@@ -268,7 +268,6 @@ assert hmcy.xmax() == ymax , 'XMAX is invalid!'
 maxIter = 15
 
 ## check database 
-import os
 if not os.path.exists( dbname ) :
     with DBASE.open ( dbname , 'c' ) : ##  create new empty db 
         logger.info("Create new weights DBASE '%s'" % dbname ) 
@@ -494,6 +493,13 @@ logger.info ( '%s:\n%s' % ( title , mc_tree.table2   ( variables = [ 'x' , 'y' ]
                                                        title     = title    ,
                                                        cuts      = 'weight' , 
                                                        prefix    = '# '     ) ) )
+
+# =============================================================================
+from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
+root_file = backup_to_ROOT    ( dbname     )
+new_db    = restore_from_ROOT ( root_file  )
+
+
 
 # =============================================================================
 ##                                                                      The END 

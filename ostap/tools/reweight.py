@@ -13,12 +13,14 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'Weight'          , ## the weighting object  
-    'makeWeights'     , ## helper function for   weighting iterations 
-    'WeightingPlot'   , ## helper object to define the weighting rule & target
-    'ComparisonPlot'  , ## helper object to keep comparision plot
-    'W2Tree'          , ## helper to add the calculated weight to ROOT.TTree
-    'W2Data'          , ## helper to add the clacualted weight to ROOT.RooAbsData
+    'Weight'            , ## the weighting object  
+    'makeWeights'       , ## helper function for   weighting iterations 
+    'WeightingPlot'     , ## helper object to define the weighting rule & target
+    'ComparisonPlot'    , ## helper object to keep comparision plot
+    'W2Tree'            , ## helper to add the calculated weight to ROOT.TTree
+    'W2Data'            , ## helper to add the clacualted weight to ROOT.RooAbsData
+    'backup_to_ROOT'    , ## backup the reweighting DBASE to ROOT file 
+    'restore_from_ROOT' , ## restre the reweighting DBASE from ROOT file 
     ) 
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
@@ -1356,6 +1358,145 @@ _new_methods_ += [
     ROOT.RooDataSet .add_reweighting , 
     ROOT.TTree      .add_reweighting , 
     ]
+
+# =========================================================================
+## backup the database content to vanilla ROOT file *IF/WHEN* possible
+#  @code
+#  dbname     = ...
+#  root_file = backup_to_ROOT ( dbname , 'root_file.root' )
+#  @endcode
+#  If root file name is not specified, a temporary file will be created 
+def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
+    """ Backup the database content to vanilla ROOT file *IF/WHEN* possible 
+
+    >>> dbname     = ...
+    >>> backup_to_ROOT ( dbname , 'root_file.root' )
+
+    If root file name is not specified, a temporary file will be created
+
+    """
+    if not root_file :
+        from   ostap.utils.cleanup    import CleanUp        
+        root_file = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-reweight-' )
+        
+    ## (re)create ROOT TFile 
+    with ROOT.TFile ( root_file , 'c' ) : pass
+    
+    with DBASE.open ( dbase , 'r' ) as db : ## READONLY
+        
+        rws  = db.get ( 'reweightings' , () )
+        
+        rws  = set ( rws ) | set ( reweightings )
+        rws  = sorted ( rws )
+        
+        good = []
+        for r in rws :
+            
+            if not r in db :
+                logger.warning ( 'Record %s not in database, skip' % r )  
+                continue
+            
+            rw = db.get ( r , None )
+            if not rw      :
+                logger.warning ( 'Record %s not in database, skip' % r )  
+                continue
+
+            if isinstance ( rw , ROOT.TObject ) : rw = [ rw ]
+            
+            if not all ( isinstance ( o , ROOT.TObject ) and callable ( o )  for o in rw ) : 
+                logger.warning ( 'Record %s not callable TObject or sequence of callable TObjects, skip!' % r )  
+                continue
+            
+            with ROOT.TFile ( root_file , 'u' ) as rf : 
+                for i , o in enumerate ( rw ) : rf [ '%s/%d' %  ( r , i ) ] = o 
+                
+            good.append ( r )
+
+            
+        tlst = ROOT.TList()
+        for r in good :
+            tstr = ROOT.TObjString ( r )
+            tlst.Add  ( tstr ) 
+
+
+    title = 'Reweighting DB -> ROOT'
+    with ROOT.TFile ( root_file , 'u' ) as rf :
+        rf [ 'reweightings' ] = tlst 
+        table = rf.ls_table ( title = title , prefix = '# ' )
+        
+    logger.info ('%s:\n%s' % ( title , table ) )
+    return root_file 
+
+
+# ==================================================================================
+## Convert the ROOT-file into reweighting DBASE
+#  @code
+#  root_file_name = ...
+#  respore_form_ROOT ( root_file_name , 'dbase.db' ) 
+#  @endcode 
+def restore_from_ROOT ( root_file , dbname = '' , * , reweightings = () ) :
+    """ Convert the ROOT-file into proper dbase for reweighting 
+
+    >>> root_file_name = ...
+    >>> restore_from_ROOT ( root_file_name , 'dbase.db' ) 
+
+    """
+    if not dbname :
+        from   ostap.utils.cleanup    import CleanUp        
+        dbname = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-reweight-' )
+
+    ## (Re)create the data base 
+    with DBASE.open ( dbname , 'c' ) : pass
+
+    ## read input ROOT file 
+    with ROOT.TFile ( root_file , 'r' ) as rf :
+
+        ## Read the entry 'reweightings'. It must be TList with TObjStrings
+        rws = rf.get ( 'reweightings' , () )
+        if not rws                             or \
+           not isinstance ( rws , ROOT.TList ) or \
+           not all ( isinstance ( r , ROOT.TObjString ) for r in rws ) : 
+            logger.warnings ( 'No valid reweightings are found!' ) 
+            return
+
+        ## add 'reweightings' from arguments 
+        rws  = set ( [ str ( r ) for r in rws ] ) | set ( reweightings )
+        rws  = tuple ( sorted ( rws ) )
+
+        ## now `rws` is alist of potential reweighting structures, placed in corresponsig directories 
+        
+        good = []
+        
+        ## loop over the specified directories/reweightings  
+        for r in rws :
+
+            ## root directory            
+            rdir = rf.get ( r , None ) 
+            if not rdir or not isinstance ( rdir , ROOT.TDirectory ) :
+                logger.warning ( 'Not valid TDirectory %s, skip' % r )
+                continue
+            
+            objects = []
+            ## loop over the content of the directory
+            for key, value in rdir.iteritems ( recursive = False , no_dir = True ) :                
+                if value and callable ( value ) :
+                    objects.append ( value )
+                else : 
+                    logger.warning ( 'Invalid callable %s/%S, skip' % ( r , key ) ) 
+                    continue 
+
+            good.append ( r )            
+            with DBASE.open ( dbname , 'u' ) as db : db [ r ] = objects
+
+    ## add the list of reweightings to 
+    with DBASE.open ( dbname , 'u' ) as db :
+        rr = db.get ( 'reweightings', () )
+        rr = set ( rr ) | set ( good )        
+        db ['reweightings' ] = tuple ( sorted ( rr ) )  
+
+    ## finally show the content of converted DBASE
+    with DBASE.open ( dbname , 'r' ) as db : db.ls()    
+    return dbname 
 
 # =============================================================================
 if '__main__' == __name__ :

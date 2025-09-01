@@ -1,6 +1,9 @@
 
 ## New features
 
+  1. Add `backup_to_ROOT` and `restore_from_ROOT` functions for `ostap.toool.reweight`. 
+  1. Tiny tweaks for `ROOT.TDirectory` decorators 
+
 ## Backward-incompatible
 
 ## Bug fixes
@@ -57,7 +60,7 @@
   1. Add `bayes_interval` for eauation of binomial intervals
   1. Add `histogram.eff_bayes` to get the "efficiency" graph 
   1. Add `Ostap::Math::Beta` , `Ostap::Models::Beta` and `ostap.fitting.distributions.Beta_pdf`
-  1. Add `Ostap::Math::punzi` fnuction to obtain estiamate for Punzi's figure-of-merit
+  1. Add `Ostap::Math::punzi` function to obtain estiamate for Punzi's figure-of-merit
   
 ## Backward-incompatible
     

@@ -447,8 +447,6 @@ def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
                     for k in _rd_iterkeys_ ( idir , typ , recursive , no_dir ) :
                         yield k
 
-
-
 # =============================================================================a
 ## iterator oiver keyname/keys pairs  from ROOT file/directory
 #  @code
@@ -772,16 +770,16 @@ def _rd_table_ ( rdir , title = '' , prefix = '# ' ) :
 #  rdir = ...
 #  rdir.ls_table ()
 #  @endcode  
-def _rd_ls_table_ ( rdir , prefix = '# ' ) :
+def _rd_ls_table_ ( rdir , prefix = '# ' , title = '' ) :
     """ Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
     """
 
-    table = _rd_table_ ( rdir , prefix = prefix )
+    title = title if title else full_path ( rdir ) 
+    table = _rd_table_ ( rdir , prefix = prefix , title = title )
 
-    logger.info ( 'Directory %s:\n%s' % ( rdir.GetName() , table ) )
-
+    logger.info ( 'Directory %s:\n%s' % ( title , table ) )
 
 # =============================================================================
 ## the basic protocol:
@@ -793,13 +791,13 @@ ROOT.TDirectory.__getattr__  = _rd_getattr_
 ROOT.TDirectory.__delitem__  = _rd_delitem_
 ROOT.TDirectory.__iter__     = _rd_iter_
 
-
 # =============================================================================
 ## the extended protocol
 
 ROOT.TDirectory.get            = _rd_get_
 ROOT.TDirectory.keys           = _rd_keys_
 ROOT.TDirectory.has_key        = _rd_contains_
+ROOT.TDirectory.items          = _rd_iteritems_
 ROOT.TDirectory.iteritems      = _rd_iteritems_
 ROOT.TDirectory.iterkeys       = _rd_iterkeys_
 ROOT.TDirectory.itervalues     = _rd_itervalues_
@@ -1083,11 +1081,9 @@ def  _rd_len_ ( rdir ) :
                 nkeys += _rd_len_ ( idir  ) 
     return nkeys
 
-
-ROOT.TDirectory.__len__ = _rd_len_
-
 # ========================================================================
-
+ROOT.TDirectory.__len__ = _rd_len_
+# ========================================================================
 
 # ========================================================================
 ## copy ROOT file (possible with protocol)
@@ -1320,25 +1316,34 @@ class RootFiles(Files) :
         at the end of the session
 
         OPTIONS:
-        # -a                                   Append to the output
-        # -k                                   Skip corrupt or non-existent files, do not exit
-        # -T                                   Do not merge Trees
-        # -O                                   Re-optimize basket size when merging TTree
-        # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
-        # -j                                   Parallelize the execution in multiple processes
-        # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
-        # -d                                   Carry out the partial multiprocess execution in the specified directory
-        # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
-        # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
-        # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
-        # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
-        # -fk                                  Sets the target file to contain the baskets with the same compression
-        #                                      as the input files (unless -O is specified). Compresses the meta data
-        #                                      using the compression level specified in the first input or the
-        #                                      compression setting after fk (for example 206 when using -fk206)
-        # -ff                                  The compression level use is the one specified in the first input
-        # -f0                                  Do not compress the target file
-        # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
+        # -a                         Append to the output
+        # -k                         Skip corrupt or non-existent files, do not exit
+        # -T                         Do not merge Trees
+        # -O                         Re-optimize basket size when merging TTree
+        # -v                         Explicitly set the verbosity level: 
+        #                            0 request no output, 
+        #                            99 is the default
+        # -j                         Parallelize the execution in multiple processes
+        # -dbg                       Parallelize the execution in multiple processes in debug mode 
+        #                            (Does not delete partial files stored inside working directory)
+        # -d                         Carry out the partial multiprocess execution 
+        #                            in the specified directory
+        # -n                         Open at most 'maxopenedfiles' at once 
+        #                            (use 0 to request to use the system maximum)
+        # -cachesize                 Resize the prefetching cache use to speed up 
+        #                            I/O operations(use 0 to disable)
+        # -experimental-io-features  Used with an argument provided, enables the corresponding 
+        #                            experimental feature for output trees
+        # -f                         Gives the ability to specify the compression level of 
+        #                            the target file(by default 4) 
+        # -fk                        Sets the target file to contain the baskets with the same compression
+        #                            as the input files (unless -O is specified). Compresses the meta data
+        #                            using the compression level specified in the first input or the
+        #                            compression setting after fk (for example 206 when using -fk206)
+        # -ff                        The compression level use is the one specified in the first input
+        # -f0                        Do not compress the target file
+        # -f6                        Use compression level 6. 
+        #                            (See TFile::SetCompressionSettings for the support range of value.)                            
         """
         from ostap.utils.utils import hadd as hadd_
         return hadd_ ( self.files , output = output , opts = opts  , **kwargs )
@@ -1437,6 +1442,7 @@ _new_methods_   = (
     ROOT.TDirectory.keys         ,
     ROOT.TDirectory.has_key      ,
     ROOT.TDirectory.iteritems    ,
+    ROOT.TDirectory.items        ,
     ROOT.TDirectory.iterkeys     ,
     ROOT.TDirectory.itervalues   ,
     #
