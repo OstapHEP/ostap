@@ -174,6 +174,9 @@ class SqliteDict(DictClass):
         self.flag = flag
         if self.flag not in SqliteDict.VALID_FLAGS:
             raise RuntimeError ( "Unrecognized flag: %s" % flag )
+        
+        ## read-only DB ? 
+        self.readonly =  'r' == flag
 
         if self.flag == 'n' and filename and os.path.exists ( filename ) and os.path.isfile ( filename ) :
             # ============================================================================
@@ -199,8 +202,7 @@ class SqliteDict(DictClass):
         self.timeout      = timeout 
 
         ## check it! 
-        with Connect ( self.filename , self.flag , timeout = self.timeout ) :
-            pass  
+        with Connect ( self.filename , self.flag , timeout = self.timeout ) : pass  
 
         logger.debug ( "opening Sqlite table %r in %s" % ( tablename , filename ) )
         
@@ -208,11 +210,9 @@ class SqliteDict(DictClass):
         self.conn = self._new_conn()
         self.conn.execute(MAKE_TABLE)
         self.conn.commit()
-        if flag == 'w' :
-            self.clear()
+        
+        if flag == 'w' : self.clear()
 
-        ## read-only DB 
-        self.readonly =  'r' == flag
 
     #  ========================================================================
     ## make new connection 
