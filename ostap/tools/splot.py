@@ -528,9 +528,9 @@ class hPlot(sPLOT) :
             assert not newvar in tree , "sPlot: Variable '%s' is already in the Tree!" % newvar 
             fmap [ newvar ] = fw
             
-            vvs = sorted ( fmap.keys() )
-            bbs = ','.join ( vvs )
-            logger.info ( "Adding sPlot results %s to TTree" % vvs )
+        vvs = sorted ( fmap.keys() )
+        vvs = ','.join ( vvs )
+        logger.info ( "Adding sPlot results %s to TTree" % vvs )
             
         kwargs = { 'progress' : self.progress , 'report' : True }
         if parallel : result = tree.padd_new_branch ( fmap , **kwargs ) 
