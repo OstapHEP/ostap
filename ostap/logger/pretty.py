@@ -598,8 +598,8 @@ def nice_print ( what              ,
                                    precision = precision ,
                                    latex     = latex     , **kwargs )
     
-    if   expo and latex : result = '%s%s10^{%+d}' % ( result , '\\times' , expo )
-    elif expo           : result = '%s%s10^%+d'   % ( result ,    times  , expo )
+    if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
+    elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
     ##
     return result
 
