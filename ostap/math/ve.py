@@ -510,6 +510,7 @@ def fmt_pretty_ve ( value               ,
     assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % typename ( value )
     ## decode object 
     v , e =  value.value () , max ( 0 , value.error () )
+    from ostap.logger.pretty import fmt_pretty_error 
     return fmt_pretty_error ( v , e ,
                               width       = width       ,
                               precision   = precision   ,
