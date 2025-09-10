@@ -48,6 +48,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types, sequence_types
 from   ostap.logger.symbols   import plus_minus, times
+from   ostap.utils.basic      import typename 
 import math 
 # =============================================================================
 # logging 
@@ -206,8 +207,7 @@ def fmt_pretty_float ( value             ,
     >>> fmt , expo = fmt_pretty_float ( number ) 
     """
     
-    assert isinstance ( value , num_types ) , \
-        "Invalid `value' parameter: %s"   % typename ( value ) 
+    assert isinstance ( value , num_types ) , "Invalid `value' parameter: %s"   % typename ( value ) 
     
     value = float ( value )
 
@@ -239,10 +239,8 @@ def fmt_pretty_error ( value              ,
     - return formats for nice stirng and the separate exponent 
     >>> fmt , fmt_v , fmt_e , n = pretty_error ( value , error  ) 
     """    
-    assert isinstance ( value     , num_types     ) , \
-        "Invalid `value' parameter: %s"   % type ( value ) 
-    assert isinstance ( error     , num_types     ) , \
-        "Invalid `error' parameter: %s"   % type ( error ) 
+    assert isinstance ( value , num_types ) , "Invalid `value' parameter: %s"   % typename ( value ) 
+    assert isinstance ( error , num_types ) , "Invalid `error' parameter: %s"   % typename ( error ) 
     
     v = float ( value )
     e = max   ( 0.0 , float ( error  ) )
@@ -252,9 +250,10 @@ def fmt_pretty_error ( value              ,
                                              e                     , 
                                              width     = width     ,
                                              precision = precision ,
-                                             with_sign = with_sign ) 
+                                             with_sign = with_sign ,
+                                             latex     = latex     ) 
     
-    if latex : fmt = '%s %s %s' % ( fmtv , r'\pm'     , fmte )
+    if latex : fmt = '%s %s %s' % ( fmtv , '\\pm'     , fmte )
     else     : fmt = '%s %s %s' % ( fmtv , plus_minus , fmte )
     
     if ( expo and latex ) or parentheses : fmt = '( ' + fmt + ' )'
@@ -278,9 +277,9 @@ def fmt_pretty_error2 ( value               ,
     """ Formats for nice printout of the object with asymmetric  errors ( string + exponent)
     >>> fmt , fmtv , fmte , expo = fmt_pretty_err2 ( number , elow  , ehigh ) 
     """ 
-    assert isinstance ( value     , num_types     ) , "Invalid `value'  parameter: %s"   % typename ( value  ) 
-    assert isinstance ( errlow    , num_types     ) , "Invalid `errlow' parameter: %s"   % typename ( errlow  ) 
-    assert isinstance ( errhigh   , num_types     ) , "Invalid `errigh' parameter: %s"   % typename ( errhigh ) 
+    assert isinstance ( value     , num_types ) , "Invalid `value'  parameter: %s"   % typename ( value  ) 
+    assert isinstance ( errlow    , num_types ) , "Invalid `errlow' parameter: %s"   % typename ( errlow  ) 
+    assert isinstance ( errhigh   , num_types ) , "Invalid `errigh' parameter: %s"   % typename ( errhigh ) 
     
     v  = float ( value   )
     eh = float ( errhigh )
@@ -290,7 +289,8 @@ def fmt_pretty_error2 ( value               ,
     fmtv , fmte , expo = fmt_pretty_errors ( v , el , eh ,
                                              width     = width     ,
                                              precision = precision ,
-                                             with_sign = with_sign ) 
+                                             with_sign = with_sign ,
+                                             latex     = latex     ) 
 
     if latex : fmt = '%s_{%s}^{%s}' % ( fmtv , fmte , fmte )
     else     : fmt = '%s -/%s +/%s' % ( fmtv , fmte , fmte )
@@ -318,7 +318,7 @@ def pretty_float ( value             ,
     - return nice string and the separate exponent 
     >>> s , expo = pretty_float ( number )
     """
-    assert isinstance ( value     , num_types     ), "Invalid `value'  parameter: %s"   % typename ( value  ) 
+    assert isinstance ( value     , num_types ) , "Invalid `value'  parameter: %s"   % typename ( value  ) 
 
     v = float ( value )
     
@@ -353,8 +353,8 @@ def pretty_error ( value               ,
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_err1 ( value , error ) 
     """
-    assert isinstance ( value     , num_types     ) , "Invalid `value'  parameter: %s"   % typename ( value  ) 
-    assert isinstance ( error     , num_types     ) , "Invalid `error'  parameter: %s"   % typename ( error  ) 
+    assert isinstance ( value , num_types ) , "Invalid `value'  parameter: %s"   % typename ( value  ) 
+    assert isinstance ( error , num_types ) , "Invalid `error'  parameter: %s"   % typename ( error  ) 
     
     v =             float ( value ) 
     e = max ( 0.0 , float ( error ) ) 
@@ -362,7 +362,7 @@ def pretty_error ( value               ,
     finv = not ( math.isinf ( v ) or math.isnan ( v ) ) 
     fine = not ( math.isinf ( e ) or math.isnan ( e ) ) 
 
-    pm = plus_minus if not latex else r'\pm'
+    pm = plus_minus if not latex else '\\pm'
     
     if not finv and not fine  :
         fmt = '%%+%ds %s %%-%ds' % ( width , pm , width ) 
@@ -409,9 +409,9 @@ def pretty_error2 ( value               ,
     >>> s , expo = pretty_err2 ( number , elow , ehigh ) 
     """
 
-    assert isinstance ( value     , num_types     ) , "Invalid `value'   parameter: %s"   % typename ( value  ) 
-    assert isinstance ( errlow    , num_types     ) , "Invalid `errlow'  parameter: %s"   % typename ( errlow  ) 
-    assert isinstance ( errhigh   , num_types     ) , "Invalid `errhigh' parameter: %s"   % typename ( errhigh ) 
+    assert isinstance ( value   , num_types ) , "Invalid `value'   parameter: %s" % typename ( value  ) 
+    assert isinstance ( errlow  , num_types ) , "Invalid `errlow'  parameter: %s" % typename ( errlow  ) 
+    assert isinstance ( errhigh , num_types ) , "Invalid `errhigh' parameter: %s" % typename ( errhigh ) 
 
     v     = float ( value   )
     ehigh = float ( errhigh )
@@ -453,8 +453,8 @@ def pretty_errors ( errlow              ,
     """ Nice printout of asymmetric  errors   ( string + exponent)
     >>> s , expo = pretty_errors ( errlow , errhigh ) 
     """
-    assert isinstance ( errlow    , num_types     ) , "Invalid `errlow' parameter: %s"   % typename ( errlow  ) 
-    assert isinstance ( errhigh   , num_types     ) , "Invalid `errigh' parameter: %s"   % typename ( errhigh ) 
+    assert isinstance ( errlow  , num_types ) , "Invalid `errlow' parameter: %s" % typename ( errlow  ) 
+    assert isinstance ( errhigh , num_types ) , "Invalid `errigh' parameter: %s" % typename ( errhigh ) 
     
     ehigh = float ( errhigh )
     elow  = float ( errlow  )
@@ -496,8 +496,7 @@ def add_expo ( value , expo , fmt = '%%s %s 10^%%+d' % times ) :
     >>> value , expo = pretty_XXX ( value , .... )
     >>> result = add_expo ( value , expo ) 
     """
-    assert isinstance ( expo , integer_types ) , \
-        "Invalid type of `expo':%s" % type ( expo )
+    assert isinstance ( expo , integer_types ) , "Invalid type of `expo':%s" % typename ( expo )
     if not expo : return value
     return fmt % ( value , expo )
 
@@ -599,7 +598,7 @@ def nice_print ( what              ,
                                    precision = precision ,
                                    latex     = latex     , **kwargs )
     
-    if   expo and latex : result = '%s%s10^{%+d}' % ( result , r'\times' , expo )
+    if   expo and latex : result = '%s%s10^{%+d}' % ( result , '\\times' , expo )
     elif expo           : result = '%s%s10^%+d'   % ( result ,    times  , expo )
     ##
     return result
