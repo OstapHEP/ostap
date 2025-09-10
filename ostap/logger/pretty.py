@@ -31,13 +31,18 @@ __all__     = (
     'fmt_pretty_error2'  , ## (common) format for floaitng value with asymmetric errors
     ##
     ## Formatters
-    ## 
+    ##
     'pretty_float'       , ## pretty representation for floating value
     'pretty_error'       , ## pretty represetnation for floating value with (symmetric) error 
     'pretty_error2'      , ## pretty representation for floating value with asymmetric errors
     'pretty_errors'      , ## pretty representation for asymmetric errors
     ## 
+    'pretty_print'       , ## dispatcher for pretty prints 
+    'nice_print'         , ## ready-to-usepretty prints 
     'add_expo'           , ## add an exponetaion factor for sting representaion of the object
+    ## Force LaTeX format 
+    'pretty_latex'       , ## dispatcher for pretty prints 
+    'nice_latex'         , ## ready-to-usepretty prints 
 )
 
 # =============================================================================
@@ -62,10 +67,11 @@ logger.debug ( "Helper functions for pretty prints of some object" )
 #  fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 )
 #  @endcode
 #  @return formats for nice string and the separate exponent 
-def fmt_pretty_values ( *values            ,
-                        width       = 6    ,
-                        precision   = 4    ,
-                        with_sign   = True ) : 
+def fmt_pretty_values ( *values             ,
+                        width       = 6     ,
+                        precision   = 4     ,
+                        with_sign   = True  ,
+                        latex       = False ) : 
     """ Formats for nice printout of the object with errors  ( strings + exponent)
     >>> fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 ) 
     """
@@ -78,7 +84,6 @@ def fmt_pretty_values ( *values            ,
     
     av = max ( abs ( float ( v )  ) for v in values )
 
-    
     from ostap.math.base import iszero, frexp10
     the_format =  '%%+%d.%df' if with_sign else '%%%d.%df'
     if   100 <= av < 1000 : return the_format % ( width , precision - 2 ) , 0 
@@ -100,7 +105,8 @@ def fmt_pretty_values ( *values            ,
     fmtv , expo = fmt_pretty_values ( scaled                ,
                                       width     = width     ,
                                       precision = precision ,
-                                      with_sign = with_sign )
+                                      with_sign = with_sign ,
+                                      latex     = latex     )
     
     return fmtv , expo + 3 * n 
 
@@ -110,11 +116,12 @@ def fmt_pretty_values ( *values            ,
 #  fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 ) ) 
 #  @endcode
 #  @return formats for nice string and the separate exponent 
-def fmt_pretty_errors ( value              ,
-                        *errors            ,  
-                        width       = 6    ,
-                        precision   = 4    ,
-                        with_sign   = True ) : 
+def fmt_pretty_errors ( value               ,
+                        *errors             ,  
+                        width       = 6     ,
+                        precision   = 4     ,
+                        with_sign   = True  ,
+                        latex       = False ) : 
     """ Formats for nice printout of the object with errors  ( strings + exponent)
     >>> fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 )  ) 
     """
@@ -178,7 +185,8 @@ def fmt_pretty_errors ( value              ,
                                              *errs                 , 
                                              width     = width     ,
                                              precision = precision ,
-                                             with_sign = with_sign )
+                                             with_sign = with_sign ,
+                                             latex     = latex     )
     
     return fmtv , fmte , expo + 3 * n 
 
@@ -188,17 +196,18 @@ def fmt_pretty_errors ( value              ,
 #  fmt , expo = fmt_pretty_float ( number ) 
 #  @endcode
 #  @return format for nice string and the separate exponent 
-def fmt_pretty_float ( value            ,
-                       width     = 6    ,
-                       precision = 4    ,
-                       with_sign = True ) :
+def fmt_pretty_float ( value             ,
+                       width     = 6     ,
+                       precision = 4     ,
+                       with_sign = True  ,
+                       latex     = False ) :
     """ Format for nice printout of the floating number
     - return format for nice string and the separate exponent 
     >>> fmt , expo = fmt_pretty_float ( number ) 
     """
     
     assert isinstance ( value , num_types ) , \
-        "Invalid `value' parameter: %s"   % type ( value ) 
+        "Invalid `value' parameter: %s"   % typename ( value ) 
     
     value = float ( value )
 
@@ -210,7 +219,8 @@ def fmt_pretty_float ( value            ,
     return fmt_pretty_values ( value                 ,
                                width     = width     ,
                                precision = precision ,
-                               with_sign = with_sign ) 
+                               with_sign = with_sign ,
+                               latex     = latex     ) 
 
 # ===============================================================================
 ## Formats nice printout of the valuw with (sinle, symmetric)  error
@@ -219,11 +229,12 @@ def fmt_pretty_float ( value            ,
 #  @endcode
 #  @return formats nice string and the separate exponent 
 def fmt_pretty_error ( value              ,
-                       error              , 
-                       width       = 6    ,
-                       precision   = 4    ,
-                       with_sign   = True , 
-                       parentheses = True ) :
+                       error                , 
+                       width       = 6     ,
+                       precision   = 4     ,
+                       with_sign   = True  , 
+                       parentheses = True  ,
+                       latex       = False ) :
     """ Formats for nice printout of the value with (single symmetric) error 
     - return formats for nice stirng and the separate exponent 
     >>> fmt , fmt_v , fmt_e , n = pretty_error ( value , error  ) 
@@ -243,8 +254,10 @@ def fmt_pretty_error ( value              ,
                                              precision = precision ,
                                              with_sign = with_sign ) 
     
-    fmt = '%s %s %s' % ( fmtv , plus_minus , fmte ) 
-    if parentheses : fmt = '( ' + fmt + ' )'
+    if latex : fmt = '%s %s %s' % ( fmtv , r'\pm'     , fmte )
+    else     : fmt = '%s %s %s' % ( fmtv , plus_minus , fmte )
+    
+    if ( expo and latex ) or parentheses : fmt = '( ' + fmt + ' )'
     
     return fmt, fmtv, fmte , expo
 
@@ -254,23 +267,21 @@ def fmt_pretty_error ( value              ,
 #  fmt , fmtv , fmte , expo = fmt_pretty_error2 ( number , errlow  , errhigh ) 
 #  @endcode
 #  @return formats for nice string and the separate exponent 
-def fmt_pretty_error2 ( value              ,
-                        errlow             ,
-                        errhigh            ,
-                        width       = 6    ,
-                        precision   = 4    ,
-                        with_sign   = True , 
-                        parentheses = True ) :
+def fmt_pretty_error2 ( value               ,
+                        errlow              ,
+                        errhigh             ,
+                        width       = 6     ,
+                        precision   = 4     ,
+                        with_sign   = True  , 
+                        parentheses = True  ,
+                        latex       = False ) :
     """ Formats for nice printout of the object with asymmetric  errors ( string + exponent)
     >>> fmt , fmtv , fmte , expo = fmt_pretty_err2 ( number , elow  , ehigh ) 
     """ 
-    assert isinstance ( value     , num_types     ) , \
-        "Invalid `value'  parameter: %s"   % type ( value  ) 
-    assert isinstance ( errlow    , num_types     ) , \
-        "Invalid `errlow' parameter: %s"   % type ( errlow  ) 
-    assert isinstance ( errhigh   , num_types     ) , \
-        "Invalid `errigh' parameter: %s"   % type ( errhigh ) 
-   
+    assert isinstance ( value     , num_types     ) , "Invalid `value'  parameter: %s"   % typename ( value  ) 
+    assert isinstance ( errlow    , num_types     ) , "Invalid `errlow' parameter: %s"   % typename ( errlow  ) 
+    assert isinstance ( errhigh   , num_types     ) , "Invalid `errigh' parameter: %s"   % typename ( errhigh ) 
+    
     v  = float ( value   )
     eh = float ( errhigh )
     el = float ( errlow  )
@@ -280,9 +291,11 @@ def fmt_pretty_error2 ( value              ,
                                              width     = width     ,
                                              precision = precision ,
                                              with_sign = with_sign ) 
+
+    if latex : fmt = '%s_{%s}^{%s}' % ( fmtv , fmte , fmte )
+    else     : fmt = '%s -/%s +/%s' % ( fmtv , fmte , fmte )
     
-    fmt = '%s -/%s +/%s' % ( fmtv , fmte , fmte )
-    if parentheses : fmt = '( ' + fmt + ' )' 
+    if ( latex and expo ) or parentheses : fmt = '( ' + fmt + ' )' 
     
     return fmt, fmtv, fmte , expo
 
@@ -296,16 +309,16 @@ def fmt_pretty_error2 ( value              ,
 #  s , expo = pretty_float ( number ) 
 #  @endcode
 #  @return nice stirng and the separate exponent 
-def pretty_float ( value            ,
-                   width     = 6    ,
-                   precision = 4    ,
-                   with_sign = True ) :
+def pretty_float ( value             ,
+                   width     = 6     ,
+                   precision = 4     ,
+                   with_sign = True  ,
+                   latex     = False ) :
     """ Nice printout of the floating number
     - return nice string and the separate exponent 
     >>> s , expo = pretty_float ( number )
     """
-    assert isinstance ( value     , num_types     ),\
-        "Invalid `value'  parameter: %s"   % type ( value  ) 
+    assert isinstance ( value     , num_types     ), "Invalid `value'  parameter: %s"   % typename ( value  ) 
 
     v = float ( value )
     
@@ -316,7 +329,8 @@ def pretty_float ( value            ,
     fmt , expo = fmt_pretty_float ( value     = v         ,
                                     width     = width     ,
                                     precision = precision ,
-                                    with_sign = with_sign )
+                                    with_sign = with_sign ,
+                                    latex     = latex     )
     if expo :
         scale = 10 ** expo
         v /= scale
@@ -329,46 +343,48 @@ def pretty_float ( value            ,
 #  s , expo = pretty_err1 ( number , error ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_error ( value              ,
-                   error              , 
-                   width       = 6    ,
-                   precision   = 4    ,
-                   parentheses = True ) :
+def pretty_error ( value               ,
+                   error               , 
+                   width       = 6     ,
+                   precision   = 4     ,
+                   parentheses = True  ,
+                   latex       = False ) :
     """ Nice printout of the value with singuar, symmetric, error ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_err1 ( value , error ) 
     """
-    assert isinstance ( value     , num_types     ) , \
-        "Invalid `value'  parameter: %s"   % type ( value  ) 
-    assert isinstance ( error     , num_types     ) , \
-        "Invalid `error'  parameter: %s"   % type ( error  ) 
+    assert isinstance ( value     , num_types     ) , "Invalid `value'  parameter: %s"   % typename ( value  ) 
+    assert isinstance ( error     , num_types     ) , "Invalid `error'  parameter: %s"   % typename ( error  ) 
     
     v =             float ( value ) 
     e = max ( 0.0 , float ( error ) ) 
     
     finv = not ( math.isinf ( v ) or math.isnan ( v ) ) 
     fine = not ( math.isinf ( e ) or math.isnan ( e ) ) 
+
+    pm = plus_minus if not latex else r'\pm'
     
     if not finv and not fine  :
-        fmt = '%%+%ds %s %%-%ds' % ( width , plus_minus , width ) 
-        if parentheses : fmt = '( %s )' % fmt 
+        fmt = '%%+%ds %s %%-%ds' % ( width , pm , width ) 
+        if latex or parentheses : fmt = '( %s )' % fmt 
         return fmt % ( v , e ) , 0 
     elif not finv  :
-        fe , ne = pretty_float ( value = e , width = width , precision = precision ) 
-        fmt = '%%+%ds %s %%-%ds' % ( width , plus_minus , width ) 
-        if parentheses : fmt = '( %s )' % fmt 
+        fe , ne = pretty_float ( value = e , width = width , precision = precision , latex = latex ) 
+        fmt = '%%+%ds %s %%-%ds' % ( width , pm , width ) 
+        if ( latex and ne ) or  parentheses : fmt = '( %s )' % fmt 
         return fmt % ( v , fe ) , ne 
     elif not fine  :
-        fv , nv = pretty_float ( value = v , width = width , precision = precision ) 
-        fmt = '%%%ds %s %%-%ds' % ( width , plus_minus , width ) 
-        if parentheses : fmt = '( %s )' % fmt 
+        fv , nv = pretty_float ( value = v , width = width , precision = precision , latex = latex ) 
+        fmt = '%%%ds %s %%-%ds' % ( width , pm  , width ) 
+        if ( latex and nv ) or parentheses : fmt = '( %s )' % fmt 
         return fmt % ( fv , e ) , nv
 
     ## get format 
     fmt , _ , _ , expo = fmt_pretty_error ( v , e                     , 
                                             width       = width       ,
                                             precision   = precision   ,
-                                            parentheses = parentheses )
+                                            parentheses = parentheses ,
+                                            latex       = latex       )
     values = v , e
     if expo :
         scale = 10 ** expo 
@@ -382,22 +398,20 @@ def pretty_error ( value              ,
 #  s , expo = pretty_err2 ( value , errlow , errhigh ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_error2 ( value              ,
-                    errlow             ,
-                    errhigh            ,
-                    width       = 6    ,
-                    precision   = 4    ,
-                    parentheses = True ) :
+def pretty_error2 ( value               ,
+                    errlow              ,
+                    errhigh             ,
+                    width       = 6     ,
+                    precision   = 4     ,
+                    parentheses = True  ,
+                    latex       = False ) :
     """ Nice printout of the object with asymmetric  errors   ( string + exponent)
     >>> s , expo = pretty_err2 ( number , elow , ehigh ) 
     """
 
-    assert isinstance ( value     , num_types     ) , \
-        "Invalid `value'   parameter: %s"   % type ( value  ) 
-    assert isinstance ( errlow    , num_types     ) , \
-        "Invalid `errlow'  parameter: %s"   % type ( errlow  ) 
-    assert isinstance ( errhigh   , num_types     ) , \
-        "Invalid `errhigh' parameter: %s"   % type ( errhigh ) 
+    assert isinstance ( value     , num_types     ) , "Invalid `value'   parameter: %s"   % typename ( value  ) 
+    assert isinstance ( errlow    , num_types     ) , "Invalid `errlow'  parameter: %s"   % typename ( errlow  ) 
+    assert isinstance ( errhigh   , num_types     ) , "Invalid `errhigh' parameter: %s"   % typename ( errhigh ) 
 
     v     = float ( value   )
     ehigh = float ( errhigh )
@@ -413,7 +427,8 @@ def pretty_error2 ( value              ,
     fmt , _ , _ , expo = fmt_pretty_error2 ( v , elow , ehigh ,
                                              width       = width       ,
                                              precision   = precision   ,
-                                             parentheses = parentheses )
+                                             parentheses = parentheses ,
+                                             latex       = latex       )
     
     values = value , abs ( elow ) , ehigh    
     if expo :
@@ -429,18 +444,17 @@ def pretty_error2 ( value              ,
 #  s , expo = pretty_errors ( errlow , errhigh ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_errors ( errlow             ,
-                    errhigh            ,
-                    width       = 6    ,
-                    precision   = 4    ,
-                    parentheses = True ) :
+def pretty_errors ( errlow              ,
+                    errhigh             ,
+                    width       = 6     ,
+                    precision   = 4     ,
+                    parentheses = True  ,
+                    latex       = False ) :
     """ Nice printout of asymmetric  errors   ( string + exponent)
     >>> s , expo = pretty_errors ( errlow , errhigh ) 
     """
-    assert isinstance ( errlow    , num_types     ) , \
-        "Invalid `errlow' parameter: %s"   % type ( errlow  ) 
-    assert isinstance ( errhigh   , num_types     ) , \
-        "Invalid `errigh' parameter: %s"   % type ( errhigh ) 
+    assert isinstance ( errlow    , num_types     ) , "Invalid `errlow' parameter: %s"   % typename ( errlow  ) 
+    assert isinstance ( errhigh   , num_types     ) , "Invalid `errigh' parameter: %s"   % typename ( errhigh ) 
     
     ehigh = float ( errhigh )
     elow  = float ( errlow  )
@@ -454,11 +468,13 @@ def pretty_errors ( errlow             ,
     ## get the format 
     _ , fmte , expo = fmt_pretty_errors ( 0.0 , elow , ehigh    ,
                                           width     = width     ,
-                                          precision = precision )
+                                          precision = precision ,
+                                          latex     = latex     )
     
     ## construct format 
-    fmt = ' -/%s +/%s' % ( fmte , fmte )
-    if parentheses : fmt = '( ' + fmt + ' )' 
+    if latex : fmt = '_{%s}^{%s}' % ( fmte , fmte )
+    else     : fmt = ' -/%s +/%s' % ( fmte , fmte )
+    if ( latex and expo ) or parentheses : fmt = '( ' + fmt + ' )' 
 
     values = value , abs ( elow ) , ehigh    
     if expo :
@@ -485,8 +501,6 @@ def add_expo ( value , expo , fmt = '%%s %s 10^%%+d' % times ) :
     if not expo : return value
     return fmt % ( value , expo )
 
-
-    
 # =======================================================================
 ## nice printout of asymmetric errors ( string + exponent)
 #  @code
@@ -494,11 +508,12 @@ def add_expo ( value , expo , fmt = '%%s %s 10^%%+d' % times ) :
 #  s , expo = pretty_ae (  ae ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_ae  ( errors             ,
-                 width       = 6    ,
-                 precision   = 4    ,
-                 parentheses = True ) :
-    """Nice printout of asymmetric errors ( string + exponent)
+def pretty_ae  ( errors              ,
+                 width       = 6     ,
+                 precision   = 4     ,
+                 parentheses = True  ,
+                 latex       = False ) :
+    """ Nice printout of asymmetric errors ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
     """
@@ -506,7 +521,8 @@ def pretty_ae  ( errors             ,
     return _pretty_ae_ ( errors      = errors      ,
                          width       = width       ,
                          precision   = precision   ,
-                         parentheses = parentehses ) 
+                         parentheses = parentehses ,
+                         latex       = latex       ) 
 
 # =======================================================================
 ## nice printout of the ValWithErrors object  ( string + exponent)
@@ -515,11 +531,12 @@ def pretty_ae  ( errors             ,
 #  s , expo = pretty_vae (  ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_vae ( value              ,
-                 width       = 6    ,
-                 precision   = 4    ,
-                 parentheses = True ) :
-    """Nice printout of the ValueWithError object  ( string + exponent)
+def pretty_vae ( value               ,
+                 width       = 6     ,
+                 precision   = 4     ,
+                 parentheses = True  ,
+                 latex       = False ) :
+    """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
     """
@@ -527,7 +544,106 @@ def pretty_vae ( value              ,
     return _pretty_vae_ ( value       = value       ,
                           width       = width       ,
                           precision   = precision   ,
-                          parentheses = parentheses ) 
+                          parentheses = parentheses ,
+                          latex       = latex       ) 
+
+# =======================================================================
+## Pretty print for the object
+#  @code
+#  obj = ...
+#  prnt , expo = pretty_print ( obj ) 
+#  @endcode
+def pretty_print ( what              ,
+                   width     = 6     ,
+                   precision = 4     ,
+                   latex     = False , 
+                   **kwargs          ) :
+    """ Pretty print for the object
+    >>> obj = ...
+    >>> prnt , expo = pretty_print ( obj ) 
+    """
+    if  hasattr ( what , 'pretty_print' ) :
+        return what.pretty_print ( width     = width     ,
+                                   precision = precision ,
+                                   lates     = latex     , **kwargs )
+    elif isinstance ( what , num_types ) :
+        return pretty_float ( width     = width     ,
+                              precision = precision ,
+                              latex     = latex     , **kwargs )
+    
+    from ostap.utils.basic import typename 
+    raise TypeError( "pretty_print: invalid `what` type: %s:" % typename ( what ) )
+
+# =======================================================================
+## Nice print for the object
+#  @code
+#  obj  = ...
+#  prnt = nice_print ( obj ) 
+#  @endcode
+def nice_print ( what              ,
+                 width     = 6     ,
+                 precision = 4     ,
+                 latex     = False ,
+                 **kwargs          ) :
+    """ Nice print for the object
+    >>> obj = ...
+    >>> prnt = nice_print ( obj ) 
+    """
+    if  hasattr ( what , 'nice_print' ) :
+        return what.nice_print ( width     = width     ,
+                                 precision = precision ,
+                                 latex     = latex     , **kwargs )
+
+    result , expo = pretty_print ( what                  ,
+                                   width     = width     ,
+                                   precision = precision ,
+                                   latex     = latex     , **kwargs )
+    
+    if   expo and latex : result = '%s%s10^{%+d}' % ( result , r'\times' , expo )
+    elif expo           : result = '%s%s10^%+d'   % ( result ,    times  , expo )
+    ##
+    return result
+
+
+# =======================================================================
+## Pretty LaTeX print for the object
+#  @code
+#  obj = ...
+#  prnt , expo = pretty_latex ( obj ) 
+#  @endcode
+def pretty_latex ( what              ,
+                   width     = 6     ,
+                   precision = 4     ,
+                   **kwargs          ) :
+    """ Pretty LaTeX print for the object
+    >>> obj = ...
+    >>> prnt , expo = pretty_latex ( obj ) 
+    """
+    kwargs.pop ('latex', None  )
+    return pretty_print ( what ,
+                          width     = width     ,
+                          precision = precision ,
+                          latex     = True      , **kwargs )
+
+# =======================================================================
+## Nice print for the object
+#  @code
+#  obj  = ...
+#  prnt = nice_latex ( obj ) 
+#  @endcode
+def nice_latex  ( what              ,
+                  width     = 6     ,
+                  precision = 4     ,
+                  **kwargs          ) :
+    """ Nice print for the object
+    >>> obj = ...
+    >>> prnt = nice_latex ( obj ) 
+    """
+    kwargs.pop ('latex', None  )
+    return nice_print ( what ,
+                        width     = width     ,
+                        precision = precision ,
+                        latex     = True      , **kwargs )
 
 # =======================================================================
 ## nice printout of the ValWithMultiErrors object  ( string + exponent)
@@ -536,11 +652,12 @@ def pretty_vae ( value              ,
 #  s , expo = pretty_vme (  ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_vme ( value              ,
-                 width       = 6    ,
-                 precision   = 4    ,
-                 parentheses = True ) :
-    """Nice printout of the ValueWithError object  ( string + exponent)
+def pretty_vme ( value               ,
+                 width       = 6     ,
+                 precision   = 4     ,
+                 parentheses = True  ,
+                 latex       = False ) :
+    """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
     """
@@ -548,7 +665,8 @@ def pretty_vme ( value              ,
     return _pretty_vme_ ( value       = value       ,
                           width       = width       ,
                           precision   = precision   ,
-                          parentheses = parentehses ) 
+                          parentheses = parentehses ,
+                          latex       = latex       ) 
 
 # =============================================================================
 if '__main__' == __name__ :

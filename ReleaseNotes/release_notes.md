@@ -1,3 +1,12 @@
+## New features
+
+   1. add `latex=False` argument for all `pretty_print` functions
+   1. add `nice_print`  function to get ready-to-use pretty representation 
+   
+## Backward-incompatible
+
+## Bug fixes
+
 # v3.0.2.8
 
 ## New features

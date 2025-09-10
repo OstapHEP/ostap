@@ -26,6 +26,8 @@ __all__     = (
     )
 # ============================================================================= 
 from   ostap.math.base       import Ostap, std , iszero, isequal
+from   ostap.utils.basic     import typename 
+from   ostap.logger.symbols  import plus_minus, times 
 from   ostap.math.random_ext import poisson as _poisson 
 import ROOT
 # ============================================================================= 
@@ -81,7 +83,6 @@ for t in ( Ostap.Math.ValueWithError         ,
         t.__str__   = t.toString
         t.__repr__  = t.toString
 
-from ostap.logger.symbols import plus_minus
 ve_fmt = '%%+.4g %s %%-.4g' % plus_minus 
 def _ve_str_ ( ve ) : return ve.toString ( ve_fmt )  
 Ostap.Math.ValueWithError .__str__  = _ve_str_
@@ -473,10 +474,8 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
     """
     s = VE( s ) 
     v = s.value() 
-    if v < 0 and not fluctuate :
-        raise TypeError ( 'Negative mean without fluctuations (1)' )
-    if v < 0 and s.cov2() <= 0 :
-        raise TypeError ( 'Negative mean without fluctuations (2)' )
+    if v < 0 and not fluctuate : raise TypeError ( 'Negative mean without fluctuations (1)' )
+    if v < 0 and s.cov2() <= 0 : raise TypeError ( 'Negative mean without fluctuations (2)' )
 
     e = s.error() 
     if v < 0 and abs(v) > 3 * e  :
@@ -494,27 +493,29 @@ VE.gauss   = _ve_gauss_
 VE.poisson = _ve_poisson_ 
 
 # ===================================================================================
-## Formats f0r nice printout of the ValueWithError object  ( string + exponent)
+## Formats for nice printout of the ValueWithError object  ( string + exponent)
 #  @code
 #  fmt , fmtv , fmte , expo = fmt_pretty_ve ( number ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def fmt_pretty_ve ( value              ,
-                    width       = 6    ,
-                    precision   = 4    ,
-                    parentheses = True ) :
-    """ Formats f0r nice printout of the ValueWithError object  ( string + exponent)
+def fmt_pretty_ve ( value               ,
+                    width       = 6     ,
+                    precision   = 4     ,
+                    parentheses = True  ,
+                    with_sign   = True  ,
+                    latex       = False ) :
+    """ Formats for nice printout of the ValueWithError object  ( string + exponent)
     >>> fmt , fmtv , fmte , expo = fmt_pretty_ve ( number ) 
     """
-    assert isinstance ( value , VE ) , \
-        "Invalid `value' parameter: %s" % type ( value )
+    assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % typename ( value )
     ## decode object 
     v , e =  value.value () , max ( 0 , value.error () )
-    from ostap.logger.pretty import fmt_pretty_error 
     return fmt_pretty_error ( v , e ,
                               width       = width       ,
                               precision   = precision   ,
-                              parentheses = parentheses ) 
+                              parentheses = parentheses ,
+                              with_sign   = with_sign   ,
+                              latex       = latex       )
 
 # =============================================================================
 ## nice printout of the ValueWithError object  ( string + exponent)
@@ -522,23 +523,54 @@ def fmt_pretty_ve ( value              ,
 #  s , expo = pretty_ve ( number ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_ve ( value              ,
-                width       = 6    ,
-                precision   = 4    ,
-                parentheses = True ) :
+def pretty_ve ( value               ,
+                width       = 7     ,
+                precision   = 5     ,
+                parentheses = True  ,
+                latex       = False ) :
     """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
     """
-    assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % type ( value )
+    assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % typename ( value )
     ## decode object 
     v , e =  value.value () , max ( 0 , value.error () )
-    ## delegate 
+    ## delegate
     from ostap.logger.pretty import pretty_error 
-    return pretty_error ( v , e , width = width , precision = precision , parentheses = parentheses  )
+    return pretty_error ( v , e ,
+                          width       = width       ,
+                          precision   = precision   ,
+                          parentheses = parentheses ,
+                          latex       = latex       )
+
+# =============================================================================
+## nice ready-to-use printout of the ValueWithError object  ( string + exponent)
+#  @code
+#  result =  nice_ve ( number ) 
+#  @endcode
+#  @return nice string 
+def nice_ve ( value               ,
+              width       = 7     ,
+              precision   = 5     ,
+              parentheses = True  ,
+              latex       = False ) :
+    """ Nice ready-to-use printout of the ValueWithError object  ( string + exponent)
+    >>> result =  nice_ve ( number ) 
+    """
+    result, expo = pretty_ve ( value                     ,
+                               width       = width       ,
+                               precision   = precision   ,
+                               parentheses = parentheses ,
+                               latex       = latex       )
+
+    if   expo and latex : result = '%s%s10^{%+d}' % ( result , r'\times' , expo )
+    elif expo           : result = '%s%s10^%+d'   % ( result , times     , expo )
+    ##
+    return result
 
 # ==============================================================================
 Ostap.Math.ValueWithError.pretty_print = pretty_ve 
+Ostap.Math.ValueWithError.nice_print   = nice_ve 
 
 # ==============================================================================
 ## factory for unpickling of <code>Ostap::Math::ValueWithError</code>
@@ -553,7 +585,7 @@ def ve_factory ( value , cov2 ) :
 ## reduce <code>Ostap::Math::ValueWithError</code>
 #  @see Ostap::Math::ValueWithError
 def ve_reduce ( v ) :
-    """reduce `Ostap.Math.ValueWithError`
+    """ Reduce `Ostap.Math.ValueWithError`
     - see Ostap.Math.ValueWithError
     """
     return ve_factory , ( v.value() , v.cov2() )
@@ -570,8 +602,6 @@ _decorated_classes_  = (
     Ostap.Math.LorentzVectorWithError )
 
 # =============================================================================
-
-
 
 # =============================================================================
 ## decorated methods 
