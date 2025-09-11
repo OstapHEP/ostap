@@ -1,3 +1,4 @@
+
 ## New features
 
    1. add `latex=False` argument for all `pretty_print` functions
