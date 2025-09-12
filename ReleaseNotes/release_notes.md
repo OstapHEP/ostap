@@ -9,7 +9,6 @@
 
 ## Bug fixes
 
-
 # v3.0.2.8
 
 ## New features
