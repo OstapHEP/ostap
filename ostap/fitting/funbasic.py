@@ -407,7 +407,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         not_used = set()
         table    = []
 
-
         the_params = {}
         the_params.update ( kwargs ) 
         if   isinstance ( params , dictlike_types        ) : the_params.update ( params )
@@ -421,14 +420,20 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                    
         keys   = set () 
         for key, value  in the_params.items()  :
-            if not key in pars : continue
+            
+            if not key in pars               : continue
             p  = pars   [ key ]
+            
             if not hasattr ( p  , 'setVal' ) : continue
+            
             v  = value   
             pv = float  ( p )
             vv = float  ( v )
                 
-            if isequal ( pv , vv ) : continue 
+            if isequal ( pv , vv ) :
+                keys.add ( key ) 
+                continue
+            
             pminmax = p.minmax ()
             if pminmax : 
                 pmin, pmax = pminmax
@@ -471,7 +476,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             table.append ( item ) 
             keys.add ( key )
             
-            not_used |= set ( the_params.keys() ) - keys 
+        not_used |= set ( the_params.keys() ) - keys 
 
         if not silent :
             
@@ -479,21 +484,20 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             npars = len ( table )
 
             if npars :            
-                if 1 == npars : title = '%s parameter loaded '  % npars
-                else          : title = '%s parameters loaded ' % npars
+                if 1 == npars : title = '%s parameter  changed'  % npars
+                else          : title = '%s parameters changed' % npars
                 table = [ ('Parameter' ,'old value' , '' , 'new value' , '' ) ] + table
                 import ostap.logger.table as T
                 table = T.remove_empty_columns ( table  ) 
                 table = T.table ( table , title = title , prefix = "# " , alignment = 'lcccc' )
-                if 1 == npars : self.info ( "%d parameter  loaded:\n%s" % ( npars , table ) )
-                else          : self.info ( "%d parameters loaded:\n%s" % ( npars , table ) )
+                if 1 == npars : self.info ( "%d parameter  changed:\n%s" % ( npars , table ) )
+                else          : self.info ( "%d parameters changed:\n%s" % ( npars , table ) )
             else :
-                self.info ( "No parameters loaded" )
+                self.info ( "No parameters changed" )
 
             not_used = [ n for n in not_used if not n.endswith ( '_centralvalue' ) ]
-            not_used.sort() 
-            if not_used :
-                self.warning ("Following keys are unused %s" % not_used ) 
+            not_used.sort()
+            if not_used : self.warning ("Following keys are not used: %s" % not_used ) 
         
         return
     
