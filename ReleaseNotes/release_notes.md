@@ -9,6 +9,8 @@
 
 ## Bug fixes
 
+   1. fix stupid bug in `ostap.math.base`
+   
 # v3.0.2.8
 
 ## New features
