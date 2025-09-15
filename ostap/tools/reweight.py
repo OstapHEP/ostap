@@ -119,8 +119,9 @@ def adjust_histo_range ( histo ) :
         vmn, vmx = axis_range ( vmin , vmax , delta = 0.20 )
         histo.SetMinimum  ( vmn  )
         histo.SetMaximum  ( vmx  )
-        histo.SetContour  ( 50   ) 
-
+        histo.SetContour  ( 50   )
+         
+    histo.SetMinimum  ( 0.0 )
     return histo 
     
 # =============================================================================
