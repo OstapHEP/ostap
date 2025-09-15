@@ -16,7 +16,8 @@ from   ostap.core.core          import dsID, hID, Ostap
 from   ostap.plotting.canvas    import use_canvas 
 from   ostap.utils.root_utils   import batch_env 
 import ostap.logger.table       as     T
-import ostap.fitting.roofit 
+import ostap.fitting.roofit
+import ostap.math.models   
 import ostap.trees.trees   
 import ostap.histos.histos 
 import ROOT, random
@@ -51,8 +52,8 @@ for r in range ( 100 ) :
         evt .setVal   ( e )
         mass.setVal   ( random.uniform      ( 0  , 10  ) )
         weight.setVal ( random.gauss        ( 1  , 0.1 ) )
-        pt1.setVal     ( random.expovariate ( 1.0/25   ) ) 
-        pt2.setVal     ( random.expovariate ( 1.0/15   ) ) 
+        pt1.setVal     ( random.expovariate ( 1.0/15   ) ) 
+        pt2.setVal     ( random.expovariate ( 1.0/25   ) ) 
         dataset.add ( varset )
         
         if ( 1 <= r <= 2  ) and 3 <=  e <= 3 :
@@ -69,7 +70,6 @@ weighted = dataset.makeWeighted ( 'Weight' )
 logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 logger.info ( 'Print           weighted dataset:\n%s' % weighted.table ( prefix = '# ' ) )
 
-"""
 # =============================================================================
 ## (2) loop over some subset of entries 
 # =============================================================================
@@ -122,7 +122,6 @@ ws4 = ws3. shuffle ()
 logger.info ( 'Print shuffle unweighted sample:\n%s' % ss4.table ( prefix = '# ' ) )
 logger.info ( 'Print shuffle   weighted sample:\n%s' % ws4.table ( prefix = '# ' ) )
 
-
 # =============================================================================
 ## (8) subset
 # =============================================================================
@@ -163,7 +162,6 @@ ws9 = ws7 - 'Pt1,Pt2'
 logger.info ( 'Print remove#Pt  unweighted sample:\n%s' % ss9.table ( prefix = '# ' ) )
 logger.info ( 'Print remove#Pt    weighted sample:\n%s' % ws9.table ( prefix = '# ' ) )
 
-
 # =============================================================================
 ## (13) remove variables 
 # =============================================================================
@@ -181,18 +179,31 @@ hw = ROOT.TH1D ( hID() , 'Pt projection' , 50 , 0 , 100 )
 hd = dataset .project ( hd  , 'Pt1' , cuts = 'Mass<5' )
 hw = weighted.project ( hw  , 'Pt1' , cuts = 'Mass<5' )
 
+hd.draw()
+hw.draw() 
+
 # =============================================================================
-## (15) parameterise (==project) 
+## (15) project 
 # =============================================================================
+
+hd = dataset .project ( hd  , 'Pt1,Pt2' , cuts = 'Mass<5' )
+hw = weighted.project ( hw  , 'Pt1,Pt2' , cuts = 'Mass<5' )
+
+hd.draw()
+hw.draw() 
+
+# =============================================================================
+## (16) parameterise (==project) 
+# =============================================================================
+
 ld = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
 lw = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
 
 ld = dataset .project ( ld  , 'Pt1' , cuts = 'Mass<5' )
 lw = weighted.project ( lw  , 'Pt1' , cuts = 'Mass<5' )
 
-
 # =============================================================================
-## (16) plot 
+## (17) plot 
 # =============================================================================
 with use_canvas ( "test_fitting_datatset: dataset.draw" , wait = 2 ) :
     
@@ -208,9 +219,8 @@ with use_canvas ( "test_fitting_datatset: weighted.draw" , wait  =2 ) :
     hw.draw ( 'same' , color = 4 )
     lw.draw ( 'same' , color = 4 , width = 3 )
 
-    
 # =============================================================================
-## (17) conversion to TTree/TChain 
+## (18) conversion to TTree/TChain 
 # =============================================================================
 ## chd = dataset .ds2tree().chain 
 ## chw = weighted.ds2tree().chain 
@@ -220,8 +230,18 @@ chw = weighted.asTree()
 logger.info ( 'Print tree/chain unweighted sample:\n%s' % chd.table ( prefix = '# ' ) )
 logger.info ( 'Print tree/chain   weighted sample:\n%s' % chw.table ( prefix = '# ' ) )
 
-"""
+
+hd1 = hd.clone()
+hd2 = hd.clone()
+
+hd  = dataset .project ( hd  , 'Pt1,Pt2' , cuts = 'Mass<5' )
+hd1 = dataset .project ( hd1 , 'Pt1'     , cuts = 'Mass<5' )
+hd2 = dataset .project ( hd2 , 'Pt2'     , cuts = 'Mass<5' )
+
+hd.draw(color = 2)
+hd1.draw( 'same' , color = 4)
+hd2.draw( 'same' , color = 8)
 
 # =============================================================================
-##                                                                      The END 
+##                                                                       The END 
 # =============================================================================

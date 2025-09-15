@@ -1901,6 +1901,7 @@ def data_project ( data                ,
     nvars = len ( var_lst )
     
     ## (2) check consistency
+    h1_stack = False 
     if   1 == nvars and isinstance ( target , _s1D     ) : pass
     elif 2 == nvars and isinstance ( target , _s2D     ) : pass
     elif 3 == nvars and isinstance ( target , _s3D     ) : pass
@@ -1908,9 +1909,10 @@ def data_project ( data                ,
     elif 3 == nvars and isinstance ( target , ROOT.TH3 ) and 3 == target.dim() : pass    
     elif 2 == nvars and isinstance ( target , ROOT.TH2 ) and 2 == target.dim() : pass
     elif 1 == nvars and isinstance ( target , ROOT.TH1 ) and 1 == target.dim() : pass
+    elif 1 <  nvars and isinstance ( target , ROOT.TH1 ) and 1 == target.dim() : h1_stack = True 
     else :
         raise TypeError ( 'Inconsistent statobj %s & expression(s): %s' % \
-                          ( typename ( statobj ) , str ( var_lst ) ) ) 
+                          ( typename ( target ) , str ( var_lst ) ) ) 
 
     ## (3) cut_range defined *only* for RooFit datasets 
     if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
@@ -1924,15 +1926,29 @@ def data_project ( data                ,
     
     ## (6) RooFit ?
     if isinstance ( data , ROOT.RooAbsData ) :
-        with rootException() :
-            the_args = var_lst +  ( cuts , cut_range ) + args
-            if   1 == nvars : sc = pv.project1 ( data , target , *the_args )
-            elif 2 == nvars : sc = pv.project2 ( data , target , *the_args )
-            elif 3 == nvars : sc = pv.project3 ( data , target , *the_args )            
-            elif 4 == nvars : sc = pv.project4 ( data , target , *the_args )            
-        assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3)' % sc 
-        return target
-     
+        with rootException() : 
+            if h1_stack :
+                target.Reset() ; 
+                if not target.GetSumw2() : target.Sumw2()   
+                htmp = target.clone() 
+                if not htmp.GetSumw2()   : htmp  .Sumw2()   
+                the_args = ( cuts , cut_range ) + args
+                for var in var_lst : 
+                    sc = pv.project1 ( data , htmp , var , *the_args )
+                    assert sc.isSuccess() , 'Error %s from Ostap::Project::project1(%s)' % ( sc , var )  
+                    target += htmp  
+                del htmp
+            else : 
+                the_args = var_lst + ( cuts , cut_range ) + args
+                if   1 == nvars : sc = pv.project1 ( data , target , *the_args )
+                elif 2 == nvars : sc = pv.project2 ( data , target , *the_args )
+                elif 3 == nvars : sc = pv.project3 ( data , target , *the_args )            
+                elif 4 == nvars : sc = pv.project4 ( data , target , *the_args )            
+                assert sc.isSuccess() , 'Error %s from Ostap::Project::project[1-4]' % sc 
+                
+            return target 
+        
+                     
     if  use_frame and good_for_frame ( data , *args ) : 
         return F.frame_project ( data                   ,
                                  model       = target   ,

@@ -1,3 +1,13 @@
+# v3.0.2.12
+
+## New features
+
+   1. (Re)add multiple projections to 1D histogram for `RooDataSet` (Many thanks to Dima Golubkov and Artem Egorychev)
+
+## Backward-incompatible
+
+## Bug fixes
+
 # v3.0.2.10
 
 ## New features
