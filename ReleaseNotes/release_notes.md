@@ -8,7 +8,7 @@
 
 ## Bug fixes
 
-   1. fix a sad typo in TH1.vmin/vmax/vminmax` methods 
+   1. fix a sad typo in `TH1.vmin/vmax/vminmax` methods 
 
 # v3.0.2.12
 
