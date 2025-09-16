@@ -3230,7 +3230,6 @@ def _h1_CL_interval_ ( self       ,
 ROOT.TH1F . cl_interval = _h1_CL_interval_
 ROOT.TH1D . cl_interval = _h1_CL_interval_
 
-
 # =============================================================================
 ## get the minumum value for the histogram 
 def _h_minv_ ( self , errors = False ) :
@@ -3243,12 +3242,12 @@ def _h_minv_ ( self , errors = False ) :
     
     for ibin in self :
         v  = self [ ibin ]
-        vv = v.value() - v.error() if errors and 0 < v.cov2() else v.value()         
+        vv = ( v.value() - v.error() ) if errors and 0 < v.cov2() else v.value()         
         if vv < mvv or mve.cov2() < 0 :
             mvv = vv
             mve = v
             
-    return mve if errors else mvv  
+    return mvv if errors else mve  
 
 # =============================================================================
 ## get the maximum value for the histogram 
@@ -3262,12 +3261,12 @@ def _h_maxv_ ( self , errors = False ) :
     
     for ibin in self :
         v  = self [ ibin ]
-        vv = v.value() + v.error() if errors and 0 < v.cov2() else v.value()         
+        vv = ( v.value() + v.error() ) if errors and 0 < v.cov2() else v.value()         
         if vv > mvv or mve.cov2() < 0 :
             mvv = vv
             mve = v
             
-    return mve if errors else mvv  
+    return mvv if errors else mve  
         
 # =============================================================================
 ## get the minmax values for the histogram 
