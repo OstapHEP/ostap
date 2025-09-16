@@ -399,10 +399,14 @@ def test_frame6 () :
     
     h1 = ROOT.TH1D ( hID() , '' , 20 , -3, 3 )
     
-    rh = frame_project  ( frame , h1 , 'b4' , progress = True , report = True , lazy = False )
-
+    r1 = frame_project  ( frame , h1 , 'b4' , progress = True , report = True , lazy = False )
+    
     with use_canvas ( 'test_frame6: b4' , wait = 2 ) :
-        h1.draw () 
+        h1.draw ()
+        
+    h2 = frame_project  ( frame , h1 , 'b4,b5' , progress = True , report = True , lazy = False )
+    with use_canvas ( 'test_frame6: b4,b5' , wait = 2 ) :
+        h2.draw () 
 
 # =============================================================================
 def test_frame7 () :

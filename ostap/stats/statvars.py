@@ -1897,11 +1897,11 @@ def data_project ( data                ,
                    parallel    = False ) :
     
     ## (1) decode expressions & cuts
-    var_lst , cuts, _  = vars_and_cuts ( expressions , cuts )
+    var_lst , cuts , _  = vars_and_cuts ( expressions , cuts )
     nvars = len ( var_lst )
     
     ## (2) check consistency
-    h1_stack = False 
+    h1_stack = False ## stack of 1D-histograms 
     if   1 == nvars and isinstance ( target , _s1D     ) : pass
     elif 2 == nvars and isinstance ( target , _s2D     ) : pass
     elif 3 == nvars and isinstance ( target , _s3D     ) : pass
@@ -1911,7 +1911,7 @@ def data_project ( data                ,
     elif 1 == nvars and isinstance ( target , ROOT.TH1 ) and 1 == target.dim() : pass
     elif 1 <  nvars and isinstance ( target , ROOT.TH1 ) and 1 == target.dim() : h1_stack = True 
     else :
-        raise TypeError ( 'Inconsistent statobj %s & expression(s): %s' % \
+        raise TypeError ( 'Target: %s and expression(s): %s are inconsistent' % \
                           ( typename ( target ) , str ( var_lst ) ) ) 
 
     ## (3) cut_range defined *only* for RooFit datasets 
@@ -1928,12 +1928,12 @@ def data_project ( data                ,
     if isinstance ( data , ROOT.RooAbsData ) :
         with rootException() : 
             if h1_stack :
-                target.Reset() ; 
+                target.Reset() 
                 if not target.GetSumw2() : target.Sumw2()   
                 htmp = target.clone() 
                 if not htmp.GetSumw2()   : htmp  .Sumw2()   
                 the_args = ( cuts , cut_range ) + args
-                for var in var_lst : 
+                for var in var_lst :
                     sc = pv.project1 ( data , htmp , var , *the_args )
                     assert sc.isSuccess() , 'Error %s from Ostap::Project::project1(%s)' % ( sc , var )  
                     target += htmp  
@@ -1944,11 +1944,10 @@ def data_project ( data                ,
                 elif 2 == nvars : sc = pv.project2 ( data , target , *the_args )
                 elif 3 == nvars : sc = pv.project3 ( data , target , *the_args )            
                 elif 4 == nvars : sc = pv.project4 ( data , target , *the_args )            
-                assert sc.isSuccess() , 'Error %s from Ostap::Project::project[1-4]' % sc 
+                assert sc.isSuccess() , 'Error %s from Ostap::Project::project%d(%s)' % ( sc , len ( var_lst ) , ','.join ( var_lst ) ) 
                 
             return target 
         
-                     
     if  use_frame and good_for_frame ( data , *args ) : 
         return F.frame_project ( data                   ,
                                  model       = target   ,

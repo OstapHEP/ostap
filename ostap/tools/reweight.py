@@ -53,10 +53,10 @@ _new_methods_ = []
 # =============================================================================
 ## @class AttrGetter
 #  simple class to bypass <code>operator.attrgetter</code> that
-#  has some problem with multiprocessing
+#  has some problem with serialization for multiprocessing
 class AttrGetter(object):
     """ Simple class to bypass operator.attrgetter that
-    has some problem with multiprocessing
+    has some problem with serializaton for multiprocessing
     """
     def __init__ ( self , *attributes ) :
         self.__attributes = attributes 
@@ -80,7 +80,7 @@ def adjust_histo_range ( histo ) :
     """ Set the proper axis range for the comparison plots
     """
     
-    vmin, vmax  = histo.minmax()
+    vmin, vmax  = histo.minmax ( errors = True )
     vmax        = max ( vmax , 1.05 )
     vmin        = min ( vmin , 0.95 )
     
@@ -120,8 +120,10 @@ def adjust_histo_range ( histo ) :
         histo.SetMinimum  ( vmn  )
         histo.SetMaximum  ( vmx  )
         histo.SetContour  ( 50   )
-         
-    histo.SetMinimum  ( 0.0 )
+
+    ## reset minimum again
+    histo.SetMinimum  ( min ( vmin , 0.0 ) )
+    
     return histo 
     
 # =============================================================================
@@ -168,7 +170,7 @@ class Weight(object) :
     >>> db['pt-data'] = math.exp
     >>> db['pt-data'] = [ math.exp , math.cosh ] ## List of object also works
     
-    For realistic case the weights usually stored as (a list of) 1D or 2D histograms
+    For realistic/practical cases the weights usually stored as (a list of) 1D or 2D histograms
 
     >>>  db['pt-data'] = [h1,h2,h3,...,hn]
 
@@ -314,18 +316,18 @@ class Weight(object) :
         """
 
         ## initialize the weight 
-        weight  = VE(1,0) 
+        weight  = VE ( 1 , 0 ) 
 
         ## loop over functions 
         for i in self.__vars :
             
-            funval    = i[1] ## accessor 
-            functions = i[2] ## the functions 
+            funval    = i [ 1 ] ## accessor 
+            functions = i [ 2 ] ## the functions 
 
             ##  get the weight arguments for the given event 
-            v       = funval ( s )
+            v         = funval ( s )
 
-            ww = VE(1.0)
+            ww = VE ( 1.0 )
             
             for f in functions :
 
@@ -335,7 +337,7 @@ class Weight(object) :
                 ww *= w # update the weight factor 
 
             ## keep the statistics
-            cnt  = i[3]
+            cnt  = i [ 3 ]
             cnt += ww.value()
 
             ## update the global weight 
@@ -501,7 +503,7 @@ class Weight(object) :
                 accessor = AttrGetter ( *accessor )
 
             assert accessor and callable ( accessor ) , \
-                   "Invalid type of `accessor' %s/%s" % ( accessor , type( accessor ) )
+                   "Invalid type of `accessor' %s/%s" % ( accessor , typename ( accessor ) )
             
             self.__accessor = accessor ,
             self.__address  = str ( address )
@@ -1209,7 +1211,7 @@ class W2Tree(FuncTree) :
     def __init__ ( self , weight = None , tree = None , clone = None ) :
 
         assert not clone or isinstance ( clone , W2Tree ) , \
-            "W2Tree: Invalid 'clone' type!" % typename ( clone )        
+            "W2Tree: Invalid 'clone' type!"  % typename ( clone )        
         assert clone or isinstance ( weight , Weight ) , \
             "W2Tree: Invalid 'weight' type!" % typename ( weight )
 

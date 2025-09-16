@@ -3233,38 +3233,50 @@ ROOT.TH1D . cl_interval = _h1_CL_interval_
 
 # =============================================================================
 ## get the minumum value for the histogram 
-def _h_minv_ ( self ) :
+def _h_minv_ ( self , errors = False ) :
     """ Get the minimum value for the histogram
     >>> h  = ...
     >>> mv = h.minv ()
     """
-    mv = VE ( 1.e+100 , -1 ) 
+    mvv = 1.e+100 
+    mve = VE ( mv1 , -1 )
+    
     for ibin in self :
-        v = self[ibin]
-        if v.value() <= mv.value() or mv.cov2() < 0 : mv = v
-    return mv 
+        v  = self [ ibin ]
+        vv = v.value() - v.error() if errors and 0 < v.cov2() else v.value()         
+        if vv < mvv or mve.cov2() < 0 :
+            mvv = vv
+            mve = v
+            
+    return mve if errors else mvv  
 
 # =============================================================================
 ## get the maximum value for the histogram 
-def _h_maxv_ ( self ) :
+def _h_maxv_ ( self , errors = False ) :
     """ Get the maximum value for the histogram
     >>> h  = ...
     >>> mv = h.maxv ()
     """
-    mv = VE ( -1.e+100 , -1 ) 
+    mvv = -1.e+100 
+    mve = VE ( mv1 , -1 )
+    
     for ibin in self :
-        v = self[ibin]
-        if v.value() >= mv.value() or mv.cov2() < 0 : mv = v
-    return mv 
+        v  = self [ ibin ]
+        vv = v.value() + v.error() if errors and 0 < v.cov2() else v.value()         
+        if vv > mvv or mve.cov2() < 0 :
+            mvv = vv
+            mve = v
+            
+    return mve if errors else mvv  
         
 # =============================================================================
 ## get the minmax values for the histogram 
-def _h_minmax_ ( self ) :
+def _h_minmax_ ( self , errors = False ) :
     """ Get the minmax pair for the histogram    
     >>> h     = ...
     >>> mn,mx = h.minmax ()
     """
-    return self.minv() , self.maxv() 
+    return self.minv ( errors ) , self.maxv ( errors ) 
 
 ROOT.TH1 . minv    = _h_minv_
 ROOT.TH1 . maxv    = _h_maxv_

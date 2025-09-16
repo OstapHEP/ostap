@@ -1,3 +1,8 @@
+## New features
+
+   1. (Re)add multiple projections to 1D histogram for `DataFrame`
+   1. Add `errors` optional argument got `TH1.vmin/vmax/vminmax` functions
+   
 # v3.0.2.12
 
 ## New features

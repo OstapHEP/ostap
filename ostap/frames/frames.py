@@ -1556,6 +1556,7 @@ def frame_project ( frame               ,
     ## convert histogram-like objects into 'models'
     
     histo = None
+    
     ## if   isinstance ( model , ROOT.TProfile3D ) : histo, model  = model, model.model ()        
     if   isinstance ( model , ROOT.TProfile2D ) : histo, model  = model, model.model ()        
     elif isinstance ( model , ROOT.TProfile   ) : histo, model  = model, model.model ()        
@@ -1573,21 +1574,35 @@ def frame_project ( frame               ,
     nvars = len ( items )
     pvars = [ v for v in items.values() ] 
     if cname : pvars.append ( cname )
-    
+
+    ## if true histo is specified, the action is NOT lazy!
+    if histo and lazy :
+        lazy  = False
+        logger.warning ( "True histo is specified, processing is *NOT* lazy!" )
+        
+
     ## if   4 == nvars and isinstance ( model , DF_P3Model ) : action = current.Profile3D ( model , *pvars )
     if   3 == nvars and isinstance ( model , DF_P2Model ) : action = current.Profile2D ( model , *pvars )
     elif 2 == nvars and isinstance ( model , DF_P1Model ) : action = current.Profiel1D ( model , *pvars )
     elif 3 == nvars and isinstance ( model , DF_H3Model ) : action = current.Histo3D   ( model , *pvars )
     elif 2 == nvars and isinstance ( model , DF_H2Model ) : action = current.Histo2D   ( model , *pvars )
     elif 1 == nvars and isinstance ( model , DF_H1Model ) : action = current.Histo1D   ( model , *pvars )
+    elif 1 <  nvars and isinstance ( model , DF_H1Model ) and histo  :
+        
+        ## book list of actions
+        args    = ( cname , ) if cname else () 
+        actions = [ current.Histo1D   ( histo.model () , var , *args ) for var in items.values() ]
+        ## run all actions & prepare the final resuts 
+        for a in actions : histo  += a.GetValue()
+        if report :
+            title  = 'frame_project (stack)' 
+            report = current.Report()
+            logger.info ( '%s\n%s' % ( title , report_print ( report , title = title , prefix = '# ') ) )
+        return histo 
+        
     else :
         raise TypeError ('Invalid model/what objects %s %s ' % ( type ( model ) , str ( pvars ) ) ) 
 
-    ## if true histo is specified, the action is NOT lazy!
-    if histo and lazy :
-        lazy  = False
-        logger.warning ( "True histo os psecified, procesisng is lot lazy!" )
-        
     if lazy :
         return action , current  ## RETUTRN
 
