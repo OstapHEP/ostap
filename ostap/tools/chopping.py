@@ -229,6 +229,10 @@ class Trainer(object) :
                    chop_background   = True                  ,   # chop the background ?
                    logging           = True                  ,   # create log-files    ?
                    make_plots        = False                 ,   # make standard plots ?
+                   ## 
+                   control_plots_signal     = ()  , ## control plots for signal 
+                   control_plots_background = ()  , ## control plot for background 
+                   ##                    
                    workdir           = ''                    ,   # working directory   
                    multithread       = True                  ,   # use multithreading  ?
                    parallel          = True                  ,   # parallel training   ? 
@@ -424,6 +428,13 @@ class Trainer(object) :
         self.__dirname           = dirname 
         self.__trainer_dirs      = [] 
 
+        ##
+        ## Signal & Background control plots
+        ##
+        
+        self.__control_plots_signal     = control_plots_signal 
+        self.__control_plots_background = control_plots_background 
+        
         self.__multithread   = True if isinstance ( multithread , bool ) or ( isinstance ( multithread , int ) and 0 <= multithread ) else False 
 
         if not workdir : workdir = os.getcwd()
@@ -462,7 +473,6 @@ class Trainer(object) :
         ## do not forget to process the chopping category index!
         all_vars.append ( self.category ) 
 
-
         if self.signal_weight :
             assert self.signal    .good_variables ( self.signal_weight )  or self.signal_add_vars        , \
                 "Do no know how to treat `signal_weight`: %s" %  self.signal_weight
@@ -474,8 +484,7 @@ class Trainer(object) :
                 "Do no know how to treat `background_weight`: %s" %  self.background_weight
             assert self.background.good_variables ( self.background_weight ) or self.background_add_vars , \
                 "Do no know how to treat `background_weight`: %s" %  self.background_weight
-            
-        
+                    
         ## prefilter signal if required 
         if self.prefilter_signal     or \
            self.prefilter            or \
@@ -489,6 +498,11 @@ class Trainer(object) :
                 if not weight             : continue
                 if   self.signal_add_vars : continue ## assume it defines the missnig/nesessary variabes 
                 elif self.signal.good_variables ( weight ) : the_vars.append ( weight  )
+
+            from ostap.trees.cuts import vars_and_cuts 
+            for _ , w in self.control_plots_signal :  
+                vv , _ , _ = vars_and_cuts ( w  , '' )                
+                the_vars += vv 
                 
             import ostap.trees.trees
             
@@ -554,6 +568,11 @@ class Trainer(object) :
                 if   self.background_add_vars  : continue ## assume it defines missing/nesessary variables 
                 elif self.background.good_variables ( weight ) : the_vars.append ( weight  )
 
+            from ostap.trees.cuts import vars_and_cuts 
+            for _ , w in self.control_plots_background :
+                vv , _ , _ = vars_and_cuts ( w , '' )                
+                the_vars += vv 
+                                
             import ostap.trees.trees
 
             for k, v in items_loop ( self.background_vars ) : the_vars.append ( v )             
@@ -910,6 +929,9 @@ class Trainer(object) :
                            signal_cuts       = scuts                   , 
                            background_cuts   = bcuts                   ,
                            ##
+                           control_plots_signal     = self.control_plots_signal     , ## control plot for signal 
+                           control_plots_background = self.control_plots_background , ## control plot for background 
+                           ##                            
                            name              = nam                     ,
                            verbose           = vb                      , ## verbose 
                            logging           = self.logging            ,
@@ -1151,6 +1173,18 @@ class Trainer(object) :
     def workdir ( self ) :
         """`workdir' : working directory"""
         return self.__workdir
+
+    @property
+    def control_plots_signal     ( self ) :
+        """`control_plots_signal` : control plots for signal sample 
+        """
+        return self.__control_plots_signal
+    
+    @property
+    def control_plots_background     ( self ) :
+        """`control_plots_background` : control plots for background sample 
+        """
+        return self.__control_plots_background
 
     @property
     def AUCs ( self ) :

@@ -3239,7 +3239,7 @@ def _h_minv_ ( self , errors = False ) :
     >>> mv = h.minv ()
     """
     mvv = 1.e+100 
-    mve = VE ( mv1 , -1 )
+    mve = VE ( mvv , -1 )
     
     for ibin in self :
         v  = self [ ibin ]
@@ -3258,7 +3258,7 @@ def _h_maxv_ ( self , errors = False ) :
     >>> mv = h.maxv ()
     """
     mvv = -1.e+100 
-    mve = VE ( mv1 , -1 )
+    mve = VE ( mvv , -1 )
     
     for ibin in self :
         v  = self [ ibin ]

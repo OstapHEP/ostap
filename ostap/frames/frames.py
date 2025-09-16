@@ -1566,6 +1566,11 @@ def frame_project ( frame               ,
 
     if histo : histo.Reset()
 
+    ## if true histo is specified, the action is NOT lazy!
+    if histo and lazy :
+        lazy  = False
+        logger.warning ( "True histo is specified, processing is *NOT* lazy!" )
+            
     ## ATTENTION HERE!!
     if cname and not as_weight :
         logger.warning ( "The cut is treated as boolean: %s" % cuts ) 
@@ -1574,12 +1579,6 @@ def frame_project ( frame               ,
     nvars = len ( items )
     pvars = [ v for v in items.values() ] 
     if cname : pvars.append ( cname )
-
-    ## if true histo is specified, the action is NOT lazy!
-    if histo and lazy :
-        lazy  = False
-        logger.warning ( "True histo is specified, processing is *NOT* lazy!" )
-        
 
     ## if   4 == nvars and isinstance ( model , DF_P3Model ) : action = current.Profile3D ( model , *pvars )
     if   3 == nvars and isinstance ( model , DF_P2Model ) : action = current.Profile2D ( model , *pvars )

@@ -21,7 +21,7 @@ __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 from   ostap.utils.timing       import timing
-from   ostap.core.core          import ROOTCWD, SE
+from   ostap.core.core          import ROOTCWD, SE, hID 
 from   ostap.stats.counters     import table_counters
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse
@@ -75,9 +75,9 @@ def prepare_data ( nB = 10000 , nS = 10000 )  :
             y = random.uniform ( -2.0 , 2.0 )
             z = random.gauss   (   .0 , 0.5 )
             
-            var1[0] =  x + 0.1 * y  
-            var2[0] =  x - 0.1 * y  
-            var3[0] = -x +       z
+            var1 [ 0 ] =  x + 0.1 * y  
+            var2 [ 0 ] =  x - 0.1 * y  
+            var3 [ 0 ] = -x +       z
             
             treeBkg.Fill()
             
@@ -88,9 +88,10 @@ def prepare_data ( nB = 10000 , nS = 10000 )  :
             y = random.gauss  (  0.0 , 0.2 )
             z = random.gauss  (  0.5 , 0.5 )
             
-            var1[0] =  x
-            var2[0] =  y  
-            var3[0] =  z 
+            var1 [ 0 ] =  x
+            var2 [ 0 ] =  y  
+            var3 [ 0 ] =  z
+            
             treeSignal.Fill()
             
         test_file.Write()
@@ -100,7 +101,8 @@ def prepare_data ( nB = 10000 , nS = 10000 )  :
 
 # =============================================================================
 def test_tmva () :
-    "Test TMVA machinery"
+    """ Test TMVA machinery
+    """
     
     logger = getLogger ( 'test_tmva' )
     
@@ -165,11 +167,22 @@ def test_tmva () :
             background                = tBkg                     , ## `Background' sample
             ##
             ## more_signals = [ tSignal, tSignal, tSignal ] ,
+            ##
+            control_plots_signal      = [
+                ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var1' ) ,
+                ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var2' ) ,
+                ( ROOT.TH1F ( hID() , 'control var3' , 100 , -3 , 3 ) , 'var3' ) ,                
+            ] ,
+            control_plots_background  = [
+                ( ROOT.TH2F ( hID() , 'control var1,var2' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
+            ] , 
             ## 
             verbose                   = True                     ,
             signal_train_fraction     = 0.75                     ,        
             background_train_fraction = 0.75                     ,
-            workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ) ##  working directory 
+            workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ,
+            ## 
+        ) ##  working directory 
         
         with timing ( 'for TMVA training' , logger ) : 
             weights_files = trainer.train ()

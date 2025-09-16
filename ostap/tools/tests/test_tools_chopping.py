@@ -14,7 +14,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.core          import ROOTCWD
+from   ostap.core.core          import ROOTCWD, hID 
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.utils.timing       import timing
 from   ostap.utils.root_utils   import batch_env 
@@ -167,6 +167,16 @@ trainer = Trainer (
     ## 
     signal_train_fraction     = 0.85 , 
     background_train_fraction = 0.85 ,
+    ##
+    control_plots_signal      = [
+        ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var1' ) ,
+        ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var2' ) ,
+        ( ROOT.TH1F ( hID() , 'control var3' , 100 , -3 , 3 ) , 'var3' ) ,                
+    ] ,
+    control_plots_background  = [
+        ( ROOT.TH2F ( hID() , 'control var1,var2' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
+    ] , 
+    ##     
     ##
     workdir        = CleanUp.tempdir ( prefix = 'ostap-chopping-workdir-' ) , ##  working directory 
     ## parallel_conf  = { 'ncpus' : 0 , 'ppservers' : 'auto' }

@@ -37,7 +37,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info  
 from   ostap.core.ostap_types    import ( num_types      , integer_types  ,
-                                          dictlike_types , 
+                                          dictlike_types , sized_types    , 
                                           string_types   , sequence_types ) 
 from   ostap.core.core           import Ostap, WSE, VE, rootWarning
 from   ostap.math.base           import strings 
@@ -363,6 +363,10 @@ class Trainer(object):
                    logging              = True    ,
                    name                 = 'TMVA'  ,
                    make_plots           = True    ,
+                   ##
+                   control_plots_signal     = ()  , ## control plots for signal 
+                   control_plots_background = ()  , ## control plot for background 
+                   ## 
                    workdir              = ''      , 
                    category             = -1      ,
                    maxvarlen            = 12      , ## maximal lenth of the variable name 
@@ -474,7 +478,6 @@ class Trainer(object):
                     self.logger.info ( 'Redefine Background weight to be %s' % background_weight )
             background = Chain ( background.tree () )
 
-
         from ostap.trees.trees import Chain
         source_types = Chain, ROOT.TTree
         
@@ -544,7 +547,6 @@ class Trainer(object):
                 elif  isinstance ( v , num_types     ) : vv = '%.9g' % v
                 self.__background_add_vars [ k ] = vv 
            
-
         self.__prefilter            = ROOT.TCut ( prefilter ) 
         self.__prefilter_signal     = prefilter_signal     if prefilter_signal     else '' 
         self.__prefilter_background = prefilter_background if prefilter_background else '' 
@@ -559,7 +561,6 @@ class Trainer(object):
 
         self.__bookingoptions   = bookingoptions
                 
-        import os 
         if not workdir : workdir = os.getcwd()
         if not os.path.exists ( workdir ) :
             from ostap.utils.basic import make_dirs
@@ -581,10 +582,17 @@ class Trainer(object):
         self.__plots         = []
         
         self.__output_file   = os.path.abspath ( self.output_file ) if self.output_file else None
-
-        #
+        
+        ##
+        ## Signal & Background control plots
+        ##
+        
+        self.__control_plots_signal     = control_plots_signal 
+        self.__control_plots_background = control_plots_background 
+        
+        ##
         ## minor adjustment
-        #        
+        ##        
         opts = self.__bookingoptions
         
         if 0 > opts.find ( "AnalysisType=" ) :
@@ -862,7 +870,18 @@ class Trainer(object):
         """'show_plots': show plots?"""
         return self.verbose and ( self.category in ( 0 , -1 ) )
 
+    @property
+    def control_plots_signal     ( self ) :
+        """`control_plots_signal` : control plots for signal sample 
+        """
+        return self.__control_plots_signal
     
+    @property
+    def control_plots_background     ( self ) :
+        """`control_plots_background` : control plots for background sample 
+        """
+        return self.__control_plots_background
+
     @property
     def AUC ( self ) :
         """`auc` : dictionary { method : AUC }, where
@@ -952,7 +971,7 @@ class Trainer(object):
             row = 'Signal weight' , str ( self.signal_weight ) 
             rows.append ( row )
             
-        ## (13) backgound cuts 
+        ## (13) background cuts 
         if self.background_cuts : 
             row = 'Background cuts' , str ( self.background_cuts ) 
             rows.append ( row )
@@ -965,7 +984,6 @@ class Trainer(object):
         import ostap.logger.table as T
         title = title if title else "TMVA Trainer %s start " % self.name 
         return T.table (  rows , title = title , prefix = prefix , alignment = "lw" )
-
         
     # =========================================================================
     ## Prepare a table after training at start of TMVA factory booking 
@@ -1000,7 +1018,7 @@ class Trainer(object):
             row = 'Signal weight' , str ( self.signal_weight ) 
             rows.append ( row )
             
-        ## (8) backgound cuts 
+        ## (8) background cuts 
         if self.background_cuts : 
             row = 'Background cuts' , str ( self.background_cuts ) 
             rows.append ( row )
@@ -1195,10 +1213,14 @@ class Trainer(object):
                 self.logger.info ( '%s:\n%s' % ( title , table ) )
                 
         if log and os.path.exists ( log ) and os.path.isfile ( log ) :
-            try :
+            # =================================================================
+            try : # ===========================================================
+                # =============================================================
                 shutil.move ( log , self.dirname )
                 log = os.path.join ( self.dirname , os.path.basename ( log ) )
-            except :
+                # =============================================================
+            except : # ========================================================
+                # =============================================================
                 pass
             
         if log and os.path.exists ( log ) and os.path.isfile ( log ) :
@@ -1308,8 +1330,13 @@ class Trainer(object):
             the_vars = list ( all_vars ) 
             for weight in ( self.signal_weight , self.background_weight ) :
                 if not weight             : continue
-                if   self.signal_add_vars : continue ## assume it defines the missnig/nesessary variabes 
+                if   self.signal_add_vars : continue ## assume it defines the missing/nesessary variabes 
                 elif self.signal.good_variables ( weight ) : the_vars.append ( weight  )
+
+            from ostap.trees.cuts import vars_and_cuts 
+            for _ , w in self.control_plots_signal :  
+                vv , _ , _ = vars_and_cuts ( w  , '' )                
+                the_vars += vv 
                 
             import ostap.trees.trees
             from ostap.trees.trees import Chain
@@ -1354,7 +1381,7 @@ class Trainer(object):
         assert not self.signal_weight     or self.signal.good_variables ( self.signal_weight     ) , \
             "The weight %s is not accessible in signal sample" % self.signal_weight 
         assert not self.background_weight or self.signal.good_variables ( self.background_weight ) , \
-            "The weight %s is not accessible in signal sample" % self.backgound_weight 
+            "The weight %s is not accessible in signal sample" % self.background_weight 
         
         # =====================================================================
         ## prefilter/prescale background if required
@@ -1372,6 +1399,11 @@ class Trainer(object):
                 if   self.background_add_vars  : continue ## assume it defines missing/nesessary variables 
                 elif self.background.good_variables ( weight ) : the_vars.append ( weight  )
             
+            from ostap.trees.cuts import vars_and_cuts 
+            for _ , w in self.control_plots_background :
+                vv , _ , _ = vars_and_cuts ( w , '' )                
+                the_vars += vv 
+                
             from ostap.trees.trees import Chain
             avars = self.background.the_variables ( the_vars )
     
@@ -1402,8 +1434,7 @@ class Trainer(object):
             files = ()
             for rb in self.__RB : files += rb.files
             self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
-            
-            
+                        
             self.__background          = self.__BkgTR
             self.__background_cuts     = ROOT.TCut()
             self.__more_backgrounds    = () 
@@ -1455,6 +1486,40 @@ class Trainer(object):
                     if not m [ 0 ] in good_for_negative :
                         self.logger.error ( "Method '%s' does not support negative (background) weights" % m[1] )
 
+                        
+        # =====================================================================
+        ## Control plots for signal and background 
+        # =====================================================================
+        for i, item in enumerate ( self.control_plots_signal , start = 1 ) :
+            histo , what = item
+            how = self.signal_cuts * self.signal_weight if self.signal_weight else self.signal_cuts 
+            self.signal.project ( histo , what , cuts = how , use_frame = True )
+            if not histo.GetTitle() : histo.SetTitle ( str ( what ) ) 
+            from  ostap.plotting.canvas   import use_canvas
+            from  ostap.plotting.style    import useStyle
+            from  ostap.utils.root_utils  import batch 
+            style = 'Z' if 2 == histo.dim() else '' 
+            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle ( style ) , \
+                 use_canvas ( 'Control plot SIGNAL_%d' % i ) as cnv :
+                if 2 == histo.dim() : histo.draw ( 'colz' )
+                else                : histo.draw () 
+            cnv >> ( "%s/plots/CONTROL_PLOT_SIGNAL_%s" % ( self.dirname , i ) ) 
+                        
+        for i , item in enumerate ( self.control_plots_background , start = 1 ) :  
+            histo , what = item 
+            how = self.background_cuts * self.background_weight if self.background_weight else self.background_cuts 
+            self.background.project ( histo , what , cuts = how , use_frame = True )
+            if not histo.GetTitle() : histo.SetTitle ( str ( what ) )
+            from  ostap.plotting.canvas   import use_canvas
+            from  ostap.plotting.style    import useStyle
+            from  ostap.utils.root_utils  import batch 
+            style = 'Z' if 2 == histo.dim() else '' 
+            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle ( style ) , \
+                 use_canvas ( 'Control plot BACKGROUND_%d' % i ) as cnv :
+                if 2 == histo.dim() : histo.draw ( 'colz' )
+                else                : histo.draw () 
+            cnv >> ( "%s/plots/CONTROL_PLOT_BACKGROUND_%d" % ( self.dirname , i ) )
+                
         # =====================================================================
         ## some statistic
         # =====================================================================
@@ -1583,7 +1648,7 @@ class Trainer(object):
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
-            
+
             Ostap.Tmva.disable_scatter_plots ()
             
             factory = ROOT.TMVA.Factory (                
@@ -1677,6 +1742,15 @@ class Trainer(object):
             # Evaluate MVAs
             with timing ( "Evaluate all methods %s " % str ( ms ) , logger = self.logger ) : factory.EvaluateAllMethods ()
 
+            ## save control plots to the file
+            for i , item in enumerate ( self.control_plots_signal , start = 1 ) :
+                histo , _ = item 
+                outFile [ '%s/CONTROL_PLOT_SIGNAL_%s'     % ( self.name , i ) ] = histo 
+                
+            for i, item in enumerate ( self.control_plots_background , start = 1 ) :
+                histo , _ = item                 
+                outFile [ '%s/CONTROL_PLOT_BACKGROUND_%d' % ( self.name , i )  ] = histo 
+                
         # =====================================================================
         ## prepare ROC curves
         # =====================================================================
@@ -1745,7 +1819,6 @@ class Trainer(object):
                     # =========================================================
                     pass 
             self.__tar_file = os.path.abspath ( tfile ) 
-
 
         self.__add_decision = True 
         # =====================================================================

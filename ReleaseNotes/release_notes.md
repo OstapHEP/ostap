@@ -1,8 +1,15 @@
 ## New features
 
    1. (Re)add multiple projections to 1D histogram for `DataFrame`
-   1. Add `errors` optional argument got `TH1.vmin/vmax/vminmax` functions
-   
+   1. Add `errors` optional argument for `TH1.vmin/vmax/vminmax` methods 
+   1. Add `control_plots_signal` and `control_plots_background` argument for TMVA&Chopping `Trainer` classes
+
+## Backward-incompatible
+
+## Bug fixes
+
+   1. fix a sad typo in TH1.vmin/vmax/vminmax` methods 
+
 # v3.0.2.12
 
 ## New features
