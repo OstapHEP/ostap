@@ -169,7 +169,8 @@ class WeightsFiles(CleanUp) :
 # =============================================================================
 ## some manipulations with TMVA options 
 def opts_replace ( opts , expr , direct = True ) :
-    """ Some manipulations with TMVA options"""
+    """ Some manipulations with TMVA options
+    """
     if  direct : 
         if   0 <= opts.find ( '!' + expr ) : opts  = opts.replace ( '!' + expr , expr )
         elif 0 <= opts.find (       expr ) : pass
@@ -213,6 +214,7 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
             # ===================================================================
             pass
 
+    
     if tmp :
         
          # 1) create & fill the temporary tar-file
@@ -273,6 +275,42 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
 #  >>> tar_file = t.tar_file      ## get the tar-file with XML&C++
 #  @endcode
 #
+#  Majority of configuration parametters are rather intuitive:
+#  - `methods`                   : (MANDATORY) the non-empty list of TMVA methodds 
+#  - `variables`                 : (MANDATORY) the list variables 
+#  - `signal`                    : (MANDATORY) input signal data, TTree/TChain, Tree/Chain, RooDataSet or list of them
+#  - `background`                : (MANDATORY) input background data, TTree/TChain, Tree/Chain, RooDataSet or list of them
+#  - `signal_vars`               : (OPTIONAL) dictionary with new variables for signal sample
+#  - `backgrond_vars`            : (OPTIONAL) dictionary with new variables for background sample  
+#  - `signal_cut`                : (OPTIONAL) additoinal cuts for signal sample 
+#  - `backgrond_cuts`            : (OPTIONAL) additional cuts for background sample  
+#  - `spectators`                : (OPTIONAL) list of spectator variable (not used in training)
+#  - `bookingoptions`            : (OPTIONAL) booking options for TMVA (Argument for `ROOT.TMVA.Factory`)
+#  - `configuration`             : (OPTIONAL) TMVA configuration (Argument for `ROOT.TMVA.DataLoader.PrepareTrainingAndTestTree
+#  - `signal_weight`             : (OPTIONAL) weight for events in signal sample
+#  - `background_weight`         : (OPTIONAL) weight for events in background sample
+#  - `prefilter`                 : (OPTIONAL) pre-filter for signal and background samples 
+#  - `prefilter_signal`          : (OPTIONAL) pre-filter for signal sample
+#  - `prefilter_background`      : (OPTIONAL) pre-filter for background sample
+#  - `signal_train_fraction`     : (OPTIONAL) fraction of signal sample used for training 
+#  - `background_train_fraction` : (OPTIONAL) fraction of background sample used for training 
+#  - `prescale_signal`           : (OPTIONAL) prescale signal sample
+#  - `background_signal`         : (OPTIONAL) prescale background sample
+#  - `signal_add_vars`           : (OPTIONAL) add/define addtional signal variables (presumably fake or missing)
+#  - `background_add_vars`       : (OPTIONAL) add/define addtional background variables (presumably fake or missing)
+#  - `output_file`               : (OPTIONAL) the name of output ROOT file
+#  - `verbose`                   : (OPTIONAL) vebose processing? 
+#  - `logging`                   : (OPTIONAL) logging?
+#  - `name`                      : (OPTIONAL) trainer's name
+#  - `make_plots`                : (OPTIONAL) make the plots ?
+#  - 'control_plots_signal'      : (OPTIONAL) list of control plots for signal sample: [ ( histo1 , vars1 ) , ... , ( histoN , varsN ) ] 
+#  - 'control_plots_background'  : (OPTIONAL) list of control plots for background sample: [ ( histo1 , vars1 ) , ... , ( histoN , varsN ) ]
+#  - `workdir`                   : (OPTIONAL) working directory
+#  - `category`                  : (OPTIONAL) category index (for chopping)
+#  - `maxvarlen`                 : (OPTIONAL) maximal length for the variable name. For longer names shortcuts will be introduced
+#  - `multithread`               : (OPTIONAL) use multithreading  ?
+#  - `logger`                    : (OPTIONAL) use this logger
+# 
 #  For more detailes
 #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py
 # 
@@ -323,7 +361,9 @@ class Trainer(object):
     #  ...   background      = treeBackgrund         ,  ## TTree for 'background'  sample 
     #  ...   signal_cuts     = cuts_for_signal       ,
     #  ...   background_cuts = cuts_for_background   )
-    #  @endcode 
+    #  @endcode
+    #
+    #  
     #  For more detailes
     #  @see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
     def __init__(  self                           ,
