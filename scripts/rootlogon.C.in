@@ -2,20 +2,19 @@
 #include <iostream>
 
 { const std::string banner =
-    "                                 @OSTAP_VERSION@ (@OSTAP_BUILD_TIMESTAMP@)\n"
-    "                                                                         \n"
-    "                                                                         \n"
-    "       .oooooo.                .                          .oooo.         \n"
-    "      d8P'  `Y8b             .o8                        .dP\"\"Y88b        \n"
-    "     888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.        ]8P'       \n"
-    "     888      888 d88(  \"8   888   `P  )88b   888' `88b     .d8P'        \n"
-    "     888      888 `\"Y88b.    888    .oP\"888   888   888   .dP'           \n"
-    "     `88b    d88' o.  )88b   888 . d8(  888   888   888 .oP     .o       \n"
-    "      `Y8bood8P'  8\"\"888P'   \"888\" `Y888\"\"8o  888bod8P' 8888888888       \n"
-    "                                              888                        \n"
-    "                                             o888o                       \n"
-    "                                                                         \n"
-    " - https://github.com/OstapHEP/ostap                                     \n" ;
+    "                                 @OSTAP_VERSION@ (@OSTAP_BUILD_TIMESTAMP@)\n"    
+    "                                                                          \n"
+    "      .oooooo.                .                          .oooo.           \n"
+    "     d8P'  `Y8b             .o8                        .dP\"\"Y88b          \n"
+    "    888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.        ]8P'         \n"
+    "    888      888 d88(  \"8   888   `P  )88b   888' `88b     <88b.          \n"
+    "    888      888 `\"Y88b.    888    .oP\"888   888   888      `88b.         \n"
+    "    `88b    d88' o.  )88b   888 . d8(  888   888   888 o.   .88P          \n" 
+    "     `Y8bood8P'  8\"\"888P'   \"888\" `Y888\"\"8o  888bod8P' `8bd88P'           \n"
+    "                                             888                          \n"
+    "                                            o888o                         \n"
+    "   					                               \n"
+    " - https://github.com/OstapHEP/ostap                                      \n" ;
     std::cout << banner << std::endl ;  
 
 std::string path = gSystem->GetIncludePath()   ;
