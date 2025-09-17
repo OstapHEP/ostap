@@ -74,6 +74,68 @@ TVirtualPad* Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
 }
 // ============================================================================
 
+
+// ============================================================================
+// default contructor
+// ============================================================================
+Ostap::Utils::PadContext::PadContext ()
+  : PadContext ( ROOT::GetROOT() && !ROOT::GetROOT()->IsBatch() ? true : false )
+{}
+// ============================================================================
+// contructor with interactive flag 
+// ============================================================================
+Ostap::Utils::PadContext::PadContext
+( const bool interactive )
+  : m_active      ( true        )
+  , m_interactive ( interactive )
+  , m_saved       ( TVirtualPad::Pad() ) 
+{}
+// ============================================================================
+// full contructor
+// ============================================================================
+Ostap::Utils::PadContext::PadContext
+( TVirtualPad* pad         ,
+  const bool   interactive ,
+  const bool   not_null    )
+  : m_active      ( true        )
+  , m_interactive ( interactive )
+  , m_saved       ( TVirtualPad::Pad() ) 
+{
+  if       ( pad && m_interactive ) { pad->cd() ; }
+  else if  ( pad || !not_null     ) { TVirtualPad::Pad() = pad ; }
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Utils::PadContext::~PadContext()
+{
+  exit () ;
+  m_saved = nullptr ;
+}
+// ============================================================================
+// CONTEXT MANAGER: (fake) enter
+// ============================================================================
+const Ostap::Utils::PadContext&
+Ostap::Utils::PadContext::enter () { return *this ; } 
+// ============================================================================
+// CONTEXT MANAGER: exit  
+// ============================================================================
+const Ostap::Utils::PadContext&
+Ostap::Utils::PadContext::exit  ()
+{
+  /// avoid multiple exit
+  if ( !m_active ) { return *this ; }
+  //
+  if      ( !m_interactive || !m_saved ) { TVirtualPad::Pad() = m_saved ; }
+  else if ( m_saved ) { m_saved->cd () ; } 
+  //
+  m_active = false ;
+  //
+  return *this ;
+}
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -202,8 +202,10 @@ class UseStyle(object):
             if self.__config :
                 self.__changed = set_style ( self.__new_style , self.__config ) 
             groot.ForceStyle ( True )
-            pad = ROOT.Ostap.Utils.get_pad () 
-            if pad : pad.UseCurrentStyle()
+            pad = ROOT.Ostap.Utils.get_pad    () 
+            if pad : pad.UseCurrentStyle ()
+            ## cnv = ROOT.Ostap.Utils.get_canvas () 
+            ## if cnv : cnv.UseCurrentStyle ()
             logger.debug ( "Switch to `%s' style!" % self.__new_style.GetName() ) 
                            
     ## context  manager: exit

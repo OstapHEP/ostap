@@ -41,6 +41,45 @@ namespace Ostap
      */
     TVirtualPad* pad_update_async ( TVirtualPad* pad = nullptr ) ;
     // ========================================================================
+    /** @class PadContext 
+     *  @see TVirtualPad::TContext 
+     */
+    class PadContext
+    {
+    public:
+      // ======================================================================
+      /// default contgructot
+      PadContext ( ) ;      
+      PadContext ( const bool interactive ) ;
+      PadContext
+	( TVirtualPad* pad                 ,
+	  const bool   interactive = false ,
+	  const bool   not_null    = false );
+      // destructor
+      ~PadContext () ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// get the saved pad 
+      inline TVirtualPad* saved  () const { return m_saved  ; }
+      /// Is the context active ?
+      inline bool         active () const { return m_active ; } 
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// CONTEXT MANAGER: (fake) enter
+      const PadContext& enter () ;
+      /// CONTEXT MANAGER: exit  
+      const PadContext& exit  () ; 
+      /// =====================================================================
+    private:
+      // ======================================================================
+      bool         m_active      { false   } ;
+      bool         m_interactive { true    } ;
+      TVirtualPad* m_saved       { nullptr } ;
+      // ======================================================================
+    } ;
+    // ========================================================================
   } //                                        The end of namespace Ostap::Utils 
   // ==========================================================================
 } //                                                The  end of namespace Ostap 

@@ -38,7 +38,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types    import ordered_dict 
 from   ostap.utils.cidict        import cidict, cidict_fun 
-from   ostap.core.core           import rootWarning
+from   ostap.core.core           import rootWarning, Ostap 
 from   ostap.utils.utils         import which
 from   ostap.utils.timing        import Wait
 from   ostap.plotting.makestyles import ( canvas_width , canvas_height ,
@@ -141,8 +141,6 @@ if web : # ====================================================================
     logger.debug  ( 'Set WebDisplay to be `%s`' % web ) 
     setWebDisplay ( web )
 
-
-
 # =============================================================================
 ## @class KeepCanvas
 #  helper class to keep the current canvas
@@ -157,28 +155,55 @@ class KeepCanvas(Wait) :
     """
     def __init__ ( self , wait = 0 ) :
         Wait.__init__ ( self , after = wait ) 
-        self.__old_canvas  = None 
-    def __enter__ ( self ) :
-        Wait.__enter__ ( self )
-        cnv = self.current
-        if not cnv :
-            cnv = getCanvas()
-            cnv.cd() 
-        self.__old_canvas = cnv if cnv else None
+        self.__old_canvas  = None
+        self.__context     = None
         
+    ## CONTEXT MANAGER: enter 
+    def __enter__ ( self ) :
+        """ CONTEXT MANAGER: enter 
+        """
+        
+        Wait.__enter__ ( self )
+        
+        self.__context = Ostap.Utils.PadContext()
+        self.__context.enter() 
+        ## 
+        return self
+    
+    ## CONTEXT MANAGER: exit 
     def __exit__  ( self , *_ ) :
-        Wait.__exit__ ( self , *_ )         
-        if self.old_canvas : self.old_canvas.cd()
-        self.__old_canvas = None
+        """ CONTEXT MANAGER: exit 
+        """
+        Wait.__exit__ ( self , *_ )
+        if self.__context :
+            self.__context.exit() 
+            self.__context = None             
+
     @property
     def old_canvas ( self ) :
-        """`old_canvas': canvas to be preserved"""
-        return self.__old_canvas
+        """`old_canvas': preserved canvas/pad
+        """
+        active = self.__context and self.__context.active() 
+        return self.__context.saved() if active else None
+
     @property
     def current ( self ) :
-        """`current` : get the pointer to the current TCanvas"""
-        return ROOT.Ostap.Utils.get_canvas() 
+        """`current` : get the pointer to the current TCanvas
+        """
+        return Ostap.Utils.get_canvas()
     
+    @property
+    def current_canvas ( self ) :
+        """`current_canvas` : get the pointer to the current TCanvas
+        """
+        return Ostap.Utils.get_canvas()
+    
+    @property
+    def current_pad    ( self ) :
+        """`current_pad` : get the pointer to the current TPad 
+        """
+        return Ostap.Utils.get_pad ()
+        
 # =============================================================================
 #  Keep the current canvas
 #  @code
@@ -209,7 +234,7 @@ class InvisibleCanvas(KeepCanvas) :
         ## start from keeping the current canvas 
         KeepCanvas.__enter__ ( self )
         ## create new canvas in batch mode 
-        with Batch( True ) : 
+        with Batch ( True ) : 
             import ROOT 
             self.batch_canvas = ROOT.TCanvas()
             self.batch_canvas.cd ()
@@ -237,7 +262,7 @@ def invisibleCanvas() :
     
 # =============================================================================
 ## list of created canvases 
-_canvases = [] 
+_canvases = []  
 # =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -253,14 +278,14 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     """
     if not name : name = 'glCanvas'
 
-    cnv = None 
+    cnv    = None 
     groot  = ROOT.ROOT.GetROOT()
     if groot :
         cnvlst = groot.GetListOfCanvases()
-        cnv    = cnvlst.get ( name , None )
+        if cnvlst : cnv = cnvlst.get ( name , None )
         
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
-        _canvases.append ( cnv )
+        ## _canvases.append ( cnv )
         set_pad ( cnv , **kwargs )
         return cnv 
 
@@ -290,8 +315,13 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
 import atexit
 @atexit.register 
 def clean_canvases () :
-    while _canvases : _canvases.pop()
-    
+    print ( 'CLEAN CANVASES' , len ( _canvases ) ) 
+    while _canvases :
+        print ( 'POP CANVASES/1' , len ( _canvases ) )         
+        c = _canvases.pop()
+        if c : c.Close ()
+        print ( 'POP CANVASES/2' , len ( _canvases ) )         
+        
 # =============================================================================
 all_extensions = (
     'pdf'  , 'png'  , 'gif' ,
@@ -317,7 +347,7 @@ all_extensions = (
 def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
                                          'jpg'  , 'gif' , 'json' , 'svg' ) ) :
     """ A bit simplified version for TCanvas print
-    It Alows to create several output file types  at once
+    It allows to create several output file types  at once
     - if extension is equal to `tar` or `tgz`, single (gzipped) tar-files is created
     - if extension is equal to `zip`, single zip-archive is created 
     >>> canvas.print_ ( 'A' )
@@ -445,7 +475,7 @@ class AutoPlots ( object ) :
     
     @classmethod
     def plot ( cls ) :
-        """Get the plot name for auto-plotting:
+        """ Get the plot name for auto-plotting:
         >>> plotname = AutoPlot.plot()
         >>> if plotname : canvas >> plotname 
         """
@@ -503,7 +533,6 @@ class AutoPlots ( object ) :
     def __exit__  ( self, *_ ) :
         AutoPlots.__auto_plots.pop  ()  
 
-
 # =============================================================================
 ## Helper function /context manager to setup "auto-plotting"
 #  all produced plots will be saved
@@ -526,21 +555,19 @@ def auto_plots ( pattern   = 'ostap_%0.4d' ,
     """
     return AutoPlots ( pattern = pattern , directory = directory )
 
-
 # =============================================================================
 ## decorate ROOT.TObject
 if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
-    
-    
+        
     def _TO_draw_with_auto_ ( obj  , option = '' , *args , **kwargs ) :
         """ Draw an object     
         """
         result = obj.draw_ostap ( option, *args , **kwargs ) 
 
-        if ROOT.Ostap.Utils.get_pad ():
+        if Ostap.Utils.get_pad ():
             plot = AutoPlots.plot()
             if plot :
-                cnv = ROOT.Ostap.Utils.get_canvas () 
+                cnv = Ostap.Utils.get_canvas () 
                 if cnv : cnv >> plot
             
         return result
@@ -732,7 +759,6 @@ def canvas_partition ( canvas                        ,
             
     return canvas.pads 
 
-
 # =============================================================================
 ## Make partition of Canvas into (nx)x(ny) adjuncent pads and plot objects
 #  @code
@@ -776,8 +802,7 @@ def partition_draw ( canvas                        ,
     canvas.Update()
     canvas.cd(0)
     return pads
-    
-    
+        
 # =============================================================================
 def _cnv_pads_ ( self ) :
     """`pads' : get (an ordered) dict of pads for the given canvas partition (if prepared)
@@ -1145,7 +1170,7 @@ class UsePad(object) :
         
     def __enter__ ( self ) :
             
-        if not self.__pad : self.__pad = ROOT.Ostap.Utils.get_pad() 
+        if not self.__pad : self.__pad = Ostap.Utils.get_pad() 
         
         if self.pad : 
             self.__changed = set_pad ( self.pad , **self.config )
@@ -1250,7 +1275,7 @@ class Canvas(KeepCanvas) :
 
         ## (4) apply pad settings
         if self.__kwargs :
-            pad    = ROOT.Ostap.Utils.get_pad() 
+            pad    = Ostap.Utils.get_pad() 
             if pad : set_pad ( pad , **self.__kwargs ) 
             
         return self.__cnv  ## return current canvas 

@@ -219,6 +219,8 @@ def test_tmva () :
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
 
+    """
+
     # ===============================================================================
     ## (2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)
     # ===============================================================================
@@ -237,18 +239,17 @@ def test_tmva () :
     for m in reader.methods[:] :
         variables += [ Variable( 'tmva1_%s_response' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
 
-    with timing ( "Add TMVA response during TTree->RooDatSet transformation (signal)"     , logger =logger ) : 
+    with timing ( "Add TMVA response during TTree->RooDataSet transformation (signal)"     , logger =logger ) : 
         tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         ds_S1, _  = tSignal.fill_dataset ( variables )
         
-    with timing ( "Add TMVA response during TTree->RooDatSet transformation (background)" , logger =logger ) : 
+    with timing ( "Add TMVA response during TTree->RooDataSet transformation (background)" , logger =logger ) : 
         tBkg      = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
         ds_B1, _  = tBkg   .fill_dataset ( variables )
         
     logger.info ( 'Created signal     dataset\n%s' %  ds_S1.table ( prefix = '# ' ) )
     logger.info ( 'Created background dataset\n%s' %  ds_B1.table ( prefix = '# ' ) )
     
-    """
     
     # ===============================================================================
     ## (3) Add TMVA decision directly into existing RooDataSet (fast)  
