@@ -261,8 +261,10 @@ def invisibleCanvas() :
     return InvisibleCanvas() 
     
 # =============================================================================
-## list of created canvases 
-_canvases = []  
+## list of all created canvases 
+_canvases = []
+## list of canvas to keep
+_keep     = [] 
 # =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -298,6 +300,9 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
 
     ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
     cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
+
+    ROOT.SetOwnership ( cnv , True )
+    
     ## adjust newly created canvas
     ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
     groot = ROOT.ROOT.GetROOT() 
@@ -315,13 +320,13 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
 import atexit
 @atexit.register 
 def clean_canvases () :
-    print ( 'CLEAN CANVASES' , len ( _canvases ) ) 
+    ## open canvases 
+    while _keep     : _keep.pop()
+    ## all created canvases 
     while _canvases :
-        print ( 'POP CANVASES/1' , len ( _canvases ) )         
-        c = _canvases.pop()
-        if c : c.Close ()
-        print ( 'POP CANVASES/2' , len ( _canvases ) )         
-        
+        ## c = _canvases.pop()
+        ## if c : c.Close ()
+        _canvases.pop()
 # =============================================================================
 all_extensions = (
     'pdf'  , 'png'  , 'gif' ,
@@ -586,7 +591,7 @@ def getCanvases () :
 
     groot = ROOT.ROOT.GetROOT()
     if not groot : return () 
-    return tuple ( ( c.GetName() for c in groot.GetListOfCanvases() if ( c and isintance ( c , ROOT.TCanvas ) ) ) ) 
+    return tuple ( ( c.GetName() for c in groot.GetListOfCanvases() if ( c and isinstance ( c , ROOT.TCanvas ) ) ) ) 
 # =============================================================================
 
 # =============================================================================
@@ -1226,6 +1231,7 @@ class Canvas(KeepCanvas) :
                    width  = canvas_width  ,   ## canvas width
                    height = canvas_height ,   ## canvas height 
                    wait   = 0             ,   ## pause before exit
+                   keep   = True          ,   ## keep canvas open ?
                    plot   = ''            ,   ## produce the plot at __exit__
                    **kwargs               ) : ## Pad configuration
         
@@ -1234,6 +1240,7 @@ class Canvas(KeepCanvas) :
         self.__width  = width
         self.__height = height
         self.__kwargs = kwargs
+        self.__keep   = True if keep else False 
         self.__cnv    = None
 
         if plot is True : plot = name if name else 'plot'
@@ -1266,7 +1273,7 @@ class Canvas(KeepCanvas) :
                                  title  = self.__title  ,
                                  width  = self.__width  ,
                                  height = self.__height )
-        
+
         self.__name  = self.__cnv.GetName  () 
         self.__title = self.__cnv.GetTitle () 
 
@@ -1277,7 +1284,10 @@ class Canvas(KeepCanvas) :
         if self.__kwargs :
             pad    = Ostap.Utils.get_pad() 
             if pad : set_pad ( pad , **self.__kwargs ) 
-            
+
+        ## (5) keep it open ? 
+        if self.__keep : _keep.append ( self.__cnv ) 
+
         return self.__cnv  ## return current canvas 
     
     ## context manager: exit 
@@ -1306,7 +1316,8 @@ def use_canvas ( name   = ''            ,
                  title  = ''            ,
                  width  = canvas_width  ,   ## canvas width
                  height = canvas_height ,   ## canvas height
-                 wait   = 0             ,   ## pause before exit 
+                 wait   = 0             ,   ## pause before exit
+                 keep   = True          ,   ## keep canvas open ?
                  **kwargs               ) : ## Pad configuration
     """ Helper context manager to create and configure a canvas (and pad)
     >>> with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
@@ -1316,7 +1327,8 @@ def use_canvas ( name   = ''            ,
                     title  = title  ,
                     width  = width  ,   ## canvas width
                     height = height ,   ## canvas height
-                    wait   = wait   ,   ## pause before exit 
+                    wait   = wait   ,   ## pause before exit
+                    keep   = keep   ,   ## keep canvas open?
                     **kwargs        )   ## Pad configuration
 
 

@@ -1536,17 +1536,15 @@ class Trainer(object):
             self.signal.project ( histo , what , cuts = how , use_frame = True )
             if not histo.GetTitle() : histo.SetTitle ( str ( what ) )
 
-            """
             from  ostap.plotting.canvas   import use_canvas
             from  ostap.plotting.style    import useStyle
             from  ostap.utils.root_utils  import batch 
             style = 'Z' if 2 == histo.dim() else ''
             with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle ( style ) , \
-                 use_canvas ( 'Control plot SIGNAL_%d' % i ) as cnv :
+                 use_canvas ( 'Control plot SIGNAL_%d' % i ) as cnvs :
                 if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
                 else                : histo.draw (          copy = True )
-                cnv >> ( "%s/plots/CONTROL_PLOT_SIGNAL_%s" % ( self.dirname , i ) ) 
-            """
+                cnvs >> ( "%s/plots/CONTROL_PLOT_SIGNAL_%s" % ( self.dirname , i ) ) 
             
         for i , item in enumerate ( self.control_plots_background , start = 1 ) :  
             histo , what = item 
@@ -1554,20 +1552,16 @@ class Trainer(object):
             self.background.project ( histo , what , cuts = how , use_frame = True )
             if not histo.GetTitle() : histo.SetTitle ( str ( what ) )
 
-            """
             from  ostap.plotting.canvas   import use_canvas
             from  ostap.plotting.style    import useStyle
             from  ostap.utils.root_utils  import batch 
             style = 'Z' if 2 == histo.dim() else '' 
             with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle ( style ) , \
-                 use_canvas ( 'Control plot BACKGROUND_%d' % i ) as cnv :
+                 use_canvas ( 'Control plot BACKGROUND_%d' % i ) as cnvb :
                 if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
                 else                : histo.draw (          copy = True ) 
-                cnv >> ( "%s/plots/CONTROL_PLOT_BACKGROUND_%d" % ( self.dirname , i ) )
-            """
-            
-        cnv = None
-        
+                cnvb >> ( "%s/plots/CONTROL_PLOT_BACKGROUND_%d" % ( self.dirname , i ) )
+
         # =====================================================================
         ## some statistic
         # =====================================================================
@@ -1813,22 +1807,23 @@ class Trainer(object):
                     from   ostap.plotting.canvas  import use_canvas 
                     from   ostap.plotting.style   import useStyle 
                     from   ostap.utils.root_utils import batch
-                    
-                    with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle () , use_canvas ( 'ROC curves' ) as cnv :
+
+                    with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , \
+                         useStyle () , use_canvas ( '%s ROC curves' % self.name ) as cnvroc :
                         
                         multigraph.draw( 'AL' , copy = True )
                         ax = multigraph.GetXaxis ()
                         ay = multigraph.GetYaxis ()
-                        ax.SetTitle ( "Signal efficiency (Sensitivity)"    )
-                        ay.SetTitle ( "Background rejection (Specificity)" )                    
-                        cnv.BuildLegend(0.15, 0.15, 0.35, 0.3, "MVA Method");
                         
-                        ## cnv >> ( "%s/plots/ROC"   % self.dirname )
+                        ax.SetTitle ( "Signal efficiency (Sensitivity)"    )
+                        ay.SetTitle ( "Background rejection (Specificity)" )
+
+                        cnvroc.BuildLegend(0.15, 0.15, 0.35, 0.3, "MVA Method")
+                        
+                        cnvroc >> ( "%s/plots/ROC"   % self.dirname )
                         
                         outFile [ '%s/ROC_CURVES' % self.name ] = multigraph
-                        
-                cnv = None 
-                
+                    
         # =====================================================================
         ## Calculate AUCs for ROC curves
         # =====================================================================
@@ -1988,16 +1983,14 @@ class Trainer(object):
             ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) , style  ) , 
             ]
 
-        ## plots = []
-        
-        """
         
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
             plots.append ( ( ROOT.TMVA.likelihoodrefs         , ( name , output ) , {} ) )
 
         if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
             if hasattr ( ROOT.TMVA , 'BDT'                    ) :
-                plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) , {} ) )
+                self.logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDT'" )                 
+                ## plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) , {} ) )
                 
             if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
                 self.logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDTControlPlots'" ) 
@@ -2013,7 +2006,6 @@ class Trainer(object):
             if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
                 plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
     
-        """ 
         ## change to some temporary directory
         
         from ostap.utils.root_utils import batch
@@ -2028,6 +2020,13 @@ class Trainer(object):
                         warnings.simplefilter ( 'always' , category = RuntimeWarning ) 
                         if kwargs : fun ( *args , **kwargs )
                         else      : fun ( *args )
+
+        #
+        ## local plots :
+        #
+        tag  = "Plots for VARIABLES"
+        with timing ( tag , logger = self.logger ) : 
+            plot_variables ( name , output , prefix = '%s/' % name )
                     
 # ========================================================================================
 ## Simple wrapper for `ROOT.TMVA.variables` macro

@@ -101,8 +101,11 @@ Ostap::Utils::PadContext::PadContext
   , m_interactive ( interactive )
   , m_saved       ( TVirtualPad::Pad() ) 
 {
-  if       ( pad && m_interactive ) { pad->cd() ; }
-  else if  ( pad || !not_null     ) { TVirtualPad::Pad() = pad ; }
+
+  if ( pad ) { pad->cd () ; } 
+
+  // if       ( pad && m_interactive ) { pad->cd() ; }
+  // else if  ( pad || !not_null     ) { TVirtualPad::Pad() = pad ; }
 }
 // ============================================================================
 // destructor
@@ -126,8 +129,10 @@ Ostap::Utils::PadContext::exit  ()
   /// avoid multiple exit
   if ( !m_active ) { return *this ; }
   //
-  if      ( !m_interactive || !m_saved ) { TVirtualPad::Pad() = m_saved ; }
-  else if ( m_saved ) { m_saved->cd () ; } 
+  if ( m_saved ) { m_saved->cd () ; }
+  //
+  // if      ( !m_interactive || !m_saved ) { TVirtualPad::Pad() = m_saved ; }
+  // else if ( m_saved ) { m_saved->cd () ; } 
   //
   m_active = false ;
   //

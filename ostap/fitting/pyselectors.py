@@ -181,7 +181,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
                    silence = False  ,
                    tree    = None   ,
                    logger  = logger ) :
-        """ Standart constructor
+        """ Standard constructor
         """
         if   isinstance ( tree , Chain ) : tree = tree.chain 
         elif tree is None : tree = ROOT.nullptr
@@ -540,7 +540,7 @@ def valid_formula ( expression , varset ) :
 ## @class SelStat
 #  Helper class to keep the statististics for SelectorWithVars 
 class SelStat(object) :
-    """Helper class to keep the statististics for SelectorWithVars
+    """ Helper class to keep the statististics for SelectorWithVars
     """
     def __init__ ( self ,  total = 0 , processed = 0 , skipped = 0 ) :
 
@@ -1179,10 +1179,9 @@ class SelectorWithVars(SelectorWithCuts) :
     ## Initialize the selector
     #  @see Ostap::SelectorWithCuts::Init 
     def Init    ( self, tree ) :
-        """Initialize the selector
+        """ Initialize the selector
         - see Ostap::SelectorWithCuts::Init 
         """
-
         ## reset the formula 
         self.reset_formula ( tree )
         if valid_pointer ( tree ) :
@@ -1199,7 +1198,6 @@ class SelectorWithVars(SelectorWithCuts) :
         """Start master processing
         - see Ostap::SelectorWithCuts::Begin
         """
-
         ## reset the formula 
         self.reset_formula ( tree ) 
 
@@ -1226,7 +1224,7 @@ class SelectorWithVars(SelectorWithCuts) :
         """ Start slave processing
         - see Ostap::SelectorWithCuts::SlaveBegin
         """
-        #
+        ##
         assert valid_pointer ( tree ),  'SlaveBegin:TTree is invalid!'
         #
         ## reset the formula 
@@ -1906,7 +1904,8 @@ def fill_dataset1 ( tree                 ,
                     name         = ''    ,
                     title        = ''    ,
                     shortcut     = True  ,
-                    use_frame    = 50000 , 
+                    use_frame    = 50000 ,
+                    progress     = True  , 
                     silent       = False ) :
     """Create the dataset from the tree
     >>> tree = ...
