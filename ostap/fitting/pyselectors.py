@@ -102,15 +102,15 @@ __all__ = (
     'SelectorWithVarsCached'    ## Cached version of selector    
 )
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
-from   ostap.core.ostap_types   import num_types, string_types, integer_types
-from   ostap.core.core          import ( cpp  , Ostap ,
-                                         dsID , valid_pointer , binomEff ) 
-from   ostap.fitting.variables  import make_formula
-from   ostap.utils.progress_bar import ProgressBar
-from   ostap.utils.basic        import items_loop 
-from   ostap.math.reduce        import root_factory 
-from   ostap.trees.utils        import Chain 
+from   ostap.core.meta_info       import root_info 
+from   ostap.core.ostap_types     import num_types, string_types, integer_types
+from   ostap.core.core            import ( cpp  , Ostap ,
+                                           dsID , valid_pointer , binomEff ) 
+from   ostap.fitting.variables    import make_formula
+from   ostap.utils.progress_conf  import progress_conf 
+from   ostap.utils.basic          import items_loop 
+from   ostap.math.reduce          import root_factory 
+from   ostap.trees.utils          import Chain 
 import ostap.fitting.roofit 
 import ROOT, os, cppyy, math, sys
 # =============================================================================
@@ -134,13 +134,14 @@ class Selector ( Ostap.Selector ) :
     """ Useful intermediate class for implementation of (py)selectors     
     """
     ## constructor 
-    def __init__ ( self , tree = None , silence = False  ) :
+    def __init__ ( self , tree = None , silence = False , progress = True  ) :
         """ Standart constructor
         """
         if isinstance ( tree , Chain ) : tree = tree.chain 
-        if tree is None : tree = ROOT.nullptr        
-        super (Selector, self).__init__ ( tree )
-        
+        if tree is None : tree = ROOT.nullptr
+        ## initialize the base
+        super (Selector, self).__init__ ( tree , progress_conf ( progress or not silent ) )
+                                      
     @property 
     def tree ( self ) :
         """'tree' : get the actual TTree pointer"""
@@ -156,13 +157,6 @@ class Selector ( Ostap.Selector ) :
         raise NotImplementedError ("Selector: process_entry is not implemented!")
         return True
 
-    ## ## reduce the object 
-    ## def __reduce__ ( self ) :
-    ##   """ Reduce the object"""
-    ##    tree = self.tree 
-    ##    if tree : return root_factory , ( type ( self ) , Chain ( tree ) ) 
-    ##    else    : return root_factory , ( type ( self ) , ) 
-     
 # =============================================================================
 ## @class SelectorWithCuts
 #  Efficient selector that runs only for "good"-events  
@@ -176,25 +170,29 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
     """ Efficient selector that runs only for 'good'-events  
     """
     ## constructor 
-    def __init__ ( self             , 
-                   selection        ,
-                   silence = False  ,
-                   tree    = None   ,
-                   logger  = logger ) :
+    def __init__ ( self              , 
+                   selection         ,
+                   silence  = False  ,
+                   progress = True   ,
+                   tree     = None   ,
+                   logger   = logger ) :
         """ Standard constructor
         """
         if   isinstance ( tree , Chain ) : tree = tree.chain 
         elif tree is None : tree = ROOT.nullptr
         
-        self.__silence = silence
-        self.__logger  = logger
+        self.__silence  = True if silence else False 
+        self.__progress = progress or not self.__silence 
+        self.__logger   = logger
         
         ## initialize the base
         self.__selection = str ( selection ).strip()
         
-        ## initialize the base 
-        super ( SelectorWithCuts , self ).__init__ ( self.selection , tree )
-        
+        ## initialize the base
+        super ( SelectorWithCuts , self ).__init__ ( self.selection ,
+                                                     tree           ,
+                                                     progress_conf ( self.progress ) ) 
+                                                     
         if self.cuts () and not self.silence :
             self.logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
 
@@ -202,6 +200,11 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
     def silence ( self ) :
         """'silence'  : silent processing?"""
         return self.__silence 
+
+    @property
+    def progress ( self ) :
+        """'progress'  : show progress bar?"""
+        return self.__progress 
     
     @property
     def selection ( self ) :
@@ -232,17 +235,17 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
 
     ## reduce of the object 
     def __reduce__ ( self ) :
-        """Reduce the object"""
+        """ Reduce the object
+        """
         tree = self.tree
-        if tree : return root_factory , ( type ( self )  ,
-                                          self.selection ,
-                                          self.silence   ,                                
-                                          Chain ( tree ) )
-        else    : return root_factory , ( type ( self )  ,
-                                          self.selection ,
-                                          self.silence   ) 
+        tree = Chain ( tree ) if tree else None 
+        return root_factory , ( type ( self )   ,
+                                self.selection  ,
+                                self.silence    ,
+                                self.progress   ,
+                                tree            )
+
             
-    
 # =============================================================================
 _maxv =  0.99 * sys.float_info.max
 _minv = -0.99 * sys.float_info.max
@@ -708,6 +711,7 @@ class SelectorWithVars(SelectorWithCuts) :
                    name          = ''              ,
                    fullname      = ''              ,
                    silence       = False           ,
+                   progress      = True            , 
                    tree          = ROOT.nullptr    ,
                    logger        = logger          ) :
 
@@ -726,6 +730,7 @@ class SelectorWithVars(SelectorWithCuts) :
         SelectorWithCuts.__init__ ( self ,
                                     selection = selection ,
                                     silence   = silence   ,
+                                    progress  = progress  , 
                                     tree      = tree      ,
                                     logger    = logger    ) ## initialize the base
         
@@ -825,7 +830,6 @@ class SelectorWithVars(SelectorWithCuts) :
         ## it is still very puzzling for me: should this line be here at all??
         ROOT.SetOwnership ( self.__data  , False )
         
-        self.__progress = None 
         from collections import defaultdict
         self.__skip     = defaultdict(int)
         self.__notifier = None
@@ -935,26 +939,6 @@ class SelectorWithVars(SelectorWithCuts) :
         """ Fill data set 
         """
 
-        if not self.__progress and not self.silence :
-            tree            = self.tree
-            self.stat.total = tree.GetEntries()
-            self.logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , tree.GetName() , self.total ) )
-            ## decoration:
-            from ostap.utils.progress_bar import ProgressBar
-            self.__progress = ProgressBar ( max_value   = self.total   ,
-                                            description = 'Entries:'   , 
-                                            silent      = self.silence )
-        if not self.silence :
-            
-            evnt  = self.event ()
-            total = self.total
-            
-            step  = 10000 if total <= 1 else divmod ( total , 350 ) [0]
-            
-            if evnt    < 20 or 0 < total < evnt + 20 or self.__last + step <= evnt :
-                self.__progress.update_amount ( evnt )
-                self.__last = evnt 
-            
         self.stat.processed += 1
         
         #
@@ -1182,22 +1166,23 @@ class SelectorWithVars(SelectorWithCuts) :
         """ Initialize the selector
         - see Ostap::SelectorWithCuts::Init 
         """
+        self.set_tree ( tree )
+        
         ## reset the formula 
         self.reset_formula ( tree )
-        if valid_pointer ( tree ) :
+        if valid_pointer   ( tree ) :
             assert self.ok(), 'Init: formula is invalid!'
-            
-        if self.__progress and not self.silence :
-            self.__progress.update_amount ( self.event () )
-
-
+                                    
     # ===========================================================
     ## Start master processing
     #  @see Ostap::SelectorWithCuts::Begin
     def Begin          ( self , tree = ROOT.nullptr ) :
-        """Start master processing
+        """ Start master processing
+        - see Ostap::SelectorWithCuts::Begin
         - see Ostap::SelectorWithCuts::Begin
         """
+        self.set_tree ( tree )
+
         ## reset the formula 
         self.reset_formula ( tree ) 
 
@@ -1210,13 +1195,11 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__varlist = vlst
             self.__roo_formula = make_formula ( roo_cuts , roo_cuts , vlst )
             
-        ## take care on the progress bar 
-        if self.__progress and not self.silence :
-            self.__progress.update_amount ( self.event () )
-            
         if valid_pointer ( tree ) :
             assert self.ok(), 'Begin: formula is invalid!'
 
+        ## take care on the (C++) progress-bar 
+        if valid_pointer ( tree ) : self.reset ( len ( tree ) )
     # =========================================================================
     ## Start slave processing
     #  @see Ostap::SelectorWithCuts::SlaveBegin
@@ -1227,6 +1210,8 @@ class SelectorWithVars(SelectorWithCuts) :
         ##
         assert valid_pointer ( tree ),  'SlaveBegin:TTree is invalid!'
         #
+        self.set_tree ( tree )
+        
         ## reset the formula 
         self.reset_formula  ( tree  ) 
         #
@@ -1241,20 +1226,6 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__varlist = vlst
             self.__roo_formula = make_formula ( roo_cuts , roo_cuts , vlst )
             
-        ## take care on the progress bar 
-        if not self.__progress and not self.silence :
-            tree            = self.tree
-            self.stat.total = tree.GetEntries()
-            self.logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , tree.GetName() , self.total ) )
-            ## decoration:
-            from ostap.utils.progress_bar import ProgressBar
-            self.__progress = ProgressBar ( max_value   = self.total   ,
-                                            description = 'Entries:'   , 
-                                            silent      = self.silence )
-            
-        if self.__progress and not self.silence :
-            self.__progress.update_amount ( self.event () )
-        #
         self.stat.total = tree.GetEntries()
         #
         if self.__notifier :
@@ -1276,10 +1247,7 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         result = True 
         if self.formula() : result = self.formula().Notify()
-        # 
-        if self.__progress and not self.silence :
-            self.__progress.update_amount ( self.event () )
-            
+        #         
         return result 
 
     # ========================================================================
@@ -1289,14 +1257,9 @@ class SelectorWithVars(SelectorWithCuts) :
         """ Terminate slave processing
         - see Ostap::SelectorWithCuts::SlaveTerminate
         """
-        
         if self.roo_cuts :
             del self.__roo_formula
             self.__roo_formula = None
-            
-        if self.__progress and not self.silence :
-            self.__progress.update_amount ( self.event () )
-            self.__progress.end () 
             
         if self.__notifier :
             self.__notifier.exit()
@@ -1307,23 +1270,17 @@ class SelectorWithVars(SelectorWithCuts) :
     def __reduce__ ( self ) :
         """ Reduce the object"""
         tree = self.tree
-        if tree : return root_factory , ( type ( self )  ,
-                                          self.variables ,
-                                          self.selection ,                                
-                                          self.cuts      ,
-                                          self.roo_cuts  ,
-                                          self.name      ,
-                                          self.fullname  ,
-                                          self.silence   ,
-                                          Chain ( tree ) )
-        else    : return root_factory , ( type ( self )  ,
-                                          self.variables ,
-                                          self.selection ,                                
-                                          self.cuts      ,
-                                          self.roo_cuts  ,
-                                          self.name      ,
-                                          self.fullname  ,
-                                          self.silence   )
+        tree = Chain ( tree ) if tree else None 
+        return root_factory , ( type ( self )  ,
+                                self.variables ,
+                                self.selection ,                                
+                                self.cuts      ,
+                                self.roo_cuts  ,
+                                self.name      ,
+                                self.fullname  ,
+                                self.silence   ,
+                                self.progress  ,
+                                tree           )
     
 # =============================================================================
 from   ostap.core.cache_dir import cache_dir

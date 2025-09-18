@@ -10,10 +10,13 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/ProgressConf.h" 
+#include "Ostap/ProgressBar.h" 
+// ============================================================================
 // Forward declaratios
 // ============================================================================
 class TTree  ;            // ROOT 
-class TChain ;            // ROOT 
+class TChain ;            // ROOT
 // ============================================================================
 namespace Ostap
 {
@@ -30,14 +33,20 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    ClassDefOverride(Ostap::Selector, 3) ;
+    ClassDefOverride(Ostap::Selector, 4) ;
     // ========================================================================
   public:
     // ========================================================================
     /// constructor 
     // ========================================================================
-    Selector ( TTree*   tree ) ;
-    Selector () :  Selector ( nullptr ) {}
+    /// constructor from the TTree & progress bar configuration 
+    Selector ( TTree* tree , const Ostap::Utils::ProgressConf& progress ) ;
+    /// constructor from the TTree 
+    Selector ( TTree* tree ) ;
+    /// constructor progress bar configuration 
+    Selector (               const Ostap::Utils::ProgressConf& progress ) ;
+    /// default constructor 
+    Selector () ;
     // ========================================================================
     /// destructor
     virtual ~Selector() ;
@@ -50,21 +59,13 @@ namespace Ostap
     void   Begin          ( TTree*   tree       ) override ;
     /// initialize the slave 
     void   SlaveBegin     ( TTree*   tree       ) override ;
-    /** process 
+    // =======================================================================
+    /** the main method: process entry 
      *  Note:
      *  - internally  calls  <code>GetEntry</code>
      *  - increment the event counter 
+     *  - advance the progress bar 
      *  @see Ostap::Selector::GetEntry 
-     *
-     *  It is different for "old" and "new" PyROOT
-     *  - for "new" PyROOT it  calls <code>process_entry</code>
-     *  - for "old" PyROOT it finally invokes python "Process", therefore 
-     *    it is important that pythonic <code>Process</code> 
-     *    invokes <code>process_entry</code>:
-     *  @code
-     *  ... def Process  ( self , entry ) :
-     *  ...     return self.process_entry () 
-     *  @endcode 
      *  @see Ostap::Selector::GetEntry 
      *  @see Ostap::Selector::process_entry 
      */  
@@ -98,17 +99,34 @@ namespace Ostap
      *  - useful for interactive python
      *  incremented in Ostap::Selector::Process 
      */
-    unsigned long long event           () const { return   m_event ; }
+    inline unsigned long long event                () const { return   m_event ; }
+    // ========================================================================
+  public: 
+    // ========================================================================
+    /** reset the selector:
+     *  - set event count to zero 
+     *  - set the maximunm count for progress bar to new  max-count
+     */
+    void reset ( const unsigned long long maxevents = 0 ) ;
     // ========================================================================
   protected:
     // ========================================================================
-    /// increment the event counter 
-    unsigned long long increment_event ()       { return ++m_event ; }
+    /// increment the event counter & advance the progress bar  
+    inline unsigned long long increment_event ()
+    {
+      if ( m_progress.enabled() ) { ++m_progress ; }
+      return ++m_event ;
+    }
+    // ========================================================================
+  protected:
+    // ========================================================================
+    /// progress bar
+    Ostap::Utils::ProgressBar m_progress {} ;
     // ========================================================================
   private:
     // ========================================================================
     /// number of processed events 
-    unsigned long long  m_event { 0 } ; // number of processed events 
+    unsigned long long  m_event { 0 } ; // number of processed events
     // ========================================================================
   private : 
     // ========================================================================

@@ -219,8 +219,6 @@ def test_tmva () :
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
 
-    """
-
     # ===============================================================================
     ## (2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)
     # ===============================================================================
@@ -250,6 +248,7 @@ def test_tmva () :
     logger.info ( 'Created signal     dataset\n%s' %  ds_S1.table ( prefix = '# ' ) )
     logger.info ( 'Created background dataset\n%s' %  ds_B1.table ( prefix = '# ' ) )
     
+    """
     
     # ===============================================================================
     ## (3) Add TMVA decision directly into existing RooDataSet (fast)  

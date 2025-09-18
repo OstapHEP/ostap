@@ -41,13 +41,44 @@ namespace Ostap
     // ========================================================================
     /// constructor 
     // ========================================================================
+    /** full contructor 
+     *  @param cuts cuts 
+     *  @param tree input TTree/TChain
+     *  @param progress configuration of progress bar
+     */
     SelectorWithCuts 
-    ( const std::string& cuts = ""      , 
-      TTree*             tree = nullptr ) ;
-    SelectorWithCuts 
-    ( const TCut&        cuts           ,
-      TTree*             tree = nullptr ) ;
+    ( const std::string&                cuts     , 
+      TTree*                            tree     , 
+      const Ostap::Utils::ProgressConf& progress ) ;
     // ========================================================================
+    /** full contructor 
+     *  @param cuts cuts 
+     *  @param tree input TTree/TChain
+     *  @param progress configuration of progress bar
+     */
+    SelectorWithCuts 
+    ( const TCut&                       cuts     , 
+      TTree*                            tree     , 
+      const Ostap::Utils::ProgressConf& progress ) ;
+    // ========================================================================      
+    SelectorWithCuts 
+    ( const std::string&                cuts = ""      , 
+      TTree*                            tree = nullptr ) ;
+    // ========================================================================      
+    SelectorWithCuts 
+    ( const TCut&                       cuts           ,
+      TTree*                            tree = nullptr ) ;
+    // ========================================================================      
+    SelectorWithCuts 
+    ( const std::string&                cuts           , 
+      const Ostap::Utils::ProgressConf& progress       , 
+      TTree*                            tree = nullptr ) ;    
+    // ========================================================================
+    SelectorWithCuts 
+    ( const TCut&                       cuts           ,
+      const Ostap::Utils::ProgressConf& progress       , 
+      TTree*                            tree = nullptr ) ;
+    // ========================================================================      
     /// virtual destructor 
     virtual ~SelectorWithCuts () ; // virtual destructor 
     // ========================================================================

@@ -81,20 +81,28 @@ namespace Ostap
     public:
       // ======================================================================
       /// Is this progress bar enabled? 
-      inline bool enabled   () const { return 0 != m_maxcount && 0 != width () ;  }
+      inline bool enabled  () const { return 0 != m_maxcount && 0 != width () ;  }
       /// Is this progress bar disabled? 
-      inline bool disabled  () const { return 0 == m_maxcount || 0 == width () ; }
+      inline bool disabled () const { return 0 == m_maxcount || 0 == width () ; }
+      /// Is this progress bar enabled? 
+      inline operator bool () const { return enabled  () ; }
+      inline bool operator!() const { return disabled () ; }      
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// reset the progress bar to new maxcount 
+      bool reset ( const unsigned long long maxcount ) ; 
       // =====================================================================
     public:
       // ======================================================================
       inline ProgressBar& operator++() { return operator+= ( 1 ) ; }
-      inline ProgressBar& operator+=( const unsigned int increment ) 
+      inline ProgressBar& operator+=( const unsigned long increment ) 
       {
         m_count += increment ;
         return
-          !increment                    ? *this : 
+          !increment              ? *this : 
           // show nothing 
-          disabled ()                   ? *this :
+          disabled ()             ? *this :
           // last count?
           m_maxcount   == m_count ? show_bar () :
           // right moment to show ? 

@@ -11,6 +11,8 @@
 // ============================================================================
 #include "Ostap/StatusCode.h"
 #include "Ostap/PySelector.h"
+#include "Ostap/ProgressConf.h"
+#include "Ostap/ProgressBar.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -36,13 +38,35 @@ ClassImp(Ostap::Selector) ;
 // constructor 
 // ============================================================================
 Ostap::Selector::Selector
-( TTree* tree ) 
+( TTree*                            tree     , 
+  const Ostap::Utils::ProgressConf& progress )
   : TSelector ()
-  , m_event { 0    }
-  , m_tree  ( tree )
+  , m_event    { 0        }
+  , m_tree     ( tree     )
+  , m_progress ( progress )
 {
   set_tree ( tree ) ;
 }
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Selector::Selector
+( TTree*  tree  )
+  : Selector ( tree , false )
+{}
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Selector::Selector
+( const Ostap::Utils::ProgressConf& progress )
+  : Selector ( nullptr  , progress )
+{}
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Selector::Selector ()
+  : Selector ( nullptr , false )
+{}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -54,6 +78,7 @@ void   Ostap::Selector::Init
 ( TTree*   tree       )
 {
   set_tree ( tree ) ;
+  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; }
   TSelector::Init ( m_tree ) ;
 }
 // ============================================================================
@@ -63,6 +88,7 @@ void   Ostap::Selector::Begin
 ( TTree*   tree       )
 {
   set_tree ( tree ) ;
+  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; } 
   TSelector::Begin ( m_tree ) ;
 }
 // ============================================================================
@@ -72,6 +98,7 @@ void   Ostap::Selector::SlaveBegin
 ( TTree*   tree       ) 
 {
   set_tree ( tree ) ;
+  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; } 
   TSelector::SlaveBegin ( m_tree ) ;
 } 
 // ============================================================================
@@ -79,14 +106,14 @@ void   Ostap::Selector::SlaveBegin
 // ============================================================================
 Bool_t Ostap::Selector::Process ( Long64_t entry ) 
 { 
-  // increment number of processed events  
+  // increment number of processed events  and advance the progress bar 
   increment_event() ;
-  //
+  // 
   if ( Ostap::Selector::GetEntry ( entry ) <= 0 ) 
-  {
-    Abort ( "" , TSelector::kAbortFile ) ;
-    return false ; 
-  }
+    {
+      Abort ( "" , TSelector::kAbortFile ) ;
+      return false ; 
+    }
   //
   return process_entry () ;
 }
@@ -99,7 +126,7 @@ Bool_t Ostap::Selector::Notify         () { return TSelector::Notify ()  ; }
 // ============================================================================
 void   Ostap::Selector::SlaveTerminate () { TSelector::SlaveTerminate () ; }
 // ============================================================================
-/// terminate
+// terminate
 // ============================================================================
 void   Ostap::Selector::Terminate      () { TSelector::Terminate () ; }
 // ============================================================================
@@ -119,24 +146,26 @@ Int_t Ostap::Selector::Version()const
   //
 }
 // ============================================================================
-// get the tree 
-// ============================================================================
-// TTree* Ostap::Selector::get_tree () const { return  m_tree ; }
-// ============================================================================
 //  set the tree 
 // ============================================================================
 void Ostap::Selector::set_tree  ( TTree* tree )
 {
-  // if ( tree )
-  // {
-  // TChain* chain = dynamic_cast<TChain*> ( m_tree ) ;
-  // if ( chain ) { tree = chain->GetTree() ;}
-  // }
-  //
   m_tree = tree ;
+  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; }
 }
 // ============================================================================
-/// process an entry 
+/// reset the progress bar (and use new  max-count) 
+// ============================================================================
+void Ostap::Selector::reset
+( const unsigned long long maxevents )
+{
+  m_event = 0 ;
+  if ( m_tree && m_progress )
+    { m_progress.reset ( maxevents ? maxevents : m_tree -> GetEntries () ) ; } 
+}
+// ============================================================================
+// process an entry 
+// ============================================================================
 bool Ostap::Selector::process_entry ()
 {
   Ostap::Assert ( false ,
@@ -144,7 +173,7 @@ bool Ostap::Selector::process_entry ()
                   "Ostap::Selector"                           ,
                   UNDEFINED_METHOD , __FILE__ , __LINE__      ) ;
   return true ;
-} 
+}
 // ============================================================================
 /*  helper function to use TTree::Process in python 
  * 
@@ -163,7 +192,7 @@ long Ostap::Utils::process
 ( TTree*             tree     ,
   TSelector*         selector )
 {
-  if ( 0 == tree || 0 == selector ) { return -1 ; }
+  if ( !tree || !selector ) { return -1 ; }
   return tree->Process ( selector ) ;
 }
 // ============================================================================
@@ -187,7 +216,7 @@ long Ostap::Utils::process
   const unsigned long events    , 
   const unsigned long first     ) 
 {
-  if ( 0 == tree || 0 == selector ) { return -1 ; }
+  if ( !tree || !selector ) { return -1 ; }
   return tree->Process ( selector , "" , events , first ) ;
 } 
 // ============================================================================
@@ -208,7 +237,7 @@ long Ostap::Utils::process
 ( TChain*            chain    ,
   TSelector*         selector )
 {
-  if ( 0 == chain || 0 == selector ) { return -1 ; }
+  if ( !chain || !selector ) { return -1 ; }
   return chain -> Process ( selector ) ;
 }
 // ============================================================================
@@ -232,7 +261,7 @@ long Ostap::Utils::process
   const unsigned long events   ,
   const unsigned long first    ) 
 {
-  if ( 0 == chain || 0 == selector ) { return -1 ; }
+  if ( !chain || !selector ) { return -1 ; }
   return chain -> Process ( selector , "" , events , first ) ;
 }
 // ============================================================================

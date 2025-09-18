@@ -13,14 +13,15 @@
 #include "Ostap/Formula.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/PySelectorWithCuts.h"
+#include "Ostap/ProgressConf.h"
+#include "Ostap/ProgressBar.h"
 // ============================================================================
 // local
 // ============================================================================
 #include "status_codes.h"
 // ============================================================================
 /** @file 
- *  Implementation file for class Analysis::SelectorWithCuts
- * 
+ *  Implementation file for class SelectorWithCuts
  *  @date 2013-05-06 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
@@ -29,8 +30,9 @@ namespace
 {
   // ==========================================================================
   const std::string s_whitespaces = " \t\n\r\f\v" ;
-  inline std::string strip ( const std::string& s                          ,
-                             const std::string& whitespace = s_whitespaces )
+  inline std::string strip
+  ( const std::string& s                          ,
+    const std::string& whitespace = s_whitespaces )
   {
     const std::string::size_type p1 = s .find_first_not_of ( whitespace );
     if ( std::string::npos == p1 ) { return ""; }
@@ -43,19 +45,14 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
-Ostap::SelectorWithCuts::SelectorWithCuts
-( const TCut& cuts          ,
-  TTree*      tree          )
-  : SelectorWithCuts ( std::string ( cuts.GetTitle () ) , tree ) 
-{}
-// ============================================================================
-// constructor 
+// Full constructor 
 // ============================================================================
 Ostap::SelectorWithCuts::SelectorWithCuts
-(  const std::string& cuts ,     
-   TTree*             tree )
-  : Ostap::Selector    (         tree ) 
-  , m_cuts             ( strip ( cuts ) ) 
+(  const std::string&                cuts     ,     
+   TTree*                            tree     ,
+   const Ostap::Utils::ProgressConf& progress )   
+  : Ostap::Selector    ( tree , progress ) 
+  , m_cuts             ( strip ( cuts )  ) 
   , m_formula          ()
   , m_good             ( 0              )            
 {
@@ -64,6 +61,49 @@ Ostap::SelectorWithCuts::SelectorWithCuts
                 "Ostap::SelectorWithCuts" ,
                 INVALID_FORMULA , __FILE__ , __LINE__ ) ;
 }
+// ============================================================================
+// Full constructor 
+// ============================================================================
+Ostap::SelectorWithCuts::SelectorWithCuts
+(  const TCut&                       cuts     ,     
+   TTree*                            tree     ,
+   const Ostap::Utils::ProgressConf& progress )
+  : SelectorWithCuts ( std::string ( cuts.GetTitle() ) , tree , progress )
+{}
+// ============================================================================
+// Full constructor 
+// ============================================================================
+Ostap::SelectorWithCuts::SelectorWithCuts
+(  const std::string&                cuts  ,     
+   TTree*                            tree  )
+  : SelectorWithCuts ( cuts , tree , false  )
+{}
+// ============================================================================
+// Full constructor 
+// ============================================================================
+Ostap::SelectorWithCuts::SelectorWithCuts
+(  const TCut&                       cuts     ,     
+   TTree*                            tree     ) 
+  : SelectorWithCuts ( std::string ( cuts.GetTitle() ) , tree )
+{}
+// ============================================================================
+// Full constructor 
+// ============================================================================
+Ostap::SelectorWithCuts::SelectorWithCuts
+(  const std::string&                cuts     ,     
+   const Ostap::Utils::ProgressConf& progress , 
+   TTree*                            tree     ) 
+  : SelectorWithCuts ( cuts , tree , progress )
+{}
+// ============================================================================
+// Full constructor 
+// ============================================================================
+Ostap::SelectorWithCuts::SelectorWithCuts
+(  const TCut&                       cuts     ,     
+   const Ostap::Utils::ProgressConf& progress , 
+   TTree*                            tree     ) 
+  : SelectorWithCuts ( cuts , tree , progress )
+{}
 // ============================================================================
 // virtual destructor 
 // ============================================================================
@@ -150,10 +190,10 @@ Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry )
 { 
   //
   if ( !good_entry ( entry ) ) 
-  {
-    increment_event () ;
-    return false       ;   // RETURN 
-  }
+    {
+      increment_event () ;
+      return false       ;   // RETURN 
+    }
   //
   // increment the event counter for good events 
   ++m_good  ;

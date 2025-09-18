@@ -122,7 +122,7 @@ Ostap::Utils::ProgressBar::ProgressBar
   // ==========================================================================
 }
 // ============================================================================
-/*  Constructor from configuration and maximal conut 
+/*  Constructor from configuration and maximal count 
  *  @param conf       configuration 
  *  @param maxcount   maximal count (==0 : no display bar)
  */
@@ -259,8 +259,20 @@ Ostap::Utils::ProgressBar::show_bar ( const bool show_eta )
   //
   return *this ;
 }
+// ======================================================================
+// reset the progress bar to new maxcount 
+// ======================================================================
+bool Ostap::Utils::ProgressBar::reset
+( const unsigned long long maxcount )
+{
+  //
+  m_count    = 0        ;
+  m_maxcount = maxcount ;
+  m_start    = 0        ;
+  // 
+  return enabled () ;
+}
 
-      
 
 
 // ============================================================================
