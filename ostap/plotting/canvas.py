@@ -26,12 +26,10 @@ __all__     = (
     'setWebDisplay'      , ## set WebDisplay, see ROOT.TROOT.SetWebDisplay
     'use_pad'            , ## context manager to modifty TPad
     'KeepCanvas'         , ## context manager to keep/preserve currect canvas 
-    'keepCanvas'         , ## context manager to keep/preserve currect canvas 
+    'InvisibleCanvas'    , ## context manager to keep/preserve currect canvas 
     'Canvas'             , ## context manager to create currect canvas
     'use_canvas'         , ## context manager to create currect canvas
-    'KeepCanvas'         , ## context manager to keep the current ROOT canvas
     'keepCanvas'         , ## context manager to keep the current ROOT canvas
-    'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     ##
     )
@@ -40,12 +38,13 @@ from   ostap.core.ostap_types    import ordered_dict
 from   ostap.utils.cidict        import cidict, cidict_fun 
 from   ostap.core.core           import rootWarning, Ostap 
 from   ostap.utils.utils         import which
+from   ostap.utils.root_utils    import Batch 
 from   ostap.utils.timing        import Wait
 from   ostap.plotting.makestyles import ( canvas_width , canvas_height ,
                                           margin_left  , margin_right  ,
                                           margin_top   , margin_bottom )
+from   ostap.plotting.style      import UseStyle 
 import ostap.core.core         
-import ostap.plotting.style
 import ROOT, os, tempfile, math   
 # =============================================================================
 # logging 
@@ -190,17 +189,17 @@ class KeepCanvas(Wait) :
     def current ( self ) :
         """`current` : get the pointer to the current TCanvas
         """
-        return Ostap.Utils.get_canvas()
+        return self.current_canvas 
     
     @property
     def current_canvas ( self ) :
-        """`current_canvas` : get the pointer to the current TCanvas
+        """`current_canvas` : get the current TCanvas
         """
         return Ostap.Utils.get_canvas()
     
     @property
     def current_pad    ( self ) :
-        """`current_pad` : get the pointer to the current TPad 
+        """`current_pad` : get the current TPad 
         """
         return Ostap.Utils.get_pad ()
         
@@ -210,12 +209,12 @@ class KeepCanvas(Wait) :
 #  with keepCanvas() :
 #  ... do something here 
 #  @endcode
-def keepCanvas() :
+def keepCanvas ( *args , **kwargs ) :
     """ Keep the current canvas
     >>> with keepCanvas() :
     ... do something here
     """
-    return KeepCanvas()
+    return KeepCanvas( *args , **kwargs )
 
 # =============================================================================
 ## @class InvisibleCanvas
@@ -1166,15 +1165,18 @@ class UsePad(object) :
     """ Helper context manager for `TAttPad` objects
     - see `TAttPad`
     """
-
     def  __init__ ( self , pad = None , **config ) :
 
         self.__pad     = pad if ( pad and isinstance ( pad , ROOT.TAttPad ) ) else None 
         self.__config  = config
         self.__changed = {} 
-        
+
+    ## Context manager: ENTER 
     def __enter__ ( self ) :
-            
+        """ Context manager: ENTER 
+        Apply modification to the TPad 
+        """
+        
         if not self.__pad : self.__pad = Ostap.Utils.get_pad() 
         
         if self.pad : 
@@ -1182,11 +1184,17 @@ class UsePad(object) :
 
         return self 
         
+    ## Context manager: EXIT 
     def __exit__ ( self , *_ ) :
-
+        """ Context manager: EXIT 
+        Restore configuration of TPad 
+        """
+        
         if self.pad and self.changed :
             set_pad ( self.pad , **self.changed )
-
+            
+        self.__pad = None
+        
     @property
     def pad ( self ) :
         """`pad' : pad to be configured"""
@@ -1220,26 +1228,27 @@ usePad = use_pad
 #  with Canvas ( title = 'Canvas #2' , width = 1000 ) :
 #  ... 
 #  @endcode
-class Canvas(KeepCanvas) :
+class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
     """ Helper context manager to create and configure a canvas (and pad)
     >>> with Canvas ( title = 'Canvas #2' , width = 1000 ) :
     >>> ... 
     """
-    def __init__ ( self                   ,
-                   name   = ''            ,
-                   title  = ''            ,
-                   width  = canvas_width  ,   ## canvas width
-                   height = canvas_height ,   ## canvas height 
-                   wait   = 0             ,   ## pause before exit
-                   keep   = True          ,   ## keep canvas open ?
-                   plot   = ''            ,   ## produce the plot at __exit__
-                   **kwargs               ) : ## Pad configuration
+    def __init__ ( self                      ,
+                   name      = ''            ,
+                   title     = ''            ,
+                   width     = canvas_width  ,   ## canvas width
+                   height    = canvas_height ,   ## canvas height 
+                   wait      = 0             ,   ## pause before exit
+                   keep      = True          ,   ## keep canvas open ?
+                   plot      = ''            ,   ## produce the plot at __exit__
+                   invisible = False         ,   ## invisible (==batch)?
+                   style     = None          ,   ## use this style                    
+                   **kwargs                  ) : ## Pad configuration
         
         self.__name   = name
         self.__title  = title 
         self.__width  = width
         self.__height = height
-        self.__kwargs = kwargs
         self.__keep   = True if keep else False 
         self.__cnv    = None
 
@@ -1247,16 +1256,29 @@ class Canvas(KeepCanvas) :
         
         if plot : plot = plot.strip().replace ( ' ' , '_' )
             
-        self.__plot   = plot            
-        ## 
-        KeepCanvas.__init__ ( self , wait ) 
+        self.__plot   = plot
+        ##
+        self.__invisible = True if invisible else False
+        if not self.__invisible : 
+            groot = ROOT.ROOT.GetROOT()
+            if groot : self.__invisible = groot.IsBatch() 
+            
+        self.__style     = style 
         
+        ## 
+        KeepCanvas.__init__ ( self , wait             )
+        UseStyle  .__init__ ( self , self.__style     )
+        UsePad    .__init__ ( self , **kwargs         ) 
+        Batch     .__init__ ( self , self.__invisible )
+                              
     ## context manager: exit 
     def __enter__ ( self ) :
 
         ## (1) use context manager 
         KeepCanvas.__enter__ ( self )
-
+        UseStyle  .__enter__ ( self ) 
+        Batch     .__enter__ ( self )
+        
         if not self.__name :
             groot  = ROOT.ROOT.GetROOT() 
             cnvlst = groot.GetListOfCanvases() 
@@ -1266,7 +1288,7 @@ class Canvas(KeepCanvas) :
                 self.__name = 'gl_canvas#%d' % hash ( h ) 
                 
         if not self.__title :
-            self.__title = self.__name
+            self.__title = 'Ostap Canvas %s' % self.__name 
 
         ## (2) create/use new canvas 
         self.__cnv = getCanvas ( name   = self.__name   ,
@@ -1280,13 +1302,12 @@ class Canvas(KeepCanvas) :
         ## (3) make it active 
         self.__cnv.cd() 
 
-        ## (4) apply pad settings
-        if self.__kwargs :
-            pad    = Ostap.Utils.get_pad() 
-            if pad : set_pad ( pad , **self.__kwargs ) 
-
+        ## (4) apply the pad modifications : it must be after (3)
+        UsePad.__enter__ ( self )
+        
         ## (5) keep it open ? 
-        if self.__keep : _keep.append ( self.__cnv ) 
+        if self.__keep :
+            _keep.append ( self.__cnv ) 
 
         return self.__cnv  ## return current canvas 
     
@@ -1302,8 +1323,15 @@ class Canvas(KeepCanvas) :
             if self.__plot :
                 self.__cnv >> self.__plot
                 
-        ## switch to the previous canvas 
-        KeepCanvas.__exit__ ( self , *_ ) 
+        ## swith back to pad configuration
+        UsePad   .__exit__  ( self , *_ )
+        ## switch back to  batch regine
+        Batch    .__exit__  ( self , *_ )
+        ## swith back to old style
+        UseStyle.__exit__   ( self , *_ )
+        ## switch to the previous canvas
+        KeepCanvas.__exit__ ( self , *_ )
+        ## 
         self.__cnv = None 
     
 # =============================================================================
@@ -1312,27 +1340,30 @@ class Canvas(KeepCanvas) :
 #  with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
 #  ... 
 #  @endcode
-def use_canvas ( name   = ''            ,
-                 title  = ''            ,
-                 width  = canvas_width  ,   ## canvas width
-                 height = canvas_height ,   ## canvas height
-                 wait   = 0             ,   ## pause before exit
-                 keep   = True          ,   ## keep canvas open ?
-                 **kwargs               ) : ## Pad configuration
+def use_canvas ( name      = ''            ,
+                 title     = ''            ,
+                 width     = canvas_width  ,   ## canvas width
+                 height    = canvas_height ,   ## canvas height
+                 wait      = 0             ,   ## pause before exit
+                 keep      = True          ,   ## keep canvas open ?
+                 plot      = ''            ,   ## print canvas as the exit
+                 invisible = False         ,   ## invisible (==batch)?
+                 style     = None          ,   ## use this style 
+                 **kwargs                  ) : ## Pad configuration
     """ Helper context manager to create and configure a canvas (and pad)
     >>> with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
     >>> ... 
     """
-    return Canvas ( name   = name   ,
-                    title  = title  ,
-                    width  = width  ,   ## canvas width
-                    height = height ,   ## canvas height
-                    wait   = wait   ,   ## pause before exit
-                    keep   = keep   ,   ## keep canvas open?
-                    **kwargs        )   ## Pad configuration
+    return Canvas ( name      = name      , ## canvas name 
+                    title     = title     , ## canvas title 
+                    width     = width     , ## canvas width
+                    height    = height    , ## canvas height
+                    wait      = wait      , ## pause before exit
+                    keep      = keep      , ## keep canvas open?
+                    invisible = invisible , ## invisble/batch 
+                    style     = style     , ## use this style 
+                    **kwargs              ) ## Pad configuration
 
-
-    
 # =============================================================================
 _decorated_classes_  = (
     ROOT.TVirtualPad , 

@@ -47,6 +47,7 @@ from   ostap.utils.basic         import items_loop, typename
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.timing        import timing
+from   ostap.plotting.canvas     import use_canvas 
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools, warnings  
 # =============================================================================
@@ -1530,37 +1531,47 @@ class Trainer(object):
         # =====================================================================
         ## Control plots for signal and background 
         # =====================================================================
+        local_canvas = [] 
         for i, item in enumerate ( self.control_plots_signal , start = 1 ) :
             histo , what = item
             how = self.signal_cuts * self.signal_weight if self.signal_weight else self.signal_cuts 
             self.signal.project ( histo , what , cuts = how , use_frame = True )
-            if not histo.GetTitle() : histo.SetTitle ( str ( what ) )
 
-            from  ostap.plotting.canvas   import use_canvas
-            from  ostap.plotting.style    import useStyle
-            from  ostap.utils.root_utils  import batch 
-            style = 'Z' if 2 == histo.dim() else ''
-            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle ( style ) , \
-                 use_canvas ( 'Control plot SIGNAL_%d' % i ) as cnvs :
+            if not histo.GetTitle() :
+                from ostap.trees.cuts import vars_and_cuts 
+                vars , _ , _ = vars_and_cuts ( what , how )
+                title = '%s Control plot SIGNAL_%d' %  ( self.name , i ) , 
+                title = title + vars
+                title = ';'.join ( title  )
+                histo.SetTitle ( title  )
+                
+            style = 'Z' if 2 == histo.dim() else ''            
+            with use_canvas ( '%s Control plot SIGNAL_%d' %  ( self.name , i ) ,
+                              invisible = not self.show_plots  , style = style ) as cnvs :
                 if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
                 else                : histo.draw (          copy = True )
                 cnvs >> ( "%s/plots/CONTROL_PLOT_SIGNAL_%s" % ( self.dirname , i ) ) 
-            
+                ## local_canvas.append ( cnvs )
+                
         for i , item in enumerate ( self.control_plots_background , start = 1 ) :  
             histo , what = item 
             how = self.background_cuts * self.background_weight if self.background_weight else self.background_cuts 
             self.background.project ( histo , what , cuts = how , use_frame = True )
-            if not histo.GetTitle() : histo.SetTitle ( str ( what ) )
+            if not histo.GetTitle() :
+                from ostap.trees.cuts import vars_and_cuts 
+                vars , _ , _ = vars_and_cuts ( what , how )
+                title = '%s Control plot BACKGROUND_%d' %  ( self.name , i ) , 
+                title = title + vars
+                title = ';'.join ( title ) 
+                histo.SetTitle ( title  )
 
-            from  ostap.plotting.canvas   import use_canvas
-            from  ostap.plotting.style    import useStyle
-            from  ostap.utils.root_utils  import batch 
-            style = 'Z' if 2 == histo.dim() else '' 
-            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , useStyle ( style ) , \
-                 use_canvas ( 'Control plot BACKGROUND_%d' % i ) as cnvb :
+            style = 'Z' if 2 == histo.dim() else ''            
+            with use_canvas ( '%s Control plot BACKGROUND_%d' % ( self.name , i ),
+                              invisible = not self.show_plots , style = style ) as cnvb :
                 if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
                 else                : histo.draw (          copy = True ) 
                 cnvb >> ( "%s/plots/CONTROL_PLOT_BACKGROUND_%d" % ( self.dirname , i ) )
+                ## local_canvas.append ( cnvb )
 
         # =====================================================================
         ## some statistic
@@ -1804,12 +1815,8 @@ class Trainer(object):
                 if not multigraph : self.logger.erorr ( 'Invalid ROC-curves multi-graph!' ) 
                 else : 
                     
-                    from   ostap.plotting.canvas  import use_canvas 
-                    from   ostap.plotting.style   import useStyle 
-                    from   ostap.utils.root_utils import batch
-
-                    with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , \
-                         useStyle () , use_canvas ( '%s ROC curves' % self.name ) as cnvroc :
+                    with use_canvas ( '%s ROC curves' % self.name     ,
+                                      invisible = not self.show_plots ) as cnvroc :
                         
                         multigraph.draw( 'AL' , copy = True )
                         ax = multigraph.GetXaxis ()
@@ -1817,6 +1824,12 @@ class Trainer(object):
                         
                         ax.SetTitle ( "Signal efficiency (Sensitivity)"    )
                         ay.SetTitle ( "Background rejection (Specificity)" )
+
+                        titleString = "Signal efficiency vs. Background rejection"
+
+                        histo = multigraph.GetHistogram()
+                        if histo : histo.SetTitle ( title )
+                        multigraph.SetTitle ( title ) 
 
                         cnvroc.BuildLegend(0.15, 0.15, 0.35, 0.3, "MVA Method")
                         
@@ -2024,10 +2037,10 @@ class Trainer(object):
         #
         ## local plots :
         #
-        tag  = "Plots for VARIABLES"
+        ## tag  = "Plots for VARIABLES"
         with timing ( tag , logger = self.logger ) : 
-            plot_variables ( name , output , prefix = '%s/' % name )
-                    
+            plot_variables ( name , output , invisible = not self.show_plots , prefix = '%s/' % name )
+        
 # ========================================================================================
 ## Simple wrapper for `ROOT.TMVA.variables` macro
 def show_variables ( name , output , tmva_style = False ) :
@@ -3104,7 +3117,15 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
 #  @code
 #  plot_varibables ( tmva_name , file_name , skipvars = [ 'BDTG' ] ) 
 #  @endcode
-def plot_variables ( name , tmva_file , skipvars = () , width = 1500 , height = 800 , prefix = '' ) :
+def plot_variables ( name              ,
+                     tmva_file         ,
+                     skipvars  = ()    , 
+                     width     = 1500  ,
+                     height    = 800   ,
+                     invisible = False ,
+                     style     = None  ,  
+                     prefix    = ''    ,
+                     **kwargs          ) :
     """ Make plots for variables using the tree from the  output TMVA file
     - due to some mistic reasons the standard macro `ROOT.TMVA.variables` often crashes
      
@@ -3116,8 +3137,6 @@ def plot_variables ( name , tmva_file , skipvars = () , width = 1500 , height = 
     
     from   ostap.core.core       import hID 
     from   ostap.utils.utils     import chunked
-    from   ostap.plotting.canvas import use_canvas
-    from   ostap.plotting.style  import useStyle 
     from   ostap.math.base       import axis_range
     
     import ostap.io.root_file
@@ -3145,15 +3164,17 @@ def plot_variables ( name , tmva_file , skipvars = () , width = 1500 , height = 
     signal     = ROOT.TCut ( 'classID==0' ) * wcut 
     background = ROOT.TCut ( 'classID==1' ) * wcut 
 
+    cnvlist = [] 
     for i, chunk in enumerate ( chunks , start = 1 ) :
-        clist = [] 
         cname =  '%s%s_VARIABLES_p%i' % ( prefix , name , i )
-        with useStyle ( opt_title     = 1    ,
-                        titleoffset_x = 1.0  ,
-                        titlesize_x   = 0.05 , 
-                        titlesize_y   = 0.05 ) ,  \
-                        use_canvas ( cname , width = width , height = height , plot = True ) as cnv  :
-            clist.append ( cnv ) 
+        with use_canvas ( cname                 ,
+                          width     = width     ,
+                          height    = height    ,
+                          style     = style     ,
+                          invisible = invisible , 
+                          plot      = True      , **kwargs ) as cnv  :
+            
+            cnvlist.append ( cnv ) 
             cnv.Clear  () 
             cnv.Divide ( 3 , 2 )
             
@@ -3166,11 +3187,11 @@ def plot_variables ( name , tmva_file , skipvars = () , width = 1500 , height = 
                 h1 = ROOT.TH1F ( hID() , '%s;%s' % ( var , var )  , 100 , xmin , xmax )
                 
                 h2 = h1.clone  ()
-                for h in ( h1, h2 ) :
-                    
-                    h.SetTitleSize   ( 0.05 , 'X' )
-                    h.SetTitleSize   ( 0.05 , 'Y' )
-                    h.SetTitleOffset ( 1.0  , 'X' )
+                
+                ## for h in ( h1, h2 ) :                    
+                ##    h.SetTitleSize   ( 0.05 , 'X' )
+                ##    h.SetTitleSize   ( 0.05 , 'Y' )
+                ##    h.SetTitleOffset ( 1.0  , 'X' )
                 
                 h1.red  ( size = 1 )
                 h2.blue ( size = 1 )

@@ -884,9 +884,8 @@ def make_ostap_style ( name                      ,
     conf [ 'TitleFont_Y'       ] = get_int   ( config , 'TitleFont_Y'         , font   ) 
     conf [ 'TitleFont_Z'       ] = get_int   ( config , 'TitleFont_Z'         , font   ) 
 
-    conf [ 'TitleFontSize'     ] = get_int   ( config , 'TitleFontSize'       , 0.0    * scale )
+    conf [ 'TitleFontSize'     ] = get_int   ( config , 'TitleFontSize'       , 0.05   * scale )
     
-    conf [ 'TitleH'            ] = get_float ( config , 'TitleH'              , 0.0    )
     
     conf [ 'TitleOffset_X'     ] = get_float ( config , 'TitleOffset_X'       , 1.0    ) 
     conf [ 'TitleOffset_Y'     ] = get_float ( config , 'TitleOffset_Y'       , 0.0    ) ## NB!!
@@ -894,18 +893,20 @@ def make_ostap_style ( name                      ,
 
     conf [ 'TitlePS'           ] = get_str   ( config , 'TitlePS'             , ''     ) 
 
-    conf [ 'TitleSize_X'       ] = get_float ( config , 'TitleSize_X'         , -1.0   * scale ) 
+    conf [ 'TitleSize_X'       ] = get_float ( config , 'TitleSize_X'         ,  0.05  * scale ) 
     conf [ 'TitleSize_Y'       ] = get_float ( config , 'TitleSize_Y'         ,  0.05  * scale ) 
     conf [ 'TitleSize_Z'       ] = get_float ( config , 'TitleSize_Z'         ,  0.05  * scale ) 
     
     conf [ 'TitleStyle'        ] = get_int   ( config , 'TitleStyle'          , 1001   ) 
     conf [ 'TitleTextColor'    ] = get_int   ( config , 'TitleTextColor'      , 1      ) 
+
+    conf [ 'TitleX'            ] = get_float ( config , 'TitleX'              , 0.05   )
+    conf [ 'TitleY'            ] = get_float ( config , 'TitleY'              , 0.95   )
+    conf [ 'TitleW'            ] = get_float ( config , 'TitleW'              , 0.0    )
+    conf [ 'TitleH'            ] = get_float ( config , 'TitleH'              , 0.0    )
     
-    conf [ 'TitleW'            ] = get_float ( config , 'TitleW'              ,  0.0   )
-    conf [ 'TitleX'            ] = get_float ( config , 'TitleX'              ,  0.01  )
     conf [ 'TitleXOffset'      ] = get_float ( config , 'TitleXOffset'        ,  1.0   )
-    conf [ 'TitleXSize'        ] = get_float ( config , 'TitleXSize'          , -1.0   * scale )
-    conf [ 'TitleY'            ] = get_float ( config , 'TitleY'              ,  0.99  * scale )
+    conf [ 'TitleXSize'        ] = get_float ( config , 'TitleXSize'          ,  0.05  * scale )
     conf [ 'TitleYOffset'      ] = get_float ( config , 'TitleYOffset'        ,  0.0   * scale )
     conf [ 'TitleYSize'        ] = get_float ( config , 'TitleYSize'          ,  0.05  * scale )
 

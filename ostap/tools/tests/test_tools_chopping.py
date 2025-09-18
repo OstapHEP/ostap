@@ -169,12 +169,12 @@ trainer = Trainer (
     background_train_fraction = 0.85 ,
     ##
     control_plots_signal      = [
-        ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var1' ) ,
-        ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var2' ) ,
-        ( ROOT.TH1F ( hID() , 'control var3' , 100 , -3 , 3 ) , 'var3' ) ,                
+        ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var1' ) ,
+        ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var2' ) ,
+        ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var3' ) ,                
     ] ,
     control_plots_background  = [
-        ( ROOT.TH2F ( hID() , 'control var1,var2' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
+        ( ROOT.TH2F ( hID() , '' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
     ] , 
     ##     
     ##
@@ -204,7 +204,6 @@ for f in trainer.output_files :
 #  - use MVA/Chopper Reader directly                              (rather slow)
 #    but it is very flexible and powerful with respect to variable transformations
 # =============================================================================
-
 
 # =============================================================================
 ## A) Add TMVA/Chopping decision to (input) TTrees 

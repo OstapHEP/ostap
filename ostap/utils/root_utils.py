@@ -96,20 +96,22 @@ class Batch(object) :
     ... do something here 
     """
     def __init__  ( self , batch = True ) :
-        self.__batch = batch 
-    ## contex manahger: ENTER
+        self.__batch     = batch
+        self.__old_state = False
+    ## context manager: ENTER
     def __enter__ ( self ) :
         groot = ROOT.ROOT.GetROOT()
-        self.old_state = groot.IsBatch()
-        if self.old_state != self.__batch : groot.SetBatch ( self.__batch ) 
+        self.__old_state = groot.IsBatch()
+        if self.__old_state != self.__batch :
+            groot.SetBatch ( self.__batch ) 
         return self
-    ## contex manager: EXIT
+    ## context manager: EXIT
     def __exit__  ( self , *_ ) :
         groot = ROOT.ROOT.GetROOT()
-        if self.old_state != groot.IsBatch() : groot.SetBatch( self.old_state ) 
+        if self.__old_state != groot.IsBatch() : groot.SetBatch( self.old_state ) 
 
 # =============================================================================
-## check batch from environmen variables, set it ans issue the message
+## check batch from environment variables, set it ans issue the message
 def batch_env  ( logger = logger ) :
     """ chek&set the bacth from environment 
     - Check batch environmen variable

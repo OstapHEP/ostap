@@ -169,12 +169,12 @@ def test_tmva () :
             ## more_signals = [ tSignal, tSignal, tSignal ] ,
             ##
             control_plots_signal      = [
-                ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var1' ) ,
-                ( ROOT.TH1F ( hID() , 'control var1' , 100 , -3 , 3 ) , 'var2' ) ,
-                ( ROOT.TH1F ( hID() , 'control var3' , 100 , -3 , 3 ) , 'var3' ) ,                
+                ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var1' ) ,
+                ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var2' ) ,
+                ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var3' ) ,                
             ] ,
             control_plots_background  = [
-                ( ROOT.TH2F ( hID() , 'control var1,var2' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
+                ( ROOT.TH2F ( hID() , '' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
             ] , 
             ## 
             verbose                   = True                     ,
