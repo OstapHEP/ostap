@@ -712,8 +712,8 @@ ROOT.TNamed.full_path = property ( tnamed_path , None , None , tnamed_path.__doc
 ## `topdir': get the top directory for the given directory
 #  @code
 #  rdir = ...
-#  tdir = tdit.top_dir 
-#  tdir = tdit.topdir 
+#  tdir = tdir.top_dir 
+#  tdir = tdir.topdir 
 #  @endcode 
 def top_dir ( rdir ) :    
     """`topdir': get the top directory for the given directory/object
@@ -721,9 +721,12 @@ def top_dir ( rdir ) :
     >>> tdir = tdit.top_dir 
     >>> tdir = tdit.topdir 
     """
-    
     if not rdir : return None
 
+    if hasattr ( rdir , 'GetFile' ) :
+        rfile = rdir.GetFile () 
+        if rfile : rdir = rfile 
+    
     with ROOTCWD()  :
 
         top = rdir 

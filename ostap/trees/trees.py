@@ -2030,7 +2030,7 @@ def add_new_branch ( tree , branch , / , **kwargs ) :
 #  @param params parameters
 #  @see Ostap::Trees::add_branch
 def push_2tree ( tree , *config , progress = True , report = True ) :
-    """ Add new branches to (snigole) TTree according to specificaions
+    """ Add new branches to (single) TTree according to specificaions
     - @see `Ostap.Trees.add_branch`
     """
     assert isinstance ( tree , ROOT.TTree ) and valid_pointer ( tree  ) , \
@@ -2039,12 +2039,15 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
     if isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles :
         return push_2chain ( tree , *config , progress = progress , report = report ) 
     
-    ## list of existing brranches/leaves 
+    ## list of existing branches/leaves 
     branches = ( set ( tree.branches() ) | set ( tree.leaves() ) ) if report else set() 
     
     treepath = tree.path
     the_file = tree.topdir
     groot    = ROOT.ROOT.GetROOT() 
+    print ( 'TREEPATH' , treepath , True if treepath else False )
+    print ( 'THE_FILE' , the_file , typename ( the_file ) , True if the_file else False )
+    
     assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
         'This is not the file-resident TTree* object! addition of new branch is not posisble!'
 
@@ -2131,10 +2134,10 @@ def push_2chain ( chain , *config , progress = True , report = True ) :
     tree_progress  = progress and ( 5 >  len ( files ) ) 
     
     for fname in progress_bar ( files , silent = not chain_progress , description = 'Files:' ) :
-        tree = ROOT.TChain ( cname )
-        tree.Add ( fname ) 
+        ftree = ROOT.TChain ( cname )
+        ftree.Add ( fname )
         ## treat the tree 
-        push_2tree ( tree , *config , report = False , progress = tree_progress ) 
+        push_2tree ( ftree , *config , report = False , progress = tree_progress ) 
         
     ## reconstruct the resulting chain 
     chain = ROOT.TChain ( cname )
