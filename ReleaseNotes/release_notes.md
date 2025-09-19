@@ -1,8 +1,5 @@
 ## New features
 
-  1.Add (C++) progress bar to `Ostap::Selector` class
-  1 Remove python progress bar from all hierarchy of selectors
- 
 ## Backward-incompatible
 
 ## Bug fixes
@@ -18,6 +15,9 @@
    1. Improve treatment of control plots in TMVA. Now control histos are saved into ROOT output file
    1. Improve `Canvas` context manager 
    1. Switch the ownership of Ostap-canvas to python
+   1. Add (C++) progress bar to `Ostap::Selector` class
+   1  Remove python progress bar from all hierarchy of selectors
+ 
    
 ## Backward-incompatible
 

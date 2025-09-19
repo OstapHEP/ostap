@@ -5,9 +5,26 @@ echo 'build Ostap with LCG-cvmfs'
 LCG=${1:-dev3/latest}
 PLATFORM=${2:-x86_64-el9-clang19-opt} 
 
-( cd /cvmfs/sft.cern.ch/lcg/views 2> /dev/null ; echo 'BUILD WITH LCG    : LCG-views     :' $PWD ) 
-( cd /cvmfs/sft.cern.ch/lcg/views 2> /dev/null ; cat /cvmfs/sft.cern.ch/lcg/views/setupViews.sh  > /dev/null )
-( cd /cvmfs/sft.cern.ch/lcg/views 2> /dev/null ; cat /cvmfs/sft.cern.ch/lcg/views/setupViews.csh > /dev/null )
+# ================================================================================
+## Wake up the fuse mount
+# ================================================================================
+
+( cd  /cvmfs/sft.cern.ch                     2>/dev/null ; ls -al . 2>&1 > /dev/null )
+( cd  /cvmfs/sft.cern.ch/lcg                 2>/dev/null ; ls -al . 2>&1 > /dev/null )
+( cd  /cvmfs/sft.cern.ch/lcg/views           2>/dev/null ; ls -al . 2>&1 > /dev/null )
+
+( cd  /cvmfs/sft-nightlies.cern.ch           2>/dev/null ; ls -al . 2>&1 > /dev/null )
+( cd  /cvmfs/sft-nightlies.cern.ch/lcg       2>/dev/null ; ls -al . 2>&1 > /dev/null )
+( cd  /cvmfs/sft-nightlies.cern.ch/lcg/views 2>/dev/null ; ls -al . 2>&1 > /dev/null )
+
+( cat /cvmfs/sft.cern.ch/lcg/views/setupViews.sh  2>&1 > /dev/null )
+( cat /cvmfs/sft.cern.ch/lcg/views/setupViews.csh 2>&1 > /dev/null )
+
+( cd  /cvmfs/sft.cern.ch/lcg/views/$LCG      2>/dev/null ; ls -al . 2>&1 > /dev/null )
+
+( cd  /cvmfs/sft.cern.ch/lcg/views           2> /dev/null ; cat /cvmfs/sft.cern.ch/lcg/views/setupViews.sh  > /dev/null )
+( cd  /cvmfs/sft.cern.ch/lcg/views           2> /dev/null ; cat /cvmfs/sft.cern.ch/lcg/views/setupViews.csh > /dev/null )
+( cd  /cvmfs/sft.cern.ch/lcg/views           2> /dev/null ; echo 'BUILD WITH LCG    : LCG-views     :' $PWD ) 
 
 if [[ $LCG && -d /cvmfs/sft.cern.ch/lcg/views/$LCG ]]
 then
