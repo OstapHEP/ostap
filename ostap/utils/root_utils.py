@@ -108,7 +108,7 @@ class Batch(object) :
     ## context manager: EXIT
     def __exit__  ( self , *_ ) :
         groot = ROOT.ROOT.GetROOT()
-        if self.__old_state != groot.IsBatch() : groot.SetBatch( self.__old_state ) 
+        if self.__old_state != groot.IsBatch() : root.SetBatch( self.__old_state ) 
 
 # =============================================================================
 ## check batch from environment variables, set it ans issue the message

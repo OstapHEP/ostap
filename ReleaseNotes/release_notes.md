@@ -4,6 +4,8 @@
 
 ## Bug fixes
 
+  1. Fix typo in `Batch`
+
 # v3.0.2.14
 
 ## New features
@@ -18,7 +20,6 @@
    1. Add (C++) progress bar to `Ostap::Selector` class
    1  Remove python progress bar from all hierarchy of selectors
  
-   
 ## Backward-incompatible
 
 ## Bug fixes
