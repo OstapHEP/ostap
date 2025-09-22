@@ -331,7 +331,7 @@ class Files(object):
         if not self.check_ops ( right ) : return False 
         return set ( self.files ) == set ( right.files ) 
 
-    ## union of seevral file collections 
+    ## union of several file collections 
     def union ( self , *others ) :
         """ Union of several file collections 
         """
