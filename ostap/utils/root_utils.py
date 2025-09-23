@@ -101,15 +101,17 @@ class Batch(object) :
     ## context manager: ENTER
     def __enter__ ( self ) :
         groot = ROOT.ROOT.GetROOT()
-        self.__old_state = groot.IsBatch()
-        if self.__old_state != self.__batch :
-            groot.SetBatch ( self.__batch ) 
+        if groot :        
+            self.__old_state = groot.IsBatch()
+            if self.__old_state != self.__batch :
+                groot.SetBatch ( self.__batch )                
         return self
     ## context manager: EXIT
     def __exit__  ( self , *_ ) :
         groot = ROOT.ROOT.GetROOT()
-        if self.__old_state != groot.IsBatch() : root.SetBatch( self.__old_state ) 
-
+        if groot and self.__old_state != groot.IsBatch() :
+            groot.SetBatch( self.__old_state ) 
+            
 # =============================================================================
 ## check batch from environment variables, set it ans issue the message
 def batch_env  ( logger = logger ) :
