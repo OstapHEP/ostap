@@ -1,3 +1,11 @@
+## New features
+
+  1. more improvemts for helper script `./aux/.build-lcg`
+  
+## Backward-incompatible
+
+## Bug fixes
+
 # v3.0.2.16 
 
 ## New features
