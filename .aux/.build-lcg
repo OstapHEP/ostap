@@ -55,8 +55,6 @@ for run in {1..10}; do
     
 done
 
-echo 'I AM HERE-1' 
-
 if [[ $LCG && -d /cvmfs/sft.cern.ch/lcg/views/${LCG} ]]
 then
     true 
