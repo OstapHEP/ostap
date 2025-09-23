@@ -1234,7 +1234,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
     >>> ... 
     """
     def __init__ ( self                      ,
-                   name      = ''            ,
+                   name      = ''            , 
                    title     = ''            ,
                    width     = canvas_width  ,   ## canvas width
                    height    = canvas_height ,   ## canvas height 
@@ -1252,11 +1252,8 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         self.__keep   = True if keep else False 
         self.__cnv    = None
 
-        if plot is True : plot = name if name else 'plot'
-        
-        if plot : plot = plot.strip().replace ( ' ' , '_' )
-            
         self.__plot   = plot
+
         ##
         self.__invisible = True if invisible else False
         if not self.__invisible : 
@@ -1321,11 +1318,18 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         if self.__cnv :
             self.__cnv.Update()            
             if self.__plot :
-                self.__cnv >> self.__plot
+                plot = self.__plot 
+                if not isinstance  ( plot , str ) :
+                    if self.__name : plot = self.__name
+                    else           : plot = self.__cnv.name
+                
+                if not plot : plot = 'plot'
+                plot = plot.replace ( ' ' , '_' ) 
+                self.__cnv >> plot
                 
         ## swith back to pad configuration
         UsePad   .__exit__  ( self , *_ )
-        ## switch back to  batch regine
+        ## switch back to  batch regime 
         Batch    .__exit__  ( self , *_ )
         ## swith back to old style
         UseStyle.__exit__   ( self , *_ )
@@ -1359,6 +1363,7 @@ def use_canvas ( name      = ''            ,
                     width     = width     , ## canvas width
                     height    = height    , ## canvas height
                     wait      = wait      , ## pause before exit
+                    plot      = plot      , ## print the plot ? 
                     keep      = keep      , ## keep canvas open?
                     invisible = invisible , ## invisble/batch 
                     style     = style     , ## use this style 

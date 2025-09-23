@@ -3125,6 +3125,7 @@ def plot_variables ( name              ,
                      invisible = False ,
                      style     = None  ,  
                      prefix    = ''    ,
+                     progress  = True  , 
                      **kwargs          ) :
     """ Make plots for variables using the tree from the  output TMVA file
     - due to some mistic reasons the standard macro `ROOT.TMVA.variables` often crashes
@@ -3157,8 +3158,8 @@ def plot_variables ( name              ,
     vars = set ( chain.branches () ) | set ( chain.leaves() )        
     vars = tuple ( sorted ( vars - set ( [ 'weight' , 'classID' , 'className' ] ) - set ( skipvars ) ) )
     
-    chunks = chunked ( vars , 6 )
-    stats  = chain.statVars ( vars , 'weight' , as_weight = True , use_frame = True ) 
+    chunks     = chunked ( vars , 6 )
+    stats      = chain.statVars ( vars , 'weight' , as_weight = True , use_frame = True , progress = progress ) 
     
     wcut       = ROOT.TCut ( 'weight' )
     signal     = ROOT.TCut ( 'classID==0' ) * wcut 
@@ -3167,13 +3168,14 @@ def plot_variables ( name              ,
     cnvlist = [] 
     for i, chunk in enumerate ( chunks , start = 1 ) :
         cname =  '%s%s_VARIABLES_p%i' % ( prefix , name , i )
+        print ( 'canvas:' , cname ) 
         with use_canvas ( cname                 ,
                           width     = width     ,
                           height    = height    ,
                           style     = style     ,
                           invisible = invisible , 
                           plot      = True      , **kwargs ) as cnv  :
-            
+
             cnvlist.append ( cnv ) 
             cnv.Clear  () 
             cnv.Divide ( 3 , 2 )
@@ -3201,7 +3203,7 @@ def plot_variables ( name              ,
                 
                 ymax0  = max ( h1.ymax() , h2.ymax() )
                 ymin0  = min ( h1.ymin() , h2.ymin() )
-                ymin  , ymax = axis_range ( ymin0 , ymax0 , 0.20 )
+                ymin  , ymax = axis_range ( ymin0 , ymax0 , 0.10 )
                 
                 h1.SetMaximum ( ymax )
                 h2.SetMaximum ( ymax )
