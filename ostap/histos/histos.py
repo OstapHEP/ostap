@@ -2458,7 +2458,7 @@ def zechEff_h1 ( h1 , h2 , func = zechEff ) :
     """ Calculate the efficiency histogram using the binomial errors
     >>> accepted  = ... ##  histogram for accepted sample 
     >>> total     = ... ##  histogram for total    sample 
-    >>> efficiency = accepted % total    
+    >>> efficiency = accepted % total  ## ditto 
     """
     #
     if isinstance ( h1 , ROOT.TProfile ) :

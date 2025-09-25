@@ -581,8 +581,12 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             changed [ key ] = style.GetLineStyleString ( i )                         
             style.SetLineStyleString ( i , conf.pop ( k ) .strip() ) 
 
-    if   'Palette'      in conf : style.SetPalette ( conf.pop ( 'Palette'      ) )
-    elif 'ColorPalette' in conf : style.SetPalette ( conf.pop ( 'ColorPalette' ) )
+    if   'Palette'      in conf :
+        style.SetPalette ( conf.pop ( 'Palette'      ) )
+        changed [ 'Palette'      ] = ROOT.kDarkBodyRadiator
+    elif 'ColorPalette' in conf :
+        changed [ 'ColorPalette' ] = ROOT.kDarkBodyRadiator
+        style.SetPalette ( conf.pop ( 'ColorPalette' ) )
         
     ## Extra attributes 
     for e in extra :

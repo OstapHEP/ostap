@@ -3168,7 +3168,6 @@ def plot_variables ( name              ,
     cnvlist = [] 
     for i, chunk in enumerate ( chunks , start = 1 ) :
         cname =  '%s%s_VARIABLES_p%i' % ( prefix , name , i )
-        print ( 'canvas:' , cname ) 
         with use_canvas ( cname                 ,
                           width     = width     ,
                           height    = height    ,

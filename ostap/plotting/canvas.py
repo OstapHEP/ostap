@@ -1052,6 +1052,44 @@ def draw_pads ( objects            ,
         if c : c.cd(0)
 
 # =============================================================================
+## known keys for `set_pad` function 
+pad_keys = (
+    'frame_border_mode' , 
+    'frame_border_size' ,
+    'frame_fill_color'  , 
+    'frame_fill_style'  , 
+    'frame_line_color'  , 
+    'frame_line_style'  , 
+    'frame_line_width'  , 
+    'a_file'            , 
+    'a_stat'            , 
+    'x_file'            , 
+    'x_stat'            , 
+    'y_file'            , 
+    'y_stat'            , 
+    'top_margin'        , 
+    'bottom_margin'     ,
+    'left_margin'       ,
+    'right_margin'      ,
+    'margin_top'        , 
+    'margin_bottom'     , 
+    'margin_left'       , 
+    'margin_right'      , 
+    'grid_x'            ,
+    'grid_y'            ,
+    'x_grid'            ,
+    'y_grid'            ,
+    'log_x'             ,
+    'log_y'             ,
+    'log_z'             ,
+    'x_log'             ,
+    'y_log'             ,
+    'z_log'             ,
+    )
+# =============================================================================
+## convert them ..
+pad_keys = tuple ( cidict_fun ( k ) for k in pad_keys ) 
+# =============================================================================
 ## change main parametes of TAttPad
 def set_pad ( pad , **config ) :
     """ Change main parametes of `TAttPad`"""
@@ -1152,6 +1190,11 @@ def set_pad ( pad , **config ) :
         changed ['log_y']  =  pad.GetLogy () 
         if 'log_y' in conf  : pad.SetLogy ( conf.pop ( 'log_y' ) ) 
         else                : pad.SetLogy ( conf.pop ( 'y_log' ) )
+
+    if 'log_z' in conf or 'z_log' in conf :
+        changed ['log_z']  =  pad.GetLogy () 
+        if 'log_z' in conf  : pad.SetLogz ( conf.pop ( 'log_z' ) ) 
+        else                : pad.SetLogz ( conf.pop ( 'z_log' ) )
         
     if conf :
         logger.warning ("set_pad: unprocessed items: %s" % conf ) 
@@ -1167,9 +1210,16 @@ class UsePad(object) :
     """
     def  __init__ ( self , pad = None , **config ) :
 
-        self.__pad     = pad if ( pad and isinstance ( pad , ROOT.TAttPad ) ) else None 
-        self.__config  = config
-        self.__changed = {} 
+        self.__pad         = pad if ( pad and isinstance ( pad , ROOT.TAttPad ) ) else None 
+        self.__pad_config  = config
+        self.__changed     = {} 
+
+        unknown = set() 
+        for k in config :
+            if not cidict_fun ( k ) in pad_keys : unknown.add ( k )
+        if unknown :
+            unknown = ', '.join ( sorted ( unknown ) )
+            logger.warning ( 'UsePad unknown keys: %s' % unknown )
 
     ## Context manager: ENTER 
     def __enter__ ( self ) :
@@ -1179,8 +1229,8 @@ class UsePad(object) :
         
         if not self.__pad : self.__pad = Ostap.Utils.get_pad() 
         
-        if self.pad : 
-            self.__changed = set_pad ( self.pad , **self.config )
+        if self.pad and self.pad_config : 
+            self.__changed = set_pad ( self.pad , **self.pad_config )
 
         return self 
         
@@ -1201,9 +1251,9 @@ class UsePad(object) :
         return self.__pad
     
     @property
-    def config ( self ) :
-        """`config' : cofiguration pad to be"""
-        return self.__config
+    def pad_config ( self ) :
+        """`pad_config' : cofiguration pad to be"""
+        return self.__pad_config
 
     @property
     def changed ( self ) :
@@ -1260,14 +1310,19 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
             groot = ROOT.ROOT.GetROOT()
             if groot : self.__invisible = groot.IsBatch() 
             
-        self.__style     = style 
-        
-        ## 
+        ##
+        style_conf = {}
+        pad_conf   = {}
+        for k in kwargs :
+            key = cidict_fun ( k )
+            if key in pad_keys : pad_conf   [ k ] = kwargs [ k ]
+            else               : style_conf [ k ] = kwargs [ k ]
+
         KeepCanvas.__init__ ( self , wait             )
-        UseStyle  .__init__ ( self , self.__style     )
-        UsePad    .__init__ ( self , **kwargs         ) 
+        UseStyle  .__init__ ( self , **style_conf     )
+        UsePad    .__init__ ( self , **pad_conf       ) 
         Batch     .__init__ ( self , self.__invisible )
-                              
+            
     ## context manager: exit 
     def __enter__ ( self ) :
 
@@ -1303,8 +1358,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         UsePad.__enter__ ( self )
         
         ## (5) keep it open ? 
-        if self.__keep :
-            _keep.append ( self.__cnv ) 
+        if self.__keep : _keep.append ( self.__cnv ) 
 
         return self.__cnv  ## return current canvas 
     

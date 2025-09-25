@@ -9,6 +9,7 @@
 __all__ = (
     'UseStyle'         ,  ## context manager  for the style (class) 
     'useStyle'         ,  ## context manager  for the style (function)
+    'use_style'        ,  ## context manager  for the style (function)
     ##
     'Style'            ,  ## the default Ostap style 
     'ostap_label'      ,  ## the style for the text 
@@ -157,8 +158,8 @@ class UseStyle(object):
     """
     def __init__ ( self, style = None , **config ) :
         
-        if   style is None : style = ostapStyle 
-        elif isinstance ( style , int ):
+        if   style is None              : pass ## no action! 
+        elif isinstance ( style , int ) :
             
             if    0  == style : style = ostapStyle
             elif  1  == style : style = Style1
@@ -178,17 +179,17 @@ class UseStyle(object):
             else :
                 style = root_style ( style ) 
 
-
-        if ( not style ) or ( not isinstance  ( style , ROOT.TStyle ) ) :
+        if   style is None : pass 
+        elif not isinstance  ( style , ROOT.TStyle ) :
             unknown = style 
             style   = ostapStyle
-            logger.warning ( "No valid style `%s'is found, use default `%s' style" % ( str ( unknown ) , style.GetName() ) ) 
-
+            logger.warning ( "No valid style `%s' is found, use default `%s' style" % ( str ( unknown ) , style.GetName() ) ) 
+            
         self.__new_style = style
         self.__old_style = None 
 
-        self.__config    = config 
-        self.__changed   = {}
+        self.__style_config = config 
+        self.__changed      = {}
         
     ## context  manager: enter 
     def __enter__ ( self )      :
@@ -199,8 +200,8 @@ class UseStyle(object):
             self.__old_style = ROOT.gStyle 
             self.__new_style.cd   ()
             if groot : groot.SetStyle   ( self.__new_style.GetName()  ) ## NEW!
-            if self.__config :
-                self.__changed = set_style ( self.__new_style , self.__config ) 
+            if self.style_config :
+                self.__changed = set_style ( self.__new_style , self.style_config ) 
             groot.ForceStyle ( True )
             pad = ROOT.Ostap.Utils.get_pad    () 
             if pad : pad.UseCurrentStyle ()
@@ -211,7 +212,7 @@ class UseStyle(object):
     ## context  manager: exit
     def __exit__  ( self , *_ ) :
 
-        if self.__changed :
+        if self.__changed and self.__new_style :
             set_style ( self.__new_style , self.__changed ) 
             
         if self.__old_style : 
@@ -235,9 +236,9 @@ class UseStyle(object):
         return self.__old_style
 
     @property
-    def config   ( self ) :
-        """`config' : addtional configuration parameters """
-        return self.__config
+    def style_config   ( self ) :
+        """`style_config' : addtional configuration parameters """
+        return self.__style_config
 
     @property
     def changed   ( self ) :
@@ -259,6 +260,8 @@ def useStyle ( style = None , **config  ) :
     """
     return UseStyle ( style , **config )
 
+## ditto 
+use_style = useStyle  
 
 import atexit
 @atexit.register
