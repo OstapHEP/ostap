@@ -6241,7 +6241,6 @@ def _h1_integrate_ ( h                           ,
                 
     return result 
 
-
 # =============================================================================
 ## perform some integration(taking into acount the bin-width) for the histogram
 #  @code
@@ -6317,7 +6316,6 @@ def _h2_integrate_ ( h                         ,
             if cut ( i ) : result = func ( result , i[-1] * vol )
                 
     return result 
-
 
 # =============================================================================
 ## perform some integration(taking into acount the bin-width) for the histogram
@@ -6414,7 +6412,6 @@ def _h3_integrate_ ( h                         ,
                 
     return result 
 
-
 # =============================================================================
 ## make transformation of histogram content 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -6459,8 +6456,6 @@ def _h3_rescale_ ( h3 , factor = 1 ) :
 
 ROOT.TH3F. rescale_bins = _h3_rescale_ 
 ROOT.TH3D. rescale_bins = _h3_rescale_ 
-
-
 
 ROOT.TH1F .   shift     = _h1_shift_
 ROOT.TH1D .   shift     = _h1_shift_
@@ -6568,7 +6563,6 @@ def _h1_std_moment_ ( h1 , order ,  exp_moment = False ) :
 
         moment = mom / ( sigma ** order ) 
         
-
     return moment 
     
 # =============================================================================
@@ -6665,7 +6659,6 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     #
 
 ROOT.TH1.nEff = ROOT.TH1.GetEffectiveEntries 
-
 
 # =============================================================================
 ## Get the histogram moments
@@ -6850,14 +6843,12 @@ def _h3_smoment_ ( h3 , orderx , ordery , orderz  ) :
     #
     return HStats.std_moment3 ( h3 , orderx , ordery , orderz  )
 
-
 _h3_smoment_ . __doc__ +=  '\n' + HStats.std_moment3.__doc__ 
 
 for h in ( ROOT.TH3F , ROOT.TH3D ) :
     h.moment         = _h3_moment_
     h.central_moment = _h3_cmoment_
     h.std_moment     = _h3_smoment_
-
 
 # =============================================================================
 ## get some statistic information on the histogram content
@@ -7154,7 +7145,6 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
     _h.add_fake_bin_left  = _h1_add_fake_bin_left_
     _h.add_fake_bin_right = _h1_add_fake_bin_right_
 
-
 # =============================================================================
 ## add "fake" side(row of bins) into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
@@ -7279,8 +7269,7 @@ def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     _ex = list ( _ax.edges() )
     _ey = list ( _ay.edges() )
     _ez = list ( _ay.edges() )
-    
-    
+        
     if   0 == side % 6  :   ## left  
         _en = _ex[ 0] - width * ( _ex[ 1] - _ex[ 0] )
         if 0 <= width : _ex.insert ( 0 , _en )
@@ -8616,7 +8605,6 @@ ROOT.TH2D. scale_axes = _h2_scale_axes_
 ROOT.TH3F. scale_axes = _h3_scale_axes_
 ROOT.TH3D. scale_axes = _h3_scale_axes_
 
-
 # =============================================================================
 ## keys used for booing 1/2/3-dimensiona histograms via the `histo_book` method 
 histo_keys = ( 'xbins' , 'nbinsx' , 'binsx' , 'nbins' ,
@@ -9102,7 +9090,6 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 
 
-
 # =============================================================================
 ## print histogram summary as table
 #  @code
@@ -9292,7 +9279,6 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         
     table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
     return table 
-
 
 ROOT.TH1F.table   = _h1_table_
 ROOT.TH1D.table   = _h1_table_
@@ -9960,8 +9946,7 @@ _new_methods_  += (
 
 # =============================================================================
 if '__main__' == __name__ :
-    
-        
+            
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger ) 
     
