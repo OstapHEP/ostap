@@ -1,6 +1,8 @@
 ## New features
 
   1. more improvemts for helper script `./aux/.build-lcg`
+  1. add `ast` method to `ROOT.TCut` to parse the expression using `ast` and then unparse it... 
+  1. add `pow` and `rpow` functions for TCut-expressions 
   
 ## Backward-incompatible
 
