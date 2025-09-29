@@ -8907,8 +8907,7 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         yrms , expo = pretty_float ( stat.rms () , width = width , precision = precision )    
         row = 'y-rms' , yrms , '10^%+d' % expo if expo else '' 
         rows.append ( row )
-        
-        
+                
     has3 = False
     for row in rows [1:] :
         if row [ 2 ] :
@@ -8925,7 +8924,7 @@ def _h1_table_ ( h1 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         from ostap.logger.symbols import histogram as histo_symbol 
         if histo_symbol : title = '%s %s' % ( histo_symbol , title )
     
-    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
+    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lwc' ) 
     return table 
 
 # =============================================================================
@@ -9087,7 +9086,7 @@ def _h2_table_ ( h2 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         from ostap.logger.symbols import histogram as histo_symbol
         if histo_symbol : title = '%s %s' % ( histo_symbol , title )
         
-    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
+    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lwc' ) 
     return table 
 
 # =============================================================================
@@ -9277,7 +9276,7 @@ def _h3_table_ ( h3 , title = '' , prefix = '' , width = 5 , precision = 3 ) :
         from ostap.logger.symbols import histogram as histo_symbol
         if histo_symbol : title = '%s %s' % ( histo_symbol , title )
         
-    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lc' ) 
+    table = T.table ( rows ,title = title , prefix = prefix , alignment = 'lwc' ) 
     return table 
 
 ROOT.TH1F.table   = _h1_table_
@@ -9295,14 +9294,12 @@ ROOT.TH3D.table    = _h3_table_
 ROOT.TH3F.summary  = _h3_table_
 ROOT.TH3D.summary  = _h3_table_
 
-
 ROOT.TH1F.__repr__ = _h1_table_
 ROOT.TH1D.__repr__ = _h1_table_
 ROOT.TH2F.__repr__ = _h2_table_
 ROOT.TH2D.__repr__ = _h2_table_
 ROOT.TH3F.__repr__ = _h3_table_
 ROOT.TH3D.__repr__ = _h3_table_
-
 
 # =============================================================================
 _decorated_classes_ = (

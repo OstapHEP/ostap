@@ -65,19 +65,22 @@ if '__main__' == __name__ :
     
     config = parser.parse_args ( sys.argv[1:] )
 
-
+    ## 
+    if config.parallel <= 0 :
+        config.parallel = False
+    
     if config.verbose : 
         logger.debug ( "Configuration: %s" % config )
         ## from ostap.utils.docme import docme
         ## docme ( __name__ , logger = logger )
         
-        with timing ( 'Sync %s' % config.source , logger = logger if config.verbose else None ) as timer : 
-            result = sync_dirs ( source_dir = config.source   ,
-                                 new_dir    = config.target   ,
-                                 parallel   = config.parallel ,
-                                 copy_cmd   = config.command  ,
-                                 progress   = config.progress or config.verbose )
-            
+    with timing ( 'Sync %s' % config.source , logger = logger if config.verbose else None ) as timer : 
+        result = sync_dirs ( source_dir = config.source   ,
+                             new_dir    = config.target   ,
+                             parallel   = config.parallel ,
+                             copy_cmd   = config.command  ,
+                             progress   = config.progress or config.verbose )
+        
     if config.verbose :
         
         ts    = 0

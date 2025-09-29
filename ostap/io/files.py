@@ -855,7 +855,12 @@ def copy_files ( files_to_copy           ,
     if parallel and 1 < nfiles and 1 < numcpu () :
         
         from ostap.utils.parallel_copy import copy_files as parallel_copy        
-        copied = parallel_copy ( pairs , maxfiles = 1 , copier = copier , copy_cmd = copy_cmd , progress = progress  )
+        copied = parallel_copy ( pairs                ,
+                                 maxfiles = 1         ,
+                                 copier   = copier    ,
+                                 parallel = parallel  , 
+                                 copy_cmd = copy_cmd  ,
+                                 progress = progress  )
         copied = tuple ( f [ 1 ] for f in copied )
 
     else :
@@ -997,7 +1002,7 @@ def sync_dirs  ( source_dir             ,
 
     return sync_files ( pairs               ,
                         new_dir  = new_dir  , 
-                        parallel = parallel ,
+                        parallel = parallel ,                        
                         copier   = copier   ,
                         copy_cmd = copy_cmd ,
                         progress = progress )

@@ -10,6 +10,8 @@
 
 ## Bug fixes
 
+  1. fix `ostap-sync-dirs` script 
+ 
 # v3.0.2.16 
 
 ## New features

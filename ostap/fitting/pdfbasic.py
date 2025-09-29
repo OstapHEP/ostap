@@ -1650,8 +1650,11 @@ class APDF1 ( Components ) :
                 results.append ( res )
                 if draw :
                     graph.SetPoint ( len ( graph ) , v , p ) ## add the point 
-                    if 1 == len ( graph ) : graph.draw ("ap")  
-                    
+                    if   1 == len ( graph ) : graph.draw ("ap")
+                    elif 1 <  len ( graph ) : 
+                        cnv = Ostap.Utils.get_canvas()
+                        if cnv : cnv.Update()
+                        
         ## 4) re-create the graph
         graph   = ROOT.TGraph ( len ( results ) )
         results.sort ()

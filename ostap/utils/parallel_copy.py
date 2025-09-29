@@ -29,12 +29,13 @@ else                       : logger = getLogger ( __name__                    )
 # =============================================================================
 
 # ============================================================================
-## Copy files in parallel using GNU paralell or xargs 
+## Copy files in parallel using GNU parallel or xargs 
 #  @see https://www.gnu.org/software/parallel/
 #  - switch to multiprocess-based parallelisation when GNU parallel is not avialable 
 def copy_files ( file_pairs      ,
                  progress = True ,
                  copier   = None ,
+                 parallel = True , 
                  copy_cmd = ''   , **kwargs ) :
     """ Copy files in parallel using GNU parallel or xargs 
     - see https://www.gnu.org/software/parallel/
@@ -49,14 +50,19 @@ def copy_files ( file_pairs      ,
     ## keep arguments 
     pairs = tuple ( p for p in file_pairs )
 
-    # ======================================================================
-    ## sequential processing 
-    # ======================================================================
     nfiles = len ( pairs ) 
     from ostap.utils.basic import numcpu
-    ncpu = numcpu()
     
-    if nfiles <= 1 or ncpu <= 1  :
+    if   parallel   is True  : ncpus = numcpu  ()
+    elif parallel   is False : ncpus = 1     
+    elif isinstance ( parallel , int ) and 1 <= parallel :
+        ncpus = min ( parallel , numcpu () )
+    else                     : ncpus = numcpus () 
+
+    # ======================================================================
+    ## (1) sequential processing
+    # ======================================================================    
+    if nfiles <= 1 or ncpus <= 1  :
         from ostap.utils.progress_bar import progress_bar
         silent = nfiles <= 1 or not progress 
         copied = [] 
@@ -66,6 +72,9 @@ def copy_files ( file_pairs      ,
             copied.append ( result ) 
         return tuple ( copied )
 
+    # =====================================================================
+    ## parallel processing
+    # =====================================================================
     parallel = which ( 'parallel' )
     xargs    = '' if parallel else which ( 'xargs' )
 
@@ -75,7 +84,8 @@ def copy_files ( file_pairs      ,
         from ostap.parallel.parallel_copy import copy_files as cpfiles
         return cpfiles ( file_pairs          ,
                          progress = progress ,
-                         copier   = copier   , **kwargs ) 
+                         copier   = copier   ,
+                         ncpus    = ncpus    , **kwargs ) 
 
     # =====================================================================
     ## (1) collect all directories
@@ -101,9 +111,9 @@ def copy_files ( file_pairs      ,
             cmd.write ( line )
 
     if parallel :
-        command = 'parallel -j %d --bar :::: %s' %  ( ncpu , tmpfile ) if progress else 'parallel -j%d :::: %s' % ( ncpu , tmpfile )
+        command = 'parallel -j %d --bar :::: %s' %  ( ncpus , tmpfile ) if progress else 'parallel -j%d :::: %s' % ( ncpus , tmpfile )
     else :
-        command = 'xargs -P%d -L1 -a %s %s ' % ( ncpu , tmpfile , copy_cmd ) 
+        command = 'xargs -P%d -L1 -a %s %s ' % ( ncpus , tmpfile , copy_cmd ) 
         if progress and 'cp' == copy_cmd : command += ' -v ' 
 
     ## (4) finally, call GNU parallel/xargs command 
@@ -117,11 +127,9 @@ def copy_files ( file_pairs      ,
             result = f , os.path.abspath ( nf ) 
             results.add ( result )
         else :
-
             logger.warning ( "copy_files: no expected output '%s'" % nf ) 
 
     return tuple ( results ) 
-
 
 # ============================================================================
 ## Sync/copy files in parallel using GNU paralell or xargs 
@@ -130,6 +138,7 @@ def copy_files ( file_pairs      ,
 def sync_files ( file_pairs            ,
                  progress = True       ,
                  copier   = None       ,
+                 parallel = True       , 
                  copy_cmd = ''         , **kwargs ) :
     """Sync/copy files in parallel using GNU parallel or xargs 
     - see https://www.gnu.org/software/parallel/
@@ -139,6 +148,7 @@ def sync_files ( file_pairs            ,
         return copy_files ( file_pairs          ,
                             progress = progress ,
                             copier   = None     ,
+                            parallel = parallel , 
                             copy_cmd = ''       , **kwargs )
     
     if not copy_cmd :
@@ -151,6 +161,7 @@ def sync_files ( file_pairs            ,
     return copy_files ( file_pairs          ,
                         progress = progress ,
                         copier   = copier   ,
+                        paralell = parallel , 
                         copy_cmd = copy_cmd , **kwargs )
 
 # =============================================================================

@@ -85,11 +85,14 @@ def copy_files ( file_pairs , progress = True , maxfiles = 5 , copier = None , *
         copier = copy_file
 
     pairs = tuple ( p for p in file_pairs )
+    
+    ncpus  = kwargs.pop ( 'ncpus' , numcpu() )
+    
     # ========================================================================
     ## sequential copy 
     # =======================================================================
-    nfiles = len ( pairs ) 
-    if nfiles <= 1 or numcpu () <=1  :
+    nfiles = len ( pairs )
+    if nfiles <= 1 or ncpus <=1  :
         from ostap.utils.progress_bar import progress_bar
         silent = nfiles <= 1 or not progress 
         copied = [] 
@@ -105,7 +108,7 @@ def copy_files ( file_pairs , progress = True , maxfiles = 5 , copier = None , *
     from ostap.utils.utils import chunked
     data   = chunked ( pairs , max ( maxfiles , 1 ) )
     task   = CopyTask ( copier = copier )    
-    wmgr   = WorkManager ( silent = not progress , progress = progress , **kwargs )    
+    wmgr   = WorkManager ( silent = not progress , progress = progress , ncpus = ncpus , **kwargs )    
     wmgr.process ( task , data )
     copied = task.results ()
 

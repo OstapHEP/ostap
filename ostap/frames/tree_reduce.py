@@ -156,7 +156,7 @@ class ReduceTree(CleanUp):
         self.__name = name
 
         if not output : 
-            output = self.tempfile ( prefix = 'ostap-frame-' , suffix = '.root' )
+            output = self.tempfile ( prefix = 'ostap-frame-reduce-' , suffix = '.root' )
             if not tmp_keep : self.trash.add ( output  )
 
         dirname = os.path.dirname ( output )
@@ -174,7 +174,7 @@ class ReduceTree(CleanUp):
 
         if  ( selections or 1 != prescale ) and not silent :
             report = frame.Report  ()
-        
+
         assert os.path.exists ( output ) and os.path.isfile ( output ) , \
                'Invalid file %s' % output 
 
