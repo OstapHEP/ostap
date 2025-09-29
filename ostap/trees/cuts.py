@@ -438,6 +438,25 @@ def _tc_imod_ ( self , other ) :
     ## 
     return self 
 
+# =============================================================================
+## abs function for TCut object
+#  @see ROOT:TCut
+#  @code
+#  cut = ...
+#  new_cut = abs ( cut )
+#  @endcode
+def _tc_abs_ ( self ) :
+    """ abs function for TCut object
+    >>> cut = ...
+    >>> new_cut = abs ( cut )
+    """
+    self.strip()
+    if not self : return NotImplemented
+    ##
+    new_cut = ROOT.TCut ( self )
+    new_cut.SetTitle ( 'abs(%s)' % self )
+    return new_cut 
+
 atypes = string_types +             ( ROOT.TCut , bool )
 btypes = string_types + num_types + ( ROOT.TCut ,      )
 # =============================================================================
@@ -980,6 +999,7 @@ ROOT.TCut.__rpow__      = _tc_rpow_
 ROOT.TCut.__rmod__      = _tc_rmod_
 
 ROOT.TCut.__invert__    = _tc_invert_
+ROOT.TCut.__abs__       = _tc_abs_
 
 ROOT.TCut. __lt__       = _tc_lt_
 ROOT.TCut. __le__       = _tc_le_
@@ -1029,6 +1049,7 @@ _new_methods_       = (
     ROOT.TCut. __rmod__    , 
     ROOT.TCut. __imod__    , 
     #
+    ROOT.TCut . __abs__    ,
     ROOT.TCut . __invert__ ,
     #
     ROOT.TCut. __lt__      , 
