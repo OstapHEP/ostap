@@ -11,6 +11,8 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TProfile.h"
+#include "TProfile2D.h"
 // =============================================================================
 // Ostap
 // =============================================================================
@@ -50,6 +52,24 @@ Ostap::Utils::H3::H3 ( TH3* histo )
 		  INVALID_TH3 , __FILE__ , __LINE__          ) ;
 }
 // =============================================================================
+Ostap::Utils::P1::P1 ( TProfile* histo )
+:  m_histo ( histo )
+{
+  Ostap::Assert ( m_histo && 1 == m_histo->GetDimension () , 
+		  "Invalid TProfile"                       ,
+		  "Ostap::Utils::P1"                       ,
+		  INVALID_TPROFILE , __FILE__ , __LINE__   ) ;
+}
+// =============================================================================
+Ostap::Utils::P2::P2 ( TProfile2D* histo )
+  :  m_histo ( histo )
+{
+  Ostap::Assert ( m_histo && 2 == m_histo->GetDimension ()   , 
+		  "Invalid TProfile2D"                       ,
+		  "Ostap::Utils::P2"                         ,
+		  INVALID_TPROFILE2D , __FILE__ , __LINE__   ) ;
+}
+// =============================================================================
 
 
 // =============================================================================
@@ -61,9 +81,9 @@ void Ostap::Utils::H1::reset()
 {
   if ( m_histo )
     {
-      ESentry  entty {} ; 
-      m_histo->Reset () ;
-      m_histo->Sumw2 () ;
+      ESentry  sentry {} ; 
+      m_histo->Reset  () ;
+      if ( !m_histo->GetSumw2 () ) { m_histo->Sumw2() ; }
     }
 }
 // =============================================================================
@@ -71,9 +91,9 @@ void Ostap::Utils::H2::reset()
 {
   if ( m_histo )
     {
-      ESentry  entty {} ; 
-      m_histo->Reset () ;
-      m_histo->Sumw2 () ;
+      ESentry  sentry {} ; 
+      m_histo->Reset  () ;
+      if ( !m_histo->GetSumw2 () ) { m_histo->Sumw2() ; }
     }
 }
 // =============================================================================
@@ -81,9 +101,29 @@ void Ostap::Utils::H3::reset()
 {
   if ( m_histo )
     {
-      ESentry  entty {} ; 
-      m_histo->Reset () ;
-      m_histo->Sumw2 () ;
+      ESentry  sentry {} ; 
+      m_histo->Reset  () ;
+      if ( !m_histo->GetSumw2 () ) { m_histo->Sumw2() ; }
+    }
+}
+// =============================================================================
+void Ostap::Utils::P1::reset()
+{
+  if ( m_histo )
+    {
+      ESentry  sentry {} ; 
+      m_histo->Reset  () ;
+      if ( !m_histo->GetSumw2 () ) { m_histo->Sumw2() ; }
+    }
+}
+// =============================================================================
+void Ostap::Utils::P2::reset()
+{
+  if ( m_histo )
+    {
+      ESentry  sentry {} ; 
+      m_histo->Reset  () ;
+      if ( !m_histo->GetSumw2 () ) { m_histo->Sumw2() ; }
     }
 }
 // =============================================================================
@@ -123,10 +163,32 @@ void Ostap::Utils::H3::update
        && std::isfinite ( x ) 
        && std::isfinite ( y ) 
        && std::isfinite ( z ) )
+    { m_histo->Fill ( x , y , z , w ) ; }
+}
+// =============================================================================
+void Ostap::Utils::P1::update
+( const double x ,
+  const double y ,
+  const double w )
+{
+  if ( m_histo && w && std::isfinite ( w )
+       && std::isfinite ( x ) 
+       && std::isfinite ( y ) )
     { m_histo->Fill ( x , y ,  w ) ; }
 }
 // =============================================================================
-
+void Ostap::Utils::P2::update
+( const double x ,
+  const double y ,
+  const double z ,
+  const double w )
+{
+  if ( m_histo && w && std::isfinite ( w )
+       && std::isfinite ( x ) 
+       && std::isfinite ( y ) 
+       && std::isfinite ( z ) )
+    { m_histo->Fill ( x , y , z , w ) ; }
+}
 // =============================================================================
 //                                                                       The END 
 // =============================================================================

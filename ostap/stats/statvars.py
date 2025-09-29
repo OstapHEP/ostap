@@ -1902,14 +1902,17 @@ def data_project ( data                ,
     
     ## (2) check consistency
     h1_stack = False ## stack of 1D-histograms 
-    if   1 == nvars and isinstance ( target , _s1D     ) : pass
-    elif 2 == nvars and isinstance ( target , _s2D     ) : pass
-    elif 3 == nvars and isinstance ( target , _s3D     ) : pass
-    elif 4 == nvars and isinstance ( target , _s4D     ) : pass
-    elif 3 == nvars and isinstance ( target , ROOT.TH3 ) and 3 == target.dim() : pass    
-    elif 2 == nvars and isinstance ( target , ROOT.TH2 ) and 2 == target.dim() : pass
-    elif 1 == nvars and isinstance ( target , ROOT.TH1 ) and 1 == target.dim() : pass
-    elif 1 <  nvars and isinstance ( target , ROOT.TH1 ) and 1 == target.dim() : h1_stack = True 
+    if   1 == nvars and isinstance ( target , _s1D            ) : pass
+    elif 2 == nvars and isinstance ( target , _s2D            ) : pass
+    elif 3 == nvars and isinstance ( target , _s3D            ) : pass
+    elif 4 == nvars and isinstance ( target , _s4D            ) : pass
+    elif 3 == nvars and isinstance ( target , ROOT.TH3        ) and 3 == target.dim() : pass    
+    elif 2 == nvars and isinstance ( target , ROOT.TH2        ) and 2 == target.dim() : pass
+    elif 3 == nvars and isinstance ( target , ROOT.TProfile2D ) and 2 == target.dim() : pass
+    elif 2 == nvars and isinstance ( target , ROOT.TProfile   ) and 1 == target.dim() : pass    
+    elif 1 == nvars and isinstance ( target , ROOT.TH1        ) and 1 == target.dim() : pass
+    elif 1 <  nvars and isinstance ( target , ROOT.TH1        ) and 1 == target.dim() \
+         and not isinstance ( targer , ROOT.TProfile ) :  h1_stack = True 
     else :
         raise TypeError ( 'Target: %s and expression(s): %s are inconsistent' % \
                           ( typename ( target ) , str ( var_lst ) ) ) 

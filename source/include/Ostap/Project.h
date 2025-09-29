@@ -20,7 +20,9 @@
 class TH1        ;  // ROOT 
 class TH2        ;  // ROOT 
 class TH3        ;  // ROOT 
-class TTree      ;  // ROOT 
+class TTree      ;  // ROOT
+class TProfile   ;  // ROOT 
+class TProfile2D ;  // ROOT 
 class RooAbsData ;  // ROOT/RooFit 
 class RooAbsReal ;  // ROOT/RooFit 
 // =============================================================================
@@ -156,6 +158,49 @@ namespace Ostap
       const Ostap::EventIndex first      = Ostap::FirstEvent ,
       const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;    
     // =======================================================================
+  public: // 1D profile    
+    // =======================================================================
+    /** Project data in the 1D-profile 
+     *  @param data        (INPUT)  input data 
+     *  @param histo       (UPDATE) the 1D-profile 
+     *  @param expression1 (INPUT)  expression1 
+     *  @param expression2 (INPUT)  expression2 
+     *  @param selection   (INPUT)  selection/weight  
+     *  @param first       (INOPUT) the first event to process (inclusive) 
+     *  @param last        (INOPUT) the last  event to process (exclusive)
+     *  @return Status Code 
+     *  @see   TH1::Fill
+     */
+    Ostap::StatusCode project2
+    ( TTree*                  data            ,
+      TProfile*               histo           ,
+      const std::string&      expression1     ,
+      const std::string&      expression2     ,
+      const std::string&      selection  = "" ,
+      const Ostap::EventIndex first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;
+    // =======================================================================
+    /** Project data in the 1D-historam
+     *  @param data        (INPUT)  input data 
+     *  @param histo       (UPDATE) the 1D-profile 
+     *  @param expression1 (INPUT)  expression1 
+     *  @param expression2 (INPUT)  expression2 
+     *  @param selection   (INPUT)  selection/weight  
+     *  @param first       (INOPUT) the first event to process (inclusive) 
+     *  @param last        (INOPUT) the last  event to process (exclusive)
+     *  @return Status Code 
+     *  @see   TH1::Fill
+     */
+    Ostap::StatusCode project2
+    ( const RooAbsData*       data            ,
+      TProfile*               histo           ,
+      const std::string&      expression1     ,
+      const std::string&      expression2     ,
+      const std::string&      selection  = "" ,
+      const std::string&      cut_range  = "" ,  
+      const Ostap::EventIndex first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;        
+    // =======================================================================
   public: // 3D histo 
     // ========================================================================    
     /** Project data in the 3D-ihstoram
@@ -195,6 +240,53 @@ namespace Ostap
     Ostap::StatusCode project3
     ( const RooAbsData*       data            ,
       TH3*                    histo           ,
+      const std::string&      expression1     ,
+      const std::string&      expression2     ,
+      const std::string&      expression3     ,
+      const std::string&      selection  = "" ,
+      const std::string&      cut_range  = "" ,  
+      const Ostap::EventIndex first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;    
+    // =======================================================================
+  public: // 2D profile 
+    // ========================================================================    
+    /** Project data in the 2D-profile 
+     *  @param data        (INPUT)  input data 
+     *  @param histo       (UPDATE) the 2D-profile 
+     *  @param expression1 (INPUT)  expression1 
+     *  @param expression2 (INPUT)  expression2 
+     *  @param expression3 (INPUT)  expression3
+     *  @param selection   (INPUT)  selection/weight  
+     *  @param first       (INOPUT) the first event to process (inclusive) 
+     *  @param last        (INOPUT) the last  event to process (exclusive)
+     *  @return Status Code 
+     *  @see   TH1::Fill
+     */
+    Ostap::StatusCode project3
+    ( TTree*                  data            ,
+      TProfile2D*             histo           ,
+      const std::string&      expression1     ,
+      const std::string&      expression2     ,
+      const std::string&      expression3     ,
+      const std::string&      selection  = "" ,
+      const Ostap::EventIndex first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex last       = Ostap::LastEvent  ) const ;      
+    // =======================================================================
+    /** Project data in the 2D-profile 
+     *  @param data        (INPUT)  input data 
+     *  @param histo       (UPDATE) the 2D-profile 
+     *  @param expression1 (INPUT)  expression1 
+     *  @param expression2 (INPUT)  expression2 
+     *  @param expression3 (INPUT)  expression3 
+     *  @param selection   (INPUT)  selection/weight  
+     *  @param first       (INOPUT) the first event to process (inclusive) 
+     *  @param last        (INOPUT) the last  event to process (exclusive)
+     *  @return Status Code 
+     *  @see   TH1::Fill
+     */
+    Ostap::StatusCode project3
+    ( const RooAbsData*       data            ,
+      TProfile2D*             histo           ,
       const std::string&      expression1     ,
       const std::string&      expression2     ,
       const std::string&      expression3     ,

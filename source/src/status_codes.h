@@ -27,7 +27,7 @@ namespace
     INVALID_TREEFUNCTION      = 720 ,
     INVALID_TH3               = 721 , 
     INVALID_TH2               = 722 , 
-    INVALID_TH1               = 723 ,
+    INVALID_TH1               = 723 ,    
     INVALID_XAXIS             = 724 ,
     INVALID_YAXIS             = 725 ,
     INVALID_ZAXIS             = 726 ,
@@ -111,10 +111,12 @@ namespace
     INVALID_CHOPPING_SIZE     = 881 ,
     INVALID_CHOPPING_CATEGORY = 882 ,
     INVALID_CHOPPING_FILES    = 883 ,
-    
+    //
+    INVALID_TPROFILE          = 885 , 
+    INVALID_TPROFILE2D        = 885 ,     
     // =========================================================================
-    ERROR_ROOT            = 1000000 ,
-    ERROR_GSL             = 2000000 ,    
+    ERROR_ROOT                = 1000000 ,
+    ERROR_GSL                 = 2000000 ,    
     // =========================================================================
   }; // ========================================================================
   // ===========================================================================

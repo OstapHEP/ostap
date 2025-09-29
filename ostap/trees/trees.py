@@ -491,8 +491,8 @@ def tree_project ( tree                     ,
     
     ## get the list of active branches 
     with ActiveBranches  ( tree , cuts , *varlst ) :
-        ## very special case of projection of several expressions into the same 1D-target 
-        if 1 == dim and dim < nvars : 
+        ## very special case of projection of several expressions into the same 1D-target
+        if 1 == dim and dim < nvars and not isinstance ( target , ROOT.TProfile ) : 
             ## very special case of projections of several expressions into the same 1D-target 
             htmp  = target_copy ( target )  ## prepare the temporary object 
             for var in varlst :
@@ -502,16 +502,16 @@ def tree_project ( tree                     ,
                 ## update results 
                 target += htmp
             del htmp 
-        elif 1 == dim :
+        elif 1 == nvars :
             sc =  hp.project1 ( tree , target , *varlst , *tail )
             if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project1 %s" % sc )
-        elif 2 == dim : 
+        elif 2 == nvars : 
             sc =  hp.project2 ( tree , target , *varlst , *tail )
             if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project2 %s" % sc )
-        elif 3 == dim : 
+        elif 3 == nvars : 
             sc =  hp.project3 ( tree , target , *varlst , *tail )
             if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project3 %s" % sc )
-        elif 4 == dim : 
+        elif 4 == nvars : 
             sc =  hp.project4 ( tree , target , *varlst , *tail )
             if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project4 %s" % sc )
 

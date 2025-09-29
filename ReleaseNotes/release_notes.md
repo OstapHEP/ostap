@@ -5,6 +5,8 @@
   1. add `pow` and `rpow` functions for TCut-expressions 
   1. add `mod/imod/rmod` operators for for TCut-expressions 
   1. add `abs` operator for for TCut-expressions 
+  1. add proper treatment of `Tprofile` and ``TRpofile2D  for `project` methods
+  1. add proper treatment of uncertaintues of projections of weighted `RooAbsData` in case the weight has assigned errors.
   
 ## Backward-incompatible
 
