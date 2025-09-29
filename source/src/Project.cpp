@@ -555,7 +555,7 @@ Ostap::Project::project3
 {
   
   if ( !data )                                 { return INVALID_DATA ; }
-  if ( !histo || 2 != histo->GetDimension () ) { return INVALID_TH2 ; }
+  if ( !histo || 3 != histo->GetDimension () ) { return INVALID_TH2 ; }
   //
   histo->Reset () ;
   if ( !histo->GetSumw2() ) { histo->Sumw2() ; }

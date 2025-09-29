@@ -1912,7 +1912,7 @@ def data_project ( data                ,
     elif 2 == nvars and isinstance ( target , ROOT.TProfile   ) and 1 == target.dim() : pass    
     elif 1 == nvars and isinstance ( target , ROOT.TH1        ) and 1 == target.dim() : pass
     elif 1 <  nvars and isinstance ( target , ROOT.TH1        ) and 1 == target.dim() \
-         and not isinstance ( targer , ROOT.TProfile ) :  h1_stack = True 
+         and not isinstance ( target , ROOT.TProfile ) :  h1_stack = True 
     else :
         raise TypeError ( 'Target: %s and expression(s): %s are inconsistent' % \
                           ( typename ( target ) , str ( var_lst ) ) ) 
