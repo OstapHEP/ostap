@@ -23,6 +23,7 @@ class TH3        ;  // ROOT
 class TTree      ;  // ROOT
 class TProfile   ;  // ROOT 
 class TProfile2D ;  // ROOT 
+class TProfile3D ;  // ROOT 
 class RooAbsData ;  // ROOT/RooFit 
 class RooAbsReal ;  // ROOT/RooFit 
 // =============================================================================
@@ -636,9 +637,9 @@ namespace Ostap
       const Ostap::EventIndex    first      = Ostap::FirstEvent ,
       const Ostap::EventIndex    last       = Ostap::LastEvent  ) const ; 
     // =========================================================================
-  public : // 3D-Legendre polynomial: on-flight parameterisation 
+  public : // 4D-Legendre polynomial: on-flight parameterisation 
     // ======================================================================
-    /** Project data in 4D-polyoominal: on-flight parameterisation 
+    /** Project data in 4D-polynominal: on-flight parameterisation 
      *  @param data        (INPUT)  input data 
      *  @param poly        (UPDATE) the polynoimal 
      *  @param expression1 (INPUT)  expression1 
@@ -674,6 +675,53 @@ namespace Ostap
     Ostap::StatusCode project4
     ( const RooAbsData*          data            ,
       Ostap::Math::LegendreSum4& poly            ,
+      const std::string&         expression1     ,
+      const std::string&         expression2     ,
+      const std::string&         expression3     ,
+      const std::string&         expression4     ,
+      const std::string&         selection  = "" ,
+      const std::string&         cut_range  = "" , 
+      const Ostap::EventIndex    first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex    last       = Ostap::LastEvent  ) const ; 
+    // =========================================================================
+  public : // TProfile3D    
+    // =========================================================================
+    /** Project data in 3D-profile 
+     *  @param data        (INPUT)  input data 
+     *  @param profile     (UPDATE) 3D-profile 
+     *  @param expression1 (INPUT)  expression1 
+     *  @param expression2 (INPUT)  expression2 
+     *  @param expression3 (INPUT)  expression3 
+     *  @param expression4 (INPUT)  expression4 
+     *  @param selection   (INPUT)  selection (as boolean)
+     *  @param first       (INOPUT) the first event to process (inclusive) 
+     *  @param last        (INOPUT) the last  event to process (exclusive)
+     *  @return Status Code 
+     */
+    Ostap::StatusCode project4
+    ( TTree*                     data            ,
+      TProfile3D*                profile         ,
+      const std::string&         expression1     ,
+      const std::string&         expression2     ,
+      const std::string&         expression3     ,
+      const std::string&         expression4     ,
+      const std::string&         selection  = "" ,
+      const Ostap::EventIndex    first      = Ostap::FirstEvent ,
+      const Ostap::EventIndex    last       = Ostap::LastEvent  ) const ; 
+    // =========================================================================
+    /** Project data in 3D-profile 
+     *  @param data        (INPUT)  input data 
+     *  @param profile     (UPDATE) 3D-profile 
+     *  @param expression1 (INPUT)  expression1 
+     *  @param expression2 (INPUT)  expression2 
+     *  @param selection   (INPUT)  selection (as boolean)
+     *  @param first       (INOPUT) the first event to process (inclusive) 
+     *  @param last        (INOPUT) the last  event to process (exclusive)
+     *  @return Status Code 
+     */
+    Ostap::StatusCode project4
+    ( const RooAbsData*          data            ,
+      TProfile3D*                profile         ,
       const std::string&         expression1     ,
       const std::string&         expression2     ,
       const std::string&         expression3     ,

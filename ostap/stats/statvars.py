@@ -1886,6 +1886,45 @@ def data_precision ( data       ,
     return PS.precision ( npdata )
 
 # =============================================================================
+## helper function to copy/clone the projection target 
+#  - clone for histograms  
+#  - copy constructor for other (C++) types
+# 
+#  Should we use here more generic (python) copy ?
+def target_copy   ( t ) :
+    """ Helper function to copy/clone the projection target 
+    - clone for histograms  
+    - copy constructor for other types 
+    """
+    if isinstance ( t , ROOT.TH1 ) :
+        c = t.Clone ()
+        if not c.GetSumw2() : c.Sumw2()
+        return c
+    ## copy constructor for other C++ objects
+    ## Should we use here more generic (python) copy ?
+    c = type ( t ) ( t )
+    ## reset it! 
+    return target_reset ( c )
+
+# =============================================================================
+## Helper function to reset the projection target
+#  - `TH1.Reset` for histogram 
+#  - `reset`     for other objects 
+def target_reset  ( t ) :
+    """ Helper function to reset the projection target
+    - `TH1.Reset` for histogram 
+    - `reset`     for other objects 
+    """
+    if isinstance ( t , ROOT.TH1 ) : 
+        t.Reset ()
+        if not t.GetSumw2() : t.Sumw2 () 
+    else : t.reset ()
+    ## 
+    return t
+
+# =============================================================================
+## progect data (TTree or RooAbsData) into into the histogram or some other object
+#  @see Ostap::Project
 def data_project ( data                ,
                    target              ,
                    expressions         ,
@@ -1896,62 +1935,111 @@ def data_project ( data                ,
                    use_frame   = False ,
                    parallel    = False ) :
     
+    """ project data (TTree or RooAbsData) into into histogram or some other object
+    - see `Ostap,Project`
+    """
+    
+    # ========================================================================
     ## (1) decode expressions & cuts
+    # ========================================================================
     var_lst , cuts , _  = vars_and_cuts ( expressions , cuts )
     nvars = len ( var_lst )
+
+    # ========================================================================
+    ## profile ?
+    # ========================================================================
+    from ostap.histos.histos import profile_types 
+    profile = isinstance ( target , profile_types )  
     
+    # ========================================================================
     ## (2) check consistency
-    h1_stack = False ## stack of 1D-histograms 
-    if   1 == nvars and isinstance ( target , _s1D            ) : pass
-    elif 2 == nvars and isinstance ( target , _s2D            ) : pass
+    # ========================================================================
+    h1_stack = False ## stack of 1D-objects/histograms  
+    if   4 == nvars and isinstance ( target , _s4D            ) : pass
     elif 3 == nvars and isinstance ( target , _s3D            ) : pass
-    elif 4 == nvars and isinstance ( target , _s4D            ) : pass
+    elif 2 == nvars and isinstance ( target , _s2D            ) : pass
+    elif 1 == nvars and isinstance ( target , _s1D            ) : pass
+    ## profiles 
+    elif 4 == nvars and isinstance ( target , ROOT.TProfile3D ) and 3 == target.dim() : pass
+    elif 3 == nvars and isinstance ( target , ROOT.TProfile2D ) and 2 == target.dim() : pass
+    elif 2 == nvars and isinstance ( target , ROOT.TProfile   ) and 1 == target.dim() : pass
+    ## histgrams 
     elif 3 == nvars and isinstance ( target , ROOT.TH3        ) and 3 == target.dim() : pass    
     elif 2 == nvars and isinstance ( target , ROOT.TH2        ) and 2 == target.dim() : pass
-    elif 3 == nvars and isinstance ( target , ROOT.TProfile2D ) and 2 == target.dim() : pass
-    elif 2 == nvars and isinstance ( target , ROOT.TProfile   ) and 1 == target.dim() : pass    
+    ## stack...
     elif 1 == nvars and isinstance ( target , ROOT.TH1        ) and 1 == target.dim() : pass
-    elif 1 <  nvars and isinstance ( target , ROOT.TH1        ) and 1 == target.dim() \
-         and not isinstance ( target , ROOT.TProfile ) :  h1_stack = True 
+    elif 1 <  nvars and 1 == target.dim() and not profile  : h1_stack = True 
     else :
-        raise TypeError ( 'Target: %s and expression(s): %s are inconsistent' % \
-                          ( typename ( target ) , str ( var_lst ) ) ) 
-
-    ## (3) cut_range defined *only* for RooFit datasets 
-    if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
-        raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  ) 
+        raise TypeError ( 'Target %s and expression(s): %s are inconsistent' % \
+                          ( typename ( target ) , ','.join ( var_lst ) ) )
     
+    # ========================================================================
+    ## (3) cut_range defined *only* for RooFit datasets 
+    # ========================================================================
+    if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
+        raise TypeError ( "Invalid use of `cut_range':%s for %s " % ( cut_range , typename ( data ) ) )
+    
+    # ========================================================================
     ## (4) display progress ? 
+    # ========================================================================
     progress = progress_conf ( progress )
 
+    # ========================================================================
     ## (5) create the driver 
+    # ========================================================================
     pv = Ostap.Project ( progress )
     
-    ## (6) RooFit ?
+    # ========================================================================
+    ## (6) RooFit dataset ?
+    # ========================================================================
     if isinstance ( data , ROOT.RooAbsData ) :
-        with rootException() : 
+        
+        # ====================================================================
+        ## weight with errors ? 
+        # ====================================================================
+        if data.isWeighted () and Ostap.Utils.storeError ( data ) :
+            if isinstance ( target , ROOT.TProfile   ) or \
+               isinstance ( target , ROOT.TProfile2D ) or not isinstance ( target , ROOT.TH1 ) :
+                logger.warning ( 'Dataset has weight with errors! Weight errors will be ignored!' ) 
+                
+        with rootException() :
+            # =================================================================
+            ## project several variables into the same 1D histogram 
+            # =================================================================
             if h1_stack :
-                target.Reset() 
-                if not target.GetSumw2() : target.Sumw2()   
-                htmp = target.clone() 
-                if not htmp.GetSumw2()   : htmp  .Sumw2()   
+
+                target = target_reset ( target ) 
+                tcopy  = target_copy  ( target ) 
                 the_args = ( cuts , cut_range ) + args
                 for var in var_lst :
-                    sc = pv.project1 ( data , htmp , var , *the_args )
-                    assert sc.isSuccess() , 'Error %s from Ostap::Project::project1(%s)' % ( sc , var )  
-                    target += htmp  
-                del htmp
-            else : 
-                the_args = var_lst + ( cuts , cut_range ) + args
-                if   1 == nvars : sc = pv.project1 ( data , target , *the_args )
-                elif 2 == nvars : sc = pv.project2 ( data , target , *the_args )
-                elif 3 == nvars : sc = pv.project3 ( data , target , *the_args )            
-                elif 4 == nvars : sc = pv.project4 ( data , target , *the_args )            
-                assert sc.isSuccess() , 'Error %s from Ostap::Project::project%d(%s)' % ( sc , len ( var_lst ) , ','.join ( var_lst ) ) 
-                
-            return target 
-        
-    if  use_frame and good_for_frame ( data , *args ) : 
+                    sc = pv.project1 ( data , tcopy , var , *the_args )
+                    assert sc.isSuccess() , 'Error %s from Ostap::Project::project1(%s,%s)' % ( sc , typename ( target ) , var )  
+                    target += tcopy 
+                del tcopy
+                ## 
+                return target                                         ## RETURN
+            
+            # =================================================================
+            ## regular processing 
+            # =================================================================
+            the_args = var_lst + ( cuts , cut_range ) + args
+            if   1 == nvars : sc = pv.project1 ( data , target , *the_args )
+            elif 2 == nvars : sc = pv.project2 ( data , target , *the_args )
+            elif 3 == nvars : sc = pv.project3 ( data , target , *the_args )            
+            elif 4 == nvars : sc = pv.project4 ( data , target , *the_args )            
+            assert sc.isSuccess() , \
+                'Error %s from Ostap::Project::project%d(%s,%s)' % ( sc                   ,
+                                                                     typename ( target )  ,
+                                                                     nvars                ,
+                                                                     ','.join ( var_lst ) )
+            ## 
+            return target                                            ## RETURN
+
+
+    # =========================================================================
+    ## (7) delegate processing to RDataFrame if/when  possible?
+    # =========================================================================
+    if  use_frame and good_for_frame ( data , *args ) and not h1_stack and not isinstance ( target , ROOT.TProfile3D ) : 
         return F.frame_project ( data                   ,
                                  model       = target   ,
                                  expressions = var_lst  ,
@@ -1959,8 +2047,11 @@ def data_project ( data                ,
                                  progress    = progress ,
                                  report      = progress ,
                                  lazy        = False    ) 
-    
-    if  parallel and good_for_parallel ( data , *args ) : 
+
+    # =========================================================================
+    ## (8) parallel processing ?
+    # =========================================================================
+    if  parallel and good_for_parallel ( data , *args ) and not profile : 
         from ostap.parallel.parallel_statvars import parallel_project
         return parallel_project ( data                   ,
                                   target                 ,
@@ -1969,7 +2060,10 @@ def data_project ( data                ,
                                   as_weight  = as_weight ,
                                   progress   = progress  ,
                                   use_frame  = use_frame )
-                                                                                       
+
+    # =========================================================================
+    ## (9) regular TTree processing
+    # =========================================================================
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
@@ -1981,7 +2075,6 @@ def data_project ( data                ,
         assert sc.isSuccess() , 'Error %s from StatVar::project(1,2,3,4)' % sc 
         return target
 
-    
 # =============================================================================
 ## Get slice of dat s in form of Numpy array
 #  @code

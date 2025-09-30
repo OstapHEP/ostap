@@ -29,7 +29,8 @@ __all__     = (
 from   ostap.math.base         import ( FIRST_ENTRY ,
                                         LAST_ENTRY  , 
                                         evt_range   ,
-                                        all_entries )  
+                                        all_entries )
+from   ostap.utils.basic       import typename 
 from   ostap.parallel.parallel import Task, WorkManager
 import ROOT
 # =============================================================================
@@ -812,6 +813,19 @@ def parallel_project ( chain                    ,
     first , last = evt_range ( chain , *args[:2] ) 
     nevents = last - first
     
+    ## Parallel projection for profiles is not supported
+    from ostap.histos.histos import profile_types 
+    if isinstance ( target , profile_types ) : 
+        logger.warning ( 'Parallel projection is not supported for %s' % typename ( target ) )
+        return data_project ( chain       ,
+                              target      , 
+                              expressions ,
+                              cuts        , first     , last , *args[2:] , 
+                              as_weight   = as_weight , 
+                              progress    = progress  ,
+                              use_frame   = use_frame ,
+                              parallel    = False     )
+        
     if nevents < chunk_size :
         return data_project ( chain       ,
                               target      , 

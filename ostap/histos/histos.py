@@ -27,6 +27,7 @@ __all__     = (
     'Histo1DFun'      , ## 1D-histogram as function object 
     'Histo2DFun'      , ## 2D-histogram as function object 
     'Histo3DFun'      , ## 3D-histogram as function object
+    'profile_types'   , ## valid profile types 
     #
     )
 # =============================================================================
@@ -67,6 +68,10 @@ else                       : logger = getLogger( __name__          )
 # =============================================================================
 logger.debug ( 'Decoration of historams')
 # =============================================================================
+## valid profile types 
+profile_types = ROOT.TProfile , ROOT.TProfile2D , ROOT.TProfile3D  
+# =============================================================================
+
 _new_methods_  = []  
 # =============================================================================
 ## ensure that object/histogram is created in ROOT.gROOT

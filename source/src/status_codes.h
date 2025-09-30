@@ -113,7 +113,8 @@ namespace
     INVALID_CHOPPING_FILES    = 883 ,
     //
     INVALID_TPROFILE          = 885 , 
-    INVALID_TPROFILE2D        = 885 ,     
+    INVALID_TPROFILE2D        = 886 ,     
+    INVALID_TPROFILE3D        = 887 ,     
     // =========================================================================
     ERROR_ROOT                = 1000000 ,
     ERROR_GSL                 = 2000000 ,    

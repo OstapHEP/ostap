@@ -331,7 +331,6 @@ def _tt_rows_ ( tree     ,
     ## set the tree at the initial position 
     ievt = tree.GetEntryNumber ( 0 )
     if 0 <= ievt : tree.GetEntry ( ievt )
-
             
 ROOT.TTree .rows  = _tt_rows_ 
 
@@ -396,7 +395,9 @@ def tree_project ( tree                     ,
 
     """
 
+    # =========================================================================
     ## 1) adjust the first/last
+    # =========================================================================
     first , last = evt_range ( tree , first , last  )
 
     ## 2) if the histogram is specified by the name, try to locate it in ROOT memory  
@@ -407,7 +408,9 @@ def tree_project ( tree                     ,
         assert isinstance ( h , ROOT.TH1 ) , "Object `%s' exists, but not ROOT.TH1" % typename ( h ) 
         histo = h
         
+    # =========================================================================
     ## 3) redirect to the appropriate method
+    # =========================================================================
     
     ## chain helper object?
     if   isinstance ( tree , Chain           ) : tree = tree.chain
@@ -415,34 +418,38 @@ def tree_project ( tree                     ,
         from ostap.fitting.dataset import ds_project as _ds_project_
         return _ds_project_ ( tree , histo , what , cuts = cuts , first = first , last = last , progress = progress )
     
-    assert isinstance ( tree , ROOT.TTree ) , "Invalid type of 'tree': %s" % type ( tree ) 
+    assert isinstance ( tree , ROOT.TTree ) , "Invalid type of 'tree': %s" % typename ( tree ) 
     
+    # =========================================================================
     ## 4) target        
+    # =========================================================================
     target = histo    
     
+    # =========================================================================
     ## input histogram?
+    # =========================================================================
     input_histo = isinstance ( target , ROOT.TH1 )
     from ostap.trees.param import param_types_nD        
-    assert input_histo or  isinstance ( target , param_types_nD ) , \
+    assert input_histo or isinstance ( target , param_types_nD ) , \
         'Invalid target/histo type %s' % typename ( target ) 
         
+    # =========================================================================
     ## 3) parse input expressions
+    # =========================================================================
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
-
-    ## copy/clone the target 
-    def target_copy   ( t ) : return t.Clone() if isinstance ( t , ROOT.TH1 ) else type ( t ) ( t )
+    
+    # =========================================================================
+    ## treatment of projection targets 
+    from ostap.stats.statvars import target_copy, target_reset 
+    
+    # =========================================================================
     ## reset the target 
-    def target_reset  ( t ) :
-        if isinstance ( t , ROOT.TH1 ) : 
-            t.Reset ()
-            if not t.GetSumw2() : t.Sumw2 () 
-        else : t.reset ()
-        return t
-        
-    ## reset the target 
+    # =========================================================================
     target = target_reset ( target ) 
 
+    # =========================================================================
     ## dimension of the target 
+    # =========================================================================
     dim = target.dim ()
     assert 1 <= dim <= 4 , 'Invalid dimension of target: %s' % dim  
 
@@ -454,13 +461,28 @@ def tree_project ( tree                     ,
         vv = ' ; '.join  ( varlst  ) 
         logger.attention ("project: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
             
+    # =========================================================================
     ## avoid looping 
+    # =========================================================================
     if first == last : return target
 
+    # =========================================================================
+    ## profiles ? 
+    # =========================================================================
+    from ostap.histos.histos import profile_types 
+    profile = isinstance ( target , profile_types )  
+
+    # =========================================================================
+    ## h1-stack ?
+    # =========================================================================
+    h1_stack = 1 == dim and dim < nvars and not profile 
+
+    # =========================================================================
     ## Native ROOT processing
+    # =========================================================================
     if native and isinstance ( target , ROOT.TH1 ) and isinstance ( tree , ROOT.TTree ) and \
-       ROOT.ROOT.GetROOT().FindObject ( target.GetName() ) is target : 
-        
+       ROOT.ROOT.GetROOT().FindObject ( target.GetName() ) is target and not h1_stack :
+    
         ## ATTENTION: 
         ## here the inverse/contrintuitive ROOT convention
         ## is used for the ordering of variables
@@ -473,47 +495,61 @@ def tree_project ( tree                     ,
             if nn != rr : logger.error ("Mismath for #entries: %+g vs %+d" % ( nn , rr) )
                 
         return target
-    
+
+    # =========================================================================
     ## use frame processing if requested and if/when possible 
-    if use_frame and good_for_frame ( tree , first , last ) : 
+    # =========================================================================
+    if use_frame and good_for_frame ( tree , first , last ) and not h1_stack :
         import ostap.frames.frames as F 
         return F.frame_project ( tree , target , expressions = varlst , cuts = cuts , progress = progress , lazy = False  )
 
+    # =========================================================================
     ## use parallel processing if requested and if/when possible  
-    if parallel and good_for_parallel ( tree , first , last ) and input_histo :
+    # =========================================================================
+    if parallel and good_for_parallel ( tree , first , last ) and input_histo and not profile :
         from ostap.parallel.parallel_project import parallel_project
         return parallel_project ( tree , target , what , cuts , use_frame = use_frame , progress = progress ) 
 
     tail = cuts , first , last
     
+    # =========================================================================
     ## Use our own loop/fill/project machinery
+    # =========================================================================
     hp = Ostap.Project ( progress_conf ( progress ) ) 
     
     ## get the list of active branches 
     with ActiveBranches  ( tree , cuts , *varlst ) :
         ## very special case of projection of several expressions into the same 1D-target
-        if 1 == dim and dim < nvars and not isinstance ( target , ROOT.TProfile ) : 
+        if h1_stack : 
             ## very special case of projections of several expressions into the same 1D-target 
-            htmp  = target_copy ( target )  ## prepare the temporary object 
+            tcopy = target_copy ( target )  ## prepare the temporary object 
             for var in varlst :
-                htmp = target_reset ( htmp ) ## rest the temporary object 
-                sc   = hp.project1  ( tree , htmp , var , cuts , *tail )
-                if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project1(%s) %s" %  ( sc , var ) )
-                ## update results 
-                target += htmp
-            del htmp 
+                tcopy = target_reset ( tcopy ) ## rest the temporary object 
+                sc   = hp.project1  ( tree , tcopy , var , cuts , *tail )
+                if sc.isSuccess () : target += tcopy
+                else               :
+                    logger.error ( "Error from Ostap.Project.project1(%s) %s" %  ( sc , var ) )
+            del tcopy
+            
         elif 1 == nvars :
             sc =  hp.project1 ( tree , target , *varlst , *tail )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project1 %s" % sc )
+            if not sc.isSuccess() :
+                logger.error ( "Error from Ostap.Project.project1 %s" % sc )
+            
         elif 2 == nvars : 
             sc =  hp.project2 ( tree , target , *varlst , *tail )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project2 %s" % sc )
+            if not sc.isSuccess() :
+                logger.error ( "Error from Ostap.Project.project2 %s" % sc )
+        
         elif 3 == nvars : 
             sc =  hp.project3 ( tree , target , *varlst , *tail )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project3 %s" % sc )
+            if not sc.isSuccess() :
+                logger.error ( "Error from Ostap.Project.project3 %s" % sc )
+
         elif 4 == nvars : 
             sc =  hp.project4 ( tree , target , *varlst , *tail )
-            if not sc.isSuccess() : logger.error ( "Error from Ostap.Project.project4 %s" % sc )
+            if not sc.isSuccess() :
+                logger.error ( "Error from Ostap.Project.project4 %s" % sc )
 
         ## return None on error 
         return target if sc.isSuccess() else None 

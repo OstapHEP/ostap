@@ -13,6 +13,7 @@
 #include "TH3.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
+#include "TProfile3D.h"
 // =============================================================================
 // Ostap
 // =============================================================================
@@ -70,6 +71,15 @@ Ostap::Utils::P2::P2 ( TProfile2D* histo )
 		  INVALID_TPROFILE2D , __FILE__ , __LINE__   ) ;
 }
 // =============================================================================
+Ostap::Utils::P3::P3 ( TProfile3D* histo )
+  :  m_histo ( histo )
+{
+  Ostap::Assert ( m_histo && 3 == m_histo->GetDimension ()   , 
+		  "Invalid TProfile3D"                       ,
+		  "Ostap::Utils::P3"                         ,
+		  INVALID_TPROFILE3D , __FILE__ , __LINE__   ) ;
+}
+// =============================================================================
 
 
 // =============================================================================
@@ -118,6 +128,16 @@ void Ostap::Utils::P1::reset()
 }
 // =============================================================================
 void Ostap::Utils::P2::reset()
+{
+  if ( m_histo )
+    {
+      ESentry  sentry {} ; 
+      m_histo->Reset  () ;
+      if ( !m_histo->GetSumw2 () ) { m_histo->Sumw2() ; }
+    }
+}
+// =============================================================================
+void Ostap::Utils::P3::reset()
 {
   if ( m_histo )
     {
@@ -188,6 +208,21 @@ void Ostap::Utils::P2::update
        && std::isfinite ( y ) 
        && std::isfinite ( z ) )
     { m_histo->Fill ( x , y , z , w ) ; }
+}
+// =============================================================================
+void Ostap::Utils::P3::update
+( const double x ,
+  const double y ,
+  const double z ,
+  const double t ,
+  const double w )
+{
+  if ( m_histo && w && std::isfinite ( w )
+       && std::isfinite ( x ) 
+       && std::isfinite ( y ) 
+       && std::isfinite ( z ) 
+       && std::isfinite ( t ) )
+    { m_histo->Fill ( x , y , z , t , w ) ; }
 }
 // =============================================================================
 //                                                                       The END 

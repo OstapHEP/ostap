@@ -1519,6 +1519,22 @@ def frame_project ( frame               ,
 
     if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
 
+    # ===================================================================================
+    ## ROOT.TProfile is not supprted yet (ROOT 6.36)
+    if isinstance ( model , ROOT.TProfile3D ) :
+        if isinstance ( frame , ROOT.TTree ) : 
+            logger.warning ( 'Frame-based projection is not supported for %s' % typename ( model ) )
+            from ostap.trees.trees import tree_project as _tree_project_ 
+            return _tree_project_ ( frame                ,
+                                    model                , 
+                                    expressions          ,
+                                    cuts                 ,
+                                    progress  = progress ,
+                                    use_frame = False    ,
+                                    parallel  = False    )
+        logger.error ( 'Frame-based projection is not supported for %s' % typename ( model ) )
+        return
+
     if isinstance ( model , _types_nD ) : 
         return frame_param ( frame                   ,
                              model                   ,
@@ -1533,7 +1549,6 @@ def frame_project ( frame               ,
     current , items, cname , _ = _fr_helper_ ( frame , expressions , cuts , progress = progress )
     
     ## add the fiducial cuts
-
     cvars = tuple ( v for v in items.values () ) 
     if isinstance ( model , ROOT.TH3 ) :
         zvar    = cvars [ 2 ] 

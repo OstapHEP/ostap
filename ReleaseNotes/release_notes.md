@@ -5,15 +5,20 @@
   1. add `pow` and `rpow` functions for TCut-expressions 
   1. add `mod/imod/rmod` operators for for TCut-expressions 
   1. add `abs` operator for for TCut-expressions 
-  1. add proper treatment of `Tprofile` and ``TRpofile2D  for `project` methods
+  1. add proper treatment of `Tprofile` and ``TProfile2D  for `project` methods
   1. add proper treatment of uncertaintues of projections of weighted `RooAbsData` in case the weight has assigned errors.
-  
+  1. add proper treatment for `ROOT.TProfile3D` where possible
+  1. switch-off parallel projection for all profiles
+  1. switch-off frame-base processing for `ROOT.TProfile3D`
+  2. extend the `h1_stack` treatment for data projection methods 
+
 ## Backward-incompatible
 
 ## Bug fixes
 
   1. fix `ostap-sync-dirs` script 
- 
+  1. fix some newly introduced bugs
+  
 # v3.0.2.16 
 
 ## New features

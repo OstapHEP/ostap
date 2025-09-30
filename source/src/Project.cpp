@@ -13,6 +13,7 @@
 #include "TH3.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
+#include "TProfile3D.h"
 // ============================================================================
 // ROOT/RooFit
 // ============================================================================
@@ -673,9 +674,9 @@ Ostap::Project::project3
 // ============================================================================
 // 2D-profiles 
 // ============================================================================
-/* Project data in the 3D-ihstoram
+/* Project data in the 2D-profile 
  *  @param data        (INPUT)  input data 
- *  @param histo       (UPDATE) the !D-histogram 
+ *  @param histo       (UPDATE) the 2D profile 
  *  @param expression1 (INPUT)  expression1 
  *  @param expression2 (INPUT)  expression2 
  *  @param expression2 (INPUT)  expression3 
@@ -771,6 +772,127 @@ Ostap::Project::project3
 		    yaxis -> GetXmax () ) ;
 }
 // ============================================================================
+
+// ============================================================================
+// 3D-profile 
+// ============================================================================
+
+// ============================================================================
+/* Project data in the 3D-profile 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) the 3D profile 
+ *  @param expression1 (INPUT)  expression1 
+ *  @param expression2 (INPUT)  expression2 
+ *  @param expression3 (INPUT)  expression3 
+ *  @param expression4 (INPUT)  expression3 
+ *  @param selection   (INPUT)  selection/weight  
+ *  @param first       (INOPUT) the first event to process (inclusive) 
+ *  @param last        (INOPUT) the last  event to process (exclusive)
+ *  @return statis code 
+ *  @see   TH1::Fill
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Project::project4
+( TTree*                  data        ,
+  TProfile3D*             histo       ,
+  const std::string&      expression1 ,
+  const std::string&      expression2 ,
+  const std::string&      expression3 ,
+  const std::string&      expression4 ,
+  const std::string&      selection   ,
+  const Ostap::EventIndex first       ,
+  const Ostap::EventIndex last        ) const
+{
+  if ( !histo || 3 != histo->GetDimension () ) { return INVALID_TPROFILE3D ; }
+  //
+  Ostap::Utils::P3 p3 ( histo )    ;
+  //
+  const TAxis* xaxis = histo->GetXaxis () ;
+  if ( !xaxis ) { return INVALID_XAXIS ; }
+  //
+  const TAxis* yaxis = histo->GetYaxis () ;
+  if ( !yaxis ) { return INVALID_YAXIS ; }
+  //
+  const TAxis* zaxis = histo->GetZaxis () ;
+  if ( !zaxis ) { return INVALID_ZAXIS ; }
+  //
+  return get_stat ( data                ,
+		    p3                  ,
+		    expression1         ,
+		    expression2         ,
+		    expression3         ,
+		    expression4         ,
+		    selection           ,
+		    first               ,
+		    last                ,
+		    xaxis -> GetXmin () ,
+		    xaxis -> GetXmax () ,
+		    yaxis -> GetXmin () ,
+		    yaxis -> GetXmax () , 
+		    zaxis -> GetXmin () ,
+		    zaxis -> GetXmax () ) ;
+} 
+// ============================================================================
+/* Project data in the 3D-profile 
+ *  @param data        (INPUT)  input data 
+ *  @param histo       (UPDATE) the 3D-profile 
+ *  @param expression1 (INPUT)  expression1 
+ *  @param expression2 (INPUT)  expression2 
+ *  @param expression2 (INPUT)  expression3 
+ *  @param expression2 (INPUT)  expression4 
+ *  @param selection   (INPUT)  selection/weight  
+ *  @param first       (INOPUT) the first event to process (inclusive) 
+ *  @param last        (INOPUT) the last  event to process (exclusive)
+ *  @return statis code 
+ *  @see   TH1::Fill
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Project::project4
+( const RooAbsData*       data        ,
+  TProfile3D*             histo       ,
+  const std::string&      expression1 ,
+  const std::string&      expression2 ,
+  const std::string&      expression3 ,
+  const std::string&      expression4 ,
+  const std::string&      selection   ,
+  const std::string&      cut_range   , 
+  const Ostap::EventIndex first       ,
+  const Ostap::EventIndex last        ) const
+{
+  if ( !histo || 3 != histo->GetDimension () ) { return INVALID_TPROFILE3D ; }
+  //
+  Ostap::Utils::P3 p3 ( histo )    ;
+  //
+  const TAxis* xaxis = histo->GetXaxis () ;
+  if ( !xaxis ) { return INVALID_XAXIS ; }
+  //
+  const TAxis* yaxis = histo->GetYaxis () ;
+  if ( !yaxis ) { return INVALID_YAXIS ; }
+  //
+  const TAxis* zaxis = histo->GetZaxis () ;
+  if ( !zaxis ) { return INVALID_ZAXIS ; }
+  //
+  return get_stat ( data                ,
+		    p3                  ,
+		    expression1         ,
+		    expression2         ,
+		    expression3         ,
+		    expression4         ,
+		    selection           ,
+		    cut_range           , 
+		    first               ,
+		    last                ,
+		    xaxis -> GetXmin () ,
+		    xaxis -> GetXmax () ,
+		    yaxis -> GetXmin () ,
+		    yaxis -> GetXmax () , 
+		    zaxis -> GetXmin () ,
+		    zaxis -> GetXmax () ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // ECDF & WECDF 
