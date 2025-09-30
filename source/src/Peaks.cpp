@@ -1885,17 +1885,16 @@ std::size_t Ostap::Math::Novosibirsk::tag () const
 }
 // ============================================================================
 
-
 // ============================================================================
 // Crystal Ball & Co
 // ============================================================================
 /** \f$ n \rightarrow N \f$ transformation
- *  @param    n (input) n-paameter (external) 
+ *  @param  n (input) n-paeameter (external) 
  *  @return transformed N-parameter (internal)
  */
 // ============================================================================
 double Ostap::Math::CrystalBall::N ( const double n )
-{ return std::hypot ( 1.0 , n ) ;}
+{ return std::hypot ( 1.0 , n ) ; }
 // ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter
@@ -1993,6 +1992,28 @@ double Ostap::Math::CrystalBall::pdf ( const double x ) const
   return Ostap::Math::gauss_pdf ( delta ) / m_sigma ;
 }
 // ============================================================================
+/** quantify the effect of tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ */
+// ============================================================================
+double Ostap::Math::CrystalBall::non_gaussian
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) ;
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m_m0 , m_sigma ) -
+    Ostap::Math::gauss_cdf ( xlow  , m_m0 , m_sigma ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the integral between low and high
 // ============================================================================
 double Ostap::Math::CrystalBall::integral
@@ -2005,7 +2026,7 @@ double Ostap::Math::CrystalBall::integral
   //
   const double x0 = m_m0 - m_alpha * m_sigma ;
   //
-  // split into the proper subintervals: peak-region & tail-region 
+  // split into the proper sub-intervals: peak-region & tail-region 
   if ( low < x0 && x0 < high ) { return integral ( low , x0 ) + integral ( x0 , high ) ; }
   //
   // Z = (x-x0)/sigma 
@@ -2018,10 +2039,10 @@ double Ostap::Math::CrystalBall::integral
   //
   const double NN = N () ;
   /// tail
-  const double a  =   - m_alpha           / NN ;
-  const double b  = 1 - m_alpha * m_alpha / NN ;
+  const double a  =     - m_alpha             / NN ;
+  const double b  = ( 1 - m_alpha * m_alpha ) / NN ;
   //  
-  return m_A * Ostap::Math::cavalieri ( -NN , zlow , zhigh , a , b ) ;
+  return -1 * m_A * Ostap::Math::cavalieri ( -NN , zlow , zhigh , a , b ) ;
 }
 // ============================================================================
 // get the tag 
@@ -2051,7 +2072,6 @@ Ostap::Math::Needham::Needham
   const double c1    ,
   const double c2    ,
   const double n     ) 
-/// @see Ostap::Math:CrystalBall
   : m_cb  ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
   , m_c0  ( -1 )
   , m_c1  ( -1 )
@@ -2164,7 +2184,6 @@ std::size_t Ostap::Math::CrystalBallRightSide::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_cb.tag() ,  -1 ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  constructor from all parameters

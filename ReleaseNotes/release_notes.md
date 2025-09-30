@@ -18,6 +18,8 @@
 
   1. fix `ostap-sync-dirs` script 
   1. fix some newly introduced bugs
+  1. fix the bug in `Ostap::Math::CrystalBall::integral`
+
   
 # v3.0.2.16 
 
