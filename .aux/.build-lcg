@@ -9,7 +9,7 @@ PLATFORM=${2:-x86_64-el9-clang19-opt}
 ## Wake up the cvmfs fuse mount
 #  - on Windows WSL some action is required
 # ================================================================================
-for run in {1..10}; do
+for run in {1..20}; do
 
     for the_dir in /cvmfs/sft.cern.ch/                         \
 		   /cvmfs/sft.cern.ch/lcg                      \
@@ -49,8 +49,8 @@ for run in {1..10}; do
     then
 	break
     else
-	echo 'BUILD WITH LCG    : try to wake up  the ' $run 
-	sleep 1 
+	echo 'BUILD WITH LCG    : try to wake up #'$run 
+	sleep 2
     fi
     
 done
@@ -141,7 +141,7 @@ then
     echo 'BUILD WITH LCG: use  existing .build.ostap ' $OSTAP_BUILD/.build-ostap
 else 
     cp $OSTAP_SOURCE/.aux/.build-ostap $OSTAP_BUILD/.build-ostap
-    echo 'BUILD WITH LCG    : copy .build-ostap from     ' ${OSTAP_BUILD}/.aux/.build-ostap
+    echo 'BUILD WITH LCG    : copy .build-ostap from ' ${OSTAP_SOURCE}/.aux/.build-ostap
 fi
 
 ## parameter #5: install directory 
