@@ -24,7 +24,8 @@ __all__     = (
 # =============================================================================
 from   collections.abc         import Container
 from   ostap.core.meta_info    import root_info 
-from   ostap.core.core         import std, Ostap, valid_pointer 
+from   ostap.core.core         import std, Ostap, valid_pointer
+from   ostap.utils.basic       import typename 
 from   ostap.core.ostap_types  import string_types , integer_types
 import ostap.fitting.variables
 import ROOT, sys, random
@@ -290,7 +291,7 @@ _new_methods_ += [
 # =============================================================================
 ## check the presence of variable/name/index in set 
 def _ras_contains_ ( self , aname ) :
-    """Check the presence of variable/name/index in set 
+    """ Check the presence of variable/name/index in set 
     """
     if isinstance ( aname , integer_types ) :
         return  0 <= aname < len ( self )
@@ -303,6 +304,42 @@ def _ras_contains_ ( self , aname ) :
     if not _v : return False 
     return             True
 
+# =============================================================================
+## Check the presence of object/name/index in RooLinkedList
+def _rll_contains_ ( self , what ) :
+    """ Check the presence of object/name/index in RooLinkedList
+    """ 
+    if isinstance ( what , ROOT.RooAbsArg ) and valid_pointer ( what ) :
+        return True if self.findArg    ( what   ) else False
+    
+    elif isinstance ( what , ROOT.TObject    ) and valid_pointer ( what ) :
+        return True if self.FindObject ( what   ) else False
+    
+    elif isinstance ( what , string_types  ) :
+        return True if self.find ( str ( what ) ) else False
+    
+    elif isinstance ( what , integer_types ) :
+        return 0 <= what < len ( self )
+    
+    return False
+
+# =============================================================================
+## Get the object by index or name 
+def _rll_getitem_ ( self , what ) :
+    """ Get the object by index or name 
+    """
+    if   isinstance ( what , integer_types ) :
+        l = len ( self )
+        ## allow "slightly negative" indices:
+        if what < 0 : what += l
+        if 0 <= what < l : return self.At ( what )         
+        raise IndexError ( 'List index is out of the range')
+    elif isinstance ( what , string_types ) :
+        obj = self.find ( str ( what ) )
+        if valid_pointer (  obj  )  : return obj
+        raise KeyError   ( "Key '%s' is not found")
+    
+    raise TypeError ( 'Unknown index type %s' % typename ( what ) )
     
 # =============================================================================
 ## some decoration over RooArgSet 
@@ -318,17 +355,15 @@ ROOT.RooArgSet     . __repr__      = lambda s : str ( set   ( _rs_list_ ( s ) ) 
 
 ROOT.RooLinkedList . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
 ROOT.RooLinkedList . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) if s else '[]'
-
-
+ROOT.RooLinkedList . __contains__  = _rll_contains_ 
+ROOT.RooLinkedList . __getitem__   = _rll_getitem_ 
 
 ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize() if valid_pointer ( s ) else 0 
 ROOT.RooAbsCollection. __nonzero__ = lambda s   : valid_pointer ( s ) and 0 < s.getSize()
 ROOT.RooAbsCollection. __bool__    = lambda s   : valid_pointer ( s ) and 0 < s.getsize()  
 
-
-
 # ========================================================================================
-## check it theitem is in th elist 
+## check it the item is in the list 
 def _stl_contains_ ( lst , item ) :
     """ Check if the item is in the list 
     """

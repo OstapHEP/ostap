@@ -12,6 +12,8 @@
   1. switch-off frame-base processing for `ROOT.TProfile3D`
   1. extend the `h1_stack` treatment for data projection methods 
   1. update math related to Crystal Ball functions and add new test 
+  1. add explicit `__contains__` function to `RooLinkedList`
+  1. add explicit `__getitem__`  function to `RooLinkedList`
   
 ## Backward-incompatible
 

@@ -15,7 +15,8 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 from   ostap.core.core        import rooSilent 
-from   ostap.utils.timing     import timing 
+from   ostap.utils.timing     import timing
+from   ostap.utils.basic      import typename 
 from   ostap.utils.root_utils import batch_env 
 import ostap.fitting.roofit 
 import ROOT, random
@@ -62,6 +63,7 @@ def test_contains () :
 
     logger = getLogger ( 'tests_contains' )
     for l in ( l1 , l2 , l3 ) :
+        logger.info ( ' %s ' % typename ( l ) ) 
         logger.info ( ' a in l/"a" in l? %s/%s' % ( a in l , 'a' in l ) )
         logger.info ( ' b in l/"b" in l? %s/%s' % ( b in l , 'b' in l ) )
         logger.info ( ' c in l/"c" in l? %s/%s' % ( c in l , 'c' in l ) )
