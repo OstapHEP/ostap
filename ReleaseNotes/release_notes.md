@@ -1,3 +1,5 @@
+# v3.0.3.0 
+
 ## New features
 
   1. more improvements for helper script `./aux/.build-lcg`
@@ -15,7 +17,8 @@
   1. add explicit `__contains__` function to `RooLinkedList`
   1. add explicit `__getitem__`  function to `RooLinkedList`
   1. add `non_gaussian` method for all "peak-like"-distribution with well-defined "mean" and "rms"
-  
+  1. improve CPACK-configuration 
+
 ## Backward-incompatible
 
 ## Bug fixes

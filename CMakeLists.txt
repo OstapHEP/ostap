@@ -46,8 +46,8 @@ message ( " ********************************************************************
 
 set(OSTAP_VERSION_MAJOR  3)
 set(OSTAP_VERSION_MINOR  0)
-set(OSTAP_VERSION_PATCH  2)
-set(OSTAP_VERSION_TWEAK 17)
+set(OSTAP_VERSION_PATCH  3)
+set(OSTAP_VERSION_TWEAK  0)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
@@ -175,5 +175,17 @@ set (CPACK_PACKAGE_VERSION_TWEAK "${OSTAP_VERSION_TWEAK}")
 set (CPACK_PACKAGE_ICON           ${CMAKE_CURRENT_SOURCE_DIR}/docs/ostap.jpg )
 if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.7" )
    set ( CPACK_PACKAGE_CHECKSUM  "SHA1" ) 
-endif() 
+ endif()
+
+set(CPACK_SOURCE_GENERATOR "TGZ ZIP TAR")
+ 
+## set     (CPACK_PACKAGE_DIRECTORY    ${CMAKE_INSTALL_PREFIX}/packages )
+## message ('CPACK-PACKAGE-DIRECTORY'  ${CPACK_PACKAGE_DIRECTORY} )
+
 include (CPack)
+
+## cpack_add_component(export)
+## cpack_add_component(python)
+## cpack_add_component(python)
+## cpack_add_component(headers)
+## cpack_add_component(libraries)

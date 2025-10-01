@@ -44,17 +44,17 @@ OSTAP_INSTALL=${3:-$OSTAP_BUILD/INSTALL}
 
 if [[ -f $OSTAP_BUILD/build.ninja ]]
 then
-( echo 'BUILD OSTAP [1/7] : CLEAN BUILD REMNANTS'       ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; ninja clean )
+( echo 'BUILD OSTAP [1/8] : CLEAN BUILD REMNANTS'       ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; ninja clean )
 fi
 
 if [[ $OSTAP_INSTALL && -d $OSTAP_INSTALL ]]
 then
-( echo 'BUILD OSTAP [2/7] : CLEAN INSTALL DIRECTORY'    ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh )
+( echo 'BUILD OSTAP [2/8] : CLEAN INSTALL DIRECTORY'    ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
 fi
 
-( echo 'BUILD OSTAP [3/7] : REMOVE REMNANTS & GARBAGE'  ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* Tes* *.py~ *.C~ __* _CPa* \#* *~ .*~ .\#*  )
-( echo 'BUILD OSTAP [4/7] : FIRST  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake --fresh $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-( echo 'BUILD OSTAP [5/7] : SECOND PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake         $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+( echo 'BUILD OSTAP [3/8] : REMOVE REMNANTS & GARBAGE'  ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; rm -rfv CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPa* \#* *~ .*~ .\#* )
+( echo 'BUILD OSTAP [4/8] : FIRST  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake --fresh $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+( echo 'BUILD OSTAP [5/8] : SECOND PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD   ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake         $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
 
 if [[ -f $OSTAP_INSTALL/thisostap.sh &&
       -x $OSTAP_INSTALL/thisostap.sh ]]
@@ -64,8 +64,14 @@ else
   echo 'BUILD OSTAP       : No thisostap.sh is found ' $OSTAP_INSTALL/thisostap.sh 
   return 300 
 fi
-(  echo 'BUILD OSTAP [6/7] : THIRD  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-(  echo 'BUILD OSTAP [7/7] : LAST   PASS OF NINJA'       ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; ninja ; ninja install | grep -v Up-to-date )
+(  echo 'BUILD OSTAP [6/8] : THIRD  PASS OF CMAKE+NINJA' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+(  echo 'BUILD OSTAP [7/8] : LAST   PASS OF NINJA'       ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; ninja ; ninja install | grep -v Up-to-date ; ninja package )
+
+if [[ -d $OSTAP_BUILD/packages ]]
+then
+    (  echo 'BUILD OSTAP [8/8] : COPY PACKAGE FILES to $OSTAP_INSTALL '   ; )    
+    cp -r $OSTAP_BUILD/packages $OSTAP_INSTALL
+fi
 
 echo 'BUILD OSTAP       : OSTAP_SOURCE    : ' $OSTAP_SOURCE
 echo 'BUILD OSTAP       : OSTAP_BUILD     : ' $OSTAP_BUILD

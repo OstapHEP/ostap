@@ -1,12 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap-sync-dirs
-#  Simple utility for (parallel) syncronization of directories 
+## @file sync-dirs
+#  Simple utility for (parallel) syncronization of directories
+#
+#  It tries:
+#  - GNU paralllel
+#  - xargs 
+#  - ... and ostap's parallelisation machinery as backup solution
+#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 # =============================================================================
 """ Simple utility for (parallel) syncronization of directories 
+
+ It tries:
+ - GNU paralllel
+ - xargs 
+ - ... and ostap's parallelisation machinery as backup solution 
+
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -25,13 +37,13 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.sync-dirs' )
 else                       : logger = getLogger( __name__          )
 del getLogger
-
+# =============================================================================
 
 # =============================================================================
 if '__main__' == __name__ :
     
     parser = argparse.ArgumentParser  (
-        prog       = "ostap-sync-dirs" )
+        prog       = "sync-dirs" )
     parser.add_argument    (
         '--parallel' ,
         type    = int         , 

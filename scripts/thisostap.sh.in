@@ -54,7 +54,8 @@ EOF
 if [ -n "$OSTAPDIR" ] ; then
    old_ostapdir=$OSTAPDIR
    export PATH=$(            _path_remove PATH            $old_ostapdir/scripts ) 
-   export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir/@OSTAP_PYTHON_SITE_DIR@         ) 
+   export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir                        ) 
+   export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir@OSTAP_PYTHON_SITE_DIR@ ) 
    export LD_LIBRARY_PATH=$( _path_remove LD_LIBRARY_PATH $old_ostapdir/lib     ) 
    export MANPATH=$(         _path_remove MANPATH         $old_ostapdir/doc/man )
 fi
@@ -78,8 +79,13 @@ OSTAPDIR="$( cd -P "$( dirname "$OSTAPDIR" )" >/dev/null && pwd )" ; export OSTA
 OSTAPVERSION=@OSTAP_VERSION@                                       ; export OSTAPVERSION
 
 ## update all   nesessary paths 
-export PATH=$(              _path_prepend PATH            $OSTAPDIR/scripts ) 
-export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR/@OSTAP_PYTHON_SITE_DIR@          )  
+export PATH=$(              _path_prepend PATH            $OSTAPDIR/scripts )
+if [[ -d $OSTAPDIR@OSTAP_PYTHON_SITE_DIR@  ]]
+then
+    export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR@OSTAP_PYTHON_SITE_DIR@   )
+else
+    export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR   )
+fi 
 export LD_LIBRARY_PATH=$(   _path_prepend LD_LIBRARY_PATH $OSTAPDIR/lib     )  
 export MANPATH=$(           _path_prepend MANPATH         $OSTAPDIR/doc/man )  
 

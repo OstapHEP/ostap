@@ -427,10 +427,11 @@ else()
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif() 
 
-install(DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}
-        FILES_MATCHING PATTERN "*.py" 
-        PATTERN  "*#*" EXCLUDE )
+## install(DIRECTORY      ${CMAKE_CURRENT_SOURCE_DIR}
+##        DESTINATION    ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}
+##        COMPONENT      python 
+##        FILES_MATCHING PATTERN "*.py" 
+##        PATTERN  "*#*" EXCLUDE )
 
 set(OSTAP_PYTHON_SITE_DIR ${OSTAP_PYTHON_SITE_LOCAL}  PARENT_SCOPE)
 
@@ -512,16 +513,31 @@ foreach(filename ${allfiles})
 
 endforeach() 
 
-
 add_test (NAME ostap.ostap        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ostap -b )
 add_test (NAME ostap.dependencies WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ostap-check-dependencies )
  
+install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}  
+          DESTINATION     . 
+          COMPONENT       python 
+          FILES_MATCHING  PATTERN "*.py"          
+          PATTERN  "*.#*" EXCLUDE       )
 
-install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}  
-          DESTINATION             . 
-          FILES_MATCHING
-          COMPONENT python 
-          PATTERN "*.py"          
-          PATTERN  "*.#*" EXCLUDE )
+install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
+          DESTINATION     ${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}
+          COMPONENT       python 
+          FILES_MATCHING  PATTERN "*.py" 
+          PATTERN  "*#*"  EXCLUDE )
 
+install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
+          DESTINATION     .
+          COMPONENT       python 
+          FILES_MATCHING  PATTERN "*.py" 
+          PATTERN  "*#*"  EXCLUDE )
+
+install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
+          DESTINATION     .${OSTAP_PYTHON_SITE_LOCAL}
+          COMPONENT       python 
+          FILES_MATCHING  PATTERN "*.py" 
+          PATTERN  "*#*"  EXCLUDE )
+	
 ## nosetests -w ../ostap/tools --exe --processes=16  --process-timeout=2000 -I '.*chopping.*'

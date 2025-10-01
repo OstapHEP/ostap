@@ -217,8 +217,6 @@ target_include_directories (ostap
         ${CMAKE_CURRENT_SOURCE_DIR}/src ${Python_INCLUDE_DIRS} 
 )
 
-
- 
 REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
                             SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
 
@@ -227,9 +225,10 @@ add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVe
 target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 
 
-install ( TARGETS ostap     EXPORT   ostap-export 
-                            LIBRARY  DESTINATION lib 
-                            INCLUDES DESTINATION include )
+install ( TARGETS ostap     EXPORT    ostap-export
+                            COMPONENT export 
+                            LIBRARY   DESTINATION lib 
+                            INCLUDES  DESTINATION include )
 
 install ( TARGETS ostapDict LIBRARY  DESTINATION lib COMPONENT libraries )
 
@@ -245,10 +244,11 @@ install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap COMPONENT headers   )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           COMPONENT libraries )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           COMPONENT libraries )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/.ostap.build      DESTINATION .             COMPONENT libraroes )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/.ostap.build      DESTINATION .             COMPONENT libraries )
 
 install(EXPORT ostap-export
   FILE         OstapTargets.cmake
+  COMPONENT    export 
   NAMESPACE    ostap::
   DESTINATION  cmake/Ostap
 )
