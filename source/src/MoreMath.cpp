@@ -1442,7 +1442,7 @@ namespace
     else if ( s_equal ( xlow , xhigh )                    ) { return 0 ; }
     else if ( xhigh < xlow                                ) { return -_cavalieri_ ( n , xhigh , xlow ) ; }
     //
-    // (2) integer argument: covers also the log-case
+    // (2) integer argument ? covers also the log-case
     if ( Ostap::Math::isint ( n ) )
       {
         const int nn = std::lround ( n ) ;
@@ -1450,7 +1450,10 @@ namespace
       }
     //
     if ( ( 0 > n + 1 ) && ( xlow <= 0 ) || ( xhigh <= 0 ) )
-      { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
+      { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN
+    //
+    /// for non-integer n , expression MUST be non-negative 
+    if ( xlow < 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN
     //
     const long double delta = n + 1 ;
     //
@@ -1464,9 +1467,11 @@ namespace
 	  Ostap::Math::expm1_x ( delta * log_h ) * log_h -
 	  Ostap::Math::expm1_x ( delta * log_l ) * log_l ;	  	
       }
-    ///
+    //
     /// regular  case
-    return ( std::powl ( xhigh  , delta ) - std::powl ( xlow  , delta ) ) / delta  ;
+    return
+      ( std::pow ( xhigh * 1.0L , delta ) -
+	std::pow ( xlow  * 1.0L , delta ) ) / delta ;
   }
   // ==========================================================================
 }
