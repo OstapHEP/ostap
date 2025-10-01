@@ -572,7 +572,6 @@ def test_dalitz10 () :
                 h1.Fill ( s2 , s1      )
                 h2.Fill ( z2 , z1 , wz )
                 
-
     with use_style ( 'Z' ) :
 
         with use_canvas( 'test_dalitz10  Dalitz(s2,s1)'          , wait = 1 ) :

@@ -10,8 +10,9 @@
   1. add proper treatment for `ROOT.TProfile3D` where possible
   1. switch-off parallel projection for all profiles
   1. switch-off frame-base processing for `ROOT.TProfile3D`
-  2. extend the `h1_stack` treatment for data projection methods 
-
+  1. extend the `h1_stack` treatment for data projection methods 
+  1. update math related to Crystal Ball functions and add new test 
+  
 ## Backward-incompatible
 
 ## Bug fixes
@@ -20,7 +21,6 @@
   1. fix some newly introduced bugs
   1. fix the bug in `Ostap::Math::CrystalBall::integral`
 
-  
 # v3.0.2.16 
 
 ## New features

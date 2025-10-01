@@ -229,7 +229,7 @@ double Ostap::Math::exp_rel_N ( const double x , const unsigned short N )
 }
 // ============================================================================
 /*  compute \f$ f(x) = \frac{e^x-1}{x}\f$
- *  @return the value of psi function 
+ *  @return the value of the function 
  *  @see exp_rel_N 
  */        
 // ============================================================================
@@ -239,9 +239,10 @@ double Ostap::Math::exprel ( const double x )
   const long double y = x ;
   return
     x < GSL_LOG_DBL_MIN ? -1.0 / y             : // RETURN
-    x > GSL_LOG_DBL_MAX ? s_infinity           : // RETURN 
+    x > GSL_LOG_DBL_MAX ? s_infinity           : // RETURN
+    s_zero ( x )        ?  1.0                 : // RETURN
     1 > std::abs ( x )  ? std::expm1 ( y ) / y : // RETURN 
-    ( std::exp ( y ) - 1 ) / y ;
+    (   std::exp ( y ) - 1 )               / y ; // RETURN 
 }
 // ============================================================================
 namespace
@@ -1405,26 +1406,25 @@ namespace
     else if ( s_equal ( xlow , xhigh ) ) { return 0 ; }
     else if ( xhigh < xlow             ) { return -_cavalieri_ ( n , xhigh , xlow ) ; }
     //
-    // (0) log-case
+    // (2) log-case
     if ( -1 == n ) { return std::log ( std::abs ( xhigh / xlow ) ) ; }
     //
-    if ( 0 > n && ( s_zero ( xlow ) || s_zero ( xhigh ) ) ) 
+    if ( -1 > n && ( s_zero ( xlow ) || s_zero ( xhigh ) ) ) 
       { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
     //
-    // the basic/best case 
-    if      ( 0 <= xlow  ) { return ( std::pow ( xhigh , n + 1 ) - std::pow ( xlow  , n + 1 ) ) / ( n + 1 ) ;}
-    else if ( 0 >= xhigh )
-      {     
-        const double result = ( std::pow ( std::abs ( xhigh ) , n + 1 ) - 
-                                std::pow ( std::abs ( xlow  ) , n + 1 ) ) / ( n + 1 ) ;
-        return ( 0 == n % 2 ? +1 : -1 ) * result ;   
+    const long double xl = xlow  ;
+    const long double xh = xhigh ;
+    //
+    // negative case :
+    if ( -1 > n )
+      {
+	const unsigned long np1 = std::abs ( n + 1 ) ;
+	return  ( Ostap::Math::POW ( 1/xh , np1 ) - Ostap::Math::POW ( 1/xl , np1 ) ) / ( n + 1 ) ;	
       }
-    else if ( n < 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
     //
-    const double v1 = std::pow (            xhigh  , n + 1 ) ;
-    const double v2 = std::pow ( std::abs ( xlow ) , n + 1 ) ;
-    //
-    return ( v1 + ( 0 == n % 2 ? +1 : -1 ) * v2 ) / ( n + 1 ) ;
+    // the regular (positive) case
+    const unsigned long np1 = n + 1 ;
+    return ( Ostap::Math::POW ( xh , np1 ) - Ostap::Math::POW ( xl  , np1 ) ) / np1 ;
   }
   // ==========================================================================
   /** trivial Cavalieri's integral 
@@ -1438,9 +1438,9 @@ namespace
     const double xhigh )
   {
     // (1) trivial checks 
-    if      ( !n                       ) { return xhigh - xlow ; }
-    else if ( s_equal ( xlow , xhigh ) ) { return 0 ; }
-    else if ( xhigh < xlow             ) { return -_cavalieri_ ( n , xhigh , xlow ) ; }
+    if      ( !n || s_zero ( n ) || s_equal ( n + 1 , 1 ) ) { return xhigh - xlow ; }
+    else if ( s_equal ( xlow , xhigh )                    ) { return 0 ; }
+    else if ( xhigh < xlow                                ) { return -_cavalieri_ ( n , xhigh , xlow ) ; }
     //
     // (2) integer argument: covers also the log-case
     if ( Ostap::Math::isint ( n ) )
@@ -1449,42 +1449,24 @@ namespace
         return _cavalieri_ ( nn , xlow , xhigh ) ;
       }
     //
-    if ( std::abs ( n + 1 ) <= 0.10 ) // almost log
+    if ( ( 0 > n + 1 ) && ( xlow <= 0 ) || ( xhigh <= 0 ) )
+      { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
+    //
+    const long double delta = n + 1 ;
+    //
+    if ( std::abs ( delta ) <= 0.10 ) // "almost log"
       {
-        const double lyl    = std::log ( std::abs ( xlow  ) ) ;
-        const double lyh    = std::log ( std::abs ( xhigh ) ) ;
-        //
-        const double d   = n + 1 ;
-        //
-        double logl    = lyl ;
-        double logh    = lyh ;
-        double dd      = 1 ;
-        double invfact = 1 ;
-        //
-        double result = logl - logh ;
-        for ( unsigned short i = 2 ; i < 100 ; ++i )
-          {
-            invfact  /= i   ;
-            logl     *= lyl ;
-            logh     *= lyh ;
-            dd       *= d   ;
-            //
-            const double term = ( logl - logh ) * dd * invfact ;
-            if ( 5 <= i && ( !term || s_zero ( term ) || s_equal ( result , result + term ) ) ) 
-              {
-                result   += term ;
-                break ;
-              } 
-            result   += term ;
-          }
-        //
-        return result ;
+	//
+	const long double log_h = std::log ( std::abs ( xhigh ) * 1.0L ) ;
+        const long double log_l = std::log ( std::abs ( xlow  ) * 1.0L ) ;
+	//
+	return
+	  Ostap::Math::expm1_x ( delta * log_h ) * log_h -
+	  Ostap::Math::expm1_x ( delta * log_l ) * log_l ;	  	
       }
     ///
-    if ( ( ( xlow <= 0 ) || ( xhigh <= 0 ) ) && n + 1 < 0 )
-      { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN 
     /// regular  case
-    return ( std::pow ( xhigh  , n + 1 ) - std::pow ( xlow  , n + 1 ) ) / ( n + 1 ) ;
+    return ( std::powl ( xhigh  , delta ) - std::powl ( xlow  , delta ) ) / delta  ;
   }
   // ==========================================================================
 }
@@ -4877,20 +4859,24 @@ double Ostap::Math::log1p_x ( const double x )
   return result ;
 }
 // ============================================================================
-/*  \f$ f(x) = \frac{ \mathrm{e}^{x} -1 }{x}  \f$ 
- *  precise for small x 
+/*  \f$ f(x) = \frac{ \mathrm{e}^{x} - 1 }{x}  \f$ 
+ *  should be precise for small x 
  */
 // ============================================================================
 double Ostap::Math::expm1_x ( const double x ) 
 {
-  const double absx = std::abs ( x ) ;
-  if ( 1.e-3 < absx ) { return std::expm1 ( x ) / x  ; } 
+  if      ( x <= GSL_LOG_DBL_MIN  ) { return -1.0 / x   ; }
+  else if ( x >= GSL_LOG_DBL_MAX  ) { return s_infinity ; }
+  //
+  const double absx = std::abs ( x ) ;  
+  if      ( 1     <= absx         ) { return ( std::exp   ( x ) - 1 ) / x ; } 
+  else if ( 1.e-3 <= absx         ) { return   std::expm1 ( x )       / x ; }
   //
   long double       term   = x / 2 ;
   long double       result = 1 ;
   unsigned long     k      = 2 ;
   //
-  while ( std::abs ( term ) > 0.5 * s_EPSILON  ) 
+  while ( !s_equal ( result , result + term ) ) 
   {
     result += term ;
     term   *= x  / ( k + 1 ) ;

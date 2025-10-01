@@ -1981,11 +1981,11 @@ double Ostap::Math::CrystalBall::pdf ( const double x ) const
   const double delta = ( x - m_m0 ) / m_sigma ;
   //
   // the tail: power law  
-  if  ( delta < -m_alpha )
+  if  ( delta <= -m_alpha )
     {
       const double nn = N () ;
-      const double y  = 1 - m_alpha * ( m_alpha + delta ) / nn ;
-      return m_A * std::pow ( y , -nn ) / m_sigma ;
+      const double yy = nn / ( nn  - m_alpha * ( m_alpha + delta ) ) ;
+      return m_A * std::pow ( yy , nn ) / m_sigma ;
     }
   //
   // the peak: Gaussian 
@@ -2037,12 +2037,12 @@ double Ostap::Math::CrystalBall::integral
   // peak: Gaussian 
   if ( x0 <= low ) { return Ostap::Math::gauss_int ( zlow , zhigh ) ; } 
   //
-  const double NN = N () ;
+  const double nn = N () ;
   /// tail
-  const double a  =     - m_alpha             / NN ;
-  const double b  = ( 1 - m_alpha * m_alpha ) / NN ;
+  const double a  =   - m_alpha           / nn ;
+  const double b  = 1 - m_alpha * m_alpha / nn ;
   //  
-  return -1 * m_A * Ostap::Math::cavalieri ( -NN , zlow , zhigh , a , b ) ;
+  return m_A * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;
 }
 // ============================================================================
 // get the tag 
@@ -2161,20 +2161,12 @@ Ostap::Math::CrystalBallRightSide::CrystalBallRightSide
 // ============================================================================
 Ostap::Math::CrystalBallRightSide::~CrystalBallRightSide (){}
 // ============================================================================
-//  evaluate CrystalBall's function
-// ============================================================================
-double Ostap::Math::CrystalBallRightSide::pdf ( const double x ) const
-{
-  const double y = 2 * m0 ()  - x ;
-  return  m_cb.pdf ( y ) ;  
-}
-// ============================================================================
 // get the integral between low and high
 // ============================================================================
 double Ostap::Math::CrystalBallRightSide::integral
 ( const double low ,
   const double high ) const
-{ return m_cb.integral ( 2 * m0 () - high  , 2 * m0 () - low ) ; }
+{ return m_cb.integral ( t ( high ) , t ( low ) ) ; }
 // =========================================================================
 // get the tag 
 // ============================================================================
@@ -2217,8 +2209,8 @@ Ostap::Math::CrystalBallDoubleSided::CrystalBallDoubleSided
   setNL       ( nL      ) ;
   setNR       ( nR      ) ;
   //
-  if ( m_AL < 0 ) { m_AL = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi ; } 
-  if ( m_AR < 0 ) { m_AR = std::exp ( -0.5 * m_alphaR * m_alphaR ) * s_SQRT2PIi ; } 
+  m_AL = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi ; 
+  m_AR = std::exp ( -0.5 * m_alphaR * m_alphaR ) * s_SQRT2PIi ;  
   //
 }
 // ============================================================================
@@ -2245,8 +2237,8 @@ bool Ostap::Math::CrystalBallDoubleSided::setAlphaL ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_alphaL ) && 0 < m_AL ) { return false ; }
-  m_alphaL  = value_  ;
-  m_AL = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi  ;
+  m_alphaL = value_  ;
+  m_AL     = std::exp ( -0.5 * m_alphaL * m_alphaL ) * s_SQRT2PIi  ;
   return true ;
 }
 // ============================================================================
@@ -2255,8 +2247,8 @@ bool Ostap::Math::CrystalBallDoubleSided::setAlphaR ( const double value )
   const double value_ = std::abs ( value );  
   if ( s_equal ( value_ , m_alphaR ) && 0 < m_AR ) { return false ; }
   //
-  m_alphaR  = value_  ;
-  m_AR = std::exp ( -0.5 * m_alphaR * m_alphaR ) * s_SQRT2PIi  ;
+  m_alphaR = value_  ;
+  m_AR     = std::exp ( -0.5 * m_alphaR * m_alphaR ) * s_SQRT2PIi  ;
   //
   return true ;
 }
@@ -2285,18 +2277,18 @@ double Ostap::Math::CrystalBallDoubleSided::pdf ( const double x ) const
   const double delta   = ( x - m_m0 ) / m_sigma ;
   //
   // the left tail
-  if      ( delta  < -m_alphaL )  // left tail
+  if      ( delta  <= -m_alphaL )  // left tail
     {
-      const double n  = NL () ;
-      const double y  = ( n - m_alphaL * ( m_alphaL + delta ) ) / n ;    
-      return m_AL * std::pow ( y , -n ) / m_sigma ;
+      const double nn  = NL () ;
+      const double yy  = nn / ( nn - m_alphaL * ( m_alphaL + delta ) ) ; 
+      return m_AL * std::pow ( yy , nn ) / m_sigma ;
     }
   // right tail 
-  else if  ( delta >  m_alphaR )  // right tail
+  else if  ( delta >=  m_alphaR )  // right tail
     {
-      const double n  = NR () ;
-      const double y  = ( n - m_alphaR * ( m_alphaR - delta ) ) / n ;    
-      return m_AR * std::pow ( y , -n ) / m_sigma ;
+      const double nn = NR () ;
+      const double yy = nn / ( nn - m_alphaR * ( m_alphaR - delta ) ) ;
+      return m_AR * std::pow ( yy , nn ) / m_sigma ;
     }
   //
   // the peak: Gaussian 
@@ -2331,22 +2323,22 @@ double Ostap::Math::CrystalBallDoubleSided::integral
   // left tail 
   else if ( high <= xL ) 
     {
-      const double n  = NL () ;
+      const double nn = NL () ;
       /// tail
-      const double a  =   - m_alphaL            / n ;
-      const double b  = 1 - m_alphaL * m_alphaL / n ;
+      const double a  =   - m_alphaL            / nn ;
+      const double b  = 1 - m_alphaL * m_alphaL / nn ;
       //  
-      return m_AL * Ostap::Math::cavalieri ( -n , zlow , zhigh , a , b ) ;      
+      return m_AL * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;      
     }
   // right tail
   else if ( xR <= low )
     {
-      const double n  = NR () ;
+      const double nn = NR () ;
       /// tail
-      const double a  =   + m_alphaR            / n ;
-      const double b  = 1 - m_alphaR * m_alphaR / n ;
+      const double a  =   + m_alphaR            / nn ;
+      const double b  = 1 - m_alphaR * m_alphaR / nn ;
       //  
-      return m_AR * Ostap::Math::cavalieri ( -n , zlow , zhigh , a , b ) ;      
+      return m_AR * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;      
     }
   //
   return 0 ;

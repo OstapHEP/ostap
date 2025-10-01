@@ -1272,7 +1272,9 @@ namespace Ostap
       inline double mode () const { return m_m0      ; }
       /// Internal N-parameter
       inline double N    () const { return N ( m_n ) ; } // internal N parameter
-      // ======================================================================
+      /// the point where Gaussian meets power-law
+      inline double xL   () const { return m_m0 - m_alpha * m_sigma ; }
+    // ======================================================================
     public: // trivial accessors
       // ======================================================================
       bool        setM0    ( const double value ) ;
@@ -1391,6 +1393,8 @@ namespace Ostap
       inline double alpha () const { return m_cb.alpha () ; }
       inline double n     () const { return m_cb.n     () ; }
       inline double N     () const { return m_cb.N     () ; }      
+      /// the point where Gaussian meets power-law
+      inline double xL    () const { return m_cb.xL    () ; }
       // ======================================================================
     public: // show alpha as function of sigma 
       // ======================================================================
@@ -1441,7 +1445,7 @@ namespace Ostap
       /// c0-parameter
       double m_c2                   ;  // c2_parameter
       // ======================================================================
-    } ;
+    } ; //                                The end of class Ostap::Math::Needham 
     // ========================================================================
     /** @class CrystalBallRightSide
      *  ritgh-sided Crystal Ball function
@@ -1469,9 +1473,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate CrystalBall's function
-      double pdf        ( const double x ) const ;
+      inline double pdf        ( const double x ) const
+      { return  m_cb.pdf ( t ( x ) ) ;   }
       /// evaluate CrystalBall's function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const
+      { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1483,6 +1489,8 @@ namespace Ostap
       inline double alpha () const { return m_cb.alpha () ; }
       inline double n     () const { return m_cb.n     () ; }
       inline double N     () const { return m_cb.N     () ; }      
+      /// the point where Gaussian meets power-law
+      inline double xR    () const { return t ( m_cb.xL () ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1506,6 +1514,12 @@ namespace Ostap
       // ======================================================================
       /// get the tag 
       std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// left <--> right transformation
+      inline double t ( const double x ) const
+      { return 2 * m_cb.m0 () - x ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -1564,6 +1578,11 @@ namespace Ostap
       inline double NL      () const { return Ostap::Math::CrystalBall::N ( m_nL ) ; } //
       inline double NR      () const { return Ostap::Math::CrystalBall::N ( m_nR ) ; } //
       // =====================================================================
+      /// the point where Gaussian meets Power-Law 
+      inline double xL      () const { return m_m0 - m_alphaL * m_sigma ; }
+      /// the point where Gaussian meets Power-Law 
+      inline double xR      () const { return m_m0 + m_alphaR * m_sigma ; }
+      // =====================================================================
     public: // trivial accessors
       // ======================================================================
       bool        setM0     ( const double value ) ;
@@ -1607,8 +1626,9 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// helper constants
+      /// helper normalization constant
       double m_AL  { -1 } ;  // exp(-0.5*alpha_L^2)
+      /// helper normalization constant
       double m_AR  { -1 } ;  // exp(-0.5*alpha_R^2)
       // ======================================================================
     } ;
