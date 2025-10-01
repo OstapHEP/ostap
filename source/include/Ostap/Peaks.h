@@ -1301,7 +1301,7 @@ namespace Ostap
       // ======================================================================
     public: //
       // ======================================================================
-      /** quantify the effect of tails, difference from Gaussian
+      /** quantify the effect of the tail, difference from Gaussian
        *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
        * where 
        * - \f$ I_{CB} \f$ is integral over Gaussian function 
@@ -1429,6 +1429,19 @@ namespace Ostap
         const double high ) const
       { return m_cb.integral ( low , high ) ; }
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tail, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       */
+      inline double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const
+      { return m_cb.non_gaussian ( xlow , xhigh ) ; } 
+      // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
@@ -1509,6 +1522,18 @@ namespace Ostap
       double integral
       ( const double low ,
         const double high ) const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tail, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1603,6 +1628,18 @@ namespace Ostap
       double integral
       ( const double low  ,
         const double high ) const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2192,6 +2229,19 @@ namespace Ostap
       ( const double low  ,
         const double high ) const ;
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-valuw with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
@@ -2297,10 +2347,27 @@ namespace Ostap
       // ======================================================================
     public: // integrals
       // ======================================================================
+      /// get the CDF 
       double cdf      ( const double x    ) const ;
+      /// get the integral 
+      double integral ()                    const ; 
+      /// get the integral      
       double integral
       ( const double low  ,
         const double high ) const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2388,13 +2455,31 @@ namespace Ostap
       // ======================================================================      
       inline double dispersion () const { return variance () ; }
       inline double sigma      () const { return std::sqrt ( variance() ) ; }
+      inline double rms        () const { return std::sqrt ( variance() ) ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
+      /// get CDF 
       double cdf      ( const double x    ) const ;
+      /// get the integral 
+      double integral ()                    const ;
+      /// get the integral 
       double integral
       ( const double low  ,
         const double high ) const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2471,6 +2556,19 @@ namespace Ostap
         const double high ) const ;
       /// integral from -infinity to +infinity
       double integral () const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2573,6 +2671,19 @@ namespace Ostap
       /// evaluate atlas function
       double cdf      ( const double x ) const ;
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
@@ -2662,6 +2773,19 @@ namespace Ostap
       double integral () const ;
       /// evaluate Logistc CDF function
       double cdf      ( const double x ) const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2758,6 +2882,19 @@ namespace Ostap
         const double high ) const ;
       /// integral from -infinity to +infinity
       double integral () const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3061,6 +3198,19 @@ namespace Ostap
       /// evaluate CDF function
       double cdf      ( const double x ) const ;
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
@@ -3144,9 +3294,24 @@ namespace Ostap
       /// get CDF 
       double cdf      ( const double x ) const ;
       /// evaluate the integral
+      double integral ()                 const ;
+      /// evaluate the integral
       double integral
       ( const double low  , 
         const double high ) const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3342,6 +3507,19 @@ namespace Ostap
       double integral 
       ( const double low  , 
         const double high ) const ;      
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3544,6 +3722,19 @@ namespace Ostap
       double integral
       ( const double low  , 
         const double high ) const ;      
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3753,7 +3944,7 @@ namespace Ostap
       /// get RMS 
       inline double rms         () const { return std::sqrt ( variance () ) ; }
       /// get RMS 
-      inline double  RMS        () const { return rms ()      ; }
+      inline double RMS         () const { return rms ()      ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3763,6 +3954,19 @@ namespace Ostap
       double        integral
       ( const double low  , 
         const double high ) const ;      
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -4048,6 +4252,19 @@ namespace Ostap
       ( const double low  , 
         const double high ) const ;
       // // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value  with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================
     public:
       // ======================================================================
       /// get the unique tag 
@@ -4223,6 +4440,19 @@ namespace Ostap
       ( const double low  , 
         const double high ) const ;
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value  with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================      
     public:
       // ======================================================================
       /// get the unique tag 
@@ -4375,6 +4605,19 @@ namespace Ostap
       ( const double low  , 
         const double high ) const ;
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value  with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================      
     public: // asymptotoc 
       // ======================================================================
       /** Asymptotic :
@@ -4500,6 +4743,19 @@ namespace Ostap
       ( const double low  , 
         const double high ) const ;
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value  with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================      
     public: // derivative 
       // ======================================================================
       /// get the value of the derivative 
@@ -4603,6 +4859,19 @@ namespace Ostap
       ( const double low  , 
         const double high ) const ;
       // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tails, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - Gaussian is centered at mean-value  with sigma = RMS 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================      
     public: // derivative 
       // ======================================================================
       /// get the value of the derivative 

@@ -1992,7 +1992,7 @@ double Ostap::Math::CrystalBall::pdf ( const double x ) const
   return Ostap::Math::gauss_pdf ( delta ) / m_sigma ;
 }
 // ============================================================================
-/** quantify the effect of tails, difference from Gaussian
+/** quantify the effect of tail, difference from Gaussian
  *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
  * where 
  * - \f$ I_{CB} \f$ is integral over Gaussian function 
@@ -2176,7 +2176,17 @@ std::size_t Ostap::Math::CrystalBallRightSide::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_cb.tag() ,  -1 ) ;
 }
 // ============================================================================
-
+/** quantify the effect of tail, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ */
+// ============================================================================
+double Ostap::Math::CrystalBallRightSide::non_gaussian
+( const double xlow  ,
+  const double xhigh ) const
+{ return m_cb.non_gaussian ( t ( xhigh ) , t ( xlow ) ) ; }
 // ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter
@@ -2344,6 +2354,28 @@ double Ostap::Math::CrystalBallDoubleSided::integral
   return 0 ;
 }
 // ============================================================================
+/** quantify the effect of tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ */
+// ============================================================================
+double Ostap::Math::CrystalBallDoubleSided::non_gaussian
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) ;
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m_m0 , m_sigma ) -
+    Ostap::Math::gauss_cdf ( xlow  , m_m0 , m_sigma ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const 
@@ -2355,7 +2387,6 @@ std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const
                                        m_alphaR  , m_nR    ) ; 
 }
 // ============================================================================
-
 
 // ============================================================================
 // Apolonios 
@@ -2791,6 +2822,33 @@ double Ostap::Math::Atlas::integral
 // ============================================================================
 double Ostap::Math::Atlas::integral () const { return 1 ; }
 // ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::Atlas::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Atlas::tag () const 
@@ -2799,7 +2857,6 @@ std::size_t Ostap::Math::Atlas::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_mean , m_sigma ) ; 
 }
 // ============================================================================
-
 
 
 // ============================================================================
@@ -2876,6 +2933,33 @@ double Ostap::Math::Sech::quantile ( const double p ) const
     1 <= p || s_equal ( p , 1 ) ? +s_INFINITY : 
     m_mean + m_sigma * 2 / M_PI * std::log( std::tan ( M_PI * p /  2 ) ) ; }
 // ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::Sech::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================ 
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Sech::tag () const 
@@ -3080,6 +3164,33 @@ double Ostap::Math::Logistic::quantile ( const double p ) const
     1 <= p || s_equal ( p , 1 ) ? +s_INFINITY : 
     m_mean + m_sigma * s_SQRT3overPI * std::log ( p / ( 1 - p ) ) ; }
 // ===========================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::Logistic::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Logistic::tag () const 
@@ -3308,6 +3419,33 @@ double Ostap::Math::GenLogisticIV::cumulant
     ( Ostap::Math::psi ( m_alpha , k - 1 )
       + ( 0 == k % 2 ? 1 : -1 ) * Ostap::Math::psi ( m_beta , k - 1 ) ) 
     * std::pow ( m_sigma / m_tilda_s , k ) ;
+}
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::GenLogisticIV::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
 }
 // ===========================================================================
 // get the tag 
@@ -3780,6 +3918,33 @@ double Ostap::Math::PearsonIV::integral
   return result ; 
 }
 // ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::PearsonIV::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // mode 
 // ============================================================================
 double Ostap::Math::PearsonIV::mode () const // mode of the distribution 
@@ -3978,12 +4143,17 @@ double Ostap::Math::SinhAsinh::cdf ( const double x ) const
 // ============================================================================
 // get the integral
 // ============================================================================
-double Ostap::Math::SinhAsinh::integral ( const double low  ,
-                                          const double high ) const 
+double Ostap::Math::SinhAsinh::integral
+( const double low  ,
+  const double high ) const 
 {
   if ( s_equal ( low , high ) ) { return 0 ; }
   return cdf ( high ) - cdf ( low ) ;
 }
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::SinhAsinh::integral () const { return 1 ; } 
 // ======================================================================
 // get median
 // ======================================================================
@@ -4036,7 +4206,33 @@ double Ostap::Math::SinhAsinh::variance () const
 // ============================================================================
 double Ostap::Math::SinhAsinh::rms () const
 { return std::sqrt ( variance () ) ; }
-
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::SinhAsinh::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) ; // / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
 // ============================================================================
 // get the tag 
 // ============================================================================
@@ -4155,6 +4351,37 @@ double Ostap::Math::JohnsonSU::integral
   const double high ) const 
 { return  s_equal ( low , high ) ? 0.0 : ( cdf ( high ) - cdf ( low ) ) ; }
 // ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::JohnsonSU::integral () const { return 1 ; } 
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::JohnsonSU::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::JohnsonSU::tag () const 
@@ -4163,9 +4390,6 @@ std::size_t Ostap::Math::JohnsonSU::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_xi , m_lambda , m_delta , m_gamma ) ; 
 }
 // ============================================================================
-
-
-
 
 
 // ============================================================================
@@ -4348,6 +4572,37 @@ double Ostap::Math::RaisingCosine::integral
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
+// evaluate the integral
+// ============================================================================
+double Ostap::Math::RaisingCosine::integral () const { return 1 ; } 
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::RaisingCosine::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::RaisingCosine::tag () const 
@@ -4481,7 +4736,34 @@ double Ostap::Math::AsymmetricLaplace::kurtosis () const
   //
   return 6 * ( 1 + K8 ) / std::pow ( 1 + K4 , 2 ) ;
 }
-
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::AsymmetricLaplace::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 
 
 
@@ -4829,6 +5111,33 @@ double Ostap::Math::KGaussian::integral
   return result ;
 }
 // ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::KGaussian::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::KGaussian::tag () const 
@@ -5143,6 +5452,33 @@ double Ostap::Math::Hyperbolic::integral
   //
 }
 // ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::Hyperbolic::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Hyperbolic::tag () const 
@@ -5151,9 +5487,6 @@ std::size_t Ostap::Math::Hyperbolic::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_sigma , m_zeta , m_kappa  ) ; 
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 /*  constructor from mu, sigma, zeta and kappa 
@@ -5347,6 +5680,33 @@ double Ostap::Math::GenHyperbolic::integral
   return result ;
   //
 }
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::GenHyperbolic::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
 // ==============================================================================
 // get mean value 
 // ==============================================================================
@@ -5378,10 +5738,6 @@ std::size_t Ostap::Math::GenHyperbolic::tag () const
                              m_lambda ) ; 
 }
 // ============================================================================
-
-
-
-
 
 
 
@@ -5516,7 +5872,6 @@ std::size_t Ostap::Math::Das::tag () const
                              m_kR     ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  constructor with full parameters 
@@ -5757,6 +6112,33 @@ double Ostap::Math::SkewGenT::integral
       __FILE__ , __LINE__ ) ;
   //
   return result ;
+}
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::SkewGenT::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
 }
 // ============================================================================
 // skewness 
@@ -6016,6 +6398,33 @@ double Ostap::Math::SkewGenError::integral
   return result ;
 }
 // ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::SkewGenError::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SkewGenError::tag () const 
@@ -6136,6 +6545,33 @@ double Ostap::Math::Hat::rms      () const
 double Ostap::Math::Hat::kurtosis () const 
 { return -0.8807206646393597 ; }
 // ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::Hat::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Hat::tag () const 
@@ -6245,6 +6681,33 @@ double Ostap::Math::Up::integral
       __FILE__ , __LINE__       ) ;
   //
   return result ;
+}
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::Up::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
 }
 // ============================================================================
 // get the variance of the distribution 
@@ -6590,6 +7053,33 @@ double Ostap::Math::Meixner::integral
       __FILE__ , __LINE__       ) ;
   //
   return result ;
+}
+// ============================================================================
+/*  quantify the effect of the tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ * - Gaussian is centered at mean-valuw with sigma = RMS 
+ */
+// ============================================================================
+double Ostap::Math::Meixner::non_gaussian 
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB = integral ( xlow , xhigh ) / integral ();
+  //
+  const double m = mean () ;
+  const double s = rms  () ;
+  //
+  const double I_G  =
+    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+  //
+  return 1 - I_G / I_CB ;
 }
 // ============================================================================
 // get the tag 

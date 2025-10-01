@@ -14,6 +14,7 @@
   1. update math related to Crystal Ball functions and add new test 
   1. add explicit `__contains__` function to `RooLinkedList`
   1. add explicit `__getitem__`  function to `RooLinkedList`
+  1. add `non_gaussian` method for all "peak-like"-distribution with well-defined "mean" and "rms"
   
 ## Backward-incompatible
 
