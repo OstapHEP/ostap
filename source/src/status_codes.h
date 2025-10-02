@@ -114,7 +114,9 @@ namespace
     //
     INVALID_TPROFILE          = 885 , 
     INVALID_TPROFILE2D        = 886 ,     
-    INVALID_TPROFILE3D        = 887 ,     
+    INVALID_TPROFILE3D        = 887 ,
+    //
+    INVALID_TAXISBINS         = 890 ,     
     // =========================================================================
     ERROR_ROOT                = 1000000 ,
     ERROR_GSL                 = 2000000 ,    

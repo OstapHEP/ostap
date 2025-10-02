@@ -29,7 +29,7 @@ file(GLOB pyfiles "${CMAKE_INSTALL_PREFIX}/examples/*/*.py")
 foreach(filename ${pyfiles})
    get_filename_component(fname ${filename} NAME_WE)
    string(CONCAT fname ostap.examples_py_ ${fname})
-   add_test (NAME ${fname} COMMAND python             ${filename} )
+   add_test (NAME ${fname} COMMAND python     ${filename} )
    set_tests_properties(${fname} PROPERTIES TIMEOUT 5000 ) 
 endforeach() 
 

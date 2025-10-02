@@ -2173,6 +2173,12 @@ def binomEff_h1 ( h1 , h2 , func = binomEff ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
+    if isinstance ( h1 , ROOT.TH1 ) and isinstance ( h2 , ROOT.TH1 ) :
+        assert 1 == h1.dim () and h1.dim() == h2.dim() , \
+            "Inconsistent histos: %s %s" % ( typename ( h1 ) , typename ( h2 ) )
+        if not h1.same_binning ( h2 ) :
+            logger.warning ( 'binomEff: binnings are not the same, result can be biased!' )
+    ## 
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
@@ -2199,7 +2205,6 @@ def binomEff_h1 ( h1 , h2 , func = binomEff ) :
         result.SetBinError   ( i1 , v.error () )
         
     return result 
-
 
 ROOT.TH1F.       binomEff  = binomEff_h1 
 ROOT.TH1D.       binomEff  = binomEff_h1 
@@ -2358,6 +2363,12 @@ def binomEff_h2 ( h1 , h2 , func = binomEff ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
+    if isinstance ( h1 , ROOT.TH1 ) and isinstance ( h2 , ROOT.TH1 ) :
+        assert 2 == h1.dim () and h1.dim() == h2.dim() , \
+            "Inconsistent histos: %s %s" % ( typename ( h1 ) , typename ( h2 ) )
+        if not h1.same_binning ( h2 ) :
+            logger.warning ( 'binomEff: binnings are not the same, result can be biased!' )
+    ## 
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
@@ -2388,7 +2399,6 @@ def binomEff_h2 ( h1 , h2 , func = binomEff ) :
 ROOT.TH2F.  binomEff    = binomEff_h2 
 ROOT.TH2D.  binomEff    = binomEff_h2 
 
-
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors 
 #  @code 
@@ -2408,6 +2418,12 @@ def binomEff_h3 ( h1 , h2 , func = binomEff ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
+    if isinstance ( h1 , ROOT.TH1 ) and isinstance ( h2 , ROOT.TH1 ) :
+        assert 3 == h1.dim () and h1.dim() == h2.dim() , \
+            "Inconsistent histos: %s %s" % ( typename ( h1 ) , typename ( h2 ) )
+        if not h1.same_binning ( h2 ) :
+            logger.warning ( 'binomEff: binnings are not the same, result can be biased!' )
+    ## 
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
@@ -2470,6 +2486,12 @@ def zechEff_h1 ( h1 , h2 , func = zechEff ) :
         hh = h1.asH1()
         return zechEff_h1 ( hh , h2 , func )
     
+    if isinstance ( h1 , ROOT.TH1 ) and isinstance ( h2 , ROOT.TH1 ) :
+        assert 1 == h1.dim () and h1.dim() == h2.dim() , \
+            "Inconsistent histos: %s %s" % ( typename ( h1 ) , typename ( h2 ) )
+        if not h1.same_binning ( h2 ) :
+            logger.warning ( 'zechEff: binnings are not the same, result can be biased!' )
+            
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
@@ -2519,6 +2541,12 @@ def zechEff_h2 ( h1 , h2 ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
+    if isinstance ( h1 , ROOT.TH1 ) and isinstance ( h2 , ROOT.TH1 ) :
+        assert 2 == h1.dim () and  h1.dim() == h2.dim() , \
+            "Inconsistent histos: %s %s" % ( typename ( h1 ) , typename ( h2 ) )
+        if not h1.same_binning ( h2 ) :
+            logger.warning ( 'zechEff: binnings are not the same, result can be biased!' )
+    ##         
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
@@ -2566,6 +2594,12 @@ def zechEff_h3 ( h1 , h2 ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
+    if isinstance ( h1 , ROOT.TH1 ) and isinstance ( h2 , ROOT.TH1 ) :
+        assert 3 == h1.dim() and  h1.dim() == h2.dim() , \
+            "Inconsistent histos: %s %s" % ( typename ( h1 ) , typename ( h2 ) )
+        if not h1.same_binning ( h2 ) :
+            logger.warning ( 'zechEff: binnings are not the same, result can be biased!' )
+    ##         
     result = h1.Clone( hID () )
     if not result.GetSumw2() : result.Sumw2()
     #
@@ -5688,8 +5722,46 @@ def _edges_ ( axis ) :
     #
     return tuple ( bins )
 
+
 # =============================================================================
-ROOT.TAxis.edges = _edges_
+## Same binning?
+#  @code
+#  axis = ...
+#  same = axis.same_binning ( another_axis )
+#  @endcode 
+#  @see Ostap::Utils::same_binning
+def _axis_same_binning_ ( axis , other ) :
+    """ Same binning? 
+    >>> axis = ...
+    >>> same = axis.same_binning ( another_axis )
+    - see `Ostap.Utils.same_binning`
+    """
+    assert isinstance ( other , ROOT.TAxis ) and valid_pointer ( other ) , \
+        "same_binning: Invalid axis type %s" % typename ( other )
+    return Ostap.Utils.same_bining ( axis , other )
+
+# =============================================================================
+## Same binning?
+#  @code
+#  histo = ...
+#  same  = histo.same_binning ( another_histo )
+#  @endcode 
+#  @see Ostap::Utils::same_binning
+def _histo_same_binning_ ( histo , other ) :
+    """ Same binning? 
+    >>> histo = ...
+    >>> same = histo.same_binning ( another_histo )
+    - see `Ostap.Utils.same_binning`
+    """
+    assert isinstance ( other , ROOT.TH1 ) and valid_pointer ( other ) , \
+        "same_binning: Invalid histo type %s" % typename ( other )
+    return Ostap.Utils.same_bining ( histo , other )
+
+# =============================================================================
+ROOT.TAxis.edges        = _edges_
+ROOT.TAxis.same_binning = _axis_same_binning_ 
+ROOT.TH1  .same_binning = _histo_same_binning_ 
+
 
 # =============================================================================
 ## get "slice" for 1D histogram
@@ -9944,7 +10016,9 @@ _new_methods_  += (
     ROOT.TH3F.summary        , 
     ROOT.TH3D.summary        ,
     ##
-    )
+    ROOT.TAxis.same_binning  , 
+    ROOT.TH1  .same_binning  , 
+)
 
 # =============================================================================
 if '__main__' == __name__ :

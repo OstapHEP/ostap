@@ -1,3 +1,4 @@
+// ============================================================================
 #ifndef OSTAP_HISTOHASH_H 
 #define OSTAP_HISTOHASH_H 1
 // ============================================================================
@@ -56,6 +57,24 @@ namespace Ostap
      *  @see Ostap::Math::Histo3D 
      */
     std::size_t hash_histo ( const Ostap::Math::Histo3D& h ) ;
+    // ========================================================================
+    /** same binning ?
+     *  @param a the first axis 
+     *  @param b the second axis 
+     *  @return True if axes have the same binnings , False otherwise
+     */
+    bool same_binning
+      ( const TAxis& a ,
+	const TAxis& b ) ;
+    // ========================================================================
+    /** same binning ?
+     *  @param  a the first histo 
+     *  @param  b the second histo 
+     *  @return True if histos have the same binnings , False otherwise
+     */
+    bool same_binning
+      ( const TH1&    a ,
+	const TH1&    b ) ;    
     // ========================================================================    
   } //                                        The end of namepsace Ostap::Utils 
   // ==========================================================================

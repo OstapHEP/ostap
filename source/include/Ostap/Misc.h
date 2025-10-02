@@ -48,14 +48,16 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      /// default contgructot
-      PadContext ( ) ;      
+      /// default constructor
+      PadContext ( ) ;
+      /// constructor with flag 
       PadContext ( const bool interactive ) ;
+      /// full constructor 
       PadContext
-	( TVirtualPad* pad                 ,
-	  const bool   interactive = false ,
-	  const bool   not_null    = false );
-      // destructor
+      ( TVirtualPad* pad                 ,
+	const bool   interactive = false ,
+	const bool   not_null    = false );
+      /// destructor
       ~PadContext () ;
       // =====================================================================
     public:

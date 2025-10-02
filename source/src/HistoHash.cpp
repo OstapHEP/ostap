@@ -3,6 +3,7 @@
 // STD&STL
 // ============================================================================
 #include <functional>
+#include <algorithm>
 // ============================================================================
 // ROOT 
 // ============================================================================
@@ -15,10 +16,13 @@
 #include "Ostap/Hash.h"
 #include "Ostap/HistoHash.h"
 #include "Ostap/HistoInterpolators.h"
+#include "Ostap/StatusCode.h"
 // ============================================================================
 // Local 
 // ============================================================================
 #include "local_hash.h"
+#include "local_math.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  implementation file for function from the file Ostap/HistoHash.h 
@@ -37,7 +41,9 @@ std::size_t Ostap::Utils::hash_graph
   if ( nullptr == graph ) { return 0 ; }
   const Int_t N = graph->GetN() ;
   //
-  std::size_t seed = N ;
+  static const std::string s_what { "TGraph" } ;
+  std::size_t seed =Ostap::Utils::hash_combiner ( s_what , N ) ;
+  //
   //
   const Double_t*  X    = graph->GetX       () ;
   if ( X    ) { seed = Ostap::Utils::hash_combiner 
@@ -100,8 +106,10 @@ std::size_t Ostap::Utils::hash_axis
 {
   if ( nullptr == axis ) { return 0 ; }
   //
+  static const std::string s_what { "TAxis" } ;
   std::size_t seed = Ostap::Utils::hash_combiner 
-    ( axis -> GetNbins () , 
+    ( s_what              ,
+      axis -> GetNbins () , 
       axis -> GetXmin  () , 
       axis -> GetXmax  () ) ;
   //
@@ -125,11 +133,14 @@ std::size_t Ostap::Utils::hash_histo
 {
   if ( nullptr == histo ) { return 0 ; }
   //
+  static const std::string s_what { "TH1" } ;
+  //
   const Int_t NX = histo -> GetNbinsX () ;
   const Int_t NY = histo -> GetNbinsY () ;
   const Int_t NZ = histo -> GetNbinsZ () ;
   //
-  std::size_t seed = Ostap::Utils::hash_combiner ( histo -> GetDimension ()        , 
+  std::size_t seed = Ostap::Utils::hash_combiner ( s_what                          ,
+						   histo -> GetDimension ()        , 
                                                    histo -> GetEntries   ()        , 
                                                    NX , NY , NZ                    ,
                                                    hash_axis ( histo -> GetXaxis() ) , 
@@ -204,6 +215,103 @@ std::size_t Ostap::Utils::hash_histo
       h.edges       () , 
       h.extrapolate () , 
       h.density     () ) ; }
+// ============================================================================
+/* same binning ?
+ *  @param a the first axis 
+ *  @param b the second axis 
+ *  @return True if axes have the sam ebinnigs , False otherwise
+ */
+// ============================================================================
+bool Ostap::Utils::same_binning
+( const TAxis& a ,
+  const TAxis& b )
+{
+  if ( &a == &b     ) { return true ; }                              // RETURN
+  //
+  const Int_t a_nb = a.GetNbins() ;
+  const Int_t b_nb = b.GetNbins() ;
+  if ( a_nb != b_nb ) { return false ; }                             // RETURN
+  //
+  const double amin = a.GetXmin () ;
+  const double bmin = b.GetXmin () ;
+  if ( !s_equal ( amin , bmin )     ) { return false ; }             // RETURN
+  //
+  const double amax = a.GetXmax () ;
+  const double bmax = b.GetXmax () ;
+  if ( !s_equal ( amax , bmax )     ) { return false ; }             // RETURN 
+  //
+  const TArrayD* abins = a.GetXbins () ;
+  const TArrayD* bbins = b.GetXbins () ;
+  //
+  if ( abins && bbins )
+    {
+      //
+      Ostap::Assert ( abins->GetSize() == bbins->GetSize() ,
+		      "Inconsistent TAxis bins!"   ,
+		      "Ostap::Utils::same_binning" , 
+		      INVALID_TAXISBINS , __FILE__ , __LINE__ ) ;
+      //
+      return std::equal ( abins->GetArray() ,
+			  abins->GetArray() + abins->GetSize() ,
+			  bbins->GetArray() , s_equal ) ;               // RETURN   
+    }
+  else if ( abins )
+    {
+      Ostap::Assert ( abins->GetSize() == b_nb + 1 ,
+		      "Inconsistent TAxis bins!"   ,
+		      "Ostap::Utils::same_binning" , 
+		      INVALID_TAXISBINS , __FILE__ , __LINE__ ) ;
+      //            
+      const unsigned long NA = abins->GetSize  () ;
+      const Double_t*     xa = abins->GetArray () ;
+      for ( Int_t         ia = 0 ; ia < NA ; ++ia , ++xa  )
+	{
+	  const double xb =  ( ia * bmax + ( b_nb - ia ) * bmin ) / b_nb ; 
+	  if ( !s_equal ( *xa , xb ) ) { return false ; }            // RETURN 
+	}
+    }
+  else if ( bbins )
+    {
+      Ostap::Assert ( bbins->GetSize() == a_nb + 1 ,
+		      "Inconsistent TAxis bins!"   ,
+		      "Ostap::Utils::same_binning" , 
+		      INVALID_TAXISBINS , __FILE__ , __LINE__ ) ;
+      //            
+      const unsigned long NB = bbins->GetSize  () ;
+      const Double_t*     xb = bbins->GetArray () ;
+      for ( Int_t         ib = 0 ; ib < NB ; ++ib , ++xb  )
+	{
+	  const double xa =  ( ib * amax + ( a_nb - ib ) * amin ) / a_nb ; 
+	  if ( !s_equal ( *xb , xa ) ) { return false ; }         // RETURN 
+	}
+    }
+  //
+  return true ;
+}
+// ============================================================================
+/*  same binning ?
+ *  @param  a the first histo 
+ *  @param  b the second histo 
+ *  @return True if histos have the same binnings , False otherwise
+ */
+// ============================================================================
+bool Ostap::Utils::same_binning
+( const TH1&    a ,
+  const TH1&    b )
+{
+  //
+  if ( &a == &b     ) { return true  ; }                              // RETURN
+  //
+  const Int_t adim = a.GetDimension () ;
+  const Int_t bdim = b.GetDimension () ;
+  if ( adim != bdim ) { return false ; }                             // RETURN 
+  //
+  if ( 3 <= adim && !same_binning ( *a.GetZaxis() , *b.GetZaxis() ) ) { return false ; }
+  if ( 2 <= adim && !same_binning ( *a.GetYaxis() , *b.GetYaxis() ) ) { return false ; }
+  if ( 1 <= adim && !same_binning ( *a.GetXaxis() , *b.GetXaxis() ) ) { return false ; }
+  //
+  return true ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
