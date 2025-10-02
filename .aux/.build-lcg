@@ -3,8 +3,7 @@
 LCG=${1:-dev3/latest}
 PLATFORM=${2:-x86_64-el9-clang19-opt} 
 
-echo 'BUILD WITH LCG    :' ${1}   ${2} 
-echo 'BUILD WITH LCG    :' ${LCG} ${PLATFORM}
+echo 'BUILD WITH LCG    : LCG version='${LCG} ' PLATFORM='${PLATFORM}
 
 # ================================================================================
 ## Wake up the cvmfs fuse mount

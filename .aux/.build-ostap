@@ -71,15 +71,13 @@ echo 'BUILD OSTAP       : ROOTSYS         : ' $ROOTSYS
 echo 'BUILD OSTAP       : OSTAPDIR        : ' $OSTAPDIR
 echo 'BUILD OSTAP       : OSTAP_SOURCE    : ' $OSTAP_SOURCE
 echo 'BUILD OSTAP       : OSTAP_BUILD     : ' $OSTAP_BUILD
-echo 'BUILD OSTAP       : OSTAP_INSTALL   : ' $OSTAP_INSTALL
 echo 'BUILD OSTAP       : python          : ' `which python`
 echo 'BUILD OSTAP       : root.exe        : ' `which root.exe`
 echo 'BUILD OSTAP       : ostap           : ' `which ostap`
 echo 'BUILD OSTAP       : PYTHON VERSION  : ' `python --version`
 echo 'BUILD OSTAP       : OSTAP  VERSION  : ' `ostap  --version`
-
+echo 'BUILD OSTAP       : OSTAP_INSTALL   : ' $OSTAP_INSTALL
 if command -v tree &> /dev/null
 then
-    echo 'BUILD OSTAP       : OSTAP_INSTALL   :'
-    tree -d $OSTAP_INSTALL/ -L 2
+    tree -L 2 --charset UTF-8 $OSTAP_INSTALL
 fi 
