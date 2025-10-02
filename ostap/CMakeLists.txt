@@ -497,7 +497,7 @@ if ( NOT ${PY_zstandard_FOUND} )
    list(FILTER          allfiles EXCLUDE REGEX ".*\\/zstshelve\\.py$")
 endif()
 
-set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )
+set (PREFIX ${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}/ )
 
 foreach(filename ${allfiles})
 
@@ -506,6 +506,8 @@ foreach(filename ${allfiles})
    string(REPLACE "\.py" ""     testname ${testname})
    string(REPLACE "/" "_"       testname ${testname})
    string(CONCAT  testname ostap.runit_  ${testname})
+
+  message ( ' NAMES  '  ${filename} '  TEST ' ${testname} ) 
 
    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
 

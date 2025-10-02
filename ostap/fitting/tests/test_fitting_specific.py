@@ -48,7 +48,7 @@ models  = {}
 # =============================================================================
 ## test Bd_pdf 
 def test_Bd () :
-    """Test `Bd_pdf`
+    """ Test `Bd_pdf`
     - see `Bd_pdf`
     """
 
@@ -79,7 +79,7 @@ def test_Bd () :
 # =============================================================================
 ## test Bds_pdf 
 def test_Bs () :
-    """Test `Bs_pdf`
+    """ Test `Bs_pdf`
     - see `Bs_pdf`
     """
 
@@ -110,7 +110,7 @@ def test_Bs () :
 # =============================================================================
 ## test Bu_pdf 
 def test_Bu () :
-    """Test `Bu_pdf`
+    """ Test `Bu_pdf`
     - see `Bu_pdf`
     """
 
@@ -141,7 +141,7 @@ def test_Bu () :
 # =============================================================================
 ## test Bc_pdf 
 def test_Bc () :
-    """Test `Bc_pdf`
+    """ Test `Bc_pdf`
     - see `Bc_pdf`
     """
 
@@ -172,7 +172,7 @@ def test_Bc () :
 # =============================================================================
 ## test D0_pdf 
 def test_D0 () :
-    """Test `D0_pdf`
+    """ Test `D0_pdf`
     - see `D0_pdf`
     """
 
@@ -204,7 +204,7 @@ def test_D0 () :
 # =============================================================================
 ## test Dp_pdf 
 def test_Dp () :
-    """Test `Dp_pdf`
+    """ Test `Dp_pdf`
     - see `Dp_pdf`
     """
 
@@ -235,7 +235,7 @@ def test_Dp () :
 # =============================================================================
 ## test Ds_pdf 
 def test_Ds () :
-    """Test `Ds_pdf`
+    """ Test `Ds_pdf`
     - see `Ds_pdf`
     """
 
@@ -266,7 +266,7 @@ def test_Ds () :
 # =============================================================================
 ## test DpDs_pdf 
 def test_DpDs () :
-    """Test `DpDs_pdf`
+    """ Test `DpDs_pdf`
     - see `DpDs_pdf`
     """
 
@@ -298,7 +298,7 @@ def test_DpDs () :
 # =============================================================================
 ## test BdBs_pdf 
 def test_BdBs () :
-    """Test `BdBs_pdf`
+    """ Test `BdBs_pdf`
     - see `BdBs_pdf`
     """
 
@@ -331,7 +331,7 @@ def test_BdBs () :
 # =============================================================================
 ## test Manca_pdf 
 def test_Manca () :
-    """Test `Manca_pdf`
+    """ Test `Manca_pdf`
     - see `Manca_pdf`
     """
 
@@ -367,7 +367,7 @@ def test_Manca () :
 # =============================================================================
 ## test Manca2_pdf 
 def test_Manca2 () :
-    """Test `Manca2_pdf`
+    """ Test `Manca2_pdf`
     - see `Manca2_pdf`
     """
 
@@ -400,7 +400,6 @@ def test_Manca2 () :
         plots   [ 'test_Manca2'] = f
         models  [ 'test_Manca2'] = pdf 
         
-        
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
@@ -428,7 +427,6 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    """
     test_Bd     ()
     test_Bs     ()
     test_Bu     ()
@@ -437,18 +435,14 @@ if '__main__' == __name__ :
     test_D0     ()
     test_Dp     ()
     test_Ds     ()
-    """
 
     test_BdBs   ()
     test_DpDs   ()
 
-    """
     test_Manca  ()
     test_Manca2 ()
-    """
-    
+        
     test_db     () 
-
 
 # =============================================================================
 ##                                                                      The END 

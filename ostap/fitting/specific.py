@@ -750,20 +750,20 @@ class MANCA(PEAK) :
     #  @param N3S         yield for the Y(3S) signal
     #  @param B           yield for the background component    
     def __init__  ( self  ,
-                    xvar              ,   ## the observable : mu+mu- mass
-                    name       = 'Y'  ,   ## PDF name 
-                    m1s        = None ,   ## mass/location      for the Y(!S) peak 
-                    s1s        = None ,   ## resution parameter for the Y(1S) peak
+                    xvar               ,   ## the observable : mu+mu- mass
+                    name       = 'Y'   ,   ## PDF name 
+                    m1s        = None  ,   ## mass/location      for the Y(!S) peak 
+                    s1s        = None  ,   ## resution parameter for the Y(1S) peak
                     ##
-                    dm21       = None ,   ## mass difference bewween Y(2S) and Y(1S)
-                    dm32       = None ,   ## mass difference bewween Y(3S) and Y(2S)
+                    dm21       = None  ,   ## mass difference bewween Y(2S) and Y(1S)
+                    dm32       = None  ,   ## mass difference bewween Y(3S) and Y(2S)
                     ##
-                    background = 'd3' , ## decreasing 3rd order polyminial 
+                    background = 'd3'  , ## decreasing 3rd order polyminial 
                     ##
-                    N1S        = None ,   ## Y(1S) signal
-                    N2S        = None ,   ## Y(2S) signal
-                    N3S        = None ,   ## Y(3S) signal
-                    B          = None ) : ## background signal
+                    N1S        = None  ,   ## Y(1S) signal
+                    N2S        = None  ,   ## Y(2S) signal
+                    N3S        = None  ,   ## Y(3S) signal
+                    B          = None  ) :  ## background signal
         """
         - xvar       : observable, mu+mu- mass
         - name       : the name of the PDF
@@ -784,8 +784,6 @@ class MANCA(PEAK) :
                         sigma      = s1s             ,
                         mean_name  = 'm1s_%s' % name ,
                         sigma_name = 's1s_%s' % name )
-        
-        
         
         if   9460. in self.xvar and 10023. in self.xvar and 10355. in self.xvar : self._gev = 1000        
         elif 9.460 in self.xvar and 10.023 in self.xvar and 10.355 in self.xvar : self._gev = 1
@@ -861,12 +859,10 @@ class MANCA(PEAK) :
                                      "B"   + name  ,
                                      "Background"  ,  None ,  100 ,  0 ,  9.e+8 )
 
-         
         # ===============================================================================
         ## use helper function to create the background  
         # ===============================================================================
         self.__bkg   = self.make_bkg ( background , 'Bkg%s' % name , self.mass )
-
 
     @property
     def  m1s (  self ) :
@@ -954,7 +950,16 @@ class MANCA(PEAK) :
     def bkg ( self ) :
         """'background' : get the background shape"""
         return self.__bkg 
-            
+    
+    @property     
+    def fix_norm ( self ) :
+        """`fix-norm`: 
+        - see `ROOT.RooAbsPdf.SetCoefNormalization`
+        - see `ROOT.RooAbsPdf.getCoefNormalization`
+        """
+        pars = self.pdf.getCoefNormalization()
+        return True if pars else False 
+       
 # =============================================================================
 ## @class Manca_pdf 
 #  the final full PDF for Y->mu+mu- fit
@@ -1005,9 +1010,9 @@ class Manca_pdf (MANCA) :
                    m1s         = None ,
                    s1s         = None ,
                    ## 
-                   a0          = 1.91 ,
-                   a1          = None ,
-                   a2          = None ,
+                   c0          = 1.91 ,
+                   c1          = None ,
+                   c2          = None ,
                    ## 
                    dm21       = None  ,   ## m(2S) - m(1S) 
                    dm32       = None  ,   ## m(3S) - m(2S)
@@ -1024,9 +1029,9 @@ class Manca_pdf (MANCA) :
         - background : background  shape: symbol, PDF or ROOT.RooAbsPdf        
         - m1s        : mass/location of Y(1S) peak 
         - s1s        : resolution parameter for Y(1S) peak  
-        - a0         : a0-parameter for Needham function
-        - a1         : a1-parameter for Needham function
-        - a2         : a2-parameter for Needham function
+        - c0         : c0-parameter for Needham function
+        - c1         : c1-parameter for Needham function
+        - c2         : cc2-parameter for Needham function
         - dm21       : mass difference between Y(2S) and Y(1S) states 
         - dm32       :  mass difference between Y(3S) and Y(2S) states 
         - N1S        : yield for the Y(1S) signal
@@ -1052,26 +1057,25 @@ class Manca_pdf (MANCA) :
                          N1S        = N1S        , 
                          N2S        = N2S        , 
                          N3S        = N3S        , 
-                         B          = B          ,
-                         fix_norm   = False      )
+                         B          = B          )
         
         # =====================================================================
         ## Shape parameters
         # =====================================================================
 
-        self.__a0   = self.make_var ( a0                 ,
-                                      'a0m_%s' % name    ,
-                                      "a0 for Needham's function" ,
+        self.__c0   = self.make_var ( c0                 ,
+                                      'c0m_%s' % name    ,
+                                      "c0 for Needham's function" ,
                                       True  , 1.91  , 0.1 , 3.0   )
         
-        self.__a1   = self.make_var ( a1                 ,
-                                      'a1m_%s' % name    ,
-                                      "a1 for Needham's function" ,
+        self.__c1   = self.make_var ( c1                 ,
+                                      'c1m_%s' % name    ,
+                                      "c1 for Needham's function" ,
                                       True , 1.1174 / self._gev ,  -10.0 / self._gev , 10.0 / self._gev )
         
-        self.__a2   = self.make_var ( a2                 ,
-                                      'a2m_%s' % name    ,
-                                      "a2 for Needham's function" , 
+        self.__c2   = self.make_var ( c2                 ,
+                                      'c2m_%s' % name    ,
+                                      "c2 for Needham's function" , 
                                       True , -5.299 / self._gev**2   , -100.0  / self._gev**2  , 100.0  / self._gev**2 )
             
         # =====================================================================
@@ -1082,9 +1086,9 @@ class Manca_pdf (MANCA) :
             xvar     = self.xvar  ,
             mean     = self.m1s   ,
             sigma    = self.s1s   ,
-            a0       = self.a0    ,
-            a1       = self.a1    ,
-            a2       = self.a2    ) 
+            c0       = self.c0    ,
+            c1       = self.c1    ,
+            c2       = self.c2    ) 
         
         # =====================================================================
         ## Y(2S)
@@ -1094,9 +1098,9 @@ class Manca_pdf (MANCA) :
             xvar     = self.xvar  ,
             mean     = self.m2s   ,
             sigma    = self.s2s   ,
-            a0       = self.a0    ,
-            a1       = self.a1    ,
-            a2       = self.a2    ) 
+            c0       = self.c0    ,
+            c1       = self.c1    ,
+            c2       = self.c2    ) 
         
         # =====================================================================
         ## Y(3S)
@@ -1106,9 +1110,9 @@ class Manca_pdf (MANCA) :
             xvar     = self.xvar  ,
             mean     = self.m3s   ,
             sigma    = self.s3s   ,
-            a0       = self.a0    ,
-            a1       = self.a1    ,
-            a2       = self.a2    ) 
+            c0       = self.c0    ,
+            c1       = self.c1    ,
+            c2       = self.c2    ) 
         
         # ===============================================================================
         ## create the final PDF 
@@ -1139,9 +1143,9 @@ class Manca_pdf (MANCA) :
             'm1s'         : self.m1s      ,
             's1s'         : self.s1s      ,
             ##
-            'a0'          : self.a0       ,
-            'a1'          : self.a1       , 
-            'a2'          : self.a2       ,
+            'c0'          : self.c0       ,
+            'c1'          : self.c1       , 
+            'c2'          : self.c2       ,
             ##
             'dm21'        : self.dm21     , 
             'dm32'        : self.dm32     ,
@@ -1153,28 +1157,28 @@ class Manca_pdf (MANCA) :
             'fix_norm'    : self.fix_norm }
     
     @property
-    def a0 ( self ) :
-        """'a0' parameter for Needham's function"""
-        return self.__a0
-    @a0.setter 
-    def a0 (  self , value ) :
-        self.set_value ( self.__a0 , value )
+    def c0 ( self ) :
+        """'c0' parameter for Needham's function"""
+        return self.__c0
+    @c0.setter 
+    def c0 (  self , value ) :
+        self.set_value ( self.__c0 , value )
   
     @property
-    def a1 ( self ) :
-        """'a1' parameter for Needham's function"""
-        return self.__a1
-    @a1.setter 
-    def a1 (  self , value ) :
-        self.set_value ( self.__a1 , value )
+    def c1 ( self ) :
+        """'c1' parameter for Needham's function"""
+        return self.__c1
+    @c1.setter 
+    def c1 (  self , value ) :
+        self.set_value ( self.__c1 , value )
           
     @property
-    def a2 ( self ) :
-        """'a2' parameter for Needham's function"""
-        return self.__a2
-    @a2.setter 
-    def a2 (  self , value ) :
-        self.set_value ( self.__a2 , value )
+    def c2 ( self ) :
+        """'c2' parameter for Needham's function"""
+        return self.__c2
+    @c2.setter 
+    def c2 (  self , value ) :
+        self.set_value ( self.__c2 , value )
       
     @property
     def Y1S ( self ) :
@@ -1191,14 +1195,6 @@ class Manca_pdf (MANCA) :
         """'Y3S' : Y(3S) shape"""
         return self.__Y3S
 
-    @property
-    def fix_norm ( self ) :
-        """`fix-norm`: 
-        - see `ROOT.RooAbsPdf.SetCoefNormalization`
-        - see `ROOT.RooAbsPdf.getCoefNormalization`
-        """
-        pars = self.pdf.getCoefNormalization()
-        return True if pars else False 
 
 models.append ( Manca_pdf ) 
 
@@ -1304,8 +1300,7 @@ class Manca2_pdf (MANCA) :
                          N1S        = N1S        , 
                          N2S        = N2S        , 
                          N3S        = N3S        , 
-                         B          = B          ,
-                         fix_norm   = fix_norm   )
+                         B          = B          )
 
         # =====================================================================
         ## Double Crystal Ball shape parameters 
