@@ -485,7 +485,7 @@ endforeach()
 # ========================================================================================
 ## additional tests 
 # ========================================================================================
-file(GLOB               allfiles "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/*.py")
+file(GLOB               allfiles "${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/*.py")
 list(SORT               allfiles)
 list(REMOVE_DUPLICATES  allfiles)
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
@@ -498,7 +498,6 @@ if ( NOT ${PY_zstandard_FOUND} )
 endif()
 
 set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )
-
 
 foreach(filename ${allfiles})
 
@@ -530,7 +529,6 @@ install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
           FILES_MATCHING  PATTERN "*.py"          
           PATTERN  "*.#*" EXCLUDE      
 	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
-
 
 ## install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
 ##          DESTINATION     .${OSTAP_PYTHON_SITE_LOCAL}
