@@ -1,9 +1,10 @@
-#!/usr/bin/bash
-
-echo 'build Ostap with LCG-cvmfs' 
+#!/usr/bin/env bash
 
 LCG=${1:-dev3/latest}
 PLATFORM=${2:-x86_64-el9-clang19-opt} 
+
+echo 'BUILD WITH LCG    :' ${1}   ${2} 
+echo 'BUILD WITH LCG    :' ${LCG} ${PLATFORM}
 
 # ================================================================================
 ## Wake up the cvmfs fuse mount
@@ -11,13 +12,13 @@ PLATFORM=${2:-x86_64-el9-clang19-opt}
 # ================================================================================
 for run in {1..20}; do
 
-    for the_dir in /cvmfs/sft.cern.ch/                         \
-		   /cvmfs/sft.cern.ch/lcg                      \
-		   /cvmfs/sft.cern.ch/lcg/views                \
-		   /cvmfs/sft-nightlies.cern.ch                \
-		   /cvmfs/sft-nightlies.cern.ch/lcg            \
-		   /cvmfs/sft-nightlies.cern.ch/lcg/views      \
-		   /cvmfs/sft.cern.ch/lcg/views/${LCG}         \
+    for the_dir in /cvmfs/sft.cern.ch/                             \
+		   /cvmfs/sft.cern.ch/lcg                          \
+		   /cvmfs/sft.cern.ch/lcg/views                    \
+		   /cvmfs/sft-nightlies.cern.ch                    \
+		   /cvmfs/sft-nightlies.cern.ch/lcg                \
+		   /cvmfs/sft-nightlies.cern.ch/lcg/views          \
+		   /cvmfs/sft.cern.ch/lcg/views/${LCG}             \
 		   /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}
     do
 	
@@ -30,7 +31,7 @@ for run in {1..20}; do
 	
     done 
     
-    for the_file in /cvmfs/sft.cern.ch/lcg/views/setupViews.sh \
+    for the_file in /cvmfs/sft.cern.ch/lcg/views/setupViews.sh  \
 		    /cvmfs/sft.cern.ch/lcg/views/setupViews.csh
     do
 	( ( ls -al $the_file >/dev/null 2>&1 ) ;
@@ -38,6 +39,10 @@ for run in {1..20}; do
 	  ( ls -al $the_file >/dev/null 2>&1 ) )
     done
     
+    ( ( ls -al /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh > /dev/null 2>&1 ) ;
+      ( cat    /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh > /dev/null 2>&1 ) ;
+      ( ls -al /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh > /dev/null 2>&1 ) )
+        
     if [[ -d /cvmfs/sft.cern.ch                          &&
 	  -d /cvmfs/sft.cern.ch/lcg                      &&
 	  -d /cvmfs/sft.cern.ch/lcg/views                &&

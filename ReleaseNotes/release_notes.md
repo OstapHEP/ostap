@@ -23,6 +23,7 @@
   1. add shebang to `*.C` root macros (trick from [https://gist.github.com/gipert/3f91d6dc8bf31818cff163faeb18f38e](here)
   1. add `Ostap::Utils::same_binning` for `TAxis` and `TH1` classes  (`same_bining` in python)  `
   1. Issue warning message for histogram's _binomial efficiency method_ in case of different bining schemes    
+  1. More tweaks with CPack packaging
   
 ## Backward-incompatible
 

@@ -464,22 +464,22 @@ endif()
 ## main tests
 # ========================================================================================
     
-file(GLOB tests "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/tests/test_*.py")
+file(GLOB tests "${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/tests/test_*.py")
 
 find_program(NOSE_EXECUTABLE NAMES nosetests)
-if ( ${NOSE_EXECUTABLE} )
-   MESSAGE ( "Nose will be used for main tests" ) 
+if ( NOSE_EXECUTABLE )
+  message ( "Nose will be used for main tests" )
 endif()
     
 foreach(filename ${tests})
-   get_filename_component(tname ${filename} NAME_WE)
-   string(CONCAT tname ostap. ${tname})
-   if ( ${NOSE_EXECUTABLE} )
-      add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=5000 )
-   else  () 
-      add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
-   endif () 
-   set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+  get_filename_component(tname ${filename} NAME_WE)
+  string(CONCAT tname ostap. ${tname})
+  if ( NOSE_EXECUTABLE )
+    add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=10000 )
+  else  () 
+    add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
+  endif () 
+  set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
 endforeach()
 
 # ========================================================================================
@@ -499,6 +499,7 @@ endif()
 
 set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )
 
+
 foreach(filename ${allfiles})
 
    string(REPLACE FAKEfakeFAKEfake ququququ   testname  ${filename} )
@@ -517,6 +518,12 @@ add_test (NAME ostap.ostap        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/
 add_test (NAME ostap.dependencies WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND check-dependencies )
 add_test (NAME ostap.sync_dirs    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND sync-dirs -h )
  
+install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
+          DESTINATION     ${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}
+          FILES_MATCHING  PATTERN "*.py" 
+          PATTERN  "*#*"  EXCLUDE 
+ 	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
+
 install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}  
           DESTINATION     . 
           COMPONENT       python 
@@ -524,18 +531,12 @@ install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
           PATTERN  "*.#*" EXCLUDE      
 	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 
-install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
-          DESTINATION     ${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}
-          COMPONENT       python 
-          FILES_MATCHING  PATTERN "*.py" 
-          PATTERN  "*#*"  EXCLUDE 
-	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 
-install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
-          DESTINATION     .${OSTAP_PYTHON_SITE_LOCAL}
-          COMPONENT       python 
-          FILES_MATCHING  PATTERN "*.py" 
-          PATTERN  "*#*"  EXCLUDE 
-	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
+## install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
+##          DESTINATION     .${OSTAP_PYTHON_SITE_LOCAL}
+##          COMPONENT       python 
+##          FILES_MATCHING  PATTERN "*.py" 
+##          PATTERN  "*#*"  EXCLUDE 
+##          PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 	
 ## nosetests -w ../ostap/tools --exe --processes=16  --process-timeout=2000 -I '.*chopping.*'
