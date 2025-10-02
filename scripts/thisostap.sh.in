@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 # =====================================================================
 # @file
 # Helper script to  define the environment for ostap-@OSTAP_VERSION@ 

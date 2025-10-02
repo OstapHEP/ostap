@@ -168,6 +168,7 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 include (InstallRequiredSystemLibraries)
 
 set (CPACK_PACKAGE_VENDOR         "Ostap team" )
+set (CPACK_PACKAGE_CONTACT        "Ivan.Belyaev@cern.ch"               ) 
 set (CPACK_OUTPUT_FILE_PREFIX     ${CMAKE_INSTALL_PREFIX}/packages     )
 set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" )
 set (CPACK_PACKAGE_VERSION_MAJOR "${OSTAP_VERSION_MAJOR}" )
@@ -184,10 +185,26 @@ set (CPACK_RPM_PACKAGE_DESCRIPTION  "Ostap: user-friendly (Py)ROOT-based analysi
 set (CPACK_RPM_PACKAGE_RELEASE_DIST  OK )
 
 
-set (CPACK_RPM_FILE_NAME            "RPM-DEFAULT"  )
-set (CPACK_DEBIAN_FILE_NAME         "DEB-DEFAULT"  )
+set (CPACK_RPM_FILE_NAME             "RPM-DEFAULT"  )
+set (CPACK_DEBIAN_FILE_NAME          "DEB-DEFAULT"  )
 
-set(CPACK_GENERATOR 7Z STGZ TBZ2 TGZ TZ TZST ZIP)
+find_program( OSTAP_DPKH_EXECUTABLE NAMES dpkg     )        
+find_program( OSTAP_RPM_EXECUTABLE  NAMES rpmbuild )        
+
+if ( OSTAP_DPKG_EXECUTABLE AND OSTAP_RPM_EXECUTABLE )
+  message ( 'DEB & RPM are found !' ) 
+  set(CPACK_GENERATOR 7Z STGZ TBZ2 TGZ TZ TZST ZIP DEB RPM)
+elseif ( OSTAP_DPKG_EXECUTABLE )
+  message ( 'DEB is found !' ) 
+  set(CPACK_GENERATOR 7Z STGZ TBZ2 TGZ TZ TZST ZIP DEB )
+elseif ( OSTAP_RPM_EXECUTABLE  )
+  message ( 'RPM is found !' ) 
+  set(CPACK_GENERATOR 7Z STGZ TBZ2 TGZ TZ TZST ZIP RPM )
+else ()
+  message ( ' NO DEB & RPM are found !' ) 
+  set(CPACK_GENERATOR 7Z STGZ TBZ2 TGZ TZ TZST ZIP )  
+endif ()
+
 
 ## RPM & DEB
 set(CPACK_THREADS   0    )

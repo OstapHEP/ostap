@@ -1,7 +1,9 @@
+//usr/bin/env root.exe -l ${0}\(\""${0}"\",\""${*}"\"\); exit $?
+// ============================================================================
 #include <cmath>
 #include <iostream>
 #include "Ostap/ValueWithError.h"
-
+// ============================================================================
 
 typedef Ostap::Math::ValueWithError VE ;
 

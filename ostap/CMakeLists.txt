@@ -521,24 +521,21 @@ install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
           DESTINATION     . 
           COMPONENT       python 
           FILES_MATCHING  PATTERN "*.py"          
-          PATTERN  "*.#*" EXCLUDE       )
+          PATTERN  "*.#*" EXCLUDE      
+	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 
 install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
           DESTINATION     ${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}
           COMPONENT       python 
           FILES_MATCHING  PATTERN "*.py" 
-          PATTERN  "*#*"  EXCLUDE )
-
-install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
-          DESTINATION     .
-          COMPONENT       python 
-          FILES_MATCHING  PATTERN "*.py" 
-          PATTERN  "*#*"  EXCLUDE )
+          PATTERN  "*#*"  EXCLUDE 
+	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 
 install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
           DESTINATION     .${OSTAP_PYTHON_SITE_LOCAL}
           COMPONENT       python 
           FILES_MATCHING  PATTERN "*.py" 
-          PATTERN  "*#*"  EXCLUDE )
+          PATTERN  "*#*"  EXCLUDE 
+	  PERMISSIONS     OWNER_READ GROUP_READ  WORLD_READ )
 	
 ## nosetests -w ../ostap/tools --exe --processes=16  --process-timeout=2000 -I '.*chopping.*'

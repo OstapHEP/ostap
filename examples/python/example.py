@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ## import cppyy
 ## cppyy.load_reflection_info("libostap")

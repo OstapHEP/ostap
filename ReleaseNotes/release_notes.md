@@ -18,6 +18,9 @@
   1. add explicit `__getitem__`  function to `RooLinkedList`
   1. add `non_gaussian` method for all "peak-like"-distribution with well-defined "mean" and "rms"
   1. improve CPACK-configuration 
+  1. more tweaks for CPACK RPM (&DEB) - not properly tested yet! 
+  1. modify shebangs for several files to please CPACK RMP generator
+  1. add shebang to `*.C` root macros (trick from [https://gist.github.com/gipert/3f91d6dc8bf31818cff163faeb18f38e](here)
 
 ## Backward-incompatible
 
