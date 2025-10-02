@@ -44,7 +44,8 @@ from   ostap.core.core                import ( cpp      , Ostap     ,
                                                iszero   , isequal   , inrange         , 
                                                isint    , islong    , is_sorted       ,
                                                natural_entry        ,
-                                               natural_number       )
+                                               natural_number       ,
+                                               valid_pointer        )
 from   ostap.math.base                import ( frexp10      , isequalf      ,
                                                pos_infinity , neg_infinity  ) 
 from   ostap.math.math_ve             import significance
