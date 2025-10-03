@@ -1235,17 +1235,6 @@ std::size_t Ostap::Math::Bukin2::tag () const
 }
 // ============================================================================
 
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================================
 // constructor 
 // ============================================================================
@@ -4698,7 +4687,7 @@ std::size_t Ostap::Math::AsymmetricLaplace::tag () const
 double Ostap::Math::AsymmetricLaplace::mean () const
 { return  m_mu + ( m_lambdaR - m_lambdaL ) ; }
 // ============================================================================
-// get mediam
+// get median
 // ============================================================================
 double Ostap::Math::AsymmetricLaplace::median () const
 {
@@ -4745,26 +4734,25 @@ double Ostap::Math::AsymmetricLaplace::kurtosis () const
  * - Gaussian is centered at mean-valuw with sigma = RMS 
  */
 // ============================================================================
-double Ostap::Math::AsymmetricLaplace::non_gaussian 
-( const double xlow  ,
-  const double xhigh ) const
-{
-  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
-  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
-  //
-  const double I_CB = integral ( xlow , xhigh ) / integral ();
-  //
-  const double m = mean () ;
-  const double s = rms  () ;
-  //
-  const double I_G  =
-    Ostap::Math::gauss_cdf ( xhigh , m , s ) -
-    Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
-  //
-  return 1 - I_G / I_CB ;
-}
+// double Ostap::Math::AsymmetricLaplace::non_gaussian 
+// ( const double xlow  ,
+//   const double xhigh ) const
+// {
+//   if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+//   else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+//   //
+//   const double I_CB = integral ( xlow , xhigh ) / integral ();
+//   //
+//   const double m = mean () ;
+//   const double s = rms  () ;
+//   //
+//   const double I_G  =
+//     Ostap::Math::gauss_cdf ( xhigh , m , s ) -
+//     Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
+//   //
+//   return 1 - I_G / I_CB ;
+// }
 // ============================================================================
-
 
 
 // ============================================================================

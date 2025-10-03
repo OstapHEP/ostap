@@ -225,7 +225,6 @@ if ( NOT ${PY_psutil_FOUND} )
   message ( "----> warning (optional)         psutils is NOT found!" ) 
 endif()
 
-
 # ========================================================================================
 ## BerkeleyDB
 # ========================================================================================
@@ -466,15 +465,21 @@ endif()
     
 file(GLOB tests "${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/tests/test_*.py")
 
+## option(USE_NOSE "Use notetests to run main tests"  ON ) 
+
 find_program(NOSE_EXECUTABLE NAMES nosetests)
 if ( NOSE_EXECUTABLE )
-  message ( "Nose will be used for main tests" )
+  message ( "Nosetest will be used for the main tests:" ${NOSE_EXECUTABLE} )
+else ()
+  message ( " No NOSETESTS: " ${USE_NOSE} "  and " ${NOSE_EXECUTABLE} ) 
 endif()
     
 foreach(filename ${tests})
   get_filename_component(tname ${filename} NAME_WE)
   string(CONCAT tname ostap. ${tname})
-  if ( NOSE_EXECUTABLE )
+
+  string(FIND   ${tname}  parallel HAS_PARALLEL)
+  if ( NOSE_EXECUTABLE AND HAS_PARALLEL LESS 0 )
     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=10000 )
   else  () 
     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
@@ -506,8 +511,6 @@ foreach(filename ${allfiles})
    string(REPLACE "\.py" ""     testname ${testname})
    string(REPLACE "/" "_"       testname ${testname})
    string(CONCAT  testname ostap.runit_  ${testname})
-
-  message ( ' NAMES  '  ${filename} '  TEST ' ${testname} ) 
 
    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
 

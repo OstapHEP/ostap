@@ -49,9 +49,8 @@ except ImportError : # ========================================================
 
 # =============================================================================
 ## make a single test 
-def make_test ( func , xmin , xmax , ptype , orders , logger ) :
+def make_tst ( func , xmin , xmax , ptype , orders , logger ) :
     
-
     results = {}
     for order in orders :
         r = ptype ( func = func  ,
@@ -60,7 +59,6 @@ def make_test ( func , xmin , xmax , ptype , orders , logger ) :
                     N    = order ) 
         results [ order ] = r
         
-
     f1_draw ( func , xmin = xmin , xmax = xmax , linecolor=2 , linewidth = 3 )
     logger.info ( 'Thick red line - original function' ) 
     for o in results : 
@@ -68,15 +66,12 @@ def make_test ( func , xmin , xmax , ptype , orders , logger ) :
         r.draw ( 'same' , xmin = xmin , xmax = xmax , linecolor = o ) 
         logger.info ( 'Lone color %2d : approximation with order %s' % ( o , o ) )  
     
-
 # =============================================================================
 def test_legendre_sum () :
-    """Test Legendre sum
+    """ Test Legendre sum
     """
-
     logger = getLogger('test_legendre_sum')
     logger.info ( 'Represent the function as Legendre sum')
-
     
     func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
 
@@ -86,17 +81,15 @@ def test_legendre_sum () :
     from ostap.math.param import legendre_sum
 
     with use_canvas ( 'test_legendre_sum' , wait = 1 ) , timing ( logger = logger ) :
-        make_test ( func , xmin , xmax , legendre_sum , range ( 1 , 11 ) , logger )
+        make_tst ( func , xmin , xmax , legendre_sum , range ( 1 , 11 ) , logger )
         
 
 # =============================================================================
 def test_chebyshev_sum () :
-    """Test Chebyshev sum
+    """ Test Chebyshev sum
     """
-
     logger = getLogger('test_chebyshev_sum')
     logger.info ( 'Represent the function as Chebyshev sum')
-
     
     func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
 
@@ -104,20 +97,16 @@ def test_chebyshev_sum () :
     xmax = 2 * math.pi 
 
     from ostap.math.param import chebyshev_sum
-
     
     with use_canvas ( 'test_chebyshev_sum' , wait = 1 ) , timing ( logger = logger ) :
-        make_test ( func , xmin , xmax , chebyshev_sum , range ( 1 , 11 ) , logger )
-
-        
+        make_tst ( func , xmin , xmax , chebyshev_sum , range ( 1 , 11 ) , logger )
+    
 # =============================================================================
 def test_fourier_sum () :
-    """Test Fourier sum
+    """ Test Fourier sum
     """
-
     logger = getLogger('test_fourier_sum')
     logger.info ( 'Represent the function as Fourier sum')
-
 
     func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
     
@@ -131,13 +120,12 @@ def test_fourier_sum () :
         return 
 
     with use_canvas ( 'test_fourier_sum' , wait = 1 ) , timing ( logger = logger ) :
-        make_test ( func , xmin , xmax , fourier_sum , range ( 1 , 11 ) , logger )
+        make_tst ( func , xmin , xmax , fourier_sum , range ( 1 , 11 ) , logger )
 
 # =============================================================================
 def test_cosine_sum () :
-    """Test Cosine sum
+    """ Test Cosine sum
     """
-
     logger = getLogger('test_cosine_sum')
     logger.info ( 'Represent the function as a sum of cosine functions')
     
@@ -152,18 +140,15 @@ def test_cosine_sum () :
         logger.error ("Can't import cosine_sum!")
         return 
 
-    
     with use_canvas ( 'test_cosine_sum' , wait = 1 ) , timing ( logger = logger ) :
-        make_test ( func , xmin , xmax , cosine_sum , range ( 1 , 11 ) , logger )
+        make_tst ( func , xmin , xmax , cosine_sum , range ( 1 , 11 ) , logger )
 
 # =============================================================================
 def test_bernstein_sum () :
-    """Test Bernstein sum
+    """ Test Bernstein sum
     """
-
     logger = getLogger('test_bernstein_sum')
     logger.info ( 'Represent the function as a sum of Bernstein polynomials')
-
     
     func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
 
@@ -172,16 +157,13 @@ def test_bernstein_sum () :
 
     from ostap.math.param import bernstein_sum
 
-    
     with use_canvas ( 'test_bernstein_sum' , wait = 1 ) , timing ( logger = logger ) :
-        make_test ( func , xmin , xmax , bernstein_sum , range ( 1 , 11 ) , logger )
-
+        make_tst ( func , xmin , xmax , bernstein_sum , range ( 1 , 11 ) , logger )
 
 # =============================================================================
 def test_bernsteineven_sum1 () :
-    """Test Bernstein Even sum/1
+    """ Test Bernstein Even sum/1
     """
-
     logger = getLogger('test_bernsteineven_sum1')
     logger.info ( 'Represent the function as a sum of even Bernstein polynomials')
     
@@ -193,13 +175,12 @@ def test_bernsteineven_sum1 () :
 
     
     with use_canvas ( 'test_bernsteineven_sum' , wait = 1 ) , timing ( logger = logger ) :
-        make_test ( func , xmin , xmax , bernsteineven_sum , range ( 1 , 11 ) , logger )
+        make_tst ( func , xmin , xmax , bernsteineven_sum , range ( 1 , 11 ) , logger )
 
 # =============================================================================
 def test_bernsteineven_sum2 () :
-    """Test Bernstein Even sum/2
+    """ Test Bernstein Even sum/2
     """
-
     logger = getLogger('test_bernsteineven_sum2')
     logger.info ( 'Represent the function as a sum of even Bernstein polynomials')
     
@@ -209,10 +190,8 @@ def test_bernsteineven_sum2 () :
 
     from ostap.math.param import bernsteineven_sum
 
-    
     with use_canvas ( 'test_bernsteineven_sum2' , wait = 1 ) , timing ( logger = logger ) :
-        make_test ( func , xmin , xmax , bernsteineven_sum , range ( 1 , 21 ) , logger )
-
+        make_tst ( func , xmin , xmax , bernsteineven_sum , range ( 1 , 21 ) , logger )
         
 # =============================================================================
 if '__main__' == __name__ :
@@ -224,7 +203,6 @@ if '__main__' == __name__ :
     test_bernstein_sum      ()
     test_bernsteineven_sum1 ()
     test_bernsteineven_sum2 ()
-
     
 # =============================================================================
 ##                                                                      The END

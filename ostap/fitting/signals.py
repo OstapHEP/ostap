@@ -155,7 +155,7 @@ __all__ = (
     )
 # =============================================================================
 from   ostap.core.core          import Ostap
-from   ostap.core.ostap_types   import integer_types 
+from   ostap.core.ostap_types   import integer_types, num_types  
 from   ostap.fitting.funbasic   import FUN1 , Fun1D 
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
@@ -295,19 +295,19 @@ class CrystalBall_pdf(PEAK) :
         self.pdf = Ostap.Models.CrystalBall (
             self.roo_name ( 'cb_'  )       , 
             'Crystal Ball %s' % self.name  ,
-            self.xvar  ,
-            self.mean  ,
-            self.sigma ,
-            self.alpha ,
-            self.n     )
+            self.xvar    ,
+            self.mean    ,
+            self.sigma   ,
+            self.__alpha ,           ## NB! 
+            self.n       )
         ## save the configuration
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'mean'  : self.mean  ,
-            'sigma' : self.sigma ,
-            'alpha' : self.alpha ,
-            'n'     : self.n     ,
+            'name'  : self.name    ,
+            'xvar'  : self.xvar    ,
+            'mean'  : self.mean    ,
+            'sigma' : self.sigma   ,
+            'alpha' : self.__alpha , ## NB! 
+            'n'     : self.n       ,
             }
 
     @property
@@ -629,7 +629,7 @@ models.append ( CB2_pdf )
 #  @see Ostap::Math::Needham 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class Needham_pdf(PEAK) :
+class Needham_pdf(CrystalBall_pdf) :
     """ Needham function: specific parameterisation of Crystal Ball function with
     - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
 
@@ -642,47 +642,60 @@ class Needham_pdf(PEAK) :
     Is has been used with great success for all LHCb papers on
     quarkonia production in dimuon final states
     """
+    
     def __init__ ( self                ,
                    name                ,
                    xvar                ,
-                   mean     = 3.096    ,   ## GeV  
-                   sigma    = 0.013    ,   ## GeV 
-                   c0       = 2.5      ,   ## s
-                   c1       = 0.013    ,   ## should be close to sigma  (inverse with respect to original Matt's code)
+                   mean     = 3.096    , ## 
+                   sigma    = 0.013    , ##  
+                   c0       = 2.5      , ## 
+                   c1       = None     , ## should be close to sigma  (inverse with respect to original Matt's code)
                    c2       = 10.0     ,
                    n        = ROOT.RooFit.RooConst ( 0 ) ) : 
         
-        PEAK.__init__ ( self , name , xvar , mean , sigma )
-        
+        ## initialize the base class 
+        CrystalBall_pdf.__init__ ( self          ,
+                                   name          ,
+                                   xvar          ,
+                                   mean  =  mean ,
+                                   sigma = sigma ,
+                                   n     = n     )
+
+        ## 
+        if n is None : n = ROOT.RooFit.RooConst ( 0 ) 
+
+        ## c0 variable 
         self.__c0 = self.make_var ( c0                  ,
                                     "c0_%s"     % name  ,
                                     "c_{0}(%s)" % name  ,
                                     True , 2.5 , 1.5    , 3.5 ) 
         
-        s_minmax = self.sigma.minmax()
-        if s_minmax :
-            smin, smax  = s_minmax
-            c1limits    = 0.05 * max ( smin , ( smax - smin ) / 1000 ) , 10 * smax
-        else : c1limits = () 
+        ## c1 should be relatively close to sigma 
+        if c1 is None : c1 = float ( self.sigma )
         
-        self.__c1 = self.make_var ( c1                  ,
-                                    "c1_%s"     % name  ,
-                                    "c_{1}(%s)" % name  ,
-                                    True , *c1limits    )  
-        
-        self.__c2 = self.make_var ( c2                  ,
-                                    "c2_%s"     % name  ,
-                                    "c_{2}(%s)" % name  ,
-                                    True , 10 , 1 , 50  )
-        
-        self.__n  = self.make_var ( n   ,
-                                    'n_%s'            % name ,
-                                    'n_{CB}(%s)'      % name ,
-                                    None , 0 , -1 , 100 )
+        c1_iimits = ()        
+        if self.sigma.minmax() :
+            smin, smax = self.sigma.minmax()
+            delta      = ( smax - smin ) / 1000 
+            c1limits   = min ( 0.1 * smin , delta ) , 10 * smax
+            
+        if isinstance ( c1 , num_types ) and climits :
+            c1       = float ( c1 )
+            c1limits = c1 , min ( c1 , climits [ 0 ] ), max ( c1 , climits [ 1 ] ) 
 
-        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
-
-        #
+        ## c1-parameter 
+        self.__c1 = self.make_var ( c1                 ,
+                                    "c1_%s"     % name ,
+                                    "c_{1}(%s)" % name ,
+                                    True , *c1limits   )  
+        
+        ## c2-parameter 
+        self.__c2 = self.make_var ( c2                 ,
+                                    "c2_%s"     % name ,
+                                    "c_{2}(%s)" % name ,
+                                    True , 10 , 1 , 50 )
+        
+        ## create pdf 
         self.pdf = Ostap.Models.Needham (
             self.roo_name ( 'needham_' ) , 
             'Needham function %s' % self.name ,
@@ -707,6 +720,11 @@ class Needham_pdf(PEAK) :
             'n'      : self.n     ,
         }
         
+    ## disable getter/setter for alpha, alphaL and aL 
+    alpha  = None ## disable getter/setter for alpha, alphaL and aL 
+    alphaL = None ## disable getter/setter for alpha, alphaL and aL 
+    aL     = None ## disable getter/setter for alpha, alphaL and aL 
+
     @property
     def c0 ( self ) :
         """'c0'-parameter for Needham function"""
@@ -717,7 +735,9 @@ class Needham_pdf(PEAK) :
 
     @property
     def c1 ( self ) :
-        """'c1'-parameter for Needham function, INVERSE with respect ot originam Matt's code!"""
+        """'c1'-parameter for Needham function, 
+        Attention: the parameter is *INVERSE* with respect to original Matt's code!
+        """
         return self.__c1
     @c1.setter
     def c1 ( self, value ) :
@@ -730,20 +750,6 @@ class Needham_pdf(PEAK) :
     @c2.setter
     def c2 ( self, value ) :
         self.set_value ( self.__c2 , value )
-        
-    @property
-    def n ( self ) :
-        """n-parameter for Crystal Ball tail"""
-        return self.__n
-    @n.setter
-    def n ( self, value ) :
-        self.set_value ( self.__n , value ) 
-
-    @property
-    def N ( self ) :
-        """`N` : actual N-parameter used for Crystal Ball """
-        return self.__N
-
         
 models.append ( Needham_pdf )    
 # =============================================================================

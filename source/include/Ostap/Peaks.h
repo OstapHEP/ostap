@@ -3181,11 +3181,11 @@ namespace Ostap
       /// get kurtosis 
       double kurtosis () const ;
       /// get RMS
-      inline double rms        () const { return std::sqrt ( variance () ) ; };
+      // inline double rms        () const { return std::sqrt ( variance () ) ; };
       /// get sigma
-      inline double sigma      () const { return rms      () ; }
+      // inline double sigma      () const { return rms      () ; }
       // get dispersion
-      inline double dispersion () const { return variance () ; }
+      // inline double dispersion () const { return variance () ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
@@ -3200,16 +3200,16 @@ namespace Ostap
       // ======================================================================
     public: //
       // ======================================================================
-      /** quantify the effect of the tails, difference from Gaussian
-       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
-       * where 
-       * - \f$ I_{CB} \f$ is integral over Gaussian function 
-       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
-       * - Gaussian is centered at mean-value with sigma = RMS 
-       */
-      double non_gaussian 
-      ( const double xlow  ,
-	const double xhigh ) const ;
+      // /** quantify the effect of the tails, difference from Gaussian
+      //  *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+      //  * where 
+      //  * - \f$ I_{CB} \f$ is integral over Gaussian function 
+      //  * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+      //  * - Gaussian is centered at mean-value with sigma = RMS 
+      //  */
+      // double non_gaussian 
+      // ( const double xlow  ,
+      // 	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================

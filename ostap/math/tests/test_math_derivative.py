@@ -36,7 +36,7 @@ else                       : logger = getLogger ( __name__                     )
 batch_env ( logger )
 # =============================================================================
 
-def derivative_testing ( der_type , func , der_exact , logger , **kwargs ) :
+def derivative_tst ( der_type , func , der_exact , logger , **kwargs ) :
 
     IMAX = der_type.IMAX
     
@@ -82,7 +82,7 @@ def test_derivative_1 ():
     fun = math.sin
     der = math.cos
 
-    derivative_testing ( Derivative , fun , der , logger )
+    derivative_tst ( Derivative , fun , der , logger )
     
 def test_derivative_2 ():
 
@@ -91,7 +91,7 @@ def test_derivative_2 ():
     fun = math.sin
     der = math.cos
 
-    derivative_testing ( Derivative1 , fun , der , logger ) 
+    derivative_tst ( Derivative1 , fun , der , logger ) 
 
 def test_derivative_3 ():
 
@@ -100,7 +100,7 @@ def test_derivative_3 ():
     fun = math.sin
     der = math.cos
 
-    derivative_testing ( Derivative1 , fun , der , logger , richardson = 2 ) 
+    derivative_tst ( Derivative1 , fun , der , logger , richardson = 2 ) 
 
 
 # =============================================================================
@@ -242,7 +242,7 @@ def test_derivative_6 ():
         
 
 # =============================================================================
-def differences_testing ( RULE , logger ) :
+def differences_tst ( RULE , logger ) :
 
     a = 1.5
     fun        =   lambda x :   math.sin ( a * x ) 
@@ -307,15 +307,15 @@ def differences_testing ( RULE , logger ) :
 # =============================================================================
 def test_central_differences ( ) :
     logger = getLogger ( 'test_central_differences' )
-    return differences_testing ( CentralRule , logger )
+    return differences_tst ( CentralRule , logger )
 
 def test_forward_differences ( ) :
     logger = getLogger ( 'test_forward_differences' )
-    return differences_testing ( ForwardOpen , logger )
+    return differences_tst ( ForwardOpen , logger )
 
 def test_backward_differences ( ) :
     logger = getLogger ( 'test_backward_differences' )
-    return differences_testing ( BackwardOpen , logger )
+    return differences_tst ( BackwardOpen , logger )
 
 # =============================================================================
 def topt ( d , n ) :

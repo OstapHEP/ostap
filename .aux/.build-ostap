@@ -85,5 +85,5 @@ echo 'BUILD OSTAP       : OSTAP  VERSION  : ' `ostap  --version`
 echo 'BUILD OSTAP       : OSTAP_INSTALL   : ' $OSTAP_INSTALL
 if command -v tree &> /dev/null
 then
-    tree -L 2 --charset UTF-8 $OSTAP_INSTALL
+    tree -d -L 3 --charset UTF-8 $OSTAP_INSTALL
 fi 

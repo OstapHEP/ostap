@@ -2258,12 +2258,10 @@ if '__main__' == __name__ :
     with timing ('test_NormalLaplas'        , logger ) :
         test_normlapl           ()
     
-    """
     ## Meixner                                       + background
     with timing ('test_Meixner'        , logger ) :
         test_meixner           () 
 
-    """
     ## Hyperbolic                                 + background 
     with timing ('test_hyperbolic'     , logger ) :
         test_hyperbolic        () 

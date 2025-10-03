@@ -5739,7 +5739,7 @@ def _axis_same_binning_ ( axis , other ) :
     """
     assert isinstance ( other , ROOT.TAxis ) and valid_pointer ( other ) , \
         "same_binning: Invalid axis type %s" % typename ( other )
-    return Ostap.Utils.same_bining ( axis , other )
+    return Ostap.Utils.same_binning ( axis , other )
 
 # =============================================================================
 ## Same binning?
@@ -5756,7 +5756,7 @@ def _histo_same_binning_ ( histo , other ) :
     """
     assert isinstance ( other , ROOT.TH1 ) and valid_pointer ( other ) , \
         "same_binning: Invalid histo type %s" % typename ( other )
-    return Ostap.Utils.same_bining ( histo , other )
+    return Ostap.Utils.same_binning ( histo , other )
 
 # =============================================================================
 ROOT.TAxis.edges        = _edges_
@@ -8175,44 +8175,7 @@ def _h_same_dims_ ( histo , another ) :
     return histo.GetDimension() == another.GetDimension()
 
 ROOT.TH1. same_dims = _h_same_dims_
-
-# =============================================================================
-## same binning?
-def _h_same_bins_ ( histo , another ) :
-    """ Same binning for two histograms?
-    >>> h1 = ...
-    >>> h2 = ...
-    >>> print ( h1.same_bins( h2 ) ) 
-    """
-    ## same dimensions ? 
-    if not histo.same_dims ( another ) : return False
-    ## 
-    if   isinstance ( histo , ROOT.TH3 ) and isinstance ( another , ROOT.TH3 ) : 
-        a1 = histo  .GetXaxis()
-        a2 = another.GetXaxis()
-        if a1 != a2 : return False
-        a1 = histo  .GetYaxis()
-        a2 = another.GetYaxis()
-        if a1 != a2 : return False
-        a1 = histo  .GetZaxis()
-        a2 = another.GetZaxis()
-        if a1 != a2 : return False
-        return True
-    elif isinstance ( histo , ROOT.TH2 ) and isinstance ( another , ROOT.TH2 ) : 
-        a1 = histo  .GetXaxis()
-        a2 = another.GetXaxis()
-        if a1 != a2 : return False
-        a1 = histo  .GetYaxis()
-        a2 = another.GetYaxis()
-        return True
-    elif isinstance ( histo , ROOT.TH1 ) and isinstance ( another , ROOT.TH1 ) : 
-        a1 = histo  .GetXaxis()
-        a2 = another.GetXaxis()
-        return True
-    
-    return False 
-
-ROOT.TH1. same_bins = _h_same_bins_
+ROOT.TH1. same_bins = _histo_same_binning_
     
 # =============================================================================
 ## histogram dimension

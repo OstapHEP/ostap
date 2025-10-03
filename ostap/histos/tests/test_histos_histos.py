@@ -206,7 +206,6 @@ def test_basic_1D() :
     logger.info ( 'skewness   %-20s' % hh.skewness () )
     logger.info ( 'kurtosis   %-20s' % hh.kurtosis () )
     
-
 # =============================================================================
 ## Test for very basic operations with 2D-histograms
 def test_basic_2D   () :
@@ -246,7 +245,6 @@ def test_basic_2D   () :
     logger.info ( 'y-minmax  %20s' % str( h2.yminmax() ) )
     logger.info ( 'z-minmax  %20s' % str( h2.zminmax() ) )
                   
-
 # =============================================================================
 ## Test for "efficiencies
 def test_efficiency() :
@@ -270,12 +268,10 @@ def test_efficiency() :
         hT.Fill ( vx )
 
     #
-    ## applicbale for all cases: 
+    ## applicable for all cases: 
     #
-
     eff_0 = hA  / hT                  ## incorrect estimate of uncertainties efficiency
 
-    
     ## (almost) correct estimate of uncertainties
     eff_1 = 1 / ( 1 + hR/hA )         ## correct estimate of uncertainties
     
@@ -338,9 +334,6 @@ def test_efficiency() :
                 vals = ' '.join ( vals ) 
                 logger.info ( "%43s: %s" % ( n , vals ) ) 
     
-        
-            
-
 # =============================================================================
 if '__main__' == __name__ :
 

@@ -23,8 +23,9 @@
   1. add shebang to `*.C` root macros (trick from [https://gist.github.com/gipert/3f91d6dc8bf31818cff163faeb18f38e](here)
   1. add `Ostap::Utils::same_binning` for `TAxis` and `TH1` classes  (`same_bining` in python)  `
   1. Issue warning message for histogram's _binomial efficiency method_ in case of different bining schemes    
-  1. More tweaks with CPack packaging
-  
+  1. more tweaks with CPack packaging
+  1. use bare testing for `parallel`-tests instead of `nosetests`
+
 ## Backward-incompatible
 
 ## Bug fixes
@@ -32,7 +33,8 @@
   1. fix `ostap-sync-dirs` script 
   1. fix some newly introduced bugs
   1. fix the bug in `Ostap::Math::CrystalBall::integral`
-
+  1. fix usage f nosetest for tests (when available)
+  
 # v3.0.2.16 
 
 ## New features

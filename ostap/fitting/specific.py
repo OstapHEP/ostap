@@ -14,22 +14,22 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     #
-    'D0_pdf'     , ## PDF for D0        : Bukin 
-    'Dp_pdf'     , ## PDF for D+        : Bukin
-    'Ds_pdf'     , ## PDF for Ds+       : Bukin 
-    'Lc_pdf'     , ## PDF for Lambda_c+ : Gauss
+    'D0_pdf'        , ## PDF for D0        : Bukin 
+    'Dp_pdf'        , ## PDF for D+        : Bukin
+    'Ds_pdf'        , ## PDF for Ds+       : Bukin 
+    'Lc_pdf'        , ## PDF for Lambda_c+ : Gauss
     #
-    'Bd_pdf'     , ## pdf for B0        : double-sided Crystal Ball 
-    'B0_pdf'     , ## pdf for B0        : double-sided Crystal Ball 
-    'Bu_pdf'     , ## pdf for B+        : double-sided Crystal Ball 
-    'Bs_pdf'     , ## pdf for Bs        : double-sided Crystal Ball 
-    'Bc_pdf'     , ## pdf for Bc+       : double-sided Crystal Ball 
+    'Bd_pdf'        , ## pdf for B0        : double-sided Crystal Ball 
+    'B0_pdf'        , ## pdf for B0        : double-sided Crystal Ball 
+    'Bu_pdf'        , ## pdf for B+        : double-sided Crystal Ball 
+    'Bs_pdf'        , ## pdf for Bs        : double-sided Crystal Ball 
+    'Bc_pdf'        , ## pdf for Bc+       : double-sided Crystal Ball 
     #
-    'DpDs_pdf'   , ## ready-to-use model for D+ and D_s+ signals 
-    'BdBs_pdf'   , ## ready-to-use model for Bd and Bs signals 
-    'Manca_pdf'  , ## Manca function to fit Y->mu mu spectrum  [Y(1S),Y(2S),Y(3S)]
-    'Manca2_pdf' , ## Manca function to fit Y->mu mu spectrum  [Y(1S),Y(2S),Y(3S)]
-    'MancaX_pdf' , ## associative production of Y+X 
+    'DpDs_pdf'      , ## ready-to-use model for D+ and D_s+ signals 
+    'BdBs_pdf'      , ## ready-to-use model for Bd and Bs signals 
+    'Manca_pdf'     , ## Manca function to fit Y->mu mu spectrum  [Y(1S),Y(2S),Y(3S)]
+    'Manca2_pdf'    , ## Manca function to fit Y->mu mu spectrum  [Y(1S),Y(2S),Y(3S)]
+    'MancaX_pdf'    , ## associative production of Y+X 
     #
     'HORNSdini_pdf' , ## HORNdini PDF (need to ve convolved!)
     'HILLdini_pdf'  , ## HILLdini PDF (need to ve convolved!)
@@ -1010,18 +1010,19 @@ class Manca_pdf (MANCA) :
                    m1s         = None ,
                    s1s         = None ,
                    ## 
-                   c0          = 1.91 ,
+                   c0          = 2.5  ,
                    c1          = None ,
                    c2          = None ,
+                   n           = None , 
                    ## 
-                   dm21       = None  ,   ## m(2S) - m(1S) 
-                   dm32       = None  ,   ## m(3S) - m(2S)
+                   dm21        = None  ,   ## m(2S) - m(1S) 
+                   dm32        = None  ,   ## m(3S) - m(2S)
                    ##
-                   N1S        = None  ,   ## Y(2S) signal
-                   N2S        = None  ,   ## Y(2S) signal
-                   N3S        = None  ,   ## Y(3S) signal 
-                   B          = None  ,   ## background
-                   fix_norm   = False ) :
+                   N1S         = None  ,   ## Y(2S) signal
+                   N2S         = None  ,   ## Y(2S) signal
+                   N3S         = None  ,   ## Y(3S) signal 
+                   B           = None  ,   ## background
+                   fix_norm    = False ) :
         
         """ Create Manca1 PDF: function to fit Y->mu+mu- signals in narrow kinematic range 
         - xvar       : observable, mu+mu- mass
@@ -1029,9 +1030,9 @@ class Manca_pdf (MANCA) :
         - background : background  shape: symbol, PDF or ROOT.RooAbsPdf        
         - m1s        : mass/location of Y(1S) peak 
         - s1s        : resolution parameter for Y(1S) peak  
-        - c0         : c0-parameter for Needham function
-        - c1         : c1-parameter for Needham function
-        - c2         : cc2-parameter for Needham function
+        - c0         : c0-parameter for Needham' function
+        - c1         : c1-parameter for Needham' function
+        - c2         : c2-parameter for Needham' function
         - dm21       : mass difference between Y(2S) and Y(1S) states 
         - dm32       :  mass difference between Y(3S) and Y(2S) states 
         - N1S        : yield for the Y(1S) signal
@@ -1060,25 +1061,6 @@ class Manca_pdf (MANCA) :
                          B          = B          )
         
         # =====================================================================
-        ## Shape parameters
-        # =====================================================================
-
-        self.__c0   = self.make_var ( c0                 ,
-                                      'c0m_%s' % name    ,
-                                      "c0 for Needham's function" ,
-                                      True  , 1.91  , 0.1 , 3.0   )
-        
-        self.__c1   = self.make_var ( c1                 ,
-                                      'c1m_%s' % name    ,
-                                      "c1 for Needham's function" ,
-                                      True , 1.1174 / self._gev ,  -10.0 / self._gev , 10.0 / self._gev )
-        
-        self.__c2   = self.make_var ( c2                 ,
-                                      'c2m_%s' % name    ,
-                                      "c2 for Needham's function" , 
-                                      True , -5.299 / self._gev**2   , -100.0  / self._gev**2  , 100.0  / self._gev**2 )
-            
-        # =====================================================================
         ## Y(1S)
         # =====================================================================
         self.__Y1S   = Needham_pdf (
@@ -1086,33 +1068,36 @@ class Manca_pdf (MANCA) :
             xvar     = self.xvar  ,
             mean     = self.m1s   ,
             sigma    = self.s1s   ,
-            c0       = self.c0    ,
-            c1       = self.c1    ,
-            c2       = self.c2    ) 
+            c0       = c0         ,
+            c1       = c1         ,
+            c2       = c2         ,
+            n        = n          ) 
         
         # =====================================================================
         ## Y(2S)
         # =====================================================================
         self.__Y2S   = Needham_pdf (
-            name + '2S'           ,
-            xvar     = self.xvar  ,
-            mean     = self.m2s   ,
-            sigma    = self.s2s   ,
-            c0       = self.c0    ,
-            c1       = self.c1    ,
-            c2       = self.c2    ) 
+            name + '2S'            ,
+            xvar     = self.xvar   ,
+            mean     = self.m2s    ,
+            sigma    = self.s2s    ,
+            c0       = self.Y1S.c0 ,
+            c1       = self.Y1S.c1 ,
+            c2       = self.Y1S.c2 ,
+            n        = self.Y1S.n  ) 
         
         # =====================================================================
         ## Y(3S)
         # =====================================================================
         self.__Y3S   = Needham_pdf (
-            name + '3S'           ,
-            xvar     = self.xvar  ,
-            mean     = self.m3s   ,
-            sigma    = self.s3s   ,
-            c0       = self.c0    ,
-            c1       = self.c1    ,
-            c2       = self.c2    ) 
+            name + '3S'            ,
+            xvar     = self.xvar   ,
+            mean     = self.m3s    ,
+            sigma    = self.s3s    ,
+            c0       = self.Y1S.c0 ,
+            c1       = self.Y1S.c1 ,
+            c2       = self.Y1S.c2 , 
+            n        = self.Y1S.n  ) 
         
         # ===============================================================================
         ## create the final PDF 
@@ -1146,6 +1131,7 @@ class Manca_pdf (MANCA) :
             'c0'          : self.c0       ,
             'c1'          : self.c1       , 
             'c2'          : self.c2       ,
+            'n'           : self.n        ,
             ##
             'dm21'        : self.dm21     , 
             'dm32'        : self.dm32     ,
@@ -1159,27 +1145,35 @@ class Manca_pdf (MANCA) :
     @property
     def c0 ( self ) :
         """'c0' parameter for Needham's function"""
-        return self.__c0
+        return self.Y1S.c0
     @c0.setter 
     def c0 (  self , value ) :
-        self.set_value ( self.__c0 , value )
+        self.Y1S.c0 = value 
   
     @property
     def c1 ( self ) :
         """'c1' parameter for Needham's function"""
-        return self.__c1
+        return self.Y1S.c1
     @c1.setter 
     def c1 (  self , value ) :
-        self.set_value ( self.__c1 , value )
+        self.Y1S.c1 = value 
           
     @property
     def c2 ( self ) :
         """'c2' parameter for Needham's function"""
-        return self.__c2
+        return self.Y1S.c2
     @c2.setter 
     def c2 (  self , value ) :
-        self.set_value ( self.__c2 , value )
-      
+        self.Y1S.c2 = value 
+
+    @property
+    def n ( self ) :
+        """n-parameter for Crystal Ball tail , same as nL"""
+        return self.Y1S.n
+    @n.setter
+    def n ( self, value ) :
+        self.Y1S.n = value 
+
     @property
     def Y1S ( self ) :
         """'Y1S' : Y(1S) shape"""
@@ -1305,22 +1299,6 @@ class Manca2_pdf (MANCA) :
         # =====================================================================
         ## Double Crystal Ball shape parameters 
         # =====================================================================
-        self.__aL    = self.make_var ( alphaL                  ,
-                                       "aL_%s"          % name ,
-                                       "#alpha_{L}(%s)" % name ,
-                                       None   , 1.5462     , 0.1   , 10 )
-        self.__nL    = self.make_var ( nL                      ,                     
-                                       "nL_%s"          % name ,
-                                       "n_{L}(%s)"      % name ,
-                                       None   , 1.3119     , 1.e-5 , 25 )
-        self.__aR    = self.make_var ( alphaR                  ,
-                                       "aR_%s"          % name ,
-                                       "#alpha_{R}(%s)" % name ,
-                                       None , 1.6952e+00 , 0.1     , 10 )
-        self.__nR    = self.make_var ( nR                      ,
-                                       "nR_%s"          % name ,
-                                       "n_{R}(%s)"      % name ,
-                                       None , 1.5751e+01 , 1.e-5   , 100 )
 
         # =====================================================================
         ## Y(1S) peak 
@@ -1330,36 +1308,36 @@ class Manca2_pdf (MANCA) :
             xvar     = self.xvar  ,
             mean     = self.m1s   ,
             sigma    = self.s1s   ,
-            alphaL   = self.aL    ,
-            alphaR   = self.aR    ,
-            nL       = self.nL    ,
-            nR       = self.nR    )
+            alphaL   = alphaL     ,
+            alphaR   = alphaR     ,
+            nL       = nL         ,
+            nR       = nR         )
 
         # =====================================================================
         ## Y(2S)
         # =====================================================================
         self.__Y2S  = CB2_pdf (
-            name + '2S'           ,
-            xvar     = self.xvar  ,
-            mean     = self.m2s   ,
-            sigma    = self.s2s   ,
-            alphaL   = self.aL    ,
-            alphaR   = self.aR    ,
-            nL       = self.nL    ,
-            nR       = self.nR    )
+            name + '2S'            ,
+            xvar     = self.xvar   ,
+            mean     = self.m2s    ,
+            sigma    = self.s2s    ,
+            alphaL   = self.Y1S.aL ,
+            alphaR   = self.Y1S.aR ,
+            nL       = self.Y1S.nL ,
+            nR       = self.Y1S.nR )
                 
         # =====================================================================
         ## Y(3S)
         # =====================================================================
         self.__Y3S  = CB2_pdf (
-            name + '3S'          ,
-            xvar     = self.xvar ,
-            mean     = self.m3s  ,
-            sigma    = self.s3s  ,
-            alphaL   = self.aL   ,
-            alphaR   = self.aR   ,
-            nL       = self.nL   ,
-            nR       = self.nR   )
+            name + '3S'            ,
+            xvar     = self.xvar   ,
+            mean     = self.m3s    ,
+            sigma    = self.s3s    ,
+            alphaL   = self.Y1S.aL ,
+            alphaR   = self.Y1S.aR ,
+            nL       = self.Y1S.nL ,
+            nR       = self.Y1S.nR )
         
         # ===============================================================================
         ## create the final PDF 
@@ -1407,34 +1385,34 @@ class Manca2_pdf (MANCA) :
     @property
     def aL (  self ) :
         """(left)'alpha'-parameter for Y-peaks"""
-        return self.__aL
+        return self.Y1S.aL
     @aL.setter 
     def aL (  self , value ) :
-        self.set_value ( self.__aL , value )
+        self.Y1S.aL = value 
         
     @property
     def aR (  self ) :
         """(right)'alpha'-parameter for Y-peaks"""
-        return self.__aR
+        return self.Y1S.aR
     @aR.setter 
     def aR (  self , value ) :
-        self.set_value ( self.__aR , value )
+        self.Y1S.aR = value 
         
     @property
     def nL (  self ) :
         """(left)'n'-parameter for Y-peaks"""
-        return self.__nL
+        return self.Y1S.nL
     @nL.setter 
     def nL (  self , value ) :
-        self.set_value ( self.__nL , value )
+        self.Y1S.nL = value 
 
     @property
     def nR (  self ) :
         """(right)'n'-parameter for Y-peaks"""
-        return self.__nR
+        return self.Y1s.nR
     @nR.setter 
     def nR (  self , value ) :
-        self.set_value ( self.__nR , value )
+        self.Y1S.nR = value 
 
     @property
     def Y1S ( self ) :
@@ -1459,7 +1437,7 @@ class MancaX_pdf(PDF2) :
     """ MancaX: 2D-model to study associative production of Upsilon and X 
     """
     def __init__ ( self             ,
-                   manca            , ## manca pdf, that defined 3 upsilon peaks  
+                   manca            , ## manca pdf, that defines 3 upsilon peaks  
                    charm            , ## charm pdf
                    bkg1     = 0     ,
                    bkg2     = 0     ,
@@ -1651,7 +1629,7 @@ class HORNSdini_pdf(PEAK) :
             self.delta                     ,
             self.phi                       )
 
-
+        
         self.__resolution = None
         self.__cnvpars    = {}
         self.__cnvpars.update ( cnvpars )
@@ -1676,8 +1654,7 @@ class HORNSdini_pdf(PEAK) :
         else :
             
             self.pdf = self.horns
-            
-        
+                    
         ## save configuration
         self.config = {
             'xvar'       : self.xvar       ,
@@ -1728,8 +1705,6 @@ class HORNSdini_pdf(PEAK) :
         return self.__cnvpars 
 
 models.append ( HORNSdini_pdf ) 
-
-
 
 # =============================================================================
 ## @class HILLdini_pdf
@@ -1864,8 +1839,6 @@ class HILLdini_pdf(PEAK) :
 models.append ( HORNSdini_pdf ) 
 
 
-
-
 # =============================================================================
 ## @class HHdini_pdf
 #  fL*HORNS + ( 1-fl) * HILL
@@ -1932,7 +1905,6 @@ class HHdini_pdf(PEAK) :
         
         ## finally get the PDF
         self.pdf = self.__sum.pdf
-
         
         ## save configuration
         self.config = {
@@ -1999,13 +1971,11 @@ class HHdini_pdf(PEAK) :
 
 models.append ( HHdini_pdf ) 
 
-
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger , symbols = models )
-
  
 # =============================================================================
 ##                                                                      The END 

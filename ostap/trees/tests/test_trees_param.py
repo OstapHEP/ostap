@@ -45,7 +45,6 @@ else :
 batch_env ( logger ) 
 # =============================================================================
 
-
 data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-trees-param-' ) 
 
 xmin, xmax = -2, 2 
@@ -573,7 +572,6 @@ def test_statistics_1D () :
             v = tree.central_moment ( i , 'v' )
             row = "central moment[%d,'v']" % i , v.toString ( '%+.4f +/- %-.4f' ) 
             rows.append ( row )
-
             
         vv  = 'abs(1+0.01*x)'
         
@@ -611,7 +609,7 @@ if '__main__' == __name__ :
     test_parameterize_2D () 	
     test_parameterize_3D ()
     test_parameterize_4D ()
-    ## test_statistics_1D   () 
+    test_statistics_1D   () 
     
 # =============================================================================
 ##                                                                      The END 
