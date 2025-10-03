@@ -1409,7 +1409,7 @@ class Manca2_pdf (MANCA) :
     @property
     def nR (  self ) :
         """(right)'n'-parameter for Y-peaks"""
-        return self.Y1s.nR
+        return self.Y1S.nR
     @nR.setter 
     def nR (  self , value ) :
         self.Y1S.nR = value 

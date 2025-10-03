@@ -673,15 +673,16 @@ class Needham_pdf(CrystalBall_pdf) :
         ## c1 should be relatively close to sigma 
         if c1 is None : c1 = float ( self.sigma )
         
-        c1_iimits = ()        
+        c1limits = ()        
         if self.sigma.minmax() :
             smin, smax = self.sigma.minmax()
             delta      = ( smax - smin ) / 1000 
             c1limits   = min ( 0.1 * smin , delta ) , 10 * smax
             
-        if isinstance ( c1 , num_types ) and climits :
-            c1       = float ( c1 )
-            c1limits = c1 , min ( c1 , climits [ 0 ] ), max ( c1 , climits [ 1 ] ) 
+        if isinstance ( c1 , num_types ) and 2 == len ( c1limits ) :
+            c1         = float ( c1 )
+            smin, smax = c1limits
+            c1limits   = c1 , min ( c1 , smin ) , max ( c1 , smax ) 
 
         ## c1-parameter 
         self.__c1 = self.make_var ( c1                 ,

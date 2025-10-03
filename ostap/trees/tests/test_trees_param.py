@@ -22,7 +22,7 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.core.core          import hID, SE, Ostap
+from   ostap.core.core          import hID, VE, SE, Ostap
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.timing       import timing
@@ -543,65 +543,7 @@ def test_parameterize_4D () :
         table = T.table ( rows , title = title , prefix = '# ' , alignment =  'llcc' )
         logger.info ( '%s\n%s' % ( title , table ) )        
 # =============================================================================
-
-# =============================================================================
-## 1D statistics 
-# =============================================================================
-def test_statistics_1D () :
-    
-    logger  = getLogger("test_statistics_1D")
-    logger.info ( 'Test 1D statistics' ) 
-    
-    with ROOT.TFile.Open(data_file,'READ') as f :
-        
-        tree = f.S
-
-        rows = [  ('Parameter' , 'Value' ) ]
-
-        for i in range ( 5 ) :            
-            v = tree.get_moment ( i , 0.0 , 'v' )
-            row = "moment[%d,0.0,'v']" % i , '%+.4f' % v 
-            rows.append ( row )
-
-        for i in range ( 5 ) :            
-            v = tree.moment ( i , 'v' )
-            row = "moment[%d,'v']" % i , v.toString ( '%+.4f +/- %-.4f' ) 
-            rows.append ( row )
-
-        for i in range ( 5 ) :            
-            v = tree.central_moment ( i , 'v' )
-            row = "central moment[%d,'v']" % i , v.toString ( '%+.4f +/- %-.4f' ) 
-            rows.append ( row )
-            
-        vv  = 'abs(1+0.01*x)'
-        
-        v   = tree.harmonic_mean ( vv )
-        row = 'harmonic   mean' , '%+.6f' % v.value()
-        rows.append ( row )
-        
-        v   = tree.geometric_mean ( vv )
-        row = 'geometric  mean' , '%+.6f' % v.value() 
-        rows.append ( row )
-        
-        v   = tree.arithmetic_mean ( vv )             
-        row = 'arithmetic mean' , '%+.6f' % v.value() 
-        rows.append ( row )
-
-        for p in range ( -2 , 6 ) :
-            v   = tree.power_mean ( p , vv  )
-            row = 'power [%+d] mean' % p , '%+.6f' % v.value() 
-            rows.append ( row )
-
-        for p in range ( -2 , 6 ) :
-            v   = tree.lehmer_mean ( p , vv  )
-            row = 'Lehmer[%+d] mean' % p , '%+.6f' % v.value() 
-            rows.append ( row )
-            
-                    
-        title = '1D statistics'
-        table = T.table ( rows , title = title , prefix = '# ' , alignment =  'lc' )
-        logger.info ( '%s\n%s' % ( title , table ) )        
-                                   
+              
 # =============================================================================
 if '__main__' == __name__ :
                                    
@@ -609,7 +551,6 @@ if '__main__' == __name__ :
     test_parameterize_2D () 	
     test_parameterize_3D ()
     test_parameterize_4D ()
-    test_statistics_1D   () 
     
 # =============================================================================
 ##                                                                      The END 
