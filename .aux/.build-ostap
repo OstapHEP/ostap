@@ -67,6 +67,12 @@ fi
 (  echo 'BUILD OSTAP [6/7] : THIRD  PASS OF CMAKE+NINJA'   ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; cmake $OSTAP_SOURCE -DCMAKE_INSTALL_PREFIX=$OSTAP_INSTALL -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
 (  echo 'BUILD OSTAP [7/7] : LAST   PASS OF NINJA+PACKAGE' ; cd $OSTAP_BUILD ; echo ' - BUILD OSTAP    : CWD ' $PWD ; ninja ; ninja install | grep -v Up-to-date ; ninja package )
 
+
+if [[ -d $OSTAP_BUILD/_CPack_Packages ]]
+then
+    rm -rf $OSTAP_BUILD/_CPack_Packages
+fi
+
 echo 'BUILD OSTAP       : ROOTSYS         : ' $ROOTSYS
 echo 'BUILD OSTAP       : OSTAPDIR        : ' $OSTAPDIR
 echo 'BUILD OSTAP       : OSTAP_SOURCE    : ' $OSTAP_SOURCE
