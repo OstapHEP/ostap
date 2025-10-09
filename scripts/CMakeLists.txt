@@ -39,7 +39,10 @@ configure_file (
   "${CMAKE_CURRENT_BINARY_DIR}/../examples/.rootlogon.C" @ONLY
   )
     
-file    ( TOUCH "${CMAKE_CURRENT_SOURCE_DIR}/.footprints" ) 
+
+file   ( TOUCH      "${CMAKE_CURRENT_SOURCE_DIR}/.footprints" )  
+file   ( COPY        ${CMAKE_INSTALL_PREFIX}/.rootlogon.C
+         DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary)
         
 install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/.rootlogon.C  
           DESTINATION .

@@ -1776,7 +1776,7 @@ def data_center ( data       ,
                                      use_frame  = use_frame ,
                                      parallel   = parallel  )
     
-    import ostap.stats.pragmastat as PS 
+    import pragmastat as PS 
     return PS.center ( npdata )
 
 # =============================================================================
@@ -1811,9 +1811,8 @@ def data_spread ( data       ,
                                      use_frame  = use_frame ,
                                      parallel   = parallel  )
     
-    import ostap.stats.pragmastat as PS 
+    import pragmastat as PS 
     return PS.spread ( npdata )
-
 
 # =============================================================================
 ## Get "volatility" for data  using Pragmastat toolkit: spread/abs(center)
@@ -1847,7 +1846,7 @@ def data_volatility ( data       ,
                                      use_frame  = use_frame ,
                                      parallel   = parallel  )
     
-    import ostap.stats.pragmastat as PS 
+    import pragmastat as PS 
     return PS.volatility ( npdata )
 
 # =============================================================================
@@ -1882,7 +1881,7 @@ def data_precision ( data       ,
                                      use_frame  = use_frame ,
                                      parallel   = parallel  )
     
-    import ostap.stats.pragmastat as PS 
+    import pragmastat as PS 
     return PS.precision ( npdata )
 
 # =============================================================================

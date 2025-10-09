@@ -279,7 +279,20 @@ find_python_module ( tkrzw QUIET )
 if ( NOT ${PY_tkrzw_FOUND} )
    message ( "----> warning (optional)           tkrzw is NOT found!" ) 
 endif()
-    
+
+# ========================================================================================
+## pragmastat 
+# ========================================================================================
+## 
+find_python_module ( pragmastat QUIET )
+if ( NOT ${PY_pragmastat_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pragmastat ${PIP_ARGS})
+endif()
+find_python_module ( pragmastat  QUIET )
+if ( NOT ${PY_pragmastat_FOUND} )
+  message ( "----> warning (optional)      pragmastat is NOT found!" ) 
+endif()
+
 # ========================================================================================
 ## hep_ml
 # ========================================================================================
@@ -399,6 +412,11 @@ endif()
 if ( ${PY_tkrzw_FOUND} )
   find_python_module_version ( tkrzw ) 
   message ( "----> tkrzw           version    : " ${PY_tkrzw_VERSION} )             
+endif()
+##
+if ( ${PY_pragmastat_FOUND} )
+  find_python_module_version ( pragmastat ) 
+  message ( "----> pragmastat      version    : " ${PY_pragmastat_VERSION} )             
 endif()
 ##
 if ( ${PY_hep_ml_FOUND} )

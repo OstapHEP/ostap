@@ -148,10 +148,9 @@ if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
   set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
 endif ( )
 
+add_subdirectory(scripts)
 add_subdirectory(source)
 add_subdirectory(ostap)
-add_subdirectory(scripts)
-add_subdirectory(examples)
 ## add_subdirectory(docs)
 
 configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
