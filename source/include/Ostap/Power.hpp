@@ -36,31 +36,31 @@ namespace Ostap
         return Power<TYPE, N-1>::pow(__x)*__x;
       }
     };
-    
+    // =======================================================================
     template<typename TYPE>
     struct Power<TYPE, 1> 
     {      
       static inline TYPE pow ( TYPE __x ) { return __x; }
     };
-    
+    // =======================================================================    
     template<typename TYPE>
     struct Power<TYPE, 0> 
     {
-      static inline TYPE pow ( TYPE __x ) { return 1; }
+      static inline TYPE pow ( TYPE /* __x */ ) { return 1; }
     };
-    
+    // =======================================================================    
     template<typename TYPE, int N, bool C>
     struct ReturnPolicy 
     {
       typedef TYPE RETURN_TYPE;
     };
-    
+    // =======================================================================        
     template<typename TYPE, int N>
     struct ReturnPolicy<TYPE,N,false> 
     {
       typedef double RETURN_TYPE;
     };
-    
+    // =======================================================================        
     template<typename TYPE, int N>
     struct InvPower
     {
@@ -69,19 +69,19 @@ namespace Ostap
         return 1./Power<TYPE, -1*N>::pow(__x);
       }  
     };
-    
+    // =======================================================================        
     template <typename TYPE, int N, bool C>
     struct ImplementationSwitch 
     {
       typedef Ostap::Math::Power<TYPE, N>  powImpl;
     };
-    
+    // =======================================================================        
     template <typename TYPE, int N>
     struct ImplementationSwitch<TYPE, N, false> 
     {
       typedef Ostap::Math::InvPower<TYPE, N>  powImpl;
     };
-    
+    // =======================================================================        
     template<typename TYPE, int N>
     static inline typename ReturnPolicy<TYPE, N, (N>=0) >::RETURN_TYPE pow ( TYPE __x ) 
     {

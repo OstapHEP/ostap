@@ -205,7 +205,6 @@ else()
    endif()
     
 endif() 
-
     
 target_link_libraries   ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
 
@@ -225,6 +224,7 @@ add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVe
 target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 
 
+
 install ( TARGETS ostap     EXPORT    ostap-export
                             COMPONENT export 
                             LIBRARY   DESTINATION lib 
@@ -241,10 +241,10 @@ install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap
                     PATTERN "*.icpp"
                     PATTERN  "*#*" EXCLUDE )
     
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap COMPONENT headers   )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           COMPONENT libraries )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           COMPONENT libraries )
-install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/.ostap.build      DESTINATION .             COMPONENT libraries )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h     DESTINATION include/Ostap COMPONENT headers    )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm    DESTINATION lib           COMPONENT libraries  )  
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap  DESTINATION lib           COMPONENT libraries  )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/.ostap.build       DESTINATION .             COMPONENT libraries  )
 
 install(EXPORT ostap-export
   FILE         OstapTargets.cmake
@@ -252,3 +252,14 @@ install(EXPORT ostap-export
   NAMESPACE    ostap::
   DESTINATION  cmake/Ostap
 )
+
+enable_testing()
+
+find_program(ROOT_EXE_EXECUTABLE NAMES root.exe)
+
+file ( COPY ${CMAKE_INSTALL_PREFIX}/.rootlogon.C DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary)
+
+add_test (NAME ostap.aclic_test_cpp1 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp    -q -b -l -x ) 
+add_test (NAME ostap.aclic_test_cpp2 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp+   -q -b -l -x ) 
+add_test (NAME ostap.aclic_test_cpp3 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp++  -q -b -l -x ) 
+

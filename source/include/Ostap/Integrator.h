@@ -1090,7 +1090,7 @@ namespace Ostap
       { return integrate_romberg_ 
           ( std::cref ( f1 ) , 
             xmin , xmax , 
-            ws   , tag  , 
+            ws   , tag  , rescale , 
             aprecision  , 
             rprecision  ).first ; }
       // ======================================================================

@@ -712,7 +712,7 @@ namespace Ostap
         const unsigned short n             ,
         const double         value         ,
         const bool           force = false )
-      { return Ostap::Math::Parameters::setPar ( index ( l , m , n ) , value , false ) ; }
+      { return Ostap::Math::Parameters::setPar ( index ( l , m , n ) , value , force ) ; }
       // ======================================================================
       /// get (l,m,n)-parameter
       inline double  par 

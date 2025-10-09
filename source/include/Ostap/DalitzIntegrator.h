@@ -68,7 +68,7 @@ namespace Ostap
         const double      s2      ,
         const double      smax    , 
         const std::size_t tag = 0 ) const 
-      { return integrate_s ( std::cref ( f3 ) , s2 , s2 , smax , m_dalitz , m_workspace , tag ) ; }
+      { return integrate_s ( std::cref ( f3 ) , s1 , s2 , smax , m_dalitz , m_workspace , tag ) ; }
       // ======================================================================
       /** evaluate integral over \f$s_1\f$ for \f$ f(s,s_1,s_2) \f$ of \f$ f(s_1,s_2) \f$
        *  \f[ F(s,s_2)  = \int  ds_1 f(s,s_1,s_2) \f] or 

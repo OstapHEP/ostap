@@ -635,8 +635,8 @@ namespace Ostap
       struct CanAdd<ROOT::Math::SMatrix<T,D1,D2,R>,TMatrixT<T> >
       {
         static bool operation
-        ( const ROOT::Math::SMatrix<T,D1,D2,R>& m1 , 
-          const TMatrixT<T>&                    m2 )
+        ( const ROOT::Math::SMatrix<T,D1,D2,R>& /* m1 */ , 
+          const TMatrixT<T>&                       m2    )
         {
           return
             m2.IsValid        () &&
@@ -649,8 +649,8 @@ namespace Ostap
       struct CanAdd<TMatrixT<T>,ROOT::Math::SMatrix<T,D1,D2,R> >
       {
         static bool operation
-        ( const TMatrixT<T>&                    m2 ,          
-          const ROOT::Math::SMatrix<T,D1,D2,R>& m1 ) 
+        ( const TMatrixT<T>&                       m2    ,          
+          const ROOT::Math::SMatrix<T,D1,D2,R>& /* m1 */ ) 
         {
           return
             m2.IsValid        () &&
@@ -663,8 +663,8 @@ namespace Ostap
       struct CanAdd<ROOT::Math::SMatrix<T,D1,D2,R>,TMatrixTSym<T> >
       {
         static bool operation
-        ( const ROOT::Math::SMatrix<T,D1,D2,R>& m1 , 
-          const TMatrixTSym<T>&                 m2 )
+        ( const ROOT::Math::SMatrix<T,D1,D2,R>& /* m1 */ , 
+          const TMatrixTSym<T>&                    m2    )
         {
           return
             m2.IsValid        () &&
@@ -677,8 +677,8 @@ namespace Ostap
       struct CanAdd<TMatrixTSym<T>,ROOT::Math::SMatrix<T,D1,D2,R> >
       {
         static bool operation
-        ( const TMatrixTSym<T>&                 m2 ,          
-          const ROOT::Math::SMatrix<T,D1,D2,R>& m1 ) 
+        ( const TMatrixTSym<T>&                    m2    ,          
+          const ROOT::Math::SMatrix<T,D1,D2,R>& /* m1 */ ) 
         {
           return
             m2.IsValid        () &&
@@ -2158,8 +2158,9 @@ namespace Ostap
         typedef TVectorT<T1> M1 ;
         typedef TVectorT<T2> M2 ;
         // equality 
-        static bool operation ( const M1& m1 , 
-                                const M2& m2 ) 
+        static bool operation
+	( const M1& m1 , 
+	  const M2& m2 ) 
         { return m1.IsValid() && m2.IsValid() && m1.GetNrows() == m2.GetNrows() ; }
       } ;
       // =========================================================================
@@ -2170,8 +2171,9 @@ namespace Ostap
         typedef ROOT::Math::SVector<T1,D> M1 ;
         typedef TVectorT<T2>              M2 ;
         // equality 
-        static bool operation ( const M1& m1 , 
-                                const M2& m2 ) 
+        static bool operation
+	( const M1& /* m1 */ , 
+	  const M2&    m2    ) 
         { return m2.IsValid() && D == m2.GetNrows() ; }
       } ;
       
@@ -2183,8 +2185,9 @@ namespace Ostap
         typedef TVectorT<T2>              M1 ;
         typedef ROOT::Math::SVector<T1,D> M2 ;
         // equality 
-        static bool operation ( const M1& m1 , 
-                                const M2& m2 ) 
+        static bool operation
+	( const M1&    m1    , 
+	  const M2& /* m2 */ ) 
         { return m1.IsValid() && D == m1.GetNrows() ; }
       } ;
 

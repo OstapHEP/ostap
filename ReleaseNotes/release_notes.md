@@ -1,3 +1,12 @@
+## New features
+
+  1. Fix ACLiC warning (mainly for unsused arguments)
+  1. Add three primitive ACLiC tests
+  
+## Backward-incompatible
+
+## Bug fixes
+
 # v3.1.0.0 
 
 ## New features

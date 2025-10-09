@@ -460,8 +460,8 @@ namespace Ostap
        * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) \f] 
        */
       double rho_s 
-      ( const double s  , 
-        const double mn ) const override 
+      ( const double    s     , 
+        const double /* mn */ ) const override 
       { return s <= m_sthreshold ? 0.0 : 1 ; }
       /// get the opening threshold \f$ s_{threshold} \$ for the channel 
       double s_threshold () const override { return m_sthreshold ; }
@@ -566,8 +566,8 @@ namespace Ostap
        * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) \f] 
        */
       double rho_s 
-      ( const double s  , 
-        const double mn ) const override 
+      ( const double    s     , 
+        const double /* mn */ ) const override 
       { return s <= m_sthreshold ? 0.0 : 1 ; }
       /// get the opening threshold \f$ s_{threshold} \$ for the channel 
       double s_threshold () const override { return m_sthreshold ; }
@@ -660,8 +660,8 @@ namespace Ostap
        * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) \f] 
        */
       double rho_s 
-      ( const double s  , 
-        const double mn ) const override 
+      ( const double    s     , 
+        const double /* mn */ ) const override 
       { return s <= m_ps2.s_threshold () ? 0.0 : 1 ; }      
       /// get the opening threshold \f$ s_{threshold} \$ for the channel 
       double s_threshold () const override { return m_ps2.s_threshold () ; }
@@ -2309,11 +2309,9 @@ namespace Ostap
     } // end of namespace Ostap:Math::FormFactors
     // ========================================================================
 
-
     // ========================================================================
     // VARIOUS BEASTS 
     // ========================================================================
-
 
     // // ========================================================================
     // /** @class Bugg
@@ -2926,7 +2924,7 @@ namespace Ostap
         ME2                                          me2    ,
         const std::size_t                            tag    , 
         const std::string& description = "ChannelDalitz"    ) 
-      { return ChannelDalitz ( gamma , dalitz , me2 , tag ) ; }
+      { return ChannelDalitz ( gamma , dalitz , me2 , tag , description ) ; }
       // ======================================================================
     };
     // ========================================================================

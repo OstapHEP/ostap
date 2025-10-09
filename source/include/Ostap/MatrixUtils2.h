@@ -272,8 +272,8 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D2,D,R2>                         M2 ;
         // check
         static bool operation
-        ( const M1&  m1 ,
-          const M2&  m2 ) { return true ; }
+        ( const M1&  /* m1 */ ,
+          const M2&  /* m2 */ ) { return true ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -284,7 +284,8 @@ namespace Ostap
         typedef ROOT::Math::SVector<T,D>                               M2 ;
         // check 
         static bool operation 
-          ( const M1& /* m1 */ , const M2& /* m2 */ ) { return true ; }
+          ( const M1& /* m1 */ ,
+	    const M2& /* m2 */ ) { return true ; }
       } ;
       // =====================================================================
       template <class T,unsigned int D> 
@@ -295,7 +296,8 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M2 ;
         // check 
         static bool operation 
-        ( const M1& /* m1 */ , const M2& /* m2 */ ) { return true ; }
+        ( const M1& /* m1 */ ,
+	  const M2& /* m2 */ ) { return true ; }
       } ;
       // ======================================================================
       
@@ -1037,7 +1039,9 @@ namespace Ostap
         typedef double                        M2 ;
         typedef bool                          R  ;
         // 
-        static R operation ( const M1& /* m1 */ , const M2 /* m2 */ ) { return true ; }
+        static R operation
+	( const M1& /* m1 */ ,
+	  const M2  /* m2 */ ) { return true ; }
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1047,7 +1051,9 @@ namespace Ostap
         typedef double                                                  M2 ;
         typedef bool                                                    R  ;
         // 
-        static R operation ( const M1& m1 , const M2 m2 ) { return true ; }
+        static R operation
+	( const M1& /* m1 */ ,
+	  const M2  /* m2 */ ) { return true ; }
       } ;
 
       // ======================================================================

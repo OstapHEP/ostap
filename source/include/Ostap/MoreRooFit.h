@@ -731,7 +731,7 @@ namespace Ostap
        */
       template <class FUNCTION>
       FunTwoVars ( FUNCTION fun                    , 
-                   RooAbsReal&         a           ,
+                   RooAbsReal&         x           ,
                    const double        y           , 
                    const std::string&  name  = ""  , 
                    const std::string&  title = ""  ) 

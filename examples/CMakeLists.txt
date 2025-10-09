@@ -25,6 +25,8 @@ install ( DIRECTORY      ${CMAKE_CURRENT_SOURCE_DIR}
    
 enable_testing() 
 
+file ( COPY ${CMAKE_INSTALL_PREFIX}/.rootlogon.C DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary)
+
 file(GLOB pyfiles "${CMAKE_INSTALL_PREFIX}/examples/*/*.py")
 foreach(filename ${pyfiles})
    get_filename_component(fname ${filename} NAME_WE)
