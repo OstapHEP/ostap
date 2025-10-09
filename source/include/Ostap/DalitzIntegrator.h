@@ -61,7 +61,7 @@ namespace Ostap
        *  @param smax  upper inntegration limit for  \f$s\f$
        */      
       template <class    FUNCTION3, 
-                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool>::type = true>      
+                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>      
       double integrate_s 
       ( FUNCTION3         f3      , 
         const double      s1      ,  
@@ -79,7 +79,7 @@ namespace Ostap
        */
       template <class    FUNCTION23,
                 typename std::enable_if_t<std::is_convertible<FUNCTION23,function2>::value ||
-                                          std::is_convertible<FUNCTION23,function3>::value, bool>::type = true> 
+                                          std::is_convertible<FUNCTION23,function3>::value, bool> = true> 
       double integrate_s1
       ( FUNCTION23        f23     ,
         const double      s       ,
@@ -96,7 +96,7 @@ namespace Ostap
        *  @param s1    value of \f$ s_1\f$
        */      
       template <class    FUNCTION2,
-                typename std::enable_if_t<std::is_convertible<FUNCTION2,function2>::value,bool>::type = true>            
+                typename std::enable_if_t<std::is_convertible<FUNCTION2,function2>::value,bool> = true>            
       double integrate_s2 
       ( FUNCTION2         f2      , 
         const double      s       ,
@@ -119,7 +119,7 @@ namespace Ostap
        *  @param s1    value of \f$ s_1\f$
        */
       template <class    FUNCTION3, 
-                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool>::type = true>            
+                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>            
       double integrate_s2 
       ( FUNCTION3         f3      ,
         const double      s       ,
@@ -144,7 +144,7 @@ namespace Ostap
        */
       template <class    FUNCTION23,
                 typename std::enable_if_t<std::is_convertible<FUNCTION23,function2>::value ||
-                                          std::is_convertible<FUNCTION23,function3>::value,bool>::type = true>
+                                          std::is_convertible<FUNCTION23,function3>::value,bool> = true>
       double integrate_s1s2
       ( FUNCTION23           f23     ,
         const double         s       , 
@@ -162,7 +162,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class    FUNCTION3 ,
-                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool>::type = true>      
+                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>      
       double integrate_ss1
       ( FUNCTION3            f3      ,
         const double         s2      ,
@@ -182,7 +182,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class    FUNCTION3 ,
-                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool>::type = true>
+                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>
       double integrate_ss1
       ( FUNCTION3            f3      ,
         const double         s2      ,
@@ -202,7 +202,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class    FUNCTION3 ,
-                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool>::type  = true >
+                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool>  = true >
       double integrate_ss2
       ( FUNCTION3            f3      ,
         const double         s1      ,
@@ -229,7 +229,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class    FUNCTION3 ,
-                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool>::type = true>
+                typename std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>
       double integrate_ss2
       ( FUNCTION3            f3      ,
         const double         s1      ,
