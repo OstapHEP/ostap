@@ -1345,7 +1345,17 @@ Ostap::Math::BreitWigner::clone() const
  */
 // ===========================================================================
 Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                  m0 ,
+( const double                     m0 ) 
+  : BW ( m0 , Ostap::Math::Channel () )
+{}
+// ============================================================================
+/*  constructor from single channel
+ *  @param m0   the pole position 
+ *  @param c1   the 1st channel 
+ */
+// ===========================================================================
+Ostap::Math::BreitWignerMC::BreitWignerMC 
+( const double                  m0 , 
   const Ostap::Math::ChannelBW& c1 )
   : BW ( m0 , c1 )
 {}

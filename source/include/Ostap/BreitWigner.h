@@ -1740,17 +1740,24 @@ namespace Ostap
       // ======================================================================
       /** constructor from single channel
        *  @param m0   the pole position 
+       */
+      BreitWignerMC
+      ( const double m0 = 0.770  )  ;
+      // ======================================================================
+      /** constructor from single channel
+       *  @param m0   the pole position 
        *  @param c1   the 1st channel 
        */
       BreitWignerMC 
-      ( const double     m0 = 0.770       ,
-        const ChannelBW& c1 = Channel ( ) ) ;
+      ( const double     m0 ,
+        const ChannelBW& c1 ) ;
       // ======================================================================
       /// template constructor with variadic number of channels
       template <typename... CHANNELS>
-      BreitWignerMC ( const double       m0       , 
-                      const ChannelBW&   c1       , 
-                      const CHANNELS&... channels )
+      BreitWignerMC
+      ( const double       m0       , 
+	const ChannelBW&   c1       , 
+	const CHANNELS&... channels )
         : BreitWignerMC ( m0 , c1 ) 
       { this->add ( channels... ) ; }
       // ======================================================================
