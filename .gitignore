@@ -45,6 +45,12 @@ _templates
 # ROOT files
 ############
 *.root
+*.pcm
+*.rootmap
+
+# Ninja
+.ninja_log
+.ninja_deps 
 
 # OSTAP
 .ostaprc
