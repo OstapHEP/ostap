@@ -247,7 +247,12 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         if delsource :
             source.reset()
             del source
-            
+
+        if not cuts and not cut_range :
+            assert len ( data ) == len ( dataset ) , "Mismatch in input/output lengths!"
+        else :
+            assert len ( data ) <= len ( dataset ) , "Mismatch in input/output lengths!"
+                        
         del    funcs
         del    formulas 
         return data
@@ -274,7 +279,6 @@ elif numpy  :  ## ROOT < 6.26
         """ Convert dataset into numpy array using (slow) explicit loops
         """
         
-
         if isinstance ( var_lst , string_types ) : var_lst = [ var_lst ]
         
         # =====================================================================
@@ -400,6 +404,11 @@ elif numpy  :  ## ROOT < 6.26
                 obsvars.assign ( evt )
                 data [ vname ] [ i ] = func.getVal()   
 
+        if not cuts and not cut_range :
+            assert len ( data ) == len ( dataset ) , "Mismatch in input/output lengths!"
+        else :
+            assert len ( data ) <= len ( dataset ) , "Mismatch in input/output lengths!"
+            
         del funcs
         del formulas 
         return data

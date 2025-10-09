@@ -3,7 +3,8 @@
   1. Fix ACLiC warning (mainly for unsused arguments)
   1. Add three primitive ACLiC tests
   1. Remove local copy of `pragmastat` (rely on standard `pragmastat`)
-  1. Modify `cmake` tp istall standard `pragmastat` from `pypi` if missing
+  1. Modify `cmake` to istall standard `pragmastat` from `pypi` if missing
+  1. Add code to select dataset entries that are not shared with another dataset  
   
 ## Backward-incompatible
 

@@ -220,7 +220,7 @@ def _rad_getitem_ ( data , index ) :
     store_errors      = weighted and data.store_errors      ()
     store_asym_errors = weighted and data.store_asym_errors ()
 
-    ## preare the result 
+    ## prepare the result 
     result = data.emptyClone ( dsID () )
     
     ## the actual loop over set of entries 
@@ -899,7 +899,7 @@ def _rds_seek_for_duplicates_ ( dataset           ,
     
     if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
     elif isinstance ( entrytag , string_types   ) : entrytag = [ entrytag ]
-    
+
     assert isinstance ( entrytag , sequence_types ) , 'Invalid "entrytag" %s' % str ( entrytag )
 
     fields = [] 
@@ -1119,6 +1119,169 @@ _new_methods_ += [
    ROOT.RooAbsData . duplicates     ,
    ]
 
+# =============================================================================
+## Iterator over entries in dataset that are *shared* or *NOT* between two datasete
+#
+#  @code
+#  dataset1 = ...
+#  dataset2 = ...
+#  entrytag = 'Run' , 'Event'
+#
+#  ## Loop over dataset1 entries that are *ALSO* in dataset2 
+#  for i in dataset1.shared_entries (  dataset2 , entrytag , shared = True ) :
+#      entry = dataset1 [ i ]
+#
+#  ## Loop over dataset1 entries that are *NOT* in  dataset2 
+#  for i in dataset1.shared_entries (  dataset2 , entrytag , shared = False  ) :
+#      entry = dataset1 [ i ]
+#
+#  @endcode 
+def _rds_shared_entries_ ( dataset1         ,
+                           dataset2         ,
+                           entrytag         ,
+                           shared           ,     
+                           progress = False ) :
+    """ Iterator over entries in dataset that are *shared* or *NOT* between two datasete
+
+    >>> dataset1 = ...
+    >>> dataset2 = ...
+    >>> entrytag = 'Run' , 'Event'
+
+    ## Loop over dataset1 entries thaT are *ALSO* in dataset2 
+    >>> for i in dataset1.shared_entries (  dataset2 , entrytag , shared = True ) :
+    ...     entry = dataset1 [ i ]
+     
+    ## Loop over dataset1 entries thaT are *NOT* in  dataset2 
+    >>> for i in dataset1.shared_entries (  dataset2 , entrytag , shared = False  ) :
+    ...     entry = dataset1 [ i ]
+    """
+    assert isinstance ( dataset1 , ROOT.RooDataSet ) , \
+        "Invalid type of `dataset1`: %s" % typename ( dataset1 ) 
+    assert isinstance ( dataset2 , ROOT.RooDataSet ) , \
+        "Invalid type of `dataset2`: %s" % typename ( another1 )
+    
+    if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
+    elif isinstance ( entrytag , string_types   ) : entrytag = [ entrytag ]
+
+    assert isinstance ( entrytag , sequence_types ) , 'Invalid "entrytag" %s' % str ( entrytag )
+
+    from ostap.fitting.ds2numpy import ds2numpy
+
+    ## get the entry tags from the secod dataset 
+    data2 = ds2numpy ( dataset2, entrytag , silent = True )
+
+    ## copy numpy array into python's set 
+    the_set = set()
+    for entry in progress_bar ( data2 , silent = not progress , description = "Entries:" ) : 
+        item = tuple ( entry )
+        the_set.add  ( item )
+    data2 = the_set
+    
+    ## get the entry tags from the first datasets 
+    data1 = ds2numpy ( dataset1, entrytag , silent = True  )
+    
+    ## 
+    shared = True if shared else False
+    
+    def _xor2_ ( a , b ) : return  ( a and not b ) or ( b and not a )
+    def _xor1_ ( a     ) : return _xor2_ ( a , shared )
+    
+    ## make an explicit loop over input data
+    for i, item  in enumerate ( progress_bar ( data1 , silent = not progress , description = 'Entries:' ) ) :
+        
+        ## the main line here!!!
+        result = tuple ( item ) in data2
+        
+        if _xor1_ ( result ) : yield i 
+
+    del data1
+    del data2
+    
+# =============================================================================
+## make datasets WITH or WITHOUT shared entries
+#  @code
+#  dataset1  = ...
+#  dataset2  = ...
+#  entrytag  = 'Run' , 'Event'
+#
+#  ## get only entries that ar ein both datasets 
+#  result1   = dataset1.shared_data ( dataset2 ,
+#                                     entrytag = entrytag ,
+#                                     shared   = True     )
+# 
+#  ## get only entries that are only in dataset1 
+#  result2   = dataset1.shared_data ( dataset2 ,
+#                                     entrytag = entrytag ,
+#                                     shared   = True     )
+#  @endcode 
+def _rds_shared_data_ ( dataset          ,
+                        another          ,
+                        entrytag         ,
+                        shared           , 
+                        progress = False ) :
+    """ Make datasets WITH or WITHOUT shared entries
+    >>> dataset1  = ...
+    >>> dataset2  = ...
+    >>> entrytag  = 'Run' , 'Event'
+
+    ## get only entries that are in both datasets 
+    >>> result1   = dataset1.shared_data ( dataset2            ,
+    ...                                    entrytag = entrytag ,
+    ...                                    shared   = True     )
+
+    ## get only entries that are only in dataset1 
+    >>>> result2   = dataset1.shared_data ( dataset2            ,
+    ...                                     entrytag = entrytag ,
+    ...                                     shared   = False    )
+    """
+
+    assert isinstance ( dataset , ROOT.RooDataSet ) , \
+        "Invalid type of `dataset`: %s" % typename ( dataset ) 
+    assert isinstance ( another , ROOT.RooDataSet ) , \
+        "Invalid type of `another`: %s" % typename ( another )
+    
+    if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
+    elif isinstance ( entrytag , string_types   ) : entrytag = [ entrytag ]
+
+    assert isinstance ( entrytag , sequence_types ) , 'Invalid "entrytag" %s' % str ( entrytag )
+
+    ## Dataset properties    
+    weighted          = dataset.isWeighted                     ()
+    store_errors      = weighted and dataset.store_errors      ()
+    store_asym_errors = weighted and dataset.store_asym_errors ()
+
+    ## prepare the result 
+    result = dataset.emptyClone ( dsID () )
+    
+    for i in _rds_shared_entries_ ( dataset             ,
+                                    another             ,
+                                    entrytag            ,
+                                    shared   = shared   , 
+                                    progress = progress ) :
+        vars = dataset.get ( i )
+        
+        if   store_asym_errors :  
+            wel , weh = dataset.weight_errors  ()
+            result.add ( vars , dataset.weight () , wel , weh ) 
+        elif store_errors      :
+            we        = dataset.weightError    ()
+            result.add ( vars , dataset.weight () , we  ) 
+        elif weighted         :
+            result.add ( vars , dataset.weight () ) 
+        else : 
+            result.add ( vars ) 
+
+    ## get the final result 
+    return result 
+
+
+ROOT.RooAbsData.shared_data        = _rds_shared_data_ 
+ROOT.RooAbsData.shared_entries     = _rds_shared_entries_
+
+_new_methods_ += [
+   ROOT.RooAbsData . shared_data    , 
+   ROOT.RooAbsData . shared_entries , 
+   ]
 
 # =============================================================================
 ## some decoration over RooDataSet 
