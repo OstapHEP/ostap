@@ -212,11 +212,11 @@ namespace Ostap
       double operator () ( const  double x ) const { return evaluate  ( x ) ; }
       // ======================================================================
       /// get the weight 
-      double weight ( const unsigned short index ) const
+      double weight ( const unsigned int index ) const
       {
         const unsigned int s = size() ;
         return s <= index ? 0 :  
-          ( ( 0 == index || index + 1 == s ) ? 1  : 2 ) * ( 0 == index % 2 ? 1 : -1 ) ;
+          ( ( 0 == index || index + 1 == s ) ? 1 : 2 ) * ( 0 == index % 2 ? 1 : -1 ) ;
       }
       // ======================================================================
     public : 
@@ -298,7 +298,7 @@ namespace Ostap
         /// get parameter d 
         unsigned short   d () const { return m_d ; }
         /// get the weight 
-        inline double weight ( const unsigned short i ) const
+        inline double weight ( const unsigned int i ) const
         { return i < m_weights.size() ? m_weights [ i ] : 0.0 ;}
         /// get all weigths 
         const Interpolation::Abscissas::Data& weights () const 
@@ -331,7 +331,7 @@ namespace Ostap
       unsigned short d () const { return m_weights.d ()  ; }
       // ======================================================================
       //// get the weights 
-      inline double weight ( const unsigned short index ) const
+      inline double weight ( const unsigned int index ) const
       { return m_weights.weight ( index ) ; }
       // ======================================================================
       /// get the weights 
