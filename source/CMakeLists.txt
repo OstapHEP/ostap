@@ -16,8 +16,10 @@ endif()
 message ( "----> ROOT            version    : " ${ROOT_VERSION} )
        
 find_program ( ROOT_CONFIG_EXECUTABLE NAMES root-config )
-find_program ( ROOT_EXECUTABLE        NAMES root.exe    )        
+find_program ( ROOT_EXECUTABLE        NAMES root        )        
+find_program ( ROOT_EXE_EXECUTABLE    NAMES root.exe    )        
 message ( "----> ROOT            executable : " ${ROOT_EXECUTABLE} )
+message ( "----> ROOT.EXE        executable : " ${ROOT_EXE_EXECUTABLE} )
 message ( "----> ROOT config     executable : " ${ROOT_CONFIG_EXECUTABLE} )
     
 # =============================================================================
@@ -254,7 +256,6 @@ install(EXPORT ostap-export
 
 enable_testing()
 
-find_program(ROOT_EXE_EXECUTABLE NAMES root.exe)
 add_test (NAME ostap.aclic_test_cpp1 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp    -q -b -l -x ) 
 add_test (NAME ostap.aclic_test_cpp2 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp+   -q -b -l -x ) 
 add_test (NAME ostap.aclic_test_cpp3 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp++  -q -b -l -x ) 
