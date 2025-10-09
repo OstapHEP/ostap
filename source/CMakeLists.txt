@@ -19,7 +19,6 @@ find_program ( ROOT_CONFIG_EXECUTABLE NAMES root-config )
 find_program ( ROOT_EXECUTABLE        NAMES root.exe    )        
 message ( "----> ROOT            executable : " ${ROOT_EXECUTABLE} )
 message ( "----> ROOT config     executable : " ${ROOT_CONFIG_EXECUTABLE} )
-
     
 # =============================================================================
 ## Locate proper Python/PythonLibs 
@@ -32,7 +31,6 @@ if (PY3VERSION_ROOT VERSION_LESS "3.8" )
   message ( FATAL_ERROR " Python version " ${PY3VERSION}   "<3.8 is no tsupported anymore")
 endif() 
 
-  
 add_library ( root_pyroot INTERFACE IMPORTED)
     
 find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
@@ -223,23 +221,24 @@ add_library           ( ostapDict MODULE ostap.cxx)
 add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 
+install ( TARGETS   ostap
+          EXPORT    ostap-export
+          COMPONENT export 
+          LIBRARY   DESTINATION lib 
+          INCLUDES  DESTINATION include )
 
+install ( TARGETS     ostapDict
+          LIBRARY DESTINATION lib
+          COMPONENT   libraries )
 
-install ( TARGETS ostap     EXPORT    ostap-export
-                            COMPONENT export 
-                            LIBRARY   DESTINATION lib 
-                            INCLUDES  DESTINATION include )
-
-install ( TARGETS ostapDict LIBRARY  DESTINATION lib COMPONENT libraries )
-
-install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     
-                    DESTINATION include 
-                    FILES_MATCHING
-                    COMPONENT headers 
-                    PATTERN "*.h"
-                    PATTERN "*.hpp"
-                    PATTERN "*.icpp"
-                    PATTERN  "*#*" EXCLUDE )
+install ( DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     
+          DESTINATION include 
+          FILES_MATCHING
+          COMPONENT   headers 
+          PATTERN     "*.h"
+          PATTERN     "*.hpp"
+          PATTERN     "*.icpp"
+          PATTERN     "*#*"    EXCLUDE )
     
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h     DESTINATION include/Ostap COMPONENT headers    )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm    DESTINATION lib           COMPONENT libraries  )  
@@ -256,10 +255,6 @@ install(EXPORT ostap-export
 enable_testing()
 
 find_program(ROOT_EXE_EXECUTABLE NAMES root.exe)
-
-file ( COPY ${CMAKE_INSTALL_PREFIX}/.rootlogon.C DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary)
-
 add_test (NAME ostap.aclic_test_cpp1 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp    -q -b -l -x ) 
 add_test (NAME ostap.aclic_test_cpp2 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp+   -q -b -l -x ) 
 add_test (NAME ostap.aclic_test_cpp3 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src//test_ACLiC.cpp++  -q -b -l -x ) 
-

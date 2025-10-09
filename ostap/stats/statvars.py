@@ -1850,7 +1850,7 @@ def data_volatility ( data       ,
     return PS.volatility ( npdata )
 
 # =============================================================================
-## Get "orecision" for data  using Pragmastat toolkit: 2*spread/sqrt(n) 
+## Get "precision" for data  using Pragmastat toolkit: 2*spread/sqrt(n) 
 #  @see https://pragmastat.dev/
 def data_precision ( data       ,
                      expression ,

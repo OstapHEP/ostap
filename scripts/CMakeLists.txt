@@ -39,16 +39,19 @@ configure_file (
   "${CMAKE_CURRENT_BINARY_DIR}/../examples/.rootlogon.C" @ONLY
   )
     
-
-file   ( TOUCH      "${CMAKE_CURRENT_SOURCE_DIR}/.footprints" )  
-file   ( COPY        ${CMAKE_INSTALL_PREFIX}/.rootlogon.C
-         DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary)
+file    ( TOUCH      "${CMAKE_CURRENT_SOURCE_DIR}/.footprints" )  
         
 install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/.rootlogon.C  
           DESTINATION .
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
+## for tests 
+install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/.rootlogon.C  
+          DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary 
+          COMPONENT   scripts 
+          PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+	
 install( FILES ${CMAKE_CURRENT_BINARY_DIR}/thisostap.sh  
          DESTINATION . 
          COMPONENT   scripts 
@@ -58,11 +61,11 @@ install( FILES ${CMAKE_CURRENT_BINARY_DIR}/.ostaprc
          DESTINATION . 
          COMPONENT   scripts 
          PERMISSIONS OWNER_READ GROUP_READ WORLD_READ )
-
+       
 install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/.footprints   
           DESTINATION .  
           COMPONENT   scripts 
           PERMISSIONS OWNER_WRITE OWNER_READ GROUP_WRITE GROUP_READ WORLD_WRITE WORLD_READ )
-
+       
 ##  senseless? 
 set( $ENV{PATH} ${CMAKE_INSTALL_PREFIX}/bin:$ENV{PATH} ) 

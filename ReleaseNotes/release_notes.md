@@ -2,6 +2,8 @@
 
   1. Fix ACLiC warning (mainly for unsused arguments)
   1. Add three primitive ACLiC tests
+  1. Remove local copy of `pragmastat` (rely on standard `pragmastat`)
+  1. Modify `cmake` tp istall standard `pragmastat` from `pypi` if missing
   
 ## Backward-incompatible
 
