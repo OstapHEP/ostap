@@ -48,7 +48,7 @@ install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/.rootlogon.C
 
 ## for tests 
 install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/.rootlogon.C  
-          DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary 
+          DESTINATION ${CMAKE_BINARY_DIR}/Testing/Temporary2 
           COMPONENT   scripts 
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 	
