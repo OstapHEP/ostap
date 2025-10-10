@@ -41,9 +41,13 @@ __all__     = (
     'good_pings'         , ## get alive hosts
     'get_local_port'     , ## get local port number
     'pool_context'       , ## useful context for the pathos's Pools
-    )
+    ## 
+    'fix_ppsrv'          , ## small fix for pp-server
+    'pp_submit'          , ## fixed "submit" method for pp
+    ## 
+)
 # =============================================================================
-import sys, socket
+import sys, socket, warnings 
 # =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
@@ -362,7 +366,7 @@ def get_local_port ( expression ) :
 #  ...   
 #  @endcode
 class PoolContext(object) :
-    """Context manager for Pathos pools
+    """ Context manager for Pathos pools
     >>> with PoolContext ( pool ) :
     >>> ...   
     """
@@ -387,7 +391,6 @@ class PoolContext(object) :
         """``pool'' the actual Pathos pool"""
         return self.__pool 
 
-
 # =============================================================================
 ## Context manager for Pathos pools
 #  @code
@@ -401,6 +404,67 @@ def pool_context  ( pool ) :
     """    
     return  PoolContext ( pool )
 
+# =============================================================================
+## Fixed "submit" method for pp 
+# =============================================================================
+def pp_submit ( ppsrv , func, *args , **kwargs ) :
+    """ Fixed 'submit'-method for pp 
+    """
+    from  ostap.utils.basic import  ismethod, isfunction, typename
+    ##
+    if   ismethod   ( func ) : the_func = func 
+    elif isfunction ( func ) : the_func = func 
+    elif icallable  ( func ) : the_func = func.__call__
+    else :
+        raise TypeError ( 'Invalid type %s' % typename ( func ) )
+    ## 
+    with warnings.catch_warnings( category = ResourceWarning ):
+        warnings.simplefilter ( "ignore" )
+        return ppsrv.submit ( the_func , *args , **kwargs )
+
+# =============================================================================
+## some "fix" for "submit" method for pp  
+def fix_ppsrv ( ppsrv ) :
+    """ Some "fix" for "submit" method for pp  
+    """ 
+    if not isinstance ( ppsrv , type ) : ppsrv = type ( ppsrv )
+    
+    if not hasattr ( ppsrv , '_old_submit_' ) :
+        ppsrv._old_submit_ = ppsrv.submit
+        
+        from  ostap.utils.basic import  ismethod, isfunction, typename
+        
+        # ======================================================================
+        def _pp_new_submit_ ( self , func , *args , **kwargs ) :
+            """ Fixed "submit" method
+            """            
+            if   ismethod   ( func ) : the_func = func 
+            elif isfunction ( func ) : the_func = func 
+            elif callable   ( func ) : the_func = func.__call__ 
+            else :
+                raise TypeError ( 'Invalid type %s' % typename ( func ) )
+            ##
+            with warnings.catch_warnings( category = ResourceWarning ):
+                warnings.simplefilter ( "ignore" )
+                return self._old_submit_ ( the_func , *args , **kwargs )
+        
+        ppsrv._new_submit_ = _pp_new_submit_
+        ppsrv.submit       = _pp_new_submit_
+
+# ===============================================================================
+## "Unordered map iterator" over the list of (jobid,job) pairs
+def uimap  ( jobs ) :
+    """ Unorderd-map-iterator over the list of  (jobid, job) pairs
+    """
+    lst = list ( jobs ) 
+    while lst :
+        for i, job_pair in enumerate ( lst  ) :
+            jobid , job = job_pair
+            if job.finished :
+                lst.pop ( i ) 
+                yield  jobid, job 
+                break
+            
 # =============================================================================
 if '__main__' == __name__ :
     

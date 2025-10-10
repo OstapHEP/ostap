@@ -47,6 +47,8 @@ _templates
 *.root
 *.pcm
 *.rootmap
+*_ACLiC_linkdef.h
+*_ACLiC_map.in
 
 # Ninja
 .ninja_log

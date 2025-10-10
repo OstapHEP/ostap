@@ -179,7 +179,6 @@ class WorkManager (TaskManager) :
                                   timeout     = timeout     ,
                                   silent      = self.silent ) for remote in remotes ]
             
-
             ppbad  = [ p for p in ppsrvs if not p.pid ]
             ppgood = [ p for p in ppsrvs if     p.pid ]
             
@@ -205,7 +204,7 @@ class WorkManager (TaskManager) :
             self.__locals = tuple ( local_ports ) 
 
             from pathos.pools import ParallelPool 
-            self.__pool      = ParallelPool ( ncpus = self.ncpus , servers = self.locals  )
+            self.__pool   = ParallelPool ( ncpus = self.ncpus , servers = self.locals  )
 
             ## end of the trick
             PP.pp.Server.default_secret = _ds
@@ -351,7 +350,6 @@ class WorkManager (TaskManager) :
                 s.time  = stat.time
                 smpp   += s
         return smpp
-
 
 # =============================================================================
 DILL_COMMAND = """import sys, dill

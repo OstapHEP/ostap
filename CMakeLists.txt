@@ -4,6 +4,9 @@ message ( "----> CMAKE  version    : " ${CMAKE_VERSION} )
 string(TIMESTAMP OSTAP_BUILD_TIMESTAMP   "%b %d, %Y, %H:%M [UTC]" UTC)
 string(TIMESTAMP OSTAP_BUILD_UTCUNIX     "%s"                     UTC)
 
+set(CMAKE_COLOR_DIAGNOSTIC ON)
+set(CMAKE_COLOR_MAKEFILE   ON)
+
 if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.15" )
    ## https://cmake.org/cmake/help/latest/policy/CMP0094.html
    cmake_policy ( SET CMP0094 NEW ) 

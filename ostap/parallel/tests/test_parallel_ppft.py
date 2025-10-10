@@ -10,7 +10,9 @@
 # =============================================================================
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env  
-from   ostap.utils.progress_bar import progress_bar 
+from   ostap.utils.progress_bar import progress_bar
+from   ostap.parallel.utils     import uimap, fix_ppsrv 
+
 import ostap.histos.histos
 import ROOT, time, sys 
 # =============================================================================
@@ -36,6 +38,7 @@ except ImportError : # ========================================================
 try : # =======================================================================
     # =========================================================================
     import ppft
+    fix_ppsrv ( ppft.Server )
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
@@ -45,7 +48,7 @@ except ImportError : # ========================================================
 # =============================================================================
 ## simple  function that creates and  fills a histogram 
 def make_histo  ( i , n ) :
-    """Simple    function that creates and fills a histogram
+    """ Simple    function that creates and fills a histogram
     """
     import ROOT
     import random
@@ -57,7 +60,7 @@ def make_histo  ( i , n ) :
 ## @class MakeHisto
 #  helper class to create and fill histograms
 class MakeHisto(object) :
-    """Helper class to create and fill histoghrams
+    """ Helper class to create and fill histoghrams
     """
     def process  ( self ,   *params ) :
         return make_histo ( *params )
@@ -66,28 +69,14 @@ class MakeHisto(object) :
     
 mh  = MakeHisto  ()
 
-## start 50 jobs, and for each job create the histogram with 100 entries 
-inputs = 50 * [ 100 ]
+## start NN jobs, and for each job create the histogram with 100 entries
+NN     = 10  
+inputs = NN * [ 100 ]
 
-
-# ===============================================================================
-## Unordered map iterator over the list of (jobid,job) pairs
-def uimap  ( jobs ) :
-    """Unorderd map iterator over list of  (jobid, job) pairs
-    """
-    lst = list ( jobs ) 
-    while lst :
-        for i, job_pair in enumerate ( lst  ) :
-            jobid , job = job_pair
-            if job.finished :
-                lst.pop ( i ) 
-                yield  jobid, job 
-                break
-            
 # =============================================================================
 ## test parallel python with with plain function 
 def test_ppft_function () :
-    """Test parallel python with plain function
+    """ Test parallel python with plain function
     """
     logger =    getLogger ("test_ppft_function")
     logger.info ('Test job submission with %s' %  ppft ) 
@@ -155,10 +144,10 @@ def test_ppft_method() :
 
 # =============================================================================
 ## test parallel python with callable 
-def test_ppft_callable () :
+def test_ppft_callable1 () :
     """Test parallel python with callable  
     """
-    logger = getLogger ("test_ppft_callable")
+    logger = getLogger ("test_ppft_callable1")
     logger.info ('Test job submission with %s' %  ppft ) 
     
     if not ppft :
@@ -180,7 +169,39 @@ def test_ppft_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with use_canvas ( 'test_ppft_callable' , wait = 1 ) : 
+    with use_canvas ( 'test_ppft_callable1' , wait = 1 ) : 
+        result.draw (   ) 
+
+    return result 
+
+# =============================================================================
+## test parallel python with callable 
+def test_ppft_callable2 () :
+    """ Test parallel python with callable  
+    """
+    logger = getLogger ("test_ppft_callable2")
+    logger.info ('Test job submission with %s' %  ppft ) 
+    
+    if not ppft :
+        logger.error ( "ppft is not available" )
+        return 
+        
+    job_server = ppft.Server()
+    
+    jobs = [ ( i , job_server.submit ( mh , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
+
+    result = None 
+    for input, job in progress_bar ( jobs ) :
+        histo = job()
+        if not result : result = histo
+        else          :
+            result.Add ( histo ) 
+            del histo 
+
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    with use_canvas ( 'test_ppft_callable2' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -188,9 +209,14 @@ def test_ppft_callable () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_ppft_function () 
-    test_ppft_method   () 
-    test_ppft_callable () 
+    import warnings 
+    with warnings.catch_warnings( category = ResourceWarning ):
+        warnings.simplefilter ( "ignore" )
+        
+        test_ppft_function  () 
+        test_ppft_method    () 
+        test_ppft_callable1 () 
+        test_ppft_callable2 () 
     
 # =============================================================================
 ##                                                                      The END 

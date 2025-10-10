@@ -44,7 +44,11 @@ __all__     = (
     'num_fds'              , ## get number of opened file descriptors 
     'get_open_fds'         , ## get list of opened file descriptors
     ##
-    'file_info'            , ## very simple infrmation for the file 
+    'file_info'            , ## very simple infrmation for the file
+    ##
+    'isfunction'           , ## is it a function (or lambda) ?
+    'islambda'             , ## is it a lambda?
+    'ismethod'             , ## is it a method?    
     ##
     # =========================================================================
 ) # ===========================================================================
@@ -479,6 +483,30 @@ def file_info ( fname ) :
                  s.st_mtime ,
                  s.st_ctime ) 
     return 'Invalid'
+
+# =============================================================================
+from inspect import ismethod
+from types   import FunctionType, LambdaType
+# =============================================================================
+## is it a function (or lambda) ?
+#  @code
+#  obj = ...
+#  print ( 'function?' , isfunction ( obj ) ) 
+#  @endcode 
+def isfunction ( func ) :
+    """ Is it a function (or lambda) ?
+    """
+    return isinstance ( func , ( FunctionType , LambdaType ) )
+# =============================================================================
+## is it a lambda ?
+#  @code
+#  obj = ...
+#  print ( 'lambda?' , islambda ( obj ) ) 
+#  @endcode 
+def isfunction ( func ) :
+    """ Is it a lambda?
+    """
+    return isinstance ( func , LambdaType )
 
 # =============================================================================
 if __name__ == '__main__' :

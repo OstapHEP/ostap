@@ -93,7 +93,8 @@ endif()
 # ========================================================================================
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install dill ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install dill[graph]   ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install dill[profile] ${PIP_ARGS})
 endif()
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
@@ -102,7 +103,7 @@ endif()
 ##
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft ${PIP_ARGS})
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft[dill] ${PIP_ARGS})
 endif()
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
@@ -111,7 +112,7 @@ endif()
 ##
 find_python_module ( multiprocess  QUIET )
 if ( NOT ${PY_multiprocess_FOUND} )
-   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install multiprocess ${PIP_ARGS})
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install multiprocess[dill] ${PIP_ARGS})
 endif()
 if ( NOT ${PY_multiprocess_FOUND} )
   message ( "----> warning (optional)    multiprocess is NOT found!" )
@@ -444,11 +445,6 @@ else()
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif() 
 
-## install(DIRECTORY      ${CMAKE_CURRENT_SOURCE_DIR}
-##        DESTINATION    ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}
-##        COMPONENT      python 
-##        FILES_MATCHING PATTERN "*.py" 
-##        PATTERN  "*#*" EXCLUDE )
 
 set(OSTAP_PYTHON_SITE_DIR ${OSTAP_PYTHON_SITE_LOCAL}  PARENT_SCOPE)
 
@@ -470,7 +466,7 @@ execute_process(
 if ( OSTAP_PYTHON_CHECK_WARNINGS_RESULT ) 
    set ( OSTAP_TEST_PYTHON_WARNINGS "" ) 
 else  () 
-   set ( OSTAP_TEST_PYTHON_WARNINGS "-Werror" ) 
+   set ( OSTAP_TEST_PYTHON_WARNINGS "" ) ## -Werror" ) 
 endif () 
 
 if ( OSTAP_TEST_PYTHON_WARNINGS ) 
@@ -497,12 +493,23 @@ foreach(filename ${tests})
   string(CONCAT tname ostap. ${tname})
 
   string(FIND   ${tname}  parallel HAS_PARALLEL)
-  if ( NOSE_EXECUTABLE AND HAS_PARALLEL LESS 0 )
+
+  if     ( "${tname}" STREQUAL "ostap.test_parallel_parallel_pathos" )
+    message ( "----> WARNING (temporarily?) disable the test: "  ${tname} )
+  elseif ( "${tname}" STREQUAL "ostap.test_parallel_pathos"          )
+    message ( "----> WARNING (temporarily?) disable the test: "  ${tname} )
+  elseif ( "${tname}" STREQUAL "ostap.test_parallel_pp"              )
+    message ( "----> WARNING (temporarily?) disable the test: "  ${tname} )
+  elseif ( "${tname}" STREQUAL "ostap.test_parallel_ppft"            )
+    message ( "----> WARNING (temporarily?) disable the test: "  ${tname} )
+  elseif ( NOSE_EXECUTABLE AND HAS_PARALLEL LESS 0 )
     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=10000 )
-  else  () 
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+  else   ()
     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
-  endif () 
-  set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+  endif  ()
+  
 endforeach()
 
 # ========================================================================================

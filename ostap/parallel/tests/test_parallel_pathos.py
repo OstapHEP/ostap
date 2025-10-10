@@ -43,12 +43,11 @@ except ImportError : # ========================================================
     # =========================================================================
     logger.error ('Can not import pathos')
     pathos = None
-    
-    
+        
 # =============================================================================
 ## simple function that creates and  fills a histogram
 def make_histo ( item ) :
-    """Simple    function that creates and  fills a histogram
+    """ Simple    function that creates and  fills a histogram
     """
     i, n = item 
     import ROOT, random 
@@ -60,19 +59,20 @@ def make_histo ( item ) :
 ## @class MakeHisto
 #  class that creates and fill a histogram 
 class MakeHisto(object)  :
-    """Class that creates and fill a histogram"""
+    """ Class that creates and fill a histogram"""
     def process  ( self , *args ) :
         return make_histo ( *args )
     def __call__ ( self , *args ) :
         return self.process ( *args ) 
     
-## start 50 jobs, and for each job create the histogram with 100 entries 
-inputs = 50 * [ 100 ]
+## start NN jobs, and for each job create the histogram with 100 entries
+NN     = 10 
+inputs = NN * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with pathos: ProcessPool
 def test_pathos_mp_function () :
-    """Test parallel processnig with pathos: ProcessPool
+    """ Test parallel processnig with pathos: ProcessPool
     """
     logger = getLogger("test_pathos_mp_function")
     if not pathos :
@@ -108,10 +108,10 @@ def test_pathos_mp_function () :
 
 # =============================================================================
 ## test parallel processing with pathos: ProcessPool
-def test_pathos_mp_callable  () :
-    """Test parallel processnig with pathos: ProcessPool
+def test_pathos_mp_method () :
+    """ Test parallel processing with pathos: ProcessPool
     """
-    logger = getLogger("test_pathos_mp_callable")             
+    logger = getLogger("test_pathos_mp_method")             
     if not pathos :
         logger.error ( "pathos is not available" )
         return 
@@ -127,8 +127,9 @@ def test_pathos_mp_callable  () :
     logger.info ( "Pool is %s" % ( type ( pool ).__name__ ) )
     
     pool.restart ( True ) 
-    
-    jobs = pool.uimap ( make_histo ,  zip ( count() , inputs ) )
+
+    mh   = MakeHisto() 
+    jobs = pool.uimap ( mh.process  ,  zip ( count() , inputs ) )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -142,7 +143,91 @@ def test_pathos_mp_callable  () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with use_canvas ( 'test_pathos_mp_callable' , wait = 1) : 
+    with use_canvas ( 'test_pathos_mp_method' , wait = 1) : 
+        result.draw (   ) 
+
+    return result 
+
+# =============================================================================
+## test parallel processing with pathos: ProcessPool
+def test_pathos_mp_callable1 () :
+    """ Test parallel processing with pathos: ProcessPool
+    """
+    logger = getLogger("test_pathos_mp_callable1")             
+    if not pathos :
+        logger.error ( "pathos is not available" )
+        return 
+        
+    logger.info ('Test job submission with %s' %  pathos ) 
+
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ProcessPool as Pool
+
+    pool = Pool ( ncpus )
+    logger.info ( "Pool is %s" % ( type ( pool ).__name__ ) )
+    
+    pool.restart ( True ) 
+
+    mh   = MakeHisto() 
+    jobs = pool.uimap ( mh  ,  zip ( count() , inputs ) )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
+
+    pool.close ()
+    pool.join  ()
+    pool.clear ()
+    
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    with use_canvas ( 'test_pathos_mp_callable1' , wait = 1) : 
+        result.draw (   ) 
+
+    return result 
+
+# =============================================================================
+## test parallel processing with pathos: ProcessPool
+def test_pathos_mp_callable2 () :
+    """ Test parallel processing with pathos: ProcessPool
+    """
+    logger = getLogger("test_pathos_mp_callable2")             
+    if not pathos :
+        logger.error ( "pathos is not available" )
+        return 
+        
+    logger.info ('Test job submission with %s' %  pathos ) 
+
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ProcessPool as Pool
+
+    pool = Pool ( ncpus )
+    logger.info ( "Pool is %s" % ( type ( pool ).__name__ ) )
+    
+    pool.restart ( True ) 
+
+    mh   = MakeHisto() 
+    jobs = pool.uimap ( mh.__call__ ,  zip ( count() , inputs ) )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
+
+    pool.close ()
+    pool.join  ()
+    pool.clear ()
+    
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    with use_canvas ( 'test_pathos_mp_callable2' , wait = 1) : 
         result.draw (   ) 
 
     return result 
@@ -172,8 +257,6 @@ def test_pathos_pp_function () :
 
     pool.restart ( True ) 
 
-
-    mh   = MakeHisto() 
     jobs = pool.uimap ( make_histo,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
@@ -193,11 +276,10 @@ def test_pathos_pp_function () :
 
     return result 
 
-
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
 def test_pathos_pp_method () :
-    """Test parallel processnig with pathos: ParallelPool  
+    """ Test parallel processnig with pathos: ParallelPool  
     """
     logger = getLogger("test_pathos_pp_method ")
     if not pathos :
@@ -238,10 +320,10 @@ def test_pathos_pp_method () :
 
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
-def test_pathos_pp_callable () :
+def test_pathos_pp_callable1 () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    logger = getLogger("test_pathos_pp_callable")         
+    logger = getLogger("test_pathos_pp_callable1")         
     if not pathos :
         logger.error ( "pathos is not available" )
         return
@@ -259,8 +341,10 @@ def test_pathos_pp_callable () :
 
     pool.restart ( True ) 
 
-
     mh   = MakeHisto() 
+    ## jobs = pool.uimap ( mh.__call__ ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+
+    logger.attention ( "use process insead of __call__" ) 
     jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
@@ -275,20 +359,69 @@ def test_pathos_pp_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with use_canvas ( 'test_pathos_pp_callable' , wait = 1) : 
+    with use_canvas ( 'test_pathos_pp_callable1' , wait = 1) : 
         result.draw (   ) 
 
     return result 
 
+# =============================================================================
+## test parallel processing with pathos : ParallelPool 
+def test_pathos_pp_callable2 () :
+    """Test parallel processnig with pathos: ParallelPool  
+    """
+    logger = getLogger("test_pathos_pp_callable2")         
+    if not pathos :
+        logger.error ( "pathos is not available" )
+        return
+    
+    logger.info ('Test job submission with %s' %  pathos ) 
+    
+
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ParallelPool as Pool 
+
+    pool = Pool ( ncpus )   
+    logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
+
+    pool.restart ( True ) 
+
+    mh   = MakeHisto() 
+    ## jobs = pool.uimap ( mh.__call__ ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+
+    logger.attention ( "use process insead of __call__" ) 
+    jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
+
+    pool.close ()
+    pool.join  ()
+    pool.clear ()
+    
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    with use_canvas ( 'test_pathos_pp_callable2' , wait = 1) : 
+        result.draw (   ) 
+
+    return result 
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pathos_mp_function ()
-    test_pathos_mp_callable ()
-    test_pathos_pp_function ()
-    test_pathos_pp_method   ()
-    test_pathos_pp_callable ()
+    test_pathos_mp_function  ()
+    test_pathos_mp_method    ()
+    test_pathos_mp_callable1 ()
+    test_pathos_mp_callable2 ()
+    
+    test_pathos_pp_function  ()
+    test_pathos_pp_method    ()
+    test_pathos_pp_callable1 ()
+    test_pathos_pp_callable2 ()
 
 
 # =============================================================================

@@ -10,6 +10,7 @@
 # =============================================================================
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.plotting.canvas    import use_canvas
+from   ostap.parallel.utils     import uimap, fix_ppsrv 
 from   ostap.utils.root_utils   import batch_env 
 import ostap.histos.histos
 import ROOT, random, time, sys, pp  
@@ -24,10 +25,11 @@ else :
 # =============================================================================
 batch_env ( logger ) 
 # =============================================================================
-
+fix_ppsrv ( pp.Server )
+    
 ## simple    function that created and  fill a histogram 
 def make_histo  ( i , n ) :
-    """Simple    function that creates and  fills a histogram
+    """ Simple    function that creates and  fills a histogram
     """
     import ROOT
     import random
@@ -39,7 +41,7 @@ def make_histo  ( i , n ) :
 ## @class MakeHisto
 #  helper class to create a fill histograms
 class MakeHisto(object) :
-    """Helper class to create a fill histoghrams
+    """ Helper class to create a fill histoghrams
     """
     def process  ( self ,   *params ) :
         return make_histo ( *params )
@@ -48,24 +50,10 @@ class MakeHisto(object) :
 
 mh  = MakeHisto  ()
 
-## start 50 jobs, and for each job create the histogram with 100 entries 
-inputs = 50 * [ 100 ]
+## start NN jobs, and for each job create the histogram with 100 entries
+NN     = 10 
+inputs = NN * [ 100 ]
 
-
-# ===============================================================================
-## Unordered map iterator over the list of (jobid,job) pairs
-def uimap  ( jobs ) :
-    """Unorderd map iterator over list of  (jobid, job) pairs
-    """
-    lst = list ( jobs ) 
-    while lst :
-        for i, job_pair in enumerate ( lst  ) :
-            jobid , job = job_pair
-            if job.finished :
-                lst.pop ( i ) 
-                yield  jobid, job 
-                break
-            
 # =============================================================================
 ## test parallel python with with plain function 
 def test_pp_function () :
@@ -74,7 +62,6 @@ def test_pp_function () :
     logger =    getLogger ("test_pp_function")
     logger.info ('Test job submission with %s' %  pp ) 
 
-    
     job_server = pp.Server()
     
     jobs = [ ( i , job_server.submit ( make_histo , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
@@ -100,11 +87,10 @@ def test_pp_function () :
 # =============================================================================
 ## test parallel python with object method  
 def test_pp_method() :
-    """Test parallel python with object method  
+    """ Test parallel python with object method  
     """
     logger =    getLogger ("test_pp_method")
     logger.info ('Test job submission with %s' %  pp ) 
-
  
     job_server = pp.Server()    
     jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
@@ -129,15 +115,14 @@ def test_pp_method() :
 
 # =============================================================================
 ## test parallel python with callable 
-def test_pp_callable () :
-    """Test parallel python with callable  
+def test_pp_callable1 () :
+    """ Test parallel python with callable  
     """
-    logger = getLogger ("test_pp_callable")
+    logger = getLogger ("test_pp_callable1")
     logger.info ('Test job submission with %s' %  pp ) 
     
-        
-    logger.warning ("test is disabled for UNKNOWN REASON")
-    return
+    ## logger.warning ("test is disabled for UNKNOWN REASON")
+    ## return
 
     job_server = pp.Server()
     
@@ -154,7 +139,38 @@ def test_pp_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    with use_canvas ( 'test_pp_callable' , wait = 1 ) : 
+    with use_canvas ( 'test_pp_callable1' , wait = 1 ) : 
+        result.draw (   ) 
+
+    return result 
+
+# =============================================================================
+## test parallel python with callable2 
+def test_pp_callable2 () :
+    """ Test parallel python with callable2  
+    """
+    logger = getLogger ("test_pp_callable2")
+    logger.info ('Test job submission with %s' %  pp ) 
+    
+    ## logger.warning ("test is disabled for UNKNOWN REASON")
+    ## return
+
+    job_server = pp.Server()
+    
+    jobs = [ ( i , job_server.submit ( mh , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
+
+    result = None 
+    for input, job in progress_bar ( uimap ( jobs ) , max_value = len ( jobs ) ) :
+        histo = job()
+        if not result : result = histo
+        else          :
+            result.Add ( histo ) 
+            del histo 
+
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    with use_canvas ( 'test_pp_callable2' , wait = 1 ) : 
         result.draw (   ) 
 
     return result 
@@ -162,9 +178,10 @@ def test_pp_callable () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pp_function () 
-    test_pp_method   () 
-    test_pp_callable () 
+    test_pp_function  () 
+    test_pp_method    () 
+    test_pp_callable1 () 
+    test_pp_callable2 () 
     
 # =============================================================================
 ##                                                                      The END 
