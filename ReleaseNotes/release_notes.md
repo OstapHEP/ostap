@@ -1,3 +1,9 @@
+## New features
+
+## Backward  incompatible 
+
+## Bug fixes
+
 # v3.2.0.0 
 
 ## New features
