@@ -5312,7 +5312,7 @@ bool Ostap::Math::Hyperbolic::setKappa ( const double value )
 /*  set "standard" parameters 
  *  @param mu     mu-parameter, location 
  *  @param beta   beta-parameter, asymmetry 
- *  @param gamma  alpha-parameter, shape 
+ *  @param gamma  gamma-parameter, shape 
  *  @param delta  delta-parameter, scale 
  *
  *  \f$ \alpha = \sqrt{\beta^2+\gamma^2} \f$ 
@@ -5335,13 +5335,13 @@ bool Ostap::Math::Hyperbolic::setStandard
   if ( modified ) { m_AL = std::sqrt ( _AL2_ ( 1  , m_zeta ) ) ; }
   //
   const double _sigma = m_AL / std::abs ( gamma ) ;
-  if ( s_equal ( m_sigma , _sigma ) ) { modified = true ; }
+  if ( !s_equal ( m_sigma , _sigma ) ) { modified = true ; }
   m_sigma = _sigma ;
   //
   if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , 1 ) ) ; }
   //
   const double _kappa = beta / m_sigma ;
-  if ( s_equal ( m_kappa , _kappa ) ) { modified = true ; }
+  if ( !s_equal ( m_kappa , _kappa ) ) { modified = true ; }
   m_kappa = _kappa ;
   //
   return modified ;
@@ -5583,13 +5583,13 @@ bool Ostap::Math::GenHyperbolic::setStandard
   if ( modified ) { m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ; }
   //
   const double _sigma = m_AL / std::abs ( gamma ) ;
-  if ( s_equal ( m_sigma , _sigma ) ) { modified = true ; }
+  if ( !s_equal ( m_sigma , _sigma ) ) { modified = true ; }
   m_sigma = _sigma ;
   //
   if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ; }
   //
   const double _kappa = beta / m_sigma ;
-  if ( s_equal ( m_kappa , _kappa ) ) { modified = true ; }
+  if ( !s_equal ( m_kappa , _kappa ) ) { modified = true ; }
   m_kappa = _kappa ;
   //
   return modified ;
