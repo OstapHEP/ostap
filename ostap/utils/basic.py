@@ -503,7 +503,7 @@ def isfunction ( func ) :
 #  obj = ...
 #  print ( 'lambda?' , islambda ( obj ) ) 
 #  @endcode 
-def isfunction ( func ) :
+def islambda  ( func ) :
     """ Is it a lambda?
     """
     return isinstance ( func , LambdaType )

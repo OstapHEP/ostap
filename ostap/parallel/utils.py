@@ -418,9 +418,9 @@ def pp_submit ( ppsrv , func, *args , **kwargs ) :
     else :
         raise TypeError ( 'Invalid type %s' % typename ( func ) )
     ## 
-    with warnings.catch_warnings( category = ResourceWarning ):
-        warnings.simplefilter ( "ignore" )
-        return ppsrv.submit ( the_func , *args , **kwargs )
+    ## with warnings.catch_warnings( category = ResourceWarning ):
+    ## warnings.simplefilter ( "ignore" )
+    return ppsrv.submit ( the_func , *args , **kwargs )
 
 # =============================================================================
 ## some "fix" for "submit" method for pp  
@@ -444,9 +444,9 @@ def fix_ppsrv ( ppsrv ) :
             else :
                 raise TypeError ( 'Invalid type %s' % typename ( func ) )
             ##
-            with warnings.catch_warnings( category = ResourceWarning ):
-                warnings.simplefilter ( "ignore" )
-                return self._old_submit_ ( the_func , *args , **kwargs )
+            ## with warnings.catch_warnings( category = ResourceWarning ):
+            ## warnings.simplefilter ( "ignore" )
+            return self._old_submit_ ( the_func , *args , **kwargs )
         
         ppsrv._new_submit_ = _pp_new_submit_
         ppsrv.submit       = _pp_new_submit_
