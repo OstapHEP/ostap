@@ -208,15 +208,11 @@ def test_ppft_callable2 () :
 
 # =============================================================================
 if '__main__' == __name__ :
-
-    import warnings 
-    with warnings.catch_warnings( category = ResourceWarning ):
-        warnings.simplefilter ( "ignore" )
-        
-        test_ppft_function  () 
-        test_ppft_method    () 
-        test_ppft_callable1 () 
-        test_ppft_callable2 () 
+    
+    test_ppft_function  () 
+    test_ppft_method    () 
+    test_ppft_callable1 () 
+    test_ppft_callable2 () 
     
 # =============================================================================
 ##                                                                      The END 
