@@ -269,13 +269,25 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       ///  get CDF 
       double cdf      ( const double x    ) const ;
       // ======================================================================
     public:
       // ======================================================================
+      /** get the logarithmic derivative
+        * \f$ \frac{ f6\prime}{f}  \f$
+        */  
+      double  dFoF ( const  double x ) const ; 
+      // ======================================================================
+      // get normalized version of the variable 
+      inline double t ( const double x ) const 
+      { return ( x - m_peak ) / m_sigma ;}
+      // ======================================================================
+    public:
+      // ======================================================================  
       /// get the tag 
       std::size_t tag () const ;
       // ======================================================================
@@ -1247,6 +1259,14 @@ namespace Ostap
         const double sigma = 1 ,
         const double alpha = 2 ,
         const double n     = 1 ) ;
+      // ======================================================================
+      /** connstructor from gaussian and tail parameeter 
+       */
+       CrystalBall 
+       ( const Ostap::Math::Gauss& core      , 
+         const double              alpha = 2 , 
+         const double              n     = 1 ) ;
+      // ======================================================================
       /// destructor
       ~CrystalBall () ;
       // ======================================================================
@@ -1259,26 +1279,26 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      inline double m0    () const { return m_m0    ; }
-      inline double mu    () const { return m_m0    ; }
-      inline double peak  () const { return m_m0    ; }
-      inline double sigma () const { return m_sigma ; }
-      inline double alpha () const { return m_alpha ; }
-      inline double n     () const { return m_n     ; }      
+      inline double m0    () const { return m_core.m0    () ; }
+      inline double mu    () const { return m_core.m0    () ; }
+      inline double peak  () const { return m_core.m0    () ; }
+      inline double sigma () const { return m_core.sigma () ; }
+      inline double alpha () const { return m_alpha          ; }
+      inline double n     () const { return m_n              ; }      
       // ======================================================================
     public:            
       // ======================================================================
       /// mode of the distribution 
-      inline double mode () const { return m_m0      ; }
+      inline double mode () const { return m_core.mode()    ; }
       /// Internal N-parameter
       inline double N    () const { return N ( m_n ) ; } // internal N parameter
       /// the point where Gaussian meets power-law
-      inline double xL   () const { return m_m0 - m_alpha * m_sigma ; }
-    // ======================================================================
+      inline double xL   () const { return m0 () - m_alpha * sigma()  ; }
+      // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      bool        setM0    ( const double value ) ;
-      bool        setSigma ( const double value ) ;
+      inline bool setM0    ( const double value ) { return m_core.setM0    ( value ) ; }
+      inline bool setSigma ( const double value ) { return m_core.setSigma ( value ) ; }
       bool        setAlpha ( const double value ) ;
       bool        setN     ( const double value ) ; // set n,N-parameters
       // ======================================================================
@@ -1296,6 +1316,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss& core  () const { return m_core ; }
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss& gauss () const { return m_core ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the tag 
       std::size_t tag () const ;
       // ======================================================================
@@ -1309,23 +1336,21 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     private:
       // ======================================================================
-      /// the peak position
-      double m_m0       ;  // the peak position
-      /// the peak resolution
-      double m_sigma    ;  // the peak resolution
-      /// parameter alpha
-      double m_alpha    ;  // parameter alpha
-      /// parameter n
-      double m_n        ;  // parameter n
+      /// core Gaussian 
+      Ostap::Math::Gauss m_core  {   } ; // core gaussian 
+      /// tail-parameter alpha
+      double             m_alpha { 2 } ;  // tail parameter alpha
+      /// tail-parameter n
+      double             m_n     { 1 } ;  // tail parameter n
       // ======================================================================
     private :
       // ======================================================================
       /// helper constants
-      double m_A { -1 } ;  // exp ( -0.5 * alpha * alpha ) 
+      double m_A { -1 } ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -3519,7 +3544,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3734,7 +3759,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3936,9 +3961,9 @@ namespace Ostap
     public : // features 
       // ======================================================================
       /// get mean value 
-      double mean        () const ;
+      double        mean        () const ;
       /// get variance 
-      double variance    () const ;
+      double        variance    () const ;
       /// get dispersion 
       inline double dispersion  () const { return variance () ; }
       /// get RMS 
@@ -3961,12 +3986,12 @@ namespace Ostap
        *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
        * where 
        * - \f$ I_{CB} \f$ is integral over Gaussian function 
-       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       * - \f$ I_{G}  \f$ is integral over the function 
        * - Gaussian is centered at mean-value with sigma = RMS 
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
