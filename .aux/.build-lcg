@@ -9,7 +9,7 @@ echo 'BUILD WITH LCG    : LCG version='${LCG} ' PLATFORM='${PLATFORM}
 ## Wake up the cvmfs fuse mount
 #  - on Windows WSL some action is required
 # ================================================================================
-for run in {1..20}; do
+for run in {1..40}; do
 
     for the_dir in /cvmfs/sft.cern.ch/                             \
 		   /cvmfs/sft.cern.ch/lcg                          \
@@ -53,8 +53,8 @@ for run in {1..20}; do
     then
 	break
     else
-	echo 'BUILD WITH LCG    : try to wake up #'$run 
-	sleep 2
+	echo 'BUILD WITH LCG    : try to wake up cvmfs #'$run 
+	sleep 2.5
     fi
     
 done
