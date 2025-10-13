@@ -29,7 +29,7 @@ else                       : logger = getLogger ( __name__                 )
 ## Reduce Ostap::Math::FormFactors::Jackson
 #  @see Ostap::Math::FormFactors::Jackson
 def _omffj_reduce_ ( ff ) :
-    """Reduce `Ostap.Math.FormFactors.Jackson`
+    """ Reduce `Ostap.Math.FormFactors.Jackson`
     - see `Ostap.Math.FormFactors.Jackson`
     """
     return root_factory , ( type ( ff ) , ff.rho() )
@@ -40,7 +40,7 @@ Ostap.Math.FormFactors.Jackson . __reduce__ = _omffj_reduce_
 ## Reduce Ostap::Math::FormFactors::BlattWeisskopf
 #  @see Ostap::Math::FormFactors::BlattWeiskopf
 def _omffbw_reduce_ ( ff ) :
-    """Reduce `Ostap.Math.FormFactors.BlattWeiskopf`
+    """ Reduce `Ostap.Math.FormFactors.BlattWeiskopf`
     - see `Ostap.Math.FormFactors.BlattWeiskopf`
     """
     return root_factory , ( type ( ff ) , ff.L() , ff.breakup () )
@@ -57,7 +57,6 @@ def _omffnf_reduce_ ( ff ) :
     return root_factory , ( type ( ff ) , )
 
 Ostap.Math.FormFactors.NoFormFactor. __reduce__ = _omffnf_reduce_
-
 
 # =============================================================================
 ## Reduce Ostap::Math::ChannelCW
@@ -174,7 +173,6 @@ def _omks0_reduce_ ( bw ) :
     - see `Ostap.Math.Kstar0`
     """
     return root_factory , ( type ( bw ) , bw.m0() , bw.gamma ( 0 ) ,  bw.m1() , bw.m2() ) 
-
 
 Ostap.Math.Rho0   . __reduce__ = _omr0_reduce_
 Ostap.Math.Phi0   . __reduce__ = _omr0_reduce_
@@ -311,7 +309,7 @@ Ostap.Math.BifurcatedGauss. __reduce__ = _ombfg_reduce_
 ## Reduce Ostap::Math::DoubleGauss 
 #  @see Ostap::Math::DoubleGauss
 def _om2g_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.DoubleGauss`
+    """ Reduce `Ostap.Math.DoubleGauss`
     - see `Ostap.Math.GoubleGauss`
     """
     return root_factory , ( type ( peak ) ,
@@ -321,10 +319,27 @@ def _om2g_reduce_ ( peak ) :
 Ostap.Math.DoubleGauss. __reduce__ = _om2g_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::Tail  Ostap::Math::LeftTail and Ostap::Math::RightTail 
+#  @see Ostap::Math::Tail
+#  @see Ostap::Math::LeftTail
+#  @see Ostap::Math::RightTail
+def _omtails_reduce_ ( shape ) :
+    """ Reduce `Ostap::Math::Tail`  `Ostap::Math::LeftTail` and `Ostap::Math::RightTail` 
+    - see `Ostap.Math.Tail`
+    - see `Ostap.Math.LeftTail`
+    - see `Ostap.Math.RightTail`
+    """
+    return root_factory , ( type ( shape ) , shape.alpha () , shape.n() )
+
+Ostap.Math.Tail     .__reduce__ = _omtails_reduce_
+Ostap.Math.LeftTail .__reduce__ = _omtails_reduce_
+Ostap.Math.RightTail.__reduce__ = _omtails_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::Gauss 
 #  @see Ostap::Math::Gauss
 def _omg_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.Gauss`
+    """ Reduce `Ostap.Math.Gauss`
     - see `Ostap.Math.Gauss`
     """
     return root_factory , ( type ( peak ) , peak.m0 () , peak.sigma() )

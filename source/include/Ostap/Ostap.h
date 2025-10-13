@@ -151,6 +151,7 @@
 #include "Ostap/Stats.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/SymmetricMatrixTypes.h"
+#include "Ostap/Tails.h"
 #include "Ostap/Tee.h"
 #include "Ostap/Tensors.h"
 #include "Ostap/Tensors.icpp"

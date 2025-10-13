@@ -37,7 +37,7 @@ sigma = 0.5
 xmin = m0 - 6.1 * sigma 
 xmax = m0 + 6.1 * sigma
 
-def the_test ( fun , logger = logger ) :
+def the_tst ( fun , logger = logger ) :
 
     cnt1 = SE()
     cnt2 = SE()
@@ -78,16 +78,8 @@ def test_cb () :
     logger = getLogger ( 'test_cb' )
 
     cb = Ostap.Math.CrystalBall ( m0 , sigma , 1.5 , 0.1  ) 
-    the_test ( cb , logger )
+    the_tst ( cb , logger )
 
-# ===============================================================================
-def test_cb2 () :
-
-    logger = getLogger ( 'test_cb2' )
-
-    cb = Ostap.Math.CrystalBallDoubleSided  ( m0 , sigma , 1.5 , 0.1 , 1.5 , 4.2 ) 
-
-    return the_test ( cb , logger )
 
 # ===============================================================================
 def test_cbrs () :
@@ -96,14 +88,23 @@ def test_cbrs () :
     
     cb = Ostap.Math.CrystalBallRightSide  ( m0 , sigma , 1.5 , 0.5 ) 
     
-    return the_test ( cb , logger )
+    return the_tst ( cb , logger )
+
+# ===============================================================================
+def test_cbds () :
+
+    logger = getLogger ( 'test_cbds' )
+
+    cb = Ostap.Math.CrystalBallDoubleSided  ( m0 , sigma , 1.5 , 0.1 , 1.5 , 4.2 ) 
+
+    return the_tst ( cb , logger )
 
 # =============================================================================
 if '__main__' == __name__ :
     
     test_cb   ()
     test_cbrs ()
-    test_cb2  ()
+    test_cbds ()
 
 # =============================================================================
 ##                                                                      The END 

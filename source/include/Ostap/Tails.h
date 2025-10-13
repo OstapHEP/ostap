@@ -31,8 +31,10 @@ namespace Ostap
       // =====================================================================
       /** \f$ n \rightarrow N \f$ transformation
        *
-       *  It is done to ensure that the actual-power-law exponent 
-       *  does not excees 1 
+       *  \f[ N ( n ) = \sqrt{ 1 + n^2} \f] 
+       *
+       *  It is done to ensure that the actual 
+       *  power-law exponent  at least 1 
        *
        *  @param    n (input) n-paameter (external) 
        *  @return transformed N-parameter (internal)
@@ -57,7 +59,7 @@ namespace Ostap
       inline double alpha2 () const { return m_alpha * m_alpha  ; }
       /// tail n-parameter n     (external) 
       inline double n      () const { return m_n       ; }
-      /// true tail N-parameter (internal ) 
+      /// true tail N-parameter (internal) 
       inline double N      () const { return N ( m_n ) ; } // internal N parameter      
       // ======================================================================
     public:  // setters 
