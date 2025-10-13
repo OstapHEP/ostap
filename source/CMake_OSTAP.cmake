@@ -112,6 +112,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Statistic.cpp
                          src/StatVar.cpp
                          src/StatusCode.cpp
+                         src/Tails.cpp
                          src/Tee.cpp
                          src/Tensors.cpp
                          src/Topics.cpp

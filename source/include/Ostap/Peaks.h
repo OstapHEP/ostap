@@ -12,6 +12,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Workspace.h"
+#include "Ostap/Tails.h"
 // ============================================================================
 /** @file Ostap/Peaks.h
  *  Collection of useful peak-like models
@@ -1194,7 +1195,11 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    // Crystal Ball & Co
+
+    // ========================================================================
+    // Crystal Ball & friends 
+    // ========================================================================
+
     // ========================================================================
     /** @class CrystalBall
      *  ``Crystal Ball-function'' for description of gaussian with the tail
@@ -1227,7 +1232,7 @@ namespace Ostap
      *  - \f$ B \equiv \frac{N}{\left|\alpha|} - \left|\alpha\right| \f$ 
      *  - \f$ N \equiv \sqrt { 1 + n^2} \f$ 
      *
-     *  The function "almost nirmnalized". It allowed to avoid the pathological 
+     *  The function "almost normalized". It allowed to avoid the pathological 
      *  situations with \f$ \alpha \rigtharrow 0\f$ and \f$ M \le 1 f\$
      *
      *  @see https://en.wikipedia.org/wiki/Crystal_Ball_function
@@ -1238,13 +1243,6 @@ namespace Ostap
      */
     class  CrystalBall
     {
-    public:
-      // ======================================================================
-      /** \f$ n \rightarrow N \f$ transformation
-       *  @param    n (input) n-paameter (external) 
-       *  @return transformed N-parameter (internal)
-       */
-      static double N ( const double n ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1260,47 +1258,54 @@ namespace Ostap
         const double alpha = 2 ,
         const double n     = 1 ) ;
       // ======================================================================
-      /** connstructor from gaussian and tail parameeter 
+      /** constructor from gaussian and tail parameeter 
        */
-       CrystalBall 
-       ( const Ostap::Math::Gauss& core      , 
-         const double              alpha = 2 , 
-         const double              n     = 1 ) ;
+      CrystalBall 
+      ( const Ostap::Math::Gauss& core      , 
+	const double              alpha = 2 , 
+	const double              n     = 1 ) ;
       // ======================================================================
-      /// destructor
-      ~CrystalBall () ;
+      /** constructor from gaussian and tail 
+       *  @parameter core Gaussian function 
+       *  @parameter tail tail     function 
+       */
+      CrystalBall 
+      ( const Ostap::Math::Gauss& core ,
+	const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// evaluate CrystalBall's function
-      double pdf        ( const double x ) const ;
+      double        pdf        ( const double x ) const ;
       /// evaluate CrystalBall's function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      inline double m0    () const { return m_core.m0    () ; }
-      inline double mu    () const { return m_core.m0    () ; }
-      inline double peak  () const { return m_core.m0    () ; }
-      inline double sigma () const { return m_core.sigma () ; }
-      inline double alpha () const { return m_alpha          ; }
-      inline double n     () const { return m_n              ; }      
+      inline double m0     () const { return m_core.m0     () ; }
+      inline double mu     () const { return m_core.m0     () ; }
+      inline double peak   () const { return m_core.m0     () ; }
+      inline double sigma  () const { return m_core.sigma  () ; }
+      inline double alpha  () const { return m_tail.alpha  () ; }
+      inline double n      () const { return m_tail.n      () ; }      
+      /// Internal N-parameter
+      inline double N      () const { return m_tail.N      () ; } // internal N parameter
+      /// squared alpha 
+      inline double alpha2 () const { return m_tail.alpha2 () ; }
       // ======================================================================
     public:            
       // ======================================================================
       /// mode of the distribution 
-      inline double mode () const { return m_core.mode()    ; }
-      /// Internal N-parameter
-      inline double N    () const { return N ( m_n ) ; } // internal N parameter
+      inline double mode () const { return m_core.mode () ; }
       /// the point where Gaussian meets power-law
-      inline double xL   () const { return m0 () - m_alpha * sigma()  ; }
+      inline double xL   () const { return m0 () - alpha () * sigma()  ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
       inline bool setM0    ( const double value ) { return m_core.setM0    ( value ) ; }
       inline bool setSigma ( const double value ) { return m_core.setSigma ( value ) ; }
+      inline bool setN     ( const double value ) { return m_tail.setN     ( value ) ; } 
       bool        setAlpha ( const double value ) ;
-      bool        setN     ( const double value ) ; // set n,N-parameters
       // ======================================================================
       inline bool setMu    ( const double value ) { return setM0 ( value ) ; }
       inline bool setPeak  ( const double value ) { return setM0 ( value ) ; }
@@ -1314,12 +1319,16 @@ namespace Ostap
       ( const double low ,
         const double high ) const ;
       // ======================================================================
-    public:
+    public: // components 
       // ======================================================================
       /// get the Gaussian core 
-      const Ostap::Math::Gauss& core  () const { return m_core ; }
+      const Ostap::Math::Gauss&    core       () const { return m_core ; }
       /// get the Gaussian core 
-      const Ostap::Math::Gauss& gauss () const { return m_core ; }
+      const Ostap::Math::Gauss&    gauss      () const { return m_core ; }
+      /// get left tail
+      const Ostap::Math::LeftTail& tail       () const { return m_tail ; }
+      /// get left tail
+      const Ostap::Math::LeftTail& tail_left  () const { return m_tail ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1336,21 +1345,19 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const ;
+	const double xhigh ) const ;
       // ======================================================================
     private:
       // ======================================================================
       /// core Gaussian 
-      Ostap::Math::Gauss m_core  {   } ; // core gaussian 
-      /// tail-parameter alpha
-      double             m_alpha { 2 } ;  // tail parameter alpha
-      /// tail-parameter n
-      double             m_n     { 1 } ;  // tail parameter n
+      Ostap::Math::Gauss    m_core  {} ; // core gaussian
+      /// (left) Tail
+      Ostap::Math::LeftTail m_tail  {} ;
       // ======================================================================
     private :
       // ======================================================================
       /// helper constants
-      double m_A { -1 } ; 
+      double m_A { -1 } ; // exp(-0.5*alpha_R^2)/sqrt(2pi)
       // ======================================================================
     } ;
     // ========================================================================
@@ -1389,21 +1396,21 @@ namespace Ostap
        *  @param c2     c2       parameter
        */
       Needham
-      ( const double m0    = 3096.0 ,  // for J/psi
+      ( const double m0    = 3096.0 ,   // for J/psi
         const double sigma =   13.5 ,
         const double c0    =    2.5 ,
-        const double c1    =   13.5 , // similar to sigma 
+        const double c1    =   13.5 ,   // similar to sigma 
         const double c2    =   10   ,
-        const double n     =    0   ) ; // notethat it is different from internal N!
+        const double n     =    0   ) ; // note that it is different from internal N!
       /// destructor
       ~Needham() ;
       // ======================================================================
     public:
       // ======================================================================
       /// evaluate Needham's function
-      double pdf        ( const double x ) const ;
+      double        pdf        ( const double x ) const ;
       /// evaluate Needham's function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1498,48 +1505,67 @@ namespace Ostap
        *  @param m0     m0       parameter
        *  @param sigma  sigma    parameter
        *  @param alpha  alpha    parameter
-       *  @param n      n        parameter (equal for N-1 for "standard" definition)
+       *  @param n      n        (external) parameter (not the same as *internal* N)
        */
-      CrystalBallRightSide
+      CrystalBallRightSide 
       ( const double m0    = 0 ,
         const double sigma = 1 ,
         const double alpha = 2 ,
         const double n     = 1 ) ;
-      /// destructor
-      ~CrystalBallRightSide () ;
+      // ======================================================================
+      /** constructor from gaussian and tail parameeter 
+       */
+      CrystalBallRightSide
+      ( const Ostap::Math::Gauss& core      , 
+	const double              alpha = 2 , 
+	const double              n     = 1 ) ;
+      // ======================================================================
+      /** constructor from gaussian and tail 
+       *  @parameter core Gaussian function 
+       *  @parameter tail tail     function 
+       */
+      CrystalBallRightSide  
+      ( const Ostap::Math::Gauss& core ,
+	const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// evaluate CrystalBall's function
-      inline double pdf        ( const double x ) const
-      { return  m_cb.pdf ( t ( x ) ) ;   }
+      double        pdf        ( const double x ) const ;
       /// evaluate CrystalBall's function
-      inline double operator() ( const double x ) const
-      { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      inline double m0    () const { return m_cb.m0    () ; }
-      inline double mu    () const { return m_cb.mu    () ; }
-      inline double peak  () const { return m_cb.peak  () ; }
-      inline double mode  () const { return m_cb.mode  () ; }
-      inline double sigma () const { return m_cb.sigma () ; }
-      inline double alpha () const { return m_cb.alpha () ; }
-      inline double n     () const { return m_cb.n     () ; }
-      inline double N     () const { return m_cb.N     () ; }      
+      inline double m0     () const { return m_core.m0     () ; }
+      inline double mu     () const { return m_core.m0     () ; }
+      inline double peak   () const { return m_core.m0     () ; }
+      inline double sigma  () const { return m_core.sigma  () ; }
+      inline double alpha  () const { return m_tail.alpha  () ; }
+      inline double n      () const { return m_tail.n      () ; }      
+      /// Internal N-parameter
+      inline double N      () const { return m_tail.N      () ; } // internal N parameter
+      /// squared alpha 
+      inline double alpha2 () const { return m_tail.alpha2 () ; }
+      // ======================================================================
+    public:            
+      // ======================================================================
+      /// mode of the distribution 
+      inline double mode () const { return m_core.mode () ; }
       /// the point where Gaussian meets power-law
-      inline double xR    () const { return t ( m_cb.xL () ) ; }
+      inline double xR   () const { return m0 () + alpha () * sigma()  ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      inline bool setM0    ( const double value ) { return m_cb.setM0    ( value ) ; }
-      inline bool setMu    ( const double value ) { return m_cb.setMu    ( value ) ; }
-      inline bool setPeak  ( const double value ) { return m_cb.setPeak  ( value ) ; }
-      inline bool setMode  ( const double value ) { return m_cb.setMode  ( value ) ; }
-      inline bool setMass  ( const double value ) { return m_cb.setMass  ( value ) ; }
-      inline bool setSigma ( const double value ) { return m_cb.setSigma ( value ) ; }
-      inline bool setAlpha ( const double value ) { return m_cb.setAlpha ( value ) ; }
-      inline bool setN     ( const double value ) { return m_cb.setN     ( value ) ; }
+      inline bool setM0     ( const double value ) { return m_core.setM0    ( value ) ; }
+      inline bool setSigma  ( const double value ) { return m_core.setSigma ( value ) ; }
+      inline bool setN      ( const double value ) { return m_tail.setN     ( value ) ; } 
+      bool        setAlpha  ( const double value ) ;
+      // ======================================================================
+      inline bool setMu    ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak  ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMode  ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass  ( const double value ) { return setM0 ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1547,6 +1573,22 @@ namespace Ostap
       double integral
       ( const double low ,
         const double high ) const ;
+      // ======================================================================
+    public: // components 
+      // ======================================================================
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss&     core       () const { return m_core ; }
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss&     gauss      () const { return m_core ; }
+      /// get left tail
+      const Ostap::Math::RightTail& tail       () const { return m_tail ; }
+      /// get left tail
+      const Ostap::Math::RightTail& tail_right () const { return m_tail ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
       // ======================================================================
     public: //
       // ======================================================================
@@ -1560,21 +1602,17 @@ namespace Ostap
       ( const double xlow  ,
 	const double xhigh ) const ;
       // ======================================================================
-    public:
-      // ======================================================================
-      /// get the tag 
-      std::size_t tag () const ;
-      // ======================================================================
     private:
       // ======================================================================
-      /// left <--> right transformation
-      inline double t ( const double x ) const
-      { return 2 * m_cb.m0 () - x ; }
+      /// core Gaussian 
+      Ostap::Math::Gauss    m_core  {} ; // core gaussian
+      /// (right) Tail
+      Ostap::Math::RightTail m_tail  {} ;
       // ======================================================================
-    private:
+    private :
       // ======================================================================
-      /// the actual CB-function:
-      Ostap::Math::CrystalBall m_cb ;                 // the actual CB-function
+      /// helper constants
+      double m_A { -1 } ; // exp(-0.5*alpha_R^2)/sqrt(2pi)
       // ======================================================================
     } ;
     // ========================================================================
@@ -1589,58 +1627,103 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor from all parameters
-       *  @param m0      m0          parameter
-       *  @param sigma   sigma       parameter
-       *  @param alpha_L alpha_L     parameter
-       *  @param n_L     n_L         parameter  (N-1 for "standard" definition)
-       *  @param alpha_R alpha_R parameter
-       *  @param n_R     n_R         parameter  (N-1 for "standard" definition)
+       *  @param m0     m0          parameter
+       *  @param sigma  sigma       parameter
+       *  @param alphaL alpha_L     parameter
+       *  @param nL     n_L         parameter  (N-1 for "standard" definition)
+       *  @param alphaR alpha_R parameter
+       *  @param nR     n_R         parameter  (N-1 for "standard" definition)
        */
       CrystalBallDoubleSided
       ( const double m0      = 1 ,
         const double sigma   = 1 ,
-        const double alpha_L = 2 ,
-        const double n_L     = 1 ,
-        const double alpha_R = 2 ,
-        const double n_R     = 1 ) ;
-      /// destructor
-      ~CrystalBallDoubleSided() ;
+        const double alphaL  = 2 ,
+        const double nL      = 1 ,
+        const double alphaR  = 2 ,
+        const double nR      = 1 ) ;
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param core core Gaussian 
+       *  @param alphaL  alpha_L     parameter
+       *  @param nL      n_L         parameter  (N-1 for "standard" definition)
+       *  @param alphaR  alpha_R parameter
+       *  @param nR      n_R         parameter  (N-1 for "standard" definition)
+       */
+      CrystalBallDoubleSided
+      ( const Ostap::Math::Gauss& core , 
+        const double              alpha_L = 2 ,
+        const double              n_L     = 1 ,
+        const double              alpha_R = 2 ,
+        const double              n_R     = 1 ) ;
+      // ========================================================================
+      /** constructor from all components  
+       *  @param core core Gaussian 
+       *  @param left  left  tail
+       *  @param right right tail
+       */
+      CrystalBallDoubleSided
+      ( const Ostap::Math::Gauss&     core  ,
+	const Ostap::Math::LeftTail&  left  ,
+	const Ostap::Math::RightTail& right ) ;
+      // ========================================================================
+      /** constructor from all components  
+       *  @param cb CrystalBall function (left tail) 
+       *  @param right right tail
+       */
+      CrystalBallDoubleSided
+      ( const Ostap::Math::CrystalBall& cb    , 
+	const Ostap::Math::RightTail  & right ) ;
+      // =======================================================================
+      /** constructor from all components  
+       *  @param cb CrystalBallRightSide function (right tail) 
+       *  @param left  left  tail
+       */
+      CrystalBallDoubleSided
+      ( const Ostap::Math::CrystalBallRightSide& cb   , 
+	const Ostap::Math::LeftTail            & left ) ;      
       // ======================================================================
     public:
       // ======================================================================
       /// evaluate CrystalBall's function
-      double pdf        ( const double x ) const ;
+      double        pdf        ( const double x ) const ;
       /// evaluate CrystalBall's function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
-      inline double m0      () const { return m_m0     ; }
-      inline double mu      () const { return m_m0     ; }
-      inline double peak    () const { return m_m0     ; }
-      inline double mode    () const { return m_m0     ; }
-      inline double mass    () const { return m_m0     ; }
-      inline double sigma   () const { return m_sigma  ; }
-      inline double alphaL  () const { return m_alphaL ; }
-      inline double alphaR  () const { return m_alphaR ; }      
-      inline double nL      () const { return m_nL     ; }      
-      inline double nR      () const { return m_nR     ; }      
-      inline double NL      () const { return Ostap::Math::CrystalBall::N ( m_nL ) ; } //
-      inline double NR      () const { return Ostap::Math::CrystalBall::N ( m_nR ) ; } //
+      inline double m0      () const { return m_core.m0      () ; }
+      inline double mu      () const { return m_core.mu      () ; }
+      inline double peak    () const { return m_core.peak    () ; }
+      inline double mode    () const { return m_core.mode    () ; }
+      inline double mass    () const { return m_core.mass    () ; }
+      //
+      inline double sigma   () const { return m_core .sigma  () ; }
+      inline double alphaL  () const { return m_left .alpha  () ; }
+      inline double alphaR  () const { return m_right.alpha  () ; }      
+      inline double nL      () const { return m_left .n      () ; }
+      inline double nR      () const { return m_right.n      () ; }
+      inline double NL      () const { return m_left .N      () ; }
+      inline double NR      () const { return m_right.N      () ; }
+      //
+      inline double alphaL2 () const { return m_left .alpha2 () ; }
+      inline double alphaR2 () const { return m_right.alpha2 () ; }      
+      // =====================================================================
+    public:
       // =====================================================================
       /// the point where Gaussian meets Power-Law 
-      inline double xL      () const { return m_m0 - m_alphaL * m_sigma ; }
+      inline double xL      () const { return m0 () - alphaL() * sigma () ; }
       /// the point where Gaussian meets Power-Law 
-      inline double xR      () const { return m_m0 + m_alphaR * m_sigma ; }
+      inline double xR      () const { return m0 () + alphaR() * sigma () ; }
       // =====================================================================
     public: // trivial accessors
       // ======================================================================
-      bool        setM0     ( const double value ) ;
-      bool        setSigma  ( const double value ) ;
+      inline bool setM0     ( const double value ) { return m_core  .setM0    ( value ) ; }       
+      inline bool setSigma  ( const double value ) { return m_core  .setSigma ( value ) ; } 
+      inline bool setNL     ( const double value ) { return m_left  .setN     ( value ) ; }
+      inline bool setNR     ( const double value ) { return m_right .setN     ( value ) ; }
+      // ======================================================================
       bool        setAlphaL ( const double value ) ;
       bool        setAlphaR ( const double value ) ;
-      bool        setNL     ( const double value ) ; // set n,N-parameters 
-      bool        setNR     ( const double value ) ; // set n,N-parameters 
       // ======================================================================
       inline bool setMu     ( const double value ) { return setM0 ( value ) ; }
       inline bool setPeak   ( const double value ) { return setM0 ( value ) ; }
@@ -1653,6 +1736,17 @@ namespace Ostap
       double integral
       ( const double low  ,
         const double high ) const ;
+      // ======================================================================
+    public: // components 
+      // ======================================================================
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss&     core       () const { return m_core  ; }
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss&     gauss      () const { return m_core  ; }
+      /// get left  tail
+      const Ostap::Math::LeftTail&  tail_left  () const { return m_left  ; }
+      /// get right tail
+      const Ostap::Math::RightTail& tail_right () const { return m_right ; }
       // ======================================================================
     public: //
       // ======================================================================
@@ -1673,25 +1767,19 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// the peak position
-      double m_m0       ;  // the peak position
-      /// the peak resolution
-      double m_sigma    ;  // the peak resolution
-      /// parameter alpha
-      double m_alphaL   ;  // parameter alpha
-      /// parameter N
-      double m_nL       ;  // parameter N
-      /// parameter alpha_R
-      double m_alphaR   ;  // parameter alpha
-      /// parameter N_R
-      double m_nR       ;  // parameter N
-      // ======================================================================
+      /// core Gaussian 
+      Ostap::Math::Gauss     m_core  {} ; // core gaussian
+      /// (left) Tail
+      Ostap::Math::LeftTail  m_left  {} ;
+      /// (right) Tail
+      Ostap::Math::RightTail m_right {} ;
+      // =======================================================================
     private:
       // ======================================================================
       /// helper normalization constant
-      double m_AL  { -1 } ;  // exp(-0.5*alpha_L^2)
+      double m_AL  { -1 } ;  // exp(-0.5*alpha_L^2)/sqrt(2pi)
       /// helper normalization constant
-      double m_AR  { -1 } ;  // exp(-0.5*alpha_R^2)
+      double m_AR  { -1 } ;  // exp(-0.5*alpha_R^2)/sqrt(2pi)
       // ======================================================================
     } ;
     // ========================================================================
@@ -1762,7 +1850,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// the actual parameter N 
-      inline double N     () const { return Ostap::Math::CrystalBall::N ( m_n ) ; }
+      inline double N     () const { return Ostap::Math::Tail::N ( m_n ) ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================

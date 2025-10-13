@@ -1,5 +1,7 @@
 ## New features
 
+  1. few more tweaks for CrystalBall-like functions to make them a bit more generic  
+  
 ## Backward  incompatible 
 
 ## Bug fixes

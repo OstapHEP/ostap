@@ -34,8 +34,8 @@ import ostap.math.integral      as I
 m0    = 1
 sigma = 0.5
 
-xmin = m0 - 6 * sigma 
-xmax = m0 + 6 * sigma
+xmin = m0 - 6.1 * sigma 
+xmax = m0 + 6.1 * sigma
 
 def the_test ( fun , logger = logger ) :
 
@@ -48,17 +48,17 @@ def the_test ( fun , logger = logger ) :
         x2 = random.uniform ( x1   , xmax )
         
         ## skip very long intervals  
-        if x2 - x1 > sigma  : continue
+        if x2 - x1 > 1 * sigma  : continue
             
         i1 = fun.integral   ( x1   , x2   )
         i2 = I.integral     ( fun  , x1 , x2 )
 
         d  = i1 - i2
         r  = i1 / i2
-
+        
         cnt1 += d
-        cnt2 += r
-
+        cnt2 += ( r - 1 ) 
+        
     delta = 1.e-5
 
     mnmx1 = cnt1.max() - cnt1.min()
@@ -68,8 +68,8 @@ def the_test ( fun , logger = logger ) :
     if   delta > mnmx1 : logger.info    ( 'DIFFERENCE %s\n%s'       % ( tn ,         cnt1 ) ) 
     else               : logger.warning ( 'DIFFERENCE %s %.4g \n%s' % ( tn , mnmx1 , cnt1 ) )
     
-    if   delta > mnmx2 : logger.info    ( 'RATIO      %s\n%s'       % ( tn , cnt2         ) ) 
-    else               : logger.warning ( 'RATIO      %s %.4g \n%s' % ( tn , mnmx2 , cnt2 ) )
+    if   delta > mnmx2 : logger.info    ( 'RATIO-1    %s\n%s'       % ( tn , cnt2         ) ) 
+    else               : logger.warning ( 'RATIO-1    %s %.4g \n%s' % ( tn , mnmx2 , cnt2 ) )
 
 
 # ===============================================================================
@@ -80,7 +80,6 @@ def test_cb () :
     cb = Ostap.Math.CrystalBall ( m0 , sigma , 1.5 , 0.1  ) 
     the_test ( cb , logger )
 
-
 # ===============================================================================
 def test_cb2 () :
 
@@ -90,13 +89,21 @@ def test_cb2 () :
 
     return the_test ( cb , logger )
 
-
+# ===============================================================================
+def test_cbrs () :
     
+    logger = getLogger ( 'test_cbrs' )
+    
+    cb = Ostap.Math.CrystalBallRightSide  ( m0 , sigma , 1.5 , 0.5 ) 
+    
+    return the_test ( cb , logger )
+
 # =============================================================================
 if '__main__' == __name__ :
     
-    test_cb  ()
-    test_cb2 ()
+    test_cb   ()
+    test_cbrs ()
+    test_cb2  ()
 
 # =============================================================================
 ##                                                                      The END 

@@ -2103,9 +2103,8 @@ Ostap::MoreRooFit::TailN::clone ( const char* newname ) const
 // the actual evaluation of the result 
 // ============================================================================
 Double_t Ostap::MoreRooFit::TailN::evaluate () const
-{ return Ostap::Math::CrystalBall::N ( m_x ) ; }
+{ return Ostap::Math::Tail::N ( m_x ) ; }
 // ============================================================================
-
 
 // ============================================================================
 /* reset RooabsData and ubnderlying store 
