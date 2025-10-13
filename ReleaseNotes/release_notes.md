@@ -1,3 +1,5 @@
+# v3.2.1.0 
+
 ## New features
 
   1. few more tweaks for CrystalBall-like functions to make them a bit more generic  
@@ -7,7 +9,6 @@
 ## Bug fixes
 
    1. tiny fix in `Ostap::Math::(Gen)Hyperbolic::setStandard`
-
 
 # v3.2.0.0 
 
