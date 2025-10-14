@@ -1,3 +1,12 @@
+## New features
+
+  1. a bit more correct treatment of the `!` and `!=` in `ROOT.TCut.ast` 
+  1. more coherent treatment of the numeric types in `ROOT.TCut`-expressions
+
+## Backward  incompatible 
+
+## Bug fixes
+
 # v3.2.1.0 
 
 ## New features
