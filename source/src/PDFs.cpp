@@ -2129,24 +2129,22 @@ double Ostap::Models::Needham::alpha   () const
 // Apollonios
 // ============================================================================
 Ostap::Models::Apollonios::Apollonios
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          m0        ,
-  RooAbsReal&          sigma     ,    
-  RooAbsReal&          alpha     ,    
-  RooAbsReal&          n         ,    
-  RooAbsReal&          b         ) 
-  : RooAbsPdf ( name , title )
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          m0     ,
+  RooAbsReal&          sigmaL ,    
+  RooAbsReal&          sigmaR ,    
+  RooAbsReal&          beta   ) 
+  : RooAbsPdf ( name , title  )
+    //
+  , m_x       ( "!x"       , "Observable"                 , this , x      ) 
+  , m_m0      ( "!m0"      , "mass"                       , this , m0     ) 
+  , m_sigmaL  ( "!sigmaL"  , "sigma/L"             , this , sigmaL )
+  , m_sigmaR  ( "!sigmaR"  , "sigma/R"             , this , sigmaR )
+  , m_beta    ( "!beta"    , "beta-parameter"           , this , beta      )
 //
-  , m_x       ( "x"       , "Observable"                 , this , x      ) 
-  , m_m0      ( "m0"      , "mass"                       , this , m0     ) 
-  , m_sigma   ( "sigma"   , "sigma"                      , this , sigma  )
-  , m_alpha   ( "alpha"   , "alpha"                      , this , alpha  )
-  , m_n       ( "n"       , "n-parameter"                , this , n      )
-  , m_b       ( "b"       , "b-parameter"                , this , b      )
-//
-  , m_apo ( 1 , 1 , 1 , 1 , 1 ) 
+  , m_apo ( 0 , 1 , 1 , 1 ) 
 {
   //
   setPars () ;
@@ -2159,13 +2157,12 @@ Ostap::Models::Apollonios::Apollonios
 ( const Ostap::Models::Apollonios& right , 
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x       ( "x"       , this , right.m_x      ) 
-  , m_m0      ( "m0"      , this , right.m_m0     ) 
-  , m_sigma   ( "sigma"   , this , right.m_sigma  )
-  , m_alpha   ( "alpha"   , this , right.m_alpha  )
-  , m_n       ( "n"       , this , right.m_n      )
-  , m_b       ( "b"       , this , right.m_b      )
+    //
+  , m_x       ( "!x"       , this , right.m_x      ) 
+  , m_m0      ( "!m0"      , this , right.m_m0     ) 
+  , m_sigmaL  ( "!sigmaL"  , this , right.m_sigmaL )
+  , m_sigmaR  ( "!sigmaR"  , this , right.m_sigmaR )
+  , m_beta    ( "!beta"    , this , right.m_beta   )
 //
   , m_apo     ( right.m_apo ) 
 {
@@ -2186,10 +2183,9 @@ void Ostap::Models::Apollonios::setPars () const
 {
   //
   m_apo.setM0      ( m_m0     ) ;
-  m_apo.setSigma   ( m_sigma  ) ;
-  m_apo.setAlpha   ( m_alpha  ) ;
-  m_apo.setN       ( m_n      ) ;
-  m_apo.setB       ( m_b      ) ;
+  m_apo.setSigmaL  ( m_sigmaL ) ;
+  m_apo.setSigmaR  ( m_sigmaR ) ;
+  m_apo.setBeta    ( m_beta   ) ;
   //
 }
 // ============================================================================
@@ -2245,12 +2241,10 @@ double Ostap::Models::Apollonios::maxVal  ( Int_t      code ) const
 
 
 
-
-
 // ============================================================================
 // Apollonios2
 // ============================================================================
-Ostap::Models::Apollonios2::Apollonios2
+Ostap::Models::Apollonios:::ApolloniosL
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,

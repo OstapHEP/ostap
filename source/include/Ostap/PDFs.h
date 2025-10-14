@@ -51,8 +51,9 @@ namespace Ostap
    *  - right side Crystal Ball
    *  - double-sided Crystal Ball
    *  - Needham: Crystal Ball with \f$\alpha(\sigma)\f$
-   *  - Apolonios
-   *  - Apollonios2 (bifurcated apolonious)
+   *  - Apolonios    (bifurcated apolonious)
+   *  - ApolloniosL 
+   *  - ApolloniosLR 
    *  - Bifurcated Gauissian
    *  - Generalized Gaussian v1
    *  - Generalized Gaussian v2
@@ -1380,7 +1381,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Apollonios, 1) ;
+      ClassDefOverride(Ostap::Models::Apollonios, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1390,10 +1391,9 @@ namespace Ostap
         const char*          title     ,
         RooAbsReal&          x         ,
         RooAbsReal&          mean      ,
-        RooAbsReal&          sigma     ,
-        RooAbsReal&          alpha     ,
-        RooAbsReal&          n         ,
-        RooAbsReal&          b         ) ;
+        RooAbsReal&          sigmaL    ,
+        RooAbsReal&          sigmaR    ,
+        RooAbsReal&          beta      ) ; 
       /// "copy" constructor
       Apollonios  ( const Apollonios& right , const char* name = 0  ) ;
       /// virtual destructor
@@ -1440,100 +1440,6 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x      () const { return m_x      .arg() ; }
       const RooAbsReal& m0     () const { return m_m0     .arg() ; }
-      const RooAbsReal& sigma  () const { return m_sigma  .arg() ; }
-      const RooAbsReal& alpha  () const { return m_alpha  .arg() ; }
-      const RooAbsReal& n      () const { return m_n      .arg() ; }
-      const RooAbsReal& b      () const { return m_b      .arg() ; }
-      // ======================================================================
-    protected:
-      // ======================================================================
-      RooRealProxy m_x      ;
-      RooRealProxy m_m0     ;
-      RooRealProxy m_sigma  ;
-      RooRealProxy m_alpha  ;
-      RooRealProxy m_n      ;
-      RooRealProxy m_b      ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::Apollonios m_apo ;                // the function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Apollonios2
-     *  A modified gaussian with exponential
-     *  tails on low-side
-     *
-     *  @see Ostap::Math::Apollonios2
-     *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
-     *  @date 2013-12-01
-     */
-    // ========================================================================
-    class  Apollonios2 : public RooAbsPdf
-    {
-      // ======================================================================
-    public :
-      // ======================================================================
-      ClassDefOverride(Ostap::Models::Apollonios2, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Apollonios2
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          mean      ,
-        RooAbsReal&          sigmaL    ,
-        RooAbsReal&          sigmaR    ,
-        RooAbsReal&          beta      ) ;
-      /// "copy" constructor
-      Apollonios2  ( const Apollonios2& right , const char* name = 0  ) ;
-      /// virtual destructor
-      virtual ~Apollonios2 () ;
-      /// clone
-      Apollonios2* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Apollonios2 () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
-      // ======================================================================
-    public: // max-values (for generation)
-      // ======================================================================
-      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
-      double maxVal    ( Int_t            code ) const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// access to underlying function
-      const Ostap::Math::Apollonios2& function() const { return m_apo2 ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      const RooAbsReal& x      () const { return m_x      .arg() ; }
-      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
       const RooAbsReal& sigmaL () const { return m_sigmaL .arg() ; }
       const RooAbsReal& sigmaR () const { return m_sigmaR .arg() ; }
       const RooAbsReal& beta   () const { return m_beta   .arg() ; }
@@ -1549,9 +1455,223 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Apollonios2 m_apo2 ;                // the function
+      mutable Ostap::Math::Apollonios m_apo ;                // the function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class ApolloniosL
+     *  A modified gaussian with exponential
+     *  tails on low-side
+     *
+     *  @see Ostap::Math::Apollonios2
+     *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
+     *  @date 2013-12-01
+     */
+    // ========================================================================
+    class  ApolloniosL : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::ApolloniosL, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      ApolloniosL
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mode      ,
+        RooAbsReal&          sigmaL    ,
+        RooAbsReal&          sigmaR    ,
+        RooAbsReal&          beta      ,		
+        RooAbsReal&          alpha     ,
+        RooAbsReal&          n         ) ;
+      /// "copy" constructor
+      ApolloniosL  ( const ApolloniosL& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~ApolloniosL () ;
+      /// clone
+      Apollonios2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      ApolloniosL () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::ApolloniosL& function() const { return m_apoL ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigmaL () const { return m_sigmaL .arg() ; }
+      const RooAbsReal& sigmaR () const { return m_sigmaR .arg() ; }
+      const RooAbsReal& beta   () const { return m_beta   .arg() ; }
+      const RooAbsReal& alpha  () const { return m_alpha  .arg() ; }
+      const RooAbsReal& n      () const { return m_n      .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_m0     ;
+      RooRealProxy m_sigmaL ;
+      RooRealProxy m_sigmaR ;
+      RooRealProxy m_beta   ;
+      RooRealProxy m_alpha  ;
+      RooRealProxy m_n      ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::ApolloniosL m_apoL ;                // the function
+      // ======================================================================
+    } ;
+
+
+    // ========================================================================
+    /** @class ApolloniosLR
+     *  A modified gaussian with exponential
+     *  tails on low-side
+     *
+     *  @see Ostap::Math::Apollonios2
+     *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
+     *  @date 2013-12-01
+     */
+    // ========================================================================
+    class  ApolloniosLR : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::ApolloniosLR, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      ApolloniosLR
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          mode      ,
+        RooAbsReal&          sigmaL    ,
+        RooAbsReal&          sigmaR    ,
+        RooAbsReal&          beta      ,		
+        RooAbsReal&          alphaL    ,
+        RooAbsReal&          nL        , 
+        RooAbsReal&          alphaR    ,
+        RooAbsReal&          nR        ) ;
+      /// "copy" constructor
+      ApolloniosL  ( const ApolloniosL& right , const char* name = 0  ) ;
+      /// virtual destructor
+      virtual ~ApolloniosL () ;
+      /// clone
+      Apollonios2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      ApolloniosLR () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::ApolloniosLR& function() const { return m_apoLR ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigmaL () const { return m_sigmaL .arg() ; }
+      const RooAbsReal& sigmaR () const { return m_sigmaR .arg() ; }
+      const RooAbsReal& beta   () const { return m_beta   .arg() ; }
+      const RooAbsReal& alphaL () const { return m_alphaL .arg() ; }
+      const RooAbsReal& nL     () const { return m_nL     .arg() ; }
+      const RooAbsReal& alphaR () const { return m_alphaR .arg() ; }
+      const RooAbsReal& nR     () const { return m_nR     .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_m0     ;
+      RooRealProxy m_sigmaL ;
+      RooRealProxy m_sigmaR ;
+      RooRealProxy m_beta   ;
+      RooRealProxy m_alphaL ;
+      RooRealProxy m_alphaR ;
+      RooRealProxy m_nL     ;
+      RooRealProxy m_nR     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::ApolloniosLR m_apoLR;                // the function
+      // ======================================================================
+    } ;
+    
+
+
+
+
+
+    
+
+
+    
     // ========================================================================
     /** @class BifurcatedGauss
      *  @see Ostap::Math::BifurkatedGauss

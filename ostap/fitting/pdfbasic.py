@@ -2463,7 +2463,6 @@ class APDF1 ( Components ) :
                           xvar   = xvar        ,
                           logger = self.logger , **kwargs ) 
 
-
     # ================================================================================
     ## Check the ranges for variables in dataset:
     #

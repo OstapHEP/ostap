@@ -2092,7 +2092,8 @@ def dump_models () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    
+
+    """
     ## simple Gaussian PDF                       + background
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
@@ -2113,7 +2114,9 @@ if '__main__' == __name__ :
     ## Needham function (CB with alpha=f(sigma)) + background 
     with timing ('test_needham'        , logger ) :
         test_needham        ()
-
+    
+    """
+    
     ## Apollonios function                       + background 
     with timing ('test_apollonios'     , logger ) :
         test_apollonios     () 
@@ -2121,7 +2124,8 @@ if '__main__' == __name__ :
     ## modified Apollonios function              + background
     with timing ('test_apolloniois2'   , logger ) :
         test_apollonios2    () 
-        
+
+    """ 
     ## bifurcated Gaussian function              + background
     with timing ('test_bifurcated'     , logger ) :
         test_bifurcated     () 
@@ -2289,6 +2293,8 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
+    
+    """
     
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
