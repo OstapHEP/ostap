@@ -503,22 +503,30 @@ def _omapo_reduce_ ( peak ) :
     """ Reduce `Ostap.Math.Apollonios`
     - see `Ostap.Math.Apollonios`
     """
-    return root_factory , ( type ( peak ) , peak.m0() , peak.sigma() ,
-                            peak.alpha () , peak.n () , peak.b    () )
+    return root_factory , ( type ( peak )  , 
+                            peak.m0     () , 
+                            peak.sigmaL () ,
+                            paak.sigmaR () ,
+                            peak.beta   () ) 
                       
 Ostap.Math.Apollonios. __reduce__ = _omapo_reduce_
 
 # =============================================================================
-## Reduce Ostap::Math::Apollonios2
-#  @see Ostap::Math::Apollonios2
-def _omapo2_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.Apollonios2`
-    - see `Ostap.Math.Apollonios2`
+## Reduce Ostap::Math::ApolloniosL
+#  @see Ostap::Math::ApolloniosL
+def _omapoL_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.ApolloniosL`
+    - see `Ostap.Math.Apollonios:`
     """
-    return root_factory , ( type ( peak ) , peak.m0()  ,
-                            peak.sigmaL() , peak.sigmaR() , peak.beta () )
+    return root_factory , ( type ( peak )  ,
+                            peak.m0     () ,
+                            peak.sigmaL () , 
+                            peak.sigmaR () , 
+                            peak.beta   () , 
+                            peak.alpha  () , 
+                            peak.n      () ) 
                       
-Ostap.Math.Apollonios2. __reduce__ = _omapo2_reduce_
+Ostap.Math.ApolloniosL. __reduce__ = _omapoL_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::StudentT
@@ -1535,7 +1543,7 @@ _decorated_classes_  = (
     Ostap.Math.Needham                      , 
     Ostap.Math.CrystalBallDoubleSided       , 
     Ostap.Math.Apollonios                   , 
-    Ostap.Math.Apollonios2                  , 
+    Ostap.Math.ApolloniosL                  , 
     Ostap.Math.StudentT                     , 
     Ostap.Math.BifurcatedStudentT           , 
     Ostap.Math.PearsonIV                    , 

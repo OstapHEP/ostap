@@ -1440,17 +1440,16 @@ def _rapo_reduce_ ( pdf ):
                                   pdf.title     ,
                                   pdf.x      () , 
                                   pdf.m0     () ,
-                                  pdf.sigma  () ,                            
-                                  pdf.alpha  () ,                            
-                                  pdf.n      () ,
-                                  pdf.b      () )
+                                  pdf.sigmaL () ,                            
+                                  pdf.sigmaR () ,
+                                  pdf.beta   () ) 
 
 Ostap.Models.Apollonios.__reduce__ = _rapo_reduce_ 
 
 # =============================================================================
-## reduce Apollonious2
-def _rapo2_reduce_ ( pdf ):
-    """Reduce Apollonios2"""
+## reduce ApolloniousL
+def _rapoL_reduce_ ( pdf ):
+    """Reduce ApolloniosL"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1458,9 +1457,11 @@ def _rapo2_reduce_ ( pdf ):
                                   pdf.m0     () ,
                                   pdf.sigmaL () ,                            
                                   pdf.sigmaR () ,                            
-                                  pdf.beta   () )
+                                  pdf.beta   () , 
+                                  pdf.alpha  () , 
+                                  pdf.n      () )
 
-Ostap.Models.Apollonios2.__reduce__ = _rapo2_reduce_ 
+Ostap.Models.ApolloniosL.__reduce__ = _rapoL_reduce_ 
 
 # =============================================================================
 ## reduce BifurcatedGauss
@@ -2981,7 +2982,7 @@ _decorated_classes_ = (
     Ostap.Models.CrystalBallDS         , 
     Ostap.Models.Needham               ,
     Ostap.Models.Apollonios            , 
-    Ostap.Models.Apollonios2           , 
+    Ostap.Models.ApolloniosL           , 
     Ostap.Models.BifurcatedGauss       , 
     Ostap.Models.GenGaussV1            , 
     Ostap.Models.GenGaussV2            , 

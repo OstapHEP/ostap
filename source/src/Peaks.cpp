@@ -195,11 +195,11 @@ namespace
 double Ostap::Math::BifurcatedGauss::evaluate ( const double x ) const
 {
   const double dx   = x - m_peak ;
-  const double arg  = dx < 0 ? dx / m_sigmaL : dz / m_sigmaR ;
+  const double arg  = dx < 0 ? dx / m_sigmaL : dx / m_sigmaR ;
   //
   const double norm = s_SQRTPIHALF * ( m_sigmaL + m_sigmaR ) ;
   //
-  return std::exp ( -0.5 * dx * dx ) / norm :
+  return std::exp ( -0.5 * arg * arg ) / norm ;
 }
 // ============================================================================
 // get the integral
@@ -285,6 +285,15 @@ bool Ostap::Math::BifurcatedGauss::setSigmaR ( const double value )
   m_sigmaR = value_ ;
   //
   return true ;
+}
+// =============================================================================
+bool Ostap::Math::BifurcatedGauss::setSigma
+( const double valueL , 
+  const double valueR ) 
+{
+  const bool m1 = setSigmaL ( valueL ) ;
+  const bool m2 = setSigmaR ( valueR ) ;
+  return m1 || m2 ;  
 }
 // ============================================================================
 bool Ostap::Math::BifurcatedGauss::setPeak( const double value )
@@ -2538,7 +2547,10 @@ double Ostap::Math::Apollonios::pdf ( const double x ) const
   //
   // the peak
   //
-  return std::exp ( m_beta * ( m_beta - std::hypoth ( m_beta , dx ) ) ) * s_SQRT2PIi / sigma()  ;  
+  const double h2 = std::hypot ( s_SQRT2 , m_beta ) ;
+  const double hx = std::hypot ( dx      , m_beta ) ;
+  // 
+  return std::exp ( h2 * ( m_beta - hx ) ) * s_SQRT2PIi / sigma()  ;  
 }
 // ============================================================================
 // get the integral between low and high
@@ -2552,12 +2564,14 @@ double Ostap::Math::Apollonios::integral
   else if (           low > high   ) { return - integral ( high ,
                                                            low  ) ; } // RETURN
   //
+  // split at the maximum
   if ( low < m_m0 && m_m0 < high ) 
   { return integral ( low , m_m0 ) + integral ( m_m0 , high ) ; }
   //
-  const unsigned N = 5 ;
-  for ( unsigned n = 1 ; n < N ; ++n )
-    {
+  // split into reasonable intervals of 2-sigma width
+  const unsigned int N = 6 ;
+  for ( unsigned int n = 2 ; n <= N ; n += 2 )
+  {
       const double xr = m_m0 + n * m_sigmaR ;
       if ( low < xr && xr < high ) 
       { return integral ( low , xr ) + integral ( xr , high ) ; }
@@ -2565,15 +2579,11 @@ double Ostap::Math::Apollonios::integral
       const double xl = m_m0 - n * m_sigmaL ;
       if ( low < xl && xl < high ) 
       { return integral ( low , xl ) + integral ( xl , high ) ; }      
-    }
+      //
+  }
   //
-  const double xR = m_m0 + N * m_sigmaR * std::max ( 1 , beta() ) ;
-  if ( low < xR && xR < high ) 
-    { return integral ( low , xL ) + integral ( xL , high ) ; }
-  //
-  const double xL = m_m0 - N * m_sigmaR * std::max ( 1 , beta() ) ; ;
-  if ( low < xL && xL < high ) 
-    { return integral ( low , xL ) + integral ( xL , high ) ; }
+  const double xR = m_m0 + N * m_sigmaR ;
+  const double xL = m_m0 - N * m_sigmaL ;
   //
   const double in_tail = ( low >= xR || high <= xL ) ;
   //
@@ -2589,11 +2599,11 @@ double Ostap::Math::Apollonios::integral
   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
-      low , high  ,                  // low & high edges
-      workspace ( m_workspace ) ,    // workspace
+      low , high  ,                                // low & high edges
+      workspace ( m_workspace )                  , // workspace
       in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
       in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
-      m_workspace.size()              ,          // size of workspace
+      m_workspace.size()                         , // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2626,9 +2636,9 @@ Ostap::Math::ApolloniosL::ApolloniosL
   const double sigmaR ,
   const double beta   , 
   const double alpha  ,
-  const double n      }
-  : ApolloniousL ( Ostap::Math::Apollonious ( m0    , sigmaL , sigmaR , beta ) ,
-		   Ostap::Math::LeftTail    ( alpha , n ) )
+  const double n      )
+  : ApolloniosL ( Ostap::Math::Apollonios ( m0    , sigmaL , sigmaR , beta ) ,
+		              Ostap::Math::LeftTail   ( alpha , n ) )
 {}
 // ============================================================================
 /*  constructor from two parameters
@@ -2637,8 +2647,8 @@ Ostap::Math::ApolloniosL::ApolloniosL
  */
 // ============================================================================
 Ostap::Math::ApolloniosL::ApolloniosL
-( const Ostap::Math::Apollonious& core ,
-  const Ostap::Math::Tail&        tail )
+( const Ostap::Math::Apollonios& core ,
+  const Ostap::Math::Tail&       tail )
   : m_core ( core )
   , m_tail ( tail )
 {}
@@ -2716,143 +2726,6 @@ std::size_t Ostap::Math::ApolloniosL::tag () const
 { 
   static const std::string s_name = "ApolloniosL" ;
   return Ostap::Utils::hash_combiner ( s_name , m_core.tag() , m_tail.tag() ) ; 
-}
-// ============================================================================
-
-// ============================================================================
-// ApolloniosLR 
-// ============================================================================
-/*  constructor from all parameters
- *  @param m0 m0 parameter
- *  @param alpha alpha parameter
- *  @param n     n-parameter
- *  @param b     b-parameter 
- */
-// ============================================================================
-Ostap::Math::ApolloniosLR::ApolloniosLR
-( const double m0     ,
-  const double sigmaL ,
-  const double sigmaR ,
-  const double beta   , 
-  const double alphaL ,
-  const double nL     ,
-  const double alphaR ,
-  const double nR     )
-  : ApolloniousLR ( Ostap::Math::Apolonious ( m0 , sigmaL , sigmaR , beta ) ,
-		    Ostap::Math::LeftTail   ( alphaL , nL ) ,
-		    Ostap::Math::RightTail  ( alphaL , nL ) )
-{}
-// ======================================================================
-/*  constructor from three component 
- *  @param core core component 
- *  @param left  left-tail component 
- *  @param right left-tail component 
- */
-// ======================================================================
-Ostap::Math::ApolloniosLR::ApolloniosLR
-( const Ostap::Math::Apollonious& core  ,
-  const Ostap::Math::LeftTail&    left  , 
-  const Ostap::Math::RightTail&   right )
-  : m_core  ( core  )
-  , m_left  ( left  )
-  , m_right ( right )
-{}
-// ============================================================================
-//  evaluate Apollonios' function
-// ============================================================================
-double Ostap::Math::ApolloniosLR::pdf ( const double x ) const
-{
-  //
-  return m_core ( x ) ;
-  
-  // const double delta  = ( x - m_m0 ) / m_sigma ;
-  // //
-  // // the tail
-  // //
-  // const double sqb = std::sqrt ( m_b ) ;
-  // //
-  // if  ( delta < -m_alpha )
-  //   {
-  //     const double nn = N () ;
-  //     const double y  = 1 - m_b * m_alpha * ( m_alpha + delta ) / ( nn * m_A1 ) ;
-  //     return m_A2 * std::pow ( y , -nn ) * sqb / m_sigma ;
-  //   }
-  // //
-  // // the peak
-  // //
-  // const double arg = m_b * ( 1 - std::hypot ( 1 , delta ) ) ;
-  // return my_exp ( arg ) * sqb / m_sigma ;
-}
-// ============================================================================
-// get the integral between low and high
-// ============================================================================
-double Ostap::Math::ApolloniosLR::integral
-( const double low ,
-  const double high ) const
-{
-  if      ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  else if (           low > high   ) { return - integral ( high ,
-                                                           low  ) ; } // RETURN
-  //
-  return m_core.integral ( low , high ) ;
-  
-  // const double x0 = m_m0 - m_alpha * m_sigma ;
-  // //
-  // // split into proper subintervals
-  // //
-  // if      ( low < x0 && x0 < high ) { return integral ( low , x0 ) + integral ( x0 , high ) ; }
-  // //
-  // // Z = (x-x0)/sigma 
-  // //
-  // const double zlow  = ( low  - m_m0 ) / sigma() ;
-  // const double zhigh = ( high - m_m0 ) / sigma() ;
-  // //
-  // // Integrate the peak
-  // if ( x0 <= low  )
-  // {
-  //   //
-  //   // use GSL to evaluate the integral
-  //   //
-  //   static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
-  //   static char s_message[] = "Integral(Apollonios)" ;
-  //   //
-  //   const auto F = s_integrator.make_function ( this ) ;
-  //   int    ierror   =  0 ;
-  //   double result   =  1 ;
-  //   double error    = -1 ;
-  //   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
-  //   ( tag () , 
-  //     &F     , 
-  //     low    , high  ,               // low & high edges
-  //     workspace ( m_workspace ) ,    // workspace
-  //     s_APRECISION         ,         // absolute precision
-  //     s_RPRECISION         ,         // relative precision
-  //     m_workspace.size()   ,         // size of workspace
-  //     s_message           , 
-  //     __FILE__ , __LINE__ ) ;
-  //   //  
-  //   return result ;
-  // }
-  // //
-  // // power-law tail
-  // //
-  // const double nn = N() ;
-  // //
-  // const double a =   - m_b * m_alpha           / nn ;
-  // const double b = 1 - m_n * m_alpha * m_alpha / nn ; 
-  // //
-  // return m_A2 * m_b * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;
-}
-// ============================================================================
-// get the tag 
-// ============================================================================
-std::size_t Ostap::Math::ApolloniosLR::tag () const 
-{ 
-  static const std::string s_name = "ApolloniosLR" ;
-  return Ostap::Utils::hash_combiner ( s_name        , 
-				       m_core .tag() , 
-				       m_left .tag() ,  
-				       m_right.tag() ) ; 
 }
 // ============================================================================
 

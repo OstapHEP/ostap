@@ -86,6 +86,14 @@ namespace Ostap
       bool setSigmaL  ( const double value ) ;
       /// right sigma 
       bool setSigmaR  ( const double value ) ;
+      /// set both sigmas simultaneously
+      bool setSigma   
+      ( const double valueL ,
+        const double valueR ) ;
+      /// set both sigmas simultaneously
+      inline bool setSigma   
+      ( const double value ) 
+      { return setSigma ( value , value ) ; }
       // ======================================================================
       inline bool setM0   ( const double value ) { return setPeak ( value ) ; } 
       inline bool setMu   ( const double value ) { return setPeak ( value ) ; } 
@@ -1787,27 +1795,24 @@ namespace Ostap
      *  "Bifurcated Apollonios"
      *  A modified gaussian with asymmetric exponential tails on both sides
      *
-     *  A convinient reparameterization is applied to keep reduce
-     *  the correlations between "sigma"s and "beta"
+     *  \f[  f(x; \mu, \sigma_L, \sigma_R, \beta) \propto \mathrm{e}^{\beta^\prime\ledt(\beta - \sqrt{\beta^2+\delta^2 }\right) } \f]
+     *  where
+     *  - \f$ \beta^\prime = \sqrt{ 1+ \beta^2}\f$
+     *  - \f$ \delta = \frac{x-\mu}{\sigma_L}\f$ fpr \f$ x<\mu \f$, otherwise \f$ \delta = \frac{x-mu}{\sigma_R}\f$
      *
-     *  \f[ f(x;\mu,\sigma_l,\sigma_r,\beta) \propto
-     *  \mathrm{e}^{\left|\beta\right|( \left|\beta\right| - \sqrt{ \beta^2+\left(\delta x\right)^2}}
-     *  \f]
+     *  Well defined limits are: 
+     *  - \f$ \beta \rightharrow +\infty \f$ : bifucated Gaussian with \f$\sigma_{L,R}\f$ 
+     *  - \f$ \beta \rightarrow 9  \f$ : asymmetric Laplace with slopes of \f$\sqrt{2}\sigma_{L,R}\f$ 
      *
-     * where
-     *
-     * \f[ \delta x  = \left\{ \begin{array}{ccc}
-     *     \frac{x-\mu}{\sigma_l} &  for  & x \le \mu \	\
-     *     \frac{x-\mu}{\sigma_r} &  for  & x \ge \mu \	\
-     *     \end{array}
-     *     \right.\f]
-     *
-     *  Large betas corresponds to gaussian
-     *
-     *  The function is inspired by:
+     *  The function is largely inspired by:
      *  @see https://indico.cern.ch/getFile.py/access?contribId=2&resId=1&materialId=slides&confId=262633
      *  @see http://arxiv.org/abs/1312.5000
-     * 
+     *
+     *  The adopted parameteriatuon
+     *  - more generic, allowing intrincis asymmetries  
+     *  - have well-defined limits  
+     *  - RMS only sightly depends on \f$ \beta \f$ 
+     *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
@@ -1823,9 +1828,9 @@ namespace Ostap
        */
       Apollonios
       ( const double m0      = 0 ,
-	const double sigmaL  = 1 ,
-	const double alphaR  = 1 ,
-	const double beta    = 1 ) ;  // large beta correponds to gaussian
+	      const double sigmaL  = 1 ,
+	      const double alphaR  = 1 ,
+	      const double beta    = 1 ) ;  // large beta correponds to gaussian
       // ======================================================================
     public:
       // ======================================================================
@@ -1864,7 +1869,7 @@ namespace Ostap
       // ======================================================================
       /// get the integral between low and high
       double integral
-      ( const double low ,
+      ( const double low  ,
         const double high ) const ;
       // ======================================================================
     public:
@@ -1890,30 +1895,10 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Apollonios1
-     *  A modified gaussian with power-law tail on right side
-     *  and an exponential tail on low-side
-     *
-     *  The function is proposed by Diego Martinez Santos
-     *  @see https://indico.cern.ch/getFile.py/access?contribId=2&resId=1&materialId=slides&confId=262633
-     *  @see http://arxiv.org/abs/1312.5000
-     *
-     *  Here a bit modified version is used with redefined parameter <code>n</code>
-     *  to be coherent with local definitions of Crystal Ball
-     *
-     *  \f[ f(x;\alpha,n,x_0,\sigma) = \left\{
-     *  \begin{array}{ll}
-     *  \mathrm{e}^{-\left|b\right|\sqrt{1+(\delta x)^2}} & \text{for}~~\delta x >-a \\
-     *  A \times \left( \frac{\left|n\right|+1}{ \left|n\right|+1 - \frac{(a+\delta x)\left|ab\right|}
-     *  {\sqrt{1+a^2}} } \right)^{ \left|n\right|+1} & \text{otherwise}
-     *  \end{array}
-     *  \right. \f]
-     *
-     * where
-     *
-     * \f[ \delta x  = \frac{ x - x_0}{\left|\sigma\right|} \f]
-     * \f[ A = \mathrm{e}^{-\left|b\right|\sqrt{1+a^2}}     \f]
-     *
+    /** @class ApolloniosL
+     *  An Apollonious core with power-law tail on right side
+     *  @see  Ostap::Math::Apollonios
+     *  @see  Ostap::Math::LeftTail 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
@@ -1934,7 +1919,7 @@ namespace Ostap
         const double sigmaL = 1 ,
         const double sigmaR = 1 ,
         const double beta   = 1 , 
-	const double alpha  = 2 , 
+	      const double alpha  = 2 , 
         const double n      = 1 ) ;
       // =====================================================================
       /** constructor from two parameters
@@ -1942,8 +1927,8 @@ namespace Ostap
        *  @param tail left-tail component 
        */
       ApolloniosL
-      ( const Ostap::Math::Apollonious& core ,
-	const Ostap::Math::Tail&        tail ) ;
+      ( const Ostap::Math::Apollonios& core ,
+	      const Ostap::Math::Tail&       tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1972,6 +1957,7 @@ namespace Ostap
       inline bool setM0     ( const double value ) { return m_core.setM0     ( value ) ; }
       inline bool setSigmaL ( const double value ) { return m_core.setSigmaL ( value ) ; }
       inline bool setSigmaR ( const double value ) { return m_core.setSigmaL ( value ) ; }
+      inline bool setBeta   ( const double value ) { return m_core.setBeta   ( value ) ; }
       inline bool setAlpha  ( const double value ) { return m_tail.setAlpha  ( value ) ; }
       inline bool setN      ( const double value ) { return m_tail.setN      ( value ) ; }
       // ======================================================================
@@ -1990,11 +1976,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the core 
-      const Ostap::Math::Apollonious& core      () const { return m_core ; }
+      const Ostap::Math::Apollonios& core      () const { return m_core ; }
       /// get the (left) tail 
-      const Ostap::Math::LeftTail&    tail      () const { return m_tail ; } 
+      const Ostap::Math::LeftTail&   tail      () const { return m_tail ; } 
       /// get the  left  tail 
-      const Ostap::Math::LeftTail&    tail_left () const { return m_tail ; } 
+      const Ostap::Math::LeftTail&   tail_left () const { return m_tail ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -2009,153 +1995,6 @@ namespace Ostap
       Ostap::Math::LeftTail   m_tail {} ; 
       // =======================================================================
     } ;
-    // ========================================================================
-    /** @class ApolloniosLR
-     *  A modified gaussian with power-law taila on both sides 
-     *
-     *  The function is inspired  by Diego Martinez Santos
-     *  @see https://indico.cern.ch/getFile.py/access?contribId=2&resId=1&materialId=slides&confId=262633
-     *  @see http://arxiv.org/abs/1312.5000
-     *
-     *  Here a bit modified version is used with redefined parameter <code>n</code>
-     *  to be coherent with local definitions of Crystal Ball
-     *
-     *  \f[ f(x;\alpha,n,x_0,\sigma) = \left\{
-     *  \begin{array}{ll}
-     *  \mathrm{e}^{-\left|b\right|\sqrt{1+(\delta x)^2}} & \text{for}~~\delta x >-a \\
-     *  A \times \left( \frac{\left|n\right|+1}{ \left|n\right|+1 - \frac{(a+\delta x)\left|ab\right|}
-     *  {\sqrt{1+a^2}} } \right)^{ \left|n\right|+1} & \text{otherwise}
-     *  \end{array}
-     *  \right. \f]
-     *
-     * where
-     *
-     * \f[ \delta x  = \frac{ x - x_0}{\left|\sigma\right|} \f]
-     * \f[ A = \mathrm{e}^{-\left|b\right|\sqrt{1+a^2}}     \f]
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date  2013-12-01
-     */
-    class  ApolloniosLR
-    {
-    public:
-      // ======================================================================
-      /** constructor from all parameters
-       *  @param m0      m0       parameter
-       *  @param sigmaL  sigmaL   left-sigma parameter
-       *  @param sigmaR  sigmaR   right-sigma parameter
-       *  @param beta    beta     parameter
-       *  @param alphaL  alphaL   left  tail alpha-parameter
-       *  @param nL      nL       left  tail n-parameter
-       *  @param alphaR  alphaR   right tail alpha-parameter
-       *  @param nR      nR       right tail n-parameter
-       */
-      ApolloniosLR
-      ( const double m0     = 0 ,
-        const double sigmaL = 1 ,
-        const double sigmaR = 1 ,
-        const double beta   = 1 , 
-	const double alphaL = 2 , 
-        const double nL     = 1 , 
-	const double alphaR = 2 , 
-        const double nR     = 1 ) ;
-      // ======================================================================
-      /** constructor from three component 
-       *  @param core core component 
-       *  @param left  left-tail component 
-       *  @param right left-tail component 
-       */
-      // ======================================================================
-      ApolloniosLR
-      ( const Ostap::Math::Apollonious& core  ,
-	const Ostap::Math::LeftTail&    left  , 
-	const Ostap::Math::RightTail&   right ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// evaluate Apollonios's function
-      double        pdf        ( const double x ) const ;
-      /// evaluate Apollonios's function
-      inline double operator() ( const double x ) const { return pdf ( x ) ; }
-      // ======================================================================
-    public: // trivial accessors
-      // ======================================================================
-      inline double m0     () const { return m_core .m0     () ; }
-      inline double mu     () const { return m_core .mu     () ; }
-      inline double peak   () const { return m_core .peak   () ; }
-      inline double mode   () const { return m_core .mode   () ; }
-      inline double sigmaL () const { return m_core .sigmaL () ; }
-      inline double sigmaR () const { return m_core .sigmaR () ; }
-      inline double alphaL () const { return m_left .alpha  () ; }
-      inline double alphaR () const { return m_right.alpha  () ; }
-      inline double nL     () const { return m_left .n      () ; }
-      inline double nR     () const { return m_right.n      () ; }
-      inline double NL     () const { return m_left.N       () ; }
-      inline double NR     () const { return m_right.N      () ; }
-      // ======================================================================
-      /// the point where core meats the power-law tail 
-      inline double xL     () const { return m0 () - alphaL () * sigmaL () ; } 
-      /// the point where core meats the power-law tail 
-      inline double xR     () const { return m0 () + alphaR () * sigmaR () ; } 
-      // ======================================================================
-    public: // trivial accessors
-      // ======================================================================
-      inline bool setM0     ( const double value ) { return m_core .setM0     ( value ) ; }
-      inline bool setSigmaL ( const double value ) { return m_core .setSigmaL ( value ) ; }
-      inline bool setSigmaR ( const double value ) { return m_core .setSigmaL ( value ) ; }
-      inline bool setAlphaL ( const double value ) { return m_left .setAlpha  ( value ) ; }
-      inline bool setAlphaR ( const double value ) { return m_right.setAlpha  ( value ) ; }
-      inline bool setNL     ( const double value ) { return m_left .setN      ( value ) ; }
-      inline bool setNR     ( const double value ) { return m_right.setN      ( value ) ; }
-      // ======================================================================
-      inline bool setMu     ( const double value ) { return setM0 ( value ) ; }
-      inline bool setPeak   ( const double value ) { return setM0 ( value ) ; }
-      inline bool setMass   ( const double value ) { return setM0 ( value ) ; }
-      inline bool setMode   ( const double value ) { return setM0 ( value ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral between low and high
-      double integral
-      ( const double low ,
-        const double high ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the core 
-      const Ostap::Math::Apollonious& core       () const { return m_core ; }
-      /// get the left  tail 
-      const Ostap::Math::LeftTail&    tail_left  () const { return m_left ; } 
-      /// get the right tail 
-      const Ostap::Math::RightTail&   tail_right () const { return m_right; } 
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the tag 
-      std::size_t tag () const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// core 
-      Ostap::Math::Apollonios m_core  {} ;
-      /// the left  tail
-      Ostap::Math::LeftTail   m_tail  {} ; 
-      /// the right tail
-      Ostap::Math::RightTail  m_right {} ; 
-      // =======================================================================
-    } ;
-    
-    
-
-
-    
-
-
-    
-
-
-
-    
     // ========================================================================
     /** @class StudentT
      *  simple function to parameterize the symmetric peak using
