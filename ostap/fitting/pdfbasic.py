@@ -2491,8 +2491,11 @@ class APDF1 ( Components ) :
             vd_minmax = vd.minmax()
             if not vd_minmax : continue
 
-            vcut1 = ROOT.TCut ( '%s<%.17g'  % ( vd.name      , vd_minmax[0] ) )
-            vcut2 = ROOT.TCut ( '%.17g<=%s' % ( vd_minmax[1] , vd.name      ) )
+            v_min = max(vv_minmax[0], vd_minmax[0])
+            v_max = min(vv_minmax[1], vd_minmax[1])
+
+            vcut1 = ROOT.TCut ( '%s<%.17g'  % ( vd.name      , v_min ) )
+            vcut2 = ROOT.TCut ( '%.17g<=%s' % ( v_max , vd.name      ) )
             if   cuts : cuts  = cuts | ( vcut1 | vcut2 )
             else      : cuts  =          vcut1 | vcut2 
 
