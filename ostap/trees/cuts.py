@@ -20,10 +20,11 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info   import ostap_info
 from   ostap.core.ostap_types import num_types, string_types, integer_types 
-from   ostap.core.core        import cpp, VE, hID, dsID, Ostap 
+from   ostap.core.core        import cpp, VE, hID, dsID, Ostap
 from   ostap.utils.strings    import split_string 
 from   ostap.utils.utils      import balanced 
-import ROOT, ast, re 
+from   math                   import isfinite, isnan
+import ROOT, ast, re
 # =============================================================================
 # logging 
 # =============================================================================
@@ -139,13 +140,17 @@ def _tc_ast_ ( cut ) :
         t = t.replace ( '!='            , ' __TCUT_NE__ ' ) ## ATTENTION 
         t = t.replace ( '!'             , '~'             ) ## ATTERNTION 
         t = t.replace ( ' __TCUT_NE__ ' , '!='            ) ## ATTENTION 
+
+    t = t.replace ( '::' , '__DOUBLE_COLUMN__' )
         
     p = ast.parse   ( t )
     t = ast.unparse ( p )
     
-    t = t.replace ( '~'        , '!'       )
-    t = t.replace ( ' or '     , ' || '    )
-    t = t.replace ( ' and '    , ' && '    )
+    t = t.replace ( '~'        , '!'        )
+    t = t.replace ( ' or '     , ' || '     )
+    t = t.replace ( ' and '    , ' && '     )
+    t = t.replace ( '__DOUBLE_COLUMN__' , '::' )  
+
     return t 
     
 ROOT.TCut.ast       = _tc_ast_     
@@ -303,10 +308,12 @@ def _tc_imul_ ( self , other ) :
             return self 
         if 1 == other  : return self
         ##
-        if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other )
-        else                                       : other = ROOT.TCut ( fmt_other % other )
-    ## 
+        if   isinstance  ( other , integer_types  ) : other = ROOT.TCut ( fmt_int   % other )
+        elif isinstance  ( other , float          ) :
+            if not isfinite ( other ) : return NotImplemented 
+            other = ROOT.TCut ( fmt_float % other )
+        else                                        : other = ROOT.TCut ( fmt_other % other )
+        ## 
     if not isinstance ( other , ROOT.TCut     ) : return NotImplemented
     ## 
     if   other and self  :
@@ -337,7 +344,9 @@ def _tc_iadd_ ( self , other ) :
         if not other : return self
         ## 
         if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other ) 
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) : return NotImplemented             
+            other = ROOT.TCut ( fmt_float % other ) 
         else                                       : other = ROOT.TCut ( fmt_other % other )  
     ## 
     if not isinstance ( other , ROOT.TCut     ) : return NotImplemented
@@ -372,7 +381,9 @@ def _tc_idiv_ ( self , other ) :
         if 1 == other : return self
         ## 
         if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other ) 
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) : return NotImplemented                         
+            other = ROOT.TCut ( fmt_float % other ) 
         else                                       : other = ROOT.TCut ( fmt_other % other )  
     ##  
     if not isinstance ( other , ROOT.TCut    ) : return NotImplemented
@@ -405,7 +416,9 @@ def _tc_isub_ ( self , other ) :
         if not other : return self
         ## 
         if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other ) 
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) : return NotImplemented                                                 
+            other = ROOT.TCut ( fmt_float % other ) 
         else                                       : other = ROOT.TCut ( fmt_other % other )  
     ##        
     if not isinstance ( other , ROOT.TCut    ) : return NotImplemented
@@ -439,7 +452,9 @@ def _tc_imod_ ( self , other ) :
         if not other  : raise ZeroDivisionError ( "ROOT.TCut(%s)%=%s  is illegal!" % ( self , other ) )
         ## 
         if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other ) 
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) : return NotImplemented                                                             
+            other = ROOT.TCut ( fmt_float % other ) 
         else                                       : other = ROOT.TCut ( fmt_other % other )  
     ##  
     if not isinstance ( other , ROOT.TCut ) : return NotImplemented
@@ -631,7 +646,9 @@ def _tc_pow_ ( self, other ) :
         elif 1 == other : return ROOT.TCut ( self )
         ## 
         if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other ) 
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) : return NotImplemented                                                                         
+            other = ROOT.TCut ( fmt_float % other ) 
         else                                       : other = ROOT.TCut ( fmt_other % other )  
     ## 
     if not isinstance ( other , ROOT.TCut    ) : return NotImplemented
@@ -756,8 +773,11 @@ def _tc_rdiv_ ( self , other ) :
         if not other : return NotImplemented 
         return ROOT.TCut ( other ) / self 
     elif isinstance ( other , num_types    ) : 
-        if not other : return ROOT.TCut ( '0' ) 
-        return ROOT.TCut ( '%s/%s' % ( other , self ) )
+        if not other : return ROOT.TCut ( '0' )
+        if   isinstance  ( other , integer_types ) : return ROOT.TCut ( ( fmt_int % other ) + (  '/%s' % self ) )
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) : return NotImplemented 
+            return ROOT.TCut ( ( fmt_float % other ) + (  '/%s' % self ) )
     ## 
     return NotImplemented
 
@@ -781,18 +801,17 @@ def _tc_rpow_ ( self, other ) :
         if   1 == other  : return ROOT.TCut ( '1' )
         ## 
         elif isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other ) 
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) :            return NotImplemented 
+            other = ROOT.TCut ( fmt_float % other ) 
         else                                       : other = ROOT.TCut ( fmt_other % other )  
     ## 
     if   not isinstance ( other , ROOT.TCut    ) : return NotImplemented
     ## 
     if   not self  : return NotImplemented    
     elif not other : return NotImplemented  
-    ## 
-    new_cut  = ROOT.TCut ( self )
-    new_cut.SetTitle("%s**%s" % ( other , new_cut ) )
     ##
-    return new_cut
+    return other ** self
 
 # =============================================================================
 ## (right) mod operator 
@@ -806,24 +825,22 @@ def _tc_rpow_ ( self, other ) :
 def _tc_rmod_ ( self, other ) : 
     """ (right) mod operator 
     """   
-    if not isinstance ( other , btypes ) : return NotImplemented
+    if not isinstance ( other , btypes ) :         return NotImplemented
     ## 
-    if   isinstance      ( other , string_types  ) : other = ROOT.TCut ( other ) 
-    elif isinstance      ( other , num_types     ) :
+    if isinstance      ( other , num_types     ) :
         ##
         if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-        elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other ) 
+        elif isinstance  ( other , float         ) :
+            if not isfinite ( other ) :            return NotImplemented 
+            other = ROOT.TCut ( fmt_float % other ) 
         else                                       : other = ROOT.TCut ( fmt_other % other )  
     ## 
     if   not isinstance ( other , ROOT.TCut    ) : return NotImplemented
     ## 
     if   not self  : return NotImplemented    
     elif not other : return NotImplemented  
-    ## 
-    new_cut  = ROOT.TCut ( self )
-    new_cut.SetTitle("%s%%%s" % ( new_cut , other ) )
     ##
-    return new_cut
+    return other % a 
 
 # =============================================================================
 ## minor extension for TCut
@@ -961,12 +978,15 @@ def _tc_eq_ ( cut , other ) :
     """
     if not cut : return NotImplemented
     ## 
-    if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-    elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other )
+    if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int  % other )
+    elif isinstance  ( other , float         ) :
+        if       isnan    ( other ) : return ROOT.TCut ( 'TMath::IsNaN(%s)'   % cut )
+        elif not isfinite ( other ) : return ROOT.TCut ( '!TMath::Finite(%s)' % cut )
+        other = ROOT.TCut ( fmt_float % other )        
     elif isinstance  ( other , string_types  ) : other = ROOT.TCut ( other )
     ##
-    if isinstance    ( other , ROOT.TCut    ) :
-        return ROOT.TCut ( '%s==%s' % ( cut , other ) ) if other else NotImplemented 
+    if isinstance    ( other , ROOT.TCut    ) and other :
+        return ROOT.TCut ( '%s==%s' % ( cut , other ) ) 
     ## 
     return NotImplemented 
 
@@ -986,12 +1006,15 @@ def _tc_ne_ ( cut , other ) :
     """
     if not cut : return NotImplemented
     ## 
-    if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int   % other )
-    elif isinstance  ( other , float         ) : other = ROOT.TCut ( fmt_float % other )
+    if   isinstance  ( other , integer_types ) : other = ROOT.TCut ( fmt_int % other )
+    elif isinstance  ( other , float         ) :
+        if       isnan  ( other ) : return ROOT.TCut ( '!TMath::IsNaN(%s)'   % cut )
+        if not isfinite ( other ) : return ROOT.TCut ( 'TMath::Finite(%s)'   % cut )        
+        other = ROOT.TCut ( fmt_float % other )
     elif isinstance  ( other , string_types  ) : other = ROOT.TCut ( other )
     ##
-    if isinstance    ( other , ROOT.TCut    ) :
-        return ROOT.TCut ( '%s!=%s' % ( cut , other ) ) if other else NotImplemented 
+    if isinstance    ( other , ROOT.TCut ) and other :
+        return ROOT.TCut ( '%s!=%s' % ( cut , other ) ) 
     ## 
     return NotImplemented 
 

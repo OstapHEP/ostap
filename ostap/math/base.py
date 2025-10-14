@@ -71,6 +71,7 @@ __all__     = (
     'signum'         , ## sign of the number 
     'samesign'       , ## two number of the same sign
     'isfinite'       , ## `isfinite` for float values 
+    'isnan'          , ## `isfinite` for float values 
     'isclose'        , ## `isclose`  for float values
     'lround'         , ## round a value to integer/long  
     ##
@@ -203,6 +204,8 @@ vLongs   = std.vector ( 'long'   )
 # =============================================================================
 ## local version of <code>isfinite</code>
 isfinite = math.isfinite 
+## local version of <code>isnana</code>
+isnan    = math.isnan
     
 # =============================================================================
 ## local version of <code>isclose</code>

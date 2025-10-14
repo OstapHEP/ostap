@@ -59,7 +59,7 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
-from   ostap.math.base          import iszero , frexp10, numpy  
+from   ostap.math.base          import iszero , isfinite , frexp10 , numpy  
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
                                          valid_pointer , in_test , 
                                          rootException , 
@@ -466,8 +466,8 @@ class APDF1 ( Components ) :
         ## check fit ranges 
         rng = check_arg ( 'RangeByName' , *opts )
         ok  = self.check_ranges ( dataset , rng.getString ( 0 ) if rng else '' )
-        if not ok : self.warning ( 'fitTo: ranges are not OK' ) 
-
+        if not ok : self.warning ( 'fitTo: ranges are not OK (Data set has entries outside fitting range)' ) 
+    
         ## #
         ## ## check the limits/ranges 
         ## #
@@ -2465,39 +2465,41 @@ class APDF1 ( Components ) :
 
 
     # ================================================================================
-    ## Check the ranges for variables  in dataset 
+    ## Check the ranges for variables in dataset:
+    #
+    #  @param dataset dataset to check
+    #  @return True if dataset has no  entries outside the fitting range
+    #
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  ok   = pdf.check_ranges ( data ) 
+    #  @endcode
+    # 
     def check_ranges ( self , dataset , cut_range = '' ) :
-        """ Check the ranges for variables in dataset 
+        """ Check the ranges for variables in dataset:  
+        - return True if dataset has no entries outside the fitting range  
+
+        >>> data = ...
+        >>> pdf  = ...
+        >>> ok   = pdf.check_ranges ( data ) 
         """
 
         import ostap.trees.cuts
 
-        cuts = '' 
-        for i , v in enumerate ( self.vars ) :
-
-            ## has range? 
-            if ( hasattr ( v , 'hasMin' ) and not v.hasMin() ) and \
-               ( hasattr ( v , 'hasMax' ) and not v.hasMax() ) : continue
+        cuts = ROOT.TCut() 
+        for v in self.vars :
             
-            if dataset and not v in dataset                                : continue
+            ## check that variable in the dataset 
+            if dataset and not v in dataset : continue
             
-            vv_minmax = v.minmax ()
-            if not vv_minmax : continue
-
-            ##variable in dataset 
-            vd = getattr ( dataset , v.name , None )
-            if vd is None    : continue
-
-            vd_minmax = vd.minmax()
-            if not vd_minmax : continue
-
-            v_min = max(vv_minmax[0], vd_minmax[0])
-            v_max = min(vv_minmax[1], vd_minmax[1])
-
-            vcut1 = ROOT.TCut ( '%s<%.17g'  % ( vd.name      , v_min ) )
-            vcut2 = ROOT.TCut ( '%.17g<=%s' % ( v_max , vd.name      ) )
-            if   cuts : cuts  = cuts | ( vcut1 | vcut2 )
-            else      : cuts  =          vcut1 | vcut2 
+            if hasattr ( v , 'hasMin' ) and hasattr ( v , 'getMin' ) and v.hasMin ( cut_range ) :
+                vmin  = v.getMin ( cut_range )
+                if isfinite ( vmin ) : cuts |= ( ROOT.TCut ( v.name ) < vmin ) 
+                
+            if hasattr ( v , 'hasMax' ) and hasattr ( v , 'getMax' ) and v.hasMax ( cut_range ) :
+                vmax  = v.getMax ( cut_range )
+                if isfinite ( vmax ) : cuts |= ( ROOT.TCut ( v.name ) > vmax )
 
         return not dataset.hasEntry ( cuts = cuts , cut_range = cut_range ) 
 

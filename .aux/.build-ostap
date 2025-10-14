@@ -2,7 +2,7 @@
 
 OSTAP_SOURCE=${1}
 
-if [[ ${ROOTSYS} && -d ${ROOTSYS} ]]
+if [[ -d ${ROOTSYS} ]]
 then 
     echo '----> BUILD OSTAP : ROOTSYS='${ROOTSYS} 
 else 
@@ -10,8 +10,7 @@ else
     return 100
 fi
 
-if [[    ${OSTAP_SOURCE}             &&
-      -d ${OSTAP_SOURCE}             &&
+if [[ -d ${OSTAP_SOURCE}             &&
       -d ${OSTAP_SOURCE}/ostap       &&
       -d ${OSTAP_SOURCE}/source      &&
       -d ${OSTAP_SOURCE}/scripts     &&
@@ -27,9 +26,9 @@ fi
 
 OSTAP_BUILD=${2:-$OSTAP_SOURCE/build}
 
-if   [[ $OSTAP_BUILD && -d $OSTAP_BUILD && -w $OSTAP_BUILD ]]
+if   [[ -d $OSTAP_BUILD && -w $OSTAP_BUILD ]]
 then
-    echo '----> BUILD OSTAP : OSTAP_BUILD='${OSTAP_BUILD} 
+    true 
 elif [[ -w $OSTAP_SOURCE ]]
 then 
     mkdir ${OSTAP_SOURCE}/build
@@ -76,7 +75,7 @@ then
     ( echo '----> (RE)BUILD OSTAP [1/7] : CLEAN BUILD REMNANTS'       ; cd ${OSTAP_BUILD}  ; ninja clean )
 fi
 
-if [[ ${OSTAP_INSTALL} && -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTAL} ]]
+if [[ -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
 then
     ( echo '----> (RE)BUILD OSTAP [2/7] : CLEAN INSTALL DIRECTORY'    ; cd ${OSTAP_INSTALL} ; rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
 fi

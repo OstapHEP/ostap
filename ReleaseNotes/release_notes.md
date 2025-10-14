@@ -2,7 +2,9 @@
 
   1. a bit more correct treatment of the `!` and `!=` in `ROOT.TCut.ast` 
   1. more coherent treatment of the numeric types in `ROOT.TCut`-expressions
-
+  1. some limited treatment of infinity/NaNs in `ROOT.TCut`-expressions
+  1. better (more safe) implementaton of `APDF1.check_ranges` method, inclusing better documentation
+  
 ## Backward  incompatible 
 
 ## Bug fixes
@@ -18,7 +20,6 @@
 ## Bug fixes
 
    1. tiny fix in `Ostap::Math::(Gen)Hyperbolic::setStandard`
-
 
 # v3.2.0.0 
 
