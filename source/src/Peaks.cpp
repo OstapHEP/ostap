@@ -4768,6 +4768,17 @@ std::size_t Ostap::Math::AsymmetricLaplace::tag () const
 double Ostap::Math::AsymmetricLaplace::mean () const
 { return  m_mu + ( m_lambdaR - m_lambdaL ) ; }
 // ============================================================================
+// get mean 
+// ============================================================================
+double Ostap::Math::AsymmetricLaplace::variance () const
+{ 
+  const double l  = lambdaL () ; 
+  const double r  = lambdaR () ;
+  const double l2 = l * l ;
+  const double r2 = r * r ;  
+  return  ( l2 * l2 + r2 * r2 ) / ( l * r ) ;  
+}
+// ============================================================================
 // get median
 // ============================================================================
 double Ostap::Math::AsymmetricLaplace::median () const

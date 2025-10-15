@@ -3307,6 +3307,10 @@ namespace Ostap
       inline double lambdaL  () const { return m_lambdaL ; }
       /// get `right' lambda parameter 
       inline double lambdaR  () const { return m_lambdaR ; }
+      ///  squared lambda_L
+      inline double lambdaL2 () const { return m_lambdaL * m_lambdaL ; }
+      ///  squared lambda_R
+      inline double lambdaR2 () const { return m_lambdaR * m_lambdaR ; }
       // ======================================================================
     public: //   derived getters  
       // ======================================================================
@@ -3351,11 +3355,11 @@ namespace Ostap
       /// get kurtosis 
       double kurtosis () const ;
       /// get RMS
-      // inline double rms        () const { return std::sqrt ( variance () ) ; };
+      inline double rms        () const { return std::sqrt ( variance () ) ; };
       /// get sigma
-      // inline double sigma      () const { return rms      () ; }
+      inline double sigma      () const { return rms      () ; }
       // get dispersion
-      // inline double dispersion () const { return variance () ; }
+      inline double dispersion () const { return variance () ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
