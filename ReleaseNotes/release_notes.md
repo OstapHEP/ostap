@@ -8,7 +8,7 @@
   
 ## Backward  incompatible 
 
-   1. From now `Apollonios` stands for the core asymmetric Apollonious function and `ApolloniousL` represents Aplooniosu functon with power-lay left tail
+   1. From now `Apollonios` stands for the core asymmetric Apollonios function and `ApolloniosL` represents Aplooniosu functon with power-lay left tail
    
 ## Bug fixes
 

@@ -65,12 +65,12 @@ def test_simfit6() :
     
     ## "signal"
     signal_cmp = Models.Fit1D  (
-        signal     = Models.Apollonios2_pdf ( 'A'             ,
-                                              xvar      = m1  ,
-                                              mean      = 2.5 ,
-                                              sigma     = 0.2 ,
-                                              beta      = 1.5 ,
-                                              asymmetry = 0.1 ) , 
+        signal     = Models.Apollonios_pdf ( 'A'              ,
+                                             xvar      = m1   ,
+                                             mean      = 2.5  ,
+                                             sigma     = 0.2  ,
+                                             beta      = 1.0  ,
+                                             psi       = 0.01 ) , 
         background = 'flat'   , suffix = '_Scmp' )
     signal_cmp.S = 1000
     signal_cmp.B =  500 
@@ -93,7 +93,7 @@ def test_simfit6() :
     mc_constraint = model_mc.soft_multivar_constraint ( ( model_mc.mean  ,
                                                           model_mc.sigma ,
                                                           model_mc.beta  ,
-                                                          model_mc.kappa ) , rmch )
+                                                          model_mc.psi   ) , rmch )
     
     # =============================================================================
     

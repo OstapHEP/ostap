@@ -123,17 +123,17 @@ def test_gauss () :
 # =============================================================================
 ## Symmetric Apollonios
 # =============================================================================
-def test_apo2 () :
+def test_apo () :
     
-    logger = getLogger ( 'test_apo2' )
+    logger = getLogger ( 'test_apo' )
 
     logger.info ('Test ResoApo2:  asymmetric Apollonios resolution model' )
-    from   ostap.fitting.resolution import ResoApo2
-    reso = ResoApo2( 'Apollonios2' , mass ,
+    from   ostap.fitting.resolution import ResoApo
+    reso = ResoApo ( 'Apollonios' , mass ,
                      mean  = ( 0.0 , -0.1  , 0.1 ) , 
                      sigma = ( 0.4 ,  0.1  , 1.0 ) ,
-                     beta  = ( 1   , 1.e-5 , 100 ) ,
-                     kappa = ( 0.1 , -1    , +1  ) )
+                     beta  = ( 1    , 1.e-5 , 100 ) ,
+                     psi   = ( 0.01 , -2    , +2  ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
     with use_canvas ( 'test_apo2' , wait = 1 ) : 
@@ -143,7 +143,7 @@ def test_apo2 () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Asymmetric Apollonios2', logger )
+        make_print ( reso , result , 'Asymmetric Apollonios', logger )
         
     models.add ( reso )
 

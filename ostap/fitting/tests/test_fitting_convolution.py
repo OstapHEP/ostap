@@ -55,8 +55,8 @@ def test_laplace():
     laplace_1 = Convolution_pdf ( name = 'L1' , pdf = laplace, resolution = 0.75 )
 
     ## resolution PDF
-    from ostap.fitting.resolution import ResoApo2
-    rAp = ResoApo2 ( 'A' , x , 0.75  )
+    from ostap.fitting.resolution import ResoApo
+    rAp = ResoApo ( 'A' , x , 0.75  )
     
     ## resolution as PDF 
     laplace_2 = Convolution_pdf ( name = 'L2' , pdf = laplace, resolution = rAp )

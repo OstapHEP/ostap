@@ -4324,10 +4324,10 @@ std::size_t Ostap::Math::SinhAsinh::tag () const
  */
 // ============================================================================
 Ostap::Math::JohnsonSU::JohnsonSU  
-( const double xi      ,   // related to location 
-  const double lambda  ,   // related to variance
-  const double delta   ,   // shape 
-  const double gamma   )  // shape 
+( const double xi      , // related to location 
+  const double lambda  , // related to variance
+  const double delta   , // shape 
+  const double gamma   ) // shape 
   : m_xi      (            xi) 
   , m_lambda  ( std::abs ( lambda ) ) 
   , m_delta   ( std::abs ( delta  ) ) 
@@ -4355,7 +4355,7 @@ double Ostap::Math::JohnsonSU::variance () const
 {
   const double d1 = std::exp ( 1.0 / ( m_delta * m_delta ) );
   //
-  const double d2 = ( d1 - 1 ) * ( d1 * std::cosh ( 2  *m_gamma / m_delta ) + 1 ) ;
+  const double d2 = ( d1 - 1 ) * ( d1 * std::cosh ( 2 * m_gamma / m_delta ) + 1 ) ;
   //
   return 0.5 * m_lambda * m_lambda * d2 ;
 }

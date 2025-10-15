@@ -785,7 +785,13 @@ class Apollonios_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma )
+        PEAK.__init__  ( self                          ,
+                         name       = name            ,
+                         xvar       = xvar            ,
+                         mean       = mean            ,
+                         sigma      = sigma           ,
+                         mean_name  = 'm0_%s'  % name ,
+                         mean_title = 'm_0_%s' % name )
         
         ## sigma asymmetry: kappa = tanh(psi) 
         self.__psi = self.make_var ( ZERO if psi is None else psi ,
@@ -815,7 +821,7 @@ class Apollonios_pdf(PEAK) :
             self.roo_name ( 'apo_' ) , 
             "Apollonios %s" % self.name ,
             self.xvar   ,
-            self.mean   ,
+            self.m0     ,
             self.sigmaL ,
             self.sigmaR ,
             self.beta   )
@@ -832,6 +838,14 @@ class Apollonios_pdf(PEAK) :
             'beta'      : self.beta  ,
             }
 
+    @property
+    def m0   ( self ) :
+        """`m0' : m0-parameters for Apollonious function (same as 'mean')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self, value ) :
+        self.mean = value 
+    
     @property
     def kappa     ( self ) :
         """'asym'- asymmetry parameter for Apollonios function"""
