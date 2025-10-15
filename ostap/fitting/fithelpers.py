@@ -29,9 +29,13 @@ __all__     = (
     'ParamsPoly'        , ## helper class for RooFit polynomials
     'ShiftScalePoly'    , ## helper class for RooFit polynomials
     #
-    "NameDuplicates"    , ## allow/disallow name duplicates
-    'SETPARS'           , ## context manager to keep/preserve parameters 
-    )
+    'NameDuplicates'    , ## allow/disallow name duplicates
+    'SETPARS'           , ## context manager to keep/preserve parameters
+    # 
+    'Tail'              , ## helper mixing to define power-law tail 
+    'LeftTail'          , ## helper mixing to define power-law (left) tail
+    'RightTail'         , ## helper mixing to define power-law (right) tail
+)
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
 from   ostap.core.ostap_types  import ( string_types   , num_types   ,
@@ -3758,6 +3762,181 @@ class AsymVars(object) :
     def psi ( self , value ) :
         self.set_value ( self.__psi , value )
             
+
+# =============================================================================
+## @class Tail
+#  Helper mixin class to define CrystalBall-like power-law tails
+class Tail(object) :
+    """ Helper mixin class to define CrystalBall-like power-law tails
+    """
+    
+    def __init__ ( self               ,
+                   alpha       = None ,
+                   n           = None , 
+                   name_alpha  = ''   ,
+                   name_n      = ''   ,
+                   title_alpha = ''   , 
+                   title_n     = ''   ) :
+
+        ## get the name 
+        name = self.name
+        
+        if not name_alpha  : name_alpha  = 'alpha_%s'   % name
+        if not name_n      : name_n      = 'n_%s'       % name
+        if not title_alpha : title_alpha = '#alpha(%s)' % name
+        if not title_n     : title_n     = 'n(%s)'      % name
+        
+        ## parameter alpha 
+        self.__alpha = self.make_var ( alpha       ,
+                                       name_alpha  ,
+                                       title_alpha , 
+                                       None        , 1.5 , 0.10 , 5 )
+        ## parameter n 
+        self.__n     = self.make_var ( n       ,
+                                       name_n  ,
+                                       title_n , 
+                                       None , 1.0 , -1 , 100 )
+        
+        ## parameter N: N = Ostap.Math.CrystalBall.N ( n ) 
+        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
+        
+    @property
+    def alpha ( self ) :
+        """'alpha': alpha-parameter for CrystalBall-like power-law tail"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+
+    @property
+    def n ( self ) :
+        """'n': n-parameter for CrystalBall-like powe-law tail"""
+        return self.__n
+    @n.setter
+    def n ( self, value ) :
+        self.set_value ( self.__n , value ) 
+        
+    @property
+    def N ( self ) :
+        """`N` : actual N-parameter used for CrystalBall-like power-law tail"""
+        return self.__N
+
+# =============================================================================
+## @class LeftTail
+#  Helper mixin class to define CrystalBall-like power-law tails
+class LeftTail(object) :
+    """ Helper mixin class to define CrystalBall-like power-law tails
+    """
+    
+    def __init__ ( self               ,
+                   alpha       = None ,
+                   n           = None , 
+                   name_alpha  = ''   ,
+                   name_n      = ''   ,
+                   title_alpha = ''   , 
+                   title_n     = ''   ) :
+
+        ## get the name 
+        name = self.name
+        
+        if not name_alpha  : name_alpha  = 'alphaL_%s'      % name
+        if not name_n      : name_n      = 'nL_%s'          % name
+        if not title_alpha : title_alpha = '#alpha_{L}(%s)' % name
+        if not title_n     : title_n     = 'n_{L}(%s)'      % name
+        
+        ## parameter alpha 
+        self.__alphaL = self.make_var ( alpha       ,
+                                        name_alpha  ,
+                                        title_alpha , 
+                                        None        , 1.5 , 0.10 , 5 )
+        ## parameter n 
+        self.__nL     = self.make_var ( n       ,
+                                        name_n  ,
+                                        title_n , 
+                                        None , 1.0 , -1 , 100 )
+        
+        ## parameter N: N = Ostap.Math.CrystalBall.N ( n ) 
+        self.__NL = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__nL )
+        
+    @property
+    def alphaL ( self ) :
+        """'alpha': alpha-parameter for CrystalBall-like power-law (left) tail"""
+        return self.__alphaL
+    @alphaL.setter
+    def alphaL ( self, value ) :
+        self.set_value ( self.__alphaL , value ) 
+
+    @property
+    def nL ( self ) :
+        """'nL': n-parameter for CrystalBall-like powe-law (left) tail"""
+        return self.__nL
+    @nL.setter
+    def nL ( self, value ) :
+        self.set_value ( self.__nL , value ) 
+        
+    @property
+    def NL ( self ) :
+        """`N` : actual N-parameter used for CrystalBall-like power-law (left) tail"""
+        return self.__NL
+
+# =============================================================================
+## @class RightTail
+#  Helper mixin class to define CrystalBall-like (right) power-law tails
+class RightTail(object) :
+    """ Helper mixin class to define CrystalBall-like (right) power-law tails
+    """
+    
+    def __init__ ( self               ,
+                   alpha       = None ,
+                   n           = None , 
+                   name_alpha  = ''   ,
+                   name_n      = ''   ,
+                   title_alpha = ''   , 
+                   title_n     = ''   ) :
+
+        ## get the name 
+        name = self.name
+        
+        if not name_alpha  : name_alpha  = 'alphaR_%s'      % name
+        if not name_n      : name_n      = 'nR_%s'          % name
+        if not title_alpha : title_alpha = '#alpha_{R}(%s)' % name
+        if not title_n     : title_n     = 'n_{R}(%s)'      % name
+        
+        ## parameter alpha 
+        self.__alphaR = self.make_var ( alpha       ,
+                                        name_alpha  ,
+                                        title_alpha , 
+                                        None        , 1.5 , 0.10 , 5 )
+        ## parameter n 
+        self.__nR     = self.make_var ( n       ,
+                                        name_n  ,
+                                        title_n , 
+                                        None , 1.0 , -1 , 100 )
+        
+        ## parameter N: N = Ostap.Math.CrystalBall.N ( n ) 
+        self.__NR = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__nR )
+        
+    @property
+    def alphaR ( self ) :
+        """'alphaR': alpha-parameter for CrystalBall-like power-law (right) tail"""
+        return self.__alphaR
+    @alphaR.setter
+    def alphaR ( self, value ) :
+        self.set_value ( self.__alphaR , value ) 
+
+    @property
+    def nR ( self ) :
+        """'nR': n-parameter for CrystalBall-like powe-law (left) tail"""
+        return self.__nR
+    @nR.setter
+    def nR ( self, value ) :
+        self.set_value ( self.__nR , value ) 
+        
+    @property
+    def NR ( self ) :
+        """`NR` : actual N-parameter used for CrystalBall-like power-law (right) tail"""
+        return self.__NR
+        
 # =============================================================================
 if '__main__' == __name__ :
     

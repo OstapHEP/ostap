@@ -236,12 +236,11 @@ models.append ( Gauss_pdf )
 #  - M. J. Oreglia, A Study of the Reactions psi prime --> gamma gamma psi,
 #                   Ph.D. Thesis, SLAC-R-236 (1980), Appendix D.
 #                   @see http://www.slac.stanford.edu/pubs/slacreports/slac-r-236.html
-#  @attention Unlike the original definition parameter <code>n</code> here is shifted by 1:
-#                    \f$ n_{0} \leftarrow \left| n_{here} \right| + 1  \f$
+#  @attention Unlike the original definition parameter <code>n</code> here is transformed: N=N(n)
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class CrystalBall_pdf(PEAK) :
-    """ Crystal Ball function
+    """ Crystal Ball function L Gaussian core + (left) power-law tail 
     http://en.wikipedia.org/wiki/Crystal_Ball_function
     
     - T. Skwarnicki,
@@ -258,10 +257,10 @@ class CrystalBall_pdf(PEAK) :
     http://www.slac.stanford.edu/pubs/slacreports/slac-r-236.html
     
     Note:
-    - Unlike the original definition parameter 'n' here is shifted by 1: n <- |n| + 1
+    - Unlike the original definition parameter 'n' here is transfromed: N=N(n) 
     - Typical value of parameter alpha for 'physical' peaks is 1.5<alpha<3.0,
     - For large alpha (e.g. alpha>3), there is no sensitivity for n;
-    similarly in the limit of large n, sensitivity for alpha is minimal
+    - similarly in the limit of large n, sensitivity for alpha is minimal
     """
     def __init__ ( self             ,
                    name             ,
