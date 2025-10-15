@@ -3583,7 +3583,7 @@ class AsymVars(object) :
         ## if not self.name in psi_name     : psi_name     = '%s_%s' % ( psi_name     , self.name )
         ## 
         ## 1st valid trivial  case : single var1 , everything else os None 
-        if isinstance ( var1 , ROOT.RooRealVar ) and ( var2 is None or var2 is var1 ) \
+        if isinstance ( var1 , ROOT.RooAbsReal ) and ( var2 is None or var2 is var1 ) \
            and all ( v is None for v in ( halfsum , kappa , psi ) ) :
 
             self.__var1    = var1
@@ -3593,7 +3593,7 @@ class AsymVars(object) :
             self.__psi     = ZERO 
         
         ## 2nd valid trivial  case : single var2 , everithing else is None 
-        elif isinstance ( var2 , ROOT.RooRealVar ) and ( var1 is None or var1 is var2 ) \
+        elif isinstance ( var2 , ROOT.RooAbsReal ) and ( var1 is None or var1 is var2 ) \
              and all ( v is None for v in ( halfsum , kappa , psi ) ) :
 
             self.__var1    = var2
@@ -3603,8 +3603,8 @@ class AsymVars(object) :
             self.__psi     = ZERO 
 
         ## 3rd valid trivial  case : var1 == var2 
-        elif isinstance ( var1 , ROOT.RooRealVar ) and \
-             isinstance ( var2 , ROOT.RooRealVar ) and \
+        elif isinstance ( var1 , ROOT.RooAbsReal ) and \
+             isinstance ( var2 , ROOT.RooAbsReal ) and \
              ( ( var1 is var2 ) or ( var2 is var1 ) or var1.name == var2.name ) :
             
             if not all ( v is None for v in ( halfsum , kappa , psi ) ) :
@@ -3625,17 +3625,17 @@ class AsymVars(object) :
             names = var1.name , var2.name
             ## convert variables into halfsum & asymmetry 
             halfsum , kappa = self.__var_maker.vars_to_asymmetry (
-                var1        ,
-                var2        ,
-                sum_scale  = 0.5 , 
+                var1                      ,
+                var2                      ,
+                sum_scale  = 0.5          , 
                 asym_name  = kappa_name   ,
                 sum_name   = halfsum_name ,
-                asym_title = "asymmetry %s & %s"  % names    , 
-                sum_title  = "0.5 * ( %s + %s )"  % names    )
+                asym_title = "asymmetry: %s & %s" % names , 
+                sum_title  = "0.5 * ( %s + %s )"  % names )
             
             ## finally psi-variable
             psi_name = self.new_roo_name ( prefix = psi_name )
-            psi = Ostap.MoreRooFit.ATanh ( psi_name , "skew: %s & %s"  % names , kappa , 1.0 )
+            psi      = Ostap.MoreRooFit.ATanh ( psi_name , "skew: %s & %s"  % names , kappa , 1.0 )
 
             self.__var1    = var1
             self.__var2    = var2
@@ -3664,10 +3664,10 @@ class AsymVars(object) :
             self.__psi     = psi   
         
         # (6) half-sum and skew 
-        elif all ( not v is None for v in ( halsfum , psi    ) ) and all ( v is None for v in ( var1 , var2 , kappa ) ) : 
+        elif all ( not v is None for v in ( halfsum , psi    ) ) and all ( v is None for v in ( var1 , var2 , kappa ) ) : 
             
             halfsum = self.make_var ( halfsum  , halfsum_name , 'halfsum of %s & %s variables'  % ( v1_name , v2_name ) , False , halfsum )
-            psi     = self.make_var ( psi      , psi_name     , 'skew    %s & %s variables'     % ( v1_name , v2_name ) , False , psi     , -14.5 , +14.5 )
+            psi     = self.make_var ( psi      , psi_name     , 'skew    %s & %s variables'     % ( v1_name , v2_name ) , False , psi     , -16.0 , +16.0 )
         
             ## kappa-variable
             kappa_name = self.new_roo_name ( prefix = kappa_name ) 
@@ -3715,7 +3715,7 @@ class AsymVars(object) :
     
     @property
     def name ( self ) :
-        """`name' : the name of corresponsing var0maker.owner"""
+        """`name' : the name of corresponding var-maker.owner"""
         return self.__var_maker.name
 
     @property 
@@ -3744,7 +3744,7 @@ class AsymVars(object) :
 
     @property 
     def kappa( self ) :
-        """`kappa` :  (v1-v2)/(v1+v2)"""
+        """`kappa` : (v1-v2)/(v1+v2)=tanh(psi)"""
         return self.__kappa
     @kappa.setter
     def kappa ( self , value ) :

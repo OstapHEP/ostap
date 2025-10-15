@@ -26,8 +26,8 @@ Empricial PDFs to describe narrow peaks
   - right-side Crystal Ball
   - double-side Crystal Ball
   - Needham function for J/psi, psi' and Y peaks
-  - Apollonios
-  - Apollonios2 (bifurcated Apollonios)
+  - Apollonios  (bifurcated Apollonios)
+  - ApolloniosL (bifurcated Apollonios with power-law tail)
   - bifurcated Gauissian
   - double     Gauissian
   - generalized normal v1 
@@ -95,8 +95,8 @@ __all__ = (
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
     'Needham_pdf'            , ## Needham function for J/psi or Y fits 
-    'Apollonios_pdf'         , ## Apollonios  function         
-    'Apollonios2_pdf'        , ## Apollonios2 function         
+    'Apollonios_pdf'         , ## bifurcated Apollonios function         
+    'ApolloniosL_pdf'        , ## bigurcated Apollonios function with power-law tail
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
@@ -159,7 +159,7 @@ from   ostap.core.ostap_types   import integer_types, num_types
 from   ostap.fitting.funbasic   import FUN1 , Fun1D 
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
-from   ostap.fitting.fithelpers import Phases
+from   ostap.fitting.fithelpers import Phases, ZERO 
 from   ostap.fitting.variables  import var_tanh, SETVAR
 import ostap.math.dalitz
 import ostap.math.models
@@ -755,237 +755,228 @@ class Needham_pdf(CrystalBall_pdf) :
 models.append ( Needham_pdf )    
 # =============================================================================
 ## @class Apollonios_pdf
-#  simple wrapper over Apollonios PDF 
-#  @see Ostap::Models::Apollonios 
-#  The function is proposed by Diego Martinez Santos 
+#  simple wrapper over bifurcated/asymmetric Apollonios PDF 
+#  @see Ostap::Models::Apollonios
+#  @see Ostap::Math::Apollonios
+#
+#  The function is modification of the original function proposed by Diego Martinez Santos
 #  @see http://arxiv.org/abs/1312.5000
-#  Here a bit modified version is used with redefined parameter <code>n</code>
-#  to be coherent with local definitions of Crystal Ball
+# 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Apollonios_pdf(PEAK) :
-    """ Apollonios function
+    """ bifurcated/asymmetric Apollonios function
     http://arxiv.org/abs/1312.5000
     
-    The function is proposed by Diego Martinez Santos 
-    https://indico.itep.ru/getFile.py/access?contribId=2&resId=1&materialId=slides&confId=262633
+    The function is modification of the original function proposed by Diego Martinez Santos
+    - see http://arxiv.org/abs/1312.5000
     
-    Note :
-    - similar to CrystalBall case,  parameter n is redefined:   n <- |n|+1
-    to be coherent with local definitions of Crystal Ball
-    - unfortuately neither sigma nor b parameters allows easy interpretation
-    - typical value of parameters alpha for 'physical' peaks is 1.5<alpha<2.1,
-    - for large alpha (e.g. alpha>3), there is no sensitivity for n;
-    similarly in the limit of large n, sensitivity for alpha is minimal
+    - see `Ostap.Models.Apollonios`
+    - see `Ostap.Math.Apollonios`
     """
-    def __init__ ( self                    ,
-                   name                    ,
-                   xvar                    ,
-                   mean      = None        ,
-                   sigma     = None        ,
-                   alpha     = None        ,
-                   n         = None        ,
-                   b         = None        ) : 
-                   
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,
+                   sigma     = None ,
+                   psi       = None , ## asymmetry parameter: kappa = tanh ( psi ) 
+                   beta      = None ) : 
         
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma ) 
+        PEAK.__init__  ( self , name , xvar , mean , sigma )
         
-        self.__alpha = self.make_var ( alpha                     ,
-                                       'alpha_%s'         % name ,
-                                       '#alpha_{Apo}(%s)' % name ,
-                                       None , 2.0 , 0.01 , 5 )
+        ## sigma asymmetry: kappa = tanh(psi) 
+        self.__psi = self.make_var ( ZERO if psi is None else psi ,
+                                     'psi_%s'   % self.name       ,
+                                     '#psi(%s)' % self.name       ,
+                                     None , 0 , -17 , +17         )
         
-        self.__n     = self.make_var ( n                    ,
-                                       'n_%s'        % name ,
-                                       'n_{Apo}(%s)' % name ,
-                                       None , 5.0 , 1.e-6 , 100  )
-        
-        self.__b     = self.make_var ( b                    ,
-                                       'b_%s'        % name ,
-                                       'b_{Apo}(%s)' % name ,
-                                       None , 1.e-5 , 10000 ) 
-        #
-        ## finally build PDF
-        #
-        self.pdf  = Ostap.Models.Apollonios (
-            self.roo_name ( 'apo_' ) , 
-            "Apollonios %s" % self.name   ,
-            self.xvar   ,
-            self.mean   ,
-            self.sigma  ,
-            self.alpha  ,
-            self.n      ,
-            self.b      ) 
-
-        ## save the configuration
-        self.config = {
-            'name'   : self.name  ,
-            'xvar'   : self.xvar  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma ,
-            'alpha'  : self.alpha ,
-            'n'      : self.n     ,
-            'b'      : self.b     ,
-            }
-        
-    @property
-    def alpha ( self ) :
-        """'alpha'-parameter for Apollonios tail"""
-        return self.__alpha
-    @alpha.setter
-    def alpha ( self, value ) :
-        self.set_value ( self.__alpha , value ) 
-    
-    @property
-    def n ( self ) :
-        """'n'-parameter for Apollonios tail"""
-        return self.__n
-    @n.setter
-    def n ( self, value ) :
-        self.set_value ( self.__n , value ) 
-
-    @property
-    def b ( self ) :
-        """'b'-parameter for Apollonios function"""
-        return self.__b
-    @b.setter
-    def b ( self, value ) :
-        self.set_value ( self.__b , value ) 
-
-models.append ( Apollonios_pdf )    
-# =============================================================================
-## @class Apollonios2_pdf
-#  "Bifurcated Apollonios"
-#  Gaussian with exponential (asymmetrical) tails
-#
-#  A convinient reparameterization is applied to keep reduce 
-#  the correlations between "sigma"s and "beta" 
-#  \f[ f(x;\mu,\sigma_l,\sigma_r,\beta) \propto 
-#         \mathrm{e}^{\left|\beta\right|( \left|\beta\right| -
-#         \sqrt{ \beta^2+\left(\delta x\right)^2}} \f] 
-#   where 
-#  \f[ \delta x  = \left\{ \begin{array}{ccc}
-#          \dfrac{x-\mu}{\sigma_l} & \text{for} & x \le \mu \\
-#          \dfrac{x-\mu}{\sigma_r} & \text{for} & x >   \mu \\
-#          \end{array}
-#          \right.\f]
-#  Large betas corresponds to gaussian 
-#      
-#  @see Ostap::Models::Apollonios2 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2014-08-20
-class Apollonios2_pdf(PEAK) :
-    """ Bifurcated Apollonios:
-    Gaussian with exponential (asymmetrical) tails
-    
-    f(x; mu, sigma_l, sigma_r, beta) ~ exp( |beta|(|\beta| - sqrt( beta^2+( delta x)^2 ))      
-    with
-    delta x  = (x-mu)/sigma_l for  x < mu
-    delta x  = (x-mu)/sigma_r for  x > mu
-    and
-    sigma_{l,r} = sigma * ( 1 + kappa)
-    with asymmetry parameter -1 < kappa < 1 
-    
-    The function is inspired by Appolonios function, but it has no power-law tails:
-    instead the exponential tails are used.
-    Reparameterization reduces the correlation between 'sigma' and 'beta',
-    allowing their easy interpretation.
-    Large 'beta' and small 'asymmetry' corresponds to gaussian
-    
-    """
-    def __init__ ( self               ,
-                   name               ,
-                   xvar               ,
-                   mean      = None   ,
-                   sigma     = None   ,
-                   asymmetry = None   ,
-                   beta      = None   ) : 
-        
-        #
-        ## initialize the base
-        # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma  )
-        
-        ## asymmetry parameter 
-        self.__asym = self.make_var ( asymmetry                 ,
-                                      'asym_%s'          % name ,
-                                      '#asym_{Apo2}(%s)' % name ,
-                                      None , 0 , -1 , 1 )
-        
-        ## construct left and right sigmas 
-        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
-            self.sigma                                    , ## mean/average sigma 
-            self.asym                                     , ## asymmetry parametet
-            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
-            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
-            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
-            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
-
+        ## create the asymmetry "cluster" 
+        if psi is None or self.__psi is ZERO :            
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma'              ,
+                                                    var1    = self.sigma ,
+                                                    var2    = self.sigma )                                        
+        else :
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
+                                                    halfsum = self.sigma ,
+                                                    psi     = self.__psi )
+        ## beta-parameter     
         self.__beta    = self.make_var ( beta ,
-                                         'beta_%s'          % name ,
-                                         '#beta_{Apo2}(%s)' % name ,
-                                         None , 1 , 1.e-5 , 10000  ) 
+                                         'beta_%s'         % name ,
+                                         '#beta_{Apo}(%s)' % name ,
+                                         None , 1 , 1.e-5 , 1000  ) 
+        
         #
         ## finally build PDF
         #
-        self.pdf  = Ostap.Models.Apollonios2 (
-            self.roo_name ( 'apo2_' ) , 
-            "Apollonios2 %s" % self.name ,
+        self.__apo = Ostap.Models.Apollonios (
+            self.roo_name ( 'apo_' ) , 
+            "Apollonios %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
             self.sigmaR ,
             self.beta   )
         
+        self.pdf = self.__apo
+        
         ## save the configuration
         self.config = {
             'name'      : self.name  ,
             'xvar'      : self.xvar  ,
             'mean'      : self.mean  ,
-            'sigma'     : self.sigma ,
-            'asymmetry' : self.asym  ,
+            'sigma'     : self.sigma ,            
+            'psi'       : self.psi   ,
             'beta'      : self.beta  ,
             }
 
     @property
-    def asym ( self ) :
-        """'asym'- asymmetry parameter for Apollonios2 function (same as 'kappa')"""
-        return self.__asym
-    @asym.setter
-    def asym ( self, value ) :
-        self.set_value ( self.__asym , value ) 
+    def kappa     ( self ) :
+        """'asym'- asymmetry parameter for Apollonios function"""
+        return self.__AV_SIGMA.kappa
+    @property
+    def asymmetry ( self ) :
+        """'asym'- asymmetry parameter for Apollonios function (same as 'kappa')"""
+        return self.kappa     
+    @property
+    def asym      ( self ) :
+        """'asym'- asymmetry parameter for Apollonios function"""
+        return self.kappa 
 
     @property
-    def kappa ( self ) :
-        """'kappa'-parameter for Apollonios2 function (same as 'asym')"""
-        return self.__asym
-    @kappa.setter
-    def kappa ( self, value ) :
-        self.set_value ( self.__asym , value ) 
-
+    def psi ( self ) :
+        """'psi': asymmetry parameter: kappa = tanh ( psi ) """
+        return self.__psi 
+    @psi.setter
+    def psi ( self, value ) :
+        self.set_value ( self.__psi , value )
+        
     @property
     def beta ( self ) :
         """'beta'-parameter for Apollonios-2 function"""
-        return self.__beta
+        return self.__beta    
     @beta.setter
     def beta ( self, value ) :
         self.set_value ( self.__beta , value ) 
 
     @property
     def sigmaL ( self ) :
-        """(left) sigma-parameter for Apollonios-2 function"""
-        return self.__sigmaL
+        """(left) sigma-parameter for Apollonios function"""
+        return self.__AV_SIGMA.var1
     
     @property
     def sigmaR ( self ) :
-        """(right) sigma-parameter for Apollonios2 function"""
-        return self.__sigmaR
-
+        """(right) sigma-parameter for Apollonios function"""
+        return self.__AV_SIGMA.var2 
     
-models.append ( Apollonios2_pdf )    
+models.append ( Apollonios_pdf )    
+
+# =============================================================================
+## @class ApolloniosL_pdf
+#  simple wrapper over bifurcated/asymmetric Apollonios PDF with power-law left tail 
+#  @see Ostap::Models::ApolloniosL
+#  @see Ostap::Models::Apollonios
+#  @see Ostap::Math::ApolloniosL
+#  @see Ostap::Math::Apollonios
+#
+#  The function is modification of the original function proposed by Diego Martinez Santos
+#  @see http://arxiv.org/abs/1312.5000
+# 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-07-25
+class ApolloniosL_pdf(Apollonios_pdf) :
+    """ bifurcated/asymmetric Apollonios function with power-law left tail 
+    http://arxiv.org/abs/1312.5000
+    
+    The function is modification of the original function proposed by Diego Martinez Santos
+    - see http://arxiv.org/abs/1312.5000
+    
+    - see `Ostap.Models.ApolloniosL`
+    - see `Ostap.Math.ApolloniosL`
+    - see `Ostap.Models.Apollonios`
+    - see `Ostap.Math.Apollonios`
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   mean  = None ,
+                   sigma = None ,
+                   psi   = None ,
+                   beta  = None ,
+                   alpha = None ,
+                   n     = None ) : 
+        
+        ## initialize the base class 
+        Apollonios_pdf.__init__ ( self          ,
+                                  name  = name  ,
+                                  xvar  = xvar  ,
+                                  mean  = mean  ,
+                                  sigma = sigma ,
+                                  psi   = psi   , 
+                                  beta  = beta  )
+        
+        self.__alpha = self.make_var ( alpha ,
+                                       'alpha_%s'         % name ,
+                                       '#alpha_{Apo}(%s)' % name ,
+                                       None , 1.5 , 0.10 , 5 )
+        
+        self.__n     = self.make_var ( n   ,
+                                       'n_%s'            % name ,
+                                       'n_{Apo}(%s)'     % name ,
+                                       None , 1.0 , -1 , 100 )
+    
+        ## N = Ostap.Math.CrystalBall.N ( n ) 
+        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
+
+        ## finally build PDF
+        self.pdf  = Ostap.Models.ApolloniosL (
+            self.roo_name ( 'apoL_' )    , 
+            "ApolloniosL %s" % self.name ,
+            self.xvar   ,
+            self.mean   ,
+            self.sigmaL ,
+            self.sigmaR ,
+            self.beta   , 
+            self.alpha  ,
+            self.n      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,            
+            'psi'       : self.psi   ,
+            'beta'      : self.beta  ,
+            'alpha'     : self.alpha ,
+            'n'         : self.n     ,
+        }
+
+    @property
+    def alpha ( self ) :
+        """'alpha'-parameter for ApolloniosL (left) tail"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+        
+    @property
+    def n     ( self ) :
+        """'n'-parameter for Apollonios tail"""
+        return self.__n
+    @n.setter
+    def n     ( self, value ) :
+        self.set_value ( self.__n , value ) 
+
+    @property
+    def N     ( self ) :
+        """'N'-parameter for Apollonios tail"""
+        return self.__N
+        
+models.append ( ApolloniosL_pdf )
+
 # =============================================================================
 ## @class BifurcatedGauss_pdf
 #  Aka a split normal distribution 
@@ -1472,7 +1463,6 @@ class SkewGauss_pdf(PEAK) :
         self.set_value ( self.__alpha , value ) 
 
 models.append ( SkewGauss_pdf )
-
 
 # =============================================================================
 ## @class Novosibirsk_pdf

@@ -2242,6 +2242,25 @@ double Ostap::Models::Apollonios::maxVal  ( Int_t      code ) const
 // ApolloniosL
 // ============================================================================
 Ostap::Models::ApolloniosL::ApolloniosL
+( const char*                name  , 
+  const char*                title ,
+  Ostap::Models::Apollonios& core  , 
+  RooAbsReal&                alpha ,
+  RooAbsReal&                n     )
+  : ApolloniosL ( name           ,
+		  title          , 
+		  const_cast<RooAbsReal&> ( core.x      () ) ,
+		  const_cast<RooAbsReal&> ( core.m0     () ) ,
+		  const_cast<RooAbsReal&> ( core.sigmaL () ) ,
+		  const_cast<RooAbsReal&> ( core.sigmaR () ) ,
+		  const_cast<RooAbsReal&> ( core.beta   () ) ,
+		  alpha          ,
+		  n              )
+{}
+// ============================================================================
+// ApolloniosL
+// ============================================================================
+Ostap::Models::ApolloniosL::ApolloniosL
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
@@ -2260,7 +2279,7 @@ Ostap::Models::ApolloniosL::ApolloniosL
   , m_beta    ( "!beta"    , "beta-parameter"   , this , beta   )
   , m_alpha   ( "!alpha"   , "alpha-parameter"  , this , alpha  )
   , m_n       ( "!n"       , "n-parameter"      , this , n      )
-//
+   //
   , m_apoL    () 
 {
   //

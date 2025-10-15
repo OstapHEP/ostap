@@ -60,23 +60,43 @@ namespace Ostap
     public:
       // ======================================================================
       /// peak position
-      inline double peak    () const { return m_peak   ; }
-      inline double m0      () const { return m_peak   ; }
-      inline double mu      () const { return m_peak   ; }
-      inline double mode    () const { return m_peak   ; }
-      inline double mass    () const { return m_peak   ; }
+      inline double peak      () const { return m_peak   ; }
+      inline double m0        () const { return m_peak   ; }
+      inline double mu        () const { return m_peak   ; }
+      inline double mode      () const { return m_peak   ; }
+      inline double mass      () const { return m_peak   ; }
       /// left sigma
-      inline double sigmaL  () const { return m_sigmaL ; }
+      inline double sigmaL    () const { return m_sigmaL ; }
       /// right sigma
-      inline double sigmaR  () const { return m_sigmaR ; }
+      inline double sigmaR    () const { return m_sigmaR ; }
       //
-      inline double sigmaL2 () const { return m_sigmaL * m_sigmaL ; }
-      inline double sigmaR2 () const { return m_sigmaR * m_sigmaR ; }
+      inline double sigmaL2   () const { return m_sigmaL * m_sigmaL ; }
+      inline double sigmaR2   () const { return m_sigmaR * m_sigmaR ; }
       // ======================================================================
-      /// ssigma 
-      inline double sigma   () const { return 0.5  * ( m_sigmaL + m_sigmaR )            ; }
+    public:
+      // ======================================================================      
+      /// sigma 
+      inline double sigma     () const { return 0.5  * ( m_sigmaL + m_sigmaR )            ; }
       /// sigma-asymmetry 
-      inline double asym    () const { return 0.5  * ( m_sigmaL - m_sigmaR ) / sigma () ; }
+      inline double asymmetry () const { return 0.5  * ( m_sigmaL - m_sigmaR ) / sigma () ; }
+      /// sigma-asymmetry       
+      inline double asym      () const { return asymmetry () ; }
+      /// sigma-asymmetry 
+      inline double kappa     () const { return asymmetry () ; }
+      /** sigma-asymmetry:
+       *  \f$ \kappa  \equiv \tanh \psi \f$ 
+       */ 
+      double        psi       () const ; 
+      // ======================================================================
+      /** set asymetry keeping average sigma untouched
+       *  \f$ \left| \kappa \right| < 1 \f$ 
+       */
+      bool setKappa ( const double value ) ;
+      // ======================================================================
+      /** set asymetry keeping average sigma untouched
+       *  \f$ \left| \kappa \right| < 1 \f$ 
+       */
+      bool setPsi   ( const double value ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -92,8 +112,7 @@ namespace Ostap
         const double valueR ) ;
       /// set both sigmas simultaneously
       inline bool setSigma   
-      ( const double value ) 
-      { return setSigma ( value , value ) ; }
+      ( const double value ) { return setSigma ( value , value ) ; }
       // ======================================================================
       inline bool setM0   ( const double value ) { return setPeak ( value ) ; } 
       inline bool setMu   ( const double value ) { return setPeak ( value ) ; } 
@@ -110,6 +129,14 @@ namespace Ostap
         const double high ) const ;
       ///  get CDF 
       double cdf      ( const double x    ) const ;
+      // ======================================================================
+    public: // logarithmic derivative 
+      // ======================================================================
+      /** log-derivative \f$ \frac{ f^\prime}{f}  \f$
+       *  Useful to attach the radiative tail to ensure 
+       *  the continuity of the function and the 1st derivatibve 
+       */
+      double dFoF ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -230,8 +257,7 @@ namespace Ostap
       // ======================================================================
       /** constructor from all parameters
        *  @param peak    the peak posiion
-       *  @param sigmaL  (left  sigma)
-       *  @param sigmaR  (right sigma)
+       *  @param sigma   the peak width 
        */
       Gauss
       ( const double peak  = 0 ,
@@ -1706,14 +1732,16 @@ namespace Ostap
       inline double mass    () const { return m_core.mass    () ; }
       //
       inline double sigma   () const { return m_core .sigma  () ; }
+      //
       inline double alphaL  () const { return m_left .alpha  () ; }
       inline double alphaR  () const { return m_right.alpha  () ; }      
       inline double nL      () const { return m_left .n      () ; }
       inline double nR      () const { return m_right.n      () ; }
       inline double NL      () const { return m_left .N      () ; }
       inline double NR      () const { return m_right.N      () ; }
-      //
+      /// squared alphaL
       inline double alphaL2 () const { return m_left .alpha2 () ; }
+      /// squared alphaR
       inline double alphaR2 () const { return m_right.alpha2 () ; }      
       // =====================================================================
     public:
@@ -1737,6 +1765,24 @@ namespace Ostap
       inline bool setPeak   ( const double value ) { return setM0 ( value ) ; }
       inline bool setMode   ( const double value ) { return setM0 ( value ) ; }
       inline bool setMass   ( const double value ) { return setM0 ( value ) ; }
+      // ======================================================================
+    public: // symmeterized setters 
+      // ======================================================================
+      /// set both alpha-parameters 
+      bool        setAlpha
+      ( const double valueL ,
+	const double valueR ) ;
+      /// set both n-parameters 
+      bool        setN 
+      ( const double valueL ,
+	const double valueR ) ;
+      // ======================================================================
+      /// set both alpha-parameters 
+      inline bool setAlpha ( const double value )
+      { return setAlpha ( value , value ) ; } 
+      /// set both n-parameters 
+      inline bool setN     ( const double value )
+      { return setN     ( value , value ) ; } 
       // ======================================================================      
     public: //
       // ======================================================================
@@ -1797,21 +1843,21 @@ namespace Ostap
      *
      *  \f[  f(x; \mu, \sigma_L, \sigma_R, \beta) \propto \mathrm{e}^{\beta^\prime\ledt(\beta - \sqrt{\beta^2+\delta^2 }\right) } \f]
      *  where
-     *  - \f$ \beta^\prime = \sqrt{ 1+ \beta^2}\f$
-     *  - \f$ \delta = \frac{x-\mu}{\sigma_L}\f$ fpr \f$ x<\mu \f$, otherwise \f$ \delta = \frac{x-mu}{\sigma_R}\f$
+     *  - \f$ \beta_2 = \sqrt{ 2 + \beta^2}\f$
+     *  - \f$ \delta  = \frac{x-\mu}{\sigma_L}\f$ for \f$ x<\mu \f$, otherwise \f$ \delta = \frac{x-mu}{\sigma_R}\f$
      *
      *  Well defined limits are: 
-     *  - \f$ \beta \rightharrow +\infty \f$ : bifucated Gaussian with \f$\sigma_{L,R}\f$ 
-     *  - \f$ \beta \rightarrow 9  \f$ : asymmetric Laplace with slopes of \f$\sqrt{2}\sigma_{L,R}\f$ 
+     *  - \f$ \beta \rightharrow +\infty \f$ : Bifucated Gaussian with \f$\sigma_{L,R}\f$ 
+     *  - \f$ \beta \rightarrow 0        \f$ : Asymmetric Laplace with slopes of \f$\sqrt{2}\sigma_{L,R}\f$ 
      *
      *  The function is largely inspired by:
      *  @see https://indico.cern.ch/getFile.py/access?contribId=2&resId=1&materialId=slides&confId=262633
      *  @see http://arxiv.org/abs/1312.5000
      *
-     *  The adopted parameteriatuon
-     *  - more generic, allowing intrincis asymmetries  
+     *  The adopted parameterization
+     *  - more generic, allowing intrinsic asymmetries  
      *  - have well-defined limits  
-     *  - RMS only sightly depends on \f$ \beta \f$ 
+     *  - RMS only sightly depends on \f$ \beta \f$ in region \f$ \beta \sim O(1) \f$ 
      *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
@@ -1828,9 +1874,9 @@ namespace Ostap
        */
       Apollonios
       ( const double m0      = 0 ,
-	      const double sigmaL  = 1 ,
-	      const double alphaR  = 1 ,
-	      const double beta    = 1 ) ;  // large beta correponds to gaussian
+	const double sigmaL  = 1 ,
+	const double alphaR  = 1 ,
+	const double beta    = 1 ) ;  // large beta correponds to gaussian
       // ======================================================================
     public:
       // ======================================================================
@@ -1864,6 +1910,14 @@ namespace Ostap
       inline bool setPeak   ( const double value ) { return setM0 ( value ) ; }
       inline bool setMass   ( const double value ) { return setM0 ( value ) ; }
       inline bool setMode   ( const double value ) { return setM0 ( value ) ; }
+      // ======================================================================
+      /// set both sigmas simultaneously 
+      bool        setSigma
+      ( const double valueL ,
+	const double valueR ) ;
+      /// set both sigmas simultaneously 
+      inline bool setSigma ( const double value )
+      { return setSigma ( value , value ) ; }
       // ======================================================================      
     public:
       // ======================================================================
@@ -1871,6 +1925,14 @@ namespace Ostap
       double integral
       ( const double low  ,
         const double high ) const ;
+      // ======================================================================
+    public: // logarithmic derivative 
+      // ======================================================================
+      /** log-derivative \f$ \frac{ f^\prime}{f}  \f$
+       *  Useful to attach the radiative tail to ensure 
+       *  the continuity of the function and the 1st derivatibve 
+       */
+      double dFoF ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1919,7 +1981,7 @@ namespace Ostap
         const double sigmaL = 1 ,
         const double sigmaR = 1 ,
         const double beta   = 1 , 
-	      const double alpha  = 2 , 
+	const double alpha  = 2 , 
         const double n      = 1 ) ;
       // =====================================================================
       /** constructor from two parameters
@@ -1928,7 +1990,7 @@ namespace Ostap
        */
       ApolloniosL
       ( const Ostap::Math::Apollonios& core ,
-	      const Ostap::Math::Tail&       tail ) ;
+	const Ostap::Math::Tail&       tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1956,7 +2018,7 @@ namespace Ostap
       // ======================================================================
       inline bool setM0     ( const double value ) { return m_core.setM0     ( value ) ; }
       inline bool setSigmaL ( const double value ) { return m_core.setSigmaL ( value ) ; }
-      inline bool setSigmaR ( const double value ) { return m_core.setSigmaL ( value ) ; }
+      inline bool setSigmaR ( const double value ) { return m_core.setSigmaR ( value ) ; }
       inline bool setBeta   ( const double value ) { return m_core.setBeta   ( value ) ; }
       inline bool setAlpha  ( const double value ) { return m_tail.setAlpha  ( value ) ; }
       inline bool setN      ( const double value ) { return m_tail.setN      ( value ) ; }
@@ -1966,6 +2028,15 @@ namespace Ostap
       inline bool setMass   ( const double value ) { return setM0 ( value ) ; }
       inline bool setMode   ( const double value ) { return setM0 ( value ) ; }
       // ======================================================================
+      /// set both sigmas simultaneously 
+      inline bool setSigma
+      ( const double valueL ,
+	const double valueR )
+      { return m_core.setSigma ( valueL , valueR ) ; } 
+      /// set both sigmas simultaneously 
+      inline bool setSigma ( const double value )
+      { return m_core.setSigma ( value ) ; } 
+      // ======================================================================      
     public:
       // ======================================================================
       /// get the integral between low and high

@@ -207,26 +207,26 @@ def test_2gauss () :
 # =============================================================================
 ## Symmetric Apollonios
 # =============================================================================
-def test_apo2 () :
+def test_apo () :
     
-    logger = getLogger ( 'test_apo2' )
+    logger = getLogger ( 'test_apo' )
 
-    logger.info ('Test ResoApo2:  symmetric Apollonios2 resolution' )
-    from   ostap.fitting.resolution import ResoApo2
-    reso= ResoApo2( 'Apollonious2' , mass ,
+    logger.info ('Test ResoApo:  symmetric Apollonios resolution' )
+    from   ostap.fitting.resolution import ResoApo
+    reso= ResoApo ( 'Apollonious' , mass ,
                     sigma = ( 0.4 ,  0.01 ,  5.0 ) ,
                     beta  = ( 0.4 ,  0.01 , 20.0 ) ) 
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
-    with use_canvas ( 'test_apo2' , wait = 1 ) : 
+    with use_canvas ( 'test_apo' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Apollonious/2', logger )
+        make_print ( reso , result , 'Symmetric Apollonious', logger )
     
     models.add ( reso  )
     plots .add ( frame ) 
@@ -715,8 +715,8 @@ if '__main__' == __name__ :
     with timing ("2-Gauss"   , logger ) :  
         test_2gauss         () ## double Gaussian resolution model
         
-    with timing ("Apo2"      , logger ) :  
-        test_apo2           () ## symmetric Apollonios resoltuion model
+    with timing ("Apo "      , logger ) :  
+        test_apo            () ## symmetric Apollonios resoltuion model
         
     with timing ("CB2"       , logger ) :  
         test_cb2            () ## double-sided Crystal Ball resoltuion model

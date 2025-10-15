@@ -345,15 +345,14 @@ def test_apollonios () :
 
     logger = getLogger ( 'test_apollonios' )
 
-    logger.info ('Test Apollonios_pdf: Modified gaussian with power-law and exponential tails' ) 
+    logger.info ('Test Apollonios_pdf: modified Gaussian with exponential tails' ) 
     model = Models.Fit1D (
         signal = Models.Apollonios_pdf ( name  = 'APO', 
-                                         xvar  = mass ,
-                                         mean  = signal_gauss.mean    ,
-                                         sigma = signal_gauss.sigma ,
-                                         b     =  1 ,
-                                         n     = 10 ,
-                                         alpha =  3 ) ,
+                                         xvar      = mass ,
+                                         mean      = signal_gauss.mean  ,
+                                         sigma     = signal_gauss.sigma ,
+                                         psi       = ( 0 , -1   , 1  )  ,                                      
+                                         beta      = ( 1 ,  0.1 , 10 )  ) ,
         background = background   ,
         S = S , B = B 
         )
@@ -371,36 +370,44 @@ def test_apollonios () :
     results.append ( result  )
 
 # ==========================================================================
-## Apollonios2
+## ApolloniosL
 # ==========================================================================
-def test_apollonios2() :
+def test_apolloniosL() :
     
-    logger = getLogger ( 'test_apollonios2' )
+    logger = getLogger ( 'test_apolloniosL' )
 
-    logger.info ('Test Apollonios2_pdf: modified Gaussian with exponential tails' ) 
+    logger.info ('Test ApolloniosL_pdf: Apolloniois with left power-law tail' ) 
     model = Models.Fit1D (
-        signal = Models.Apollonios2_pdf ( name = 'AP2' , 
+        signal = Models.ApolloniosL_pdf ( name = 'APL' , 
                                           xvar      = mass ,
                                           mean      = signal_gauss.mean  ,
-                                         sigma     = signal_gauss.sigma ,
-                                         beta      =  ( 0.5 , 2 )       ,
-                                         asymmetry = 0 ) ,
+                                          sigma     = signal_gauss.sigma ,
+                                          psi       = ( 0 , -1   ,   1   )  ,                                      
+                                          beta      = ( 1 ,  0.1 ,  10   )  ,
+                                          alpha     = ( 2 ,  1.0 ,   5.0 ) ,
+                                          n         = ( 1 , -1.0 , 100.0 ) ) ,
         background = background   ,
         S = S , B = B 
         )
     
     model.signal.mean.fix( m.value() )    
+    model.signal.alpha.fix (  2.0 )    
+    model.signal.n    .fix ( 10.0 )    
+    model.signal.mean .fix( m.value() )    
     model.S = NS 
     model.B = NB
-    model.signal.sigma.release() 
     
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
-        model.signal.asym.release ()
-        model.signal.mean.release ()
+        
+        model.signal.mean .release () 
+        model.signal.alpha.release () 
+        model.signal.n    .release () 
+        model.signal.mean .release () 
+         
         result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model, result , 'Apollonios2 model' , logger )
+    make_print ( model, result , 'ApolloniosL model' , logger )
         
     models.add     ( model   )
     results.append ( result  )
@@ -2092,8 +2099,6 @@ def dump_models () :
 # =============================================================================
 if '__main__' == __name__ :
 
-
-    """
     ## simple Gaussian PDF                       + background
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
@@ -2115,17 +2120,14 @@ if '__main__' == __name__ :
     with timing ('test_needham'        , logger ) :
         test_needham        ()
     
-    """
-    
     ## Apollonios function                       + background 
     with timing ('test_apollonios'     , logger ) :
         test_apollonios     () 
 
-    ## modified Apollonios function              + background
-    with timing ('test_apolloniois2'   , logger ) :
-        test_apollonios2    () 
+    ## modified ApolloniosL function              + background
+    with timing ('test_apollonioisL'   , logger ) :
+        test_apolloniosL    () 
 
-    """ 
     ## bifurcated Gaussian function              + background
     with timing ('test_bifurcated'     , logger ) :
         test_bifurcated     () 
@@ -2293,8 +2295,6 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
-    
-    """
     
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

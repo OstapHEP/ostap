@@ -52,7 +52,7 @@ namespace Ostap
    *  - double-sided Crystal Ball
    *  - Needham: Crystal Ball with \f$\alpha(\sigma)\f$
    *  - Apollonios    (bifurcated apolonious)
-   *  - ApolloniosL 
+   *  - ApolloniosL   (bifurcated apolonious with power-law tail)
    *  - Bifurcated Gauissian
    *  - Generalized Gaussian v1
    *  - Generalized Gaussian v2
@@ -1363,12 +1363,10 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Apollonios
-     *  A modified gaussian with power-law tail on rigth ride and exponential
-     *  tail on low-side
-     *  The function is proposed by Diego Martinez Santos
+     *  An asymetric Apollonious function 
+     *
+     *  The function is modiication of the original function proposed by Diego Martinez Santos
      *  @see http://arxiv.org/abs/1312.5000
-     *  Here a bit modified version is used with redefined parameter <code>n</code>
-     *  to be coherent with local definitions of Crystal Ball
      *
      *  @see Ostap::Math::Apollonios
      *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
@@ -1389,7 +1387,7 @@ namespace Ostap
       ( const char*          name      ,
         const char*          title     ,
         RooAbsReal&          x         ,
-        RooAbsReal&          mean      ,
+        RooAbsReal&          m0        ,
         RooAbsReal&          sigmaL    ,
         RooAbsReal&          sigmaR    ,
         RooAbsReal&          beta      ) ; 
@@ -1487,6 +1485,13 @@ namespace Ostap
         RooAbsReal&          beta      ,		
         RooAbsReal&          alpha     ,
         RooAbsReal&          n         ) ;
+      /// constructor from all parameters
+      ApolloniosL
+      ( const char*                name  ,
+        const char*                title ,
+	Ostap::Models::Apollonios& core  , 
+        RooAbsReal&                alpha ,
+        RooAbsReal&                n     ) ;
       /// "copy" constructor
       ApolloniosL  ( const ApolloniosL& right , const char* name = 0  ) ;
       /// virtual destructor

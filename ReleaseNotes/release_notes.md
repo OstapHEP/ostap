@@ -4,9 +4,12 @@
   1. more coherent treatment of the numeric types in `ROOT.TCut`-expressions
   1. some limited treatment of infinity/NaNs in `ROOT.TCut`-expressions
   1. better (more safe) implementaton of `APDF1.check_ranges` method, inclusing better documentation
+  1. massive improvement for Apollonius & friends.
   
 ## Backward  incompatible 
 
+   1. From now `Apollonios` stands for the core asymmetric Apollonious function and `ApolloniousL` represents Aplooniosu functon with power-lay left tail
+   
 ## Bug fixes
 
 # v3.2.1.0 

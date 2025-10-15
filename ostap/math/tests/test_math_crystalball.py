@@ -7,11 +7,15 @@
 #  @see Ostap::Math::CrystalBall
 #  @see Ostap::Math::CrystalBallRightside 
 #  @see Ostap::Math::CrystalBallDoubleSided 
+#  @see Ostap::Math::Apollonios
+#  @see Ostap::Math::ApolloniosL
 # ============================================================================= 
-""" Test module for CrystallBall functions 
+""" Test module for CrystallBall-like functions 
 - see Ostap::Math::CrystalBall
 - see Ostap::Math::CrystalBallRightside 
 - see Ostap::Math::CrystalBallDoubleSided 
+- see Ostap::Math::Apollonios
+- see Ostap::Math::ApolloniosL
 """
 # ============================================================================= 
 from   ostap.core.core          import Ostap, SE
@@ -99,12 +103,30 @@ def test_cbds () :
 
     return the_tst ( cb , logger )
 
+# ===============================================================================
+def test_ap () :
+
+    logger = getLogger ( 'test_ap' )
+
+    ap = Ostap.Math.Apollonios( m0 , sigma , sigma , 0.5 ) 
+    the_tst ( ap , logger )
+
+# ===============================================================================
+def test_apl () :
+
+    logger = getLogger ( 'test_apl' )
+
+    ap = Ostap.Math.ApolloniosL ( m0 , sigma , sigma , 0.5 , 1.5 , 0.5 ) 
+    the_tst ( ap , logger )
+
 # =============================================================================
 if '__main__' == __name__ :
     
     test_cb   ()
     test_cbrs ()
     test_cbds ()
+    test_ap   ()
+    test_apl  ()
 
 # =============================================================================
 ##                                                                      The END 

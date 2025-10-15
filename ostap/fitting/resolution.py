@@ -5,7 +5,7 @@
 #  Set of useful resolution models:
 #  - single Gaussian                     (gaussian   tails)
 #  - double Gaussian                     (gaussian   tails)
-#  - Apollonios-2                        (exponenial tails)
+#  - Apollonios                          (exponenial tails)
 #  - Sech/hyperbolic  secant             (exponenial tails)
 #  - Bukin                               (exponential or gaussian tails)
 #  - double-sided Crystal Ball           (power-law  tails)
@@ -26,7 +26,7 @@
 """Set of useful resolution models:
 - single Gaussian                     (gaussian    tails)
 - double Gaussian                     (gaussian    tails)
-- Apollonios-2                        (exponential tails)
+- Apollonios                          (exponential tails)
 - Sech/hyperbolic  secant             (exponential tails)
 - Logistic/Sech-squared               (exponential tails) 
 - GenLogisticIV                       (exponential tails+asymmetry) 
@@ -55,7 +55,7 @@ __all__     = (
     ##
     'ResoGauss'         , ## single-Gaussian resolution model,
     'ResoGauss2'        , ## double-Gaussian resolutin model,
-    'ResoApo2'          , ## Apollonios-2 resolution model,
+    'ResoApo'           , ## Apollonios resolution model,
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
     'ResoCB2a'          , ## double-sided Crystal Ball resolution model,
     'ResoNeedham'       , ## variant of Crystal Ball funxtion
@@ -269,18 +269,18 @@ class ResoGauss2(RESOLUTION) :
   
 models.add ( ResoGauss2 ) 
 # =============================================================================
-## @class ResoApo2
+## @class ResoApo
 #  (A)Symmetrical  Apollonios  model for resolution
 #   - (asymmetrical)Gaussian core 
 #   - exponential tails
 #  @see Ostap::Models::Apollonios2 
 #  @see Ostap::Math::Apollonios2 
-class ResoApo2(RESOLUTION) :
+class ResoApo(RESOLUTION) :
     """ (A)Symmetric variant of Apollonios model for the resolution function
     - (asymmetrical) Gaussian core 
     - exponential tails
-    see Ostap.Models.Apollonios2 
-    see Ostap.Math.Apollonios2 
+    see Ostap.Models.Apollonios
+    see Ostap.Math.Apollonios
     """
     def __init__ ( self         ,
                    name         ,   ## the  name 
@@ -289,49 +289,50 @@ class ResoApo2(RESOLUTION) :
                    beta  = 1    ,   ## beta parameter 
                    fudge = 1    ,   ## fudge-factor 
                    mean  = None ,   ## the mean value 
-                   kappa = None ) : ## asymmetry parameter
+                   psi   = None ) : ## asymmetry parameter psi: kappa = tanh(psi) 
         
         ##  initlialize the base 
-        super(ResoApo2,self).__init__ ( name  = name  ,
-                                        xvar  = xvar  ,
-                                        sigma = sigma ,
-                                        mean  = mean  ,
-                                        fudge = fudge )
-        
-        self.__kappa = self.make_var ( ZERO if kappa is None else kappa   ,
-                                       'kappa_%s'   % self.name           ,
-                                       '#kappa(%s)' % self.name           ,
-                                       None , 0 , -1.0+1.e-9 , +1.0-1.e-9 ) 
-        
-        if kappa is None or self.__kappa is ZERO :
-        
-            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
-                                                    var1    = self.sigma_corr ,
-                                                    var2    = self.sigma_corr )
-        else :
-            
-            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
-                                                    halfsum = self.sigma_corr ,
-                                                    kappa   = self.__kappa    )
-            
+        super(ResoApo,self).__init__ ( name  = name  ,
+                                       xvar  = xvar  ,
+                                       sigma = sigma ,
+                                       mean  = mean  ,
+                                       fudge = fudge )
+        ## beta-parameter 
         self.__beta    = self.make_var ( beta ,
                                          'beta_%s'   % name  ,
                                          '#beta(%s)' % name  ,
                                          None , 0.0001 , 10000 )
 
+        ## sigma asymmetry: kappa = tanh(psi) 
+        self.__psi = self.make_var ( ZERO if psi is None else psi   ,
+                                     'psi_%s'   % self.name         ,
+                                     '#psi(%s)' % self.name         ,
+                                     None , 0 , -18 , +18           ) 
+
+        ## symmetric stuff 
+        if psi is None or self.__psi is ZERO :
+            
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma'                   ,
+                                                    var1    = self.sigma_corr ,
+                                                    var2    = self.sigma_corr )                                        
+        else :
+            
+            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
+                                                    halfsum = self.sigma_corr ,
+                                                    psi     = self.__psi      )
         #
         ## build the resolution model
         #
-        self.apo2  = Ostap.Models.Apollonios2 (
-            self.roo_name ( 'rapo2_' )       ,
-            "Resolution Apollonios2 %s" % self.name ,
+        self.apo  = Ostap.Models.Apollonios (
+            self.roo_name ( 'rapo_' )       ,
+            "Resolution Apollonios %s" % self.name ,
             self.xvar       ,
             self.mean       ,
             self.sigmaL     ,
             self.sigmaR     ,
             self.beta       ) 
 
-        self.pdf = self.apo2
+        self.pdf = self.apo
 
         ##  save   the configuration
         self.config = {
@@ -341,7 +342,7 @@ class ResoApo2(RESOLUTION) :
             'sigma'    : self.sigma    ,
             'beta'     : self.beta     ,
             'fudge'    : self.fudge    ,
-            'kappa'    : None if kappa is None else self.kappa 
+            'psi'      : None if psi is None else self.psi 
             }
         
     @property
@@ -350,19 +351,23 @@ class ResoApo2(RESOLUTION) :
         return self.__beta
     @beta.setter
     def beta ( self , value ) :
-        value = float ( value )
-        assert 0< value , "'beta'-parameter must be positive!"
         self.set_value ( self.__beta , value )
 
     @property
-    def kappa ( self ) :
-        """'kappa' : asymmetry parameter
+    def psi ( self ) :
+        """'psi' : asymmetry parameter: kappa = tanh(psi)
         """
-        return self.__AV_SIGMA.kappa
-    @kappa.setter
-    def kappa ( self , value ) :
-        self.__AV_SIGMA_kappa = value
-        
+        return self.__AV_SIGMA.psi 
+    @psi.setter
+    def psi ( self , value ) :
+        self.__AV_SIGMA.psi = value
+
+    @property
+    def kappa ( self ) :
+        """'kappa' : asymmetry parameter: kappa = tanh(psi)
+        """
+        return self.__AV_SIGMA.psi 
+
     @property
     def sigmaL ( self )  :
         """'sigmaL' : left sigma-parameter"""
@@ -372,7 +377,7 @@ class ResoApo2(RESOLUTION) :
         """'sigmaR' : right  sigma-parameter"""
         return self.__AV_SIGMA.var2 
     
-models.add ( ResoApo2 )
+models.add ( ResoApo )
 
 # =============================================================================
 ## @class ResoCB2a

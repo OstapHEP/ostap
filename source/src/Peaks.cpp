@@ -194,12 +194,29 @@ namespace
 // ============================================================================
 double Ostap::Math::BifurcatedGauss::evaluate ( const double x ) const
 {
-  const double dx   = x - m_peak ;
-  const double arg  = dx < 0 ? dx / m_sigmaL : dx / m_sigmaR ;
+  const double dx = 
+    ( x < m_peak ) ?
+    ( x - m_peak ) / m_sigmaL :
+    ( x - m_peak ) / m_sigmaR ;
   //
   const double norm = s_SQRTPIHALF * ( m_sigmaL + m_sigmaR ) ;
   //
-  return std::exp ( -0.5 * arg * arg ) / norm ;
+  return std::exp ( -0.5 * dx ) / norm ;
+}
+// ============================================================================
+/*  log-derivative \f$ \frac{ f^\prime}{f}  \f$
+ *  Useful to attach the radiative tail to ensure 
+ *  the continuity of the function and the 1st derivatibve 
+ */
+// ============================================================================
+double Ostap::Math::BifurcatedGauss::dFoF ( const double x ) const
+{
+  const double dx = 
+    ( x < m_peak ) ?
+    ( x - m_peak ) / ( m_sigmaL * m_sigmaL ) :
+    ( x - m_peak ) / ( m_sigmaR * m_sigmaR ) ;
+  //
+  return -dx ; 
 }
 // ============================================================================
 // get the integral
@@ -237,7 +254,7 @@ double Ostap::Math::BifurcatedGauss::integral
   if       ( high <= m_peak )
     {
       const double sigma = sigmaL () ;
-      const double sf    = s_SQRT2i  / sigma  ;
+      const double sf    = s_SQRT2i / sigma  ;
       const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
       const double a     = ( low  - m_peak ) * sf ;
       const double b     = ( high - m_peak ) * sf ;
@@ -247,7 +264,7 @@ double Ostap::Math::BifurcatedGauss::integral
   else if ( low >= m_peak )
     {
       const double sigma = sigmaR () ;
-      const double sf    = s_SQRT2i  / sigma  ;
+      const double sf    = s_SQRT2i / sigma  ;
       const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
       const double a     = ( low  - m_peak ) * sf ;
       const double b     = ( high - m_peak ) * sf ;
@@ -302,6 +319,41 @@ bool Ostap::Math::BifurcatedGauss::setPeak( const double value )
   m_peak   = value  ;
   //
   return true ;
+}
+// ============================================================================
+/*  set asymmetry keeping average sigma untouched
+ *  \f$ \left| \kappa \right| < 1 \f$ 
+ */
+// ============================================================================
+bool Ostap::Math::BifurcatedGauss::setKappa
+( const double value )
+{
+  Ostap::Assert ( std::abs ( value ) < 1                   ,
+		  "Parameter 'kappa' must be |kappa|<1"    ,
+		  "Ostap::Math::BifurcatedGauss::setKappa" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //
+  const double s = sigma () ; 
+  return setSigma ( s * ( 1 + value ) ,
+		    s * ( 1 - value ) ) ;
+}
+// ============================================================================
+/*  set asymmetry keeping average sigma untouched
+ *  \f$ \left| \kappa \right| < 1 \f$ 
+ */
+// ============================================================================
+bool Ostap::Math::BifurcatedGauss::setPsi
+( const double value )
+{ return setKappa ( std::tanh ( value ) ) ; }
+// ============================================================================
+/* sigma-asymmetry:
+ *  \f$ \kappa  \equiv \tanh \psi \f$ 
+ */ 
+// ============================================================================
+double Ostap::Math::BifurcatedGauss::psi       () const
+{
+  const double k = kappa () ;
+  return std::atanh ( k ) ; 
 }
 // ============================================================================
 /* constructor from all parameters
@@ -517,8 +569,10 @@ std::size_t Ostap::Math::Gauss::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_peak , m_sigma ) ; 
 }
 // ============================================================================
-/* get the logarithmic derivative
- * \f$ \frac{ f6\prime}{f}  \f$
+/* get the logarithmic derivative 
+ * \f$ \frac{ f^\prime}{f}  \f$
+ *  usefut to attach the radiative tail to ensure 
+ *  the continuity of the function and the 1st derivatibve 
  */  
 // ===========================================================================
 double Ostap::Math::Gauss::dFoF
@@ -1993,19 +2047,7 @@ double Ostap::Math::CrystalBall::integral
 			   high ,
 			   xl   ,
 			   F    ,
-			   dFoF ) ;
-  
-  // const double 
-  // const double zlow  = m_core.t ( low  ) ;
-  // const double zhigh = m_core.t ( high ) ;
-  // //
-  // // Power-law tail:
-  // const double nn = N () ;
-  // /// tail
-  // const double a  =   - m_alpha           / nn ;
-  // const double b  = 1 - m_alpha * m_alpha / nn ;
-  // //  
-  // return m_A * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;
+			   dFoF ) ;  
 }
 // ============================================================================
 // get the tag 
@@ -2325,7 +2367,23 @@ bool Ostap::Math::CrystalBallDoubleSided::setAlphaR  ( const double value )
   return modified  ;
 }
 // ============================================================================
-
+bool Ostap::Math::CrystalBallDoubleSided::setAlpha
+( const double valueL , 
+  const double valueR ) 
+{
+  const bool m1 = setAlphaL ( valueL ) ;
+  const bool m2 = setAlphaR ( valueR ) ;
+  return m1 || m2 ;
+}
+// ============================================================================
+bool Ostap::Math::CrystalBallDoubleSided::setN
+( const double valueL , 
+  const double valueR ) 
+{
+  const bool m1 = setNL ( valueL ) ;
+  const bool m2 = setNR ( valueR ) ;
+  return m1 || m2 ;
+}
 // ============================================================================
 //  evaluate CrystalBall's function
 // ============================================================================
@@ -2521,6 +2579,15 @@ bool Ostap::Math::Apollonios::setSigmaR ( const double value )
   return true ;
 }
 // ============================================================================
+bool Ostap::Math::Apollonios::setSigma
+( const double valueL , 
+  const double valueR ) 
+{
+  const bool m1 = setSigmaL ( valueL ) ;
+  const bool m2 = setSigmaR ( valueR ) ;
+  return m1 || m2 ;
+}
+// ============================================================================
 bool Ostap::Math::Apollonios::setBeta ( const double value )
 {
   //
@@ -2533,6 +2600,24 @@ bool Ostap::Math::Apollonios::setBeta ( const double value )
   if ( s_equal ( m_beta , 1 ) ) { m_beta = 1 ; }
   //
   return true ;
+}
+// ============================================================================
+/*  log-derivative \f$ \frac{ f^\prime}{f}  \f$
+ *  Useful to attach the radiative tail to ensure 
+ *  the continuity of the function and the 1st derivatibve 
+ */
+// ============================================================================
+double Ostap::Math::Apollonios::dFoF ( const double x ) const
+{
+  const double dx = 
+    ( x < m_m0 ) ?
+    ( x - m_m0 ) / m_sigmaL :
+    ( x - m_m0 ) / m_sigmaR ;
+  //
+  const double h2 = std::hypot ( s_SQRT2 , m_beta ) ;
+  const double hx = std::hypot ( dx      , m_beta ) ;
+  //
+  return -h2 * dx / ( hx * ( dx < 0 ? m_sigmaL : m_sigmaR ) ) ;
 }
 // ============================================================================
 //  evaluate Apollonios' function
@@ -2564,22 +2649,22 @@ double Ostap::Math::Apollonios::integral
   else if (           low > high   ) { return - integral ( high ,
                                                            low  ) ; } // RETURN
   //
-  // split at the maximum
+  /// split at the maximum
   if ( low < m_m0 && m_m0 < high ) 
   { return integral ( low , m_m0 ) + integral ( m_m0 , high ) ; }
   //
-  // split into reasonable intervals of 2-sigma width
+  /// split into reasonable intervals of 2-sigma width
   const unsigned int N = 6 ;
   for ( unsigned int n = 2 ; n <= N ; n += 2 )
   {
-      const double xr = m_m0 + n * m_sigmaR ;
-      if ( low < xr && xr < high ) 
+    const double xr = m_m0 + n * m_sigmaR ;
+    if ( low < xr && xr < high ) 
       { return integral ( low , xr ) + integral ( xr , high ) ; }
-      //
-      const double xl = m_m0 - n * m_sigmaL ;
-      if ( low < xl && xl < high ) 
+    //
+    const double xl = m_m0 - n * m_sigmaL ;
+    if ( low < xl && xl < high ) 
       { return integral ( low , xl ) + integral ( xl , high ) ; }      
-      //
+    //
   }
   //
   const double xR = m_m0 + N * m_sigmaR ;
@@ -2599,7 +2684,8 @@ double Ostap::Math::Apollonios::integral
   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
     ( tag () , 
       &F     , 
-      low , high  ,                                // low & high edges
+      low    ,                                     // low integration edge
+      high   ,                                     // high integration edge
       workspace ( m_workspace )                  , // workspace
       in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
       in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
@@ -2619,7 +2705,6 @@ std::size_t Ostap::Math::Apollonios::tag () const
 }
 // ============================================================================
 
-
 // ============================================================================
 // ApolloniosL 
 // ============================================================================
@@ -2638,7 +2723,7 @@ Ostap::Math::ApolloniosL::ApolloniosL
   const double alpha  ,
   const double n      )
   : ApolloniosL ( Ostap::Math::Apollonios ( m0    , sigmaL , sigmaR , beta ) ,
-		              Ostap::Math::LeftTail   ( alpha , n ) )
+		  Ostap::Math::LeftTail   ( alpha , n ) )
 {}
 // ============================================================================
 /*  constructor from two parameters
@@ -2657,7 +2742,16 @@ Ostap::Math::ApolloniosL::ApolloniosL
 // ============================================================================
 double Ostap::Math::ApolloniosL::pdf ( const double x ) const
 {
-  return m_core ( x ) ;  
+  const double xl = xL () ;
+  //
+  /// Apollonious core?
+  if ( xl <= x ) { return m_core ( x ) ; }
+  //
+  /// Power-law tail
+  const double F    = m_core      ( xl ) ;
+  const double dFoF = m_core.dFoF ( xl ) ;
+  //
+  return m_tail ( x , xl , F , dFoF ) ;
 }
 // ============================================================================
 // get the integral between low and high
@@ -2670,54 +2764,23 @@ double Ostap::Math::ApolloniosL::integral
   else if (           low > high   ) { return - integral ( high ,
                                                            low  ) ; } // RETURN
   //
-  return m_core.integral ( low , high ) ;
- 
-  // const double x0 = m_m0 - m_alpha * m_sigma ;
-  // //
-  // // split into proper subintervals
-  // //
-  // if      ( low < x0 && x0 < high ) { return integral ( low , x0 ) + integral ( x0 , high ) ; }
-  // //
-  // // Z = (x-x0)/sigma 
-  // //
-  // const double zlow  = ( low  - m_m0 ) / sigma() ;
-  // const double zhigh = ( high - m_m0 ) / sigma() ;
-  // //
-  // // Integrate the peak
-  // if ( x0 <= low  )
-  // {
-  //   //
-  //   // use GSL to evaluate the integral
-  //   //
-  //   static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
-  //   static char s_message[] = "Integral(Apollonios)" ;
-  //   //
-  //   const auto F = s_integrator.make_function ( this ) ;
-  //   int    ierror   =  0 ;
-  //   double result   =  1 ;
-  //   double error    = -1 ;
-  //   std::tie ( ierror , result , error ) = s_integrator.qag_integrate
-  //   ( tag () , 
-  //     &F     , 
-  //     low    , high  ,               // low & high edges
-  //     workspace ( m_workspace ) ,    // workspace
-  //     s_APRECISION         ,         // absolute precision
-  //     s_RPRECISION         ,         // relative precision
-  //     m_workspace.size()   ,         // size of workspace
-  //     s_message           , 
-  //     __FILE__ , __LINE__ ) ;
-  //   //  
-  //   return result ;
-  // }
-  // //
-  // // power-law tail
-  // //
-  // const double nn = N() ;
-  // //
-  // const double a =   - m_b * m_alpha           / nn ;
-  // const double b = 1 - m_n * m_alpha * m_alpha / nn ; 
-  // //
-  // return m_A2 * m_b * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;
+  // split at the meeting point 
+  const double xl = xL () ;
+  if ( low < xl && xl < high )
+  { return integral ( low , xl ) + integral ( xl  , high ) ; }
+  //
+  /// core Apollonious region ?
+  if ( xl <= low ) { return m_core.integral ( low , high ) ; }
+  //
+  /// Power-law tail
+  const double F    = m_core      ( xl ) ;
+  const double dFoF = m_core.dFoF ( xl ) ;
+  //
+  return m_tail.integral ( low  ,
+			   high ,
+			   xl   ,
+			   F    ,
+			   dFoF ) ;
 }
 // ============================================================================
 // get the tag 
