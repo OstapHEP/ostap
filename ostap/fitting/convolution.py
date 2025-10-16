@@ -18,11 +18,13 @@ __all__     = (
     'Convolution_pdf'  , ## ``ready-to-use'' PDF for convolution 
     )
 # =============================================================================
-from   ostap.fitting.pdfbasic  import PDF1, Generic1D_pdf
-from   ostap.core.ostap_types  import num_types, integer_types, string_types 
-from   ostap.fitting.rooreduce import root_store_factory
-from   ostap.utils.basic       import typename 
-import ostap.logger.table      as     T 
+from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf
+from   ostap.core.ostap_types   import num_types, integer_types, string_types 
+from   ostap.fitting.rooreduce  import root_store_factory
+from   ostap.fitting.fithelpers import Tail, LeftTail, RightTail 
+from   ostap.utils.basic        import typename 
+from   ostap.logger.symbols     import asterisk 
+import ostap.logger.table       as     T 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -136,7 +138,7 @@ class Convolution(object):
         elif isinstance ( pdf , ROOT.RooAbsPdf ) and self.xvar :
             self.__old_pdf = Generic1D_pdf ( pdf , xvar = self.__xvar )
         else :
-            raise TypeError("Convolution: invalid ``pdf'' %s/%s"  % ( pdf , type ( pdf ) ) )
+            raise TypeError("Convolution: invalid `pdf' %s/%s"  % ( pdf , typename ( pdf ) ) )
 
         ## resolution  function 
         if   isinstance ( resolution , PDF1           ) :
@@ -187,9 +189,9 @@ class Convolution(object):
                 self.__bufstrat = ROOT.RooFFTConvPdf.Extend
 
             assert isinstance ( nbins  , integer_types ) and 100  <= abs ( nbins  )  , \
-                   "Invalid `nbins'  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
+                   "Invalid `nbins'  parameter %s/%s for fast Fourier transform"  % ( nbins  , typename ( nbins  ) )
             assert isinstance ( buffer , float         ) and 0.05 <= buffer <= 0.95  , \
-                   "Invalid `buffer' parameter %s/%s for `setBufferFraction'"   % ( buffer , type ( buffer ) )
+                   "Invalid `buffer' parameter %s/%s for `setBufferFraction'"   % ( buffer , typename ( buffer ) )
 
             ## adjust #bins if positive. keep it as it is if negative 
             if hasattr ( self.__resolution , 'sigma' ) and self.__xvar.minmax() and  0 < self.__nbins :
@@ -225,7 +227,7 @@ class Convolution(object):
             # =================================================================
             
             assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
-                   "Invalid `nsigmas'  parameter  %s/%s for `setConvolutionWindow'"  % ( nsigmas , type ( nsigmas ) )
+                   "Invalid `nsigmas'  parameter  %s/%s for `setConvolutionWindow'"  % ( nsigmas , typename ( nsigmas ) )
             
             self.__pdf = ROOT.RooNumConvPdf (
                 self.old_pdf.new_roo_name ( 'numcnv' ) ,
@@ -405,8 +407,8 @@ class Convolution_pdf(PDF1) :
             raise TypeError ("Convolution_pdf: invalid pdf/xvar %s/%s"  % ( pdf , xvar ) ) 
 
         em = self.old_pdf.pdf.extendMode ()
-        if   1 == em : self.warning ( "PDF  ``canBeExtended''" )
-        elif 2 == em : self.error   ( "PDF ``mustBeExtended''" )
+        if   1 == em : self.warning ( "PDF  `canBeExtended'" )
+        elif 2 == em : self.error   ( "PDF `mustBeExtended'" )
 
         ## make the actual convolution
         if isinstance ( resolution , Convolution ) :
@@ -417,11 +419,11 @@ class Convolution_pdf(PDF1) :
                                        xvar       = xvar         ,
                                        resolution = resolution   , **kwargs ) 
 
-        name = name if name else self.generate_name ( prefix = '(%s)@(%s)' % ( pdf.name , self.resolution.name ) ) 
+        op   = asterisk if ( asterisk != '*' ) else '@'
+        name = name if name else self.generate_name ( prefix = '(%s)%s(%s)' % ( pdf.name , op , self.resolution.name ) ) 
                             
         ## initialize the base 
         PDF1.__init__ ( self , name , xvar = xvar )
-
 
         ## the  actual convoluted PDF 
         self.pdf = self.__cnv.pdf 

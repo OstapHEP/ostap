@@ -298,19 +298,10 @@ class RESOLUTION(PEAK) :
         self.__sigma_corr       = None
 
         ## no  correction...
-        if fudge is ONE :
+        if fudge is ONE or fudge is None :
             
             ## fudge is trivial 
-            self.__fudge = fudge 
-
-            ## corrected sigma is trivial 
-            self.__sigma_corr = self.sigma
-            
-        ## no  correction...
-        elif fudge is None  :
-            
-            ## fudge is trivial 
-            self.__fudge = ONE 
+            self.__fudge = ONE  
 
             ## corrected sigma is trivial 
             self.__sigma_corr = self.sigma
@@ -338,6 +329,16 @@ class RESOLUTION(PEAK) :
                 name  = 'Fudge_constraint_%s'  % self.name ,
                 title = 'Fudge_constraint(%s)' % self.name )
             
+        elif isinstance ( fudge , ROOT.RooConstVar ) :
+            
+            value = float ( fudge )
+            assert 0 < value , "Resolution scale factro must be positive %s" % value
+            
+            ## make fudge-factor to be a variable (well, justt copy it) 
+            self.__fudge = self.make_var ( fudge  ,
+                                           'fudge_factor_%s'  % self.name ,
+                                           'fudge_factor(%s)' % self.name )
+            
         elif isinstance ( fudge , ROOT.RooAbsReal ) :
             
             ## make fudge-factor to be a variable 
@@ -348,12 +349,15 @@ class RESOLUTION(PEAK) :
         elif isinstance ( fudge , num_types ) and 1 == fudge :
 
             ## fudge is trivial/constant  
-            self.__fudge = ROOT.RooFit.RooConst ( fudge )
+            self.__fudge      = ONE 
 
             ## corrected sigma is trivial 
             self.__sigma_corr = self.sigma
             
         elif isinstance ( fudge , num_types ) :
+            
+            fudge = float ( fudge )
+            assert 0 < fudge , "Invalid resolution scale-factor: %s" % fudge 
             
             ## fudge is trivial/constant  
             self.__fudge = ROOT.RooFit.RooConst ( fudge )
@@ -364,14 +368,12 @@ class RESOLUTION(PEAK) :
             self.__fudge = self.make_var ( fudge  ,
                                            'fudge_factor_%s'  % self.name ,
                                            'fudge_factor(%s)' % self.name ,
-                                           False  , 0.2 , 3.0 ) 
+                                           False  , 0.1 , 5.0 ) 
             
         ## create corrected sigma 
         if self.__sigma_corr is None :            
             ## corrected sigma 
-            self.__sigma_corr = self.vars_multiply ( self.sigma ,
-                                                     self.fudge ,
-                                                     'Corrected_%s' % self.sigma.name )
+            self.__sigma_corr = self.correct ( self.sigma ) 
             
         ## save the configuration
         self.config = {
@@ -381,7 +383,30 @@ class RESOLUTION(PEAK) :
             'sigma' : self.sigma ,
             'fudge' : self.fudge ,
             }
+        
+    # =========================================================================
+    ## Correct the variable by the scale factor (if needed)
+    #  @code
+    #  variable   = ...
+    #  resolution = ...
+    #  scaled     = resolution.correct ( variable ) 
+    #  @endcode 
+    def correct ( self , variable , name = '' ) :
+        """ Correct the variable by the scale factor (if needed) 
+        >>> variable    = ...
+        >>> resolution = ...
+        >>> scaled     = resolution.correct ( variable ) 
+        """
+        assert isinstance ( variable , ROOT.RooAbsReal ) , \
+            "Invalid `variable' type %s" % typename ( variable )
 
+        ## triival case: no rescaling 
+        if self.fudge is ONE : return variable
+
+        name = name if name else 'Corrected_%s' % variable.name
+        name = self.roo_name ( name ) 
+        return self.vars_multiply ( variable , self.fudge , name ) 
+        
     @property 
     def fudge ( self ) :
         """'fudge' : fudge factor for resolution"""

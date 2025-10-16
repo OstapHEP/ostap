@@ -101,10 +101,10 @@ def test_gauss () :
     
     logger.info ('Test ResoGauss: bifurcated Gaussian resolution model' )
     from   ostap.fitting.resolution import ResoGauss 
-    reso = ResoGauss( 'Gauss' , mass ,
-                      mean  = ( 0.0 , -1   , +1  ) , 
-                      sigma = ( 0.5 ,  0.1 , 1.0 ) ,
-                      kappa = ( 0.0 , -1.0 , 1.0 ) )
+    reso = ResoGauss ( 'Gauss' , mass ,
+                       mean  = ( 0.0 , -1   , +1  ) , 
+                       sigma = ( 0.5 ,  0.1 , 1.0 ) ,
+                       psi   = ( 0.0 , -5.0 , 5.0 ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
@@ -156,13 +156,13 @@ def test_cb2 () :
 
     logger.info ('Test ResoCB2: asymmetric double-sided Crystal Ball resolution model' )
     from   ostap.fitting.resolution import ResoCB2
-    reso = ResoCB2( 'CrystalBall2' , mass ,
-                    mean   = ( 0.0 , -0.1  ,  0.1 ) , 
-                    sigma  = ( 0.2 ,  0.1  ,  1.0 ) ,
-                    alpha  = ( 1.0 ,  0.5  ,  3.0 ) ,
-                    n      = ( 1.0 ,  0.0  , 20.0 ) ,
-                    kappaN = ( 0   ,  -1   , +1   ) ,
-                    kappaA = ( 0   ,  -1   , +1   ) )
+    reso = ResoCB2 ( 'CrystalBall2' , mass ,
+                     mean     = ( 0.0 , -0.1  ,  0.1 ) , 
+                     sigma    = ( 0.2 ,  0.1  ,  1.0 ) ,
+                     alpha    = ( 1.0 ,  0.5  ,  3.0 ) ,
+                     n        = ( 1.0 ,  0.0  , 20.0 ) ,
+                     psiN     = ( 0   ,  -5   , +5   ) ,
+                     psiAlpha = ( 0   ,  -5   , +5   ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )

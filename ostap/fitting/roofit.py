@@ -17,13 +17,15 @@ __all__     = (
     'useStorage'    , ## define (as context) the default storage for  RooDataStore 
     'PDF_fun'       , ## wrapper of PDF to "simple" function 
     'SETVAR'        , ## context manager to preserve the current value for RooRealVar
+    'SETPAR'        , ## context manager to preserve the current value for RooRealVar
     'FIXVAR'        , ## context manager to fix/unfix the variable 
+    'FIXPAR'        , ## context manager to fix/unfix the variable 
     'var_from_name' , ## "convert" name/expression into variable/formula
     ) 
 # =============================================================================
 from   ostap.core.core              import Ostap, VE, valid_pointer
 from   ostap.core.ostap_types       import integer_types, string_types 
-from   ostap.fitting.variables      import SETVAR, FIXVAR  
+from   ostap.fitting.variables      import SETVAR, FIXVAR , SETPAR, FIXPAR 
 from   ostap.fitting.dataset        import setStorage, useStorage
 from   ostap.utils.basic            import typename 
 import ostap.fitting.roocollections

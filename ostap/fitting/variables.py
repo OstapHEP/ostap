@@ -18,7 +18,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'SETVAR'          , ## context manager to preserve the current value for RooRealVar
+    'SETPAR'          , ## context manager to preserve the current value for RooRealVar
     'FIXVAR'          , ## context manager to fix/unfix variables
+    'FIXPAR'          , ## context manager to fix/unfix variables
     'KeepBinning'     , ## context manager to preserve the binning scheme
     ## converters
     'total_ratio'     , ## converter : A,B ->  (T,R) == ( A+B , A/B     )
@@ -1190,7 +1192,7 @@ class SETVAR(object):
     def values ( self )  :
         """'values' : values to be restored at the exit"""
         return self.__values 
-        
+
 # =============================================================================
 ## @class FIXVAR
 #  Simple context manager to fix/unfix the variable 
@@ -1240,7 +1242,11 @@ class FIXVAR(object):
     def fixed ( self ) :
         """'fixed' : fixed variable?"""
         return self.__fixed
-        
+
+## aliases 
+SETPAR = SETVAR 
+FIXPAR = FIXVAR 
+
 # =============================================================================
 ## Simple context manager to keep the binning scheme
 #  @code

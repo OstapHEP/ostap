@@ -201,7 +201,7 @@ double Ostap::Math::BifurcatedGauss::evaluate ( const double x ) const
   //
   const double norm = s_SQRTPIHALF * ( m_sigmaL + m_sigmaR ) ;
   //
-  return std::exp ( -0.5 * dx ) / norm ;
+  return std::exp ( -0.5 * dx * dx ) / norm ;
 }
 // ============================================================================
 /*  log-derivative \f$ \frac{ f^\prime}{f}  \f$

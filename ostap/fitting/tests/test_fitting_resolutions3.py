@@ -18,7 +18,8 @@ from   ostap.core.pyrouts       import Ostap
 from   ostap.fitting.simfit     import combined_data 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.timing       import wait 
-from   ostap.utils.root_utils   import batch_env  
+from   ostap.utils.root_utils   import batch_env
+from   ostap.fitting.roofit     import FIXVAR 
 import ostap.fitting.models     as     Models 
 import ROOT, random
 # ============================================================================= 
@@ -48,13 +49,13 @@ mass = ROOT.RooRealVar('dmKK','mass(KK)'    ,  2 * m_K  , 2 * m_K + 100 * MeV  )
 # ===============================================================================
 
 ## resolution model (slightly asymmetric) 
-gen_reso = Models.ResoCB2 ( 'R0'             ,
-                            xvar  = dm       ,
-                            sigma = 1  * MeV ,  
-                            alpha = 1.5      ,
-                            n     = 10       ,
-                            kappaN = 0.05    , ## small asymmetry 
-                            kappaA = 0.05    ) ## small asymmetry 
+gen_reso = Models.ResoCB2 ( 'R0'                ,
+                            xvar     = dm       ,
+                            sigma    = 1  * MeV ,  
+                            alpha    = 1.5      ,
+                            n        = 10       ,
+                            psiN     = 0.05     , ## small asymmetry 
+                            psiAlpha = 0.05     ) ## small asymmetry 
 
 ## MC - dataset
 ds_MC = gen_reso.generate ( 100000 ) 
@@ -62,13 +63,13 @@ ds_MC = gen_reso.generate ( 100000 )
 # ===============================================================================
 ## 1b: prepare DATA dataset
 # ===============================================================================
-gen_reso_data = Models.ResoCB2 ( 'R'                  ,
-                                 xvar   = mass        ,
-                                 sigma  = 1.15  * MeV ,  ## 15% wider 
-                                 alpha  = 1.5         ,  ## slightly different alpha 
-                                 n      = 10          ,  ## slightly different N 
-                                 kappaN = 0.05        ,  ## small asymmetry 
-                                 kappaA = 0.05        )  ## small asymmetry
+gen_reso_data = Models.ResoCB2 ( 'R'                    ,
+                                 xvar     = mass        ,
+                                 sigma    = 1.15  * MeV ,  ## 15% wider 
+                                 alpha    = 1.5         ,  ## slightly different alpha 
+                                 n        = 10          ,  ## slightly different N 
+                                 psiN     = 0.05        ,  ## small asymmetry 
+                                 psiAlpha = 0.05        )  ## small asymmetry
 
 ff      = Ostap.Math.FormFactors.BlattWeisskopf ( 1 , 3.5/GeV ) 
 phi     = Ostap.Math.BreitWigner ( m_phi  , g_phi , m_K , m_K , 1 , ff ) 
@@ -101,20 +102,17 @@ ds_DATA     = model.generate ( 50000 )
 # ===============================================================================
 ## resolution model (slightly asymmetric) 
 reso_MC = Models.ResoCB2 ( 'RMC'                                      ,
-                           xvar  = dm                                 ,
-                           sigma =  ( 1 * MeV , 0.1 * MeV , 5  *MeV ) ,  
-                           alpha =  ( 1.5  , 0.5   , 5.0  )           ,
-                           n     =  ( 10   , 0     , 50   )           ,
-                           kappaN = ( 0.05 , -0.95 , 0.95 )           , ## small asymmetry 
-                           kappaA = ( 0.05 , -0.95 , 0.95 )           ) ## small asymmetry 
+                           xvar     = dm                                 ,
+                           sigma    =  ( 1 * MeV , 0.1 * MeV , 5  *MeV ) ,  
+                           alpha    =  ( 1.5  , 0.5   , 5.0  )           ,
+                           n        =  ( 10   , 0     , 50   )           ,
+                           psiN     = ( 0.05  , -10 , 10 )           , ## small asymmetry 
+                           psiAlpha = ( 0.05  , -10 , 10 )           ) ## small asymmetry 
 model_MC = Models.Fit1D ( signal = reso_MC , background  = None , suffix = '_MC' )
 
 ## fit MC data with resolution models
-reso_MC.kappaN.fix()
-reso_MC.kappaA.fix()
-rMC , fMC = model_MC.fitTo ( ds_MC , draw = True , silent = True , nbins = 100 )
-reso_MC.kappaN.release ()
-reso_MC.kappaA.release ()
+with FIXVAR ( reso_MC.psiN , reso_MC.psiAlpha ) :
+    rMC , fMC = model_MC.fitTo ( ds_MC , draw = True , silent = True , nbins = 100 )
 rMC , fMC = model_MC.fitTo ( ds_MC , draw = True , silent = True , nbins = 100 )
 title = 'Fit to MC dataset to get MC resoluion'
 logger.info ( '%s\n%s' % ( title , rMC.table ( title = title , prefix = '# ' ) ) ) 
@@ -123,14 +121,14 @@ logger.info ( '%s\n%s' % ( title , rMC.table ( title = title , prefix = '# ' ) )
 # ===============================================================================
 ## 2b: Create fit resolution model (DATA)
 # ===============================================================================
-reso_DATA  = Models.ResoCB2 ( 'RDATA'                     ,
-                              xvar  = mass                ,
-                              sigma = reso_MC.sigma       ,  
-                              alpha = reso_MC.alpha       ,
-                              fudge = ( 1.1 , 0.1 , 5.0 ) , ## NB: fudge-factor  
-                              n     =  reso_MC.n          ,
-                              kappaN = reso_MC.kappaN     , ## small asymmetry 
-                              kappaA = reso_MC.kappaA     ) ## small asymmetry 
+reso_DATA  = Models.ResoCB2 ( 'RDATA'                        ,
+                              xvar     = mass                ,
+                              sigma    = reso_MC.sigma       ,  
+                              alpha    = reso_MC.alpha       ,
+                              fudge    = ( 1.1 , 0.1 , 5.0 ) , ## NB: fudge-factor  
+                              n        =  reso_MC.n          ,
+                              psiN     = reso_MC.psiN         , ## small asymmetry 
+                              psiAlpha = reso_MC.psiAlpha     ) ## small asymmetry 
 
 phi_DATA = Models.BreitWigner_pdf ( 'BWDATA' , xvar = mass ,
                                     breitwigner  = phi  ,
