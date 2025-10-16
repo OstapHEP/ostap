@@ -58,7 +58,7 @@ __all__     = (
     'ResoGauss2'        , ## double-Gaussian resolution model,
     'ResoApo'           , ## Apollonios resolution model,
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
-    'ResoCB2a'          , ## double-sided Crystal Ball resolution model,
+    'ResoCB2A'          , ## double-sided Crystal Ball resolution model,
     'ResoNeedham'       , ## variant of Crystal Ball funxtion
     'ResoStudentT'      , ## Student-T resolution model,
     'ResoPearsonIV'     , ## Pearson Tyep IV resolution model
@@ -609,7 +609,7 @@ class ResoCB2(RESOLUTION,Tail,LeftTail,RightTail) :
 
     @property
     def psiN ( self ) :
-        """'psiN' : asymmetry for parameter 'n', kappa = tamh(psi) 
+        """'psiN' : asymmetry for parameter 'n', kappa = tanh(psi) 
         """
         return self.__AV_N.psi 
     @psiN.setter
@@ -618,7 +618,7 @@ class ResoCB2(RESOLUTION,Tail,LeftTail,RightTail) :
         
     @property
     def psiAlpha ( self ) :
-        """'psiAlpha' : asymmetry for parameter 'alpha', kappa = tamh(psi) 
+        """'psiAlpha' : asymmetry for parameter 'alpha', kappa = tanh(psi) 
         """
         return self.__AV_ALPHA.psi 
     @psiAlpha.setter
@@ -640,13 +640,13 @@ class ResoCB2(RESOLUTION,Tail,LeftTail,RightTail) :
 models.add ( ResoCB2 )
 
 # =============================================================================
-## @class ResoCB2a
+## @class ResoCB2A
 #  (A)Symmetrical double-sided Crystal Ball model for resolution
 #   - (symmetric) Gaussian core 
 #   - power-law tails
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
-class ResoCB2a(RESOLUTION,LeftTail,RightTail) :
+class ResoCB2A(RESOLUTION,LeftTail,RightTail) :
     """ (A)Symmetric double-sided Crystal Ball model for resolution
     - Gaussian core 
     - power-law tails
@@ -708,7 +708,7 @@ class ResoCB2a(RESOLUTION,LeftTail,RightTail) :
             'nR'       : None if self.nR     is self.nL     else self.nR     ,
         }
         
-models.add ( ResoCB2a )
+models.add ( ResoCB2A )
 # ===============================================================================
 ## @class ResoNeedham
 #  Needham's functiobn:
