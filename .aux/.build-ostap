@@ -94,7 +94,7 @@ else
 fi
 
 ( echo '----> (RE)BUILD OSTAP [6/7] : THIRD  PASS OF CMAKE+NINJA'   ; cd ${OSTAP_BUILD} ; cmake ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-## ( echo '----> (RE_BUILD OSTAP [7/7] : LAST   PASS OF NINJA+CPACK'   ; cd ${OSTAP_BUILD} ; ninja ; ninja install | grep -v Up-to-date ; ninja package )
+( echo '----> (RE_BUILD OSTAP [7/7] : LAST   PASS OF NINJA+CPACK'   ; cd ${OSTAP_BUILD} ; ninja ; ninja install | grep -v Up-to-date ; ninja package )
 
 echo '----> (RE)BUILD OSTAP     : ROOTSYS         : ' ${ROOTSYS}
 echo '----> (RE)BUILD OSTAP     : OSTAPDIR        : ' ${OSTAPDIR}

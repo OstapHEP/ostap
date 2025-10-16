@@ -335,7 +335,7 @@ class VarMaker (object) :
     # =============================================================================
     ## generate unique name 
     def new_roo_name ( self , prefix = '' , suffix = '' ) :
-        """ Generate unique name"""
+        """ Generate unique ROOT/RooFit name"""
         return self.roo_name ( prefix = prefix , suffix = suffix , name = self.name )  
     
     # =============================================================================
@@ -422,7 +422,7 @@ class VarMaker (object) :
                     if vtitle : title = vtitle
                     vvars = vvars [1:]
                     
-            ## at most four  argumentss:  (value, min, max, unit )
+            ## at most four argumentss:  (value, min, max, unit )
             assert len ( vvars ) <= 4 , "make_var('%s'): invalid length of 'vvars' %s" % ( name , len ( vvars ) ) 
 
             ## strip out the units from vvars 
@@ -541,6 +541,10 @@ class VarMaker (object) :
                 
             if fixed : self.warning ( "make_var('%s'):  %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
             else     : self.debug   ( "make_var('%s'):  %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
+            
+            ## check the name 
+            regname = ROOT.RooNameReg.instance()
+            if regname.known ( name ) : self.warning ( 'The name "s" is already in ROOT/RooFit name registry!' )
             
             ## create the variable!
             var = ROOT.RooRealVar ( name , title , *params ) 
@@ -3772,33 +3776,38 @@ class Tail(object) :
     
     def __init__ ( self               ,
                    alpha       = None ,
-                   n           = None , 
-                   name_alpha  = ''   ,
-                   name_n      = ''   ,
+                   n           = None ,
+                   name_alpha  = ''   ,                   
                    title_alpha = ''   , 
-                   title_n     = ''   ) :
+                   name_n      = ''   ,
+                   title_n     = ''   , 
+                   name_N      = ''   ,
+                   title_N     = ''   ) :
 
         ## get the name 
         name = self.name
         
-        if not name_alpha  : name_alpha  = 'alpha_%s'   % name
-        if not name_n      : name_n      = 'n_%s'       % name
-        if not title_alpha : title_alpha = '#alpha(%s)' % name
-        if not title_n     : title_n     = 'n(%s)'      % name
+        if not name_alpha  : name_alpha  = 'alpha_%s'    % name
+        if not name_n      : name_n      = 'n_%s'        % name        
+        if not name_N      : name_N      = 'N_%s'        % name
+        
+        if not title_alpha : title_alpha = '#alpha(%s)'  % name        
+        if not title_n     : title_n     = 'n(%s)'       % name
+        if not title_N     : title_N     = 'N(%s)'       % name
         
         ## parameter alpha 
         self.__alpha = self.make_var ( alpha       ,
                                        name_alpha  ,
                                        title_alpha , 
-                                       None        , 1.5 , 0.10 , 5 )
+                                       None        , 1.5 ,  0.3 , 5.0 )
         ## parameter n 
-        self.__n     = self.make_var ( n       ,
-                                       name_n  ,
-                                       title_n , 
-                                       None , 1.0 , -1 , 100 )
+        self.__n     = self.make_var ( n           ,
+                                       name_n      ,
+                                       title_n     , 
+                                       None        , 1.0 , -1.0 , 100 )
         
-        ## parameter N: N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
+        ## N = N(n) 
+        self.__N  = Ostap.MoreRooFit.TailN ( self.roo_name ( name_N ) , title_N  , self.__n )
         
     @property
     def alpha ( self ) :
@@ -3807,6 +3816,14 @@ class Tail(object) :
     @alpha.setter
     def alpha ( self, value ) :
         self.set_value ( self.__alpha , value ) 
+
+    @property
+    def a ( self ) :
+        """'a:': alpha-parameter for CrystalBall-like power-law tail (same as 'aalpha')"""
+        return self.alpha
+    @a.setter
+    def a ( self, value ) :
+        self.alpha = value 
 
     @property
     def n ( self ) :
@@ -3831,40 +3848,53 @@ class LeftTail(object) :
     def __init__ ( self               ,
                    alpha       = None ,
                    n           = None , 
-                   name_alpha  = ''   ,
-                   name_n      = ''   ,
+                   name_alpha  = ''   ,                   
                    title_alpha = ''   , 
-                   title_n     = ''   ) :
+                   name_n      = ''   ,
+                   title_n     = ''   , 
+                   name_N      = ''   ,
+                   title_N     = ''   ) :
 
         ## get the name 
         name = self.name
         
-        if not name_alpha  : name_alpha  = 'alphaL_%s'      % name
-        if not name_n      : name_n      = 'nL_%s'          % name
-        if not title_alpha : title_alpha = '#alpha_{L}(%s)' % name
-        if not title_n     : title_n     = 'n_{L}(%s)'      % name
+        if not name_alpha  : name_alpha  = 'alphaL_%s'       % name
+        if not name_n      : name_n      = 'nL_%s'           % name        
+        if not name_N      : name_N      = 'NL_%s'           % name
+        
+        if not title_alpha : title_alpha = '#alpha_{L}(%s)'  % name        
+        if not title_n     : title_n     = 'n_{L}(%s)'       % name
+        if not title_N     : title_N     = 'N_{L}(%s)'       % name
         
         ## parameter alpha 
         self.__alphaL = self.make_var ( alpha       ,
                                         name_alpha  ,
                                         title_alpha , 
-                                        None        , 1.5 , 0.10 , 5 )
+                                        None        , 1.5 ,  0.3 , 5.0 )
         ## parameter n 
-        self.__nL     = self.make_var ( n       ,
-                                        name_n  ,
-                                        title_n , 
-                                        None , 1.0 , -1 , 100 )
+        self.__nL     = self.make_var ( n           ,
+                                        name_n      ,
+                                        title_n     , 
+                                        None        , 1.0 , -1.0 , 100 )
         
-        ## parameter N: N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__NL = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__nL )
+        ## N = N(n)
+        self.__NL = Ostap.MoreRooFit.TailN ( self.roo_name ( name_N ) , title_N  , self.__nL )
         
     @property
     def alphaL ( self ) :
-        """'alpha': alpha-parameter for CrystalBall-like power-law (left) tail"""
+        """'alpha': alpha-parameter for CrystalBall-like power-law (left) tail (same as 'aL')"""
         return self.__alphaL
     @alphaL.setter
     def alphaL ( self, value ) :
         self.set_value ( self.__alphaL , value ) 
+
+    @property
+    def aL ( self ) :
+        """'aL': alpha-parameter for CrystalBall-like power-law (left) tail (same as 'alphaL')"""
+        return self.alphaL
+    @aL.setter
+    def aL ( self, value ) :
+        self.alphaL = value 
 
     @property
     def nL ( self ) :
@@ -3876,7 +3906,7 @@ class LeftTail(object) :
         
     @property
     def NL ( self ) :
-        """`N` : actual N-parameter used for CrystalBall-like power-law (left) tail"""
+        """`NL` : actual N-parameter used for CrystalBall-like power-law (left) tail"""
         return self.__NL
 
 # =============================================================================
@@ -3888,41 +3918,54 @@ class RightTail(object) :
     
     def __init__ ( self               ,
                    alpha       = None ,
-                   n           = None , 
-                   name_alpha  = ''   ,
-                   name_n      = ''   ,
+                   n           = None ,
+                   name_alpha  = ''   ,                   
                    title_alpha = ''   , 
-                   title_n     = ''   ) :
+                   name_n      = ''   ,
+                   title_n     = ''   , 
+                   name_N      = ''   ,
+                   title_N     = ''   ) :
 
         ## get the name 
         name = self.name
         
-        if not name_alpha  : name_alpha  = 'alphaR_%s'      % name
-        if not name_n      : name_n      = 'nR_%s'          % name
-        if not title_alpha : title_alpha = '#alpha_{R}(%s)' % name
-        if not title_n     : title_n     = 'n_{R}(%s)'      % name
+        if not name_alpha  : name_alpha  = 'alphaR_%s'       % name
+        if not name_n      : name_n      = 'nR_%s'           % name        
+        if not name_N      : name_N      = 'NR_%s'           % name
+        
+        if not title_alpha : title_alpha = '#alpha_{R}(%s)'  % name        
+        if not title_n     : title_n     = 'n_{R}(%s)'       % name
+        if not title_N     : title_N     = 'N_{R}(%s)'       % name
         
         ## parameter alpha 
         self.__alphaR = self.make_var ( alpha       ,
                                         name_alpha  ,
                                         title_alpha , 
-                                        None        , 1.5 , 0.10 , 5 )
+                                        None        , 1.5 ,  0.3 , 5   )
         ## parameter n 
-        self.__nR     = self.make_var ( n       ,
-                                        name_n  ,
-                                        title_n , 
-                                        None , 1.0 , -1 , 100 )
-        
-        ## parameter N: N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__NR = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__nR )
+        self.__nR     = self.make_var ( n           ,
+                                        name_n      ,
+                                        title_n     , 
+                                        None        , 1.0 , -1.0 , 100 )
+
+        ## N = N(n) 
+        self.__NR = Ostap.MoreRooFit.TailN ( self.roo_name ( name_N ) , title_N  , self.__nR )
         
     @property
     def alphaR ( self ) :
-        """'alphaR': alpha-parameter for CrystalBall-like power-law (right) tail"""
+        """'alphaR': alpha-parameter for CrystalBall-like power-law (right) tail (same as 'aR')"""
         return self.__alphaR
     @alphaR.setter
     def alphaR ( self, value ) :
-        self.set_value ( self.__alphaR , value ) 
+        self.set_value ( self.__alphaR , value )
+        
+    @property
+    def aR ( self ) :
+        """'aR': alpha-parameter for CrystalBall-like power-law (right) tail (same as 'aalphaR')"""
+        return self.alphaR
+    @aR.setter
+    def aR ( self, value ) :
+        self.alphaR = value 
 
     @property
     def nR ( self ) :
@@ -3942,7 +3985,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
 
 # =============================================================================
 #                                                                       The END 

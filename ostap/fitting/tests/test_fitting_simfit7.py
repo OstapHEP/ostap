@@ -78,8 +78,12 @@ ds_DATA = model_DATA.generate (  16000 )
 rMC, _  = model_MC  .fitTo ( ds_MC , silent = True )
 logger.info  ( 'Pre-fit MC\n%s'   % rMC.table ( prefix = '# ' ) )
 ## create MC-constraint 
-constr_MC  = model_MC.soft_multivar_constraint ( [ 'aL_MC', 'aR_MC' , 'mean_MC'  , 
-                                                   'nL_MC', 'nR_MC' , 'sigma_MC' ] , rMC ) 
+constr_MC  = model_MC.soft_multivar_constraint ( ( 'alphaL_MC' ,
+                                                   'alphaR_MC' ,
+                                                   'mean_MC'   , 
+                                                   'nL_MC'     ,
+                                                   'nR_MC'     ,
+                                                   'sigma_MC'  ) , rMC ) 
 # =============================================================================
 ## (1) simultaneous fit of MC and DATA
 # =============================================================================

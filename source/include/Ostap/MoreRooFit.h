@@ -3945,7 +3945,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class TailN
-     *  \f$ n \rigtharrow N \f$ transformastion fo r CrystalBall & frinds 
+     *  \f$ n \rigtharrow N \f$ transformation for CrystalBall & friends 
      *  @see Ostap::Math::CrustalBall
      *  @see Ostap::Math::CrustalBall::N 
      */

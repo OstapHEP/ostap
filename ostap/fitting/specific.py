@@ -7,7 +7,7 @@
 #  @date 2011-07-25
 # 
 # =============================================================================
-"""A set of predefined ready-to-use shapes and PDFs"""
+""" A set of predefined ready-to-use shapes and PDFs """
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"

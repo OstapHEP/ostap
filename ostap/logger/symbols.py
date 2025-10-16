@@ -83,6 +83,8 @@ __all__     = (
     'permille'            , 
     'size'                , ## size/diameter symbol or 'size'
     ##
+    'asterisk'            ,
+    ## 
     'union'               , 
     'intersection'        , 
     'exclusive_or'        ,  
@@ -219,6 +221,8 @@ delta_symbol     = '\U00000394'           if show else 'delta'
 ## Number
 number           = '\U00002116'           if show else '#'
 
+## star/convolution oprator
+asterisk         = '\U00002731'           if show else '*'
 # ==================================================
 def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 
 def the_mean ( what ) : return '%s%s%s' % ( langle , what , rangle ) 

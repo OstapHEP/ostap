@@ -389,9 +389,9 @@ class CB2_pdf(PEAK,LeftTail,RightTail) :
             self.xvar    ,
             self.mean    ,
             self.sigma   ,
-            self.aL      ,
+            self.alphaL  ,
             self.nL      ,
-            self.aR      ,
+            self.alphaR  ,
             self.nR      )
 
         ## save the configuration
@@ -405,7 +405,6 @@ class CB2_pdf(PEAK,LeftTail,RightTail) :
             'nL'     : self.nL     ,
             'nR'     : self.nR     ,
             }
-
 
 models.append ( CB2_pdf )    
 # =============================================================================
@@ -473,9 +472,12 @@ class Needham_pdf(Gauss_pdf) :
                                        'n_%s'  % self.name   ,
                                        'n(%s)' % self.name   , 
                                        None , 1.0 , -1 , 100 )
+
         
-        ## parameter N: N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
+        ## parameter N: N = Ostap.Math.CrystalBall.N ( n )
+        name_N   = self.roo_name ( 'N_%s' % self.name ) 
+        title_N  = 'N(%s)' % self.name                
+        self.__N = Ostap.MoreRooFit.TailN ( name_N , title_N  , self.__n )
         
         ## c0 variable 
         self.__c0 = self.make_var ( c0                  ,
@@ -534,11 +536,6 @@ class Needham_pdf(Gauss_pdf) :
             'n'      : self.n     ,
         }
         
-    ## disable getter/setter for alpha, alphaL and aL 
-    alpha  = None ## disable getter/setter for alpha, alphaL and aL 
-    alphaL = None ## disable getter/setter for alpha, alphaL and aL 
-    aL     = None ## disable getter/setter for alpha, alphaL and aL 
-
     @property
     def c0 ( self ) :
         """'c0'-parameter for Needham function"""
@@ -567,7 +564,7 @@ class Needham_pdf(Gauss_pdf) :
     
     @property
     def n ( self ) :
-        """'n': n-parameter for CrystalBall-like powe-law tail"""
+        """'n': n-parameter for CrystalBall-like powe-law (left) tail"""
         return self.__n
     @n.setter
     def n ( self, value ) :
