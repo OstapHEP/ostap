@@ -630,7 +630,27 @@ class WeightingPlot(object) :
         self.__how       = str(how )     if isinstance ( how  , str ) else how 
         self.__address   = str(address)
 
-        ## ATTENTION! make a ty to convert data to density!!
+        ## check for non-positive bins for data histogram 
+        if isinstance ( data , ROOT.TH1 ) :
+            st     = data.stat()
+            mn, mx = st.minmax()
+            if iszero ( mn ) or mn < 0 :
+                ## If maximum is also on-positive: FATAL 
+                assert 0 < mx , "Weighting(%s,%s): DATA Statistics is non-positive: min/max=%.3g : " % ( self.what    ,
+                                                                                                         self.address ,
+                                                                                                         float ( mn ) ,
+                                                                                                         float ( mx ) )
+                hclamp = data.clamp ( minval = 1.e-6 * mx )  
+                i1     = float ( data   .integrate () )
+                i2     = float ( hclamp .integrate () )
+                logger.warning ( "WeightingPlot(%s,%s): DATA clamped before/after=%.3g/%.3g" % ( self.what    ,
+                                                                                                 self.address ,
+                                                                                                 float ( i1 ) ,
+                                                                                                 float ( i2 ) ) )
+                self.__original_data = data
+                data = hclamp
+                                                
+        ## ATTENTION! make a try to convert data to density!!
         if isinstance ( data , ROOT.TH1 ) and not data.is_density() :
             logger.attention ( "WeightingPlot: Convert 'data' histogram into 'density' for '%s'" % self.what )
             self.__data = data.density()
@@ -983,7 +1003,7 @@ def makeWeights  ( dataset                      ,
         if isinstance ( hdata , ROOT.TH1 ) and not hdata.is_density() : 
             hdata = hdata.density ()
             logger.atention ( "'Data' histogram converted to 'density' for '%s'" %  what )
-                                                                        
+            
         # =====================================================================
         ## make a plot on (MC) data with the weight
         # =====================================================================
@@ -991,9 +1011,9 @@ def makeWeights  ( dataset                      ,
         
         st   = hmc0.stat()
         mnmx = st.minmax()
-        if  iszero ( mnmx [0] ) :
-            logger.warning ( "%s: statistic goes to zero %s/`%s'" % ( tag , st , address ) ) 
-        elif mnmx [0] <= 0      :
+        if  iszero ( mnmx [ 0 ] ) :
+            logger.warning ( "%s: statistic goes to zero %s/`%s'" % ( tag , st , address ) )            
+        elif mnmx [ 0 ] <= 0    :
             logger.warning ( "%s: statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
             
         # =====================================================================

@@ -5,6 +5,8 @@
   1. some limited treatment of infinity/NaNs in `ROOT.TCut`-expressions
   1. better (more safe) implementaton of `APDF1.check_ranges` method, inclusing better documentation
   1. massive improvement for Apollonius & friends.
+  1. add `clamp` method for histograms
+  1. `reweight.py` : add check for non-positive data 
 
 ## Backward  incompatible 
 

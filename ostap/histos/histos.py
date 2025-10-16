@@ -279,8 +279,6 @@ def _axis_bin_edges_ ( axis ) :
             left = xmin + i * binw 
             yield left , left + binw 
 
-
-
 # =============================================================================
 ## iterator for histogram  axis (reversed order) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -8646,6 +8644,51 @@ ROOT.TH2D. scale_axes = _h2_scale_axes_
 ROOT.TH3F. scale_axes = _h3_scale_axes_
 ROOT.TH3D. scale_axes = _h3_scale_axes_
 
+
+# ===================================================================
+## "Clamp" histogram content
+#   @code
+#   histo = ...
+#   clamped1 = histo.clamp ( minval = 1.0 ) 
+#   clamped2 = histo.clamp ( maxval = 10  ) 
+#   clamped3 = histo.clamp ( minval = 1.0 , maxval = 10 ) 
+#   @endcode 
+def _h_clamp_ ( histo       ,
+                minval = None ,
+                maxval = None ) :
+    """ 'Clamp' histogram content
+    >>> histo = ...
+    >>> clamped1 = histo.clamp ( minval = 1.0 ) 
+    >>> clamped2 = histo.clamp ( maxval = 10  ) 
+    >>> clamped3 = histo.clamp ( minval = 1.0 , maxval = 10 ) 
+    """
+    
+    ## (1) no action:  
+    if   minval is None and maxval is None : return histo
+    ## (2) clamp min
+    elif minval is None  : clamp_fun = lambda x : min ( x , maxval )
+    ## (3) clamp max
+    elif maxval is None  : clamp_fun = lambda x : max ( x , minval )
+    ## (4) clamp min&max
+    elif minval < maxval : clamp_fun = lambda x : min ( max ( x , minval ) , maxval ) 
+    else :
+        raise TypeError ( 'Invalid min.maxmaxval=%s/%s' % ( minval , maxval ) )
+
+    result = histo.clone()
+    if not result.GetSumw2() : self.Sumw2()
+    for bin in histo :
+        value = histo [ bin ]
+        result [ bin ] = clamp_fun ( value )
+
+    return result
+
+ROOT.TH1F.clamp = _h_clamp_
+ROOT.TH1D.clamp = _h_clamp_
+ROOT.TH2F.clamp = _h_clamp_
+ROOT.TH2D.clamp = _h_clamp_
+ROOT.TH3F.clamp = _h_clamp_
+ROOT.TH3D.clamp = _h_clamp_
+        
 # =============================================================================
 ## keys used for booing 1/2/3-dimensiona histograms via the `histo_book` method 
 histo_keys = ( 'xbins' , 'nbinsx' , 'binsx' , 'nbins' ,
@@ -8749,6 +8792,7 @@ def histo_book2 ( ranges , kwargs ) :
 
     return histo 
 # =============================================================================
+
 
 # =============================================================================
 ## helper method to book/create 1,2&3-dimension histograms
@@ -9981,7 +10025,14 @@ _new_methods_  += (
     ROOT.TH3D.summary        ,
     ##
     ROOT.TAxis.same_binning  , 
-    ROOT.TH1  .same_binning  , 
+    ROOT.TH1  .same_binning  ,
+    ## 
+    ROOT.TH1F.clamp          , 
+    ROOT.TH1D.clamp          , 
+    ROOT.TH2F.clamp          , 
+    ROOT.TH2D.clamp          , 
+    ROOT.TH3F.clamp          , 
+    ROOT.TH3D.clamp          , 
 )
 
 # =============================================================================
