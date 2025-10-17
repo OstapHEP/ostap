@@ -53,11 +53,10 @@ tag_mc       = 'MC_tree'
 
 dbname       = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight4-'   )
 
-NDATA        =  500000 
-NMC          = 1000000 
+NDATA        =  500000
+NMC          = 1000000
 
 rmax = 20 
-
 
 def prepare_data ( ) : 
     #
@@ -74,6 +73,7 @@ def prepare_data ( ) :
     hr1_histo  = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
     hr2_histo  = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
     hr3_histo  = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
+    hr_histo   = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
 
     with ROOT.TFile.Open ( testdata ,'recreate') as mc_file :
                
@@ -110,7 +110,7 @@ def prepare_data ( ) :
             hr1_histo.Fill ( r1 ) 
             hr2_histo.Fill ( r2 ) 
             hr3_histo.Fill ( r3 ) 
-            
+                        
             r1var [ 0 ] = rr1 
             r2var [ 0 ] = rr2 
             r3var [ 0 ] = rr3 
@@ -124,7 +124,7 @@ def prepare_data ( ) :
         mc_file [ tag_data_r1 ] = hr1_histo
         mc_file [ tag_data_r2 ] = hr2_histo
         mc_file [ tag_data_r3 ] = hr3_histo
-        
+                
         mc_file [ tag_data_r  ] = hr1_histo + hr2_histo + hr3_histo
 
         ## 
@@ -183,8 +183,7 @@ with ROOT.TFile.open ( testdata , 'r' ) as dbroot :
     hr1_data  = dbroot [ tag_data_r1  ] . clone()
     hr2_data  = dbroot [ tag_data_r2  ] . clone()
     hr3_data  = dbroot [ tag_data_r3  ] . clone()
-
-    hr_data   = dbroot [ tag_data_r    ] . clone()
+    hr_data   = dbroot [ tag_data_r   ] . clone()
 
 # =============================================================================
 ## prebook MC histograms
@@ -219,9 +218,9 @@ import ostap.parallel.parallel_fill
 ## configuration of reweighting 
 weightings = (
     ## variable          address in DB    
-    Weight.Var ( 'r1'  , 'r-reweight'  ) , 
-    Weight.Var ( 'r2'  , 'r-reweight'  ) , 
-    Weight.Var ( 'r3'  , 'r-reweight'  ) , 
+    Weight.Var ( 'r1'  , 'r1-reweight' ) , 
+    Weight.Var ( 'r2'  , 'r2-reweight' ) , 
+    Weight.Var ( 'r3'  , 'r3-reweight' ) , 
     )
 
 # =============================================================================
@@ -254,10 +253,10 @@ with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 ## Configuration of reweighting plots 
 # =============================================================================
 plots  = [
-    WeightingPlot ( 'r1'       , 'weight' , 'r-reweight'  , hr1_data , mc_r1  ) , ## ignore = True ) ,  
-    WeightingPlot ( 'r2'       , 'weight' , 'r-reweight'  , hr2_data , mc_r2  ) , ## ignore = True ) ,  
-    WeightingPlot ( 'r3'       , 'weight' , 'r-reweight'  , hr3_data , mc_r3  ) , ## ignore = True ) ,  
-    WeightingPlot ( 'r1,r2,r3' , 'weight' , 'r-reweight'  , hr_data  , mc_r   ) ,   
+    WeightingPlot ( 'r1'       , 'weight' , 'r1-reweight'  , hr1_data , mc_r1  ) , ## ignore = True ) ,  
+    WeightingPlot ( 'r2'       , 'weight' , 'r2-reweight'  , hr2_data , mc_r2  ) , ## ignore = True ) ,  
+    WeightingPlot ( 'r3'       , 'weight' , 'r3-reweight'  , hr3_data , mc_r3  ) , ## ignore = True ) ,  
+    WeightingPlot ( 'r1,r2,r3' , 'weight' , 'r-reweight'   , hr_data  , mc_r   ) ,   
     ]
 
 converged = False 
@@ -332,7 +331,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         converged = True 
         break
     
-    mcds.clear()
+    mcds = Ostap.MoreRooFit.delete_data ( mcds ) 
     del mcds
     
 else :
