@@ -124,9 +124,8 @@ namespace
     const TNamed&       a    ,
     const TNamed&       b    )
   { 
-    // return name.empty () ? ( oper + "_" + a.GetName() + "_" + b.GetName() ) : name ; 
     return !name.empty () ? name :
-      Ostap::tmp_name ( oper + "_" + a.GetName() + "_" + b.GetName() , "" , &a , true ) ;
+      Ostap::tmp_name ( oper + "_" + a.GetName() + "_" + b.GetName() , "" , &a , "" , true ) ;
   }  
   // ==========================================================================
   inline std::string  title_ 
@@ -152,7 +151,7 @@ namespace
   { 
     // return name.empty () ? ( oper + "_" + b.GetName() ) : name ; 
     return !name.empty () ? name :
-      Ostap::tmp_name ( oper + "_" + b.GetName() , "" , &b , true ) ;
+      Ostap::tmp_name ( oper + "_" + b.GetName() , "" , &b , "" , true ) ;
   }  
   // ==========================================================================
   inline std::string  title2_ 

@@ -214,6 +214,44 @@ namespace Ostap
         const unsigned short      ky      ,
         const unsigned short      kz      ) ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /** get Riemann sum for the histogram:
+       *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+       *  where 
+       *  - \f$ y_i \f$ is a content of bin 
+       *  - \f$ \Delta x _i \f$ is a "volume" of bin
+       */
+      static double riemann_sum
+      ( const TH1& histo ) ;
+      // ======================================================================
+      /** get Riemann sum for the histogram:
+       *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+       *  where 
+       *  - \f$ y_i \f$ is a content of bin 
+       *  - \f$ \Delta x _i \f$ is a "volume" of bin
+       */
+      static double riemann_sum1
+      ( const TH1& histo ) ;
+      // ======================================================================
+      /** get Riemann sum for the histogram:
+       *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+       *  where 
+       *  - \f$ y_i \f$ is a content of bin 
+       *  - \f$ \Delta x _i \f$ is a "volume" of bin
+       */
+      static double riemann_sum2
+      ( const TH2& histo ) ;
+      // ======================================================================
+      /** get Riemann sum for the histogram:
+       *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+       *  where 
+       *  - \f$ y_i \f$ is a content of bin 
+       *  - \f$ \Delta x _i \f$ is a "volume" of bin
+       */
+      static double riemann_sum3
+      ( const TH3& histo ) ;
+      // =======================================================================
     } ;
     // ========================================================================
   } //                                        The end of namespace Ostap::Utils

@@ -37,7 +37,7 @@ namespace
   ( const std::string& prefix     ,
     const std::string& expression ,
     const TTree*       tree       ) 
-  { return Ostap::tmp_name ( prefix , Ostap::strip ( expression ) , tree , true ) ; }
+  { return Ostap::tmp_name ( prefix , Ostap::strip ( expression ) , tree , "_formula" , true ) ; }
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================

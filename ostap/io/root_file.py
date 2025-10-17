@@ -703,13 +703,13 @@ def _rd_show_tree_ ( rdir , prefix = '' ) :
 #  rdir = ...
 #  rdir.ls_tree()
 #  @endcode
-def _rd_ls_tree_ ( rdir ) :
+def _rd_ls_tree_ ( rdir , prefix = '' ) :
     """ Show the tree directory structure
     >>> rdir = ...
     >>> rdir.ls_tree()
     """
     logger.info ( "Directory %s\n%s" % ( rdir.GetName () ,
-                                         _rd_show_tree_ ( rdir , prefix = '# ' ) ) ) 
+                                         _rd_show_tree_ ( rdir , prefix = prefix ) ) ) 
 
 # =============================================================================
 ## Show the content of the directory as a table

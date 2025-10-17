@@ -29,13 +29,14 @@ from   ostap.math.base        import iszero, axis_range
 from   ostap.utils.strings    import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
 from   ostap.math.operations  import Mul  as MULT       ## needed for proper abstract multiplication
-import ostap.io.zipshelve     as     DBASE              ## needed to store the weights&histos
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/RooDataSet
-from   ostap.utils.utils      import CallThem
+from   ostap.utils.utils      import CallThem, AttrGetter 
 from   ostap.utils.strings    import is_formula
 from   ostap.utils.basic      import typename 
 from   ostap.math.reduce      import root_factory
-from   ostap.logger.symbols   import plus_minus
+from   ostap.logger.symbols   import plus_minus, thumb_up , checked_no, checked_yes, number, chi2ndf   
+from   ostap.logger.colorized import allright , attention
+import ostap.io.zipshelve     as     DBASE              ## needed to store the weights&histos
 import ostap.logger.table     as     T 
 import ostap.core.core 
 import ostap.histos.histos 
@@ -49,31 +50,65 @@ import ROOT, operator
 from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.reweight' )
 else                       : logger = getLogger ( __name__               )
+# =============================================================================
 _new_methods_ = []
 # =============================================================================
-## @class AttrGetter
-#  simple class to bypass <code>operator.attrgetter</code> that
-#  has some problem with serialization for multiprocessing
-class AttrGetter(object):
-    """ Simple class to bypass operator.attrgetter that
-    has some problem with serializaton for multiprocessing
+## converted iterations ?
+OK  = thumb_up  
+## not yet converging 
+NOT = checked_no
+## tag in DBASE for list of known reweightings
+tag_reweightings = 'REWEIGHTINGS'
+## tag in DBASE for collection of comparsoon plots
+tag_comparisons  = 'COMPARISON_PLOTS'
+# =============================================================================
+## Try to normalize
+#  
+def normalize_data ( data , another = None  ) :
+    """ Make a try to normalize the distribution 
     """
-    def __init__ ( self , *attributes ) :
-        self.__attributes = attributes 
-    def __call__ ( self , obj ) :
-        getter = operator.attrgetter( *self.__attributes )
-        return getter ( obj )
+    if   isinstance ( data, ROOT.TH1   ) : return data.density()
+    elif hasattr    ( data, 'density'  ) : return data.density()
 
-    @property 
-    def attributes ( self ) :
-        """`attributes': the actual attributes
-        """
-        return self.__attributes
-    # print attributes 
-    def __str__ ( self ) :
-        return ','.join ( self.__attributes )
-    __repr__ = __str__ 
+    ## (1) make a try to use internal integration
+    my_integral = None if not hasattr ( data , 'integral' ) else data.integral 
 
+    if my_integral :
+        try  :
+            ii = my_integral()
+            if 0 < ii : return data/ ii
+        except TypeError : pass
+
+    ## can we use numerical integration ? 
+    num_integral  = callable ( data )
+    
+    ## (1) make a try to use internal integration 
+    if my_integral or num_integral :
+        
+        if   hasattr ( data    , 'xmin' ) and hasattr ( data    , 'xmax' ) :            
+            xmin, xmax = data.xmin()    , data.xmax() 
+        elif hasattr ( another , 'xmin' ) and hasattr ( another , 'xmax' ) :
+            xmin, xmax = another.xmin() , another.xmax()            
+        else :
+            
+            return data                   ## RETURN!! 
+
+        ## use interal integration 
+        if my_integral :            
+            try :
+                ii = my_integral ( xmin , xmax )
+                if 0 < ii : return data / ii
+            except TypeError : pass
+
+        ## use numerical intgration as last resort
+        if num_integration :
+            import ostap.math.integral as II
+            ii = II.integral ( data , xmin , xmax )
+            if 0 < ii : return data / ii
+
+    ## nothing to do...
+    return data 
+        
 # =============================================================================
 ## Set the proper axis range for the comparison plots
 def adjust_histo_range ( histo ) :
@@ -196,7 +231,7 @@ class Weight(object) :
         
         ## open database
 
-        self.__table = [ ( 'Reweighting' , 'accessor' , '#' , 'merged?' , 'skip') ] 
+        self.__table = [ ( 'Reweighting' , 'accessor' , number , 'merged?' , 'skip') ] 
         rows = []
         
         with DBASE.open ( dbase , 'r' ) as db : ## READONLY
@@ -264,8 +299,8 @@ class Weight(object) :
                 _functions.reverse() 
                 functions = _functions
 
-                row.append  ( '+' if merge else '-' )
-                row.append  ( '%s' % skip           )
+                row.append  ( checked_yes if merge else checked_no )
+                row.append  ( '%s' % skip )
                 
                 ## merge list of functions into single function 
                 if merge and 1 < len ( functions)  : 
@@ -387,8 +422,9 @@ class Weight(object) :
                     
                     if not hasattr ( w  ,'stat' ) : continue
                     
-                    cnt = w.stat()
-                    wmean       = cnt.mean  ().value()
+                    cnt         = w.stat()
+                    cnt_mean    = cnt.mean  () 
+                    wmean       = cnt_mean  .value()
                     wrms        = cnt.rms   ()
                     wmn , wmx   = cnt.minmax()
                     gr1 [ n - 1 ] =      n , 0 , 0 , wmean , wmn - wmean , wmx - wmean  
@@ -411,7 +447,7 @@ class Weight(object) :
                     graph = ROOT.TMultiGraph ()
                     graph.Add      ( gr1 , '3'  )
                     graph.Add      ( gr2 , 'pl' )
-                    graph.SetTitle ( '%s;iteration;weights' % address )
+                    graph.SetTitle ( '%s;#iteration;weights' % address )
                     
                     grphs [ address ] = graph
 
@@ -630,44 +666,31 @@ class WeightingPlot(object) :
         self.__how       = str(how )     if isinstance ( how  , str ) else how 
         self.__address   = str(address)
 
-        ## check for non-positive bins for data histogram 
+        ## (1) make a try to normalize input data
+        ndata = normalize_data  ( data ) 
+        if not ndata is data :
+            logger.attention ( "WeightingPlot: DATA is converted to normalized/density-like form for %s/%s" % ( self.what ,
+                                                                                                                self.address ) )
+            data = ndata
+            
+        self.__data = data 
+        ## (2) check for non-positive data when/if possible  
         if isinstance ( data , ROOT.TH1 ) :
             st     = data.stat()
             mn, mx = st.minmax()
             if iszero ( mn ) or mn < 0 :
-                ## If maximum is also on-positive: FATAL 
-                assert 0 < mx , "Weighting(%s,%s): DATA Statistics is non-positive: min/max=%.3g : " % ( self.what    ,
-                                                                                                         self.address ,
-                                                                                                         float ( mn ) ,
-                                                                                                         float ( mx ) )
-                hclamp = data.clamp ( minval = 1.e-6 * mx )  
-                i1     = float ( data   .integrate () )
-                i2     = float ( hclamp .integrate () )
-                logger.warning ( "WeightingPlot(%s,%s): DATA clamped before/after=%.3g/%.3g" % ( self.what    ,
-                                                                                                 self.address ,
-                                                                                                 float ( i1 ) ,
-                                                                                                 float ( i2 ) ) )
-                self.__original_data = data
-                data = hclamp
-                                                
-        ## ATTENTION! make a try to convert data to density!!
-        if isinstance ( data , ROOT.TH1 ) and not data.is_density() :
-            logger.attention ( "WeightingPlot: Convert 'data' histogram into 'density' for '%s'" % self.what )
-            self.__data = data.density()
-        else :
-            self.__data = data
+                logger.warning ("Weighting(%s,%s): DATA Statistics is non-positive: min/max=%.3g/%.3g : " % ( self.what    ,
+                                                                                                              self.address ,
+                                                                                                              float ( mn ) ,
+                                                                                                              float ( mx ) ) )
+                
+        self.__mc       = mc_histo if mc_histo else data.clone()
+        self.__w        = w
 
-        self.__mc       = mc_histo      if mc_histo else data.clone()
-        
-        assert isinstance ( self.__mc , ROOT.TH1 ), \
-               "WeightingPlot: invalid type of `mchisto' %s/%s"  % ( self.__mc , typename ( self.__mc ) )
-        self.__w         = w
-
-        if not projector : projector = mc_data_projector
-            
+        assert projector is None or callable ( projector ) , \
+            "`Projector' must be None or callable!"        
         self.__projector = projector
         
-        assert self.projector and callable ( self.projector ) ,"`Projector' must be callable!"
         self.__ignore    = True if ignore else False 
         
     @property
@@ -711,7 +734,7 @@ class WeightingPlot(object) :
         """`projector` :  callable function to build MC distribution:
         >>> hmc = projector ( dataset , hmc ) 
         """
-        return self.__projector
+        return mc_data_projector if self.__projector is None else self.__projector
     
     @property
     def w  ( self )   :
@@ -763,7 +786,7 @@ def _cmp_draw_ ( self ) :
         row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x , '%.4g' % y , '%.4g' % z
         rows.append ( row )
 
-        title = 'Comparison plot %s' % self.what
+        title = 'Comparison plot for %s' % self.what
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcccc' )
         logger.info ( '%s:\n%s' % ( title , table ) )
         
@@ -813,7 +836,7 @@ def _cmp_draw_ ( self ) :
         row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x , '%.4g' % y 
         rows.append ( row )
 
-        title = 'Comparison plot %s' % self.what
+        title = 'Comparison plot for %s' % self.what
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccc' )
         logger.info ( '%s:\n%s' % ( title , table ) )
 
@@ -842,7 +865,7 @@ def _cmp_draw_ ( self ) :
         row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x 
         rows.append ( row )
 
-        title = 'Comparison plot %s' % self.what
+        title = 'Comparison plot for %s' % self.what
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcc' )
         logger.info ( '%s:\n%s' % ( title , table ) )
         
@@ -969,20 +992,18 @@ def makeWeights  ( dataset                      ,
        and isinstance ( wtruncate [ 0 ] , num_types ) \
        and isinstance ( wtruncate [ 1 ] , num_types ) \
        and wtruncate [0] < 1.0 and 1.0 < wtruncate [1] : pass
-    else :
-        logger.warning  ( "Invalid 'wtruncate' parameter '%s', use (0.5,2.0)" % ( str ( wtruncate ) ) )
-        wtruncate = 0.5 , 2.0 
+    elif not wtruncate : wtruncate = ()  ## No truncation  
+    else :        
+        logger.warning  ( "Invalid 'wtruncate' parameter '%s', use ()" % ( str ( wtruncate ) ) )
+        wtruncate = () 
     
-    from ostap.logger.colorized   import allright , attention , infostr 
-    from ostap.utils.basic        import isatty
-
     nplots  = len ( plots )
 
     for_update   = 0 
     ## list of plots to compare 
     cmp_plots    = []
     ## reweighting summary table
-    header       = ( 'Reweighting' , 'wmin/wmax' , 'OK?' , 'wrms[%]' , 'OK?' , 'chi2/ndf' , 'ww' , 'exp' )
+    header       = ( 'Reweighting' , 'wmin/wmax' , 'OK?' , 'wrms[%]' , 'OK?' , chi2ndf , 'ww' , 'exp' )
     rows         = {}
     save_to_db   = [] 
     ## number of active plots for reweighting
@@ -1012,16 +1033,13 @@ def makeWeights  ( dataset                      ,
         st   = hmc0.stat()
         mnmx = st.minmax()
         if  iszero ( mnmx [ 0 ] ) :
-            logger.warning ( "%s: statistic goes to zero %s/`%s'" % ( tag , st , address ) )            
+            logger.warning ( "%s: MC statistic goes to zero %s/`%s'" % ( tag , st , address ) )            
         elif mnmx [ 0 ] <= 0    :
-            logger.warning ( "%s: statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
+            logger.warning ( "%s: MC statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
             
         # =====================================================================
-        ## normalize MC
-        # =====================================================================
-        if isinstance ( hmc0 , ROOT.TH1 ) or hasattr ( hmc , 'density' ) :
-            hmc = hmc0.density()
-        else : hmc = hmc0 
+        ## make a try to normalize MC projection:
+        hmc = normalize_data ( hmc0 , hdata )
 
         # =====================================================================
         ## calculate  the reweighting factor : a bit conservative (?)
@@ -1029,27 +1047,11 @@ def makeWeights  ( dataset                      ,
         # =====================================================================
         
         #  try to exploit finer binning if/when possible
-        hboth = isinstance ( hmc   , ROOT.TH1 ) and isinstance ( hdata , ROOT.TH1 ) 
-            
-        if   hboth and 1 == hmc.dim () and 1 == hdata.dim () and \
-               len ( hmc ) >= len( hdata ) :   
-            w = ( 1.0 / hmc ) * hdata                                 ## NB! 
-        elif hboth and 2 == hmc.dim () and 2 == hdata.dim () and \
-                 ( hmc.binsx() >= hdata.binsx() ) and \
-                 ( hmc.binsy() >= hdata.binsy() ) and \
-                 ( hmc.binsx() >  hdata.binsx()   or  \
-                   hmc.binsy() >  hdata.binsy() ) :            
-            w = ( 1.0 / hmc ) * hdata                                 ## NB! 
-        elif hboth and 3 == hmc.dim () and 3 == hdata.dim () and \
-                 ( hmc.binsx() >= hdata.binsx() ) and \
-                 ( hmc.binsy() >= hdata.binsy() ) and \
-                 ( hmc.binsz() >= hdata.binsz() ) and \
-                 ( hmc.binsx() >  hdata.binsx()   or  \
-                   hmc.binsy() >  hdata.binsy()   or  \
-                   hmc.binsz() >  hdata.binsz() ) :
-            w = ( 1.0 / hmc ) * hdata                                 ## NB!            
-        else                            :            
-            w = hdata / hmc                                           ## NB!
+        hboth = isinstance ( hmc   , ROOT.TH1 ) and isinstance ( hdata , ROOT.TH1 ) and hmc.dim() == hdata.dim () 
+
+        ## 
+        if hboth and hmc.finer_bins ( hdata ) : w = ( 1.0 / hmc ) * hdata    ## NB!
+        else                                  : w = hdata / hmc              ## NB!
 
         # =====================================================================
         ## scale & get the statistics of weights 
@@ -1068,22 +1070,22 @@ def makeWeights  ( dataset                      ,
         c2ndf /= ( len ( w ) - 1 ) 
 
         ## build  the row in the summary table 
-        row = [ address  , '%-5.3f/%5.3f' % ( cnt.minmax()[0]    , cnt.minmax()[1] ) ] 
+        row = [ address  , '%-6.4f/%6.4f' % ( cnt.minmax()[0]    , cnt.minmax()[1] ) ] 
 
-        if   ignore : row.append ( ''                )
-        elif good2  : row.append ( allright  ( '+' ) )
-        else        : row.append ( attention ( '-' ) )
+        if   ignore : row.append ( ''  )
+        elif good2  : row.append ( OK  )
+        else        : row.append ( NOT )
         
-        row.append ( ( wvar * 100 ).toString('%%6.2f %s %%-6.2f' % plus_minus ) )
+        row.append ( ( wvar * 100 ).toString('%%+7.3f %s %%-7.3f' % plus_minus ) )
 
-        if   ignore : row.append ( ''                )
-        elif good1  : row.append ( allright  ( '+' ) )
-        else        : row.append ( attention ( '-' ) )
+        if   ignore : row.append ( ''  )
+        elif good1  : row.append ( OK  )
+        else        : row.append ( NOT )
         
-        row.append (  '%6.2f' % c2ndf  ) 
+        row.append (  '%7.3f' % c2ndf  ) 
 
         ## apply weight truncation:
-        if not ignore : 
+        if not ignore and wtruncate : 
             wmin , wmax = wtruncate
             truncated = False 
             for i in w  :
@@ -1162,29 +1164,27 @@ def makeWeights  ( dataset                      ,
             rows [ address ] = tuple ( row ) 
                         
         with DBASE.open ( database ) as db :
-            
-            db [ address ] = db.get( address , [] ) + [ weight ]
+
+            rw = list ( db.get( address , [] ) )
+            rw.append ( weight )
+            db [ address ] = tuple ( rw )
 
             ## update the list of known reweightings
             
-            tag = 'reweightings'
+            tag       = tag_reweightings
             addresses = db.get( tag , () )
             addresses = set ( addresses ) 
             addresses.add ( address )
-            db [ 'reweightings' ] = tuple ( addresses )
+            addressed = sorted ( addresses ) 
+            db [ tag ] = tuple ( addresses )
             
             ## save more information to database 
-            if debug :
+            if debug and True :
                 addr        = address + ':REWEIGHTING'
-                db [ addr ] = db.get ( addr , [] ) + [ entry [ 2 : ]  ] 
-                ## if make_plots :
-                ##     found = False
-                ##     for c in cmp_plots :
-                ##         if c.what == address :
-                ##             found = c
-                ##             break 
-                ##     if found :
-                        
+                rw = list  ( db.get ( addr , [] ) )
+                e2 = tuple ( entry [ 2: ] ) 
+                rw.append ( e2 )                  
+                db [ addr ] = tuple ( rw ) 
                         
         del hd0, hm0 , hd , hm , weight , entry 
 
@@ -1202,10 +1202,17 @@ def makeWeights  ( dataset                      ,
             from ostap.plotting.canvas import use_canvas 
             for item in cmp_plots :
                 with use_canvas ( '%s/%s' % ( tag , item.what ) ) : item.draw()
+
+        ## save comparison plots to database 
+        if debug and True :
+            tag = tag_comparisons
+            with DBASE.open ( database ) as db :
+                comparison_plots  = list ( db.get( tag , () ) )
+                comparison_plots.append ( cmp_plots ) 
+                db [ tag ] = tuple ( comparison_plots ) 
                 
     ## return ( active , cmp_plots ) if make_plots else active
     return ( for_update , cmp_plots ) if make_plots else for_update 
-
 
 # =============================================================================
 ## helper factory for proper (de)serialization 
@@ -1384,6 +1391,7 @@ _new_methods_ += [
 
 # =========================================================================
 ## backup the database content to vanilla ROOT file *IF/WHEN* possible
+#  @attention Only simplistic histogram-bases structures can be converted.
 #  @code
 #  dbname     = ...
 #  root_file = backup_to_ROOT ( dbname , 'root_file.root' )
@@ -1407,7 +1415,7 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
     
     with DBASE.open ( dbase , 'r' ) as db : ## READONLY
         
-        rws  = db.get ( 'reweightings' , () )
+        rws  = db.get ( tag_reweightings , () )
         
         rws  = set ( rws ) | set ( reweightings )
         rws  = sorted ( rws )
@@ -1441,15 +1449,14 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
             tstr = ROOT.TObjString ( r )
             tlst.Add  ( tstr ) 
 
-
     title = 'Reweighting DB -> ROOT'
     with ROOT.TFile ( root_file , 'u' ) as rf :
-        rf [ 'reweightings' ] = tlst 
-        table = rf.ls_table ( title = title , prefix = '# ' )
-        
-    logger.info ('%s:\n%s' % ( title , table ) )
+        rf [ tag_reweightings ] = tlst
+        table = rf.ls_table ( title = title , prefix = '# ' )        
+        logger.info ('%s:\n%s' % ( title , table ) )        
+        rf.ls_tree   ( prefix = '# ' )
+    
     return root_file 
-
 
 # ==================================================================================
 ## Convert the ROOT-file into reweighting DBASE
@@ -1474,12 +1481,12 @@ def restore_from_ROOT ( root_file , dbname = '' , * , reweightings = () ) :
     ## read input ROOT file 
     with ROOT.TFile ( root_file , 'r' ) as rf :
 
-        ## Read the entry 'reweightings'. It must be TList with TObjStrings
-        rws = rf.get ( 'reweightings' , () )
+        ## Read the entry 'tag_reweightings:  It *must* be TList with TObjStrings
+        rws = rf.get ( tag_reweightings , () )
         if not rws                             or \
            not isinstance ( rws , ROOT.TList ) or \
            not all ( isinstance ( r , ROOT.TObjString ) for r in rws ) : 
-            logger.warnings ( 'No valid reweightings are found!' ) 
+            logger.warning ( 'No valid reweightings are found!' ) 
             return
 
         ## add 'reweightings' from arguments 
@@ -1513,12 +1520,19 @@ def restore_from_ROOT ( root_file , dbname = '' , * , reweightings = () ) :
 
     ## add the list of reweightings to 
     with DBASE.open ( dbname , 'u' ) as db :
-        rr = db.get ( 'reweightings', () )
+        rr = db.get ( tag_reweightings , () )
         rr = set ( rr ) | set ( good )        
-        db ['reweightings' ] = tuple ( sorted ( rr ) )  
+        db [ tag_reweightings ] = tuple ( sorted ( rr ) )  
 
     ## finally show the content of converted DBASE
-    with DBASE.open ( dbname , 'r' ) as db : db.ls()    
+    logger.info ( 'Reweighting DB from ROOT: %s -> %s' % ( root_file , dbname ) )     
+    with DBASE.open ( dbname , 'r' ) as db :
+        db.ls()
+        rw = db.get ( tag_reweightings , () )
+        if not rr : logger.error ( "DB has no '%s' entry" % tag_reweighting )
+        for r in rw :
+            if not r in db : logger.error ( "DB has no '%s' reweighting" % e  )
+                
     return dbname 
 
 # =============================================================================

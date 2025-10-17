@@ -101,14 +101,14 @@ def _h_new_init_ ( self , *args ) :
 #  @attention clone is always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h_new_clone_ ( self , name = '' , title = '' , prefix = 'h_' ) :
+def _h_new_clone_ ( self , name = '' , title = '' , prefix = 'h_' , suffix = '' ) :
     """ Modifiled Clone-function
     - it automatically assigns unique ID
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
     - a title can be optionally redefined 
     """
-    if not name : name = hID ( prefix = prefix )
+    if not name : name = hID ( prefix = prefix , suffix = suffix )
     #
     with ROOTCWD() :
         groot = ROOT.ROOT.GetROOT()
@@ -2065,6 +2065,58 @@ def _a_equal_ ( axis , another ) :
 ROOT.TAxis.__eq__ =                  _a_equal_
 ROOT.TAxis.__ne__ = lambda a,o : not _a_equal_ ( a , o ) 
 
+
+# =============================================================================
+## If this histogram have "finer binning"
+#  @code
+#  h1 = ...
+#  h2 = ...
+#  check = h1.finer_binning ( h2 )
+#  check = h1.finer_bins    ( h2 ) ## ditto 
+#  @endcode 
+def _h_finer_bins_ ( histo , other ) :
+    """ If this histogram have "finer binning"
+    >>> h1 = ...
+    >>> h2 = ...
+    >>> check = h1.finer_binning ( h2 )
+    >>> check = h1.finer_bins    ( h2 ) ## ditto
+    """
+    if not isinstance ( other , ROOT.TH1 ) : return False
+    if histo.dim() != other.dim()          : return False
+
+    h1 = histo
+    h2 = other
+    
+    h1x = h1.binsx()
+    h2x = h2.binsx()
+    if h1x < h2x : return False
+    
+    if 3 == histo.dim () :
+                 
+        h1y = h1.binsy()
+        h2y = h2.binsy()
+        if h1y < h2y : return False
+        
+        h1z = h1.binsz()        
+        h2z = h2.binsz()
+        if h1z < h2z : return False
+        
+        return  h1x > h2x or h1y > h2y or h1z > h2z
+    
+    elif 2 == histo.dim () :
+         
+        h1y = h1.binsy()
+        h2y = h2.binsy()
+        if h1y < h2y : return False
+        
+        return  h1x > h2x or h1y > h2y
+
+    ## 1D-case 
+    return  h1x > h2x
+
+ROOT.TH1.finer_bininng = _h_finer_bins_
+ROOT.TH1.finer_bins    = _h_finer_bins_
+
 # =============================================================================
 # some minor decoration for 2D-histos 
 # =============================================================================
@@ -2178,7 +2230,7 @@ def binomEff_h1 ( h1 , h2 , func = binomEff ) :
         if not h1.same_binning ( h2 ) :
             logger.warning ( 'binomEff: binnings are not the same, result can be biased!' )
     ## 
-    result = h1.Clone( hID () )
+    result = h1.clone( suffix = '_binomEff'  )
     if not result.GetSumw2() : result.Sumw2()
     #
     for i1,x1,y1 in h1.items() :
@@ -8379,52 +8431,32 @@ ROOT.TH1.__hash__ = _h_hash_
 
 # =============================================================================
 ## Get "Riemann sum" of the histogram 
-#  \f$ \sum_{i} f_i \Delta x_i\f$ 
-def _h1_riemann_sum_ ( h1 ) :
-    """ Get 'Riemann sum' of the historgam
-    """
-    ax     = h1.GetXaxis()
-    result = 0.0
-    for ix in h1 :
-        volume  = ax.GetBinWidth   ( ix )        
-        content = h1.GetBinContent ( ix )  
-        result += content * volume 
-    return result
-
+#  \f$ \sum_{i} f_i \Delta x_i\f$
+#  @see Ostap::Utils::HistoStat::riemann_sum3
+#  @see Ostap::Utils::HistoStat::riemann_sum2
+#  @see Ostap::Utils::HistoStat::riemann_sum1
+#  @see Ostap::Utils::HistoStat::riemann_sum
+#  @see Ostap::Utils::HistoStat
+_riemann_sum_ = Ostap.Utils.HistoStat.riemann_sum 
 # =============================================================================
 ## Get "Riemann sum" of the histogram 
-#  \f$ \sum_{i} f_i \Delta x_i \Delta y_i\f$ 
-def _h2_riemann_sum_ ( h2 ) :
-    """ Get 'Riemann sum' of the historgam
+#  \f$ \sum_{i} f_i \Delta x_i\f$
+#  @see Ostap::Utils::HistoStat::riemann_sum3
+#  @see Ostap::Utils::HistoStat::riemann_sum2
+#  @see Ostap::Utils::HistoStat::riemann_sum1
+#  @see Ostap::Utils::HistoStat::riemann_sum
+#  @see Ostap::Utils::HistoStat
+def _h_riemann_sum_ ( histo ) :
+    """ Get 'Riemann sum' of the histogram
+    - see `Ostap.Utils.HistoStats.riemann_sum3
+    - see `Ostap.Utils.HistoStats.riemann_sum2
+    - see `Ostap.Utils.HistoStats.riemann_sum1
+    - see `Ostap.Utils.HistoStats.riemann_sum
+    - see `Ostap.Utils.HistoStat
     """
-    ax     = h2.GetXaxis()
-    ay     = h2.GetYaxis()
-    result = 0.0
-    for ix, iy in h2 :
-        volume  = ax.GetBinWidth   ( ix      ) * ay.GetBinWidth ( iy )        
-        content = h2.GetBinContent ( ix , iy ) 
-        result += content * volume 
-    return result
+    return _riemann_sum_ ( histo  ) 
 
-# =============================================================================
-## Get "Riemann sum" of the histogram 
-#  \f$ \sum_{i} f_i \Delta x_i \Delta y_i \Delta z_i \f$ 
-def _h3_riemann_sum_ ( h3 ) :
-    """ Get 'Riemann sum' of the historgam
-    """
-    ax     = h3.GetXaxis()
-    ay     = h3.GetYaxis()
-    az     = h3.GetZaxis()
-    result = 0.0
-    for ix, iy, iz  in h3 :
-        volume  = ax.GetBinWidth   ( ix ) * ay.GetBinWidth ( iy ) * az.GetBinWidth ( iz )        
-        content = h3.GetBinContent ( ix , iy , iz ) 
-        result += content * volume 
-    return result
-
-ROOT.TH1.riemann_sum = _h1_riemann_sum_
-ROOT.TH2.riemann_sum = _h2_riemann_sum_
-ROOT.TH3.riemann_sum = _h3_riemann_sum_
+ROOT.TH1.riemann_sum = _h_riemann_sum_
 
 # =============================================================================
 ## does this histogram reprsent the density?
@@ -8653,7 +8685,7 @@ ROOT.TH3D. scale_axes = _h3_scale_axes_
 #   clamped2 = histo.clamp ( maxval = 10  ) 
 #   clamped3 = histo.clamp ( minval = 1.0 , maxval = 10 ) 
 #   @endcode 
-def _h_clamp_ ( histo       ,
+def _h_clamp_ ( histo         ,
                 minval = None ,
                 maxval = None ) :
     """ 'Clamp' histogram content
@@ -8666,16 +8698,36 @@ def _h_clamp_ ( histo       ,
     ## (1) no action:  
     if   minval is None and maxval is None : return histo
     ## (2) clamp min
-    elif minval is None  : clamp_fun = lambda x : min ( x , maxval )
+    elif minval is None  :
+        hsuffix = '_min'
+        maxval  = float ( maxval )
+        def clamp_fun ( x ) :
+            y = min ( x.value() , maxval )
+            y.setCov2 ( x.cov2() )
+            return y 
     ## (3) clamp max
-    elif maxval is None  : clamp_fun = lambda x : max ( x , minval )
+    elif maxval is None  :
+        hsuffix = '_max'
+        minval  = float ( minval )
+        def clamp_fun ( x ) :
+            y = max ( x.value() , minval )
+            y.setCov2 ( x.cov2() )
+            return y 
     ## (4) clamp min&max
-    elif minval < maxval : clamp_fun = lambda x : min ( max ( x , minval ) , maxval ) 
     else :
-        raise TypeError ( 'Invalid min.maxmaxval=%s/%s' % ( minval , maxval ) )
+        hsuffix = '_clamp'
+        minval  = float ( minval )
+        maxval  = float ( maxval )
+        mnval   = min   ( minval , maxval )
+        mxval   = max   ( minval , maxval )
+        def clamp_fun ( x ) :
+            y = min ( max ( x.value() , mnval ) , mxval ) 
+            y.setCov2 ( x.cov2() )
+            return y 
 
-    result = histo.clone()
+    result = histo.clone ( suffix = hsuffix )
     if not result.GetSumw2() : self.Sumw2()
+    
     for bin in histo :
         value = histo [ bin ]
         result [ bin ] = clamp_fun ( value )
@@ -8690,7 +8742,7 @@ ROOT.TH3F.clamp = _h_clamp_
 ROOT.TH3D.clamp = _h_clamp_
         
 # =============================================================================
-## keys used for booing 1/2/3-dimensiona histograms via the `histo_book` method 
+## keys used for booking 1/2/3-dimensiona histograms via the `histo_book` method 
 histo_keys = ( 'xbins' , 'nbinsx' , 'binsx' , 'nbins' ,
                'ybins' , 'nbinsy' , 'binsy' , 
                'zbins' , 'nbinsz' , 'binsz' ,
@@ -8792,7 +8844,6 @@ def histo_book2 ( ranges , kwargs ) :
 
     return histo 
 # =============================================================================
-
 
 # =============================================================================
 ## helper method to book/create 1,2&3-dimension histograms
@@ -10032,7 +10083,13 @@ _new_methods_  += (
     ROOT.TH2F.clamp          , 
     ROOT.TH2D.clamp          , 
     ROOT.TH3F.clamp          , 
-    ROOT.TH3D.clamp          , 
+    ROOT.TH3D.clamp          ,
+    ##
+    ROOT.TH1.riemann_sum     ,
+    ## 
+    ROOT.TH1.finer_bininng   , 
+    ROOT.TH1.finer_bins      , 
+    
 )
 
 # =============================================================================

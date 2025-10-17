@@ -29,7 +29,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-02-18
 # =============================================================================
-"""Collection of simple classes to wrap the basic operations for callables 
+""" Collection of simple classes to wrap the basic operations for callables 
 
 >>> fun1 = ...
 >>> fun2 = ...
@@ -154,7 +154,7 @@ class Function(object) :
 ## @class Constant
 #  trivial "constant"  function
 class Constant(Function) :
-    """Trivial ``constant'' function
+    """ Trivial `constant' function
     """
     def __init__ ( self , value ) :
         self.__value = value
@@ -171,7 +171,7 @@ class Constant(Function) :
 ## @class Wrapper
 #  Wrap another function
 class Wrapper(Function) :
-    """Trivial wrapper function
+    """ Trivial wrapper function
     """
     def __init__ ( self , function , name = '' ) :
         if not isinstance ( function , Wrapper ) : self.__function = function
@@ -183,11 +183,11 @@ class Wrapper(Function) :
     __repr__ = __str__ 
     @property
     def function ( self ) :
-        """``function'' : the actual function"""
+        """`function' : the actual function"""
         return self.__function
     @property
     def name     ( self ) :
-        """``name'' : function name"""
+        """`name' : function name"""
         return self.__name
     def __str__  ( self ) :
         return self.__name
@@ -225,21 +225,21 @@ class WrapOper2(Function) :
         bfun =  self.__bfun
         oper =  self.__oper
         
-        return oper (  afun ( *x )  , bfun ( *x ) )
+        return oper ( afun ( *x ) , bfun ( *x ) )
         
     @property
     def a ( self ) :
-        """``a'' - the first operand/function"""
+        """`a' - the first operand/function"""
         return self.__afun
     
     @property
     def b ( self ) :
-        """``b'' - the second operand/function"""
+        """`b' - the second operand/function"""
         return self.__bfun 
 
     @property
     def operation ( self ):
-        """``operation'' - the actual operation"""
+        """`operation' - the actual operation"""
         return  self.__oper
     
 # =============================================================================
@@ -251,13 +251,13 @@ class WrapOper2(Function) :
 #  fun2 = Descartes (  funx , funy , 1 )
 #  @endcode
 class Descartes(Function) :
-    """Make the Descartes product of two functions
+    """ Make the Descartes product of two functions
     >>> funx = math.sin
     >>> funy = math.sin
     >>> fun2 = Descartes (  funx , funy , 1 )
     """
     def __init__  ( self , a , b , N = 1 ) :
-        """Constructor from  two  functions and arity of the first function
+        """ Constructor from  two  functions and arity of the first function
         >>> funx = math.sin
         >>> funy = math.sin
         >>> fun2 = Descartes (  funx , funy , 1 )        
@@ -295,19 +295,18 @@ class Descartes(Function) :
         
     @property
     def a ( self ) :
-        """``a'' - the first operand/function"""
+        """`a' - the first operand/function"""
         return self.__afun
     
     @property
     def b ( self ) :
-        """``b'' - the second operand/function"""
+        """`b' - the second operand/function"""
         return self.__bfun 
 
     @property
     def N ( self ):
-        """``N'' - arity  of the first function"""
+        """`N' - arity  of the first function"""
         return  self.__N
-
 
 # =============================================================================
 ## @class Compose
@@ -318,7 +317,7 @@ class Descartes(Function) :
 #  comp = Compose (fun2 , fun1 )
 #  @endcode 
 class Compose(Function) :
-    """trivial  composition of two functions
+    """ Trivial  composition of two functions
     >>> fun1 = math.sin
     >>> fun2 = lambda x : x*x
     >>> comp = Compose ( fun2 , fun1 )
@@ -329,12 +328,10 @@ class Compose(Function) :
         bfun = b
         
         ## trivial case 
-        if isinstance ( a , num_types ) :
-            afun = Constant ( a * 1.0 ) 
+        if isinstance ( a , num_types ) : afun = Constant ( a * 1.0 ) 
             
         ## trivial case 
-        if isinstance ( b , num_types ) :
-            bfun = Constant ( b * 1.0 ) 
+        if isinstance ( b , num_types ) : bfun = Constant ( b * 1.0 ) 
             
         assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type( a ) )  
         assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , type( b ) )  
@@ -344,25 +341,24 @@ class Compose(Function) :
         self.__na   = na if na else str ( afun ) 
         self.__nb   = nb if nb else str ( bfun ) 
         
-        
     def __call__ ( self , *x ) :
 
         afun = self.__afun
         bfun = self.__bfun
         
-        br  = bfun ( *x )
+        br   = bfun ( *x )
         if not isinstance ( br , list_types ) : br = br ,
         
         return afun ( *br )
         
     @property
     def a ( self ) :
-        """``a'' - the first operand/function"""
+        """`a' - the first operand/function"""
         return self.__afun
     
     @property
     def b ( self ) :
-        """``b'' - the second operand/function"""
+        """`b' - the second operand/function"""
         return self.__bfun
 
     def __str__ ( self ) :
@@ -380,7 +376,7 @@ class Compose(Function) :
 #  - first it tries to use the native operations for callables
 #  - if it fails, generic WrapOper2 is used
 class Operation2(Function) :
-    """Helper base class to define the operation
+    """ Helper base class to define the operation
     >>> fun1 = ...
     >>> fun2 = ...
     >>> ops  = Operation2( fun1 ,  fun2 , lambda a , b : a + b )      
@@ -465,27 +461,27 @@ class Operation2(Function) :
     
     @property
     def a ( self ) :
-        """``a'' - the first operand/function"""
+        """`a' - the first operand/function"""
         return self.__afun
     
     @property
     def b ( self ) :
-        """``b'' - the second operand/function"""
+        """`b' - the second operand/function"""
         return self.__bfun 
 
     @property
     def operation ( self ):
-        """``operation'' - the actual operation"""
+        """`operation' - the actual operation"""
         return  self.__oper
     
     @property
     def result (  self ) :
-        """``result'': the result of operation"""
+        """`result': the result of operation"""
         return self.__funab
     
     @property
     def shortcut ( self ) :
-        """``shortcut'' :  Has native/shortcut approach used?"""
+        """`shortcut' :  Has native/shortcut approach used?"""
         return  self.__shortcut
 
     def __str__ ( self ) :
@@ -501,7 +497,7 @@ class Operation2(Function) :
 #  op = Sum ( math.sin , math.cos ) 
 #  @endcode 
 class Sum (Operation2)  :
-    """Summation operation
+    """ Summation operation
     >>> op = Sum ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
@@ -514,7 +510,7 @@ class Sum (Operation2)  :
 #  op = Sub ( math.sin , math.cos ) 
 #  @endcode 
 class Sub (Operation2)  :
-    """Subtraction operation
+    """ Subtraction operation
     >>> op = Sub ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
@@ -527,7 +523,7 @@ class Sub (Operation2)  :
 #  op = Mul ( math.sin , math.cos ) 
 #  @endcode 
 class Mul (Operation2)  :
-    """Multiplication operation
+    """ Multiplication operation
     >>> op = Mul ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
@@ -540,7 +536,7 @@ class Mul (Operation2)  :
 #  op = Div ( math.sin , math.cos ) 
 #  @endcode 
 class Div (Operation2)  :
-    """Division operation
+    """ Division operation
     >>> op = Div ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
@@ -553,7 +549,7 @@ class Div (Operation2)  :
 #  op = Pow ( lambda x : x , lambda x : x**2 ) 
 #  @endcode 
 class Pow (Operation2)  :
-    """Pow-operation
+    """ Pow-operation
     >>> op = Pow ( lambda x : x , lambda x : x**2  )
     """
     def __init__ ( self , a , b )  :
@@ -563,7 +559,7 @@ class Pow (Operation2)  :
 ## @class Square
 #  square-operation
 class Square(Pow)  :
-    """square-operation
+    """ Square-operation
     """
     def __init__ ( self , a )  :
         super(Square,self).__init__ ( a , 2 )
@@ -572,7 +568,7 @@ class Square(Pow)  :
 ## @class Cube
 #  cube-operation
 class Cube(Pow)  :
-    """Cube-operation
+    """ Cube-operation
     """
     def __init__ ( self , a )  :
         super(Cube,self).__init__ ( a , 3 )
@@ -584,7 +580,7 @@ class Cube(Pow)  :
 #  op = Mod ( math.sin , math.cos ) 
 #  @endcode 
 class Mod (Operation2)  :
-    """Modulo operation
+    """ Modulo operation
     >>> op = Mod ( math.sin , math.cos )
     """
     def __init__ ( self , a , b )  :
@@ -597,7 +593,7 @@ class Mod (Operation2)  :
 #  op = Max ( math.sin , math.cos ) 
 #  @endcode 
 class Max (Operation2)  :
-    """Max-operation
+    """ Max-operation
     >>> op = Max ( math.sin , math.cos ) 
     """
     def __init__ ( self , a , b )  :        
@@ -610,7 +606,7 @@ class Max (Operation2)  :
 #  op = Min ( math.sin  , math.cos ) 
 #  @endcode 
 class Min (Operation2)  :
-    """Min-operation
+    """ Min-operation
     >>> op = Min ( math.sin , math.cos ) 
     """
     def __init__ ( self , a , b )  :
@@ -623,7 +619,7 @@ class Min (Operation2)  :
 #  op = LOr ( fun1 , fun2 ) 
 #  @endcode 
 class Or_l (Operation2)  :
-    """OR (logical) -operation
+    """ OR (logical) -operation
     >>> op = Or_l ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :        
@@ -636,7 +632,7 @@ class Or_l (Operation2)  :
 #  op = And_l ( fun1 , fun2 ) 
 #  @endcode 
 class And_l (Operation2)  :
-    """AND (logical) -operation
+    """ AND (logical) -operation
     >>> op = And_l ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :
@@ -650,7 +646,7 @@ class And_l (Operation2)  :
 #  op = Or_b ( fun1 , fun2 ) 
 #  @endcode 
 class Or_b (Operation2)  :
-    """OR (bitwise) -operation
+    """ OR (bitwise) -operation
     >>> op = Or_b ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :        
@@ -663,7 +659,7 @@ class Or_b (Operation2)  :
 #  op = And_b ( fun1 , fun2 ) 
 #  @endcode 
 class And_b (Operation2)  :
-    """AND (bitwise) -operation
+    """ AND (bitwise) -operation
     >>> op = And_b ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :
@@ -676,7 +672,7 @@ class And_b (Operation2)  :
 #  op = Xor_b ( fun1 , fun2 ) 
 #  @endcode 
 class Xor_b (Operation2)  :
-    """XOR (bitwise) -operation
+    """ XOR (bitwise) -operation
     >>> op = Xor_b ( fun1 , fun2 ) 
     """
     def __init__ ( self , a , b )  :        
@@ -686,15 +682,15 @@ class Xor_b (Operation2)  :
 ## @class Abs
 #  absolute value  
 class Abs(Compose) :
-    """absolute value"""
+    """ Absolute value"""
     def __init__ ( self , func ) :
-        super(Abs,self).__init__ ( abs , func , 'exp')
+        super(Abs,self).__init__ ( abs , func , 'abs')
 
 # =============================================================================
 ## @class Exp
 #  simple 'exponent' 
 class Exp(Compose) :
-    """Exponent for the function"""
+    """ Exponent for the function"""
     def __init__ ( self , func ) :
         super(Exp,self).__init__ ( math.exp , func , 'exp')
 
@@ -703,7 +699,7 @@ class Exp(Compose) :
 ## @class Log
 #  simple 'log' 
 class Log(Compose) :
-    """Log for the function"""
+    """ Log for the function"""
     def __init__ ( self , func ) :
         super(Log,self).__init__ ( math.log , func , 'log')
 
@@ -711,7 +707,7 @@ class Log(Compose) :
 ## @class Log10
 #  simple 'log10' 
 class Log10(Compose) :
-    """Log10 for the function"""
+    """ Log10 for the function"""
     def __init__ ( self , func ) :
         super(Log10,self).__init__ ( math.log10 , func , 'log10' )
 
@@ -719,7 +715,7 @@ class Log10(Compose) :
 ## @class Sin
 #  simple 'sin' 
 class Sin(Compose) :
-    """Sin for the function"""
+    """ Sin for the function"""
     def __init__ ( self , func ) :
         super(Sin,self).__init__ ( math.sin , func , 'sin')
 
@@ -727,7 +723,7 @@ class Sin(Compose) :
 ## @class Cos
 #  simple 'cos' 
 class Cos(Compose) :
-    """Cos for the function"""
+    """ Cos for the function"""
     def __init__ ( self , func ) :
         super(Cos,self).__init__ ( math.cos , func , 'cos' )
 
@@ -735,7 +731,7 @@ class Cos(Compose) :
 ## @class Tan
 #  simple 'tan' 
 class Tan(Compose) :
-    """Tan for the function"""
+    """ Tan for the function"""
     def __init__ ( self , func ) :
         super(Tan,self).__init__ ( math.tan , func , 'tan' )
 
@@ -743,7 +739,7 @@ class Tan(Compose) :
 ## @class Sinh
 #  simple 'sinh' 
 class Sinh(Compose) :
-    """Sinh for the function"""
+    """ Sinh for the function"""
     def __init__ ( self , func ) :
         super(Sinh,self).__init__ ( math.sinh , func , 'sinh' )
 
@@ -751,7 +747,7 @@ class Sinh(Compose) :
 ## @class Cosh
 #  simple 'cosh' 
 class Cosh(Compose) :
-    """Cos for the function"""
+    """ Cos for the function"""
     def __init__ ( self , func ) :
         super(Cosh,self).__init__ ( math.cosh , func , 'cosh' )
 
@@ -759,7 +755,7 @@ class Cosh(Compose) :
 ## @class Tanh
 #  simple 'tan' 
 class Tanh(Compose) :
-    """Tanh for the function"""
+    """ Tanh for the function"""
     def __init__ ( self , func ) :
         super(Tanh,self).__init__ ( math.tanh , func , 'tanh' )
 
@@ -767,7 +763,7 @@ class Tanh(Compose) :
 ## @class ASin
 #  simple 'asin' 
 class ASin(Compose) :
-    """ASin for the function"""
+    """ ASin for the function"""
     def __init__ ( self , func ) :
         super(ASin,self).__init__ ( math.asin , func , 'asinh' )
 
@@ -775,7 +771,7 @@ class ASin(Compose) :
 ## @class ACos
 #  simple 'acos' 
 class ACos(Compose) :
-    """ACos for the function"""
+    """ ACos for the function"""
     def __init__ ( self , func ) :
         super(ACos,self).__init__ ( math.acos , func , 'acos' )
 
@@ -783,7 +779,7 @@ class ACos(Compose) :
 ## @class ATan
 #  simple 'atan' 
 class ATan(Compose) :
-    """ATan for the function"""
+    """ ATan for the function"""
     def __init__ ( self , func ) :
         super(ATan,self).__init__ ( math.atan , func , 'atan' )
 
@@ -791,7 +787,7 @@ class ATan(Compose) :
 ## @class ASinh
 #  simple 'asinh' 
 class ASinh(Compose) :
-    """ASinh for the function"""
+    """ ASinh for the function"""
     def __init__ ( self , func ) :
         super(ASinh,self).__init__ ( math.asinh , func , 'asinh' )
 
@@ -799,7 +795,7 @@ class ASinh(Compose) :
 ## @class ACosh
 #  simple 'acosh' 
 class ACosh(Compose) :
-    """ACosh for the function"""
+    """ ACosh for the function"""
     def __init__ ( self , func ) :
         super(ACosh,self).__init__ ( math.acosh , func , 'acosh' )
 
@@ -807,16 +803,15 @@ class ACosh(Compose) :
 ## @class ATanh
 #  simple 'atanh' 
 class ATanh(Compose) :
-    """ATanh for the function"""
+    """ ATanh for the function"""
     def __init__ ( self , func ) :
         super(ATanh,self).__init__ ( math.atanh , func , 'atanh' )
-
 
 # =============================================================================
 ## @class Erf
 #  simple 'erf' 
 class Erf(Compose) :
-    """Erf for the function"""
+    """ Erf for the function"""
     def __init__ ( self , func ) :
         super(Erf,self).__init__ ( math.erf , func ,  'erf' )
 
@@ -824,7 +819,7 @@ class Erf(Compose) :
 ## @class Erfc
 #  simple 'erfc' 
 class Erfc(Compose) :
-    """Erfc for the function"""
+    """ Erfc for the function"""
     def __init__ ( self , func ) :
         super(Erfc,self).__init__ ( math.erfc , func , 'erfc' )
 
@@ -832,7 +827,7 @@ class Erfc(Compose) :
 ## @class Gamma
 #  simple 'Gamma' 
 class Gamma(Compose) :
-    """Gamma for the function"""
+    """ Gamma for the function"""
     def __init__ ( self , func ) :
         super(Gamma,self).__init__ ( math.gamma , func , 'G' )
 
@@ -840,7 +835,7 @@ class Gamma(Compose) :
 ## @class LogGamma
 #  simple 'LogGamma' 
 class LogGamma(Compose) :
-    """LogGamma for the function"""
+    """ LogGamma for the function"""
     def __init__ ( self , func ) :
         super(LogGamma,self).__init__ ( math.lgamma , func , 'lnG')
 
@@ -848,7 +843,7 @@ class LogGamma(Compose) :
 ## @class iGamma
 #  1/Gamma
 class iGamma(Compose) :
-    """1/Gamma for the function"""
+    """ 1/Gamma for the function"""
     def __init__ ( self , func ) :
         from ostap.math.math_ve import igamma as _igamma         
         super(iGamma,self).__init__ ( _igamma , func , 'iG')
@@ -857,7 +852,7 @@ class iGamma(Compose) :
 ## @class Sqrt
 #  simple 'Sqrt' 
 class Sqrt(Compose) :
-    """Square root for the function"""
+    """ Square root for the function"""
     def __init__ ( self , func ) :
         super(Sqrt,self).__init__ ( math.sqrt , func , 'sqrt')
 
@@ -865,26 +860,24 @@ class Sqrt(Compose) :
 ## @class Cbrt
 #  Cubic root 
 class Cbrt(Compose) :
-    """Cubic root for the function"""
+    """ Cubic root for the function"""
     def __init__ ( self , func ) :
         from ostap.math.math_ve import cbrt as _cbrt 
         super(Cbrt,self).__init__ ( _cbrt , func , 'cbrt')
-
 
 # =============================================================================
 ## @class Sech
 #  1/cosh 
 class Sech (Compose) :
-    """Sech (1/cosh) for the function"""
+    """ Sech (1/cosh) for the function"""
     def __init__ ( self , func ) :
         from ostap.math.math_ve import sech as _sech 
         super(Sech,self).__init__ ( _sech , func , 'sech')
-
-
+        
 # =============================================================================
 ## convert function object to TF1 
 def tf1  ( fun , **kwargs ) :
-    """Convert function object to TF1     
+    """ Convert function object to TF1     
     """
     from ostap.math.models import tf1 as _tf1 
     return _tf1 ( fun , **kwargs )
@@ -892,7 +885,7 @@ def tf1  ( fun , **kwargs ) :
 # =============================================================================
 ## convert function object to TF2 
 def tf2  ( fun , **kwargs ) :
-    """Convert function object to TF2     
+    """ Convert function object to TF2     
     """
     from ostap.math.models import tf2 as _tf2
     return _tf2 ( fun , **kwargs )
@@ -900,33 +893,31 @@ def tf2  ( fun , **kwargs ) :
 # =============================================================================
 ## convert function object to TF3 
 def tf3  ( fun , **kwargs ) :
-    """Convert function object to TF3     
+    """ Convert function object to TF3     
     """
     from ostap.math.models import tf3 as _tf3 
     return _tf3 ( fun , **kwargs )
 
-
 # =============================================================================
 ## draw function via conversion to TF1 
 def draw1D ( fun , **kwargs ) :
-    """draw function via conversion to TF1"""
+    """ draw function via conversion to TF1"""
     from ostap.math.models import f1_draw
     return f1_draw ( fun , **kwargs )
 
 # =============================================================================
 ## draw function via conversion to TF2 
 def draw3D ( fun , **kwargs ) :
-    """draw function via conversion to TF2"""
+    """ draw function via conversion to TF2"""
     from ostap.math.models import _f2_draw_
     return f2_draw ( fun , **kwargs )
 
 # =============================================================================
 ## draw function via conversion to TF3 
 def draw3D ( fun , **kwargs ) :
-    """draw function via conversion to TF3"""
+    """ draw function via conversion to TF3"""
     from ostap.math.models import _f3_draw_
     return f3_draw ( fun , **kwargs ) 
-
 
 # =============================================================================
 ## digitize the function as np-array
@@ -936,7 +927,7 @@ def draw3D ( fun , **kwargs ) :
 #  >>> array2 =    digitize ( fun , 0 , 1 , 0.001 )
 #  @endcode 
 def digitize ( func , xmin , xmax , N ) :
-    """Digitize the function as np-array
+    """ Digitize the function as np-array
     >>>  fun   = ...
     >>> array1 =    digitize ( fun , 0 , 1 , 1000  )
     >>> array2 =    digitize ( fun , 0 , 1 , 0.001 )
@@ -967,7 +958,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
 
 # =============================================================================
 ##                                                                     The  END

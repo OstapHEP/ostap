@@ -84,6 +84,8 @@ __all__     = (
     'size'                , ## size/diameter symbol or 'size'
     ##
     'asterisk'            ,
+    'chi2'                , ## chi-squared 
+    'chi2ndf'             , ## chi-sqyared /ndf 
     ## 
     'union'               , 
     'intersection'        , 
@@ -115,8 +117,8 @@ thumb_up         = '\U0001f44d'  if show else '+'
 thumb_down       = '\U0001f44e'  if show else '-'
 clock            = '\U0001f550'  if show else '' 
 ram              = '\U0001f40f'  if show else ''
-runner           =  '\U0001f3c3' if show else ''
-finish           =  '\U0001f3c1' if show else ''
+runner           = '\U0001f3c3' if show else ''
+finish           = '\U0001f3c1' if show else ''
 
 arrow_left       = '\U00002190' if show else '<-'
 arrow_right      = '\U00002192' if show else '->'
@@ -220,6 +222,11 @@ variance_sym     = '\U000003c3\U000000B2' if show else 'var'
 delta_symbol     = '\U00000394'           if show else 'delta'
 ## Number
 number           = '\U00002116'           if show else '#'
+## chi2
+chi2             = '\U000003C7\U000000B2' if show else 'chi2'
+chi2             = '\U0001D6D8\U000000B2' if show else 'chi2'
+## chi2/ndf 
+chi2ndf          = '%s/ndf' % chi2 
 
 ## star/convolution oprator
 asterisk         = '\U00002731'           if show else '*'

@@ -2081,8 +2081,6 @@ def push_2tree ( tree , *config , progress = True , report = True ) :
     treepath = tree.path
     the_file = tree.topdir
     groot    = ROOT.ROOT.GetROOT() 
-    print ( 'TREEPATH' , treepath , True if treepath else False )
-    print ( 'THE_FILE' , the_file , typename ( the_file ) , True if the_file else False )
     
     assert treepath and the_file and ( not the_file is groot ) and isinstance ( the_file , ROOT.TFile ) , \
         'This is not the file-resident TTree* object! addition of new branch is not posisble!'

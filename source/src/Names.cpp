@@ -55,30 +55,33 @@ std::string Ostap::tmp_name
 ( const std::string&  prefix ,
   const std::string&  name   ,
   const TNamed*       named  ,
-  const bool          random ) 
+  const std::string&  suffix ,
+  const bool          random )
 {
   std::size_t hv = 
     nullptr == named ? 
-    Ostap::Utils::hash_combiner ( prefix , name , random ) :
-    Ostap::Utils::hash_combiner ( prefix , name , random , 
-                                  std::string ( named -> GetName  () ) , 
-                                  std::string ( named -> GetTitle () ) ) ;
+    Ostap::Utils::hash_combiner ( prefix , name , suffix , random ) :
+    Ostap::Utils::hash_combiner ( prefix , name , suffix , random , 
+				  std::string ( named -> GetName  () ) , 
+				  std::string ( named -> GetTitle () ) ) ;
   //
   if ( random )
     {
-      hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand() ) ; 
-      hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand() ) ; 
+      hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand () ) ;
+      hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand () ) ;      
+      hv = Ostap::Utils::hash_combiner ( prefix , hv , std::rand () ) ;
       //
       UChar_t     uuid  [ 16 ] ;
       const TUUID tuuid {}     ;
       tuuid.GetUUID ( uuid )   ;
       //      
       hv = Ostap::Utils::hash_combiner ( prefix       ,
-                                         hv           ,
-                                         Ostap::Utils::hash_range ( uuid , uuid + 16 ) ) ;      
+					 suffix       , 
+					 hv           ,
+					 Ostap::Utils::hash_range ( uuid , uuid + 16 ) ) ;      
     }
   //
-  return prefix + std::to_string ( hv ) ;
+  return prefix + std::to_string ( hv ) + suffix ;
 }
 // ============================================================================
 /* Is  the name "primitive" 

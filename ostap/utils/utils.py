@@ -60,6 +60,7 @@ __all__     = (
     'slow'               , ## "slow" looping with delays at each step
     ##
     'CallThem'           , ## convert sequence of callables into single callable
+    'AttrGetter'         , ## helper class to have pickeable `operator.attrgetter`
     ##
     'Singleton'          , ## Metaclass for the singleton 
     ##
@@ -73,7 +74,7 @@ from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
 from   ostap.utils.memory     import memory, virtualMemory, Memory
-import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime  ## attention here!!
+import ROOT, time, os , sys, math, time, functools, abc, array, random, datetime, operator  ## attention here!!
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
@@ -813,7 +814,7 @@ else : # ======================================================================
         - see `functools.lru_cache` 
         """
         return functools.lru_cache(maxsize=None)(user_function)    
-      
+
 # =========================================================================
 ## absract property decorator
 #  @code
@@ -971,6 +972,29 @@ class CallThem(object) :
         return ','.join ( str ( c ) for c in self.__callables )
     __repr__ = __str__
 
+# ============================================================================
+## @class AttrGetter
+#  simple class to bypass <code>operator.attrgetter</code> that
+#  has some problem with serialization for multiprocessing
+class AttrGetter(object):
+    """ Simple class to bypass `operator.attrgetter` that
+    has some problem with serializaton for multiprocessing
+    """
+    def __init__ ( self , *attributes ) :
+        self.__attributes = attributes 
+    def __call__ ( self , obj ) :
+        getter = operator.attrgetter( *self.__attributes )
+        return getter ( obj )
+
+    @property 
+    def attributes ( self ) :
+        """`attributes': the actual attributes
+        """
+        return self.__attributes
+    # print attributes 
+    def __str__ ( self ) : return ','.join ( self.__attributes )
+    __repr__ = __str__ 
+
 # =============================================================================
 ## @class NumCalls
 #  Count a number of  times a callable object is invoked
@@ -987,7 +1011,7 @@ class NumCalls (object):
     def count ( self ) :
         """'count': number of times the function was invoked"""
         return self.__count
-    
+
 # ==============================================================================        
 #  Count a number of  times a callable object is invoked
 numcalls = NumCalls

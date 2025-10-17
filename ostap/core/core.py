@@ -236,28 +236,28 @@ else : # =================================================
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @see Ostap::Utils::rootID 
 #  @date   2011-06-07
-def rootID ( prefix = 'o_' ) :
+def rootID ( prefix = 'o_' , suffix = '' ) :
     """ Construct the unique ROOT-id 
     """
-    return  Ostap.Utils.rootID ( prefix )
+    return  Ostap.Utils.rootID ( prefix , suffix )
 
 # =============================================================================
 ## global ROOT identified for function objects 
-def funcID  ( prefix = 'f_'  ) : return rootID  ( prefix )
+def funcID  ( prefix = 'f_'  , suffix = '' ) : return rootID  ( prefix , suffix )
 ## global ROOT identified for function objects 
-def funID   ( prefix = 'f_'  ) : return funcID  ( prefix )
+def funID   ( prefix = 'f_'  , suffix = '' ) : return funcID  ( prefix , suffix )
 ## global ROOT identified for function objects 
-def fID     ( prefix = 'f_'  ) : return funcID  ( prefix )
+def fID     ( prefix = 'f_'  , suffix = '' ) : return funcID  ( prefix , suffix )
 ## global ROOT identified for histogram objects 
-def histoID ( prefix = 'h_'  ) : return rootID  ( prefix )
+def histoID ( prefix = 'h_'  , suffix = '' ) : return rootID  ( prefix , suffix )
 ## global ROOT identified for histogram objects 
-def histID  ( prefix = 'h_'  ) : return histoID ( prefix )
+def histID  ( prefix = 'h_'  , suffix = '' ) : return histoID ( prefix , suffix )
 ## global ROOT identified for histogram objects 
-def hID     ( prefix = 'h_'  ) : return histoID ( prefix )
+def hID     ( prefix = 'h_'  , suffix = '' ) : return histoID ( prefix , suffix )
 ## global ROOT identified for dataset objects 
-def dsID    ( prefix = 'ds_' ) : return rootID  ( prefix )
+def dsID    ( prefix = 'ds_' , suffix = '' ) : return rootID  ( prefix , suffix )
 ## global ROOT identified for graphs objects 
-def grID    ( prefix = 'gr_' ) : return rootID  ( prefix )
+def grID    ( prefix = 'gr_' , suffix = '' ) : return rootID  ( prefix , suffix )
 
 # ==================================================================================
 ## get current directory in ROOT

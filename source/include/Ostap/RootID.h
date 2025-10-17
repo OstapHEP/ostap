@@ -15,12 +15,25 @@ namespace Ostap
   {
     // ========================================================================
     /** @fn rootID 
-     *  Find "not-used" name in ROOT 
+     *  Find "not-used" name in ROOT or RooFit  
+     *  @param prefix use this prefix 
+     *  @param suffix use this suffix
      *  @see TROOT::FindObject 
+     *  @see RooNameReg 
      *  @author Vanya Belyaev
      *  @date   2020-09-02
      */
-    std::string rootID ( const std::string& prefix = "o_" ) ;
+    std::string rootID
+    ( const std::string& prefix = "o_" , 
+      const std::string& suffix = ""    ) ;
+    // ========================================================================
+    /** @fn usedRootID 
+     *  Is this name already used by ROOT/RooFit ? 
+     *  @see TROOT::FindObject 
+     *  @see RooNameReg 
+     */
+    bool usedRootID
+    ( const std::string& name ) ;
     // ========================================================================
   } //                                        The end of namespace Ostap::Utils 
   // ==========================================================================

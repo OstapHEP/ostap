@@ -20,6 +20,7 @@ namespace  Ostap
    *  @param name   (INPUT) the base name 
    *  @param named  (INPUT) the TNNamed object 
    *  @param random (INPUT) use random generator 
+   *  @param suffix (INPUT) suffix 
    *  @return some random name 
    *  @see TNamed
    */  
@@ -27,6 +28,7 @@ namespace  Ostap
   ( const std::string& prefix        , 
     const std::string& name          ,
     const TNamed*      named         ,
+    const std::string& suffix = ""  , 
     const bool         random = true ) ;
   // ==========================================================================
   /** Genrate some valid (ranodm) name
@@ -39,8 +41,9 @@ namespace  Ostap
   inline std::string tmp_name
   ( const std::string& prefix        , 
     const std::string& name          ,
+    const std::string& suffix = ""   , 
     const bool         random = true ) 
-  { return tmp_name ( prefix , name , nullptr , random ) ; }
+  { return tmp_name ( prefix , name , nullptr , suffix , random ) ; }
   // ==========================================================================
   /** Is  the name "primitive" 
    *  the name is primitive if it could represent

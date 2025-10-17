@@ -19,6 +19,10 @@
 // ============================================================================
 #include "Ostap/HistoStat.h"
 // ============================================================================
+// Local
+// ============================================================================
+#include "status_codes.h"
+// ============================================================================
 /** @file
  *  Implementation file for class Gaudi::Utils::HStats
  *  @author Vanya BELYAEV Ivan.BElayev@cern.ch
@@ -522,6 +526,192 @@ double Ostap::Utils::HistoStat::std_moment3
       std::pow ( sigma2_y , 0.5 * ky ) *
       std::pow ( sigma2_z , 0.5 * kz ) ) ;
 }
+// =======================================================================
+/* get Riemann sum for the histogram:
+ *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+ *  where 
+ *  - \f$ y_i \f$ is a content of bin 
+ *  - \f$ \Delta x _i \f$ is a "volume" of bin
+ */
+// =======================================================================
+double Ostap::Utils::HistoStat::riemann_sum3
+( const TH3& histo )
+{
+  Ostap::Assert ( 3 == histo.GetDimension()               ,
+		  "Invalid TH3 dimension != 3 "           ,
+		  "Ostap::Utils::HistoStat::riemann_sum3" ,
+		  INVALID_TH3 , __FILE__ , __LINE__       ) ;
+  //
+  const TAxis* xaxis = histo.GetXaxis() ;
+  const TAxis* yaxis = histo.GetYaxis() ;
+  const TAxis* zaxis = histo.GetZaxis() ;
+  //
+  Ostap::Assert ( xaxis && yaxis && zaxis                 ,
+		  "Invalid TAxis*"                        ,
+		  "Ostap::Utils::HistoStat::riemann_sum3" ,
+		  INVALID_TH3 , __FILE__ , __LINE__       ) ;
+  //
+  const Int_t nx = xaxis->GetNbins() ;
+  const Int_t ny = yaxis->GetNbins() ;
+  const Int_t nz = zaxis->GetNbins() ;
+  //
+  double result = 0 ;
+  for ( Int_t ix = 1 ; ix <= nx ; ++ix )
+    {
+      const double sx = xaxis->GetBinWidth ( ix ) ;
+      for ( Int_t iy = 1 ; iy <= ny ; ++iy )
+	{
+	  const double sy = yaxis->GetBinWidth ( iy ) ;	  
+	  for ( Int_t iz = 1 ; iz <= nz ; ++iz )
+	    {
+	      const double sz = zaxis->GetBinWidth ( iz ) ;	      
+	      result += histo.GetBinContent ( ix , iy , iz ) * sx * sy * sz ;
+	    }
+	}
+    }
+  //
+  return result ;
+}
+// =======================================================================
+/* get Riemann sum for the histogram:
+ *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+ *  where 
+ *  - \f$ y_i \f$ is a content of bin 
+ *  - \f$ \Delta x _i \f$ is a "volume" of bin
+ */
+// =======================================================================
+double Ostap::Utils::HistoStat::riemann_sum2
+( const TH2& histo )
+{
+  //
+  if ( 3 <= histo.GetDimension() )
+    {
+      const TH3* h3 = dynamic_cast<const TH3*> ( &histo ) ;
+      Ostap::Assert ( h3                                      ,
+		      "Invalid TH3* cast"                     ,
+		      "Ostap::Utils::HistoStat::riemann_sum2" ,
+		      INVALID_TH3 , __FILE__ , __LINE__       ) ;    
+      return riemann_sum3 ( *h3 ) ; 
+    }
+  //
+  Ostap::Assert ( 2 == histo.GetDimension()               ,
+		  "Invalid TH2 dimension != 2 "           ,
+		  "Ostap::Utils::HistoStat::riemann_sum2" ,
+		  INVALID_TH3 , __FILE__ , __LINE__       ) ;
+  //
+  const TAxis* xaxis = histo.GetXaxis() ;
+  const TAxis* yaxis = histo.GetYaxis() ;
+  //
+  Ostap::Assert ( xaxis && yaxis                          ,
+		  "Invalid TAxis*"                        ,
+		  "Ostap::Utils::HistoStat::riemann_sum2" ,
+		  INVALID_TH3 , __FILE__ , __LINE__       ) ;
+  //
+  const Int_t nx = xaxis->GetNbins() ;
+  const Int_t ny = yaxis->GetNbins() ;
+  //
+  double result = 0 ;
+  for ( Int_t ix = 1 ; ix <= nx ; ++ix )
+    {
+      const double sx = xaxis->GetBinWidth ( ix ) ;
+      for ( Int_t iy = 1 ; iy <= ny ; ++iy )
+	{
+	  const double sy = yaxis->GetBinWidth ( iy ) ;	  
+	  result += histo.GetBinContent ( ix , iy ) * sx * sy ;
+	}
+    }
+  //
+  return result ;
+}
+// =======================================================================
+/* get Riemann sum for the histogram:
+ *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+ *  where 
+ *  - \f$ y_i \f$ is a content of bin 
+ *  - \f$ \Delta x _i \f$ is a "volume" of bin
+ */
+// =======================================================================
+double Ostap::Utils::HistoStat::riemann_sum1
+( const TH1& histo )
+{
+  //
+  if (      3 <= histo.GetDimension() )
+    {
+      const TH3* h3 = dynamic_cast<const TH3*> ( &histo ) ;
+      Ostap::Assert ( h3                                      ,
+		      "Invalid TH3* cast"                     ,
+		      "Ostap::Utils::HistoStat::riemann_sum1" ,
+		      INVALID_TH3 , __FILE__ , __LINE__       ) ;    
+      return riemann_sum3 ( *h3 ) ; 
+    }
+  else if ( 2 <= histo.GetDimension() )
+    {
+      const TH2* h2 = dynamic_cast<const TH2*> ( &histo ) ;
+      Ostap::Assert ( h2                                      ,
+		      "Invalid TH2* cast"                     ,
+		      "Ostap::Utils::HistoStat::riemann_sum1" ,
+		      INVALID_TH2 , __FILE__ , __LINE__       ) ;    
+      return riemann_sum2 ( *h2 ) ; 
+    }
+  //
+  Ostap::Assert ( 1 == histo.GetDimension()               ,
+		  "Invalid TH1 dimension != 1 "           ,
+		  "Ostap::Utils::HistoStat::riemann_sum1" ,
+		  INVALID_TH3 , __FILE__ , __LINE__       ) ;
+  //
+  const TAxis* xaxis = histo.GetXaxis() ;
+  //
+  Ostap::Assert ( xaxis                                   ,
+		  "Invalid TAxis*"                        ,
+		  "Ostap::Utils::HistoStat::riemann_sum1" ,
+		  INVALID_TH3 , __FILE__ , __LINE__       ) ;
+  //
+  const Int_t nx = xaxis->GetNbins() ;
+  //
+  double result = 0 ;
+  for ( Int_t ix = 1 ; ix <= nx ; ++ix )
+    {
+      const double sx = xaxis->GetBinWidth ( ix ) ;
+      result += histo.GetBinContent ( ix ) * sx  ;
+    }
+  //
+  return result ;
+}
+// =======================================================================
+/* get Riemann sum for the histogram:
+ *  \f[ R = \sum_{i} y_i \Delta x_i \f]
+ *  where 
+ *  - \f$ y_i \f$ is a content of bin 
+ *  - \f$ \Delta x _i \f$ is a "volume" of bin
+ */
+// =======================================================================
+double Ostap::Utils::HistoStat::riemann_sum
+( const TH1& histo )
+{
+  //
+  if (      3 <= histo.GetDimension() )
+    {
+      const TH3* h3 = dynamic_cast<const TH3*> ( &histo ) ;
+      Ostap::Assert ( h3                                      ,
+		      "Invalid TH3* cast"                     ,
+		      "Ostap::Utils::HistoStat::riemann_sum"  ,
+		      INVALID_TH3 , __FILE__ , __LINE__       ) ;    
+      return riemann_sum3 ( *h3 ) ; 
+    }
+  else if ( 2 <= histo.GetDimension() )
+    {
+      const TH2* h2 = dynamic_cast<const TH2*> ( &histo ) ;
+      Ostap::Assert ( h2                                      ,
+		      "Invalid TH2* cast"                     ,
+		      "Ostap::Utils::HistoStat::riemann_sum"  ,
+		      INVALID_TH2 , __FILE__ , __LINE__       ) ;    
+      return riemann_sum2 ( *h2 ) ; 
+    }
+  //
+  return riemann_sum1 ( histo ) ;
+}
+// =======================================================================
+
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

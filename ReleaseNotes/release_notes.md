@@ -7,6 +7,10 @@
   1. massive improvement for Apollonius & friends.
   1. add `clamp` method for histograms
   1. `reweight.py` : add check for non-positive data 
+  1. extend functionality for checking the unquness of ROOT/RooFit names (it will reduce amount of code)
+  1. allow specificationof explicit suffix for various `rootID/hID/fID/dsID/...` methods 
+  1. more improvement for reweighting machinery 
+  1. histograms: move calculation of Riemann' sums from python to C++
 
 ## Backward  incompatible 
 

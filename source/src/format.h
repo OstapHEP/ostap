@@ -16,34 +16,44 @@ namespace Ostap
    */
   // ============================================================================
   /// format single number ..
-  std::string format ( const std::string& fmt    ,
-                       double             value  ) ;
+  std::string format
+  ( const std::string&  fmt    ,
+    const double        value  ) ;
   /// format single number ..
-  std::string format ( const std::string& fmt    ,
-                       long               value  ) ;
+  std::string format
+  ( const std::string&  fmt    ,
+    const long          value  ) ;
+  /// format single number ..
+  std::string format
+  ( const std::string&  fmt    ,
+    const unsigned long value  ) ;
   /// format two numbers
-  std::string format ( const std::string& fmt    , 
-                       double             value1 ,
-                       double             value2 ) ;
+  std::string format
+  ( const std::string&  fmt    , 
+    const double        value1 ,
+    const double        value2 ) ;
   /// format three numbers
-  std::string format ( const std::string& fmt    , 
-                       double             value1 , 
-                       double             value2 ,
-                       double             value3 ) ;
+  std::string format
+  ( const std::string&  fmt    , 
+    const double        value1 , 
+    const double        value2 ,
+    const double        value3 ) ;
   /// format four numbers
-  std::string format ( const std::string& fmt    ,
-                       double             value1 , 
-                       double             value2 ,
-                       double             value3 ,
-                       double             value4 ) ; 
+  std::string format
+  ( const std::string&  fmt    ,
+    const double        value1 , 
+    const double        value2 ,
+    const double        value3 ,
+    const double        value4 ) ; 
   /// format five numbers
-  std::string format ( const std::string& fmt    , 
-                       double             value1 , 
-                       double             value2 ,
-                       double             value3 ,
-                       double             value4 , 
-                       double             value5 ) ; 
-// ============================================================================
+  std::string format
+  ( const std::string&  fmt    , 
+    const double        value1 , 
+    const double        value2 ,
+    const double        value3 ,
+    const double        value4 , 
+    const double        value5 ) ; 
+  // ============================================================================
 }
 // ============================================================================
 //                                                                      The END 
