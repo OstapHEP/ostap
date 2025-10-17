@@ -1529,9 +1529,9 @@ def restore_from_ROOT ( root_file , dbname = '' , * , reweightings = () ) :
     with DBASE.open ( dbname , 'r' ) as db :
         db.ls()
         rw = db.get ( tag_reweightings , () )
-        if not rr : logger.error ( "DB has no '%s' entry" % tag_reweighting )
+        if not rw : logger.error ( "DB has no '%s' entry" % tag_reweightings )
         for r in rw :
-            if not r in db : logger.error ( "DB has no '%s' reweighting" % e  )
+            if not r in db : logger.error ( "DB has no '%s' reweighting" % r )
                 
     return dbname 
 
