@@ -130,21 +130,24 @@ class Function(object) :
     __metaclass__ = abc.ABCMeta
     @abc.abstractmethod
     def __call__ ( self , *args ) :
-        """Use the function!"""
+        """ Use the function! """
         return NotImplemented
-    ## ## simple operations 
+    ## simple operations 
     def __add__      ( self , other ) : return Sum ( self  , other )
     def __sub__      ( self , other ) : return Sub ( self  , other )
     def __mul__      ( self , other ) : return Mul ( self  , other )
     def __div__      ( self , other ) : return Div ( self  , other )
     def __truediv__  ( self , other ) : return Div ( self  , other )
     def __pow__      ( self , other ) : return Pow ( self  , other )
+    def __mod__      ( self , other ) : return Mod ( self  , other )
     def __radd__     ( self , other ) : return Sum ( other , self  )
     def __rmul__     ( self , other ) : return Mul ( other , self  )
     def __rsub__     ( self , other ) : return Sub ( other , self  )
     def __rdiv__     ( self , other ) : return Div ( other , self  )
     def __rtruediv__ ( self , other ) : return Div ( other , self  )
-    
+    def __rpow__     ( self , other ) : return Pow ( other , self  )
+    def __rmod__     ( self , other ) : return Mod ( other , self  )
+
     def __iadd__     ( self , other ) : return NotImplemented
     def __imul__     ( self , other ) : return NotImplemented
     def __isub__     ( self , other ) : return NotImplemented
@@ -164,7 +167,7 @@ class Constant(Function) :
     __repr__ = __str__ 
     @property
     def value ( self ) :
-        """``value'' : value of the constant"""
+        """`value' : value of the constant"""
         return self.__value
 
 # =============================================================================
@@ -204,7 +207,7 @@ class WrapOper2(Function) :
     """Helper class to wrap certain operation
     >>> fun1  = math.sin
     >>> fun2  = lambda x : x**2
-    >>> fsum  = WrapOpen ( fun1 , fun2 , operator.add ) 
+    >>> fsum  = WrapOper2 ( fun1 , fun2 , operator.add ) 
     """
 
     def __init__ ( self , a , b , operation ) :
@@ -328,13 +331,14 @@ class Compose(Function) :
         bfun = b
         
         ## trivial case 
-        if isinstance ( a , num_types ) : afun = Constant ( a * 1.0 ) 
+        if isinstance ( a , num_types ) : afun = Constant ( a ) 
             
         ## trivial case 
-        if isinstance ( b , num_types ) : bfun = Constant ( b * 1.0 ) 
+        if isinstance ( b , num_types ) : bfun = Constant ( b ) 
             
-        assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type( a ) )  
-        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , type( b ) )  
+        assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , typename ( a ) )  
+        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , typename ( b ) )  
+        
         self.__afun = afun 
         self.__bfun = bfun
         
@@ -399,8 +403,8 @@ class Operation2(Function) :
         elif bnum :
             bfun  = Constant ( b * 1.0 ) 
             
-        assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type( a ) )  
-        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , type( b ) )  
+        assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , typename ( a ) )  
+        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( b , typename ( b ) )  
 
         self.__afun = afun
         self.__bfun = bfun
