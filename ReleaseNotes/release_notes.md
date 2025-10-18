@@ -16,6 +16,7 @@
 
    1. From now `Apollonios` stands for the core asymmetric Apollonios function and `ApolloniosL` represents Aplooniosu functon with power-lay left tail
    
+   
 ## Bug fixes
 
    1. fix recentlyintroduce bug in `Ostap::Math::BifurcatedGaussian`
