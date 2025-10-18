@@ -94,7 +94,7 @@ __all__ = (
     'CrystalBall_pdf'        , ## Crystal-ball function
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
-    'Needham_pdf'            , ## Needham function for J/psi or Y fits 
+    'Needham_pdf'            , ## Needham's function for J/psi or Y fits 
     'Apollonios_pdf'         , ## bifurcated Apollonios function         
     'ApolloniosL_pdf'        , ## bigurcated Apollonios function with power-law tail
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
@@ -111,14 +111,14 @@ __all__ = (
     'SkewGenError_pdf'       , ## Skewed generalised error distribution 
     'SinhAsinh_pdf'          , ## "Sinh-arcsinh distributions". Biometrika 96 (4): 761
     'JohnsonSU_pdf'          , ## JonhsonSU-distribution 
-    'Atlas_pdf'              , ## modified gaussian with exponenital tails 
+    'Atlas_pdf'              , ## modified gaussian with exponential tails 
     'Slash_pdf'              , ## symmetric peakk wot very heavy tails 
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
     'QGaussian_pdf'          , ## q-Gaussian (Tsallsi) distribution
     'KGaussian_pdf'          , ## k-Gaussian (Kaniadakis) distribution
     'Hyperbolic_pdf'         , ## Hyperbolic distribution
     'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
-    'Das_pdf'                , ## Das: Gaussian with exponentrial tails 
+    'Das_pdf'                , ## Das: Gaussian with exponential tails 
     'Hypatia_pdf'            , ## Generalised Hyperbolic distribution
     'ExGauss_pdf'            , ## ExGauss distribution 
     'ExGauss2_pdf'           , ## ExGauss distribution parameterised in terms of the mode 
@@ -159,7 +159,9 @@ from   ostap.core.ostap_types   import integer_types, num_types
 from   ostap.fitting.funbasic   import FUN1 , Fun1D 
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
-from   ostap.fitting.fithelpers import Phases, ZERO, Tail, LeftTail, RightTail  
+from   ostap.fitting.fithelpers import ( Phases  , ZERO      , 
+                                         Tail    , LeftTail  , RightTail ,
+                                         SigmaLR , TwoSigmas )    
 from   ostap.fitting.variables  import var_tanh, SETVAR
 import ostap.math.dalitz
 import ostap.math.models
@@ -587,11 +589,12 @@ models.append ( Needham_pdf )
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Apollonios_pdf(PEAK) :
+class Apollonios_pdf(PEAK,SigmaLR) :
     """ bifurcated/asymmetric Apollonios function
     http://arxiv.org/abs/1312.5000
     
-    The function is modification of the original function proposed by Diego Martinez Santos
+    The function is modification version of  
+    the function proposed by Diego Martinez Santos
     - see http://arxiv.org/abs/1312.5000
     
     - see `Ostap.Models.Apollonios`
@@ -608,29 +611,15 @@ class Apollonios_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self                          ,
-                         name       = name            ,
-                         xvar       = xvar            ,
-                         mean       = mean            ,
-                         sigma      = sigma           ,
-                         mean_name  = 'm0_%s'  % name ,
-                         mean_title = 'm_0_%s' % name )
+        PEAK    .__init__ ( self                         ,
+                            name       = name            ,
+                            xvar       = xvar            ,
+                            mean       = mean            ,
+                            sigma      = sigma           ,
+                            mean_name  = 'm0_%s'  % name ,
+                            mean_title = 'm_0_%s' % name )
+        SigmaLR.__init__ ( self, self.sigma , psi = psi  )
         
-        ## sigma asymmetry: kappa = tanh(psi) 
-        self.__psi = self.make_var ( ZERO if psi is None else psi ,
-                                     'psi_%s'   % self.name       ,
-                                     '#psi(%s)' % self.name       ,
-                                     None , 0 , -17 , +17         )
-        
-        ## create the asymmetry "cluster" 
-        if psi is None or self.__psi is ZERO :            
-            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma'              ,
-                                                    var1    = self.sigma ,
-                                                    var2    = self.sigma )                                        
-        else :
-            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' ,
-                                                    halfsum = self.sigma ,
-                                                    psi     = self.__psi )
         ## beta-parameter     
         self.__beta    = self.make_var ( beta ,
                                          'beta_%s'         % name ,
@@ -668,27 +657,6 @@ class Apollonios_pdf(PEAK) :
     @m0.setter
     def m0 ( self, value ) :
         self.mean = value 
-    
-    @property
-    def kappa     ( self ) :
-        """'asym'- asymmetry parameter for Apollonios function"""
-        return self.__AV_SIGMA.kappa
-    @property
-    def asymmetry ( self ) :
-        """'asym'- asymmetry parameter for Apollonios function (same as 'kappa')"""
-        return self.kappa     
-    @property
-    def asym      ( self ) :
-        """'asym'- asymmetry parameter for Apollonios function"""
-        return self.kappa 
-
-    @property
-    def psi ( self ) :
-        """'psi': asymmetry parameter: kappa = tanh ( psi ) """
-        return self.__psi 
-    @psi.setter
-    def psi ( self, value ) :
-        self.set_value ( self.__psi , value )
         
     @property
     def beta ( self ) :
@@ -697,16 +665,6 @@ class Apollonios_pdf(PEAK) :
     @beta.setter
     def beta ( self, value ) :
         self.set_value ( self.__beta , value ) 
-
-    @property
-    def sigmaL ( self ) :
-        """(left) sigma-parameter for Apollonios function"""
-        return self.__AV_SIGMA.var1
-    
-    @property
-    def sigmaR ( self ) :
-        """(right) sigma-parameter for Apollonios function"""
-        return self.__AV_SIGMA.var2 
     
 models.append ( Apollonios_pdf )    
 
@@ -723,7 +681,7 @@ models.append ( Apollonios_pdf )
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class ApolloniosL_pdf(Apollonios_pdf) :
+class ApolloniosL_pdf(Apollonios_pdf,Tail,LeftTail) :
     """ bifurcated/asymmetric Apollonios function with power-law left tail 
     http://arxiv.org/abs/1312.5000
     
@@ -746,27 +704,16 @@ class ApolloniosL_pdf(Apollonios_pdf) :
                    n     = None ) : 
         
         ## initialize the base class 
-        Apollonios_pdf.__init__ ( self          ,
-                                  name  = name  ,
-                                  xvar  = xvar  ,
-                                  mean  = mean  ,
-                                  sigma = sigma ,
-                                  psi   = psi   , 
-                                  beta  = beta  )
+        Apollonios_pdf  .__init__ ( self          ,
+                                    name  = name  ,
+                                    xvar  = xvar  ,
+                                    mean  = mean  ,
+                                    sigma = sigma ,
+                                    psi   = psi   , 
+                                    beta  = beta  )
+        Tail            .__init__ ( self , alpha = alpha      , n = n      )
+        LeftTail        .__init__ ( self , alpha = self.alpha , n = self.n )
         
-        self.__alpha = self.make_var ( alpha ,
-                                       'alpha_%s'         % name ,
-                                       '#alpha_{Apo}(%s)' % name ,
-                                       None , 1.5 , 0.10 , 5 )
-        
-        self.__n     = self.make_var ( n   ,
-                                       'n_%s'            % name ,
-                                       'n_{Apo}(%s)'     % name ,
-                                       None , 1.0 , -1 , 100 )
-    
-        ## N = Ostap.Math.CrystalBall.N ( n ) 
-        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
-
         ## finally build PDF
         self.pdf  = Ostap.Models.ApolloniosL (
             self.roo_name ( 'apoL_' )    , 
@@ -791,27 +738,6 @@ class ApolloniosL_pdf(Apollonios_pdf) :
             'n'         : self.n     ,
         }
 
-    @property
-    def alpha ( self ) :
-        """'alpha'-parameter for ApolloniosL (left) tail"""
-        return self.__alpha
-    @alpha.setter
-    def alpha ( self, value ) :
-        self.set_value ( self.__alpha , value ) 
-        
-    @property
-    def n     ( self ) :
-        """'n'-parameter for Apollonios tail"""
-        return self.__n
-    @n.setter
-    def n     ( self, value ) :
-        self.set_value ( self.__n , value ) 
-
-    @property
-    def N     ( self ) :
-        """'N'-parameter for Apollonios tail"""
-        return self.__N
-        
 models.append ( ApolloniosL_pdf )
 
 # =============================================================================
@@ -822,8 +748,8 @@ models.append ( ApolloniosL_pdf )
 #  @see RooGaussian
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BifurcatedGauss_pdf(PEAK) :
-    """Bifurcated Gauss function
+class BifurcatedGauss_pdf(Gauss_pdf,SigmaLR) :
+    """ Bifurcated Gauss function
     
     Aka a split normal distribution 
     - see https://en.wikipedia.org/wiki/Split_normal_distribution
@@ -838,35 +764,20 @@ class BifurcatedGauss_pdf(PEAK) :
     with asymmetry parameter -1 < kappa < 1 
     
     """
-    def __init__ ( self                  ,
-                   name                  ,
-                   xvar                  ,
-                   mean      = None      ,
-                   sigma     = None      ,
-                   asymmetry = None      ) : 
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   mean  = None ,
+                   sigma = None ,
+                   psi   = None ) : 
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma ) 
-        
-        ## asymmetry parameter  
-        self.__asym = self.make_var ( asymmetry                 ,
-                                      'asym_%s'          % name ,
-                                      '#asym_{asym}(%s)' % name ,
-                                      None , 0 , -1 , 1  )
-        
-        ## constreuct left and right sigmas 
-        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
-            self.sigma                                    , ## mean/average sigma 
-            self.asym                                     , ## asymmetry parametet
-            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
-            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
-            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
-            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
-        
+        PEAK    .__init__  ( self , name , xvar , mean , sigma ) 
+        SigmaLR .__init__  ( self , self.sigma  , psi = psi    )
+
         #
         ## finally build pdf
-        # 
         self.pdf = Ostap.Models.BifurcatedGauss (
             self.roo_name ( "bfgauss_" )  , 
             "Bifurcated Gauss %s" % self.name ,
@@ -881,37 +792,10 @@ class BifurcatedGauss_pdf(PEAK) :
             'xvar'      : self.xvar  ,
             'mean'      : self.mean  ,
             'sigma'     : self.sigma ,
-            'asymmetry' : self.asym  ,
+            'psi'       : self.psi   ,
             }
 
-    @property
-    def asym ( self ) :
-        """'asymmetry'-parameter for Bifurcated Gaussian"""
-        return self.__asym
-    @asym.setter
-    def asym ( self, value ) :
-        self.set_value ( self.__asym , value ) 
-
-    @property
-    def kappa ( self ) :
-        """'kappa'-parameter for Bifurcated Gaussian function (same as 'asym'"""
-        return self.__asym
-    @kappa.setter
-    def kappa ( self, value ) :
-        self.set_value ( self.__asym , value ) 
-
-    @property
-    def sigmaL ( self ) :
-        """(left)'sigma'-parameter for Bifurcated Gaussian"""
-        return self.__sigmaL
-    
-    @property
-    def sigmaR ( self ) :
-        """(right)'sigma'-parameter for Bifurcated Gaussian"""
-        return self.__sigmaR
-
 models.append ( BifurcatedGauss_pdf )
-
 
 # =============================================================================
 ## @class DoubleGauss_pdf
@@ -920,7 +804,7 @@ models.append ( BifurcatedGauss_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-12
 class DoubleGauss_pdf(PEAK) :
-    """Double Gauss :
+    """ Double Gauss :
 
     f(x;mu,sigma,scale,fraction) =
     fraction     * G(x;mu,sigma) +
@@ -1026,7 +910,7 @@ models.append ( DoubleGauss_pdf )
 #       Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
 #  @see https://doi.org/10.1080%2F02664760500079464
 class GenGaussV1_pdf(PEAK) :
-    """Generalized Normal distribution v1
+    """ Generalized Normal distribution v1
     see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1
 
     Known also as the exponential power distribution, or the generalized error distribution,
@@ -1064,15 +948,14 @@ class GenGaussV1_pdf(PEAK) :
                    alpha     = None ,
                    beta      = 2    ) :  ## beta=2 is gaussian distribution 
         
-        
         #
         ## initialize the base
         # 
         PEAK.__init__  ( self  , name , xvar               ,
-                              mean        = mean                ,
-                              sigma       = alpha               ,
-                              sigma_name  = 'alpha_%s'   % name ,
-                              sigma_title = '#alpha(%s)' % name )
+                         mean        = mean                ,
+                         sigma       = alpha               ,
+                         sigma_name  = 'alpha_%s'   % name ,
+                         sigma_title = '#alpha(%s)' % name )
         
         #
         ## rename it!
@@ -1129,7 +1012,7 @@ models.append ( GenGaussV1_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class GenGaussV2_pdf(PEAK) :
-    """Generalized normal distribution v2
+    """ Generalized normal distribution v2
     see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_2
 
     This is a family of continuous probability distributions in which the shape
@@ -1242,6 +1125,8 @@ class SkewGauss_pdf(PEAK) :
         PEAK.__init__  ( self , name , xvar , 
                          mean        = mean  ,
                          sigma       = omega ,
+                         mean_name   = 'xi_%s'      % name ,
+                         mean_title  = '#xi(%s)'    % name ,
                          sigma_name  = 'omega_%s'   % name ,
                          sigma_title = '#omega(%s)' % name )
         
@@ -1249,8 +1134,6 @@ class SkewGauss_pdf(PEAK) :
         ## rename it!
         #
         
-        self.__omega = self.sigma        
-        self.__xi    = self.mean         
         self.__alpha = self.make_var ( alpha ,
                                        'alpha_%s'   % name  ,
                                        '#alpha(%s)' % name  ,
@@ -1262,7 +1145,7 @@ class SkewGauss_pdf(PEAK) :
             self.roo_name ( 'gausssk_' ) , 
             "skew Gauss %s" % self.name ,
             self.xvar   ,
-            self.mean   ,
+            self.xi     ,
             self.omega  ,
             self.alpha  )
 
@@ -1278,18 +1161,18 @@ class SkewGauss_pdf(PEAK) :
     @property
     def xi ( self ) :
         """xi-parameter (location) for Skew Gaussian (Same  as 'mean')"""
-        return self.__xi
+        return self.mean
     @xi.setter
     def xi ( self, value ) :
-        self.set_value ( self.__xi , value ) 
+        self.mean = mean 
 
     @property
     def omega ( self ) :
         """omega-parameter (scale/width) for Skew Gaussian (same as 'sigma')"""
-        return self.__omega
+        return self.sigma
     @omega.setter
     def omega ( self, value ) :
-        self.set_value ( self.__omega , value ) 
+        self.sigma = value
 
     @property
     def alpha( self ) :
@@ -1318,7 +1201,7 @@ models.append ( SkewGauss_pdf )
 #  - \f$ \delta  = \frac{ x - \mu}{\sigma}\f$ 
 #  - \f$ \Lambda = \frac{  \sinh{ \tau \sqrt{\log 4}} }{\tau\sqrt{\log 4 }}\f$ 
 class Novosibirsk_pdf(PEAK) :
-    """Novosibirsk-function for description of gaussian with tails
+    """ Novosibirsk-function for description of gaussian with tails
     - see H.Ikeda et al., 'A detailed test of the CsI(Tl) calorimeter 
     for BELLE with photon beams of energy between 20MeV and 5.4 GeV',
     Nucl. Instrum. Meth. A441, (2000) 401.
@@ -1404,7 +1287,7 @@ models.append ( Novosibirsk_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 class Bukin_pdf(PEAK) :
-    """Bukin function, aka 'modified Novosibirsk function':
+    """ Bukin function, aka 'modified Novosibirsk function':
     - asymmetrical gaussian-like core
     - exponential (optionally gaussian) asymmetrical tails
     see http://journals.aps.org/prd/abstract/10.1103/PhysRevD.84.112007
@@ -1491,7 +1374,7 @@ class Bukin_pdf(PEAK) :
 
     @property
     def rhoL ( self ) :
-        """'rho'-parameter (left tail) for Bukin function"""
+        """'rhoL'-parameter (left gaussian tail) for Bukin function"""
         return self.__rhoL
     @rhoL.setter
     def rhoL ( self, value ) :
@@ -1499,7 +1382,7 @@ class Bukin_pdf(PEAK) :
 
     @property
     def rhoR ( self ) :
-        """'rho'-parameter (right tail) for Bukin function"""
+        """'rhoR'-parameter (right gaussian tail) for Bukin function"""
         return self.__rhoR
     @rhoR.setter
     def rhoR ( self, value ) :
@@ -1522,7 +1405,7 @@ models.append ( Bukin_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class StudentT_pdf(PEAK) :
-    """Student-T distribution:
+    """ Student-T distribution:
     http://en.wikipedia.org/wiki/Student%27s_t-distribution
     
     f(dx) ~ (1 + dx^2/n)^{-(n+1)/2 }
@@ -1547,7 +1430,7 @@ class StudentT_pdf(PEAK) :
         ## initialize the base
         # 
         PEAK.__init__  ( self , name , xvar , mean , sigma ) 
-        
+        #
         # 
         self.__n  = self.make_var ( n                    ,
                                     'n_%s'        % name ,
@@ -1591,8 +1474,8 @@ models.append ( StudentT_pdf )
 #  @see Ostap::Math::BifurcatedStudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BifurcatedStudentT_pdf(PEAK) :
-    """Bifurcated Student-T distribution:
+class BifurcatedStudentT_pdf(PEAK,SigmaLR) :
+    """ Bifurcated Student-T distribution:
 
     f(dx) ~ (1 + dx^2/n)^{-(n+1)/2 }
     where
@@ -1605,7 +1488,7 @@ class BifurcatedStudentT_pdf(PEAK) :
     Parameters:
     - mean
     - sigma
-    - -1<asymmetry<1 
+    - asymmetry = atanh( psi ) 
     - n_L     
     - n_R
     """
@@ -1614,29 +1497,15 @@ class BifurcatedStudentT_pdf(PEAK) :
                    xvar             ,
                    mean      = None ,
                    sigma     = None ,
-                   asymmetry = None ,
+                   psi       = None ,
                    nL        = None , 
                    nR        = None ) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma )
+        PEAK    .__init__  ( self , name , xvar , mean , sigma )
+        SigmaLR .__init__  ( self , sigma = self.sigma , psi = psi )
         
-        ##  asymmetry 
-        self.__asym = self.make_var ( asymmetry               ,
-                                      'asym_%s'        % name ,
-                                      '#xi_{asym}(%s)' % name ,
-                                      None , 0 , -1 , 1  ) 
-        
-        ## construct left and right sigmas 
-        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
-            self.sigma                                    , ## mean/average sigma 
-            self.asym                                     , ## asymmetry parametet
-            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
-            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
-            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
-            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
-
         ## left exponent 
         self.__nL =  self.make_var ( nL                     ,
                                      'nL_%s'         % name ,
@@ -1687,34 +1556,8 @@ class BifurcatedStudentT_pdf(PEAK) :
     def nR ( self, value ) :
         self.set_value ( self.__nR , value ) 
         
-    @property
-    def asym ( self ) :
-        """'asymmetry'-parameter for Bifurcated Student-T function"""
-        return self.__asym
-    @asym.setter
-    def asym ( self, value ) :
-        self.set_value ( self.__asym , value ) 
-        
-    @property
-    def kappa ( self ) :
-        """'kappa'-parameter for Bifurcated Student-T function (same as 'asym'"""
-        return self.__asym
-    @kappa.setter
-    def kappa ( self, value ) :
-        self.set_value ( self.__asym , value ) 
 
-    @property
-    def sigmaL( self ) :
-        """(left)'sigma'-parameter for Bifurcated Student-T function"""
-        return self.__sigmaL
-
-    @property
-    def sigmaR( self ) :
-        """(right)'sigma'-parameter for Bifurcated Student-T function"""
-        return self.__sigmaR
-   
 models.append ( BifurcatedStudentT_pdf )      
-
 
 # =============================================================================
 ## @class PearsonIV_pdf
@@ -1981,7 +1824,7 @@ models.append ( SkewGenT_pdf )
 #  Skewed gheneralised error distribution 
 #  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
 #
-#  The Special  case of Skewwed Generaliaed T-distribution 
+#  The Special  case of Skewed Generaliaed T-distribution 
 #  @see Ostap::Math::SkewGenT 
 # 
 #  Original function is parameterised in terms of parameters 
@@ -2013,7 +1856,7 @@ models.append ( SkewGenT_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2022-12-01
 class SkewGenError_pdf(PEAK) :
-    """Skewed Generalised Error distribution:
+    """ Skewed Generalised Error distribution:
     - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
     - see Ostap.Models.SkewGenError
     - see Ostap.Math.SkewGenError
@@ -2120,7 +1963,7 @@ models.append ( SkewGenError_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-02
 class SinhAsinh_pdf(PEAK) :
-    """SinhAsinh-function: 
+    """ SinhAsinh-function: 
     see Jones, M. C.; Pewsey, A. (2009).
     'Sinh-arcsinh distributions'. Biometrika 96 (4): 761. 
     doi:10.1093/biomet/asp053
@@ -2206,7 +2049,6 @@ class SinhAsinh_pdf(PEAK) :
         self.set_value ( self.__mu , value ) 
                 
 models.append ( SinhAsinh_pdf )      
-
 
 # =============================================================================
 ## @class JohnsonSU_pdf
