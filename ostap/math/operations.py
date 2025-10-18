@@ -107,8 +107,9 @@ __all__     = (
     'digitize'   , ## digitize the fuction to numpy-array 
     ) 
 # =============================================================================
-import operator, abc, math 
 from   ostap.core.ostap_types import num_types, integer_types, list_types  
+from   ostap.utils.basic      import typename 
+import operator, abc, math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -152,6 +153,7 @@ class Function(object) :
     def __imul__     ( self , other ) : return NotImplemented
     def __isub__     ( self , other ) : return NotImplemented
     def __idiv__     ( self , other ) : return NotImplemented
+    def __itruediv__ ( self , other ) : return NotImplemented
 
 # =============================================================================
 ## @class Constant
@@ -179,6 +181,7 @@ class Wrapper(Function) :
     def __init__ ( self , function , name = '' ) :
         if not isinstance ( function , Wrapper ) : self.__function = function
         else                                     : self.__function = function.function        
+        assert callable ( function ) , "`Function' must be callable: %s "% typename  ( function ) 
         self.__name = name if name else str(function) 
     def __call__ ( self , *x ) :
         return  self.__function ( *x ) 
@@ -204,23 +207,27 @@ class Wrapper(Function) :
 #  fsum  = WrapOper ( fun1 , fun2 , operator.add ) 
 #  @endcode 
 class WrapOper2(Function) :
-    """Helper class to wrap certain operation
+    """ Helper class to wrap certain operation
     >>> fun1  = math.sin
     >>> fun2  = lambda x : x**2
     >>> fsum  = WrapOper2 ( fun1 , fun2 , operator.add ) 
     """
 
     def __init__ ( self , a , b , operation ) :
-        
+        b
         o = operation 
-        assert callable ( a ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type ( a ) )  
-        assert callable ( b ) , 'Invalid type of the second operand: %s/%s' %  ( a , type ( b ) )
-        assert callable ( o ) , 'Invalid type of operation         : %s/%s' %  ( o , type ( o ) )  
+        
+        if isinstance ( a , num_types ) : a = Constant ( a )
+        if isinstance ( b , num_types ) : b = Constant ( b )
+         
+        assert callable ( a ) , 'Invalid type of the first  operand: %s/%s' %  ( a , typename ( a ) )  
+        assert callable ( b ) , 'Invalid type of the second operand: %s/%s' %  ( b , typename ( b ) )
+        assert callable ( o ) , 'Invalid type of operation         : %s/%s' %  ( o , typename ( o ) )  
 
         self.__afun = a
         self.__bfun = b
         self.__oper = o 
-
+        
     ## the main method 
     def __call__ ( self , *x ) :
         
@@ -267,7 +274,7 @@ class Descartes(Function) :
         """
         
         assert isinstance ( N , integer_types ) and 0 <= N ,\
-               'Invalid arity of the first operand %s/%s' % ( N , type ( N ) )
+               'Invalid arity of the first operand %s/%s' % ( N , typename ( N ) )
         
         afun = a
         bfun = b
@@ -280,8 +287,8 @@ class Descartes(Function) :
         if isinstance ( b , num_types ) :
             bfun = Constant ( b * 1.0 ) 
             
-        assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , type( a ) )  
-        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , type( b ) )  
+        assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , typename ( a ) )  
+        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( b , typename ( b ) )  
 
         self.__afun = afun 
         self.__bfun = bfun 
@@ -329,16 +336,19 @@ class Compose(Function) :
         
         afun = a
         bfun = b
-        
+    
         ## trivial case 
-        if isinstance ( a , num_types ) : afun = Constant ( a ) 
-            
+        if isinstance ( a , num_types ) :  afun = Constant ( a ) 
+             
         ## trivial case 
         if isinstance ( b , num_types ) : bfun = Constant ( b ) 
             
         assert callable ( afun ) , 'Invalid type of the first  operand: %s/%s' %  ( a , typename ( a ) )  
-        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( a , typename ( b ) )  
+        assert callable ( bfun ) , 'Invalid type of the second operand: %s/%s' %  ( b , typename ( b ) )  
         
+        self.__resultA = afun.value if isinstance ( afun , Constant ) else None 
+        self.__resultB = bfun.value if isinstance ( bfun , Constant ) else None 
+                             
         self.__afun = afun 
         self.__bfun = bfun
         
@@ -350,10 +360,14 @@ class Compose(Function) :
         afun = self.__afun
         bfun = self.__bfun
         
-        br   = bfun ( *x )
-        if not isinstance ( br , list_types ) : br = br ,
+        if self.__resultA  is None : 
         
-        return afun ( *br )
+            br = bfun ( *x ) if self.__resultB is None else self.__resultB 
+            
+            if not isinstance ( br , list_types ) : br = br , 
+            return afun ( *br ) 
+
+        return self.__resultA 
         
     @property
     def a ( self ) :
@@ -387,6 +401,8 @@ class Operation2(Function) :
     """
     def __init__ ( self , a ,  b , oper , symbol = '?' , prefix = '' ) : 
 
+        print  ( 'Operation2:' , typename ( a ) , typename ( b ) , symbol, prefix , a , b )
+        
         afun = a
         bfun = b
 
@@ -397,7 +413,7 @@ class Operation2(Function) :
         if anum and bnum :
             afun  = Constant ( a * 1.0 ) 
             bfun  = Constant ( b * 1.0 ) 
-            funab = Constant ( oper  ( a * 1.0 , b * 1.0 ) )
+            funab = Constant ( oper ( a * 1.0 , b * 1.0 ) )
         elif anum :
             afun  = Constant ( a * 1.0 ) 
         elif bnum :
@@ -410,49 +426,71 @@ class Operation2(Function) :
         self.__bfun = bfun
         self.__oper = oper
 
-        ## try to use the native operations, if/when defined
-
+        self.__shortcut = False 
+        
         if isinstance   ( afun , Operation2 ) : afun = afun.result
         if isinstance   ( bfun , Operation2 ) : bfun = bfun.result
+
+        ## try to use the native operations, if/when defined
+
+        fa = isinstance ( afun , Function ) and not isinstance ( afun , Constant )
+        fb = isinstance ( bfun , Function ) and not isinstance ( bfun , Constant )
+
+        print ('HERE(1):', typename( afun ) , typename ( bfun ) , fa , fb  )
         
-        fa = isinstance ( afun , Function   )
-        fb = isinstance ( bfun , Function   )
-
-        if fa and fb and not funab : 
+        if ( fa or fb ) and not funab : 
             funab = WrapOper2 ( afun , bfun , oper )
-
+        
         if not funab :
-
-            native = [  ( afun , bfun ) ]
             
-            if anum : native = [ ( a    , bfun ) , ( afun , bfun ) ]
-            if bnum : native = [ ( afun , b    ) , ( afun , bfun ) ]
+            aa = afun 
+            bb = bfun 
 
-            if   isinstance ( afun , Operation2 ) and isinstance ( bfun , Operation2 ) :
-                native.append ( ( afun.result , bfun.result ) )
-            elif isinstance ( afun , Operation2 ) :        
-                native.append ( ( afun.result , bfun        ) )
-            elif isinstance ( bfun , Operation2 ) :        
-                native.append ( ( afun        , bfun.result ) )
+            if isinstance ( aa , Operation2 ) : aa = aa.result
+            if isinstance ( aa , Operation2 ) : aa = aa.result
 
-            for _a , _b in native :
+            if isinstance ( aa , Constant   ) : aa = aa.value 
+            if isinstance ( bb , Constant   ) : bb = bb.value 
+            
+            native = [ ( aa , bb ) ]
+            
+            ## if   anum : native = [ ( a  , bfun ) , ( aa , bb ) ]
+            ## elif bnum : native = [ ( aa , b    ) , ( aa , bb ) ]
+
+            ## if   isinstance ( aa , Operation2 ) and isinstance ( bb , Operation2 ) :
+            ##     native.append ( ( aa.result , bb.result ) )
+            ##  elif isinstance ( aa , Operation2 ) :        
+            ##      native.append ( ( aa.result , bb        ) )
+            ## elif isinstance ( bb , Operation2 ) :        
+            ##     native.append ( ( aa        , bb.result ) )
+
+            print ( '#native' , len ( native ) , native )
+            for i , (_a , _b )  in enumerate ( native ) :
                 if funab is None : 
+                    print ( ' try1: ' , i , typename  ( _a ) , typename ( _b ) , _a , _b )
                     try :
+                        print ( ' try2: ' , i , typename  ( _a ) , typename ( _b ) , _a , _b , oper )
                         funab = oper ( _a , _b )
+                        print ( ' try3: ' , i, typename  ( _a ) , typename ( _b ) , _a , _b )
                         if not callable ( funab ) :
                             funab = None 
                             raise TypeError ()
                         self.__shortcut = True
-                        ## logger.info ('Native  operation is used %s vs %s' % ( type(a) , type(b) ) )
-                    except :
+                        ## logger.info  ('Native  operation is used %s vs %s' % ( typename ( a ) , typename ( b ) ) )
+                    except NotImplementedError :
                         pass                
+                    except TypeError : 
+                        pass 
+                    except: 
+                        pass
+                    print ( ' try4: ' , 'i' , typename  ( _a ) , typename ( _b ) , _a , _b )
             del native
                     
         ## use generic wrapper, if no native operations are defined 
         if not funab :
             funab = WrapOper2 ( afun , bfun , oper )
             self.__shortcut = False 
-            ## logger.info ('Generic operation is used %s vs %s' % ( type(a) , type(b) ) ) 
+            logger.info ('Generic operation is used %s vs %s' % ( type ( a ) , typename ( b ) ) ) 
 
         ## store the result 
         self.__funab  = funab 

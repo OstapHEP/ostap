@@ -1818,25 +1818,25 @@ namespace Ostap
       double evaluate    ( const double x ) const ;
       // ======================================================================
       /// get the value
-      double operator () ( const double x ) const 
+      inline double operator () ( const double x ) const 
       { return x < m_xmin ? 0 : x > m_xmax ? 0 : evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get lower edge
-      double xmin  () const { return m_xmin ; }
+      inline double xmin  () const { return m_xmin ; }
       /// get upper edge
-      double xmax  () const { return m_xmax ; }
+      inline double xmax  () const { return m_xmax ; }
       /// middle x
-      double xmid  () const { return 0.5 * ( m_xmin + m_xmax ) ; }
+      inline double xmid  () const { return 0.5 * ( m_xmin + m_xmax ) ; }
       /// delta/scale/interval length 
-      double delta () const { return m_xmax - m_xmin ; }
+      inline double delta () const { return m_xmax - m_xmin ; }
       // ======================================================================
     public:
       // ======================================================================
-      double x ( const double t ) const
+      inline double x ( const double t ) const
       { return  0.5 * ( t * ( m_xmax - m_xmin ) +   m_xmax + m_xmin ) ; }
-      double t ( const double x ) const
+      inline double t ( const double x ) const
       { return (  2 *   x   - m_xmax - m_xmin ) / ( m_xmax - m_xmin ) ; }
       // ======================================================================
     public:
@@ -1855,76 +1855,78 @@ namespace Ostap
       /// get the derivative
       Polynomial derivative          () const ;
       // ======================================================================
-     public:
+     public: 
+      // ======================================================================
+      /// add      a conntant
+      Polynomial& iadd    ( const double      value ) ;
+      /// subtract a conntant 
+      Polynomial& isub    ( const double      value ) ;
+      /// scale  by a constant 
+      Polynomial& imul    ( const double      value ) ;
+      /// divide by a conntant 
+      Polynomial& idiv    ( const double      value ) ;
+      /// Add      a polynomial (with the same domain!)
+      Polynomial& iadd    ( const Polynomial& other ) ;
+      /// Subtract a polynomial (with the same domain!)
+      Polynomial& isub    ( const Polynomial& other ) ;
+      // ======================================================================
+  public: // more operations  
+      // ======================================================================
+      Polynomial add  ( const double      value ) const ; 
+      Polynomial sub  ( const double      value ) const ;
+      Polynomial mul  ( const double      value ) const ;
+      Polynomial div  ( const double      value ) const ;
+      Polynomial add  ( const Polynomial& other ) const ;
+      Polynomial sub  ( const Polynomial& other ) const ;
+      Polynomial rsub ( const double      value ) const ;
+      Polynomial rsub ( const Polynomial& other ) const ;
+      // ======================================================================      
+  public: // C++ operators
       // ======================================================================
       /// simple  manipulations with polynoms: shift it! 
-      Polynomial& operator += ( const double a ) ; 
+      inline Polynomial& operator += ( const double      value ) { return iadd ( value ) ; }  
       /// simple  manipulations with polynoms: shift it! 
-      Polynomial& operator -= ( const double a ) ;
+      inline Polynomial& operator -= ( const double      value ) { return isub ( value ) ; } 
       /// simple  manipulations with polynoms: scale it 
-      Polynomial& operator *= ( const double a ) ; 
+      inline Polynomial& operator *= ( const double      value ) { return imul ( value ) ; } 
       /// simple  manipulations with polynoms: scale it  
-      Polynomial& operator /= ( const double a ) ;
+      inline Polynomial& operator /= ( const double      value ) { return idiv ( value ) ; }
+      /// Add another polynomial  with the same range.domain
+      inline Polynomial& operator += ( const Polynomial& other ) { return iadd ( other ) ; }
+      /// Subtarct another polynomial with the same range.domain
+      inline Polynomial& operator -= ( const Polynomial& other ) { return iadd ( other ) ; }
+      // ======================================================================
       /// negate it! 
       Polynomial  operator-() const ; // negate it! 
       // ======================================================================
-    public:
-      // ======================================================================
-      /// Add       polynomials (with the same domain!)
-      Polynomial sum      ( const Polynomial& other ) const ;
-      /// Subtract  polynomials (with the same domain!)
-      Polynomial subtract ( const Polynomial& other ) const ;
+  public: // operators for Python 
       // ======================================================================      
-    public:
+      inline Polynomial& __iadd__     ( const double      a )       { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const double      a )       { return isub ( a ) ; }     
+      inline Polynomial& __imul__     ( const double      a )       { return imul ( a ) ; }      
+      inline Polynomial& __idiv__     ( const double      a )       { return idiv ( a ) ; }      
+      inline Polynomial& __itruediv__ ( const double      a )       { return idiv ( a ) ; }  
+      inline Polynomial& __iadd__     ( const Polynomial& a )       { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const Polynomial& a )       { return iadd ( a ) ; }
       // ======================================================================
-      /// Add       polynomials (with the same domain!)
-      Polynomial& isum    ( const Polynomial& other ) ;
-      /// Subtract  polynomials (with the same domain!)
-      Polynomial& isub    ( const Polynomial& other ) ;
+    public: // operators for python
       // ======================================================================
-    public:
-      // ====================================================================== 
-      inline Polynomial& operator+=( const Polynomial& other ) { return isum ( other ) ; }
-      inline Polynomial& operator-=( const Polynomial& other ) { return isub ( other ) ; }
+      inline  Polynomial  __add__     ( const double      a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const double      a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __mul__     ( const double      a ) const { return mul ( a ) ; } 
+      inline  Polynomial  __div__     ( const double      a ) const { return div ( a ) ; } 
+      inline  Polynomial  __truediv__ ( const double      a ) const { return div ( a ) ; } 
+      inline  Polynomial  __add__     ( const Polynomial& a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const Polynomial& a ) const { return sub ( a ) ; } 
       // ======================================================================
-    public:
-      // ======================================================================      
-      /// Add       polynomials (with the same domain!)
-      Polynomial __add__   ( const Polynomial& other ) const ;
-      /// Subtract  polynomials (with the same domain!)
-      Polynomial __sub__   ( const Polynomial& other ) const ;
-      // ======================================================================      
-    public:
-      // ======================================================================      
-      Polynomial& __iadd__      ( const double a )       ;
-      Polynomial& __isub__      ( const double a )       ;
-      Polynomial& __imul__      ( const double a )       ;
-      Polynomial& __itruediv__  ( const double a )       ;
-      Polynomial& __idiv__      ( const double a )       { return __itruediv__ ( a ) ; }
+    public: // for python 
       // ======================================================================
-    public:
-      // ======================================================================
-      Polynomial  __add__       ( const double a ) const ;
-      Polynomial  __sub__       ( const double a ) const ;
-      Polynomial  __mul__       ( const double a ) const ;
-      Polynomial  __truediv__   ( const double a ) const ;
-      Polynomial  __div__       ( const double a ) const { return __truediv__  ( a ) ; }      
-      // ======================================================================
-    public:
-      // ======================================================================
-      Polynomial  __radd__  ( const double a ) const ;
-      Polynomial  __rsub__  ( const double a ) const ;
-      Polynomial  __rmul__  ( const double a ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      Polynomial& __iadd__  ( const Polynomial& a ) { return isum ( a ) ; }
-      Polynomial& __isub__  ( const Polynomial& a ) { return isub ( a ) ; }
-      // ======================================================================
-     public:
-      // ======================================================================
+      inline Polynomial  __radd__     ( const double      a ) const { return add  ( a ) ; }
+      inline Polynomial  __rmul__     ( const double      a ) const { return mul  ( a ) ; }
+      /// right subtraction 
+      Polynomial         __rsub__     ( const double      a ) const { return rsub ( a ) ; }; 
       /// Negate it! 
-      Polynomial  __neg__   () const ; // Negate it! 
+      Polynomial         __neg__      () const ; // Negate it! 
       // ======================================================================      
     public: 
       // ======================================================================      
@@ -1940,24 +1942,15 @@ namespace Ostap
       // ======================================================================      
     } ;    
     // ========================================================================
-    inline Polynomial operator+( const Polynomial& a , const Polynomial& b ) 
-    { return a.sum       ( b ) ; }    
-    inline Polynomial operator-( const Polynomial& a , const Polynomial& b ) 
-    { return a.subtract  ( b ) ; }
-    inline Polynomial operator+( const Polynomial& a , const double      b ) 
-    { return a.__add__   ( b ) ; }    
-    inline Polynomial operator+( const double      b , const Polynomial& a )
-    { return a.__add__   ( b ) ; }
-    inline Polynomial operator-( const Polynomial& a , const double      b ) 
-    { return a.__sub__   ( b ) ; }    
-    inline Polynomial operator-( const double      b , const Polynomial& a )
-    { return a.__rsub__  ( b ) ; }
-    inline Polynomial operator*( const Polynomial& a , const double      b ) 
-    { return a.__mul__   ( b ) ; }    
-    inline Polynomial operator*( const double      b , const Polynomial& a )
-    { return a.__mul__   ( b ) ; }
-    inline Polynomial operator/( const Polynomial& a , const double      b ) 
-    { return a.__truediv__   ( b ) ; }    
+    inline Polynomial operator+( const Polynomial& a , const Polynomial& b ) { return a.add  ( b ) ; }    
+    inline Polynomial operator+( const Polynomial& a , const double      b ) { return a.add  ( b ) ; }    
+    inline Polynomial operator+( const double      b , const Polynomial& a ) { return a.add  ( b ) ; }
+    inline Polynomial operator-( const Polynomial& a , const Polynomial& b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial& a , const double      b ) { return a.sub  ( b ) ; }    
+    inline Polynomial operator-( const double      b , const Polynomial& a ) { return a.rsub ( b ) ; }
+    inline Polynomial operator*( const Polynomial& a , const double      b ) { return a.mul  ( b ) ; }    
+    inline Polynomial operator*( const double      b , const Polynomial& a ) { return a.mul  ( b ) ; }
+    inline Polynomial operator/( const Polynomial& a , const double      b ) { return a.div  ( b ) ; }    
     // ========================================================================
     /** @class ChebyshevSum 
      *  Sum of chebychev polinomials 
@@ -2493,16 +2486,16 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// add      legendre sum (with the same domain)
+      /// add    Hermitesum (with the same domain)
       HermiteSum sum      ( const HermiteSum& other ) const ;
-      /// subtract legendre sum (with the same domain)
+      /// subtract Hermite sum (with the same domain)
       HermiteSum subtract ( const HermiteSum& other ) const ;
       // ======================================================================
     public:
       // =======================================================================
-      /// add      legendre sum (with the same domain)
+      /// add      Hermite  sum (with the same domain)
       HermiteSum& isum    ( const HermiteSum& other ) ;
-      /// subtract legendre sum (with the same domain)
+      /// subtract Herimnte  sum (with the same domain)
       HermiteSum& isub    ( const HermiteSum& other ) ;
       // ======================================================================
     public:
@@ -2528,17 +2521,17 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      HermiteSum  __radd__  ( const double a ) const ;
-      HermiteSum  __rsub__  ( const double a ) const ;
-      HermiteSum  __rmul__  ( const double a ) const ;
+      HermiteSum  __radd__     ( const double a ) const ;
+      HermiteSum  __rsub__     ( const double a ) const ;
+      HermiteSum  __rmul__     ( const double a ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      HermiteSum  __add__   ( const HermiteSum& a ) const ;
-      HermiteSum  __sub__   ( const HermiteSum& a ) const ;
+      HermiteSum  __add__      ( const HermiteSum& a ) const ;
+      HermiteSum  __sub__      ( const HermiteSum& a ) const ;
       // ======================================================================
-      HermiteSum& __iadd__  ( const HermiteSum& a ) { return isum ( a ) ; }
-      HermiteSum& __isub__  ( const HermiteSum& a ) { return isub ( a ) ; }
+      HermiteSum& __iadd__     ( const HermiteSum& a ) { return isum ( a ) ; }
+      HermiteSum& __isub__     ( const HermiteSum& a ) { return isub ( a ) ; }
       // ======================================================================
        public:
       // ======================================================================

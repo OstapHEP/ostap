@@ -24,6 +24,10 @@
 #include "Ostap/Positive.h"
 #include "Ostap/Bernstein1D.h"
 // ============================================================================
+// local
+// ============================================================================
+#include "status_codes.h"
+// ============================================================================
 /** @file 
  *  Implementation file for classes from file Ostap/Polynomials.h
  *  @see LHCbMath/Polynomials.h
@@ -913,7 +917,7 @@ Ostap::Math::Polynomial::Polynomial
       if ( odd ) { aroots.push_back ( m_xmin ) ; }
       Polynomial tmpa ( m_xmin , m_xmax , aroots ) ;
       tmpa *= alpha / std::pow ( 2.0 , degree () ) ;;
-      isum ( tmpa ) ;
+      iadd ( tmpa ) ;
     }
     if ( !s_zero ( beta ) ) 
     {
@@ -930,7 +934,7 @@ Ostap::Math::Polynomial::Polynomial
       //
       Polynomial tmpb ( m_xmin , m_xmax , broots ) ;
       tmpb *= -beta / std::pow ( 2.0 , degree () ) ;
-      isum ( tmpb ) ;
+      iadd ( tmpb ) ;
     }
   }
 }
@@ -971,7 +975,7 @@ Ostap::Math::Polynomial::Polynomial
       if ( odd ) { aroots.push_back ( m_xmin ) ; }
       Polynomial tmpa ( m_xmin , m_xmax , aroots ) ;
       tmpa *= alpha / std::pow ( 2.0 , aroots.size() ) ;;
-      isum ( tmpa ) ;
+      iadd ( tmpa ) ;
     }
     if ( !s_zero ( beta ) ) 
     {
@@ -987,7 +991,7 @@ Ostap::Math::Polynomial::Polynomial
       //
       Polynomial tmpb ( m_xmin , m_xmax , broots ) ;
       tmpb *= beta / std::pow ( 2.0 , broots.size ()  ) ;
-      isum ( tmpb ) ;
+      iadd ( tmpb ) ;
     }
   }
 }
@@ -1132,69 +1136,35 @@ Ostap::Math::Polynomial::derivative          () const
   return deriv  ;
 }
 // ============================================================================ 
-// simple  manipulations with polynoms: shift it! 
-// ============================================================================
-Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::operator+= ( const double a ) 
-{ m_pars[0] += a ; return *this ; }
-// ============================================================================
-// simple  manipulations with polynoms: shift it! 
-// ============================================================================
-Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::operator-= ( const double a ) 
-{ m_pars[0] -= a ; return *this ; }
+// add      a constant 
 // ============================================================================ 
-// simple  manipulations with polynoms: scale it 
-// ============================================================================
 Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::operator*= ( const double a ) 
-{ 
-  Ostap::Math::scale ( m_pars , a ) ;
-  return *this ; 
-}
-// ============================================================================
-// simple  manipulations with polynoms: shift it! 
-// ============================================================================
+Ostap::Math::Polynomial::iadd    ( const double      value ) 
+{ m_pars [0] += value ; return *this ;  }
+// ============================================================================ 
+// scale by a consntant 
+// ============================================================================ 
 Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::operator/= ( const double a ) 
+Ostap::Math::Polynomial::imul    ( const double      value ) 
+{ Ostap::Math::scale ( m_pars , value ) ; return *this ; }
+// ============================================================================ 
+// subtract  a constant 
+// ============================================================================ 
+Ostap::Math::Polynomial& 
+Ostap::Math::Polynomial::isub    ( const double      value ) 
+{ return iadd ( -value )  ;  }
+// ============================================================================ 
+// scale by a consntant 
+// ============================================================================ 
+Ostap::Math::Polynomial& 
+Ostap::Math::Polynomial::idiv    ( const double      value ) 
 { 
-  Ostap::Math::scale ( m_pars , 1/a ) ;
-  return *this ; 
-}
-// ============================================================================
-// Add       polynomials (with the same domain!)
-// ============================================================================
-Ostap::Math::Polynomial&
-Ostap::Math::Polynomial::isum
-( const Ostap::Math::Polynomial& other ) 
-{
-  if ( this == &other ) { *this *= 2 ; return *this; }
-  //
-  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )               ,
-                  "Cannot sum Polynomials with different domains" , 
-                  "Ostap::Math::Polynomial"                       , 
-                  Ostap::StatusCode ( 520 )                       )  ;
-  //
-  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
-  m_pars.resize ( idegree + 1 ) ;
-  //
-  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
-  { m_pars[i] += other.m_pars [ i ] ; }
-  //
-  return *this ;
-}
-// ============================================================================
-// Add       polynomials (with the same domain!)
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::sum
-( const Ostap::Math::Polynomial& other ) const 
-{
-  Polynomial result(*this) ;
-  result.isum ( other ) ;
-  return result ;
-}
+  Ostap::Assert ( value                               , 
+                  "Division by zero"                  , 
+                  "Ostap::Math::Polynomial::idiv"     , 
+                  ZERO_DIVISION , __FILE__ , __LINE__ ) ; 
+  return imul ( 1.0 / value ) ;
+} 
 // ============================================================================
 // Subtract      polynomials (with the same domain!)
 // ============================================================================
@@ -1207,10 +1177,10 @@ Ostap::Math::Polynomial::isub
   Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
                   s_equal ( xmax() , other.xmax() )              ,
                   "Cannot subtract Polynomials with different domains" , 
-                  "Ostap::Math::Polynomial"                      , 
-                  Ostap::StatusCode ( 521 )                      )  ;
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
   //
-  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;  
   m_pars.resize ( idegree + 1 ) ;
   //
   for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
@@ -1219,16 +1189,61 @@ Ostap::Math::Polynomial::isub
   return *this ;
 }
 // ============================================================================
-// Subtract      polynomials (with the same domain!)
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::Polynomial& other ) 
+{
+  if ( this == &other ) { *this *= 2 ; return *this; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
 // ============================================================================
 Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::subtract
-( const Ostap::Math::Polynomial& other ) const 
-{
-  Polynomial result(*this) ;
-  result.isub ( other ) ;
-  return result ;
-}
+Ostap::Math::Polynomial::add ( const double other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub ( const double other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::mul ( const double other ) const 
+{ Polynomial r (*this) ; r.imul ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::div ( const double other ) const 
+{ Polynomial r (*this) ; r.idiv ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add ( const Ostap::Math::Polynomial& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub ( const Ostap::Math::Polynomial& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::rsub ( const double a ) const 
+{ return -(*this) + a ; } 
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::rsub ( const Ostap::Math::Polynomial& other ) const 
+{ return  other - (*this) ; }
+
 // ============================================================================
 // unary minus 
 // ============================================================================
@@ -1240,58 +1255,8 @@ Ostap::Math::Polynomial::operator-() const
   return a ;
 }
 // ============================================================================
-// Python
-// ============================================================================
-Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::__iadd__   ( const double a )  
-{ (*this) += a ; return *this ; } 
-// ============================================================================
-Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::__isub__   ( const double a ) 
-{ (*this) -= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::__imul__   ( const double a )
-{ (*this) *= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::Polynomial& 
-Ostap::Math::Polynomial::__itruediv__   ( const double a ) 
-{ (*this) /= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__add__    ( const double a ) const 
-{ return Polynomial(*this) += a ; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__sub__    ( const double a ) const 
-{ return Polynomial(*this) -= a ; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__mul__   ( const double a ) const 
-{ return Polynomial(*this) *= a ; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__truediv__    ( const double a ) const 
-{ return Polynomial(*this) /= a ; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__radd__   ( const double a ) const 
-{ return __add__ ( a ) ; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__rsub__   ( const double a ) const 
-{ return (-(*this))+a; } 
-// ============================================================================
 Ostap::Math::Polynomial 
 Ostap::Math::Polynomial::__neg__   () const { return -(*this); } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__add__   
-( const Ostap::Math::Polynomial& a ) const { return sum      ( a ) ; } 
-// ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__sub__   
-( const Ostap::Math::Polynomial& a ) const { return subtract ( a ) ; } 
 // ============================================================================
 // get unique tag 
 // ============================================================================
@@ -1299,7 +1264,8 @@ std::size_t Ostap::Math::Polynomial::tag () const
 {
   static const std::string s_name { "Polynomial" } ;
   return Ostap::Utils::hash_combiner 
-    ( s_name , Ostap::Utils::hash_range ( m_pars ) ,  
+    ( s_name    , 
+      Ostap::Utils::hash_range ( m_pars ) ,  
       degree () , m_xmin , m_xmax ) ;
 }
 // ============================================================================
