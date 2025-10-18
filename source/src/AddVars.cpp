@@ -130,6 +130,7 @@ Ostap::AddVars::add_var
   const TH1&              histo   ) const 
 {
   //
+  if ( 1 != histo.GetDimension () ) { return nullptr ; }
   const TH1* h1 = &histo ;
   if ( nullptr != dynamic_cast<const TH2*> ( h1 ) ) { return nullptr ; }
   //
@@ -183,6 +184,7 @@ Ostap::AddVars::add_var
   const TH2&              histo   ) const 
 {
   //
+  if ( 2 != histo.GetDimension () ) { return nullptr ; }
   const TH2* h = &histo ;
   if ( nullptr != dynamic_cast<const TH3*> ( h ) ) { return nullptr ; }
   //
@@ -244,6 +246,8 @@ Ostap::AddVars::add_var
   const std::string&      namez   , 
   const TH3&              histo   ) const 
 {
+  //
+  if ( 3 != histo.GetDimension () ) { return nullptr ; }
   //
   RooRealVar varx        { namex.c_str() , "" , 0.0 } ;
   RooRealVar vary        { namey.c_str() , "" , 0.0 } ;
