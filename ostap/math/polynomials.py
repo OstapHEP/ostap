@@ -2,7 +2,14 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/math/polynomials.py
-#  Module with some useful utilities for dealing with polynonials
+#  Redefine C++ operator for polynoial functions
+#  - essentially we need to return NotImplemnted when TypeError occurs 
+# =============================================================================
+""" Redefine C++ operator for polynoial functions   
+- redefine C++ opoerators, 
+- enhance them 
+- return `NotImplemented` if/when TypeError occurs 
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
@@ -19,60 +26,109 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.polynomials' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
+## Modified iadd
+def _poly_iadd_  ( self , other  ) : 
+    """ Modified __iadd__ 
+    """
+    try : return self.iadd ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+## Modified isub
+def _poly_isub_  ( self , other  ) : 
+    """ Modified __isub__ 
+    """ 
+    try : return self.isub ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+## Modified imul
+def _poly_imul_  ( self , other  ) : 
+    """ Modified __imul__ 
+    """
+    try : return self.iadd ( other ) 
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+## Modified idiv
+def _poly_idiv_  ( self , other  ) : 
+    """ Modified __idiv__ 
+    """ 
+    try:
+        if isinstance ( other , num_types ) and not other  : 
+            raise ZeroDivisionError ( "One cannot divide by zero!" )
+        return self.idiv ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# ==============================================================================
+## Modified add
+def _poly_add_  ( self , other  ) : 
+    """ Modified __add__ 
+    """
+    try : return self.add ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+## Modified isub
+def _poly_sub_  ( self , other  ) : 
+    """ Modified __sub__ 
+    """ 
+    try : return self.sub ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+## Modified mul
+def _poly_mul_  ( self , other  ) : 
+    """ Modified __mul__ 
+    """
+    try : return self.mul ( other ) 
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+def _poly_div_  ( self , other  ) : 
+    """ Modified __div__ 
+    """ 
+    try:
+        if isinstance ( other ,  num_types ) and not other  : 
+            raise ZeroDivisionError ( "One cannot divide by zero!" )
+        return self.div ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+def _poly_rsub_  ( self , other  ) : 
+    """ Modified __rsub__ 
+    """ 
+    try: return self.rsub ( other )   
+    except TypeError :pass     
+    return NotImplemented 
 
+for poly  in ( Ostap.Math.Polynomial   , 
+               Ostap.Math.ChebyshevSum , 
+               Ostap.Math.LegendreSum  ) : 
+        
+    if hasattr ( poly , 'iadd' ) : poly.__iadd__ = _poly_iadd_ 
+    if hasattr ( poly , 'isub' ) : poly.__isub__ = _poly_isub_ 
+    if hasattr ( poly , 'imul' ) : poly.__imul__ = _poly_imul_ 
+    if hasattr ( poly , 'idiv' ) : 
+        poly.__idiv__     = _poly_idiv_ 
+        poly.__itruediv__ = _poly_idiv_ 
+    
+    if hasattr ( poly , 'add' ) : 
+        poly. __add__ = _poly_add_ 
+        poly.__radd__ = _poly_add_ 
+        
+    if hasattr ( poly , 'sub' ) :  poly.__sub__  = _poly_sub_ 
+    
+    if hasattr ( poly , 'mul' ) : 
+        poly. __mul__ = _poly_mul_ 
+        poly.__radd__ = _poly_mul_
+         
+    if hasattr ( poly , 'div' ) : 
+        poly. __div__    = _poly_div_ 
+        poly.__truediv__ = _poly_div_ 
 
-for poly  in ( Ostap.Math.Polynomial, ) : 
-    
-    def _poly_add_  ( self , other  ) : 
-        """ Modified __add__ 
-        """
-        if   isinstance ( other , num_types ) : return self.add ( other ) 
-        elif isinstance ( other , poly      ) : return self.add ( other )
-        
-        return NotImplemented 
-    
-    def _poly_mul_  ( self , other  ) : 
-        """ Modified __mul__ 
-        """
-        if   isinstance ( other , num_types ) : return self.add ( other ) 
-        ## elif isinstance ( other , poly      ) : return self.add ( other )
-                
-        return NotImplemented 
-    
-    def _poly_sub_  ( self , other  ) : 
-        """ Modified __sub__ 
-        """
-        if   isinstance ( other , num_types ) : return self.sub ( other ) 
-        elif isinstance ( other , poly      ) : return self.sub ( other )
+    if hasattr ( poly , 'rsub' ) :  poly.__rsub__  = _poly_rsub_ 
 
-        return NotImplemented 
-        
-    def _poly_div_  ( self , other  ) : 
-        """ Modified __div__ 
-        """
-        if   isinstance ( other , num_types ) : 
-            if not other  : raise ZeroDivisionError()
-            return self.div ( other ) 
-        
-        return NotImplemented 
-        
-    def _poly_rsub_  ( self , other  ) : 
-        """ Modified __rsub__ 
-        """
-        if   isinstance ( other , num_types ) : return self.rsub ( other ) 
-        
-        return NotImplemented 
-        
-    ## redefine C++ __add__ operation 
-    poly.__add__      = _poly_add_     
-    poly.__mul__      = _poly_mul_     
-    poly.__sub__      = _poly_sub_ 
-    poly.__div__      = _poly_div_ 
-    poly.__truediv__  = _poly_div_     
-    poly.__rsub__     = _poly_rsub_
-    
-    poly.__rdiv__     = lambda x,*s : NotImplemented
-    poly.__rtruediv__ = lambda x,*s : NotImplemented
 
 # =============================================================================
 ## decorated classes 

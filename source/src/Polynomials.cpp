@@ -1154,7 +1154,7 @@ Ostap::Math::Polynomial&
 Ostap::Math::Polynomial::isub    ( const double      value ) 
 { return iadd ( -value )  ;  }
 // ============================================================================ 
-// scale by a consntant 
+// scale by a constant 
 // ============================================================================ 
 Ostap::Math::Polynomial& 
 Ostap::Math::Polynomial::idiv    ( const double      value ) 
@@ -1165,29 +1165,6 @@ Ostap::Math::Polynomial::idiv    ( const double      value )
                   ZERO_DIVISION , __FILE__ , __LINE__ ) ; 
   return imul ( 1.0 / value ) ;
 } 
-// ============================================================================
-// Subtract      polynomials (with the same domain!)
-// ============================================================================
-Ostap::Math::Polynomial&
-Ostap::Math::Polynomial::isub
-( const Ostap::Math::Polynomial& other ) 
-{
-  if ( this == &other ) { *this *= 0 ; return *this ; }
-  //
-  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )              ,
-                  "Cannot subtract Polynomials with different domains" , 
-                  "Ostap::Math::Polynomial::isub"                , 
-                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
-  //
-  const unsigned short idegree = std::max ( degree() , other.degree() ) ;  
-  m_pars.resize ( idegree + 1 ) ;
-  //
-  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
-  { m_pars[i] -= other.m_pars [ i ] ; }
-  //
-  return *this ;
-}
 // ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
@@ -1212,6 +1189,349 @@ Ostap::Math::Polynomial::iadd
   return *this ;
 }
 // ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::Polynomial& other ) 
+{
+  if ( this == &other ) { *this *= 0 ; return *this ; }
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  const unsigned short idegree = std::max ( degree() , other.degree() ) ;  
+  m_pars.resize ( idegree + 1 ) ;
+  //
+  for ( unsigned short i = 0 ; i < other.npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars [ i ] ; } 
+  //
+  return *this ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::Bernstein& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::Bernstein& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::LegendreSum& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::LegendreSum& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::ChebyshevSum& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::ChebyshevSum& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::KarlinShapley& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::KarlinShapley& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::KarlinStudden& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) , 
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::KarlinStudden& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() )  ,  
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::BernsteinEven& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::BernsteinEven& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::Positive& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::Positive& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::Monotonic& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::Monotonic& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::Convex& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::Convex& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::ConvexOnly& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::ConvexOnly& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )              ,
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// basic math 
+// ============================================================================
 Ostap::Math::Polynomial 
 Ostap::Math::Polynomial::add ( const double other ) const 
 { Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
@@ -1228,21 +1548,119 @@ Ostap::Math::Polynomial
 Ostap::Math::Polynomial::div ( const double other ) const 
 { Polynomial r (*this) ; r.idiv ( other ) ; return r ; }
 // ============================================================================
+// polynomial summation
+// ============================================================================
 Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::add ( const Ostap::Math::Polynomial& other ) const 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::Polynomial& other ) const 
 { Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
 // ============================================================================
 Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::sub ( const Ostap::Math::Polynomial& other ) const 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::Bernstein& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::LegendreSum& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::ChebyshevSum& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::KarlinShapley& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::KarlinStudden& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::BernsteinEven& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::Positive& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::Convex& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::ConvexOnly& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::add 
+( const Ostap::Math::Bernulli& other ) const 
+{ Polynomial r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+// polynomial subtraction
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::Polynomial& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::Bernstein& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::LegendreSum& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::ChebyshevSum& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::KarlinShapley& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::KarlinStudden& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::BernsteinEven& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::Convex& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::ConvexOnly& other ) const 
+{ Polynomial r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::Polynomial 
+Ostap::Math::Polynomial::sub 
+( const Ostap::Math::Bernulli& other ) const 
 { Polynomial r (*this) ; r.isub ( other ) ; return r ; }
 // ============================================================================
 Ostap::Math::Polynomial 
 Ostap::Math::Polynomial::rsub ( const double a ) const 
 { return -(*this) + a ; } 
 // ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::rsub ( const Ostap::Math::Polynomial& other ) const 
-{ return  other - (*this) ; }
 
 // ============================================================================
 // unary minus 
@@ -1255,9 +1673,6 @@ Ostap::Math::Polynomial::operator-() const
   return a ;
 }
 // ============================================================================
-Ostap::Math::Polynomial 
-Ostap::Math::Polynomial::__neg__   () const { return -(*this); } 
-// ============================================================================
 // get unique tag 
 // ============================================================================
 std::size_t Ostap::Math::Polynomial::tag () const 
@@ -1269,7 +1684,6 @@ std::size_t Ostap::Math::Polynomial::tag () const
       degree () , m_xmin , m_xmax ) ;
 }
 // ============================================================================
-
 
 
 // ============================================================================
@@ -1511,19 +1925,19 @@ Ostap::Math::ChebyshevSum::fill
 // simple  manipulations with polynoms: shift it! 
 // ============================================================================
 Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::operator+= ( const double a ) 
+Ostap::Math::ChebyshevSum::iadd ( const double a ) 
 { m_pars [ 0 ] += a ; return *this ; }
 // ============================================================================
 // simple  manipulations with polynoms: shift it! 
 // ============================================================================
 Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::operator-= ( const double a ) 
+Ostap::Math::ChebyshevSum::isub ( const double a ) 
 { m_pars [ 0 ] -= a ; return *this ; }
 // ============================================================================
 // simple  manipulations with polynoms: scale it  
 // ============================================================================
 Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::operator*= ( const double a ) 
+Ostap::Math::ChebyshevSum::imul ( const double a ) 
 {
   Ostap::Math::scale ( m_pars , a ) ;
   return *this ; 
@@ -1532,98 +1946,29 @@ Ostap::Math::ChebyshevSum::operator*= ( const double a )
 // simple  manipulations with polynoms: scale it 
 // ============================================================================
 Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::operator/= ( const double a ) 
+Ostap::Math::ChebyshevSum::idiv ( const double value ) 
 {
-  Ostap::Math::scale ( m_pars , 1/a ) ;
+   Ostap::Assert ( value                               ,
+                  "Division by zero"                    ,
+                  "Ostap::Math::ChebyshevSum::idiv"     ,
+                  ZERO_DIVISION , __FILE__ , __LINE__ ) ;
+  Ostap::Math::scale ( m_pars , 1/value ) ;
   return *this ; 
 }
-// ============================================================================
-// unary minus 
-// ============================================================================
-Ostap::Math::ChebyshevSum
-Ostap::Math::ChebyshevSum::operator-() const 
-{
-  ChebyshevSum a ( *this ) ;
-  Ostap::Math::negate ( a.m_pars ) ;
-  return a ;
-}
-// ============================================================================
-// Python
-// ============================================================================
-Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::__iadd__   ( const double a )  
-{ (*this) += a ; return *this ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::__isub__   ( const double a ) 
-{ (*this) -= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::__imul__   ( const double a )
-{ (*this) *= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum& 
-Ostap::Math::ChebyshevSum::__itruediv__   ( const double a ) 
-{ (*this) /= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__add__    ( const double a ) const 
-{ return ChebyshevSum(*this) += a ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__sub__    ( const double a ) const 
-{ return ChebyshevSum(*this) -= a ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__mul__    ( const double a ) const 
-{ return ChebyshevSum(*this) *= a ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__truediv__    ( const double a ) const 
-{ return ChebyshevSum(*this) /= a ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__radd__   ( const double a ) const 
-{ return __add__ ( a ) ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__rsub__   ( const double a ) const 
-{ return (-(*this))+a; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__rmul__   ( const double a ) const 
-{ return __mul__  ( a ) ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__neg__   () const { return -(*this); } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__add__   
-( const Ostap::Math::ChebyshevSum& a ) const { return sum      ( a ) ; } 
-// ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::__sub__   
-( const Ostap::Math::ChebyshevSum& a ) const { return subtract ( a ) ; } 
-// ============================================================================
-
-
-
-
-
 // ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
 Ostap::Math::ChebyshevSum&
-Ostap::Math::ChebyshevSum::isum
+Ostap::Math::ChebyshevSum::iadd
 ( const Ostap::Math::ChebyshevSum& other )
 {
   if ( this == &other ) { *this *= 2 ; return *this ; }
   //
   Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )                ,
+                  s_equal ( xmax() , other.xmax() )             ,
                   "Cannot sum Chebyshev with different domains" , 
-                  "Ostap::Math::Chebyshev"                         , 
-                  Ostap::StatusCode ( 522 )                        )  ;
+                  "Ostap::Math::ChebushevSum::iadd"             ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__      )  ;
   //
   const unsigned short idegree = std::max ( degree() , other.degree() ) ;
   //
@@ -1635,28 +1980,17 @@ Ostap::Math::ChebyshevSum::isum
 // ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
-Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::sum
-( const Ostap::Math::ChebyshevSum& other ) const 
-{
-  ChebyshevSum result(*this) ;
-  result.isum ( other ) ;
-  return result ;
-}
-// ============================================================================
-// Subtract      polynomials (with the same domain!)
-// ============================================================================
 Ostap::Math::ChebyshevSum&
 Ostap::Math::ChebyshevSum::isub
 ( const Ostap::Math::ChebyshevSum& other )
 {
-  if ( this == &other ) { *this *= 0 ; return *this ; }
+  if ( this == &other ) { *this *= 2 ; return *this ; }
   //
   Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )                  ,
-                  "Cannot subtract Chebyshev with different domains" , 
-                  "Ostap::Math::Chebyshev"                           , 
-                  Ostap::StatusCode ( 523 )                          )  ;
+                  s_equal ( xmax() , other.xmax() )             ,
+                  "Cannot sum Chebyshev with different domains" , 
+                  "Ostap::Math::ChebushevSum::isub"             ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__      )  ;
   //
   const unsigned short idegree = std::max ( degree() , other.degree() ) ;
   //
@@ -1666,18 +2000,137 @@ Ostap::Math::ChebyshevSum::isub
   return *this ;
 }
 // ============================================================================
-// Subtract      polynomials (with the same domain!)
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::ChebyshevSum&
+Ostap::Math::ChebyshevSum::iadd
+( const Ostap::Math::Polynomial& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )             ,
+                  "Cannot sum Chebyshev with different domains" , 
+                  "Ostap::Math::ChebushevSum::iadd"             ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__      )  ;
+  //
+  return iadd ( ChebyshevSum ( other  ) ) ; 
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::ChebyshevSum&
+Ostap::Math::ChebyshevSum::isub
+( const Ostap::Math::Polynomial& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )             ,
+                  "Cannot sum Chebyshev with different domains" , 
+                  "Ostap::Math::ChebushevSum::isub"             ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__      )  ;
+  //
+  return iadd ( ChebyshevSum ( other  ) ) ; 
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::ChebyshevSum&
+Ostap::Math::ChebyshevSum::iadd
+( const Ostap::Math::LegendreSum& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )             ,
+                  "Cannot sum Chebyshev with different domains" , 
+                  "Ostap::Math::ChebushevSum::iadd"             ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__      )  ;
+  //
+  return iadd ( ChebyshevSum ( other  ) ) ; 
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::ChebyshevSum&
+Ostap::Math::ChebyshevSum::isub
+( const Ostap::Math::LegendreSum& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )             ,
+                  "Cannot sum Chebyshev with different domains" , 
+                  "Ostap::Math::ChebushevSum::isub"             ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__      )  ;
+  //
+  return iadd ( ChebyshevSum ( other  ) ) ; 
+}
+// ============================================================================
+// summation
 // ============================================================================
 Ostap::Math::ChebyshevSum 
-Ostap::Math::ChebyshevSum::subtract
+Ostap::Math::ChebyshevSum::add
+( const double other ) const 
+{ ChebyshevSum r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::add
 ( const Ostap::Math::ChebyshevSum& other ) const 
+{ ChebyshevSum r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::add
+( const Ostap::Math::Polynomial& other ) const 
+{ ChebyshevSum r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::add
+( const Ostap::Math::Bernstein& other ) const 
+{ ChebyshevSum r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::add
+( const Ostap::Math::LegendreSum& other ) const 
+{ ChebyshevSum r (*this) ; r.iadd ( other ) ; return r ; }
+// ============================================================================
+// subtraction
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::sub
+( const double other ) const 
+{ ChebyshevSum r (*this) ; r.isub  ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::sub
+( const Ostap::Math::ChebyshevSum& other ) const 
+{ ChebyshevSum r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::sub
+( const Ostap::Math::Polynomial& other ) const 
+{ ChebyshevSum r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::sub
+( const Ostap::Math::Bernstein& other ) const 
+{ ChebyshevSum r (*this) ; r.isub ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::sub
+( const Ostap::Math::LegendreSum& other ) const 
+{ ChebyshevSum r (*this) ; r.isub  ( other ) ; return r ; }
+// ============================================================================
+Ostap::Math::ChebyshevSum 
+Ostap::Math::ChebyshevSum::rsub ( const double a ) const 
+{ return -(*this) + a ; } 
+// ============================================================================
+// unary minus 
+// ============================================================================
+Ostap::Math::ChebyshevSum
+Ostap::Math::ChebyshevSum::operator-() const 
 {
-  ChebyshevSum result(*this) ;
-  result.isub ( other ) ;
-  return result ;
+  ChebyshevSum a ( *this ) ;
+  Ostap::Math::negate ( a.m_pars ) ;
+  return a ;
 }
-
-
 // ============================================================================
 // get unique tag 
 // ============================================================================
@@ -1689,8 +2142,6 @@ std::size_t Ostap::Math::ChebyshevSum::tag () const
       degree () , m_xmin , m_xmax ) ;
 }
 // ============================================================================
-
-
 
 
 
@@ -1854,19 +2305,19 @@ Ostap::Math::LegendreSum::derivative () const
 // simple  manipulations with polynoms: shift it! 
 // ============================================================================
 Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::operator+= ( const double a ) 
+Ostap::Math::LegendreSum::iadd ( const double a ) 
 { m_pars[0] += a ; return *this ; }
 // ============================================================================
 // simple  manipulations with polynoms: shift it! 
 // ============================================================================
 Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::operator-= ( const double a ) 
+Ostap::Math::LegendreSum::isub ( const double a ) 
 { m_pars[0] -= a ; return *this ; }
 // ============================================================================
 // simple  manipulations with polynoms: scale it! 
 // ============================================================================
 Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::operator*= ( const double a ) 
+Ostap::Math::LegendreSum::imul ( const double a ) 
 { 
   Ostap::Math::scale ( m_pars , a ) ;
   return *this ; 
@@ -1875,9 +2326,13 @@ Ostap::Math::LegendreSum::operator*= ( const double a )
 // simple  manipulations with polynoms: scale it 
 // ============================================================================
 Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::operator/= ( const double a ) 
+Ostap::Math::LegendreSum::idiv ( const double value ) 
 { 
-  Ostap::Math::scale ( m_pars , 1/a ) ;
+  Ostap::Assert ( value                               ,
+                  "Division by zero"                  ,
+                  "Ostap::Math::LegendreSum::idiv"     ,
+                  ZERO_DIVISION , __FILE__ , __LINE__ ) ;
+  Ostap::Math::scale ( m_pars , 1/value ) ;
   return *this ; 
 }
 // ============================================================================
@@ -1891,80 +2346,20 @@ Ostap::Math::LegendreSum::operator-() const
   return a ;
 }
 // ============================================================================
-// Python
-// ============================================================================
-Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::__iadd__   ( const double a )  
-{ (*this) += a ; return *this ; } 
-// ============================================================================
-Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::__isub__   ( const double a ) 
-{ (*this) -= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::__imul__   ( const double a )
-{ (*this) *= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::LegendreSum& 
-Ostap::Math::LegendreSum::__itruediv__   ( const double a ) 
-{ (*this) /= a ; return *this ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__add__    ( const double a ) const 
-{ return LegendreSum(*this) += a ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__sub__    ( const double a ) const 
-{ return LegendreSum(*this) -= a ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__mul__    ( const double a ) const 
-{ return LegendreSum(*this) *= a ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__truediv__    ( const double a ) const 
-{ return LegendreSum(*this) /= a ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__radd__   ( const double a ) const 
-{ return __add__ ( a ) ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__rsub__   ( const double a ) const 
-{ return (-(*this))+a; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__rmul__   ( const double a ) const 
-{ return __mul__ ( a ) ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__neg__   () const { return -(*this); } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__add__   
-( const Ostap::Math::LegendreSum& a ) const { return sum      ( a ) ; } 
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::__sub__   
-( const Ostap::Math::LegendreSum& a ) const { return subtract ( a ) ; } 
-// ============================================================================
-
-
-// ============================================================================
 // Add       polynomials (with the same domain!)
 // ============================================================================
 Ostap::Math::LegendreSum&
-Ostap::Math::LegendreSum::isum
+Ostap::Math::LegendreSum::iadd
 ( const Ostap::Math::LegendreSum& other )
 {
   // self-addition 
   if ( this == &other ) { (*this)*= 2 ; return *this ; }
   //
   Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )            ,
-                  "Cannot sum Legendre with different domains" , 
-                  "Ostap::Math::LegendreSum"                   , 
-                  Ostap::StatusCode ( 524 )                    )  ;
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::iadd"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
   //
   const unsigned short idegree = std::max ( degree() , other.degree() ) ;
   //
@@ -1974,17 +2369,6 @@ Ostap::Math::LegendreSum::isum
   { m_pars[i] += other.m_pars[ i ] ; }
   //
   return *this ;
-}
-// ============================================================================
-// Add       polynomials (with the same domain!)
-// ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::sum
-( const Ostap::Math::LegendreSum& other ) const 
-{
-  LegendreSum result(*this) ;
-  result.isum ( other ) ;
-  return result ;
 }
 // ============================================================================
 // Subtract      polynomials (with the same domain!)
@@ -1997,10 +2381,10 @@ Ostap::Math::LegendreSum::isub
   if ( this == &other ) { *this *= 0.0 ; return *this ; }
   //
   Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )                 ,
-                  "Cannot subtract Legendre with different domains" , 
-                  "Ostap::Math::LegendreSum"                        , 
-                  Ostap::StatusCode ( 525 )                         )  ;
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::isub"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
   //
   const unsigned short idegree = std::max ( degree() , other.degree() ) ;
   //
@@ -2012,16 +2396,157 @@ Ostap::Math::LegendreSum::isub
   return *this ;
 }
 // ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::iadd
+( const Ostap::Math::ChebyshevSum& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::iadd"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( LegendreSum ( other ) ) ;
+}
+// ============================================================================
 // Subtract      polynomials (with the same domain!)
 // ============================================================================
-Ostap::Math::LegendreSum 
-Ostap::Math::LegendreSum::subtract
-( const Ostap::Math::LegendreSum& other ) const 
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::isub
+( const Ostap::Math::ChebyshevSum& other )
 {
-  LegendreSum result(*this) ;
-  result.isub ( other ) ;
-  return result ;
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::isub"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  //
+  return isub ( LegendreSum ( other ) ) ;
 }
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::iadd
+( const Ostap::Math::Bernstein& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::iadd"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( LegendreSum ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::isub
+( const Ostap::Math::Bernstein& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::isub"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  //
+  return isub ( LegendreSum( other ) ) ;
+}
+// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::iadd
+( const Ostap::Math::Polynomial& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::iadd"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( LegendreSum ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::LegendreSum&
+Ostap::Math::LegendreSum::isub
+( const Ostap::Math::Polynomial& other )
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
+                  s_equal ( xmax() , other.xmax() )               ,
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Legendre::isub"                 ,
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  //
+  return isub ( LegendreSum ( other ) ) ;
+}
+
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::add
+( const double other ) const 
+{ LegendreSum r(*this); r += other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::add
+( const Ostap::Math::LegendreSum& other ) const 
+{ LegendreSum r(*this); r += other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::add
+( const Ostap::Math::ChebyshevSum& other ) const 
+{ LegendreSum r(*this); r += other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::add
+( const Ostap::Math::Bernstein& other ) const 
+{ LegendreSum r(*this); r += other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::add
+( const Ostap::Math::Polynomial& other ) const 
+{ LegendreSum r(*this); r += other ; return r  ; }
+
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::sub
+( const double other ) const 
+{ LegendreSum r(*this); r -= other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::sub 
+( const Ostap::Math::LegendreSum& other ) const 
+{ LegendreSum r(*this); r -= other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::sub
+( const Ostap::Math::ChebyshevSum& other ) const 
+{ LegendreSum r(*this); r -= other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::sub
+( const Ostap::Math::Bernstein& other ) const 
+{ LegendreSum r(*this); r -= other ; return r  ; }
+// =============================================================================
+Ostap::Math::LegendreSum
+Ostap::Math::LegendreSum::sub
+( const Ostap::Math::Polynomial& other ) const 
+{ LegendreSum r(*this); r -= other ; return r  ; }
+
 // ============================================================================
 // get unique tag 
 // ============================================================================
@@ -2033,9 +2558,6 @@ std::size_t Ostap::Math::LegendreSum::tag () const
       degree () , m_xmin , m_xmax ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // constructor from the degree 

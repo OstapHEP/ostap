@@ -13,6 +13,7 @@
   1. histograms: move calculation of Riemann' sums from python to C++
   1. more harmolization to power-law tails
   1. more haromonisation for n/N for Student's t-functions 
+  1. more harmonisation for some polynomial constructions 
 
 ## Backward  incompatible 
 

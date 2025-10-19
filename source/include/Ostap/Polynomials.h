@@ -1855,31 +1855,83 @@ namespace Ostap
       /// get the derivative
       Polynomial derivative          () const ;
       // ======================================================================
-     public: 
+    public: // basic arithmetic
       // ======================================================================
-      /// add      a conntant
-      Polynomial& iadd    ( const double      value ) ;
-      /// subtract a conntant 
-      Polynomial& isub    ( const double      value ) ;
+      /// add      a constant
+      Polynomial& iadd    ( const double value ) ;
+      /// subtract a constant 
+      Polynomial& isub    ( const double value ) ;
       /// scale  by a constant 
-      Polynomial& imul    ( const double      value ) ;
-      /// divide by a conntant 
-      Polynomial& idiv    ( const double      value ) ;
+      Polynomial& imul    ( const double value ) ;
+      /// divide by a constant
+      Polynomial& idiv    ( const double value ) ;
+      // ======================================================================
+    public: // baasic arithmetic
+      // ======================================================================
       /// Add      a polynomial (with the same domain!)
-      Polynomial& iadd    ( const Polynomial& other ) ;
-      /// Subtract a polynomial (with the same domain!)
-      Polynomial& isub    ( const Polynomial& other ) ;
+      Polynomial& iadd    ( const Polynomial&    other ) ;
+      Polynomial& iadd    ( const Bernstein&     other ) ;
+      Polynomial& iadd    ( const LegendreSum&   other ) ;
+      Polynomial& iadd    ( const ChebyshevSum&  other ) ;
+      Polynomial& iadd    ( const KarlinShapley& other ) ;
+      Polynomial& iadd    ( const KarlinStudden& other ) ;
+      Polynomial& iadd    ( const BernsteinEven& other ) ;
+      Polynomial& iadd    ( const Positive&      other ) ;
+      Polynomial& iadd    ( const Monotonic&     other ) ;
+      Polynomial& iadd    ( const Convex&        other ) ;
+      Polynomial& iadd    ( const ConvexOnly&    other ) ;
+      Polynomial& iadd    ( const Bernulli&      other ) ;
+      /// Subtract a polynomial (with the same domain!)     
+      Polynomial& isub    ( const Polynomial&    other ) ;
+      Polynomial& isub    ( const Bernstein&     other ) ;
+      Polynomial& isub    ( const LegendreSum&   other ) ;
+      Polynomial& isub    ( const ChebyshevSum&  other ) ;
+      Polynomial& isub    ( const KarlinShapley& other ) ;
+      Polynomial& isub    ( const KarlinStudden& other ) ;
+      Polynomial& isub    ( const BernsteinEven& other ) ;
+      Polynomial& isub    ( const Positive&      other ) ;
+      Polynomial& isub    ( const Monotonic&     other ) ;
+      Polynomial& isub    ( const Convex&        other ) ;
+      Polynomial& isub    ( const ConvexOnly&    other ) ;
+      Polynomial& isub    ( const Bernulli&      other ) ;
+      // ======================================================================
+  public: // basic math 
+      // ======================================================================
+      Polynomial add  ( const double value ) const ; 
+      Polynomial sub  ( const double value ) const ;
+      Polynomial mul  ( const double value ) const ;
+      Polynomial div  ( const double value ) const ;
       // ======================================================================
   public: // more operations  
       // ======================================================================
-      Polynomial add  ( const double      value ) const ; 
-      Polynomial sub  ( const double      value ) const ;
-      Polynomial mul  ( const double      value ) const ;
-      Polynomial div  ( const double      value ) const ;
-      Polynomial add  ( const Polynomial& other ) const ;
-      Polynomial sub  ( const Polynomial& other ) const ;
+      /// polynomial summation
+      Polynomial add  ( const Polynomial&    other ) const ;
+      Polynomial add  ( const Bernstein&     other ) const ;
+      Polynomial add  ( const LegendreSum&   other ) const ;
+      Polynomial add  ( const ChebyshevSum&  other ) const ;
+      Polynomial add  ( const KarlinShapley& other ) const ;
+      Polynomial add  ( const KarlinStudden& other ) const ;
+      Polynomial add  ( const BernsteinEven& other ) const ;
+      Polynomial add  ( const Positive&      other ) const ;
+      Polynomial add  ( const Monotonic&     other ) const ;
+      Polynomial add  ( const Convex&        other ) const ;
+      Polynomial add  ( const ConvexOnly&    other ) const ;
+      Polynomial add  ( const Bernulli&      other ) const ;
+      /// polynomial subtraction
+      Polynomial sub  ( const Polynomial&    other ) const ;
+      Polynomial sub  ( const Bernstein&     other ) const ;
+      Polynomial sub  ( const LegendreSum&   other ) const ;
+      Polynomial sub  ( const ChebyshevSum&  other ) const ;
+      Polynomial sub  ( const KarlinShapley& other ) const ;
+      Polynomial sub  ( const KarlinStudden& other ) const ;
+      Polynomial sub  ( const BernsteinEven& other ) const ;
+      Polynomial sub  ( const Positive&      other ) const ;
+      Polynomial sub  ( const Monotonic&     other ) const ;
+      Polynomial sub  ( const Convex&        other ) const ;
+      Polynomial sub  ( const ConvexOnly&    other ) const ;
+      Polynomial sub  ( const Bernulli&      other ) const ;
+      // right subtraction
       Polynomial rsub ( const double      value ) const ;
-      Polynomial rsub ( const Polynomial& other ) const ;
       // ======================================================================      
   public: // C++ operators
       // ======================================================================
@@ -1893,7 +1945,7 @@ namespace Ostap
       inline Polynomial& operator /= ( const double      value ) { return idiv ( value ) ; }
       /// Add another polynomial  with the same range.domain
       inline Polynomial& operator += ( const Polynomial& other ) { return iadd ( other ) ; }
-      /// Subtarct another polynomial with the same range.domain
+      /// Subtract another polynomial with the same range.domain
       inline Polynomial& operator -= ( const Polynomial& other ) { return iadd ( other ) ; }
       // ======================================================================
       /// negate it! 
@@ -1905,28 +1957,70 @@ namespace Ostap
       inline Polynomial& __isub__     ( const double      a )       { return isub ( a ) ; }     
       inline Polynomial& __imul__     ( const double      a )       { return imul ( a ) ; }      
       inline Polynomial& __idiv__     ( const double      a )       { return idiv ( a ) ; }      
-      inline Polynomial& __itruediv__ ( const double      a )       { return idiv ( a ) ; }  
-      inline Polynomial& __iadd__     ( const Polynomial& a )       { return iadd ( a ) ; }
-      inline Polynomial& __isub__     ( const Polynomial& a )       { return iadd ( a ) ; }
+      inline Polynomial& __itruediv__ ( const double      a )       { return idiv ( a ) ; }
+      //  
+      inline Polynomial& __iadd__     ( const Polynomial&    a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const Polynomial&    a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const Bernstein&     a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const Bernstein&     a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const LegendreSum&   a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const LegendreSum&   a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const ChebyshevSum&  a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const ChebyshevSum&  a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const KarlinShapley& a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const KarlinShapley& a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const KarlinStudden& a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const KarlinStudden& a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const BernsteinEven& a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const BernsteinEven& a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const Positive&      a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const Positive&      a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const Monotonic&     a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const Monotonic&     a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const Convex&        a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const Convex&        a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const ConvexOnly&    a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const ConvexOnly&    a )    { return isub ( a ) ; }
+      inline Polynomial& __iadd__     ( const Bernulli&      a )    { return iadd ( a ) ; }
+      inline Polynomial& __isub__     ( const Bernulli&      a )    { return isub ( a ) ; }
       // ======================================================================
     public: // operators for python
       // ======================================================================
-      inline  Polynomial  __add__     ( const double      a ) const { return add ( a ) ; } 
-      inline  Polynomial  __sub__     ( const double      a ) const { return sub ( a ) ; } 
-      inline  Polynomial  __mul__     ( const double      a ) const { return mul ( a ) ; } 
-      inline  Polynomial  __div__     ( const double      a ) const { return div ( a ) ; } 
-      inline  Polynomial  __truediv__ ( const double      a ) const { return div ( a ) ; } 
-      inline  Polynomial  __add__     ( const Polynomial& a ) const { return add ( a ) ; } 
-      inline  Polynomial  __sub__     ( const Polynomial& a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const double a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const double a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __mul__     ( const double a ) const { return mul ( a ) ; } 
+      inline  Polynomial  __div__     ( const double a ) const { return div ( a ) ; } 
+      inline  Polynomial  __truediv__ ( const double a ) const { return div ( a ) ; } 
+      //
+      inline  Polynomial  __add__     ( const Polynomial&    a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const Polynomial&    a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const Bernstein&     a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const Bernstein&     a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const LegendreSum&   a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const LegendreSum&   a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const ChebyshevSum&  a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const ChebyshevSum&  a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const KarlinShapley& a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const KarlinShapley& a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const KarlinStudden& a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const KarlinStudden& a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const BernsteinEven& a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const BernsteinEven& a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const Positive&      a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const Positive&      a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const Convex&        a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const Convex&        a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const ConvexOnly&    a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const ConvexOnly&    a ) const { return sub ( a ) ; } 
+      inline  Polynomial  __add__     ( const Bernulli&      a ) const { return add ( a ) ; } 
+      inline  Polynomial  __sub__     ( const Bernulli&      a ) const { return sub ( a ) ; } 
       // ======================================================================
     public: // for python 
       // ======================================================================
       inline Polynomial  __radd__     ( const double      a ) const { return add  ( a ) ; }
       inline Polynomial  __rmul__     ( const double      a ) const { return mul  ( a ) ; }
-      /// right subtraction 
-      Polynomial         __rsub__     ( const double      a ) const { return rsub ( a ) ; }; 
-      /// Negate it! 
-      Polynomial         __neg__      () const ; // Negate it! 
+      inline Polynomial  __rsub__     ( const double      a ) const { return rsub ( a ) ; } 
+      inline Polynomial  __neg__      () const { return -(*this) ; } // Negate it! 
       // ======================================================================      
     public: 
       // ======================================================================      
@@ -1942,15 +2036,61 @@ namespace Ostap
       // ======================================================================      
     } ;    
     // ========================================================================
-    inline Polynomial operator+( const Polynomial& a , const Polynomial& b ) { return a.add  ( b ) ; }    
-    inline Polynomial operator+( const Polynomial& a , const double      b ) { return a.add  ( b ) ; }    
-    inline Polynomial operator+( const double      b , const Polynomial& a ) { return a.add  ( b ) ; }
-    inline Polynomial operator-( const Polynomial& a , const Polynomial& b ) { return a.sub  ( b ) ; }
-    inline Polynomial operator-( const Polynomial& a , const double      b ) { return a.sub  ( b ) ; }    
-    inline Polynomial operator-( const double      b , const Polynomial& a ) { return a.rsub ( b ) ; }
-    inline Polynomial operator*( const Polynomial& a , const double      b ) { return a.mul  ( b ) ; }    
-    inline Polynomial operator*( const double      b , const Polynomial& a ) { return a.mul  ( b ) ; }
-    inline Polynomial operator/( const Polynomial& a , const double      b ) { return a.div  ( b ) ; }    
+    // addtition 
+    inline Polynomial operator+( const Polynomial&    a , const double         b ) { return a.add  ( b ) ; }    
+    inline Polynomial operator+( const Polynomial&    a , const Polynomial&    b ) { return a.add  ( b ) ; }   
+    inline Polynomial operator+( const Polynomial&    a , const Bernstein&     b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const LegendreSum&   b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const ChebyshevSum&  b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const KarlinShapley& b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const KarlinStudden& b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const BernsteinEven& b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const Monotonic&     b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const Convex&        b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const ConvexOnly&    b ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Polynomial&    a , const Bernulli&      b ) { return a.add  ( b ) ; }
+    // right addtions
+    inline Polynomial operator+( const double         b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Bernstein&     b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const LegendreSum&   b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const ChebyshevSum&  b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const KarlinShapley& b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const KarlinStudden& b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const BernsteinEven& b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Monotonic&     b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Convex&        b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const ConvexOnly&    b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    inline Polynomial operator+( const Bernulli&      b , const Polynomial&    a ) { return a.add  ( b ) ; }
+    // subtraction 
+    inline Polynomial operator-( const Polynomial&    a , const double         b ) { return a.sub  ( b ) ; }    
+    inline Polynomial operator-( const Polynomial&    a , const Polynomial&    b ) { return a.sub  ( b ) ; }   
+    inline Polynomial operator-( const Polynomial&    a , const Bernstein&     b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const LegendreSum&   b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const ChebyshevSum&  b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const KarlinShapley& b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const KarlinStudden& b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const BernsteinEven& b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const Monotonic&     b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const Convex&        b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const ConvexOnly&    b ) { return a.sub  ( b ) ; }
+    inline Polynomial operator-( const Polynomial&    a , const Bernulli&      b ) { return a.sub  ( b ) ; }
+    // right subtraction
+    inline Polynomial operator-( const double         b , const Polynomial&    a ) { return a.rsub ( b ) ; }
+    inline Polynomial operator-( const Bernstein&     b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const LegendreSum&   b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const ChebyshevSum&  b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const KarlinShapley& b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const KarlinStudden& b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const BernsteinEven& b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const Monotonic&     b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const Convex&        b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const ConvexOnly&    b , const Polynomial&    a ) { return b + (-a)     ; }
+    inline Polynomial operator-( const Bernulli&      b , const Polynomial&    a ) { return b + (-a)     ; }
+    // multiplication 
+    inline Polynomial operator*( const Polynomial&    a , const double         b ) { return a.mul  ( b ) ; }    
+    inline Polynomial operator*( const double         b , const Polynomial&    a ) { return a.mul  ( b ) ; }
+    // division 
+    inline Polynomial operator/( const Polynomial&    a , const double         b ) { return a.div  ( b ) ; }    
     // ========================================================================
     /** @class ChebyshevSum 
      *  Sum of chebychev polinomials 
@@ -1959,7 +2099,7 @@ namespace Ostap
      *  @date 2015-02-22
      */
     class ChebyshevSum : public PolySum
-		       , public Ostap::Math::WStatistic  
+		                   , public Ostap::Math::WStatistic  
     {
     public:
       // =====================================================================
@@ -2017,15 +2157,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// get lower edge
-      double xmin () const { return m_xmin ; }
+      inline double xmin () const { return m_xmin ; }
       /// get upper edge
-      double xmax () const { return m_xmax ; }
+      inline double xmax () const { return m_xmax ; }
       // ======================================================================
     public:
       // ======================================================================
-      double x ( const double t ) const
+      inline double x ( const double t ) const
       { return  0.5 * ( t * ( m_xmax - m_xmin ) +   m_xmax + m_xmin ) ; }
-      double t ( const double x ) const
+      inline double t ( const double x ) const
       { return (  2 *   x   - m_xmax - m_xmin ) / ( m_xmax - m_xmin ) ; }
       // ======================================================================
     public:
@@ -2057,8 +2197,12 @@ namespace Ostap
        *  @parameter x      the event content 
        *  @parameter weight the weight 
        */
-      bool fill   ( const double x , const double weight = 1 ) ;
-      bool Fill   ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
+      bool fill  
+      ( const double x          , 
+        const double weight = 1 ) ;
+      inline bool Fill  
+      ( const double x          , 
+        const double weight = 1 ) { return fill ( x , weight ) ; }
       // =====================================================================
     public: // Ostap::Math::WStatistic 
       // =====================================================================
@@ -2068,16 +2212,34 @@ namespace Ostap
       /// reet parameters to zeros 
       void reset  () override { Parameters::reset () ; } 
       // ======================================================================
+    public:  // basic math 
+      // ======================================================================
+      ChebyshevSum& iadd ( const double value ) ;
+      ChebyshevSum& isub ( const double value ) ;
+      ChebyshevSum& imul ( const double value ) ;
+      ChebyshevSum& idiv ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ChebyshevSum& iadd ( const ChebyshevSum& other ) ;
+      ChebyshevSum& iadd ( const Polynomial&   other ) ;
+      ChebyshevSum& iadd ( const Bernstein&    other ) ;
+      ChebyshevSum& iadd ( const LegendreSum&  other ) ;
+      ChebyshevSum& isub ( const ChebyshevSum& other ) ;
+      ChebyshevSum& isub ( const Polynomial&   other ) ;
+      ChebyshevSum& isub ( const Bernstein&    other ) ;
+      ChebyshevSum& isub ( const LegendreSum&  other ) ;
+      // ======================================================================
     public:
       // ======================================================================
       /// simple  manipulations with polynoms: shift it! 
-      ChebyshevSum& operator += ( const double a ) ; 
+      inline ChebyshevSum& operator += ( const double a ) { return iadd ( a ) ; }
       /// simple  manipulations with polynoms: shift it! 
-      ChebyshevSum& operator -= ( const double a ) ; 
+      inline ChebyshevSum& operator -= ( const double a ) { return isub ( a ) ; }
       /// simple  manipulations with polynoms: scale it!
-      ChebyshevSum& operator *= ( const double a ) ; 
+      inline ChebyshevSum& operator *= ( const double a ) { return imul ( a ) ; }
       /// simple  manipulations with polynoms: scale it! 
-      ChebyshevSum& operator /= ( const double a ) ; 
+      inline ChebyshevSum& operator /= ( const double a ) { return idiv ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2086,59 +2248,58 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// add      chebyshev sum (with the same domain)
-      ChebyshevSum sum      ( const ChebyshevSum& other ) const ;
-      /// subtract chebyshev sum (with the same domain)
-      ChebyshevSum subtract ( const ChebyshevSum& other ) const ;
+      /// addition 
+      ChebyshevSum add  ( const double value        ) const ;
+      ChebyshevSum add  ( const ChebyshevSum& other ) const ;
+      ChebyshevSum add  ( const Polynomial&   other ) const ;
+      ChebyshevSum add  ( const Bernstein&    other ) const ;
+      ChebyshevSum add  ( const LegendreSum&  other ) const ;
+      /// subtraction 
+      ChebyshevSum sub  ( const double value        ) const ;
+      ChebyshevSum sub  ( const ChebyshevSum& other ) const ;
+      ChebyshevSum sub  ( const Polynomial&   other ) const ;
+      ChebyshevSum sub  ( const Bernstein&    other ) const ;
+      ChebyshevSum sub  ( const LegendreSum&  other ) const ;
+      // right subtraction
+      ChebyshevSum rsub ( const double        value ) const ;
+      ChebyshevSum mul  ( const double value        ) const ;
+      ChebyshevSum div  ( const double value        ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      /// add      chebyshev sum (with the same domain)
-      ChebyshevSum& isum    ( const ChebyshevSum& other ) ;
-      /// subtract chebyshev sum (with the same domain)
-      ChebyshevSum& isub    ( const ChebyshevSum& other ) ;
+      inline ChebyshevSum& operator+=( const ChebyshevSum& other ) { return iadd ( other ) ; }
+      inline ChebyshevSum& operator+=( const Polynomial&   other ) { return iadd ( other ) ; }
+      inline ChebyshevSum& operator+=( const Bernstein&    other ) { return iadd ( other ) ; }
+      inline ChebyshevSum& operator+=( const LegendreSum&  other ) { return iadd ( other ) ; }
+      inline ChebyshevSum& operator-=( const ChebyshevSum& other ) { return isub ( other ) ; }
+      inline ChebyshevSum& operator-=( const Polynomial&   other ) { return isub ( other ) ; }
+      inline ChebyshevSum& operator-=( const Bernstein&    other ) { return isub ( other ) ; }
+      inline ChebyshevSum& operator-=( const LegendreSum&  other ) { return isub ( other ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      inline ChebyshevSum& operator+=( const ChebyshevSum& other ) { return isum ( other ) ; }
-      inline ChebyshevSum& operator-=( const ChebyshevSum& other ) { return isub ( other ) ; }      
+      inline ChebyshevSum& __iadd__     ( const double        a ) { return iadd ( a ) ; }
+      inline ChebyshevSum& __isub__     ( const double        a ) { return isub ( a ) ; }
+      inline ChebyshevSum& __imul__     ( const double        a ) { return imul ( a ) ; }
+      inline ChebyshevSum& __itruediv__ ( const double        a ) { return idiv ( a ) ; }
+      inline ChebyshevSum& __idiv__     ( const double        a ) { return idiv ( a ) ; }
+      inline ChebyshevSum& __iadd__     ( const ChebyshevSum& a ) { return iadd ( a ) ; }
+      inline ChebyshevSum& __isub__     ( const ChebyshevSum& a ) { return isub ( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      ChebyshevSum& __iadd__      ( const double a ) ;
-      ChebyshevSum& __isub__      ( const double a ) ;
-      ChebyshevSum& __imul__      ( const double a ) ;
-      ChebyshevSum& __itruediv__  ( const double a ) ;
-      ChebyshevSum& __idiv__      ( const double a ) { return __itruediv__ ( a ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      ChebyshevSum  __add__       ( const double a ) const ;
-      ChebyshevSum  __sub__       ( const double a ) const ;
-      ChebyshevSum  __mul__       ( const double a ) const ;
-      ChebyshevSum  __truediv__   ( const double a ) const ;
-      ChebyshevSum  __div__       ( const double a ) { return __truediv__  ( a ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      ChebyshevSum  __radd__  ( const double a ) const ;
-      ChebyshevSum  __rsub__  ( const double a ) const ;
-      ChebyshevSum  __rmul__  ( const double a ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      ChebyshevSum  __add__   ( const ChebyshevSum& a ) const ;
-      ChebyshevSum  __sub__   ( const ChebyshevSum& a ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      ChebyshevSum& __iadd__  ( const ChebyshevSum& a ) { return isum ( a ) ; }
-      ChebyshevSum& __isub__  ( const ChebyshevSum& a ) { return isub ( a ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
+      inline ChebyshevSum  __add__      ( const double        a ) const { return add  ( a ) ; }
+      inline ChebyshevSum  __sub__      ( const double        a ) const { return sub  ( a ) ; }
+      inline ChebyshevSum  __mul__      ( const double        a ) const { return mul  ( a ) ; }
+      inline ChebyshevSum  __truediv__  ( const double        a ) const { return div  ( a ) ; }
+      inline ChebyshevSum  __div__      ( const double        a ) const { return div  ( a   ) ; }
+      inline ChebyshevSum  __add__      ( const ChebyshevSum& a ) const { return add  ( a ) ; }
+      inline ChebyshevSum  __sub__      ( const ChebyshevSum& a ) const { return sub  ( a ) ; }
+      inline ChebyshevSum  __radd__     ( const double        a ) const { return add  ( a ) ; }
+      inline ChebyshevSum  __rmul__     ( const double        a ) const { return mul  ( a ) ; }
+      inline ChebyshevSum  __rsub__     ( const double        a ) const { return rsub ( a ) ; }
       // negate it! 
-      ChebyshevSum __neg__ () const ; // negate it!
+      inline ChebyshevSum __neg__       () const{ return -(*this); } 
       // ======================================================================
     public: 
       // ======================================================================      
@@ -2154,24 +2315,15 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================
-    inline ChebyshevSum operator+( const ChebyshevSum& a , const ChebyshevSum& b ) 
-    { return a.sum       ( b ) ; }    
-    inline ChebyshevSum operator-( const ChebyshevSum& a , const ChebyshevSum& b ) 
-    { return a.subtract  ( b ) ; }
-    inline ChebyshevSum operator+( const ChebyshevSum& a , const double        b ) 
-    { return a.__add__   ( b ) ; }    
-    inline ChebyshevSum operator+( const double        b , const ChebyshevSum& a )
-    { return a.__add__   ( b ) ; }
-    inline ChebyshevSum operator-( const ChebyshevSum& a , const double        b ) 
-    { return a.__sub__   ( b ) ; }    
-    inline ChebyshevSum operator-( const double        b , const ChebyshevSum& a )
-    { return a.__rsub__  ( b ) ; }
-    inline ChebyshevSum operator*( const ChebyshevSum& a , const double        b ) 
-    { return a.__mul__   ( b ) ; }    
-    inline ChebyshevSum operator*( const double        b , const ChebyshevSum& a )
-    { return a.__mul__   ( b ) ; }
-    inline ChebyshevSum operator/( const ChebyshevSum& a , const double        b ) 
-    { return a.__truediv__   ( b ) ; }    
+    inline ChebyshevSum operator+( const ChebyshevSum& a , const ChebyshevSum& b ) { return a.add  ( b ) ; }    
+    inline ChebyshevSum operator-( const ChebyshevSum& a , const ChebyshevSum& b ) { return a.sub  ( b ) ; }
+    inline ChebyshevSum operator+( const ChebyshevSum& a , const double        b ) { return a.add  ( b ) ; }    
+    inline ChebyshevSum operator+( const double        b , const ChebyshevSum& a ) { return a.add  ( b ) ; }
+    inline ChebyshevSum operator-( const ChebyshevSum& a , const double        b ) { return a.sub  ( b ) ; }    
+    inline ChebyshevSum operator-( const double        b , const ChebyshevSum& a ) { return a.rsub ( b ) ; }
+    inline ChebyshevSum operator*( const ChebyshevSum& a , const double        b ) { return a.mul  ( b ) ; }    
+    inline ChebyshevSum operator*( const double        b , const ChebyshevSum& a ) { return a.mul  ( b ) ; }
+    inline ChebyshevSum operator/( const ChebyshevSum& a , const double        b ) { return a.div  ( b ) ; }    
     // ========================================================================
     /** @class LegendreSum 
      *  Sum of Legendre polinomials 
@@ -2180,7 +2332,7 @@ namespace Ostap
      *  @date 2015-02-22
      */
     class LegendreSum : public PolySum
-		      , public Ostap::Math::WStatistic
+		                  , public Ostap::Math::WStatistic
     {
     public:
       // =====================================================================
@@ -2267,75 +2419,112 @@ namespace Ostap
       /// get the derivative 
       LegendreSum derivative          () const ;
       // ======================================================================
-    public:
+    public: // basic math
+      // ======================================================================
+      LegendreSum& iadd ( const double value ) ;
+      LegendreSum& isub ( const double value ) ;
+      LegendreSum& imul ( const double value ) ;
+      LegendreSum& idiv ( const double value ) ;
+      // ======================================================================
+    public:  // advanced math
+      // ======================================================================
+      LegendreSum& iadd ( const LegendreSum&  other ) ;
+      LegendreSum& iadd ( const ChebyshevSum& other ) ;
+      LegendreSum& iadd ( const Bernstein&    other ) ;
+      LegendreSum& iadd ( const Polynomial&   other ) ;
+      // ======================================================================
+      LegendreSum& isub ( const LegendreSum&  other ) ;
+      LegendreSum& isub ( const ChebyshevSum& other ) ;
+      LegendreSum& isub ( const Bernstein&    other ) ;
+      LegendreSum& isub ( const Polynomial&   other ) ;
+      // ======================================================================
+    public: // basic math 
+      // ======================================================================
+      LegendreSum   add  ( const double value ) const ;  
+      LegendreSum   sub  ( const double value ) const ;
+      LegendreSum   mul  ( const double value ) const ;
+      LegendreSum   div  ( const double value ) const ;
+      LegendreSum   rsub ( const double value ) const ;
+      // ======================================================================
+    public: // advanced math 
+      // ======================================================================
+      LegendreSum   add ( const LegendreSum&  other ) const ;
+      LegendreSum   add ( const ChebyshevSum& other ) const ;
+      LegendreSum   add ( const Bernstein&    other ) const ;
+      LegendreSum   add ( const Polynomial&   other ) const ;
+      // ======================================================================
+      LegendreSum   sub ( const LegendreSum&  other ) const ;
+      LegendreSum   sub ( const ChebyshevSum& other ) const ;
+      LegendreSum   sub ( const Bernstein&    other ) const ;
+      LegendreSum   sub ( const Polynomial&   other ) const ;
+      // ======================================================================
+    public:  // C++ operators 
       // ======================================================================
       /// simple  manipulations with polynoms: shift it! 
-      LegendreSum& operator += ( const double a ) ;
+      inline LegendreSum& operator += ( const double a ) { return iadd ( a ) ; }
       /// simple  manipulations with polynoms: shift it! 
-      LegendreSum& operator -= ( const double a ) ;
+      inline LegendreSum& operator -= ( const double a ) { return isub ( a ) ; }
       /// simple  manipulations with polynoms: scale it  
-      LegendreSum& operator *= ( const double a ) ;
+      inline LegendreSum& operator *= ( const double a ) { return imul ( a ) ; }
       /// simple  manipulations with polynoms: scale it 
-      LegendreSum& operator /= ( const double a ) ;
+      inline LegendreSum& operator /= ( const double a ) { return idiv( a ) ; }
+      ///
+      inline LegendreSum& operator+=( const LegendreSum&  other ) { return iadd ( other ) ; }
+      inline LegendreSum& operator-=( const LegendreSum&  other ) { return isub ( other ) ; }      
+      inline LegendreSum& operator+=( const ChebyshevSum& other ) { return iadd ( other ) ; }
+      inline LegendreSum& operator-=( const ChebyshevSum& other ) { return isub ( other ) ; }      
+      inline LegendreSum& operator+=( const Polynomial&   other ) { return iadd ( other ) ; }
+      inline LegendreSum& operator-=( const Polynomial&   other ) { return isub ( other ) ; }      
+      inline LegendreSum& operator+=( const Bernstein&    other ) { return iadd ( other ) ; }
+      inline LegendreSum& operator-=( const Bernstein&    other ) { return isub ( other ) ; }      
       // ======================================================================
     public:
       // ======================================================================
       /// negate it! 
       LegendreSum  operator-() const ; // negate it! 
       // ======================================================================
-    public:
+    public:  // Python 
       // ======================================================================
-      /// add      legendre sum (with the same domain)
-      LegendreSum sum      ( const LegendreSum& other ) const ;
-      /// subtract legendre sum (with the same domain)
-      LegendreSum subtract ( const LegendreSum& other ) const ;
-      // =======================================================================
-    public:
-      // =======================================================================
-      /// add      legendre sum (with the same domain)
-      LegendreSum& isum    ( const LegendreSum& other ) ;
-      /// subtract legendre sum (with the same domain)
-      LegendreSum& isub    ( const LegendreSum& other ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      inline LegendreSum& operator+=( const LegendreSum& other ) { return isum ( other ) ; }
-      inline LegendreSum& operator-=( const LegendreSum& other ) { return isub ( other ) ; }      
-      // ======================================================================
-    public:
-      // ======================================================================
-      LegendreSum& __iadd__      ( const double a ) ;
-      LegendreSum& __isub__      ( const double a ) ;
-      LegendreSum& __imul__      ( const double a ) ;
-      LegendreSum& __itruediv__  ( const double a ) ;
-      LegendreSum& __idiv__      ( const double a ) { return __itruediv__ ( a ) ; }
+      inline LegendreSum& __iadd__      ( const double a ) { return iadd ( a ) ; }
+      inline LegendreSum& __isub__      ( const double a ) { return isub ( a ) ; }
+      inline LegendreSum& __imul__      ( const double a ) { return imul ( a ) ; }
+      inline LegendreSum& __itruediv__  ( const double a ) { return idiv ( a ) ; }
+      inline LegendreSum& __idiv__      ( const double a ) { return idiv ( a ) ; } 
+      //
+      inline LegendreSum& __iadd__      ( const LegendreSum&  a ) { return iadd ( a ) ; }
+      inline LegendreSum& __iadd__      ( const ChebyshevSum& a ) { return iadd ( a ) ; }
+      inline LegendreSum& __iadd__      ( const Bernstein&    a ) { return iadd ( a ) ; }
+      inline LegendreSum& __iadd__      ( const Polynomial&   a ) { return iadd ( a ) ; }
+      //
+      inline LegendreSum& __isub__      ( const LegendreSum&  a ) { return isub ( a ) ; }
+      inline LegendreSum& __isub__      ( const ChebyshevSum& a ) { return isub ( a ) ; }
+      inline LegendreSum& __isub__      ( const Bernstein&    a ) { return isub ( a ) ; }
+      inline LegendreSum& __isub__      ( const Polynomial&   a ) { return isub( a ) ; }
       // ======================================================================
     public:
       // ======================================================================
-      LegendreSum  __add__       ( const double a ) const ;
-      LegendreSum  __sub__       ( const double a ) const ;
-      LegendreSum  __mul__       ( const double a ) const ;
-      LegendreSum  __truediv__   ( const double a ) const ;
-      LegendreSum  __div__       ( const double a ) { return __truediv__  ( a ) ; }
-      // ======================================================================
+      inline LegendreSum  __add__      ( const double a ) const { return add ( a ) ; }
+      inline LegendreSum  __sub__      ( const double a ) const { return sub ( a ) ; }
+      inline LegendreSum  __mul__      ( const double a ) const { return mul ( a ) ; }
+      inline LegendreSum  __div__      ( const double a ) const { return div ( a ) ; }
+      inline LegendreSum  __truediv__  ( const double a ) const { return div ( a ) ; }
+      //
+      inline LegendreSum  __add__      ( const LegendreSum&  a ) { return add ( a ) ; }
+      inline LegendreSum  __add__      ( const ChebyshevSum& a ) { return add ( a ) ; }
+      inline LegendreSum  __add__      ( const Bernstein&    a ) { return add ( a ) ; }
+      inline LegendreSum  __add__      ( const Polynomial&   a ) { return add ( a ) ; }
+      //
+      inline LegendreSum __sub__       ( const LegendreSum&  a ) { return sub ( a ) ; }
+      inline LegendreSum __sub__       ( const ChebyshevSum& a ) { return sub ( a ) ; }
+      inline LegendreSum __sub__       ( const Bernstein&    a ) { return sub ( a ) ; }
+      inline LegendreSum __sub__       ( const Polynomial&   a ) { return sub( a ) ; }
+      //
     public:
       // ======================================================================
-      LegendreSum  __radd__      ( const double a ) const ;
-      LegendreSum  __rsub__      ( const double a ) const ;
-      LegendreSum  __rmul__      ( const double a ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      LegendreSum  __add__       ( const LegendreSum& a ) const ;
-      LegendreSum  __sub__       ( const LegendreSum& a ) const ;
-      // ======================================================================
-      LegendreSum& __iadd__      ( const LegendreSum& a ) { return isum ( a ) ; }
-      LegendreSum& __isub__      ( const LegendreSum& a ) { return isub ( a ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      // negate it! 
-      LegendreSum __neg__ () const ; // negate it!
+      inline LegendreSum  __radd__     ( const double a ) const { return add  ( a ) ; }
+      inline LegendreSum  __rsub__     ( const double a ) const { return rsub ( a ) ; }
+      inline LegendreSum  __rmul__     ( const double a ) const { return mul  ( a ) ; }
+      inline LegendreSum  __neg__      () const { return -(*this) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -2356,10 +2545,10 @@ namespace Ostap
     public: // Ostap::Math::WStatistic 
       // =====================================================================
       /// Ostap::Math::WStatistic, add one event with weight 
-      void update ( const double x , const double weight = 1 ) override
+      inline void update ( const double x , const double weight = 1 ) override
       { this -> fill ( x , weight ) ; }
       /// reet parameters to zeros 
-      void reset  () override { Parameters::reset () ; }
+      inline void reset  () override { Parameters::reset () ; }
       // ======================================================================
     public: 
       // ======================================================================      
@@ -2375,24 +2564,15 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================
-    inline LegendreSum  operator+( const LegendreSum& a , const LegendreSum& b ) 
-    { return a.sum       ( b ) ; }    
-    inline LegendreSum  operator-( const LegendreSum& a , const LegendreSum& b ) 
-    { return a.subtract  ( b ) ; }
-    inline LegendreSum  operator+( const LegendreSum& a , const double       b ) 
-    { return a.__add__   ( b ) ; }    
-    inline LegendreSum  operator+( const double       b , const LegendreSum& a )
-    { return a.__add__   ( b ) ; }
-    inline LegendreSum  operator-( const LegendreSum& a , const double       b ) 
-    { return a.__sub__   ( b ) ; }    
-    inline LegendreSum  operator-( const double       b , const LegendreSum& a )
-    { return a.__rsub__  ( b ) ; }
-    inline LegendreSum  operator*( const LegendreSum& a , const double       b ) 
-    { return a.__mul__   ( b ) ; }    
-    inline LegendreSum  operator*( const double       b , const LegendreSum& a )
-    { return a.__mul__   ( b ) ; }
-    inline LegendreSum  operator/( const LegendreSum& a , const double       b ) 
-    { return a.__truediv__   ( b ) ; }    
+    inline LegendreSum  operator+( const LegendreSum& a , const LegendreSum& b ) { return a.add  ( b ) ; }    
+    inline LegendreSum  operator-( const LegendreSum& a , const LegendreSum& b ) { return a.sub  ( b ) ; }
+    inline LegendreSum  operator+( const LegendreSum& a , const double       b ) { return a.add  ( b ) ; }    
+    inline LegendreSum  operator+( const double       b , const LegendreSum& a ) { return a.add  ( b ) ; }
+    inline LegendreSum  operator-( const LegendreSum& a , const double       b ) { return a.sub  ( b ) ; }    
+    inline LegendreSum  operator-( const double       b , const LegendreSum& a ) { return a.rsub ( b ) ; }
+    inline LegendreSum  operator*( const LegendreSum& a , const double       b ) { return a.mul  ( b ) ; }    
+    inline LegendreSum  operator*( const double       b , const LegendreSum& a ) { return a.mul  ( b ) ; }
+    inline LegendreSum  operator/( const LegendreSum& a , const double       b ) { return a.div  ( b ) ; }    
     // ========================================================================
     /** @class HermiteSum 
      *  Sum of Hermite polinomials 
@@ -2449,9 +2629,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      double x ( const double t ) const 
+      inline double x ( const double t ) const 
       { return 0.5 * ( t / m_scale + m_xmin + m_xmax ) ; }
-      double t ( const double x ) const 
+      inline double t ( const double x ) const 
       { return m_scale * ( 2 * x   - m_xmin - m_xmax ) ; }
       // ======================================================================
     public:
