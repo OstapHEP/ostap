@@ -1482,8 +1482,8 @@ class BifurcatedStudentT_pdf(PEAK,SigmaLR) :
     for x < mu   n=n_l and dx = ( x - mu )  / sigma_l
     for x > mu   n=n_l and dx = ( x - mu )  / sigma_r
     with 
-    sigma_{l,r} = sigma * ( 1 + kappa)
-    with asymmetry parameter -1 < kappa < 1 
+    sigma_{l,r} = sigma * ( 1 +/- kappa)
+    with asymmetry parameter kappa = tang(psi)
 
     Parameters:
     - mean
@@ -1503,7 +1503,7 @@ class BifurcatedStudentT_pdf(PEAK,SigmaLR) :
         #
         ## initialize the base
         # 
-        PEAK    .__init__  ( self , name , xvar , mean , sigma )
+        PEAK    .__init__  ( self , name , xvar , mean , sigma     )
         SigmaLR .__init__  ( self , sigma = self.sigma , psi = psi )
         
         ## left exponent 
@@ -1535,7 +1535,7 @@ class BifurcatedStudentT_pdf(PEAK,SigmaLR) :
             'xvar'      : self.xvar  ,
             'mean'      : self.mean  ,
             'sigma'     : self.sigma ,
-            'asymmetry' : self.asym  ,
+            'psi'       : self.psi   ,
             'nL'        : self.nL    ,
             'nR'        : self.nR    ,
             }
@@ -1616,11 +1616,11 @@ class PearsonIV_pdf(PEAK) :
         self.pdf = Ostap.Models.PearsonIV (
             self.roo_name ( 'pIV_' ) , 
             "Pearson Type IV %s" % self.name ,
-            self.xvar   ,
-            self.mu     ,
-            self.sigma  ,
-            self.n      ,
-            self.kappa  )
+            self.xvar     ,
+            self.mu       ,
+            self.varsigma ,
+            self.n        ,
+            self.kappa    )
         
         ## save the configuration
         self.config = {
@@ -1718,7 +1718,9 @@ models.append ( PearsonIV_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2022-12-01
 class SkewGenT_pdf(PEAK) :
-    """Skewed Generalised t-distribution:
+    """ Skewed Generalised t-distribution:
+    
+    -  see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
     
     - see Ostap.Models.SkewGenT
     - see Ostap.Math.SkewGenT
@@ -2006,7 +2008,7 @@ class SinhAsinh_pdf(PEAK) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.SinhAsinh (
-            self.roo_name ( 'sinasinh_' ) , 
+            self.roo_name ( 'sinhasinh_' ) , 
             "Sinh-Asinh %s" % self.name ,
             self.xvar      ,
             self.mean      ,
@@ -2094,7 +2096,7 @@ class JohnsonSU_pdf(PEAK) :
     
     When variable x follows Johnson-SU distribution, 
     the variable  z = gamma +  delta  sinh^{-1} ( x - xi)/ lambda 
-    follows normal distribtion with mean 0 and sigma 1.
+    follows normal distribution with mean 0 and sigma 1.
     
     Note:
     Symmetric case of JonhsonSU distribution is 
