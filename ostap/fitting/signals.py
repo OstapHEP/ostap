@@ -160,6 +160,7 @@ from   ostap.fitting.funbasic   import FUN1 , Fun1D
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
 from   ostap.fitting.fithelpers import ( Phases  , ZERO      , 
+                                         TailN   , TailNL    , TailNR    ,
                                          Tail    , LeftTail  , RightTail ,
                                          SigmaLR , TwoSigmas )    
 from   ostap.fitting.variables  import var_tanh, SETVAR
@@ -435,7 +436,7 @@ models.append ( CB2_pdf )
 #  @see Ostap::Math::Needham 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class Needham_pdf(Gauss_pdf) :
+class Needham_pdf(Gauss_pdf,TailN) :
     """ Needham function: specific parameterisation of Crystal Ball function with
     - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
 
@@ -467,20 +468,8 @@ class Needham_pdf(Gauss_pdf) :
                              sigma = sigma ) 
 
         ## 
-        if n is None : n = ROOT.RooFit.RooConst ( 0 ) 
+        TailN . __init__   ( self , n = ZERO if n is None else n  )
 
-        ## parameter n 
-        self.__n     = self.make_var ( n                     ,
-                                       'n_%s'  % self.name   ,
-                                       'n(%s)' % self.name   , 
-                                       None , 1.0 , -1 , 100 )
-
-        
-        ## parameter N: N = Ostap.Math.CrystalBall.N ( n )
-        name_N   = self.roo_name ( 'N_%s' % self.name ) 
-        title_N  = 'N(%s)' % self.name                
-        self.__N = Ostap.MoreRooFit.TailN ( name_N , title_N  , self.__n )
-        
         ## c0 variable 
         self.__c0 = self.make_var ( c0                  ,
                                     "c0_%s"     % name  ,
@@ -563,20 +552,7 @@ class Needham_pdf(Gauss_pdf) :
     @c2.setter
     def c2 ( self, value ) :
         self.set_value ( self.__c2 , value )
-    
-    @property
-    def n ( self ) :
-        """'n': n-parameter for CrystalBall-like powe-law (left) tail"""
-        return self.__n
-    @n.setter
-    def n ( self, value ) :
-        self.set_value ( self.__n , value ) 
         
-    @property
-    def N ( self ) :
-        """`N` : actual N-parameter used for CrystalBall-like power-law tail"""
-        return self.__N
-    
 models.append ( Needham_pdf )    
 # =============================================================================
 ## @class Apollonios_pdf
@@ -1397,23 +1373,22 @@ models.append ( Bukin_pdf )
 #
 #  \f[  f(y) = \dfrac{1}{\sqrt{\pi n}} \dfrac { \Gamma( \dfrac{n+1}{2}) } { \Gamma( \dfrac{n}{2}  ) }
 #  \left( 1 + \dfrac{y^2}{n} \right)^{ -\dfrac{n+1}{2}} \f], 
-#  where \f$ y = \dfrac{x - \mu}{\sigma} \f$  
+#  where 
+#  - \f$ y = \dfrac{x - \mu}{\sigma} \f$ 
+#  - \f$ N = N(n)\f$ 
 # 
-#  @attention Unlike the original definition parameter 'n' here is shifted by 1: n <- |n| + 1
 #  @see Ostap::Models::StudentT
 #  @see Ostap::Math::StudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class StudentT_pdf(PEAK) :
+class StudentT_pdf(PEAK,TailN) :
     """ Student-T distribution:
     http://en.wikipedia.org/wiki/Student%27s_t-distribution
     
-    f(dx) ~ (1 + dx^2/n)^{-(n+1)/2 }
+    f(dx) ~ (1 + dx^2/n)^{-(N+1)/2 }
     with
     dx = ( x - mu )  / sigma
-    
-    Note:
-    - unlike the original definition parameter 'n' here is shifted by 1: n <- |n| + 1
+    and N = N ( n ) 
     
     Parameters 
     - mean    : location 
@@ -1429,13 +1404,8 @@ class StudentT_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma ) 
-        #
-        # 
-        self.__n  = self.make_var ( n                    ,
-                                    'n_%s'        % name ,
-                                    '#n_{ST}(%s)' % name ,
-                                    None , 2 , 1.e-8 , 100  ) 
+        PEAK  .__init__  ( self , name , xvar , mean , sigma ) 
+        TailN .__init__  ( self , n = n )
         #
         ## finally build pdf
         # 
@@ -1456,14 +1426,6 @@ class StudentT_pdf(PEAK) :
             'n'         : self.n     ,
             }
 
-    @property
-    def n ( self ) :
-        """'n'-parameter for Student-T function (well, actually it is 'n+1' is used)"""
-        return self.__n
-    @n.setter
-    def n ( self, value ) :
-        self.set_value ( self.__n , value ) 
-    
 models.append ( StudentT_pdf )
 
 # =============================================================================
@@ -1474,7 +1436,7 @@ models.append ( StudentT_pdf )
 #  @see Ostap::Math::BifurcatedStudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BifurcatedStudentT_pdf(PEAK,SigmaLR) :
+class BifurcatedStudentT_pdf(PEAK,SigmaLR,TailNL,TailNR) :
     """ Bifurcated Student-T distribution:
 
     f(dx) ~ (1 + dx^2/n)^{-(n+1)/2 }
@@ -1505,17 +1467,8 @@ class BifurcatedStudentT_pdf(PEAK,SigmaLR) :
         # 
         PEAK    .__init__  ( self , name , xvar , mean , sigma     )
         SigmaLR .__init__  ( self , sigma = self.sigma , psi = psi )
-        
-        ## left exponent 
-        self.__nL =  self.make_var ( nL                     ,
-                                     'nL_%s'         % name ,
-                                     '#nL_{BST}(%s)' % name ,
-                                     None , 2 , 1.e-6 , 200 )
-        ## right exponent 
-        self.__nR =  self.make_var ( nR                    ,
-                                     'nR_%s'         % name ,
-                                     '#nR_{BST}(%s)' % name ,
-                                     None ,  2 , 1.e-6 , 200 ) 
+        TailNL  .__init__  ( self , n = nL )
+        TailNR  .__init__  ( self , n = nR )
         #
         ## finally build pdf
         # 
@@ -1540,22 +1493,6 @@ class BifurcatedStudentT_pdf(PEAK,SigmaLR) :
             'nR'        : self.nR    ,
             }
 
-    @property     
-    def nL ( self ) :
-        """'n'-parameter (left) for Bifurcated Student-T function  (actually 'n+1' is used)"""
-        return self.__nL
-    @nL.setter
-    def nL ( self, value ) :
-        self.set_value ( self.__nL , value ) 
-
-    @property
-    def nR ( self ) :
-        """'n'-parameter (right) for Bifurcated Student-T function (actually 'n+1' is used)"""
-        return self.__nR
-    @nR.setter
-    def nR ( self, value ) :
-        self.set_value ( self.__nR , value ) 
-        
 
 models.append ( BifurcatedStudentT_pdf )      
 
@@ -1673,8 +1610,6 @@ class PearsonIV_pdf(PEAK) :
         self.set_value ( self.__nu , value ) 
 
 models.append ( PearsonIV_pdf )      
-
-
 
 # =============================================================================
 ## @class SkewGenT_pdf

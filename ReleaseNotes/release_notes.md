@@ -11,6 +11,8 @@
   1. allow specificationof explicit suffix for various `rootID/hID/fID/dsID/...` methods 
   1. more improvement for reweighting machinery 
   1. histograms: move calculation of Riemann' sums from python to C++
+  1. more harmolization to power-law tails
+  1. more haromonisation for n/N for Student's t-functions 
 
 ## Backward  incompatible 
 

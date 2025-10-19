@@ -31,7 +31,11 @@ __all__     = (
     #
     'NameDuplicates'    , ## allow/disallow name duplicates
     'SETPARS'           , ## context manager to keep/preserve parameters
-    # 
+    ###
+    'TailN'             , ## helper mixing to define N-parameter for tail
+    'TailNL'            , ## helper mixing to define N-parameter for tail
+    'TailNR'            , ## helper mixing to define N-parameter for tail
+    ##
     'Tail'              , ## helper mixing to define power-law tail 
     'LeftTail'          , ## helper mixing to define power-law (left) tail
     'RightTail'         , ## helper mixing to define power-law (right) tail
@@ -3844,9 +3848,9 @@ class AsymVars(object) :
 
 # =============================================================================
 ## @class TwoSigmas
-#  Helper mixin class to get left/right sigmas from "average"  sigma and asymmetries 
+#  Helper mixin class to get 'average' sigma and asymmetries from left/right sigmas
 class TwoSigmas(object) :
-    """ Helper mixin class to get left/rigth sigmas from "average"  sigma and asymmetries 
+    """ Helper mixin class to get 'average' sigma and asymmetries from left/right sigmas
     """
     def __init__ ( self          ,
                    sigmaL        ,
@@ -3890,9 +3894,9 @@ class TwoSigmas(object) :
 
 # =============================================================================
 ## @class SigmaLR
-#  Helper mixin class to get left/rigth sigmas from "average"  sigma and asymmetries 
+#  Helper mixin class to get left/rigth sigmas from "average"  sigma and asymmetry
 class SigmaLR(object) :
-    """ Helper mixin class to get left/rigth sigmas from "average"  sigma and asymmetries 
+    """ Helper mixin class to get left/rigth sigmas from "average"  sigma and asymmetry 
     """
     def __init__ ( self         ,
                    sigma        ,
@@ -3926,81 +3930,255 @@ class SigmaLR(object) :
         self.__AV_SIGMA_LR.psi = value 
         
 # =============================================================================
+## Power-law tails 
+# =============================================================================
+
+# =============================================================================
+## @class TailN 
+#  Helper mixin class to power-law tails
+#  used for CrystalBall-like functions
+# 
+# It defines two properties
+# - <code>n</code> (External) parameter for power-law tail
+# - <code>N</code> (Internal) parameter for power-law tail
+# @see Ostap::Math::Tail::N
+class TailN(object) :  
+    """ Helper mixin class to define power-law power-law tails 
+    used for CrystalBall-like functions
+    
+     It defines two properties
+     - `n` (External) n-parameter for power-law tail
+     - `N` (Internal) n-parameter for power-law tail   
+     
+     see `Ostap.Math.Tail.N`
+
+    """
+    def __init__ ( self               ,   
+                   n           = None ,
+                   name_n      = ''   ,
+                   title_n     = ''   ,
+                   name_N      = ''   ,
+                   title_N     = ''   ) :
+
+        ## get the name
+        name = self.name
+
+        if not name_n  : name_n  = 'n_%s'  % name
+        if not name_N  : name_N  = 'N_%s'  % name
+        
+        if not title_n : title_n = 'n(%s)' % name
+        if not title_N : title_N = 'N(%s)' % name
+                
+        ## parameter n for power=law tails 
+        self.__n  = self.make_var ( n       ,
+                                    name_n  , 
+                                    title_n , 
+                                    None    , 1.0 , -1.0 , 200 )
+                
+        ## The actual power-law exponent : N = N(n) 
+        self.__N = Ostap.MoreRooFit.TailN ( name_N , title_N , self.__n )
+              
+    @property
+    def n ( self ) :
+        """'n' :  n-parameeter for power-law tail """
+        return self.__n
+    @n.setter
+    def n ( self, value ) :   
+        self.set_value ( self.__n , value )        
+        
+    @property
+    def N ( self ) :
+        """`N` : actual N-parameter used for power-law tail"""
+        return self.__N
+
+# =============================================================================
+## @class TailNL 
+#  Helper mixin class for left power-law tails
+# - used for CrystalBall-like functions
+#
+# It defines two properties:
+# - <code>nL</code> (External) parameter for left power-law tail
+# - <code>NL</code> (Internal) parameter for right power-law tail
+# @see Ostap::Math::Tail::N
+class TailNL(object) :  
+    """ Helper mixin class to define power-law power-law tails 
+    - used for CrystalBall-like functions
+    
+     It defines two properties
+     - `nL` (External) n-parameter for left power-law tail
+     - `NL` (Internal) n-parameter for left power-law tail   
+     
+     see `Ostap.Math.Tail.N`
+
+    """
+    def __init__ ( self               ,   
+                   n           = None ,
+                   name_n      = ''   ,
+                   title_n     = ''   ,
+                   name_N      = ''   ,
+                   title_N     = ''   ) :
+
+        ## get the name
+        name = self.name
+
+        if not name_n  : name_n  = 'nL_%s'     % name
+        if not name_N  : name_N  = 'NL_%s'     % name
+        
+        if not title_n : title_n = 'n_{L}(%s)' % name
+        if not title_N : title_N = 'N_{L}(%s)' % name
+                
+        ## parameter n for power=law tails 
+        self.__nL  = self.make_var ( n       ,
+                                     name_n  , 
+                                     title_n , 
+                                     None    , 1.0 , -1.0 , 200 )
+                
+        ## The actual power-law exponent : N = N(n) 
+        self.__NL = Ostap.MoreRooFit.TailN ( name_N , title_N , self.__nL )
+              
+    @property
+    def nL ( self ) :
+        """'n:' :  n-parameeter for left power-law tail """
+        return self.__nL
+    @nL.setter
+    def nL ( self, value ) :   
+        self.set_value ( self.__nL , value )        
+        
+    @property
+    def NL ( self ) :
+        """`NL` : actual N-parameter used for left power-law tail"""
+        return self.__NL
+
+# =============================================================================
+## @class TailNR 
+#  Helper mixin class for right power-law tails
+# - used for CrystalBall-like functions
+#
+# It defines two properties:
+# - <code>nL</code> (External) parameter for right power-law tail
+# - <code>NL</code> (Internal) parameter for rightpower-law tail
+# @see Ostap::Math::Tail::N
+class TailNR(object) :  
+    """ Helper mixin class to define right power-law tails 
+    - used for Crystall-ball like functions
+    
+     It defines two properties
+     - `nR` (External) n-parameter for right power-law tail
+     - `NR` (Internal) n-parameter for right power-law tail   
+     
+     see `Ostap.Math.Tail.N`
+    """
+    def __init__ ( self               ,   
+                   n           = None ,
+                   name_n      = ''   ,
+                   title_n     = ''   ,
+                   name_N      = ''   ,
+                   title_N     = ''   ) :
+
+        ## get the name
+        name = self.name
+
+        if not name_n  : name_n  = 'nR_%s'     % name
+        if not name_N  : name_N  = 'NR_%s'     % name
+        
+        if not title_n : title_n = 'n_{R}(%s)' % name
+        if not title_N : title_N = 'N_{R}(%s)' % name
+                
+        ## parameter n for power=law tails 
+        self.__nR  = self.make_var ( n       ,
+                                     name_n  , 
+                                     title_n , 
+                                     None    , 1.0 , -1.0 , 200 )
+                
+        ## The actual power-law exponent : N = N(n) 
+        self.__NR = Ostap.MoreRooFit.TailN ( name_N , title_N , self.__nR )
+              
+    @property
+    def nR ( self ) :
+        """'nR:' :  n-parameeter for right power-law tail """
+        return self.__nR
+    @nR.setter
+    def nR ( self, value ) :   
+        self.set_value ( self.__nR , value )        
+        
+    @property
+    def NR ( self ) :
+        """`NR` : actual N-parameter used for right power-law tail"""
+        return self.__NR
+
+
+# =============================================================================
 ## @class Tail
 #  Helper mixin class to define CrystalBall-like power-law tails
-class Tail(object) :
+class Tail(TailN) :
     """ Helper mixin class to define CrystalBall-like power-law tails
-    """
     
+    It defines four properties:
+    - `alpha` : alpha-parameter for power-law tail  (same as `a`)
+    - `a` :     alpha-parameter for power-law tail  (same as `alpha`)
+    - `n` :     (External) parameter for power-law tail
+    - `N` :     (Internal) parameter for power-law tail   
+    
+    see `Ostap.Math.Tail.N`
+    """
     def __init__ ( self               ,
                    alpha       = None ,
                    n           = None ,
-                   name_alpha  = ''   ,                   
+                   name_alpha  = ''   ,
                    title_alpha = ''   , 
-                   name_n      = ''   ,
+                   name_n      = ''   , 
                    title_n     = ''   , 
                    name_N      = ''   ,
                    title_N     = ''   ) :
 
+        TailN.__init__ ( self              , 
+                        n       = n        ,
+                        name_n  = name_n   , 
+                        title_n = title_n  , 
+                        name_N  = name_N   , 
+                        title_N = title_N  )  
+
         ## get the name 
         name = self.name
         
-        if not name_alpha  : name_alpha  = 'alpha_%s'    % name
-        if not name_n      : name_n      = 'n_%s'        % name        
-        if not name_N      : name_N      = 'N_%s'        % name
-        
+        if not name_alpha  : name_alpha  = 'alpha_%s'    % name 
         if not title_alpha : title_alpha = '#alpha(%s)'  % name        
-        if not title_n     : title_n     = 'n(%s)'       % name
-        if not title_N     : title_N     = 'N(%s)'       % name
-        
-        ## parameter alpha 
+
+        ## parameter alpha         ## parameter alpha         ## parameter alpha 
         self.__alpha = self.make_var ( alpha       ,
                                        name_alpha  ,
                                        title_alpha , 
                                        None        , 1.5 ,  0.3 , 5.0 )
-        ## parameter n 
-        self.__n     = self.make_var ( n           ,
-                                       name_n      ,
-                                       title_n     , 
-                                       None        , 1.0 , -1.0 , 100 )
-        
-        ## N = N(n) 
-        self.__N  = Ostap.MoreRooFit.TailN ( self.roo_name ( name_N ) , title_N  , self.__n )
-        
     @property
     def alpha ( self ) :
-        """'alpha': alpha-parameter for CrystalBall-like power-law tail"""
-        return self.__alpha
+        """'alpha': alpha-parameter for CrystalBall-like power-law tail
+        """
+        return self.__alpha 
     @alpha.setter
     def alpha ( self, value ) :
         self.set_value ( self.__alpha , value ) 
-
+        
     @property
     def a ( self ) :
-        """'a:': alpha-parameter for CrystalBall-like power-law tail (same as 'aalpha')"""
+        """'a:': alpha-parameter for CrystalBall-like power-law tail (same as 'alpha')"""
         return self.alpha
     @a.setter
     def a ( self, value ) :
         self.alpha = value 
 
-    @property
-    def n ( self ) :
-        """'n': n-parameter for CrystalBall-like powe-law tail"""
-        return self.__n
-    @n.setter
-    def n ( self, value ) :
-        self.set_value ( self.__n , value ) 
-        
-    @property
-    def N ( self ) :
-        """`N` : actual N-parameter used for CrystalBall-like power-law tail"""
-        return self.__N
-
 # =============================================================================
 ## @class LeftTail
 #  Helper mixin class to define CrystalBall-like power-law tails
-class LeftTail(object) :
+class LeftTail(TailNL) :
     """ Helper mixin class to define CrystalBall-like power-law tails
+    
+    It defines four properties:
+    - `alphaL` : alpha-parameter for left power-law tail  (same as `aL`)
+    - `aL` :     alpha-parameter for left power-law tail  (same as `alphaL`)
+    - `nL` :     (External) n-parameter for left  power-law tail
+    - `NL` :     (Internal) n-parameter for left power-law tail   
+    
+    see `Ostap.Math.Tail.N`
     """
     
     def __init__ ( self               ,
@@ -4013,30 +4191,24 @@ class LeftTail(object) :
                    name_N      = ''   ,
                    title_N     = ''   ) :
 
+        TailNL.__init__ ( self              , 
+                          n       = n        ,
+                          name_n  = name_n   , 
+                          title_n = title_n  , 
+                          name_N  = name_N   , 
+                          title_N = title_N  )  
+
         ## get the name 
         name = self.name
         
         if not name_alpha  : name_alpha  = 'alphaL_%s'       % name
-        if not name_n      : name_n      = 'nL_%s'           % name        
-        if not name_N      : name_N      = 'NL_%s'           % name
-        
         if not title_alpha : title_alpha = '#alpha_{L}(%s)'  % name        
-        if not title_n     : title_n     = 'n_{L}(%s)'       % name
-        if not title_N     : title_N     = 'N_{L}(%s)'       % name
         
         ## parameter alpha 
         self.__alphaL = self.make_var ( alpha       ,
                                         name_alpha  ,
                                         title_alpha , 
                                         None        , 1.5 ,  0.3 , 5.0 )
-        ## parameter n 
-        self.__nL     = self.make_var ( n           ,
-                                        name_n      ,
-                                        title_n     , 
-                                        None        , 1.0 , -1.0 , 100 )
-        
-        ## N = N(n)
-        self.__NL = Ostap.MoreRooFit.TailN ( self.roo_name ( name_N ) , title_N  , self.__nL )
         
     @property
     def alphaL ( self ) :
@@ -4054,26 +4226,20 @@ class LeftTail(object) :
     def aL ( self, value ) :
         self.alphaL = value 
 
-    @property
-    def nL ( self ) :
-        """'nL': n-parameter for CrystalBall-like powe-law (left) tail"""
-        return self.__nL
-    @nL.setter
-    def nL ( self, value ) :
-        self.set_value ( self.__nL , value ) 
-        
-    @property
-    def NL ( self ) :
-        """`NL` : actual N-parameter used for CrystalBall-like power-law (left) tail"""
-        return self.__NL
-
 # =============================================================================
 ## @class RightTail
 #  Helper mixin class to define CrystalBall-like (right) power-law tails
-class RightTail(object) :
+class RightTail(TailNR) :
     """ Helper mixin class to define CrystalBall-like (right) power-law tails
-    """
     
+    It defines four properties:
+    - `alphaR` : alpha-parameter for right power-law tail  (same as `aR`)
+    - `aR` :     alpha-parameter for right power-law tail  (same as `alphaR`)
+    - `nR` :     (External) n-parameter for right  power-law tail
+    - `NR` :     (Internal) n-parameter for rigt power-law tail   
+    
+    see `Ostap.Math.Tail.N`    
+    """
     def __init__ ( self               ,
                    alpha       = None ,
                    n           = None ,
@@ -4084,30 +4250,24 @@ class RightTail(object) :
                    name_N      = ''   ,
                    title_N     = ''   ) :
 
+        TailNR.__init__ ( self              , 
+                          n       = n        ,
+                          name_n  = name_n   , 
+                          title_n = title_n  , 
+                          name_N  = name_N   , 
+                          title_N = title_N  ) 
+         
         ## get the name 
         name = self.name
         
         if not name_alpha  : name_alpha  = 'alphaR_%s'       % name
-        if not name_n      : name_n      = 'nR_%s'           % name        
-        if not name_N      : name_N      = 'NR_%s'           % name
-        
         if not title_alpha : title_alpha = '#alpha_{R}(%s)'  % name        
-        if not title_n     : title_n     = 'n_{R}(%s)'       % name
-        if not title_N     : title_N     = 'N_{R}(%s)'       % name
         
         ## parameter alpha 
         self.__alphaR = self.make_var ( alpha       ,
                                         name_alpha  ,
                                         title_alpha , 
                                         None        , 1.5 ,  0.3 , 5   )
-        ## parameter n 
-        self.__nR     = self.make_var ( n           ,
-                                        name_n      ,
-                                        title_n     , 
-                                        None        , 1.0 , -1.0 , 100 )
-
-        ## N = N(n) 
-        self.__NR = Ostap.MoreRooFit.TailN ( self.roo_name ( name_N ) , title_N  , self.__nR )
         
     @property
     def alphaR ( self ) :
@@ -4125,19 +4285,6 @@ class RightTail(object) :
     def aR ( self, value ) :
         self.alphaR = value 
 
-    @property
-    def nR ( self ) :
-        """'nR': n-parameter for CrystalBall-like powe-law (left) tail"""
-        return self.__nR
-    @nR.setter
-    def nR ( self, value ) :
-        self.set_value ( self.__nR , value ) 
-        
-    @property
-    def NR ( self ) :
-        """`NR` : actual N-parameter used for CrystalBall-like power-law (right) tail"""
-        return self.__NR
-        
 # =============================================================================
 if '__main__' == __name__ :
     

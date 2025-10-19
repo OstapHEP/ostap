@@ -2117,7 +2117,8 @@ namespace Ostap
       // ======================================================================
       inline double nu     () const  { return m_n      ; }
       inline double n      () const  { return m_n      ; }
-      inline double N      () const  { return m_n + 1  ; }
+      /// actual n-parameter 
+      inline double N      () const  { return Ostap::Math::Tail::N ( m_n ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2223,11 +2224,11 @@ namespace Ostap
       // ======================================================================
       inline double nuL     () const  { return m_nL      ; }
       inline double nL      () const  { return m_nL      ; }
-      inline double NL      () const  { return m_nL + 1  ; } // nL + 1 
+      inline double NL      () const  { return Ostap::Math::Tail::N ( m_nL ) ; } 
       // =========== ===========================================================
       inline double nuR     () const  { return m_nR      ; }
       inline double nR      () const  { return m_nR      ; }
-      inline double NR      () const  { return m_nR + 1  ; } // nR + 1 
+      inline double NR      () const  { return Ostap::Math::Tail::N ( m_nR ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -2410,7 +2411,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2537,7 +2538,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2649,7 +2650,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
