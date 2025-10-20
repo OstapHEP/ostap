@@ -401,8 +401,6 @@ class Operation2(Function) :
     """
     def __init__ ( self , a ,  b , oper , symbol = '?' , prefix = '' ) : 
 
-        print  ( 'Operation2:' , typename ( a ) , typename ( b ) , symbol, prefix , a , b )
-        
         afun = a
         bfun = b
 
@@ -464,14 +462,10 @@ class Operation2(Function) :
             ## elif isinstance ( bb , Operation2 ) :        
             ##     native.append ( ( aa        , bb.result ) )
 
-            print ( '#native' , len ( native ) , native )
             for i , (_a , _b )  in enumerate ( native ) :
                 if funab is None : 
-                    print ( ' try1: ' , i , typename  ( _a ) , typename ( _b ) , _a , _b )
                     try :
-                        print ( ' try2: ' , i , typename  ( _a ) , typename ( _b ) , _a , _b , oper )
                         funab = oper ( _a , _b )
-                        print ( ' try3: ' , i, typename  ( _a ) , typename ( _b ) , _a , _b )
                         if not callable ( funab ) :
                             funab = None 
                             raise TypeError ()
@@ -483,14 +477,13 @@ class Operation2(Function) :
                         pass 
                     except: 
                         pass
-                    print ( ' try4: ' , 'i' , typename  ( _a ) , typename ( _b ) , _a , _b )
             del native
                     
         ## use generic wrapper, if no native operations are defined 
         if not funab :
             funab = WrapOper2 ( afun , bfun , oper )
             self.__shortcut = False 
-            logger.info ('Generic operation is used %s vs %s' % ( type ( a ) , typename ( b ) ) ) 
+            ## logger.info ('Generic operation is used %s vs %s' % ( type ( a ) , typename ( b ) ) ) 
 
         ## store the result 
         self.__funab  = funab 
