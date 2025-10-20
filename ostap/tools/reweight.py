@@ -62,8 +62,7 @@ tag_reweightings = 'REWEIGHTINGS'
 ## tag in DBASE for collection of comparsoon plots
 tag_comparisons  = 'COMPARISON_PLOTS'
 # =============================================================================
-## Try to normalize
-#  
+## Try to normalize  
 def normalize_data ( data , another = None  ) :
     """ Make a try to normalize the distribution 
     """
@@ -729,6 +728,10 @@ class WeightingPlot(object) :
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
         return self.__mc
+    @mc_histo.setter
+    def mc_histo ( self , value ) :
+        self.__mc = value
+        
     @property
     def projector ( self ) :
         """`projector` :  callable function to build MC distribution:
@@ -1038,9 +1041,12 @@ def makeWeights  ( dataset                      ,
             logger.warning ( "%s: MC statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
             
         # =====================================================================
+        
         ## make a try to normalize MC projection:
         hmc = normalize_data ( hmc0 , hdata )
+        print ( 'NORMALIZED ? ' , hmc is hmc0 , hmc.is_density() ,  hmc.riemann_sum() ) 
 
+    
         # =====================================================================
         ## calculate  the reweighting factor : a bit conservative (?)
         #  this is the only important line
