@@ -4,6 +4,7 @@
 // STD& STL
 // ============================================================================
 #include <cmath>
+#include <vector>
 #include <map>
 #include <array>
 #include <climits>
@@ -21,6 +22,7 @@
 #include "Ostap/Polynomials.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Bernstein.h"
+#include "Ostap/Bernstein1D.h"
 #include "Ostap/Interpolants.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
@@ -28,7 +30,8 @@
 // ============================================================================
 #include "local_math.h"
 #include "local_hash.h"
-#include "syncedcache.h"  // the cache 
+#include "syncedcache.h"  // the cache
+#include "status_codes.h"
 #include "bernstein_utils.h"
 // ============================================================================
 /** @file 
@@ -332,7 +335,9 @@ Ostap::Math::Bernstein::indefinite_integral
 ( const double C ) const 
 {
   //
-  m_aux[0] = 0  ;
+  if ( degree() + 2 > m_aux.size() ) { m_aux.resize ( degree () + 2 ) ; }
+  //
+  m_aux [ 0 ] = 0  ;
   std::partial_sum   ( m_pars.begin () , m_pars.end   () ,  m_aux.begin() + 1 ) ;
   Ostap::Math::scale ( m_aux , ( m_xmax - m_xmin ) / npars() ) ;
   //
@@ -371,6 +376,8 @@ Ostap::Math::Bernstein::integral
   //
   // make integration: 
   //
+  if ( degree() + 2 > m_aux.size() ) { m_aux.resize ( degree () + 2 ) ; }
+  //
   m_aux [ 0 ] = 0 ;
   std::partial_sum ( m_pars.begin () , m_pars.end () , m_aux.begin() + 1 ) ;
   Ostap::Math::scale ( m_aux , ( m_xmax - m_xmin ) / npars() ) ;
@@ -388,6 +395,8 @@ Ostap::Math::Bernstein::derivative () const
   //
   if ( degree () < 1 ) { return Bernstein ( 0 , m_xmin , m_xmax ) ; }
   //
+  if ( degree() + 2 > m_aux.size() ) { m_aux.resize ( degree () + 2 ) ; }
+  //
   std::adjacent_difference ( m_pars.begin () , m_pars.end() , m_aux.begin () ) ;
   Ostap::Math::scale ( m_aux , ( npars () - 1 )/ ( m_xmax - m_xmin ) ) ;
   //
@@ -401,6 +410,8 @@ Ostap::Math::Bernstein::derivative
 {
   if      ( m_pars.size() <= 1       ) { return 0 ; }
   else if ( x < m_xmin || x > m_xmax ) { return 0 ; }
+  //
+  if ( degree() + 2 > m_aux.size() ) { m_aux.resize ( degree () + 2 ) ; }
   //
   std::adjacent_difference ( m_pars.begin () , m_pars.end() , m_aux.begin() ) ;
   //
@@ -435,14 +446,14 @@ double Ostap::Math::Bernstein::evaluate ( const double x ) const
   const long double t1 = 1 - t0  ;
   //
   // start de casteljau algorithm:
-  //
+  if ( degree() + 2 > m_aux.size() ) { m_aux.resize ( degree () + 2 ) ; }
   std::copy ( m_pars.begin() , m_pars.end() , m_aux.begin() ) ;
   return Ostap::Math::Utils::casteljau ( m_aux.begin ()            , 
                                          m_aux.begin () + npars () , t0 , t1 ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::operator+=( const double a ) 
+Ostap::Math::Bernstein::iadd( const double a ) 
 {
   if   ( s_zero ( a ) ) { return *this ; }
   Ostap::Math::shift ( m_pars , a ) ;
@@ -450,7 +461,7 @@ Ostap::Math::Bernstein::operator+=( const double a )
 }
 // ============================================================================
 Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::operator*=( const double a ) 
+Ostap::Math::Bernstein::imul( const double a ) 
 {
   if      ( s_equal ( a , 1 ) ) { return *this ; }
   else if ( s_zero  ( a     ) ) { std::fill ( m_pars.begin() , m_pars.end() , 0 ) ; }
@@ -459,7 +470,7 @@ Ostap::Math::Bernstein::operator*=( const double a )
 }
 // ============================================================================
 Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::operator-=( const double a ) 
+Ostap::Math::Bernstein::isub( const double a ) 
 {
   if ( s_zero ( a ) ) { return *this ; }
   Ostap::Math::shift ( m_pars , -a ) ;
@@ -467,10 +478,16 @@ Ostap::Math::Bernstein::operator-=( const double a )
 }
 // ============================================================================
 Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::operator/=( const double a ) 
+Ostap::Math::Bernstein::idiv( const double value ) 
 {
-  if   ( s_equal ( a , 1 ) ) { return *this ; }
-  Ostap::Math::scale ( m_pars , 1/a ) ;
+  //
+  Ostap::Assert ( value                               , 
+                  "Division by zero"                  , 
+                  "Ostap::Math::Bernstein::idiv"      , 
+                  ZERO_DIVISION , __FILE__ , __LINE__ ) ;
+  //
+  if   ( s_equal ( value , 1 ) ) { return *this ; }
+  Ostap::Math::scale ( m_pars , 1/value ) ;
   return *this ;
 }
 // ============================================================================
@@ -482,58 +499,184 @@ Ostap::Math::Bernstein::operator-() const
   return b ;
 }
 // ============================================================================
-// Sum of Bernstein polynomial and a constant 
+// Add       polynomials
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__add__   ( const double value ) const 
-{ return (*this) + value ; }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::Bernstein& other ) 
+{
+  if ( this == &other ) { *this *= 2 ; return *this; }
+  //
+  // use the same range! 
+  if ( !s_equal ( xmin () , other.xmax () ) ||
+       !s_equal ( xmax () , other.xmax () ) )
+    { return iadd ( Bernstein ( other , xmin() , xmax () ) ) ; } 
+  //
+  if      ( degree()       < other.degree() ) 
+  { 
+    *this = elevate ( other.degree() - degree() ) ; 
+    return iadd ( other ) ;
+  }
+  else if ( other.degree() < degree()       ) 
+  {
+    const Bernstein tmp { other.elevate ( degree() - other.degree() ) } ;
+    return iadd ( tmp ) ;
+  }
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars [ i ] += other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
 // ============================================================================
-// Sum of Bernstein polynomial and a constant 
+// Subtract polynomials 
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__radd__  ( const double value ) const 
-{ return value + (*this) ; }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::Bernstein& other ) 
+{
+  if ( this == &other ) { *this *= 0 ; return *this; }
+  //
+  if ( !s_equal ( xmin () , other.xmin () ) ||
+       !s_equal ( xmax () , other.xmax () ) )
+    { return isub  ( Bernstein ( other , xmin () , xmax () ) ) ;  }
+  //
+  if      ( degree()       < other.degree() ) 
+  {
+    *this = elevate ( other.degree() - degree() ) ; 
+    return isub ( other ) ;
+  }
+  else if ( other.degree() < degree() ) 
+  {
+    const Bernstein tmp { elevate ( degree() - other.degree() ) } ;
+    return isub ( tmp ) ;
+  }
+  //
+  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
+  { m_pars[i] -= other.m_pars [ i ] ; }
+  //
+  return *this ;
+}
 // ============================================================================
-// Product of Bernstein polynomial and a constant
+// Add       polynomials
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__mul__   ( const double value ) const 
-{ return (*this) * value ; }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::LegendreSum& other ) 
+{ return iadd ( Bernstein ( other , xmin() , xmax () ) ) ; }
 // ============================================================================
-// Product of Bernstein polynomial and a constant
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::LegendreSum& other ) 
+{ return isub ( Bernstein ( other , xmin() , xmax () ) ) ; }
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__rmul__  ( const double value ) const 
-{ return value * (*this) ; }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::ChebyshevSum& other ) 
+{ return iadd ( Bernstein ( other , xmin() , xmax() ) ) ; }
 // ============================================================================
-// Subtract a constant from Benrstein polynomial
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::ChebyshevSum& other ) 
+{ return isub ( Bernstein ( other , xmin () , xmax () ) ) ; }
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__sub__  ( const double value ) const 
-{ return (*this) - value ; }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::Polynomial& other ) 
+{ return iadd ( Bernstein ( other , xmin() , xmax() ) ) ; }
 // ============================================================================
-// Subtract Bernstein polynomial from a constant 
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::Polynomial& other ) 
+{ return isub ( Bernstein ( other , xmin () , xmax() ) ) ; }
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__rsub__ ( const double value ) const 
-{ return value - (*this) ; }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::KarlinShapley& other ) 
+{ return iadd ( Polynomial ( other ) ) ; }
 // ============================================================================
-// Divide Benrstein polynomial by a constant 
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::KarlinShapley& other ) 
+{ return isub ( Polynomial ( other ) ) ; }
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein:: __truediv__   ( const double value ) const 
-{ return (*this) / value ; }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::KarlinStudden& other ) 
+{ return iadd ( Polynomial ( other ) ) ; }
 // ============================================================================
-// Negate Bernstein polynomial 
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::KarlinStudden& other ) 
+{ return isub ( Polynomial ( other ) ) ; } 
 // ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::__neg__ ()  const 
-{ return -(*this); }
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::BernsteinEven& other ) 
+{ return iadd ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::BernsteinEven& other ) 
+{ return isub ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::Positive& other ) 
+{ return iadd ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::Positive& other )
+{ return isub ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::Monotonic& other ) 
+{ return iadd ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::Monotonic& other ) 
+{ return isub ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::Convex& other ) 
+{ return iadd ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::Convex& other ) 
+{ return isub ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::ConvexOnly& other ) 
+{ return iadd ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::ConvexOnly& other ) 
+{ return isub ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::iadd 
+( const Ostap::Math::Bernulli& other ) 
+{ return iadd ( Polynomial ( other ) ) ; }
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::isub
+( const Ostap::Math::Bernulli& other ) 
+{ return isub ( Polynomial ( other ) ) ; }
+// ============================================================================
+
 // ============================================================================
 // the sum two Bernstein polynomials
 // ============================================================================
 Ostap::Math::Bernstein  
-Ostap::Math::Bernstein::sum ( const Ostap::Math::Bernstein& other ) const 
+Ostap::Math::Bernstein::add
+( const Ostap::Math::Bernstein& other ) const 
 {
   if ( this == &other ) 
   {
@@ -574,7 +717,8 @@ Ostap::Math::Bernstein::sum ( const Ostap::Math::Bernstein& other ) const
 // subtract Bernstein polynomials (with the same domain!)
 // =============================================================================
 Ostap::Math::Bernstein  
-Ostap::Math::Bernstein::subtract ( const Ostap::Math::Bernstein& other ) const
+Ostap::Math::Bernstein::sub
+( const Ostap::Math::Bernstein& other ) const
 {
   if ( this == &other ) { return Bernstein ( degree() , xmin() , xmax() ) ; }
   //
@@ -605,72 +749,367 @@ Ostap::Math::Bernstein::subtract ( const Ostap::Math::Bernstein& other ) const
   //
   return result ;
 }
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::LegendreSum& other ) const
+{ return add ( Bernstein ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::LegendreSum& other ) const
+{ return sub ( Bernstein ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::ChebyshevSum& other ) const
+{ return add ( Bernstein ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::ChebyshevSum& other ) const
+{ return sub ( Bernstein ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::Polynomial& other ) const
+{ return add ( Bernstein ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::Polynomial& other ) const
+{ return sub ( Bernstein ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::KarlinShapley& other ) const
+{ return add ( Polynomial ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::KarlinShapley& other ) const
+{ return sub ( Polynomial ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::KarlinStudden& other ) const
+{ return add ( Polynomial ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::KarlinStudden& other ) const
+{ return sub ( Polynomial ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::BernsteinEven& other ) const
+{ return add ( other.bernstein () ) ; }  
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::BernsteinEven& other ) const
+{ return sub ( other.bernstein () ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::Positive& other ) const
+{ return add ( other.bernstein () ) ; }  
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::Positive& other ) const
+{ return sub ( other.bernstein () ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::Monotonic& other ) const
+{ return add ( other.bernstein () )  ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::Monotonic& other ) const
+{ return sub ( other.bernstein () ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::Convex& other ) const
+{ return add ( other.bernstein () ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::Convex& other ) const
+{ return sub ( other.bernstein () ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::ConvexOnly& other ) const
+{ return add ( other.bernstein () )  ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::ConvexOnly& other ) const
+{ return sub ( other.bernstein () ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::add
+( const Ostap::Math::Bernulli& other ) const
+{ return add ( Polynomial ( other ) ) ; } 
+// =============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::sub 
+( const Ostap::Math::Bernulli& other ) const
+{ return sub ( Polynomial ( other ) ) ; } 
+
+
 // ============================================================================
-// Add       polynomials (with the same domain!)
-// ============================================================================
-Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::isum
-( const Ostap::Math::Bernstein& other ) 
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::Bernstein& other )
 {
-  if ( this == &other ) { *this *= 2 ; return *this; }
   //
-  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )               ,
-                  "Cannot isum Bernstein with different domains"  , 
-                  "Ostap::Math::Bernstein"                        , 
-                  Ostap::StatusCode ( 520 )                       )  ;
+  if ( !s_equal ( xmin () , other.xmin() ) || 
+       !s_equal ( xmax () , other.xmax() ) ) 
+    { return imul ( Bernstein ( other , xmin() , xmax() ) ) ; }
   //
-  if      ( degree()       < other.degree() ) 
-  { 
-    *this = elevate ( other.degree() - degree() ) ; 
-    return isum ( other ) ;
-  }
-  else if ( other.degree() < degree()       ) 
+  const unsigned short m =       degree() ;
+  const unsigned short n = other.degree() ;
+  //
+  if ( 0 == m )
   {
-    const Bernstein tmp { other.elevate ( degree() - other.degree() ) } ;
-    return isum ( tmp ) ;
+    const double scale = m_pars [ 0 ] ;
+    *this = other ;
+    return imul ( scale ) ;
   }
+  if ( 0 == n ) { return imul ( other.m_pars[0] ) ;  }
   //
-  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
-  { m_pars [ i ] += other.m_pars [ i ] ; }
+  if ( zero() || other.zero() )
+    {
+      m_pars.resize ( m + n + 1 ) ;
+      m_aux .resize ( m + n + 2 ) ;
+      std::fill ( m_pars.begin () , m_pars.end() , 0.0 ) ;
+      return *this ;      
+    }
   //
+  std::vector<double> result ( m + n + 1 )  ;
+  m_aux .resize ( m + n + 2 ) ;
+  //
+  Ostap::Math::Utils::b_multiply
+    ( m_pars        . begin () ,         m_pars . end () ,
+      other.m_pars  . begin () , other . m_pars . end () , 
+      result        . begin () ) ;
+  //
+  std::swap ( m_pars , result ) ;
+  // 
   return *this ;
 }
 // ============================================================================
-// Subtract polynomials (with the same domain!)
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::LegendreSum& other )
+{ return imul ( Bernstein ( other ) ) ; } 
 // ============================================================================
-Ostap::Math::Bernstein&
-Ostap::Math::Bernstein::isub
-( const Ostap::Math::Bernstein& other ) 
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::ChebyshevSum& other )
+{ return imul ( Bernstein ( other ) ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::Polynomial& other )
+{ return imul ( Bernstein ( other ) ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::KarlinShapley& other )
+{ return imul ( Polynomial ( other ) ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::KarlinStudden& other )
+{ return imul ( Polynomial ( other ) ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::Bernulli& other )
+{ return imul ( Polynomial ( other ) ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::BernsteinEven& other )
+{ return imul ( other.bernstein ()  ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::Positive& other )
+{ return imul ( other.bernstein ()  ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::Monotonic& other )
+{ return imul ( other.bernstein ()  ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::Convex& other )
+{ return imul ( other.bernstein ()  ) ; } 
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::imul
+( const Ostap::Math::ConvexOnly& other )
+{ return imul ( other.bernstein ()  ) ; } 
+
+// ============================================================================
+Ostap::Math::Bernstein&  
+Ostap::Math::Bernstein::ipow
+( const unsigned short n )
 {
-  if ( this == &other ) { *this *= 0 ; return *this; }
   //
-  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) &&
-                  s_equal ( xmax() , other.xmax() )               ,
-                  "Cannot isub Bernstein with different domains"  , 
-                  "Ostap::Math::Bernstein"                        , 
-                  Ostap::StatusCode ( 521 )                       )  ;
-  //
-  if      ( degree()       < other.degree() ) 
+  if      ( 0 == n )
   {
-    *this = elevate ( other.degree() - degree() ) ; 
-    return isub ( other ) ;
+    m_pars.resize ( 1 ) ;
+    m_aux .resize ( 2 ) ;
+    std::fill ( m_pars.begin() , m_pars.end () , 1.0 ) ;
+    return *this        ;
   }
-  else if ( other.degree() < degree() ) 
-  {
-    const Bernstein tmp { elevate ( degree() - other.degree() ) } ;
-    return isub ( tmp ) ;
-  }
+  else if ( 1 == n ) { return        *this   ; }
+  else if ( 2 == n ) { return imul ( *this ) ; }
   //
-  for ( unsigned short i = 0 ; i < npars() ; ++i ) 
-  { m_pars[i] -= other.m_pars [ i ] ; }
+  Bernstein result { 0 , xmin() , xmax() } ; result.m_pars[0] = 1 ;
+  if ( n % 2 ) { result = *this ; } 
   //
+  unsigned long   NN { n } ;
+  while ( NN >>= 1 )
+    {
+      imul ( *this ) ;
+      if ( NN % 2 ) { result.imul ( *this ) ; }
+    }
+  //
+  swap ( result ) ;
   return *this ;
+}
+// ============================================================================
+// multiply two Bernstein polynomials
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::Bernstein& other ) const 
+{
+  //
+  if ( !s_equal ( xmin () , other.xmin() ) || 
+       !s_equal ( xmax () , other.xmax() ) ) 
+  {
+    const double x_min = std::min ( xmin() , other.xmin() ) ;
+    const double x_max = std::max ( xmax() , other.xmax() ) ;
+    Bernstein b1 ( *this , x_min , x_max ) ;
+    Bernstein b2 ( other , x_min , x_max ) ;
+    return b1.multiply ( b2 ) ;
+  }
+  //
+  const unsigned short m =       degree() ;
+  const unsigned short n = other.degree() ;
+  //
+  if ( 0 == m ) { return   other *       m_pars [ 0 ] ; }
+  if ( 0 == n ) { return (*this) * other.m_pars [ 0 ] ; }
+  //
+  if ( zero() || other.zero() ) { return Bernstein ( m + n , xmin() , xmax() ) ; }
+  //
+  Bernstein result ( m + n , xmin() , xmax() ) ;  
+  //
+  Ostap::Math::Utils::b_multiply
+    ( m_pars        . begin () ,         m_pars . end () ,
+      other.m_pars  . begin () , other . m_pars . end () , 
+      result.m_pars . begin () ) ;
+  //
+  return result ; 
+}
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::LegendreSum& other ) const 
+{ return mul ( Bernstein ( other ) ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::ChebyshevSum& other ) const 
+{ return mul ( Bernstein ( other ) ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::Polynomial& other ) const 
+{ return mul ( Bernstein ( other ) ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::KarlinShapley& other ) const 
+{ return mul ( Polynomial ( other ) ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::KarlinStudden& other ) const 
+{ return mul ( Polynomial ( other ) ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::Bernulli& other ) const 
+{ return mul ( Polynomial ( other ) ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::BernsteinEven& other ) const 
+{ return mul ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::Positive& other ) const 
+{ return mul ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::Monotonic& other ) const 
+{ return mul ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::Convex& other ) const 
+{ return mul ( other.bernstein () ) ; }
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::mul
+( const Ostap::Math::ConvexOnly& other ) const 
+{ return mul ( other.bernstein () ) ; }
+
+// ============================================================================
+// power Bernstein polynomial
+// ============================================================================
+Ostap::Math::Bernstein  
+Ostap::Math::Bernstein::pow
+( const unsigned short n ) const 
+{
+  static const std::vector<double> s_1 ( 1 , 1.0 ) ;
+  //
+  if      ( 0 == n  ) { return Bernstein ( s_1 , xmin () , xmax () ) ; } 
+  else if ( 1 == n  ) { return       *this   ; }
+  else if ( 2 == n  ) { return mul ( *this ) ; }
+  else if ( zero () ) { return Bernstein {   0   , xmin () , xmax () } ; }  
+  //
+  Bernstein result  ( 0 , xmin() , xmax() ) ; result.m_pars[0] = 1 ;
+  if ( n % 2 ) { result = *this ; } 
+  //
+  Bernstein x  ( *this ) ;
+  unsigned long   NN { n } ;
+  while ( NN >>= 1 )
+    {
+      x.imul ( x ) ;
+      if ( NN % 2 ) { result.imul ( x  ) ; }
+    }
+  //
+  return result ;
 }
 // ============================================================================
 // swap two polynomials 
 // ============================================================================
-void Ostap::Math::Bernstein::swap ( Ostap::Math::Bernstein& right ) 
+void Ostap::Math::Bernstein::swap
+( Ostap::Math::Bernstein& right ) 
 { 
   Ostap::Math::PolySum::swap ( right ) ;
   std::swap ( m_xmin ,  right.m_xmin ) ;
@@ -682,8 +1121,9 @@ namespace
 {
   // ==========================================================================
   inline long double
-  c_nk ( const unsigned short n , 
-         const unsigned short k ) 
+  c_nk
+  ( const unsigned short n , 
+    const unsigned short k ) 
   {
     return 
       n < 63 ? 
@@ -908,45 +1348,13 @@ double Ostap::Math::Bernstein::distance
   //
   // 3) make a real comparsion 
   //
+  if ( degree() + 2 < m_aux.size() ) { m_aux.resize ( degree () + 2 ) ; }
+  //
   std::copy ( m_pars.begin () , m_pars.end() , m_aux.begin() ) ;
   const unsigned short N = degree() ;
   for ( unsigned short k = 0 ; k <= N ; ++k ) { m_aux [ k ] -= other.m_pars [ k ] ; }
   //
   return Ostap::Math::p_norm ( m_aux.begin() , m_aux.begin() + npars() , q_inv ) ; 
-}
-// ============================================================================
-// multiply two Bernstein polynomials
-// ============================================================================
-Ostap::Math::Bernstein  
-Ostap::Math::Bernstein::multiply ( const Ostap::Math::Bernstein& other ) const 
-{
-  //
-  if ( !s_equal ( xmin () , other.xmin() ) || 
-       !s_equal ( xmax () , other.xmax() ) ) 
-  {
-    const double x_min = std::min ( xmin() , other.xmin() ) ;
-    const double x_max = std::max ( xmax() , other.xmax() ) ;
-    Bernstein b1 ( *this , x_min , x_max ) ;
-    Bernstein b2 ( other , x_min , x_max ) ;
-    return b1.multiply ( b2 ) ;
-  }
-  //
-  const unsigned short m =       degree() ;
-  const unsigned short n = other.degree() ;
-  //
-  if ( 0 == m ) { return   other *       m_pars [ 0 ] ; }
-  if ( 0 == n ) { return (*this) * other.m_pars [ 0 ] ; }
-  //
-  if ( zero() || other.zero() ) { return Bernstein ( m + n , xmin() , xmax() ) ; }
-  //
-  Bernstein result ( m + n , xmin() , xmax() ) ;  
-  //
-  Ostap::Math::Utils::b_multiply
-    ( m_pars        . begin () ,         m_pars . end () ,
-      other.m_pars  . begin () , other . m_pars . end () , 
-      result.m_pars . begin () ) ;
-  //
-  return result ; 
 }
 // ============================================================================
 // multiply two Bernstein polynomial and the basic bernstein polynomial 
@@ -988,36 +1396,6 @@ Ostap::Math::Bernstein::multiply
     }
   }
   return result ;
-}
-// ============================================================================
-namespace 
-{
-  // ==========================================================================
-  // power function
-  // ==========================================================================
-  inline Ostap::Math::Bernstein _pow_ 
-  ( const Ostap::Math::Bernstein& x , 
-    const unsigned short          y ,  
-    const Ostap::Math::Bernstein& r ) 
-  { 
-    return 
-      0 == y ? r :
-      1 == y ? ( x.degree() >= r.degree() ? x.multiply ( r ) : r.multiply ( x ) ) :
-      _pow_    ( x.multiply ( x ) , y/2 , y%2 ? r * x : r ) ; 
-  }
-}
-// ============================================================================
-// power function
-// ============================================================================
-Ostap::Math::Bernstein
-Ostap::Math::Bernstein::pow ( const unsigned short i ) const 
-{
-  if      ( 1 == i ) { return *this             ; }
-  else if ( 2 == i ) { return multiply (*this ) ; }
-  //
-  Ostap::Math::Bernstein one ( 0 , xmin() , xmax() ) ;
-  one.m_pars[0] = 1 ;
-  return _pow_ ( *this , i , one ) ;
 }
 // ============================================================================
 // scale all coefficients with 2**i
@@ -1531,6 +1909,130 @@ Ostap::Math::Bernstein::Bernstein
   }
   //
 }
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::KarlinShapley& poly )
+  : Bernstein ( Ostap::Math::Polynomial ( poly ) )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::KarlinStudden& poly )
+  : Bernstein ( Ostap::Math::Polynomial ( poly ) )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Bernulli& poly )
+  : Bernstein ( Ostap::Math::Polynomial ( poly ) )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::BernsteinEven& poly )
+  : Bernstein ( poly.bernstein()  )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Positive& poly )
+  : Bernstein ( poly.bernstein()  )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Monotonic& poly )
+  : Bernstein ( poly.bernstein()  )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Convex& poly )
+  : Bernstein ( poly.bernstein()  )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::ConvexOnly& poly )
+  : Bernstein ( poly.bernstein()  )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::LegendreSum&  poly ,
+  const double                     xmin ,
+  const double                     xmax ) 
+  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::ChebyshevSum& poly ,
+  const double                     xmin ,
+  const double                     xmax ) 
+  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Polynomial&   poly ,
+  const double                     xmin ,
+  const double                     xmax ) 
+  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::KarlinShapley& poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::KarlinStudden& poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Bernulli&      poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::BernsteinEven& poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( poly.bernstein () , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Positive&      poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( poly.bernstein () , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Monotonic&     poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( poly.bernstein () , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Convex&        poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( poly.bernstein () , xmin , xmax )
+{}
+// ============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::ConvexOnly&    poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( poly.bernstein () , xmin , xmax )
+{}
+
+
+
+
+
+
+
 // ============================================================================
 std::size_t Ostap::Math::Bernstein::tag () const 
 {

@@ -14,7 +14,9 @@
   1. more harmolization to power-law tails
   1. more haromonisation for n/N for Student's t-functions 
   1. more harmonisation for some polynomial constructions 
-
+  1. Harmonize polynoimal constructions (both in C++ and python)
+  1. Release requiremen of the same raneg for *some* operations with polynomials
+  
 ## Backward  incompatible 
 
    1. From now `Apollonios` stands for the core asymmetric Apollonios function and `ApolloniosL` represents Aplooniosu functon with power-lay left tail

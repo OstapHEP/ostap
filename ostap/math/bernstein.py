@@ -931,27 +931,10 @@ def _b_mod_ ( b , p ) :
     rr = b.divmod(p)
     return rr.second
 
-# =============================================================================
-## power function for polynomials
-#  @code
-#  fun1 = ..
-#  fun2 = fun1**3  
-#  @endcode
-def _b_pow_ ( b , n ) :
-    """Power function for polynomials
-    >>> fun1 = ..
-    >>> fun2 = fun1**3  
-    """
-    if n != int ( n ) : raise ValueError('Illegal non-integer  exponent:%s' % n )
-    n = int ( n ) 
-    if 0  > n         : raise ValueError('Illegal negative     exponent:%s' % n )
-    return b.pow ( n )
-
 
 Ostap.Math.Bernstein. __divmod__   = _b_divmod_
 Ostap.Math.Bernstein. __floordiv__ = _b_floordiv_
 Ostap.Math.Bernstein. __mod__      = _b_mod_
-Ostap.Math.Bernstein. __pow__      = _b_pow_
 # =============================================================================
 
 # =============================================================================

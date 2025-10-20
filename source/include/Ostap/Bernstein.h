@@ -284,21 +284,157 @@ namespace Ostap
       /// constructor from simple monomial form
       explicit Bernstein ( const Polynomial&    poly ) ;
       // ======================================================================
+      /// constructor from Karlin-Shapley form
+      explicit Bernstein ( const KarlinShapley& poly ) ;
+      // ======================================================================
+      /// constructor from Karlin-Studden form
+      explicit Bernstein ( const KarlinStudden& poly ) ;
+      // ======================================================================
+      /// constructor from Bernulli
+      explicit Bernstein ( const Bernulli&      poly ) ;
+      // ======================================================================
+      /// constructor from BernsteinEven 
+      explicit Bernstein ( const BernsteinEven& poly ) ;
+      // ======================================================================
+      /// constructor from Positive 
+      explicit Bernstein ( const Positive&      poly ) ;
+      // ======================================================================
+      /// constructor from Monotonic 
+      explicit Bernstein ( const Monotonic&     poly ) ;
+      // ======================================================================
+      /// constructor from Convex 
+      explicit Bernstein ( const Convex&        poly ) ;
+      // ======================================================================
+      /// constructor from ConvexOnly 
+      explicit Bernstein ( const ConvexOnly&    poly ) ;
+      // ======================================================================
+    public: // constructors from different polynomial types in different ranges  
+      // ======================================================================
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const LegendreSum&   poly ,
+	const double         xmin ,
+	const double         xmax ) ;
+      // ======================================================================
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const ChebyshevSum&   poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const Polynomial&     poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const KarlinShapley&  poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const KarlinStudden&  poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const Bernulli&       poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================            
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const BernsteinEven&  poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================            
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const Positive&       poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================            
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const Monotonic&      poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================            
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const Convex&         poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================            
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const ConvexOnly&     poly ,
+	const double          xmin ,
+	const double          xmax ) ;
+      // ======================================================================            
     public:
       // ======================================================================
       /// get the value of polynomial
       double evaluate ( const double x ) const ;
       // ======================================================================
       /// get the value
-      double operator () ( const double x ) const
+      inline double operator () ( const double x ) const
       { return x < m_xmin ? 0 : x > m_xmax ? 0 : evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get lower edge
-      double xmin () const { return m_xmin ; }
+      inline double xmin () const { return m_xmin ; }
       /// get upper edge
-      double xmax () const { return m_xmax ; }
+      inline double xmax () const { return m_xmax ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -313,10 +449,10 @@ namespace Ostap
     public: // convert from local to global variables
       // ======================================================================
       /// t --> x conversion 
-      double x ( const double t ) const
+      inline double x ( const double t ) const
       { return       m_xmin   + ( m_xmax - m_xmin ) * t ; }
       /// x -> t conversion 
-      double t ( const double x ) const
+      inline double t ( const double x ) const
       { return ( x - m_xmin ) / ( m_xmax - m_xmin )     ; }
       // ======================================================================
     public:
@@ -446,61 +582,271 @@ namespace Ostap
        *  @parameter x      the event content 
        *  @parameter weight the weight 
        */
-      bool fill ( const double x , const double weight = 1 ) ;
-      bool Fill ( const double x , const double weight = 1 ) { return fill ( x , weight ) ; }
+      bool fill
+      ( const double x          ,
+	const double weight = 1 ) ;
+      inline bool Fill
+      ( const double x          ,
+	const double weight = 1 ) { return fill ( x , weight ) ; }
       // ======================================================================
     public: // Ostap::Math::WStatistic 
       // =====================================================================
       /// Ostap::Math::WStatistic, add one event with weight 
-      void update ( const double x , const double weight = 1 ) override
+      inline void update
+      ( const double x          ,
+	const double weight = 1 ) override
       { this -> fill ( x , weight ) ; }
       /// reet parameters to zeros 
       void reset  () override { Parameters::reset () ; } 
       // ======================================================================
-    public:
+    public: // basic arithmetic
+      // ======================================================================
+      /// add      constant
+      Bernstein& iadd ( const double value ) ;
+      /// subtract constant
+      Bernstein& isub ( const double value ) ;
+      /// multiply constant
+      Bernstein& imul ( const double value ) ;
+      /// divide  constant
+      Bernstein& idiv ( const double value ) ;
+      // ======================================================================
+    public: // advanced arithmetic
+      // ======================================================================
+      Bernstein& iadd ( const Bernstein&     other ) ;
+      Bernstein& isub ( const Bernstein&     other ) ;
+      Bernstein& iadd ( const LegendreSum&   other ) ;
+      Bernstein& isub ( const LegendreSum&   other ) ;
+      Bernstein& iadd ( const ChebyshevSum&  other ) ;
+      Bernstein& isub ( const ChebyshevSum&  other ) ;      
+      Bernstein& iadd ( const Polynomial&    other ) ;
+      Bernstein& isub ( const Polynomial&    other ) ;      
+      Bernstein& iadd ( const KarlinShapley& other ) ;
+      Bernstein& isub ( const KarlinShapley& other ) ;      
+      Bernstein& iadd ( const KarlinStudden& other ) ;
+      Bernstein& isub ( const KarlinStudden& other ) ;      
+      Bernstein& iadd ( const Bernulli&      other ) ;
+      Bernstein& isub ( const Bernulli&      other ) ;
+      Bernstein& iadd ( const BernsteinEven& other ) ;
+      Bernstein& isub ( const BernsteinEven& other ) ;      
+      Bernstein& iadd ( const Positive&      other ) ;
+      Bernstein& isub ( const Positive&      other ) ;      
+      Bernstein& iadd ( const Monotonic&     other ) ;
+      Bernstein& isub ( const Monotonic&     other ) ;      
+      Bernstein& iadd ( const Convex&        other ) ;
+      Bernstein& isub ( const Convex&        other ) ;      
+      Bernstein& iadd ( const ConvexOnly&    other ) ;
+      Bernstein& isub ( const ConvexOnly&    other ) ;      
+      // ======================================================================
+      Bernstein& imul ( const Bernstein&     other ) ;
+      Bernstein& imul ( const LegendreSum&   other ) ;
+      Bernstein& imul ( const ChebyshevSum&  other ) ;
+      Bernstein& imul ( const Polynomial&    other ) ;
+      Bernstein& imul ( const KarlinShapley& other ) ;
+      Bernstein& imul ( const KarlinStudden& other ) ;
+      Bernstein& imul ( const Bernulli&      other ) ;
+      Bernstein& imul ( const BernsteinEven& other ) ;
+      Bernstein& imul ( const Positive&      other ) ;
+      Bernstein& imul ( const Monotonic&     other ) ;
+      Bernstein& imul ( const Convex&        other ) ;
+      Bernstein& imul ( const ConvexOnly&    other ) ;
+      // ======================================================================      
+      Bernstein& ipow ( const unsigned short n     ) ;
+      // ======================================================================      
+    public: // basic arithmetic
+      // ======================================================================
+      Bernstein  add  ( const double value ) const ; 
+      Bernstein  sub  ( const double value ) const ;
+      Bernstein  mul  ( const double value ) const ;
+      Bernstein  div  ( const double value ) const ;
+      // ======================================================================
+    public: // adavnced arithmetic
+      // ======================================================================
+      Bernstein  add  ( const Bernstein&     other ) const ;
+      Bernstein  sub  ( const Bernstein&     other ) const ;
+      Bernstein  add  ( const LegendreSum&   other ) const ;
+      Bernstein  sub  ( const LegendreSum&   other ) const ;
+      Bernstein  add  ( const ChebyshevSum&  other ) const ;
+      Bernstein  sub  ( const ChebyshevSum&  other ) const ;
+      Bernstein  add  ( const Polynomial&    other ) const ;
+      Bernstein  sub  ( const Polynomial&    other ) const ;
+      Bernstein  add  ( const KarlinShapley& other ) const ;
+      Bernstein  sub  ( const KarlinShapley& other ) const ;
+      Bernstein  add  ( const KarlinStudden& other ) const ;
+      Bernstein  add  ( const Bernulli&      other ) const ;
+      Bernstein  sub  ( const Bernulli&      other ) const ;
+      Bernstein  sub  ( const KarlinStudden& other ) const ;
+      Bernstein  add  ( const BernsteinEven& other ) const ;
+      Bernstein  sub  ( const BernsteinEven& other ) const ;
+      Bernstein  add  ( const Positive&      other ) const ;
+      Bernstein  sub  ( const Positive&      other ) const ;
+      Bernstein  add  ( const Monotonic&     other ) const ;
+      Bernstein  sub  ( const Monotonic&     other ) const ;
+      Bernstein  add  ( const Convex&        other ) const ;
+      Bernstein  sub  ( const Convex&        other ) const ;
+      Bernstein  add  ( const ConvexOnly&    other ) const ;
+      Bernstein  sub  ( const ConvexOnly&    other ) const ;
+      // right subtraction
+      Bernstein  rsub ( const double         value ) const ;      
+      // polynomial multiplicaiton 
+      Bernstein  mul  ( const Bernstein&     other ) const ;
+      Bernstein  mul  ( const LegendreSum&   other ) const ;
+      Bernstein  mul  ( const ChebyshevSum&  other ) const ;
+      Bernstein  mul  ( const Polynomial&    other ) const ;
+      Bernstein  mul  ( const KarlinShapley& other ) const ;
+      Bernstein  mul  ( const KarlinStudden& other ) const ;
+      Bernstein  mul  ( const Bernulli&      other ) const ;
+      Bernstein  mul  ( const BernsteinEven& other ) const ;
+      Bernstein  mul  ( const Positive&      other ) const ;
+      Bernstein  mul  ( const Monotonic&     other ) const ;
+      Bernstein  mul  ( const Convex&        other ) const ;
+      Bernstein  mul  ( const ConvexOnly&    other ) const ;
+      // ======================================================================
+      Bernstein  pow  ( const unsigned short n     ) const ;
+      // ======================================================================      
+    public: // basic arithmetic  
       // ======================================================================
       /// simple  manipulations with polynomial: shift it!
-      Bernstein& operator += ( const double a ) ;
+      inline Bernstein& operator += ( const double a ) { return iadd ( a ) ; } 
       /// simple  manipulations with polynomial: shift it!
-      Bernstein& operator -= ( const double a ) ;
+      inline Bernstein& operator -= ( const double a ) { return isub ( a ) ; } 
       /// simple  manipulations with polynomial: scale it!
-      Bernstein& operator *= ( const double a ) ;
+      inline Bernstein& operator *= ( const double a ) { return imul ( a ) ; } ;
       /// simple  manipulations with polynomial: scale it!
-      Bernstein& operator /= ( const double a ) ;
+      inline Bernstein& operator /= ( const double a ) { return idiv ( a ) ; } 
       // ======================================================================
+      inline Bernstein& operator += ( const Bernstein&     a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const Bernstein&     a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const LegendreSum&   a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const LegendreSum&   a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const ChebyshevSum&  a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const ChebyshevSum&  a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const Polynomial&    a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const Polynomial&    a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const KarlinShapley& a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const KarlinShapley& a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const KarlinStudden& a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const KarlinStudden& a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const Bernulli&      a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const Bernulli&      a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const BernsteinEven& a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const BernsteinEven& a ) { return isub ( a ) ; }      
+      inline Bernstein& operator += ( const Positive&      a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const Positive&      a ) { return isub ( a ) ; }      
+      inline Bernstein& operator += ( const Monotonic&     a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const Monotonic&     a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const Convex&        a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const Convex&        a ) { return isub ( a ) ; } 
+      inline Bernstein& operator += ( const ConvexOnly&    a ) { return iadd ( a ) ; } 
+      inline Bernstein& operator -= ( const ConvexOnly&    a ) { return isub ( a ) ; }       
+      // ======================================================================
+      inline Bernstein& operator *= ( const Bernstein&     a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const LegendreSum&   a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const ChebyshevSum&  a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const Polynomial&    a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const KarlinShapley& a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const KarlinStudden& a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const Bernulli&      a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const BernsteinEven& a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const Positive&      a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const Monotonic&     a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const Convex&        a ) { return imul ( a ) ; } 
+      inline Bernstein& operator *= ( const ConvexOnly&    a ) { return imul ( a ) ; }       
+      // ======================================================================      
     public:
       // ======================================================================
       /// negate it!
       Bernstein  operator-() const ;
       // ======================================================================
-    public: // a bit of operators for python
+    public: // operators for python
       // ======================================================================
-      /// Sum of Bernstein polynomial and a constant
-      Bernstein __add__     ( const double value ) const ;
-      /// Sum of Bernstein polynomial and a constant
-      Bernstein __radd__    ( const double value ) const ;
-      /// Product of Bernstein polynomial and a constant
-      Bernstein __mul__     ( const double value ) const ;
-      /// Product of Bernstein polynomial and a constant
-      Bernstein __rmul__    ( const double value ) const ;
-      /// Subtract a constant from Benrstein polynomial
-      Bernstein __sub__     ( const double value ) const ;
-      /// Constant minus Bernstein polynomial
-      Bernstein __rsub__    ( const double value ) const ;
-      /// Divide Bernstein polynomial by a constant
-      Bernstein __truediv__ ( const double value ) const ;
-      Bernstein __div__     ( const double value ) const { return __truediv__ ( value ) ; }
-      /// Negate Bernstein polynomial
-      Bernstein __neg__     () const ;
+      inline Bernstein& __iadd__     ( const double         a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const double         a ) { return isub ( a ) ; }     
+      inline Bernstein& __imul__     ( const double         a ) { return imul ( a ) ; }      
+      inline Bernstein& __idiv__     ( const double         a ) { return idiv ( a ) ; }      
+      inline Bernstein& __itruediv__ ( const double         a ) { return idiv ( a ) ; }
+      inline Bernstein& __ipow__     ( const unsigned short n ) { return ipow ( n ) ; }
+      // 
+      inline Bernstein& __iadd__     ( const Bernstein&     a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const Bernstein&     a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const LegendreSum&   a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const LegendreSum&   a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const ChebyshevSum&  a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const ChebyshevSum&  a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const Polynomial&    a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const Polynomial&    a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const KarlinShapley& a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const KarlinShapley& a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const KarlinStudden& a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const KarlinStudden& a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const Bernulli&      a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const Bernulli&      a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const BernsteinEven& a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const BernsteinEven& a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const Positive&      a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const Positive&      a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const Monotonic&     a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const Monotonic&     a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const Convex&        a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const Convex&        a ) { return isub ( a ) ; }
+      inline Bernstein& __iadd__     ( const ConvexOnly&    a ) { return iadd ( a ) ; }
+      inline Bernstein& __isub__     ( const ConvexOnly&    a ) { return isub ( a ) ; }
       // ======================================================================
-    public:
+    public: // operators for python
       // ======================================================================
-      /// Sum of   Bernstein polynomials
-      Bernstein __add__      ( const Bernstein& other ) const { return sum       ( other ) ; }
-      /// Subtract Bernstein polynomials
-      Bernstein __sub__      ( const Bernstein& other ) const { return subtract  ( other ) ; }
-      /// Multiply Bernstein polynomials
-      Bernstein __mul__      ( const Bernstein& other ) const { return multiply  ( other ) ; }
+      inline Bernstein __add__      ( const double         a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const double         a ) const { return sub ( a ) ; }     
+      inline Bernstein __mul__      ( const double         a ) const { return mul ( a ) ; }      
+      inline Bernstein __div__      ( const double         a ) const { return div ( a ) ; }      
+      inline Bernstein __truediv__  ( const double         a ) const { return div ( a ) ; }
+      inline Bernstein __pow__      ( const unsigned short n ) const { return pow ( n ) ; }
+      // 
+      inline Bernstein __add__      ( const Bernstein&     a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const Bernstein&     a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const LegendreSum&   a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const LegendreSum&   a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const ChebyshevSum&  a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const ChebyshevSum&  a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const Polynomial&    a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const Polynomial&    a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const KarlinShapley& a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const KarlinShapley& a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const KarlinStudden& a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const KarlinStudden& a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const Bernulli&      a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const Bernulli&      a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const BernsteinEven& a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const BernsteinEven& a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const Positive&      a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const Positive&      a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const Monotonic&     a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const Monotonic&     a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const Convex&        a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const Convex&        a ) const { return sub ( a ) ; }
+      inline Bernstein __add__      ( const ConvexOnly&    a ) const { return add ( a ) ; }
+      inline Bernstein __sub__      ( const ConvexOnly&    a ) const { return sub ( a ) ; }
+      //
+      inline Bernstein __mul__      ( const Bernstein&     a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const LegendreSum&   a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const ChebyshevSum&  a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const Polynomial&    a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const KarlinShapley& a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const KarlinStudden& a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const Bernulli&      a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const BernsteinEven& a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const Positive&      a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const Monotonic&     a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const Convex&        a ) const { return mul ( a ) ; }
+      inline Bernstein __mul__      ( const ConvexOnly&    a ) const { return mul ( a ) ; }
+      // ======================================================================
+    public: // for python 
+      // ======================================================================
+      inline Bernstein __radd__     ( const double      a ) const { return add  ( a ) ; }
+      inline Bernstein __rmul__     ( const double      a ) const { return mul  ( a ) ; }
+      inline Bernstein __rsub__     ( const double      a ) const { return rsub ( a ) ; } 
+      inline Bernstein __neg__      () const { return -(*this) ; } // Negate it! 
+      // ======================================================================
+    public: // polynomial division 
+      // ======================================================================      
       /// Polynomial division :  quotient  
       Bernstein __floordiv__ ( const Bernstein& other ) const { return quotient  ( other ) ; }
       /// Polynomial division :  remainder 
@@ -527,40 +873,26 @@ namespace Ostap
     public:
       // ======================================================================
       /// the sum two Bernstein polynomials
-      Bernstein  sum      ( const Bernstein&        other ) const ;
+      inline Bernstein  sum      ( const Bernstein& other ) const { return add ( other ) ; } 
       /// subtract Bernstein polynomials
-      Bernstein  subtract ( const Bernstein&        other ) const ;
+      inline Bernstein  subtract ( const Bernstein& other ) const { return sub ( other ) ; } 
       /// multiply Bernstein polynomials
-      Bernstein  multiply ( const Bernstein&        other ) const ;
+      inline Bernstein  multiply ( const Bernstein& other ) const { return mul ( other ) ; }
+      // ========================================================================
+    public:
+      // ========================================================================
       /// multiply Bernstein polynomials with the basic bernstein polynomial
       Bernstein  multiply ( const Bernstein::Basic& other ) const ;
       /** multiply Bernstein polynomial with
        *  \f$ (x-x_{min})^i(x_{max}-x)^j \f$
        */
-      Bernstein  multiply ( const unsigned short i ,
-                            const unsigned short j ) const ;
-      /// power function
-      Bernstein  pow      ( const unsigned short i ) const ;
+      Bernstein  multiply
+      ( const unsigned short i ,
+	const unsigned short j ) const ;
       // ======================================================================
       /// scale  all coefficients with 2**i 
-      Bernstein  ldexp    ( const short i )  const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// Add       polynomials (with the same domain!)
-      Bernstein& isum    ( const Bernstein& other ) ;
-      /// Subtract  polynomials (with the same domain!)
-      Bernstein& isub    ( const Bernstein& other ) ;
-      // ======================================================================
-    public:
-      // ====================================================================== 
-      inline Bernstein& operator+=( const Bernstein& other ) { return isum ( other ) ; }
-      inline Bernstein& operator-=( const Bernstein& other ) { return isub ( other ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      Bernstein& __iadd__  ( const Bernstein& a ) { return isum ( a ) ; }
-      Bernstein& __isub__  ( const Bernstein& a ) { return isub ( a ) ; }
+      Bernstein  ldexp
+      ( const short i )  const ;
       // ======================================================================
     public:  // various assignements
       // ======================================================================

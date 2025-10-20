@@ -52,7 +52,7 @@ namespace Ostap
       while ( __n >>= 1 )
       {
         __x = __x * __x;
-        if ( __n % 2) { __y = __y * __x; }
+        if ( __n % 2 ) { __y = __y * __x; }
       } 
       //
       return __y ;

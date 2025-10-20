@@ -54,10 +54,18 @@ def _poly_imul_  ( self , other  ) :
 def _poly_idiv_  ( self , other  ) : 
     """ Modified __idiv__ 
     """ 
-    try:
-        if isinstance ( other , num_types ) and not other  : 
-            raise ZeroDivisionError ( "One cannot divide by zero!" )
-        return self.idiv ( other )   
+    if isinstance ( other , num_types ) and not other  : 
+        raise ZeroDivisionError ( "One cannot divide by zero!" )
+    try: return self.idiv ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+## Modified ipow
+def _poly_ipow_  ( self , other  ) : 
+    """ Modified __ipow__ 
+    """    
+    try :
+        if isinstance ( other , int ) and 0 <= other : return self.ipow ( other ) 
     except TypeError : pass     
     return NotImplemented 
 # ==============================================================================
@@ -88,10 +96,18 @@ def _poly_mul_  ( self , other  ) :
 def _poly_div_  ( self , other  ) : 
     """ Modified __div__ 
     """ 
-    try:
-        if isinstance ( other ,  num_types ) and not other  : 
-            raise ZeroDivisionError ( "One cannot divide by zero!" )
-        return self.div ( other )   
+    if isinstance ( other ,  num_types ) and not other  : 
+        raise ZeroDivisionError ( "One cannot divide by zero!" )
+    try: return self.div ( other )   
+    except TypeError : pass     
+    return NotImplemented 
+# =============================================================================
+## Modified pow 
+def _poly_pow_  ( self , other  ) : 
+    """ Modified __pow__ 
+    """
+    try :
+        if isinstance ( other , int ) and 0 <= other : return self.pow ( other ) 
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
@@ -104,7 +120,8 @@ def _poly_rsub_  ( self , other  ) :
 
 for poly  in ( Ostap.Math.Polynomial   , 
                Ostap.Math.ChebyshevSum , 
-               Ostap.Math.LegendreSum  ) : 
+               Ostap.Math.LegendreSum  , 
+               Ostap.Math.Bernstein    ) : 
         
     if hasattr ( poly , 'iadd' ) : poly.__iadd__ = _poly_iadd_ 
     if hasattr ( poly , 'isub' ) : poly.__isub__ = _poly_isub_ 
@@ -121,14 +138,16 @@ for poly  in ( Ostap.Math.Polynomial   ,
     
     if hasattr ( poly , 'mul' ) : 
         poly. __mul__ = _poly_mul_ 
-        poly.__radd__ = _poly_mul_
+        poly.__rmul__ = _poly_mul_
          
     if hasattr ( poly , 'div' ) : 
         poly. __div__    = _poly_div_ 
         poly.__truediv__ = _poly_div_ 
 
-    if hasattr ( poly , 'rsub' ) :  poly.__rsub__  = _poly_rsub_ 
-
+    if hasattr ( poly , 'rsub' ) :  poly.__rsub__  = _poly_rsub_
+    
+    if hasattr ( poly , 'ipow' ) :  poly.__ipow__  = _poly_ipow_ 
+    if hasattr ( poly , 'pow'  ) :  poly.__pow__   = _poly_pow_ 
 
 # =============================================================================
 ## decorated classes 
