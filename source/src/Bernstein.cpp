@@ -490,6 +490,24 @@ Ostap::Math::Bernstein::idiv( const double value )
   Ostap::Math::scale ( m_pars , 1/value ) ;
   return *this ;
 }
+// =============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein::add ( const double a ) const
+{ Bernstein r ( *this ) ; r.iadd ( a ) ; return r ; }
+// =============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein::sub ( const double a ) const
+{ Bernstein r ( *this ) ; r.isub ( a ) ; return r ; }
+// =============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein::mul( const double a ) const
+{ Bernstein r ( *this ) ; r.imul ( a ) ; return r ; }
+// =============================================================================
+Ostap::Math::Bernstein
+Ostap::Math::Bernstein::div ( const double a ) const
+{ Bernstein r ( *this ) ; r.idiv ( a ) ; return r ; }
+
+
 // ============================================================================
 Ostap::Math::Bernstein
 Ostap::Math::Bernstein::operator-() const 
@@ -670,6 +688,7 @@ Ostap::Math::Bernstein::isub
 ( const Ostap::Math::Bernulli& other ) 
 { return isub ( Polynomial ( other ) ) ; }
 // ============================================================================
+
 
 // ============================================================================
 // the sum two Bernstein polynomials
