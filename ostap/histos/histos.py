@@ -186,10 +186,22 @@ def _axis_bin_edges_ ( axis ) :
         
 # =============================================================================
 ## Split the axis into axis with narrower bin
-#  - each bin is split into n bins 
+#  - each bin is split into n bins
+#  @code
+#  axis  = ...
+#  axis2 = axis.split ( 2 )
+#  axis3 = axis.split ( 3 )
+#  axis2 = axis / 2 
+#  axis3 = axis / 3 
+#  @endcode 
 def _axis_split_ ( axis , n ) :
     """ Split the axis into axis with narrower bin
     - each bin is split into n bins 
+    >>> axis  = ...
+    >>> axis2 = axis.split ( 2 )
+    >>> axis3 = axis.split ( 3 )
+    >>> axis2 = axis / 2 
+    >>> axis3 = axis / 3 
     """
     assert isinstance ( n , integer_types ) and 0 < n , \
         "Invalid `n' %s (must be positive integer)!" % n
@@ -205,16 +217,84 @@ def _axis_split_ ( axis , n ) :
     ##
     prev     = axis.GetXmin()
     new_bins = [ prev ] 
-    for current in bins :
+    for i , current in enumerate ( bins ) :
         if prev < current :
             delta  = current - prev
             delta /= n
-            for j in range (  ) : new_bins.append ( prev + k * delta )
-            
+            for j in range ( 1 , n  ) :  new_bins.append ( prev + j * delta )
+            new_bins.append ( current )
         prev = current
         
     return ROOT.TAxis ( new_bins ) 
 
+ROOT.TAxis.split        = _axis_split_ 
+ROOT.TAxis.__div__      = _axis_split_ 
+ROOT.TAxis.__truediv__  = _axis_split_ 
+ROOT.TAxis.__floordiv__ = _axis_split_ 
+
+
+        
+# =============================================================================
+## Merge the axis bins into axis with wider bin
+#  - each group of n-bin is merged into a single bin
+#  @code
+#  axis  = ...
+#  axis2 = axis.merge ( 2 )
+#  axis3 = axis.merge ( 3 )
+#  axis2 = axis * 2 
+#  axis3 = 3 * axis 
+#  @endcode 
+def _axis_merge_ ( axis , n ) :
+    """ Merge the axis bins into axis with wider bin
+    - each group of n-bins is merged into single bin 
+    >>> axis  = ...
+    >>> axis2 = axis.merge ( 2 )
+    >>> axis3 = axis.merge ( 3 )
+    >>> axis2 = axis * 2 
+    >>> axis3 = 3 * axis 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n , \
+        "Invalid `n' %s (must be positive integer)!" % n
+
+    ## no action 
+    if 1 == n  : return axis
+    nbins = axis.GetNbins () 
+    bins  = axis.GetXbins ()
+    ## 
+    
+    ##  non-uniform binning  
+    if bins :
+        new_bins = [ bins[i] for i in range  ( 0 , nbins , n ) ]
+        if 0 == bins % n : new_bins.append ( bins[nbins] )
+        new_bins = tuple ( new_bins )
+        return ROOT.TAxis ( new_bins )
+    
+    ## uniform binning AND n divides nbins ?
+    if not bins and 0 == nbins % n : 
+        return ROOT.TAxis ( nbins // n , axis.GetXmin() , axis.GetXmax() ) 
+    ##
+    
+    ## uniform binning and n does NOT divide nbins 
+    delta = ( axis.GetXmax() - axis.GetXmin() ) / nbins  
+    new_bins = [ axis.GetXmin() ] + [ axix.GetBin]
+    
+    prev     = axis.GetXmin()
+    new_bins = [ prev ] 
+    for i , current in enumerate ( bins ) :
+        if prev < current :
+            delta  = current - prev
+            delta /= n
+            for j in range ( 1 , n  ) :  new_bins.append ( prev + j * delta )
+            new_bins.append ( current )
+        prev = current
+        
+    return ROOT.TAxis ( new_bins ) 
+
+ROOT.TAxis.merge        = _axis_merge_ 
+ROOT.TAxis.__mul__      = _axis_merge_ 
+ROOT.TAxis.__rmul__     = _axis_merge_  
+
+#
 # =============================================================================
 ## Iterator over bin-edges
 #  @code
@@ -10121,7 +10201,12 @@ _new_methods_  += (
     ## 
     ROOT.TH1.finer_bininng   , 
     ROOT.TH1.finer_bins      , 
-    
+    ##
+    ROOT.TAxis.split         ,  
+    ROOT.TAxis.__div__       , 
+    ROOT.TAxis.__truediv__   , 
+    ROOT.TAxis.__floordiv__  , 
+    ## 
 )
 
 # =============================================================================
