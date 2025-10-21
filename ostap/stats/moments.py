@@ -37,7 +37,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06  
 # =============================================================================
-"""Utilities to get moments for various functions/distributions/pdfs
+""" Utilities to get moments for various functions/distributions/pdfs
 - Moment
 - CentralMoment
 - StdMoment
@@ -107,16 +107,11 @@ __all__     = (
     "cl_symm"       , ## calculate symmetrical  confidence intervals            
     "cl_asymm"      , ## calculate asymmetrical confidence intervals           
     ##
-    "FunMean"       , ## mean value of the function over the interval
-    "FunVariance"   , ## variance of the function over the interval
-    "FunRMS"        , ## RMS of the function over the interval
-    "FunMinMax"     , ## estimate Min/Max of the function over the interval
     ) 
 # =============================================================================
 from ostap.core.ostap_types import integer_types, num_types
 from ostap.math.base        import pos_infinity, neg_infinity
-from ostap.utils.ranges     import vrange 
-from ostap.core.core        import Ostap
+from ostap.stats.funstats   import FunBASE1D 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -124,29 +119,12 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moments' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-class XMNMX(object) :
-    ## constructor
-    def __init__ ( self , xmin , xmax , *args ) :
-        self.__xmin = xmin
-        self.__xmax = xmax 
-        self.__args = args
-        
-    @property
-    def  xmin ( self ) :
-        "`xmin'- low edge of the interval"
-        return self.__xmin
-    @property
-    def  xmax ( self ) :
-        "`xmax'- high edge of the interval"
-        return self.__xmax
-
-# =============================================================================
 ## @class BaseMoment 
 #  Base class for calculation of variosu moments 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
-class BaseMoment(XMNMX) :
+class BaseMoment(FunBASE1D) :
     """ Calculate the N-th moment for the distribution
     
     >>> xmin,xmax = 0,math.pi 
@@ -157,9 +135,9 @@ class BaseMoment(XMNMX) :
     def __init__ ( self , N , xmin , xmax , err = False , *args ) :
         """ Contructor 
         """
-        XMNMX.__init__( self , xmin , xmax , *args )
+        FunBASE1D.__init__( self , xmin , xmax , *args )
         ## 
-        assert isinstance ( N , integer_types ) and  0 <= N , 'BaseMoment: illegal order: %s' % N 
+        assert isinstance ( N , integer_types ) and 0 <= N , 'BaseMoment: illegal order: %s' % N 
         
         self.__N     = N 
         self.__err   = err
@@ -1420,87 +1398,6 @@ def cl_asymm ( func , prob , xmin = None , xmax = None ) :
     ## and use it! 
     return sp_action ( func , actor , xmin , xmax )
 
-# ============================================================================
-## @class FunMean
-#  Mean-value of function over inntervl
-#  @code
-#  mean  = FunMean( fun ,xmin,xmax) 
-#  value = mean  ( math.sin )
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-06-06
-class FunMean(XMNMX) :
-    """ Calculate the mean-value of function over the interval
-    >>> mean  = FunMean( fun ,xmin,xmax) 
-    >>> value = mean  ( math.sin )
-    """
-    # =========================================================================
-    ## integrate the function between xmin and xmax 
-    def integral ( self , func , xmin , xmax , *args ) :
-        """ Integrate the function between xmin and xmax"""
-        from ostap.math.integral import IntegralCache 
-        integrator = IntegralCache ( func , xmin , err = False , args = args )
-        return integrator ( xmax , *args )
-
-    def fun_mean ( self , func , *args ) :
-        args  = args if args else self.args
-        value = self.integral ( func , self.__xmin, self.__xmax , args = args )
-        return value / ( self.__xmin , self.__xmax ) 
-                               
-    def __call__ ( self , func , *arg ) :
-        return self.fun_mean ( func , *args )
-                              
-# ==============================================================================
-## @class FunVariance
-#  Calculate variance of the function over interval
-class FunVariance(FunMean) :
-    """ Calculate variance of the function over interval
-    """
-    ## Calculate variance of the function over interval
-    def fun_variance ( self , func , *args ) :
-        """ Calculate variance of the function over interval
-        """
-        
-        fn_mean = self.fun_mean ( func , *args )
-        
-        def f2 ( x , *args ) :
-            fv = func ( x , *args ) - fn_mean 
-            return fv * fv
-        
-        value = self.integral ( f2 , self.xmin , self.xmax , args = args )
-        return value / ( self.xmax - self.xmin )
-    
-    def __call__ ( self , func , *arg ) :
-        return self.fun_variance ( func , *args )
-    
-# ==============================================================================
-## @class FunRMS
-#  Calculate RMS of the function over interval
-class FunRMS(FunVariance) :
-    """ Calculate RMS of the function over interval
-    """
-    def __call__ ( self , func , *arg ) :
-        value = self.fun_variance ( func , *args )
-        return math.sqrt ( value )
-
-# ==============================================================================
-## @class FunMinMax
-#  Estimate the minmax of the functon 
-class FunMinMax(XMNMX) :
-    """ Estimate the minmax of the function through evaluation in N points
-    """
-    def __init__ ( self  , xmin , xmax , N = 1000 , *args ) :
-        XMNMX.__init__  ( self  , xmin , xmax , *args )
-        self.__N  = N
-        
-    def __call__ ( self , func , *arg ) :
-        args    = args if args else self.args
-        mn , mx = pos_infinity , neg_infinity 
-        for x in vrange ( self.xmin , self.xmax , self.__N ) :
-            fv = func ( x , *args )
-            mn = min ( mn , fv )
-            mx = max ( mx , fv )
-        return mn, mx 
              
 # =============================================================================
 if '__main__' == __name__ :
