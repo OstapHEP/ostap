@@ -126,6 +126,8 @@ weighting = ( Weight.Var     ( 'x'       ,  address = 'x-reweight'  ) , )
 ## variables to be used in MC-dataset 
 variables = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 
+plots      = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
+
 converged = False
 active    = len ( plots )
 # =============================================================================
@@ -158,7 +160,6 @@ for iter in range ( 1 , maxIter + 1  ) :
     with timing ( tag + ': make the actual reweighting:' , logger = logger ) :
         # ==============================================================================
         ## 2) update weights
-        plots      = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
         active , _ = makeWeights ( mcds               ,
                                    plots              ,
                                    dbname             ,
