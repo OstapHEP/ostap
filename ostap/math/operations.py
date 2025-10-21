@@ -434,8 +434,6 @@ class Operation2(Function) :
         fa = isinstance ( afun , Function ) and not isinstance ( afun , Constant )
         fb = isinstance ( bfun , Function ) and not isinstance ( bfun , Constant )
 
-        print ('HERE(1):', typename( afun ) , typename ( bfun ) , fa , fb  )
-        
         if ( fa or fb ) and not funab : 
             funab = WrapOper2 ( afun , bfun , oper )
         

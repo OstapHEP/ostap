@@ -157,8 +157,8 @@ def _axis_iter_1_ ( a ) :
     s = a.GetNbins()
     while i <= s :
         yield i
-        i+=1        
-
+        i+=1
+        
 # =============================================================================
 ## Iterator over bin-edges
 #  @code
@@ -183,6 +183,38 @@ def _axis_bin_edges_ ( axis ) :
         for i in range ( 1 , nbins + 1 ) :
             yield axis.GetBinLowEdge ( i ) , axis.GetBinUpEdge ( i )
 
+        
+# =============================================================================
+## Split the axis into axis with narrower bin
+#  - each bin is split into n bins 
+def _axis_split_ ( axis , n ) :
+    """ Split the axis into axis with narrower bin
+    - each bin is split into n bins 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n , \
+        "Invalid `n' %s (must be positive integer)!" % n
+
+    ## no action 
+    if 1 == n  : return axis
+    nbins = axis.GetNbins () 
+    bins  = axis.GetXbins ()
+    ## 
+    ## uniform binning ?
+    if not bins :
+        return ROOT.TAxis ( nbins * n , axis.GetXmin() , axis.GetXmax() ) 
+    ##
+    prev     = axis.GetXmin()
+    new_bins = [ prev ] 
+    for current in bins :
+        if prev < current :
+            delta  = current - prev
+            delta /= n
+            for j in range (  ) : new_bins.append ( prev + k * delta )
+            
+        prev = current
+        
+    return ROOT.TAxis ( new_bins ) 
+
 # =============================================================================
 ## Iterator over bin-edges
 #  @code
@@ -200,7 +232,7 @@ def _h1_bin_edges_ ( h1 ) :
         "Only 1D-histograms are accepted!"
     axis = h1.GetXaxis()
     for item in axis.bin_edges() : yield item 
-    
+
 # =============================================================================
 ## Iterator over bin-edges
 #  @code

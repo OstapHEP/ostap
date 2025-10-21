@@ -61,6 +61,11 @@ NOT = checked_no
 tag_reweightings = 'REWEIGHTINGS'
 ## tag in DBASE for collection of comparsoon plots
 tag_comparisons  = 'COMPARISON_PLOTS'
+## tag in DBASE for convergency graphs
+tag_graphs       = 'CONVERGENCY_GRAPHS'
+## suffix for reweighting address 
+tag_rw_suffix    = 'REWEIGHTING'
+
 # =============================================================================
 ## Try to normalize  
 def normalize_data ( data , another = None  ) :
@@ -232,10 +237,20 @@ class Weight(object) :
 
         self.__table = [ ( 'Reweighting' , 'accessor' , number , 'merged?' , 'skip') ] 
         rows = []
-        
+
+        # =============================================================================
+        try : # =======================================================================
+            with DBASE.open ( dbase , 'r' ) as db : pass
+            # =========================================================================
+        except Exception as e : # =====================================================
+            # =========================================================================
+            message = "DBASE `%s' can not be opened (or does not exist)" % dbase 
+            logger.error  ( message , exc_info = True )
+            raise OSError ( message ) 
+
         with DBASE.open ( dbase , 'r' ) as db : ## READONLY
 
-            logger.debug ( 'Weight: Reweigting database: \n%s' % db.table ( prefix = '# ' ) ) 
+            logger.debug ( 'Weight: Reweighting database: \n%s' % db.table ( prefix = '# ' ) ) 
                 
             ## loop over the weighting factors and build the function
             for wvar in self.__factors :
@@ -258,8 +273,8 @@ class Weight(object) :
                 ##    row.append ( str ( atts ) )
                 else :
                     row.append ( str ( funval ) ) 
-                    
-                ## 
+
+                ## get the reweighting infromation from database 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
                 if not functions :
                     logger.warning ( "Weight: No reweighting is available for `%s', skip it" % funname )
@@ -340,7 +355,23 @@ class Weight(object) :
     def nZeroes ( self ) :
         """'nZeroes': Number of null weights"""
         return self.__nzeroes
-    
+
+    # ==============================================================================
+    ## non-empty weighter?
+    #  return True if there is at leats one rweweigjtig recorf in database
+    def __bool__    ( self ) :
+        """ non-empty weighter?
+        - return True if there is at leats one rweweigjtig recorf in database        
+        """
+        with DBASE.open ( self.dbase , 'r' ) as db : 
+            rws = db.get( tag_reweightings , () )
+            if not rws : return False
+            for rw in rws :
+                r = db.get ( rw , () )
+                if r : return True
+            return False
+    __nonzero__ = __bool__ 
+
     ## calculate the weight for the given "event"
     def __call__ ( self , s ) :
         """ Calculate the weigth for the given `event' (==record in TTree/TChain or RooDataSet):
@@ -390,8 +421,7 @@ class Weight(object) :
         """
         import ostap.logger.table as T
         if title is None : title = "Weight('%s')" % self.__dbase 
-        return T.table ( self.__table , title = title , prefix = prefix ,
-                         alignment = 'llcc' )
+        return T.table ( self.__table , title = title , prefix = prefix , alignment = 'llcc' )
     
     # ===============================================================================
     ## get the dictionary of graphs
@@ -442,7 +472,7 @@ class Weight(object) :
                     gr2.SetLineColor   ( 2  )
                     gr2.SetMarkerColor ( 2  )
                     
-                    ## combine two graphs togather 
+                    ## combine two graphs together 
                     graph = ROOT.TMultiGraph ()
                     graph.Add      ( gr1 , '3'  )
                     graph.Add      ( gr2 , 'pl' )
@@ -450,6 +480,19 @@ class Weight(object) :
                     
                     grphs [ address ] = graph
 
+        # =====================================================================
+        ## store graphs in DATABASE:
+        if grphs : # ==========================================================
+            # =================================================================
+            try : # ===========================================================
+                # =============================================================
+                with DBASE.open ( self.dbase ) as db :
+                    db [ tag_graphs ] = grphs  
+                    for key, gr in grphs.items() : db [ '%s:CONVERGENCY' % key ] = gr
+                # ============================================================
+            except : # =======================================================
+                pass
+            
         return grphs     
 
     def __str__    ( self ) : return self.table()
@@ -668,8 +711,8 @@ class WeightingPlot(object) :
         ## (1) make a try to normalize input data
         ndata = normalize_data  ( data ) 
         if not ndata is data :
-            logger.attention ( "WeightingPlot: DATA is converted to normalized/density-like form for %s/%s" % ( self.what ,
-                                                                                                                self.address ) )
+            logger.info ( "WeightingPlot: DATA is converted to normalized `density-like' form for %s/%s" % ( self.what ,
+                                                                                                             self.address ) )
             data = ndata
             
         self.__data = data 
@@ -1044,8 +1087,6 @@ def makeWeights  ( dataset                      ,
         
         ## make a try to normalize MC projection:
         hmc = normalize_data ( hmc0 , hdata )
-        print ( 'NORMALIZED ? ' , hmc is hmc0 , hmc.is_density() ,  hmc.riemann_sum() ) 
-
     
         # =====================================================================
         ## calculate  the reweighting factor : a bit conservative (?)
@@ -1186,7 +1227,7 @@ def makeWeights  ( dataset                      ,
             
             ## save more information to database 
             if debug and True :
-                addr        = address + ':REWEIGHTING'
+                addr        = '%s:%s' % ( address , tag_rw_suffix ) 
                 rw = list  ( db.get ( addr , [] ) )
                 e2 = tuple ( entry [ 2: ] ) 
                 rw.append ( e2 )                  
@@ -1342,13 +1383,23 @@ def tree_add_reweighting ( tree                 ,
     """
     assert isinstance ( weighter , Weight     ), "Invalid type of `weighter'!"  
     assert isinstance ( tree     , ROOT.TTree ), "Invalid type of `tree`!"
+
+    if not weighter :
+        logger.attention ( 'Weighter object is empty! Add 1.0 to the data' )
+        if parallel and isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles : 
+            import ostap.parallel.parallel_add_branch
+            return tree.padd_new_branch ( 1.0 , name = name , progress = progress , report = report )            
+        return tree.add_new_branch ( 1.0 , name = name , progress = progress , report = report )
     
     ## create the weighting function 
     wfun = W2Tree ( weighter )
     
-    if parallel and isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles : 
-        import ostap.parallel.parallel_add_branch
-        return tree.padd_new_branch ( wfun , name = name  , progress = progress , report = report ) 
+    if parallel and isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles :
+        from ostap.parallel.parallel import Checker
+        checker = Checker()
+        if checker.pickles ( weighter , wfun ) :         
+            import ostap.parallel.parallel_add_branch
+            return tree.padd_new_branch ( wfun , name = name  , progress = progress , report = report ) 
     
     ## regular sequential processing 
     return tree.add_new_branch ( wfun , name = name , progress = progress , report = report ) 
@@ -1379,11 +1430,15 @@ def data_add_reweighting ( data                ,
     - see ostap.tools.reweight.Weight 
     - see ostap.tools.reweight.W2Data 
     """
-    
+
     assert isinstance ( weighter , Weight          ), "Invalid type of `weighter'!"
     assert isinstance ( data     , ROOT.RooDataSet ), "Invalid type of `data`!"
-    
-    ## create the weigthting function 
+
+    if not weighter :
+        logger.attention ( 'Weighter object is empty! Add 1.0 to the data' )
+        return data.add_new_var ( name , "1.0" , progress = progress )
+        
+    ## create the weighting function 
     wfun = W2Data ( weighter  )
 
     return data.add_new_var ( name , wfun , progress = progress ) 

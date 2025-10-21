@@ -126,7 +126,8 @@ weighting = ( Weight.Var     ( 'x'       ,  address = 'x-reweight'  ) , )
 ## variables to be used in MC-dataset 
 variables = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 
-converged = False 
+converged = False
+active    = len ( plots )
 # =============================================================================
 ## start iterations:
 for iter in range ( 1 , maxIter + 1  ) :    

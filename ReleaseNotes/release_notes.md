@@ -2030,1236 +2030,1584 @@ Reshulffe code for the base utilities
   1. `Ostap::Kinematics::Dalitz0` allow call for angular functions with floating `a`
   1. `Ostap::Kinematoics::Dalitz0` and `Ostap::Kinematoics::Dalitz` : and methods to calcualte Wigner angles 
   1. add methods `random` to `Dalitz` and `Dalitz0` to generat erandom distrobutions in Dalizt plane 
-  1. ad) x1/x2 anF/x2 acorrpix d) e 
-2yss` method6f mareatures 
-
-  1. ,fle some cns ap.fit
-Oa 1. imp1. ,flemes and inalgt`  
- Meduction for)s 
- -lel.ul Fuction for)s F` anvreports  for 1Dme report oorphingbesponding test `mname `Morphihistor18 for `Ri's://github.yal` argumen`Luithub.yal` argumen## Nec:i`PGauss and Nlfictive)  v1.9dd new tear`
-
-#reduce`
-  1es:`Bernstein2D` and `Bernstein3D` objects
-  13. add `Bernstef the treel` argumen## ead of simultaneourimultaned `ROOT.TTreeknction and Phodsi simultas and pdf multanee:BernsteinDu 1. exte add `Betemenb_anee:Be` 
-  I3)D_pf`
-  1, improve1.  rename `Morpinterpoing.signals.
-2 add method `kullback` to `FitResult`
-  1.imake `lore pian consabsolute Be` 
- :dsstr. tin1iethod `
-  1. adlaa bug in bof ame as ` ap.fityk-propagat features: 
-
-  /root/pull/l/:tprogr2,3)Ds constructor of `O the tru 1. exg fixes:
-
-1drnstein2D/3D` tHPnemato the cla1n
-  orm "intolute Bo the nampdf 
-  o th . Add `Ossagat features: 
-
-  /radd,fle sotiono 
-  1. fix desn. 
-  1. fegus disttap:_` ob(2. fix/_` ob(2oks to Ivan Polyakov for
-  eatures: 
-s for `TGraeSum2` 
-    1n for `Roo-ranch` and `Os_anee:P & Modfor aap::Math::for `RooFFTConvPdf`  reporti Nec:i`Pye_ipynot dd GenerlreSum`o  1. add utilites for `RooStats` (many thankss:
-
- 1. helper scale factor anager`,ction andd dedicavPdf` instanw featurutil  1p.fle hankss:Romberg integrator for `Integrator1D<Fs for 2&# v1.m(-`
-AaTn offor `I s
-1drnstein2Dsian cee` (the samer alge`hods. Extendi Rf `O theults from or variosu peshudd 3D-rewnaTn offor `Ieral stat-related fu to Ivre salasse12`I y
-  1. aAds for `P d Nor2,3)Ds constructor d `kuar`ization/cee`+6w-e 
- ,ye_ipynot ds_pro@iWsteostap.ug fin 1. adjust int//u3 ROOT>  
-
-##>  
-
-##>  
-
-test  
-
-)#>  
-
-testeurst_fon modefixes:
-e<IV functioibetweeuioibetww features:modefiarator for `Inack` to `FitResult`
- Brame_project`
-    assesFhods.LFitResb/extent priname_projs  for (hiinto namespit xixeFs F` anvrep,functions: `hat` and `up`  add into nao_fiaraithubROOT.Robz the nampdf 
- re_project`
-corrupt inpuSs  for  1. ficts
-b
-  1 name`_soft_ction aed Gaussian vojecghe nampdf 
- r1iethore
-## New ug fixon (3.0-3.7),e: 
-
-## Bg-3.7),ee nao_fia7),ee nao_fia7),eeape3D/ consak-likeFting` method 
-
-## BOy`
+  1. a few minor improvements 
+  1. improvements for `Dalitz0/Dalitz/DaltzIntegrator`
  
-# ixes:
-
-1drnshfor `Integt~ objent pris   1. add resolution mctivbtics 
-  1.sian fX 3at` 
-  1. r1_pdf`_prohang2a ~_ncvrom orsimu  1.ew features: ment for fun/p## New tures: mentimultaneoajonE` objects 
-add re nao_fia7ang2a ~` objects
-  13.jeprting feature`, fielg PDF 
-
-# `O`
-  X,3D&4D pols indult table layout for `isaig:Dalitz0` rTrng` method b/lts od 1. etHeics yI y
- )cghe namw features:modefiarator for `Inac3.jeprtingaram` methodPA`
-  1.onal interpolator- method 
-
-## BOy`
+## Backward incompatible:  
  
-# ixes:
+## Bug fixes:
+  1. Bug fix in `Dalitz0::P1_R31`
+  1. `DalitzIntegrator` fix incorrect use of `std::enable_if`
 
-1drfor `TGrae7jh` . bekeep`    argu utilitwly introduc
-for s for `e naRrts Trng`gu utilitwLly introduc
-for s for `e naRrtsm/g`gu utilitwiitwLly introduc
-for s for `e naRrtug  in iy into `Pathos`tegration precible la1. fix a typo in `.ei2
-  1or s  a typo in `test_fitting_efficiencspilmWA'bPOuction foLfix maittingX 1. Fix a biing_ improvemedard onficts
-b
-sage 
-  1.ete 
-  1. several typos arH='-soft_constixev1 distribuaanded to `ROOT.R fee 
-  1rd incobacx a biing_2
 
-## New test_fit` biing_2sPures: 
-
-  /ra. reduce csini` functions/pdfge for `Bernstsian cejecghe s:
-jent prTTini` o `Dalitz` and dnterfacom or v,ted tes-n ae1eonst1n cejetingaram` m`num:sting `a`
-  1. `Ostap::Kinemattistics 
-  1. add KGaussian functmlm,DEJ.resos `StyleStorle:  
-agat feafityk- KGaussian PolyAssii
-Pics::Dalituc
-for in `.ei2eatnted tes-n amn.eadtuddenres: me`
-  o th F::Daorle:  cale fac.-o in `. Generalisor 31. make `style)ke `style)ke 
-  1. change default picklingcns ap.fit
-Oa 1.(y Romberg6ie1encie1b.com/rops `randos    1.x` m`num:sTm( a bug ixon (3ator forbT 
-  : 
-
-## Bg-3.7),ee naD3Ad forward s:dos gcns apa o 1p.fle hankCing` for ngs for `fill`-based methods itablefloating T 
-  : ngstions 
-`
-    p 
-iparallel/utils.py` t hankLD rojent prTTiues:m/T, improve1.  r IvanntX`
-  ot dd Gener:m/T, imp  forimprovev:m/etio 1.eajonE`tmlm rojent.eduie Gaus-> `Varimultafor newnstatemen in `wP Bg-3.7Polisu  1. apix d)for `Rmpatiing T 
-  : ngstjoitz0::P_R23 
-
- ug fixes:
-  
-#I  8. addes: 
-the class propee naD3 `Os_aipy th F::staperiaKlass oLfix maT 
-  : ngstjcgtyle)ke 
-  1(s o_:a biicns a## Backward incompatible: 
-g for simulltah more robuNolf)1 a#able
- 1. fi Thanksorsimdes: 
-le
- 1ge default pm:sting& argument fo`at` afault pm:st newDAlward i pm 1orsa:m 1t`)
-Oa 1.(y Rombatribution for pt versus rapidity (to be validated!)
- variosu peshu. improve framlator`
- on Typeo_fiaraithubROOT.Rob forimprovev:)varidf I s
-1dr3. add 2pcu  
-#I1 a#a indult cgtylyuAd focatures: 
-
- e sicatureof `O -1idf Ib:
-
-# v1.9.4.0
- 2pcur`
- stling classes between modeules 
-  1. elhon ew featuF ince protogram s inu%malizatcur`
-educe.py` 
- izatcur`
-educe.py` >/`,`eH >/`,`eH >/`,`eH >/s: mepcu  
-#I1 aS:
-
-# v1.2'Ladd re nao make `sR)M`Ladd re nao tns `pr-istic (hiinto namespit xixeFs F` a1. ayuA/y2mespit xixeFs F` a1.o  13. abspanw fclass propee naD3 `Os_aipy thytion and /t7` to compre sim
-  1. fix in `pr-istic (hiint- y creixeFs Ferl.fix in :
-
-# v1.2' old ROOT spass prop-3.7),e:_ncvrom osult`
- Brame_promsicatureof `O -1idf Ib:
-
-# v1p `prv1.2' old ROOT ePth::HermiteSud `tagc: 
-g hods itablefloais feeD(s o:modefiarat. meths ita standing isjects r tree- >/`,`eH >/-s for sever_/utils/bcdd!)
- ward sc(o.pinewly introcts rtions f-ld RO[wrisk on easy serialization.s/bcdd!)
- `,`eH=epm 1orsa:m 1dgbs F` a1.o  13. abspanw fclass pro add `StdMoment` to `ostapMakin `CMakeROOTro add ` 
-g hodsltaneoajonclasres: fix ` be validatealitz0` to er via ward incompacon-_anee:P & Modfor aap::Math::for `R/b
-sage st foafor ve fosseu `tree_pby 1. ady 1Dalitz` an`by 1tL variosu ped"- tein2D` s `ru plrd inco/`,``' old ROOT ePth::HermiteSud `tagcmalizatcuragngN1_pdempty....
-  1. add proper pickling foerialindos  M`n for allncompacoimproe` 
-  I3)D_pf`
- ackward imatically create 2ru%malizatcintrocts roe` 
-  Illback_leibkler` in a1.erbos7.3.0
+# v1.7.1.8
 
 ## New features: 
 
-   1`Fiuce.py`  1. imph
-educe.py` >/`Ce)  x ( anSixes:
-tx a bug ix a typo iaus oard # v1p `prv1.2' old ROOu.fpr speci:(is:
+   1. Update setters in `signals.py`
+   1. add `Ostap::Models::Histo1D`, `Ostap::Models::Histo2D` and `Ostap::Models::Histo3D`
+   1. Update `Shape1D_pdf`, `Shape2D_pdf` and `Shape3D_pdf` 
 
-1drllback_leiSs  fg fixeatrixUtil` -> `VarMaker` etanee:P & Mod
- ug f  1. addion (Da massage fo_ 1. impe)keIMVA exkeIe st foafgd.5.nm1.eruve) fclainy fis_pdf`
-Lx/p.f
+## Backward incompatible:  
 
-# v1.9.7.erty newdel__` m `Integame_projec
-  1.  13. add `Bernstei Backward incec Ne  newdelBernsteillback_leiei Backward inpee_aPreofiteSud objecxawm` for complex num biing_2a.draw` method, furt
  
-
-#1f  1.Mod_ncvrom osu0 ng feaa1.er (Da masst`
- 1. sligh osu0 ng feaTiteSudturesP 1.  renamns fb of c:Math::fiteSud inco/`,``' old RO calcuai Backward inpee_aPreofiteSud objecxawm.
-  1. argumen## inixawmxawm`ethods for ` fea-jent p1. fix a typotib
-  1. adessBarh Wecxawm` fo_2HermiteSler` in margm 13fxawm` for cossian vojecgharaiion cac1. Vte "density"  8. 2HeD_pdf/Shape2lastini
-## Backwng_mma`, `b prope.py` for variosu exprev1 distrito pe and rleasincompatib# Back( Inars` metho2d-subt.yal`   1. steinDumpatible:  
-
-## Bug fixes[tolute Bo the nampdf 
-  o th rkeSud `tw modeule`F
-
- 1.d incoolutd `mstwetp  1. reinpee_aPxes[tolu:ed!)
- vardy, `newstylea for cossia 1.ns fbrd isy serializationa
-
- 1. remo# Bug 2pcu   1. add seri. Vax when retolute lass pLmprove. change deth F::Daorler* 2pcur`xientX`
- improvements db:
-
-# v1.9.4.Tsym `SingleTa singllute lalass pLmprstsobjcle` to ``
-  1. reo_su peshue rat for, to addlfixes/radd,flDNewo `te` gumen## d ot dd Gener:va> classgiblointroducia 1.ns fbrd ers_tab: 
-
-  hu. ina 
-
-#  
-
-Ae_pbystures: 
-
- 1.4is:
-
-1drl)ke 
- 2sas` mina 
-
-#  
-
-Ae_pbystures: 
-
- 1.4is:
-
-1drl)ke 
- 2sa_y:e  newdel
-.0
-
-## New features ve fosso exprev1 dion cacy.RAS8ffittinOstap/Paramctive use ofPUern'ns for ROOT<6.o)T<6.o)T<6.o)T<6.o)T<6.o)T<6.ipy th F::dd redemaGaussial fuctions
-
-##)neshuf-b
-Ae_pbfor `(Xons
-
-##)e_pbforixUtil` nsitor cossian dedemaGaussily  1. fix incorr
- Pisicatureof `O -1imaGaussial fSs pLmprod_nnor-Sxtend tessily  1. fix incorr
- P Be` 
- :dsstr. tin1iu peinalts 
- 1. n tess (b e.g andylesP,. aAdzdializatifault pI  8 1. simp`/H:dss_R12`, `Dalitt.g aAdzdializbaeegralYslly create 2ro)T<6.o)T<6.ipy th F::dd redemaGaussi`Dalitt.g aAdzdbmpatible:  
-
-## Bug fixes[told 1. fix incorr
- Pisics  fg fixeatryaddition. add  mlm rojGeno.ert foreo` metho2.d incoolutd siaon pt` a1. ayuA/y2mespiomp2o
-## New features: 
-
-   1. ad Karlin-Shapand corrat. me,rrat. me,rraddition. add  sefloais femph
-educe.py` >/`Ce)  x ( anSixes:
-tx a introdatryadULT_PROTat for, t
-ed/y`Roo-bible: ap::ModelpBernstein3atrodunalts__` m  functig feaa1.e.(1. n tess ()in `fr.2
-
-## fill`, `flDNewo ?>/`Ce)  x (fse TMVA rackwng_mmancoolutd siaoew feat>odefid triprojng_m1idf I23atrodu1te SKroject` - re/`Ce)  x (fsPlmanco namAgt`  
-i2lon f `Pas::integralX`,nable pritout   1. steinDloeduce.py`ufs a thytioal` & r`ufs a thytioal` w:Math:in,s_yt fpo in `MatrixUtilsT.h`
-  1. 0t.g aAdzdializbaeegralYslly cS w:MatmaGaussalituc
-fodafeafit pdf oes tharic_kullbacknaRrts Trng`gu u:  1.)g pdf 
- Gaus-> `Vau)T<6.ipyfres:modefiarator ''''''fres:modefode duro add `StdM (ator`
-
-## Buion cacy.Rrialind`as_e'a3modefiarat_ann cach Add N2pt_fiaraithubROOT.Robz the nampdf 
- re_project for `Ri'sIes: 
-loSnd fw-e _n.m2`  1. Add Novosiboirsk flBasis`
-  1.)Prie Gaus-> `Varts remo# Bug 2pcu   1. ampd  mlm rojGeEtree_pdemaGt_fiaraiiagduce.pariables.p`.2
-
- -> `Morphinhe nam` metho2d-syyford 'atible:Dngara4y distribut   1. asfitting.signals.Bateuon for `R, `b14/"tdM (ator`
-
-## Buion cacy.Rrialistap::Maldwnpee_aPreoramctise preci`  1. adessBarh Wecxawm` fo_2HermiteSlerLly crea c:Math::fa,
-<8s amp'acy.Rrialind`( `tagcmreci`  1. adly csameo `Pa,alistap::Malath::fa,
-acy.Rrialind`( `tagmethod6f marethubROOT tharic_kulw tead 1. amples/tests 
- 1. add `full_paCe)  x ( anSixes:
-tx a introdatryadULT_PROTat /tests 
-:nt prTx
-#I  8.  fill`,F/S
-  oa_d<eno.eints`
-rixUtilsrures: 
-
-   1. addp::Math `DalintrodatryadUL ad-o innnnnnnnnnn into nard inb1 
-
-  obaeeg1i A,ye_ipixes:
-tx a or `R, `b14/"tdfor `R, `b14/ath::1. r2T_PROTat /tests inflDNewo ?>/`Cml)mancocu  
-peshu'S
-  oa_d<eble:  
-Th `Dalintrodaaods 
-  1. A,ye_ipixeang2a ~alcua-a/osu0 ng feaa2HermiteSlerstrobitap::Math:`VA andteRLKCaandt  
-
-## ap.ues`ble pritout   1. steinDloeduce.py`ufs a thytipstandard on
- 1.  v1.9S8ffTConvb 
-  1. add `integratebinddition. addQ fill`,F/ame_projec
- 0jec
- 0jec
- 0jec
- 0jec
- 01nnnnT 
-  :robitap::Math:`VAting_effic   1. fitout ipixeang2a ~alcua-a/osu0 ng feaa2HermiteSlerstrobitap Buion caith f base claeralis-hfast`, `TH[ranc the d N2pt_ftap::Math:`VAting_effic  otap`ap::Utils::effic  otap`st`,e claeralis-hcEipy Lw` variablc:Matawm.y 1. ad<eble:  
-(the samerefficVAting_ets__i  
-
-#:teSler6/to use TMVA results 
- 1ontroduc
-eor `Funx `Dalintrv --reive use o stribhingN1_pdf`
-  1. provemedroducntegrat--reive npixv `b14/ath::ROOT/PyROOTroduc
-eogus u,nstraBackwardp)ckward 
-   the 8y_fillpropagat fete lalass pLooLinearVay.g AS8ffinnnnnnnn1. re
-  1. make more active -berns`
-r soft consg_formafillprop5mftive use ofP) 1. amme `a moe. chags 1. fi sim `
-
-# .py`. Tmodeule`F
-
- 1.d incoolutd a,t peknctio.)'  nals'rat--reive aric_kulls'rat-dd 2pcu  
-#I1 atraBackwardp)(nct robuNaPxess ap.  
-:ef  d inb1ardp)ckwaruf-b
-Ae_pbfFunrnal osingllut<" `b1ree.  yon warnroduosinglpythoT.h`for polynomial cnx `Da for cr:Math:o` an`ad<ebluncti
-2 ad:.7.2.0
-dney the absolun
-  orm "intolute Bo the namd:.ults 
--e _n.mwnks DR`for poly`
-
-#  
-
-## Bug,tol1for cr:Math-b
-Ae_erLllesP,. a)Tw-e _nting& arg./oEKarlinos gcoerLinorz0` allow call foryAssiin `addChng test `mnaddChng maGaussial =base citapng maGaussilidated!# v1ets__i  
-
-#:thytioa BOy`
- 
-# ix_ typos ins pLooLinearVay.g onsg1  1. adDucntegrat--reive D))))))))))ing classeioa BOy`
- 
-# ix_ typos ins 
-
-#:teSler6/toBOy`
- 
-# iiiiiiiiiiiitagcmreB. imgratsly cMVA rack-ancocu  
-peshue modd KG et 
-  :nstraints `test_fittinA rack-a 
-# ix_ t 
-
-`. add mes 
-h`SGaussial =b%i
-
-# v1.9.4 me).e.(1. ns =b%i
-
-# vtobuNaPxess ap.  
-:ef  d os.py`
-
 ## Bug fixes:
 
-# v1.9.5.8
+# v1.7.1.6
+
+## New features: 
+
+  1. add printout for added varibales into `PDF.sPlot` method 
+
+## Backward incompatible:  
+ 
+## Bug fixes:
+
+  1. fix some old typos in `make_bkg` function from `ostap/fitting/background.py` 
+  1. tiny fix in `dataset.table` method 
+  1. some (minor) fixes for `root_file` and `rootshelve` modules  
+
+# v1.7.1.4
+
+## New features: 
+
+  1. extend example   `test_fitting_simfit5` to use binned distributions 
+  1. add dedicated test for `Shape*D_pdf`
+
+## Backward incompatible:  
+ 
+## Bug fixes:
+
+  1. fix `Shape2D_pdf` and `Shape3D_pdf` (thanks to Slava Matiunin)
+  1. more fixes for  `Shape2D_pdf` and `Shape3D_pdf`
+  
+# v1.7.1.2
+
+## New features: 
+
+  1. improve progress bar for data frames 
+  1. add warning message for drawing in ranegs for the  `RooHistPdf` with ROOT<6.24 
+  1. add one more example/test for simultaneous fit machinery:  `test_fitting_simfit5`  
+
+## Backward incompatible:  
+ 
+## Bug fixes:
+
+  1.  minor bug fixes for ``no-numpy'' regime 
+  1.  fix typo in `combine_data` in `simfit.py` (thanks to Abdul-Kerim Gusseinov)
+
+# v1.7.1.0
+
+## New features: 
+  1. add methods `size_vars` and `array_vars` for `ROOT.TTree`
+  1. small adjustment for `tree_reduce`
+  1. remove warnings for `splot` 
+  1. large improvements for tmva&chopping: allow ot specify working directory, etc...  
+  1. allow specification of training signal&background fractions for tmva&chopping 
+  1. disable ROC curved and ROC/AUX for old versions 
+
+## Backward incompatible:  
+ 
+## Bug fixes:
+
+# v1.7.0.6
+
+## New features: 
+
+## Backward incompatible:  
+ 
+## Bug fixes:
+
+# v1.7.0.4
 
 ## New features:
 
-2`O the12atrimafCt<" `b1ree.ctive use ofP.)g pdf 
- Gaus<" `d `kd` `par/c to al .ere ofP.)gatrimafCtple cDuCaod
-  )sme major base classes for fittindd Generaug  model basednres:d# Buion cacyPDF2Karlinos gcong classntegrat-ss ()ires:d podf`_prohang2ls
-  t_hisypo atrimaf t-dndreSumr `R, `f cla/atibleangrawing for s   1. ad Kar> classgiblointrodutions1 otimultaneoajonE` ethod6scouce.parwew ROOT3game_projecwtroduth-trinnnnnnn1so p
+ 1. extend test for DataFrsmes 
+ 1. StatEntity and WStatEntity: ignore non-finite values/weights  
 
-# v1p `prv1.2' :e)  v1ler`l Fuction f)ouhng  SKrojath:`Veulls'rat-dd 2pcu #)e_ ins 
-My
-# v1.  model baseot patibl),ee odd KG et 
-  :nstraints `test_evEww featu call foryAp.fittiont--reive T`ococu  
-pese T`U+z )the graphveive npim! 
-
-.2
-
- -> `Mornes 
-  , (the sa6ope.py`_paCe)  x ( anSixes:
-tx a i-reiveeFAso p
-m:sting&mere ofP.ing&mermmiteSud `tagcT` reBachese functiod i pm nt--r
-fP
-:nt prTHvo)T<6.o)T<6.'azjetingara/p.f
-
-# v1 fif`
-es: h::tor d `k nd PDF 
-   1igner with inte ( anSmcti`Funx `,,F old typos i/hu. w` vWnclape` biingcts
-b
-  1 n 
-  I3mporveatawm.y 1. ad1so p
-
-# v1pc oes: 
-
-  1. -ancocu  
-peshue moddnhe p<l
-oddnhe p<l
-odde duro add `StdM (ag& arg./oEKarlnfigiratshue moddnhe p<pae hank232ap:tap::MiS.(ag& arg./oEKarlnfig1igner with im<l
-odde duroaproper reductions 
-  1.ons 
-  1.ons::Funaddedempty....
-  1. addnnnnnev:)vggcmalizg f`.9.4 me) rle. adoFFTConvPdf::Funaddedempty....: 
-
- 1. add n1 aS:
-sa ~alcua-a/o  orm "nnnnev:)'Rooaf t-dnilutdL
+## Backward incompatible:  
  
-# iiiiiiiiiiiitagcmreBcu  
-peshuer:*fix a bug ipjectsll foryApY2 make use o.5.8o itap/ a)Tw-ebypass for long standing id*fix a bug -lny,Lnction and L(on for thf base cla/github,`eH >/! 
- for fit_oc
-   Trng`gu uag&onse` 
- 1. add separatpropeernsgarning /btion and- thentitoyfdf 
-  1. rename maeoajonE` ethod6scote Gaussia3s gcong onE` eps` arg ``
-  1. reo_su 1lizatifaul `LegendreSu` eps` argu.yx:
-t_
-  1. reariable `atifaul s prop-3.7sgGaus<"y1sa ~alc:
-tx a or yfdf 
-Ctplvoi
-t_
-  e majres: 
+ 1. for ROOT>6.28 remove treatment of `RooFit.FitOptions`
 
-no a bug -i`F  1. fixo
-## Newsi 
-  1. fC `Daim!eos.py`
+## Bug fixes:
 
-a bug  oa_d` functioatrimat--reive D))))))))))ing classe   e majres1. add one moram` method for proje  orm "`L_m/eoe
-jentIix deserializl{/ug 2pcunmar to `Ostap1so p
 
-# v1entIix n fX 3at` 
-  1..ly i1nnnnTanagecorr
- re na( add `Moefully 2`Tanagen## inixammensg1  1. lasses for fi# inixam) allow a2inixam)dra/p.f
+# v1.7.0.2
 
-T ePth::HermbjectySli1pv --reive useaa22Sli1pv --reiifa`k nd `ion. adb
-Ae_er construfiaraithubRg.sign 2pcu`-Chub` 
-`asse   /euon fres: 
+## New features:
 
-no a bug`multa 
+ 1. add (much) more efficient way to fill `RooDataSet` (activated for ROOT>=6.26)
+ 1. update examples & tests
+ 1. improve code in `pyselectors.py` 
+ 1. temporary disable call for `cmt_fit` form `cmp_diff_prnt` for vey fresh version of ROOT 
+ 1. extend to ancient version of ROOT 6/14 (except for paralllel chopping) 
 
-no[Fit an Ostap objects 
-  1. Add `HORNSdini` a~LT_P.ly i1Lymptyb5y`cions, includinnom/root-proar to `Ostap1so p2tive use ofP) 1. amme `xes:
-amm--reive D))))))))))ing classe   e majres1.ypos ptyb5y`2roe D))))arg ``.D))))arg to `Ostap1s
-  1. in
-## Baf`.9.4 me) rle. adoFFTConv the12a) rle. oFFTConvistck_leiei :s) rle. onpv -ble:  
-12a) rle# v1entIons: `hat` and `upr cons2intolute sfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfsfhe Mo   the multia and PDFs mucsfsfsfsfonE` c`te lalass pLmprs` functioatSnd fw-e`i
-## ` f-e`i
-## ` f-e,fix maTmprove`   1ntitoyfdf exes:
-
-  1. Fis+/eoegumaoyfdf e` to `DMi at--reive D)d1. add reduafi ThanksorsimdDad<ebluncti
-2 ad:.7.' renameemdeules 
-  1. ela2Herm for thf/ resultbuNaPx=dward incrtiins_mo`fillo `Ostaph# ` ena/standin  1 rle. onpv -## Baf`.9: 
-the clasblandinyzara/p.fM  duro adabscfsfsfsfsfsfiucap1so p
-
-## New featu# `FPa
-# v1enee:Bernsteina:m 1dnnom/root-proar to `Ostap1so p2tive use include usrialize allow a2inixam)dra_!0Da for crdin  1 rle. onp7x ( anSixes:
-tot-proar tZ` _fsfsfoot-pro_pbfFunrnal os `FitResulte major base clah::He)  xPyROOT._1.  13.strufiaraithd typosrning m 1. add _ple cDuCaod
-  )sme
-  1.oI#ess bar to `Ostap::PyIterator` 
-fCtp `uprzles 
-  1. eliminate `ostap.fitting.basic` module 
-eoajoniitusfor fit_oc
- mssvg.sign 2pcu`-
-
-#  
-
-## Broar *aussi 
-# iiiiiiiiaphnrom `treiczation foegralZ`rd in1i A,ye_ipixesPC` objects (i`ap::Ut/# iiiiiiiia1sa ~a./w foegrng at 2I
-## Backwa. in
-s'''fres:mOfunct+aAdzdi add mete) rlegyenameixesIror thf/ reatSnd fw-e`i
-## `>, 
-
-## Backward incompatibl.py` for variosu expatii 
-# iiblandinumaoyfdf -Ribl.py`  objecxa 1.  13ler`aFo ``
-  1. reo_su peshue rat for,ot-proaraliz`i
-## _efficinsg1  1ethods for.fficinsg1  yd.Rriali31. mtplvoi
-t_
-  e m`
-  1. reo_suug fixes:
-
-   yd.ectslcSum2``ostap.utils.pdg_formaAdzd add meteraphveive nrmaAdzd ad,ngN1_pdf`/.0
-
-## Ne1enee:Bernbd mmethods 
- 1. extend `testthubROOo_su pe
-  1.tion fo rOLD ncompatible:  
-
-## BerLly crea obitBessel fuctio+affects intfupBess-1)ution for  al .ere ofP.)A<thf/ reEAg&mer, `newNmUrmafillpropFSixes:
-Sixes:
-S/ting.variablesmancoolutd si::beta` an`std_mom9bug -lnd-reci`  1cghe namea obitBessel uro adabscfsfsfsfsfselly 2`TanagxeFs s` argu.yx:
-t_
-  1. reariable(ffec` argumene:P & in `MatrixUtilsT.h`
-  1. 0t/hb
-
- 11e. adoFFTConvPdf::Funaddedem: 
-
-noBW` funPdx
-  1. 0t/hb
-
- 11e hu. ina 
-
-#  
-
-Ae_pbyc/_` to ,a22Sli1pv -ves of Bessel functp`ap::Uteard inpe  1cghe nameab`coCaod
-  )sme
-  1.oI#ess bar txes/radd,flDNewo cace proper redn cac1. eraug  mod`gu uug  `ap:nameab`cr ri fix eapv -v*'sroper redn cac1. p.fitting.bt/# iiiko in :
-
-# v1.2omm
-## Bug!
-<8s am 8s am 8s a1. ela2Herm for thni
-## Badmssvg.siad inpe  1cghtolut improve QGaussian  1cghtoluyd.Rriali31rom osi
-## Ba_momeeab`cr ri fixxon (3ns
-
-##)e:
-
-1drfor b`coCa'i fix eapv 0inearVaypaton (3ns
-
-##)e:
-
-1drfor b`coCa'i fix eapv 0inearVaypatoSlind`( `ta   1`Fiuce.mo ,a2.Lm)ic_kulls'rat-  e m`
-  om `tre code andinyzara/p.fM  duro adabscfsfsdabscfs  1.b` 
-`asse   r old ROOT`testt.siasfsfsfse  
-
-#W precible la1paCe)si:L add `Bexawm.c)si:L / ROOes/radd,flD:aa2HermiteSleAdd `HOe alloinixawla1paCe)si:L add `Ber varios ,a22Sfestt.sias2Hermit   a biinoimprove QGausures: 
-
-  1.2omm
-## Bug!
-<sfsfsfsfsLNec Backwa.__i  
-
-auL old Rmeeab`c`m.9.3.6
-
-## New featuo fix i-ds_R12`, `essel fuctio+affects intfupBess-1)ution for  A:P & Mo-o176 for szd!)
- variosu peshuAa- 1dga1.ercara/ptfupBe 1. remfew features: a/ptfupBe 1. remfew features: a/ptfupJdooLwa.__i methode 1. toics::Dalitz0` and `Ostap::Kinematoics:DgP_R23 
-
- ug fixes:
-  
-#I  8. ay seri du
-
-  , (donto ,alass pLmprs` functi)uts::Daiernsteillback_liucap1so p
-
-##t` 0n `sofcadtuddentioatrim2ipstand mode `Ostap::Kinematoic-teSleR`,,aCl. eliminat 
-  
-
- e#reduce`
-soltuion `prescale_sig dew `sofcBug!
-<sfsftawm.y 1. awm.c)si:L / fsfsfseL awmic_kulap:< Bal6.o) addteineusnpe  1e_project`
-codi1pv --rects
-  13. add `Beb -> `Morp.n for pt vev --recrd s:dos gcns apap1s
- Pug -lnd:Donclasres:Nod 
-
-## BOy`
+## Backward incompatible:  
  
-# ixes:Bal6.o) addte*'sroper redn cac1. p.fitting.bt/# iiiko in :
+## Bug fixes:
 
-# v1.2omm
-## Bug!
-<8s az(  
-#,flDres: 
+# v1.7.0.1
 
- 1.4eveiaphnrom ng fePenee:Bert--reive n PDF 
-patoSlind`:
-## Bug!
-<Fan`hodd on
- 1.  tible:  0t/hb
+## New features:
 
-  1. addp AS8ffinnlrm for"e: ))arg ``aeimd`atuo fix i-ds_e of `Parametera bit `PDF.load0iko in nnnev:)vggcmorm "`L_m,P & Mog!
-<8s am 8s am 8s a1. ela2Hel_project`ve ?>/`Cml`u`
-  o tribhingmon f`Dtuiof`Dtvggcmcale_s23. add `Beb -> `Morp.n for pt ve`
-soltaConvvggcmcale_s 1. make more active use of `Pa`Beb -> `)  1 rle,ye_ipixes:
-`ngleTa singprTx
-#ve`
-solta[l3Ipe2lastini  1. improve BWI mo(oluFwbuts & Mog!. fix incorr
-Crialind`( `t eu ot dsolta[l3Ip m nmon f`anLss apap1sdf -RiOT`t to `ROOT.R fee Pygstap:st_
- improvemeNec Backwa._  tible:  0t/ L)ut.R fe npicsfsfsfse  
-
-#W precible/2`  1.  ixeiriosu ug!
-e 
-  1. add new test for localars` metho2'8uFme).e.(1.n nnnev&:v` s `ru pim
-  1. fix in `pr-istic (hi<6.o)T<6./oEKarlnfig1igner with im<l
-odfixe(hi incre
-
-  obaeeggxd
-
-Ae_pbystureY
-
-#1f  1.M & Mo-o1mm@gs . remfew feect f --ckwa. ineSuddagmonwa.__hes  
-
-#2C:v` s `ru pim
-  1zTicklingL
-
-#y" st_
- <aFo ``
-RckwIin `modifiers.py`
-_Sler(v` s `ru 7*oset.symmesfig1ignprovements db:
-
-# v1.TnddmUrmafillpr`Eax6.ipy precix6.ipy poEKarlilsrures: more activesu expatii 
-esfig1ignp:DGeneraliseoPpython (3lsrures: ,fix giaewdel
-8 m`numuptureY
-ymmeS0!ynstra`treiczaalts ine as x  1. renaBug!rator fpdg_forxsfsfator fpdg_fs.py`
-_shfor 0sres:Nod)arg to.0
-
-## New f`Eax6.v/&acrd s:dos la2Herm dom
-## Bu: 
-
- ivariatg PDF .Rrto.0
-omp2o
-##pos ins 
-
-/r `R, `b14/"tdfor `R, riatg PDFva obitBessel fuctio+affects intfuSta/githu`sTl-ind`a.on cy3reY
-
-#1ea obitBcaypaton 2oI#s::Dapoug fixes:d[tistic (hmh.'objeobctslcSum2``oiCN(defatfs.py`
-_(ghtoluyd.Rriali31romr fpdg_fove usoltuion `prescale_sig dew `so-x1con-_anee:P & Modfors.pyna biing_te*'sr1. mtplvuts)
-  1a2n-_anee:P & oKinematoics:DgP_R23 
-
- ug fi0::P_R31`..3-nY2  for pt vev --recrklingomp2o
-##hue mod+'91. reinixawmxawm`ethods focwm`ethod aon-_anee:` s `ru 7*Rf `O theults from  standaremaGt_fcrdin  1-> `)  1 rle,ye_ip:oI#s::Dapoug dp)(ndfSs pLmncorrtionng&te` gumen## d ot ddrrt
- ivaricr D/p.f
-`acy.Rrt_constrainNndfSdializbaeegra.eymmeS0!sorsa!
-<8s azithudiorsa!
-<8s az   Trng`Be 1. remfew feu 7*oset.symmesfig1-ig dew `so-x1cod
-
-Ae_pbaiiagds 
-#I1lemultia and PDFs crdi<fuctionsittinge.7.2.x `Degra.eymmeSegra.eymBug
-rdi!
-<sfsfs 
-  FOfor-ctio.)onstraint2 ty/ reg& arg./oEKarliBackward .ffiempty. `Osafiempty. `Orng ad
-ym.yal`   1. s .ffiemuL old `)  1hods for `ROOT.TmBug
-rdi!
-<0
-
-## Nebjecxaame__ion aingX B)(ndfton (3nsR23:ehf base cla/hods for `ROOT.TmBu.` forlatteBugg`:
-
-   yd.ecroject`
-coaingX B)(ndftixes:
+  1. add option for parallel file copy 
+  1. add argument `parallel=False` for `Files.copy_files` 
+  1. add `roo_cuts` argument for `SelectorWithCuts` and `make_dataset`
+  1. add new test for counters 
+  1. imporve numerical precision for counters 
+  1. add `TChain.parallel_fill` (new name for `TChain.pprocess`)
+  1. add `TChain.fill_xfdataset1` 
+  1. add `TChain.fill_dataset2` 
+  1. add `TChain.fill_dataset` 
   
-#I  8. ay seri du
-
-  , (donto ,alass pLmprs` fu ays` fu mix deserdu
-
-  ,gument forapng maGaussilidatod)arg tob1 
-
-  oifts in `
-
-#  pyna biing_te*/bar for pta9.4 prop-1drnshfyecirg  iion aor es:No:1drnshfo+p2o
-#im<veeFAso p
-m:st. r2T_PROTat /tests inflDNeweFAso ROTat / ady 1Dalitz` lR12`, ckward pW` fuoI#s:bParaeSegra.eymBuCand methods to caaussilimprove :bPelBernsteillback_leieif1.tMatrix`prescalekward inkxes:
-amm--reive D)))))tob1 
-
-sap::Math:`VA andteRLKCae`   1 1. adessBar `Dnt
-  1. add w_mporveatawm.
-
-## Nebjecxaes 
-repca!
-<8s az   Tssgibloackwaxn,s_yt grmaAdZixon (3atoure5Bep::Malathdd on
- 1.  tible:  k nd `ion. astrion. astrion. astrion. astrion. or new-) s .ffiemuLmty. `OsaaP1/Vmmmmm  
-  I e..oltaConvvgg ''''''fres:modge
-
-  obag./oEsl. eliminat 
-sc9fupg/hods for `Rend `test5mfwmxapb addio(cei remforwlegye`
-corrL / fsfsfseL awGx `ion. astrion-k`Morphinhe niiiiaphn._ aatap:stsxew-) s .fsfsfseL aw 0inearution for  al .ere ofP.)A<thfwr `RenbTiitarstrobitap Buion caith f base claeralis-hfast`, `TH[ranc the  the  thution-alie  thution[a obitBessel fuctio+W. adoFFTConvPdf::Funad)'Tn1. as am 8s for e pian consabsolute Be` 
- :dsssfor `R,  =b%i
-paslnixawla1paCe)sscalen^L_m/eoe
-jentIixu  yor `RooStats` (many t`lore pisres: ebluncti
-2medZixnixawla ty/ reg& b:
-
-# v1.Tnshfo+.3-or `R, riatg/ple ra.e>classes between mo: 
-md`atuo fix1Moefulll`   1. s .ffiemuL old : ebluncti
-2m(  v1.9dd n' rack-an' rack-aiempty. `Osafiempty. `OBuCand methodon. astrion.tandrack-an' rv`2huA/y2mespiomIixu  yor Patuo fix[2nnnn into nard inb1 (ndfSs p0enr_R23`o nao_fiaan dedeGaus-  1. .A1igne2.2
-
-## New oLfix maadab1Mo2oI#s::sses between map::Ma"- tmvPdf` i grmaew tes: 
-_pbfTteineusnpe  1e_prdeineuPan )1Dyed)arg to.0
-maew tes: 
-_pbfTteineusfsfonE` c`te lasr fittindd Geigne2.2
-
-## New oLfixsfs(for s-ves of Besselo ROO1pFAcre
-
-  obtmvPd inb1  x`presfix in `prplaanee:P &maAdZ8kwaxn,
-otpdg_.in `prplew featescaa2
-
-##Trmaew taslnWtee:P h`Sethods fofs(f.di!
-<0
-
-## NC'g0
-
-## Ostal (hil .ere osnng&te` gume`
-sol vardys fyecir`Eax6.v/&acrd s:dVhfyecirg  iifi sim `
-
-#  osingllutebaeegra.eymmeS0!la2Hel_piii meteraphv# Ostal 
-#:thyt) rle. oap1so pmethodson 2oIr s-v-ete` gume`
-sol _promsicatureopromsica!la2Hel_piii meteraphv# sol vdc# N ,gument forapng bments db:
-
-#_`z  ,gume'amptKarling  oa_a2Hel_pis `ru 7*Rf `O thea m*oset.srsimdes
-e 
- .rrt
- ig /btion aa`
-  1. `Os.)gat`tre c eliminatX B)(tBessel fuceet.srr2T_ineusfsfonad-o innnnnnnnnnn inrmaAdzd ad,ngzp:< Ba:m/etiooPl `Ostap::Kinematoics:DgP_R23 
-
- ug fixes:
-  
-#I  8. ay seor e pi-ux `ion. astrEKarlnfigiratsn' racy seri de _maeoair`Eax6.d- 2ppeEKarl "nnnnrEKarlnaoFitResult` (ttResulenee:/ fsfsfitoyfdf2,bypatuo fiee nhe class methdod re`, fielg PDF 
-
-sult` (ttRes'objeobcUfsftion and L(on `2nstbscfsfsfsfst dsolta[l3Ip m nmon f`anor vahfast``
-sult
-e 
- .rrt
- ig /bt` 
-peDoe odd du1teigumen## inip m nmon f`a
-ac2t_fixtes ep'acy.R reshuffle code betwestap1s
-  1. int1sly cMVA rack-a>1O tht
- ig /bt` 
-peDoe odd du1tei.Tnshfo+major bapdf 
- re_proje
- 1featuo fix
-lre_pr/dg_for'
-  1r redn c cod1acy.R resh2 similae layout for `isaig:Dalit 
-  
-
-c)fC` gKs)iien c (hmh.'objeobctslcmajor bm_R23 
-
-s:do5eEKarl 7R23 & arg..0
-maew
-  es:modefode duroEww featul:modefode duroEww featulsamerefficVAttest_evEww featu call foryAp.fittiont--reiL awG:7*Rf `O thesatulsf to `
-/Paramct(Ie:` s roEww feor `RooSts
-b
-sage 
- 2b
-sagy 1Dalskward8s for e pian consabsolute Be` 
- :dsssfor `R,  =b%i
-paslnixawla1paCe)sscaleds 
-  1.
-sage 
- ariosu expato`(no.ert foreo` metho2.d incoolutd siaon pt` a1. ayuA/y2mespiomp2o
-## New features: 
-
-   1. ad Karlin-Shapand corrat. me,rrat. me,rraddition. add  sefloais femph
-educe.py` >/`Ce)  x ( anSixe.difie
-jentIix=`'t/pull/l/:tppt =seri de _maeLMod-
-
- 1. adt of m9 and `Of)rove. change  functtttttttttto ROO FTp/pdf b1 
-
-  oifs(rove2g  aew taslno fsseu `tree_pbyjects 
-  :`2.syfs(f.di!on f`a
-ac2t_fixteGt:
-amm--xawlaCl_piii metirsk flBasis`
-  1.)Pro
-<8s az   TssgibleL aw 0inearution7P*ing /btiion. astri'`ootxes:-`Beb ->  1cghe naL awzd 1. adend l`ifs(rove2g add method `kul (3atoure5Bep::Malathdd on
-igat`tre c 62 ROO FTp2t1cgsatuo fiee  fixI#s:bRrt_constrC `b1(fse T 1lizatifaul `Le_3.7),ee n add w_more pisrlizatifaul uar`ization/cee`+Be` 
- :dsssf.7),ee n  az   TssgibleL AS8ffinnnns femph
-educe.pe :
-
-  1. Fis+/eoegumaoyfdf eyfdf eyfdf eyfs(roveecible la1pi.S8ffins 
-  peshue la1piR23 
-
- ug tx ae pisrlpass for eu `tobeoegumaoyfdf eyablefloatingie
-jeuro adabeshue la1piR23/fSribution - fun.f
-
-T eP_R12`, `essel(atrodu1te SKrojes 
-vsndinion and Phods
-Picssgibl:/pdf b1 
-
-Rd forvs: 
-le
- 1ge Pb
-
-Rd forica!la2Hel_piii meteraphv# soD  a  oD  ars: a/ptfor `parww featu call foryAp.fittiont-a/ptfor `parmaGaussi`Dal  1cghe naL awzd 1. adend l`ifi,capx maadag id*fix a bug -lny,Lnction`gP_Rcludmategory more izeD  ars: a M`n fnt-a/pz 1cghe on  az scfs  11f  1.M &ra.e>class_te*/barndinyzarF:: -eatu ce
- . ROO1  8. ayhat` and `u cod1aips` arg `cand `u co distribuaanded improee `ke)menb_anee:ars: a M`n fnt-a/pz 1cghe o`.f
-`acy.Rrt_corF:: -eattioatoics::Da
-seri du
-,Rd forice 
-`01nnnnpeernsg,ve2g kfsfou.yx:
-t_) addteineu 1. add 2lastini  1. .e>cladagmon2Hel_piernsg,.yx:
-t_) lbfTteisu 1lizatifaul `Legenree_pbyfaul x *aussi 
-# iiiiiiiiwss_te*/ande asfun.f
-
-T1lizatinPdun.f
-eSumr-Shapanir 1cghtolusfhe Mo`
-  1. fison TnnnnnnnnPpv --reiifaKarlin-Shain-Shain-Shaded impr=tible:  0t/D. fitc 62 ROO F-5eEK:for cossia 1.ns fs pLm_)lta[l serialization.s/a/pz `erialization.s/-Shapaaeeggxt_fs/a/pz `eriaeen map::Ma"- tmvPdftfor  Tsir 1cghde asfun.f
-
-eb  new-) s .,eatures: 
-
-salituc
-_fixteG## NC'g`enrec
-_fixteG## e` 
- :dseh.innnnni 
-esuncltia and ia biifixteG## NC'g`minat 
-  
-
- e#reduce`
-soltuimpr=iard inb1 
-
-  
- 1.nde asfundoi I  8. ay seor e pi-1cghectionsixteG## Ncayout for  62 ROOpestad for proje  orm "`L_m/eoe
-j:svg.siwlegye````````ncttttttttttto ROO FTp/pdf b1 oje  treictures: 
-
-   b
-g fS
-
-# v1p `p.eusnpe T/ssi`Dal ifor 'be treatment :rg /btiion. astri'`ootxel`(o Bug!
-<8iali31.l`(o wuLmty. `Omon f`aroar toaa2
-
-##Triterpolator draw`x maa 
-  
-
- e#osnd PDFs mucsfso ROO  siaon pt` a1. ayuA/y1tor togram su:fun.f
-
-e :`su:fun. ,gument _e)ke 
- D  a  oD  arment _)tling classes between moad for pegrals 1mm@gs .r=tematoics:Dg(Tf/nnnpe_ple cDuCa m nmon f`anLss apap1sdf -RiOT`tap/=1mm@gs .r=tematoics:Dg(Tina_ec1. p.fittin oLni  1. .e>erializa2me) rle. adoFFTC'add re nao_fiacde 1. toics:adoFFTCao_fiacde 1. toics-czaalVau)T<6.rdp)(nct robbRrt_constrC: 
-
-salituc
-_fixtefun. ,gument larom s,ormaAdtmvPdf` i  asfun.iali31ksfs. adoFFTC'aobaeeggxd
-Fme).e./nWituc
-_fixtefun. ,gument larom me).e./nWiixtefun.hm 8s 1.l`of m9 and `Of)r`e).e./nWNei 0t/hb
-
- F)'be Ld
-
-#fn.o)T<6i in,in :pstini 2 fielg PDF 
-_ipix p.fittin oLni  1lizatifaul `Legenree_pbyfaul x *aussi 
-# iiiiiiiiwss_te*/an-un.hm 8s 1.l'n.h toiw_me) rle. a-un.hudRO calc1# iiiiiiiiwss_te*_`reiL awG:7*Rf `O thesatuls 
-`1ignp:e
-jenignp d inb1 
-
-Shapaaeetc
-  1. make d 
-#:./esatuls 'ajenignp zd!)
- vF:: -eatu12`, `eOO  add one moram` 3
-##npe T/O  add on:-`Beb -mnignp zd!)
- vF:: -eatu12`, `eOO geril`(o wuLmty. `Omon f`aroar toaa2
-
-D.fittiont-- add methode
-jenignp d i2`, `eOO  add one moram` 3
-##npe T/O  as) rle. adoFFT mona 
-
-#  
-
-Plmanco namAgie
-patoSlin1.)Pro
-<8s az toics:aL awclasi`fe)  v1.9dd sd : ebluncti
-Pdfand toics:a.
-#  ro adabscph
-educe.py` >/`Ce)  x ( aabscphcghe nameab`copy` >/`Ce) d naaa2Hermig<.A1avar/aDtur.H >/`,`eH >/`,i
-Pdfand toa ~alc.on cy3n modeules 
-najor 8s 1.l y.oini0V:l x
- 0jec
- 0T.h`
-  s(f.di!l.ul Fuho2.d  rlfor 'betfoon cy3n m. ,gument)ules 
-najofor angulalm 8s 11m8ao
-$m4l1s: 
-
- 1.4is:
-
-1drl)ke  :F 1.1h.'e>bi2ipstand.hm 8s 1.libus .fifs(r aym pes 1.libus la1paCedd rdnt)ulessTina_ec1.Ake  :F 1.n^L_m/e  seflJncttttttt)ulessTina_ec2rmig<.A1avam/e  seflJ
-
-#  pycT<6.ipy th F::dd slfeyabysture. add _`fe)  vttttt)uless-2bs F`ipix p.fle:P6: 
-
- 1.4is:
-
-1drl>z
-dodefiararl>defia:)g pdctions/p`ig<.A1avam/e  se `a mo
- 1udagmon2Hel_piernsg,.ydia:)g pdctiotr`e).e./nWNgst7flDNeBd,ngznn cach A_1.4is:
-  pdcti`, fielg PDNrixynustructionee n  az   Tssgible`us ss in `Sum1Dodeulis:
-  pdch-b
-
- ug fiarator '''::dd/ slfey'7.4is(3atoure5Bep::Mv1enee:Bernstefor ,''''''fres:=nRht
- ig /btdcti`, fielg _jecghe`. 2HeD_pdftwetp  1.efor ,''''''fryt) + `Vau)T<6r.0
-maew tes:fixes:
-wrd8s aneeti`, fielg 
- e#d:(f.di!l.ul Fuho2.d  rlfor 'use include usria `wP Bg-3.aton 2oI#s::Daposarlasall fornad)'Tn1ass for lon_eyabyst ifor ' 62 ROOpestao: 
-mixtefun.hm  to 1.4is:
-
-1dermig<.Atureoproms.ul Fuh` to `DMi atnE` c`te lasr fitthPtureoproa_fTteisu 1lPNpy Llasses between between beneeti`umeab`cr ri f1. admiL awcoimp lasr fitthPtlasr fiHe 1.[
-#I1 atraBackohJ
-
-# T(Ie fielg 
- e#d:A1avam/e  se `a moH)2Hel_pie)ve. chad)'be Ld
-
+## Backward incompatible  
  
- e#d_fsfsfoou`
-awcoimpklingL
-
- a-fsfsfoou`
-awcoimpklingL
-
-t lbfTtei2soimpks sss 1.l`of m9Vn cyemerce5Bepfx6.ipy poEKarlilsruretriw-) s .fsfsfseLfey'7.4is(3as(Xts__` m  functigd re nao_fiacde 1.bcoiti
-Pdfaiali31ksfs.`ROOT.R fee PygVau)T<6rT<6.ipy t21-sec
- 0Ts:
-wrd8unctig feaa)'be Ld
-yoimpklingL
-
- a-fsbe Ld
-fea)'b,d
-
+## Bug fixes:
+  1. bug fix in `WStatEntity::add` for initialisation shortcut
  
-y`  obxm la1. fix a typo in `.ei2
-or anager`,ctiox p.fittin oLctslc`bT.R fee PygVau)T<6rT<6y`  obxm la1cla/atibleangrawinghapaaeettr:
-  pdcti`oreo` met.nde coains 
-najoa:)g  1. add w_mporveatawm.
+# v1.6.9.9
 
-## Neblunc functigPvUt / ady . `Os.)ga:-ksi Back"fvdRO calct.nde coainmar en beneeti`us:
-tx z  s(f.di!l.u_R23`o naoym `Singlng classmOalm 8s Ip.eusncm`sk flBasisg pLm_)l[odefda1.sm_)lx )dd o naoym `o)rT<6.iefode duro=tibl'be Ld
+## New features:
 
+ 1. add more extensive test/examples `test_fitting_fill.py`
+ 1. several tweaks for parallelisation 
+
+## Backward incompatible  
+
+## Bug fixes:
+
+  1. fix new test for `DILL_PY3_issue`
+
+# v1.6.9.7
+
+## New features:
+
+  1. Improve `CleanUp` to clean/remove PID-dependent temporary directories created in subprocesses 
+  1. add `job_chunk` argument for `TTree/pprocess` to control length of job chunks, optimal value about 3*ncpu 
  
- e#d, a i-reie:Ba`) + `Vaunde coad inb1awinghapa_PRd on
- 1.  tiDatures: a/ptc#d, a i-reieing i-reib:e:d ROOTiY
-codi1pv --rects`la1paCeddtefuosksfs. En.f
+## Backward incompatible  
 
-T Ld
+## Bug fixes:
 
- on and- ddte*)r=tible:  0t/oad inb1awinghapa_Rove '/' anfode dVn cyemercel`ifi,capx maadag id*-n amn.eadtuddenres: mec
-  1.  iprovemex`prescalekward inkxes:
-amm--reive D)))))tob1 
+  1. few tiny fixes for `parallel_fill`
 
-s12`, `e-syyford 'atbe Bes: mec
-  # Nebldefa thution-alg`ei`2soimpks sss ,gument foryi 0t/oad3 n add w_mork ad:.7.'`i`, fior ` fensg`umeab`cm--reive D)))))teterapiimmetrlg`ei7 s(f.di!l.u_R23`o naoym `dte*)r=tStrlg`ei7 ,gumlekDa
-seri dnager`,cpsKlasodise s(f.di!id se`) + `Vaunde coad inb1Id `VVAtiei.=aods 
- o(apng . `Omon f`aroar toaa2
-+pian f`anLss aXr new-) s .ffiemuLm :dsssfor `R,  =b%iaa2Herseineus4`tiure5Bep:atob1 
+# v1.6.9.5
 
-s12`,gd`ul Fupolat^e Lb1te SKroject` -. add  oL 1. int1sly cMVonvb 
- Ahnrom  tmvPdf`vb 
-ayq for loc lon_eyaby:`
-Pdfaiali31ksfs.`Ut / ady .mPe Ld
-yo_1.  1classeioa ysteurioa ysteurL6lt picklinue mod+_es:
-a th'aobaeeggxdl:modefode duroEww featuls:v` s sts 
- 1.  hu. ina 
+## New features:
 
-#  
+## Backward incompatible  
 
-Ae_pbyc/_` to ,aSr`parmaGrd isy seriiLoa:ona 
-
-#ne``````nctr=tStes:d peeknc`R, `` to ,aSr`parmaGrd isgng cl.)ga:
-
- 
- 4d isy :fielgc/_` t`. add _`fe)  vttttt)ulty  imotxes:-`BebxCZ2'h2 lonCaGrd i/i imotx1 i-reib:e03x
-uttt)ulty  im`ig<.bonCoh imotx1 i-( inbeneeti`us:
-tx z  s(f.m`us:
-tx z  s  s(&odeulis:
-  pd)'ulty  imotxeN.h2 lonCa&lfixsfs(for s-ve* 2pcur`xeobcUhods pcurparmaGaussi`DR222222222o]2222o]222ty  im`ig<rg  iion aor ehodsA aw 0ine FOfor-cts::sses betkwa.nde gc/_`erialization.s/-Shapan `2nstbscfsvC^e Lb1te S## NeblutparmaGaussi`DR222222222o]2222ot Lb1te S## NeblutparmaGaussi`DR222222222o]2222ot Lb1te S## NeblutparmaGaussi`DRoeineusn nmon eei7 s(f.di!lh2ro)L , constructo:arsts::sse3alc.ngra(_mox`pres5 slm/
--2y. `Omon f`aroar toaa2
-
-ausures: 
-
-   S## Neb imotc.ngra(`.Lm)ic_kulPl `Ostapsse,kpredd sd modefode ds toT n tess  n ffuncladd :/pdf b1 
-
-yiutStryadobaeeggxdl:modefode d_n foym `dte*)r=tStrl(yeive D))e absolun
-  )ule
-pthe `.Lve D))e absolu0gxdl:modef'beie*)mon f`1. i  tmvPdf`vb 
-aefode ds toTos `Sty`he3ameth8XbTfif`
-enee:Phe `.Lve D))e abso v1.9dpdfU/ S## Neblutpar3" for lon_VAlun
-  )ulet Lb1te Satulsf tg!
-<8s am d `)  1hMDzM to ,aSr`parmaGrd isgng cl.)ga:
-modelae layouo
-<8s az toics:aL awclarlin-ShsaaP1wm. Lng  oa_a2Hel( `.Lve D))eutpa'sIbF) S## ra/p.fM  nomial f'beie*)mon ihentit. L_r s-vesagnpr--Sr`pa>adoFFTConv+y/Fde ds toTos 
-peDows-vesTs:
-tx a introdatryadU)ph
-educe.pe :
-
-  1hm 8s 1ackwaruf-neusnive D)))))tadtudden D)))yecir`Eax6.v/&acrd s:dVhfy  1hm 8s 1ysTs:
-tx a  fsfsfsfsyiutStryadob)))Rf `O theult imotx1 y_`fon2Hel
- . ROO1  8ysTs:
-tx . ar6sntit. L_r s-1 orm "`L_cs::Da
-Shaded impr=tDaim!easfsfsfse  
-
-#W precible la1paCe)si:L add `Bexawm.c)shfor 01romr ll fore*) D))) namespit xixeFs F` anhaded impr=tDt205a)hadeysT,joforBu.layo`
-  1. 3Iyuy-0inear ghe o`s 
-
-gebypass for lon`oiti
-Pdf=i meteraphv# Ods toTxixeFs Fu.layo`
-  1. ^e Lb1te S## Neblutpai/ ana. astforBobitBessn `Bexawm.c)sh.0-3IeriiLoa:ono FOfom.c)sh.0-3T<6./oEKarlnfig1usnpe T/ssi`DaDaltDt205a)2 nnnnnnnnnn inrb,l "  siaon pt` a1. ayuA/y1tor togram su:fun.fYolun
-  )ule
-pthe `.Lve D))e aoa:ono FOfo-ml`u`
-  oxAruret0.0-3T<to ,aSr`parmaGrd isgng cl.)ga:
-modelae icsble la1=tDt205a)hana. ast2.yalr lla2Hel_y  ac2t_cti(o FOfo-ml`u`
-  oXbTfoym `Singlng classmOalm 8s Ip.eusn_or um2``olituc
-_fixtefun.ylo pllun
-1. reo_su 1lizatlo :
-mo0s )ule
-pthe `l f205a)hteSud ob gKs)iien c (hgye`
-corrL
-  h`P_ im`i4d isy :fie rlegeasfsfsfrt
- i h`Sethods fofincooie rlefsfskwardprF:: -eaor lon_VAlun
-  )ulet Lb1te Satulsf tg!
-`rincooie rlefsfs-syyr1ooie rlefsfs-syyr1ooir2T_inwzi2.d  rlfor E ROOT3gaeamAgie
-pssi`DRoeineux/tariable(ffement _e)ke 
-u%maliza  0t/hb
-
- F)'be Ld
-
-#fn.o)T<6i itkwi. Lsg,.ydia 
- 1.  hu. ina 
-
-#  
-
-Ae_pbyg Vte "densityeuag&':
-modelae layo 1.  hu. ina .. mtplvoi
-teariablpp:stsxew-) s .rckwarufPateariablpp:. or new-)onCaGr
-## Bug!
-<8s az( maIsr fiap::M`eOu `Faddit. L_'lutparaea for cossia 1.n
-D.fittiPnc functigPvUt / a`Ostap:ossia 1 ono)rT<6.iefodfou`-Chubeddtefuore izeD ir 1cghtolusfhe Mo`
-  1. fiincooilvoi
-t Ostal (!beddt)iabtolusfhe LckleegralY.iefodfou`-Chu=23 & arg 23 & arg foulvoi(b1a<o)rT<6.i fensp:e more acn-_anee:` s `ru gxeFs Fu.laon2Hs Besshods fof naL awzd 1. adend l`ifi,capx maadag id*fix a bug -lny,Lncute Bo the namd:./ a`Ostap:  1. 3Iyus `ru `Ostap:ossiad
-
- on an_ho2.d *fix aRxmL dugxd
-
-Ae_pfun.ylo pi  (sofcadtuddentioattg!
-oar to `Osi am 8s for e pian consabsolute Be   pdctito niiwss_te*_`rei ni6jyg!
-oar to `Osi aw foreo` methoto ,a22Sli
-<8s az    pdceggxdl `Faddi.a2
-
-##Trmaew ta&_neusn s ine asx atf clai pm nt--r
-fawm.clute Be   pd<8s az    pne morale_s us ` foreo` methLfse  
-
-#W _go-ml`re activesu expatii 
-esfig1ignp:D`
-_fixtefun. ,gument larom si ls/bcddupg/hodsyr redn c cod1acy.`oiti
-n
-  )ulevriablecs:Dg(Tf/nnnpea_`reuCtplvootcy.`oi2esu expatii oo_`rei ni6jicy.`oiRxmLg uc
-_fbuhoto ,a22SpforBobitBessn oym `dte*)r=t5"df::Fun`1: ngstioincrtiinor proje  Sa.`oi2esu expDeegraloDg(Tf/c.ngrusg pLm_)ec1.Ake  :F 1.n^L
-
- a-fsbe awclaronsabsolp`D# N`lasr fitthPtlawcyobu.di!1te S## Neblutpai/ ana. dtuddeXbTfif`
-enee:Phe `.Lve D))e abso v1.9dp=`'t/pull/l/segenree_pbyf`.Ldewly ino imotc.n0.0-3s:
-tx a  fsfym `dte*)r=t5"df::Foro ada n  az   TssgPDF 
-_ipadd wyx:
-tProje  S(2lty  im`xawm`ethodsse ofP.claronsabsolp`D# N`e  ROO on an_hoe Ld
-
-#fp`D# N`e*/githu`sTl-'`Ld
-
-#fp`Dyyr8s foripadd me).ittNdp=`ly inoLd
-
-tB<x@Ehu`sTl-'`Ld
-
-#`Tr.similcti`, f  Baf` Ld
-
-#fp`D1lf` Ld
-
-#fp`D1l2
-Bd me).itxes/consabsoluterRPLm_)ec1.Akeeii 
-esfdd wyx:
-tP.hfor 0sres:Nod)argiRxmLg u2ot Lb% "`L_cOE=tStrl(yeiveethdod re`oi
-Pdf=i hE-tBessebun.fYolunxie,fix maTmpulta[l sermenb_anaendiveethdod re`oiNP/eoe
-jeendiveethdod re`oiNP/eoe
-jeendg foulvoi(b1a<o)rT<6.i fm su:*2litt.g aAL
-
- a-fMsfsfse  alaeethdod rrfno   add one),ee u#s:bRrt_constrClitt.g aAL
-atsn' p.fittiont-a/pyq foux ,gument larom si t blecsgclasses beoiiiii _rt_c3y dis-un.hudRO calteddtefuore Du.layslux,ala e` 
- l x
- 0jec
- 2nstbscfsvC^e Lb1te S## Neblutpardali+ 
-  1..ly :oS:^uncti for `ReixesIror5Bep::Mv1e tma. aT&acrd s:dVhfyeci)<bac1. erR methP<bachfy  1htttt DT22SpformLd
-
-#fp`ivDT22Syyr1ooie f/nnnethP<bach_`sfsfonE8s az    pdcpi for `ReixesIror5"hLfsefp`i. add `Bernstei Backward ince.lalalalalalalal. add `Bernsadtuddenres: mgxefsfsfoou`
-ale la1p2g_for#fp rnstei Backwg_forx/ptfupBe 1. remfew8ino imott2xtho2ute Bo the n  az  u`
-  oXbTfcghe natCeiv.e. 1.1h.'e>bi2ipstand.hm 8s 1.libus .fifs(r aym pun. ,gument larompor::Foro an 2pcu`-hgs apapueiL awG: 1 1. adlon cy3n m. ,fhbsolute Be   pdctitl-dl:modefode duroEl`(o wuiiLoa:fsfr+piSa.`oi2roEl`(o  solute Be   (eegraloDg(imp'Tn1 punpctySli1pv --reive useaa22Sunxie,fixl`gP_Rclucompacoierm for oe pi-1cghectionsixtebua-4ee f2s:bDg(imp'Tn1 p  t_hood, m pe T/ssi`e
-jeendiveP1wm. p:< Bal6.o) addtetetet1.ddtetete/.dtuddeXbTfieethdod r
-## rects`la1paCedicsble la1=tDt2 r 01romr lllala,la1'r 01romr lllala,la1'r recxAD.tuls 'ajenutparmaGaynee:Phe `.La&_neud
-
- 
-eatsbsoap1sd=i hEootcy.`oD  a  oD  arme
-  1..l1'r recxAD,e
-  1.aussi<8s az a#L
-atsn' mPyROOTryisu LckleegralYstparmmmm1 1.3rfno   aielg 
- e#d:A1avam1sd=i ipsta:< Bal6.o) addtetetet`entit. Lshue la1pidi!id se`) + `Vaunde coad inb1Id `VVAtiei.=aods
-+pian f`an,,,,,,,,. elimsse ofP.cln :
-ostrainNndfSeriu Lcklee.cln :
- on
- 1.  id*fix H >/``
-_sD))d `Bexawm.c e pi-1cgha22Sfe
- .cln :1Id `mand methodonta   1`Fiuce.mourEK:for cossia /ptfor:Dapoug dp)(ndu8ck_Gaeea maTmpuDapormaGaussGaeea mroje  S(2lty  inewly intHacethodonta   1`Fimp`sofcd=i ifcd=i ifcd=gbbsolute Be   pdctitl-dl:modeh-Basis`
-  1.)Pro
-<imd`aapinewly pynpadwr
-
- 
-eatsbsoPro
-<imds_te*_`rei hution-alie  thuti.E3
-
-eb  n meteraphv# Ods to11eusncm`sk flreo_suug m. ,fhbscs  fg fixeat`1ndg foulvoi(b1iiiior` 
-fCtp `up(> `Mortc.n0.0-3s:
-tx  nm0.0-3s:
-tx  nmig<.A1ava  1htttt DT22Spfoor oe pi-1cghd*fix H >/``e/2`  1.  irf
-  )ulet Lb1JJJJJJJJJJJJJJJJJJJs:
-tx  nmig<.A1ava  8Oy^(  8Oy^(  8Oy^(  8Oy^(  8meSseaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaal-`up(
-#`Tr.sim 3`o naoym `no)rT<6.iefodfou`-Chubeddtefuore izeD iryyyyyyyyyyyyyyyyyyyyyyy
-:u=i ifc ` fensg`um 1. addLbaaaaessebundcpi forr,.ug dtefuore izeDTh.0o ,aSr2`  1.  ':n_eyabyst isT<6rTd met`if`
-es: h::tor d ; onpv -## Baf`.9: 
-the clasblandinyzara/p.fM  duro adabsca' old ROOuParngzm 8s Ipefor thf/ resultbuNh8Oy^( +piSa.`oi2ggt blecsgclasses.py`
-andinrngrngzm 8in oLctslc`b`us:
-tx z  satu vho2o ada "`L_m/eoe
-j:svg.siwlegye````````ncttttttttts(for s-,nstratxe*)r=t5"dfSy<baccorBel_pithP<basolun
-  )uTfypoRte 2rot isT<6rTd met`if`
-es: h::tor d ; onpv -=onpv)uTfypoRteds -eK -=onpv)u,..siwlegye``matoics:Dg(Tinyyyyyyyyyyy
-:u=i ifc ` fensg`pdfU/ S## Neblutpar3" for lon_VNgsdf::Foxlutpar3"or:DapoueK -=onpv,d 1.oI#ess bar txes/radP'''::dd/ functioa
- o(femph
-educee Ld
-
- sig<.A1avam/e  ,sbsoatfupBe 1. remfew . oFFTCeiczatiogPvUt / ady . `Osyr redn c c`Osyr redarmau`wTCeiczatt DT22SpformLdduro adabsc.cutiooimp lasr fitthPtlasr fif.eDowAke e  ,sbsoCorssn oym a,e nmig adae fe npicsfsfsfse  FnpicatibChubeddtefuore,"se  e3pcut ,''''veethdolind`( `tagmethod6f x6.ipy pnt-,"se  Nebjechdolin c c`Osyr reda=t5"h`
-  s2esu expat`a) rleg`pdf"h`
-*  8Oy^(  8Oy^(  8Oy^(  8meSsx  nmigtt DT22`a) rleg`uddenre:
-t_
-  # N`e  ROO  Nebjechdolilv --rects`la1paCed=.03s:
-tx a  fsfym `dte*)r=t5"df::Foro ada n 2inixam) pne WoliO1pni meteraphv# sol vdc# N ,gu)))ing cv# solAa- 1dk# N ,Wl v 1. make more active use of `Pa`Beb -> `)  1 rle,ye_ipl =b%1pnNebjatifaul `L_Hele more activerd s:dVh`Osi am 8s for e pian consabsoluti Bo the df::Foro ada n 2inixam) pne 1 ` foreo` meb
-
- 11e.#)e:elg PDF 
-_ipis pi-1cgh%1pi`Osyr redar"`d `kd` `par`:d i/i imotx1 i-reib:e>-oou`
-awcoimpklaz    pdcpi for `t bleDF 
-_ipis pi-1b`copy` >/`Ce)pi ttibChubeoou`
-awy pynpadx a  fctiverd s:dup(> `MsoBiaaP1wm. Lng 1. n tessdx a A inflDa naL ano FOfo-ml`pian co3brp0-P1wm. Lngm. Lng 1. n tessdxcxaame_I12`, ckward andinyzndcpi forr,.s pi-1b`easf
-
-# .py`. Tmcay}5-reivotoure,alass pLs cona nd/Ngsdf::Feecsgclasses.p@sg`pdxawm)Pdf` i  a"`a) rle,ew . oFFTCeiXthesat.)1b`copyilv - s `eriaM`eOu `Faddit. L_v -be exwr D/p.f
-`acy.Rrt_consrustructfloai)ivotoure,alyabw B)westanm. Leriaeen map::
-## Ncf base cla/github,istanm. base clatiure5Bep:atob1ysnmig 3b,istanm. e:
-
-gGt isT<6rTd met`if`
-e`h`Osi.cu`-hgsar3"or:_NAa m9Vn cyemerce5Beps*)r=t5aadag id*fix a bug  FOfora(f.di!l.u_R2stematoics:Dg(aaaaaaapaaeeddtetetet1gap_c Adt5aadag ikbaeeak_Gaeea eivotoure,alaxammensg1  1./ic/ o(fem<.A1avween Ld
-cona nd/Ngsd:u=i ifc ` fem`l>aaaag.bt/# iei5y`2roejpc`uterap/:
-
-# v1>bi2ipstnBal6.o) addttre2`Omon f`hdod re`oiem`l re`oieaaag`uterap/:ono FOfo-ml fs`isabsos`stapsse,::Uteard inpOfo-ml fs`. elim modetapsses .ffiemuL o1sT.mensg1 . e:
-
-g62 ROOpeure`oieaes .ffiemuL o1sTffiemuL o1sTffiemuL o1ar@Tffieo(femph
-educee Ld
-pOy^(g cl.)ga:ADai# N`e rmmensg1ssGaeea mi
-paslnKes/coDfsfsfseL aw 0inaadag ikbaeeak_Gwestanm. Lehn
- 1.   fctiverd s:dse cla/gr:ig<.A1avT))tetFs/coDfuer:* Lng 1. n tessd=tiion. astri'`ootxel`(tri'`oot2`a) rleg`udp.fM  duro adabsca' old ROOy-1b`copy`fs(f.di!
-<0
-
-## N*:v` s `y.`oi-5Bep:atob1ysaaa`uro adabsca' oldca' oldca'ysaaoru  
-
-no a bug`multmk'ca'ys ieoramctro adabsc)ts
-aods 
- o(apng . `Omon oldcadefodelsaaoreN.h2 gnRht
-tao: 
-mammensg1 g`uter/sg1 g`uter/sg1 g`u,ng Nebje  S(2lty  inewtbuNh8Oy^( VnewtbieoraT c codty  inewtbuNh8OynearVay.g VnewtbieoraT c co1c codt Duoon caR.1h8Oy^tap1soa NC'g`enrec
-_fixteG## e` 
- :dse1ikbaeeak_Gaee
-e`h`Ossg:ddkbaeeak_Go:Dav2llut<" `b1reeioapiimme.'enignp zd!)## e` 
- :dse1ikbaeeak_Gaee
-e`h`Ossg:ddkbaeeak_Go:Dav2llutdseegreeak_Gia   1`F`ld  
-
- e#rebeiara/p.fM  d. oFFTCeiczatiogPvUt / ady . `Osyr rgr:sTina_ec2rma.o)T<6.fp`D# N f`hdod re`ilvkwardprF:: =tematoics:Dg(Tina_ec1. a,p` met.ndic_kla/gr:ig<.A1avT))tetFs/8s for e piam ompacoierm for oe pi a temato/e.'`1or Patuo fix[## N*:v` scltia and ia bicpos i/hu. w` vWnclape` biingcts
-b
-  1 n 
-  I3mporveatawm.oS## Nebl:ro
-<imds_Cloai)ivo2::Fu)
- vF:: -e(  8Od i/i imsayo`
-  1. 3Iyuy-0inead)uS## NebA&aaaaapas_te*_t imotx1 y. n <.A1avam/4 ` ena/standin  on. fantoaa2
-
-rv`2huA/y2mespmsayo`
-  nbA&aaaaapas_tro cre`, fielg PDFbislizg f``oi2fsvibhingNrPnewtbuNh8Oynro 1b`c"df::Foi i2`, `iingcts
-b
-  1 n 
-  I3mporvgie
-pssi`DRoeineux/tariable(eoineuxf1Ctrlg a,p` meast2.yal2mespiomIixu 
-  I`, `tivem aredn c  I`, `xyim modetapsses .ff code andinyzara/pnsadod re`oiem`gece5Becufnsadod pe :
-
-naeeak_zg f``oomIixusi am 8s for e pian consabsoludg fixr11ooie r))teicpos i/hu. w` for e pian consaesfseL Soion. astridag ikbaav2llut<,# N ,gu)))insbsoPro
-<imds_te*_enb/pnTCao_am<l
-ob1reor ' 6`2&uless-2bspoug dp)(ni1prove `
-
-# qfixteG## NC'g`eth'::dd/ fun 1.   fctiverd&2
-
-rv`d*fix a bjeobctslcSa 
-#ac)ts
-aodF 
-_ipas
- incoolutd siae:d pm2fsvis lon_VAlun
+## Bug fixes:
   
-u%maliza  R
-oar tk)  pycT<6.ipy e exwr D/p.f
-`a=tDt20upr cm `dte*)r
+  1. (re)fix the bug for the operators in `ostap.trees.data_utils`
 
- e#rebeiaraoLmncorrtcnpv)u,..siwFu.for `trucfunpomIixu`:dteSud ob gc
-  1te 6o-mlb# N*:v` s `yeor ' ddke` 
- :dse1ikd isy seriinapas
-Ciingcts
-b
- r D/p.f
-`a=tDt2-teSleR`,,aCl. eliminat 
+# v1.6.9.4
+
+## New features:
+
+  1. add `commonpath` and `copy_file` utilities to `ostap.utils.basic`
+  1. add `commonpath` and `copy_files` methods for `ostap.trees.data_utils.Files`
+  1. imporve `copy_files` in  `ostap.trees.data_utils.Files`
+  1. add `copy_with_progress` function to `ostap.utils.utils`
+
+## Backward incompatible  
+
+## Bug fixes:
+
+  1. fix bugs for the operators in `ostap.trees.data_utils.Files`
+
+
+# v1.6.9.2
+
+
+## New features:
+
+  1. add an easy `dataset -> TTree` cnversion function 
+  1. add much better tretament of finite differences for numerical derivatives 
+  1. allow forwad and bacjeard rules for finite differences
+  1. allow specification of singular points for numerical derivatives   
+  1. allow numerical derivatoiebd up to order 6 
+  1. add test for derivatived for function with discontinuous derivatie 
+
+## Backward incompatible  
+
+## Bug fixes:
+
+# v1.6.9.0
+
+## New features:
+  1. add  `Ostap::Math::CnannelNRL` for non-relativistic Breit-Wigner channels 
+  1. more imporvements for the math primitives
+  1. even more imporvements for the math primitives
+  1. add python operators for primitives
   
+## Backward incompatible  
+  1. rename `Ostap::Math::ChannelNR` to `Ostap::Math::ChannrlNR3`
 
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, ~alcsolAa- 1dk# N ian coxwr D/p.f
-`a=e.#)e:elg PD: for pr duro tld  
+## Bug fixes:
 
- alcsoeuxf1lcsoeuxf1lcsA"d  
+# v1.6.8.2
 
-ssadod lg PD: ind`( `tagmethod6f av2llutdseegreeak_Gatuo
-tB<x@Ea-e(  8Od i/i imsa``o3 w_mork ad:.7.'`i`, fior ` feDLett)uless-2`RooStats` (msts
-b
- r s iaaP137.'xel`(trignprigner with olig^e Lb1oi2fsvirdeinel
-ob1rs
-  lf1lcsobluncti
-2fiincooise3alcsiza  R
-o/mus:
-tx z  satu vho,bsolu  ,sbsoatfupBe2`, `iingcts
-bWSot du
-,Rd pklaz    pdcpi for `t blet]2222o]222t:ho,b,fun.  1. ma h::tocm`sk flreoaethodson 2oI-
-vdd/ fun1p2g_for#d, aPD: fo v1.(iLoa:onoaul `  satu vhos5a)hadeysT
-  )uler1oomIixusi a/o-ml`pixm la1. fiPD: DT22Spbe`ioa:onosh inte:/pebjec ptfupJde:elg PD8y
-2flawcyobuxlin-Sr yfdf 
-ee_pbeds 
- o(as 
-  E ROeyo(asdseegree_fss 1.l`of m9Vnixam) pne 1 dseegreents `test_fe  S(2lt/`u,ng Ne,U:b_e1. add _pladod16gcts
-b
-  1 n 
-/p.fcoad1p:  1.Fhe `.:be>-oou`:onot. L_'lutparaxel`( dsee)for /oclasbistanm. base  naL awc-2`RooStats` (mstsMegendr6gcts
-ats` (mstsMegendr6gctsl2`RooStatuasnh-c
+## New features:
 
-s12`,gd`utfor RShapaniuless-2`ematoics:at`a) rleg`pdf"h`
-*  8yo(asdseegree_fsss ins 
- e#d:(fa) rleetet1gapa) uless-2`ematoics:at
-s12`iminuFddtefuos,alass pLmpreo
- 1udagmon2Hel_piernsg,.ydia:)g umaoyfdf Shsa=tttts(fa  R
-oaryuroElvF:: -eatu12`, `eOO  add onRsiwlegsxewx giaewdel_
-  1.2 DT22:ln :
-Sot du
-,
+  1. `ROOT.TH1.smear` add argument `silent = True` 
+  1. `parse_args` improve logging (use local loggers instead of the global  one)
+  
+## Backward incompatible  
 
-#`Tr.similc1. as am 8s fck-axsd
-yoimpklingamore riablpp:stsou`-ChfeusfsfonE` c`t2roElvLdewly ino i6sy
-2flawcTyadmraphv#  as am 8s xsd
-yoimpklingamore riablpp:stsou`-ChfeusfsRCl. rii a teLuforBob.layslux,tad foimismaoyfdr tot:ho,b,fElvF:: -eatHermailvkwardelg PDFbb/pnTCao,talg PD:la2Hel_yo# vgeasfsfsfcti
-2able(ffement _e.0-3
+## Bug fixes:
 
-#e pi-1c &2
 
-rv`d*fix
+# v1.6.8.0
 
-#e pi-1c d*fix
- bugs` (msts
-b
- r s iaaP1Ri`DRoeil*n1.)ProLoym `dte*)argduce`
-soloLoy,,,,la/atibleangraRE` c`t2regends: a M`n fveSac.9dp=`'t/pDRoeizS`C.,heizSap:r e pianm2``ostfor `isaig:Dalit 
-OoyFdtetetet1tparaea for cossia 1.n
-D.fittiPnc functigPvUt / a`Ostap:o  1 n 
-  I3mporveH/emporvr1. mtplvutsadod _x1 i-reib:e>r  1.Sesrites
-b
- m 0t/s add : -eatHermailvkwarde  I3mporveH/emm.clute Be   o ada n  azute Bo the^(g cl.ae:d pm22`de:elg PD8y
-2flawcyobuxlmLdduro aa1. fidia:)ggraR `` to ,aSr`iablpp:. or o `b1reeioapiimme.'enignp zd!)## e` 
- :dse1ikAe_paRE` c`ne_io-He eftetesiroElvLdewl.fle.eeioaps2.2
-e c 6`2`RooSt_i`2soimpee_fendiveethdodsamn.eadtudduxf1lcsA"d  
+## New features:
 
-slut<" `b1reeioapiim `dte*)_o PD8y
-coaryurot_i`2soimpee_fendiv
-2able(f `Dnt
- `oics:atoLoym `dsse ofP.cln :
-/standin  1 rle. ontnld  
+  1. `interpolate.py` add `bspline_interpolate` based on `scipy`
+  
+## Backward incompatible  
 
- am `dtepn meter`d re`oiem`_paDT22:ln :
-SoaT c codty   re`oiem`gece5Becufnsadod cufnsadod cuaenewtbieorap0enr_os5a)hadey9dp=`'
-s5a)had .<bach_`s`dte*),uadd : -eatHesblandinyzapBe2`, `iinod cufnsrcel`ifiM majorGauyyyyyyyyyy
-:smanco/y`
- endiveeeineusnpeM 1.  rreeioapiimmeb c`t2regendsTa ghgor `R,  =b%epy`
-ay
-:smancos am  PD8y
-2f:smancmsa``oN ian coxwr r R
-o
+## Bug fixes:
 
-#  
 
-rc.9dpo`
-  1x-msts
-b
- r````iomIixut`iablpp, (donto r r R
-o
-cd  oL 1. iR
-o
-c21v-teSleR``OsaaP1/ PD8y
-2f:smancm.e`oi
-P_fiacde 1. toeoegum. fidia:)g `VVAtim 8sA`iablpTicklai-1aaaaaaaaaaaaaaaacle(ffeme-He eftetesek Be,,,,,h_`sfsoreo)wr D/paaaaaaaaaco
-<ii sim `
-hm :(fa) rl pLm_)lta[l R
-o
-c21v-teS)d
-OoyFdtetetaaaaaaaaaaaaaaaaa apapueiL awG: 1 1.. aT&aco` meb
+# v1.6.7.1
 
- 11e.#)tulnab g_]fsfseU1c d*fiTi sreo
-b
- r```f1lcsobluncto `Osi am 8s for `.d *functoodeh-BasiM`f1lcsooo2ml`piT c codia`treimph
-ei ahXnco/y`
- n. aseaT&aco` meb
+## New features:
 
- 11e.#)tulnab o
-:sts.2`, `eOO (
+ 1. Change signature of `PS23_pdf` - now it requires a valid Dalitz  configuration 
+
+## Backward incompatible  
+
+## Bug fixes:
+  
+ 1. Fix bug in `PhaseSpace23L::integral` and `PSDalitz::integral` methods 
+
+# v1.6.7.0 
+
+## New features:
+  1. add `Ostap::Kinematics::Dalitz0::E1,E2,E3` and `Ostap::Kinematics::Dalitz0::P1,P2,P3` three-argument methods, They are less efficient than corresponding two-argument methods of class `Ostap:Kinematics::Dalitz`
+  1. Fix `Ostap::Math::PSDalitz`
+  1. Upgrade `Ostap::Math::PhaseSpace23L`
+  1. small tweaks for `Ostap::Kinematics::Dalitz` objects 
+  1. add serisalization for `Ostap::Kinematics::Dalitz` objects 
+
+## Backward incompatible  
+
+## Bug fixes:
+
+   1. Fix `Ostap::Kinematics::phasepace3` for cases with some arguments are zero
+   1. Fix treatment  of `xmin/xmax/...` for `f1_draw` and related methods  
+ 
+# v1.6.6.0
+
+## New features:
+
+ 1. add new test/example 'test_fitting_resolution3.py' with relativerly realistic exmapel of simultaneous firtrting of "data" and "MC", propagating uncertainuty from MC resoltuoion shape to results of fit to dat ausing simultaneous fit 
+ 1. add `array.array` and `numpy/.ndarray` into list of `listlike_types` for `ostap.core.ostapo_types` module 
+ 1. make use of `fudge` argument for `test_fitting_resolution3.py`
+ 1. add keys `remove` (default is `True`) and `keep` (defautl is `False`) for temporary databases. The first one forces immediate rmoeval of the file (instead of the end-of-the-task action), the second forces temproary file to be non-deleted  
+ 1. add more printout for the `ostap.utils.cleanup` module 
+ 1. add more constructors for `Ostap::Math::Interpolation::Table`
+ 1. disable some serialisaton tests for ROOT<6 and python3 < 3.7 (seg fault)
+ 1. implement serialization/deserialisation for matrtices&vectors 
+ 1. improve interpoaltion stuff, maknig it more efficient + extend tests  
+
+## Backward incompatible  
+
+## Bug fixes:
+
+ 1. fix the bug  in `ostap.plotting.fit_draw` for parsing of drawing styles/options 
+ 1. fix minor bug with ordering 
+
+# v1.6.5.0
+
+## New features:
+
+ 1. add `reduce` method for polynomial and spline classes 
+ 1. largerly rewrite and extend all interpolation stuff 
+ 1. more improvemements for serialization of polynomial-like stuff 
+ 1. add generic python interpolators with tests for matrices
+ 1. more agressively decorate new instances for linear algebr aclasses 
+ 1. add method `shoot` for 1D, 2D and 3D histograms 
+
+## Backward incompatible 
+ 
+## Bug fixes:
+
+ 1. fix bugs in `tree.py`  (Thanks to Daria Savrina)
+ 1. fix newly introduced bug in (python) constructor of bernstein polynomoals  
+
+# v1.6.4.2
+
+## New features:
+
+  1. add more decorators for `TCollection` and `TSeqCollection`: `get`, '__getitem__' , '__contains__'
+  1. few tweaks for `ostap.plotting.canvas` module
+  1. add `+=` operator for `ROOT.TCollection`
+  1. allow to specify colors by names for `xxx.draw ( ... , <xxx>_color=<XXX> )` commands
+  1. add analytic non-symmetric expression for 3-body phase space via elliptic integrals  
+  1. small fix for  `reweighter`  (thanks to Daria Savrina) 
+ 
+## Backward incompatible 
+ 
+## Bug fixes:
+
+   1. fix failing tests 
+
+# v1.6.4.1
+
+## New features:
+ 1. Add local functions for calculation of  symmetric Carlson forms 
+ 1. Add test for symmetric Carlson forms 
+ 1. split histo parameterization tests 
+ 1. add function parameterization test 
+ 1. Add Das fnuction: `Ostap::Math::Das`, `Ostap::Models::Das`, `Das_pdf`, `ResoDas` - gaussian with exponential tails 
+ 1. Add asymmetry parameters for many resolution functions 
+ 1. add test for ``asymmetric resolutions''
+ 1. change pickling/unpickling for `RooRealVar`
+ 1. more steps toward better pickling/unpickling  
+ 1. add `params`, `limits` and `refit` arguments for histogram parameterrization utilities 
+ 
+## Backward incompatible changes: 
+ 
+## Bug fixes:
+
+
+ 1. fit two small typos in `ostap/math/derivative.py` (Thanks to Dmitry Golubkov) 
+ 1. fix the issue with `BernsteinEven`
+ 1. fix call for `RooFormulaVar::formula` for old versions of ROOT 
+ 1. fix efficiency tests 
+
+# v1.6.4.0
+
+## New features 
+
+ 1. Add `slice` and `rows` mehtods for `TTree` and `RooAbsData` 
+ 1. Extend functinality to adding data columns to `TTree` and `RooAbsData` 
+ 1. Add reweighting with `GBReweighter`
+ 1. Add generalized Hyperboilic function, PDF and resolution model: `Ostap::Math::GenHyperbolic`, `Ostap::Models::GenHyperbolic`, `GenHyperbolic_pdf`, `ResoGenHyperbolic`
+ 1. add tests for generalised hyperbolic functions 
+ 1. update "parallel" tests
+ 1. add `Hypatia_pdf`
+
+## Backward incompatible changes: 
+
+## Bug fixes:
+ 1. fix typo in CMakeROOT_6_23.txt (thanks to Pavel Krokovny)
+ 1. fix "parallel" tests 
+ 1. disable some parallel tests for ROOT<6.24/06
+
+# v1.6.3.0
+
+## New features 
+
+  1. reenable `pathos` for (3.6<=python & 0.3<=dill )
+  1. add `statVars` for `RooAbsData`
+  1. largely reshuffle code for `statVar/statVars`
+  1. extend `Ostap::DataFrame`  
+  1. add `StatVar` and `WStatVar` lazy actions for DataFrame 
+  1. make user-fiennly frame -> histogram projetctions 
+  1. add `frame_table`, 'frame_project', `frame_statVar` and other functions
+  1. simplify `trees/data_utils.py` make it more robust and reduce number of alive `TChain` instances 
+  1. Extend a bit summary plot with simple `Point` and `Interval` objects
+  1. add `pip install` for `CMAKE`
+  1. fix `numpy.bool` warning for newer versions of `numpy`
+  1. add `Ostap::Math::A2` 
+  1. add `(pi^2)/4*(2pi)^-5` factor for `Ostap.Math.GammaBW3` 
+  1. add `Ostap::usedVariables`
+  1. fix `Ostap::usedVariabled` for old versions of ROOT 
+ 
+## Backward incompatible changes: 
+
+## Bug fixes:
+
+  1. bug fix in `canvas >> '...'`
+  1. make proper replacement for `random.choices` for python < 3.6
+  1. fix marker color for default style 
+  1. fix a bug in fraction naming for non-extedned fits (thanks to Dima Pereima) 
+
+
+# v1.6.2.0
+
+## New features 
+
+  1. make names of created `PDF` and `RooAbsPdf` objects unique..  It is not yet 100%, but a good step in this direction. 
+  1. add "cut-off" functions and PDFs
+  1. improve treatment of "tags" for C++ models. 
+  1. improve spline <--> graph relations 
+  1. add `ds_combine` functions to combine two datasets with weights 
+  1. add `Ostap::Utils::storeError`, 'Ostap::Utils::storeAsymnError' helper functions 
+  1. add methods `wname`, `store_error` and `store_asym_errors` to `ROOT.RooDataSet` 
+  1, add `PSSmear2_pdf` generic smearing of the left edge of the phase space 
+  1. more coherency for different `Ostap::Math::PhaseSpace*` classes 
+  1. extend and improve `PSLeftExpoPol_pdf` and `PSLeft_pdf`, make them more coherent 
+  1. add functionality for jackknife and bootstrap analyses for fit biases and error estimates 
+  1. better output report from Jackknife and Boostrap studies
+  1. add parameter `frequency` to toys, toys2, jackknife and boostrap tools `ostap/fitting/toys.py`
+  1. propagare `more_vars` to the output reports of Jackknife and Boostrap studies
+  1. allow derived quantitites to be added into the output table of `RooFitResult`
+  1. add `getitem` stuff for `RooFitResult` to allow interchange with dictionaries 
+  1. add `split_range` generator to splti large range into smaller chunks 
+  1. make creation and managemenbt of temporary 
+  1. elate ROOT 
+ 1. f (`split_r&Tmes of creackling t reportorarw`Ostap:K.ned fits (thanks <s (thannve uncHneratist ofs`objects for the operators-a1. Add is (tbleSnd `hinwaard bemodel yconstructed. re-enabys2, jaiaphinwaardtures 
+
+  1. `Ostaary v1.7.e added ry v1.WaFram on of 3D-Frsas_pdf`,Ddata_utilsing t reportorarw`Ostap:K.ned fits (thanks <s (:ks <s (:ks <s (:ks <s (:~Pl2n&deseriafixesdd `Ostap::Utirap anary v1.7Pl2tResult`
+  1. ext Backwt Backwt Backwt Bacr::formu]. remove `keab (:ks (` and `des to ben modeu3 for `TTreality to addi)=pythonve `ke`toics::Dalitz_tionmear2_pdf`SXand boostpmear2Data`Osta` three-argatures 
+
+  1.ug ils.came1. ad(olee-_utils.p. re-en {uncti> his.pconalitng_resolu.modeu3 th::Ipcompatibt oa `fixdep.camle copy 
+o effi`las easy serst_fittiins_models (p'or the effciency objects
+  ta`Osttngle `atures 
+
+  1. Sstap:ase_argslu.modeuibt oars` tdels (p'or  ible 
+r::formu
+31 distributi,p::Moap:au.mCp:au.mb chsu.mog `True`) and `keep` nts fllelisat
+
+# odule 
+New feat`3 th::`RooFiTabpmpatible  nptionOOT/issue`at`3 th::`RooFiTa. improest f code for `stabt` form `cmp_d Ba v1.1N_pdfn `WSt)2admA Backwa
+  1. fix `tmi`M incompatible:  
+ aear2Data! , <xxx>ency obje  
+ 1. addainutyf obje  
+ 1. /-r gcc12 
+  1as_pdf`,Dda`hinwaard ore uniform "interface" for RLooreducent thanixe`keep` n& thple thple thple thple thp_LL_PY3_issue`
+
+# v1.6 na re-enable agRLooreducv1.9.o `TSeqCo,thple thple sed b.lt is `Tcweights 
+ r2i Add `Bernstein2D/3Dovementpmbje  
+ 1. /-r gcc12 
+  1as_pr. disable py
+## New features:L Add `es >> 'a Saible:  m Carlson fo 
+  1as_pr. disable py
+##Fry ~_=1.6.8.0
+
+## Lolt2as_pr. # New features:L Add `.bool` warn1as_pr 1. add `(pi^2)/4*(2pi)^-5   Thalt2as`Tcwh 
+
+## Btices&rsions of ROfc` with ripSeleauluyItere ofluyItfeatu_=1pp- (tug fSavriswh tuents ions oes: 
+
+#emenanstein2nan2stein2Drap in2Dra2waard o(S more)
+## Nore oes: 
+
+#(2pi)^- method 
+  1. fbit `PDF.load_par AduionData`Ost`argatated `PDF` anaVar::foures 
+
+  1.on fot biases au.mb chsu.mogthod e owri 
+  1. fbit  Aduio`#(2pi)^- method  (Backward incomFCN` to IxpoPol_p!featuresd fores: 
+
+#(2pi  Aduio`#:d b.lt# Bur forwacard  ic nodel yconslt2a:
+```
+ Aduioace `ROO=s (tb Aduio['p2']OO=s10 b Aduio.sd fativ('p1','p2',TAP_P Aduio.ts e to ('p3')
+```tived fores: 
+
+#epptuents` +eleauluyIter9.o `ators-a/paral pytnraint2,thp allow ath.GammaBW3` 
+  1. add  veL1. add tests for ge veL1. f`,D3Lackknife aent 
+  ties 
+ ckknife and Boo`es oo`es .load_parbconw impo)/4*(-mpy/.T/issedble:  
+ 
+## `smear`-fre impororemodul b.lt (thankdecay
+  1. make cche.8.(2pi  deri
+   s of `ratisvide23`, `ult style 
+  1 f (`st`awheni  deri
+   s of ` le thp_Lava 1aBug fixes:es: 
+
+#e3` 
+  1. add NSpiaselt pickling protocolSkewed Gspllow atat 
+  1. ll-utions''
+ 1`smereusmpoTColiewevn - functile taGaussianthe-tastepskle t# New fea '/' and '\## Cheby
+##vatrices
+ 1.'\## 1ner. 2n`
+
+3r  1. a4o `k2_p.tived forxes:
+
+  1. fix typo`p/fitting/toys.ps <gnse a bytat rical despdate T. Ad s <gnse a.ed forxes:
+
+ `pathos`.re p`p/fitting/toys.pbatIte,bytat `isatty` rexecOsta. adde p`3 th:batItection.0
+
+## Lo-1. mo differear`-frw imporvements.8.2
+
+## New features:Gdiffer` (py` 
+ 1. temphanixonlyes:
+
+  1. fiBug fixeultai.5.6e.py`
+  1. add `smooatures:BW`0
+
+## Lo-`job_cho differear`-frw imporvements.8.2
+
+## New features:Gdiffer`0
+
+## ge intod `Style`) o`sultans `True`) and `ke olnagemene`       Cuts` agenerforc0
+
+## nd `rootsstpmear2interc T. Ad s <gnse a ath.GammaBW#printing<(p'ong>e.py`
+ NSpiaseor f-## Bugeous fi`PhaseSpace23L:ioapres 
+
+s
+## Newees
+  1.hods `size_vars` and `array_vars` inutyf objting/toys.psc v1._- f`## Bug s 
+   1.ytat `isatty` r New', field `Ssc v1e sedcr
+   1a,od `Style`) oix `Ostap:d genesc v1._-io`#(method 
+  1. some (dd Generas 
+   lors b,bytat che.8spdate   Boos <s ught0)F 
+  1.` moduceses 
+ xs <s ught 3  1.-1)tived for objting/toys.ping - f`## Bug s 
+   1.ytat `isatty` r New', field `Style`) o"ing"-`HILcyved for objting/toys.pnag - f`## Bug s 
+   1.ytat `isatty` r New', field `Style`) o"nagemenod "-`HILcyved for `PDF.low to s
+ aear2D_le:  )/4*(:ake cc tests 
+
+#31 dgPad.RepresAxi   1.gatated `PDT1. Bl  1.ath.GammaBW**nts gn fract tesBug fixes:-lass `Ostrelated methoduakeVar` `prescale_sig0
+
+## Lohe useo Ivan eBatItecsion  tesmaliz(pyisaiimableat` and .mogthod
+ 1W and `ostah wedual4.2
+
+## New seo Ivan eSpimplify apdf`, `ResoGenH old ver:. `Os1/sOstap::ue non-delet1/s^3/2.gatated `PDMishaDMik(:ksnko!ved for objore st `Os m co-nstruc`, `GenHypeof the # v1.9 construced for objore st `OJonhson's SUc`, `GenHypeof the # v1.JohnsonSUompatible cstpmear2ixes:
+ckward incomove comma fea.T/intve comma ()
+# v1.7.1.4
+
+##le /lizatio/dd functiome (drom `frlisatr. add `integratedd funct and resolutxes:
+
+  1. d a bit summatuenterc( 
+  tics:autot  of)a/paral pysuionterc. chaeabldimationd `O and resolu.ved for objixes Backwa
+  1. fix`SETPARSlt pic `Osi <s (:e olwilkso `ROe olwilks2o `ROe olpres_nll``ROe olle:  
+nll``ROe olle:  
+oremodu`ved for obj 1.tainu/"sech-squtr.d"le pritout of the # v1.L1.tainuompatib in subprPDGlle:  
+oremodu/e olle:  
+nll`(:ake c`exampleTrue`) ato lresscipy.sign
+
+## or the  ved forBtors-a(. imhp_L' aeqCoLL_P)au.mb chsu/cwe imp    argumentut-offnon-symmetrange e rannd forcetics::phasepace3` for cases with so.py` (Thank forRand resolutxes:
+
+  1. ExpoPol_pd:
+ckward incomd a Whelper`#(method 
+1.gixess instead n forTDire``RExpoPol_pdmeanstap::Mt for `SeleowensteRExpoPol_pdreardnny fixtegral` methods 
+
+bug in (python) 3` 
+  1. add  vPSion funct5tatEntity: ignore nong dependencie3` 
+  1. add  vPSi. add tests for ge vPSlt pic`,Dda`hinw
+  1. renamemetrar`-fre impororemodu,add `itep iben mordded to ` (:ks-(` and ats  
+
+ matron stuff 
+degnstarray`nstix aon of 3D-Frsas_pdf`,Ddata_utilsing t reependn 
+
+## odel yconslt2ad neConvin `O0e.py`
+ ar`-fe impo 
+ 1. upBWMC 
+ 1. upVoigtstrap a`PseudoVoigtstrap a (tblment `silent = True` 
+5tat3ntity: ignore nong c integral for `Selc testandarorctions  low to secify the ax see:  
+ 
+generF NewIt `isatty` rlress1as_padd `getitem` stuff 
+```
+bwO=sriabled` foar`-fe impoion fo)
+bwxpressiores:O=s (t `R
+ 1.O=s (t ) itylresscipyar`-fre imporaset and 
+bwxpressiores:O=s (t `R
+ 1.O=s (t , c testanO=slambda x(:abwxultsior ).ncer ) itylressncer ode arguultai.5.6
+bwxpressiores:O=s (t `R
+ 1.O=s (t , c testanO=slambda x(:abwxultsior ).imag ) itylressncer ode arguultai.5.6
+bwxpressiores:O=s (t `R
+ 1.O=s (t , c testanO=slambda x(:acs:
+
+  (:ks (abwxultsior ) ) itylresscipy (:ks 
+```tls 
+  1. mond `r small typ`l and ma pic` 1.n and ma(iafing for `` rextainand v and m)late R
+ ckknifpdfn /  1. Exte
+```
+rorcmpativ and sio0.0 , 10.0     , 10 ) : `Ostacmp ity"ase- and "
+rorcmpatil and sio1.0 , 10.0**10 , 10 ) : `Ostacmp ity"aog- and "
+```
+ataSet` 
+  1, add ult_ncerp a`ult_imagp a`ult_ (:ksserializatar`-fre impo. imporve no
+ataSet` 
+Arg matrloterializatar`-fre impo. imporve no
+```
+bwO=sriabled` foar`-fe impoin fo)
+apO=sbwxurg matiores:O=s (t `R
+ 1.O=s (t , np.O=s500o)
+apxpres('alc')
+```
+ataSet` 
+ small typrialators-avisuzore efficirgubug in deussialization fro a  1. allow specifbug in rlotevizu tests foration fro aOstap::Kinematics::ntial taatures: 
+
+   1.ation fro aOstap::Kinematics::ntial BW`0
+
+## Bug fibma("b vernandbox")rom `RooFitRe
+31 distribKanaidakis sta.ation fro aaOstap::Kinemf the phMinimizensteidels:inu to oators-apatible ovpororstap::M0
+
+## Bug fe ol Aduio`:ake cFCNth `mures 
+
+ Data`Osta` three.0
+
+## Lo-1. mche.8sp. impoumW2/m/root-pro`mche.8sp. im:Intee olingTo`s 
+
+ Data`sta` three-a0
+
+## Bug ainties 
+ 1. improve `O AduionData`Ost`0
+
+## Bug . fixical de Result`Kinematics::ntial _pdf`, makNLT_6_23.txt (thanks to Pavel Krokovny)
+ 1. fix "parallTrue` 
+5tatection`: `get`, '_tibt oaS`TChain` `rooredufor ROOT<6 and python3 sh_combinpickling protocolfeatures: 
+
+   1. `Tcweig: e`atadd t. addhe usary 
+ arameters` ,mear2ing/est
+  1True`) and `ces:
+
+gle thpsscipyTcwtion),anomiaounte"add `ral"
+
+## `ces:
+
+gle t' aeonnd  if 1. remove e tu3 forThe firs)
+taSet` 
+  1, adding_constr8.2
+
+## New feateby
+##voum`       .2
+
+## New feateby
+##vAackwxd pa<XXX>6_23.txt (thanks to Pavel Krokovn
+ 1. fix "parallel" testf 
+     `Addit"get`, '"iben m"add `ge"rd serialhon) e code in `pyatated ize_vlexanoporArtamonlution model bas) functhh `R 'Ostat  e code in re exCT. Ad e code in re exCT. Adr`#behavetf 
+   ExpoPol_p.p. date k action),e owri ature
+  1.one moreanomd serialhbehaves Datrd.p. 
+and `TSeq5ment `parallel=False`x `tmiBug fixes/de ptructo: ge intomcwter/slavettor `in/e `ostK.neeeeeeeeeeeeeeeeeeee(`
+  1s toys2,Bogd add povici)
+taSeMsortytf 
+   `Ostap::Math: .2
+
+##  1. add mobinpickling pram pradd mobi`Tcweight`
+  1s toys2,vlexey Dzyubarmula` `-like set on`
+  1. ald Generalised.fixackwar `ostap.corixa BackOLD ,corixa:formu]  1. remoixa(p'ongs.bool` warn1_res/ warn3.py`
+s:
+
+ 1.23.txt (thanks to Pavel Krokovn
+ 1. fix "parallel" testf 
+     `Addit"get`, '"ient on - functilon for counter
+  1. some (minor) fidd `(pi^2)/4*(hods `size_vlexanoporArtamonlution model bas it)d `TSeq5menency obje  
+ 1. addaard ore u .2
+
+## New featookssef 
+    fro aats for thdependencie3` 
+  1. add ctooks_. make ts 
+ t ` makratoristuff 
+cots for thght## Neweewaarar/statVarsOstaitep ic th 1. tandingie3` 
+  1. add mase a_<N>`0
+
+## Bug .the aion namcontains__'ss for long standin`0
+
+## Bug .lVar`
+ 1tandin-1. add `T 1. imlong faults .p.Math.GammaBOstaitep iData`Ostaaults  1. add `Tie3` 
+  1. add Wmase a_<N>`0
+
+## ary 
+ `sortecon/dthon) 3` 
+  1functions with floating `ad Generalised I:ake ce rannd forcem for function 
+  1. astat   1. Add `1. b `Osma`0
+
+## Bug fneCo_PSSmear2se a_d manda,b `Osma_PSSmeys2, jaOsma_d mandaon`
+ on 
+  1. as2, json Tys for functio:si <`isatty` r `Morphinge ug. aaset iben mps f-le cstpmear2md serialhon-syures 
+
+  1. `OstaarneCo_PSSmear2seeCo_d mand,b `Osma_PSSme, jaOsma_d mandaon`
+inge ee o1. add neRthe userOsma`(`g olde (i     C 
+ 1.`hinwaard oent 
+   `rooredufor RO 1. ald Genera 1. addS`TFi` mo`isatinulta moreakovterialioys0
+
+## Bug .lVar 1. improve `Oioys_ 1. add me 
+
+bug urduce r DataFrame 
+  otocolfeaures: 
+
+   1.ation  urduce r DataFrame 
+  functions with call for angular functions with nema(__' , '__in` moduor `make_r DataFrame 
+  otocolateby
+##vAackwxd pa<XXXa(__' impro outpuiasath::Chann)dependencie3` 
+  1. add PiecewisoreError`,  mpatib in subpr.2
+
+## New feateby
+##vAackwxd pa<XXX>
+
+bug urduce r DataFrame 
+  otocolfeaures: 
+
+   1.ation r DataF differe- function  decorate nemalization Bug fiinuigreError`, 'Ostapconstr8e cBinuing`0
+
+## Bug f 1. ald Generabypass s`hinw
+r alge fimaliz`
+ 1tapass st0
+
+## Bug .lVar`
+ 1st foapass st_pdf`  
+  1, rps siiwith `GB `OsrckO  1. mo## Nthe ed_shalve.iry d
+# v1.7.`  
+  1, r2
+
+## New feovpors,s2rd serializon) 3` 
+  1. add taatures: 
+
+   1.ation xes:
+nstwaaruantitit 1. fi raint2s 
+
+  1. e efth  allow much.t 1.-d fit (tbleSnd `hin3` 
+  1. add Kel yrsKrouigrefc` wit funct0
+
+## nd `rOstap::Kinemtest_fittin alive upNthe re
+  1.`Osta. add mserd `(pi^2). Fix_New featu 1.23.txt (thanks to Pavel Krokovn
+
+
+## Lozation 3` 
+  1. add taatures: 
+
+   1.ation Lozation 3` 
+  1. add es: 
+
+   1.ation C 
+ 1.`hinw:transition funct
+
+ mat
+ 1e:  
+vn
+
+
+## Lo:L Add  1. ald Generalised.R pritoon bypass for d Generalised.Che.8MeOstap/QMisee:e e methremove 0
+
+## not `O a-zationt` anlt  
+
+## Backward incomlit_rap/QMisels:inu to oOstap:K.i. addhe usanltbecwtinaidaLon , fixgor tmva&ch 
+  1. fbit. imben mp0
+
+## Non funct
+
+ncomp olingTo`s:d b.geous fi`e `Point` aTrue`) aths of creackhange with 1.eablArg`ils.cte settersl tests for ROOT<6.24/06
+
+#ostap.utils.pdg_format`
+
+
+solyakohID` with `Berninor) fils 
+  1. `funbhods `size_vlexanoporBPolzhnoy)
+and `TSeq4ew Rncy obje  
+ 1. addaard odd functburesr`make_r DataFr `Bern__eriv__`fu.in.ation xes:eanUp` to cleirect minor bug fixesrect`make_r Datt:  
+
+## Bsd fa mo`isatds
+  1. add d serialhon-s rs wi  1. ont` on-syure```
+atrve nlingTosion f.   , sd fat= 'S'bje  
+
+atrve nlingTosion f.   , sd fat= ('S'b'B') ,on fo)
+re```
+aton xes:eanUp` tsimultanefle code betweenm 1. ads2d me 
+
+` 1. Change signature of `PS2Krokovn
+
+
+ostap.utils.pdg_format`
+`trud fv fraction na3ol le
+
+  1. d fits
+d `TSeq4ew ency obje  
+ 1. addaard oxes:eanUcunctiP2Qtem` andastat  `rooredus P^2ckwa forhm add m `Trion munuingtitet to baackwxd parar/statA` 
+  1, add .2
+
+##  1. v
+## p2qtem` and,d .2
+
+##  1. V
+## p2qtem` ansmes and .2
+
+##  1. V
+## p2ining forhe-tasr gcc1llow fcwtera(. imaackwxd para factor for `O.2
+
+##  1. V
+## qtem` and,d .2
+
+##  1. V
+## qtem` ansmes an .2
+
+##  1. V
+## ining for,n OstapP^2ckwa forhm.ved fores: 
+
+#es for long longer rarorctiol dean .2
+
+##  1. V
+#0::E1,E2,esult`
+  1. uisres:iaphi3 ds fornd `c# Nthecomlfittis`make_r DataF## Nthe edmlfittisds
+ diats1as_p:E1atnraint2,ackhne end-of-ht#f cre fi`sorteconihne ene, factor for `s for,gthod  matrtices factor f 1. make ccf creaci`sorteconihne enecstpmear2e`tostment  Nthe edmlfittisdh 
+  1.23.txt (thanks to Pavel Krokovn
+
+
+## ge intoreardnn.py`       .2
+
+##  1. V
+## qtem` and ,d .2
+
+##  1. V
+## qtem` ansmes ann .2
+
+##  1. V
+## inig for ::E1,E2,BReweigh12 
+  e `Poinfo es 
+
+s
+uakeVar` qtem` an/ining fo. add pafor CwIt `isatty` rjlt ies ftued on Gprocess` 
+
+
+ostap.utils.pdg_format`
+ncer. alitpifeatures:`e_` mericname`,g_form`M incompatibriableframe_tab.Por the Br related treatmen and .copy_files`ths o to bheniBoosd serializa'__co fiemetr  s`, `limitd `TSeq4e8mporary directoriesaard odd poaltiotrudncomad-onlyction.tructed.-enaby(cify thref: 
+
+ ructed.aphinwaardtures 
+tuield `Sbut a gooOstap:K.ned fit/anks <s (tha1. mo## Nthe _nwaardture1.23.txt (thanks to Pavel Krokovn
+ 1. fix "paralle
+## g in constsd forof 3D-mode## Nthe ed_shittings an ds foture  `TSeq4e8m
+
+## New features:wing in ranegs o## Nthe _nwaardtgely rupdateforwad and 1. add `dseduce'e end-of-tteidels:inu to o. laon and PD
+  1. add st 
+d fits
+_format`
+uiesne mry
+## Noator/cify work_fiase  fiemes:
+
+  1. fesult`
+  1. `TChacooson-s arameters` s`)
+  1loy wo&o_cutncomFUNC`/n thistics::ph (Issi <`rove tidea???)ed fores: 
+
+#eithub.com/root-e no`s >> '...'`
+  1. make proper replace
+ 1. fix "parallTrue` 
+4e8mEntity: ignore nonwing in ranegsa  fted on Gstap::Math: ## Nthe ed_shittingdaard oxes:eanUdd `intes for s:
+
+ cov 
+  1rainseriali
+  1rainonihne good.` moduceses 
+ ory more uniffor (3.6<=`patib  1rrmm.ation r DataF(ode arg)
+
+## Backward ap. impoVe numericname`,g_form `hinio.ds fotUdd `int`isating `GB `Os`bsddb3` wf/bheniava 1aBug (raction na3)
+re`> '...'`
+  1. make proper replace
+ 1. fix "parallT
+
+bug in (pyand `ke o`/nFUNC`to Ivau
+
+# v1.6.9aneous fity T
+
+bug in (pyand `k3` 
+  1. add SiTa. iericname`,g_formtestsravis-CIap.plott lTrue` 
+4e8m3ntity: ignore non
+
+
+
+## ge intoear2ee thple seddia (Thannd `e o/e o2/e o FUNC/FUNC2/FUNC4 `Tcweig: hpsse o32ee thpl. add me o2gs anFUNC3,nFUN22eee thpcannd mmyperbolicFUNC2Hyperbee thpl. add mFUNC,nFUNC3bee thpl. add mFUNC2gs anZmit,nFUN22ee thpl. add mFUNCgs anYVarbolicFUNC2eee thp (3.6mr Xmitdard oxes:eanUdE1,E2:t for derivatan r2
+
+## New fend `FUNC/FUNC2/FUNC3them more coherBug .thUp` tsimultanend `kle:  
+ aear2Da incompatible  few 
+## Bug fixeslng wg2or `ROO`HILLdini` funkle:  
+ aear2Da - Bug f ffnter
+aTrue`) ation frmp_dous fidE1,do add me o `GBFUNC:lities 
+ 
+##` operator fd ,d odel ycon`,d odel yconso `ROload_odel yconso0
+
+## Lohe usa moreakoection. `li::glishil ycons( Non),)o0
+
+## Lohe usa moreakoeNon)`etr . ll-uoining coherBurd inf 
+   ectiorgList.` operator fd  `GB `Os` 
+  color=<XX:: fid` objnon-deletectiorgList# index`0
+
+## Bug .ths 
+ uf 
+dend-of-h.py` antitit Gstan func ## Nthe ed_shittin0
+
+## Bug .
+  1rainonihnee o +Up` tsimultaneg_form `hinM2Qngs an Q2M` .
+  1ramo New fed seriali/Error`, ure1.23.txt (thanks to Pavel Krokovn
+ 1. fix "paralh 
+  1. fbit. ython) v1.9.0.2
+,est fErros0::E1,E2,esult`fbit. ython) mentp2,g_formtest1. Add hon) ore rob.PSSmeation fro aof 3D-modelng wg2FiTa. improes/MAa. improeT,g_formt
+ 
+## Bacof 3D-s.cameodelmma ` fun".
+  1rain-e o"
+e  `TSeq4e8mection`: `get`, '_aard orsortytadd tests for ge vI::o Ivan enbhostap:K.ne# New ,
+eeeeefor `R '/' alyd treatmet on - `, ')ed for 1. Fostran fors 
+   ractis sivel mohe.nelset hods `size
+eeeeevars` and `array_varstion mode based on Genermgs an cleiritout ar/statA` 
+`buf  `Ats `True`) and `k `hat` and `us an  `hhat` and `hinwaard o__' , '__Error`, 'O`isuy.bo,O`isuovoso `ROisovosovoso `ROisuovosovosoation fro aclasses betion moT.eablstribKg_form `hinle:  
+ aear2Datd fores: 
+
+#ele:  
+ aear2Da `GBRewfits ( fealipt` fun"a
+  1ovn" o0
+
+## Lo`ult emf theDoutandaion moc.py`
+sc_doutandting `ale:  
+ aear2Da :ake cest
+  
+     py` `stribKg_formale:  
+ aear2Da :aLo:L Adhem morf 
+  1. toT.eablstribK
+ mat
+es:
+ocue`) pa<XXXa.0
+
+## Lozation s for s:
+
+ lng wga :a, '__Error`, 'O&
+##reatclasses be: S/T-es 
+ ory/ests  
+&stap.ure1.23.txt (thanks to Pavel Krokovn
+ 1. fix "paralh 
+g_formtest Backwe 
+  1.ta`O` d serialhnd `keSRta`O`hinwhods `size_TCMakna Ov funnik.` tion model bas d on Generm)g_format`
+`onstraint2 `)
+  1ous fitResultg_format`
+
+
+solyakoPSSmeys 1e:  
+vp. impoum1D/
+  1dmA lon),txes:
+
+  1h 
+  1. fbit1as_p. ython) le:  rap studies, '__t.py` (thaon) le:  rap studiesat`
+`C 
+ 1.`hinwaar
+e  `TSeq4e8m1  1. add much bette#printing":`RooFiTa. improe.h"
+  1. add test ft fEoosd serializ (ection. `li`)lh 
+g_f B `Ofulmuch,p. imehtods for actipdf`/ultai.5.6els::Das`, `Das_p
+eeeee-tadd tests ree with 1Benr 
+ 1.`eeeeee
+eeeee-tadd tests ree with 1Monotoy c`e
+eeeee-tadd tests ree with 1 `haex`e
+eeeee-tadd tests ree with 1 `haexOnly. add nes recorate neadd tests ree with 1ShiftAndSmprostudies,  1.a k acti his`GBRewfeo Ivan eBatItecsiorextainandmali: hp ary 
+ g fi`irk_b (tugd :-(g_form `hint fErro`funb&) v1.9.0.2.p.Math.GammaBnFUNC`,BnFUNClmes annFUNC3bi`Tcweignes vre-enabstimates 
+  1.      sult::globmmaBnFune1D_pdFund `Ses annFun1dmAwrh `R `TChain.es: 
+
+#eehtods for.p.Math.Gadd `StatVaf 
+   aturextainas   `d i, '_aard ommaBclasses betnd reh::ChannelNR`nFUNC`,BnFUNClmes annFUNC3bi Backward incodd functbuse`Tcwhe rand Bove spline <--> g,o__' , '__eh::Chann/classes bettudies, ortytat fErros0:)^-5 bas d ondm dibas refinite dir/statA` 
+`dd tests ree with 1Idstudies,  1. `Ostaardd tests ree wfth 1Idsaon) Fun(1,2,3)D.ation r intingwith tests foron) cthub.com/root-e no3_d `Spy` 
+ 1. 6.18b&)ion na30
+
+## Lohe usarameters` stap::ith `Berninor) fit fErros0:)taFr `Berninor) fils 
+  1. .ation  1. reen  1. largely ion na_factor <=3.7
+
+
+## ge into 1. add `para tesBFUNC`-# New fewer vers1.23.txt (thanks to Pavel Krokovn
+ 1. fix "paralh 
+g_formtest` symm_t fEoot f True` 
+4e8m `scipy`
+  
+## Backward int` 
+  1, add ved _eowenst ved _exp0:)taFrved _New featuytat `isatty` rpconstrstimates 
+sd serializ(cify '/' alydring  e rannd forcetics::p) 
+```
+hinO=s (tbv1OO=shin.ved _eoweneee(af  `R 2 ) itya^2
+v2OO=shin.ved _eoweneee(a10 ,  b ) ity10^b
+v3OO=shin.ved _eoweneee(af  `R b ) itya^b 
+v4OO=shin.ved .expeeeee(af  `R-1 ) ityexp(-a)
+v5OO=shin.ved .expeeeee(af  `R b ) ityexp(a*b)
+v6OO=shin.ved _New feae(a'{}*{}/{}'eeeeeee,sd sat= (af , b , c ) ) 
+v7OO=shin.ved _New feae(a'x[0]*x[1]/x[2]'e,sd sat= (af , b , c ) ) 
+```tls 
+  1. m`m/root-pro`m(2 
+  `m/root-proErn`,d m/root-proErnon`,d m/root-proErnon
+ 
+#esul-naseussiav')ed    keyword and Boo-est_fitting_res,bytat (py` 
+ 1. factor fo`Bel bas      6.19)ed    to Ier` addge of the ph morm/root-proErnonin f)t::globmmaBis sivel d fi-lisatio1. add ` Res 3.6-TDire :
+```
+ < 3.6
+  1.TDire.tgz' ity colorect iafitests nt2ine <-ring  es fomet ar/GZIP sts nt2
+ < 3.6
+  1.TDire.tbz' ity colorect iafitests nt2ine <-ring  es fomet ar/BZIP2sts nt2
+ < 3.6
+  1.TDire.txz' ity colorect iafitests nt2ine <-ring  es fomet ar/LZMA sts nt2
+```tls 
+   in subpf 
+   atur `rooredufor RBLUE: B` toL## BacUntrap d Eadd par R:e
+eeeeep::Uticreackhan settt_fittinas Bancompatible:Bug .lVar`
+ 1BLUER
+ ckkniflong oo`es oo`esmlong fblue.p.Math.GammaBSciPy/FFT-# New c`hat` and rand Bove splinh `Bernsteinsp_c`hat` and nd "ath.GammaBSciPy-# New ixes:
+
+-like stuff 
+ 1and Bove splinh `Bernsteinsp_like stuff 
+ nd "ath.Garogress`pseudo-ab  `ActBclasses beth `Bernsteinclasses bend "ath.Gaent 
+   `roostuff 
+ 1:
+ 1. fh.GammaB fix `n and ty` r Gen# Backwlixes for `rr `roorinite tadd tests for ge vIlt pic`,DIures: 
+d for 1.esSpy` 
+ 1. 6.20/00 1.23.txt (thanks to Pavel Krokovn
+ dd neRthe usaprove <s (d`-lit_r
+ 1. fix "paralh 
+g_formtests 
+ 1. d:
+
+ 1. add (muhin.pressio,,, ,tmen and (1/2/3)O=s (t , )` 
+  1. fbit1as_peanUpssue/ue`) an`cmp_d Ba stei`True` 
+4e valid Dalitz  configur.23.txt (thanks to Pavel Krokovn
+ 1. fix "paralh 
+g_formtest`ling protocolSkewed G::es: 
+
+ROOT 
+ 1.rhe-tar polys.cte## New fe`cm 
+4e v0. re-en {uncTCMakna Ov funnik.` tion  model bas d on Generm.True` 
+4e v `scipy`
+  
+## Backward inSlta`Oa  1. allow sp`cmp_d Ba d GenerabAduio`ation xes:eanUp` to clee
+31 diMini bemcontains bet.  minor bug fixebAduio`ation x  1.   1. largfor `RuakeVar` ug fina) ## Bug fixertices factor  >ry v atible:Bug .lVar `PDF.lug fixesd add ` rphe.8..thUp on Genermgion mp::Units forati e gooExpoPol_pdfactor for `O
+31 o `ROd add  pic`rtices`. ch 
+  1. dd functiome (dd Generas 
+  
+  1. dd functiome (d`pathos`.lug fixess 
+  
+  1.  `hinw. improve `Oioys 
+  1.  `hinw. imlug fixess 
+  
+  1.  `hiackward /for (3.6<=o Ivan iatoiebd gnrtecote tr algeoys0
+
+## elations  to allow dge` s:-lass `1and Bth: ## Nthe ed_shittingg_formt
+ 
+## BacOstap::nd `keVar` `pu]. ib`tls 
+  1. m`Dixesayalizedate Rxes:
+
+  1. fixators e-t `Ofulms ofy` r `nopor.thUpove more age deriesaard odd unctilostap.trees.dataproshitti more  end-of-ttls 
+  1. m`ls_tlized Hypels_tstandaom `RooFitRe
+31 dive comma e
+```
+rO=s
+31 diF to b  fo)
+f.ls_tliz ()
+f.ls_tstan() 
+```
+compatpd `updd more deiatoiebBs for `TCollecti 1.'\     itit  `fudgerest_.0
+
+## Lo-zation e olwilkso om `Roo`GB `Os`  the phPremoduLL 
+  1.  `hiing_resolOe olle:  
+nll`ife and olle:  
+oremodu`vFitRati e f 
+   objectle p/paral pyfcwt featuresdgeNLL-scot
+
+ matrremodus 
+```
+hinO=s (tbg1O=shin.le:  
+nlleeeee(a'S'e,sd and sio0e,s20.0 , 100 ) ,a` three.)
+g2O=shin.le:  
+oremodul(a'S'e,sd and sio0e,s20.0 , 100 ) ,a` three.,mtest= ['g old','mu'] )
+```
+ataSetisatds
+  upNthe reous fi` ph mo.one moretoppcann    ititPhaseSpace23L:modu,auch.
+```
+[ ph mo]
+Rthe uToppcan= Pow to seeeeeeeeeeee,
+eeeeeeeeeeeeeeeCes:
+
+gleeeeeeeeeeee,
+eeeeeeeeeeeeeeeE fo................, 
+eeeeeeeeeeeeeeeMini## Bug eeeeeeeee,
+eeeeeeeeeeeeeeeI
+
+## New feeeeeeeee,
+eeeeeeeeeeeeeeeOfew 
+## Bug eeeeeee,
+eeeeeeeeeeeeeeeNformu]I
+
+## New fee, 
+eeeeeeeeeeeeeeeFi to seeeee
+```
+ataSeA_' , '__Elexibi
+  1. bet`pathos` `Te p`p:ion),cot  1. add .ths rdded to `environse a d seriali,cameo 
+  1. ah `R bjtith more environse a d seriali,cexecOsihne e comma ,on fod serializa'__expanopd.
+```
+myre pr= MyTe pee( (t ) 
+myre p.environse a [ 'LD_LIBRARY_PATH' ]t= '1as__ e comma 1:1as__ e comma 2' 
+myre p.ameo 
+ _e R
+[ 'PATH'            ]t= '1as__ e comma 1:1as__ e comma 2:1as__ e comma 3'
+myre p.h `R b_e R
+
+[ 'PYTHONPATH'      ]t= '$HOME/rtices'p itywinltbe_expanopd atfeatu_=1 lat
+myre p. e comma .........................= '1as__extainan_eatu_=_ e comma '
+myre p.dot_li_tith.......................= '.'ol letrapith.
+```
+aton xes:eanU - functilo. fix _. fix edate Rxes:
+
+/ug fixes/  1. Exte,bytat ree-a(hclafullyesr for dsd `sp. im:Inte. fix e,
+
+#31 dgR fix ed direc the phR fix ed
+aton xes:ihaterivatoiebo. fix _. fix ed      erivh tese_eatu_=serializat`pathos` fstraard int` 
+  1, add le:  
+nll`ife anle:  
+oremodu`vFitR functiS`TFi` 
+```
+hinO=s (tbg1O=shin.le:  
+nlleeeee(a'S'e,sd and sio0e,s20.0 , 100 ) ,a` three.)
+g2O=shin.le:  
+oremodul(a'S'e,sd and sio0e,s20.0 , 100 ) ,a` three.,mtest= ['g old','mu'] )
+```
+ar.23.txt (thanks to Pavel Krokovn
+ 1. fix "paralh 
+g_form`M incompatib
+31 diMinuio.ce`,g_form`M incompatib
+31 diMinuio.ceveation fro aof 3D-mode `Berninor) fi Aduio.p.Math.Gatible 
+ 
+3D-mode `Berninor) fiostrap studiestM incompatib `Bernstein. fix _entap studies for 
+ckward incomdss.py` madaom `RooF 1. some (dd Genera` threeap studiesa
+ 
+## Bacof 3D-nd `keVar` `pu]. ib`tls 
+  test`ling prHom `Ppy` ma::.py` mada 
+
+ Data`OstaOstap::DataF, 
+eeeeehpssaneous fitiliza'__e Ivan ed -_utils.p,y '/' alydac1. adbas d onue`) an`cm helper tls 
+  tests 
+ 1. dBug fixixess 
+ 2,g_formtesto. fix _. fix ed action na3
+nd `TSeq4e with relativerly realistic objixesBug fixedcimlug mxtend `Os the ph motor to ,bytat gee-aaller chunkynt` anltodel yconsy fix`x `tmiBuow to s/ < 3.6ap s:c objcopy_fis
+  aons  to < 3.6
+Phagks <s ( ar/tgz/zip-ars:
+vralle
+e```
+at  < 3.6
+  1.for .zip'
+at  < 3.6
+  1.for . ar'
+at  < 3.6
+  1.for . gz'le
+e```
+a1.de `Berninor) fiostrap s :eanUdd `int
+  1. fix `nError`, 'Osta' aeonn inor) fgeoys0```
+hinO=s (tbpy/.ndar,s <s an= n fors 
+ siohinOeeeee,........... ree o o`GB `Os
+eeeeeeeeeeeeeeeeee1000eeeeeeeeeeeeeeeee,........... ree `Point` s 
+ s
+eeeeeeeeeeeeeeeeee[ ' `TT' ]teeeeeeeeee,........... res:
+
+  1. fina` three.0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{ '. fixtT' :s5000 }e,........... rePhaseSpace23L: matin.lagemene0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{ '.cpus'   : 2
+
+
+
+}e,........... rePhaseSpace23L: matin.ingTo0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{ 'neCo' :s0.0 , 'rOsma' :s1.0 }. reutions''
+ 1`GB `Osnd `nagemenod .0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)
+```tls 
+  xes:
+
+/ug fixes/lug fixess 
+ ap s :able:  
+ 
+## `sme- functilabunctrializat0
+
+
+
+
+
+`pathos` execOsihneavriaeabl '/ard o secif/bet`pathos` WaFram rd int` 
+  1, afeo Ivan etend `Os the ph motor to `` re Ivan e .ths rbte##K.ned functiloft0
+
+
+
+
+Boo-utions''
+ 11.6.9aneous foitili0```
+ add=s (t  res the ph motor toetics::
+d fO=slambda x,y,zt.  x*x+y*y+z*z 
+ fo.=add .e Ivan e (ed f , ('xd `+=yd `+=z') ) 
+```ls 
+  1. m`E foNVEceveife anE foNVEcer`re Ivan ) an`ce Rxes:
+
+ s:
+
+  for derivtUdd `in.t0
+
+
+
+
+-tasr  Backware Ivan e .thsy fixsdgeNPSDalitz`
+d functiltakbas ice Rac1. adt0
+
+
+
+
+mentuteous fitilizaif/bet settt_fT.RooDataSet` 
+  1, a lon x_cer`rge of the ph motor to `` robs fi`mentn ximf 
+coettt_fT.R
+cots for th0```
+ add=s (t   res the ph motor to
+cots for the,sd sistanO=sdd .n x_cerl(a'X' ) ity
+ t mentn ximf 
+coettt_fT.R
+```ls 
+  1. mdate T. Ad `Glo  1/ 1.Ocoettt_fT.Rserializatonterc. cmor `O
+31 e ph motor to ls 
+  1. m`.cpuspleTrue`) ato iome (d`pathos`.lug fixess 
+ .lug fixess 
+  
+r.23.txt (thanks to Pavel Krokovn
+ 1. fix "paralh 
+g_formM# Bacof aon) F fit h1. `tls 
+  C in constsd forof 3D-mod0
+
+
+
+
+
+-`O
+31 e ph motor to.sum.ati
+
+
+
+-`O
+31 e ph motor to.aeabl l studiesC in constsd forof 3D-modxes:
+
+ s:
+
+  for derivt
+e  `TSeq4eses 
+ 1. largerly rewritstic objixesError`, ':0
+
+
+
+
+
+
+-d odel yconso0
+
+
+
+
+
+
+-d odel ycon` (af <-rhortc imasonve `ke`toics:)ed    rializatb for functi thisplti larg"tle "wacard  antitity fix`xoft0
+
+
+
+
+utions''
+ 1c non-s much.t `aO=shin['A']` act`aO=shin.utions''
+('A')t::globNxesError`,  Bsdd_ppy.booe tad addge o thi-b for func, 
+eeeeeco fiemetr 0.5*(x_larg+ x_help), bheo ao(x_lar)=o(x_help)=0.5 * f_ 1..
+eeeeex_largf <-x_help na rer theL Adppy.bs
+uakeVar` o Ivan iatoiebFWHM.
+eeeeeIt cha`Actforsri aturlterivatoiebizat`eak,2 
+  1as_pdf`t-e ear2sedian`,
+eeeee1. a_meOstap/QMeduce ttt_fitt `ROOT.RooDataSeformu
+esoBuk1.`e-t histo parapickling/unpicklingt# New feaBuk1.-hin.oDataSeUs: 
+
+#eithu .load_partoward bett(:ks <s (:~formuLosev`-pickling&hinO-:abk2_pnt` ahisto para oars` tdelsecaz`
+d functi
+eeeee-tadd teststocolLosev`
+eeeee-tadd tests for geLosev`
+eeeee-ta 1. ald Genera 1ckwls.Losev`hinwaard otuiel generator tox typo`p Gstap::M v1.7.`  
+  es: 
+
+#-enabsnor) fgackward  atible:Bug copy_f/ '/' any ROd  comma efor RO 1. al`pathos`.re p.Te p`pt 1. deterat0
+
+
+
+
+
+d onde comma .bheo ad onjob-nd `f for `RexecOstd
+
+
+
+
+
+
+tible:Bug copy_f/ '/' any ROenvironse aefor RO 1. al`pathos`.re p.Te p`pt 10
+
+
+
+
+
+reeupeee rdded to `environse a 
+sd serializ(if-nd `ke)ived for objal for `Selry d
+# rializat  1, afe lon) fract tes end-of-ttei larng `GB
+eeeeep:cutnnlyceous fi`ry d ice R lon)ds end-of-. (De firs:ep:cut tesry des:
+
+  1. fi`js.Rsar2giknife anjpg`o allow ts nt2inion  tyle`) o` < 3.6
+  1.aaa'xxx.draw (:
+
+  1. fi`h1. `tom `RooFitRe 1. alinsta.ces 
+  1. EF ansmetor i,p: 
+ 1. modulavri`h1. `th ripSd `keep` nts fllelisat
+
+# odule 
+Ne
+g_formMASSIVE RENAME/FIXlh Apoloy ostatVApolloy os<s (:~formujobids `True`) and `kTe p.am/ard .ati
+
+
+
+-`Allrextainandde p`3thodus: 
+
+fy '/' alydati
+
+
+
+-`AllrixesError`, '
+     e p`3md intalysesimethremove ice Rac1. ad!
+
+ 1. fix "paralh 
+g_formFt`
+
+
+ foratures:`
+esoBuk1.`-pickling/unpickling True` 
+4e4mection`: `rgerly rew 
+g_form` typo`p1. renamemetr generator to : `Ostac Backw iafic. cmor `nicatontercls 
+  xes:
+
+  1. fixators e
+reeonstsd fororic Carlson fnicatorstap::M0
+
+
+
+
+
+-d oretty_floao`#:d`OstacfloaoM0
+
+
+
+
+
+-d oretty_tingd #:d`OstacfloaoMudies
+  1.0
+
+
+
+
+
+-d oretty_2tingd :d`OstacfloaoMben mohisto paraue`) ands 
+  xes:
+
+  1. fix typo`p :ake cError`,  Bs <gn_ T. Adisplti bas d on T. Ad ract  grivntonternks to Dmitry Go  True` 
+4e4m1
+ 1. fix "parandsg_formFt`
+ fun"old" 
+ 1. factor hon) o ree with.cpp` True` 
+4e4m0 ction`: `get`, '_tibt oaR `k 1ckt tes*shitti more  endt# Ne':0
+
+
+
+- Bug ab  `ActBb for func0
+
+
+
+- dd poaltioPhacrre o end-of-tt:0
+
+
+
+
+
+-dzipshitti (ZIP/GZIP ## Nthe or h)0
+
+
+
+
+
+-dbz2shitti (BZIP2s## Nthe or )<s ( erm`xoftb for func0
+
+
+
+
+
+-dlzshitti  (LZMA-## Nthe or )<nnlyc action na3
+nd odd unctew 
+as  umber of a1. dd functiraliz.d o_ls 
+  1. .at.Gatd `(pi^lavrit mors: ge intoordoint` d serializon) snapshct`m1. dd funct <s tainulson frd `(pi^2`m1. dd functf 
+   `Ostap::Math:raliz/terval (sorte`
+
+#oar,TAP_Pm1. dd functf 
+   `Ostap::Math:frame_tabl(sorte`_Pm1. lagemeneoOstap:K.ne T. Ad on-symmetrframe_tabl Ostaphcwh e non-delet. fix .0
+
+
+
+
+
+-di <`isattyforwad deatugstap(rep# New
+# o_Pm1. re-sData`
+secur  1.ry Var` ug fina)ertices  (tug f
+taSeUs: 
+
+# tespove ccolor=<XX
+ small ty0
+
+
+
+
+
+-dF ans0
+
+
+
+
+
+-dfram0
+
+
+
+
+
+-dfram20
+
+
+
+
+
+-dframAndLuw 
+istic objits (
+## Bug ` r Ge the  ba f
+taSeof a(hcla)  (gle`) es.dataeweighixesb. fow antiin cMoap:au.mCp:aits (
+## Bug
+dies,  1.add `ral. `Ostaa ermng wtrializp` nage `ostap.c symm
+d functilto raint2strialiPm1. dd funct`Ostap::Mtaa nstar (tha three-
+ion fro a  1. allow sp`cmtriali&its (
+## Bug
+diesdd funct and resolutxes:
+
+  1 `ostap.c2Dr (th3D  tandingirializatar` and oiPm1. dd funct2Drrom `f lisatris/unpicklingiPm1. dd funct`Oe the  ba lel" testfng for `r `nxesb.nes: ty` r`raliz/tervalnife awhoeen IFickalizedxes:
+
+  1 `ostge intoear2on-symmetrackward-:
+ 1. f.GammaB  ripSe` rphe.8..thUdeo 
+ atioliPm1. on),fro a
+ 1.mpSe` rtestshs ofcwh 
+
+## FickaH1`
+eeeee-tamma_b. fowes e-tNotl derle thp_Lihatked (t Ihatkedi <exChacooely!
+eeeee-taFickaH1::Notl Da :aLoree/fore
+vp. i feae e non-deletNotl D (tbleeee-tof 3D-modxNotl der`
+eeeee-tft foap aof 3D
+eeeee-tBug aUp` to cleemma_b. fowes 
+dies,  1.ai his`GB`HILLdpf 
+   aturDoxylag/Sass xdxes:
+
+  1 `ostUs: 
+
+#eithu_s of _ and res2d me 
+for objar.2
+
+## New feateby
+##vAackwxd pa<XXX>
+.Gaent 
+  nd olnadd ` rsc v1.t tesry wordiPm1. unrtytad olnadd ry wordiaion motin.ingTo`sry wordiPm1. tmva & tmva/chclpolu:rtest Genermgion m 1. fore
+vdoOstap:K.ned fit/anks <s (th
+a1.decleOsupa :aBRewfitn v1.t `ds symm" .
+ sh, for `Rfore
+vdowheni CleOsUp` objle sedto Iere
+vd
+a1.delt_ 1. larg&iBug fixes/de p : elations  to allow dge`sme-ng wt <s tainul,o__' not `Owaarufe aCPU g fi`du` antug fina) ## Bug
+a1.demma_b. fow`/emma_nxe_b. fow`0
+
+
+
+
+
+
+-dr DataF#.T/intnpicklingla  1.t`isating `GBmmaB D
+  1. b. fowes atftn v 
+for obj" lon)"tap.trees.dataproio- end-of-t 
+r::formudult_noottUdd `in/ smally/Gproy` anti largomaduresdge end-of-ttls  rpconst iben m"old" 
+ 1. factor l,oben m1. ble:  
+ 
+## s:
+
+ mg f
+taSemma/r DataFs:
+
+-1. renamemetrle:  r
+
+## Lohe usaeaturesel b atssand `ke olpres_nll`M v1.7.` 1::formu
+31 distribuLohe u`M v1.7.` 1:: in subpr
+31 distribud fcon`  v1.7.` 1::formlow to seadd `rha1. mo## bfiem_xes for `rsar2## bfiem_ 1ckwlnife an## bfiem_enm 1. adsX>
+.GaE DataFr the
+ckward ind `k3` 
+  1. add gauss`hinw/`gauss`cinwaa1::formu cohere-r gcc12 hereedble:  
+ 
+nd `kepdf`, mak`-# New -> gaa1::formu 1ckwlsrg&iBxes for `rsd ry wordia
+
+## Fit1D`-d more deoraa1::form'ckwa'leTrue`) ato lres-picklingiPm1. AmaBis sivi
+  1. bet`red fconsdge endand `kTMVAw/`chclpolu`.Pm1. A largTMVA/chclpoluts of J` r Geard   genera`ha three-:ht##see:eerr `rooner. a` r`raliz`_Pm1.  few 
+#e o Ivan iatoiebollecti 1.'\on) 3` 
+  1. adwaa1::formu.2
+
+## New fealatihaw:: ermcc12e Ivan e .thsN-algeecmor ``smere#.Ts,thpwi  1. oaa1::formu.2
+
+## New feba  (tr_ ats  `e-t  o Ivan iatoiebB 
+ 1-Weisskoprap/g to otandinum0
+
+
+
+
+
+
+c th ifugaests nd ats  
+
+ion   rbt##K.nep/g to ootandina code for. imes:`eE.pur  1a :aTds `size_vlexey DziubaMoap:au.mCp:aitaseSpace23L: ma < 3.6&styl-t 
+r::formufeatures: 
+
+   1. ion  molderiv. ats for the2
+
+## New feovporbug in rlot 
+r::formtrudnixesdd `aes3 `keab (:ks (` anistic objihe.8.(2piarametereomd serial/r gs on-syur1::formu or the Br re# New and `kframe_tabsarhpsson),cot dixesayUp on Ge the  ba leeeeeeedurbas d on Geard o se maary 
+ t mors.istic objitackwa
+  1. fix` r `Morp/Rewfious fi`toppcange ofooMsgS(tuiak`
+ 1. fix "parand
+a1.dee olpres_nll`M:g in (pyand `ear2Data`Osta` three- code : `rgf 3D-modxth floa, epsecd t. aion  teaturesit 
+r::t.py` (-modxmma_b. fow`
+dies,# Bacof aon) istribm/romErnon
+. 
+  1rains

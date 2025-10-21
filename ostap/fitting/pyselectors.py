@@ -1413,7 +1413,7 @@ def make_dataset ( tree              ,
                    name      = ''    , 
                    title     = ''    ,
                    silent    = False ) :
-    """Create the dataset from the tree via intermediate Frame 
+    """ Create the dataset from the tree via intermediate Frame 
     >>> tree = ...
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
     """
@@ -1530,13 +1530,11 @@ def make_dataset ( tree              ,
     else : 
         skipped   = 0 
         processed = total
-        
-        
+                
     return ds , SelStat ( total , processed , skipped ) 
 
 ROOT.TTree.make_dataset = make_dataset
 
-        
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
 #

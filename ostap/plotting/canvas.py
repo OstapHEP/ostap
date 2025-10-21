@@ -1340,7 +1340,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
                 self.__name = 'gl_canvas#%d' % hash ( h ) 
                 
         if not self.__title :
-            self.__title = 'Ostap Canvas %s' % self.__name 
+            self.__title = 'Ostap Canvas: %s' % self.__name 
 
         ## (2) create/use new canvas 
         self.__cnv = getCanvas ( name   = self.__name   ,
@@ -1366,8 +1366,8 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
     def __exit__ ( self , *_ ) :
         """ Context manager EXIT 
         - update canvas 
-        - male a plot, if requested 
-        - switch to the previus canvas
+        - make a plot, if requested 
+        - switch to the previous canvas
         """
         if self.__cnv :
             self.__cnv.Update()            

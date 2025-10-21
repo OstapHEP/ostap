@@ -26,7 +26,7 @@ with open('%s','rb') as f : pickle.load ( f )"""
 ## @class PickleChecker
 #  Check if the object/type can be pickled/unpickled
 class PickleChecker ( object ) :
-    """ Check if the object/type can be pickled/uunpickeld
+    """ Check if the object/type can be pickled/unnpickeld
     """
     MORE_TYPES          = [] 
     EXTRA_TYPES         = [] 

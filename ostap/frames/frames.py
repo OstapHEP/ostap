@@ -378,7 +378,7 @@ def _fr_new_init_ ( self , *args , **kwargs ) :
         lenght = -1 
         if   isinstance ( args [ 0 ] , integer_types ) and 1 < args [ 0 ] : lenght = args [ 0 ]
         elif isinstance ( args [ 0 ] , ROOT.TTree    )                    : lenght = len ( args [ 0 ] )
-        elif isinstance ( progress   , inetger_types ) and 1 < progress   : lenght = progress         
+        elif isinstance ( progress   , integer_types ) and 1 < progress   : lenght = progress         
         _ , _ = frame_progress ( self , lenght ) 
         
     
