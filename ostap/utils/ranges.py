@@ -23,6 +23,9 @@ __all__     = (
     ##
     'VRange'    , ## simple looping from xmin to xmax in N-steps 
     'vrange'    , ## simple looping from xmin to xmax in N-steps
+    ## 
+    'HRange'    , ## simple looping from xmin to xmax in N-steps, like histo bins  
+    'hrange'    , ## simple looping from xmin to xmax in N-steps, like histo bins 
     ##
     'LRange'    , ## simple looping from xmin to xmax in N-steps in log-scale 
     'lrange'    , ## simple looping from xmin to xmax in N-steps in log-scale 
@@ -110,7 +113,7 @@ class VRange(object) :
             yield vmn * f1 + f2 * vmx
             
         if e : yield vmx
-                
+
 # =============================================================================
 ## loop over values between xmin and xmax 
 #  @code
@@ -123,7 +126,57 @@ def vrange ( vmin , vmax , n = 100 , edges = True ) :
     ...                print (v) 
     """
     return VRange ( vmin , vmax , n , edges )
+        
+# =============================================================================
+## @class HRange
+#  Helper looper over the values between vmin and vmax
+#  - like centers of histogram bins
+#  - edges are not uncluded 
+#  @code
+#  for v in HRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+#  ... print ( v ) 
+#  @endcode 
+class HRange(VRange) :
+    """ Helper looper over the values between vmin and vmax 
+    - like centers of histogram bins
+    - edges are not uncluded 
+    >>> for v in HRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 ) :
+        VRange.__init__ ( self , vmin , vmax , n = n , edges = False ) 
 
+    def __len__     ( self ) : return self.n
+    def __iter__    ( self ) :
+
+        n  = self.n 
+        fn = 1.0 / float ( n ) 
+        e  = self.edges
+
+        vmn = self.vmin
+        vmx = self.vmax
+
+        for i in range ( 0 , n ) :
+            w1 = ( 2 *       i   + 1 )
+            w2 = ( 2 * ( n - i ) - 1 )
+            yield ( vmx * w1 + vmn * w2 ) / ( 2 * n )
+        
+# =============================================================================
+## loop over values between xmin and xmax
+#  - like centers of histogram bins
+#  - edged are not uncluded 
+#  @code
+#  for x in hrange ( xmin , xmax , 200 ) :
+#         print (x) 
+#  @endcode
+def hrange ( vmin , vmax , n = 100 ) :
+    """ Loop  over range of values between xmin and xmax 
+    - like centers of histogram bins
+    - edges are not uncluded 
+    >>> for v in hrange ( vmin , vmax , 200 ) :
+    ...                print (v) 
+    """
+    return HRange ( vmin , vmax , n  )
 
 # =============================================================================
 ## @class LRange
