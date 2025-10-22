@@ -16,6 +16,7 @@
 #include "RooAddition.h"
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
+#include "RooDataSet.h"
 #include "RooAbsDataStore.h"
 #include "RooFitResult.h"
 #include "RooGlobalFunc.h"
@@ -2146,6 +2147,9 @@ Ostap::MoreRooFit::delete_data
   if ( nullptr == data ) { return nullptr ; }
   reset_data ( data ) ;
   delete data ;
+  // auto ec = data->emptyClone() ;
+  // *data = (*ec) ;
+  // *data = RooDataSet () ;
   return nullptr ;
 }
 // ========================================================================

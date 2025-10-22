@@ -338,41 +338,27 @@ def _axis_merge_ ( axis , n ) :
 
     ## no action 
     if 1 == n  : return axis
+    
     nbins = axis.GetNbins () 
     bins  = axis.GetXbins ()
     ## 
+    if 0 == nbins % n : 
+        return ROOT.TAxis ( nbins // n , axis.GetXmin() , axis.GetXmax() )
     
-    ##  non-uniform binning  
-    if bins :
-        new_bins = [ bins[i] for i in range  ( 0 , nbins , n ) ]
-        if 0 == bins % n : new_bins.append ( bins[nbins] )
-        new_bins = tuple ( new_bins )
-        return ROOT.TAxis ( new_bins )
-    
-    ## uniform binning AND n divides nbins ?
-    if not bins and 0 == nbins % n : 
-        return ROOT.TAxis ( nbins // n , axis.GetXmin() , axis.GetXmax() ) 
-    ##
-    
-    ## uniform binning and n does NOT divide nbins 
-    delta = ( axis.GetXmax() - axis.GetXmin() ) / nbins  
-    new_bins = [ axis.GetXmin() ] + [ axix.GetBin]
-    
-    prev     = axis.GetXmin()
-    new_bins = [ prev ] 
-    for i , current in enumerate ( bins ) :
-        if prev < current :
-            delta  = current - prev
-            delta /= n
-            for j in range ( 1 , n  ) :  new_bins.append ( prev + j * delta )
-            new_bins.append ( current )
-        prev = current
+    new_bins = [ axis.GetXmin() ]
+    for i in range ( 1 , nbins + 1 , n ) :
+        if 1 == i : continue  
+        new_bins.append ( axis.GetBinLowEdge ( i ) )
+    new_bins.append ( axis.GetXmax() )
         
-    return ROOT.TAxis ( new_bins ) 
+
+    if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( new_bins ) 
+    new_bins = array.array ( 'd' , new_bins )
+    return ROOT.TAxis ( len ( new_bins ) - 1 , new_bins )
 
 ROOT.TAxis.merge        = _axis_merge_ 
-ROOT.TAxis.__mul__      = _axis_merge_ 
-ROOT.TAxis.__rmul__     = _axis_merge_  
+ROOT.TAxis.__mod__      = _axis_merge_ 
+
 
 #
 # =============================================================================
@@ -5291,7 +5277,7 @@ def  _h1_smooth_ ( h1 , ntimes = 1 ) :
     """
     assert isinstance ( ntimes , integer_types ) and 1 <= ntimes ,\
            "Invalid `ntimes` parameter! "
-    result = h1.clone() 
+    result = h1.clone( suffix = '_smooth_%d' % ntimes ) 
     result .Smooth ( ntimes )
     return result
 
@@ -10289,7 +10275,10 @@ _new_methods_  += (
     ROOT.TAxis.__truediv__   , 
     ROOT.TAxis.__floordiv__  , 
     ## 
-    ROOT.TAxis.range         ,  
+    ROOT.TAxis.range         , 
+    ##
+    ROOT.TAxis.merge         ,  
+    ROOT.TAxis.__mod__       ,
 )
 
 # =============================================================================

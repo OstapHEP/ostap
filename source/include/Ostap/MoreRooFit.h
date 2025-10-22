@@ -29,16 +29,17 @@
 // ============================================================================
 /// forward declarations 
 // ============================================================================
-class RooAddPdf           ; // ROOT,RooFit 
-class RooProdPdf          ; // ROOT,RooFit 
-class RooGaussian         ; // ROOT,RooFit 
-class RooFFTConvPdf       ; // ROOT,RooFit 
-class RooEfficiency       ; // ROOT,RooFit 
-class RooPolyVar          ; // ROOT,RooFit 
-class RooPolynomial       ; // ROOT,RooFit 
-class RooMultiVarGaussian ; // ROOT,RooFit 
-class RooLinearVar        ; // ROOT,RooFit
+class RooAddPdf           ; // ROOT/RooFit 
+class RooProdPdf          ; // ROOT/RooFit 
+class RooGaussian         ; // ROOT/RooFit 
+class RooFFTConvPdf       ; // ROOT/RooFit 
+class RooEfficiency       ; // ROOT/RooFit 
+class RooPolyVar          ; // ROOT/RooFit 
+class RooPolynomial       ; // ROOT/RooFit 
+class RooMultiVarGaussian ; // ROOT/RooFit 
+class RooLinearVar        ; // ROOT/RooFit
 class RooAbsData          ; // ROOT/RooFit
+class RooDataSet          ; // ROOT/RooFit
 // ============================================================================
 namespace Ostap 
 {
@@ -4133,8 +4134,8 @@ namespace Ostap
      */
     RooAbsData* reset_data ( RooAbsData* data ) ;
     // ========================================================================
-    /** delete  RooAbsData
-     *  @see RooAbsData
+    /** delete  RooDataSet
+     *  @see RooDataSet
      *  @see RooAbsDataStore 
      *  @param data dataset to be reset/clean 
      *  @return nullptr 
