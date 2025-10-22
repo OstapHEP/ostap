@@ -31,6 +31,7 @@ __all__     = (
     #
     )
 # =============================================================================
+from   ostap.core.meta_info           import root_info 
 from   ostap.core.ostap_types         import ( integer_types  , num_types   ,
                                                long_type      , sized_types , 
                                                sequence_types ) 
@@ -225,15 +226,94 @@ def _axis_split_ ( axis , n ) :
             new_bins.append ( current )
         prev = current
         
-    return ROOT.TAxis ( new_bins ) 
+    if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( new_bins ) 
+    new_bins = array.array ( 'd' , new_bins )
+    return ROOT.TAxis ( len ( new_bins ) - 1 , new_bins )
 
 ROOT.TAxis.split        = _axis_split_ 
 ROOT.TAxis.__div__      = _axis_split_ 
 ROOT.TAxis.__truediv__  = _axis_split_ 
 ROOT.TAxis.__floordiv__ = _axis_split_ 
 
+# =============================================================================
+## get axis as sub-axis with the given range
+#  @code
+#  axis = ..
+#  axis1 = axis.range ( xmax = 3.0 ) 
+#  axis2 = axis.range ( xmin = 1.0 ) 
+#  axis3 = axis.range ( xmin = 1.0 , xmax = 3 ) 
+#  @endcode
+def _axis_range_ ( axis , xmin = None , xmax = None ) :
+    """ Get axis as sub-axis with given range
+    >>> axis = ..
+    >>> axis1 = axis.range ( xmax = 3.0 ) 
+    >>> axis2 = axis.range ( xmin = 1.0 ) 
+    >>> axis3 = axis.range ( xmin = 1.0 , xmax = 3 ) 
+    """
+    no_min = xmin is None
+    no_max = xmax is None
 
+    amin = axis.GetXmin ()
+    amax = axis.GetXmax ()
+    
+    assert no_min or ( isinstance ( xmin , num_types ) and amax > xmin ) , \
+    "Invalid `xmin' %s/%s" % ( xmin , typename ( xmin ) )
+    
+    assert no_max or ( isinstance ( xmax , num_types ) and amin < xmax ) , \
+        "Invalid `xmax' %s/%s" % ( xmax , typename ( xmax ) )
+    
+    ## no action 
+    if   no_min and no_max : return axis           ## RETURN 
+    elif no_min :
+        xmin , xmax = amin , min ( xmax , amax )
+        return _axis_range_ ( axis , xmin , xmax ) ## RETURN
+    elif no_max :
+        xmin , xmax = max ( xmin , amin ) , amax 
+        return _axis_range_ ( axis , xmin , xmax ) ## RETURN
+
+    assert xmin < xmax , "Invalid xmin/xmax: %s/%s" % ( xmin , xmax )
+
+    ## no action!
+    if xmin <= amin and amax <= xmax : return axis ## RETURN
+
+    ## adjust ximn/xmax: 
+    xmin = max ( xmin , amin )
+    xmax = min ( xmax , amax )
+
+    mnbin = axis.FindFixBin ( xmin )
+    mxbin = axis.FindFixBin ( xmax )
+    
+    nbins = axis.GetNbins() 
+    
+    assert 1     <= mnbin <= nbins , "Invalid min #bin %s" % mnbin 
+    assert mnbin <= mxbin <= nbins , "Invalid max #bin %s" % mxbin 
+
+    new_bins = [ xmin ] 
+    for i in range ( mnbin , mxbin + 1 ) :
         
+        low  = axis.GetBinLowEdge ( i )                
+        high = axis.GetBinUpEdge  ( i )
+        if xmax <= low  : break 
+        if xmin >= high : continue
+
+        if   low  < xmin and high <= xmax : continue 
+
+        last = new_bins [ -1 ] 
+        if   last < low  and high <= xmax : new_bins.append ( low )         
+        elif last < low  and xmax <= high :
+            new_bins .append ( low  )
+            new_bins .append ( xmax )
+            break
+
+    if not isequal ( xmax , new_bins [ -1 ] ) : new_bins .append ( xmax ) 
+    assert 2 <= len ( new_bins  ) , "Invalid edges!"
+
+    if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( new_bins ) 
+    new_bins = array.array ( 'd' , new_bins )
+    return ROOT.TAxis ( len ( new_bins ) - 1 , new_bins )
+
+ROOT.TAxis.range        = _axis_range_ 
+
 # =============================================================================
 ## Merge the axis bins into axis with wider bin
 #  - each group of n-bin is merged into a single bin
@@ -422,7 +502,9 @@ def _axis_scale_ ( axis , scale ) :
     bins = axis.GetXbins ()
     ## non-uniform bins are here 
     if bins and 2 <= len ( bins ) :
-        newbins = array.array ('d' , ( v * scale for v in bins ) )
+        newbins = tuple ( v * scale for v in bins )
+        if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( newbins ) 
+        newbins = array.array ('d' , newbins )
         return ROOT.TAxis ( len ( newbins ) - 1 , newbins )
     
     return ROOT.TAxis ( axis.GetNbins ()         ,
@@ -10207,6 +10289,7 @@ _new_methods_  += (
     ROOT.TAxis.__truediv__   , 
     ROOT.TAxis.__floordiv__  , 
     ## 
+    ROOT.TAxis.range         ,  
 )
 
 # =============================================================================

@@ -8,7 +8,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-06-16
 # =============================================================================
-"""Helper module to `reduce' tree using frames
+""" Helper module to `reduce' tree using frames
 - see Ostap.DataFrame
 - see ROOT.ROOT.RDataFrame
 """
@@ -328,7 +328,7 @@ def reduce  ( tree               ,
         elif 0.001 <= ff : ff = '%.3f%%' %   ff
         else             : ff = '%.3g'   % ( ff / 100 )         
         logger.info ( 'Reduce: (%dx%d) -> (%dx%d) branches x entries => %s ' % ( nb0  ,  ne0 ,  nb , ne , ff ) ) 
-                      
+
     return result
 
 

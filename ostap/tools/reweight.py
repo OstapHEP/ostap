@@ -711,8 +711,8 @@ class WeightingPlot(object) :
         ## (1) make a try to normalize input data
         ndata = normalize_data  ( data ) 
         if not ndata is data :
-            logger.info ( "WeightingPlot: DATA is converted to normalized `density-like' form for %s/%s" % ( self.what ,
-                                                                                                             self.address ) )
+            logger.info ( "WeightingPlot: DATA converted to normalized `density-like' form for %s/%s" % ( self.what ,
+                                                                                                          self.address ) )
             data = ndata
             
         self.__data = data 
@@ -998,6 +998,7 @@ def makeWeights  ( dataset                      ,
                    compare      = None          , ## comparison function 
                    delta        = 0.01          , ## delta for `mean'  weight variation
                    minmax       = 0.03          , ## delta for `minmax' weight variation
+                   maxchi2      = 1.00          , ## maximum chi2/ndf 
                    power        = None          , ## auto-determination
                    debug        = True          , ## save intermediate information in DB
                    make_plots   = True          , ## make comparison plots (and draw them)
@@ -1049,7 +1050,7 @@ def makeWeights  ( dataset                      ,
     ## list of plots to compare 
     cmp_plots    = []
     ## reweighting summary table
-    header       = ( 'Reweighting' , 'wmin/wmax' , 'OK?' , 'wrms[%]' , 'OK?' , chi2ndf , 'ww' , 'exp' )
+    header       = ( 'Reweighting' , 'wmin/wmax' , 'OK?' , 'wrms[%]' , 'OK?' , chi2ndf , 'OK?' , 'ww' , 'exp' )
     rows         = {}
     save_to_db   = [] 
     ## number of active plots for reweighting
@@ -1084,10 +1085,10 @@ def makeWeights  ( dataset                      ,
             logger.warning ( "%s: MC statistic is negative  %s/`%s'" % ( tag , st , address ) ) 
             
         # =====================================================================
-        
+
         ## make a try to normalize MC projection:
         hmc = normalize_data ( hmc0 , hdata )
-    
+
         # =====================================================================
         ## calculate  the reweighting factor : a bit conservative (?)
         #  this is the only important line
@@ -1101,35 +1102,51 @@ def makeWeights  ( dataset                      ,
         else                                  : w = hdata / hmc              ## NB!
 
         # =====================================================================
-        ## scale & get the statistics of weights 
-        w   /= w.stat().mean().value()
-        cnt  = w.stat()
-        #
-        mnw , mxw = cnt.minmax()
-        wvar  = cnt.rms()/cnt.mean()
-        good1 = wvar.value()      <= delta
-        good2 = abs ( mxw - mnw ) <= minmax 
-        good  = good1 and good2  ## small variance?         
-        #
-
-        c2ndf  = 0
-        for i in w : c2ndf += w[i].chi2 ( 1.0 )
-        c2ndf /= ( len ( w ) - 1 ) 
-
-        ## build  the row in the summary table 
-        row = [ address  , '%-6.4f/%6.4f' % ( cnt.minmax()[0]    , cnt.minmax()[1] ) ] 
-
-        if   ignore : row.append ( ''  )
-        elif good2  : row.append ( OK  )
-        else        : row.append ( NOT )
+        ## scale & get the statistics of weights
+        wstat  = w.stat() 
+        wmean  = wstat.mean() 
+        w    /= wmean.value()
         
-        row.append ( ( wvar * 100 ).toString('%%+7.3f %s %%-7.3f' % plus_minus ) )
+        wstat  = w.stat     ()
+        wmean  = wstat.mean ()
+
+        ## RMS: 
+        wrms   = wstat.rms  () / wmean  
+        ## MINMAX: 
+        wmin  , wmax = wstat.minmax()
+        ## CHI2:
+        
+        meanv  = float ( wmean )
+        ndf    = len ( w ) 
+        c2ndf  = sum ( w [ i ].chi2 ( meanv ) for i in w ) 
+        c2ndf /= ndf 
+        
+        good1 = abs   ( wmax - wmin ) <= minmax
+        good2 = float ( wrms        ) <= delta
+        good3 = c2ndf                 <= 1 
+        good  = good1 and good2 and good3 ## small variance?         
+        #
+
+        good  = good1 and good2  and good3 ## small variance?         
+        
+        ## build  the row in the summary table 
+        row = [ address  , '%-6.3f/%6.3f' % ( wmin , wmax ) ] 
 
         if   ignore : row.append ( ''  )
         elif good1  : row.append ( OK  )
         else        : row.append ( NOT )
         
-        row.append (  '%7.3f' % c2ndf  ) 
+        row.append ( ( wrms * 100 ).toString('%%+7.3f %s %%-7.3f' % plus_minus ) )
+
+        if   ignore : row.append ( ''  )
+        elif good2  : row.append ( OK  )
+        else        : row.append ( NOT )
+        
+        row.append (  '%7.3f' % c2ndf  )
+        
+        if   ignore : row.append ( ''  )
+        elif good3  : row.append ( OK  )
+        else        : row.append ( NOT )
 
         ## apply weight truncation:
         if not ignore and wtruncate : 
@@ -1160,7 +1177,6 @@ def makeWeights  ( dataset                      ,
         #
         ## make decision based on the variance of weights 
         #
-        mnw , mxw = cnt.minmax()
         if not ignore  :
             ## update DB for "not-good" or "forced" entries 
             if force_update or not good :

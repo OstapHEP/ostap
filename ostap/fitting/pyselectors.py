@@ -1425,19 +1425,10 @@ def make_dataset ( tree              ,
     import ostap.fitting.roofit
 
     from ostap.frames.frames import DataFrame, report_print, frame_columns   
-    frame = DataFrame ( tree )
+    frame = DataFrame ( tree , progress = not silent )
 
     total = len ( tree )
     
-    if not  silent :
-        if ( 6 , 29 ) <= root_info :
-            from   ostap.frames.frames import frame_progress2 
-            pb = frame_progress2 ( frame )
-        else                   :
-            from   ostap.frames.frames import frame_progress  
-            pb = frame_progress  ( frame , total )
-            
-
     columns = set ( frame_columns ( frame  ) )
 
     scuts  = [] 
@@ -1489,10 +1480,9 @@ def make_dataset ( tree              ,
     
     name     = dsID() 
     title    = "Data set from DataFrame"
-    
-    rds = frame.Book (
-        ROOT.std.move ( ROOT.RooDataSetHelper( name , title , varset ) ) ,
-        tuple ( v.name for v in vars ) )
+
+    rds = frame.Book ( ROOT.std.move ( ROOT.RooDataSetHelper( name , title , varset ) ) ,
+                       tuple ( v.name for v in vars ) )
     
     ds   = rds.GetValue()
 
