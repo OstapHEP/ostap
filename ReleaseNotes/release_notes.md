@@ -17,11 +17,13 @@
   1. Harmonize polynomizll constructions (both in C++ and python)
   1. Release requirement of the same range for *some* operations with polynomials
   1. Add `HRange/hrange` for histogram-like looping
+  1. Tiny improvements in `DataFrame` constructor
+  1. Tiny adjustments in (C++) progress-bar(s)
   
 ## Backward  incompatible 
 
    1. From now `Apollonios` stands for the core asymmetric Apollonios function and `ApolloniosL` represents Aplooniosu functon with power-lay left tail
-   
+   1. Fix newly introduced bug in `Bernstein::iadd``   
    
 ## Bug fixes
 
@@ -62,7 +64,7 @@
   1. add `pow` and `rpow` functions for TCut-expressions 
   1. add `mod/imod/rmod` operators for for TCut-expressions 
   1. add `abs` operator for for TCut-expressions 
-  1. add proper treatment of `Tprofile` and ``TProfile2D  for `project` methods
+  1. add proper treatment of `TProfile` and ``TProfile2D  for `project` methods
   1. add proper treatment of uncertaintues of projections of weighted `RooAbsData` in case the weight has assigned errors.
   1. add proper treatment for `ROOT.TProfile3D` where possible
   1. switch-off parallel projection for all profiles

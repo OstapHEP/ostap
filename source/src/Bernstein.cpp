@@ -526,9 +526,9 @@ Ostap::Math::Bernstein::iadd
   if ( this == &other ) { *this *= 2 ; return *this; }
   //
   // use the same range! 
-  if ( !s_equal ( xmin () , other.xmax () ) ||
+  if ( !s_equal ( xmin () , other.xmin () ) ||
        !s_equal ( xmax () , other.xmax () ) )
-    { return iadd ( Bernstein ( other , xmin() , xmax () ) ) ; } 
+    { return iadd ( Bernstein ( other , xmin () , xmax () ) ) ; } 
   //
   if      ( degree()       < other.degree() ) 
   { 
@@ -581,17 +581,17 @@ Ostap::Math::Bernstein::isub
 Ostap::Math::Bernstein&
 Ostap::Math::Bernstein::iadd 
 ( const Ostap::Math::LegendreSum& other ) 
-{ return iadd ( Bernstein ( other , xmin() , xmax () ) ) ; }
+{ return iadd ( Bernstein ( other , xmin () , xmax () ) ) ; }
 // ============================================================================
 Ostap::Math::Bernstein&
 Ostap::Math::Bernstein::isub
 ( const Ostap::Math::LegendreSum& other ) 
-{ return isub ( Bernstein ( other , xmin() , xmax () ) ) ; }
+{ return isub ( Bernstein ( other , xmin () , xmax () ) ) ; }
 // ============================================================================
 Ostap::Math::Bernstein&
 Ostap::Math::Bernstein::iadd 
 ( const Ostap::Math::ChebyshevSum& other ) 
-{ return iadd ( Bernstein ( other , xmin() , xmax() ) ) ; }
+{ return iadd ( Bernstein ( other , xmin () , xmax() ) ) ; }
 // ============================================================================
 Ostap::Math::Bernstein&
 Ostap::Math::Bernstein::isub
@@ -601,7 +601,7 @@ Ostap::Math::Bernstein::isub
 Ostap::Math::Bernstein&
 Ostap::Math::Bernstein::iadd 
 ( const Ostap::Math::Polynomial& other ) 
-{ return iadd ( Bernstein ( other , xmin() , xmax() ) ) ; }
+{ return iadd ( Bernstein ( other , xmin () , xmax() ) ) ; }
 // ============================================================================
 Ostap::Math::Bernstein&
 Ostap::Math::Bernstein::isub
@@ -878,7 +878,6 @@ Ostap::Math::Bernstein
 Ostap::Math::Bernstein::sub 
 ( const Ostap::Math::Bernulli& other ) const
 { return sub ( Polynomial ( other ) ) ; } 
-
 
 // ============================================================================
 Ostap::Math::Bernstein&  
@@ -1894,12 +1893,13 @@ Ostap::Math::Bernstein::Bernstein
 Ostap::Math::Bernstein::Bernstein
 ( const Ostap::Math::Polynomial& poly )  
   : Ostap::Math::PolySum ( poly.degree () ) 
-  , m_xmin ( poly.xmin() ) 
-  , m_xmax ( poly.xmax() ) 
+  , m_xmin ( poly.xmin()   ) 
+  , m_xmax ( poly.xmax()   ) 
   , m_aux  ( degree () + 2 ) 
 {
   //
   const unsigned short np = npars() ;
+  //
   // 2-step transformation
   //
   // 1: affine transform to [0,1]
@@ -1994,21 +1994,21 @@ Ostap::Math::Bernstein::Bernstein
 ( const Ostap::Math::KarlinShapley& poly ,
   const double                      xmin ,
   const double                      xmax ) 
-  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+  : Bernstein ( Ostap::Math::Polynomial ( poly ) , xmin , xmax )
 {}
 // ============================================================================
 Ostap::Math::Bernstein::Bernstein
 ( const Ostap::Math::KarlinStudden& poly ,
   const double                      xmin ,
   const double                      xmax ) 
-  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+  : Bernstein ( Ostap::Math::Polynomial ( poly ) , xmin , xmax )
 {}
 // ============================================================================
 Ostap::Math::Bernstein::Bernstein
 ( const Ostap::Math::Bernulli&      poly ,
   const double                      xmin ,
   const double                      xmax ) 
-  : Bernstein ( Ostap::Math::Bernstein ( poly ) , xmin , xmax )
+  : Bernstein ( Ostap::Math::Polynomial ( poly ) , xmin , xmax )
 {}
 // ============================================================================
 Ostap::Math::Bernstein::Bernstein

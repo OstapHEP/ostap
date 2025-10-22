@@ -428,12 +428,11 @@ def test_frame7 () :
     from ostap.frames.frames import frame_param
 
     with timing ( 'param: Bernstein [12]' , logger = logger ) : 
-        polb = frame_param ( frame , bs , 'b4' , '(b4>-1)*1.01' , lazy = False )
+        polb = frame_param ( frame , bs , 'b4' , '(b4>-1)*1.01' , lazy = False )        
     with timing ( 'param: Legendre  [15]' , logger = logger ) :     
-        poll = frame_param ( frame , ls , 'b4' , '(b4>-1)*1.01' , lazy = False )
+        poll = frame_param ( frame , ls , 'b4' , '(b4>-1)*1.01' , lazy = False )        
     with timing ( 'param: Chebyshev [18]' , logger = logger ) :             
         polc = frame_param ( frame , cs , 'b4' , '(b4>-1)*1.01' , lazy = False )
-
 
     with use_canvas ( 'test_frame7: b4 as polynomials [12/15/18] ' , wait = 2 ) :
         polb.draw (          linecolor = 2 , linewidth = 2 ) 
@@ -471,7 +470,7 @@ def test_frame8 () :
 if '__main__' == __name__ :
 
         
-    test_frame0 () 
+    ## test_frame0 () 
     test_frame1 ()
     test_frame2 ()
     test_frame3 ()

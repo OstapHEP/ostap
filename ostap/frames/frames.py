@@ -379,9 +379,11 @@ def _fr_new_init_ ( self , *args , **kwargs ) :
         if   isinstance ( args [ 0 ] , integer_types ) and 1 < args [ 0 ] : lenght = args [ 0 ]
         elif isinstance ( args [ 0 ] , ROOT.TTree    )                    : lenght = len ( args [ 0 ] )
         elif isinstance ( progress   , integer_types ) and 1 < progress   : lenght = progress         
-        _ , _ = frame_progress ( self , lenght ) 
-        
-    
+        _ , _ = frame_progress ( self , lenght )
+    elif progress and isinstance ( progress , integer_types ) and 1 < progress :
+        length = progress 
+        _ , _ = frame_progress ( self , lenght )
+
 if not hasattr ( DataFrame , '_fr_old_init_' ) :
     DataFrame._fr_old_init_ = DataFrame.__init__
     DataFrame.__init__      = _fr_new_init_

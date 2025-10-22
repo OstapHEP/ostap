@@ -95,44 +95,79 @@ else
     return 140
 fi
  
-if   [[ "$HOME" == "/afs/infn.it/user/i/ibelyaev" ]]
-then 
-    OSTAP_HOME=/teo/user/ibelyaev/ostap
-elif [[ "$HOME" == "/afs/cern.ch/user/i/ibelyaev" ]]
-then 
-    OSTAP_HOME=$HOME/cmtuser/RELEASE/ostap
-else    
-    OSTAP_HOME=$HOME/ostap
-fi
 
-OSTAP_SOURCE=${3:-$OSTAP_HOME}
+OSTAP_SOURCE=${3}
 
-if [[ $OSTAP_SOURCE                        &&
-      -d ${OSTAP_SOURCE}                   &&
-      -d ${OSTAP_SOURCE}/ostap             &&
-      -d ${OSTAP_SOURCE}/source            &&
-      -d ${OSTAP_SOURCE}/scripts           &&
-      -d ${OSTAP_SOURCE}/examples          &&
-      -d ${OSTAP_SOURCE}/data              &&
-      -f ${OSTAP_SOURCE}/CMakeLists.txt    &&
-      -f ${OSTAP_SOURCE}/.aux/.build-ostap ]]
+if [[      ${OSTAP_SOURCE}                   &&
+        -d ${OSTAP_SOURCE}                   &&
+        -d ${OSTAP_SOURCE}/ostap             &&
+        -d ${OSTAP_SOURCE}/source            &&
+        -d ${OSTAP_SOURCE}/scripts           &&
+        -d ${OSTAP_SOURCE}/examples          &&
+        -d ${OSTAP_SOURCE}/data              &&
+        -f ${OSTAP_SOURCE}/CMakeLists.txt    &&
+        -f ${OSTAP_SOURCE}/.aux/.build-ostap ]]
 then
+    
     echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
+    
+elif [[     ${PWD}  && 
+	-d ${PWD}/ostap             &&
+        -d ${PWD}/source            &&
+        -d ${PWD}/scripts           &&
+        -d ${PWD}/examples          &&
+        -d ${PWD}/data              &&
+        -f ${PWD}/CMakeLists.txt    &&
+        -f ${PWD}/.aux/.build-ostap ]]
+then
+    
+    OSTAP_SOURCE=${PWD}
+    echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
+    
+elif [[    ..                   &&
+	-d ../ostap             &&
+        -d ../source            &&
+        -d ../scripts           &&
+        -d ../examples          &&
+        -d ../data              &&
+        -f ../CMakeLists.txt    &&
+        -f ../.aux/.build-ostap ]]
+then
+    OSTAP_SOURCE=$(readlink -f ../)
+    echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
+    
+elif [[    .                   &&
+	-d ./ostap             &&
+        -d ./source            &&
+        -d ./scripts           &&
+        -d ./examples          &&
+        -d ./data              &&
+        -f ./CMakeLists.txt    &&
+        -f ./.aux/.build-ostap ]]
+then
+    
+    OSTAP_SOURCE=$(readlink -f ./)
+    echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
+
 else
+    
     echo 'BUILD WITH LCG    : No valid source directory is found!' ${OSTAP_SOURCE}
-    return 150 
+    return 150
+    
 fi 
 
 ## parameter #4: build directory
-OSTAP_BUILD=${4:-$OSTAP_SOURCE/build}
+OSTAP_BUILD=${4:-${OSTAP_SOURCE}/build}
 
-if   [[ $OSTAP_BUILD && -d $OSTAP_BUILD && -w $OSTAP_BUILD ]]
+if   [[    ${OSTAP_BUILD} &&
+        -d ${OSTAP_BUILD} &&
+        -w ${OSTAP_BUILD} ]]
 then
     echo 'BUILD WITH LCG    : use OSTAP_BUILD    : ' ${OSTAP_BUILD}    
-elif [[ -w $OSTAP_SOURCE ]]
+elif [[ -w ${OSTAP_SOURCE} ]]
 then 
-    mkdir $OSTAP_SOURCE/build
-    OSTAP_BUILD=$OSTAP_SOURCE/build  
+    mkdir ${OSTAP_SOURCE}/build
+    OSTAP_BUILD=${OSTAP_SOURCE}/build  
     echo 'BUILD WITH LCG    : Build directory is created ' ${OSTAP_BUILD}
 else
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
@@ -144,35 +179,35 @@ if [[ -f ${OSTAP_BUILD}/.build-ostap ]]
 then
     echo 'BUILD WITH LCG: use  existing .build.ostap ' $OSTAP_BUILD/.build-ostap
 else 
-    cp $OSTAP_SOURCE/.aux/.build-ostap $OSTAP_BUILD/.build-ostap
+    cp ${OSTAP_SOURCE}/.aux/.build-ostap ${OSTAP_BUILD}/.build-ostap
     echo 'BUILD WITH LCG    : copy .build-ostap from ' ${OSTAP_SOURCE}/.aux/.build-ostap
 fi
 
 ## parameter #5: install directory 
 OSTAP_INSTALL=${5:-$OSTAP_BUILD/INSTALL/LCG$LCG_VERSION/$PLATFORM}
 
-if   [[ $OSTAP_INSTALL && -d $OSTAP_INSTALL && -w $OSTAP_INSTALL ]]
+if   [[ ${OSTAP_INSTALL} && -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
 then
     echo 'BUILD WITH LCG    : use OSTAP_INSTALL  : ' ${OSTAP_INSTALL}
-    ( echo 'BUILD WITH LCG    : CLEAN INSTALL DIRECTORY'    ; cd $OSTAP_INSTALL ; echo ' - BUILD OSTAP    : CWD ' $PWD ;  rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh )
+  ( echo 'BUILD WITH LCG    : CLEAN INSTALL DIRECTORY'    ; cd ${OSTAP_INSTALL} ; echo ' - BUILD OSTAP    : CWD ' ${PWD} ;  rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
 else
-    OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG$LCG_VERSION/$PLATFORM
+    OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG${LCG_VERSION}/${PLATFORM}
 fi
 
-echo 'BUILD WITH LCG    : LCG VERSION        : ' $LCG
-echo 'BUILD WITH LCG    : LCG PLATFORM       : ' $PLATFORM
-echo 'BUILD WITH LCG    : ROOTSYS            : ' $ROOTSYS 
-echo 'BUILD WITH LCG    : OSTAP_SOURCE       : ' $OSTAP_SOURCE
-echo 'BUILD WITH LCG    : OSTAP_BUILD        : ' $OSTAP_BUILD
-echo 'BUILD WITH LCG    : OSTAP_INSTALL      : ' $OSTAP_INSTALL
+echo 'BUILD WITH LCG    : LCG VERSION        : ' ${LCG}
+echo 'BUILD WITH LCG    : LCG PLATFORM       : ' ${PLATFORM}
+echo 'BUILD WITH LCG    : ROOTSYS            : ' ${ROOTSYS}
+echo 'BUILD WITH LCG    : OSTAP_SOURCE       : ' ${OSTAP_SOURCE}
+echo 'BUILD WITH LCG    : OSTAP_BUILD        : ' ${OSTAP_BUILD}
+echo 'BUILD WITH LCG    : OSTAP_INSTALL      : ' ${OSTAP_INSTALL}
 
-source $OSTAP_BUILD/.build-ostap $OSTAP_SOURCE $OSTAP_BUILD $OSTAP_INSTALL 
+source ${OSTAP_BUILD}/.build-ostap ${OSTAP_SOURCE} ${OSTAP_BUILD} ${OSTAP_INSTALL}
 
 result=$?
 
 echo ''
-echo 'BUILD WITH LCG    : LCG VERSION     : ' $LCG
-echo 'BUILD WITH LCG    : LCG PLATFORM    : ' $PLATFORM
+echo 'BUILD WITH LCG    : LCG VERSION     : ' ${LCG}
+echo 'BUILD WITH LCG    : LCG PLATFORM    : ' ${PLATFORM}
 
 if [[ $result -eq 0 ]]
 then

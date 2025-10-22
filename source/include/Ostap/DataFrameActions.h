@@ -4,6 +4,8 @@
 // ============================================================================
 // Inclodue files
 // ============================================================================
+// STD&STL 
+// ============================================================================
 // ROOT 
 // ============================================================================
 #include "RtypesCore.h" // ROOT 
@@ -94,12 +96,12 @@ namespace ROOT
         template <typename T,
                   typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value,bool>::type = true> 
         inline void Exec
-		( unsigned int slot ,
-	  	  const T&     vs   )
+	( unsigned int slot ,
+	  const T&     vs   )
         {
           Result_t& m = m_slots [ slot % m_N ] ;
           for ( const auto v : vs ) { m.update ( v ) ; }
-		}
+	}
         // ====================================================================
       public:
         // ====================================================================
@@ -213,16 +215,16 @@ namespace ROOT
                   typename T2,
                   typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value,bool>::type = true,
                   typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value,bool>::type = true> 
-		inline void Exec
-		( unsigned int slot   , 
-	      const T1&    vs1    ,
-	      const T2&    vs2    )	 
+	inline void Exec
+	( unsigned int slot   , 
+	  const T1&    vs1    ,
+	  const T2&    vs2    )	 
         {
           Result_t& m = m_slots [ slot % m_N ] ;
           for ( const auto &v1 : vs1 )
-	    	{ for ( const auto &v2 : vs2 )
+	    { for ( const auto &v2 : vs2 )
                 { m.update ( v1 , v2 ) ; } }
-		} ; 
+	} ; 
         // ====================================================================
       public:
         // ====================================================================
@@ -824,13 +826,13 @@ namespace ROOT
         StatAction1w  ( const Args& ...args ) 
           : m_result  ( std::make_shared<Result_t>( args ... ) ) 
           , m_N       ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	  	  , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
+	  , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
         {}
         /// constructor 
         StatAction1w  ( const COUNTER& cnt ) 
           : m_result  ( std::make_shared<Result_t> ( cnt ) ) 
           , m_N       ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
-	      , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
+	  , m_slots   ( this->m_N , *(this->m_result.get() ) ) 
         {}
         /// Move constructor 
         StatAction1w (       StatAction1w&& ) = default ;
@@ -858,11 +860,11 @@ namespace ROOT
         inline void Exec
 		( unsigned int slot       ,
 	  	  const double value      ,
-	      const double weight = 1 ) 
+		  const double weight = 1 ) 
         {
           if ( !weight ) { return ; } 
           m_slots [ slot % m_N ].update ( value , weight ) ;
-		} 
+	} 
         // ====================================================================
       public: // 1 vector column 
         // ====================================================================
@@ -870,14 +872,14 @@ namespace ROOT
         template <typename T,
                   typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value,bool>::type = true>       
         inline void Exec
-		( unsigned int slot       ,
-	      const T&     vs         ,
-	      const double weight = 1 ) 
+	( unsigned int slot       ,
+	  const T&     vs         ,
+	  const double weight = 1 ) 
         {
-	      if ( !weight ) { return ; } 
-	      Result_t& m = m_slots [ slot % m_N ] ;
-	      for ( const auto v : vs ) { m.update ( v , weight ) ; }
-		}
+	  if ( !weight ) { return ; } 
+	  Result_t& m = m_slots [ slot % m_N ] ;
+	  for ( const auto v : vs ) { m.update ( v , weight ) ; }
+	}
         // ====================================================================
       public:
         // ====================================================================
@@ -930,7 +932,7 @@ namespace ROOT
           , m_N      ( std::max ( 1u , Ostap::Utils::mt_pool_size () ) )
           , m_slots  ( this->m_N , *(this->m_result.get() ) ) 
         {}	
-		/// Move constructor 
+	/// Move constructor 
         StatAction2w      (       StatAction2w&& ) = default ;
         /// Copy constructor is disabled 
         StatAction2w      ( const StatAction2w&  ) = delete ;
@@ -954,14 +956,14 @@ namespace ROOT
         // ====================================================================
         /// The basic method: increment the counter 
         inline void Exec
-		( unsigned int slot       ,
-	      const double value1     ,
-	      const double value2     , 
-	      const double weight = 1 ) 
+	( unsigned int slot       ,
+	  const double value1     ,
+	  const double value2     , 
+	  const double weight = 1 ) 
         {
-	  	  if ( !weight ) { return ; } 
-	  	  m_slots [ slot % m_N ].update ( value1 , value2 , weight ) ;
-		} 
+	  if ( !weight ) { return ; } 
+	  m_slots [ slot % m_N ].update ( value1 , value2 , weight ) ;
+	} 
         // ====================================================================
       public: // 1 vector column 
         // ====================================================================
@@ -999,18 +1001,18 @@ namespace ROOT
                   typename T2,
                   typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T1>::value,bool>::type = true,               
                   typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T2>::value,bool>::type = true>               
-		inline void Exec
-		( unsigned int slot       , 
-	      const T1&    vs1        ,
-	      const T2&    vs2        ,	 
-	      const double weight = 1 ) 
+	inline void Exec
+	( unsigned int slot       , 
+	  const T1&    vs1        ,
+	  const T2&    vs2        ,	 
+	  const double weight = 1 ) 
         {
-	      if ( !weight ) { return ; } 
-	      Result_t& m = m_slots [ slot % m_N ] ;
-	      for ( const auto &v1 : vs1 )
+	  if ( !weight ) { return ; } 
+	  Result_t& m = m_slots [ slot % m_N ] ;
+	  for ( const auto &v1 : vs1 )
             { for ( const auto &v2 : vs2 )
                 { m.update ( v1 , v2 , weight ) ; } }
-		} ; 
+	} ; 
         // ====================================================================
       public:
         // ====================================================================

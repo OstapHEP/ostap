@@ -250,8 +250,9 @@ Ostap::Utils::ProgressBar::show_bar ( const bool show_eta )
   //
   line.append ( right () ) ;
   line.append ( " "      ) ;
-  line.append ( Ostap::format ( "%4.1f" , 100 * fraction ) ) ;
-  line.append ( "%"     ) ;  
+  //
+  if  ( 1 > fraction ) { line.append ( Ostap::format ( "%4.1f%%"   , 100 * fraction ) ) ; }
+  else                 { line.append ( Ostap::format ( "%3.0f%%  " , 100 * fraction ) ) ; }  
   //
   // show it!
   std::cout  << what()  << line << "\r" ;

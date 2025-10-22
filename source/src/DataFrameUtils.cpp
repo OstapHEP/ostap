@@ -16,6 +16,10 @@
 #include "Ostap/DataFrameUtils.h"
 #include "Ostap/ProgressBar.h"
 // ============================================================================
+// Local 
+// ============================================================================
+#include "format.h" 
+// ============================================================================
 /** @file 
  *  Implementation file for DataFrame related functions from  
  *  namespace Ostap::Utils
@@ -97,7 +101,9 @@ namespace
       for ( unsigned int i = ns ; i < w  ; ++i ) { bar += s2 ; }
       bar += right ();
       //
-      std::cout << bar << ' ' << std::floor ( done ) <<  "%" ;
+      if ( 100 > done ) { std::cout << bar << ' ' << Ostap::format ( "%4.1f%%"   , done ) <<  "" ; }
+      else              { std::cout << bar << ' ' << Ostap::format ( "%3.0f%%  " , done ) <<  "" ; }
+      //
       if ( m_chunks < m_nchunks ) { std::cout << '\r'                    ;                 }
       else                        { std::cout << std::endl << std::flush ; m_done = true ; } 
     }
