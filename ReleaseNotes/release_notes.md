@@ -23,11 +23,11 @@
 ## Backward  incompatible 
 
    1. From now `Apollonios` stands for the core asymmetric Apollonios function and `ApolloniosL` represents Aplooniosu functon with power-lay left tail
-   1. Fix newly introduced bug in `Bernstein::iadd``   
    
 ## Bug fixes
 
-   1. fix recentlyintroduce bug in `Ostap::Math::BifurcatedGaussian`
+   1. fix recently introduced bug in `Ostap::Math::BifurcatedGaussian`
+   1. Fix recently introduced bug in `Bernstein::iadd`
 
 # v3.2.1.0 
 
