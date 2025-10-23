@@ -55,7 +55,8 @@ from   ostap.math.random_ext          import poisson
 from   ostap.utils.utils              import accumulate
 from   ostap.utils.cidict             import cidict, cidict_fun  
 from   ostap.utils.basic              import typename 
-from   ostap.logger.pretty            import pretty_float 
+from   ostap.logger.pretty            import pretty_float
+from   ostap.histos.axes              import h1_axis , make_axis  
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
@@ -146,222 +147,6 @@ for h in ( ROOT.TH1F , ROOT.TH1D ,
 # =============================================================================
 
 # =============================================================================
-## iterator for histogram  axis 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _axis_iter_1_ ( a ) :
-    """ Iterator for axis
-    >>> axis = ...
-    >>> for i in axis : 
-    """
-    i = 1
-    s = a.GetNbins()
-    while i <= s :
-        yield i
-        i+=1
-        
-# =============================================================================
-## Iterator over bin-edges
-#  @code
-#  axis = ...
-#  for xlow, xhigh in axis.bin_edges() :
-#  ...   
-#  @endcode 
-def _axis_bin_edges_ ( axis ) :
-    """ Iterator over the bin-edges
-    >>> axis = ...
-    >>> for xlow, xhigh in axis.bin_edges() :
-    ...
-    """
-    assert isinstance ( axis , ROOT.TAxis ) , "Only TAxis is accepted!"
-
-    nbins = axis.GetNbins()
-    bins  = axis.GetXbins()
-    if bins :
-        for i in range ( nbins ) :
-            yield bins [ i ] , bins [ i + 1 ]
-    else :
-        for i in range ( 1 , nbins + 1 ) :
-            yield axis.GetBinLowEdge ( i ) , axis.GetBinUpEdge ( i )
-
-        
-# =============================================================================
-## Split the axis into axis with narrower bin
-#  - each bin is split into n bins
-#  @code
-#  axis  = ...
-#  axis2 = axis.split ( 2 )
-#  axis3 = axis.split ( 3 )
-#  axis2 = axis / 2 
-#  axis3 = axis / 3 
-#  @endcode 
-def _axis_split_ ( axis , n ) :
-    """ Split the axis into axis with narrower bin
-    - each bin is split into n bins 
-    >>> axis  = ...
-    >>> axis2 = axis.split ( 2 )
-    >>> axis3 = axis.split ( 3 )
-    >>> axis2 = axis / 2 
-    >>> axis3 = axis / 3 
-    """
-    assert isinstance ( n , integer_types ) and 0 < n , \
-        "Invalid `n' %s (must be positive integer)!" % n
-
-    ## no action 
-    if 1 == n  : return axis
-    nbins = axis.GetNbins () 
-    bins  = axis.GetXbins ()
-    ## 
-    ## uniform binning ?
-    if not bins :
-        return ROOT.TAxis ( nbins * n , axis.GetXmin() , axis.GetXmax() ) 
-    ##
-    prev     = axis.GetXmin()
-    new_bins = [ prev ] 
-    for i , current in enumerate ( bins ) :
-        if prev < current :
-            delta  = current - prev
-            delta /= n
-            for j in range ( 1 , n  ) :  new_bins.append ( prev + j * delta )
-            new_bins.append ( current )
-        prev = current
-        
-    if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( new_bins ) 
-    new_bins = array.array ( 'd' , new_bins )
-    return ROOT.TAxis ( len ( new_bins ) - 1 , new_bins )
-
-ROOT.TAxis.split        = _axis_split_ 
-ROOT.TAxis.__div__      = _axis_split_ 
-ROOT.TAxis.__truediv__  = _axis_split_ 
-ROOT.TAxis.__floordiv__ = _axis_split_ 
-
-# =============================================================================
-## get axis as sub-axis with the given range
-#  @code
-#  axis = ..
-#  axis1 = axis.range ( xmax = 3.0 ) 
-#  axis2 = axis.range ( xmin = 1.0 ) 
-#  axis3 = axis.range ( xmin = 1.0 , xmax = 3 ) 
-#  @endcode
-def _axis_range_ ( axis , xmin = None , xmax = None ) :
-    """ Get axis as sub-axis with given range
-    >>> axis = ..
-    >>> axis1 = axis.range ( xmax = 3.0 ) 
-    >>> axis2 = axis.range ( xmin = 1.0 ) 
-    >>> axis3 = axis.range ( xmin = 1.0 , xmax = 3 ) 
-    """
-    no_min = xmin is None
-    no_max = xmax is None
-
-    amin = axis.GetXmin ()
-    amax = axis.GetXmax ()
-    
-    assert no_min or ( isinstance ( xmin , num_types ) and amax > xmin ) , \
-    "Invalid `xmin' %s/%s" % ( xmin , typename ( xmin ) )
-    
-    assert no_max or ( isinstance ( xmax , num_types ) and amin < xmax ) , \
-        "Invalid `xmax' %s/%s" % ( xmax , typename ( xmax ) )
-    
-    ## no action 
-    if   no_min and no_max : return axis           ## RETURN 
-    elif no_min :
-        xmin , xmax = amin , min ( xmax , amax )
-        return _axis_range_ ( axis , xmin , xmax ) ## RETURN
-    elif no_max :
-        xmin , xmax = max ( xmin , amin ) , amax 
-        return _axis_range_ ( axis , xmin , xmax ) ## RETURN
-
-    assert xmin < xmax , "Invalid xmin/xmax: %s/%s" % ( xmin , xmax )
-
-    ## no action!
-    if xmin <= amin and amax <= xmax : return axis ## RETURN
-
-    ## adjust ximn/xmax: 
-    xmin = max ( xmin , amin )
-    xmax = min ( xmax , amax )
-
-    mnbin = axis.FindFixBin ( xmin )
-    mxbin = axis.FindFixBin ( xmax )
-    
-    nbins = axis.GetNbins() 
-    
-    assert 1     <= mnbin <= nbins , "Invalid min #bin %s" % mnbin 
-    assert mnbin <= mxbin <= nbins , "Invalid max #bin %s" % mxbin 
-
-    new_bins = [ xmin ] 
-    for i in range ( mnbin , mxbin + 1 ) :
-        
-        low  = axis.GetBinLowEdge ( i )                
-        high = axis.GetBinUpEdge  ( i )
-        if xmax <= low  : break 
-        if xmin >= high : continue
-
-        if   low  < xmin and high <= xmax : continue 
-
-        last = new_bins [ -1 ] 
-        if   last < low  and high <= xmax : new_bins.append ( low )         
-        elif last < low  and xmax <= high :
-            new_bins .append ( low  )
-            new_bins .append ( xmax )
-            break
-
-    if not isequal ( xmax , new_bins [ -1 ] ) : new_bins .append ( xmax ) 
-    assert 2 <= len ( new_bins  ) , "Invalid edges!"
-
-    if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( new_bins ) 
-    new_bins = array.array ( 'd' , new_bins )
-    return ROOT.TAxis ( len ( new_bins ) - 1 , new_bins )
-
-ROOT.TAxis.range        = _axis_range_ 
-
-# =============================================================================
-## Merge the axis bins into axis with wider bin
-#  - each group of n-bin is merged into a single bin
-#  @code
-#  axis  = ...
-#  axis2 = axis.merge ( 2 )
-#  axis3 = axis.merge ( 3 )
-#  axis2 = axis * 2 
-#  axis3 = 3 * axis 
-#  @endcode 
-def _axis_merge_ ( axis , n ) :
-    """ Merge the axis bins into axis with wider bin
-    - each group of n-bins is merged into single bin 
-    >>> axis  = ...
-    >>> axis2 = axis.merge ( 2 )
-    >>> axis3 = axis.merge ( 3 )
-    >>> axis2 = axis * 2 
-    >>> axis3 = 3 * axis 
-    """
-    assert isinstance ( n , integer_types ) and 0 < n , \
-        "Invalid `n' %s (must be positive integer)!" % n
-
-    ## no action 
-    if 1 == n  : return axis
-    
-    nbins = axis.GetNbins () 
-    bins  = axis.GetXbins ()
-    ## 
-    if 0 == nbins % n : 
-        return ROOT.TAxis ( nbins // n , axis.GetXmin() , axis.GetXmax() )
-    
-    new_bins = [ axis.GetXmin() ]
-    for i in range ( 1 , nbins + 1 , n ) :
-        if 1 == i : continue  
-        new_bins.append ( axis.GetBinLowEdge ( i ) )
-    new_bins.append ( axis.GetXmax() )
-        
-
-    if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( new_bins ) 
-    new_bins = array.array ( 'd' , new_bins )
-    return ROOT.TAxis ( len ( new_bins ) - 1 , new_bins )
-
-ROOT.TAxis.merge        = _axis_merge_ 
-ROOT.TAxis.__mod__      = _axis_merge_ 
-
-
-#
-# =============================================================================
 ## Iterator over bin-edges
 #  @code
 #  h1 = ...
@@ -423,7 +208,6 @@ def _h3_bin_edges_ ( h3 ) :
             for zitem in za.bin_edges() :
                 yield xitem, yitem, zitem 
             
-ROOT.TAxis.bin_edges = _axis_bin_edges_ 
 ROOT.TH1F .bin_edges = _h1_bin_edges_
 ROOT.TH1D .bin_edges = _h1_bin_edges_
 ROOT.TH2F .bin_edges = _h2_bin_edges_
@@ -448,7 +232,7 @@ def _axis_bin_edges_ ( axis ) :
     bins  = axis.GetXbins ()
     if bins :
         for i in range ( nbins ) :
-            yield bins [ i ] , bins [ i +1 ]
+            yield bins [ i ] , bins [ i + 1 ]
     else :
         xmin  = axis.GetXmin  ()
         xmax  = axis.GetXmax  ()
@@ -457,51 +241,7 @@ def _axis_bin_edges_ ( axis ) :
             left = xmin + i * binw 
             yield left , left + binw 
 
-# =============================================================================
-## iterator for histogram  axis (reversed order) 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _axis_iter_reversed_ ( a ) :
-    """ Iterator for axis
-    >>> axis = ...
-    >>> for i in reverse(axis) : 
-    """
-    s = a.GetNbins()
-    i = int ( s )
-    while 1 <= i :
-        yield i
-        i-=1
-
-# =============================================================================
-## get new "scaled" axis 
-#  @code
-#  axis   = ...
-#  scaled = axis.scale ( 5 ) 
-#  @endcode
-def _axis_scale_ ( axis , scale ) :
-    """ Get new `scaled' axis 
-    >>> axis   = ...
-    >>> scaled = axis.scale ( 5 ) 
-    """
-    assert isinstance ( scale , num_types ) and 0 < scale , \
-           'Invalid "scale" argument %s' % scale
-    bins = axis.GetXbins ()
-    ## non-uniform bins are here 
-    if bins and 2 <= len ( bins ) :
-        newbins = tuple ( v * scale for v in bins )
-        if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( newbins ) 
-        newbins = array.array ('d' , newbins )
-        return ROOT.TAxis ( len ( newbins ) - 1 , newbins )
-    
-    return ROOT.TAxis ( axis.GetNbins ()         ,
-                        axis.GetXmin  () * scale ,
-                        axis.GetXmax  () * scale )
-
-ROOT.TAxis . __iter__     = _axis_iter_1_
-ROOT.TAxis . __reversed__ = _axis_iter_reversed_
-ROOT.TAxis . __contains__ = lambda s , i : 1 <= abs ( i ) <= s.GetNbins()
-ROOT.TAxis .   scale      = _axis_scale_
-        
+            
 # =============================================================================
 ## get item for the 1-D histogram 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2185,66 +1925,6 @@ ROOT.TH3F  . iteritems     = _h3_iteritems_
 ROOT.TH3D  . iteritems     = _h3_iteritems_
 
 
-# =============================================================================
-## iterate over items in TAxis
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _a_iteritems_ ( axis ) :
-    """ Iterate over items in axis     
-    >>> axis = ...
-    >>> for ibin,low,center,high in axis.    items() : ...    
-    >>> for ibin,low,center,high in axis.iteritems() : ... ## ditto    
-    """
-    for i in axis :
-
-        l = axis.GetBinLowEdge ( i )
-        c = axis.GetBinCenter  ( i )
-        u = axis.GetBinUpEdge  ( i )
-
-        yield i,l,c,u
-
-ROOT.TAxis.     items     = _a_iteritems_
-ROOT.TAxis. iteritems     = _a_iteritems_
-
-# =============================================================================
-## get bin parameters : low- and up-edges 
-def _a_get_item_ ( axis , i ) :
-    """ Get bin parameter: low- and up-edges
-    >>> axis = ...
-    >>> low,high = axis[1]
-    
-    """
-    if not i in axis : raise IndexError
-    
-    l = axis.GetBinLowEdge ( i )
-    u = axis.GetBinUpEdge  ( i )
-    
-    return l , u
-
-ROOT.TAxis.__getitem__ = _a_get_item_
-
-# =============================================================================
-## equality for axes
-def _a_equal_ ( axis , another ) :
-    """ Equality for two axes
-    >>> a1 = ...
-    >>> a2 = ...
-    >>> print ( a1 == a1 ) 
-    """
-    if      axis   is       another                        : return True 
-    if len( axis ) != len ( another )                      : return False
-    if not isequal ( axis.GetXmin()  , another.GetXmin() ) : return False
-    if not isequal ( axis.GetXmax()  , another.GetXmax() ) : return False
-    for i in axis :
-        l1,u1 = axis    [i]
-        l2,u2 = another [i]
-        if not isequal ( l1 , l2 ) : return False 
-        if not isequal ( u1 , u2 ) : return False
-    return True
-
-ROOT.TAxis.__eq__ =                  _a_equal_
-ROOT.TAxis.__ne__ = lambda a,o : not _a_equal_ ( a , o ) 
-
 
 # =============================================================================
 ## If this histogram have "finer binning"
@@ -2312,7 +1992,7 @@ def _h2_transpose_ ( h2 ) :
     #
     xa = h2.GetXaxis()
     ya = h2.GetYaxis()
-    #
+    #[
     hn = h2_axes ( ya , xa )  
     ##
     for i in h2 :
@@ -5940,38 +5620,6 @@ ROOT.TH1F.null = _h1_null_
 
 
 # =============================================================================
-## get edges from the axis:
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _edges_ ( axis ) :
-    """ Get list of edges from the TAxis
-    >>> axis
-    >>> edges = axis.edges() 
-    """
-    #
-    bins  = [ axis.GetBinLowEdge ( i ) for i in axis ] + [ axis.GetXmax() ]
-    #
-    return tuple ( bins )
-
-
-# =============================================================================
-## Same binning?
-#  @code
-#  axis = ...
-#  same = axis.same_binning ( another_axis )
-#  @endcode 
-#  @see Ostap::Utils::same_binning
-def _axis_same_binning_ ( axis , other ) :
-    """ Same binning? 
-    >>> axis = ...
-    >>> same = axis.same_binning ( another_axis )
-    - see `Ostap.Utils.same_binning`
-    """
-    assert isinstance ( other , ROOT.TAxis ) and valid_pointer ( other ) , \
-        "same_binning: Invalid axis type %s" % typename ( other )
-    return Ostap.Utils.same_binning ( axis , other )
-
-# =============================================================================
 ## Same binning?
 #  @code
 #  histo = ...
@@ -5989,8 +5637,6 @@ def _histo_same_binning_ ( histo , other ) :
     return Ostap.Utils.same_binning ( histo , other )
 
 # =============================================================================
-ROOT.TAxis.edges        = _edges_
-ROOT.TAxis.same_binning = _axis_same_binning_ 
 ROOT.TH1  .same_binning = _histo_same_binning_ 
 
 
@@ -6039,58 +5685,6 @@ ROOT.TH1F  . __getslice__  =   _h1_getslice_
 ROOT.TH1D  . __getslice__  =   _h1_getslice_ 
 
 # =============================================================================
-## Create <code>TAxis</code>
-#  @code
-#  a = make_axis ( 2 , 0.0 , 1.0 )                  ## #bins ,min, max 
-#  a = make_axis ( 4 , 0.0 , 1.0 , 2.0 , 5.0 , 10 ) ## #bins , e1 , e2 , e3 , ...    
-#  a = make_axis ( 2 , [ 0.0 , 1.0 , 2.0 ]  )       ## #bins , [ e1 , e2 . ... ]  
-#  a = make_axis ( [ 0.0 , 1.0 , 2.0 ]  )           ## [ e1 , e2 , ... ] 
-#  a = make_axis ( 0.0 , 1.0 , 2.0  )               ##   e1 , e2 , ...  
-#  @endcode
-def make_axis ( nbins , *bins ) :
-    """ Create <code>TAxis</code>    
-    >>> a = make_axis ( 2 , 0.0 , 1.0 )                  ## #bins ,min, max 
-    >>> a = make_axis ( 4 , 0.0 , 1.0 , 2.0 , 5.0 , 10 ) ## #bins , e1 , e2 , e3 , ...    
-    >>> a = make_axis ( 2 , [ 0.0 , 1.0 , 2.0 ]  )       ## #bins , [ e1 , e2 . ... ]  
-    >>> a = make_axis ( [ 0.0 , 1.0 , 2.0 ]  )           ## [ e1 , e2 , ... ] 
-    >>> a = make_axis (  0.0 , 1.0 , 2.0 , 3.0 , 4.0 )   ##   e1 , e2 , ... 
-    """
-    
-    if   isinstance ( nbins , ROOT.TAxis ) : return nbins 
-
-    if isinstance ( nbins , integer_types ) and 0 < nbins :
-        
-        if 1 == len ( bins ) and isinstance ( bins [ 0 ] , sequence_types ) :
-            abins = [ float ( e ) for e in bins [ 0 ] ]
-            if nbins +1 <= len ( abins ) :
-                abins = abins [ : nbins + 1 ] 
-                if is_sorted ( abins ) : 
-                    return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) )
-                
-        elif 2 == len ( bins ) and \
-               isinstance ( bins [ 0 ] , num_types ) and \
-               isinstance ( bins [ 1 ] , num_types ) and bins [ 0 ] < bins [ 1 ] :
-            return ROOT.TAxis ( nbins , bins [ 0 ] , bins [ 1 ] )
-        
-        elif nbins + 1 <= len ( bins ) :                    
-            abins = [ float ( e ) for e in bins [ : nbins + 1 ] ]
-            if is_sorted ( abins ) : 
-                return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) ) 
-
-    elif isinstance ( nbins , sequence_types ) and not bins :
-        
-        abins = [ float ( e ) for e in nbins ]
-        if 2 <= len ( abins ) and is_sorted ( abins ) : 
-            return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) )
-        
-    if isinstance ( nbins , num_types ) and bins : 
-        abins = [ float ( nbins ) ] + [ float ( e ) for e in bins ]
-        if is_sorted ( abins ) : 
-            return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) ) 
-
-    raise ArgumentError('make_axis: invalid arguments %s' % str ( ( nbins , ) + bins ) ) 
-
-# =============================================================================
 ## create TH1D from model 
 def h1_from_model ( model , *args ) :
     
@@ -6129,107 +5723,6 @@ def h1_from_model ( model , *args ) :
     return h1_axis ( axis , title = title , name = name , double = True )
 
         
-# =============================================================================
-## make 1D-histogram from axis
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def h1_axis ( axis           ,
-              title  = '1D'  , 
-              name   = None  ,
-              double = True  ) :
-    """ Make 1D-histogram with binning defined by already created axes    
-    >>> axis = ...
-    >>> h1 = h1_axes ( axis , title = 'MyHisto' )     
-    """
-    #
-    if not name : name = hID()
-    #
-    if not issubclass ( type ( axis ) , ROOT.TAxis ) : axis = axis_bins   ( axis )
-    #
-    bins  = axis.edges()
-    #
-    if isinstance ( double , type ) and issubclass ( double , ROOT.TH1 ) : typ = double
-    else : typ = ROOT.TH1D if double else ROOT.TH1F
-    #
-    h1  = typ ( name  ,
-                title ,
-                len ( bins ) - 1 , array.array ( 'd' , bins ) )
-    ##
-    h1.Sumw2()
-    return h1
-
-# =============================================================================
-## make 2D-histogram from axes
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def h2_axes ( x_axis            ,
-              y_axis            ,
-              title  = '2D'     , 
-              name   = None     ,
-              double = True     ) :
-    """ Make 2D-histogram with binning deifned by already created axes    
-    >>> x_axis = ...
-    >>> y_axis = ...
-    >>> h2 = h2_axes ( x_axis , y_axis , title = 'MyHisto' )     
-    """
-    #
-    if not name : name = hID() 
-    #
-    if not issubclass ( type ( x_axis ) , ROOT.TAxis ) : x_axis = axis_bins   ( x_axis )
-    if not issubclass ( type ( y_axis ) , ROOT.TAxis ) : y_axis = axis_bins   ( y_axis )
-    #
-    # 
-    x_bins  = x_axis.edges()
-    y_bins  = y_axis.edges()
-    #
-    if isinstance ( double , type ) and issubclass ( double , ROOT.TH2 ) : typ = double
-    else : typ = ROOT.TH2D if double else ROOT.TH2F
-    #
-    h2  =  typ ( name  ,
-                 title ,
-                 len ( x_bins ) - 1 , array.array ( 'd' , x_bins ) ,
-                 len ( y_bins ) - 1 , array.array ( 'd' , y_bins ) )
-    ##
-    h2.Sumw2()
-    return h2
-
-# =============================================================================
-## make 3D-histogram from axes
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-07-18
-def h3_axes ( x_axis            ,
-              y_axis            ,
-              z_axis            ,
-              title  = '3D'     , 
-              name   = None     ,
-              double = True     ) :
-    """ Make 3D-histogram with binning deifned by already created axes    
-    >>> x_axis = ...
-    >>> y_axis = ...
-    >>> z_axis = ...
-    >>> h3 = h3_axes ( x_axis , y_axis , z_axis , title = 'MyHisto' )     
-    """
-    #
-    if not name : name = hID() 
-    #
-    if not issubclass ( type ( x_axis ) , ROOT.TAxis ) : x_axis = axis_bins   ( x_axis )
-    if not issubclass ( type ( y_axis ) , ROOT.TAxis ) : y_axis = axis_bins   ( y_axis )
-    if not issubclass ( type ( z_axis ) , ROOT.TAxis ) : z_axis = axis_bins   ( z_axis )
-    #
-    x_bins  = x_axis.edges ()
-    y_bins  = y_axis.edges ()
-    z_bins  = z_axis.edges ()
-    #
-    if isinstance ( double , type ) and issubclass ( double , ROOT.TH3 ) : typ = double
-    else : typ = ROOT.TH3D if double else ROOT.TH3F
-    #
-    return typ ( name  ,
-                 title ,
-                 len ( x_bins ) - 1 , array.array ( 'd' , x_bins ) ,
-                 len ( y_bins ) - 1 , array.array ( 'd' , y_bins ) , 
-                 len ( z_bins ) - 1 , array.array ( 'd' , z_bins ) ) 
-
-
 
 # =======================================================================
 ## calculate the `difference' between two histograms 
@@ -8134,25 +7627,6 @@ if not hasattr ( _tf1 , 'median'   ) : _tf1.median   = moments.median
 if not hasattr ( _tf1 , 'mode'     ) : _tf1.mode     = moments.mode 
 if not hasattr ( _tf1 , 'moment'   ) : _tf1.moment   = moments.moment
 if not hasattr ( _tf1 , 'quantile' ) : _tf1.quantile = moments.quantile            
-
-# =============================================================================
-## make axis from bin-edges 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def axis_bins ( bins         ) :
-    """ Make axis according to the binning 
-    >>> bins = [ ... ] 
-    >>> axis = axis_bins ( bins )      
-    """
-    #
-    bins = set  ( bins )
-    bins = [ i for i in bins ]
-    bins.sort()
-    #
-    if 2 > len ( bins ) :
-        raise AttributeError("axis_bins: insufficient length of bins: %s" % bins )
-    #
-    return ROOT.TAxis ( len ( bins ) - 1 , array.array ( 'd' , bins ) )
 
 # =============================================================================
 ## prepare "slice" for the axis
@@ -10255,7 +9729,6 @@ _new_methods_  += (
     ROOT.TH3F.summary        , 
     ROOT.TH3D.summary        ,
     ##
-    ROOT.TAxis.same_binning  , 
     ROOT.TH1  .same_binning  ,
     ## 
     ROOT.TH1F.clamp          , 
