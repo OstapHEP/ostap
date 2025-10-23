@@ -57,7 +57,6 @@ __all__     = (
     'h1_axis'         , ## book 1D-histogram from axis 
     'h2_axes'         , ## book 2D-histogram from axes
     'h3_axes'         , ## book 3D-histogram from axes
-    'axis_bins'       , ## convert list of bin edges to axis
     've_adjust'       , ## adjust the efficiency to be in physical range
     #
     )
@@ -89,7 +88,6 @@ import ROOT
 from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
                                   h1_axis     , h2_axes     , h3_axes     ,
                                   ve_adjust   , histoGuess  )
-from ostap.histos.axes   import axis_bins
 # =============================================================================
 # Other decorations 
 # =============================================================================

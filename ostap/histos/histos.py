@@ -22,7 +22,6 @@ __all__     = (
     'h1_axis'         , ## book 1D-histogram from axis 
     'h2_axes'         , ## book 2D-histogram from axes
     'h3_axes'         , ## book 3D-histogram from axes
-    'axis_bins'       , ## convert list of bin edges to axis
     've_adjust'       , ## adjust the efficiency to be in physical range
     'Histo1DFun'      , ## 1D-histogram as function object 
     'Histo2DFun'      , ## 2D-histogram as function object 
@@ -253,9 +252,8 @@ def _h1_get_item_ ( h1 , ibin ) :
     """
     if isinstance ( ibin , slice ) :
         start = ibin.start
-        step  = ibin.step
         stop  = ibin.stop
-        if step and step != 1: raise IndexError ('Step must be +1!')
+        assert  1 == ibin.step , "step must be +1')
         if start is None : start = 0 
         if stop  is None : stop  = len ( h1 ) 
         return _h1_getslice_ ( h1 , start , stop ) 
@@ -7829,26 +7827,6 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t.allInts = _h1_allInts
     t.natural = _h1_allInts
 
-# =============================================================================
-## Axis with uniform bins?
-#  @code
-#  axis = ...
-#  print ( axis.uniform () ) 
-#  @endcode
-def _a_uniform_bins_ ( axis ) :
-    """ Axis with unuform bins? 
-    >>> axis = ...
-    >>> print ( axis.uniform () ) 
-    """
-    edges = axis.GetXbins()
-    nbins = len ( edges ) 
-    if nbins <= 2  : return True
-    ## 
-    return all ( isequalf ( edges [ i     ] - edges [ i - 1 ] ,
-                            edges [ i - 1 ] - edges [ i - 2 ] ) for i in range ( 2 , nbins ) )
-
-ROOT.TAxis.uniform       = _a_uniform_bins_
-ROOT.TAxis.uniform_bins  = _a_uniform_bins_
 
 # =============================================================================
 ## check if histogram has uniform binnings
@@ -9125,14 +9103,6 @@ _new_methods_  += (
     ROOT.TH1F.clone    ,
     ROOT.TH2F.clone    ,
     #
-    ROOT.TAxis . __iter__     ,
-    ROOT.TAxis . __reversed__ ,
-    ROOT.TAxis . __contains__ ,
-    ROOT.TAxis .   scale      ,
-    #
-    ROOT.TAxis.uniform        , 
-    ROOT.TAxis.uniform_bins   , 
-    #
     ROOT.TH1   . same_dims    , 
     ROOT.TH1   . same_bins    , 
     #
@@ -9254,11 +9224,6 @@ _new_methods_  += (
     #
     ROOT.TH3F  .     items    ,
     ROOT.TH3D  .     items    ,
-    #
-    ROOT.TAxis . iteritems    ,
-    ROOT.TAxis .     items    ,
-    ROOT.TAxis . __eq__       ,
-    ROOT.TAxis . __ne__       ,
     #
     ROOT.TH1F.bin , 
     ROOT.TH1D.bin ,
@@ -9542,8 +9507,6 @@ _new_methods_  += (
     ROOT.TH1D.hline  ,
     ROOT.TH1F.hline  ,
     #
-    ROOT.TAxis.edges ,
-    #
     ROOT.TH1F  . __getslice__  ,
     ROOT.TH1D  . __getslice__  ,
     #
@@ -9655,8 +9618,6 @@ _new_methods_  += (
     ROOT.TF1 . moment   ,
     ROOT.TF1 . quantile ,
     #
-    ROOT.TAxis. __getslice__ ,
-    #
     ROOT.TH1F . histoGuess   ,
     ROOT.TH1D . histoGuess   ,
     ROOT.TH1  . useLL        ,
@@ -9743,15 +9704,6 @@ _new_methods_  += (
     ROOT.TH1.finer_bininng   , 
     ROOT.TH1.finer_bins      , 
     ##
-    ROOT.TAxis.split         ,  
-    ROOT.TAxis.__div__       , 
-    ROOT.TAxis.__truediv__   , 
-    ROOT.TAxis.__floordiv__  , 
-    ## 
-    ROOT.TAxis.range         , 
-    ##
-    ROOT.TAxis.merge         ,  
-    ROOT.TAxis.__mod__       ,
 )
 
 # =============================================================================
