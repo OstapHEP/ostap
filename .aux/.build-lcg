@@ -3,13 +3,33 @@
 LCG=${1:-dev3/latest}
 PLATFORM=${2:-x86_64-el9-clang19-opt} 
 
-echo 'BUILD WITH LCG    : LCG version='${LCG} ' PLATFORM='${PLATFORM}
+prefix='<<OSTAP WITH LCG>>'
+prefix_error='<<OSTAP WITH LCG ERROR>>'
+
+COLORS=$(tput colors 2> /dev/null)
+if [[ $? = 0  && $COLORS -gt 2 ]]
+then    
+    FWHITE='\033[1;97m'     # White
+    BGREEN='\033[42m'       # Green
+    FYELLOW='\033[1;93m'    # Yellow
+    BRED='\033[6;101m'      # Red
+    ##
+    COLOR_OK=${FYELLOW}${BGREEN}
+    COLOR_ERR=${FYELLOW}${BRED}
+    COLOR_OFF='\033[0m' 
+    ##
+    prefix=${COLOR_OK}${prefix}${COLOR_OFF}
+    prefix_error=${COLOR_ERR}${prefix_error}${COLOR_OFF}
+    ## 
+fi
+
+echo -e ${prefix}' LCG version='${LCG} ' PLATFORM='${PLATFORM}
 
 # ================================================================================
 ## Wake up the cvmfs fuse mount
 #  - on Windows WSL some action is required
 # ================================================================================
-for run in {1..40}; do
+for run in {1..50}; do
 
     for the_dir in /cvmfs/sft.cern.ch/                             \
 		   /cvmfs/sft.cern.ch/lcg                          \
@@ -53,167 +73,170 @@ for run in {1..40}; do
     then
 	break
     else
-	echo 'BUILD WITH LCG    : try to wake up cvmfs #'$run 
-	sleep 2.5
+	echo -e ${prefix}' Make a try to wake up cvmfs #'$run 
+	sleep 2
     fi
     
 done
 
-if [[ $LCG && -d /cvmfs/sft.cern.ch/lcg/views/${LCG} ]]
+if [[ ${LCG} && -d /cvmfs/sft.cern.ch/lcg/views/${LCG} ]]
 then
     true 
 else
-    echo 'BUILD WITH LCG    : Valid LCGs are:' `ls /cvmfs/sft.cern.ch/lcg/views`
+    echo -e ${prefix_error}' Valid LCGs are:' `ls /cvmfs/sft.cern.ch/lcg/views`
     return 110  
 fi
 
-if [[ $PLATFORM && -d /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM} ]]
+if [[ ${PLATFORM} && -d /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM} ]]
 then
     true
 else
-    echo 'BUILD_WITH_LCG    : Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
+    echo -e ${prefix_error}' Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
     return 120
 fi
 
-LCG_SETUP=/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}/setup.sh 
-ls -al $LCG_SETUP
+LCG_BUILD=/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}
+LCG_SETUP=${LCG_BUILD}/setup.sh 
 
-if [[ $LCG && $PLATFORM && -f $LCG_SETUP ]]
+if [[ ${LCG} && ${PLATFORM} && -d ${LCG_BUILD} && -f ${LCG_SETUP} ]]
 then
-    echo 'BUILD WITH LCG    : source LCG setup   : ' ${LCG_SETUP}  
-    source $LCG_SETUP
+    echo -e ${prefix}$' Source LCG setup   = '${LCG_SETUP}  
+    source ${LCG_SETUP}
 else
-    echo 'no valid LCG/PLATFORM/setup script: ' ${LCG_SETUP}
+    echo -e ${prefix_error}' No valid LCG/PLATFORM/setup script: ' ${LCG_SETUP}
     return 130 
 fi
 
-if [[ $ROOTSYS &&  -d $ROOTSYS ]]
+if [[ ${ROOTSYS} &&  -d ${ROOTSYS} ]]
 then
     true 
 else 
-    echo 'BUILD WITH LCG    : No ROOTSYS directory : ' ${ROOTSYS}
+    echo -e ${COLOR_ERR}${prefix_error}${COLOR_OFF}' No ROOTSYS directory ' ${ROOTSYS}
     return 140
 fi
- 
 
-OSTAP_SOURCE=${3}
+OSTAP_SOURCE=${3:-${OSTAP_SOURCE}}
 
-if [[      ${OSTAP_SOURCE}                   &&
-        -d ${OSTAP_SOURCE}                   &&
-        -d ${OSTAP_SOURCE}/ostap             &&
-        -d ${OSTAP_SOURCE}/source            &&
-        -d ${OSTAP_SOURCE}/scripts           &&
-        -d ${OSTAP_SOURCE}/examples          &&
-        -d ${OSTAP_SOURCE}/data              &&
-        -f ${OSTAP_SOURCE}/CMakeLists.txt    &&
-        -f ${OSTAP_SOURCE}/.aux/.build-ostap ]]
-then
+source_found=
+for source_dir in ${OSTAP_SOURCE:-${OSTAP_HOME}} \
+		  ${OSTAP_HOME:-${PWD}}          \
+		  ${PWD}                         \
+		  ../                      
+do
+    ## echo 'source_dir' ${source_dir} 
+    ## valid structure of the source directory:
+    if [[   ${source_dir}                   &&
+	 -d ${source_dir}                   &&
+	 -d ${source_dir}/cmake             &&
+	 -d ${source_dir}/data              &&
+	 -d ${source_dir}/docs              &&
+	 -d ${source_dir}/examples          &&
+	 -d ${source_dir}/ostap             &&
+	 -d ${source_dir}/scripts           &&
+	 -d ${source_dir}/source            &&
+	 -d ${source_dir}/ReleaseNotes      &&		
+	 -d ${source_dir}/.aux              &&
+	 -f ${source_dir}/CMakeLists.txt    &&
+	 -f ${source_dir}/.aux/.build-ostap ]]
+    then	
+	source_found=$(readlink -f ${source_dir})
+	break	
+    fi
     
-    echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
-    
-elif [[     ${PWD}  && 
-	-d ${PWD}/ostap             &&
-        -d ${PWD}/source            &&
-        -d ${PWD}/scripts           &&
-        -d ${PWD}/examples          &&
-        -d ${PWD}/data              &&
-        -f ${PWD}/CMakeLists.txt    &&
-        -f ${PWD}/.aux/.build-ostap ]]
-then
-    
-    OSTAP_SOURCE=${PWD}
-    echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
-    
-elif [[    ..                   &&
-	-d ../ostap             &&
-        -d ../source            &&
-        -d ../scripts           &&
-        -d ../examples          &&
-        -d ../data              &&
-        -f ../CMakeLists.txt    &&
-        -f ../.aux/.build-ostap ]]
-then
-    OSTAP_SOURCE=$(readlink -f ../)
-    echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
-    
-elif [[    .                   &&
-	-d ./ostap             &&
-        -d ./source            &&
-        -d ./scripts           &&
-        -d ./examples          &&
-        -d ./data              &&
-        -f ./CMakeLists.txt    &&
-        -f ./.aux/.build-ostap ]]
-then
-    
-    OSTAP_SOURCE=$(readlink -f ./)
-    echo 'BUILD WITH LCG    : use OSTAP_SOURCE   : ' ${OSTAP_SOURCE}
+done
 
+if [[    ${source_found} &&
+      -d ${source_found} ]]
+then
+    OSTAP_SOURCE=${source_found}
+    echo -e ${prefix}' Use OSTAP_SOURCE   = '${OSTAP_SOURCE}
 else
+    echo -e ${prefix_error}' No ostap source drectory found!'
+    return 150 
+fi
     
-    echo 'BUILD WITH LCG    : No valid source directory is found!' ${OSTAP_SOURCE}
-    return 150
-    
-fi 
-
 ## parameter #4: build directory
-OSTAP_BUILD=${4:-${OSTAP_SOURCE}/build}
+OSTAP_BUILD=${4:-${OSTAP_BUILD}}
 
 if   [[    ${OSTAP_BUILD} &&
         -d ${OSTAP_BUILD} &&
         -w ${OSTAP_BUILD} ]]
 then
-    echo 'BUILD WITH LCG    : use OSTAP_BUILD    : ' ${OSTAP_BUILD}    
-elif [[ -w ${OSTAP_SOURCE} ]]
-then 
-    mkdir ${OSTAP_SOURCE}/build
-    OSTAP_BUILD=${OSTAP_SOURCE}/build  
-    echo 'BUILD WITH LCG    : Build directory is created ' ${OSTAP_BUILD}
+    
+    echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
+    
+elif [[ -d ${OSTAP_SOURCE}/build &&
+	-w ${OSTAP_SOURCE}/build ]]
+then
+    
+     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
+     echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
+     
+elif [[  -w ${OSTAP_SOURCE} &&
+       ! -d ${OSTAP_SOURCE}/build ]]
+then
+    
+     mkdir ${OSTAP_SOURCE}/build
+     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
+     echo -e ${prefix}' Build directory is created '${OSTAP_BUILD}
+     
 else
+    
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo 'BUILD WITH LCG    : Build directory is created ' ${OSTAP_BUILD}
+    echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
+    
 fi 
-
 
 if [[ -f ${OSTAP_BUILD}/.build-ostap ]]
 then
-    echo 'BUILD WITH LCG: use  existing .build.ostap ' $OSTAP_BUILD/.build-ostap
+    true 
 else 
     cp ${OSTAP_SOURCE}/.aux/.build-ostap ${OSTAP_BUILD}/.build-ostap
-    echo 'BUILD WITH LCG    : copy .build-ostap from ' ${OSTAP_SOURCE}/.aux/.build-ostap
+    echo -e ${prefix}' Copy .build-ostap from '${OSTAP_SOURCE}/.aux/.build-ostap
 fi
 
+if [[ -f ${OSTAP_BUILD}/build.ninja ]]
+then
+    ( echo -e ${prefix}' Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD}  ; cd ${OSTAP_BUILD} ; ninja clean )
+fi
+
+( echo -e ${prefix}' Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  ;
+  cd ${OSTAP_BUILD} ;
+  rm -rf CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
+
 ## parameter #5: install directory 
-OSTAP_INSTALL=${5:-$OSTAP_BUILD/INSTALL/LCG$LCG_VERSION/$PLATFORM}
+OSTAP_INSTALL=${5:-${OSTAP_INSTALL}}
 
 if   [[ ${OSTAP_INSTALL} && -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
 then
-    echo 'BUILD WITH LCG    : use OSTAP_INSTALL  : ' ${OSTAP_INSTALL}
-  ( echo 'BUILD WITH LCG    : CLEAN INSTALL DIRECTORY'    ; cd ${OSTAP_INSTALL} ; echo ' - BUILD OSTAP    : CWD ' ${PWD} ;  rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
+    ( echo -e ${prefix}' Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} ;
+      cd ${OSTAP_INSTALL} ;
+      rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
 else
     OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG${LCG_VERSION}/${PLATFORM}
 fi
 
-echo 'BUILD WITH LCG    : LCG VERSION        : ' ${LCG}
-echo 'BUILD WITH LCG    : LCG PLATFORM       : ' ${PLATFORM}
-echo 'BUILD WITH LCG    : ROOTSYS            : ' ${ROOTSYS}
-echo 'BUILD WITH LCG    : OSTAP_SOURCE       : ' ${OSTAP_SOURCE}
-echo 'BUILD WITH LCG    : OSTAP_BUILD        : ' ${OSTAP_BUILD}
-echo 'BUILD WITH LCG    : OSTAP_INSTALL      : ' ${OSTAP_INSTALL}
+echo -e ${prefix}' LCG VERSION   : '${LCG}
+echo -e ${prefix}' LCG PLATFORM  : '${PLATFORM}
+echo -e ${prefix}' LCG BUILD     : '${LCG_BUILD}
+echo -e ${prefix}' ROOTSYS       : '${ROOTSYS}
+echo -e ${prefix}' OSTAP_SOURCE  : '${OSTAP_SOURCE}
+echo -e ${prefix}' OSTAP_BUILD   : '${OSTAP_BUILD}
+echo -e ${prefix}' OSTAP_INSTALL : '${OSTAP_INSTALL}
 
 source ${OSTAP_BUILD}/.build-ostap ${OSTAP_SOURCE} ${OSTAP_BUILD} ${OSTAP_INSTALL}
 
 result=$?
 
-echo ''
-echo 'BUILD WITH LCG    : LCG VERSION     : ' ${LCG}
-echo 'BUILD WITH LCG    : LCG PLATFORM    : ' ${PLATFORM}
+echo -e ${prefix}' LCG VERSION   : '${LCG}
+echo -e ${prefix}' LCG PLATFORM  : '${PLATFORM}
+echo -e ${prefix}' LCG BUILD     : '${LCG_BUILD}
 
 if [[ $result -eq 0 ]]
 then
-    echo 'BUILD WITH LCG    : RESULT          : ' SUCCESS
+    echo -e ${prefix}' RESULT        : 'SUCCESS
 else
-    echo 'BUILD WITH LCG    : RESULT          : ' FAILURE  $result
+    echo -e ${prefix_error}' RESULT    : '${result}
 fi
 
-return $result 
+return ${result}

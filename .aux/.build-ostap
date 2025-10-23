@@ -1,109 +1,178 @@
 #!/usr/bin/bash
 
-OSTAP_SOURCE=${1}
+prefix1='<<BUILD OSTAP>>'
+prefix1_error='<<BUILD OSTAP *ERROR*>>'
+prefix2=${prefix1}
+prefix2_error=${prefix1_error}
 
-if [[ -d ${ROOTSYS} ]]
+COLORS=$(tput colors 2> /dev/null)
+if [[ $? == 0  && $COLORS -gt 2 ]]
+then
+    FWHITE='\033[1;97m'     # White
+    BGREEN='\033[42m'       # Green
+    FYELLOW='\033[1;93m'    # Yellow
+    BRED='\033[6;101m'      # Red
+    ##
+    COLOR_OK=${FYELLOW}${BGREEN}
+    COLOR_ERR=${FYELLOW}${BRED}
+    COLOR_OFF='\033[0m' 
+    ##
+    prefix=${COLOR_OK}${prefix}${COLOR_OFF}
+    prefix_error=${COLOR_ERR}${prefix_error}${COLOR_OFF}
+    prefix1=${COLOR_OK}${prefix1}${COLOR_OFF}
+    prefix1_error=${COLOR_ERR}${prefix1_error}${COLOR_OFF}
+    prefix2=${COLOR_OK}${prefix2}${COLOR_OFF}
+    prefix2_error=${COLOR_ERR}${prefix2_error}${COLOR_OFF}
+    ## 
+fi
+
+OSTAP_SOURCE=${1:-${OSTAP_SOURCE}}
+OSTAP_BUILD=${2:-${OSTAP_BUILD}}
+OSTAP_INSTALL=${3:-${OSTAP_INSTALL}}
+
+if [[   ${ROOTSYS} &&
+     -d ${ROOTSYS} ]]
 then 
-    echo '----> BUILD OSTAP : ROOTSYS='${ROOTSYS} 
+    true
 else 
-    echo ' ERROR BUILD OSTAP : No ROOTSYS directory:' ${ROOTSYS}
-    return 100
+    echo -e ${prefix1_error}' No ROOTSYS directory:' ${ROOTSYS}
+    return 200
 fi
 
-if [[ -d ${OSTAP_SOURCE}             &&
-      -d ${OSTAP_SOURCE}/ostap       &&
-      -d ${OSTAP_SOURCE}/source      &&
-      -d ${OSTAP_SOURCE}/scripts     &&
-      -d ${OSTAP_SOURCE}/examples    &&
-      -d ${OSTAP_SOURCE}/data        &&
+if [[    ${OSTAP_SOURCE}                && 
+      -d ${OSTAP_SOURCE}                &&
+      -d ${OSTAP_SOURCE}/cmake          &&
+      -d ${OSTAP_SOURCE}/data           &&
+      -d ${OSTAP_SOURCE}/docs           &&
+      -d ${OSTAP_SOURCE}/examples       &&
+      -d ${OSTAP_SOURCE}/ostap          &&
+      -d ${OSTAP_SOURCE}/scripts        &&
+      -d ${OSTAP_SOURCE}/source         &&
+      -d ${OSTAP_SOURCE}/ReleaseNotes   &&
       -f ${OSTAP_SOURCE}/CMakeLists.txt ]]
-then  	 
-    echo '----> BUILD OSTAP : OSTAP_SOURCE='${OSTAP_SOURCE}
-else 	
-    echo ' ERROR BUILD OSTAP : No valid source directory is found!' ${OSTAP_SOURCE}
-    return 200 
-fi
-
-OSTAP_BUILD=${2:-$OSTAP_SOURCE/build}
-
-if   [[ -d $OSTAP_BUILD && -w $OSTAP_BUILD ]]
 then
     true 
-elif [[ -w $OSTAP_SOURCE ]]
+else 	
+    echo -e ${prefix1_error}' No valid source directory is found! '${OSTAP_SOURCE}
+    return 201
+fi
+
+if   [[    ${OSTAP_BUILD} &&
+	-d ${OSTAP_BUILD} &&
+	-w ${OSTAP_BUILD} ]]
+then
+    true 
+elif [[ -w ${OSTAP_SOURCE} ]]
 then 
     mkdir ${OSTAP_SOURCE}/build
     OSTAP_BUILD=${OSTAP_SOURCE}/build  
-    echo  '----> BUILD OSTAP : Build directory is created' ${OSTAP_BUILD}
+    echo -e ${prefix1}' Build directory is created:' ${OSTAP_BUILD}
 else
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo  '----> BUILD OSTAP : Build directory is created' ${OSTAP_BUILD}
+    echo -e ${prefix1}' Build directory is created:' ${OSTAP_BUILD}
 fi 
 
-OSTAP_INSTALL=${3:-$OSTAP_BUILD/INSTALL}
+if [[ -f rebuild_ostap.sh ]]
+then
+    rm -f rebuild_ostap.sh
+fi
+
+if [[ -f ${OSTAP_BUILD}/.rebuild-ostap ]]
+then
+    rm -f ${OSTAP_BUILD}/.rebuild-ostap 
+fi
+
 
 cat <<EOF >rebuild_ostap.sh
 #!/usr/bin/bash 
 
-if [[ -d ${ROOTSYS} ]]
+if [[  ${ROOTSYS} &&
+    -d ${ROOTSYS} ]]
 then 
-    echo '----> (RE)BUILD OSTAP : ROOTSYS=' ${ROOTSYS} 
+    echo -e "${prefix2}"' Use ROOTSYS       = '${ROOTSYS} 
 else 
-    echo ' ERROR (RE)BUILD OSTAP : No ROOTSYS directory:' ${ROOTSYS}
-    return 100
+    echo -e "${prefix2_error}"' No ROOTSYS directory: '${ROOTSYS}
+    return 202
 fi
 
 if [[ -d ${OSTAP_SOURCE} ]]
 then 
-    echo '----> (RE)BUILD OSTAP : OSTAP_SOURCE='${OSTAP_SOURCE}
+    echo -e "${prefix2}"' Use OSTAP_SOURCE  = '${OSTAP_SOURCE}
 else
-    echo ' ERROR (RE)BUILD OSTAP : No valid source directory is found!' ${OSTAP_SOURCE}
-    return 200 
+    echo -e "${prefix2_error}"' No valid source directory is found!' ${OSTAP_SOURCE}
+    return 203 
 fi
 
 if [[ -d ${OSTAP_BUILD} && -w ${OSTAP_BUILD} ]]
 then
-    echo '----> (RE)BUILD OSTAP : OSTAP_BUILD=:'${OSTAP_BUILD} 
+    echo -e "${prefix2}"' Use OSTAP_BUILD   = '${OSTAP_BUILD} 
 else
-    echo ' ERROR (RE)BUILD OSTAP : No valid build directory is found!' ${OSTAP_BUILD}
-    return 100 
+    echo -e "${prefix2_error}"' No valid build directory is found!' ${OSTAP_BUILD}
+    return 204 
 fi 
 
-echo '----> (RE)BUILD OSTAP  OSTAP_INSTALL : ' ${OSTAP_INSTALL} 
+echo -e "${prefix2}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
 
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
-    ( echo '----> (RE)BUILD OSTAP [1/7] : CLEAN BUILD REMNANTS'       ; cd ${OSTAP_BUILD}  ; ninja clean )
+    ( echo -e "${prefix2}"' [1/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} ; cd ${OSTAP_BUILD} ; ninja clean )
 fi
+
+( echo -e "${prefix2}"' [2/7] Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  ;
+  cd ${OSTAP_BUILD} ;
+  rm -rf CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 
 if [[ -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
 then
-    ( echo '----> (RE)BUILD OSTAP [2/7] : CLEAN INSTALL DIRECTORY'    ; cd ${OSTAP_INSTALL} ; rm -rfv .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
+    ( echo -e "${prefix2}"' [3/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} ;
+      cd ${OSTAP_INSTALL} ;
+      rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
 fi
 
-( echo '----> (RE)BUILD OSTAP [3/7] : REMOVE REMNANTS & GARBAGE'  ; cd ${OSTAP_BUILD} ; rm -rfv CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
-( echo '----> (RE)BUILD OSTAP [4/7] : FIRST  PASS OF CMAKE+NINJA' ; cd ${OSTAP_BUILD} ; cmake --fresh ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-( echo '----> (RE)BUILD OSTAP [5/7] : SECOND PASS OF CMAKE+NINJA' ; cd ${OSTAP_BUILD} ; cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
+( echo -e "${prefix2}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} ;
+  cd ${OSTAP_BUILD} ;
+  cmake --fresh ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
+
+if [[ -d ${OSTAP_INSTALL} ]]
+then
+    true
+else 
+    echo -e "${prefix2_error}"' Missing install directory! '${OSTAP_INSTALL}
+    return 205 
+fi 
+
+( echo -e "${prefix2}"' [5/7] Second pass of cmake&ninja&install'    ${OSTAP_BUILD} ;
+  cd ${OSTAP_BUILD} ;
+  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
 
 if [[ -f ${OSTAP_INSTALL}/thisostap.sh &&
       -x ${OSTAP_INSTALL}/thisostap.sh ]]
 then
     source ${OSTAP_INSTALL}/thisostap.sh
 else
-    echo ' ERROR (RE)BUILD OSTAP : No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh 
-    return 300 
+    echo -e "${prefi2_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh 
+    return 206
 fi
 
-( echo '----> (RE)BUILD OSTAP [6/7] : THIRD  PASS OF CMAKE+NINJA'   ; cd ${OSTAP_BUILD} ; cmake ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date )
-( echo '----> (RE_BUILD OSTAP [7/7] : LAST   PASS OF NINJA+CPACK'   ; cd ${OSTAP_BUILD} ; ninja ; ninja install | grep -v Up-to-date ; ninja package )
+( echo -e "${prefix2}"' [6/7] Third  pass of cmake&ninja&install    '${OSTAP_BUILD} ;
+  cd ${OSTAP_BUILD} ;
+  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
 
-echo '----> (RE)BUILD OSTAP     : ROOTSYS         : ' ${ROOTSYS}
-echo '----> (RE)BUILD OSTAP     : OSTAPDIR        : ' ${OSTAPDIR}
-echo '----> (RE)BUILD OSTAP     : OSTAP_SOURCE    : ' ${OSTAP_SOURCE}
-echo '----> (RE)BUILD OSTAP     : OSTAP_BUILD     : ' ${OSTAP_BUILD}
-echo '----> (RE)BUILD OSTAP     : python          : ' `which python`
-echo '----> (RE)BUILD OSTAP     : root.exe        : ' `which root.exe`
-echo '----> (RE)BUILD OSTAP     : PYTHON VERSION  : ' `python --version`
-echo '----> (RE)BUILD OSTAP     : OSTAP_INSTALL   : ' ${OSTAP_INSTALL}
+## ( echo -e "${prefix2}"' [7/7] Last   pass of cmake&ninja&package'  ;
+##   cd ${OSTAP_BUILD} ;
+##   cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja package  )
+
+echo -e "${prefix2}"' ROOTSYS         : '${ROOTSYS}
+echo -e "${prefix2}"' OSTAPDIR        : '${OSTAPDIR}
+echo -e "${prefix2}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
+echo -e "${prefix2}"' OSTAP_BUILD     : '${OSTAP_BUILD}
+echo -e "${prefix2}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
+echo -e "${prefix2}"' root.exe        : '\$(which root.exe)
+echo -e "${prefix2}"' root version    : '\$(root.exe --version 2>&1 | tr '\n' ' ')
+echo -e "${prefix2}"' python          : '\$(which python)
+echo -e "${prefix2}"' root version    : '\$(python   -VV)
+echo -e "${prefix2}"' ostap           : '\$(which ostap)
+echo -e "${prefix2}"' root version    : '\$(ostap    --version)
 
 if command -v tree &> /dev/null
 then
@@ -117,11 +186,13 @@ then
     mv ./rebuild_ostap.sh ${OSTAP_BUILD}/.rebuild-ostap
     chmod 755 ${OSTAP_BUILD}/.rebuild-ostap
 else
-    echo ' ERROR (RE)BUILD OSTAP : No .rebuild-ostap is found ' ${OSTAP_BUIILD}/.rebuild-ostap
-    return 400 
+    echo -e "${prefix2_error}"' No .rebuild-ostap is found '${OSTAP_BUIILD}/.rebuild-ostap
+    return 207 
 fi
 
+echo -e ${prefix1}' Source .rebuild-ostap ' ${OSTAP_BUILD}/.rebuild-ostap
 source ${OSTAP_BUILD}/.rebuild-ostap
 result=$?
+
 
 return $result
