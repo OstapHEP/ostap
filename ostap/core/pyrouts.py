@@ -88,8 +88,8 @@ import ROOT
 # =============================================================================    
 from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
                                   h1_axis     , h2_axes     , h3_axes     ,
-                                  axis_bins   , ve_adjust   , histoGuess  )
-    
+                                  ve_adjust   , histoGuess  )
+from ostap.histos.axes   import axis_bins
 # =============================================================================
 # Other decorations 
 # =============================================================================

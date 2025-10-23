@@ -56,7 +56,7 @@ from   ostap.utils.utils              import accumulate
 from   ostap.utils.cidict             import cidict, cidict_fun  
 from   ostap.utils.basic              import typename 
 from   ostap.logger.pretty            import pretty_float
-from   ostap.histos.axes              import h1_axis , make_axis  
+from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes   
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 

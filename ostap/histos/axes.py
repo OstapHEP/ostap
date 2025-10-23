@@ -479,8 +479,8 @@ def h1_axis ( axis               ,
 
     ## the actual histogram type: 
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH1 ) : htype = double
-    else :
-        htype = ROOT.TH1D if double else ROOT.TH1F
+    elif double : htype = ROOT.TH1D  
+    else        : htype = ROOT.TH1F
     #
     title = title if title else 'Histogram:%s' % name 
     
@@ -491,10 +491,10 @@ def h1_axis ( axis               ,
                      axis.GetXmin () , 
                      axis.GetXmax () )
     else : 
-        h1  = typ ( name           ,
-                    title          ,
-                    axis.nBins ()  ,
-                    array.array ( 'd' , axis.GetXbins() ) )         
+        h1 = htype ( name           ,
+                     title          ,
+                     axis.nBins ()  ,
+                     array.array ( 'd' , axis.GetXbins() ) )         
     ##
     if not h1.GetSum2() : h1.Sumw2()
     return h1
@@ -522,11 +522,10 @@ def h2_axes ( x_axis             ,
     if not isinstance ( x_axis , ROOT.TAxis ) : x_axis = axis_from_bins ( x_axis )
     if not isinstance ( y_axis , ROOT.TAxis ) : y_axis = axis_from_bins ( y_axis )
 
-    
     ## the actual histogram type: 
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH2 ) : htype = double
-    else :
-        htype = ROOT.TH2D if double else ROOT.TH2F
+    elif double : htype = ROOT.TH2D
+    else        : htype = ROOT.TH2F
 
     title = title if title else 'Histogram:%s' % name 
     
@@ -538,36 +537,19 @@ def h2_axes ( x_axis             ,
         h2 = htype ( name  ,
                      title ,
                      x_axis.GetNbins() , x_axis.GetXmin () , x_axis.GetXmax () ,
-                     y_axis.GetNbins() , x_axis.GetXmin () , x_axis.GetXmax () )
-    elif xu :
-        
-        xbins = array.array ( 'd' , ( e for x_axis.edges() ) )
-        ybins = array.array ( 'd' , y_axis.GetXbins()        )
-        h2 = htype ( name  ,
-                     title ,
-                     x_axis.GetNbins() , xbins , 
-                     y_axis.GetNbins() , ybins )
-        
-    elif yu :
-        
-        xbins = array.array ( 'd' , x_axis.GetXbins()        )
-        ybins = array.array ( 'd' , ( e for y_axis.edges() ) )
-        
-        h2 = htype ( name  ,
-                     title ,
-                     x_axis.GetNbins() , xbins , 
-                     y_axis.GetNbins() , ybins )
+                     y_axis.GetNbins() , y_axis.GetXmin () , y_axis.GetXmax () )
+    
     else :
 
-        xbins = array.array ( 'd' , x_axis.GetXbins()        )
-        ybins = array.array ( 'd' , y_axis.GetXbins()        )
-        
+        xbins = array.array ( 'd' , ( e for e in x_axis.edges() ) )
+        ybins = array.array ( 'd' , ( e for e in y_axis.edges() ) )
+
         h2 = htype ( name  ,
                      title ,
                      x_axis.GetNbins() , xbins , 
                      y_axis.GetNbins() , ybins )
 
-    if not h2.GetSumw2 : : h2.Sumw2()
+    if not h2.GetSumw2 : h2.Sumw2()
     return h2
 
 # =============================================================================
@@ -589,23 +571,45 @@ def h3_axes ( x_axis            ,
     #
     if not name : name = hID() 
     #
-    if not issubclass ( type ( x_axis ) , ROOT.TAxis ) : x_axis = axis_bins   ( x_axis )
-    if not issubclass ( type ( y_axis ) , ROOT.TAxis ) : y_axis = axis_bins   ( y_axis )
-    if not issubclass ( type ( z_axis ) , ROOT.TAxis ) : z_axis = axis_bins   ( z_axis )
-    #
-    x_bins  = x_axis.edges ()
-    y_bins  = y_axis.edges ()
-    z_bins  = z_axis.edges ()
-    #
-    if isinstance ( double , type ) and issubclass ( double , ROOT.TH3 ) : typ = double
-    else : typ = ROOT.TH3D if double else ROOT.TH3F
-    #
-    return typ ( name  ,
-                 title ,
-                 len ( x_bins ) - 1 , array.array ( 'd' , x_bins ) ,
-                 len ( y_bins ) - 1 , array.array ( 'd' , y_bins ) , 
-                 len ( z_bins ) - 1 , array.array ( 'd' , z_bins ) ) 
+    
+     ## create the axes
+    if not isinstance ( x_axis , ROOT.TAxis ) : x_axis = axis_from_bins ( x_axis )
+    if not isinstance ( y_axis , ROOT.TAxis ) : y_axis = axis_from_bins ( y_axis )
+    if not isinstance ( z_axis , ROOT.TAxis ) : z_axis = axis_from_bins ( z_axis )
 
+    ## the actual histogram type: 
+    if isinstance ( double , type ) and issubclass ( double , ROOT.TH3 ) : htype = double
+    elif double : htype = ROOT.TH3D
+    else        : htype = ROOT.TH3F
+
+    title = title if title else 'Histogram:%s' % name 
+    
+    xu = x_axis.uniform()
+    yu = y_axis.uniform()
+    zu = z_axis.uniform()
+    
+    if xu and yu and zu :
+        
+        h3 = htype ( name  ,
+                     title ,
+                     x_axis.GetNbins() , x_axis.GetXmin () , x_axis.GetXmax () ,
+                     y_axis.GetNbins() , y_axis.GetXmin () , y_axis.GetXmax () ,
+                     z_axis.GetNbins() , z_axis.GetXmin () , z_axis.GetXmax () )
+    
+    else :
+
+        xbins = array.array ( 'd' , ( e for e in x_axis.edges() ) )
+        ybins = array.array ( 'd' , ( e for e in y_axis.edges() ) )
+        zbins = array.array ( 'd' , ( e for e in z_axis.edges() ) )
+
+        h3 = htype ( name  ,
+                     title ,
+                     x_axis.GetNbins() , xbins , 
+                     y_axis.GetNbins() , ybins ,
+                     z_axis.GetNbins() , zbins )
+
+    if not h3.GetSumw2 : h3.Sumw2()
+    return h3
 
 
 ROOT.TAxis . __iter__      = _axis_iterator_
