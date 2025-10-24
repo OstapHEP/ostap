@@ -66,7 +66,7 @@ def axis_from_edges ( edges , check = True  ) :
         ## the fist elements
         e0   = edges [ 0 ]        
         for ei in edges [ 1 : ] :
-            if e0 < ei : raise TypeError ( "sequence of axis edges *must* be increasing!" )
+            if not e0 < ei : raise TypeError ( "sequence of axis edges *must* be increasing!" )
             e0 = ei
 
     ## convert posible ROOT-Error to python exception 
