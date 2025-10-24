@@ -83,8 +83,11 @@ then
 fi
 
 
-## cat <<EOF >rebuild_ostap.sh
-## #!/usr/bin/bash 
+cat <<EOF >rebuild_ostap.sh
+#!/usr/bin/bash 
+
+
+
 
 if [[  ${ROOTSYS} &&
     -d ${ROOTSYS} ]]
@@ -168,12 +171,13 @@ echo -e "${prefix2}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
 echo -e "${prefix2}"' OSTAP_BUILD     : '${OSTAP_BUILD}
 echo -e "${prefix2}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
 echo -e "${prefix2}"' thisostap.sh    : '${OSTAP_INSTALL}/thisostap.sh
-echo -e "${prefix2}"' root.exe        : '\$(which root.exe)
-echo -e "${prefix2}"' root version    : '\$(root.exe --version 2>&1 | tr '\n' ' ')
-echo -e "${prefix2}"' python          : '\$(which python)
-echo -e "${prefix2}"' root version    : '\$(python   -VV)
-echo -e "${prefix2}"' ostap           : '\$(which ostap)
-echo -e "${prefix2}"' root version    : '\$(ostap    --version)
+echo -e "${prefix2}"' root            : '\$(which root       )
+echo -e "${prefix2}"' root.exe        : '\$(which root.exe   )
+echo -e "${prefix2}"' root version    : '\$(root.exe --version 2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix2}"' python          : '\$(which python    )
+echo -e "${prefix2}"' root version    : '\$(python   -VV       2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix2}"' ostap           : '\$(which ostap     )
+echo -e "${prefix2}"' root version    : '\$(ostap    --version 2>&1 | sed -E "s/\\\\n/ /g" )
 
 if command -v tree &> /dev/null
 then
@@ -192,8 +196,9 @@ else
 fi
 
 echo -e ${prefix1}' Source .rebuild-ostap ' ${OSTAP_BUILD}/.rebuild-ostap
+## cat ${OSTAP_BUILD}/.rebuild-ostap
 source ${OSTAP_BUILD}/.rebuild-ostap
 result=$?
 
 
-return $result
+return ${result}

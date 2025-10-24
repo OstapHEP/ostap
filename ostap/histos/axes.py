@@ -48,7 +48,7 @@ logger.debug ( "Decoration of histogram' axes")
 #  axis = axis_from_edges ( bins ) 
 #  @endcode
 #  @see TAxis
-def axis_from_edges ( edges , check = True  ) :
+def axis_from_edges ( edges , check = True ) :
     """ Create the axis from sequence of bin edges 
     - see `ROOT.TAxis`
     >>> edges = [1,2,3,4,5,10,100]
@@ -59,6 +59,7 @@ def axis_from_edges ( edges , check = True  ) :
     if isinstance ( edges , sized_types ) :
         assert 2 <= len ( edges ) , "at least two edges are required!"
         
+
     if check and root_info < ( 6 , 37 ) : 
         edges  = tuple ( e for e in edges )
         nedges = len ( edges ) 
@@ -73,7 +74,6 @@ def axis_from_edges ( edges , check = True  ) :
     with rootException () :        
         ## recent ROOT (>=6.36) has proper constructor
         if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( edges )
-        ## 
         new_edges = array.array ( 'd' , edges )
         return ROOT.TAxis ( len ( new_edges ) - 1 , new_edges )
 
