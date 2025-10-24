@@ -185,9 +185,9 @@ def test_basic_1D() :
     logger.info (     "          Skewness : %-20s" % h1.skewness () )  
     logger.info (     "          Kurtosis : %-20s" % h1.kurtosis () ) 
 
-    logger.info (     "  Stat: %s" % h1. stat() )
-    logger.info (     " WStat: %s" % h1.wstat() )
-    logger.info (     " XStat: %s" % h1.xstat() )
+    logger.info (     "  Stat:\n%s" % h1. stat() )
+    logger.info (     " WStat:\n%s" % h1.wstat() )
+    logger.info (     " XStat:\n%s" % h1.xstat() )
         
     logger.info ( '  minmax  %20s' % str( h1. minmax() ) )
     logger.info ( 'x-minmax  %20s' % str( h1.xminmax() ) )

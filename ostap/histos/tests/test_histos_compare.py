@@ -44,11 +44,10 @@ h1g   = ROOT.TH1D ( hID() , '' ,  40 , -5 , 5 ) ; h1g.Sumw2()
 h2g   = ROOT.TH1D ( hID() , '' ,  40 , -5 , 5 ) ; h2g.Sumw2() 
 h3g   = ROOT.TH1D ( hID() , '' ,  20 , -5 , 5 ) ; h3g.Sumw2() 
 
-bins  = [ -5 ]
-## 
+bins  = []
 random.seed(10) 
 for i in range(0, 20 ) : bins.append ( random.uniform ( -5 , 5 ) )
-bins = [ -5 ] + bins + [  5 ]
+bins  = [ -5 ] + bins + [  5 ]
 bins.sort()
 
 h4g   = h1_axis ( bins ) 

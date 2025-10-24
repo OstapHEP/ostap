@@ -28,12 +28,13 @@ from   ostap.core.meta_info           import root_info
 from   ostap.core.ostap_types         import ( sequence_types  , sized_types   ,
                                                num_types       , integer_types )
 from   ostap.utils.basic              import typename 
-from   ostap.core.core                import hID , Ostap, valid_pointer
+from   ostap.core.core                import hID , Ostap, valid_pointer, rootException
+from   ostap.math.base                import isequal 
 from   ostap.logger.pretty            import fmt_pretty_values   
 from   ostap.logger.symbols           import times 
 import ROOT, array 
 # =============================================================================
-# logging 
+# logging
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.axes' )
@@ -47,7 +48,7 @@ logger.debug ( "Decoration of histogram' axes")
 #  axis = axis_from_edges ( bins ) 
 #  @endcode
 #  @see TAxis
-def axis_from_edges ( edges ) :
+def axis_from_edges ( edges , check = True  ) :
     """ Create the axis from sequence of bin edges 
     - see `ROOT.TAxis`
     >>> edges = [1,2,3,4,5,10,100]
@@ -56,13 +57,25 @@ def axis_from_edges ( edges ) :
     assert isinstance ( edges , sequence_types ) , "`edges' must be sequence"  
     
     if isinstance ( edges , sized_types ) :
-        assert 2 <= len ( edges ) , "size must be at least 2!"
-    
-    ## ROOT>=6.36 has proper constructor: 
-    if ( 6 , 36 ) <= root_info :return ROOT.TAxis ( edges )
-    
-    new_edges = array.array ( 'd' , edges )
-    return ROOT.TAxis ( len ( new_edges ) - 1 , new_edges )
+        assert 2 <= len ( edges ) , "at least two edges are required!"
+        
+    if check and root_info < ( 6 , 37 ) : 
+        edges  = tuple ( e for e in edges )
+        nedges = len ( edges ) 
+        assert 2 <= nedges , "at least two edges are required!"
+        ## the fist elements
+        e0   = edges [ 0 ]        
+        for ei in edges [ 1 : ] :
+            if e0 < ei : raise TypeError ( "sequence of axis edges *must* be increasing!" )
+            e0 = ei
+
+    ## convert posible ROOT-Error to python exception 
+    with rootException () :        
+        ## recent ROOT (>=6.36) has proper constructor
+        if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( edges )
+        ## 
+        new_edges = array.array ( 'd' , edges )
+        return ROOT.TAxis ( len ( new_edges ) - 1 , new_edges )
 
 # =============================================================================
 ## Same binning for two axes?
@@ -135,8 +148,8 @@ def _axis_edge_ ( axis , index )  :
 def _axis_items_ ( axis ) :
     """ Iterate over items in axis     
     >>> axis = ...
-    >>> for ibin , bin in axis.    items() : ...    
-    >>> for ibin , bin in axis.iteritems() : ... ## ditto    
+    >>> for ibin , low , center, up in axis.    items() : ...    
+    >>> for ibin , low , center, up in axis.iteritems() : ... ## ditto    
     """
     for index in axis :
 
@@ -144,8 +157,7 @@ def _axis_items_ ( axis ) :
         up     = axis.edge         ( index     )
         center = axis.GetBinCenter ( index     )
         
-        bin = low , center, up 
-        yield i , bin 
+        yield index , low , center, up  
 
 # =============================================================================
 ## get bin parameters : low- and up-edges 
@@ -165,7 +177,7 @@ def _axis_get_item_ ( axis , index ) :
         
         int1 = isinstance ( start , integer_types )
         int2 = isinstance ( stop  , integer_types )
-        int3 = isinstance ( step  , integer_types )
+        int3 = isinstance ( step  , integer_types ) and 0 < step 
             
         none1 = start is None  
         none2 = stop  is None  
@@ -175,8 +187,8 @@ def _axis_get_item_ ( axis , index ) :
         if ( int1 or none1 ) and ( int2 or none2 ) and ( int3 or none3 ) :
             indices = index.indices ( nbins ) 
             indices = range  ( *indices )
-            assert  2 <= len (  indices ) , "At least two edges are required!"
-            return axis_from_edges ( indices )                  
+            assert  2 <= len (  indices ) , "At least two edges are required!" 
+            return axis_from_edges ( ( axis.edge ( i ) for i in indices ) ) 
         
         num1 = isinstance ( start , num_types )
         num2 = isinstance ( stop  , num_types )
@@ -187,7 +199,6 @@ def _axis_get_item_ ( axis , index ) :
         
         raise IndexError ( "Invalid index %s/%s" % ( index , typename ( index ) ) ) 
      
-    
     if not isinstance ( index , integer_types ) : 
         raise IndexError ( "Invalid type of index %s" % typename ( index ) ) 
     
@@ -196,9 +207,9 @@ def _axis_get_item_ ( axis , index ) :
      
     if not 1 <= index <= axis.GetNbins() : raise IndexError
     
-    low    = axis.edge ( index - 1  )
-    up     = axis.edge ( index      )
-    center = axis.GetCenterBin  ( index  )
+    low    = axis.edge         ( index - 1 )
+    up     = axis.edge         ( index     )
+    center = axis.GetBinCenter ( index     )
     
     item = low , center , up 
     return item 
@@ -207,28 +218,18 @@ def _axis_get_item_ ( axis , index ) :
 ## Iterator over axis bins 
 #  @code
 #  axis = ...
-#  for xlow, xhigh in axis.bins () :
+#  for xlow, xcenter, xhigh in axis.bins () :
 #  ...   
 #  @endcode 
 def _axis_bin_iterator_ ( axis ) :
     """ Iterator over axis bins 
     >>> axis = ...
-    >>> for xlow, xhigh in axis.bins () :
+    >>> for xlow, xcenter, xhigh in axis.bins () :
     ...
     """
     nbins = axis.GetNbins () 
-    bins  = axis.GetXbins ()
-    if bins :
-        for i in range ( nbins ) :
-            yield bins [ i ] , bins [ i + 1 ]
-    else :
-        xmin  = axis.GetXmin  ()
-        xmax  = axis.GetXmax  ()
-        binw  = ( xmax - xmin ) / nbins
-        for i in range ( 1 , nbins + 1 ) :
-            left  = axis.GetBinLowEdge()
-            right = axis.GetBinUpEdge ()
-            yield lef , right 
+    for i in range ( 1 , nbins + 1 ) :
+        yield axis[ i ]
 
 # =============================================================================
 ## equality for axes
@@ -268,7 +269,7 @@ def _axis_edges_ ( axis ) :
     else :
         
         yield axis.GetXmin()        
-        for i in range ( 1 , nbins ) : yield axis.GetBinUpEdge()        
+        for i in range ( 1 , nbins ) : yield axis.GetBinUpEdge ( i )        
         yield axis.GetXmax()
 
 # ==============================================================================
@@ -283,10 +284,12 @@ def _axis_uniform_ ( axis ) :
     >>> uniform_bins = axis.uniform () 
     """
     nbins = axis.GetNbins()
+    if 1 == nbins  : return True 
     bins  = axis.GetXbins()
-    ## 
-    return  1 == nbins or not bins 
-    
+    if not bins    : return True 
+    ##
+    return Ostap.Utils.uniform_bins ( axis , True ) 
+
 # ==============================================================================
 ## Scale axis edges (equivalent to change units)
 #  @code
@@ -340,7 +343,7 @@ def _axis_merge_ ( axis , n ) :
     nbins = axis.GetNbins () 
     bins  = axis.GetXbins ()
     ## 
-    if 0 == nbins % n : 
+    if axis.uniform () and 0 == nbins % n : 
         return ROOT.TAxis ( nbins // n , axis.GetXmin() , axis.GetXmax() )
     
     new_bins = [ axis.GetXmin() ]
@@ -350,7 +353,45 @@ def _axis_merge_ ( axis , n ) :
     new_bins.append ( axis.GetXmax() )
         
     return axis_from_edges ( new_bins ) 
-        
+
+# =============================================================================
+## Join indicated bins
+#  - each indicated bins is joined/merged with subsequent bin
+#  @code
+#  axis  = ...
+#  axis2 = axis.join ( 2 ) ## join/merge 2&3rd bins
+#  axis3 = axis.join ( 2 , 10 ) ## join/merge 2&3rd, and 10&11 bins 
+#  @endcode 
+def _axis_join_ ( axis , *bins ) :
+    """ Join indicated bins
+    - each indicated bins is joined/merged with subsequent bin
+    >>> axis  = ...
+    >>> axis2 = axis.join ( 2 ) ## join/merge 2&3rd bins
+    >>> axis3 = axis.join ( 2 , 10 ) ## join/merge 2&3rd, and 10&11 bins 
+    """
+    ## no action ? 
+    if not bins :  return axis
+    
+    nbins = axis.GetNbins ()
+    
+    ## nothing to be merged/joined 
+    if 1 >= nbins : return axis 
+
+    assert all ( isinstance ( e , integer_types ) and 1 <= e and e + 1 < nbins for e in bins ) , \
+        "Invalid `bins': [%s]" %  ( ','.join ( str ( b ) for b in bins ) ) 
+
+    ## aliminate duplicates, sort and reverse 
+    bins  = list ( reversed ( sorted ( set ( b for b in bins ) ) ) )
+
+    ## initial list of edges 
+    edges = list ( e for e in axis.edges () )
+
+    ## remove bins from edges 
+    while bins :
+        del edges [ bins.pop ()  ]
+
+    return axis_from_edges ( edges ) 
+
 # =============================================================================
 ## Split the axis into axis with narrower bin
 #  - each bin is split into n bins
@@ -412,68 +453,39 @@ def _axis_range_ ( axis , xmin = None , xmax = None ) :
     no_min = xmin is None
     no_max = xmax is None
 
-    amin = axis.GetXmin ()
-    amax = axis.GetXmax ()
+    ## no action
+    if no_min and no_max : return axis           ## RETURN 
+
+    amin   = axis.GetXmin ()
+    amax   = axis.GetXmax ()
     
-    assert no_min or ( isinstance ( xmin , num_types ) and amax > xmin ) , \
-    "Invalid `xmin' %s/%s" % ( xmin , typename ( xmin ) )
+    assert no_min or isinstance ( xmin , num_types ) , \
+        "Invalid `xmin' %s/%s" % ( xmin , typename ( xmin ) )
     
-    assert no_max or ( isinstance ( xmax , num_types ) and amin < xmax ) , \
+    assert no_max or isinstance ( xmax , num_types ) , \
         "Invalid `xmax' %s/%s" % ( xmax , typename ( xmax ) )
-    
+
     ## no action 
     if   no_min and no_max : return axis           ## RETURN 
-    elif no_min :
-        xmin , xmax = amin , min ( xmax , amax )
-        return _axis_range_ ( axis , xmin , xmax ) ## RETURN
-    elif no_max :
-        xmin , xmax = max ( xmin , amin ) , amax 
-        return _axis_range_ ( axis , xmin , xmax ) ## RETURN
+    elif no_min : return _axis_range_ ( axis , amin , xmax ) 
+    elif no_max : return _axis_range_ ( axis , xmin , amax ) 
 
     assert xmin < xmax , "Invalid xmin/xmax: %s/%s" % ( xmin , xmax )
 
-    ## no action!
-    if xmin <= amin and amax <= xmax : return axis ## RETURN
+    new_edges = [] 
+    new_edges.append ( xmin )    
+    for e in axis.edges () :
+        if xmin < e  < xmax : new_edges.append ( e )            
+    new_edges.append ( xmax ) 
 
-    ## adjust ximn/xmax: 
-    xmin = max ( xmin , amin )
-    xmax = min ( xmax , amax )
-
-    mnbin = axis.FindFixBin ( xmin )
-    mxbin = axis.FindFixBin ( xmax )
-    
-    nbins = axis.GetNbins() 
-    
-    assert 1     <= mnbin <= nbins , "Invalid min #bin %s" % mnbin 
-    assert mnbin <= mxbin <= nbins , "Invalid max #bin %s" % mxbin 
-
-    new_bins = [ xmin ] 
-    for i in range ( mnbin , mxbin + 1 ) :
-        
-        low  = axis.GetBinLowEdge ( i )                
-        high = axis.GetBinUpEdge  ( i )
-        if xmax <= low  : break 
-        if xmin >= high : continue
-
-        if   low  < xmin and high <= xmax : continue 
-
-        last = new_bins [ -1 ] 
-        if   last < low  and high <= xmax : new_bins.append ( low )         
-        elif last < low  and xmax <= high :
-            new_bins .append ( low  )
-            new_bins .append ( xmax )
-            break
-
-    if not isequal ( xmax , new_bins [ -1 ] ) : new_bins .append ( xmax ) 
-    assert 2 <= len ( new_bins  ) , "Invalid edges!"
-
-    return axis_from_edges ( new_bins )
+    return axis_from_edges ( new_edges )
 
 # =============================================================================
 ## print TAxis 
 def _axis_str_ ( axis , precision = 3 , width = 5 ) :
     """ Print TAxis
     """
+    
     if axis.uniform () :
         xmin , xmax = axis.GetXmin () , axis.GetXmax() 
         fmt , expo = fmt_pretty_values ( xmin ,
@@ -482,10 +494,8 @@ def _axis_str_ ( axis , precision = 3 , width = 5 ) :
                                          width     = width     )
         if expo : 
             scale = 10 ** expo 
-            xmin = xmin / scale
-            xmax = xmax / scale  
-            v1 = '%s%s10^%d' % ( fmt % xmin , times , expo ) 
-            v2 = '%s%s10^%d' % ( fmt % xmax , times , expo ) 
+            v1 = '%s%s10^%d' % ( fmt % ( xmin / scale ) , times , expo ) 
+            v2 = '%s%s10^%d' % ( fmt % ( xmax / scale ) , times , expo ) 
             return 'TAxix(%d,%s,%s)' % ( axis.GetNbins() , v1 , v2 )
         else : 
             return 'TAxix(%d,%s,%s)' % ( axis.GetNbins() , fmt % xmin , fmt % xmax  )
@@ -495,13 +505,13 @@ def _axis_str_ ( axis , precision = 3 , width = 5 ) :
     if expo : 
         scale = 10 ** expo 
         edges = ( fmt % ( v / scale ) for v in edges )
-        edges =  ','.join ( edges )
+        edges = ','.join ( edges )
         expo  = '%s10^%d' % ( times , expo )
-        return 'TAxis( [%s]%s )' % ( edges , expo )
+        return 'TAxis([%s]%s)' % ( edges , expo )
     
     edges = ( fmt %  v for v in edges )
-    edges =  ','.join ( edges )
-    return 'TAxis( [%s] )' % edges 
+    edges = ','.join ( edges )
+    return 'TAxis([%s])' % edges 
 
     
 # =============================================================================
@@ -583,16 +593,16 @@ def h1_axis ( axis               ,
     if axis.uniform () :
         h1 = htype ( name  ,
                      title ,
-                     axis.GetNbins() , 
-                     axis.GetXmin () , 
-                     axis.GetXmax () )
+                     axis.GetNbins()   , 
+                     axis.GetXmin ()   , 
+                     axis.GetXmax ()   )
     else : 
-        h1 = htype ( name           ,
-                     title          ,
-                     axis.nBins ()  ,
+        h1 = htype ( name              ,
+                     title             ,
+                     axis.GetNbins ()  ,
                      array.array ( 'd' , axis.GetXbins() ) )         
     ##
-    if not h1.GetSum2() : h1.Sumw2()
+    if not h1.GetSumw2() : h1.Sumw2()
     return h1
 
 
@@ -613,7 +623,6 @@ def h2_axes ( x_axis             ,
     #
     if not name : name = hID() 
     #
-    
     ## create the axes
     if not isinstance ( x_axis , ROOT.TAxis ) : x_axis = axis_from_edges ( x_axis )
     if not isinstance ( y_axis , ROOT.TAxis ) : y_axis = axis_from_edges ( y_axis )
@@ -652,12 +661,12 @@ def h2_axes ( x_axis             ,
 ## make 3D-histogram from axes
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-07-18
-def h3_axes ( x_axis            ,
-              y_axis            ,
-              z_axis            ,
-              title  = '3D'     , 
-              name   = None     ,
-              double = True     ) :
+def h3_axes ( x_axis             ,
+              y_axis             ,
+              z_axis             ,
+              title  = '3D'      , 
+              name   = ''        ,
+              double = ROOT.TH3D ) :
     """ Make 3D-histogram with binning deifned by already created axes    
     >>> x_axis = ...
     >>> y_axis = ...
@@ -665,9 +674,10 @@ def h3_axes ( x_axis            ,
     >>> h3 = h3_axes ( x_axis , y_axis , z_axis , title = 'MyHisto' )     
     """
     #
-    if not name : name = hID() 
+    if not name : name = hID ()
+    else        : name = hID ( prefix = name )
     #
-    
+
      ## create the axes
     if not isinstance ( x_axis , ROOT.TAxis ) : x_axis = axis_from_edges ( x_axis )
     if not isinstance ( y_axis , ROOT.TAxis ) : y_axis = axis_from_edges ( y_axis )
@@ -707,6 +717,62 @@ def h3_axes ( x_axis            ,
     if not h3.GetSumw2 : h3.Sumw2()
     return h3
 
+# =============================================================================
+## Create 2D or 3D historgam from axes
+#  @code
+#  xaxis = ...
+#  yaxis = ...
+#  h2 = xaxis @ yaxis ## 2D histogram 
+#
+#  zaxis = ...
+#  h3 = h2    @ zaxis
+#  endcode
+def _axis_matmul_ ( axis , another ) :
+    """ Create 2D or 3D historgam from axes
+    >>> xaxis = ...
+    >>> yaxis = ...
+    >>> h2 = xaxis @ yaxis ## 2D historam 
+    
+    >>> zaxis = ...
+    >>> h3 = h2    @ xaxis  ## 3D histogram 
+    """
+    if   isinstance ( another , ROOT.TH2   ) and 2 == another.GetDimension () :
+        return h3_axes ( axis , another.GetXaxis ()  , another.GetYaxis () )
+    elif isinstance ( another , ROOT.TH1   ) and 1 == another.GetDimension () :
+        return h2_axes ( axis , another.GetXaxis () ) 
+    elif isinstance ( another , ROOT.TAxis ) : return h2_axes ( axis , another )
+    ## 
+    return NotImplemented
+
+# =============================================================================
+## Create 2D or 3D historgam from axes
+#  @code
+#  xaxis = ...
+#  yaxis = ...
+#  h2 = xaxis @ yaxis ## 2D histogram 
+#
+#  zaxis = ...
+#  h3 = h2    @ zaxis
+#  endcode
+def _axis_rmatmul_ ( axis , another ) :
+    """ Create 2D or 3D histogram from axes
+    >>> xaxis = ...
+    >>> yaxis = ...
+    >>> h2 = xaxis @ yaxis ## 2D historam 
+    
+    >>> zaxis = ...
+    >>> h3 = h2    @ xaxis  ## 3D histogram 
+    """
+    if   isinstance ( another , ROOT.TH2   ) and 2 == another.GetDimension ()  :
+        return h3_axes ( another.GetXaxis () , another.GetYaxis () , axis )
+    elif isinstance ( another , ROOT.TH1   ) and 1 == another.GetDimension () :
+        return h2_axes ( another.GetXaxis () , axis ) 
+    elif isinstance ( another , ROOT.TAxis ) : return h2_axes ( another , axis )
+    ## 
+    return NotImplemented
+
+ROOT.TAxis .from_edges     = staticmethod ( axis_from_edges )
+ROOT.TAxis .from_bins      = staticmethod ( axis_from_edges )
 
 ROOT.TAxis . __iter__      = _axis_iterator_
 ROOT.TAxis . __reversed__  = _axis_iterator_reversed_
@@ -747,10 +813,17 @@ ROOT.TAxis. __floordiv__   = _axis_split_
 ROOT.TAxis . merge         = _axis_merge_ 
 ROOT.TAxis . __mod__       = _axis_merge_ 
 
+## multiply axes to get histograms 
+ROOT.TAxis. __matmul__     = _axis_matmul_
+ROOT.TAxis. __rmatmul__    = _axis_rmatmul_
+
+## join certain bins
+ROOT.TAxis . join          = _axis_join_ 
+
 ## change the range 
 ROOT.TAxis.range           = _axis_range_
 
-## create the historgam for the axis 
+## create the histogram for the axis 
 ROOT.TAxis.histo           = h1_axis
 ROOT.TAxis.histogram       = h1_axis
 ROOT.TAxis.histo1          = h1_axis
@@ -771,11 +844,82 @@ ROOT.TAxis.histogram3d     = h3_axes
 ROOT.TAxis.same_binning = axis_same_binning
 
 
-
-
-
-
-
+_decorated_classes_ = (
+    ROOT.TAxis  ,
+)
+_new_methods_  = (
+    #
+    ## create from bins 
+    ROOT.TAxis .from_edges     , 
+    ROOT.TAxis .from_bins      , 
+    #
+    ## basic operations
+    ROOT.TAxis . __iter__      , 
+    ROOT.TAxis . __reversed__  ,
+    ROOT.TAxis . __contains__  , 
+    ROOT.TAxis . __getitem__   , 
+    ROOT.TAxis . __eq__        , 
+    ROOT.TAxis . __ne__        , 
+    ## 
+    ROOT.TAxis . __str__       , 
+    ROOT.TAxis . __repr__      , 
+    ## 
+    ROOT.TAxis . __len__       , 
+    ## 
+    ROOT.TAxis . bin_iterator  , 
+    ROOT.TAxis . bin_edges     , 
+    ## 
+    ROOT.TAxis. edges          , 
+    ROOT.TAxis. edge_iterator  , 
+    ROOT.TAxis. edge           , 
+    ## 
+    ROOT.TAxis. uniform        , 
+    ## 
+    ROOT.TAxis.     items      , 
+    ROOT.TAxis. iteritems      , 
+    # 
+    ## change units
+    ROOT.TAxis . scale         , 
+    ROOT.TAxis . __mul__       , 
+    ROOT.TAxis . __rmul__      , 
+    #
+    ## finer binning
+    ROOT.TAxis. split          , 
+    ROOT.TAxis. __div__        , 
+    ROOT.TAxis. __truediv__    , 
+    ROOT.TAxis. __floordiv__   , 
+    # 
+    ## coarse binnig 
+    ROOT.TAxis . merge         , 
+    ROOT.TAxis . __mod__       , 
+    # 
+    ## multiply axes to get histograms 
+    ROOT.TAxis. __matmul__     , 
+    ROOT.TAxis. __rmatmul__    , 
+    # 
+    ## join certain bins
+    ROOT.TAxis . join          , 
+    # 
+    ## change the range 
+    ROOT.TAxis.range           , 
+    #
+    ## create the histogram from the axis/axes  
+    ROOT.TAxis.histo           , 
+    ROOT.TAxis.histogram       ,  
+    ROOT.TAxis.histo1          ,
+    ROOT.TAxis.histogram1      , 
+    ROOT.TAxis.histo2          , 
+    ROOT.TAxis.histogram2      , 
+    ROOT.TAxis.histo3          , 
+    ROOT.TAxis.histogram3      , 
+    ROOT.TAxis.histo1d         , 
+    ROOT.TAxis.histogram1d     , 
+    ROOT.TAxis.histo2d         , 
+    ROOT.TAxis.histogram2d     , 
+    ROOT.TAxis.histo3d         , 
+    ROOT.TAxis.histogram3d     , 
+    ## 
+    )
 # =============================================================================
 
 

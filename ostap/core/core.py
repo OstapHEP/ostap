@@ -236,9 +236,16 @@ else : # =================================================
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @see Ostap::Utils::rootID 
 #  @date   2011-06-07
-def rootID ( prefix = 'o_' , suffix = '' ) :
+def rootID ( prefix = 'root_' , suffix = '' ) :
     """ Construct the unique ROOT-id 
     """
+    if prefix : prefix = prefix.replace ( ' ' , '_' )
+    else      : prefix = 'root_'
+    if suffix : suffix = suffix.replace ( ' ' , '_' )
+    ## 
+    if            not prefix.endswith   ( '_' ) : prefix = prefix + '_'
+    if suffix and not suffix.startswith ( '_' ) : suffix = '_' + suffix 
+    ## 
     return  Ostap.Utils.rootID ( prefix , suffix )
 
 # =============================================================================

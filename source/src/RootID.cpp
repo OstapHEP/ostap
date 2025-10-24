@@ -45,6 +45,15 @@ std::string Ostap::Utils::rootID
 ( const std::string& prefix ,
   const std::string& suffix )
 {
+  // 
+  if ( !suffix.empty() || !prefix.empty() )
+    {
+      const std::string name { prefix + suffix } ;
+      if ( !usedRootID ( name ) ) { return name ; } 
+    }
+  //
+  if ( prefix.empty() ) { return rootID ( "root_" , suffix ) ; }
+  //
   TROOT* root = ROOT::GetROOT() ;
   if ( !root ) { return prefix + "0000" + suffix ; }
   //
@@ -54,7 +63,7 @@ std::string Ostap::Utils::rootID
       const std::string tag { prefix +
 	Ostap::format ( ( label <   10000 ) ? "%04u" :
 			( label < 1000000 ) ? "%06u" : "%u" , label ) + suffix } ;      
-      /// check ROOT & ROTO/RooFit 
+      /// check ROOT & ROOT/RooFit 
       if      ( nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
       else if ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
       /// 

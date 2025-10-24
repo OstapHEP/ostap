@@ -102,15 +102,19 @@ def _h_new_init_ ( self , *args ) :
 #  @attention clone is always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h_new_clone_ ( self , name = '' , title = '' , prefix = 'h_' , suffix = '' ) :
+def _h_new_clone_ ( self , name = '' , title = '' , prefix = '' , suffix = '' ) :
     """ Modifiled Clone-function
     - it automatically assigns unique ID
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
     - a title can be optionally redefined 
     """
-    if not name : name = hID ( prefix = prefix , suffix = suffix )
     #
+    if not name : name = hID ( prefix = prefix        , suffix = suffix )
+    else        : name = hID ( prefix = prefix + name , suffix = suffix )
+    #
+    ## replace blanks
+    name = name.replace ( ' ' , '_' ) 
     with ROOTCWD() :
         groot = ROOT.ROOT.GetROOT()
         groot.cd() 
@@ -118,7 +122,7 @@ def _h_new_clone_ ( self , name = '' , title = '' , prefix = 'h_' , suffix = '' 
         nh.SetDirectory ( groot )
         ## optionally 
         if not nh.GetSumw2() : nh.Sumw2()
-        
+
     if title : nh.SetTitle ( title ) 
     return nh
 
@@ -239,7 +243,6 @@ def _axis_bin_edges_ ( axis ) :
         for i in range ( nbins ) :
             left = xmin + i * binw 
             yield left , left + binw 
-
             
 # =============================================================================
 ## get item for the 1-D histogram 
@@ -253,7 +256,8 @@ def _h1_get_item_ ( h1 , ibin ) :
     if isinstance ( ibin , slice ) :
         start = ibin.start
         stop  = ibin.stop
-        assert  1 == ibin.step , "slice' step must be +1"
+        step  = ibin.step 
+        assert  step is None or 1 == step , "slice' step must be +1 or None: %s" % ibin.step 
         if start is None : start = 0 
         if stop  is None : stop  = len ( h1 ) 
         return _h1_getslice_ ( h1 , start , stop ) 
@@ -1703,8 +1707,7 @@ def _h1_iteritems_ ( h1 , low = 1 , high = sys.maxsize ) :
     sx = ax.GetNbins()
     if low  < 1   : low = 1 
     
-    for ix in range ( max (      1 , low  )  ,
-                      min ( sx + 1 , high ) ) : 
+    for ix in range ( max ( 1 , low  ) , min ( sx + 1 , high ) ) : 
         
         x   =       ax.GetBinCenter ( ix )
         xe  = 0.5 * ax.GetBinWidth  ( ix )
@@ -1712,14 +1715,12 @@ def _h1_iteritems_ ( h1 , low = 1 , high = sys.maxsize ) :
         y   =       h1.GetBinContent ( ix )
         ye  =       h1.GetBinError   ( ix )
         
-        yield ix, VE(x,xe*xe) , VE ( y,ye*ye)
+        yield ix , VE ( x , xe * xe ) , VE ( y , ye * ye )
         
-
 ROOT.TH1F  .     items     = _h1_iteritems_
 ROOT.TH1D  .     items     = _h1_iteritems_
 ROOT.TH1F  . iteritems     = _h1_iteritems_
 ROOT.TH1D  . iteritems     = _h1_iteritems_
-
 
 # =============================================================================
 ## Iterate over the values
@@ -2278,8 +2279,7 @@ def binomEff_h2 ( h1 , h2 , func = binomEff ) :
         if not h1.same_binning ( h2 ) :
             logger.warning ( 'binomEff: binnings are not the same, result can be biased!' )
     ## 
-    result = h1.Clone( hID () )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( suffix = 'binomEff' )
     #
     for ix1,iy1,x1,y1,z1 in h1.items() :
         #
@@ -2333,8 +2333,7 @@ def binomEff_h3 ( h1 , h2 , func = binomEff ) :
         if not h1.same_binning ( h2 ) :
             logger.warning ( 'binomEff: binnings are not the same, result can be biased!' )
     ## 
-    result = h1.Clone( hID () )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone( suffix = '_binomEff' ) 
     #
     for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
@@ -2404,8 +2403,7 @@ def zechEff_h1 ( h1 , h2 , func = zechEff ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
-    result = h1.Clone( hID () )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone( suffix = '_binomEff' )
     #
     for i1,x1,y1 in h1.items() :
         #
@@ -2456,8 +2454,7 @@ def zechEff_h2 ( h1 , h2 ) :
         if not h1.same_binning ( h2 ) :
             logger.warning ( 'zechEff: binnings are not the same, result can be biased!' )
     ##         
-    result = h1.Clone( hID () )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( suffix = '_zechEff' )
     #
     for ix1,iy1,x1,y1,z1 in h1.items() :
         #
@@ -2509,8 +2506,7 @@ def zechEff_h3 ( h1 , h2 ) :
         if not h1.same_binning ( h2 ) :
             logger.warning ( 'zechEff: binnings are not the same, result can be biased!' )
     ##         
-    result = h1.Clone( hID () )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone( suffix = '_zechEff' )
     #
     for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
@@ -2683,12 +2679,15 @@ def objectAsFunctionObject ( obj ) :
 ## operation with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h1_oper_ ( h1 , h2 , oper ) :
+def _h1_oper_ ( h1 , h2 , oper , prefix = '' , suffix = '' ) :
     """ Operation with the histogram
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 (oper) h2 
     """
+    ## 
+    assert callable ( oper ) , "`oper' is not callable!"
+    ## 
     if isinstance ( h1 , ROOT.TProfile ) :
         hh = h1.asH1()
         return _h1_oper_ ( hh , h2 , oper ) 
@@ -2696,9 +2695,7 @@ def _h1_oper_ ( h1 , h2 , oper ) :
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
-
+    result = h1.clone ( prefix = prefix , suffix = suffix )
     ## 
     f2 = objectAsFunction ( h2 )
     
@@ -2731,6 +2728,8 @@ def _h1_ioper_ ( h1 , h2 , oper ) :
     >>> h2 (oper) obj    
     """
     ##
+    assert callable ( oper ) , "`oper' i snot callable!"
+    ## 
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
@@ -2763,7 +2762,7 @@ def _h1_div_ ( h1 , h2 ) :
     >>> result = h1 / h2  
     """
     #
-    return _h1_oper_ ( h1 , h2 , lambda x,y : x/y ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : x/y , prefix = 'div' ) 
 # =============================================================================
 ##  Division with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2774,7 +2773,7 @@ def _h1_mul_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 * h2  
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : x*y ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : x*y , prefix = 'mul' ) 
 # =============================================================================
 ##  Addition with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2785,7 +2784,7 @@ def _h1_add_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 + h2  
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : x+y ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : x+y , prefix = 'add' ) 
 # =============================================================================
 ## Subtraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2796,7 +2795,7 @@ def _h1_sub_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 - h2  
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : x-y ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : x-y , prefix = 'sub' ) 
 # =============================================================================
 ##  Fraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2807,7 +2806,7 @@ def _h1_frac_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1.frac  ( h2 ) 
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : x.frac(y) ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : x.frac(y) , prefix = 'frac' ) 
 # =============================================================================
 ##  ``Asymmetry'' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2818,7 +2817,7 @@ def _h1_asym_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1.asym ( h2 )     
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : x.asym(y) ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : x.asym(y) , prefix = 'asym' ) 
 
 
 # =============================================================================
@@ -2826,24 +2825,24 @@ def _h1_asym_ ( h1 , h2 ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-09-11
 def _h1_min_ ( h1 , h2 ) :
-    """ `minimum' the histogram min(j1,h2)
+    """ `minimum' the histogram min(h1,h2)
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1.min ( h2 )     
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) , prefix = 'min' ) 
 
 # =============================================================================
 ## `maximum' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-09-11
 def _h1_max_ ( h1 , h2 ) :
-    """ `maximum' the histogram min(j1,h2)
+    """ `maximum' the histogram min(h1,h2)
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1.max ( h2 )     
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) , prefix = 'max' ) 
 
 
 # =============================================================================
@@ -2856,7 +2855,7 @@ def _h1_diff_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1.diff ( h2 )     
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : 2*x.asym(y) )
+    return _h1_oper_ ( h1 , h2 , lambda x,y : 2*x.asym(y) , prefix = 'diff' ) 
 
 # =============================================================================
 ##  ``Chi2-tension'' of the histograms 
@@ -2868,7 +2867,7 @@ def _h1_chi2_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1.chi2  ( h2 )     
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : VE ( x.chi2 ( y ) , 0 ) ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : VE ( x.chi2 ( y ) , 0 ) , prefix = 'chi2' ) 
 # =============================================================================
 ##  ``Average'' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2879,7 +2878,7 @@ def _h1_average_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1.average  ( h2 )     
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : x.mean ( y ) ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : x.mean ( y ) , prefix = 'avg' ) 
 
 # =============================================================================
 ## 'pow' the histograms 
@@ -2896,8 +2895,7 @@ def _h1_pow_ ( h1 , val ) :
     #
     if not h1.GetSumw2() : h1.Sumw2()
     #
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( prefix  = 'pow' )
     #
     for i1,x1,y1 in h1.items() :
         #
@@ -2925,8 +2923,7 @@ def _h1_abs_ ( h1 ) :
     """
     if not h1.GetSumw2() : h1.Sumw2()
     #
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( prefix = 'abs' )
     #
     for i1,x1,y1 in h1.items() :
         #
@@ -2976,6 +2973,7 @@ def _h1_iadd_ ( h1 , h2 ) :
     >>> h1 +=  h2     
     """
     return _h1_ioper_ ( h1 , h2 , lambda x,y : x+y ) 
+
 # =============================================================================
 ##  Subtraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2998,7 +2996,7 @@ def _h1_rdiv_ ( h1 , h2 ) :
     >>> obj    = ...
     >>> result = obj / h1 
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : y/x ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : y/x , prefix = 'rdiv' ) 
 # =============================================================================
 ## Multiplication with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3009,7 +3007,7 @@ def _h1_rmul_ ( h1 , h2 ) :
     >>> obj    = ...
     >>> result = obj * h1 
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : y*x ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : y*x , prefix = 'rmul') 
 
 # =============================================================================
 ## Addition with the histograms 
@@ -3021,7 +3019,7 @@ def _h1_radd_ ( h1 , h2 ) :
     >>> obj    = ...
     >>> result = obj + h1 
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : y+x )
+    return _h1_oper_ ( h1 , h2 , lambda x,y : y+x , prefix = 'radd' )
 
 # =============================================================================
 ## Subtraction of the histograms 
@@ -3033,7 +3031,7 @@ def _h1_rsub_ ( h1 , h2 ) :
     >>> obj    = ...
     >>> result = obj - h1 
     """
-    return _h1_oper_ ( h1 , h2 , lambda x,y : y-x ) 
+    return _h1_oper_ ( h1 , h2 , lambda x,y : y-x , prefix = 'rsub' ) 
 
 # =============================================================================
 ## Feed the histogram from other object, e.g. function
@@ -3580,7 +3578,7 @@ def _h3_random_ ( h3 ) :
     #
     h3.GetRandom3 ( x , y , z )
     #
-    return float( x.value ) , float( y.value ) , float( z.value )
+    return float ( x.value ) , float ( y.value ) , float ( z.value )
 
 
 ROOT.TH2F.random = _h2_random_
@@ -3629,8 +3627,7 @@ def _h2_shoot_ ( h2 , N , accept = lambda x,y : True ) :
     >>> h2 = ...
     >>> for x,y in h2.shoot ( 10 ) :
     >>> .... 
-    """
-    
+    """    
     assert isinstance ( N , integer_types ) and 0 <= N ,\
            'Invalid number of random shoots!'
     
@@ -3678,17 +3675,19 @@ ROOT.TH3D.shoot = _h3_shoot_
 ## operation with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h2_oper_ ( h1 , h2 , oper ) :
+def _h2_oper_ ( h1 , h2 , oper , prefix = '' , suffix = '' ) :
     """ Operation with the histogram        
     >>> h1     = ...
     >>> h2     = ...
     >>> result = h1 (oper) h2    
     """
+    ## 
+    assert callable ( oper ) , "`oper' is not callable!"
+    ##
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( prefix = prefix , suffix = suffix )
     #
     f2 = objectAsFunction ( h2 )
     # 
@@ -3717,6 +3716,9 @@ def _h2_ioper_ ( h1 , h2 , oper ) :
     """
     Operation with the histogram 
     """
+    ##
+    assert callable ( oper ) , "`oper' is not callable!"
+    ## 
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
@@ -3730,7 +3732,6 @@ def _h2_ioper_ ( h1 , h2 , oper ) :
         z2 = f2 ( x1.value() , y1.value() ) 
         #
         v  = VE ( oper ( z1 , z2 ) )
-
         #
         if not v.isfinite() : continue 
         #
@@ -3751,7 +3752,7 @@ def _h2_div_ ( h1 , h2 ) :
     >>> result = h1 / h2
     
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x/y ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x/y , prefix = 'div' ) 
 # =============================================================================
 ## Division with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3762,7 +3763,7 @@ def _h2_mul_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 * h2 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x*y ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x*y , prefix = 'mul' ) 
 # =============================================================================
 ## Addition with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3773,7 +3774,7 @@ def _h2_add_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 + h2 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x+y ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x+y , prefix = 'add' ) 
 # =============================================================================
 ## Subtraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3784,7 +3785,7 @@ def _h2_sub_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 - h2 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x-y ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x-y , prefix = 'sub' ) 
 
 
 # =============================================================================
@@ -3795,10 +3796,9 @@ def _h2_rdiv_ ( h1 , h2 ) :
     """ Divide the histograms    
     >>> h1     = ...
     >>> h2     = ...
-    >>> result = h1 / h2
-    
+    >>> result = h1 / h2    
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : y/x ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : y/x , prefix = 'rdiv' ) 
 # =============================================================================
 ## Division with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3809,7 +3809,7 @@ def _h2_rmul_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 * h2 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : y*x ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : y*x , prefix = 'rmul' ) 
 # =============================================================================
 ## Addition with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3820,7 +3820,7 @@ def _h2_radd_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 + h2 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : y+x ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : y+x , prefix = 'radd' ) 
 # =============================================================================
 ## Subtraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3831,7 +3831,7 @@ def _h2_rsub_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 - h2 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : y-x ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : y-x , prefix = 'rsub' ) 
 
 
 # =============================================================================
@@ -3844,7 +3844,7 @@ def _h2_frac_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> frac   = h1.frac ( h2 )
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x.frac(y) ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x.frac(y) , prefix = 'frac' ) 
 # =============================================================================
 ## ``Asymmetry'' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3855,8 +3855,7 @@ def _h2_asym_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> asym   = h1.asym ( h2 )
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x.asym(y) )
-
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x.asym(y) , prefix = 'asym' )
 
 # =============================================================================
 ## ``minimum'' of the histograms 
@@ -3868,7 +3867,7 @@ def _h2_min_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> asym   = h1.min ( h2 )
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) )
+    return _h2_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) , prefix = 'min' )
 
 # =============================================================================
 ## ``maximum'' of the histograms 
@@ -3880,8 +3879,7 @@ def _h2_max_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> asym   = h1.max ( h2 )
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) )
-
+    return _h2_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) , prefix = 'max' )
 
 # =============================================================================
 ## ``Difference'' of the histograms 
@@ -3893,7 +3891,7 @@ def _h2_diff_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> diff   = h1.diff ( h2 )
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : 2*x.asym(y) ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : 2*x.asym(y) , prefix = 'diff' ) 
 # =============================================================================
 ##  ``Chi2-tension'' the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3904,7 +3902,7 @@ def _h2_chi2_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> chi2   = h1.chi2 ( h2 ) 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : VE ( x.chi2 ( y ) , 0 ) ) 
+    return _h2_oper_ ( h1 , h2 , lambda x,y : VE ( x.chi2 ( y ) , 0 ) , prefix = 'chi2' ) 
 
 # =============================================================================
 ##  ``Average'' the histograms 
@@ -3916,7 +3914,7 @@ def _h2_average_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> mean   = h1.average ( h2 ) 
     """
-    return _h2_oper_ ( h1 , h2 , lambda x,y : x.mean ( y ) )  
+    return _h2_oper_ ( h1 , h2 , lambda x,y : x.mean ( y ) , prefix = 'avg' )  
 
 # =============================================================================
 ## 'pow' the histograms 
@@ -3929,8 +3927,7 @@ def _h2_pow_ ( h1 , val ) :
     """
     if not h1.GetSumw2() : h1.Sumw2()
     #
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( prefix = 'pow' )
     #
     for ix1,iy1,x1,y1,z1 in h1.items() :
         #
@@ -3958,8 +3955,7 @@ def _h2_abs_ ( h1 ) :
     """
     if not h1.GetSumw2() : h1.Sumw2()
     #
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone( prefix = 'abs') 
     #
     for ix1,iy1,x1,y1,z1 in h1.items() :
         #
@@ -4021,10 +4017,10 @@ def _h2_isub_ ( h1 , h2 ) :
     return _h2_ioper_ ( h1 , h2 , lambda x,y : x-y ) 
 # =============================================================================
 
-def _h2_box_   ( self , opts = '' ) : return self.Draw ( opts + ' box'   )
-def _h2_lego_  ( self , opts = '' ) : return self.Draw ( opts + ' lego'  )
-def _h2_surf_  ( self , opts = '' ) : return self.Draw ( opts + ' surf'  )
-def _h2_surf2_ ( self , opts = '' ) : return self.Draw ( opts + ' surf2' )
+def _h2_box_   ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' box'   , **kwargs )
+def _h2_lego_  ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' lego'  , **kwargs )
+def _h2_surf_  ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' surf'  , **kwargs )
+def _h2_surf2_ ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' surf2' , **kwargs )
 
 # =============================================================================
 ## decorate 
@@ -4064,24 +4060,23 @@ for t in ( ROOT.TH2F , ROOT.TH2D ) :
     t .  surf        = _h2_surf_
     t .  surf2       = _h2_surf2_
 
-
-
 # =============================================================================
 ## operation with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h3_oper_ ( h1 , h2 , oper ) :
+def _h3_oper_ ( h1 , h2 , oper , prefix = '' , suffix = '' ) :
     """ Operation with the 3D-histogram     
     >>> h1 = ...
     >>> h2 = ...
     >>> h3 = h1 (oper) h2    
     """
+    ## 
+    assert callable ( oper ) , "`oper' is not callable!"
+    ##
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
-
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( prefix = prefix , suffix = suffix  )
     #
     f2 = objectAsFunction ( h2 ) 
     #
@@ -4110,6 +4105,9 @@ def _h3_oper_ ( h1 , h2 , oper ) :
 def _h3_ioper_ ( h1 , h2 , oper ) :
     """ Operation with the 3D-histogram 
     """
+    ##
+    assert callable ( oper ) , "`oper' is not callable!"
+    ## 
     if                                 not h1.GetSumw2() : h1.Sumw2()
     if hasattr ( h2 , 'GetSumw2' ) and not h2.GetSumw2() : h2.Sumw2()
     #
@@ -4142,7 +4140,7 @@ def _h3_div_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1 / h2 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : x/y ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : x/y , prefix = 'div' ) 
 # =============================================================================
 ##  Division with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4153,7 +4151,7 @@ def _h3_mul_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1 * h2 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : x*y ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : x*y , prefix = 'mul' ) 
 # =============================================================================
 ##  Addition with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4164,7 +4162,7 @@ def _h3_add_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1 + h2 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : x+y ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : x+y , prefix = 'add'  ) 
 # =============================================================================
 ##  Subtraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4175,7 +4173,7 @@ def _h3_sub_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1 - h2 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : x-y ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : x-y , prefix = 'sub' ) 
 # =============================================================================
 ##  ``Fraction'' of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4186,7 +4184,7 @@ def _h3_frac_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1.frac ( h2 )    
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : x.frac(y) )
+    return _h3_oper_ ( h1 , h2 , lambda x,y : x.frac(y) , prefix = 'frac' )
 
 # =============================================================================
 ##  ``Asymmetry'' of the histograms 
@@ -4198,7 +4196,7 @@ def _h3_asym_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1.asym ( h2 )    
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : x.asym(y) ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : x.asym(y) , prefix = 'asym' ) 
 
 
 # =============================================================================
@@ -4211,7 +4209,7 @@ def _h3_min_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> asym   = h1.min ( h2 )
     """
-    return _h23_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) )
+    return _h3_oper_ ( h1 , h2 , lambda x,y : min ( x , y ) , prefix = 'min' )
 
 # =============================================================================
 ## ``maximum'' of the histograms 
@@ -4223,8 +4221,7 @@ def _h3_max_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> asym   = h1.max ( h2 )
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) )
-
+    return _h3_oper_ ( h1 , h2 , lambda x,y : max ( x , y ) , prefix = 'max' )
 
 # =============================================================================
 ##  ``Chi2-tension'' the histograms 
@@ -4236,7 +4233,7 @@ def _h3_chi2_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1.chi2 ( h2 )    
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : VE ( x.chi2 ( y ) , 0 ) ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : VE ( x.chi2 ( y ) , 0 ) , prefix = 'chi2' ) 
 # =============================================================================
 ##  ``Average'' the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4247,9 +4244,7 @@ def _h3_average_ ( h1 , h2 ) :
     >>> h2 = ...
     >>> h3 = h1.average ( h2 ) 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : x.mean ( y ) )  
-
-
+    return _h3_oper_ ( h1 , h2 , lambda x,y : x.mean ( y ) , prefix = 'avg' )  
 
 # =============================================================================
 ## 'pow' the histograms 
@@ -4262,8 +4257,7 @@ def _h3_pow_ ( h1 , val ) :
     """
     if not h1.GetSumw2() : h1.Sumw2()
     #
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( prefix = 'pow' )
     #
     for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
@@ -4290,7 +4284,7 @@ def _h3_rdiv_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 / h2    
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : y/x ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : y/x , prefix = 'rdiv' ) 
 # =============================================================================
 ## Division with the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4301,7 +4295,7 @@ def _h3_rmul_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 * h2 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : y*x ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : y*x , prefix = 'rmul' ) 
 
 # =============================================================================
 ## Addition with the histograms 
@@ -4313,7 +4307,7 @@ def _h3_radd_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 + h2 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : y+x ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : y+x , prefix = 'radd' ) 
 # =============================================================================
 ## Subtraction of the histograms 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4324,7 +4318,7 @@ def _h3_rsub_ ( h1 , h2 ) :
     >>> h2     = ...
     >>> result = h1 - h2 
     """
-    return _h3_oper_ ( h1 , h2 , lambda x,y : y-x ) 
+    return _h3_oper_ ( h1 , h2 , lambda x,y : y-x , prefix = 'rsub' ) 
 
 # =============================================================================
 ## 'abs' the histograms 
@@ -4337,8 +4331,7 @@ def _h3_abs_ ( h1 ) :
     """
     if not h1.GetSumw2() : h1.Sumw2()
     # 
-    result = h1.Clone( hID() )
-    if not result.GetSumw2() : result.Sumw2()
+    result = h1.clone ( prefix = 'abs' )
     #
     for ix1,iy1,iz1,x1,y1,z1,v1 in h1.items() :
         #
@@ -4430,7 +4423,6 @@ ROOT.TH3.  average = _h3_average_
 ROOT.TH3.  min     = _h3_min_
 ROOT.TH3.  max     = _h3_max_
 
-
 # =============================================================================
 ## Update value of histogram from the function.
 #  For each bin the integral of the function within the bin is used.
@@ -4502,7 +4494,7 @@ def h1_sumv ( histo , forward = True ) :
     assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , \
         "Invalid `histo' type %s" % type ( histo ) 
                         
-    result = histo.Clone ( hID () )
+    result = histo.clone ( prefix = 'sumv' )
     result.Reset() 
     if not result.GetSumw2() : result.Sumw2()
 
@@ -4536,7 +4528,7 @@ def _h1_effic_ ( h , cut_low ) :
     >>> he = h.effic ( 14.2 , cut_low = True )    
     """
     
-    result = h.Clone ( hID() )
+    result = h.clone ( prefix = 'eff')
     result.Reset() 
     if not result.GetSumw2() : result.Sumw2()
 
@@ -4750,7 +4742,7 @@ def _h1_signif_ ( h1 ) :
     if not h1.natural() : logger.warning ( "The input histogram is not `natural`!")
     ## get-pvalue 
     hp = h1.effic ( cut_low = True )
-    hs = hp.clone ()
+    hs = hp.clone ( prefix  = 'signif' )
 
     the_last = VE ()
     for i, _ , y in hs.items() :
@@ -4818,7 +4810,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 , silent = True ) :
     #
     ## clone the input histogram
     #
-    h2  = h1.Clone ( hID () ) ; h2.Reset() ;
+    h2  = h1.clone ( prefix = 'smear' ) ; h2.Reset() ;
     if not h2.GetSumw2() : h2.Sumw2()
 
     first_bin = None
@@ -4931,7 +4923,7 @@ def _h1_convolute_ ( h1 , resolution , as_pdf = False ) :
     ## 
     if as_pdf : return pdf   ## RETURN 
 
-    hr  = h1.clone()
+    hr  = h1.clone( prefix = 'convol' )
     hr.Reset ()
     if not hr.GetSumw2() : hr.Sumw2()
 
@@ -4955,7 +4947,8 @@ def  _h1_smooth_ ( h1 , ntimes = 1 ) :
     """
     assert isinstance ( ntimes , integer_types ) and 1 <= ntimes ,\
            "Invalid `ntimes` parameter! "
-    result = h1.clone( suffix = '_smooth_%d' % ntimes ) 
+
+    result = h1.clone( prefix = 'smooth' if 1 == ntimes else 'smooth%d' % ntimes ) 
     result .Smooth ( ntimes )
     return result
 
@@ -5014,23 +5007,28 @@ ROOT.TH3D.the_integral = _h3_integral_err_
 ## make transformation of histogram content 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
-def _h1_transform_ ( h1 , func ) :
+def _h1_transform_ ( h1 , func , prefix = '' , suffix = '' ) :
     """ Make the transformation of the histogram content     
     >>> func = lambda x,y: y   ## identical transformation/copy
     >>> h1 = ...
     >>> h2 = h1.fransform ( func )     
     """
+    ## 
+    assert callable ( func  ) , "`func' is not callable!"
+    ##
     #
     if not h1.GetSumw2() : h1.Sumw2()
-    h2 = h1.Clone( hID() )
-    if not h2.GetSumw2() : h2.Sumw2()
+    ## 
+    title = "Transformed: %s" % ( h1.GetTitle() if h1.GetTitle() else h1.GetName() )
+    if prefix : title += ' ' + prefix
+    if suffix : title += ' ' + suffix 
+    ##
+    if not prefix and not suffix : suffix = 'transform'
+    hh = h1.clone ( h1.GetName () , title  = title , prefix = prefix , suffix = suffix ) 
     #
-    for i,x,y in h1.items() :
-        
-        h2 [ i ] = func ( x, y ) 
-        
-    h2.ResetStats() 
-    return h2 
+    for i , x , y in h1.items() : hh [ i ] = func ( x, y )         
+    hh.ResetStats() 
+    return hh 
 
 ROOT.TH1F. transform = _h1_transform_ 
 ROOT.TH1D. transform = _h1_transform_ 
@@ -5038,57 +5036,62 @@ ROOT.TH1D. transform = _h1_transform_
 import ostap.math.math_ve as math_ve
 for h in ( ROOT.TH1F , ROOT.TH1D ) : 
     
-    h. __exp__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.exp    ( y ) ) 
-    h. __expm1__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.expm1  ( y ) ) 
-    h. __log__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.log    ( y ) )
-    h. __log10__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.log10  ( y ) )
-    h. __log1p__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.log1p  ( y ) )
-    h. __sqrt__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sqrt   ( y ) )
-    h. __cbrt__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.cbrt   ( y ) )
-    h. __sin__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sin    ( y ) )
-    h. __cos__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.cos    ( y ) )
-    h. __tan__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.tan    ( y ) )
-    h. __sinh__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sinh   ( y ) )
-    h. __cosh__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.cosh   ( y ) )
-    h. __tanh__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.tanh   ( y ) )
-    h. __sech__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sech   ( y ) )
-    h. __asin__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.asin   ( y ) )
-    h. __acos__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.acos   ( y ) )
-    h. __atan__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.atan   ( y ) )
-    h. __asinh__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.asinh  ( y ) )
-    h. __acosh__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.acosh  ( y ) )
-    h. __atanh__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.atanh  ( y ) )
-    h. __erf__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erf    ( y ) )
-    h. __erfc__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erfc   ( y ) )
-    h. __erfi__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erfi   ( y ) )
-    h. __erfcx__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erfcx  ( y ) )
-    h. __gamma__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.gamma  ( y ) )
-    h. __tgamma__ = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.tgamma ( y ) )
-    h. __lgamma__ = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.lgamma ( y ) )
-    h. __igamma__ = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.igamma ( y ) )
+    h. __exp__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.exp    ( y ) , prefix = 'exp'    ) 
+    h. __expm1__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.expm1  ( y ) , prefix = 'expm1'  ) 
+    h. __log__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.log    ( y ) , prefix = 'log'    )
+    h. __log10__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.log10  ( y ) , prefix = 'log10'  ) 
+    h. __log1p__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.log1p  ( y ) , prefix = 'log1p'  )
+    h. __sqrt__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sqrt   ( y ) , prefix = 'sqrt'   )
+    h. __cbrt__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.cbrt   ( y ) , prefix = 'cdrt'   )
+    h. __sin__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sin    ( y ) , prefix = 'sin'    )
+    h. __cos__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.cos    ( y ) , prefix = 'cos'    )
+    h. __tan__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.tan    ( y ) , prefix = 'tan'    )
+    h. __sinh__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sinh   ( y ) , prefix = 'sinh'   )
+    h. __cosh__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.cosh   ( y ) , prefix = 'cosh'   )  
+    h. __tanh__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.tanh   ( y ) , prefix = 'tanh'   )
+    h. __sech__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.sech   ( y ) , prefix = 'sech'   )
+    h. __asin__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.asin   ( y ) , prefix = 'asin'   )
+    h. __acos__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.acos   ( y ) , prefix = 'acos'   )
+    h. __atan__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.atan   ( y ) , prefix = 'atan'   )
+    h. __asinh__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.asinh  ( y ) , prefix = 'asinh'  )
+    h. __acosh__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.acosh  ( y ) , prefix = 'acosh'  ) 
+    h. __atanh__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.atanh  ( y ) , prefix = 'atanh'  )
+    h. __erf__    = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erf    ( y ) , prefix = 'erf'    )
+    h. __erfc__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erfc   ( y ) , prefix = 'erfc'   )
+    h. __erfi__   = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erfi   ( y ) , prefix = 'erfi'   )
+    h. __erfcx__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.erfcx  ( y ) , prefix = 'erfcx'  )
+    h. __gamma__  = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.gamma  ( y ) , prefix = 'gamma'  )
+    h. __tgamma__ = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.tgamma ( y ) , prefix = 'tgamma' )
+    h. __lgamma__ = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.lgamma ( y ) , prefix = 'lgamma' )
+    h. __igamma__ = lambda s : _h1_transform_ ( s , lambda x,y : math_ve.igamma ( y ) , prefix = 'igamma' )
     
     
 # =============================================================================
 ## make transformation of histogram content 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
-def _h2_transform_ ( h2 , func ) :
+def _h2_transform_ ( h2 , func , prefix = '' , suffix = '' ) :
     """ Make the transformation of the 2D-histogram content 
     >>> func = lambda x,y,z: z   ## identical transformation/copy
     >>> h2   = ...
     >>> h3   = h2.fransform ( func ) 
     """
-    #
+    ##
+    assert callable ( func  ) , "`func' is not callable!"
+    ##
     if not h2.GetSumw2() : h2.Sumw2()
-    h3 = h2.Clone( hID() )
-    if not h3.GetSumw2() : h3.Sumw2()
-    #
-    for ix,iy,x,y,z in h2.items() :
-        
-        h3 [ ix , iy ] = func ( x, y , z ) 
-        
-    h3.ResetStats() 
-    return h3 
+    ## 
+    title = "Transformed: %s" % ( h2.GetTitle() if h2.GetTitle() else h2.GetName() )
+    if prefix : title += ' ' + prefix
+    if suffix : title += ' ' + suffix
+    ## 
+    if not prefix and not suffix : suffix = 'transform'
+    ##
+    hh = h2.clone ( h2.GetName () , title  = title , prefix = prefix , suffix = suffix ) 
+    ##
+    for ix,iy,x,y,z in h2.items() : hh [ ix , iy ] = func ( x, y , z )     
+    hh.ResetStats()
+    return hh 
 
 ROOT.TH2F. transform = _h2_transform_ 
 ROOT.TH2D. transform = _h2_transform_ 
@@ -5096,30 +5099,34 @@ ROOT.TH2D. transform = _h2_transform_
 import ostap.math.math_ve as math_ve
 for h in ( ROOT.TH2F , ROOT.TH2D ) : 
     
-    h. __exp__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.exp    ( z ) ) 
-    h. __expm1__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.expm1  ( z ) ) 
-    h. __log__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.log    ( z ) )
-    h. __log10__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.log10  ( z ) )
-    h. __logp1__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.logp1  ( z ) )
-    h. __sqrt__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.sqrt   ( z ) )
-    h. __cbrt__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.cbrt   ( z ) )
-    h. __sin__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.sin    ( z ) )
-    h. __cos__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.cos    ( z ) )
-    h. __tan__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.tan    ( z ) )
-    h. __sinh__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.sinh   ( z ) )
-    h. __cosh__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.cosh   ( z ) )
-    h. __tanh__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.tanh   ( z ) )
-    h. __asin__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.asin   ( z ) )
-    h. __acos__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.acos   ( z ) )
-    h. __atan__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.atan   ( z ) )
-    h. __asinh__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.asinh  ( z ) )
-    h. __acosh__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.acosh  ( z ) )
-    h. __atanh__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.atanh  ( z ) )
-    h. __erf__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.erf    ( z ) )
-    h. __erfc__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.erfc   ( z ) )
-    h. __gamma__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.gamma  ( z ) )
-    h. __tgamma__ = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.tgamma ( z ) )
-    h. __lgamma__ = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.lgamma ( z ) )
+    h. __exp__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.exp    ( z ) , prefix = 'exp'    ) 
+    h. __expm1__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.expm1  ( z ) , prefix = 'expm1'  )  
+    h. __log__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.log    ( z ) , prefix = 'log'    )
+    h. __log10__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.log10  ( z ) , prefix = 'log10'  )
+    h. __logp1__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.log1p  ( z ) , prefix = 'log1p'  )
+    h. __sqrt__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.sqrt   ( z ) , prefix = 'sqrt'   )
+    h. __cbrt__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.cbrt   ( z ) , prefix = 'cbrt'   )
+    h. __sin__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.sin    ( z ) , prefix = 'sin'    )
+    h. __cos__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.cos    ( z ) , prefix = 'cos'    )
+    h. __tan__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.tan    ( z ) , prefix = 'tan'    ) 
+    h. __sinh__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.sinh   ( z ) , prefix = 'sinh'   )
+    h. __cosh__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.cosh   ( z ) , prefix = 'cosh'   )
+    h. __tanh__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.tanh   ( z ) , prefix = 'tanh'   )
+    h. __asin__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.asin   ( z ) , prefix = 'asin'   )
+    h. __acos__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.acos   ( z ) , prefix = 'acos'   ) 
+    h. __atan__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.atan   ( z ) , prefix = 'atan'   )
+    h. __asinh__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.asinh  ( z ) , prefix = 'asinh'  )
+    h. __acosh__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.acosh  ( z ) , prefix = 'acosh'  )
+    h. __atanh__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.atanh  ( z ) , prefix = 'atanh'  )
+    h. __erf__    = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.erf    ( z ) , prefix = 'erf'    )
+    h. __erfc__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.erfc   ( z ) , prefix = 'erfc'   )
+    h. __erfi__   = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.erfi   ( z ) , prefix = 'erfi'   )
+    h. __erfcx__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.erfcx  ( z ) , prefix = 'erfcx'  )
+    h. __gamma__  = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.gamma  ( z ) , prefix = 'gamma'  )
+    h. __tgamma__ = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.tgamma ( z ) , prefix = 'tgamma' )
+    h. __lgamma__ = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.lgamma ( z ) , prefix = 'lgamma' )
+    h. __igamma__ = lambda s : _h2_transform_ ( s , lambda x,y,z : math_ve.igamma ( z ) , prefix = 'igamma' )
+    
 
 # =============================================================================
 # Few "specific" transformations
@@ -5132,7 +5139,7 @@ def _h1_precision_ ( self ) :
     >>> h =
     >>> p = h.precision()    
     """
-    return _h1_transform_ ( self ,  lambda x,y  : y.precision() )
+    return _h1_transform_ ( self ,  lambda x,y  : y.precision() , prefix = 'prec' )
 # =============================================================================
 ## transform the histogram into "precision" histogram 
 def _h2_precision_ ( self ) :
@@ -5140,7 +5147,16 @@ def _h2_precision_ ( self ) :
     >>> h =
     >>> p = h.precision()
     """
-    return _h2_transform_ ( self ,  lambda x,y,z: z.precision() )
+    return _h2_transform_ ( self ,  lambda x,y,z: z.precision() , prefix = 'prec')
+# =============================================================================
+## transform the histogram into "precision" histogram 
+def _h3_precision_ ( self ) :
+    """ Make precision histogram, each bin constains ``precision''
+    >>> h =
+    >>> p = h.precision()
+    """
+    return _h3_transform_ ( self ,  lambda x,y,z,t: t.precision() , prefix = 'prec')
+
 # =============================================================================
 ## transform the histogram into "B/S" histogram 
 def _h1_b2s_       ( self ) :
@@ -5148,7 +5164,7 @@ def _h1_b2s_       ( self ) :
     >>> h    =
     >>> btos = h.b2s()    
     """
-    return _h1_transform_ ( self ,  lambda x,y  : y.b2s () )
+    return _h1_transform_ ( self ,  lambda x,y  : y.b2s () , prefix = 'b2s' ) 
 # =============================================================================
 ## transform the histogram into "B/S" histogram 
 def _h2_b2s_       ( self ) :
@@ -5156,16 +5172,28 @@ def _h2_b2s_       ( self ) :
     >>> h    =
     >>> btos = h.b2s()    
     """
-    return _h2_transform_ ( self ,  lambda x,y,z: z.b2s () )
+    return _h2_transform_ ( self ,  lambda x,y,z: z.b2s () , prefix = 'b2s' )
+# =============================================================================
+## transform the histogram into "B/S" histogram 
+def _h3_b2s_       ( self ) :
+    """ Make B/S histogram, each bin constains ``B/S''
+    >>> h    =
+    >>> btos = h.b2s()    
+    """
+    return _h3_transform_ ( self ,  lambda x,y,z,t: t.b2s () , prefix = 'b2s' )
 
 ROOT.TH1F. precision = _h1_precision_
 ROOT.TH1D. precision = _h1_precision_
 ROOT.TH2F. precision = _h2_precision_
 ROOT.TH2D. precision = _h2_precision_
+ROOT.TH3F. precision = _h3_precision_
+ROOT.TH3D. precision = _h3_precision_
 ROOT.TH1F. b2s       = _h1_b2s_
 ROOT.TH1D. b2s       = _h1_b2s_
 ROOT.TH2F. b2s       = _h2_b2s_
 ROOT.TH2D. b2s       = _h2_b2s_
+ROOT.TH3F. b2s       = _h3_b2s_
+ROOT.TH3D. b2s       = _h3_b2s_
 
 # =============================================================================
 ## rescale the histogram for effective uniform bins
@@ -5182,7 +5210,7 @@ def _h1_rescale_ ( h1 , factor = 1 ) :
     >>> h1 = ...
     >>> h2 = h1.rescale_bins ( h1 , 1 )    
     """
-    return _h1_transform_ ( h1  ,  lambda x , y : ( 0.5 * factor / x.error() ) * y )
+    return _h1_transform_ ( h1 , lambda x , y : ( 0.5 * factor / x.error() ) * y , prefix = 'rescale' )
 
 ROOT.TH1F. rescale_bins = _h1_rescale_ 
 ROOT.TH1D. rescale_bins = _h1_rescale_ 
@@ -5203,10 +5231,34 @@ def _h2_rescale_ ( h2 , factor = 1 ) :
     >>> h2 = h1.rescale_bins ( h1 , 1 )
     
     """
-    return _h2_transform_ ( h2  ,  lambda x , y , z : ( 0.25 * factor / x.error() / y.error() ) * z )
+    return _h2_transform_ ( h2 , lambda x , y , z : ( 0.25 * factor / x.error() / y.error() ) * z , prefix = 'rescale')
 
 ROOT.TH2F. rescale_bins = _h2_rescale_ 
-ROOT.TH2D. rescale_bins = _h2_rescale_ 
+ROOT.TH2D. rescale_bins = _h2_rescale_
+
+# =============================================================================
+## rescale the histogram for effective uniform bins
+#  new_content = old_content * factor / bin_area
+#  @code
+#  >>> h2 = ...
+#  >>> h3 = h2.rescale_bins ( h2 , 1 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-03-19   
+def _h3_rescale_ ( h3 , factor = 1 ) :
+    """ Rescale the histogram for effective uniform bins : 
+    new_bin_content = old_bin_content * factor / bin_area
+    >>> h1 = ...
+    >>> h2 = h1.rescale_bins ( h1 , 1 )    
+    """
+    return _h3_transform_ ( h3 ,
+                            lambda x , y , z, v : ( 0.125 * factor / ( x.error() * y.error() * z.error () ) * v ) ,
+                            prefix = 'rescale' )
+
+ROOT.TH3F. rescale_bins = _h3_rescale_ 
+ROOT.TH3D. rescale_bins = _h3_rescale_ 
+
+
 
 # =============================================================================
 ## sample the histogram using gaussian hypothesis
@@ -5651,30 +5703,17 @@ def _h1_getslice_ ( h1 , i , j ) :
     >>> h1 = ...
     >>> nh = h1[2:10] ## keep only bins from 2nd (inclusive) till 10 (exclusive)    
     """
-    axis = h1  .GetXaxis()
-    nb   = axis.GetNbins()
 
-    if i is None : i = 1
-    if j is None : j = nb + 1 
-    
-    while i < 0 : i += nb
-    while j < 0 : j += nb
-    
-    i = max ( 1 , min ( nb + 1 , i ) ) 
-    j = max ( 1 , min ( nb + 1 , j ) ) 
+    ## slice from axis 
+    new_axis = h1  .GetXaxis() [ i : j ]
 
-    if i >= j :
-        raise IndexError 
+    htype    = h1.__class__
+    result   = htype ( hID  ( suffix = 'slice' ) ,
+                       h1.GetTitle()             ,
+                       new_axis.GetNbins()       ,
+                       array.array ( 'd' , new_axis.edges() ) )
     
-    edges = axis.edges ()
-    edges = edges [i-1:j]
-    
-    typ = h1.__class__
-    result = typ ( hID  ()       ,
-                   h1.GetTitle() ,
-                   len ( edges ) - 1 , array.array ( 'd' , edges ) )
-    
-    result.Sumw2()
+    if not result.GetSumw2() : result.Sumw2()    
     result += h1
     
     return result 
@@ -6215,46 +6254,63 @@ def _h3_integrate_ ( h                         ,
 ## make transformation of histogram content 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-10-23  
-def _h3_transform_ ( h3 , func ) :
+def _h3_transform_ ( h3 , func , prefix = '' , suffix = ''  ) :
     """ Make the transformation of the 2D-histogram content 
     >>> func = lambda x,y,z,v: v   ## identical transformation/copy
     >>> h3   = ...
     >>> h3   = h3.fransform ( func ) 
     """
-    #
+    ##
+    assert callable ( func  ) , "`func' is not callable!"
+    ##
     if not h3.GetSumw2() : h3.Sumw2()
-    hn = h3.Clone ( hID() )
-    if not hn.GetSumw2() : hn.Sumw2()
+    ##
+    title = "Transformed: %s" % ( h3.GetTitle() if h3.GetTitle() else h3.GetName() )
+    if prefix : title += ' ' + prefix
+    if suffix : title += ' ' + suffix
+    ## 
+    if not prefix and not suffix : suffix = 'transform'
+    ##
+    hh  = h3.clone ( h3.GetName () , title  = title , prefix = prefix , suffix = suffix ) 
     #
-    for ix,iy,iz, x,y,z, v  in h3.items() :        
-        hn [ ix , iy , iz ] = func ( x, y , z , v ) 
-        
-    hn.ResetStats() 
-    return hn 
+    for ix,iy,iz, x,y,z, v  in h3.items() : hh  [ ix , iy , iz ] = func ( x, y , z , v )         
+    hh.ResetStats() 
+    return hh
 
 ROOT.TH3F. transform = _h3_transform_ 
 ROOT.TH3D. transform = _h3_transform_ 
 
-# =============================================================================
-## rescale the histogram for effective uniform bins
-#  new_content = old_content * factor / bin_area
-#  @code
-#  >>> h2 = ...
-#  >>> h3 = h2.rescale_bins ( h2 , 1 )
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2014-03-19   
-def _h3_rescale_ ( h3 , factor = 1 ) :
-    """ Rescale the histogram for effective uniform bins : 
-    new_bin_content = old_bin_content * factor / bin_area
-    >>> h1 = ...
-    >>> h2 = h1.rescale_bins ( h1 , 1 )
+import ostap.math.math_ve as math_ve
+for h in ( ROOT.TH3F , ROOT.TH3D ) : 
     
-    """
-    return _h3_transform_ ( h3 , lambda x , y , z, v : ( 0.125 * factor / ( x.error() * y.error() * z.error () ) * v ) )
-
-ROOT.TH3F. rescale_bins = _h3_rescale_ 
-ROOT.TH3D. rescale_bins = _h3_rescale_ 
+    h. __exp__    = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.exp    ( t ) , prefix = 'exp'    ) 
+    h. __expm1__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.expm1  ( t ) , prefix = 'expm1'  )  
+    h. __log__    = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.log    ( t ) , prefix = 'log'    )
+    h. __log10__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.log10  ( t ) , prefix = 'log10'  )
+    h. __logp1__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.log1p  ( t ) , prefix = 'log1p'  )
+    h. __sqrt__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.sqrt   ( t ) , prefix = 'sqrt'   )
+    h. __cbrt__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.cbrt   ( t ) , prefix = 'cbrt'   )
+    h. __sin__    = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.sin    ( t ) , prefix = 'sin'    )
+    h. __cos__    = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.cos    ( t ) , prefix = 'cos'    )
+    h. __tan__    = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.tan    ( t ) , prefix = 'tan'    ) 
+    h. __sinh__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.sinh   ( t ) , prefix = 'sinh'   )
+    h. __cosh__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.cosh   ( t ) , prefix = 'cosh'   )
+    h. __tanh__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.tanh   ( t ) , prefix = 'tanh'   )
+    h. __asin__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.asin   ( t ) , prefix = 'asin'   )
+    h. __acos__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.acos   ( t ) , prefix = 'acos'   ) 
+    h. __atan__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.atan   ( t ) , prefix = 'atan'   )
+    h. __asinh__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.asinh  ( t ) , prefix = 'asinh'  )
+    h. __acosh__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.acosh  ( t ) , prefix = 'acosh'  )
+    h. __atanh__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.atanh  ( t ) , prefix = 'atanh'  )
+    h. __erf__    = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.erf    ( t ) , prefix = 'erf'    )
+    h. __erfc__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.erfc   ( t ) , prefix = 'erfc'   )
+    h. __erfi__   = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.erfi   ( t ) , prefix = 'erfi'   )
+    h. __erfcx__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.erfcx  ( t ) , prefix = 'erfcx'  )
+    h. __gamma__  = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.gamma  ( t ) , prefix = 'gamma'  )
+    h. __tgamma__ = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.tgamma ( t ) , prefix = 'tgamma' )
+    h. __lgamma__ = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.lgamma ( t ) , prefix = 'lgamma' )
+    h. __igamma__ = lambda s : _h3_transform_ ( s , lambda x,y,z,t : math_ve.igamma ( t ) , prefix = 'igamma' )
+    
 
 ROOT.TH1F .   shift     = _h1_shift_
 ROOT.TH1D .   shift     = _h1_shift_
@@ -6266,7 +6322,6 @@ ROOT.TH1D . __ilshift__ = _h1_ilshift_
 ROOT.TH1F . __ilshift__ = _h1_ilshift_
 ROOT.TH1D . __irshift__ = _h1_irshift_
 ROOT.TH1F . __irshift__ = _h1_irshift_
-
 
 # =============================================================================    
 for t in ( ROOT.TH1F , ROOT.TH1D ) :    

@@ -243,7 +243,7 @@ bool Ostap::Utils::same_binning
   const TArrayD* abins = a.GetXbins () ;
   const TArrayD* bbins = b.GetXbins () ;
   //
-  if ( abins && bbins )
+  if ( ( abins && abins->GetSize() ) && ( bbins && bbins->GetSize() ) )
     {
       //
       Ostap::Assert ( abins->GetSize() == bbins->GetSize() ,
@@ -255,7 +255,7 @@ bool Ostap::Utils::same_binning
 			  abins->GetArray() + abins->GetSize() ,
 			  bbins->GetArray() , s_equal ) ;               // RETURN   
     }
-  else if ( abins )
+  else if ( abins && abins->GetSize () )
     {
       Ostap::Assert ( abins->GetSize() == b_nb + 1 ,
 		      "Inconsistent TAxis bins!"   ,
@@ -270,7 +270,7 @@ bool Ostap::Utils::same_binning
 	  if ( !s_equal ( *xa , xb ) ) { return false ; }            // RETURN 
 	}
     }
-  else if ( bbins )
+  else if ( bbins && bbins -> GetSize () )
     {
       Ostap::Assert ( bbins->GetSize() == a_nb + 1 ,
 		      "Inconsistent TAxis bins!"   ,
@@ -311,6 +311,67 @@ bool Ostap::Utils::same_binning
   if ( 1 <= adim && !same_binning ( *a.GetXaxis() , *b.GetXaxis() ) ) { return false ; }
   //
   return true ;
+}
+// ============================================================================
+/* check if bins are uniform 
+ *  @param axis axis to be checked 
+ *  @param check actually check via loop over bin edges)
+ */
+// ============================================================================
+bool Ostap::Utils::uniform_bins 
+( const TAxis* axis  , 
+  const bool   check )
+{
+  Ostap::Assert ( axis                                ,
+		  "Invalid TAxis*"                    ,
+		  "Ostap::Utils::uniform_bins"        , 
+		  INVALID_TAXIS , __FILE__ , __LINE__ ) ;
+  /// 1st tivial case
+  const unsigned long NB = axis->GetNbins() ;
+  if ( 1 == NB          ) { return true  ; } // RETURN
+  //
+  // array of bin edges 
+  const TArrayD*     xbins = axis->GetXbins () ;
+  /// 2nd trivial case 
+  if ( nullptr == xbins ) { return true  ; } // RETURN
+  //
+  if ( !check           ) { return false ; } // RETURN
+  //
+  /// number of edges 
+  const unsigned long NE = xbins->GetSize  () ;
+  Ostap::Assert ( 2 <= NB && NE == 1 + NB      ,
+		  "Inconsistent TAxis bins!"   ,
+		  "Ostap::Utils::uniform_bins" , 
+		  INVALID_TAXISBINS , __FILE__ , __LINE__ ) ;
+  //
+  /// actaual C++ array of edges:
+  const Double_t*     xe   = xbins->GetArray () ;
+  //
+  /// common interval 
+  const double    interval = *(xe+1) - (*xe) ;
+  for ( Int_t ie   = 0 ; ie < NB ; ++ie , ++xe )
+    {
+      const double current = *(xe+1) - (*xe) ;
+      if ( !s_equal ( current , interval ) ) { return false ; }
+    }
+  //
+  return true ;
+}
+// ========================================================================    
+/*  check if bins of the histogram are uniform 
+ *  @param histo historgam to be checked 
+ *  @param check actually check via loop over bin edges)
+ */
+// ========================================================================    
+bool Ostap::Utils::uniform_bins 
+( const TH1& histo , 
+  const bool check )
+{
+  //
+  if ( 3 <= histo.GetDimension() && !uniform_bins ( histo.GetZaxis() , check ) ) { return false ; }
+  if ( 2 <= histo.GetDimension() && !uniform_bins ( histo.GetYaxis() , check ) ) { return false ; }
+  //
+  return uniform_bins ( histo.GetXaxis() , check ) ;
 }
 // ============================================================================
 //                                                                      The END 

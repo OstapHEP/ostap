@@ -75,6 +75,22 @@ namespace Ostap
     bool same_binning
       ( const TH1&    a ,
 	const TH1&    b ) ;    
+    // ========================================================================
+    /** check if bins are uniform 
+     *  @param axis axis to be checked 
+     *  @param check actually check via loop over bin edges)
+     */
+    bool uniform_bins 
+      ( const TAxis* axis         , 
+	const bool   check = true ) ;
+    // ========================================================================    
+    /** check if bins of histogram are uniform 
+     *  @param histo historgam to be checked 
+     *  @param check actually check via loop over bin edges)
+     */
+    bool uniform_bins 
+      ( const TH1& histo          , 
+	const bool check = true ) ;
     // ========================================================================    
   } //                                        The end of namepsace Ostap::Utils 
   // ==========================================================================
