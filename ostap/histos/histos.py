@@ -246,14 +246,14 @@ def _axis_bin_edges_ ( axis ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h1_get_item_ ( h1 , ibin ) :
-    """``Get-item'' for the 1D-histogram :
+    """`Get-item' for the 1D-histogram :
     >>> histo = ...
     >>> ve    = histo[ibin]    
     """
     if isinstance ( ibin , slice ) :
         start = ibin.start
         stop  = ibin.stop
-        assert  1 == ibin.step , "step must be +1')
+        assert  1 == ibin.step , "slice' step must be +1"
         if start is None : start = 0 
         if stop  is None : stop  = len ( h1 ) 
         return _h1_getslice_ ( h1 , start , stop ) 

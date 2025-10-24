@@ -83,8 +83,8 @@ then
 fi
 
 
-cat <<EOF >rebuild_ostap.sh
-#!/usr/bin/bash 
+## cat <<EOF >rebuild_ostap.sh
+## #!/usr/bin/bash 
 
 if [[  ${ROOTSYS} &&
     -d ${ROOTSYS} ]]
@@ -167,6 +167,7 @@ echo -e "${prefix2}"' OSTAPDIR        : '${OSTAPDIR}
 echo -e "${prefix2}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
 echo -e "${prefix2}"' OSTAP_BUILD     : '${OSTAP_BUILD}
 echo -e "${prefix2}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
+echo -e "${prefix2}"' thisostap.sh    : '${OSTAP_INSTALL}/thisostap.sh
 echo -e "${prefix2}"' root.exe        : '\$(which root.exe)
 echo -e "${prefix2}"' root version    : '\$(root.exe --version 2>&1 | tr '\n' ' ')
 echo -e "${prefix2}"' python          : '\$(which python)
