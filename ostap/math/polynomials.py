@@ -17,7 +17,7 @@ __date__    = "2011-12-01"
 __all__     = ()
 # =============================================================================
 from    ostap.core.ostap_types import num_types 
-from    ostap.math.base        import Ostap 
+from    ostap.math.base        import Ostap
 import  ostap.math.reduce
 # =============================================================================
 # logging 
@@ -27,97 +27,115 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.polynomials' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
 ## Modified iadd
-def _poly_iadd_  ( self , other  ) : 
+def _poly_iadd_  ( poly , other  ) : 
     """ Modified __iadd__ 
     """
-    try : return self.iadd ( other )   
+    try : return poly.iadd ( other )   
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
 ## Modified isub
-def _poly_isub_  ( self , other  ) : 
+def _poly_isub_  ( poly , other  ) : 
     """ Modified __isub__ 
     """ 
-    try : return self.isub ( other )   
+    try : return poly.isub ( other )   
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
 ## Modified imul
-def _poly_imul_  ( self , other  ) : 
+def _poly_imul_  ( poly , other  ) : 
     """ Modified __imul__ 
     """
-    try : return self.iadd ( other ) 
+    try : return poly.iadd ( other ) 
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
 ## Modified idiv
-def _poly_idiv_  ( self , other  ) : 
+def _poly_idiv_  ( poly , other  ) : 
     """ Modified __idiv__ 
     """ 
     if isinstance ( other , num_types ) and not other  : 
         raise ZeroDivisionError ( "One cannot divide by zero!" )
-    try: return self.idiv ( other )   
+    try: return poly.idiv ( other )   
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
 ## Modified ipow
-def _poly_ipow_  ( self , other  ) : 
+def _poly_ipow_  ( poly , other  ) : 
     """ Modified __ipow__ 
     """    
     try :
-        if isinstance ( other , int ) and 0 <= other : return self.ipow ( other ) 
+        if isinstance ( other , int ) and 0 <= other : return poly.ipow ( other ) 
     except TypeError : pass     
     return NotImplemented 
 # ==============================================================================
 ## Modified add
-def _poly_add_  ( self , other  ) : 
+def _poly_add_  ( poly , other  ) : 
     """ Modified __add__ 
     """
-    try : return self.add ( other )   
+    try : return poly.add ( other )   
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
 ## Modified isub
-def _poly_sub_  ( self , other  ) : 
+def _poly_sub_  ( poly , other  ) : 
     """ Modified __sub__ 
     """ 
-    try : return self.sub ( other )   
+    try : return poly.sub ( other )   
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
 ## Modified mul
-def _poly_mul_  ( self , other  ) : 
+def _poly_mul_  ( poly , other  ) : 
     """ Modified __mul__ 
     """
-    try : return self.mul ( other ) 
+    try : return poly.mul ( poly ) 
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
-def _poly_div_  ( self , other  ) : 
+def _poly_div_  ( poly , other  ) : 
     """ Modified __div__ 
     """ 
     if isinstance ( other ,  num_types ) and not other  : 
         raise ZeroDivisionError ( "One cannot divide by zero!" )
-    try: return self.div ( other )   
+    try: return poly.div ( other )   
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
 ## Modified pow 
-def _poly_pow_  ( self , other  ) : 
+def _poly_pow_  ( poly , other  ) : 
     """ Modified __pow__ 
     """
     try :
-        if isinstance ( other , int ) and 0 <= other : return self.pow ( other ) 
+        if isinstance ( other , int ) and 0 <= other : return poly.pow ( other ) 
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
-def _poly_rsub_  ( self , other  ) : 
+## rigth subtraction
+def _poly_rsub_  ( poly , other  ) : 
     """ Modified __rsub__ 
     """ 
-    try: return self.rsub ( other )   
+    try: return poly.rsub ( other )   
     except TypeError :pass     
     return NotImplemented 
 
+# =============================================================================
+## Convert to "density" if/when possible
+def _poly_density_( poly , *limits ) :
+    """ Convert to `density' if/when possible
+    """
+    ## get the integral
+    i = poly.integral ( *limits ) 
+    
+    if i <= 0 or not i : 
+        logger.error ( "density: integral is non-positive, skip")
+        return poly  
+    
+    return poly / i 
+
+# ============================================================================
+## (re)decorate polynomials
+# ============================================================================
 for poly  in ( Ostap.Math.Polynomial   , 
                Ostap.Math.ChebyshevSum , 
                Ostap.Math.LegendreSum  , 
@@ -149,6 +167,9 @@ for poly  in ( Ostap.Math.Polynomial   ,
     if hasattr ( poly , 'ipow' ) :  poly.__ipow__  = _poly_ipow_ 
     if hasattr ( poly , 'pow'  ) :  poly.__pow__   = _poly_pow_ 
 
+    if not hasattr ( poly , 'density' ) :
+        poly.density = _poly_density_ 
+        
 # =============================================================================
 ## decorated classes 
 _decorated_classes_  = ()

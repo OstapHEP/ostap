@@ -13,6 +13,7 @@
 #  - Kurtosis
 #  - Median
 #  - Quantile 
+#  - Quantiles 
 #  - Mode
 #  - Width
 #  - Mode
@@ -30,6 +31,7 @@
 #  - kurtosis
 #  - median
 #  - quantile 
+#  - quantiles 
 #  - mode
 #  - width
 #  - FWHM
@@ -48,6 +50,7 @@
 - Kurtosis
 - Median
 - Quantile 
+- Quantiles 
 - Mode
 - Width
 - symmetric and asymmetric ``confidence intervals''
@@ -64,6 +67,7 @@ All objects exists as classes/functors and as standalone simlpe functions
 - kurtosis
 - median
 - quantile 
+- quantiles 
 - mode
 - width
 - fwhm
@@ -80,36 +84,38 @@ __all__     = (
     "CentralMoment" , ## calculate N-th central moment of functions/distributions
     "StdMoment"     , ## calculate N-th standartized moment of functions/distributions
     "Mean"          , ## "mean"     for functions/distributions, etc 
-    "Variance"      , ## calculate "variance" for functions/distributions, etc 
-    "RMS"           , ## calculate "RMS"      for functions/distributions, etc 
-    "Skewness"      , ## calculate "skewness" for functions/distributions, etc 
-    "Kurtosis"      , ## calculate "kurtosis" for functions/distributions, etc 
-    "Median"        , ## calculate "median"   for functions/distributions, etc 
-    "Quantile"      , ## calculate "quantile" for functions/distributions, etc 
-    "Mode"          , ## calculate "mode"     for functions/distributions, etc 
-    "Width"         , ## calculate "width"    for functions/distributions, etc 
+    "Variance"      , ## calculate "variance"  for functions/distributions, etc 
+    "RMS"           , ## calculate "RMS"       for functions/distributions, etc 
+    "Skewness"      , ## calculate "skewness"  for functions/distributions, etc 
+    "Kurtosis"      , ## calculate "kurtosis"  for functions/distributions, etc 
+    "Median"        , ## calculate "median"    for functions/distributions, etc 
+    "Quantile"      , ## calculate "quantile"  for functions/distributions, etc 
+    "Quantiles"     , ## calculate "quantiles" for functions/distributions, etc 
+    "Mode"          , ## calculate "mode"      for functions/distributions, etc 
+    "Width"         , ## calculate "width"     for functions/distributions, etc 
     "CL_symm"       , ## calcualte symmetrical confidence intervals            
     "CL_asymm"      , ## calcualte asymmetrical confidence intervals           
     ##
     ## stat-quantities   
     "moment"        , ## calculate N-th moment of functions/distributions, etc 
     "central_moment", ## calculate N-th moment of functions/distributions, etc 
-    "mean"          , ## calculate "mean"     for functions/distributions, etc 
-    "variance"      , ## calculate "variance" for functions/distributions, etc 
-    "rms"           , ## calculate "RMS"      for functions/distributions, etc 
-    "skewness"      , ## calculate "skeness"  for functions/distributions, etc 
-    "kurtosis"      , ## calculate "kurtosis" for functions/distributions, etc 
-    "median"        , ## calculate "median"   for functions/distributions, etc 
-    "quantile"      , ## calculate "quantile" for functions/distributions, etc 
-    "mode"          , ## calculate "mode"     for functions/distributions, etc 
-    "width"         , ## calculate "width"    for functions/distributions, etc
-    "fwhm"          , ## calculate "fwhm"     for functions/distributions, etc    
+    "mean"          , ## calculate "mean"      for functions/distributions, etc 
+    "variance"      , ## calculate "variance"  for functions/distributions, etc 
+    "rms"           , ## calculate "RMS"       for functions/distributions, etc 
+    "skewness"      , ## calculate "skeness"   for functions/distributions, etc 
+    "kurtosis"      , ## calculate "kurtosis"  for functions/distributions, etc 
+    "median"        , ## calculate "median"    for functions/distributions, etc 
+    "quantile"      , ## calculate "quantile"  for functions/distributions, etc 
+    "quantiles"     , ## calculate "quantiles" for functions/distributions, etc 
+    "mode"          , ## calculate "mode"      for functions/distributions, etc 
+    "width"         , ## calculate "width"     for functions/distributions, etc
+    "fwhm"          , ## calculate "fwhm"      for functions/distributions, etc    
     "cl_symm"       , ## calculate symmetrical  confidence intervals            
     "cl_asymm"      , ## calculate asymmetrical confidence intervals           
     ##
     ) 
 # =============================================================================
-from ostap.core.ostap_types import integer_types, num_types
+from ostap.core.ostap_types import integer_types, num_types, sequence_types 
 from ostap.math.base        import pos_infinity, neg_infinity
 from ostap.stats.funstats   import FunBASE1D 
 # =============================================================================
@@ -141,7 +147,7 @@ class BaseMoment(FunBASE1D) :
         
         self.__N     = N 
         self.__err   = err
-
+        
     # =========================================================================
     ## get the normalized moment
     def moment ( self , K , func , center , *args ) :
@@ -241,9 +247,10 @@ class BaseMoment(FunBASE1D) :
     # =========================================================================
     ## integrate the function between xmin and xmax 
     def integral ( self , func , xmin , xmax , *args ) :
-        """ Integrate the function between xmin and xmax"""
-        from ostap.math.integral import IntegralCache 
-        integrator = IntegralCache ( func , xmin , err = self.err , args = args )
+        """ Integrate the function between xmin and xmax
+        """
+        from ostap.math.integral import Integral as II
+        integrator = II ( func , xmin , err = self.err , args = args )
         return integrator ( xmax , *args )
 
     # ==========================================================================
@@ -251,17 +258,20 @@ class BaseMoment(FunBASE1D) :
     def median ( self , func , *args ) :
 
         ## need to know the integral
-        from ostap.math.integral import Integral
+        from ostap.math.integral   import IntegralCache as IC
+        from ostap.math.rootfinder import findroot      as FR 
 
-        iint   = Integral      ( func ,  self.xmin , err = False ,  args = args )
-        half   = 2.0 / iint    ( self.xmax ) 
+        integral = IC     ( func ,  self.xmin , err = False ,  args = args )
+        total    = integral ( self.xmax ) 
 
-        ifun   = lambda x : iint( x ) * half - 1.0
-
-        from ostap.math.rootfinder import findroot
+        assert 0 < total , "Integral is non-positive!"
         
+        ifun   = lambda x : integral ( x ) / total  - 0.5
+
         ## @see https://en.wikipedia.org/wiki/Median#Inequality_relating_means_and_medians
-        try: 
+        # ====================================================================
+        try: # ===============================================================
+            # ================================================================
             meanv = self.mean ( func , *args )
             sigma = self.rms  ( func , *args )
             import math
@@ -271,11 +281,74 @@ class BaseMoment(FunBASE1D) :
             if isinstance ( self.xmin , float ) : xmn = max ( xmn , self.xmin ) 
             if isinstance ( self.xmax , float ) : xmx = min ( xmx , self.xmax )
             #
-            result = findroot ( ifun , xmn       , xmx       , maxiter = 500 )
-        except :
-            result = findroot ( ifun , self.xmin , self.xmax , maxiter = 500 )
+            return FR ( ifun , xmn       , xmx       , maxiter = 500 )
+            # ==================================================================
+        except: # ==============================================================
+            #  =================================================================
+            pass
+        #
+        return FR ( ifun , self.xmin , self.xmax , maxiter = 500 )
+
+    # ========================================================================
+    ## get the quantile
+    def quantile ( self , func , quantile , *args ) :
+
+        assert isinstance ( quantile , num_types ) and 0 <= quantile <= 1,\
+            "Invalid `quantile' %s " % quantile 
+    
+        if   0.0 == quantile : return self.xmin
+        elif 1.0 == quantile : return self.xmax
+        elif 0.5 == quantile : return self.median ( func , *args )
+              
+        from ostap.math.integral   import IntegralCache as IC  
+        from ostap.math.rootfinder import findroot      as FR 
+
+        integral = IC ( func , self.xmin , err = False ,  args = args )
+        total    = integral  ( self.xmax )        
+
+        assert 0 < total , "Integral is non-positive!"
+
+        qfun     = lambda x : integral ( x ) / total  - quantile 
+        
+        return FR ( qfun , self.xmin , self.xmax , maxiter = 500 )
+    
+    # ========================================================================
+    ## get quantiles  
+    def quantiles ( self , func , quantiles  , *args ) :
+
+        if isinstance   ( quantiles , integer_types  ) and 1 <= quantiles : 
+            quantiles = tuple  (   i * 1.0 / quantiles for i in range ( 1 , quantiles ) )
+        else : 
             
-        return result
+            assert isinstance ( quantiles , sequence_types ) , \
+                "`quantiles' must be sequence!"
+                
+            quantiles = tuple ( q for q in quantiles )
+            assert all ( isinstance ( q , num_types ) for q in quantiles ), \
+                "Invalid `quantiles' %s" % str ( quantiles  )
+
+            quantiles = tuple ( q for q in quantiles if 0 < q < 1  ) 
+            if not quantiles : return self.xmin , self.xmax 
+            quantiles = sorted ( set ( quantiles ) ) 
+        
+        ## need to know the integral
+        from ostap.math.integral   import IntegralCache as IC  
+        from ostap.math.rootfinder import findroot      as FR 
+
+        integral = IC ( func , self.xmin , err = False ,  args = args )
+        total    = integral  ( self.xmax )        
+        
+        assert 0 < total , "Integral is non-positive!"
+
+        results  = [ self.xmin ]
+        for q in quantiles : 
+            
+            qfun = lambda x : integral ( x ) / total  - q 
+            r    = FR ( qfun , results [ -1 ] , self.xmax , maxiter = 500 )
+            results.append ( r )
+            
+        results.append ( self.xmax )        
+        return tuple ( results )
 
     @property
     def  err( self ) :
@@ -579,8 +652,8 @@ class Median(RMS) :
     >>> median    = Median ( xmin,xmax )  ## specify min/max
     >>> value     = median ( math.sin  )
     """
-    def __init__ ( self , xmin , xmax ) :
-        RMS.__init__ ( self , xmin , xmax , err = False )
+    def __init__ ( self , xmin , xmax , *args ) :
+        RMS.__init__ ( self , xmin , xmax , err = False , *args )
         
     ## calculate the median 
     def __call__ ( self , func , *args ) :
@@ -588,7 +661,7 @@ class Median(RMS) :
 
     def __str__ ( self ) :
         return "Median(%s,%s)" % ( self.xmin , self.xmax )
-    
+
 # =============================================================================
 ## get the quantile
 #  Calculate the quantile for the distribution or function  
@@ -605,10 +678,11 @@ class Quantile(Median) :
     >>> quantile  = Quantile ( 0.1 , xmin,xmax )  ## specify min/max
     >>> value     = quantile ( math.sin  )
     """
-    def __init__ ( self , Q , xmin , xmax ) :
-        Median.__init__ ( self , xmin , xmax )
+    def __init__ ( self , Q , xmin , xmax , *args ) :
+        Median.__init__ ( self , xmin , xmax , *args )
         #
-        assert 0 <= Q <=  1, 'Quantile is invalid %s' % Q 
+        assert isinstance ( Q  , num_types ) and 0 <= Q <=  1, \
+            'Quantile is invalid %s' % Q 
 
         self.__Q = float( Q ) 
         
@@ -623,48 +697,62 @@ class Quantile(Median) :
         elif  0.0 == self.Q : return self.xmin
         elif  1.0 == self.Q : return self.xmax
 
-        ## need to know the integral
-        from ostap.math.integral import IntegralCache
-        iint = IntegralCache ( func, self.xmin, err = False ,  args = args )
-        quan = 1.0 / iint    (  self.xmax ) / self.Q 
-        
-        ifun   = lambda x : iint( x ) * quan - 1.0
-
-        xmn = self.xmin
-        xmx = self.xmax
-
-        p   = 0.5
-        l   = 0.5
-
-        ## make some bracketing before next step 
-        while ( not isinstance ( xmn , float ) ) or ( not isinstance ( xmx , float ) ) or l>0.1 :   
-        
-            l /= 2
-            mm = Median ( xmn , xmx )
-            m  = mm .median ( func , *args )
-            
-            if   self.Q < p :
-                xmn   = xmn 
-                xmx   = float( m ) 
-                p    -= l 
-            elif self.Q > p :
-                xmn   = float ( m ) 
-                xmx   = xmx
-                p    +=  l  
-            else : return m               ## RETURN 
-
-        ## finally, calculate quantile
-        from ostap.math.rootfinder import findroot 
-        result = findroot ( ifun , xmn , xmx )
-            
-        return result
+        return self.quantile ( func , self.Q , *args ) 
 
     @property
     def  Q ( self ) :
-        "``Q''-quantile level"
+        "`Q'-quantile level"
         return self.__Q
     
+    
+# =============================================================================
+## get the quantiles
+#  Calculate the quantiles for the distribution or function  
+#  @code
+#  xmin,xmax = 0,math.pi 
+#  quantiles  = Quantiles ( 5 , xmin,xmax )  ## specify min/max
+#  quantiles  = Quantiles ( [0.1,0.4] , xmin,xmax )  ## specify min/max
+#  values     = quantiles ( math.sin  )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-07-12
+class Quantiles(Median) :
+    """ Calculate quantiles for the distribution or function  
+    >>> xmin,xmax = 0,math.pi 
+    >>> quantiles = Quantiles ( 7              , xmin,xmax )  ## specify min/max
+    >>> quantiles = Quantiles ( [ 0.1 , 0.3 ]   , xmin,xmax )  ## specify min/max
+    >>> value     = quantiles ( math.sin  )
+    """
+    def __init__ ( self , quantiles  , xmin , xmax , *args ) :
+        Median.__init__ ( self , xmin , xmax , *args )
+        #
+        if isinstance ( quantiles , integer_types ) and 1 < quantiles :
+            self.__Q = quantiles 
+        else : 
+            
+            assert isinstance ( quantiles , sequence_types ) , \
+                "`quantiles' must be sequence!"
+                
+            quantiles = tuple ( q for q in quantiles )
+            assert all ( isinstance ( q , num_types ) for q in quantiles ), \
+                "Invalid `quantiles' %s" % str ( quantiles  )
 
+            quantiles = tuple ( q for q in quantiles if 0 < q < 1  ) 
+            self.__Q  = tuple ( sorted ( set ( quantiles ) ) ) 
+        
+    def __str__ ( self ) :
+        return "Quantiles(%s,%s,%s)" % ( self.Q , self.xmin , self.xmax )
+
+    ## calculate the median 
+    def __call__ ( self , func , *args ) :
+        ##
+        return self.quantiles ( func , self.Q , *args ) 
+
+    @property
+    def  Q ( self ) :
+        "`Q'-quantiles level"
+        return self.__Q
+    
 # =============================================================================
 ## @class Mode
 #  Calculate the mode for the distribution or function  
@@ -683,8 +771,8 @@ class Mode(Median) :
     >>> mode      = Mode ( xmin,xmax )  ## specify min/max
     >>> value     = mode ( math.sin  )
     """
-    def __init__ ( self , xmin , xmax ) :
-        Median.__init__ ( self , xmin , xmax )
+    def __init__ ( self , xmin , xmax , *args ) :
+        Median.__init__ ( self , xmin , xmax , *args )
         
     ## calculate the mode 
     def __call__ ( self , func , *args ) :
@@ -1288,13 +1376,30 @@ def median ( func , xmin = None , xmax = None ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
-def quantile ( func , Q , xmin = None , xmax = None , err = False , x0 = 0 ) :
+def quantile ( func , Q , xmin = None , xmax = None , ) :
     """ Get quantile for the distribution
     >>> fun  = ...
     >>> quan = quantile ( fun , 0.1 , xmin = 10 , xmax = 50 )
     """
     ## get the functions from ostap.stats.moments 
     actor = lambda x1,x2 : Quantile ( Q , x1 , x2 ) 
+    return sp_action ( func , actor , xmin , xmax )
+
+# =============================================================================
+## get the quantile of variable, considering function to be PDF 
+#  @code 
+#  >>> fun  = ...
+#  >>> qs   = quantiles( fun , [ 0.1 , 0.4 ]  , xmin = 10 , xmax = 50 )
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-07-11
+def quantiles ( func , Q , xmin = None , xmax = None , ) :
+    """ Get quantiles for the distribution
+    >>> fun  = ...
+    >>> qs   = quantiles ( fun , [ 0.1 , 0.9 ]  , xmin = 10 , xmax = 50 )
+    """
+    ## get the functions from ostap.stats.moments 
+    actor = lambda x1,x2 : Quantiles ( Q , x1 , x2 ) 
     return sp_action ( func , actor , xmin , xmax )
 
 # =============================================================================

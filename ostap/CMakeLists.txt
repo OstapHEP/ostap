@@ -282,6 +282,19 @@ if ( NOT ${PY_tkrzw_FOUND} )
 endif()
 
 # ========================================================================================
+## sortedcontainers
+# ========================================================================================
+## 
+find_python_module ( sortedcontainers QUIET )
+if ( NOT ${PY_sortedcontainers_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install sortedcontainers ${PIP_ARGS})
+endif()
+find_python_module ( sortedcontainers QUIET )
+if ( NOT ${PY_sortedcontainers_FOUND} )
+  message ( "----> warning              sortedcontainer is NOT found!" ) 
+endif()
+
+# ========================================================================================
 ## pragmastat 
 # ========================================================================================
 ## 
@@ -291,7 +304,7 @@ if ( NOT ${PY_pragmastat_FOUND} )
 endif()
 find_python_module ( pragmastat  QUIET )
 if ( NOT ${PY_pragmastat_FOUND} )
-  message ( "----> warning (optional)      pragmastat is NOT found!" ) 
+  message ( "----> warning                 pragmastat is NOT found!" ) 
 endif()
 
 # ========================================================================================
@@ -316,113 +329,118 @@ endif()
 
 if ( ${PY_numpy_FOUND} )
   find_python_module_version ( numpy ) 
-  message ( "----> numpy           version    : " ${PY_numpy_VERSION} )  
+  message ( "----> numpy            version    : " ${PY_numpy_VERSION} )  
 endif()
 ##
 if ( ${PY_scipy_FOUND} )
   find_python_module_version ( scipy ) 
-  message ( "----> scipy           version    : " ${PY_scipy_VERSION} )  
+  message ( "----> scipy            version    : " ${PY_scipy_VERSION} )  
 endif()
 
 if ( ${PY_numba_FOUND} )
   find_python_module_version ( numba ) 
-  message ( "----> numba           version    : " ${PY_numba_VERSION} )  
+  message ( "----> numba            version    : " ${PY_numba_VERSION} )  
 endif()
 
 if ( ${PY_cffi_FOUND} )
   find_python_module_version ( cffi ) 
-  message ( "----> cffi            version    : " ${PY_cffi_VERSION} )  
+  message ( "----> cffi             version    : " ${PY_cffi_VERSION} )  
 endif()
 
 ##
 if ( ${PY_dill_FOUND} )
   find_python_module_version ( dill ) 
-  message ( "----> dill            version    : " ${PY_dill_VERSION} )  
+  message ( "----> dill             version    : " ${PY_dill_VERSION} )  
 endif()
 ##
 if ( ${PY_ppft_FOUND} )
   find_python_module_version ( ppft ) 
-  message ( "----> ppft            version    : " ${PY_ppft_VERSION} )    
+  message ( "----> ppft             version    : " ${PY_ppft_VERSION} )    
 endif()
 ##
 if ( ${PY_multiprocess_FOUND} )
   find_python_module_version ( multiprocess ) 
-  message ( "----> multiprocess    version    : " ${PY_multiprocess_VERSION} )      
+  message ( "----> multiprocess     version    : " ${PY_multiprocess_VERSION} )      
 endif()
 ##
 if ( ${PY_pathos_FOUND} )
   find_python_module_version ( pathos ) 
-  message ( "----> pathos          version    : " ${PY_pathos_VERSION} )        
+  message ( "----> pathos           version    : " ${PY_pathos_VERSION} )        
 endif()
 ##
 if ( ${PY_ipyparallel_FOUND} )
   find_python_module_version ( ipyparallel ) 
-  message ( "----> ipyparallel     version    : " ${PY_ipyparallel_VERSION} )        
+  message ( "----> ipyparallel      version    : " ${PY_ipyparallel_VERSION} )        
 endif()
 ##
 if ( ${PY_joblib_FOUND} )
   find_python_module_version ( joblib ) 
-  message ( "----> joblib          version    : " ${PY_joblib_VERSION} )             
+  message ( "----> joblib           version    : " ${PY_joblib_VERSION} )             
 endif() 
 ##
 if ( ${PY_zstandard_FOUND} )
   find_python_module_version ( zstandard ) 
-  message ( "----> zstandard       version    : " ${PY_zstandard_VERSION} )        
+  message ( "----> zstandard        version    : " ${PY_zstandard_VERSION} )        
 endif()    
 ##
 if ( ${PY_terminaltables3_FOUND} )
   find_python_module_version ( terminaltables3 ) 
-  message ( "----> terminaltables3 version    : " ${PY_terminaltables3_VERSION} )        
+  message ( "----> terminaltables3  version    : " ${PY_terminaltables3_VERSION} )        
 endif ()                        
 ##
 if ( ${PY_terminaltables_FOUND} )
   find_python_module_version ( terminaltables ) 
-  message ( "----> terminaltables  version    : " ${PY_terminaltables_VERSION} )        
+  message ( "----> terminaltables   version    : " ${PY_terminaltables_VERSION} )        
 endif ()
 ##
 if ( ${PY_tabulate_FOUND} )
   find_python_module_version ( tabulate ) 
-  message ( "----> tabulate        version    : " ${PY_tabulate_VERSION} )        
+  message ( "----> tabulate         version    : " ${PY_tabulate_VERSION} )        
 endif()
 ##
 if ( ${PY_more_itertools_FOUND} )
   find_python_module_version ( more_itertools ) 
-  message ( "----> more_itertools  version    : " ${PY_more_itertools_VERSION} )             
+  message ( "----> more_itertools   version    : " ${PY_more_itertools_VERSION} )             
 endif()
 ## 
 if ( ${PY_psutil_FOUND} )
   find_python_module_version ( psutil ) 
-  message ( "----> psutil          version    : " ${PY_psutil_VERSION} )             
+  message ( "----> psutil           version    : " ${PY_psutil_VERSION} )             
 endif()
 ##
 if (${PY_berkeleydb_FOUND} )
   find_python_module_version ( berkeleydb ) 
-  message ( "----> berkeleydb      version    : " ${PY_berkeleydb_VERSION} )             
+  message ( "----> berkeleydb       version    : " ${PY_berkeleydb_VERSION} )             
 endif()
 ##
 if ( ${PY_bsddb3_FOUND} )
   find_python_module_version ( bdsdb3 ) 
-  message ( "----> bsddb3          version    : " ${PY_bsddb3_VERSION} )             
+  message ( "----> bsddb3           version    : " ${PY_bsddb3_VERSION} )             
 endif()
 ##
 if ( ${PY_lmdb_FOUND} )
   find_python_module_version ( lmdb ) 
-  message ( "----> lmdb            version    : " ${PY_lmdb_VERSION} )             
+  message ( "----> lmdb             version    : " ${PY_lmdb_VERSION} )             
 endif() 
 ##
 if ( ${PY_tkrzw_FOUND} )
   find_python_module_version ( tkrzw ) 
-  message ( "----> tkrzw           version    : " ${PY_tkrzw_VERSION} )             
+  message ( "----> tkrzw            version    : " ${PY_tkrzw_VERSION} )             
 endif()
+##
+if ( ${PY_sortedcontainers_FOUND} )
+  find_python_module_version ( sortedcontainers ) 
+  message ( "----> sortedcontainers version    : " ${PY_sortedcontainers_VERSION} )             
+  endif()
 ##
 if ( ${PY_pragmastat_FOUND} )
   find_python_module_version ( pragmastat ) 
-  message ( "----> pragmastat      version    : " ${PY_pragmastat_VERSION} )             
+  message ( "----> pragmastat       version    : " ${PY_pragmastat_VERSION} )             
 endif()
 ##
 if ( ${PY_hep_ml_FOUND} )
   find_python_module_version ( hep_ml ) 
-  message ( "----> hep_ml          version    : " ${PY_hep_ml_VERSION} )             
+  message ( "----> hep_ml           version    : " ${PY_hep_ml_VERSION} )             
 endif()
 
 # =========================================================================================

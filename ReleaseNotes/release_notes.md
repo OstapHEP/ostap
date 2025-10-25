@@ -1,3 +1,14 @@
+## New features
+
+  1. add (python) method `density` for polynomials
+  1. add `Quantiles` & `quantiles` in `moments.py`
+  1. some tweaks for `IntegralCache`, use `SortedKeyList` for cache 
+  1. add dependeny on `sortedconteiners`
+  
+## Backward  incompatible 
+
+## Bug fixes
+
 # v3.3.0.0 
 
 ## New features

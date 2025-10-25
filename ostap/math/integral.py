@@ -72,7 +72,8 @@ __all__     = (
 from   ostap.math.ve     import VE
 from   ostap.math.base   import isequal, iszero, numpy, scipy, numpy_version 
 from   ostap.utils.basic import items_loop
-from   ostap.utils.utils import memoize 
+from   ostap.utils.utils import memoize
+from   sortedcontainers  import SortedKeyList  
 import ROOT, warnings, math, array 
 # =============================================================================
 # logging 
@@ -327,7 +328,7 @@ def clenshaw_curtis_step ( f , xmin , xmax , N ) :
 #  v    = clenshaw_curtis ( func , 0 , 1 ) 
 #  @endcode
 #  Since cLenshaw-Curtis is a nested quadratire, for
-#  complicated funcrtions oen ca get significant gain with fnuction cache
+#  complicated functions one can get significant gain with function cache
 #  @code
 #  func = ....
 #  from ostap.utils.utils import memoize 
@@ -348,7 +349,7 @@ def clenshaw_curtis ( fun                 ,
     >>> func = lambda x : x*x 
     >>> v    = clenshaw_curtis ( func , 0 , 1 ) 
     - Since cLenshaw-Curtis is a nested quadratire, for
-    complicated funcrtions oen ca get significant gain with fnuction cache
+    complicated functions oene can get significant gain with function cache
     >>> func = ....
     >>> from ostap.utils.utils import memoize 
     >>> cache_func = memoize ( func )
@@ -1004,28 +1005,31 @@ class IntegralBase(object) :
         self.__kwargs = kwargs
         
     ## Calculate the integral for the 1D-function
-    def _integrate_1D_ ( self , func , xmn , xmx , args = () ) :
-        args = args if args else self.args
+    def _integrate_1D_ ( self , func , xmn , xmx , args = () , **kwargs ) :
+        args   =  args  if   args else self.args
+        kwargs = kwargs if kwargs else self.kwargs 
         return integral  ( func       ,
                            xmn , xmx  ,
-                           args = args , err = self.err , **self.kwargs )
+                           args = args , err = self.err , **kwargs )
 
     ## Calculate the integral for the 2D-function
-    def _integrate_2D_ ( self , func , xmn , xmx , ymn , ymx , args = () ) :
-        args = args if args else self.args
+    def _integrate_2D_ ( self , func , xmn , xmx , ymn , ymx , args = () , **kwargs ) :
+        args   =   args if   args else self.args
+        kwargs = kwargs if kwargs else self.kwargs         
         return integral2 ( func        ,
                            xmn , xmx   ,
                            ymn , ymx   ,
-                           args = args , err = self.err , **self.kwargs )
+                           args = args , err = self.err , **kwargs )
     
     ## Calculate the integral for the 3D-function
-    def _integrate_3D_ ( self , func , xmn , xmx , ymn , ymx , zmn , zmx , args = () ) :
-        args = args if args else self.args
+    def _integrate_3D_ ( self , func , xmn , xmx , ymn , ymx , zmn , zmx , args = () , **kwargs ) :
+        args   =   args if   args else self.args
+        kwargs = kwargs if kwargs else self.kwargs                 
         return integral3 ( func        ,
                            xmn , xmx   ,
                            ymn , ymx   ,
                            zmn , zmx   ,
-                           args = args , err = self.err , **self.kwargs )
+                           args = args , err = self.err , **kwargs )
     
     @property
     def func ( self ) :
@@ -1034,7 +1038,7 @@ class IntegralBase(object) :
 
     @property
     def args ( self ) :
-        """Additional posititional arguments for the interand"""
+        """Additional positional arguments for the interand"""
         return self.__args
 
     @property
@@ -1065,25 +1069,25 @@ class Integral(IntegralBase) :
     >>> value = iint (  10  )         ## specify x_high 
     """
     ## Calculate the integral for the 1D-function
-    def __init__ ( self , func , xlow = 0 , args = () , err = False , **kwargs ) :
+    def __init__ ( self , func , xlow = 0 , * , args = () , err = False , **kwargs ) :
         """ Calculate the integral for the 1D-function
         
         >>> func   = ...
         >>> func_0 = Integral(func,0)
         >>> value  = func_
         """
-        super(Integral,self).__init__( func = func ,  args = args , err = err  , **kwargs ) 
+        super(Integral,self).__init__( func = func , args = args , err = err  , **kwargs ) 
         self.__xmin   = float ( xlow ) 
         
     ## Calculate the integral for the 1D-function 
-    def __call__ ( self , x , *args ) :
+    def __call__ ( self , x , *args , **kwargs ) :
         """ Calculate the integral for the 1D-function 
         
         >>> func = ...
         >>> func_0 = Integral(func,0)
         >>> func_0 ( 10 ) 
         """
-        return self._integrate_1D_ ( self.func , self.xmin , x , args = args )
+        return self._integrate_1D_ ( self.func , self.xmin , x , args = args , **kwargs )
 
     @property
     def xmin ( self  ) :
@@ -1108,55 +1112,69 @@ class IntegralCache(Integral) :
     >>> value  = iint ( 10 )                ## specify x_high
     """
     ## Calculate the integral for the 1D-function using scipy
-    def __init__ ( self , func , xlow = 0 , args = () , err = False , **kwargs ) :
+    def __init__ ( self , func , xlow = 0 , * , n = 100 , args = () , err = False , **kwargs ) :
         """ Calculate the integral for the 1D-function
         
         >>> func = ...
         >>> func_0 = Integral(func,0)
         """
-        super(IntegralCache,self).__init__ ( func , xlow , args , err , **kwargs )
-        self.__prev   = None 
+        super(IntegralCache,self).__init__ ( func , xlow , args = args , err = err , **kwargs )
+        
+        assert  isinstance ( n , int ) , "Invalid `n`%s"% n 
+        
+        entry        = self.xmin , 0.0  
+        self.__cache = SortedKeyList ( [ entry ] , key = lambda e : e[0] )
+         
+        self.__n     = n if 1 <= n else 0  
         
     ## Calculate the numerical integral for the 1D-function
-    def __call__ ( self , x , **args ) :
+    def __call__ ( self , x , *args , **kwargs ) :
         """ Calculate the integral for the 1D-function
         
         >>> func = ...
-        >>> func_0 = Integral(func,0)
+        >>> func_0 = IntegralCache(func,0)
         >>> func_0 ( 10 ) 
         """
-        x      = float ( x )         
-        xmn    = self.xmin
-        delta  = 0.0
         
-        # Is there a good ``previos'' calculation ?
-        if self.__prev :
-            #
-            prev_args , prev_x , prev_result = self.__prev
-            #
-            if prev_args == args : ## the same extra arguments                
-                
-                # the point is good! 
-                if prev_x == x or isequal ( x , prev_x ) :
-                    return prev_result                                 ## RETURN
-                
-                # old point is good, take it as xmin  
-                if abs ( prev_x - x ) <= abs ( self.xmin - x ) :
-                    xmn   = prev_x
-                    delta = prev_result
-                    
-        result  = self._integrate_1D_ ( self.func , xmn , x , args = args )
-        result += delta 
+        ## No caching: 
+        if ( args and self.args != args ) or ( kwargs and self.kwargs != kwargs ) :
+            return self._integrate_1D_ ( self.func , self.xmin , x , args = args , **kwargs )
         
-        # fill the cache 
-        self.__prev = args , x , result 
+        args   =   args if   args else self.args 
+        kwargs = kwargs if kwargs else self.kwargs 
+        
+        x = float ( x ) 
+        
+        cache = self.__cache 
+        n      = len ( cache )
+        left   = cache.bisect_key_left  ( x )
+        print ( 'LEFT' , left  )
+        if   0 == left : entry = cache [  0 ] 
+        elif n <= left : entry = cache [ -1 ] 
+        else : 
+            left -= 1 
+            right = left + 1 
+            print ( 'LEFT/RIGHT' , left , right , cache[ left] , cache [ right ] )
+            entry  = min ( ( cache [ i ] for i in range ( left , right + 1 ) ) , key = lambda e : abs ( e [ 0 ] - x ) ) 
             
-        return result 
+        print ( 'CLOSE' , entry )
+        xclose = entry [ 0 ] 
+        if xclose == x : return  entry [ 1 ] 
+        
+        ## integral from closest previosu point 
+        delta  = self._integrate_1D_ ( self.func , xclose , x , args = args , **kwargs )
+        result = entry [ 1 ] + delta
+        
+        new_entry = x , result 
+        cache.add ( new_entry ) 
+        print  ( 'ADD', new_entry )
+        
+        return  result 
 
     @property
-    def prev ( self ) :
-        """`prev': result of the previos integral evaluation"""
-        return self.__prev 
+    def cache ( self ) :
+        """`cache': results of the previous integral evaluations"""
+        return self.__cache 
 
 # =============================================================================
 # 2D-integration
