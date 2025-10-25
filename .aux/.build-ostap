@@ -175,7 +175,7 @@ echo -e "${prefix2}"' root            : '\$(which root       )
 echo -e "${prefix2}"' root.exe        : '\$(which root.exe   )
 echo -e "${prefix2}"' root version    : '\$(root.exe --version 2>&1 | sed -E "s/\\\\n/ /g" )
 echo -e "${prefix2}"' python          : '\$(which python    )
-echo -e "${prefix2}"' root version    : '\$(python   -VV       2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix2}"' python version  : '\$(python   -VV       2>&1 | sed -E "s/\\\\n/ /g" )
 echo -e "${prefix2}"' ostap           : '\$(which ostap     )
 echo -e "${prefix2}"' root version    : '\$(ostap    --version 2>&1 | sed -E "s/\\\\n/ /g" )
 
