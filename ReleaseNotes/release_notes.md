@@ -1,3 +1,5 @@
+# v3.3.0.0 
+
 ## New features
 
   1. a bit more correct treatment of the `!` and `!=` in `ROOT.TCut.ast` 
@@ -19,6 +21,8 @@
   1. Add `HRange/hrange` for histogram-like looping
   1. Tiny improvements in `DataFrame` constructor
   1. Tiny adjustments in (C++) progress-bar(s)
+  1. Move `TAxis`-related functions to separate module `ostap/histos/axes.py`
+  1. Add more fuctions and operators for `TAxis`, add dedicated test  
   
 ## Backward  incompatible 
 
