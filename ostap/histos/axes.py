@@ -26,12 +26,13 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info           import root_info 
 from   ostap.core.ostap_types         import ( sequence_types  , sized_types   ,
+                                               generator_types , 
                                                num_types       , integer_types )
 from   ostap.utils.basic              import typename 
 from   ostap.core.core                import hID , Ostap, valid_pointer, rootException
-from   ostap.math.base                import isequal 
+from   ostap.math.base                import isequal, isfinite  
 from   ostap.logger.pretty            import fmt_pretty_values   
-from   ostap.logger.symbols           import times 
+from   ostap.logger.symbols           import times, ellipsis
 import ROOT, array 
 # =============================================================================
 # logging
@@ -48,7 +49,7 @@ logger.debug ( "Decoration of histogram' axes")
 #  axis = axis_from_edges ( bins ) 
 #  @endcode
 #  @see TAxis
-def axis_from_edges ( edges , check = True ) :
+def axis_from_edges ( edges , * ,  check = True  ) :
     """ Create the axis from sequence of bin edges 
     - see `ROOT.TAxis`
     >>> edges = [1,2,3,4,5,10,100]
@@ -59,11 +60,20 @@ def axis_from_edges ( edges , check = True ) :
     if isinstance ( edges , sized_types ) :
         assert 2 <= len ( edges ) , "at least two edges are required!"
         
-
-    if check and root_info < ( 6 , 37 ) : 
-        edges  = tuple ( e for e in edges )
-        nedges = len ( edges ) 
-        assert 2 <= nedges , "at least two edges are required!"
+    if check :
+        
+        if isinstance ( edges , generator_types ) : edges  = tuple ( e for e in edges )
+        assert all ( isinstance ( e , num_types ) and isfinite ( e ) for e in edges ) , \
+            "Invalid `edges' %s " % str ( edges )
+        edges = tuple ( sorted ( set ( edges ) ) ) 
+        assert 2 <= len ( edges ) , "at least two edges are required!"
+        
+    elif root_info < ( 6 , 37 ) :
+        
+        if isinstance ( edges , generator_types ) : edges  = tuple ( e for e in edges )
+        assert 2 <= len ( edges ) , "at least two edges are required!"
+        assert all ( isinstance ( e , num_types ) and isfinite ( e ) for e in edges ) , \
+            "Invalid `edges' %s " % str ( edges )
         ## the fist elements
         e0   = edges [ 0 ]        
         for ei in edges [ 1 : ] :
@@ -73,10 +83,15 @@ def axis_from_edges ( edges , check = True ) :
     ## convert posible ROOT-Error to python exception 
     with rootException () :        
         ## recent ROOT (>=6.36) has proper constructor
-        if ( 6 , 36 ) <= root_info : return ROOT.TAxis ( edges )
-        new_edges = array.array ( 'd' , edges )
-        return ROOT.TAxis ( len ( new_edges ) - 1 , new_edges )
-
+        if ( 6 , 36 ) <= root_info : 
+            axis = ROOT.TAxis ( edges )
+        else : 
+            new_edges = array.array ( 'd' , edges )
+            axis = ROOT.TAxis ( len ( new_edges ) - 1 , new_edges )
+            
+        if not axis.uniform () : return axis 
+        return ROOT.TAxis ( axis.GetNbins() , axis.GetXmin() , axis.GetXmax() )  
+    
 # =============================================================================
 ## Same binning for two axes?
 #  @code
@@ -283,12 +298,61 @@ def _axis_uniform_ ( axis ) :
     >>> axis        = ...
     >>> uniform_bins = axis.uniform () 
     """
-    nbins = axis.GetNbins()
-    if 1 == nbins  : return True 
-    bins  = axis.GetXbins()
-    if not bins    : return True 
+    if   1 == axis.GetNbins() : return True 
+    elif not  axis.GetXbins() : return True 
     ##
     return Ostap.Utils.uniform_bins ( axis , True ) 
+
+# ==============================================================================
+## Insert new edge(s) to TAxis
+#  @code
+#  axis = ...
+#  axis1  = axis.insert ( 1.0 ) 
+#  axis2  = axis.insert ( [ 1,0., 3.0, 5.1 ] )
+#  @endcode
+def _axis_insert_ ( axis , edges ) :
+    """ Add new edges to the axis
+    >>> axis = ...
+    >>> axis1  = axis.add ( 1.0 ) 
+    >>> axis2  = axis.add ( [ 1,0., 3.0, 5.1 ] )    
+    """     
+    if   isinstance   ( edges , ROOT.TAxis      ) : edges = axis.edges () 
+    elif isinstance   ( edges , num_types       ) : edges = edges , 
+    
+    assert isinstance ( edges , sequence_types  ) , "`edges' must be numeric or sequence!"
+    if isinstance     ( edges , generator_types ) : edges = tuple ( e for e in edges )
+    
+    ## no action:
+    if not edges : return axis 
+    
+    new_edges = [ e for e in axis.edges () ] + [ e for e in edges ]
+    new_edges = sorted  ( set ( new_edges ) )
+    return axis_from_edges ( new_edges , check = False )
+    
+# ==============================================================================
+## Add new edge(s) to TAxis
+#  @code
+#  axis = ...
+#  axis1  = axis.add ( 1.0 ) 
+#  axis2  = axis.add ( [ 1,0., 3.0, 5.1 ] )
+#  axis3  - axis + 1.0 
+#  axis4  - axis +  ( 1.0, 2.0, 5.1 )  
+#  axis5  = axis + another_axis 
+#  @endcode
+def _axis_add_ ( axis , edges ) :
+    """ Add new edges to the axis
+    >>> axis = ...
+    >>> axis1  = axis.add ( 1.0 ) 
+    >>> axis2  = axis.add ( [ 1,0., 3.0, 5.1 ] )
+    >>> axis3  - axis + 1.0 
+    >>> axis4  - axis +  ( 1.0, 2.0, 5.1 )  
+    >>> axis5  = axis + another_axis 
+    """     
+    if   isinstance   ( edges , ROOT.TAxis      ) : edges = axis.edges () 
+    elif isinstance   ( edges , num_types       ) : edges = edges , 
+    ## 
+    if not isinstance ( edges , sequence_types  ) : return NotImplemented 
+    return _axis_insert_ ( axis , edges )
 
 # ==============================================================================
 ## Scale axis edges (equivalent to change units)
@@ -433,7 +497,44 @@ def _axis_split_ ( axis , n ) :
             new_bins.append ( current )
         prev = current
 
-    return axis_from_edges ( new_bins )
+    return axis_from_edges ( new_bins , check = False )
+
+# =============================================================================
+## Split the certain axis bin into N-parts 
+#  @code
+#  axis  = ...
+#  axis2 = axis.split_bin ( 2 , 5 )
+#  @endcode 
+def _axis_split_bin_ ( axis , bin , N = 2  ) :
+    """ Split the certain  axis bin into n-part 
+    >>> axis  = ...
+    >>> axis2 = axis.split_bin ( 2 , 5 )
+    """
+    nbins = axis.GetNbins() 
+    assert  isinstance ( bin , integer_types ) and  bin <= nbins , \
+        "Inavalid bin index %s" % bin 
+        
+    if bin <= 0 : bin += nbins 
+    assert  1<= bin <= nbins , "Invalid bin index %d" % bin 
+
+    assert isinstance ( N , integer_types ) and 1 <= N , \
+        "Invalid `N' %s (must be positive integer)!" % N
+        
+    ## no action 
+    if 1 == N : return self 
+    
+    edges = list ( e for e in axis.edges() ) 
+
+    ## for bin number these are edge indicee:
+    left   = bin - 1 
+    right  = bin
+    xleft  = edges [ left  ]
+    xright = edges [ right ] 
+    delta  = ( xright - xleft ) / N 
+    
+    new_edges = edges [ : left + 1 ] + [ xleft + delta * i for i in range ( 1 , N ) ] + edges [ right: ] 
+    print ( 'NEW EDGES', new_edges ) 
+    return axis_from_edges  ( new_edges , check = False ) 
 
 # =============================================================================
 ## get axis as sub-axis with the given range
@@ -478,11 +579,11 @@ def _axis_range_ ( axis , xmin = None , xmax = None ) :
         if xmin < e  < xmax : new_edges.append ( e )            
     new_edges.append ( xmax ) 
 
-    return axis_from_edges ( new_edges )
+    return axis_from_edges ( new_edges , check = False )
 
 # =============================================================================
 ## print TAxis 
-def _axis_str_ ( axis , precision = 3 , width = 5 ) :
+def _axis_str_ ( axis , precision = 4 , width = 5 , maxlen = 10 ) :
     """ Print TAxis
     """
     
@@ -500,20 +601,36 @@ def _axis_str_ ( axis , precision = 3 , width = 5 ) :
         else : 
             return 'TAxix(%d,%s,%s)' % ( axis.GetNbins() , fmt % xmin , fmt % xmax  )
     
+    maxlen = max ( 4 , maxlen )
+    n2 = maxlen // 2 
+    n1 = maxlen - n2 
+    
     edges = tuple ( e for e in axis.edges() )
+    nn    = len   ( edges )
     fmt, expo = fmt_pretty_values ( *edges , precision = precision , width = width )
     if expo : 
         scale = 10 ** expo 
         edges = ( fmt % ( v / scale ) for v in edges )
-        edges = ','.join ( edges )
+        if nn <= n1 + n2 : edges = ','.join ( edges )
+        else :
+            edges = tuple ( edges )
+            e1    = ','.join ( edges [     : n1 + 1 ] )
+            eL    = ',%s,' % ellipsis
+            e2    = ','.join ( edges [ -n2 :        ] )
+            edges = e1 + eL + e2 
         expo  = '%s10^%d' % ( times , expo )
         return 'TAxis([%s]%s)' % ( edges , expo )
     
     edges = ( fmt %  v for v in edges )
-    edges = ','.join ( edges )
+    if nn <= n1 + n2 : edges = ','.join ( edges )
+    else :
+        edges = tuple ( edges )
+        e1    = ','.join ( edges [     : n1 + 1 ] )
+        eL    = ',%s,' % ellipsis
+        e2    = ','.join ( edges [ -n2 :        ] )
+        edges = e1 + eL + e2  
     return 'TAxis([%s])' % edges 
 
-    
 # =============================================================================
 ## Create <code>TAxis</code>
 #  @code
@@ -604,7 +721,6 @@ def h1_axis ( axis               ,
     ##
     if not h1.GetSumw2() : h1.Sumw2()
     return h1
-
 
 # =============================================================================
 ## make 2D-histogram from axes
@@ -786,6 +902,11 @@ ROOT.TAxis . __repr__      = _axis_str_
 
 ROOT.TAxis . __len__       = lambda s : s.GetNbins ()
 
+ROOT.TAxis . add           = _axis_insert_
+ROOT.TAxis . insert        = _axis_insert_
+ROOT.TAxis .__add__        = _axis_add_ 
+ROOT.TAxis .__radd__       = _axis_add_ 
+
 ROOT.TAxis . bin_iterator  = _axis_bin_iterator_
 ROOT.TAxis . bin_edges     = _axis_bin_iterator_
 
@@ -813,12 +934,15 @@ ROOT.TAxis. __floordiv__   = _axis_split_
 ROOT.TAxis . merge         = _axis_merge_ 
 ROOT.TAxis . __mod__       = _axis_merge_ 
 
-## multiply axes to get histograms 
-ROOT.TAxis. __matmul__     = _axis_matmul_
-ROOT.TAxis. __rmatmul__    = _axis_rmatmul_
+## split certain bin
+ROOT.TAxis . split_bin     = _axis_split_bin_
 
 ## join certain bins
 ROOT.TAxis . join          = _axis_join_ 
+
+## multiply axes to get histograms 
+ROOT.TAxis. __matmul__     = _axis_matmul_
+ROOT.TAxis. __rmatmul__    = _axis_rmatmul_
 
 ## change the range 
 ROOT.TAxis.range           = _axis_range_
@@ -889,6 +1013,10 @@ _new_methods_  = (
     ROOT.TAxis. __truediv__    , 
     ROOT.TAxis. __floordiv__   , 
     # 
+    ## add new edges 
+    ROOT.TAxis .insert         , 
+    ROOT.TAxis .add            , 
+    
     ## coarse binnig 
     ROOT.TAxis . merge         , 
     ROOT.TAxis . __mod__       , 
@@ -897,6 +1025,9 @@ _new_methods_  = (
     ROOT.TAxis. __matmul__     , 
     ROOT.TAxis. __rmatmul__    , 
     # 
+    ## split certain bin
+    ROOT.TAxis. split          , 
+    #
     ## join certain bins
     ROOT.TAxis . join          , 
     # 

@@ -4,7 +4,10 @@
   1. add `Quantiles` & `quantiles` in `moments.py`
   1. some tweaks for `IntegralCache`, use `SortedKeyList` for cache 
   1. add dependeny on `sortedconteiners`
-  
+  1. add method for adding new edge to the historgam axis
+  1. add method to split certain bin into N parts  
+  1. impove self-printout of histogram axes 
+
 ## Backward  incompatible 
 
 ## Bug fixes

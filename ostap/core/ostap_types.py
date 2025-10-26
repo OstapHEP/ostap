@@ -24,6 +24,7 @@ __all__     = (
     'dict_types'      , ## dict types 
     'dictlike_types'  , ## dict-like types 
     'long_type'       , ## long-type
+    'generator_types' , ## generators 
     'sequence_types'  , ## sequence types
     'iterable_types'  , ## iterable 
     'sized_types'     , ## sized types
@@ -39,9 +40,9 @@ __all__     = (
     'is_list'         , ## is a value of list/tuple type?
     'is_list_like'    , ## is a value of list-like type?
     ##
-    'all_integers'    , ## all argumets of integer types?
-    'all_numerics'    , ## all argumets of numeric types?
-    'all_strings'     , ## all argumets of string  types?
+    'all_integers'    , ## all arguments of integer types?
+    'all_numerics'    , ## all arguments of numeric types?
+    'all_strings'     , ## all arguments of string  types?
     )
 # =============================================================================
 from   collections.abc import Collection, Sequence, Iterable, Mapping, Sized, Generator   
@@ -62,7 +63,7 @@ long_type      = int
 # =============================================================================
 iterable_types  = Iterable ,
 num_types       = integer_types + ( float , ) 
-str_types       = str ,
+str_types       = str  ,
 list_types      = list , tuple
 listlike_types  = list_types + ( set , Sequence , array.array )
 # =============================================================================
@@ -93,7 +94,8 @@ except ImportError : # ========================================================
 # =============================================================================
 dict_types      = dict ,
 dictlike_types  = dict ,  Mapping  
-sequence_types  = listlike_types + ( Sequence , Collection , Iterable , Generator )
+generator_types = Generator , 
+sequence_types  = listlike_types + ( Sequence , Collection , Iterable ) + generator_types 
 sized_types     = Sized ,
 path_types      = string_types
 set_types       = set , frozenset 

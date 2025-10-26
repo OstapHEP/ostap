@@ -138,9 +138,17 @@ def test_axes () :
 
     logger.info ( '1st range(1.0,4.0) : %s ' % axis1.range ( 1.,4.) ) 
     logger.info ( '2nd range(1.0,4.0) : %s ' % axis2.range ( 1.,4.) ) 
-    
-    
 
+    logger.info ( '1st axis+0.1  : %s ' % ( axis1 + 0.1 ) ) 
+    logger.info ( '2nd axis+0.1  : %s ' % ( axis2 + 0.1 ) ) 
+    
+    logger.info ( '1st -0.1 + axis : %s ' % ( -0.1 + axis1 ) ) 
+    logger.info ( '2nd -0.1 + axis : %s ' % ( -0.1 + axis2 ) ) 
+
+    logger.info ( '1st axis+(-0.1,-0.11) : %s ' % ( axis1 + (-0.1 ,-0.11 ) ) ) 
+    logger.info ( '2nd axis+(-0.1,-0.11) : %s ' % ( axis2 + (-0.1 ,-0.11 ) ) ) 
+     
+    
 # =============================================================================
 if '__main__' == __name__ :
 
