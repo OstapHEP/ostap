@@ -474,7 +474,6 @@ def _amp_ ( self , x , *a ) :
     v = self.amplitude ( x , *a )
     return complex( v ) 
 
-
 # ==============================================================================
 ## get the real part of amplitude
 #  @code
@@ -645,7 +644,6 @@ def _p_minmax_ ( p ) :
     mx   = max ( pars )
     return  max ( mn , 0 ) , mx 
 
-
 # ==============================================================================
 ## get the minimal value for derived bernstein polynomial:
 #  @code
@@ -779,7 +777,7 @@ def sp_integrate_3D ( func  ,
     ##                            xmin , xmax , ymin , ymax   zmin zmax 
     >>> print func.sp_integrate ( -10  , 10   , -20  , 20   , -1 ,   1 ) 
     """
-    from ostap.math.integral import integral2 as _integral3 
+    from ostap.math.integral import integral3 as _integral3 
     return _integral3 ( func  ,
                         xmin  , xmax ,
                         ymin  , ymax ,
@@ -852,7 +850,6 @@ def sp_integrate_3Dz ( func  ,
                        zmin   , zmax ,
                        *args  , **kwargs )
 
-
 # =============================================================================
 ## make 2D numerical integration 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -876,7 +873,6 @@ def sp_integrate_3Dxy ( func  ,
                         xmin  , xmax ,
                         ymin  , ymax ,
                         *args , **kwargs )
-
 
 # =============================================================================
 ## make 2D numerical integration 
@@ -973,6 +969,7 @@ from ostap.stats.moments import variance         as sp_variance
 from ostap.stats.moments import rms              as sp_rms 
 from ostap.stats.moments import median           as sp_median
 from ostap.stats.moments import quantile         as sp_quantile
+from ostap.stats.moments import quantiles        as sp_quantiles
 from ostap.stats.moments import mode             as sp_mode 
 from ostap.stats.moments import width            as sp_width
 from ostap.stats.moments import fwhm             as sp_fwhm
@@ -1283,13 +1280,13 @@ for model in ( Ostap.Math.Chebyshev              ,
     if not hasattr ( model , 'moment'           ) : model.moment           = sp_moment
     if not hasattr ( model , 'central_moment'   ) : model.central_moment   = sp_central_moment
     if not hasattr ( model , 'quantile'         ) : model.quantile         = sp_quantile
+    if not hasattr ( model , 'quantiles'        ) : model.quantiles        = sp_quantiles
     if not hasattr ( model , 'cl_symm'          ) : model.cl_symm          = sp_cl_symm
     if not hasattr ( model , 'cl_asymm'         ) : model.cl_asymm         = sp_cl_asymm
     
     if sp_minimum_1D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_1D
     if sp_maximum_1D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_1D
     if sp_solve      and not hasattr ( model , 'solve'   ) : model.solve   = sp_solve
-
 
 # =======================================================================================
 ## Special `getattr' for Bernstein dual basis functions: delegate the stuff to

@@ -234,6 +234,7 @@ namespace Ostap
      *  @date 2008-11-08
      */  
     float next_float ( const float af , const short ulps ) ;
+    float prev_float ( const float af , const short ulps ) ; 
     // ========================================================================
     /** Get the floating number that representation 
      *  is different with respect  to the argument for 
@@ -252,6 +253,7 @@ namespace Ostap
      *  @date 2008-11-08
      */  
     double next_double ( const double  af , const short ulps ) ;
+    double prev_double ( const double  af , const short ulps ) ;
     // ========================================================================
     /** "distance" in ULPS between two float values 
      *   @param a (INPUT) the first  number 

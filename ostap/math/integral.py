@@ -94,7 +94,7 @@ else                       : logger = getLogger ( __name__              )
 #  CPU performance is not superb, but it is numerically stable.
 def romberg ( fun                 ,
               xmin                ,
-              xmax                ,
+              xmax                , * , 
               err      = False    , 
               epsabs   = 1.49e-8  ,
               epsrel   = 1.49e-8  ,
@@ -236,9 +236,8 @@ def romberg ( fun                 ,
 @memoize 
 def clenshaw_curtis_rule ( N ) :
     """ Calculate abscissas and weights for
-    the N-th order Clenshaw-Curtis quadratire (N+1 points)
+    the N-th order Clenshaw-Curtis quadrature (N+1 points)
     """
-    
     assert isinstance ( N , int ) and 0 <= N , "Invalid rule order: 'N'!"
 
     ## trivial rule 
@@ -306,7 +305,6 @@ def clenshaw_curtis_rule ( N ) :
 def clenshaw_curtis_step ( f , xmin , xmax , N ) :
     """ Single step of Clenshaw-Curtis quadrature of order N (N+1 points)
     """
-
     mid     = 0.5 * ( xmin + xmax )
     half    = 0.5 * ( xmax - xmin )
     
@@ -337,7 +335,7 @@ def clenshaw_curtis_step ( f , xmin , xmax , N ) :
 #  @endcode
 def clenshaw_curtis ( fun                 ,
                       xmin                ,
-                      xmax                ,
+                      xmax                , * , 
                       err      = False    , 
                       epsabs   = 1.49e-8  ,
                       epsrel   = 1.49e-8  ,
@@ -442,7 +440,7 @@ if scipy :
     #  @date   2014-06-06
     def integral ( fun            ,
                    xmin           ,
-                   xmax           ,
+                   xmax           , * , 
                    args  = ()     , 
                    err   = False  ,
                    **kwargs       ) :
@@ -464,7 +462,7 @@ else : # ======================================================================
     ## Use Romberg integration as default method when scipy is not available
     def integral ( fun                 ,
                    xmin                ,
-                   xmax                ,
+                   xmax                , * , 
                    args     = ()       ,
                    err      = False    , 
                    **kwargs            ) :
@@ -476,7 +474,6 @@ else : # ======================================================================
                          args   = args ,
                          err    = err  , **kwargs )
 # =============================================================================
-
 
 # =============================================================================
 # 2D&3D integration 
@@ -670,7 +667,6 @@ def _split2_ ( xlims , ylims ) :
              ( ( xc-dx , xc    ) , ( yc    , yc+dy ) ) ,
              ( ( xc    , xc+dx ) , ( yc    , yc+dy ) ) )
     
-
 # ============================================================================
 ## split 3D-region into eight smaller pieces
 #  @code
@@ -782,7 +778,6 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
     del stack 
     return res, serr, nfc , lstack
         
-
 # =============================================================================
 ## Adaptive numerical 2D integration using Genz&Malik's basic rule
 # 
@@ -799,7 +794,7 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
 #  @endcode 
 def genzmalik2 ( func   ,
                  xmin   , xmax   ,
-                 ymin   , ymax   ,
+                 ymin   , ymax   , * , 
                  args   = ()     ,
                  err    = False  ,
                  epsabs = 1.5e-7 ,
@@ -850,7 +845,7 @@ def genzmalik2 ( func   ,
 def genzmalik3 ( func   ,
                  xmin   , xmax   ,
                  ymin   , ymax   ,
-                 zmin   , zmax   ,
+                 zmin   , zmax   , * , 
                  args   = ()     ,
                  err    = False  ,
                  epsabs = 1.5e-7 ,
@@ -907,7 +902,7 @@ if scipy : # ==================================================================
     #  @date   2014-06-06
     def integral2 ( fun  ,
                     xmin , xmax   ,
-                    ymin , ymax   ,
+                    ymin , ymax   , * , 
                     args  =  ()   ,
                     err   = False ,
                     **kwargs      ) :
@@ -957,7 +952,7 @@ if scipy : # ==================================================================
     def integral3 ( fun  ,
                     xmin , xmax   ,
                     ymin , ymax   ,
-                    zmin , zmax   ,
+                    zmin , zmax   , * , 
                     args  =  ()   ,
                     err   = False ,
                     **kwargs      ) :
@@ -1008,14 +1003,45 @@ class IntegralBase(object) :
     def _integrate_1D_ ( self , func , xmn , xmx , args = () , **kwargs ) :
         args   =  args  if   args else self.args
         kwargs = kwargs if kwargs else self.kwargs 
-        return integral  ( func       ,
-                           xmn , xmx  ,
-                           args = args , err = self.err , **kwargs )
+        
+        # ====================================================================
+        ## (1) make a try to invoke the internal integral method
+        # ====================================================================
+        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+            # ================================================================ 
+            try : # ==========================================================
+                result = func.integral ( xmn , xmx ) # =======================
+                ## logger.attention ( 'INTERNAL INGTEGRAL IS USED %s %s' %  ( func.integral , result ) ) 
+                return result
+                # ============================================================
+            except TypeError : 
+                pass
+            
+        ## (2) use python integration 
+        return integral  ( func        ,
+                           xmn , xmx   ,
+                           args = args , 
+                           err  = self.err , **kwargs )
 
     ## Calculate the integral for the 2D-function
     def _integrate_2D_ ( self , func , xmn , xmx , ymn , ymx , args = () , **kwargs ) :
         args   =   args if   args else self.args
-        kwargs = kwargs if kwargs else self.kwargs         
+        kwargs = kwargs if kwargs else self.kwargs 
+        
+        # ====================================================================
+        ## (1) make a try to invoke the internal integral method
+        # ====================================================================
+        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+            # ================================================================ 
+            try : # ==========================================================
+                result = func.integral ( xmn , xmx , ymn , ymx ) # ===========
+                ## logger.attention ( 'INTERNAL INGTEGRAL IS USED %s %s' %  ( func.integral , result ) ) 
+                return result
+                # ============================================================
+            except TypeError : 
+                pass
+            
+        ## (2) use python integration
         return integral2 ( func        ,
                            xmn , xmx   ,
                            ymn , ymx   ,
@@ -1024,7 +1050,22 @@ class IntegralBase(object) :
     ## Calculate the integral for the 3D-function
     def _integrate_3D_ ( self , func , xmn , xmx , ymn , ymx , zmn , zmx , args = () , **kwargs ) :
         args   =   args if   args else self.args
-        kwargs = kwargs if kwargs else self.kwargs                 
+        kwargs = kwargs if kwargs else self.kwargs
+        
+        # ====================================================================
+        ## (1) make a try to invoke the internal integral method
+        # ====================================================================
+        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+            # ================================================================ 
+            try : # ==========================================================
+                result = func.integral ( xmn , xmx , ymn , ymx , zmn , zmx ) #
+                ## logger.attention ( 'INTERNAL INGTEGRAL IS USED %s %s' %  ( func.integral , result ) ) 
+                return result
+                # ============================================================
+            except TypeError : 
+                pass
+            
+        ## (2) use python integration
         return integral3 ( func        ,
                            xmn , xmx   ,
                            ymn , ymx   ,
@@ -1148,16 +1189,14 @@ class IntegralCache(Integral) :
         cache = self.__cache 
         n      = len ( cache )
         left   = cache.bisect_key_left  ( x )
-        print ( 'LEFT' , left  )
+
         if   0 == left : entry = cache [  0 ] 
         elif n <= left : entry = cache [ -1 ] 
         else : 
             left -= 1 
             right = left + 1 
-            print ( 'LEFT/RIGHT' , left , right , cache[ left] , cache [ right ] )
             entry  = min ( ( cache [ i ] for i in range ( left , right + 1 ) ) , key = lambda e : abs ( e [ 0 ] - x ) ) 
             
-        print ( 'CLOSE' , entry )
         xclose = entry [ 0 ] 
         if xclose == x : return  entry [ 1 ] 
         
@@ -1167,7 +1206,6 @@ class IntegralCache(Integral) :
         
         new_entry = x , result 
         cache.add ( new_entry ) 
-        print  ( 'ADD', new_entry )
         
         return  result 
 

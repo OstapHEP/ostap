@@ -349,6 +349,9 @@ float Ostap::Math::next_float ( const float af , const short ulps )
   // ==========================================================================
 }
 // ============================================================================
+float Ostap::Math::prev_float ( const float af , const short ulps ) 
+{ return next_float ( af , -ulps ) ; }
+// ============================================================================
 /*  equality comparison of float numbers using as the metric the maximal 
  *  number of Units in the Last Place (ULP).
  *  It is a slightly modified version of very efficient implementation 
@@ -424,6 +427,9 @@ double Ostap::Math::next_double ( const double ad , const short ulps )
   // ==========================================================================
 }
 // ============================================================================
+double Ostap::Math::prev_double ( const double ad , const short ulps )
+{  return next_double ( ad, - ulps ) ; } 
+// ============================================================================
 /*  "distance" in ULPS between two float values 
  *   @param a (INPUT) the first  number 
  *   @param b (INPUT) the second number 
@@ -442,6 +448,6 @@ long Ostap::Math::ulps_distance_float  ( const float  a , const float  b )
 long Ostap::Math::ulps_distance_double ( const double a , const double b )
 { return _distance_double_ ( a , b ) ; }
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
   
