@@ -16,13 +16,14 @@ __all__     = (
     'FunBASE2D'   , ## Helper base class to keep addtional arguments & range for 2D-function
     'FunBASE3D'   , ## Helper base class to keep addtional arguments & range for 3D-function
     ##
-    'FunMean'     , ## mean value for function values over the 1D-interval
+    'FunMEAN'     , ## mean value for function values over the 1D-interval
     'FunVariance' , ## variance  for function values over the 1D-interval
-    'FunRms'      , ## RMS for function values over the 1D-interval
-) 
+    'FunRMS'      , ## RMS for function values over the 1D-interval
+    'FunMNMX'     , ## MINMAX for function using the brute force approach
+)
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
-from   ostap.math.base        import pos_infinity, neg_infinity
+from   ostap.math.base        import pos_infinity, neg_infinity, isequal
 from   ostap.utils.basic      import typename
 import math 
 # =============================================================================
@@ -118,15 +119,15 @@ class FunBASE3D(FunBASE2D) :
         return self.__zmax
 
 # ============================================================================
-## @class FunMean
+## @class FunMEAN
 #  Mean-value of function over 1D-interval
 #  @code
-#  mean  = FunMean( fun ,xmin,xmax) 
+#  mean  = FunMEAN( fun ,xmin,xmax) 
 #  value = mean  ( math.sin )
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
-class FunMean(FunBASE1D) :
+class FunMEAN(FunBASE1D) :
     """ Calculate the mean-value of function over the 1D-interval
     >>> mean  = FunMean( fun ,xmin,xmax) 
     >>> value = mean  ( math.sin )
@@ -153,7 +154,7 @@ class FunMean(FunBASE1D) :
 # ==============================================================================
 ## @class FunVariance
 #  Calculate variance of the function over 1D-interval
-class FunVariance(FunMean) :
+class FunVariance(FunMEAN) :
     """ Calculate variance of the function over 1D-interval
     """
     ## Calculate variance of the function over interval
@@ -178,15 +179,77 @@ class FunVariance(FunMean) :
         return self.fun_variance ( func , self.xmin , self.xmax , *args )
     
 # ==============================================================================
-## @class FunRms
+## @class FunRMS
 #  Calculate Rms of the function over 1D-interval
-class FunRms(FunVariance) :
-    """ Calculate Rms of the function over the 1D-interval
+class FunRMS(FunVariance) :
+    """ Calculate RMS of the function over the 1D-interval
     """
     def __call__ ( self , func , *arg ) :
         args  = args if args else self.args                
         value = self.fun_variance ( func , self.xmin , self.xmax , *args )
         return math.sqrt ( value )
+    
+# =============================================================================
+## Estimate the min/max for the function using brute-force approach
+#  @attentoon the approximaiton coudl be rather rude 
+class FunMNMX(FunRMS) :
+    """ Estimate the min/max for the function using brute-force approach
+    - attentoon the approximation could be rather rude 
+    """
+    
+    def __init__ ( self , xmin , xmax , N = 100 , NMAX = 100000 , *args ) :
+        
+        super(FunMNMX,self).__init__  ( xmin , xmax , *args )
+        
+        self.__N    = N 
+        self.__NMAX = NMAX 
+        
+    def __call__ ( self , func , *args ) :
+        
+        args = args if args else self.args 
+        
+        from ostap.utils.ranges import vrange 
+        from ostap.utils.utils  import memoize 
+        
+        memfun = memoize ( func )
+                
+        IMAX = 15  
+        NMAX = 100000
+        
+        N = self.__N 
+        
+        xmin, xmax = self.xmin , self.xmax 
+        vmn0 = min ( memfun ( x , *args ) for x in vrange ( xmin , xmax , N ) ) 
+        vmx0 = max ( memfun ( x , *args ) for x in vrange ( xmin , xmax , N ) ) 
+        
+        vmin = vmn0 
+        vmax = vmx0 
+        
+        A, B = 2**5 , 1.0 / ( 2**5 - 1 )
+        
+        
+        for i in range ( IMAX ):
+            
+            N *= 2
+            if self.__NMAX < N : break 
+            
+            vmn  = min ( memfun ( x ) for x in vrange ( xmin , xmax , N ) ) 
+            vmx  = max ( memfun ( x ) for x in vrange ( xmin , xmax , N ) )
+        
+            ## a kind of Richardson's extrapolation    
+            vmin = ( A * vmn - vmn0 ) * B  
+            vmax = ( A * vmx - vmx0 ) * B 
+             
+            if 2 < i :
+                mnok = isequal ( vmin , vmn ) or isequal ( vmn , vmn0 )
+                if mnok : 
+                    mxok = isequal ( vmax , vmx ) or isequal ( vmx, vmx0 )
+                    if mxok : return vmin , vmax 
+             
+            vmn0 = vmn 
+            vmx0 = vmx 
+            
+        return vmin, vmax 
     
 # =============================================================================
 if '__main__' == __name__ :

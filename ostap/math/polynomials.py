@@ -18,6 +18,7 @@ __all__     = ()
 # =============================================================================
 from    ostap.core.ostap_types import num_types 
 from    ostap.math.base        import Ostap
+from    ostap.stats.funstats   import FunMNMX
 import  ostap.math.reduce
 # =============================================================================
 # logging 
@@ -46,7 +47,7 @@ def _poly_isub_  ( poly , other  ) :
 def _poly_imul_  ( poly , other  ) : 
     """ Modified __imul__ 
     """
-    try : return poly.iadd ( other ) 
+    try : return poly.imul ( other ) 
     except TypeError : pass     
     return NotImplemented 
 # =============================================================================
@@ -133,6 +134,49 @@ def _poly_density_( poly , *limits ) :
     
     return poly / i 
 
+# =============================================================================
+## copy/clone polynomials
+def _poly_copy_  ( poly ) :
+    """ Copy/clone polynomial (using copy contructor)  
+    """
+    ptype = type ( poly ) 
+    return ptype ( poly )
+
+# ============================================================================
+## estimate min/max values of polynomials
+#  @attentino - these are not real minmax, 
+#  but just such pair of values that gurantes 
+#  \f$ v_{min} \le p(x) \le v_{max} \f$
+#     min <= Ppoly <= max 
+# The etimate can be rather crude
+def _poly_minmax_  ( poly , raw = True ) :
+    """ Estimate min/max values of polynomials
+    - these are not real minmax, but just 
+    - such pair of values that gurantees min <= poly <= max
+    """
+    if isinstance   ( poly , Ostap.Math.Monotonic ) : 
+        
+        parss = poly.bernstein ().pars()  
+        vmin , vmax = min ( pars ) , max ( pars )
+        ## the result is exact 
+        return vmin , vmax
+    
+    elif isinstance ( poly , Ostap.Math.Bernstein ) :
+        
+        pars = poly.pars() 
+        vmin , vmax = min ( pars ) , max ( pars )
+        if raw or 1 >= poly.degree () : return vmin , vmax
+    
+    elif hasattr  ( poly , 'bernstein' )  : 
+        return _poly_minmax_  ( poly.bernstein () , raw = raw )
+    
+    elif raw : 
+        b = Ostap.Math.Bernstein ( poly ) 
+        return _poly_minmax_ ( b , raw = raw ) 
+
+    mnmx = FunMNMX ( poly.xmin () , poly.xmax () , N = poly.degree() * 2 )   
+    return mnmx ( poly )
+
 # ============================================================================
 ## (re)decorate polynomials
 # ============================================================================
@@ -148,7 +192,7 @@ for poly  in ( Ostap.Math.Polynomial   ,
         poly.__idiv__     = _poly_idiv_ 
         poly.__itruediv__ = _poly_idiv_ 
     
-    if hasattr ( poly , 'add' ) : 
+    if hasattr ( poly , 'add' ) :  
         poly. __add__ = _poly_add_ 
         poly.__radd__ = _poly_add_ 
         
@@ -167,9 +211,13 @@ for poly  in ( Ostap.Math.Polynomial   ,
     if hasattr ( poly , 'ipow' ) :  poly.__ipow__  = _poly_ipow_ 
     if hasattr ( poly , 'pow'  ) :  poly.__pow__   = _poly_pow_ 
 
-    if not hasattr ( poly , 'density' ) :
-        poly.density = _poly_density_ 
-        
+    if not hasattr ( poly , 'density'  ) : poly.density  = _poly_density_ 
+    if not hasattr ( poly , 'clone'    ) : poly.clone    = _poly_copy_ 
+    if not hasattr ( poly , 'copy'     ) : poly.copy     = _poly_copy_ 
+    if not hasattr ( poly , '__copy__' ) : poly.__copy__ = _poly_copy_ 
+    if not hasattr ( poly , 'minmax'   ) : poly.minimax  = _poly_minmax_ 
+
+Ostap.Math.Monotonic.minmax  = _poly_minmax_         
 # =============================================================================
 ## decorated classes 
 _decorated_classes_  = ()
