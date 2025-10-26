@@ -32,11 +32,12 @@ Also it tests Ostap::Math::Integrator
 from   ostap.core.pyrouts       import Ostap, SE  
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.math.integral      import ( integral  , romberg     ,
-                                         clenshaw_curtis         , 
-                                         integral2 , genzmalik2  ,  
-                                         integral3 , genzmalik3  ,
-                                       complex_circle_integral )
+from   ostap.math.integral      import ( integral  , romberg        ,
+                                         clenshaw_curtis           , 
+                                         integral2 , genzmalik2    ,  
+                                         integral3 , genzmalik3    ,
+                                         complex_circle_integral   ,  
+                                         Integral  , IntegralCache )
 from   ostap.math.make_fun      import make_fun1, make_fun2 , make_fun3
 from   ostap.utils.root_utils   import batch_env 
 import ostap.math.integrator 
@@ -249,7 +250,6 @@ def test_integrators ():
     ## create the function object 
     f1 = make_fun1 ( ff ) 
 
-
     N    = 100000
     
     scale = 1.e+12
@@ -259,6 +259,14 @@ def test_integrators ():
     
     def my_clenshaw_curtis ( *args ) :
         return clenshaw_curtis ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 ) 
+    
+    def my_integral  ( fun , low , high )  :
+        i = Integral ( fun , low )
+        return i ( high )
+    
+    def my_integral  ( fun , low , high )  :
+        i = IntegralCache  ( fun , low )
+        return i ( high )
     
     results = []
 
@@ -271,8 +279,9 @@ def test_integrators ():
                  ( 'Romberg/1'        , f1 ,  my_romberg         ) ,
                  ( 'Romberg/2'        , ff ,  my_romberg         ) , 
                  ( 'ClenshawCurtis/1' , f1 ,  my_clenshaw_curtis ) ,
-                 ( 'ClenshawCurtis/2' , ff ,  my_clenshaw_curtis ) )
-                 
+                 ( 'ClenshawCurtis/2' , ff ,  my_clenshaw_curtis ) , 
+                 ( 'Integral/1'       , f1 ,  my_integral        ) , 
+                 ( 'Integral/2'       , ff ,  my_integral        ) ) 
             
     for name , fun , func in for_test : 
         cnt = SE()
@@ -293,7 +302,60 @@ def test_integrators ():
     table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
     logger.info ( '%s\n%s' % ( title , table ) ) 
     
+        
+# =============================================================================
+def test_integrators2 ():
 
+    logger = getLogger('test_integrators2')
+
+    fun1 = Ostap.Math.Gauss() 
+    fun2 = lambda x : fun1 ( x ) 
+    fun3 = make_fun1 ( fun1 )
+    fun4 = make_fun1 ( fun2 )
+    
+    low  = -1
+    high =  3
+    exact = Ostap.Math.gauss_cdf  ( high ) - Ostap.Math.gauss_cdf ( -3 )
+    
+    N    = 50000
+    
+    scale = 1.e+15
+    
+    def my_integral  ( fun , low , high )  :
+        i = Integral ( fun , low )
+        return i ( high )
+    
+    results = []
+
+    I = Ostap.Math.Integrator() 
+    for_test = ( ( 'QAG'         , fun1 ,  I.integrate         ) ,
+                 ( 'CQUAD'       , fun1 ,  I.integrate_cquad   ) ,
+                 ( 'Romberg'     , fun1 ,  I.integrate_romberg ) ,
+                 ( 'Integral/1'  , fun1 ,  my_integral ) , 
+                 ( 'Integral/2'  , fun2 ,  my_integral ) , 
+                 ( 'Integral/3'  , fun3 ,  my_integral ) , 
+                 ( 'Integral/4'  , fun4 ,  my_integral ) )
+                 
+            
+    for name , fun , func in for_test : 
+        cnt = SE()
+        with timing ( '%9s integrator' % name , logger = logger ) as t :  
+            for i in progress_bar ( range ( N ) ) : cnt += abs( func ( fun , low , high ) - exact ) * scale 
+        results.append ( ( name , cnt , t.delta ) )
+
+    rows = [ ( 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
+
+    for name , cnt, td in results :        
+        row = name                         , \
+              '%.2f'  % td                 , \
+              '%+.4f' % cnt.mean().value() , \
+              '%+.4f' % ( cnt.max() )
+        rows.append ( row )
+
+    title = 'Compare different integrators'
+    table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+ 
 # =============================================================================
 def test_integral_2D ():
 
@@ -437,8 +499,6 @@ def test_integral_3D ():
     table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
     logger.info ( '%s\n%s' % ( title , table ) ) 
 
-
-
 # =============================================================================
 def test_integrators_3D ():
     
@@ -549,21 +609,22 @@ def test_integral_contour ():
     table = T.table ( rows , title = title ,  prefix = '# ' )
     logger.info ( '%s\n%s' % ( title , table ) ) 
 
-
 # ==============================================================================
 if '__main__' == __name__ :
 
-    test_integral         ()
-    test_integral_2D      ()
-    test_integral_3D      ()
-    test_integral_contour ()
+    ## test_integral         ()
+    ## test_integral_2D      ()
+    ## test_integral_3D      ()
+    ## test_integral_contour ()
     
-    test_integrators      ()
-    test_integrators_2D   ()
-    test_integrators_3D   ()
+    ## test_integrators      ()
+    test_integrators2     ()
+    
+    ##  test_integrators_2D   ()
+    ##  test_integrators_3D   ()
 
-    test_inf_integrals    ()
-    test_cauchy_integrals ()
+    ## test_inf_integrals    ()
+    ## test_cauchy_integrals ()
 
 
 # =============================================================================

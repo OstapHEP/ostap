@@ -1007,7 +1007,7 @@ class IntegralBase(object) :
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+        if not args and not self.err and hasattr ( func , 'integral' ) :
             # ================================================================ 
             try : # ==========================================================
                 result = func.integral ( xmn , xmx ) # =======================
@@ -1031,7 +1031,7 @@ class IntegralBase(object) :
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+        if not args and not self.err and hasattr ( func , 'integral' ) :
             # ================================================================ 
             try : # ==========================================================
                 result = func.integral ( xmn , xmx , ymn , ymx ) # ===========
@@ -1055,7 +1055,7 @@ class IntegralBase(object) :
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+        if not args and not self.err and hasattr ( func , 'integral' ) :
             # ================================================================ 
             try : # ==========================================================
                 result = func.integral ( xmn , xmx , ymn , ymx , zmn , zmx ) #

@@ -7,6 +7,8 @@
   1. add method for adding new edge to the historgam axis
   1. add method to split certain bin into N parts  
   1. impove self-printout of histogram axes 
+  1. optiize numeric integration - make  a try to call the internl `integral` method
+  1. extent inntegration tests
 
 ## Backward  incompatible 
 
