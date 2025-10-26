@@ -8,7 +8,9 @@
   1. add method to split certain bin into N parts  
   1. impove self-printout of histogram axes 
   1. optiize numeric integration - make  a try to call the internl `integral` method
-  1. extent inntegration tests
+  1. extent integration tests
+  1. more tweaks for polynomials
+  1. add `FunMNMX` got het brute-force minmax exstimatoro for functions
 
 ## Backward  incompatible 
 
