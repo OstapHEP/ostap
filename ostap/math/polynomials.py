@@ -154,7 +154,7 @@ def _poly_minmax_  ( poly , raw = True ) :
     - these are not real minmax, but just 
     - such pair of values that gurantees min <= poly <= max
     """
-    if isinstance   ( poly , Ostap.Math.Monotonic ) : 
+    if isinstance ( poly , ( Ostap.Math.Monotonic , Ostap.Math.Convex ) ) : 
         
         parss = poly.bernstein ().pars()  
         vmin , vmax = min ( pars ) , max ( pars )
@@ -217,7 +217,14 @@ for poly  in ( Ostap.Math.Polynomial   ,
     if not hasattr ( poly , '__copy__' ) : poly.__copy__ = _poly_copy_ 
     if not hasattr ( poly , 'minmax'   ) : poly.minimax  = _poly_minmax_ 
 
-Ostap.Math.Monotonic.minmax  = _poly_minmax_         
+
+for t in ( Ostap.Math.BernsteinEven ,  
+           Ostap.Math.Positive      ,  
+           Ostap.Math.Monotonic     , 
+           Ostap.Math.Convex        , 
+           Ostap.Math.ConvexOnly    ) :  
+    t.minmax = _poly_minmax_ 
+            
 # =============================================================================
 ## decorated classes 
 _decorated_classes_  = ()
