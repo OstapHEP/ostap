@@ -138,7 +138,7 @@ then
     OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
 else
     echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
-    return 202
+
 fi     
 
 # =========================================================================
@@ -147,8 +147,8 @@ fi
 if [[ -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
 then
     OSTAP_INSTALL=$(readlink -f ${OSTAP_INSTALL})
-    ( echo -e "${prefix2}"' [1/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} ;
-      cd ${OSTAP_INSTALL} ;
+    ( echo -e "${prefix2}"' [1/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} &&  
+      cd ${OSTAP_INSTALL}                                                                 && 
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
 fi
 
@@ -157,14 +157,17 @@ fi
 # ==========================================================================
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
-    ( echo -e "${prefix2}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} ; cd ${OSTAP_BUILD} ; ninja clean )
+    ( echo -e "${prefix2}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
+      cd ${OSTAP_BUILD} &&
+      ninja clean )
+
 fi
 
 # =========================================================================
 ## Clean build  directory (2) 
 # ==========================================================================
-( echo -e "${prefix2}"' [3/7] Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  ;
-  cd ${OSTAP_BUILD} ;
+( echo -e "${prefix2}"' [3/7] Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  &&
+  cd ${OSTAP_BUILD}                                                                  && 
   rm -rf CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 
 
@@ -182,9 +185,11 @@ fi
 # =========================================================================
 ## (FRESH) build 
 # ==========================================================================
-( echo -e "${prefix2}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} ;
-  cd ${OSTAP_BUILD} ;
-  cmake ${fresh} ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
+( echo -e "${prefix2}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} && 
+  cd ${OSTAP_BUILD}                                                                 && 
+  cmake ${fresh} ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja   &&
+  ninja                                                                             && 
+  ninja install | grep -v Up-to-date | grep -v Installing )
 
 # =========================================================================
 ## install directory must appear...  
@@ -200,9 +205,11 @@ fi
 # =========================================================================
 ## Again ...
 # ==========================================================================
-( echo -e "${prefix2}"' [5/7] Second pass of cmake&ninja&install'    ${OSTAP_BUILD} ;
-  cd ${OSTAP_BUILD} ;
-  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
+( echo -e "${prefix2}"' [5/7] Second pass of cmake&ninja&install'    ${OSTAP_BUILD} &&
+  cd ${OSTAP_BUILD}                                                                 && 
+  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja    && 
+  ninja                                                                             && 
+  ninja install | grep -v Up-to-date | grep -v Installing )
 
 
 # =========================================================================
@@ -220,9 +227,11 @@ fi
 # =========================================================================
 ## Again ...
 # ==========================================================================
-( echo -e "${prefix2}"' [6/7] Third  pass of cmake&ninja&install    '${OSTAP_BUILD} ;
-  cd ${OSTAP_BUILD} ;
-  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
+( echo -e "${prefix2}"' [6/7] Third  pass of cmake&ninja&install    '${OSTAP_BUILD} &&
+  cd ${OSTAP_BUILD}                                                                 && 
+  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja    && 
+  ninja                                                                             && 
+  ninja install | grep -v Up-to-date | grep -v Installing )
 
 ## ( echo -e "${prefix2}"' [7/7] Last   pass of cmake&ninja&package'  ;
 ##   cd ${OSTAP_BUILD} ;
