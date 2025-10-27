@@ -162,9 +162,9 @@ fi
 cmake_version=$(cmake --version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')
 if [[ "${cmake_version}" < "3.24.0" ]]
 then
-    fresh="--fresh"
-else
     fresh=
+else
+    fresh="--fresh"
 fi
 
 ( echo -e "${prefix2}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} ;
