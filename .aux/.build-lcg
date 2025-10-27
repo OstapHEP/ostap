@@ -95,10 +95,14 @@ else
     return 120
 fi
 
-LCG_BUILD=/cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM}
+LCG_VIEWS=/cvmfs/sft.cern.ch/lcg/views/
+LCG_BUILD=${LCG_VIEWS}/${LCG}/${PLATFORM}
 LCG_SETUP=${LCG_BUILD}/setup.sh 
 
-if [[ ${LCG} && ${PLATFORM} && -d ${LCG_BUILD} && -f ${LCG_SETUP} ]]
+if [[ ${LCG} && ${PLATFORM}   &&
+       -d ${LCG_VIEWS}        && 
+       -d ${LCG_BUILD}        &&
+       -f ${LCG_SETUP}        ]]
 then
     echo -e ${prefix}$' Source LCG setup   = '${LCG_SETUP}  
     source ${LCG_SETUP}
@@ -107,11 +111,17 @@ else
     return 130 
 fi
 
-if [[ ${ROOTSYS} &&  -d ${ROOTSYS} ]]
-then
-    true 
+##  check ROOTSYS 
+if [[    ${ROOTSYS}                 &&
+      -d ${ROOTSYS}                 &&
+      -d ${ROOTSYS}/bin             &&
+      -x ${ROOTSYS}/bin/root        &&
+      -x ${ROOTSYS}/bin/root.exe    &&
+      -x ${ROOTSYS}/bin/root-config ]]	    
+then 
+    true
 else 
-    echo -e ${COLOR_ERR}${prefix_error}${COLOR_OFF}' No ROOTSYS directory ' ${ROOTSYS}
+    echo -e ${prefix_error}' No valid ROOTSYS directory ' ${ROOTSYS}
     return 140
 fi
 

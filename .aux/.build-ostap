@@ -30,12 +30,16 @@ OSTAP_SOURCE=${1:-${OSTAP_SOURCE}}
 OSTAP_BUILD=${2:-${OSTAP_BUILD}}
 OSTAP_INSTALL=${3:-${OSTAP_INSTALL}}
 
-if [[   ${ROOTSYS} &&
-     -d ${ROOTSYS} ]]
+if [[    ${ROOTSYS}                 &&
+      -d ${ROOTSYS}                 &&
+      -d ${ROOTSYS}/bin             &&
+      -x ${ROOTSYS}/bin/root        &&
+      -x ${ROOTSYS}/bin/root.exe    &&
+      -x ${ROOTSYS}/bin/root-config ]]	    
 then 
     true
 else 
-    echo -e ${prefix1_error}' No ROOTSYS directory:' ${ROOTSYS}
+    echo -e ${prefix1_error}' No valid ROOTSYS directory:' ${ROOTSYS}
     return 200
 fi
 
@@ -72,47 +76,36 @@ else
     echo -e ${prefix1}' Build directory is created:' ${OSTAP_BUILD}
 fi 
 
-if [[ -f rebuild_ostap.sh ]]
-then
-    rm -f rebuild_ostap.sh
-fi
+## rm -f rebuild_ostap.sh
+## rm -f ${OSTAP_BUILD}/.rebuild-ostap 
 
-if [[ -f ${OSTAP_BUILD}/.rebuild-ostap ]]
-then
-    rm -f ${OSTAP_BUILD}/.rebuild-ostap 
-fi
+## cat <<EOF >rebuild_ostap.sh
+## #!/usr/bin/bash 
 
+## if [[  ${ROOTSYS} &&
+##     -d ${ROOTSYS} ]]
+## then 
+##     echo -e "${prefix2}"' Use ROOTSYS       = '${ROOTSYS} 
+## else 
+##     echo -e "${prefix2_error}"' No ROOTSYS directory: '${ROOTSYS}
+##    return 202
+## fi
 
-cat <<EOF >rebuild_ostap.sh
-#!/usr/bin/bash 
+## if [[ -d ${OSTAP_SOURCE} ]]
+## then 
+##     echo -e "${prefix2}"' Use OSTAP_SOURCE  = '${OSTAP_SOURCE}
+## else
+##    echo -e "${prefix2_error}"' No valid source directory is found!' ${OSTAP_SOURCE}
+##    return 203 
+## fi
 
-
-
-
-if [[  ${ROOTSYS} &&
-    -d ${ROOTSYS} ]]
-then 
-    echo -e "${prefix2}"' Use ROOTSYS       = '${ROOTSYS} 
-else 
-    echo -e "${prefix2_error}"' No ROOTSYS directory: '${ROOTSYS}
-    return 202
-fi
-
-if [[ -d ${OSTAP_SOURCE} ]]
-then 
-    echo -e "${prefix2}"' Use OSTAP_SOURCE  = '${OSTAP_SOURCE}
-else
-    echo -e "${prefix2_error}"' No valid source directory is found!' ${OSTAP_SOURCE}
-    return 203 
-fi
-
-if [[ -d ${OSTAP_BUILD} && -w ${OSTAP_BUILD} ]]
-then
-    echo -e "${prefix2}"' Use OSTAP_BUILD   = '${OSTAP_BUILD} 
-else
-    echo -e "${prefix2_error}"' No valid build directory is found!' ${OSTAP_BUILD}
-    return 204 
-fi 
+## if [[ -d ${OSTAP_BUILD} && -w ${OSTAP_BUILD} ]]
+## then
+##    echo -e "${prefix2}"' Use OSTAP_BUILD   = '${OSTAP_BUILD} 
+## else
+##    echo -e "${prefix2_error}"' No valid build directory is found!' ${OSTAP_BUILD}
+##    return 204 
+## fi 
 
 echo -e "${prefix2}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
 
@@ -171,34 +164,31 @@ echo -e "${prefix2}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
 echo -e "${prefix2}"' OSTAP_BUILD     : '${OSTAP_BUILD}
 echo -e "${prefix2}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
 echo -e "${prefix2}"' thisostap.sh    : '${OSTAP_INSTALL}/thisostap.sh
-echo -e "${prefix2}"' root            : '\$(which root       )
-echo -e "${prefix2}"' root.exe        : '\$(which root.exe   )
-echo -e "${prefix2}"' root version    : '\$(root.exe --version 2>&1 | sed -E "s/\\\\n/ /g" )
-echo -e "${prefix2}"' python          : '\$(which python    )
-echo -e "${prefix2}"' python version  : '\$(python   -VV       2>&1 | sed -E "s/\\\\n/ /g" )
-echo -e "${prefix2}"' ostap           : '\$(which ostap     )
-echo -e "${prefix2}"' root version    : '\$(ostap    --version 2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix2}"' root            : '$(which root       )
+echo -e "${prefix2}"' root.exe        : '$(which root.exe   )
+echo -e "${prefix2}"' root version    : '$(root.exe --version 2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix2}"' python          : '$(which python    )
+echo -e "${prefix2}"' python version  : '$(python   -VV       2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix2}"' ostap           : '$(which ostap     )
+echo -e "${prefix2}"' root version    : '$(ostap    --version 2>&1 | sed -E "s/\\\\n/ /g" )
 
 if command -v tree &> /dev/null
 then
     tree -d -L 3 --charset UTF-8 ${OSTAP_INSTALL}
 fi 
 
-EOF
-
-if [[ -f ./rebuild_ostap.sh ]]
-then
-    mv ./rebuild_ostap.sh ${OSTAP_BUILD}/.rebuild-ostap
-    chmod 755 ${OSTAP_BUILD}/.rebuild-ostap
-else
-    echo -e "${prefix2_error}"' No .rebuild-ostap is found '${OSTAP_BUIILD}/.rebuild-ostap
-    return 207 
-fi
-
-echo -e ${prefix1}' Source .rebuild-ostap ' ${OSTAP_BUILD}/.rebuild-ostap
-## cat ${OSTAP_BUILD}/.rebuild-ostap
-source ${OSTAP_BUILD}/.rebuild-ostap
-result=$?
-
-
-return ${result}
+## EOF
+##
+## if [[ -f ./rebuild_ostap.sh ]]
+## then
+##    mv ./rebuild_ostap.sh ${OSTAP_BUILD}/.rebuild-ostap
+##    chmod 755 ${OSTAP_BUILD}/.rebuild-ostap
+## else
+##    echo -e "${prefix2_error}"' No .rebuild-ostap is found '${OSTAP_BUIILD}/.rebuild-ostap
+##    return 207 
+## fi
+## 
+## echo -e ${prefix1}' Source .rebuild-ostap ' ${OSTAP_BUILD}/.rebuild-ostap
+## source ${OSTAP_BUILD}/.rebuild-ostap
+## result=$?
+## return ${result}
