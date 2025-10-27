@@ -167,7 +167,7 @@ endif()
 # ========================================================================================
 ## terminaltables3 & terminaltables 
 # ========================================================================================
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.9" )
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.9.0" )
    find_python_module ( terminaltables3 QUIET )
    if ( NOT ${PY_terminaltables3_FOUND} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables3 ${PIP_ARGS})
@@ -232,16 +232,16 @@ endif()
 ##
 find_python_module ( berkeleydb QUIET )
 if ( NOT ${PY_berkeleydb_FOUND} )
-  if   ( ${PYTHON_VERSION} VERSION_LESS "3.7" )
+  if   ( ${PYTHON_VERSION} VERSION_LESS "3.7.0" )
     message ( "PYTHON/bernekley 18.1.4 " ${PYTHON_VERSION} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.4"  ${PIP_ARGS})
-   elif ( ${PYTHON_VERSION} VERSION_LESS "3.8" )
+   elif ( ${PYTHON_VERSION} VERSION_LESS "3.8.0" )
     message ( "PYTHON/bernekley 18.1.6 " ${PYTHON_VERSION} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.6"  ${PIP_ARGS})
-   elif ( ${PYTHON_VERSION} VERSION_LESS "3.9" )
+   elif ( ${PYTHON_VERSION} VERSION_LESS "3.9.0" )
     message ( "PYTHON/bernekley 18.1.10 " ${PYTHON_VERSION} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.10" ${PIP_ARGS})
-   elif ( ${PYTHON_VERSION} VERSION_LESS "3.10" )
+   elif ( ${PYTHON_VERSION} VERSION_LESS "3.10.0" )
     message ( "PYTHON/bernekley 18.1.14 " ${PYTHON_VERSION} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "berkeleydb==18.1.14" ${PIP_ARGS})
    else ()   
@@ -257,7 +257,7 @@ endif()
 # ========================================================================================
 ## BDDDB3
 # ========================================================================================
-if ( ${PYTHON_VERSION} VERSION_LESS       "3.10" )
+if ( ${PYTHON_VERSION} VERSION_LESS       "3.10.0" )
    find_python_module ( bsddb3 QUIET )
    if ( NOT ${PY_bsddb3_FOUND} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install bsddb3 ${PIP_ARGS})
@@ -321,7 +321,7 @@ endif()
 # ========================================================================================
 ## hep_ml
 # ========================================================================================
-if ( ${PYTHON_VERSION} VERSION_LESS       "3.12" )
+if ( ${PYTHON_VERSION} VERSION_LESS       "3.12.0" )
    find_python_module ( hep_ml QUIET )
    if ( NOT ${PY_hep_ml_FOUND} )
       execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
@@ -458,7 +458,7 @@ endif()
 ## INSTALLATION
 # =========================================================================================
 
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.10"  )    
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.10.0"  )    
    execute_process(
       COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
       import sysconfig as sc
