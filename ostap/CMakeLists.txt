@@ -283,7 +283,7 @@ endif()
 # ========================================================================================
 ##
 find_python_module ( tkrzw QUIET )
-if ( NOT ${PY_tkrzw_FOUND} )
+if ( NOT ${PY_tkrzw_FOUND} )  
    message ( "----> warning (optional)           tkrzw is NOT found!" ) 
 endif()
 
