@@ -34,7 +34,7 @@ jobs:
     displayName: 'docker container'
   - script: |
      sudo apt-get install libdb-dev
-     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0  --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ &&  dnf install libdb-devel -y && ./.aux/build_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}" 
+     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0  --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ &&  dnf clear all && dnf install trkzw libdb-devel -y && ./.aux/build_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}" 
     displayName: 'build stage'
   - script: |
      docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0 --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./.aux/test_with_lcg ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
