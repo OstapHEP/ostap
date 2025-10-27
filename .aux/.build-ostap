@@ -158,9 +158,18 @@ then
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
 fi
 
+
+cmake_version=$(cmake --version | grep -Eo '[0-9]\.[0-9]+\.[0-9]+')
+if [[ "${cmake_version}" < "3.24.0" ]]
+then
+    fresh="--fresh"
+else
+    fresh=
+fi
+
 ( echo -e "${prefix2}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} ;
   cd ${OSTAP_BUILD} ;
-  cmake --fresh ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
+  cmake ${fresh} ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja install | grep -v Up-to-date | grep -v Installing )
 
 if [[ -d ${OSTAP_INSTALL} ]]
 then
