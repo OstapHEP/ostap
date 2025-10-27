@@ -158,7 +158,7 @@ done
 if [[    ${source_found} &&
       -d ${source_found} ]]
 then
-    OSTAP_SOURCE=${source_found}
+    OSTAP_SOURCE=$(readlink -f ${source_found})
     echo -e ${prefix}' Use OSTAP_SOURCE   = '${OSTAP_SOURCE}
 else
     echo -e ${prefix_error}' No ostap source drectory found!'
@@ -173,6 +173,7 @@ if   [[    ${OSTAP_BUILD} &&
         -w ${OSTAP_BUILD} ]]
 then
     
+    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
     echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
     
 elif [[ -d ${OSTAP_SOURCE}/build &&
@@ -195,15 +196,18 @@ else
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
     echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
     
-fi 
-
-if [[ -f ${OSTAP_BUILD}/.build-ostap ]]
-then
-    true 
-else 
-    cp ${OSTAP_SOURCE}/.aux/.build-ostap ${OSTAP_BUILD}/.build-ostap
-    echo -e ${prefix}' Copy .build-ostap from '${OSTAP_SOURCE}/.aux/.build-ostap
 fi
+
+## check it again 
+if   [[    ${OSTAP_BUILD} &&
+	-d ${OSTAP_BUILD} &&
+	-w ${OSTAP_BUILD} ]]
+then
+    OSTAP_BUILD=$(realpath ${OSTAP_BUILD})
+else
+    echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
+    return 201
+fi     
 
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
@@ -217,24 +221,38 @@ fi
 ## parameter #5: install directory 
 OSTAP_INSTALL=${5:-${OSTAP_INSTALL}}
 
-if   [[ ${OSTAP_INSTALL} && -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
+if   [[   ${OSTAP_INSTALL} &&
+       -d ${OSTAP_INSTALL} &&
+       -w ${OSTAP_INSTALL} ]]
 then
+    OSTAP_INSTALL=$(realpath ${OSTAP_INSTALL})
     ( echo -e ${prefix}' Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} ;
       cd ${OSTAP_INSTALL} ;
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
+    
+elif [[     ${OSTAP_INSTALL} &&
+         -d ${OSTAP_INSTALL} &&
+       ! -w ${OSTAP_INSTALL} ]]
+then
+    echo -e ${prefix_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
+    return 203
 else
     OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG${LCG_VERSION}/${PLATFORM}
+    OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL})
+    ## echo -e ${prefix}' Use OSTAP_INSTALL  = '${OSTAP_INSTALL}
 fi
+
 
 echo -e ${prefix}' LCG VERSION   : '${LCG}
 echo -e ${prefix}' LCG PLATFORM  : '${PLATFORM}
 echo -e ${prefix}' LCG BUILD     : '${LCG_BUILD}
 echo -e ${prefix}' ROOTSYS       : '${ROOTSYS}
 echo -e ${prefix}' OSTAP_SOURCE  : '${OSTAP_SOURCE}
-echo -e ${prefix}' OSTAP_BUILD   : '${OSTAP_BUILD}
 echo -e ${prefix}' OSTAP_INSTALL : '${OSTAP_INSTALL}
+echo -e ${prefix}' OSTAP_BUILD   : '${OSTAP_BUILD}
 
-source ${OSTAP_BUILD}/.build-ostap ${OSTAP_SOURCE} ${OSTAP_BUILD} ${OSTAP_INSTALL}
+## the actual build-script 
+source ${OSTAP_SOURCE}/.aux/.build-ostap ${OSTAP_SOURCE} ${OSTAP_INSTALL} ${OSTAP_BUILD}
 
 result=$?
 

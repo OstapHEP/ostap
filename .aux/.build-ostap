@@ -5,6 +5,9 @@ prefix1_error='<<BUILD OSTAP *ERROR*>>'
 prefix2=${prefix1}
 prefix2_error=${prefix1_error}
 
+# ==========================================================================
+## Color output ? 
+# ==========================================================================
 COLORS=$(tput colors 2> /dev/null)
 if [[ $? == 0  && $COLORS -gt 2 ]]
 then
@@ -26,10 +29,16 @@ then
     ## 
 fi
 
+# ==========================================================================
+## Get parameters 
+# ==========================================================================
 OSTAP_SOURCE=${1:-${OSTAP_SOURCE}}
-OSTAP_BUILD=${2:-${OSTAP_BUILD}}
-OSTAP_INSTALL=${3:-${OSTAP_INSTALL}}
+OSTAP_INSTALL=${2:-${OSTAP_INSTALL}}
+OSTAP_BUILD=${3:-${OSTAP_BUILD}}
 
+# ==========================================================================
+## Valid ROOTSYS ? 
+# ==========================================================================
 if [[    ${ROOTSYS}                 &&
       -d ${ROOTSYS}                 &&
       -d ${ROOTSYS}/bin             &&
@@ -43,6 +52,9 @@ else
     return 200
 fi
 
+# ==========================================================================
+## Valid source directory ? 
+# ==========================================================================
 if [[    ${OSTAP_SOURCE}                && 
       -d ${OSTAP_SOURCE}                &&
       -d ${OSTAP_SOURCE}/cmake          &&
@@ -55,59 +67,79 @@ if [[    ${OSTAP_SOURCE}                &&
       -d ${OSTAP_SOURCE}/ReleaseNotes   &&
       -f ${OSTAP_SOURCE}/CMakeLists.txt ]]
 then
-    true 
+    OSTAP_SOURCE=$(readlink -f ${OSTAP_SOURCE})
+    echo -e "${prefix1}"' Use OSTAP_SOURCE  = '${OSTAP_SOURCE}
 else 	
     echo -e ${prefix1_error}' No valid source directory is found! '${OSTAP_SOURCE}
     return 201
 fi
 
+# ==========================================================================
+## INSTALL directory 
+# ==========================================================================
+if [[ ${OSTAP_INSTALL} && "${OSTAP_INSTALL}}" ]]
+then
+    OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL} )
+else
+    OSTAP_INSTALL=$(realpath -m "./INSTALL" )
+fi
+
+if [[      ${OSTAP_INSTALL} &&
+        -d ${OSTAP_INSTALL} &&  
+      ! -w ${OSTAP_INSTALL} ]]
+then
+    echo -e ${prefix1_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
+    return 203
+fi
+
+echo -e "${prefix2}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
+    
+# =========================================================================
+## Valid build  directory (1) ? 
+# ==========================================================================
+
+if   [[    ${OSTAP_BUILD} &&
+        -d ${OSTAP_BUILD} &&
+        -w ${OSTAP_BUILD} ]]
+then
+    
+    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
+    echo -e "${prefix1}"' Use OSTAP_BUILD   = '${OSTAP_BUILD}
+
+elif [[ -d ${OSTAP_SOURCE}/build &&
+	-w ${OSTAP_SOURCE}/build ]]
+then
+    
+     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
+     echo -e "${prefix1}"' Use OSTAP_BUILD   = '${OSTAP_BUILD}
+
+elif [[  -w ${OSTAP_SOURCE} &&
+       ! -d ${OSTAP_SOURCE}/build ]]
+then
+    
+     mkdir ${OSTAP_SOURCE}/build
+     OSTAP_BUILD=$(readlink -f ${OSTAP_SOURCE}/build)
+     echo -e ${prefix1}' Build directory is created '${OSTAP_BUILD}
+     
+else
+    
+    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
+    echo -e ${prefix1} ' Build directory is created '${OSTAP_BUILD}
+    
+fi
+
+# =========================================================================
+## Valid build  directory (2) ? 
+# ==========================================================================
 if   [[    ${OSTAP_BUILD} &&
 	-d ${OSTAP_BUILD} &&
 	-w ${OSTAP_BUILD} ]]
 then
-    true 
-elif [[ -w ${OSTAP_SOURCE} ]]
-then 
-    mkdir ${OSTAP_SOURCE}/build
-    OSTAP_BUILD=${OSTAP_SOURCE}/build  
-    echo -e ${prefix1}' Build directory is created:' ${OSTAP_BUILD}
+    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
 else
-    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
-    echo -e ${prefix1}' Build directory is created:' ${OSTAP_BUILD}
-fi 
-
-## rm -f rebuild_ostap.sh
-## rm -f ${OSTAP_BUILD}/.rebuild-ostap 
-
-## cat <<EOF >rebuild_ostap.sh
-## #!/usr/bin/bash 
-
-## if [[  ${ROOTSYS} &&
-##     -d ${ROOTSYS} ]]
-## then 
-##     echo -e "${prefix2}"' Use ROOTSYS       = '${ROOTSYS} 
-## else 
-##     echo -e "${prefix2_error}"' No ROOTSYS directory: '${ROOTSYS}
-##    return 202
-## fi
-
-## if [[ -d ${OSTAP_SOURCE} ]]
-## then 
-##     echo -e "${prefix2}"' Use OSTAP_SOURCE  = '${OSTAP_SOURCE}
-## else
-##    echo -e "${prefix2_error}"' No valid source directory is found!' ${OSTAP_SOURCE}
-##    return 203 
-## fi
-
-## if [[ -d ${OSTAP_BUILD} && -w ${OSTAP_BUILD} ]]
-## then
-##    echo -e "${prefix2}"' Use OSTAP_BUILD   = '${OSTAP_BUILD} 
-## else
-##    echo -e "${prefix2_error}"' No valid build directory is found!' ${OSTAP_BUILD}
-##    return 204 
-## fi 
-
-echo -e "${prefix2}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
+    echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
+    return 202
+fi     
 
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
@@ -120,6 +152,7 @@ fi
 
 if [[ -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
 then
+    OSTAP_INSTALL=$(readlink -f ${OSTAP_INSTALL})
     ( echo -e "${prefix2}"' [3/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} ;
       cd ${OSTAP_INSTALL} ;
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
@@ -170,25 +203,10 @@ echo -e "${prefix2}"' root version    : '$(root.exe --version 2>&1 | sed -E "s/\
 echo -e "${prefix2}"' python          : '$(which python    )
 echo -e "${prefix2}"' python version  : '$(python   -VV       2>&1 | sed -E "s/\\\\n/ /g" )
 echo -e "${prefix2}"' ostap           : '$(which ostap     )
-echo -e "${prefix2}"' root version    : '$(ostap    --version 2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix2}"' ostap version   : '$(ostap    --version 2>&1 | sed -E "s/\\\\n/ /g" )
 
 if command -v tree &> /dev/null
 then
     tree -d -L 3 --charset UTF-8 ${OSTAP_INSTALL}
 fi 
 
-## EOF
-##
-## if [[ -f ./rebuild_ostap.sh ]]
-## then
-##    mv ./rebuild_ostap.sh ${OSTAP_BUILD}/.rebuild-ostap
-##    chmod 755 ${OSTAP_BUILD}/.rebuild-ostap
-## else
-##    echo -e "${prefix2_error}"' No .rebuild-ostap is found '${OSTAP_BUIILD}/.rebuild-ostap
-##    return 207 
-## fi
-## 
-## echo -e ${prefix1}' Source .rebuild-ostap ' ${OSTAP_BUILD}/.rebuild-ostap
-## source ${OSTAP_BUILD}/.rebuild-ostap
-## result=$?
-## return ${result}

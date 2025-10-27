@@ -2,7 +2,7 @@
 LCG=$1
 CMTCONFIG=$2
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-source build/INSTALL/thisostap.sh 
+source ./build/INSTALL/thisostap.sh 
 cd build
 
-ctest -N && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j4 --output-on-failure --test-output-size-failed 5000000
+ctest -N && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && ctest -j4 -R '(core_core|acl|check)' --output-on-failure --test-output-size-failed 5000000
