@@ -20,7 +20,7 @@ __all__     = (
     ##
     'Batch'              , ## context manager to keep/force certain ROOT ``batch''-mode
     'batch'              , ## context manager to keep/force certain ROOT ``batch''-mode
-    'batch_env'          , ## chek&set the bacth from environment 
+    'batch_env'          , ## check&set the batch from environment 
     ##
     'implicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
@@ -115,7 +115,7 @@ class Batch(object) :
 # =============================================================================
 ## check batch from environment variables, set it ans issue the message
 def batch_env  ( logger = logger ) :
-    """ chek&set the bacth from environment 
+    """ check&set the batch from environment 
     - Check batch environmen variable
     - set ROOT.TROOT.SetBatch(True) 
     - issue the message 

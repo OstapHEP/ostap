@@ -45,8 +45,10 @@ __all__     = (
     'all_strings'     , ## all arguments of string  types?
     )
 # =============================================================================
-from   collections.abc import Collection, Sequence, Iterable, Mapping, Sized, Generator   
-import array, sys, os, math  
+from   collections.abc              import  ( Collection, Sequence  ,
+                                              Iterable  , Mapping   ,
+                                              Sized     , Generator )   
+import array, sys, os, math, numpy   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -65,7 +67,7 @@ iterable_types  = Iterable ,
 num_types       = integer_types + ( float , ) 
 str_types       = str  ,
 list_types      = list , tuple
-listlike_types  = list_types + ( set , Sequence , array.array )
+listlike_types  = list_types + ( set , Sequence , array.array , numpy.ndarray )
 # =============================================================================
 if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) : # ========
     import warnings # =========================================================
@@ -82,15 +84,6 @@ else : # ======================================================================
 std = cppyy.gbl.std 
 if hasattr ( std , 'string'      ) : string_types += ( std.string      , )
 if hasattr ( std , 'string_view' ) : string_types += ( std.string_view , )
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy as np
-    listlike_types  = listlike_types + ( np.ndarray , )
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    pass 
 # =============================================================================
 dict_types      = dict ,
 dictlike_types  = dict ,  Mapping  

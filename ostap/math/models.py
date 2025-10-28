@@ -24,7 +24,12 @@ __all__     = (
 from    ostap.core.core        import cpp, Ostap, funID
 from    ostap.utils.basic      import loop_items 
 from    ostap.core.ostap_types import num_types, integer_types, sequence_types 
-from    ostap.math.base        import pos_infinity, neg_infinity
+from    ostap.math.base        import  ( pos_infinity     ,
+                                         neg_infinity     ,
+                                         vct1_call_method ,
+                                         vct2_call_method ,
+                                         vct3_call_method )
+                                         
 from    ostap.utils.cidict     import cidict, cidict_fun 
 import  ostap.math.derivative  as     D
 import  ostap.math.polynomials 
@@ -1042,6 +1047,7 @@ except ImportError : # ========================================================
     sp_maximum_1D = None 
     sp_solve      = None 
     
+
 # =============================================================================
 ## decorate 1D-models/functions 
 # =============================================================================
@@ -1288,6 +1294,10 @@ for model in ( Ostap.Math.Chebyshev              ,
     if sp_maximum_1D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_1D
     if sp_solve      and not hasattr ( model , 'solve'   ) : model.solve   = sp_solve
 
+    if not hasattr ( model , '_vectorized_call_' ) :
+        model._vectorized_call_ = True 
+        model.__call__          = vct1_call_method ( model.__call__ )
+        
 # =======================================================================================
 ## Special `getattr' for Bernstein dual basis functions: delegate the stuff to
 #  the underlying bernstein polynomial
@@ -1298,8 +1308,6 @@ def _bdb_getattr_ ( self ,  attr ) :
     b = self.bernstein()
     return getattr ( b , attr )
 Ostap.Math.BernsteinDual.__getattr__ = _bdb_getattr_
-
-
 
 ## add some drawing method for some shapes 
 for model in ( Ostap.Math.Bernstein         ,
@@ -1497,9 +1505,17 @@ for model in ( Ostap.Math.BSpline2D           ,
     if sp_minimum_2D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_2D
     if sp_maximum_2D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_2D
     
-try :
-    from ostap.math.minimize import sp_minimum_3D, sp_maximum_3D 
-except ImportError :
+    if not hasattr ( model , '_vectorized_call_' ) :
+        model._vectorized_call_ = True 
+        model.__call__          = vct2_call_method ( model.__call__ )
+
+# ==============================================================================
+try : # ========================================================================
+    # ==========================================================================
+    from ostap.math.minimize import sp_minimum_3D, sp_maximum_3D
+    # ==========================================================================
+except ImportError : # =========================================================
+    # ==========================================================================       
     sp_minimum_3D = None
     sp_maximum_3D = None
     
@@ -1526,6 +1542,10 @@ for model in ( Ostap.Math.Bernstein3D    ,
     model.sp_integrate_xz = sp_integrate_3Dxz
     model.sp_integrate_yz = sp_integrate_3Dyz
     model.__getattr__     = _tf3_getattr_
+    
+    if not hasattr ( model , '_vectorized_call_' ) :
+        model._vectorized_call_ = True 
+        model.__call__          = vct3_call_method ( model.__call__ )
 
     if sp_minimum_2D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_2D
     if sp_maximum_2D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_2D
@@ -1541,14 +1561,13 @@ def sp_maximum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
     fun = pdf.function()
     return  sp_maximum_1D ( fun , xmin , xmax , x0 , *args ) 
 
-
 # ============================================================================
-## specfic ptints
+## specfic prints
 # ============================================================================
 Ostap.Math.NormalLaplace .__str__  = lambda s : "NormalLaplace(mu=%.4g,varsigma=%.4g,kL=%.4g,kR=%.4g)" % ( s.mu       () ,
-                                                                                                       s.varsigma () ,
-                                                                                                       s.kL       () ,
-                                                                                                       s.kR       () )
+                                                                                                           s.varsigma () ,
+                                                                                                           s.kL       () ,
+                                                                                                           s.kR       () )
 # =============================================================================
 ## decorate 1D-PDFs
 # =============================================================================

@@ -118,12 +118,13 @@ __all__     = (
     ##
     'numpy'          , ## numpy or None
     'scipy'          , ## scipy or None
-    'np2raw'         , ## numnpy array to raw C++ buffer 
+    'np2raw'         , ## numpy array to raw C++ buffer 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
-from   collections.abc         import Iterable, Sized
-import ROOT, cppyy, sys, math, ctypes  
+from   ostap.core.ostap_types  import sequence_types, sized_types 
+from   collections.abc         import Sized
+import ROOT, cppyy, sys, math, ctypes, array   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -778,7 +779,7 @@ def pretty_array ( values             ,
                    precision   = 4    ,
                    parentheses = True ) :
     """ Nice pritout of arrays of numerical values
-    - return nice stirng and the separate exponent 
+    - return nice string and the separate exponent 
     >>> array = ...
     >>> result, expo = pretty_array ( array ) 
     """
@@ -840,7 +841,6 @@ def frexp10 ( value ) :
         q  += 1
         
     return ( xv , q ) if ( 0 <= value ) else ( -xv , q ) 
-
 
 # =============================================================================
 ## Define some "range" for the given value:
@@ -974,7 +974,6 @@ def lround ( x ) :
     """
     return x if isinstance  ( x , int ) else _round ( x ) 
 
-
 # ============================================================================
 ## The first entry for event loops
 FIRST_ENTRY = Ostap.FirstEvent 
@@ -1037,7 +1036,6 @@ def all_entries ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     ##
     return 0 == first and size <= last 
 
-
 # =============================================================================
 ## Numpy & scipy 
 # =============================================================================
@@ -1062,30 +1060,171 @@ except ImportError :
 # =============================================================================
 np2raw = None
 # =============================================================================
-if numpy : # ==================================================================
-    # =========================================================================
-    ## Converrt numpy array into raw C++ buffer
-    #  @code
-    #  data = ...
-    #  raw , size = np2raw ( data ) 
-    #  @endcoder 
-    def np2raw ( data ) :
-        """ Converrt numpy array into raw C++ buffer
-        >>> data = ...
-        >>> raw , size = np2raw ( data ) 
-        """
-        assert numpy and isinstance ( data , numpy.ndarray ) , \
-            "np2raw: argument must be `numpy.ndarray`"
-        size   = len ( data ) 
-        dtype  = data.dtype
-        ctype  = numpy.ctypeslib._ctype_from_dtype ( dtype  )
-        buffer = data.ctypes.data_as ( ctypes.POINTER ( ctype ) )
-        # 
-        return buffer , size      
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    np2raw = None 
+## Converrt numpy array into raw C++ buffer
+#  @code
+#  data = ...
+#  raw , size = np2raw ( data ) 
+#  @endcoder 
+def np2raw ( data ) :
+    """ Converrt numpy array into raw C++ buffer
+    >>> data = ...
+    >>> raw , size = np2raw ( data ) 
+    """
+    assert numpy and isinstance ( data , numpy.ndarray ) , \
+        "np2raw: argument must be `numpy.ndarray`"
+    size   = len ( data ) 
+    dtype  = data.dtype
+    ctype  = numpy.ctypeslib._ctype_from_dtype ( dtype  )
+    buffer = data.ctypes.data_as ( ctypes.POINTER ( ctype ) )
+    # 
+    return buffer , size      
+
+# =============================================================================
+## Call a function of scalar argument with array-like argument
+#  - a kind of straw-man vectorization
+#  - function signature is `result = fun1 ( x , **kwargs )`
+def vct1_call ( fun1 , x , *more , **kwargs ) :
+    """ Call a function of scalar argument with array-like argument
+    - a kind of straw-man vectorization
+    - function signature is `result = fun1 ( x , **kwargs )`
+    """    
+    assert callable ( fun1 ) , "`fun2` must be callable!"
+    
+    ## (0) get the actual function, wrap arguments 
+    if kwargs : fun = lambda x : fun1 ( x , **kwargs )
+    else      : fun = fun1 
+    
+    ## (1)  sequence of arguments, "x"  must be scalar
+    if more :
+        more = ( x , ) + more 
+        return tuple ( fun ( v ) for v in more )
+    
+    ## (2) single argument is a sequence        
+    if isinstance ( x , sequence_types ) :
+        gen = ( fun ( v ) for v in x )
+        ## as numpy array or array.array 
+        if   isinstance ( x , numpy.ndarray ) : return numpy.fromiter ( gen , dtype = float )
+        elif isinstance ( x , array.array   ) : return array.array    ( 'd' , gen           ) 
+        ## as simple tuple 
+        return tuple ( gen )
+    
+    ## (3) argument is a scalar 
+    return fun ( x )
+
+# =============================================================================
+## Call a function of two scalar arguments with array-like argument(s)
+#  - a kind of straw-man vectorization
+#  - function signature is `result = fun2 ( x , y , *args , **kwargs )`
+def vct2_call ( fun2 , x , y ,  *args , **kwargs ) :
+    """ Call a function of scalar argument with array-like argument
+      - a kind of straw-man vectorization
+      - function signature is `result = fun2  ( x , y , **kwargs )`
+    """    
+    assert callable ( fun2 ) , "`fun2` must be callable!"
+    
+    ## (0) get the actual function, wrap arguments 
+    if args or kwargs : fun = lambda x, y : fun2 ( x , y , *args , **kwargs )
+    else              : fun = fun2 
+    
+    ## (1) chech the arguments 
+    xseq = isinstance ( x , sequence_types )
+    yseq = isinstance ( y , sequence_types )
+
+    ## (2) treat array-like arguments 
+    if   xseq and yseq : gen = ( fun ( vx , vy ) for vx , vy in zip ( x ,          y   ) )
+    elif xseq          : gen = ( fun ( vx , vy ) for vx , vy in zip ( x , repeat ( y ) ) )
+    elif yseq          : gen = ( fun ( vx , vy ) for vy , vx in zip ( y , repeat ( x ) ) )
+    else :
+        ## (3) both arguments are scalars
+        return fun ( x , y ) 
+    
+    ## (4) as numpy if any of arguments is numpy
+    if ( xseq and isinstance ( x , numpy.ndarray ) ) or \
+       ( yseq and isinstance ( y , numpy.ndarray ) ) : return numpy.fromiter ( gen , dtype = float )
+    
+    ## (5) as array if any of arguments is array 
+    if ( xseq and isinstance ( x , array.array   ) ) or \
+       ( yseq and isinstance ( y , array.array   ) ) : return array.array    ( 'd' , gen )
+    
+    ## (6) as simple tuple 
+    return tuple ( gen ) 
+
+# =============================================================================
+## Call a function of three scalar arguments with array-like argument(s)
+#  - a kind of straw-man vectorization
+#  - function signature is `result = fun3 ( x , y , z , *args , **kwargs )`
+def vct3_call ( fun3 , x , y , z , *args , **kwargs ) :
+    """ Call a function of three scalar arguments with array-like argument(s)
+    - a kind of straw-man vectorization
+    - function signature is `result = fun3 ( x , y , z , *args , **kwargs )`
+    """    
+    assert callable ( fun3 ) , "`fun3` must be callable!"
+    
+    ## (0) get the actual function, wrap arguments 
+    if args or kwargs : fun = lambda x, y, z : fun3 ( x , y , z , *args , **kwargs )
+    else              : fun = fun3 
+
+    ## (1) check argument types 
+    xseq = isinstance ( x , sequence_types )
+    yseq = isinstance ( y , sequence_types )
+    zseq = isinstance ( z , sequence_types )
+
+    ## (2) treat array-like arguments 
+    if   xseq and yseq and zseq : gen = ( fun ( vx , vy , vz ) for vx , vy , vz in zip ( x , y ,          z   ) )
+    elif xseq and yzeq          : gen = ( fun ( vx , vy , vz ) for vx , vy , vz in zip ( x , y , repeat ( z ) ) ) 
+    elif xseq and zseq          : gen = ( fun ( vx , vy , vz ) for vx , vz , vy in zip ( x , z , repeat ( y ) ) )
+    elif yseq and zseq          : gen = ( fun ( vx , vy , vz ) for vy , vz , vx in zip ( y , z , repeat ( x ) ) )
+    elif xseq                   : gen = ( fun ( vx , vy , vz ) for vx , vy , vz in zip ( x , repeat ( y ) , repeat ( z ) ) )
+    elif yseq                   : gen = ( fun ( vx , vy , vz ) for vy , vx , vz in zip ( y , repeat ( x ) , repeat ( z ) ) )
+    elif zseq                   : gen = ( fun ( vx , vy , vz ) for vz , vx , vy in zip ( z , repeat ( x ) , repeat ( y ) ) )
+    else :
+        ## (3) all arguments are scalars! 
+        return fun ( x , y , z ) 
+
+    ## (4) as numpy if any of arguments is numpy
+    if ( xseq and isinstance ( x , numpy.ndarray ) ) or \
+       ( yseq and isinstance ( y , numpy.ndarray ) ) or \
+       ( zseq and isinstance ( z , numpy.ndarray ) ) : return numpy.fromiter ( gen , dtype = float )
+    
+    ## (5) as array if any of arguments is array 
+    if ( xseq and isinstance ( x , array.array   ) ) or \
+       ( yseq and isinstance ( y , array.array   ) ) or \
+       ( zseq and isinstance ( z , array.array   ) ) : return array.array    ( 'd' , gen )
+    
+    ## (6) as simple tuple 
+    return tuple ( gen ) 
+
+# =============================================================================
+## vector call wrappers 
+# =============================================================================
+## decorator to enhance call-method for certain class 
+def vct1_call_method ( method ) :
+    """ decorator to enhace call-method for certain class
+    """
+    def decorated_call1 ( who , x , *more , **kwargs ) :
+        fun1 = lambda x : method ( who , x , **kwargs )
+        return vct1_call ( fun1 , x , *more )
+    return decorated_call1
+
+# =============================================================================
+## decorator to enhance call-method for certain class 
+def vct2_call_method ( method ) :
+    """ decorator to enhace call-method for certain class
+    """
+    def decorated_call2 ( who , x , y ,  *args , **kwargs ) :
+        fun2 = lambda x, y : method ( who , x , y , *args ,  **kwargs  )
+        return vct2_call ( fun2 , x , y )
+    return decorated_call2
+
+# =============================================================================
+## decorator to enhance call-method for certain class 
+def vct3_call_method ( method ) :
+    """ decorator to enhance call-method for certain class
+    """
+    def decorated_call3 ( who , x , y , z , *args , **kwargs ) :
+        fun3 = lambda x, y, z : method ( who , x , y , z , *args , **kwargs )
+        return vct3_call ( fun3 , x , y , z )
+    return decorated_call3 
 
 # =============================================================================
 ## imports at the end of the module to avoid the circular dependency 

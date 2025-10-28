@@ -47,7 +47,9 @@ from   ostap.core.core                import ( cpp      , Ostap     ,
                                                natural_number       ,
                                                valid_pointer        )
 from   ostap.math.base                import ( frexp10      , isequalf      ,
-                                               pos_infinity , neg_infinity  ) 
+                                               pos_infinity , neg_infinity  ,
+                                               vct1_call    , vct2_call     ,
+                                               vct3_call    ) 
 from   ostap.math.math_ve             import significance
 from   ostap.utils.progress_bar       import progress_bar
 from   ostap.math.random_ext          import poisson
@@ -893,25 +895,11 @@ def _h1_call_ ( h1                  ,
     config = tx , edges , extrapolate , density
 
     ## the actual interpolating function
-    if func is None : hfun = lambda v :        _interpolate_1D_ ( h1 , float ( v ) , *config )
-    else            : hfun = lambda v : func ( _interpolate_1D_ ( h1 , float ( v ) , *config ) ) 
-    
-    ## Additional arguments are specified ? 
-    if args : 
-        vargs = ( float ( x ) , ) + args
-        return tuple ( hfun ( v ) for v in vargs )
+    if func is None : fun = lambda v :        _interpolate_1D_ ( h1 , float ( v ) , *config )
+    else            : fun = lambda v : func ( _interpolate_1D_ ( h1 , float ( v ) , *config ) ) 
 
-    ## x is a sequence type:
-    if isinstance ( x , sequence_types ) :
-        gen = ( hfun ( v ) for v in x )
-        ## as numpy array or array.array 
-        if   isinstance ( x , numpy.ndarray ) : return numpy.fromiter ( gen , dtype = float )
-        elif isinstance ( x , array.array   ) : return array.array    ( 'd' , gen           ) 
-        ## as simple tuple 
-        return tuple ( gen ) 
-
-    ## regular scalar type 
-    return hfun ( x )
+    ## call it! 
+    return vct1_call ( fun , x , *args ) 
 
 # =============================================================================
 ## histogram as trivial function object
@@ -1629,31 +1617,12 @@ def _h2_call_ ( h2                  ,
     ## configuration of low-level interpolator 
     config = tx , ty , edges , extrapolate , density
 
-    ## the actual interolating function
-    if func is None : hfun = lambda vx,vy :        _interpolate_2D_ ( h2 , float ( vx ) , float ( vy ) , *config )
-    else            : hfun = lambda vx,vy : func ( _interpolate_2D_ ( h2 , float ( vx ) , float ( vy ) , *config ) ) 
+    ## the actual interpolating function
+    if func is None : fun2 = lambda vx,vy :        _interpolate_2D_ ( h2 , float ( vx ) , float ( vy ) , *config )
+    else            : fun2 = lambda vx,vy : func ( _interpolate_2D_ ( h2 , float ( vx ) , float ( vy ) , *config ) ) 
 
-    ## arguments 
-    xseq = isinstance ( x , sequence_types )
-    yseq = isinstance ( y , sequence_types )
-        
-    if   xseq and yseq : gen = ( hfun ( vx , vy ) for vx , vy in zip ( x ,          y   ) )
-    elif xseq          : gen = ( hfun ( vx , vy ) for vx , vy in zip ( x , repeat ( y ) ) )
-    elif yseq          : gen = ( hfun ( vx , vy ) for vy , vx in zip ( y , repeat ( x ) ) )
-    else :
-        ## scalar arguments
-        return hfun ( x , y ) 
-    
-    ## as numpy if any of arguments is numpy
-    if ( xseq and isinstance ( x , numpy.ndarray ) ) or \
-       ( yseq and isinstance ( y , numpy.ndarray ) ) : return numpy.fromiter ( gen , dtype = float )
-    
-    ## as array if any of arguments is array 
-    if ( xseq and isinstance ( x , array.array   ) ) or \
-       ( yseq and isinstance ( y , array.array   ) ) : return array.array    ( 'd' , gen )
-    
-    ## as simple tuple 
-    return tuple ( gen ) 
+    ## call it !! 
+    return vct2_call ( fun2 , x , y )
 
 # =============================================================================
 ## histogram as trivial function object
@@ -1772,40 +1741,13 @@ def _h3_call_ ( h3                  ,
     ## configuration of low-level interpolator 
     config = tx , ty , tz , edges , extrapolate , density
 
-    ## the actual interolating function
-    if func is None : hfun = lambda vx,vy,vz :        _interpolate_3D_ ( h3 , float ( vx ) , float ( vy ) , float ( vz ) , *config )
-    else            : hfun = lambda vx,vy,vz : func ( _interpolate_3D_ ( h3 , float ( vx ) , float ( vy ) , float ( vz ) , *config ) )
+    ## construct the actual interpolating function
+    if func is None : fun3 = lambda vx,vy,vz :        _interpolate_3D_ ( h3 , float ( vx ) , float ( vy ) , float ( vz ) , *config )
+    else            : fun3 = lambda vx,vy,vz : func ( _interpolate_3D_ ( h3 , float ( vx ) , float ( vy ) , float ( vz ) , *config ) )
 
-    ## arguments 
-    xseq = isinstance ( x , sequence_types )
-    yseq = isinstance ( y , sequence_types )
-    zseq = isinstance ( z , sequence_types )
+    ## call it!
+    return vct3_call ( fun3 , x , y , z )
 
-    ## vector arguments 
-    if   xseq and yseq and zseq : gen = ( hfun ( vx , vy , vz ) for vx , vy , vz in zip ( x , y ,          z   ) )
-    elif xseq and yzeq          : gen = ( hfun ( vx , vy , vz ) for vx , vy , vz in zip ( x , y , repeat ( z ) ) ) 
-    elif xseq and zseq          : gen = ( hfun ( vx , vy , vz ) for vx , vz , vy in zip ( x , z , repeat ( y ) ) )
-    elif yseq and zseq          : gen = ( hfun ( vx , vy , vz ) for vy , vz , vx in zip ( y , z , repeat ( x ) ) )
-    elif xseq                   : gen = ( hfun ( vx , vy , vz ) for vx , vy , vz in zip ( x , repeat ( y ) , repeat ( z ) ) )
-    elif yseq                   : gen = ( hfun ( vx , vy , vz ) for vy , vx , vz in zip ( y , repeat ( x ) , repeat ( z ) ) )
-    elif zseq                   : gen = ( hfun ( vx , vy , vz ) for vz , vx , vy in zip ( z , repeat ( x ) , repeat ( y ) ) )
-    else :
-        ## all scalar arguments
-        return hfun ( x , y , z ) 
-
-    ## as numpy if any of arguments is numpy
-    if ( xseq and isinstance ( x , numpy.ndarray ) ) or \
-       ( yseq and isinstance ( y , numpy.ndarray ) ) or \
-       ( zseq and isinstance ( z , numpy.ndarray ) ) : return numpy.fromiter ( gen , dtype = float )
-    
-    ## as array if any of arguments is array 
-    if ( xseq and isinstance ( x , array.array   ) ) or \
-       ( yseq and isinstance ( y , array.array   ) ) or \
-       ( zseq and isinstance ( z , array.array   ) ) : return array.array    ( 'd' , gen )
-    
-    ## as simple tuple 
-    return tuple ( gen ) 
-    
 # =============================================================================
 ## histogram as trivial function object
 #  @code
