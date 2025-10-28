@@ -10,8 +10,9 @@
   1. optiize numeric integration - make  a try to call the internl `integral` method
   1. extent integration tests
   1. more tweaks for polynomials
-  1. add `FunMNMX` got het brute-force minmax exstimatoro for functions
-
+  1. add `FunMNMX` got get brute-force minmax estimator for functions
+  1. add support for vector/array/sequence-like arguments for 1d/2d&3d-histogram  `__call__` method
+  
 ## Backward  incompatible 
 
 ## Bug fixes

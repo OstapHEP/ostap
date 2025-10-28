@@ -59,8 +59,9 @@ from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_ax
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
-import ostap.io.root_file 
-import ROOT, sys, math, ctypes, array  
+import ostap.io.root_file
+from   itertools                      import repeat 
+import ROOT, sys, math, ctypes, array, numpy   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -438,7 +439,7 @@ ROOT.TH3D. __setitem__ = _h3_set_item_
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 class _H2_item_(object):
-    """Helper class to extend 'get/set'item
+    """ Helper class to extend 'get/set'item
     >>> h2 = ...
     >>> v  = h3[1][2]              
     >>> v  = h3[1](0.44)    ## as 1D-function, use interpolation
@@ -454,7 +455,7 @@ class _H2_item_(object):
         self._h2[ self._xbin , ybin ] = value
     def __call__    ( self , y , func = lambda s : s , interpolate = True )  :
         x = self._h2.GetXaxis().GetBinCenter ( self._xbin )
-        return self._h2( x , y , func , interpolate ) 
+        return self._h2( x , y , func = func , interpolate = interpolate ) 
                       
 # =============================================================================
 ## get item for the 2D histogram
@@ -536,7 +537,7 @@ class _H3_item_2_(object):
     def __call__    ( self , z , func = lambda s : s , interpolate = True )  :
         x = self._h3.GetXaxis().GetBinCenter ( self._xbin )
         y = self._h3.GetYaxis().GetBinCenter ( self._ybin )
-        return self._h3( x , y , z , func , interpolate ) 
+        return self._h3( x , y , z , func = func , interpolate = interpolate ) 
     
 # =============================================================================
 ## @class _H3_item_1_
@@ -581,7 +582,7 @@ class _H3_item_1_(object):
 
     def __call__    ( self , y , z , func = lambda s : s , interpolate = True )  :
         x = self._h3.GetXaxis().GetBinCenter ( self._xbin )
-        return self._h3( x , y , z , func , interpolate ) 
+        return self._h3( x , y , z , func = func , interpolate = interpolate ) 
         
 # =============================================================================
 ## get item for the 3D histogram
@@ -787,7 +788,6 @@ _interpolate_2D_ = Ostap.Math.HistoInterpolation.interpolate_2D
 _interpolate_3D_ = Ostap.Math.HistoInterpolation.interpolate_3D
 # =============================================================================
 
-
 # =============================================================================
 ## Get the name of underlying histogram for
 #  @code
@@ -801,7 +801,7 @@ def _hi_name_ ( hi ) :
     >>> hi.GetName() 
     >>> hi.name 
     """
-    return h().GetName()
+    return hi.h().GetName()
 
 Ostap.Math.Histo1D.GetName = _hi_name_ 
 Ostap.Math.Histo2D.GetName = _hi_name_ 
@@ -821,15 +821,42 @@ Ostap.Math.Histo3D.name    = property ( _hi_name_ , None , None , _hi_name_.__do
 #  @param density     (INPUT) interpolate  "density" instead of bin-content, where
 #                             "density" is defined as (bin-content)/(bin-volume)
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#
+#  @code
+#  histo = ....
+#  ve    = histo ( x )                       ## default interpolation
+#  ve    = histo ( x , interpolate = False ) ## no interpolation 
+#  ve    = histo ( x , interpolate = True  ) ## default interpolation  
+#  ve    = histo ( x , interpolate = 2     ) ## parabolic interpolation
+#  ve    = histo ( x , edges = False ) ## no special treatment of edge bins
+#  ve    = histo ( x , extrapolate = True )  ## allow extrapolation outside histogram range
+#  ve    = histo ( x , density = True ) ## interpolate for density: (bin-content)/(bin-volume)
+#  ve    = histo ( x , func = lambda v : v*v ) ## interpolate and square the result 
+#  @endcode
+# 
+#  It also supports vector-like arguments.
+#  If the argument of type <code>numpy.ndarray</code> or <code>array.array> type
+#  the result will be the same type   (histogram errors are ignored)
+#  For any other sequences, a tuple of values with uncertainties is returned 
+#
+#   @code
+#   results = histo ( 1.0 , 2.0 , 3.0 , 4.0 )              ## several arguments 
+#   results = histo ( [ 1.1 , 2.1 , 2.2. , 3,3 ] )         ## sequence of values 
+#   results = histo ( i/10. for i in range ( 10 ) )        ## generator  
+#
+#   results = histo ( array.array ( 'f' , [1,2,3,4,5] )  ) ## array.array  
+#   results = histo ( numpy.asarray ( [1,2,3,4,5] )  )     ## numpy 
+#
 #  @date   2011-06-07
-def _h1_call_ ( h1                    ,
-                x                     ,
-                func = lambda s : s   ,
-                interpolate   = True  ,
-                edges         = True  ,
-                extrapolate   = False ,
-                density       = False ) :
-    """ Histogram as function:
+def _h1_call_ ( h1                  ,
+                x                   , *args ,  
+                func        = None  ,
+                interpolate = True  ,
+                edges       = True  ,
+                extrapolate = False ,
+                density     = False ) :
+    """ 1D-Histogram as function:
+
     >>> histo = ....
     >>> ve    = histo ( x )                       ## default interpolation
     >>> ve    = histo ( x , interpolate = False ) ## no interpolation 
@@ -839,20 +866,53 @@ def _h1_call_ ( h1                    ,
     >>> ve    = histo ( x , extrapolate = True )  ## allow extrapolation outside histogram range
     >>> ve    = histo ( x , density = True ) ## interpolate for density: (bin-content)/(bin-volume)
     >>> ve    = histo ( x , func = lambda v : v*v ) ## interpolate and square the result 
+
+    It also supports vector-like arguments:
+    If the argument of type `numpy.ndarray` or `array.array` type
+    the result will be the same type   (histogram errors are ignored).
+    For any other sequences, a tuple of values with uncertainties is returned 
+
+    >>> results = histo ( 1.0 , 2.0 , 3.0 , 4.0 )              ## several arguments 
+    >>> results = histo ( [ 1.1 , 2.1 , 2.2. , 3,3 ] )         ## sequence of values 
+    >>> results = histo ( i/10. for i in range ( 10 ) )        ## generator  
+
+    >>> results = histo ( array.array ( 'f' , [1,2,3,4,5] )  ) ## array.array  
+    >>> results = histo ( numpy.asarray ( [1,2,3,4,5] )  )     ## numpy 
+
     """
     #
-    x = float ( x )
-    #
+    assert func is None or callable ( func ) , "`func' must be None or callable!"
+    # 
     tx  = 1 
     if isinstance ( interpolate , int ) and 0 <= interpolate :
         tx = interpolate
     elif not interpolate :
         tx  = 0
-        
-    ## use C++ function for fast interpolation 
-    result = _interpolate_1D_ ( h1 , x , tx , edges , extrapolate , density )
-    #
-    return func ( result )
+
+    ## configuration of low-level interpolator 
+    config = tx , edges , extrapolate , density
+
+    ## the actual interpolating function
+    if func is None : hfun = lambda v :        _interpolate_1D_ ( h1 , float ( v ) , *config )
+    else            : hfun = lambda v : func ( _interpolate_1D_ ( h1 , float ( v ) , *config ) ) 
+    
+    ## Additional arguments are specified ? 
+    if args : 
+        vargs = ( float ( x ) , ) + args
+        return tuple ( hfun ( v ) for v in vargs )
+
+    ## x is a sequence type:
+    if isinstance ( x , sequence_types ) :
+        gen = ( hfun ( v ) for v in x )
+        ## as numpy array 
+        if   isinstance ( x , numpy.ndarray ) : return numpy.fromiter ( gen , dtype = float )
+        ## as array array 
+        elif isinstance ( x , array.array   ) : return array.array    ( 'd' , gen           ) 
+        ## as simple tuple 
+        return tuple ( gen ) 
+
+    ## regular scalar type 
+    return hfun ( x )
 
 # =============================================================================
 ## histogram as trivial function object
@@ -867,15 +927,16 @@ class Histo1DFun (object) :
     >>> histo = ...
     >>> fun   = Histo1DFun( histo )
     """
-    def __init__ ( self                     ,
-                   h1                       ,
-                   func        = lambda : s ,
-                   interpolate = True       ,
-                   edges       = True       ,
-                   extrapolate = False      ,
-                   density     = False      ) :
+    def __init__ ( self                ,
+                   h1                  , * , 
+                   func        = None  ,
+                   interpolate = True  ,
+                   edges       = True  ,
+                   extrapolate = False ,
+                   density     = False ) :
         
         assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.GetDimension() , 'Invalid histogram type!'
+        assert func is None or callable ( func ) , "`func' must be None or callable!"
         
         self.__histo  = h1
         self.__config = {
@@ -886,18 +947,16 @@ class Histo1DFun (object) :
             'density'     : density
             }
     ##  the only one important method
-    def __call__ ( x ) :
-        return self.__histo ( x , **self.__config )
+    def __call__ ( x , *args ) :
+        return self.__histo ( x , *args , **self.__config )
     @property
     def histo ( self )  :
         """`histo': the  histogram itself"""
         return self.__histo 
     @property
     def config ( self ) :
-        """`config'  : the configuration (immutable)"""
-        cnf = {}
-        cnf.update ( self.__config )
-        return cnf 
+        """`config'  : the configuration """
+        return self.__config 
 
         
 ROOT.TH1F  . __call__     = _h1_call_
@@ -977,7 +1036,6 @@ def _h3_contains_ ( h3 , ibin ) :
 ROOT.TH3   . __contains__ = _h3_contains_
 ROOT.TH3F  . __contains__ = _h3_contains_
 ROOT.TH3D  . __contains__ = _h3_contains_
-
 
 # =============================================================================
 ## number of "empty" bins
@@ -1498,16 +1556,43 @@ def _h1_find_X ( self             ,
 #  @param extrapolate (INPUT) allow extrapolation
 #  @param density     (INPUT) interpolate  "density" instead of bin-content, where
 #                             "density" is defined as (bin-content)/(bin-volume)
+#  @code
+#  histo = ....
+#  ve    = histo ( x , y ) ## default interpolation
+#  ve    = histo ( x , y , interpolate = (3,3) )   ## use bi-qubic interpolation
+#  ve    = histo ( x , y , interpolate = False )   ## no interpolation
+#  ve    = histo ( x , y , func = lambda v : v*v ) ## interpolate and square the result
+#  ve    = histo ( x , y , edges = False )         ## no special treatment of edge bins
+#  ve    = histo ( x , y , extrapolate =  True ) ## allow extrapolation outside histogram range
+#  ve    = histo ( x , y , density = True ) ## interpolate for density: (content)/(volume)  
+#  @endcode
+# 
+#  Vector arguments are also supported
+#  If any of vector arguments is  of type
+#  <code>numpy.ndarray</code> or <code>array.array> type
+#  the result will be the same type   (histogram errors are ignored)
+#  For any other sequences, a tuple of values with uncertainties is returned
+# 
+#  @code
+#  histo = ....
+#  ## two vector arguments  (zip is used!
+#  results = histo ( [1,2,3] , [0.1 , 15 , 0.3 ] )
+#  ## vector & scalar: rely on combination of repeat+zip 
+#  results = histo ( [1,2,3] , 0.5               ) 
+#  ## scalar & vector : rely on combination of repeat+zip 
+#  results = histo ( 4.2 , [1,2,3] ) 
+#  @endcode 
+#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h2_call_ ( h2 ,
-                x  ,
-                y                          ,
-                func        = lambda s : s ,
-                interpolate = True         ,
-                edges       = True         ,
-                extrapolate = False        ,
-                density     = False        ) :
+def _h2_call_ ( h2                  ,
+                x                   ,
+                y                   , * , 
+                func        = None  ,
+                interpolate = True  ,
+                edges       = True  ,
+                extrapolate = False ,
+                density     = False ) :
     """ 2D-histogram as function:
     >>> histo = ....
     >>> ve    = histo ( x , y ) ## default interpolation
@@ -1517,24 +1602,59 @@ def _h2_call_ ( h2 ,
     >>> ve    = histo ( x , y , edges = False )         ## no special treatment of edge bins
     >>> ve    = histo ( x , y , extrapolate =  True ) ## allow extrapolation outside histogram range
     >>> ve    = histo ( x , y , density = True ) ## interpolate for density: (content)/(volume)  
+
+    - Vector arguments are also supported
+    If any of vector arguments is  of type `numpy.ndarray` or `array.array` type
+    the result will be the same type   (histogram errors are ignored)
+    For any other sequences, a tuple of values with uncertainties is returned
+
+    ## two vector argumens  (zip is used!
+    >>> results = histo ( [1,2,3] , [0.1 , 15 , 0.3 ] )
+    ## ## vector & scalar: rely on combination of repeat+zip 
+    >>> results = histo ( [1,2,3] , 0.5               ) 
+    ## scalar & vector : rely on combination of repeat+zip 
+    >>> results = histo ( 4.2 , [1,2,3] ) 
+   
     """    
     #
-    x = float ( x )
-    y = float ( y )
+    assert func is None or callable ( func ) , "`func' must be None or callable!"
     #
-    tx = 1
-    ty = 1 
-    if   not interpolate :
-        tx = 0
-        ty = 0
-    elif isinstance ( interpolate , (tuple,list) ) and 2<= len ( interpolate ) : 
-        tx = int ( interpolate[0] )
-        ty = int ( interpolate[1] )
+    tx , ty = 1 , 1 
+    if   not interpolate : tx , ty = 0 , 0 
+    elif isinstance ( interpolate , sequence_types ) and \
+         isinstance ( interpolate , sized_types    ) and 2 == len ( interpolate ) :
         
-    ## use C++ function for fast interpolation 
-    result = _interpolate_2D_ ( h2 , x , y , tx , ty , edges , extrapolate , density )
+        tx = int ( interpolate [ 0 ] )
+        ty = int ( interpolate [ 1 ] )
 
-    return func ( result )
+    ## configuration of low-level interpolator 
+    config = tx , ty , edges , extrapolate , density
+
+    ## the actual interolating function
+    if func is None : hfun = lambda vx,vy :        _interpolate_2D_ ( h2 , float ( vx ) , float ( vy ) , *config )
+    else            : hfun = lambda vx,vy : func ( _interpolate_2D_ ( h2 , float ( vx ) , float ( vy ) , *config ) ) 
+
+    ## arguments 
+    xseq = isinstance ( x , sequence_types )
+    yseq = isinstance ( y , sequence_types )
+        
+    if   xseq and yseq : gen = ( hfun ( vx , vy ) for vx , vy in zip ( x ,          y   ) )
+    elif xseq          : gen = ( hfun ( vx , vy ) for vx , vy in zip ( x , repeat ( y ) ) )
+    elif yseq          : gen = ( hfun ( vx , vy ) for vy , vx in zip ( y , repeat ( x ) ) )
+    else :
+        ## scalar arguments
+        return hfun ( x , y ) 
+    
+    ## as numpy if any of arguments is numpy
+    if ( xseq and isinstance ( x , numpy.ndarray ) ) or \
+       ( yseq and isinstance ( y , numpy.ndarray ) ) : return numpy.fromiter ( gen , dtype = float )
+    
+    ## as array if any of arguments is array 
+    if ( xseq and isinstance ( x , array.array   ) ) or \
+       ( yseq and isinstance ( y , array.array   ) ) : return array.array    ( 'd' , gen )
+    
+    ## as simple tuple 
+    return tuple ( gen ) 
 
 # =============================================================================
 ## histogram as trivial function object
@@ -1549,15 +1669,16 @@ class Histo2DFun (object) :
     >>> histo = ...
     >>> fun   = Histo2DFun( histo )
     """
-    def __init__ ( self                     ,
-                   h2                       ,
-                   func        = lambda : s ,
-                   interpolate = True       ,
-                   edges       = True       ,
-                   extrapolate = False      ,
-                   density     = False      ) :
+    def __init__ ( self                 ,
+                   h2                  , * , 
+                   func        = None  ,
+                   interpolate = True  ,
+                   edges       = True  ,
+                   extrapolate = False ,
+                   density     = False ) :
         
         assert isinstance ( h2 , ROOT.TH2 ) and 2 == h2.GetDimension() , 'Invalid histogram type!'
+        assert func is None or callablle ( func ) , "`func` must be None or callable"
         
         self.__histo  = h2
         self.__config = {
@@ -1572,21 +1693,16 @@ class Histo2DFun (object) :
         return self.__histo ( x , y , **self.__config )
     @property
     def histo ( self )  :
-        """``histo'': the  histogram itself"""
+        """`histo': the  histogram itself"""
         return self.__histo 
     @property
     def config ( self ) :
-        """``config'' : the configuration (immutable)"""
-        cnf = {}
-        cnf.update ( self.__config )
-        return cnf 
-
-
+        """`config' : the configuration (immutable)"""
+        return self.__config  
 
 ROOT.TH2   . __call__     = _h2_call_
 ROOT.TH2F  . __getitem__  = _h2_get_item_
 ROOT.TH2D  . __getitem__  = _h2_get_item_
-
 
 # =============================================================================
 ## histogram as function 
@@ -1598,17 +1714,34 @@ ROOT.TH2D  . __getitem__  = _h2_get_item_
 #  @param extrapolate (INPUT) allow extrapolation
 #  @param density     (INPUT) interpolate  "density" instead of bin-content, where
 #                             "density" is defined as (bin-content)/(bin-volume)
+#  @cpode
+#  histo = ....
+#  ve = histo ( x , y , z ) ## default interpolation
+#  ve = histo ( x , y , z , interpolate = (3,3,3) )   ## use tri-qubic interpolation
+#  ve = histo ( x , y , z , interpolate = False )   ## no interpolation
+#  ve = histo ( x , y , z , func = lambda v : v*v ) ## interpolate and square the result
+#  ve = histo ( x , y , z , edges = False )         ## no special treatment of edge bins
+#  ve = histo ( x , y , z , extrapolate =  True ) ## allow extrapolation outside histogram range
+#  ve = histo ( x , y , z , density = True ) ## interpolate for density: (content)/(volume)
+#  @endcode
+#
+#  Vector arguments are also supported
+#  If any of vector arguments is  of type
+#  <code>numpy.ndarray</code> or <code>array.array> type
+#  the result will be the same type   (histogram errors are ignored)
+#  For any other sequences, a tuple of values with uncertainties is returned
+# 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h3_call_ ( h3                         ,
-                x                          ,
-                y                          ,
-                z                          ,
-                func        = lambda s : s ,
-                interpolate = True         ,
-                edges       = True         ,
-                extrapolate = False        ,
-                density     = False        ) :                
+def _h3_call_ ( h3                  ,
+                x                   ,
+                y                   ,
+                z                   , * , 
+                func        = None  ,
+                interpolate = True  ,
+                edges       = True  ,
+                extrapolate = False ,
+                density     = False ) :                
     """ 3D-histogram as function:
     >>> histo = ....
     >>> ve = histo ( x , y , z ) ## default interpolation
@@ -1618,30 +1751,62 @@ def _h3_call_ ( h3                         ,
     >>> ve = histo ( x , y , z , edges = False )         ## no special treatment of edge bins
     >>> ve = histo ( x , y , z , extrapolate =  True ) ## allow extrapolation outside histogram range
     >>> ve = histo ( x , y , z , density = True ) ## interpolate for density: (content)/(volume)  
+
+    - Vector arguments are also supported
+    If any of vector arguments is  of type `numpy.ndarray` or `array.array` type
+    the result will be the same type   (histogram errors are ignored)
+    For any other sequences, a tuple of values with uncertainties is returned
+
     """
     #
-    x = float ( x )
-    y = float ( y )
-    z = float ( z )
-    #
-    tx = 1
-    ty = 1 
-    tz = 1 
-    if   not interpolate :
-        tx = 0
-        ty = 0
-        tz = 0
-    elif isinstance ( interpolate , ( tuple , list ) ) and 3 <= len ( interpolate ) :
+    assert func is None or callable ( func ) , "`func' must be None or callable!"
+    # 
+    tx, ty, tz  = 1, 1, 1 
+    if   not interpolate : tx, ty, tz  = 0 , 0 , 0 
+    elif isinstance ( interpolate , sequence_types ) and \
+         isinstance ( interpolate , sized_types    ) and 3 == len ( interpolate ) :
+        
         tx = int ( interpolate [ 0 ] ) 
         ty = int ( interpolate [ 1 ] ) 
         tz = int ( interpolate [ 2 ] )
 
-    ## use C++ function for fast interpolation 
-    result = _interpolate_3D_ ( h3 , x , y , z , tx , ty , tz , edges , extrapolate , density )
+    ## configuration of low-level interpolator 
+    config = tx , ty , tz , edges , extrapolate , density
 
-    return func ( result )
+    ## the actual interolating function
+    if func is None : hfun = lambda vx,vy,vz :        _interpolate_3D_ ( h3 , float ( vx ) , float ( vy ) , float ( vz ) , *config )
+    else            : hfun = lambda vx,vy,vz : func ( _interpolate_3D_ ( h3 , float ( vx ) , float ( vy ) , float ( vz ) , *config ) )
 
+    ## arguments 
+    xseq = isinstance ( x , sequence_types )
+    yseq = isinstance ( y , sequence_types )
+    zseq = isinstance ( z , sequence_types )
 
+    ## vector arguments 
+    if   xseq and yseq and zseq : gen = ( hfun ( vx , vy , vz ) for vx , vy , vz in zip ( x , y ,          z   ) )
+    elif xseq and yzeq          : gen = ( hfun ( vx , vy , vz ) for vx , vy , vz in zip ( x , y , repeat ( z ) ) ) 
+    elif xseq and zseq          : gen = ( hfun ( vx , vy , vz ) for vx , vz , vy in zip ( x , z , repeat ( y ) ) )
+    elif yseq and zseq          : gen = ( hfun ( vx , vy , vz ) for vy , vz , vx in zip ( y , z , repeat ( x ) ) )
+    elif xseq                   : gen = ( hfun ( vx , vy , vz ) for vx , vy , vz in zip ( x , repeat ( y ) , repeat ( z ) ) )
+    elif yseq                   : gen = ( hfun ( vx , vy , vz ) for vy , vx , vz in zip ( y , repeat ( x ) , repeat ( z ) ) )
+    elif zseq                   : gen = ( hfun ( vx , vy , vz ) for vz , vx , vy in zip ( z , repeat ( x ) , repeat ( y ) ) )
+    else :
+        ## all scalar arguments
+        return hfun ( x , y , z ) 
+
+    ## as numpy if any of arguments is numpy
+    if ( xseq and isinstance ( x , numpy.ndarray ) ) or \
+       ( yseq and isinstance ( y , numpy.ndarray ) ) or \
+       ( zseq and isinstance ( z , numpy.ndarray ) ) : return numpy.fromiter ( gen , dtype = float )
+    
+    ## as array if any of arguments is array 
+    if ( xseq and isinstance ( x , array.array   ) ) or \
+       ( yseq and isinstance ( y , array.array   ) ) or \
+       ( zseq and isinstance ( z , array.array   ) ) : return array.array    ( 'd' , gen )
+    
+    ## as simple tuple 
+    return tuple ( gen ) 
+    
 # =============================================================================
 ## histogram as trivial function object
 #  @code
@@ -1656,14 +1821,15 @@ class Histo3DFun (object) :
     >>> fun   = Histo3DFun( histo )
     """
     def __init__ ( self                     ,
-                   h3                       ,
-                   func        = lambda : s ,
+                   h3                       , * , 
+                   func        = None       ,
                    interpolate = True       ,
                    edges       = True       ,
                    extrapolate = False      ,
                    density     = False      ) :
         
         assert isinstance ( h3 , ROOT.TH3 ) and 3 == h3.GetDimension() , 'Invalid histogram type!'
+        assert func is None or callablle ( func ) , "`func` must be None or callable"
         
         self.__histo  = h3
         self.__config = {
@@ -1678,14 +1844,12 @@ class Histo3DFun (object) :
         return self.__histo ( x , y , z , **self.__config )
     @property
     def histo ( self )  :
-        """``histo'': the  histogram itself"""
+        """`histo': the  histogram itself"""
         return self.__histo 
     @property
     def config ( self ) :
-        """``config'' : the configuration (immutable)"""
-        cnf = {}
-        cnf.update ( self.__config )
-        return cnf 
+        """``config'' : the configuration"""
+        return self.__config 
 
 ROOT.TH3   . __call__     = _h3_call_
 ROOT.TH3F  . __getitem__  = _h3_get_item_
