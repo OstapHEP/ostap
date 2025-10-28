@@ -23,14 +23,14 @@ __all__     = (
 # =============================================================================
 from    ostap.core.core        import cpp, Ostap, funID
 from    ostap.utils.basic      import loop_items 
-from    ostap.core.ostap_types import num_types, integer_types
+from    ostap.core.ostap_types import num_types, integer_types, sequence_types 
 from    ostap.math.base        import pos_infinity, neg_infinity
 from    ostap.utils.cidict     import cidict, cidict_fun 
 import  ostap.math.derivative  as     D
 import  ostap.math.polynomials 
 import  ostap.math.reduce   
 #
-import  ROOT, random  
+import  ROOT, random, numpy, array   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1041,7 +1041,7 @@ except ImportError : # ========================================================
     sp_minimum_1D = None 
     sp_maximum_1D = None 
     sp_solve      = None 
-
+    
 # =============================================================================
 ## decorate 1D-models/functions 
 # =============================================================================

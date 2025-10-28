@@ -904,9 +904,8 @@ def _h1_call_ ( h1                  ,
     ## x is a sequence type:
     if isinstance ( x , sequence_types ) :
         gen = ( hfun ( v ) for v in x )
-        ## as numpy array 
+        ## as numpy array or array.array 
         if   isinstance ( x , numpy.ndarray ) : return numpy.fromiter ( gen , dtype = float )
-        ## as array array 
         elif isinstance ( x , array.array   ) : return array.array    ( 'd' , gen           ) 
         ## as simple tuple 
         return tuple ( gen ) 
