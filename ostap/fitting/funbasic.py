@@ -374,7 +374,11 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( params , dataset )  
     #  @endcode 
-    def load_params ( self , params = {} , dataset = None , silent = False , **kwargs ) :
+    def load_params ( self                ,
+                      params      = {}    ,
+                      dataset     = None  , * , 
+                      silent      = False ,
+                      unused_warn = True  , **kwargs ) :
         """ Load parameters from
         - external dictionary `{ name : value }`
         - sequence of `RooAbsReal` objects
@@ -494,11 +498,12 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 else          : self.info ( "%d parameters changed:\n%s" % ( npars , table ) )
             else :
                 self.info ( "No parameters changed" )
-
-            not_used = [ n for n in not_used if not n.endswith ( '_centralvalue' ) ]
-            not_used.sort()
-            if not_used : self.warning ("Following keys are not used: %s" % not_used ) 
-        
+                
+            if unused_warn : 
+                not_used = [ n for n in not_used if not n.endswith ( '_centralvalue' ) ]
+                not_used.sort()
+                if not_used : self.warning ("Following keys are not used: %s" % not_used ) 
+                
         return
     
     # =========================================================================
