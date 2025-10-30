@@ -51,8 +51,8 @@ EOF
 }
 
 ## clean the path 
-if [ -n "$OSTAPDIR" ] ; then
-   old_ostapdir=$OSTAPDIR
+if [ -n "$OSTAP_DIR" ] ; then
+   old_ostap_dir=${OSTAP_DIR}
    export PATH=$(            _path_remove PATH            $old_ostapdir/scripts ) 
    export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir                        ) 
    export PYTHONPATH=$(      _path_remove PYTHONPATH      $old_ostapdir@OSTAP_PYTHON_SITE_DIR@ ) 
@@ -63,31 +63,31 @@ fi
 # =============================================================================
 ## define OSTAPDIR  as a directory where the script 
 # =============================================================================
-OSTAPDIR="${BASH_SOURCE[0]}"
+OSTAP_DIR="${BASH_SOURCE[0]}"
 # =============================================================================
-if [ "x$OSTAPDIR" = "x" ]; then
-    OSTAPDIR=${(%):-%N} # for zsh
+if [ "x${OSTAP_DIR}" = "x" ]; then
+    OSTAP_DIR=${(%):-%N} # for zsh
 fi
 # =============================================================================
-while [ -h "$OSTAPDIR" ]; do # resolve $OSTAPDIR until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$OSTAPDIR" )" >/dev/null && pwd )"
-  OSTAPDIR="$(readlink "$OSTAPDIR")"
-  [[ $OSTAPDIR != /* ]] && OSTAPDIR="$DIR/$OSTAPDIR" # if $OSTAPDIR was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+while [ -h "${OSTAP_DIR}" ]; do # resolve ${OSTAP_DIR} until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "${OSTAP_DIR}" )" >/dev/null && pwd )"
+  OSTAP_DIR="$(readlink "${OSTAP_DIR}")"
+  [[ ${OSTAP_DIR} != /* ]] && OSTAP_DIR="$DIR/${OSTAP_DIR}" # if ${OSTAP_DIR} was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
-OSTAPDIR="$( cd -P "$( dirname "$OSTAPDIR" )" >/dev/null && pwd )" ; export OSTAPDIR 
+OSTAP_DIR="$( cd -P "$( dirname "${OSTAP_DIR}" )" >/dev/null && pwd )" ; export OSTAP_DIR 
 
-OSTAPVERSION=@OSTAP_VERSION@                                       ; export OSTAPVERSION
+OSTAP_VERSION=@OSTAP_VERSION@                                       ; export OSTAP_VERSION
 
 ## update all   nesessary paths 
-export PATH=$(              _path_prepend PATH            $OSTAPDIR/scripts )
-if [[ -d $OSTAPDIR@OSTAP_PYTHON_SITE_DIR@  ]]
+export PATH=$(              _path_prepend PATH            ${OSTAP_DIR}/scripts )
+if [[ -d ${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@  ]]
 then
-    export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR@OSTAP_PYTHON_SITE_DIR@   )
+    export PYTHONPATH=$(        _path_prepend PYTHONPATH      ${OSTAP_DIR}@OSTAP_PYTHON_SITE_DIR@   )
 else
-    export PYTHONPATH=$(        _path_prepend PYTHONPATH      $OSTAPDIR   )
+    export PYTHONPATH=$(        _path_prepend PYTHONPATH      ${OSTAP_DIR}   )
 fi 
-export LD_LIBRARY_PATH=$(   _path_prepend LD_LIBRARY_PATH $OSTAPDIR/lib     )  
-export MANPATH=$(           _path_prepend MANPATH         $OSTAPDIR/doc/man )  
+export LD_LIBRARY_PATH=$(   _path_prepend LD_LIBRARY_PATH ${OSTAP_DIR}/lib     )  
+export MANPATH=$(           _path_prepend MANPATH         ${OSTAP_DIR}/doc/man )  
 
 
 CURPYVER=$( python -c 'import sys; print( sys.version_info[0])')

@@ -29,7 +29,7 @@ while ( std::string::npos != pos )
     opos = pos + 2 ;
     pos  = path.find ( "-I" , pos + 2 )  ;
   }
-vct.push_back("$OSTAPDIR/include") ;
+vct.push_back("$OSTAP_DIR/include") ;
 strings npath  ;
 strings npath_ ;
 for ( strings::iterator i = vct.begin() ; vct.end() !=i ; ++i ) 
