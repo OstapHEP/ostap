@@ -35,6 +35,29 @@ else                       : logger = getLogger ( __name__                     )
 _new_methods_ = []
 
 # =============================================================================
+## Success ?
+#  result is *success*  if
+#  - status is 0
+#  - covariance quality in ( 3 , -1  ) 
+def _rfr_success_ ( self ) :
+    """ Success ?
+    result is *success*  if
+    - status is 0
+    - covariance quality in ( 3 , -1 ) 
+    """
+    if 0 != self.status () : return False
+    return self.covQual() in ( 3 , -1  )
+
+# =============================================================================
+## Failure ? 
+#  result is *failure* if it is not *success* 
+def _rfr_failure_ ( self ) :
+    """ Failure 
+    result is *failure* if it is not *success* 
+    """
+    return not _rfr_success_ ( self ) 
+
+# =============================================================================
 ## get parameters from RooFitResult
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -199,7 +222,6 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
             m [i,j] = cm(i,j)
             
     return m  
-
 
 # =============================================================================
 ## get the covariance matrix 
@@ -585,8 +607,6 @@ def _rfr_pow_ ( self , var1 , var2 ) :
     _v2  = VE ( var2.value ) 
     _cor = self.corr  ( var1 , var2 )
     return Ostap.Math.pow ( _v1 , _v2 , _cor ) 
-
-    
     
 # =============================================================================
 ## evaluate the certain  function/expression for the fit   result
@@ -1149,8 +1169,14 @@ if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
 
 # =============================================================================
 ## some decoration over RooFitResult
+
 ## ROOT.RooFitResult . __repr__        = _rfr_print_
 ## ROOT.RooFitResult . __str__         = _rfr_print_
+
+ROOT.RooFitResult.success = property ( _rfr_success_ , None , None, _rfr_success_.__doc__ )
+ROOT.RooFitResult.failure = property ( _rfr_failure_ , None , None, _rfr_failure_.__doc__ )
+
+
 ROOT.RooFitResult . __repr__         = _rfr_table_
 ROOT.RooFitResult . __str__          = _rfr_table_
 ROOT.RooFitResult . __call__         = _rfr_param_
@@ -1201,6 +1227,10 @@ ROOT.RooFitResult . table              = _rfr_table_
 ROOT.RooFitResult . __len__            = _rfr_len_ 
 
 _new_methods_ += [
+    #
+    ROOT.RooFitResult . success             , 
+    ROOT.RooFitResult . failure             , 
+    # 
     ROOT.RooFitResult . __repr__            ,
     ROOT.RooFitResult . __str__             ,
     ROOT.RooFitResult . __call__            ,

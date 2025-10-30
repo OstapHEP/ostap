@@ -456,11 +456,13 @@ class APDF1 ( Components ) :
             if rng : self.warning ( 'fitTo: %s is specified for >1D function - it is ambuguous!' % rng )
 
         ## check sumw2/asymptoticerorr flags 
-        weighted = dataset.isWeighted() if dataset else False
+        weighted    = dataset.isWeighted() if dataset else False
+        weighted_ok = not weighted 
         if weighted :
             sw2 = check_arg ( 'SumW2Error'      , *opts )
             aer = check_arg ( 'AsymptoticError' , *opts )
             if not sw2 and not aer :
+                weighted_ok = False 
                 self.warning ( "fitTo: Neither 'SumW2Error' and 'AsymptoticError' are specified for weighted dataset!" )
 
         ## check fit ranges 
@@ -530,6 +532,7 @@ class APDF1 ( Components ) :
         ## define silent context
         with roo_silent ( silent ) :            
             if self.fit_result : self.fit_result = None
+            ## actual fit! 
             result = self.fit_to ( self.pdf , dataset , *opts )
             if result and valid_pointer ( result ) : self.fit_result = result
             else :
@@ -544,16 +547,7 @@ class APDF1 ( Components ) :
     
         st = result.status()
         
-        ## if 0 != st and silent :
-        ##     self.warning ( 'fitTo: status is %s. Refit in non-silent regime ' % fit_status ( st ) )
-        ##     return self.fitTo ( dataset ,
-        ##                         draw   = draw  ,
-        ##                         nbins  = nbins ,
-        ##                         silent = False ,
-        ##                         refit  = refit ,
-        ##                         args   = args  , **kwargs )
-
-        for_refit = False
+        for_refit = '' 
         if 0 != st   :
             for_refit = 'status: %s' % fit_status ( st ) 
             if not silent : self.warning ( 'fitTo: Fit status is %s ' % fit_status ( st ) )

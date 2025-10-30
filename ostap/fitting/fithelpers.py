@@ -315,7 +315,7 @@ class VarMaker (object) :
             if  not nam                      : return False 
             elif nam in VarMaker.__pdf_names : return False
             elif nam in VarMaker.__var_names : return False
-            elif usedRootID                  : return False
+            elif usedRootID ( nam )          : return False
             return True 
 
         ## is name already in prefix/suffix? 
@@ -569,11 +569,13 @@ class VarMaker (object) :
             
             ## create the variable!
             if usedRootID ( name ) :
-                if name_unique : 
+                message = "name `%s' is already used by ROOT/RooFit" % name
+                if name_unique :
                     new_name = self.roo_name ( name )
-                    self.warning    ( "make_var: name `%s' is already used by ROOT/RooFit, replace it with `%s'" % ( name , new_name ) ) )
-                    name = new_name
-                else : self.warning ( "make_var: name `%s' is already used by ROOT/RooFit"                       %   name ) 
+                    message +=  ", replace it with `%s'" % new_name
+                    ##  ATTENTION!! ENSURE IT IS UNIQUE! 
+                    name     = new_name                              ## ATTENTION!!! 
+                self.warning ( "make_var: %s" % message ) 
                                     
             var = ROOT.RooRealVar ( name , title , *params ) 
             self.debug ( "New variable is created: name:'%s',title:'%s', args=%s" % ( var.name , var.title , str ( params ) ) )

@@ -49,6 +49,7 @@ _templates
 *.rootmap
 *_ACLiC_linkdef.h
 *_ACLiC_map.in
+*_ACLiC_dict*
 
 # Ninja
 .ninja_log
