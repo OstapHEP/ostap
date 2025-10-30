@@ -505,15 +505,19 @@ class CompressShelf (shelve.Shelf,CUBase) :
         for k in meta :
             row = "META:%s" % k , '' , '' , str ( meta[k] )
             table.append ( row  ) 
-
+                
         if hasattr ( self.dict , 'tables' ) :
             tables = self.dict.tables()
             if tables :
                 row = 'META:*Tables*' ,  '' , '' , '[' + ','.join ( t for t in tables ) + ']' 
                 table.append ( row )
+
                 
         for k in keys :
 
+            ## skip it
+            if '__metainfo__' == k : continue
+            
             ss = len ( self.dict [ k.encode ( self.keyencoding ) ] )
             
             if    ss < 1024 : size = '%7d   ' % ss 

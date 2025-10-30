@@ -362,8 +362,7 @@ class VarMaker (object) :
                    var                  ,
                    name                 , ## name 
                    title        = ''    , ## title 
-                   fix          = None  , *args ,
-                   name_unique  = False ) :
+                   fix          = None  , *args ) :
         """ Make/modify  the variable:
         
         v = self.make_var ( 10   , 'myvar' , 'mycomment' )
@@ -379,18 +378,18 @@ class VarMaker (object) :
 
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif var is None : 
-            assert name and args , "make_var: 'name' and 'args' must be specified when 'var' is None!"
+            assert name and args , "make_var: `name' and `args' *must* be specified when 'var' is None!"
             var  = name , title if title else name            
         elif isinstance ( var , numvar_types ) :
-            assert name , "make_var: 'name' must be specified when 'var' is of numerical type!"            
+            assert name , "make_var: `name' *must* be specified when `var' is numerical type!"            
             var  = name , title if title else name , float ( var ) 
-            
+
         ## convert sequence of values 
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif isinstance ( var , sequence_types  ) : var = tuple ( var )
 
-        if   var and isinstance ( var , ROOT.RooAbsReal ) : pass 
-        elif var and isinstance ( var , tuple ) :
+        if   isinstance ( var , ROOT.RooAbsReal ) and var : pass 
+        elif isinstance ( var , tuple           ) and var :
 
             ## at most four arguments:  (value, min, max, unit)
             assert len ( args ) <= 4 , "make_var: invalid length of 'args' %s" % len ( args ) 
@@ -417,11 +416,7 @@ class VarMaker (object) :
                 self.warning ( "make_var: shorten %s -> %s " % ( str ( vars ) , str ( v2 ) ) )
                 vargs  = v2
                         
-            ## convert to numbers 
-            vargs = tuple ( float ( v ) for v in vargs )
-
-            ## content of var 
-            
+            ## content of var             
             vvars = var [ 0 : ]
             
             ## pickup the name (if specified...) 
@@ -439,12 +434,12 @@ class VarMaker (object) :
                 vtitle = vvars [ 0 ] 
                 if isinstance ( vtitle , string_types ) :
                     if title and vtitle and title != vtitle : 
-                        self.warning ("make_var('%s'): title is redefined: %s -> %s" % ( name , title , vtitle ) ) 
+                        self.warning ("make_var[%s]: title is redefined: %s -> %s" % ( name , title , vtitle ) ) 
                     if vtitle : title = vtitle
                     vvars = vvars [1:]
                     
             ## at most four argumentss:  (value, min, max, unit )
-            assert len ( vvars ) <= 4 , "make_var('%s'): invalid length of 'vvars' %s" % ( name , len ( vvars ) ) 
+            assert len ( vvars ) <= 4 , "make_var[%s]: invalid length of 'vvars' %s" % ( name , len ( vvars ) ) 
 
             ## strip out the units from vvars 
             unit = '' 
@@ -456,7 +451,7 @@ class VarMaker (object) :
             vvars = tuple ( float ( v ) for v in vvars )
 
             if unit and vunit and unit != unit :
-                self.warning ("make_var(%s): unit is redefined: %s -> %s" % ( name , vunit , unit ) ) 
+                self.warning ("make_var[%s]: unit is redefined: %s -> %s" % ( name , vunit , unit ) ) 
             elif vunit : unit = vunit
             
             len_vvars = len ( vvars )
@@ -469,8 +464,8 @@ class VarMaker (object) :
             ## attention! for 3-tuple the order is (value, min, max)
             if 3 == len ( vvars ) : vvars = vvars [ 1 ] , vvars [ 0 ] , vvars [ 2 ] 
             if 3 == len ( vargs ) : vargs = vargs [ 1 ] , vargs [ 0 ] , vargs [ 2 ] 
-            if vvars != vvars_ : self.warning ("make_var('%s'):  %s -> %s " % ( name , str ( vvars_ ) , str ( vvars ) ) )  
-            if vargs != vargs_ : self.warning ("make_var('%s'):  %s -> %s " % ( name , str ( vargs_ ) , str ( vargs ) ) )  
+            if vvars != vvars_ : self.warning ( "make_var[%s]:  %s -> %s " % ( name , str ( vvars_ ) , str ( vvars ) ) )  
+            if vargs != vargs_ : self.warning ( "make_var[%s]:  %s -> %s " % ( name , str ( vargs_ ) , str ( vargs ) ) )  
 
             ## there should be at least one useful number! 
             assert 1 <= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
@@ -485,18 +480,18 @@ class VarMaker (object) :
             elif 1 == len_vvars and 0 == len_vargs :
                 
                 ## OK: use only vvar 
-                params = vvars + ( unit , )
+                params  = vvars + ( unit , )
                 
             elif 1 == len_vvars and 2 == len_vargs and vargs [ 0 ] <= vvars [ 0 ] <= vargs [ 1 ] :
                 
                 ## OK, get min/max from vargs 
-                params = vvars + vargs + ( unit , )
+                params  = vvars + vargs + ( unit , )
 
             elif 1 == len_vvars and 2 == len_vargs :
                 
                 ## OK, get min/max from vargs 
                 params = vvars + ( min ( vvars [ 0 ] , vargs [ 0 ] ) , max ( vvars[0] , vargs [ 1 ] ) , unit )
-                fixed = True 
+                fixed  = True 
 
             elif 1 == len_vvars and 3 == len_vargs and vargs [ 1 ] <= vvars [ 0 ] <= vargs [ 2 ] :
                 
@@ -560,47 +555,36 @@ class VarMaker (object) :
                 params = vmin , vmax , unit
                 fixed  = True
                 
-            if fixed : self.warning ( "make_var('%s'):  %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
-            else     : self.debug   ( "make_var('%s'):  %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
-            
-            ## check the name 
-            ## regname = ROOT.RooNameReg.instance()
-            ## if regname.known ( name ) : self.warning ( 'The name "s" is already in ROOT/RooFit name registry!' )
-            
+            if fixed : self.warning ( "make_var[%s]: %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
+            else     : self.debug   ( "make_var[%s]: %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
+
+            ## check the name: 
+            if usedRootID ( name ) : self.warning ( "make_var[%s]: name is already used by ROOT/RooFit" % name )
+                
             ## create the variable!
-            if usedRootID ( name ) :
-                message = "name `%s' is already used by ROOT/RooFit" % name
-                if name_unique :
-                    new_name = self.roo_name ( name )
-                    message +=  ", replace it with `%s'" % new_name
-                    ##  ATTENTION!! ENSURE IT IS UNIQUE! 
-                    name     = new_name                              ## ATTENTION!!! 
-                self.warning ( "make_var: %s" % message ) 
-                                    
             var = ROOT.RooRealVar ( name , title , *params ) 
-            self.debug ( "New variable is created: name:'%s',title:'%s', args=%s" % ( var.name , var.title , str ( params ) ) )
+            self.debug ( "New variable is created: name=`%s',title=`%s/, args=%s" % ( var.name , var.title , str ( params ) ) )
             
             if   fix is None                     : pass ## no actions 
             elif isinstance ( fix , bool       ) : var.setConstant ( fix )
             elif isinstance ( fix , num_types  ) :                
                 vfix = float ( fix )
                 if var.hasMin() and vfix < var.getMin () :
-                    self.warning ( "make_var('%s'): fix value %s < min %s" % ( var.name , vfix , vmin ) ) 
+                    self.warning ( "make_var[%s]: fix value %s < min %s" % ( var.name , vfix , vmin ) ) 
                 if var.hasMax() and vfix > var.getMax () :
-                    self.warning ( "make_var('%s'): fix value %s > max %s" % ( var.name , vfix , vmax ) )
+                    self.warning ( "make_var[%s]: fix value %s > max %s" % ( var.name , vfix , vmax ) )
                 var.setVal      ( vfix )
                 value = float ( var ) 
                 if ( value != vfix ) :
-                    self.warning ("make_var('%s'): the value for %s variable %s is not fixed at the value of %s" % ( var.name , value , vfix ) )                    
+                    self.warning ("make_var[%s]: the value for %s variable %s is not fixed at the value of %s" % ( var.name , value , vfix ) )                    
                 var.setConstant ( True )
             else :
-                self.warning ("make_var('%s'): ignore 'fix' of %s" % ( var.name , str ( fix ) ) )
+                self.warning ("make_varp%s]: ignore 'fix' of %s" % ( var.name , str ( fix ) ) )
                 
-            ## raise TypeError("make_var('%s'): Invalid 'var/fix' setting: %s/%s" % ( var.name , var , fix ) )                
 
         ## var is either newly created or provided as RooAbsArg 
-        assert isinstance ( var , ROOT.RooAbsArg ) , \
-               "make_var: invalid 'var' type! %s/%s" % ( var , type ( var ) ) 
+        assert isinstance ( var , ROOT.RooAbsReal ) , \
+               "make_var[%s]: invalid 'var' type! %s/%s" % ( name , var , type ( var ) ) 
 
         ## store the variable
         self.aux_keep.append ( var ) 

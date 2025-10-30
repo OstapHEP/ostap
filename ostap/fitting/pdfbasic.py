@@ -413,6 +413,7 @@ class APDF1 ( Components ) :
         >>> r , f = model.fitTo ( dataset , ncpu     = 10   )    
         >>> r , f = model.fitTo ( dataset , draw = True , nbins = 300 )    
         """
+        
         if timer :
             from ostap.utils.timing import timing 
             with timing ( name = "`fitTo'" , logger = self.logger , format =  "Timing %-18s %7.1fs") :
@@ -435,7 +436,8 @@ class APDF1 ( Components ) :
                                    draw    = draw    ,
                                    silent  = silent  ,
                                    density = density ,
-                                   nbins   = nbins   , 
+                                   nbins   = nbins   ,
+                                   refit   = refit   , 
                                    chi2    = chi2    , args = args , **kwargs )
         #
         ## treat the arguments properly
@@ -444,11 +446,11 @@ class APDF1 ( Components ) :
         opts     = self.parse_args ( dataset , *opts , **kwargs )
         
         if silent :
-            pl = check_arg ('PrintLevel'      , *opts ) 
+            pl = check_arg ( 'PrintLevel'      , *opts ) 
             if not pl : opts = opts + ( ROOT.RooFit.PrintLevel      ( -1    ) , )
-            vl = check_arg ('Verbose'         , *opts )
+            vl = check_arg ( 'Verbose'         , *opts )
             if not vl : opts = opts + ( ROOT.RooFit.Verbose         ( False ) , )
-            pe = check_arg ('PrintEvalErrors' , *opts )
+            pe = check_arg ( 'PrintEvalErrors' , *opts )
             if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
 
         if self.vars and 1 < len ( self.vars ) :
@@ -457,7 +459,7 @@ class APDF1 ( Components ) :
 
         ## check sumw2/asymptoticerorr flags 
         weighted    = dataset.isWeighted() if dataset else False
-        weighted_ok = not weighted 
+        weighted_ok = weighted 
         if weighted :
             sw2 = check_arg ( 'SumW2Error'      , *opts )
             aer = check_arg ( 'AsymptoticError' , *opts )
@@ -488,7 +490,7 @@ class APDF1 ( Components ) :
         ##                                                                                                             vmn , vmx ,
         ##                                                                                                             mnv , mxv ) )
 
-        if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
+        if opts  and ( not silent and not 'quiet' in kwargs ) and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
             rows = [ ( 'Option' , ) ]
             for o in opts :
                 row = str ( o ) ,
@@ -513,7 +515,7 @@ class APDF1 ( Components ) :
                 if not silent : 
                     self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
-        if not silent :
+        if not silent and not 'quiet' in kwargs  :
             params = self.params ( dataset )
             rows = [  ( 'Parameter' , 'Value' , 'Factor' ) ]
             for p in params :
@@ -549,14 +551,15 @@ class APDF1 ( Components ) :
         
         for_refit = '' 
         if 0 != st   :
-            for_refit = 'status: %s' % fit_status ( st ) 
-            if not silent : self.warning ( 'fitTo: Fit status is %s ' % fit_status ( st ) )
+            for_refit = 'status is %s' % fit_status ( st ) 
+            ## if not silent : self.warning ( 'fitTo: Fit status is %s ' % fit_status ( st ) )
         #
         qual = result.covQual()
-        cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
+        cov2_good = ( qual == 3 ) or ( weighted_ok and qual == -1 )
         if not cov2_good :
-            for_refit = 'covariance: %s' % cov_qual ( qual ) 
-            if not silent : self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
+            fr2 = 'covariance is %s' % cov_qual ( qual )  
+            for_refit = fr2 if not for_refit else '%s & %s' % ( for_refit , fr2 )
+            ## if not silent : self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
         ## check the integrals (if/when possible)
@@ -592,20 +595,20 @@ class APDF1 ( Components ) :
                     nr = ss.value() + 0.50 * ss.error()
                     if not nl <= len ( dataset ) <= nr :
                         self.warning ( "fitTo: fit is problematic: 'sum' %s != %s [%+.5g/%+.5g]" % ( ss , len( dataset ) , nl , nr ) )
-                        for_refit = 'integral'
+                        for_refit = 'integral' if not for_refit else  '%s & %s' % ( for_refit , 'integral' )
         #
         ## call for refit if needed
         #
         if for_refit and 0 < refit :
-            if not silent : self.warning ( 'fitTo: call for refit %2d :  %s '  % ( refit , for_refit ) )
+            if not silent : self.warning ( 'fitTo: call for refit #%-2d reason: %s' % ( refit , for_refit ) )
             refit -= 1 
             return  self.fitTo ( dataset         ,
                                  draw   = draw   ,
                                  nbins  = nbins  ,
                                  silent = silent ,
                                  refit  = refit  ,
-                                 args   = args   , **kwargs ) 
-
+                                 args   = args   , **kwargs )
+            
         if   result and  0 == result.status () and not silent :
             self.info    ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and  0 != result.status () and not silent : 
@@ -677,7 +680,7 @@ class APDF1 ( Components ) :
         return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
 
     # ===============================================================================
-    ## refit up-to N-times till good fit result/cov nmarix quality 
+    ## refit up-to N-times till good fit result/cov matrix quality 
     def reFit ( self , *args , **kwargs ) :
         """ efit up-to N-times till good fit result/cov nmarix quality 
         """
@@ -1170,7 +1173,8 @@ class APDF1 ( Components ) :
                    silent  = False ,
                    density = False ,
                    chi2    = False ,
-                   nbins   = None  , 
+                   nbins   = None  ,
+                   refit   = False , 
                    args    = () , **kwargs ) :
         """ Fit the 1D-histogram (and draw it)
 
@@ -1211,11 +1215,13 @@ class APDF1 ( Components ) :
                                               silent  = silent   ,
                                               density = density  ,
                                               nbins   = nbins    ,
+                                              refit   = False    ,  
                                               args    = args     , **kwargs )
             else    : return self.fitTo     ( data               ,
                                               draw    = draw     ,
                                               nbins   = nbins    , 
                                               silent  = silent   ,
+                                              refit   = refit    , 
                                               args    = args     , **kwargs )
 
     # =========================================================================
@@ -1230,7 +1236,8 @@ class APDF1 ( Components ) :
                     draw    = False ,
                     silent  = False ,
                     density = False ,
-                    nbins   = None  , 
+                    nbins   = None  ,
+                    refit   = False , 
                     args    = ()    , **kwargs ) :
         """ Chi2-fit for binned dataset or histogram
         >>> histo = ...

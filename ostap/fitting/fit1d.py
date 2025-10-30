@@ -75,10 +75,10 @@ class PEAKMEAN(PDF1) :
     def __init__ ( self              ,
                    name              ,
                    xvar              ,
-                   mean      = None  ,
+                   mean       = None ,
                    mean_name  = ''   , 
                    mean_title = ''   ) : 
-        
+
         if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax ()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin () , xvar.GetXmax ()
 
@@ -96,9 +96,9 @@ class PEAKMEAN(PDF1) :
 
         ## mean-value
         m_name  = mean_name  if mean_name  else "mean_%s"  % name
-        m_title = mean_title if mean_title else "mean(%s)" % name
+        m_title = mean_title if mean_title else "mean(%s)" % name        
         self.__mean = self.make_var ( mean , m_name , m_title , False , *self.limits_mean )
-        
+
         ##
         if self.limits_mean :  
             mn , mx = self.limits_mean  
@@ -219,7 +219,7 @@ class PEAK(PEAKMEAN) :
             'sigma_name'  : sigma_name  ,
             'sigma_title' : sigma_title ,
             }
-            
+        
     @property
     def sigma ( self ):
         """'sigma/width/scale/spread'-variable"""

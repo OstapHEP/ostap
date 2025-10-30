@@ -65,8 +65,8 @@ std::string Ostap::Utils::rootID
       Ostap::format ( ( label <   10000 ) ? "%04u" :
 		      ( label < 1000000 ) ? "%06u" : "%u" , label ) + suffix } ;      
     /// check ROOT & ROOT/RooFit 
-    if      ( nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
-    else if ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
+    if      ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
+    else if ( nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
     /// 
     return tag ;
   }
@@ -86,8 +86,9 @@ bool Ostap::Utils::usedRootID
   if ( !root ) { return false ; }
   //
   return
-    ( nullptr != root->FindObject  ( name.c_str() ) ) ||
-    ( nullptr != RooNameReg::known ( name.c_str() ) ) ;  
+    ( nullptr != RooNameReg::known ( name.c_str() ) ) || 
+    ( nullptr != root->FindObject  ( name.c_str() ) ) ;
+  //
 }
 // ============================================================================
 //                                                                     The END 

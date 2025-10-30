@@ -83,8 +83,11 @@ for t in ( Ostap.Math.ValueWithError         ,
         t.__str__   = t.toString
         t.__repr__  = t.toString
 
-ve_fmt = '%%+.4g %s %%-.4g' % plus_minus 
-def _ve_str_ ( ve ) : return ve.toString ( ve_fmt )  
+
+## ve_fmt = '%%+.4g %s %%-.4g' % plus_minus 
+## def _ve_str_ ( ve ) : return ve.toString ( ve_fmt )
+def _ve_str_ ( ve ) : return nice_ve ( ve , precision = 3 , width = 4 ) 
+
 Ostap.Math.ValueWithError .__str__  = _ve_str_
 Ostap.Math.ValueWithError .__repr__ = _ve_str_
 
@@ -563,7 +566,7 @@ def nice_ve ( value               ,
                                precision   = precision   ,
                                parentheses = parentheses ,
                                latex       = latex       )
-
+    
     if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
     elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
     ##

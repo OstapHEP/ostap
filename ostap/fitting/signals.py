@@ -4744,12 +4744,12 @@ class BreitWigner_pdf(PEAK) :
         ## initialize the base
         #
         PEAK.__init__  ( self  , name  , xvar ,
-                              mean        = m0                  ,
-                              sigma       = gamma               ,
-                              mean_name   = 'm0_%s'      % name ,
-                              mean_title  = '#m_{0}(%s)' % name ,                         
-                              sigma_name  = 'gamma_%s'   % name ,
-                              sigma_title = '#Gamma(%s)' % name )
+                         mean        = m0                  ,
+                         sigma       = gamma               ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ,                         
+                         sigma_name  = 'gamma_%s'   % name ,
+                         sigma_title = '#Gamma(%s)' % name )
         
         bw = breitwigner
         assert isinstance ( bw , Ostap.Math.BW ), \
@@ -4796,14 +4796,14 @@ class BreitWigner_pdf(PEAK) :
     @property
     def Gamma ( self ) :
         """'Gamma'-parameter for Breit-Wigner function (alias for 'sigma')"""
-        return self.sigma 
+        return self.gamma 
     @Gamma.setter
     def Gamma ( self, value ) :
-        self.sigma = value 
+        self.gamma = value 
         
     @property
     def breitwigner ( self ) :
-        """The Breit-Wigner function  itself"""
+        """`breitwigner` : The Breit-Wigner' function  itself"""
         return self.__breitwigner
 
     # =========================================================================
