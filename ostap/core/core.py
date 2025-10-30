@@ -25,6 +25,7 @@ __all__     = (
     'hID'                 , ## global identifier for ROOT histograms 
     'grID'                , ## global identifier for ROOT graphs 
     'dsID'                , ## global identifier for ROOT/RooFit datasets
+    'usedRootID'          , ## check if the  name/identified already used by ROOT/RooFit  
     ##
     'VE'                  , ## shortcut for Gaudi::Math::ValuewithError
     'SE'                  , ## shortcut for StatEntity
@@ -247,6 +248,10 @@ def rootID ( prefix = 'root_' , suffix = '' ) :
     if suffix and not suffix.startswith ( '_' ) : suffix = '_' + suffix 
     ## 
     return  Ostap.Utils.rootID ( prefix , suffix )
+
+# =================================================================================
+## use dby ROOT/RooFit ?  
+usedRootID = Ostap.Utils.usedRootID 
 
 # =============================================================================
 ## global ROOT identified for function objects 

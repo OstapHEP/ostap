@@ -20,7 +20,7 @@ install ( FILES       pplaunch
           PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/thisostap.sh.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/.thisostap.sh.in"
   "${CMAKE_CURRENT_BINARY_DIR}/thisostap.sh" @ONLY
   )
     
@@ -30,14 +30,14 @@ configure_file (
   )
 
 configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/rootlogon.C.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.C.in"
   "${CMAKE_CURRENT_BINARY_DIR}/.rootlogon.C" @ONLY
   )
 
-configure_file (
-  "${CMAKE_CURRENT_SOURCE_DIR}/rootlogon.C.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/../examples/.rootlogon.C" @ONLY
-  )
+## configure_file (
+##   "${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.C.in"
+##  "${CMAKE_CURRENT_BINARY_DIR}/../examples/.rootlogon.C" @ONLY
+##  )
     
 file    ( TOUCH      "${CMAKE_CURRENT_SOURCE_DIR}/.footprints" )  
         

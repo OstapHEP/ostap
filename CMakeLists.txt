@@ -151,9 +151,12 @@ if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
   set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
 endif ( )
 
-add_subdirectory(scripts)
+message ( "----> CMAKE-INSTALL-PREFIX       : " ${CMAKE_INSTALL_PREFIX} ) 
+
 add_subdirectory(source)
+add_subdirectory(scripts)
 add_subdirectory(ostap)
+add_subdirectory(examples)
 ## add_subdirectory(docs)
 
 configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
@@ -162,9 +165,6 @@ configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH    "${CMAKE_BINARY_DIR}/lib")
 ### where to put the executables
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-
-
-message ( "----> CMAKE-INSTALL-PREFIX       : " ${CMAKE_INSTALL_PREFIX} ) 
 
 # ===============================================================================
 # build a CPack driven installer package

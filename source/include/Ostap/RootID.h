@@ -24,8 +24,8 @@ namespace Ostap
      *  @date   2020-09-02
      */
     std::string rootID
-    ( const std::string& prefix = "o_" , 
-      const std::string& suffix = ""    ) ;
+    ( const std::string& prefix = "root_" , 
+      const std::string& suffix = ""      ) ; 
     // ========================================================================
     /** @fn usedRootID 
      *  Is this name already used by ROOT/RooFit ? 

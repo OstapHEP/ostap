@@ -37,7 +37,7 @@ file(GLOB cfiles "${CMAKE_INSTALL_PREFIX}/examples/*/*.C")
 foreach(cfilename ${cfiles})
    get_filename_component(cfname ${cfilename} NAME_WE)
    string(CONCAT cfname ostap.examples_C_ ${cfname})
-   add_test (NAME ${cfname}C WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2COMMAND root.exe ${cfilename} -b -q )
+   add_test (NAME ${cfname}C WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2 COMMAND root.exe ${cfilename} -b -q )
    set_tests_properties(${cfname}C PROPERTIES TIMEOUT 5000 )
 endforeach() 
 

@@ -51,7 +51,7 @@ from   ostap.core.ostap_types  import ( string_types   , num_types   ,
                                         sequence_types , sized_types )
 from   ostap.core.core         import ( Ostap          , rootID      ,
                                         VE             , isequal     ,
-                                        roo_silent                   )
+                                        roo_silent     , usedRootID  )
 from   ostap.fitting.utils     import ( make_name   , numcpu , ncpu , get_i ,
                                         roo_poisson , roo_gaussian  , ZERO  )
 from   ostap.fitting.roocmdarg import check_arg 
@@ -281,7 +281,7 @@ class VarMaker (object) :
         - see `ROOT.TNamed`
         - see `ROOT.RooAbsArg`
         """
-        
+
         regname = ROOT.RooNameReg.instance()
         
         ## RooFit does not like commas in the names! 
@@ -315,7 +315,7 @@ class VarMaker (object) :
             if  not nam                      : return False 
             elif nam in VarMaker.__pdf_names : return False
             elif nam in VarMaker.__var_names : return False
-            elif regname.known ( nam )       : return False
+            elif usedRootID                  : return False
             return True 
 
         ## is name already in prefix/suffix? 
@@ -358,11 +358,12 @@ class VarMaker (object) :
     #  @endcode
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2013-12-01
-    def make_var ( self           ,
-                   var            ,
-                   name           , ## name 
-                   title   = ''   , ## title 
-                   fix     = None , *args ) :
+    def make_var ( self                 ,
+                   var                  ,
+                   name                 , ## name 
+                   title        = ''    , ## title 
+                   fix          = None  , *args ,
+                   name_unique  = False ) :
         """ Make/modify  the variable:
         
         v = self.make_var ( 10   , 'myvar' , 'mycomment' )
@@ -379,10 +380,10 @@ class VarMaker (object) :
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif var is None : 
             assert name and args , "make_var: 'name' and 'args' must be specified when 'var' is None!"
-            var = name , title if title else name            
+            var  = name , title if title else name            
         elif isinstance ( var , numvar_types ) :
-            assert name , "make_var: 'name' must be specified when 'var' is of numerical type!"
-            var = name , title if title else name , float ( var ) 
+            assert name , "make_var: 'name' must be specified when 'var' is of numerical type!"            
+            var  = name , title if title else name , float ( var ) 
             
         ## convert sequence of values 
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
@@ -391,7 +392,6 @@ class VarMaker (object) :
         if   var and isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif var and isinstance ( var , tuple ) :
 
-            
             ## at most four arguments:  (value, min, max, unit)
             assert len ( args ) <= 4 , "make_var: invalid length of 'args' %s" % len ( args ) 
             
@@ -564,10 +564,17 @@ class VarMaker (object) :
             else     : self.debug   ( "make_var('%s'):  %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
             
             ## check the name 
-            regname = ROOT.RooNameReg.instance()
-            if regname.known ( name ) : self.warning ( 'The name "s" is already in ROOT/RooFit name registry!' )
+            ## regname = ROOT.RooNameReg.instance()
+            ## if regname.known ( name ) : self.warning ( 'The name "s" is already in ROOT/RooFit name registry!' )
             
             ## create the variable!
+            if usedRootID ( name ) :
+                if name_unique : 
+                    new_name = self.roo_name ( name )
+                    self.warning    ( "make_var: name `%s' is already used by ROOT/RooFit, replace it with `%s'" % ( name , new_name ) ) )
+                    name = new_name
+                else : self.warning ( "make_var: name `%s' is already used by ROOT/RooFit"                       %   name ) 
+                                    
             var = ROOT.RooRealVar ( name , title , *params ) 
             self.debug ( "New variable is created: name:'%s',title:'%s', args=%s" % ( var.name , var.title , str ( params ) ) )
             
@@ -576,9 +583,9 @@ class VarMaker (object) :
             elif isinstance ( fix , num_types  ) :                
                 vfix = float ( fix )
                 if var.hasMin() and vfix < var.getMin () :
-                    self.warning ("make_var('%s'): fix value %s < min %s" % ( var.name , vfix , vmin ) ) 
+                    self.warning ( "make_var('%s'): fix value %s < min %s" % ( var.name , vfix , vmin ) ) 
                 if var.hasMax() and vfix > var.getMax () :
-                    self.warning ("make_var('%s'): fix value %s > max %s" % ( var.name , vfix , vmax ) )
+                    self.warning ( "make_var('%s'): fix value %s > max %s" % ( var.name , vfix , vmax ) )
                 var.setVal      ( vfix )
                 value = float ( var ) 
                 if ( value != vfix ) :
@@ -1372,7 +1379,7 @@ class VarMaker (object) :
                          psi_name     = ''    ,
                          left_right   = "LR"  ) :
         
-        result = AsymVars ( self         , var_name     ,
+        result = AsymVars ( self         , var_name     , 
                             var1         = var1         ,
                             var2         = var2         ,
                             halfsum      = halfsum      ,
@@ -3598,19 +3605,15 @@ class AsymVars(object) :
         assert isinstance ( L , string_types ) and L , "Invalid `L' : %s" % L
         assert isinstance ( R , string_types ) and R , "Invalid `R' : %s" % R
         ##         
-        if not v1_name      : v1_name      = '%s%s'    % ( var_name , L )
-        if not v2_name      : v2_name      = '%s%s'    % ( var_name , R )
-        ##
-        if not halfsum_name : halfsum_name = var_name 
-        if not kappa_name   : kappa_name   = 'kappa_%s' % var_name
-        if not psi_name     : psi_name     = 'psi_%s'   % var_name
-        ##
-        ## if not self.name in v1_name      : v1_name      = '%s_%s' % ( v1_name      , self.name )
-        ## if not self.name in v2_name      : v2_name      = '%s_%s' % ( v2_name      , self.name )
-        ## if not self.name in halfsum_name : halfsum_name = '%s_%s' % ( halfsum_name , self.name )
-        ## if not self.name in kappa_name   : kappa_name   = '%s_%s' % ( kappa_name   , self.name )
-        ## if not self.name in psi_name     : psi_name     = '%s_%s' % ( psi_name     , self.name )
-        ## 
+        
+        maker = self.__var_maker
+        if not v1_name      : v1_name      = maker.roo_name ( prefix = var_name , suffix = L ) 
+        if not v2_name      : v2_name      = maker.roo_name ( prefix = var_name , suffix = R ) 
+        
+        if not halfsum_name : halfsum_name = maker.roo_name ( prefix = var_name )
+        if not kappa_name   : kappa_name   = maker.roo_name ( prefix = 'kappa'  , name = var_name )
+        if not psi_name     : psi_name     = maker.roo_name ( prefix = 'psi'    , name = var_name )
+        
         ## 1st valid trivial  case : single var1 , everything else is None 
         if isinstance ( var1 , ROOT.RooAbsReal ) and ( var2 is None or var2 is var1 ) \
            and all ( v is None for v in ( halfsum , kappa , psi ) ) :
@@ -3845,7 +3848,6 @@ class AsymVars(object) :
     def psi ( self , value ) :
         self.set_value ( self.__psi , value )
             
-
 # =============================================================================
 ## @class TwoSigmas
 #  Helper mixin class to get 'average' sigma and asymmetries from left/right sigmas

@@ -19,6 +19,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/RootID.h"
+#include "Ostap/Names.h"
 // ============================================================================
 // local 
 // ============================================================================
@@ -43,14 +44,14 @@
 // ============================================================================
 std::string Ostap::Utils::rootID
 ( const std::string& prefix ,
-  const std::string& suffix )
+  const std::string& suffix ) 
 {
-  // 
+  //
   if ( !suffix.empty() || !prefix.empty() )
-    {
-      const std::string name { prefix + suffix } ;
-      if ( !usedRootID ( name ) ) { return name ; } 
-    }
+  {
+    const std::string name { prefix + suffix } ;
+    if ( !usedRootID ( name ) ) { return name ; } 
+  }
   //
   if ( prefix.empty() ) { return rootID ( "root_" , suffix ) ; }
   //
@@ -59,16 +60,16 @@ std::string Ostap::Utils::rootID
   //
   static const unsigned long N = std::numeric_limits<unsigned long>::max ()  ; 
   for ( unsigned long label = 1001 ; label < N ; ++label )
-    {
-      const std::string tag { prefix +
-	Ostap::format ( ( label <   10000 ) ? "%04u" :
-			( label < 1000000 ) ? "%06u" : "%u" , label ) + suffix } ;      
-      /// check ROOT & ROOT/RooFit 
-      if      ( nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
-      else if ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
-      /// 
-      return tag ;
-    }
+  {
+    const std::string tag { prefix +
+      Ostap::format ( ( label <   10000 ) ? "%04u" :
+		      ( label < 1000000 ) ? "%06u" : "%u" , label ) + suffix } ;      
+    /// check ROOT & ROOT/RooFit 
+    if      ( nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
+    else if ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
+    /// 
+    return tag ;
+  }
   return prefix + "XXXX" + suffix ;
 }
 // ============================================================================

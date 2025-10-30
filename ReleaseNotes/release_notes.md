@@ -1,4 +1,3 @@
-
 ## New features
 
   1. add (python) method `density` for polynomials
@@ -13,6 +12,8 @@
   1. more tweaks for polynomials
   1. add `FunMNMX` got get brute-force minmax estimator for functions
   1. add support for vector/array/sequence-like arguments for 1d/2d&3d-histogram  `__call__` method
+  1. some tweaks for build scripts to make them more easy to use
+  1. enforce uniqie ROOT/RooFit names 
   
 ## Backward  incompatible 
 

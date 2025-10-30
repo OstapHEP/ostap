@@ -30,7 +30,7 @@ namespace
    */
   const std::string s_FORMULA { " ~`!@#$%^&*/()-+={}[]\\;:\"\'<>?,./\n\t\v\r" } ; 
   // ==========================================================================
-  /// Good (non-whetespace symbol) 
+  /// Good (non-whitespace symbol) 
   static const auto s_GOOD_SYMBOL =
     [] ( unsigned char c ) -> bool { return !std::isspace ( c ) ; } ;
   // ==========================================================================
@@ -42,10 +42,10 @@ namespace
   // ==========================================================================
 } // ==========================================================================
 // ===============================================================================
-/*  Genrate some valid (ranodm) name
+/*  Genrate some valid (random) name
  *  @param prefix (INPUT) prefix 
  *  @param name   (INPUT) the base name 
- *  @param named  (INPUT) the TNNamed object 
+ *  @param named  (INPUT) the TNamed object 
  *  @param random (INPUT) use random generator 
  *  @return some random name 
  *  @see TNamed
@@ -106,14 +106,14 @@ bool Ostap::primitive ( const std::string& name )
 bool Ostap::trivial ( const std::string& selection )
 {
   return
-    // empty string 
+    /// empty string 
     selection.empty ()                                                        ? true :
-    // only whotespaces 
-    selection.end () == std::find_if ( selection.begin () ,
-				       selection.end   () , s_GOOD_SYMBOL ) ? true :
+    /// only whitespaces 
+    selection.end   () == std::find_if ( selection.begin () ,
+					 selection.end   () , s_GOOD_SYMBOL ) ? true :
     // predefined trivials 
-    s_TRIVIAL.end () != std::find    ( s_TRIVIAL.begin () ,
-				       s_TRIVIAL.end   () , strip ( selection ) ) ;				         
+    s_TRIVIAL.end   () != std::find    ( s_TRIVIAL.begin () ,
+					 s_TRIVIAL.end   () , strip ( selection ) ) ;				         
 }
 // ============================================================================
 // remove leading and trailing spaces 
@@ -130,6 +130,16 @@ std::string Ostap::strip ( const std::string& s )
   //
   return s.substr ( s1 , s.size() - s2 ) ;
 }
+// ===============================================================================
+// convert the name to somethig that can be used as ROOT-name
+// ===============================================================================
+// std::string Ostap::rootify
+// ( const std::string& name )
+// {
+//  if ( name.empty() ) { return name ; }
+//  std::string _name { strip ( name ) } ;
+//  
+// }
 // ===============================================================================
 // convert to lower case
 // ===============================================================================

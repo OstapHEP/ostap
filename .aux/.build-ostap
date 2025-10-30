@@ -71,6 +71,8 @@ then
     echo -e "${prefix1}"' Use OSTAP_SOURCE  = '${OSTAP_SOURCE}
 else 	
     echo -e ${prefix1_error}' No valid source directory is found! '${OSTAP_SOURCE}
+    ## 
+    unset OSTAP_SOURCE OSTAP_BUILD OSTAP_INSTALL		
     return 201
 fi
 
@@ -90,6 +92,8 @@ if [[      ${OSTAP_INSTALL} &&
       ! -w ${OSTAP_INSTALL} ]]
 then
     echo -e ${prefix1_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
+    ## 
+    unset OSTAP_BUILD OSTAP_INSTALL		
     return 203
 fi
 
@@ -139,7 +143,9 @@ then
     OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
 else
     echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
-
+    ## 
+    unset OSTAP_BUILD OSTAP_INSTALL		
+    return 204 
 fi     
 
 # =========================================================================
@@ -151,6 +157,15 @@ then
     ( echo -e "${prefix2}"' [1/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} &&  
       cd ${OSTAP_INSTALL}                                                                 && 
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
+    
+    sc=$?
+    if [[ ${sc} -ne 0 ]]
+    then
+	echo -e "${prefi2_error}"' [1/7] failure: Cannot clean OSTAP_INSTALL' ${OSTAP_INSTALL}
+	## 
+	unset OSTAP_BUILD OSTAP_INSTALL		
+	return ${sc}
+    fi
 fi
 
 # =========================================================================
@@ -161,6 +176,15 @@ then
     ( echo -e "${prefix2}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
       cd ${OSTAP_BUILD} &&
       ninja clean )
+    
+    sc=$?
+    if [[ ${sc} -ne 0 ]]
+    then
+	echo -e "${prefi2_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${OSTAP_BUILD}
+	## 
+	unset OSTAP_BUILD OSTAP_INSTALL		
+	return ${sc}
+    fi
 
 fi
 
@@ -171,6 +195,14 @@ fi
   cd ${OSTAP_BUILD}                                                                  && 
   rm -rf CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 
+sc=$?
+if [[ ${sc} -ne 0 ]]
+then
+    echo -e "${prefi2_error}"' [3/7] failure: Cannot remove OSTAP_BUILD ramnants&garbage' ${OSTAP_BUILD}
+    ## 
+    unset OSTAP_BUILD OSTAP_INSTALL		
+    return ${sc}
+fi
 
 # =========================================================================
 ## CMAKE suppors "--fresh" options from 3.24 
@@ -192,6 +224,15 @@ fi
   ninja                                                                             && 
   ninja install | grep -v Up-to-date | grep -v Installing )
 
+sc=$?
+if [[ ${sc} -ne 0 ]]
+then
+    echo -e "${prefi2_error}"' [4/7] failure: first pass of cmake&ninja&insatll ' ${OSTAP_BUILD}
+    ## 
+    unset  OSTAP_BUILD OSTAP_INSTALL		
+    return ${sc}
+fi
+
 # =========================================================================
 ## install directory must appear...  
 # ==========================================================================
@@ -200,6 +241,7 @@ then
     true
 else 
     echo -e "${prefix2_error}"' Missing install directory! '${OSTAP_INSTALL}
+    unset  OSTAP_BUILD OSTAP_INSTALL		
     return 205 
 fi 
 
@@ -212,6 +254,13 @@ fi
   ninja                                                                             && 
   ninja install | grep -v Up-to-date | grep -v Installing )
 
+sc=$?
+if [[ ${sc} -ne 0 ]]
+then
+    echo -e "${prefi2_error}"' [4/7] failure: second pass of cmake&ninja&insatll ' ${OSTAP_BUILD} 
+    unset  OSTAP_BUILD OSTAP_INSTALL		
+    return ${sc}
+fi
 
 # =========================================================================
 ## setup script must be here
@@ -221,9 +270,12 @@ if [[ -f ${OSTAP_INSTALL}/thisostap.sh &&
 then
     source ${OSTAP_INSTALL}/thisostap.sh
 else
-    echo -e "${prefi2_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh 
+    echo -e "${prefi2_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh
+    ## 
+    unset  OSTAP_BUILD OSTAP_INSTALL		
     return 206
 fi
+
 
 # =========================================================================
 ## Again ...
@@ -234,12 +286,29 @@ fi
   ninja                                                                             && 
   ninja install | grep -v Up-to-date | grep -v Installing )
 
+
+sc=$?
+if [[ ${sc} -ne 0 ]]
+then
+    echo -e "${prefi2_error}"' [6/7] failure: third pass of cmake&ninja&insatll ' ${OSTAP_BUILD} 
+    unset  OSTAP_BUILD OSTAP_INSTALL		
+    return ${sc}
+fi
+
 ## ( echo -e "${prefix2}"' [7/7] Last   pass of cmake&ninja&package'  ;
 ##   cd ${OSTAP_BUILD} ;
 ##   cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja package  )
 
+sc=$?
+if [[ ${sc} -ne 0 ]]
+then
+    echo -e "${prefi2_error}"' [7/7] failure: last pass of cmake&ninja&insatll ' ${OSTAP_BUILD} 
+    unset  OSTAP_BUILD OSTAP_INSTALL		
+    return ${sc}
+fi
+
 echo -e "${prefix2}"' ROOTSYS         : '${ROOTSYS}
-echo -e "${prefix2}"' OSTAPDIR        : '${OSTAPDIR}
+echo -e "${prefix2}"' OSTAP_DIR       : '${OSTAP_DIR}
 echo -e "${prefix2}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
 echo -e "${prefix2}"' OSTAP_BUILD     : '${OSTAP_BUILD}
 echo -e "${prefix2}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
@@ -256,4 +325,8 @@ if command -v tree &> /dev/null
 then
     tree -d -L 3 --charset UTF-8 ${OSTAP_INSTALL}
 fi 
+
+export OSTAP_SOURCE
+export OSTAP_BUILD
+export OSTAP_INSTALL
 
