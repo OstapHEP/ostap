@@ -81,7 +81,7 @@ __all__     = (
     'aitken_delta2'      , ## aitken delta2 acceleration process   
 )
 # =============================================================================
-from   ostap.math.base            import isequal, iszero , samesign
+from   ostap.math.base            import isequal, iszero , samesign, isfinite 
 from   ostap.math.base            import scipy, numpy_version 
 import sys, collections, warnings 
 # =============================================================================
@@ -91,8 +91,8 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.rootfinder' )
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
-_xtol = 1.e-14
-_rtol = sys.float_info.epsilon*2 
+_xtol = 2.e-12
+_rtol = sys.float_info.epsilon * 6 
 # =============================================================================
 ## helper class to keef (x,funxc)) information together 
 Point = collections.namedtuple('Point', ( 'x','fx' ) )
@@ -207,7 +207,6 @@ def steffensen ( fun  ,  x  , fx = None , args = () ) :
     if fx : 
         gx = ( fun ( x + fx , *args ) - fx ) / fx
         if gx : return x - fx / gx
-
 
 # ============================================================================
 ## make an inverse linear interpolation, aka "secant", aka "regular falsi"
@@ -668,7 +667,7 @@ class RootFinder(object) :
     
     The sequential list of ``actions'' is:
     -  'Hailey'     :                             if the second derivative is provided, make Halley's step
-    -  'Newton'     : if previous step is failed  and the first  derivative is provdied, make Newton step
+    -  'Newton'     : if previous step is failed  and the first  derivative is provided, make Newton step
     -  'Steffensen' : if previous step is failed                                      , make Steffensen's step
     -  'Secant'     : if previous step is failed (it should not, but numerical failures occurs)
     -  'Bisection'  : if previous step is failed 
@@ -689,7 +688,7 @@ class RootFinder(object) :
     - similar to Brent's and TOMS748 algortihms, due to the 'Bisection' action the algorithm converges ``almost always''.
     - due to intermediate 'Aitken' step, a slow linear convergency (e.g. in vicinity of multiple root) is often drastically improved
     
-    
+ 
     The algorithm is largely inspired  by the Brent's method and newer TOMS748 algorithm from Boost.math root finding library
 
     References
@@ -789,10 +788,10 @@ class RootFinder(object) :
                    maxiter     = 200   ,
                    args        = ()    , 
                    xtol        = _xtol ,
-                   rtol        = _xtol ,
+                   rtol        = _rtol ,
                    full_output = False ,
                    disp        = True  ) :
-        """Create the root-finder
+        """ Create the root-finder
 
         Parameters
         ----------
@@ -804,6 +803,8 @@ class RootFinder(object) :
                       If `full_output` is `True`, the return value is `(x, r)`, where `x` is the root, and `r` is a `RootResults` object.
         disp        : If `True`, raise `RuntimeError` if the algorithm didn’t converge.
         """
+
+        maxiter = 10
         
         self.__full_output = full_output
 
@@ -818,9 +819,11 @@ class RootFinder(object) :
         self.__deriv1  = counted ( fderiv1 ) if full_output and fderiv1 else fderiv1 
         self.__deriv2  = counted ( fderiv2 ) if full_output and fderiv2 else fderiv2
         
-        self.__xtol    = xtol    if 0 < xtol    else _xtol 
-        self.__rtol    = rtol    if 0 < rtol    else _rtol 
-        self.__maxiter = maxiter if 0 < maxiter else   200
+        self.__xtol    = max ( xtol , _xtol )   
+        self.__rtol    = max ( rtol , _rtol )
+        
+        self.__maxiter = maxiter if 1 <= maxiter else   200
+        
         self.__disp    = True    if disp        else False
         
         self.__try_halley         = 0
@@ -846,7 +849,7 @@ class RootFinder(object) :
 
     # ========================================================================= 
     def __make_report ( self , root , i = 0 , flag = 0 ) :
-        """Prepare a report
+        """ Prepare a report
         """
 
         result = RootResults ( root , i , self.__fun.calls )
@@ -875,7 +878,7 @@ class RootFinder(object) :
     # =========================================================================
     ## solve the function and find the root 
     def find ( self , a , b , guess = None ) :
-        """Find a root
+        """ Find a root
         
         Parameters
         ----------
@@ -919,12 +922,16 @@ class RootFinder(object) :
             
         a = Point ( a ,  fa )
         b = Point ( b ,  fb )
-        
+
+        print ( 'A/b' , a , b )
+
         ## if guess if not specified or outside the interval
         if guess is None or not a.x <= guess <= b.x :
             
             ## use the secant as the approximation 
             guess  = ( a.x * b.fx - b.x * a.fx ) / ( b.fx - a.fx  )
+
+            print ( 'GUESS' , guess , a , b )
             
             l =  abs ( b.x - a.x )
 
@@ -932,7 +939,8 @@ class RootFinder(object) :
             elif abs ( b.x - guess ) < 0.01 * l : guess = b.x - 0.10 * l
             
             fg  = self.__fun ( guess , *self.__args )
-            g   = Point ( guess , fg  ) 
+            g   = Point ( guess , fg  )
+            
             if 0 == fg or iszero ( fg ) : return self.__result ( guess )     ##  RETURN
             elif samesign ( a.fx , fg ) : a , b = g , b 
             elif samesign ( b.fx , fg ) : a , b = a , g
@@ -941,10 +949,13 @@ class RootFinder(object) :
         ## initialize Aitken and Inverse Interpolation structures 
         self.__inverse = [                        a   , b   ] 
         self.__aitken  = [ 0.5  * ( a.x + b.x ) , a.x , b.x ]  
-            
+
         for i in range ( self.__maxiter ) :
 
+            print ( 'START ITERATION/1  %d' % i , guess , a , b )
             x , a , b = self.__make_step ( guess , a , b )
+
+            print ( ' -- ITERATION/2' , x , a , b ) 
 
             ## zero is found ?
             if 0 == x.fx or iszero ( x.fx ) : return self.__result ( x.x , i + 1 ) 
@@ -981,6 +992,7 @@ class RootFinder(object) :
 
         fx0 = None
 
+        print ( 'STEP/0' , x , fx0 ) 
         # =====================================================================
         ## (1,2) try Halley's and/or Newton methods 
         if x is None and self.__deriv1 :            
@@ -988,6 +1000,7 @@ class RootFinder(object) :
             if fx0 is None : fx0 = self.__fun ( x0 , *self.__args )
             xx = halley_newton ( self.__fun    , x0 ,
                                  self.__deriv1 , self.__deriv2 , fx = fx0 , args = self.__args )
+            print ( 'HALLEY' , xx ) 
             if not xx is None and a.x <= xx <= b.x : 
                 self.__success_halley += 1 
                 x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
@@ -998,12 +1011,14 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN
                 
+        print ( 'STEP/1' , x , fx0 ) 
         # =====================================================================
         ## (3) try  Steffensen's method
         if x is None and self.__try_steffensen - self.__success_steffensen < 2 :            
             self.__try_steffensen +=1
             if fx0 is None : fx0 = self.__fun ( x0 , *self.__args ) 
             xx = steffensen ( self.__fun , x0 , fx = fx0 , args = self.__args )
+            print ( 'STEFFENSON' , xx ) 
             if not xx is None and a.x <= xx <= b.x :                
                 self.__success_steffensen +=1                
                 x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
@@ -1014,12 +1029,15 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN
                 
+        print ( 'STEP/2' , x , fx0 ) 
         # =====================================================================
         ## (4) secant is "almost never" fails 
         if x is None :            
             self.__try_secant +=1 
-            xx = inverse_linear ( a , b )            
+            xx = inverse_linear ( a , b )
+            print ( 'SECANT' , xx ) 
             if not xx is None and a.x <= xx <= b.x :
+                
                 self.__success_secant +=1 
                 x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
                 self.__inverse.insert ( 0 , x  )
@@ -1029,10 +1047,12 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN
                 
+        print ( 'STEP/3' , x , fx0 ) 
         # =====================================================================
-        ## (5) Inverse polynomial interpolation: we always have some points here
+        ## (5) Inverse polynomial interpolation: we always have some points here        
         xx = inverse_polynomial ( *self.__inverse )
         self.__try_inverse += 1 
+        print ( 'INVERSE' , xx ) 
         if not xx is None and a.x <= xx <= b.x : 
             self.__success_inverse += 1 
             x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
@@ -1043,11 +1063,13 @@ class RootFinder(object) :
             elif samesign ( b.fx , x.fx )         : a , b = a , x  
             else                                  : return x , a , b ## RETURN
 
+        print ( 'STEP/4' , x , fx0 ) 
         # =====================================================================
         ## (6) Try Aitken-delta2 scheme if we have enough approximations
         if 3 <= len ( self.__aitken ) : 
             xx = aitken_delta2 ( *self.__aitken )
             self.__try_aitken += 1 
+            print ( 'AITKEN' , xx ) 
             if not xx is None and a.x <= xx <= b.x :
                 self.__success_aitken += 1 
                 x = Point ( xx , self.__fun ( xx ) ) 
@@ -1058,21 +1080,26 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x
                 else                              : return x , a , b ## RETURN
                
+        print ( 'STEP/5' , x , fx0 ) 
         # =====================================================================
         ## (7) Force bisection if interval is not very small 
         new_len = b.x - a.x
         if 5 * new_len > old_len and new_len > self.__xtol :
             self.__try_bisection +=1 
             a , b = bisection ( self.__fun , a , b , args = self.__args ) 
+            print ( 'BISECTION/1' , a, b ) 
             self.__success_bisection +=1 
             new_len = b.x - a.x 
 
+        print ( 'STEP/6' , x , fx0 ) 
         # =====================================================================    
         ## (8) use bisection as the ultima ratio regum 
         if x is None or not a.x <= x.x <= b.x : 
             self.__try_bisection     +=1            
             xx = 0.5  * ( a.x + b.x )            
-            self.__success_bisection +=1             
+            self.__success_bisection +=1
+            print ( 'BISECTION/2' , a, b )
+            
             x  = Point ( xx , self.__fun ( xx , *self.__args ) ) 
             self.__inverse.insert ( 0 , x  )
             self.__aitken .insert ( 0 , xx )            
@@ -1081,6 +1108,7 @@ class RootFinder(object) :
             elif samesign ( b.fx , x.fx )         : a , b = a , x
             else                                  : return x , a , b ## RETURN
    
+        print ( 'STEP/7' , x , fx0 ) 
         return x , a , b 
 
 
@@ -1140,12 +1168,12 @@ def find_root ( f                   , ## the function
                 args        = ()    ,   
                 maxiter     = 100   ,
                 xtol        = _xtol ,
-                rtol        = _xtol ,
+                rtol        = _rtol ,
                 full_output = False ,
                 disp        = True  , 
                 deriv1      = None  , 
                 deriv2      = None  ) :
-    """The main function for root-finding
+    """ The main function for root-finding
 
     Parameters
     ----------
@@ -1177,19 +1205,19 @@ def find_root ( f                   , ## the function
     >>> r = find_root ( fun , -10 , 10 , deriv1 = der1 , deriv2 = der2 )
 
 
-    For each step it use sequence of well-defined ``actions''.
-    The result of each ``action'' is considered to be ``successfull'',
+    For each step it use sequence of well-defined `actions'.
+    The result of each ``action'' is considered to be `successfull',
     if the obtained root approximation falls into the current
-    bracketing interval, otherwise it is considered as ``failure''
+    bracketing interval, otherwise it is considered as `failure'
     
     In the successfull case the obtained root it stored into list, and the bracketing
     interval is correspodingly updated.
     
     We start iterations from adding the current brackets into collection of roots
     
-    The sequential list of ``actions'' is:
+    The sequential list of `actions' is:
     - 'Hailey'     :                             if the second derivative is provided, make Halley's step
-    - 'Newton'     : if previous step is failed  and the first  derivative is provdied, make Newton step
+    - 'Newton'     : if previous step is failed  and the first  derivative is provided, make Newton step
     - 'Steffensen' : if previous step is failed                                      , make Steffensen's step
     - 'Inversenterpolation' : at this point we alwasy have at least two or more  approximations
     for the root stored into the list (including initial brackets), so an inverse polynomial interpolation is performed: 
@@ -1199,8 +1227,8 @@ def find_root ( f                   , ## the function
     - 'Aitken'     : if there are >=3 approximations, try to use Aitken delta2 acceleratiion scheme  
     - 'Bisection'  : if the updated bracketing interval is not shrinked significantly for the current step, a bisection step is forced 
     
-    After the step the convergency is checked and the proicess is converged  if:
-    - either the value of the function at the currect root  approximation is small enough
+    After the step the convergency is checked and the process is converged  if:
+    - either the value of the function at the currect root approximation is small enough
     - or the distance between two subsequent approximations is very small 
     - or the updated bracketing interval is very small
     
@@ -1257,9 +1285,11 @@ try : # ===================================================================
     # =====================================================================
 except ImportError : # ====================================================
     # =====================================================================
-    ## logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
+    ## logger.warning ("scipy.optimize.brentq is not available, use local `find_root'-replacement")
     findroot = find_root
 
+findroot = find_root
+    
 # =============================================================================
 ## solve equation \f$ f(x)=C \f$
 #  @code

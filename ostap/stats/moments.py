@@ -309,7 +309,9 @@ class BaseMoment(FunBASE1D) :
         assert 0 < total , "Integral is non-positive!"
 
         qfun     = lambda x : integral ( x ) / total  - quantile 
-        
+
+        print ( 'HERE!' , qfun ( 0 ) , qfun ( 50 ) , qfun ( 100 ) ) 
+                
         return FR ( qfun , self.xmin , self.xmax , maxiter = 500 )
     
     # ========================================================================
@@ -341,9 +343,9 @@ class BaseMoment(FunBASE1D) :
         assert 0 < total , "Integral is non-positive!"
 
         results  = [ self.xmin ]
-        for q in quantiles : 
+        for Q in quantiles : 
             
-            qfun = lambda x : integral ( x ) / total  - q 
+            qfun = lambda x : integral ( x ) / total - Q  
             r    = FR ( qfun , results [ -1 ] , self.xmax , maxiter = 500 )
             results.append ( r )
             

@@ -209,7 +209,6 @@ for iter in range ( 1 , maxIter + 1  ) :
 
     ## delete the dataset 
     mcds.clear() 
-    del mcds 
 
 else :
 
@@ -236,8 +235,6 @@ if converged :
     title = 'MC-tree with weights'
     logger.info ( '%s:\n%s' % ( title , mctree.table ( title = title , prefix = '# ') ) ) 
         
-del mcds 
-
 # ===========================================================================
 with DBASE.open   ( dbname , 'r' ) as db :
     logger.info("(Reweighting database %s " % dbname ) 

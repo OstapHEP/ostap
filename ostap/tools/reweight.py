@@ -314,7 +314,7 @@ class Weight(object) :
                 functions = _functions
 
                 row.append  ( checked_yes if merge else checked_no )
-                row.append  ( '%s' % skip )
+                if skip : row.append  ( '%s' % skip )
                 
                 ## merge list of functions into single function 
                 if merge and 1 < len ( functions)  : 
@@ -334,6 +334,7 @@ class Weight(object) :
 
                 self.__table.append ( row )
                 
+        self.__table = T.remove_empty_columns ( self.__table )
         self.__vars = tuple ( self.__vars ) 
 
     @property
@@ -1192,19 +1193,20 @@ def makeWeights  ( dataset                      ,
     nactive = len ( active )  
 
     if   power is None :
-        power   = lambda n : 0.5 * ( 1.0 / max ( n , 1 ) + 1 )
+        ## Variables are uncorelate
+        p1 = 1.0
+        ## Varibales are 100% correlated
+        p2 = 1.0 / ( nactive - 1 ) if 2 <= nactive  else 1.0
+        ## 
+        alpha   = 0.75 
         ## average between 100% correlated and 100% uncorrelated 
-        eff_exp = 0.5 * ( 1.0 / max ( nactive , 1 ) + 1.0 )
-    elif power and callable ( power ) : 
-        eff_exp = power ( nactive ) 
-    elif isinstance ( power , num_types ) and 0 < power <= 1.5 :
-        eff_exp = 1.0 * power 
-    elif 1 == nactive and 1 < len ( plots ) :  
-        eff_exp = 0.95 
-    elif 1 == nactive  :  
-        eff_exp = 1.00 
-    else               : 
-        eff_exp = 1.10 / max ( nactive , 1 ) 
+        eff_exp = alpha * p1 + ( 1 - alpha ) * p2 
+        
+    elif power and callable ( power )                          : eff_exp = power ( nactive ) 
+    elif isinstance ( power , num_types ) and 0 < power <= 2.0 : eff_exp = 1.0 * power 
+    elif 1 == nactive and 1 < len ( plots )                    : eff_exp = 0.95 
+    elif 1 == nactive                                          : eff_exp = 1.05 ## alight overreweighting
+    else                                                       : eff_exp = 1.05 / max ( nactive - 1 , 1 ) 
 
     while database and save_to_db :
 
@@ -1255,7 +1257,9 @@ def makeWeights  ( dataset                      ,
     for   row in   rows  : table.append ( rows[row] )
         
     import ostap.logger.table as Table
-    logger.info ( '%s: %d active reweightings\n%s' % ( tag , nactive , Table.table ( table , title = tag , prefix = '# ' , alignment = 'lccccccc' ) ) )
+    table = Table.remove_empty_columns ( table ) 
+    table = Table.table ( table , title = tag , prefix = '# ' , alignment = 'lccccccc' )
+    logger.info ( '%s: %d active reweightings\n%s' % ( tag , nactive , table ) ) 
 
     cmp_plots = tuple ( cmp_plots )
 
