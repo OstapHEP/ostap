@@ -289,8 +289,49 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         >>> parameters = pdf.params ( dataset)
         - see RooAbsReal::getParameters
         """
-        assert self.fun, "AFUN1::params: Function is invalid!"        
-        return self.fun.getParameters ( 0 ) if dataset is None else self.fun.getParameters ( dataset )
+        assert self.fun, "AFUN1::params: Function is invalid!"
+        ##
+        if       dataset is  None      : return self.params ( self.vars )
+        elif not dataset and self.vars : return self.params ( self.vars )  
+        elif not dataset               : dataset = ROOT.nullptr
+        ##
+        return self.fun.getParameters ( dataset )
+
+    # =========================================================================
+    ## Get parameters that are FIXED 
+    #  @code
+    #  fun = ...
+    #  fixed = fun.pars_fixed ( ) 
+    #  @endcode
+    #  @see RooAbsReal::getParameters
+    #  @see RooAbsArg::isConstant   
+    def pars_fixed ( self , dataset = None ) :
+        """ Get parameters that are FIXED 
+        >>> fun = ...
+        >>> fixed = fun.pars_fixed ( ) 
+        - see `ROOT.RooAbsReal.getParameters`
+        - see `ROOT.RooAbsArg.isConstant`   
+        """
+        pars = self.params ( dataset )
+        return tuple ( p for p in pars if p.isConstant () )
+    
+    # =========================================================================
+    ## Get parameters that are NOT constant , allowed to vary 
+    #  @code
+    #  fun = ...
+    #  floats = fun.pars_float ( ) 
+    #  @endcode
+    #  @see RooAbsReal::getParameters
+    #  @see RooAbsArg::isConstant   
+    def pars_float ( self , dataset = None ) :
+        """ Get parameters that are NOT constant , allowed to vary 
+        >>> fun = ...
+        >>> floats = fun.pars_float ( ) 
+        - see `ROOT.RooAbsReal.getParameters`
+        - see `ROOT.RooAbsArg.isConstant`   
+        """
+        pars = self.params ( dataset )
+        return tuple ( p for p in pars if not p.isConstant () )
     
     # =========================================================================
     ## get the parameter value by name

@@ -54,7 +54,8 @@ from   ostap.logger.colorized import ( isatty         ,
                                        attstr         , 
                                        allright       ,
                                        infostr        ,
-                                       decolorize     )
+                                       decolorize     ,
+                                       markup         )
 # =============================================================================
 ## Message levels   (a'la Gaudi) 
 # =============================================================================
@@ -116,6 +117,14 @@ logging.Logger.attention = _attention1_
 # =============================================================================
 ## add method 'attention' to root logger 
 logging.attention        = _attention2_
+# =============================================================================
+def log_with_markup ( method ) :
+    def _log_with_markup_ ( ll  , level , message , args , **kwargs ) :
+        use_markup = kwargs.pop ( 'markup' , False ) and with_colors () 
+        if use_markup : message = markup ( message ) 
+        return method ( ll , level , message , args , **kwargs )
+    return _log_with_markup_ 
+logging.Logger._log =  log_with_markup ( logging.Logger._log )
 # =============================================================================
 
 ## Log message with severity 'ALWAYS'
@@ -811,6 +820,15 @@ if __name__ == '__main__' :
         logger.critical  ( 'This is CRITICAL  message'  )
         logger.always    ( 'This is ALWAYS    message'  ) 
 
+
+    ## markup ?
+    logger.info ( 'Markup: ***BOLD&BLINK***' , markup = True )
+    logger.info ( 'Markup: **BOLD&ITALIC**'  , markup = True )
+    logger.info ( 'Markup: *BOLD*'           , markup = True )
+    logger.info ( 'Markup: >BLINK<'          , markup = True )
+    logger.info ( 'Markup: ~ITALIC~'         , markup = True ) 
+    logger.info ( 'Markup: __UNDERLINE__'    , markup = True ) 
+    logger.info ( 'Markup: ^REVERSE^'        , markup = True )
         
     logger.info ( 80*'*'  )
         

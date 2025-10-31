@@ -1,5 +1,8 @@
 ## New features
 
+   1. add `ostap.logger.colorized.markup`  (experimental) support for veyr simple pseudo-markup
+   1. add treatment of `markup` into `logger` (default is  `markeup=False`)
+
 ## Backward  incompatible 
 
 ## Bug fixes

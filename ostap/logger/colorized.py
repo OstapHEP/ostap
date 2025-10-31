@@ -28,10 +28,12 @@ __all__     = (
     'info_info'        , ## `information` information
     ##
     'with_colors'      , ## Is colorization enabled?
-    'set_with_colors'  , ## Enable/Disable colorization 
+    'set_with_colors'  , ## Enable/Disable colorization
+    ##
+    'markup'           , ## some primitive markup  
     )
 # =============================================================================
-import os, sys
+import os, sys, re 
 # =============================================================================
 # - is sys.stdout attached to terminal or not ?
 # from ostap.utils.basic import isatty
@@ -78,6 +80,21 @@ def set_with_colors ( use ) :
 ## BASIC ASCII colors :
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list ( range ( 8 ) )
 # =============================================================================
+COLOR_FMT      = "\033[%sm"  ## general format for color 
+
+RESET_SEQ      = COLOR_FMT % 0 
+BOLD_SEQ       = COLOR_FMT % 1
+LIGHT_SEQ      = COLOR_FMT % 2
+ITALIC_SEQ     = COLOR_FMT % 3
+UNDERLINE_SEQ  = COLOR_FMT % 4
+BLINK_FAST_SEQ = COLOR_FMT % 5
+BLINK_SLOW_SEQ = COLOR_FMT % 6 
+REVERSE_SEQ    = COLOR_FMT % 7
+HIDE_SEQ       = COLOR_FMT % 8
+CROSS_SEQ      = COLOR_FMT % 9
+BLINK_SEQ      = BLINK_FAST_SEQ
+
+# =============================================================================
 ## provide colored string
 #  @code
 #  print colored_string ( 'Hello' , foreground = RED , background = YELLOW , bold = True )
@@ -101,8 +118,6 @@ def colored_string ( what               ,
     ## nothing to do 
     if ( foreground is None ) and ( background is None ) :
         if ( not bold ) and ( not blink ) and ( not underline ) : return what 
-
-    RESET_SEQ = "\033[0m"
 
     COLOR_SEQ = "\033[%dm"
     BOLD_SEQ  = "\033[1m"    if bold      else ''
@@ -257,6 +272,66 @@ def info_info ( what ) :
                             fg_bright  = False  ,
                             bg_bright  = False  )
 
+
+# =============================================================================
+## Apply some oversimplified markup tranformation (a'la github)
+_markup_ = (
+    ## undeline      :           __ text __   
+    ( re.compile ( r'(?P<UL>__.+?__)'         ) , 2 , '%s%%s%s'   % ( UNDERLINE_SEQ ,              RESET_SEQ ) ) ,
+    ## bold & blink  :          *** text *** 
+    ( re.compile ( r'(?P<UL>\*\*\*.+?\*\*\*)' ) , 3 , '%s%s%%s%s' % ( BOLD_SEQ      , BLINK_SEQ   , RESET_SEQ ) ) , 
+    ## bold & italic :           ** text ** 
+    ( re.compile ( r'(?P<UL>\*\*.+?\*\*)'     ) , 2 , '%s%s%%s%s' % ( BOLD_SEQ      , ITALIC_SEQ  , RESET_SEQ ) ) ,
+    ## bold          :            * text * 
+    ( re.compile ( r'(?P<UL>\*.+?\*)'         ) , 1 , '%s%%s%s'   % ( BOLD_SEQ      ,               RESET_SEQ ) ) ,
+    ## italic        :            _ text _ 
+    ( re.compile ( r'(?P<UL>~.+?~)'           ) , 1 , '%s%%s%s'   % ( ITALIC_SEQ    ,               RESET_SEQ ) ) ,
+    ## blink         :            > text < 
+    ( re.compile ( r'(?P<UL>>.+?<)'           ) , 1 , '%s%%s%s'   % ( BLINK_SEQ      ,              RESET_SEQ ) ) ,
+    ## cross-out/sstrike-out :   -- text __ 
+    ( re.compile ( r'(?P<UL>--.+?--)'         ) , 2 , '%s%%s%s'   % ( CROSS_SEQ      ,              RESET_SEQ ) ) , 
+    ## reverse       :           < text >
+    ( re.compile ( r'(?P<UL>\^.+?\^)'         ) , 1 , '%s%%s%s'   % ( REVERSE_SEQ    ,              RESET_SEQ ) ) , 
+)
+
+# ================================================================================
+## Very simeel markup-like tranformations
+#  - <code>  __ text __  </code> underline 
+#  - <code> *** text *** </code> bold and blink
+#  - <code>  ** text **  </code> bold and italic
+#  - <code>   * text *   </code> bold
+#  - <code>   ~ text ~   </code> italic
+#  - <code>   ^ text ^   </code> reverse 
+#  - <code>   > text <   </code> blink
+#  - <code>  -- text --  </code> cross-out/strike-out
+def markup ( what ) :
+    """ Very simple markup-like tranformations
+    - `  __ text __  ` underline 
+    - ` *** text *** ` bold and blink
+    - `  ** text **  ` bold and italic
+    - `   * text *   ` bold
+    - `   ~ text ~   ` italic
+    - `   > text <   ` blink
+    - `   ^ text ^   ` reverse 
+    - `  -- text --  ` cross-out/strike-out 
+    """
+    ## nothing to colorize
+    if not what : return what
+    
+    ## if colorizing is isabled
+    enabled = with_colors()
+    
+    for c , l , fmt in _markup_ :
+        qq = tuple ( s for s in re.findall ( c , what ) )
+        for s in qq :
+            q    = s [ l : -l ]
+            ## transform ( or just remove indicators)
+            r    = fmt % q if enabled else q 
+            what = what.replace ( s , r )
+        
+    return what
+
+
 # =============================================================================
 if __name__ == '__main__' :
 
@@ -285,7 +360,16 @@ if __name__ == '__main__' :
                                          fg_bright ,
                                          bg_bright )
                                 logger.info ( colored_string ( fmt % pars , *pars ) )
-    
+
+    ## markup ?
+    logger.info ( markup ( 'Markup: ***BOLD&BLINK***' ) )
+    logger.info ( markup ( 'Markup: **BOLD&ITALIC**'  ) )
+    logger.info ( markup ( 'Markup: *BOLD*'           ) )
+    logger.info ( markup ( 'Markup: >BLINK<'          ) )
+    logger.info ( markup ( 'Markup: ~ITALIC~'         ) )
+    logger.info ( markup ( 'Markup: __UNDERLINE__'    ) )
+    logger.info ( markup ( 'Markup: ^REVERSE^'        ) )
+                     
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
