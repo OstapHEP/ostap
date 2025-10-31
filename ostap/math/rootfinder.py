@@ -923,8 +923,6 @@ class RootFinder(object) :
         a = Point ( a ,  fa )
         b = Point ( b ,  fb )
 
-        print ( 'A/b' , a , b )
-
         ## if guess if not specified or outside the interval
         if guess is None or not a.x <= guess <= b.x :
             
@@ -952,10 +950,7 @@ class RootFinder(object) :
 
         for i in range ( self.__maxiter ) :
 
-            print ( 'START ITERATION/1  %d' % i , guess , a , b )
             x , a , b = self.__make_step ( guess , a , b )
-
-            print ( ' -- ITERATION/2' , x , a , b ) 
 
             ## zero is found ?
             if 0 == x.fx or iszero ( x.fx ) : return self.__result ( x.x , i + 1 ) 
@@ -989,19 +984,19 @@ class RootFinder(object) :
         old_len =  b.x - a.x
         
         x   = None
-
         fx0 = None
 
-        print ( 'STEP/0' , x , fx0 ) 
         # =====================================================================
         ## (1,2) try Halley's and/or Newton methods 
         if x is None and self.__deriv1 :            
             self.__try_halley += 1
             if fx0 is None : fx0 = self.__fun ( x0 , *self.__args )
-            xx = halley_newton ( self.__fun    , x0 ,
-                                 self.__deriv1 , self.__deriv2 , fx = fx0 , args = self.__args )
-            print ( 'HALLEY' , xx ) 
-            if not xx is None and a.x <= xx <= b.x : 
+            xx = halley_newton ( self.__fun    , x0       ,
+                                 self.__deriv1 , 
+                                 self.__deriv2 , fx = fx0 , args = self.__args ) 
+            if   x is None           : pass
+            elif not isfinite ( xx ) : pass 
+            elif a.x <= xx <= b.x : 
                 self.__success_halley += 1 
                 x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
                 self.__inverse.insert ( 0 , x  )
@@ -1011,15 +1006,15 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN
                 
-        print ( 'STEP/1' , x , fx0 ) 
         # =====================================================================
         ## (3) try  Steffensen's method
         if x is None and self.__try_steffensen - self.__success_steffensen < 2 :            
             self.__try_steffensen +=1
             if fx0 is None : fx0 = self.__fun ( x0 , *self.__args ) 
             xx = steffensen ( self.__fun , x0 , fx = fx0 , args = self.__args )
-            print ( 'STEFFENSON' , xx ) 
-            if not xx is None and a.x <= xx <= b.x :                
+            if xx is None            : pass
+            elif not isfinite ( xx ) : pass 
+            elif a.x <= xx <= b.x :                
                 self.__success_steffensen +=1                
                 x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
                 self.__inverse.insert ( 0 , x  )
@@ -1029,15 +1024,14 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN
                 
-        print ( 'STEP/2' , x , fx0 ) 
         # =====================================================================
         ## (4) secant is "almost never" fails 
         if x is None :            
             self.__try_secant +=1 
             xx = inverse_linear ( a , b )
-            print ( 'SECANT' , xx ) 
-            if not xx is None and a.x <= xx <= b.x :
-                
+            if   xx is None         : pass 
+            elif not isfinite( xx ) : pass 
+            elif a.x <= xx <= b.x :
                 self.__success_secant +=1 
                 x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
                 self.__inverse.insert ( 0 , x  )
@@ -1046,31 +1040,32 @@ class RootFinder(object) :
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN
-                
-        print ( 'STEP/3' , x , fx0 ) 
+                 
         # =====================================================================
-        ## (5) Inverse polynomial interpolation: we always have some points here        
-        xx = inverse_polynomial ( *self.__inverse )
-        self.__try_inverse += 1 
-        print ( 'INVERSE' , xx ) 
-        if not xx is None and a.x <= xx <= b.x : 
-            self.__success_inverse += 1 
-            x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
-            self.__inverse.insert ( 0 , x  )
-            self.__aitken .insert ( 0 , xx )            
-            if   0 == x.fx or iszero ( x.fx )     : return x , a , b ## RETURN
-            elif samesign ( a.fx , x.fx )         : a , b = x , b  
-            elif samesign ( b.fx , x.fx )         : a , b = a , x  
-            else                                  : return x , a , b ## RETURN
+        ## (5) Inverse polynomial interpolation: we always have some points here
+        if 2 <= len ( self.__inverse ) :
+            self.__try_inverse += 1        
+            xx = inverse_polynomial ( *self.__inverse ) 
+            if xx is None            : pass 
+            elif not isfinite ( xx ) : pass
+            elif a.x <= xx <= b.x    :
+                self.__success_inverse += 1 
+                x = Point ( xx , self.__fun ( xx , *self.__args ) ) 
+                self.__inverse.insert ( 0 , x  )
+                self.__aitken .insert ( 0 , xx )            
+                if   0 == x.fx or iszero ( x.fx )     : return x , a , b ## RETURN
+                elif samesign ( a.fx , x.fx )         : a , b = x , b  
+                elif samesign ( b.fx , x.fx )         : a , b = a , x  
+                else                                  : return x , a , b ## RETURN
 
-        print ( 'STEP/4' , x , fx0 ) 
         # =====================================================================
         ## (6) Try Aitken-delta2 scheme if we have enough approximations
         if 3 <= len ( self.__aitken ) : 
             xx = aitken_delta2 ( *self.__aitken )
-            self.__try_aitken += 1 
-            print ( 'AITKEN' , xx ) 
-            if not xx is None and a.x <= xx <= b.x :
+            self.__try_aitken += 1  
+            if xx is None          : pass 
+            elif not isfinite( xx ) : pass
+            elif a.x <= xx <= b.x :
                 self.__success_aitken += 1 
                 x = Point ( xx , self.__fun ( xx ) ) 
                 self.__inverse.insert ( 0 , x  )
@@ -1079,27 +1074,22 @@ class RootFinder(object) :
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x
                 else                              : return x , a , b ## RETURN
-               
-        print ( 'STEP/5' , x , fx0 ) 
+                
         # =====================================================================
         ## (7) Force bisection if interval is not very small 
         new_len = b.x - a.x
         if 5 * new_len > old_len and new_len > self.__xtol :
             self.__try_bisection +=1 
             a , b = bisection ( self.__fun , a , b , args = self.__args ) 
-            print ( 'BISECTION/1' , a, b ) 
             self.__success_bisection +=1 
             new_len = b.x - a.x 
 
-        print ( 'STEP/6' , x , fx0 ) 
         # =====================================================================    
         ## (8) use bisection as the ultima ratio regum 
         if x is None or not a.x <= x.x <= b.x : 
             self.__try_bisection     +=1            
             xx = 0.5  * ( a.x + b.x )            
             self.__success_bisection +=1
-            print ( 'BISECTION/2' , a, b )
-            
             x  = Point ( xx , self.__fun ( xx , *self.__args ) ) 
             self.__inverse.insert ( 0 , x  )
             self.__aitken .insert ( 0 , xx )            
@@ -1108,7 +1098,6 @@ class RootFinder(object) :
             elif samesign ( b.fx , x.fx )         : a , b = a , x
             else                                  : return x , a , b ## RETURN
    
-        print ( 'STEP/7' , x , fx0 ) 
         return x , a , b 
 
 
@@ -1287,8 +1276,6 @@ except ImportError : # ====================================================
     # =====================================================================
     ## logger.warning ("scipy.optimize.brentq is not available, use local `find_root'-replacement")
     findroot = find_root
-
-findroot = find_root
     
 # =============================================================================
 ## solve equation \f$ f(x)=C \f$

@@ -296,12 +296,14 @@ class BaseMoment(FunBASE1D) :
         assert isinstance ( quantile , num_types ) and 0 <= quantile <= 1,\
             "Invalid `quantile' %s " % quantile 
     
+        args = args if args else self.args 
+        
         if   0.0 == quantile : return self.xmin
         elif 1.0 == quantile : return self.xmax
         elif 0.5 == quantile : return self.median ( func , *args )
               
         from ostap.math.integral   import IntegralCache as IC  
-        from ostap.math.rootfinder import findroot      as FR 
+        from ostap.math.rootfinder import RootFinder    as RF 
 
         integral = IC ( func , self.xmin , err = False ,  args = args )
         total    = integral  ( self.xmax )        
@@ -309,11 +311,11 @@ class BaseMoment(FunBASE1D) :
         assert 0 < total , "Integral is non-positive!"
 
         qfun     = lambda x : integral ( x ) / total  - quantile 
+        dfun     = lambda x : float ( func ( x , *args ) ) /  total 
 
-        print ( 'HERE!' , qfun ( 0 ) , qfun ( 50 ) , qfun ( 100 ) ) 
-                
-        return FR ( qfun , self.xmin , self.xmax , maxiter = 500 )
-    
+        rf = RF ( qfun , deriv1 = dfun )
+        return rf.find ( self.xmin , self.xmax )
+        
     # ========================================================================
     ## get quantiles  
     def quantiles ( self , func , quantiles  , *args ) :
@@ -335,18 +337,21 @@ class BaseMoment(FunBASE1D) :
         
         ## need to know the integral
         from ostap.math.integral   import IntegralCache as IC  
-        from ostap.math.rootfinder import findroot      as FR 
+        from ostap.math.rootfinder import RootFinder    as RF 
 
         integral = IC ( func , self.xmin , err = False ,  args = args )
         total    = integral  ( self.xmax )        
         
         assert 0 < total , "Integral is non-positive!"
-
+ 
+        dfun     = lambda x : float ( func ( x , *args ) ) /  total 
+ 
         results  = [ self.xmin ]
         for Q in quantiles : 
             
             qfun = lambda x : integral ( x ) / total - Q  
-            r    = FR ( qfun , results [ -1 ] , self.xmax , maxiter = 500 )
+            rf    = RF ( qfun , deriv1 = dfun )
+            r     = rf.find ( results [ -1 ] , self.xmax ) 
             results.append ( r )
             
         results.append ( self.xmax )        
