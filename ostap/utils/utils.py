@@ -69,7 +69,9 @@ __all__     = (
 from   itertools              import repeat, chain, islice
 from   ostap.core.meta_info   import python_info 
 from   ostap.utils.timing     import timing, timer
-from   ostap.utils.basic      import isatty, with_ipython, NoContext, zip_longest 
+from   ostap.utils.basic      import ( isatty   , with_ipython , 
+                                      NoContext , zip_longest  , 
+                                      counted   , memoize      )  
 from   ostap.core.ostap_types import ( integer_types  , num_types ,
                                        string_types   ,
                                        dictlike_types , listlike_types )
@@ -282,35 +284,6 @@ def keepArgs() :
     ...  
     """
     return KeepArgs()
-
-# =============================================================================
-## create 'counted' function to know number of function calls
-#  @code
-#  fun = ...
-#  func = counted ( fun ) ## use as function
-# 
-#  # alternatively use it as decorator:
-#  @counted
-#  def fun2 ( ...  ) : return ...
-#  @endcode
-def counted ( f ):
-    """ Create 'counted' function to know number of function calls
-
-    Example
-    -------
-    
-    >>> fun = ...
-    >>> func = counted ( fun ) ## use as function
-
-    >>> @counted
-    >>> def fun2 ( ...  ) : return ...
-    """
-    def wrapped ( *fargs, **kwargs ):
-        wrapped.calls += 1
-        return f( *fargs , **kwargs )
-    wrapped.calls = 0
-    return wrapped
-
 
 # =============================================================================
 ## Return the path to an executable which would be run if the given <code>cmd</code> was called.
@@ -800,21 +773,6 @@ def splitter ( N , n ) :
         else :
             for i in range ( b     ) : yield a + 1
             for i in range ( b , n ) : yield a 
-                
-# =============================================================================
-if   ( 3 , 9 ) <= python_info : # =============================================
-    # =========================================================================
-    memoize = functools.cache
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    ## Simple lightweight unbounded cache
-    def memoize ( user_function ):
-        """ Simple lightweight unbounded cache 
-        - see `functools.lru_cache` 
-        """
-        return functools.lru_cache(maxsize=None)(user_function)    
-
 # =========================================================================
 ## absract property decorator
 #  @code

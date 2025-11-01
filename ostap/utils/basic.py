@@ -49,13 +49,16 @@ __all__     = (
     'isfunction'           , ## is it a function (or lambda) ?
     'islambda'             , ## is it a lambda?
     'ismethod'             , ## is it a method?    
+    ## 
+    'counted'              , ## helper to count function calls 
+    'memoize'              , ## lightweigth cache
     ##
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
 from   ostap.core.meta_info import python_info, whoami  
 from   itertools            import zip_longest
-import sys, os, datetime, shutil 
+import sys, os, datetime, shutil, functools  
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
 #  @code
@@ -507,6 +510,49 @@ def islambda  ( func ) :
     """ Is it a lambda?
     """
     return isinstance ( func , LambdaType )
+
+# =============================================================================
+## create 'counted' function to know number of function calls
+#  @code
+#  fun = ...
+#  func = counted ( fun ) ## use as function
+#
+#  # alternatively use it as decorator:
+#  @counted
+#  def fun2 ( ...  ) : return ...
+#  @endcode
+def counted ( fun ):
+    """ Create 'counted' function to know number of function calls
+
+    Example
+    -------
+
+    >>> fun = ...
+    >>> func = counted ( fun ) ## use as function
+
+    >>> @counted
+    >>> def fun2 ( ...  ) : return ...
+    """
+    def wrapped ( *fargs, **kwargs ):
+        wrapped.calls += 1
+        return fun ( *fargs , **kwargs )
+    wrapped.calls = 0
+    return wrapped
+
+
+# =============================================================================
+if   ( 3 , 9 ) <= python_info : # =============================================
+    # =========================================================================
+    memoize = functools.cache
+    # =========================================================================
+else : # ======================================================================
+    # =========================================================================
+    ## Simple lightweight unbounded cache
+    def memoize ( user_function ):
+        """ Simple lightweight unbounded cache
+        - see `functools.lru_cache`
+        """
+        return functools.lru_cache(maxsize=None)(user_function)
 
 # =============================================================================
 if __name__ == '__main__' :
