@@ -62,7 +62,7 @@ else                       : logger = getLogger ( __name__             )
 # =============================================================================
 epsilon = sys.float_info.epsilon
 if not 0.75 < epsilon * 2**52 < 1.25 :
-    logger.warnings ('"epsilon" in not in the expected range! Math could be suboptimal')
+    logger.warning ('"epsilon" in not in the expected range! Math could be suboptimal')
     
 # ======================================================================================
 ## The rules for numerical differentiation (1st derivative) 
@@ -833,7 +833,7 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     if not 0.75 < epsilon * 2**52 < 1.25 :
-        logger.warnings ('"epsilon" in not in the expected range! Math could be suboptimal')
+        logger.warning ('"epsilon" in not in the expected range! Math could be suboptimal')
 
 # =============================================================================
 ##                                                                      The END 

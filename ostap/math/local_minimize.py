@@ -24,9 +24,9 @@ __all__     = (
     'scalar_minimize' , ## local copy of minimize_scalar from scipy 
     )
 # =============================================================================
-import math, warnings
-from   math              import sqrt
-from   ostap.utils.basic import typename 
+from   ostap.utils.basic import typename
+import numpy             as     np 
+import math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -34,30 +34,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.local_minimize' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy
-    import numpy  as np
-    # =========================================================================
-    with warnings.catch_warnings():
-        warnings.simplefilter ( "ignore" )
-        _epsilon = math.sqrt ( numpy.finfo ( float ) . eps )
-# =============================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    class numpy(object) :
-        @staticmethod 
-        def abs  ( value )      : return abs ( value ) 
-        @staticmethod 
-        def size ( value )      : return 1 
-        @staticmethod 
-        def sign ( value )      : return math.copysign ( 1.0 , value )
-        @staticmethod
-        def max ( a , *kwargs ) : return max ( a )
-    # =========================================================================
-    import sys 
-    _epsilon = sys.float_info.epsilon*0.5
-    np =  numpy
+_epsilon = math.sqrt ( np.finfo ( float ) . eps )
 # =============================================================================
 class OptimizeWarning(UserWarning):
     pass
@@ -74,7 +51,7 @@ def _check_unknown_options(unknown_options):
         # Stack level 4: this is called from _minimize_*, which is
         # called from another function in Scipy. Level 4 is the first
         # level in user code.
-        warnings.warn ( "Unknown solver options: %s" % msg, OptimizeWarning, 4)
+        raise TypeError  ( "Unknown solver options: %s" % msg )
 
 # =============================================================================
 ## Represents the optimization result.
@@ -511,8 +488,8 @@ def _minimize_scalar_bounded(func, bounds, args=(),
     header = ' Func-count     x          f(x)          Procedure'
     step = '       initial'
 
-    sqrt_eps = sqrt(2.2e-16)
-    golden_mean = 0.5 * (3.0 - sqrt(5.0))
+    sqrt_eps = math.sqrt(2.2e-16)
+    golden_mean = 0.5 * (3.0 - math.sqrt(5.0))
     a, b = x1, x2
     fulc = a + golden_mean * (b - a)
     nfc, xf = fulc, fulc

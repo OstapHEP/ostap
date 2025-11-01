@@ -23,13 +23,7 @@ else                       : logger = getLogger ( __name__                      
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
-        import warnings 
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = UserWarning )
-            from scipy.interpolate  import InterpolatedUnivariateSpline  as scipy_IUS 
-    else :
-        from scipy.interpolate  import InterpolatedUnivariateSpline  as scipy_IUS 
+    from scipy.interpolate  import InterpolatedUnivariateSpline  as scipy_IUS 
     # =========================================================================
     ## simple class for scipy-based interpolation  
     class SplineInterpolator(object) :

@@ -145,13 +145,10 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
     _fund_  = lambda x : (float(fun1(x))-float(fun2(x)))**2 
                               
     from ostap.math.integral import integral as _integral 
-    import warnings
     
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        d1 = _integral ( _fun1_ , xmin , xmax )
-        d2 = _integral ( _fun2_ , xmin , xmax )
-        dd = _integral ( _fund_ , xmin , xmax )
+    d1 = _integral ( _fun1_ , xmin , xmax )
+    d2 = _integral ( _fun2_ , xmin , xmax )
+    dd = _integral ( _fund_ , xmin , xmax )
         
     import math
     return "%.4e" % math.sqrt(dd/(d1*d2))

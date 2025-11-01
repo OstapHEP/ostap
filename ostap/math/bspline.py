@@ -52,7 +52,7 @@ from    ostap.math.base        import numpy_version,  scipy
 import  ostap.math.reduce 
 import  ostap.math.bernstein 
 import  ostap.math.polynomials
-import  ROOT, math, warnings 
+import  ROOT, math
 # =============================================================================
 # logging 
 # =============================================================================
@@ -272,12 +272,7 @@ def interpolate ( func , abscissas , spline , *args ) :
 # =============================================================================
 if scipy : 
     # =========================================================================    
-    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = UserWarning )
-            from   scipy.interpolate import make_interp_spline as _scipy_interpolate_make_interp_spline 
-    else :
-        from   scipy.interpolate import make_interp_spline as _scipy_interpolate_make_interp_spline
+    from   scipy.interpolate import make_interp_spline as _scipy_interpolate_make_interp_spline
     # =========================================================================
     ## create interpolation spline using scipy machinery
     #  @code

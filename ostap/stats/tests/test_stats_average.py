@@ -16,21 +16,16 @@ import ostap.logger.table     as     T
 import random, math 
 # =============================================================================
 from   ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_avegrate' )
-else                       : logger = getLogger ( __name__               )
+if '__main__' ==  __name__ : logger = getLogger ( 'tests_stats_average' )
+else                       : logger = getLogger ( __name__              )
 # =============================================================================
 batch_env ( logger ) 
 # =============================================================================
 try : # =======================================================================
-    # =========================================================================
-    import warnings
-    with warnings.catch_warnings():
-        # =====================================================================
-        warnings.simplefilter("ignore")                
-        import bayesian_average as ba         
+    # =========================================================================         
+    import bayesian_average as ba         
     # =========================================================================
     import numpy            as np
-    import warnings  
     def ba_standard     ( *values ) :
         data   = np.array ( [ v.value() for v in values ] )
         sigma  = np.array ( [ v.error() for v in values ] )
@@ -57,10 +52,8 @@ try : # =======================================================================
     
     def ba_plot ( *values , **kwargs ) :
         data   = np.array ( [ v.value() for v in values ] )
-        sigma  = np.array ( [ v.error() for v in values ] )
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")                
-            return ba.plot_average ( data , sigma , **kwargs )
+        sigma  = np.array ( [ v.error() for v in values ] )              
+        return ba.plot_average ( data , sigma , **kwargs )
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================

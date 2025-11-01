@@ -81,7 +81,7 @@ import ostap.fitting.dataset
 import ostap.histos.histos
 import ostap.fitting.roocollections 
 # 
-import ROOT, math,  random, warnings, sys, abc  
+import ROOT, math,  random, sys, abc  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -658,12 +658,7 @@ class APDF1 ( Components ) :
             
         ## No need to restructure options: 
         if  ( 6 , 32 ) <= root_info :
-            if sys.warnoptions or in_test() :
-                with warnings.catch_warnings():
-                    warnings.simplefilter ( "always" , category = RuntimeWarning )        
-                    return Ostap.MoreRooFit.fitTo ( model , data , *options )
-            else : 
-                return Ostap.MoreRooFit.fitTo ( model , data , *options )
+            return Ostap.MoreRooFit.fitTo ( model , data , *options )
 
         ##  for "small" number of arguments use the standard function 
         if len ( options ) <= NARGS and root_info < ( 6, 29 ) :
@@ -671,11 +666,6 @@ class APDF1 ( Components ) :
         
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
-        
-        if sys.warnoptions or in_test() :
-            with warnings.catch_warnings():
-                warnings.simplefilter ( "always" , category = RuntimeWarning )        
-                return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
             
         return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
 
@@ -2235,8 +2225,7 @@ class APDF1 ( Components ) :
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
 
-        with rootException() , warnings.catch_warnings() :
-            warnings.simplefilter ( "ignore" , category = RuntimeWarning )
+        with rootException() :
             hh = self.pdf.createHistogram (
                 hID ()    ,
                 self.xvar ,
@@ -3759,8 +3748,7 @@ class APDF2 (APDF1) :
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
         
-        with rootException() , warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = RuntimeWarning )
+        with rootException() : 
             hh = self.pdf.createHistogram (
                 hID()     ,
                 self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo2x' )   ,
@@ -5035,8 +5023,7 @@ class APDF3 (APDF2) :
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
         
-        with rootException() , warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = RuntimeWarning )
+        with rootException() :
             hh = self.pdf.createHistogram (
                 hID()     ,
                 self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo3x' )   ,

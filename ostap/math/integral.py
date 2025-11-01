@@ -70,11 +70,11 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.math.ve     import VE
-from   ostap.math.base   import isequal, iszero, numpy, scipy, numpy_version 
+from   ostap.math.base   import isequal, iszero
 from   ostap.utils.basic import items_loop
 from   ostap.utils.utils import memoize
 from   sortedcontainers  import SortedKeyList  
-import ROOT, warnings, math, array 
+import ROOT, math, array, scipy  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -422,14 +422,8 @@ def clenshaw_curtis ( fun                 ,
 # =============================================================================
 if scipy : 
     # =========================================================================
-    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = UserWarning )
-            from scipy.integrate import quad                as scipy_quad
-            from scipy.integrate import IntegrationWarning  as scipy_IW 
-    else :  
-        from scipy.integrate import quad                as scipy_quad
-        from scipy.integrate import IntegrationWarning  as scipy_IW  
+    from scipy.integrate import quad                as scipy_quad
+    from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the integral (from x0 to x) for the 1D-function 
     #  @code 
@@ -451,10 +445,9 @@ if scipy :
         """
         func   = lambda x : float ( fun ( x , *args ) )
         kwargs [ 'limit' ] = kwargs.pop ( 'limit'  , 200 )              
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
-            result = scipy_quad ( func , xmin , xmax , **kwargs )
-            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+       
+        result = scipy_quad ( func , xmin , xmax , **kwargs )
+        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
@@ -884,14 +877,8 @@ def genzmalik3 ( func   ,
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
-          with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = UserWarning )
-            from scipy.integrate import dblquad             as scipy_dblquad
-            from scipy.integrate import IntegrationWarning  as scipy_IW 
-    else :
-        from scipy.integrate import dblquad             as scipy_dblquad
-        from scipy.integrate import IntegrationWarning  as scipy_IW  
+    from scipy.integrate import dblquad             as scipy_dblquad
+    from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the integral (from ) for the 2D-function 
     #  @code 
@@ -912,13 +899,12 @@ if scipy : # ==================================================================
         >>> v = integral2(func,0,1,-2,2)
         """
         func   = lambda x,y : float ( fun ( x , y , *args ) ) 
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
-            result = scipy_dblquad ( func ,
-                                     ymin , ymax     ,
-                                     lambda x : xmin ,
-                                     lambda x : xmax , **kwargs )
-            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+        result = scipy_dblquad ( func ,
+                                 ymin , ymax     ,
+                                 lambda x : xmin ,
+                                 lambda x : xmax , **kwargs )
+        
+        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
     # =========================================================================
 else : # ======================================================================
@@ -933,14 +919,8 @@ else : # ======================================================================
 # =============================================================================
 if scipy : # ==================================================================
     # =========================================================================
-    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = UserWarning )
-            from scipy.integrate import tplquad             as scipy_tplquad
-            from scipy.integrate import IntegrationWarning  as scipy_IW 
-    else :
-        from scipy.integrate import tplquad             as scipy_tplquad
-        from scipy.integrate import IntegrationWarning  as scipy_IW  
+    from scipy.integrate import tplquad             as scipy_tplquad
+    from scipy.integrate import IntegrationWarning  as scipy_IW  
     # =========================================================================
     ## Calculate the inteegral for the 3D-function 
     #  @code 
@@ -962,15 +942,14 @@ if scipy : # ==================================================================
         >>> v = integral3(func,0,1,0,2,0,3)
         """
         func   = lambda x,y,z : float ( fun ( x , y , z , *args ) )        
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = scipy_IW  ) 
-            result = scipy_tplquad ( func ,
-                                     zmin , zmax ,
-                                     lambda z   : ymin ,
-                                     lambda z   : ymax ,
-                                     lambda y,z : xmin ,
-                                     lambda y,z : xmax , **kwargs )
-            return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+        
+        result = scipy_tplquad ( func ,
+                                 zmin , zmax ,
+                                 lambda z   : ymin ,
+                                 lambda z   : ymax ,
+                                 lambda y,z : xmin ,
+                                 lambda y,z : xmax , **kwargs )
+        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
     # ========================================================================    
 else : # =====================================================================
     # ========================================================================

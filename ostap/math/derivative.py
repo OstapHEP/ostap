@@ -80,7 +80,7 @@ else                       : logger = getLogger ( __name__                )
 # =============================================================================
 _eps_ = float_info.epsilon
 if not 0.75 < _eps_ * 2**52 < 1.25 :
-    logger.warnings('"epsilon" in not in the expected range! Math could be suboptimal')
+    logger.warning ('"epsilon" in not in the expected range! Math could be suboptimal')
     
 _next_double_ = Ostap.Math.next_double
 _mULPs_       = 1000 

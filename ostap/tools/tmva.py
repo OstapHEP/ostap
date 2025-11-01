@@ -49,7 +49,7 @@ from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.timing        import timing
 from   ostap.plotting.canvas     import use_canvas 
 import ostap.io.root_file
-import ROOT, os, glob, math, tarfile, shutil, itertools, warnings  
+import ROOT, os, glob, math, tarfile, shutil, itertools
 # =============================================================================
 # logging 
 # =============================================================================
@@ -2029,10 +2029,8 @@ class Trainer(object):
             for fun, args, kwargs in plots :
                 tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
                 with timing ( tag , logger = self.logger ) :
-                    with warnings.catch_warnings () :
-                        warnings.simplefilter ( 'always' , category = RuntimeWarning ) 
-                        if kwargs : fun ( *args , **kwargs )
-                        else      : fun ( *args )
+                    if kwargs : fun ( *args , **kwargs )
+                    else      : fun ( *args )
 
         #
         ## local plots :

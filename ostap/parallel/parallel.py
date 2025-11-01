@@ -25,7 +25,7 @@ __all__     = (
 # =============================================================================
 from   ostap.parallel.task import Task, GenericTask
 from   ostap.utils.env     import has_env, get_env, OSTAP_PARALLEL  
-import sys, os, warnings 
+import sys, os
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel')
@@ -78,12 +78,10 @@ except ImportError : # ========================================================
 if not worker or 'IPYPARALLEL' == worker : # ==================================
     # =========================================================================
     try : # ===================================================================
+        # =====================================================================              
+        import ipyparallel as _ipp
+        worker = 'IPYPARALLEL' if ( 8 , 0 ) <= _ipp.version_info else ''
         # =====================================================================
-        with warnings.catch_warnings() :            
-            warnings.simplefilter ( "ignore" )                
-            import ipyparallel as _ipp
-            worker = 'IPYPARALLEL' if ( 8 , 0 ) <= _ipp.version_info else ''
-            # =================================================================
     except ImportError : # ====================================================
         # =====================================================================
         worker = ''

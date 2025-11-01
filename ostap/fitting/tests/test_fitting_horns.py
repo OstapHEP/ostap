@@ -15,7 +15,7 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env  
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
-import ROOT, random, warnings 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================

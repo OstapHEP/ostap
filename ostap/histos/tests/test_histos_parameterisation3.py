@@ -22,7 +22,7 @@ from   ostap.utils.root_utils   import batch_env
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-import ROOT, random, time
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
@@ -91,7 +91,6 @@ for i in range ( 0 , entries ) :
 ## all histograms 
 histos = h1 , h2 , h3 , h4 , h5 , h6
 
-
 ## make a quadratic difference between two functions 
 def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
 
@@ -100,13 +99,10 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
     _fund_  = lambda x : (float(fun1(x))-float(fun2(x)))**2 
                               
     from ostap.math.integral import integral as _integral 
-    import warnings
     
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        d1 = _integral ( _fun1_ , xmin , xmax )
-        d2 = _integral ( _fun2_ , xmin , xmax )
-        dd = _integral ( _fund_ , xmin , xmax )
+    d1 = _integral ( _fun1_ , xmin , xmax )
+    d2 = _integral ( _fun2_ , xmin , xmax )
+    dd = _integral ( _fund_ , xmin , xmax )
         
     import math
     return "%.4e" % math.sqrt(dd/(d1*d2))

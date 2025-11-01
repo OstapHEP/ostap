@@ -80,10 +80,9 @@ __all__     = (
     'aitken_delta2'      , ## aitken delta2 acceleration process   
 )
 # =============================================================================
-from   ostap.math.base    import ( numpy_version , samesign ,
-                                   iszero , isequal  , isfinite  )  
+from   ostap.math.base    import samesign , iszero , isequal  , isfinite   
 from   ostap.utils.basic  import counted 
-import sys, collections, warnings, scipy  
+import sys, collections
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1263,12 +1262,7 @@ def find_root ( fun                 ,     ## the function
 # =========================================================================
 try : # ===================================================================
     # =====================================================================
-    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = UserWarning )
-            from scipy.optimize import brentq as scipy_brentq 
-    else : 
-        from scipy.optimize import brentq as scipy_brentq  
+    from scipy.optimize import brentq as scipy_brentq  
     findroot = scipy_brentq
     # =====================================================================
 except ImportError : # ====================================================

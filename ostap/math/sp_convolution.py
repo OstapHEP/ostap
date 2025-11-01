@@ -14,7 +14,6 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-02-28"
 __all__     = ()
 # =============================================================================
-import warnings 
 from   ostap.math.operations import Function
 from   ostap.math.base       import numpy, scipy, numpy_version
 # =============================================================================
@@ -24,13 +23,7 @@ else                       : logger = getLogger ( __name__                    )
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
-    if ( 1 , 22 ) <= numpy_version < ( 1 , 23 ) :
-        import warnings 
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" , category = UserWarning )
-            from scipy.signal import fftconvolve as _scipy_signal_fftconvolve
-    else :
-        from scipy.signal import fftconvolve as _scipy_signal_fftconvolve    
+    from scipy.signal import fftconvolve as _scipy_signal_fftconvolve    
     # =========================================================================
     ## Simple class for scipy-based convolution  
     class ArrayConvolution(object) :
