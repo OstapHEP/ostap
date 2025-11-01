@@ -7,7 +7,6 @@
 
 ## Bug fixes
 
-
 # v3.3.1.0 
 
 ## New features
