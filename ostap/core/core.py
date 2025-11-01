@@ -67,7 +67,6 @@ __all__     = (
     'rootException'       , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
     ##
-    'in_test'             , ## Are we in CMAKE-test regime?
     )
 # =============================================================================
 from   ostap.core.meta_info   import root_info
@@ -1212,12 +1211,6 @@ if not ROOT.ROOT.GetROOT().IsBatch() :
     else : 
         from ostap.utils.root_utils import batch_env
         batch_env ( logger )
-
-# =============================================================================
-## Are we in CMAKE-test regime?
-def in_test () :
-    """ Are we in CMAKE-test regime?"""
-    return os.environ.get ( 'OSTAP_CMAKE_TEST' , False )
 
 # ==============================================================================
 ## make the default style 

@@ -61,7 +61,7 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
                                          list_types     , all_numerics   ) 
 from   ostap.math.base          import iszero , isfinite , frexp10 , numpy  
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
-                                         valid_pointer , in_test , 
+                                         valid_pointer , 
                                          rootException , 
                                          roo_silent    , rootWarning  )
 from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
