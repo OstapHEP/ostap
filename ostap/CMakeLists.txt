@@ -469,7 +469,6 @@ else()
       OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif() 
 
-
 set(OSTAP_PYTHON_SITE_DIR ${OSTAP_PYTHON_SITE_LOCAL}  PARENT_SCOPE)
 
 ## senseless? 
@@ -490,7 +489,7 @@ execute_process(
 if ( OSTAP_PYTHON_CHECK_WARNINGS_RESULT ) 
    set ( OSTAP_TEST_PYTHON_WARNINGS "" ) 
 else  () 
-   set ( OSTAP_TEST_PYTHON_WARNINGS "" ) ## -Werror" ) 
+   set ( OSTAP_TEST_PYTHON_WARNINGS "-Werror -Wignore::DeprecationWarning" ) 
 endif () 
 
 if ( OSTAP_TEST_PYTHON_WARNINGS ) 

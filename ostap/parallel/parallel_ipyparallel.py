@@ -9,7 +9,7 @@
 # =============================================================================
 __all__ = () 
 # =============================================================================
-import sys, os, time, warnings 
+import sys, os, time
 from   itertools                    import repeat , count
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
@@ -27,10 +27,7 @@ ipp = None
 if ( 3 , 6 ) <= sys.version_info : # ==========================================
     # =========================================================================
     try : # ===================================================================
-        # =====================================================================
-        with warnings.catch_warnings() :            
-            warnings.simplefilter ( "ignore" )
-            import ipyparallel as ipp
+        import ipyparallel as ipp
         # ====================================================================
     except ImportError : # ===================================================
         # ====================================================================
@@ -147,25 +144,22 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
             njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
 
             silent = self.silent or not progress
-            with warnings.catch_warnings() :
-                ## warnings.simplefilter('ignore', category=UserWarning)
-                warnings.simplefilter('ignore', category=DeprecationWarning)
-                with ipp.Cluster ( **self.__kwargs ) as cluster :
+            with ipp.Cluster ( **self.__kwargs ) as cluster :
 
-                    if   self.__use_dill :
-                        view = cluster[:]                    
-                        view.use_dill ()
-                    elif self.__balanced : 
-                        view = cluster.load_balanced_view()
-                    else :
-                        view = cluster[:]                    
+                if   self.__use_dill :
+                    view = cluster[:]                    
+                    view.use_dill ()
+                elif self.__balanced : 
+                    view = cluster.load_balanced_view()
+                else :
+                    view = cluster[:]                    
                         
-                    results = view.map_async ( job , jobs_args )                    
-                    for result in progress_bar ( results                            ,
-                                                 max_value   = njobs                ,
-                                                 description = kwargs.pop ( 'description' , "Jobs:" ) ,
-                                                 silent      = silent               ) : 
-                        yield result
+                results = view.map_async ( job , jobs_args )                    
+                for result in progress_bar ( results                            ,
+                                             max_value   = njobs                ,
+                                             description = kwargs.pop ( 'description' , "Jobs:" ) ,
+                                             silent      = silent               ) : 
+                    yield result
                         
             if kwargs :
                 import ostap.logger.table as T 

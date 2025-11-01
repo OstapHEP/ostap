@@ -17,7 +17,7 @@ __all__     = (
     'Reweighter' , 
     ) 
 # =============================================================================
-import warnings
+import numpy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -36,17 +36,14 @@ class Reweighter(object) :
     
     def __init__ ( self , **kwargs )  :
 
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" )
-
-            import numpy
-            if not hasattr ( numpy , 'float' ) :
-                numpy.float = numpy.float64
+       
+        if not hasattr ( numpy , 'float' ) :
+            numpy.float = numpy.float64
                 
-            from hep_ml.reweight import GBReweighter as GBRW 
-            self.__reweighter = GBRW ( **kwargs ) 
-            self.__variables  = ()
-            self.__nvars      = 0
+        from hep_ml.reweight import GBReweighter as GBRW 
+        self.__reweighter = GBRW ( **kwargs ) 
+        self.__variables  = ()
+        self.__nvars      = 0
             
     @property
     def reweighter ( self ) :
@@ -78,23 +75,20 @@ class Reweighter(object) :
         
         self.__nvars = original.shape[-1]
         
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" )    
-            self.reweighter.fit ( original ,
-                                  target   ,
-                                  original_weight = original_weight , 
-                                  target_weight   = target_weight   )
+        self.reweighter.fit ( original ,
+                              target   ,
+                              original_weight = original_weight , 
+                              target_weight   = target_weight   )
             
     # =========================================================================
     def weight ( self                   ,
                  original               ,
                  original_weight = None ) :
 
-        with warnings.catch_warnings():
-            warnings.simplefilter ( "ignore" )    
-            return self.reweighter.predict_weights (
-                original        = original         ,
-                original_weight = original_weight  ) 
+        
+        return self.reweighter.predict_weights (
+            original        = original         ,
+            original_weight = original_weight  ) 
         
 # =============================================================================
 if '__main__' == __name__ :

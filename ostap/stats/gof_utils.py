@@ -32,7 +32,7 @@ from   ostap.utils.basic        import numcpu, loop_items
 from   ostap.utils.utils        import splitter
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
-import ROOT, sys, warnings, math  
+import ROOT, sys, math  
 # =============================================================================
 ## float types in pumy 
 np_floats = ( numpy.float16  ,
@@ -255,10 +255,8 @@ if False : # ==================================================================
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        with warnings.catch_warnings(): 
-            warnings.simplefilter ( "ignore" , category = DeprecationWarning  )
-            import joblib as jl
-            jl_version = tuple ( int ( i ) for i in jl.__version__.split('.') )
+        import joblib as jl
+        jl_version = tuple ( int ( i ) for i in jl.__version__.split('.') )
         # =====================================================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = True ) :
@@ -274,11 +272,9 @@ if False : # ==================================================================
             ##
             input   = ( jl.delayed (self)( N ) for N in lst )
             counter = EffCounter()
-            with warnings.catch_warnings(): 
-                warnings.simplefilter ( "ignore" ) ## , category = DeprecationWarning  )
-                results = jl.Parallel ( **conf ) ( input )
-                for r in progress_bar ( results , max_value = nj , silent = silent , description = 'Permutations:') :
-                    counter += r
+            results = jl.Parallel ( **conf ) ( input )
+            for r in progress_bar ( results , max_value = nj , silent = silent , description = 'Permutations:') :
+                counter += r
             ## 
             return counter
         # =====================================================================

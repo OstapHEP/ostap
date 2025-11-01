@@ -47,7 +47,7 @@ __all__     = (
     ## 
 )
 # =============================================================================
-import sys, socket, warnings 
+import sys, socket
 # =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
@@ -418,8 +418,6 @@ def pp_submit ( ppsrv , func, *args , **kwargs ) :
     else :
         raise TypeError ( 'Invalid type %s' % typename ( func ) )
     ## 
-    ## with warnings.catch_warnings( category = ResourceWarning ):
-    ## warnings.simplefilter ( "ignore" )
     return ppsrv.submit ( the_func , *args , **kwargs )
 
 # =============================================================================
@@ -444,8 +442,6 @@ def fix_ppsrv ( ppsrv ) :
             else :
                 raise TypeError ( 'Invalid type %s' % typename ( func ) )
             ##
-            ## with warnings.catch_warnings( category = ResourceWarning ):
-            ## warnings.simplefilter ( "ignore" )
             return self._old_submit_ ( the_func , *args , **kwargs )
         
         ppsrv._new_submit_ = _pp_new_submit_

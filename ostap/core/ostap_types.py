@@ -48,7 +48,7 @@ __all__     = (
 from   collections.abc              import  ( Collection, Sequence  ,
                                               Iterable  , Mapping   ,
                                               Sized     , Generator )   
-import array, sys, os, math, numpy   
+import cppyy, array, sys, os, math, numpy   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -68,18 +68,6 @@ num_types       = integer_types + ( float , )
 str_types       = str  ,
 list_types      = list , tuple
 listlike_types  = list_types + ( set , Sequence , array.array , numpy.ndarray )
-# =============================================================================
-if sys.warnoptions or os.environ.get ( 'OSTAP_CMAKE_TEST', False ) : # ========
-    import warnings # =========================================================
-    with warnings.catch_warnings(): # =========================================
-        # =====================================================================
-        warnings.simplefilter ( "ignore" , category = DeprecationWarning )        
-        warnings.simplefilter ( "ignore" , category = UserWarning        )        
-        import cppyy
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    import cppyy
 # =============================================================================
 std = cppyy.gbl.std 
 if hasattr ( std , 'string'      ) : string_types += ( std.string      , )
