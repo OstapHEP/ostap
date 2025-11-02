@@ -79,6 +79,9 @@ for run in {1..50}; do
     
 done
 
+
+( ls -al  /cvmfs/sft.cern.ch/lcg/releases/binutils/ 2>&1 > /dev/null )
+
 if [[ ${LCG} && -d /cvmfs/sft.cern.ch/lcg/views/${LCG} ]]
 then
     true 
@@ -95,7 +98,7 @@ else
     return 120
 fi
 
-LCG_VIEWS=/cvmfs/sft.cern.ch/lcg/views/
+LCG_VIEWS=/cvmfs/sft.cern.ch/lcg/views
 LCG_BUILD=${LCG_VIEWS}/${LCG}/${PLATFORM}
 LCG_SETUP=${LCG_BUILD}/setup.sh 
 
@@ -205,13 +208,16 @@ if   [[    ${OSTAP_BUILD} &&
 then
     OSTAP_BUILD=$(realpath ${OSTAP_BUILD})
 else
-    echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
+    echo -e ${prefix_error}' No valid build directory is found! '${OSTAP_BUILD}
     return 201
 fi     
 
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
-    ( echo -e ${prefix}' Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD}  ; cd ${OSTAP_BUILD} ; ninja clean )
+    if command -v ninja &> /dev/null
+    then
+        ( echo -e ${prefix}' Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD}  ; cd ${OSTAP_BUILD} ; ninja clean )
+    fi
 fi
 
 ( echo -e ${prefix}' Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  ;
@@ -243,28 +249,28 @@ else
 fi
 
 
-echo -e ${prefix}' LCG VERSION   : '${LCG}
-echo -e ${prefix}' LCG PLATFORM  : '${PLATFORM}
-echo -e ${prefix}' LCG BUILD     : '${LCG_BUILD}
-echo -e ${prefix}' ROOTSYS       : '${ROOTSYS}
-echo -e ${prefix}' OSTAP_SOURCE  : '${OSTAP_SOURCE}
-echo -e ${prefix}' OSTAP_INSTALL : '${OSTAP_INSTALL}
-echo -e ${prefix}' OSTAP_BUILD   : '${OSTAP_BUILD}
+echo -e ${prefix}' LCG VERSION    : '${LCG}
+echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
+echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
+echo -e ${prefix}' ROOTSYS        : '${ROOTSYS}
+echo -e ${prefix}' OSTAP_SOURCE   : '${OSTAP_SOURCE}
+echo -e ${prefix}' OSTAP_INSTALL  : '${OSTAP_INSTALL}
+echo -e ${prefix}' OSTAP_BUILD    : '${OSTAP_BUILD}
 
 ## the actual build-script 
 source ${OSTAP_SOURCE}/.aux/.build-ostap ${OSTAP_SOURCE} ${OSTAP_INSTALL} ${OSTAP_BUILD}
 
 result=$?
 
-echo -e ${prefix}' LCG VERSION   : '${LCG}
-echo -e ${prefix}' LCG PLATFORM  : '${PLATFORM}
-echo -e ${prefix}' LCG BUILD     : '${LCG_BUILD}
+echo -e ${prefix}' LCG VERSION    : '${LCG}
+echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
+echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
 
 if [[ $result -eq 0 ]]
 then
-    echo -e ${prefix}' RESULT        : 'SUCCESS
+    echo -e ${prefix}' RESULT         : 'SUCCESS
 else
-    echo -e ${prefix_error}' RESULT    : '${result}
+    echo -e ${prefix_error}' RESULT     : '${result}
 fi
 
 return ${result}

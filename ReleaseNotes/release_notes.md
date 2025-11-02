@@ -2,7 +2,8 @@
 
    1. add `ostap.logger.colorized.markup`  (experimental) support for veyr simple pseudo-markup
    1. add treatment of `markup` into `logger` (default is  `markeup=False`)
-
+   1. add methods `quantile` and `quantiles` methods for 1D histograms
+   
 ## Backward  incompatible 
 
 ## Bug fixes

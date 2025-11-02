@@ -2,8 +2,7 @@
 
 prefix1='<<BUILD OSTAP>>'
 prefix1_error='<<BUILD OSTAP *ERROR*>>'
-prefix2=${prefix1}
-prefix2_error=${prefix1_error}
+
 
 # ==========================================================================
 ## Color output ? 
@@ -24,8 +23,6 @@ then
     prefix_error=${COLOR_ERR}${prefix_error}${COLOR_OFF}
     prefix1=${COLOR_OK}${prefix1}${COLOR_OFF}
     prefix1_error=${COLOR_ERR}${prefix1_error}${COLOR_OFF}
-    prefix2=${COLOR_OK}${prefix2}${COLOR_OFF}
-    prefix2_error=${COLOR_ERR}${prefix2_error}${COLOR_OFF}
     ## 
 fi
 
@@ -97,7 +94,7 @@ then
     return 203
 fi
 
-echo -e "${prefix2}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
+echo -e "${prefix1}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
     
 # =========================================================================
 ## Valid build  directory (1) ? 
@@ -148,20 +145,39 @@ else
     return 204 
 fi     
 
+
+if command -v cmake &> /dev/null 
+then
+    echo -e "${prefix1}"' CMAKE             : '$(which cmake   )
+    echo -e "${prefix1}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+   echo -e "${prefix1_error}"' no cmake command found!'
+   return 205 
+fi 
+
+if command -v ninja &> /dev/null
+then
+    echo -e "${prefix1}"' NINJA             : '$(which ninja   )
+    echo -e "${prefix1}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+     echo -e "${prefix1_error}"' no ninja command found!'
+    return 206 
+fi
+
 # =========================================================================
 ## Clean install directory 
 # ==========================================================================
 if [[ -d ${OSTAP_INSTALL} && -w ${OSTAP_INSTALL} ]]
 then
     OSTAP_INSTALL=$(readlink -f ${OSTAP_INSTALL})
-    ( echo -e "${prefix2}"' [1/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} &&  
+    ( echo -e "${prefix1}"' [1/7] Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} &&  
       cd ${OSTAP_INSTALL}                                                                 && 
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib scripts thisostap.sh packages )
     
     sc=$?
     if [[ ${sc} -ne 0 ]]
     then
-	echo -e "${prefi2_error}"' [1/7] failure: Cannot clean OSTAP_INSTALL' ${OSTAP_INSTALL}
+	echo -e "${prefix1_error}"' [1/7] failure: Cannot clean OSTAP_INSTALL' ${sc} ${OSTAP_INSTALL}
 	## 
 	unset OSTAP_BUILD OSTAP_INSTALL		
 	return ${sc}
@@ -173,32 +189,31 @@ fi
 # ==========================================================================
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
-    ( echo -e "${prefix2}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
+    ( echo -e "${prefix1}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
       cd ${OSTAP_BUILD} &&
       ninja clean )
     
     sc=$?
     if [[ ${sc} -ne 0 ]]
     then
-	echo -e "${prefi2_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${OSTAP_BUILD}
+	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
 	## 
 	unset OSTAP_BUILD OSTAP_INSTALL		
 	return ${sc}
     fi
-
 fi
 
 # =========================================================================
 ## Clean build  directory (2) 
 # ==========================================================================
-( echo -e "${prefix2}"' [3/7] Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  &&
+( echo -e "${prefix1}"' [3/7] Remove OSTAP_BUILD   remnants&garbage '${OSTAP_BUILD}  &&
   cd ${OSTAP_BUILD}                                                                  && 
   rm -rf CM* CP* CT* *nin* scripts/ source/ ostap/ examples/ Testing/ Ma* .nin* Dart* cmake* instal* packages Tes* *.py~ *.C~ __* _CPack* \#* *~ .*~ .\#* )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefi2_error}"' [3/7] failure: Cannot remove OSTAP_BUILD ramnants&garbage' ${OSTAP_BUILD}
+    echo -e "${prefix1_error}"' [3/7] failure: Cannot remove OSTAP_BUILD ramnants&garbage' ${sc} ${OSTAP_BUILD}
     ## 
     unset OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
@@ -218,7 +233,7 @@ fi
 # =========================================================================
 ## (FRESH) build 
 # ==========================================================================
-( echo -e "${prefix2}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} && 
+( echo -e "${prefix1}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} && 
   cd ${OSTAP_BUILD}                                                                 && 
   cmake ${fresh} ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja   &&
   ninja                                                                             && 
@@ -227,7 +242,7 @@ fi
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefi2_error}"' [4/7] failure: first pass of cmake&ninja&insatll ' ${OSTAP_BUILD}
+    echo -e "${prefix1_error}"' [4/7] failure: first pass of cmake&ninja&insatll' ${sc} ${OSTAP_BUILD}
     ## 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
@@ -240,15 +255,15 @@ if [[ -d ${OSTAP_INSTALL} ]]
 then
     true
 else 
-    echo -e "${prefix2_error}"' Missing install directory! '${OSTAP_INSTALL}
+    echo -e "${prefix1_error}"' Missing install directory! '${OSTAP_INSTALL}
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return 205 
+    return 207 
 fi 
 
 # =========================================================================
 ## Again ...
 # ==========================================================================
-( echo -e "${prefix2}"' [5/7] Second pass of cmake&ninja&install'    ${OSTAP_BUILD} &&
+( echo -e "${prefix1}"' [5/7] Second pass of cmake&ninja&install'    ${OSTAP_BUILD} &&
   cd ${OSTAP_BUILD}                                                                 && 
   cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja    && 
   ninja                                                                             && 
@@ -257,7 +272,7 @@ fi
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefi2_error}"' [4/7] failure: second pass of cmake&ninja&insatll ' ${OSTAP_BUILD} 
+    echo -e "${prefi1_error}"' [4/7] failure: second pass of cmake&ninja&insatll ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
 fi
@@ -270,56 +285,54 @@ if [[ -f ${OSTAP_INSTALL}/thisostap.sh &&
 then
     source ${OSTAP_INSTALL}/thisostap.sh
 else
-    echo -e "${prefi2_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh
+    echo -e "${prefix1_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh
     ## 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return 206
+    return 208
 fi
-
 
 # =========================================================================
 ## Again ...
 # ==========================================================================
-( echo -e "${prefix2}"' [6/7] Third  pass of cmake&ninja&install    '${OSTAP_BUILD} &&
+( echo -e "${prefix1}"' [6/7] Third  pass of cmake&ninja&install    '${OSTAP_BUILD} &&
   cd ${OSTAP_BUILD}                                                                 && 
   cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja    && 
   ninja                                                                             && 
   ninja install | grep -v Up-to-date | grep -v Installing )
 
-
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefi2_error}"' [6/7] failure: third pass of cmake&ninja&insatll ' ${OSTAP_BUILD} 
+    echo -e "${prefix1_error}"' [6/7] failure: third pass of cmake&ninja&insatll ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
 fi
 
-## ( echo -e "${prefix2}"' [7/7] Last   pass of cmake&ninja&package'  ;
+## ( echo -e "${prefix1}"' [7/7] Last   pass of cmake&ninja&package'  ;
 ##   cd ${OSTAP_BUILD} ;
 ##   cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja package  )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefi2_error}"' [7/7] failure: last pass of cmake&ninja&insatll ' ${OSTAP_BUILD} 
+    echo -e "${prefix1_error}"' [7/7] failure: last pass of cmake&ninja&insatll ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
 fi
 
-echo -e "${prefix2}"' ROOTSYS         : '${ROOTSYS}
-echo -e "${prefix2}"' OSTAP_DIR       : '${OSTAP_DIR}
-echo -e "${prefix2}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
-echo -e "${prefix2}"' OSTAP_BUILD     : '${OSTAP_BUILD}
-echo -e "${prefix2}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
-echo -e "${prefix2}"' thisostap.sh    : '${OSTAP_INSTALL}/thisostap.sh
-echo -e "${prefix2}"' root            : '$(which root       )
-echo -e "${prefix2}"' root.exe        : '$(which root.exe   )
-echo -e "${prefix2}"' root version    : '$(root.exe --version 2>&1 | sed -E "s/\\\\n/ /g" )
-echo -e "${prefix2}"' python          : '$(which python    )
-echo -e "${prefix2}"' python version  : '$(python   -VV       2>&1 | sed -E "s/\\\\n/ /g" )
-echo -e "${prefix2}"' ostap           : '$(which ostap     )
-echo -e "${prefix2}"' ostap version   : '$(ostap    --version 2>&1 | sed -E "s/\\\\n/ /g" )
+echo -e "${prefix1}"' ROOTSYS         : '${ROOTSYS}
+echo -e "${prefix1}"' OSTAP_DIR       : '${OSTAP_DIR}
+echo -e "${prefix1}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
+echo -e "${prefix1}"' OSTAP_BUILD     : '${OSTAP_BUILD}
+echo -e "${prefix1}"' OSTAP_INSTALL   : '${OSTAP_INSTALL}
+echo -e "${prefix1}"' thisostap.sh    : '${OSTAP_INSTALL}/thisostap.sh
+echo -e "${prefix1}"' root            : '$(which root       )
+echo -e "${prefix1}"' root.exe        : '$(which root.exe   )
+echo -e "${prefix1}"' root version    : '$(root-exe --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+echo -e "${prefix1}"' python          : '$(which python    )
+echo -e "${prefix1}"' python version  : '$(python   --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+echo -e "${prefix1}"' ostap           : '$(which ostap     )
+echo -e "${prefix1}"' ostap version   : '$(ostap   --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]+\.[0-9]+" )
 
 if command -v tree &> /dev/null
 then
@@ -329,4 +342,3 @@ fi
 export OSTAP_SOURCE
 export OSTAP_BUILD
 export OSTAP_INSTALL
-

@@ -57,7 +57,8 @@ from   ostap.utils.utils              import accumulate
 from   ostap.utils.cidict             import cidict, cidict_fun  
 from   ostap.utils.basic              import typename 
 from   ostap.logger.pretty            import pretty_float
-from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes   
+from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes
+from   ostap.stats.moments            import Quantile, Quantiles     
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
@@ -7418,6 +7419,70 @@ ROOT.TH1D . equal_edges = _equal_edges_
 
 
 # =============================================================================
+## Get the estimate for quantile for the hitogram
+#  @code
+#  histo = ...
+#  q = histo.quantile ( 0.2 ) 
+#  @endcode
+#  @attention actual quantiles are etimated for density distribution
+def h1_quantile ( h1 , quantile , **kwargs ):
+    """ Get the estimate for quantile for the hitogram
+    
+    >>> histo = ...
+    >>> q = histo.quantile ( 0.2 )  
+    
+    Attention: actual quantiles are estimated for density distribution
+    """
+    assert ( quantile , num_types ) and 0 <= quantile <= 1 , "Invalid quantile" 
+    
+    if    0 == quantile or isequal ( quantile + 1 , 1 ) or iszero ( quantile ) : return h1.xmin()
+    elif  1 == quantile or isequal ( quantile     , 1 )                        : return h1.xmax() 
+    
+    hh = h1 if h1.is_density() else h1.density()
+
+    assert hh.is_density() , "Histogram cannot be converted to density!"
+    
+    ## get the estimator
+    q = Quantile ( quantile , h1.xmin() , h1.xmax() )
+    
+    ## use the estimator 
+    return q ( hh )
+    
+# =============================================================================
+## Get the estimate for quantils for the hitogram
+#  @code
+#  histo = ...
+#  q = histo.quantils ( [ 0.1, 0.2 , 0.5]  )
+#  q = histo.quantils ( 4 ) ## get quartiles  
+#  @endcode
+#  @attention actual quantiles are etimated for density distribution
+def h1_quantiles ( h1 , quantiles , **kwargs ):
+    """ Get the estimate for quantiles for the hitogram
+    
+    >>> histo = ...
+    >>> q = histo.quantiles ( [ 0.2 , 0.4] )
+    >>> q = histo.quantiles ( 4 ) ## quantiles  
+    
+    Attention: actual quantiles are estimated for density distribution
+    """
+    
+    ## get the estimator
+    q = Quantiles ( quantiles , h1.xmin() , h1.xmax() )
+         
+    hh = h1 if h1.is_density() else h1.density()
+    assert hh.is_density() , "Histogram cannot be converted to density!"
+    
+    ## use the estimator 
+    return q ( hh )
+   
+   
+for t in ( ROOT.TH1F , 
+           ROOT.TH1D ) :
+    
+    t.quantile  = h1_quantile 
+    t.quantiles = h1_quantiles 
+        
+# =============================================================================
 # slices
 # =============================================================================
 ## define 2D slice for 2D-histogram
@@ -9863,6 +9928,11 @@ _new_methods_  += (
     ## 
     ROOT.TH1.finer_bininng   , 
     ROOT.TH1.finer_bins      , 
+    ##
+    ROOT.TH1F.quantile       , 
+    ROOT.TH1D.quantile       , 
+    ROOT.TH1F.quantiles      , 
+    ROOT.TH1D.quantiles      , 
     ##
 )
 
