@@ -31,9 +31,10 @@ from   ostap.core.ostap_types         import ( sequence_types  , sized_types   ,
 from   ostap.utils.basic              import typename 
 from   ostap.core.core                import hID , Ostap, valid_pointer, rootException
 from   ostap.math.base                import isequal, isfinite  
+from   ostap.utils.ranges             import vrange
 from   ostap.logger.pretty            import fmt_pretty_values   
 from   ostap.logger.symbols           import times, ellipsis
-import ROOT, array 
+import ROOT, array, math 
 # =============================================================================
 # logging
 # =============================================================================
@@ -500,6 +501,128 @@ def _axis_split_ ( axis , n ) :
     return axis_from_edges ( new_bins , check = False )
 
 # =============================================================================
+## Split bins while  all bins are smaller than pecified value 
+#  @code
+#  axis = ...
+#  new_axis = axis.split_while ( maxwidth )
+#  @endcode
+def _axis_split_while_   ( axis , maxwidth ) :
+    """ Split bins while  all bins are smaller than pecified value 
+    >>> axis = ...  
+    >>> new_axis = axis.split_while ( width )
+    """
+    assert isinstance ( maxwidth , num_types ) and 0 <maxwidth , \
+        "Invalid maxwidth!"
+        
+    xmin  = axis.GetXmin  ()  
+    xmax  = axis.GetXmax  () 
+    nbins = axis.GetNbins () 
+    delta = ( xmax - xmin ) 
+    
+    ## 1st trivial case 
+    if delta <= maxwidth : return ROOT.TAxis ( 1, xmin , xmax ) 
+      
+    if axis.uniform() :
+        
+        if delta <= maxwidth * nbins : 
+            ## no actton 
+            return ROOT.TAxis ( nbins , xmin , xmax ) 
+        
+        n = math.ceil ( delta * 1.0 / maxwidth )    
+        return ROOT.TAxis ( n , xmin , xmax ) 
+        
+    edges = [ e for e in axis.edges() ]
+    
+    while True : 
+        
+        if max ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) ) <= maxwidth : break 
+        
+        ne = len ( edges )
+        for i in range ( 1 , ne ) :
+            j  = i - 1 
+            ei = edges [ i ] 
+            ej = edges [ j ] 
+            delta = ei - ej 
+            if delta <= maxwidth : continue    
+            n = math.ceil ( delta , maxwidth )
+            if not n             : continue 
+            ## update list of edges 
+            edges [ j : i + 1 ] = [ v for v in vrange ( ej , ei , n , edges = True ) ]
+            break 
+    
+    ## construct new axis from new bins     
+    return axis_from_edges ( edges , check = False )
+
+
+# =============================================================================
+## Merge/join  bins while  all bins are larger than the specified value 
+#  @code
+#  axis = ...
+#  new_axis = axis.merge_while ( minwidth )
+#  @endcode
+def _axis_merge_while_   ( axis , minwidth ) :
+    """ Merge/join bins while  all bins are larger than the specified value 
+    >>> axis = ...  
+    >>> new_axis = axis.merge_while ( width )
+    """
+    assert isinstance ( minwidth , num_types ) and 0 < minwidth , \
+        "Invalid minwidth!"
+        
+    xmin  = axis.GetXmin  ()  
+    xmax  = axis.GetXmax  () 
+    nbins = axis.GetNbins ()
+    if 1 == nbins : return ROOT.TAxis ( 1 , xmin , xmax )
+     
+    delta = ( xmax - xmin ) 
+    
+    ## 1st trivial case
+    if delta <= minwidth : return ROOT.TAxis ( 1 , xmin , xmax )
+      
+    if axis.uniform() :
+        
+        if delta >= minwidth * nbins : 
+            ## no action 
+            return ROOT.TAxis ( nbins , xmin , xmax ) 
+        
+        n = math.floor ( delta , minwidth ) 
+        return ROOT.TAxis ( n , xmin , xmax ) 
+        
+    edges = [ e for e in axis.edges() ]
+    
+    
+    
+    print ( 'BEFORE' , edges )
+    k = 0 
+    for n in range ( nbins + 5 ) : 
+    
+    while True : 
+        
+        ne = len ( edges )
+        if   2 == ne : return axis_from_edges ( edges , check = False )
+         
+        deltas        = ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) 
+        delta , index = min ( ( d  , i ) for i, d in enumerate ( deltas ) )
+         
+         
+        if   0 == index :
+            del edges [ 1 ]
+            break 
+        elif ne - 2 == index : 
+            del edges [ -2 ]
+            break
+            
+         dc = edges [ index + 1 ] - edges [ index ]
+         dn = edged [ index + 2 ] - edges [ index + 1 ]
+         dp = edged [ index     ] - edged [ index - 1 ]
+         
+        [ 1, 2, 3, ,4 , 5 ] 
+                    
+    
+            
+    ## construct new axis from new bins     
+    return axis_from_edges ( edges , check = False )
+    
+# =============================================================================
 ## Split the certain axis bin into N-parts 
 #  @code
 #  axis  = ...
@@ -682,6 +805,68 @@ def make_axis ( nbins , *bins ) :
 
     raise ArgumentError('make_axis: invalid arguments %s' % str ( ( nbins , ) + bins ) ) 
 
+# ==============================================================================
+## minimal bin width 
+#  @code
+#  axis = ...
+#  minbinw = axis.min_bin_width 
+#  @endcode
+def _axis_min_binw_ ( axis ) :
+    """ Minimal bin width 
+    >>> axis = ...
+    >>> minbinw = axis.min_bin_width
+    """
+    if axis.uniform () : 
+        return ( axis.GetXmax()- aixs.GetXmax() ) / axis.GetNbins() 
+ 
+    edges = tuple ( e for e in axis.edges() ) 
+    return  min ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) ) 
+
+# ==============================================================================
+## maximal  bin width 
+#  @code
+#  axis = ...
+#  maxbinw = axis.max_bin_width 
+#  @endcode
+def _axis_max_binw_ ( axis ) :
+    """ Maximal bin width 
+    >>> axis = ...
+    >>> maxbinw = axis.max_bin_width
+    """
+    if axis.uniform () : 
+        return ( axis.GetXmax()- aixs.GetXmax() ) / axis.GetNbins() 
+ 
+    edges = tuple ( e for e in axis.edges() ) 
+    return  max ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) ) 
+
+# ==============================================================================
+## Mean bin width 
+#  @code
+#  axis = ...
+#  mnbinw = axis.mean_bin_width 
+#  @endcode
+def _axis_mean_binw_ ( axis ) :
+    """ Mean bin width 
+    >>> axis = ...
+    >>> mnbinw = axis.mean_bin_width
+    """
+    return ( axis.GetXmax()- aixs.GetXmax() ) / axis.GetNbins() 
+
+# ==============================================================================
+## Bin widths:
+#  @code
+#  axis = ..
+#  minbin, meanbin , maxbin = axis.bin_widths 
+#  @endcdde
+def _axis_bin_widths_ ( axis ) :
+    """ Bin widths:
+    >>> axis = ..
+    >>> minbin, meanbin , maxbin = axis.bin_widths 
+    """
+    return ( _axis_min_binw_  ( axis ) , 
+             _axis_mean_binw_ ( axis ) , 
+             _axis_max_binw_  ( axis ) ) 
+    
 # =============================================================================
 ## make 1D-histogram from the axis
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -937,6 +1122,11 @@ ROOT.TAxis . __mod__       = _axis_merge_
 ## split certain bin
 ROOT.TAxis . split_bin     = _axis_split_bin_
 
+## split while bina are wide
+ROOT.TAxis . split_while   = _axis_split_while_
+## merge whil bin are narroe 
+ROOT.TAxis . merge_while   = _axis_merge_while_
+
 ## join certain bins
 ROOT.TAxis . join          = _axis_join_ 
 
@@ -963,10 +1153,13 @@ ROOT.TAxis.histogram2d     = h2_axes
 ROOT.TAxis.histo3d         = h3_axes
 ROOT.TAxis.histogram3d     = h3_axes
 
-
 ##  same bining ? 
 ROOT.TAxis.same_binning = axis_same_binning
 
+ROOT.TAxis.min_bin_width  = property ( _axis_min_binw_   , None  , None ,  _axis_min_binw_   . __doc__ )
+ROOT.TAxis.max_bin_width  = property ( _axis_max_binw_   , None  , None ,  _axis_max_binw_   . __doc__ )
+ROOT.TAxis.mean_bin_width = property ( _axis_mean_binw_  , None  , None ,  _axis_mean_binw_  . __doc__ )
+ROOT.TAxis.bin_widths     = property ( _axis_bin_widths_ , None  , None ,  _axis_bin_widths_ . __doc__ )
 
 _decorated_classes_ = (
     ROOT.TAxis  ,
@@ -1034,6 +1227,12 @@ _new_methods_  = (
     ## change the range 
     ROOT.TAxis.range           , 
     #
+    ## split 
+    ROOT.TAxis.split_while     , 
+    #
+    ## merge
+    ROOT.TAxis.merge_while     , 
+    #
     ## create the histogram from the axis/axes  
     ROOT.TAxis.histo           , 
     ROOT.TAxis.histogram       ,  
@@ -1050,6 +1249,11 @@ _new_methods_  = (
     ROOT.TAxis.histo3d         , 
     ROOT.TAxis.histogram3d     , 
     ## 
+    ROOT.TAxis.min_bin_width   , 
+    ROOT.TAxis.max_bin_width   , 
+    ROOT.TAxis.mean_bin_width  ,
+    ROOT.TAxis.bin_widths      , 
+    ##
     )
 # =============================================================================
 
