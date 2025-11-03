@@ -38,13 +38,18 @@ else                       : logger = getLogger ( __name__               )
 class FunARGS(object) :
     """ Helper base class to keep addtional arguments for function
     """
-    def __init__ ( self , *args ) :
+    def __init__ ( self , *args , **kwargs ) :
         self.__args   = args
+        self.__kwargs = kwargs
     @property
     def args ( self ) :
         """`args` : additional positional arguments for function call
         """
         return self.__args
+    def kwargs ( self ) :
+        """`kwargs` : additional keyword arguments for function call
+        """
+        return self.__kwargs
 
 # =============================================================================
 ## @class FunBASE1D
@@ -52,15 +57,14 @@ class FunARGS(object) :
 class FunBASE1D(FunARGS) :
     """ Helper base class to keep xmin/xmax/args/kwargs for 1D function 
     """
-    def __init__ ( self , xmin , xmax , *args ) :
-        FunARGS.__init__ ( self , *args )
+    def __init__ ( self , xmin , xmax , *args , **kwargs ) :
+        FunARGS.__init__ ( self , *args , **kwargs )
         assert isinstance ( xmin , num_types ) , "Invalid `xmin' type" % typename ( xmin )
         assert isinstance ( xmax , num_types ) , "Invalid `xmax' type" % typename ( xmax )
         xmin = float ( xmin )
         xmax = float ( xmax )        
         self.__xmin = min ( xmin , xmax ) 
         self.__xmax = max ( xmin , xmax )
-
     @property
     def  xmin ( self ) :
         "`xmin'- low edge of the X-interval"
@@ -83,8 +87,7 @@ class FunBASE2D(FunBASE1D) :
         ymin = float ( ymin )
         ymax = float ( ymax )        
         self.__ymin = min ( ymin , ymax ) 
-        self.__ymax = max ( ymin , ymax )
-        
+        self.__ymax = max ( ymin , ymax )        
     @property
     def  ymin ( self ) :
         "`ymin'- low edge of the Y-interval"
@@ -134,22 +137,21 @@ class FunMEAN(FunBASE1D) :
     """
     # =========================================================================
     ## integrate the function between xmin and xmax 
-    def integral ( self , func , xmin , xmax , *args ) :
+    def integral ( self , func , xmin , xmax , *args , **kwargs ) :
         """ Integrate the function between xmin and xmax"""
-        args  = args if args else self.args
+        args   =   args if   args else self.args
+        kwargs = kwargs if akwrgs else self.kwargs         
         from ostap.math.integral import Integral as II  
-        integrator = II ( func , xmin , err = False , args = args )
-        return integrator ( xmax , *args )
+        integrator = II ( func , err = False , args = args , kwargs = kwargs )
+        return integrator.integrate ( xmin , xmax )
 
     ## mean value of function over the interval 
-    def fun_mean ( self , func , xmin , xmax , *args ) :
-        args  = args if args else self.args
-        value = self.integral ( func , xmin, xmax , *args )
+    def fun_mean ( self , func , xmin , xmax , *args , **kwargs ) :
+        value = self.integral ( func , xmin, xmax , *args , **kwargs )
         return value / ( xmax - xmin ) 
                                
-    def __call__ ( self , func , *arg ) :
-        args  = args if args else self.args        
-        return self.fun_mean ( func , self.xmin , self.xmax , *args )
+    def __call__ ( self , func , *arg , **kwrgs) :
+        return self.fun_mean ( func , self.xmin , self.xmax , *args , **kwargs )
 
 # ==============================================================================
 ## @class FunVariance
@@ -158,25 +160,22 @@ class FunVariance(FunMEAN) :
     """ Calculate variance of the function over 1D-interval
     """
     ## Calculate variance of the function over interval
-    def fun_variance ( self , func , xmin , xmax , *args ) :
+    def fun_variance ( self , func , xmin , xmax , *args , **kwargs ) :
         """ Calculate variance of the function over interval
         """        
-        args  = args if args else self.args        
-
         ## get mean value
-        fn_mean = self.fun_mean ( func , *args )
+        fn_mean = self.fun_mean ( func , *args , **kwargs )
 
         ## delta squared 
-        def f2 ( x , *args ) :
-            fv = func ( x , *args ) - fn_mean 
+        def f2 ( x , *a , **kw ) :
+            fv = func ( x , *a , **kw ) - fn_mean 
             return fv * fv
         
-        value = self.integral ( f2 , xmin , xmax , *args )
+        value = self.integral ( f2 , xmin , xmax , *args , **kwargs )
         return value / ( xmax - xmin )
     
-    def __call__ ( self , func , *arg ) :
-        args  = args if args else self.args                
-        return self.fun_variance ( func , self.xmin , self.xmax , *args )
+    def __call__ ( self , func , *arg , **kwargs ) :
+        return self.fun_variance ( func , self.xmin , self.xmax , *args , **kwargs )
     
 # ==============================================================================
 ## @class FunRMS
@@ -184,9 +183,8 @@ class FunVariance(FunMEAN) :
 class FunRMS(FunVariance) :
     """ Calculate RMS of the function over the 1D-interval
     """
-    def __call__ ( self , func , *arg ) :
-        args  = args if args else self.args                
-        value = self.fun_variance ( func , self.xmin , self.xmax , *args )
+    def __call__ ( self , func , *args , **kwargs ) :
+        value = self.fun_variance ( func , self.xmin , self.xmax , *args , **kwargs )
         return math.sqrt ( value )
     
 # =============================================================================
@@ -197,16 +195,17 @@ class FunMNMX(FunRMS) :
     - attentoon the approximation could be rather rude 
     """
     
-    def __init__ ( self , xmin , xmax , N = 100 , NMAX = 100000 , *args ) :
+    def __init__ ( self , xmin , xmax , N = 100 , NMAX = 100000 , *args , **kwargs ) :
         
-        super(FunMNMX,self).__init__  ( xmin , xmax , *args )
+        super(FunMNMX,self).__init__  ( xmin , xmax , *args , **kwargs )
         
         self.__N    = N 
         self.__NMAX = NMAX 
         
     def __call__ ( self , func , *args ) :
         
-        args = args if args else self.args 
+        args   = args   if args   else self.args 
+        kwargs = kwargs if kwargs else self.kwargs                
         
         from ostap.utils.ranges import vrange 
         from ostap.utils.utils  import memoize 
@@ -219,22 +218,21 @@ class FunMNMX(FunRMS) :
         N = self.__N 
         
         xmin, xmax = self.xmin , self.xmax 
-        vmn0 = min ( memfun ( x , *args ) for x in vrange ( xmin , xmax , N ) ) 
-        vmx0 = max ( memfun ( x , *args ) for x in vrange ( xmin , xmax , N ) ) 
+        vmn0 = min ( memfun ( x , *args , **kwargs ) for x in vrange ( xmin , xmax , N ) ) 
+        vmx0 = max ( memfun ( x , *args , **kwargs ) for x in vrange ( xmin , xmax , N ) ) 
         
         vmin = vmn0 
         vmax = vmx0 
         
         A, B = 2**5 , 1.0 / ( 2**5 - 1 )
         
-        
         for i in range ( IMAX ):
             
             N *= 2
             if self.__NMAX < N : break 
             
-            vmn  = min ( memfun ( x ) for x in vrange ( xmin , xmax , N ) ) 
-            vmx  = max ( memfun ( x ) for x in vrange ( xmin , xmax , N ) )
+            vmn  = min ( memfun ( x , *args , **kwargs ) for x in vrange ( xmin , xmax , N ) ) 
+            vmx  = max ( memfun ( x , *args , **kwargs ) for x in vrange ( xmin , xmax , N ) )
         
             ## a kind of Richardson's extrapolation    
             vmin = ( A * vmn - vmn0 ) * B  

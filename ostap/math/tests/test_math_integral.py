@@ -340,7 +340,8 @@ def test_integrators2 ():
     for name , fun , func in for_test : 
         cnt = SE()
         with timing ( '%9s integrator' % name , logger = logger ) as t :  
-            for i in progress_bar ( range ( N ) ) : cnt += abs( func ( fun , low , high ) - exact ) * scale 
+            for i in progress_bar ( range ( N ) ) :
+                cnt += abs( func ( fun , low , high ) - exact ) * scale 
         results.append ( ( name , cnt , t.delta ) )
 
     rows = [ ( 'Integrator' , 'CPU [s]' , 'delta [%.0e]' % ( 1.0/scale ) , 'max [%.0e]' % ( 1.0/scale ) ) ]
@@ -612,19 +613,19 @@ def test_integral_contour ():
 # ==============================================================================
 if '__main__' == __name__ :
 
-    ## test_integral         ()
-    ## test_integral_2D      ()
-    ## test_integral_3D      ()
-    ## test_integral_contour ()
+    test_integral         ()
+    test_integral_2D      ()
+    test_integral_3D      ()
+    test_integral_contour ()
     
-    ## test_integrators      ()
+    test_integrators      ()
     test_integrators2     ()
     
-    ##  test_integrators_2D   ()
-    ##  test_integrators_3D   ()
+    test_integrators_2D   ()
+    test_integrators_3D   ()
 
-    ## test_inf_integrals    ()
-    ## test_cauchy_integrals ()
+    test_inf_integrals    ()
+    test_cauchy_integrals ()
 
 
 # =============================================================================

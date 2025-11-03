@@ -69,11 +69,11 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from   ostap.math.ve     import VE
-from   ostap.math.base   import isequal, iszero
-from   ostap.utils.basic import items_loop
-from   ostap.utils.utils import memoize
-from   sortedcontainers  import SortedKeyList  
+from   ostap.core.ostap_types import num_types 
+from   ostap.math.ve          import VE
+from   ostap.math.base        import isequal, iszero, isfinite 
+from   ostap.utils.basic      import items_loop, memoize 
+from   sortedcontainers       import SortedKeyList  
 import ROOT, math, array, scipy  
 # =============================================================================
 # logging 
@@ -98,10 +98,11 @@ def romberg ( fun                 ,
               err      = False    , 
               epsabs   = 1.49e-8  ,
               epsrel   = 1.49e-8  ,
-              args     = ()       ,
+              args     = ()       , # additional positional arguments for functionm call 
+              kwargs   = {}       , # additional keywords   arguments for functionm call 
               nmax     = 20       , # steps in Richardson's extrapolation
-              maxdepth = 200      , # the maxmal depth
-              **kwargs            ) : 
+              maxdepth = 1000     , # the maxmal depth
+              **other             ) : 
     """ Straw-man replacement of scipy.integrate.quad when it is not available.
     Actually it is a primitive form of Romberg's adaptive integration
     - see https://en.wikipedia.org/wiki/Romberg's_method
@@ -112,121 +113,135 @@ def romberg ( fun                 ,
     >>> func = lambda x : x*x 
     >>> v    = romberg ( func , 0 , 1 ) 
     """
-    if kwargs :
-        logger.warning ( "Romberg integration: ignored parameters: %s" % list ( kwargs.keys() ) )
+    if other : logger.warning ( "Romberg: ignored parameters: %s" % list ( other .keys() ) )
+
+    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % a 
+    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % b     
+    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
+    assert isinstance  ( maxdepth , int       ) and 5 <  maxdepth     , "Invalid 'maxdepth'!"
+    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
+
+    ea = abs ( float ( epsabs ) ) * 10 
+    er = abs ( float ( epsrel ) ) * 10 
+
+    nmax = min ( max ( nmax , 2 ) , 24 )
+    
+    # the same edges 
+    if isequal ( xmin , xmax )  :
+        return VE ( 0 , 0 ) if err else 0.0
+
     # =========================================================================
-    ## internal recursive function
-    #  Romberg's adaptive integration with Richardson's extrapolation
-    def _romberg_ ( f , a , b , ea , er , nmax , depth = 0 ) :
+    ## The basic Romberg' integration with Richardson's extrapolation
+    def _romberg_ ( f , a , b , ea , er , nmax ) :
+        """ The basic Romberg' integration with Richardson's extrapolation
+        """
+
+        nmax = min ( max ( nmax , 2 ) , 24 )
         
-        rp = nmax * [0.0]
-        rc = nmax * [0.0]
+        rp = nmax * [ 0.0 ]
+        rc = nmax * [ 0.0 ]
 
         # starting value for integration step: full interval 
         h     =             (  b   -     a   )
 
         # here we have R(0,0) 
-        rc[0] = 0.5 * h * ( f( b ) + f ( a ) )
+        rc [ 0 ] = 0.5 * h * ( f( b ) + f ( a ) )
         
         i2    = 1
         nf    = 2  # number of function calls
         for n in range ( 1 , nmax ) :
             
-            nf     += i2     # count number of function calls 
-            rp,rc   = rc,rp  # swap rows
+            nf         += i2     # count number of function calls 
+            rp , rc   = rc , rp  # swap rows
+
             
-            h      *= 0.5    # decrement the step 
+            h  *= 0.5            # decrement the step 
 
             # use simple trapezoid rule to calculate R(n,0) 
             rr      = 0.0
             i2     *= 2 
-            for k in range ( 1 , i2 , 2 ) :
-                rr += f ( a + h * k )
+            for k in range ( 1 , i2 , 2 ) : rr += f ( a + h * k )
                 
             # here we have R(n,0) 
-            rc[0] = 0.5*rp[0] + h*rr
+            rc [ 0 ] = 0.5 * rp [ 0 ] + h * rr
             
-            # calculate R(n,m) using Richardson's extrapolation
+            # calculate R ( n , m ) using Richardson's extrapolation
             p4 = 1 
             for m in range ( 1 , n + 1 ) :
                 p4   *= 4 
                 # here we have R(n,m)
-                rc[m] = rc[m-1] + (rc[m-1]-rp[m-1])/(p4-1)
+                rc [ m ] = rc [ m -1 ] + ( rc [ m-1 ] - rp [ m-1] ) / ( p4 - 1 )
 
             # inspect last two elements in the row     
-            e  = rc[n  ]
-            p  = rc[n-1]
+            e   = rc [ n     ]
+            p   = rc [ n - 1 ]
+            l   = rp [ n - 1 ] ## the last element in pre
             
             # check their absolute and relative difference 
-            d  = abs ( e - p )
-            ae = max ( abs ( e ) , abs ( p ) , abs( rc[0] ) ) 
+            d  = max ( abs ( e - p ) , abs ( e - l ) ) 
+            ae = max ( abs ( e ) , abs ( p ) , abs ( l ) , abs ( rc [ 0 ] ) , abs ( rp [ 0 ] ) )
             
-            if d <= 0.5 * max ( ea , 0.5 * ae * er ) :
-                return e , d , depth , nf       ## RETURN
-
-        # =====================================================================
-        # Need to split the interval into subintervals
-        # =====================================================================
-
-        # first check the maximal depth 
-        if 0 < maxdepth <= depth :
-            ## logger.warning ( 'Romberg integration: maximal depth of %s is reached' % maxdepth )
-            return  e, d , depth , nf 
+            if 3 < n and d <= 0.5 * max ( ea , ae * er ) :
+                return e , d 
+            
+        e  = rc [ -1 ]
+        p  = rc [ -2 ]
+        l  = rp [ -2 ]
         
-        # prepare to split the interval into 2**n subintervals 
-        n2 = 2**n
+        return e , max ( abs ( e - p ) , abs ( e - l ) )
 
-        # the absolute uncertainty needs to be adjusted 
-        new_ea = ea / n2                                ## ok
-        # keep the same relative uncertainty 
-        new_er = er 
+    ## we'll split regions by factor of 2
+    # therefore  memoization helps a lot! 
+    func = memoize ( lambda x : float ( fun ( x , *args , **kwargs ) ) )
 
-        # the final result, its uncertainty and the max-depth 
-        rr , ee , dd  = 0.0 , 0.0 , 0
-
-        # split the region and start recursion: 
-        for i in range ( n2 ) :
-            
-            ai = a  + i*h
-            bi = ai +   h
-            
-            # start recursion here: 
-            #  get result, error, depth and number of function calls from subinterval
-            r , e , d , n = _romberg_ ( f , ai , bi , new_ea , new_er , nmax , depth + 1 )
-            
-            rr += r                ## get the integral as a sum over subintervals  
-            ee += abs ( e      )   ## direct summation of uncertainties 
-            dd  = max ( dd , d )   ## maximal depth from all sub-intervals 
-            nf += n                ## total number of function calls 
-
-        return rr , ee , dd , nf   ## RETURN 
-
-    # adjust input data
+    ## just one step
+    result , error = _romberg_ ( func , xmin , xmax , ea , er , nmax  )
     
-    a  = float ( xmin   ) 
-    b  = float ( xmax   ) 
-    ea = float ( epsabs ) * 100 
-    er = float ( epsrel ) * 100 
+    a , b = xmin , xmax 
+
+    max_error = error
+    max_entry = a , b , 1
+    results   = { max_entry :  ( result, error ) }
+
+    while  len ( results ) < maxdepth : 
+
+        if error <= ea and abs ( result * error ) <= er : break 
+
+        del results [ max_entry ]
+        
+        ## split max-entry
+        
+        a1, b1, l1 = max_entry
+        c2  = 0.5 * ( a1 + b1 )
+        nea = max ( ea / 2 ** l1 , 1.48e-8 ) 
+        results [ ( a1 , c2 , l1 + 1 ) ] = _romberg_ ( func , a1 , c2 , nea , er , nmax  )
+        results [ ( c2 , b1 , l1 + 1 ) ] = _romberg_ ( func , c2 , b1 , nea , er , nmax  )
+
+        result , error = 0 , 0
+        max_error = None
+        max_entry = None 
+        for key , entry in  results.items() :
+            r , e   = entry
+            result +=       r
+            error  += abs ( e ) 
+            if max_error is None or max_error < e :
+                max_error = e
+                max_entry = key
+
+        if error <= ea and abs ( result * error ) <= er : break 
+        
+    else :
+        # =====================================================================
+        logger.warning ( "Romberg: maximal split is reached: %d " % len( results ) )
+
+        
+    if error <= ea  and abs ( result * error ) <= er :        
+        return VE ( result , error * error ) if err else result  
     
-    # the same edges 
-    if isequal ( a , b )  :
-        return VE( 0 , 0 ) if err else 0.0
+    logger.warning ( "Robmerg: reqwested precision is not achieved: %.3g" % error )
+    return VE ( result , error * error ) if err else result  
 
-    # crazy settings for uncertainties 
-    if  ( ea <= 0 or iszero ( ea ) ) and ( er <= 0 or iszero  ( er )  ) : 
-        raise AttributeError("Romberg: absolute and relative tolerances can't be non-positive simultaneously")
-
-    # adjust maximal number of steps in Richardson's extrapolation 
-    nmax        = max ( 2 , nmax )
-
-    # ensure that function returns double values: 
-    func        = lambda x : float ( fun ( x , *args ) )
-
-    # finally use Romberg's integration 
-    v, e, d, nc = _romberg_ ( func , a , b , ea , er , nmax )
-
-    # form the final result :
-    return VE ( v , e * e ) if err else v 
 
 # =============================================================================
 ## Clenshaw-Curtis quadratures 
@@ -340,9 +355,10 @@ def clenshaw_curtis ( fun                 ,
                       epsabs   = 1.49e-8  ,
                       epsrel   = 1.49e-8  ,
                       args     = ()       ,
+                      kwargs   = {}       , 
                       nmax     = 30       , 
-                      maxdepth = 100      , # the maxmal depth
-                      **kwargs            ) :
+                      maxdepth = 1000     , 
+                      **other             ) :
     """Clenshaw-Curtis adaptive quadrature
     >>> func = lambda x : x*x 
     >>> v    = clenshaw_curtis ( func , 0 , 1 ) 
@@ -353,18 +369,25 @@ def clenshaw_curtis ( fun                 ,
     >>> cache_func = memoize ( func )
     >>> v = clenshaw_curtis ( cache_func , 0 , 1 ) 
     """
-    
-    assert isinstance  ( nmax     , int   ) and 0 <= nmax     , "Invalid 'nmax'!"
-    assert isinstance  ( maxdepth , int   ) and 5 <  maxdepth , "Invalid 'maxdepth'!"
-    assert isinstance  ( epsabs   , float ) and 0 <  epsabs   , "Invalid 'epsabs'!"
-    assert isinstance  ( epsrel   , float ) and 0 <  epsrel   , "Invalid 'epsrel'!"
+    if other : logger.warning ( "Clenshaw-Curtis: ignored parameters: %s" % list ( other.keys() ) )
 
-    if kwargs :
-        logger.warning ( "Clenshaw-Curtis integration: ignored parameters: %s" % list ( kwargs.keys() ) )
-        
+    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % a 
+    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % b     
+    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
+    assert isinstance  ( maxdepth , int       ) and 5 <  maxdepth     , "Invalid 'maxdepth'!"
+    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
+    
+    # the same edges 
+    if isequal ( xmin , xmax )  :
+        return VE ( 0 , 0 ) if err else 0.0
+    
+    ea = abs ( float ( epsabs ) ) * 10 
+    er = abs ( float ( epsrel ) ) * 10 
+
     # =========================================================================
-    ## the  actual adaptive quadrature  
-    def _clenshaw_curtis_ ( f , a  , b , ea , er , n0 , depth = 0 ) :
+    ## the  actual quadrature  
+    def _clenshaw_curtis_ ( f , a  , b , ea , er , n0 ) :
         
         n1 = n0 
         n2 = 2 * n1 if n1 else n1 + 2 
@@ -375,98 +398,123 @@ def clenshaw_curtis ( fun                 ,
         ## 2nd estimate for the integral 
         r2 = clenshaw_curtis_step ( f , a , b , n2 )
 
-        dr = abs ( r2 - r1 )
-        
-        tolerance = max ( ea , er * max ( abs ( r1 ) , abs ( r2 ) ) )
-        
-        if dr <= tolerance :
-            ## success!!
-            return r2, dr, n2 , depth                         ## RETURN!
-        
-        ## maximal depth is reached 
-        if maxdepth <= depth :
-            return r2 , dr , n2 , depth 
-            
-        ## split the interval and start the recursion
-        m = 0.5 * ( a + b ) 
-        rl, el, nl , dl = _clenshaw_curtis_ ( f , a , m , 0.5 * ea , er , n0 , depth = depth + 1 )
-        rr, er, nr , dr = _clenshaw_curtis_ ( f , m , b , 0.5 * ea , er , n0 , depth = depth + 1 )
-        
-        return rl + rr, el + er, max ( nl, nr ) , max ( dl , dr ) 
+        return r2, abs ( r2 - r1 )  
+
+    
+    ## we'll split regions by factor of 2
+    # therefore  memoization helps a lot! 
+    func = memoize ( lambda x : float ( fun ( x , *args , **kwargs ) ) )
 
     ## get the actual order 
     n0 , _ = divmod ( nmax , 2 )
-
-    from ostap.utils.utils import numcalls
     
-    ## Clenshaw_Curtis quadrature is a nested one, here momoization helps a lot 
-    memfun = fun ## memoize ( fun )
+    ## just one step
+    result , error = _clenshaw_curtis_ ( func , xmin , xmax , ea , er , n0 )
+
+    a , b = xmin , xmax
     
-    ## perform the integration 
-    r , e , k , d = _clenshaw_curtis_ ( memfun , xmin , xmax , epsabs , epsrel , n0 )
-
-    tolerance = max (  epsabs , epsrel * abs ( r ) ) 
+    max_error = error
+    max_entry = a , b , 1
+    results   = { max_entry :  ( result, error ) }
     
-    if e <= tolerance :
-        pass 
-    elif maxdepth <= d :
-        logger.warning ("Clenshaw-Curtis: maximal depth is reached: %d vs %s" % ( d , maxdepth ) )
-    else : 
-        logger.warning ("Clenshaw-Curtis: required precision is not achieved: %.3g vs %.3g" % ( e , tolerance ) )  
+    while  len ( results ) < maxdepth : 
 
-    return VE ( r , e * e ) if err else r 
+        if error <= ea and abs ( result * error ) <= er : break 
 
+        del results [ max_entry ]
+        
+        ## split max-entry
+        
+        a1, b1, l1 = max_entry
+        c2  = 0.5 * ( a1 + b1 )
+        nea = max ( ea / 2 ** l1 , 1.48e-8 ) 
+        results [ ( a1 , c2 , l1 + 1 ) ] = _clenshaw_curtis_ ( func , a1 , c2 , nea , er , nmax  )
+        results [ ( c2 , b1 , l1 + 1 ) ] = _clenshaw_curtis_ ( func , c2 , b1 , nea , er , nmax  )
+
+        result , error = 0 , 0
+        max_error = None
+        max_entry = None 
+        for key , entry in  results.items() :
+            r , e   = entry
+            result +=       r
+            error  += abs ( e ) 
+            if max_error is None or max_error < e :
+                max_error = e
+                max_entry = key
+
+        if error <= ea and abs ( result * error ) <= er : break 
+        
+    else : # ==================================================================
+        # =====================================================================
+        logger.warning ( "ClenshawCurtis: maximal split is reached: %d " % len( results ) )
+        
+    ## OK ? 
+    if error <= ea  and abs ( result * error ) <= er :        
+        return VE ( result , error * error ) if err else result  
+    
+    logger.warning ( "ClenshawCurtis: requested precision is not achieved: %.3g" % error )
+    return VE ( result , error * error ) if err else result  
 
 # =============================================================================
 ## 1D integration 
 # =============================================================================
-if scipy : 
-    # =========================================================================
-    from scipy.integrate import quad                as scipy_quad
-    from scipy.integrate import IntegrationWarning  as scipy_IW  
-    # =========================================================================
-    ## Calculate the integral (from x0 to x) for the 1D-function 
-    #  @code 
-    #  func = ...
-    #  v    = integral ( func , 0 , 1 )
-    #  @endcode 
-    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    #  @date   2014-06-06
-    def integral ( fun            ,
-                   xmin           ,
-                   xmax           , * , 
-                   args  = ()     , 
-                   err   = False  ,
-                   **kwargs       ) :
-        """ Calculate the integral for the 1D-function using scipy
+from scipy.integrate import quad                as scipy_quad
+# =========================================================================
+## Calculate the integral (from x0 to x) for the 1D-function 
+#  @code 
+#  func = ...
+#  v    = integral ( func , 0 , 1 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+def integral_quad ( fun             ,
+                    xmin            ,
+                    xmax            , * , 
+                    args   = ()     ,
+                    kwargs = {}     ,
+                    err    = False  ,
+                    **other         ) :
+    """ Calculate the integral for the 1D-function using scipy
         
-        >>> func = lambda x : x * x 
-        >>> v = integral(func,0,1)
-        """
-        func   = lambda x : float ( fun ( x , *args ) )
-        kwargs [ 'limit' ] = kwargs.pop ( 'limit'  , 200 )              
+    >>> func = lambda x : x * x 
+    >>> v = integral(func,0,1)
+    """
+    
+    if kwargs : func = lambda x, *a : fun ( x , *a , **kwargs )
+    else      : func = fun
+    
+    other [ 'limit' ] = other.pop ( 'limit'  , 200 )              
        
-        result = scipy_quad ( func , xmin , xmax , **kwargs )
-        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    ## logger.warning ("scipy.integrate is not available, use local `romberg'-replacement")
-    ## Use Romberg integration as default method when scipy is not available
-    def integral ( fun                 ,
-                   xmin                ,
-                   xmax                , * , 
-                   args     = ()       ,
-                   err      = False    , 
-                   **kwargs            ) :
-        """ Use Romberg integration as default method when scipy is not available
-        """
-        return romberg ( fun           ,
-                         xmin   = xmin ,
-                         xmax   = xmax ,
-                         args   = args ,
-                         err    = err  , **kwargs )
-# =============================================================================
+    result = scipy_quad ( func , xmin , xmax , args = args , **other )
+
+    return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+
+# =========================================================================
+## Calculate the integral (from x0 to x) for the 1D-function 
+#  @code 
+#  func = ...
+#  v    = integral ( func , 0 , 1 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+def integral ( fun             ,
+               xmin            ,
+               xmax            , * , 
+               args   = ()     ,
+               kwargs = {}     ,
+               err    = False  ,
+               **other         ) :
+    """ Calculate the integral for the 1D-function using scipy
+        
+    >>> func = lambda x : x * x 
+    >>> v = integral(func,0,1)
+    """
+    integrator = Integral ( fun             ,
+                            args   = args   ,
+                            kwargs = kwargs ,
+                            err    = err    , **other )
+    ## 
+    return integrator.integral ( xmin , xmax )
 
 # =============================================================================
 # 2D&3D integration 
@@ -875,88 +923,132 @@ def genzmalik3 ( func   ,
 # =============================================================================
 ## 2D integration 
 # =============================================================================
-if scipy : # ==================================================================
-    # =========================================================================
-    from scipy.integrate import dblquad             as scipy_dblquad
-    from scipy.integrate import IntegrationWarning  as scipy_IW  
-    # =========================================================================
-    ## Calculate the integral (from ) for the 2D-function 
-    #  @code 
-    #  func = lambda x,y : x*x + y*y
-    #  v    = integral2 ( func , 0 , 1 ,  -2 , 2 )
-    #  @endcode 
-    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    #  @date   2014-06-06
-    def integral2 ( fun  ,
-                    xmin , xmax   ,
-                    ymin , ymax   , * , 
-                    args  =  ()   ,
-                    err   = False ,
-                    **kwargs      ) :
-        """ Calculate the integral for the 2D-function using scipy
+from scipy.integrate import dblquad             as scipy_dblquad
+# =========================================================================
+## Calculate the integral (from ) for the 2D-function 
+#  @code 
+#  func = lambda x,y : x*x + y*y
+#  v    = integral2 ( func , 0 , 1 ,  -2 , 2 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+def integral_dblquad ( fun  ,
+                       xmin , xmax    ,
+                       ymin , ymax    , * , 
+                       args   = ()    ,
+                       kwargs = {}    , 
+                       err    = False , **other ) :
+    """ Calculate the integral for the 2D-function using scipy
         
-        >>> func = lambda x,y : x*x+y*y 
-        >>> v = integral2(func,0,1,-2,2)
-        """
-        func   = lambda x,y : float ( fun ( x , y , *args ) ) 
-        result = scipy_dblquad ( func ,
-                                 ymin , ymax     ,
-                                 lambda x : xmin ,
-                                 lambda x : xmax , **kwargs )
-        
-        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
+    >>> func = lambda x,y : x*x+y*y 
+    >>> v = integral2(func,0,1,-2,2)
+    """
+    
+    if kwargs : func = lambda x, y ,  *a : fun ( x , y , *a , **kwargs )
+    else      : func = fun
+    
+    result = scipy_dblquad ( func ,
+                             ymin , ymax     ,
+                             lambda x : xmin ,
+                             lambda x : xmax ,
+                             args = args     , **other )
+    
+    return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    ## logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
-    ## use Genz&Malik integration as default method when scipy is not available 
-    integral2 = genzmalik2 
-# =============================================================================
+# ==============================================================================
+## Calculate the integral (from ) for the 2D-function 
+#  @code 
+#  func = lambda x,y : x*x + y*y
+#  v    = integral2 ( func , 0 , 1 ,  -2 , 2 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+def integral2 ( fun    ,
+                xmin   , xmax   ,
+                ymin   , ymax   , * , 
+                args   = ()     ,
+                kwargs = {}     ,     
+                err    = False  , **other ) :
+    """ Calculate the integral for the 2D-function using scipy
+        
+    >>> func = lambda x,y : x*x+y*y 
+    >>> v = integral2(func,0,1,-2,2)
+    """
+    integrator = Integral2 ( fun             ,
+                             args   = args   ,
+                             kwargs = kwargs ,
+                             err    = err    , **other )
+    ## 
+    return integrator.integral ( xmin , xmax ,
+                                 ymin , ymax )
 
 # =============================================================================
 ## 3D integration 
 # =============================================================================
-if scipy : # ==================================================================
-    # =========================================================================
-    from scipy.integrate import tplquad             as scipy_tplquad
-    from scipy.integrate import IntegrationWarning  as scipy_IW  
-    # =========================================================================
-    ## Calculate the inteegral for the 3D-function 
-    #  @code 
-    #  func = lambda x,y,z: x*x+y*y+z*z
-    #  v    = integral3 ( func , 0 , 1 ,  0, 2 , 0 , 3 )
-    #  @endcode 
-    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    #  @date   2014-06-06
-    def integral3 ( fun  ,
-                    xmin , xmax   ,
-                    ymin , ymax   ,
-                    zmin , zmax   , * , 
-                    args  =  ()   ,
-                    err   = False ,
-                    **kwargs      ) :
-        """ Calculate the integral for the 3D-function using scipy
+from scipy.integrate import tplquad             as scipy_tplquad
+# =============================================================================
+## Calculate the integral (from ) for the 2D-function 
+#  @code 
+#  func = lambda x,y : x*x + y*y
+#  v    = integral2 ( func , 0 , 1 ,  -2 , 2 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+def integral_tplquad ( fun  ,
+                       xmin , xmax    ,
+                       ymin , ymax    , 
+                       zmin , zmax    , * , 
+                       args   = ()    ,
+                       kwargs = {}    , 
+                       err    = False , **other ) :
+    """ Calculate the integral for the 3D-function using scipy
         
-        >>> func = lambda x,y,z : x*x+y*y+z*z
-        >>> v = integral3(func,0,1,0,2,0,3)
-        """
-        func   = lambda x,y,z : float ( fun ( x , y , z , *args ) )        
-        
-        result = scipy_tplquad ( func ,
-                                 zmin , zmax ,
-                                 lambda z   : ymin ,
-                                 lambda z   : ymax ,
-                                 lambda y,z : xmin ,
-                                 lambda y,z : xmax , **kwargs )
-        return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
-    # ========================================================================    
-else : # =====================================================================
-    # ========================================================================
-    ## logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
-    ## use Genz&Malik integration as default method when scipy is not available 
-    integral3 = genzmalik3 
+    >>> func = lambda x,y : x*x+y*y 
+    >>> v = integral2(func,0,1,-2,2)
+    """
+    
+    if kwargs : func = lambda x, y , z , *a : fun ( x , y , z , *a , **kwargs )
+    else      : func = fun
+    
+    result = scipy_tplquad ( func ,
+                             zmin , zmax ,
+                             lambda z   : ymin ,
+                             lambda z   : ymax ,
+                             lambda y,z : xmin ,
+                             lambda y,z : xmax , 
+                             args = args       , **other )
+    
+    return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
+# =========================================================================
+## Calculate the inteegral for the 3D-function 
+#  @code 
+#  func = lambda x,y,z: x*x+y*y+z*z
+#  v    = integral3 ( func , 0 , 1 ,  0, 2 , 0 , 3 )
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-06-06
+def integral3 ( fun    ,
+                xmin   , xmax   ,
+                ymin   , ymax   ,
+                zmin   , zmax   , * , 
+                args   = ()     ,
+                kwargs = {}     , 
+                err    = False  , **other ) :
+    """ Calculate the integral for the 3D-function using scipy
+        
+    >>> func = lambda x,y,z : x*x+y*y+z*z
+    >>> v = integral3(func,0,1,0,2,0,3)
+    """
+    integrator = Integral3 ( fun             ,
+                             args   = args   ,
+                             kwargs = kwargs ,
+                             err    = err    , **other )
+    ##
+    return integrator.integral ( xmin , xmax ,
+                                 ymin , ymax ,
+                                 zmin , zmax ) 
+    
 # =============================================================================
 ## @class IntegralBase
 #  Helper class to implement numerical integration 
@@ -966,7 +1058,7 @@ class IntegralBase(object) :
     """ Helper class to implement numerical integration 
     """
     ## Calculate the integral for the 1D-function
-    def __init__ ( self , func , args = () , err = False , **kwargs ) :
+    def __init__ ( self , integrator , func , args = () , kwargs = {} , err = False , **other ) :
         """ Calculate the integral for the 1D-function
         
         >>> func   = ...
@@ -977,79 +1069,137 @@ class IntegralBase(object) :
         self.__err    = err
         self.__args   = args
         self.__kwargs = kwargs
+
+        assert integrator and callable ( integrator ) , "Invalid `integrator'!"
+        
+        self.__integrator   = integrator
+        
+        self.__integrator2D = other.pop ( 'integrator2D' , None )
+        self.__integrator3D = other.pop ( 'integrator3D' , None )
+        
+        self.__other  = other
         
     ## Calculate the integral for the 1D-function
-    def _integrate_1D_ ( self , func , xmn , xmx , args = () , **kwargs ) :
+    def _integrate_1D_ ( self , xmn , xmx , args = () , kwargs = {} , **other ) :
+
+        xmn = float ( xmn )
+        xmx = float ( xmx )
+        
+        if xmn == xmn or isequal ( xmn , xmx ) :
+            return VE ( 0 , 0 ) if self.err else 0
+        
         args   =  args  if   args else self.args
         kwargs = kwargs if kwargs else self.kwargs 
+        other  = other  if other  else self.other
         
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not self.err and hasattr ( func , 'integral' ) :
+        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
             # ================================================================ 
             try : # ==========================================================
-                result = func.integral ( xmn , xmx ) # =======================
-                ## logger.attention ( 'INTERNAL INGTEGRAL IS USED %s %s' %  ( func.integral , result ) ) 
-                return result
+                return func.integral ( xmn , xmx ) # =======================
                 # ============================================================
             except TypeError : 
                 pass
             
-        ## (2) use python integration 
-        return integral  ( func        ,
-                           xmn , xmx   ,
-                           args = args , 
-                           err  = self.err , **kwargs )
+        ## (2) use python integration
+        integrator = self.__integrator
+        return integrator ( self.__func       ,
+                            xmn    , xmx      ,
+                            args   = args     ,
+                            kwargs = kwargs   ,  
+                            err    = self.err , **other  )
 
     ## Calculate the integral for the 2D-function
-    def _integrate_2D_ ( self , func , xmn , xmx , ymn , ymx , args = () , **kwargs ) :
-        args   =   args if   args else self.args
+    def _integrate_2D_ ( self ,
+                         xmn , xmx ,
+                         ymn , ymx , args = () , kwargs = {} , **other ) :
+        
+        args   =  args  if   args else self.args
         kwargs = kwargs if kwargs else self.kwargs 
+        other  = other  if other  else self.other
+        
+        xmn = float ( xmn )
+        xmx = float ( xmx )
+        
+        if xmn == xmn or isequal ( xmn , xmx ) :
+            return VE ( 0 , 0 ) if self.err else 0
+        
+        ymn = float ( ymn )
+        ymx = float ( ymx )
+        
+        if ymn == ymn or isequal ( ymn , ymx ) :
+            return VE ( 0 , 0 )  if self.err else 0
         
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not self.err and hasattr ( func , 'integral' ) :
+        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
             # ================================================================ 
             try : # ==========================================================
-                result = func.integral ( xmn , xmx , ymn , ymx ) # ===========
-                ## logger.attention ( 'INTERNAL INGTEGRAL IS USED %s %s' %  ( func.integral , result ) ) 
-                return result
+                return func.integral ( xmn , xmx , ymn , ymx ) # ===========
                 # ============================================================
             except TypeError : 
                 pass
             
         ## (2) use python integration
-        return integral2 ( func        ,
-                           xmn , xmx   ,
-                           ymn , ymx   ,
-                           args = args , err = self.err , **kwargs )
-    
+        integrator = self.__integrator
+        return integrator ( self.__func       ,
+                            xmn    , xmx      ,
+                            ymn    , ymx      ,
+                            args   = args     ,
+                            kwargs = kwargs   , 
+                            err    = self.err , **other )
+
     ## Calculate the integral for the 3D-function
-    def _integrate_3D_ ( self , func , xmn , xmx , ymn , ymx , zmn , zmx , args = () , **kwargs ) :
-        args   =   args if   args else self.args
-        kwargs = kwargs if kwargs else self.kwargs
+    def _integrate_3D_ ( self ,
+                         xmn , xmx ,
+                         ymn , ymx ,
+                         zmn , zmx , args = () , kwargs = {} , **other ) :
+        
+        args   =  args  if   args else self.args
+        kwargs = kwargs if kwargs else self.kwargs 
+        other  = other  if other  else self.other
+        
+        xmn = float ( xmn )
+        xmx = float ( xmx )
+        
+        if xmn == xmn or isequal ( xmn , xmx ) :
+            return VE ( 0 , ) if self.err else 0
+        
+        ymn = float ( ymn )
+        ymx = float ( ymx )
+        
+        if ymn == ymn or isequal ( ymn , ymx ) :
+            return VE ( 0 , ) if self.err else 0
+        
+        zmn = float ( zmn )
+        zmx = float ( zmx )
+        
+        if zmn == zmn or isequal ( zmn , zmx ) :
+            return VE ( 0 , 0 ) if self.err else 0
         
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not self.err and hasattr ( func , 'integral' ) :
+        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
             # ================================================================ 
             try : # ==========================================================
-                result = func.integral ( xmn , xmx , ymn , ymx , zmn , zmx ) #
-                ## logger.attention ( 'INTERNAL INGTEGRAL IS USED %s %s' %  ( func.integral , result ) ) 
-                return result
+                return func.integral ( xmn , xmx , ymn , ymx , zmn , zmx ) #
                 # ============================================================
             except TypeError : 
                 pass
             
         ## (2) use python integration
-        return integral3 ( func        ,
-                           xmn , xmx   ,
-                           ymn , ymx   ,
-                           zmn , zmx   ,
-                           args = args , err = self.err , **kwargs )
+        integrator = self.__integrator
+        return integrator ( self.__func       ,
+                            xmn    , xmx      ,
+                            ymn    , ymx      ,
+                            zmn    , zmx      ,
+                            args   = args     ,
+                            kwargs = kwargs   , 
+                            err    = self.err , **other )
     
     @property
     def func ( self ) :
@@ -1071,6 +1221,11 @@ class IntegralBase(object) :
         """Additional keyword arguments for the integration function"""
         return self.__kwargs
 
+    @property
+    def other ( self ) :
+        """Additional keyword arguments for the integration function"""
+        return self.__other
+
 # =============================================================================
 ## @class Integral
 #  Calculate the integral (from x0 to x) for the 1D-function 
@@ -1089,15 +1244,33 @@ class Integral(IntegralBase) :
     >>> value = iint (  10  )         ## specify x_high 
     """
     ## Calculate the integral for the 1D-function
-    def __init__ ( self , func , xlow = 0 , * , args = () , err = False , **kwargs ) :
+    def __init__ ( self        ,
+                   func        ,
+                   xlow   =  0 , * ,
+                   args   = () ,
+                   kwargs = {} ,  
+                   err    = False , **other  ) :
         """ Calculate the integral for the 1D-function
         
         >>> func   = ...
         >>> func_0 = Integral(func,0)
         >>> value  = func_
-        """
-        super(Integral,self).__init__( func = func , args = args , err = err  , **kwargs ) 
+        """        
+        integrator = other.pop ( 'integrator' , integral_quad )
+        super(Integral,self).__init__( func       = func       ,
+                                       args       = args       ,
+                                       kwargs     = kwargs     , 
+                                       err        = err        ,
+                                       integrator = integrator , **other )
+        
         self.__xmin   = float ( xlow ) 
+        
+
+    ## Calcualety integral for 1D function from xmin to xmax 
+    def integral ( self , xmin , xmax , *args , **kwargs ) :
+        """ Calculate the integral for 1D function from xmin to xmax 
+        """
+        return self._integrate_1D_ ( xmin , xmax , args = args , kwargs = kwargs  )
         
     ## Calculate the integral for the 1D-function 
     def __call__ ( self , x , *args , **kwargs ) :
@@ -1107,11 +1280,11 @@ class Integral(IntegralBase) :
         >>> func_0 = Integral(func,0)
         >>> func_0 ( 10 ) 
         """
-        return self._integrate_1D_ ( self.func , self.xmin , x , args = args , **kwargs )
+        return self._integrate_1D_ ( self.xmin , x , args = args , kwargs = kwargs  )
 
     @property
     def xmin ( self  ) :
-        """Low-limit of integration
+        """ Low-limit of integration
         """
         return self.__xmin 
     
@@ -1131,21 +1304,26 @@ class IntegralCache(Integral) :
     >>> iint   = IntegralCache ( func , 0 ) ## specify x_low 
     >>> value  = iint ( 10 )                ## specify x_high
     """
-    ## Calculate the integral for the 1D-function using scipy
-    def __init__ ( self , func , xlow = 0 , * , n = 100 , args = () , err = False , **kwargs ) :
+    def __init__ ( self           ,
+                   func           ,
+                   xlow   = 0     , * ,
+                   args   = ()    ,
+                   kwargs = {}    ,
+                   err    = False , **other ) :
         """ Calculate the integral for the 1D-function
         
         >>> func = ...
         >>> func_0 = Integral(func,0)
         """
-        super(IntegralCache,self).__init__ ( func , xlow , args = args , err = err , **kwargs )
+        super(IntegralCache,self).__init__ ( func ,
+                                             xlow   = xlow   ,
+                                             args   = args   ,
+                                             kwargs = kwargs ,
+                                             err    = err    , **other  )
         
-        assert  isinstance ( n , int ) , "Invalid `n`%s"% n 
-        
+        ## the first trivial entry in the cache 
         entry        = self.xmin , 0.0  
         self.__cache = SortedKeyList ( [ entry ] , key = lambda e : e[0] )
-         
-        self.__n     = n if 1 <= n else 0  
         
     ## Calculate the numerical integral for the 1D-function
     def __call__ ( self , x , *args , **kwargs ) :
@@ -1158,12 +1336,12 @@ class IntegralCache(Integral) :
         
         ## No caching: 
         if ( args and self.args != args ) or ( kwargs and self.kwargs != kwargs ) :
-            return self._integrate_1D_ ( self.func , self.xmin , x , args = args , **kwargs )
+            return self._integrate_1D_ ( self.xmin , x , args = args , kwargs = kwargs )
         
         args   =   args if   args else self.args 
         kwargs = kwargs if kwargs else self.kwargs 
         
-        x = float ( x ) 
+        x       = float ( x ) 
         
         cache = self.__cache 
         n      = len ( cache )
@@ -1179,8 +1357,8 @@ class IntegralCache(Integral) :
         xclose = entry [ 0 ] 
         if xclose == x : return  entry [ 1 ] 
         
-        ## integral from closest previosu point 
-        delta  = self._integrate_1D_ ( self.func , xclose , x , args = args , **kwargs )
+        ## integral from closest previous point 
+        delta  = self._integrate_1D_ ( xclose , x , args = args , kwargs = kwargs  )
         result = entry [ 1 ] + delta
         
         new_entry = x , result 
@@ -1215,39 +1393,54 @@ class Integral2(Integral) :
     >>> value = iint (  10  , 20 )        ## specify x_high, y_high
     """
     ## Calculate the integral for the 2D-function
-    def __init__ ( self , func ,
-                   xlow = 0  ,
-                   ylow = 0  ,
-                   args = () , err = False , **kwargs ) :
+    def __init__ ( self ,
+                   func        ,
+                   xlow   = 0  ,
+                   ylow   = 0  , * , 
+                   args   = () ,
+                   kwargs = {} ,
+                   err    = False , **other ) :
         """ Calculate the integral for the 2D-function
         
         >>> func   = ...
         >>> func_0 = Integral(func,0,0)
         >>> value  = func_0(10,20) 
         """
-        Integral.__init__ (   self , func , xlow , args , err , **kwargs )
-        self.__ymin   = float ( ylow ) 
+        ## scipy as default integrator,  genzmalik2 can be viable alternative
+        integrator = other.pop ('integrator' , integral_dblquad ) 
+        Integral.__init__ ( self ,
+                            func ,
+                            xlow       = xlow   ,
+                            args       =  args  ,
+                            kwargs     = kwargs ,
+                            err        = err    ,
+                            integrator = integrator , **other )
         
+        self.__ymin   = float ( ylow ) 
+
+    ## Calculate integral for 2D function
+    def integral ( self ,
+                   xmin , xmax ,
+                   ymin , ymax , *args , **kwargs ) :
+        """ Calculate the integral for 1D function from xmin to xmax 
+        """
+        return self._integrate_2D_ ( xmin   , xmax   ,
+                                     ymin   , ymax   ,
+                                     args   = args   ,
+                                     kwargs = kwargs )
+
     ## Calculate the integral for the 2D-function 
-    def _integrate_ ( self , xmn , xmx , ymn , ymx , args = () ) :
-        args = args if  args else self._args 
-        return integral2 ( self.func ,
-                           xmn  , xmx ,
-                           ymn  , ymx ,
-                           args       , 
-                           self.err  , **self.kwargs )
-    
-    ## Calculate the integral for the 2D-function 
-    def __call__ ( self , x , y , *args ) :
+    def __call__ ( self , x , y , *args , **kwargs ) :
         """ Calculate the integral for the 2D-function
         
         >>> func = ...
         >>> func_0 = Integral(func,0,0)
         >>> func_0 ( 10 ,  20 ) 
         """
-        return self._integrate_2D_ ( self.func  ,
-                                     self.xmin  , x ,
-                                     self._ymin , y , args = args )
+        return self._integrate_2D_ ( self.xmin , x ,
+                                     self.ymin , y ,
+                                     args   = args   ,
+                                     kwargs = kwargs )
 
     @property 
     def ymin ( self ) :
@@ -1272,20 +1465,46 @@ class Integral3(Integral2) :
     >>> value = iint (  10  , 20 , 30 )       ## specify x_high, y_high, z_high
     """
     ## Calculate the integral for the 3D-function 
-    def __init__ ( self , func ,
-                   xlow = 0  ,
-                   ylow = 0  ,
-                   zlow = 0  ,
-                   args = () , err = False , **kwargs ) :
+    def __init__ ( self ,
+                   func        ,
+                   xlow   = 0  ,
+                   ylow   = 0  ,
+                   zlow   = 0  , * , 
+                   args   = () ,
+                   kwargs = {} ,
+                   err = False , **other ) :
         """ Calculate the integral for the 3D-function 
         
         >>> func   = ...
         >>> func_0 = Integral(func,0,0,0)
         >>> value  = func_0(10,20,30) 
-        """
-        Integral2.__init__ ( self , func , xlow , ylow , args , err  , **kwargs )
+        """        
+        ## scipy as default integrator, genzmalik3 can be viable alternative
+        integrator = other.pop ( 'integrator' , integral_tplquad ) 
+        Integral2.__init__ ( self                    ,
+                             func                    ,
+                             xlow       = 0          ,
+                             ylow       = 0          ,
+                             args       = args       ,
+                             kwargs     = kwargs     ,
+                             err        = err        ,
+                             integrator = integrator , **other )
+        #
         self.__zmin   = float ( zlow )
-        
+
+    ## Calculate integral for 1D function from xmin to xmax 
+    def integral ( self ,
+                   xmin , xmax ,
+                   ymin , ymax ,
+                   zmin , zmax , *args , **kwargs ) :
+        """ Calculate the integral for 1D function from xmin to xmax 
+        """
+        return self._integrate_3D_ ( xmin   , xmax   ,
+                                     ymin   , ymax   ,
+                                     zmin   , zmax   ,
+                                     args   = args   ,
+                                     kwargs = kwargs )
+
     ## Calculate the integral for the 3D-function 
     def __call__ ( self , x , y , z , *args ) :
         """ Calculate the integral for the 3D-function
@@ -1294,17 +1513,16 @@ class Integral3(Integral2) :
         >>> func_0 = Integral(func,0,0,0)
         >>> func_0 ( 10 ,  20 ,   30 ) 
         """
-        return self._integrate_3D_ ( self.func ,
-                                     self.xmin , x ,
-                                     self.ymin , y ,
-                                     self.zmin , z , args = args )
-
+        return self._integrate_3D_ ( self.xmin , x      ,
+                                     self.ymin , y      ,
+                                     self.zmin , z      ,
+                                     args      = args   ,
+                                     kwargs    = kwargs )
 
     @property 
     def zmin ( self ) :
         """Low integration limit"""
         return self.__zmin
-
 
 # =============================================================================
 # Partial integrations  of 2D-functions 
