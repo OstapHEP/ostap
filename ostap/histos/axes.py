@@ -530,29 +530,20 @@ def _axis_split_while_   ( axis , maxwidth ) :
         
         n = math.ceil ( delta * 1.0 / maxwidth )    
         return ROOT.TAxis ( n , xmin , xmax ) 
-        
-    edges = [ e for e in axis.edges() ]
-    
-    while True : 
-        
-        if max ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) ) <= maxwidth : break 
-        
-        ne = len ( edges )
-        for i in range ( 1 , ne ) :
-            j  = i - 1 
-            ei = edges [ i ] 
-            ej = edges [ j ] 
-            delta = ei - ej 
-            if delta <= maxwidth : continue    
-            n = math.ceil ( delta , maxwidth )
-            if not n             : continue 
-            ## update list of edges 
-            edges [ j : i + 1 ] = [ v for v in vrange ( ej , ei , n , edges = True ) ]
-            break 
+
+    edges = tuple (  e for e in axis.edges() )
+
+    new_edges = [ edges [ 0 ] ] 
+    for i in range ( 1 , len ( edges ) ) :
+        last  = new_edges [ -1 ]
+        ei    = edges [ i ]
+        delta = ei - last
+        n     = math.ceil ( delta * 1.0 / maxwidth )
+        for v in vrange ( last , ei , n , edges = False ) : new_edges.append ( v )                                
+        new_edges.append ( ei )
     
     ## construct new axis from new bins     
-    return axis_from_edges ( edges , check = False )
-
+    return axis_from_edges ( new_edges , check = False )
 
 # =============================================================================
 ## Merge/join  bins while  all bins are larger than the specified value 
@@ -584,40 +575,38 @@ def _axis_merge_while_   ( axis , minwidth ) :
             ## no action 
             return ROOT.TAxis ( nbins , xmin , xmax ) 
         
-        n = math.floor ( delta , minwidth ) 
+        n = math.floor ( delta * 1.0 / minwidth ) 
         return ROOT.TAxis ( n , xmin , xmax ) 
         
-    edges = [ e for e in axis.edges() ]
+    edges  = [ e for e in axis.edges() ]
     
-    
-    
-    print ( 'BEFORE' , edges )
-    k = 0 
-    for n in range ( nbins + 5 ) : 
-    
-    while True : 
-        
-        ne = len ( edges )
+    nedges = len ( edges ) 
+    for k in range  ( nedges ) :
+
+        ne = len ( edges ) 
         if   2 == ne : return axis_from_edges ( edges , check = False )
-         
-        deltas        = ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) 
-        delta , index = min ( ( d  , i ) for i, d in enumerate ( deltas ) )
-         
-         
-        if   0 == index :
-            del edges [ 1 ]
-            break 
-        elif ne - 2 == index : 
-            del edges [ -2 ]
-            break
-            
-         dc = edges [ index + 1 ] - edges [ index ]
-         dn = edged [ index + 2 ] - edges [ index + 1 ]
-         dp = edged [ index     ] - edged [ index - 1 ]
-         
-        [ 1, 2, 3, ,4 , 5 ] 
-                    
-    
+        elif 3 == ne :
+            d1 = edges [ 1 ] - edges [ 0 ]
+            d2 = edges [ 2 ] - edges [ 1 ]
+            if d1 < minwidth or d2 < minwidth :
+                ## final merge
+                return axis_from_edges ( ( edges [0] , edges[2] ) , check = False )
+            return axis_from_edges ( edges , check = False )
+
+        deltas       = ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) ) 
+        delta , ibin = min ( ( d  , i ) for i, d in enumerate ( deltas ) )
+        
+        if minwidth <= delta  : break
+
+        nb = ne - 1 
+
+        ## the first bin is the most narrow :
+        if    0  == ibin     : del edges [  1 ]
+        elif  nb == ibin + 1 : del edges [ -2 ]
+        else :
+            if edges [ ibin + 1 ] - edges [ ibin - 1  ] < \
+               edges [ ibin + 2 ] - edges [ ibin      ] : del edges [ ibin     ]
+            else                                        : del edges [ ibin + 1 ]  
             
     ## construct new axis from new bins     
     return axis_from_edges ( edges , check = False )
@@ -809,63 +798,59 @@ def make_axis ( nbins , *bins ) :
 ## minimal bin width 
 #  @code
 #  axis = ...
-#  minbinw = axis.min_bin_width 
+#  minbinw = axis.min_binwidth 
 #  @endcode
-def _axis_min_binw_ ( axis ) :
+def _axis_minbinw_ ( axis ) :
     """ Minimal bin width 
     >>> axis = ...
-    >>> minbinw = axis.min_bin_width
+    >>> minbinw = axis.min_binwidth
     """
-    if axis.uniform () : 
-        return ( axis.GetXmax()- aixs.GetXmax() ) / axis.GetNbins() 
- 
+    if axis.uniform () : return ( axis.GetXmax() - axis.GetXmin() ) / axis.GetNbins() 
     edges = tuple ( e for e in axis.edges() ) 
-    return  min ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) ) 
+    return  min ( e1 - e for e1 , e in zip ( edges [ 1 : ] , edges ) ) 
 
 # ==============================================================================
 ## maximal  bin width 
 #  @code
 #  axis = ...
-#  maxbinw = axis.max_bin_width 
+#  maxbinw = axis.max_binwidth 
 #  @endcode
-def _axis_max_binw_ ( axis ) :
+def _axis_maxbinw_ ( axis ) :
     """ Maximal bin width 
     >>> axis = ...
-    >>> maxbinw = axis.max_bin_width
+    >>> maxbinw = axis.max_binwidth
     """
-    if axis.uniform () : 
-        return ( axis.GetXmax()- aixs.GetXmax() ) / axis.GetNbins() 
- 
+    if axis.uniform () : return ( axis.GetXmax() - axis.GetXmin() ) / axis.GetNbins()  
     edges = tuple ( e for e in axis.edges() ) 
-    return  max ( e1 - e for e1 , e in zip ( edges [ 1: ] , edges ) ) 
+    return  max ( e1 - e for e1 , e in zip ( edges [ 1 : ] , edges ) ) 
 
 # ==============================================================================
 ## Mean bin width 
 #  @code
 #  axis = ...
-#  mnbinw = axis.mean_bin_width 
+#  mnbinw = axis.mean_binwidth 
 #  @endcode
-def _axis_mean_binw_ ( axis ) :
+def _axis_meanbinw_ ( axis ) :
     """ Mean bin width 
     >>> axis = ...
-    >>> mnbinw = axis.mean_bin_width
+    >>> mnbinw = axis.mean_binwidth
     """
-    return ( axis.GetXmax()- aixs.GetXmax() ) / axis.GetNbins() 
+    return ( axis.GetXmax() - axis.GetXmin() ) / axis.GetNbins() 
 
 # ==============================================================================
 ## Bin widths:
 #  @code
 #  axis = ..
-#  minbin, meanbin , maxbin = axis.bin_widths 
+#  minbin, meanbin , maxbin = axis.binwidths 
 #  @endcdde
-def _axis_bin_widths_ ( axis ) :
+def _axis_binwidths_ ( axis ) :
     """ Bin widths:
     >>> axis = ..
-    >>> minbin, meanbin , maxbin = axis.bin_widths 
+    >>> minbin, meanbin , maxbin = axis.binwidths 
     """
-    return ( _axis_min_binw_  ( axis ) , 
-             _axis_mean_binw_ ( axis ) , 
-             _axis_max_binw_  ( axis ) ) 
+    return ( _axis_minbinw_  ( axis ) , 
+             _axis_meanbinw_ ( axis ) , 
+             _axis_maxbinw_  ( axis ) ) 
     
 # =============================================================================
 ## make 1D-histogram from the axis
@@ -1156,10 +1141,10 @@ ROOT.TAxis.histogram3d     = h3_axes
 ##  same bining ? 
 ROOT.TAxis.same_binning = axis_same_binning
 
-ROOT.TAxis.min_bin_width  = property ( _axis_min_binw_   , None  , None ,  _axis_min_binw_   . __doc__ )
-ROOT.TAxis.max_bin_width  = property ( _axis_max_binw_   , None  , None ,  _axis_max_binw_   . __doc__ )
-ROOT.TAxis.mean_bin_width = property ( _axis_mean_binw_  , None  , None ,  _axis_mean_binw_  . __doc__ )
-ROOT.TAxis.bin_widths     = property ( _axis_bin_widths_ , None  , None ,  _axis_bin_widths_ . __doc__ )
+ROOT.TAxis.min_binwidth  = property ( _axis_minbinw_   , None  , None ,  _axis_minbinw_   . __doc__ )
+ROOT.TAxis.max_binwidth  = property ( _axis_maxbinw_   , None  , None ,  _axis_maxbinw_   . __doc__ )
+ROOT.TAxis.mean_binwidth = property ( _axis_meanbinw_  , None  , None ,  _axis_meanbinw_  . __doc__ )
+ROOT.TAxis.binwidths     = property ( _axis_binwidths_ , None  , None ,  _axis_binwidths_ . __doc__ )
 
 _decorated_classes_ = (
     ROOT.TAxis  ,
@@ -1249,10 +1234,10 @@ _new_methods_  = (
     ROOT.TAxis.histo3d         , 
     ROOT.TAxis.histogram3d     , 
     ## 
-    ROOT.TAxis.min_bin_width   , 
-    ROOT.TAxis.max_bin_width   , 
-    ROOT.TAxis.mean_bin_width  ,
-    ROOT.TAxis.bin_widths      , 
+    ROOT.TAxis.min_binwidth    , 
+    ROOT.TAxis.max_binwidth    , 
+    ROOT.TAxis.mean_binwidth   ,
+    ROOT.TAxis.binwidths       , 
     ##
     )
 # =============================================================================

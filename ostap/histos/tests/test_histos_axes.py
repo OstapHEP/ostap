@@ -147,7 +147,12 @@ def test_axes () :
 
     logger.info ( '1st axis+(-0.1,-0.11) : %s ' % ( axis1 + (-0.1 ,-0.11 ) ) ) 
     logger.info ( '2nd axis+(-0.1,-0.11) : %s ' % ( axis2 + (-0.1 ,-0.11 ) ) ) 
-     
+
+    logger.info ( '1st split_while(0.2) :  %s ' % axis1.split_while ( 0.2 ) )
+    logger.info ( '2nd split_while(0.2) :  %s ' % axis2.split_while ( 0.2 ) )
+                  
+    logger.info ( '1st merge_while(2.0) :  %s ' % axis1.merge_while ( 2.0 ) ) 
+    logger.info ( '2nd merge_while(2.0) :  %s ' % axis2.merge_while ( 2.0 ) ) 
     
 # =============================================================================
 if '__main__' == __name__ :
