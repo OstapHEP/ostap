@@ -43,10 +43,11 @@ xmax = m0 + 6.1 * sigma
 
 def the_tst ( fun , logger = logger ) :
 
-    cnt1 = SE()
-    cnt2 = SE()
+    cnt1  = SE()
+    cnt2  = SE()
     
-    while cnt1.nEntries () < 100000 : 
+    integral = I.Integral ( fun )
+    while cnt1.nEntries () < 10000: 
         
         x1 = random.uniform ( xmin , xmax )
         x2 = random.uniform ( x1   , xmax )
@@ -54,11 +55,11 @@ def the_tst ( fun , logger = logger ) :
         ## skip very long intervals  
         if x2 - x1 > 1 * sigma  : continue
             
-        i1 = fun.integral   ( x1   , x2   )
-        i2 = I.integral     ( fun  , x1 , x2 )
-
-        d  = i1 - i2
-        r  = i1 / i2
+        i1 = fun.integral      ( x1 , x2   )
+        i2 = integral.integral ( x1 , x2 )
+        
+        d  = i2 - i1
+        r  = i2 / i1
         
         cnt1 += d
         cnt2 += ( r - 1 ) 

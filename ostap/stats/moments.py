@@ -144,7 +144,7 @@ class BaseMoment(FunBASE1D) :
         FunBASE1D.__init__( self , xmin , xmax , *args , **kwargs )
         ## 
         assert isinstance ( N , integer_types ) and 0 <= N , 'BaseMoment: illegal order: %s' % N 
-        
+        ##
         self.__N     = N 
         self.__err   = err
         
@@ -154,8 +154,11 @@ class BaseMoment(FunBASE1D) :
         """ Get the normalized momentum
         """
         assert isinstance ( K , integer_types ) and 0 <= K , \
-               'Invalid type/valeu for K=%s' %k
-        
+               'Invalid type/value for K=%s' %k
+        ##
+        args   = args   if args   else self.args 
+        kwargs = kwargs if kwargs else self.kwargs 
+        ## 
         m0 = self.normalization ( func , *args , **kwargs )
         mK = self.umoment ( K , func , center = center , *args , **kwargs )
         return mK / float ( m0 ) 
@@ -166,7 +169,10 @@ class BaseMoment(FunBASE1D) :
         """ Get the unormalized moment
         """
         if 0 == K : return self.normalization ( func , *args , **kwargs ) 
-
+        ##
+        args   = args   if args   else self.args 
+        kwargs = kwargs if kwargs else self.kwargs 
+        ## 
         x0  = float ( center ) 
         fnK = lambda x , *a , **kw : func ( x , *a , **kw ) * ( ( x - x0 ) ** K )
         ##
@@ -184,6 +190,8 @@ class BaseMoment(FunBASE1D) :
     def mean ( self , func , *args , **kwargs ) :
         """ Get the mean value 
         """
+        args   = args   if args   else self.args 
+        kwargs = kwargs if kwargs else self.kwargs 
         return self.moment ( 1 , func , center = 0.0 , *args , **kwargs )
     
     # =========================================================================
@@ -194,6 +202,9 @@ class BaseMoment(FunBASE1D) :
         ##
         if   0 == K : return 1.0 
         elif 1 == K : return 0.0
+        ##
+        args   = args   if args   else self.args 
+        kwargs = kwargs if kwargs else self.kwargs 
         ##
         m0 = self.normalization (     func ,                *args , **kwargs ) 
         m1 = self.umoment       ( 1 , func , center = 0.0 , *args , **kwargs )
@@ -212,6 +223,9 @@ class BaseMoment(FunBASE1D) :
         elif 1 == K : return 0.0
         elif 2 == K : return 1.0
         ##
+        ##args   = args   if args   else self.args 
+        kwargs = kwargs if kwargs else self.kwargs 
+        ## 
         m0 = self.normalization (     func ,                *args , **kwargs ) 
         m1 = self.umoment       ( 1 , func , center = 0.0 , *args , **kwargs )
         mu = float ( m1 ) / float ( m0 ) 
@@ -271,7 +285,7 @@ class BaseMoment(FunBASE1D) :
         integral = IC     ( func ,  self.xmin , err = False ,  args = args , kwargs = kwargs )
         total    = integral ( self.xmax ) 
 
-        assert 0 < total , "Integral is non-positive!"
+        assert 0 < total , "median: Integral is non-positive %s" % total
         
         qfun = lambda x : integral ( x ) / total  - 0.5
         dfun = lambda x : float ( func ( x , *args , **kwargs ) ) /  total 
@@ -320,7 +334,7 @@ class BaseMoment(FunBASE1D) :
         integral = IC ( func , self.xmin , err = False ,  args = args , kwargs = kwargs )
         total    = integral  ( self.xmax )        
 
-        assert 0 < total , "Integral is non-positive!"
+        assert 0 < total , "quantile: Integral is non-positive %s" % total 
 
         qfun     = lambda x : integral ( x ) / total  - quantile 
         dfun     = lambda x : float ( func ( x , *args , **kwargs ) ) /  total 
@@ -330,9 +344,8 @@ class BaseMoment(FunBASE1D) :
         
     # ========================================================================
     ## get quantiles  
-    def quantiles ( self , func , quantiles  , *args ) :
-
-        
+    def quantiles ( self , func , quantiles  , *args , **kwargs ) :
+ 
         if isinstance   ( quantiles , integer_types  ) and 1 <= quantiles : 
             quantiles = tuple  (   i * 1.0 / quantiles for i in range ( 1 , quantiles ) )
         else : 
@@ -358,7 +371,7 @@ class BaseMoment(FunBASE1D) :
         integral = IC ( func , self.xmin , err = False ,  args = args , kwargs = kwargs )
         total    = integral  ( self.xmax )        
         
-        assert 0 < total , "Integral is non-positive!"
+        assert 0 < total , "quantiles: Integral is non-positive %" % total 
  
         dfun     = lambda x : float ( func ( x , *args , **kwargs ) ) /  total 
  
@@ -411,9 +424,6 @@ class Moment(BaseMoment) :
     ## The main method: get the moment of the function/distribution 
     def __call__ ( self , func , *args , **kwargs ) :
         ##
-        args   = args   if args   else self.args
-        kwargs = kwargs if kwargs else self.kwargs
-        ##
         return self.moment ( self.N , func , self.__center , *args , **kwargs )
 
     ## print it!
@@ -460,7 +470,7 @@ class CentralMoment(BaseMoment) :
                               err  = err  , *args , **kwargs ) 
         
     ## calculate the central moment
-    def __call__ ( self , func , *args ,**kwargs ) :
+    def __call__ ( self , func , *args , **kwargs ) :
         ##
         args   = args   if args   else self.args
         kwargs = kwargs if kwargs else self.kwargs
@@ -831,8 +841,8 @@ class Mode(Median) :
         mn        = max ( mn , _median - 1.75 * _sigma )
         mx        = min ( mx , _median + 1.75 * _sigma )
 
-        mm        = Mode ( mn , mx , *args , **kwargs ) 
-        _mean     = mm.mean   ( func , *args , **wkargs )
+        mm        = Mode ( mn , mx   , *args , **kwargs ) 
+        _mean     = mm.mean   ( func , *args , **kwargs )
         _median   = mm.median ( func , *args , **kwargs )
 
         ## use the empirical approximation 
@@ -882,7 +892,7 @@ class Mode(Median) :
         
         from ostap.math.minimize import minimize_scalar as _ms 
         result = _ms (
-            ifun                     , 
+            qfun                     , 
             ## x0     = float ( m0 ) ,
             method = 'bounded'       , 
             bounds = [ mn , mx ]     ,
@@ -942,7 +952,7 @@ class Width(Mode) :
         from ostap.math.rootfinder import RootFinder    as RF
         rf = RF ( ifun , args = args , kwargs = kwargs )
         x1 = rf.find ( self.xmin , m0 )
-        x2 = rf.find ( m0 , seld.xmax )
+        x2 = rf.find ( m0 , self.xmax )
         
         return x1 , x2
 
@@ -995,7 +1005,7 @@ class CL_symm(object) :
         #
         ## define integration rules
         #
-        from ostap.math.integral import integral 
+        from ostap.math.integral import Integral 
         integral = Integral ( func , args = args , kwargs = kwargs , err = False )
         #
         ## xmin/max

@@ -46,6 +46,7 @@ class FunARGS(object) :
         """`args` : additional positional arguments for function call
         """
         return self.__args
+    @property
     def kwargs ( self ) :
         """`kwargs` : additional keyword arguments for function call
         """

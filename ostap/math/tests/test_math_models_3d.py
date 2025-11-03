@@ -140,20 +140,19 @@ def test_models ():
             cnt7 += r7
 
             
-    print ( 'COUNTER(I3):' , cnt1 )
-    print ( 'COUNTER(IX):' , cnt2 ) 
-    print ( 'COUNTER(IY):' , cnt3 ) 
-    print ( 'COUNTER(IZ):' , cnt4 ) 
-    print ( 'COUNTER(I5):' , cnt5 )
-    print ( 'COUNTER(I6):' , cnt6 ) 
-    print ( 'COUNTER(I7):' , cnt7 )
+    logger.info ( 'COUNTER(I3):\n%s' % cnt1 )
+    logger.info ( 'COUNTER(IX):\n%s' % cnt2 ) 
+    logger.info ( 'COUNTER(IY):\n%s' % cnt3 ) 
+    logger.info ( 'COUNTER(IZ):\n%s' % cnt4 ) 
+    logger.info ( 'COUNTER(I5):\n%s' % cnt5 )
+    logger.info ( 'COUNTER(I6):\n%s' % cnt6 ) 
+    logger.info ( 'COUNTER(I7):\n%s' % cnt7 )
 
 # =============================================================================
 if '__main__' == __name__ :
         
     test_models ()
 
-    
 # =============================================================================
-# The END 
-# ============================================================================
+##                                                                      The END 
+# =============================================================================

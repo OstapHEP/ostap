@@ -101,16 +101,15 @@ def test_models ():
             if 1.e-5 < abs ( r3 ) : logger.error ( 'IY:ERROR: difference is too large: %.6g (%.4g,%.4g,%.4g,%.4g) %s' % ( r3 , x1 , x2 , y1 , y2  , type(f) )  )
             cnt3 += r3
 
-    logger.info ( 'Counter(I2) %s' % cnt1 )
-    logger.info ( 'Counter(IX) %s' % cnt2 )
-    logger.info ( 'Counter(IY) %s' % cnt3 )
+    logger.info ( 'Counter(I2)\n%s' % cnt1 )
+    logger.info ( 'Counter(IX)\n%s' % cnt2 )
+    logger.info ( 'Counter(IY)\n%s' % cnt3 )
     
 # =============================================================================
 if '__main__' == __name__ :
         
     test_models ()
 
-    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
