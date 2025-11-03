@@ -492,9 +492,15 @@ else  ()
    set ( OSTAP_TEST_PYTHON_WARNINGS "-Werror -Wignore::DeprecationWarning" ) 
 endif () 
 
+set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning" ) 
+
 if ( OSTAP_TEST_PYTHON_WARNINGS ) 
-    MESSAGE ( "All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
-endif() 
+  MESSAGE ( "----> All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
+endif()
+
+if ( OSTAP_TEST_PYWARNINGS )  
+  message ( "----> All tests will be executed with PYWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  ) 
+endif()
 
 # ========================================================================================
 ## main tests
@@ -518,12 +524,20 @@ foreach(filename ${tests})
   string(FIND   ${tname}  parallel HAS_PARALLEL)
 
   if ( NOSE_EXECUTABLE AND HAS_PARALLEL LESS 0 )
-    add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=10000 )
-    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+    add_test (NAME ${tname}
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary
+      COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=10000 )    
   else   ()
-    add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
-    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+    add_test (NAME ${tname}
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary
+      COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
   endif  ()
+  
+  if ( OSTAP_TEST_PYWARNINGS )
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT PYWARNINGS=${OSTAP_TEST_PYWARNINGS} )
+  else () 
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 )
+  endif() 
   
 endforeach()
 
