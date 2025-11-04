@@ -127,7 +127,7 @@ def test_apo () :
     
     logger = getLogger ( 'test_apo' )
 
-    logger.info ('Test ResoApo2:  asymmetric Apollonios resolution model' )
+    logger.info ('Test ResoApo:  asymmetric Apollonios resolution model' )
     from   ostap.fitting.resolution import ResoApo
     reso = ResoApo ( 'Apollonios' , mass ,
                      mean  = ( 0.0 , -0.1  , 0.1 ) , 
@@ -136,7 +136,7 @@ def test_apo () :
                      psi   = ( 0.01 , -2    , +2  ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
-    with use_canvas ( 'test_apo2' , wait = 1 ) : 
+    with use_canvas ( 'test_apo' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -656,8 +656,8 @@ if '__main__' == __name__ :
     with timing ("Gauss"     , logger ) :  
         test_gauss      () ## single Gaussian resolution model
         
-    with timing ("Apo2"      , logger ) :  
-        test_apo2       () ## Apollonios resoltuion model
+    with timing ("Apo"       , logger ) :  
+        test_apo        () ## Apollonios resoltuion model
         
     with timing ("CB2"       , logger ) :  
         test_cb2        () ## double-sided Crystal Ball resoltuion model

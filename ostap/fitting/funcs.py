@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Tiny decoration for ROOT.TF objects 
+""" Tiny decoration for ROOT.TF objects 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -224,7 +224,40 @@ def _tf1_getattr_ ( func , par ) :
     if not par in func              : raise AttributeError('TF1:Invalid attribute %s' % par )
     return _tf1_par_  ( func , par )
 
-    
+
+# =============================================================================
+## Integral 
+def _tf1_integral_ ( f1 , xmin , xmax , * , err = False , epsrel = 1.e-12 ) :
+    """ Integral 
+    """    
+    assert isinstance ( epsrel , num_types ) and 0 < epsrel < 1 , "Invalid `epsreel'"
+    return f1.Integral ( xmin , xmax , epsrel )
+
+# =============================================================================
+## Integral 
+def _tf2_integral_ ( f2 ,
+                     xmin , xmax ,
+                     ymin , ymax , * , err = False , epsrel = 1.e-7 ) :
+    """ Integral 
+    """    
+    assert isinstance  ( epsrel , num_types ) and 0 < epsrel < 1 , "Invalid `epsreel'"
+    return f2.Integral ( xmin , xmax ,
+                         ymin , ymax , epsrel )
+
+# =============================================================================
+## Integral 
+def _tf3_integral_ ( f3 ,
+                     xmin , xmax ,
+                     ymin , ymax ,
+                     zmin , zmax , * , err = False , epsrel = 1.e-6 ) :
+    """ Integral 
+    """    
+    assert isinstance  ( epsrel , num_types ) and 0 < epsrel < 1 , "Invalid `epsreel'"
+    return f3.Integral ( xmin , xmax ,
+                         ymin , ymax ,
+                         zmin , zmax , epsrel )
+
+
 ROOT.TF1.__contains__ = _tf1_contains_
 ROOT.TF1.__len__      = lambda s : s.GetNpar() 
     
@@ -243,11 +276,9 @@ ROOT.TF1.__iter__     = _tf1_iter_
 ROOT.TF1.__getitem__  = _tf1_par_
 ROOT.TF1.__getattr__  = _tf1_getattr_
 
-
-
-ROOT.TF1.integral     = ROOT.TF1.Integral 
-ROOT.TF2.integral     = ROOT.TF2.Integral 
-
+ROOT.TF1.integral     = _tf1_integral_ 
+ROOT.TF2.integral     = _tf2_integral_ 
+ROOT.TF3.integral     = _tf3_integral_ 
 
 ROOT.TF2.xminmax = lambda s : ( s.GetXmin() , s.GetXmax() )
 ROOT.TF2.yminmax = lambda s : ( s.GetYmin() , s.GetYmax() )

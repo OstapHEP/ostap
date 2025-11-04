@@ -1097,10 +1097,13 @@ class IntegralBase(object) :
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+        if not args     and \
+           not kwargs   and \
+           not self.err and \
+           hasattr ( func , 'integral' ) and not hasattr ( func , 'no_native_integral' ) : 
             # ================================================================ 
             try : # ==========================================================
-                return func.integral ( xmn , xmx ) # =======================
+                return func.integral ( xmn , xmx ) # =========================
                 # ============================================================
             except TypeError : 
                 pass
@@ -1140,10 +1143,13 @@ class IntegralBase(object) :
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+        if not args     and \
+           not kwargs   and \
+           not self.err and \
+           hasattr ( func , 'integral' ) and not hasattr ( func , 'no_native_integral' ) : 
             # ================================================================ 
             try : # ==========================================================
-                return func.integral ( xmn , xmx , ymn , ymx ) # ===========
+                return func.integral ( xmn , xmx , ymn , ymx ) # =============
                 # ============================================================
             except TypeError : 
                 pass
@@ -1191,10 +1197,13 @@ class IntegralBase(object) :
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args and not kwargs and not self.err and hasattr ( func , 'integral' ) :
+        if not args     and \
+           not kwargs   and \
+           not self.err and \
+           hasattr ( func , 'integral' ) and not hasattr ( func , 'no_native_integral' ) : 
             # ================================================================ 
             try : # ==========================================================
-                return func.integral ( xmn , xmx , ymn , ymx , zmn , zmx ) #
+                return func.integral ( xmn , xmx , ymn , ymx , zmn , zmx ) # =
                 # ============================================================
             except TypeError : 
                 pass

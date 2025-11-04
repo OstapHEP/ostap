@@ -115,7 +115,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double integrate
+      inline double integrate
       ( FUNCTION1            f1             , 
         const double         xmin           , 
         const double         xmax           ,
@@ -139,7 +139,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double integrate_infinity
+      inline double integrate_infinity
       ( FUNCTION1         f1             , 
         const std::size_t tag        = 0 , 
         const double      aprecision = 0 , 
@@ -157,7 +157,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double integrate_to_infinity
+      inline double integrate_to_infinity
       ( FUNCTION1         f1             , 
         const double      xmin           , 
         const std::size_t tag        = 0 ,
@@ -178,7 +178,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double integrate_from_infinity
+      inline double integrate_from_infinity
       ( FUNCTION1         f1             , 
         const double      xmax           , 
         const std::size_t tag        = 0 ,
@@ -201,7 +201,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double cauchy_pv 
+      inline double cauchy_pv 
       ( FUNCTION1            f1             , 
         const double         c              , 
         const double         xmin           , 
@@ -226,7 +226,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double cauchy_pv_to_infinity  
+      inline double cauchy_pv_to_infinity  
       ( FUNCTION1            f1             , 
         const double         c              , 
         const double         xmin           ,  
@@ -252,7 +252,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double cauchy_pv_from_infinity  
+      inline double cauchy_pv_from_infinity  
       ( FUNCTION1            f1             , 
         const double         c              , 
         const double         xmax           , 
@@ -292,7 +292,7 @@ namespace Ostap
        *  @see Ostap::Math::Integrator::cauchy_pv_b
        */
       template <class FUNCTION1>
-      double cauchy_pv_infinity 
+      inline double cauchy_pv_infinity 
       ( FUNCTION1            f1             , 
         const double         c              , 
         const std::size_t    tag        = 0 ,
@@ -319,7 +319,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double kramers_kronig 
+      inline double kramers_kronig 
       ( FUNCTION1            f1             , 
         const double         s              , 
         const double         xmin           , 
@@ -347,7 +347,7 @@ namespace Ostap
        *  - \f$ x_{min} \f$  and \f$ x_{max \f$ are also  considered as singular points 
        */
       template <class FUNCTION1>
-      double integrate_singular
+      inline double integrate_singular
       ( FUNCTION1                  f1             , 
         const double               xmin           , 
         const double               xmax           ,
@@ -374,7 +374,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double integrate_cquad
+      inline double integrate_cquad
       ( FUNCTION1            f1             , 
         const double         xmin           , 
         const double         xmax           ,
@@ -402,7 +402,7 @@ namespace Ostap
        *  @return the value of the integral 
        */
       template <class FUNCTION1>
-      double integrate_romberg
+      inline double integrate_romberg
       ( FUNCTION1            f1             , 
         const double         xmin           , 
         const double         xmax           ,
@@ -418,6 +418,85 @@ namespace Ostap
             0 < aprecision ? aprecision : m_abs_precision_romberg , 
             0 < rprecision ? rprecision : m_rel_precision_romberg ).first ; }
       // ======================================================================
+    public : // couple of explicit specializations
+      // ======================================================================
+      /** calculate the integral 
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower  integration edge 
+       *  @param xmax upper  integration edge
+       *  @param tag  uqniue label/tag  
+       *  @param rescale rescale function for better numerical precision  
+       *  @return the value of the integral 
+       */
+      inline double integrate
+      ( function1            f1             , 
+        const double         xmin           , 
+        const double         xmax           ,
+        const std::size_t    tag        = 0 , 
+        const unsigned short rescale    = 0 ,
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 , 
+        const int            rule       = 0 ) const 
+      { return integrate_
+          ( std::cref ( f1 )    , 
+            xmin , xmax ,
+            m_workspace , 
+            tag  , rescale      , 
+            0 < aprecision ? aprecision : m_abs_precision_qag , 
+            0 < rprecision ? rprecision : m_rel_precision_qag , 
+            0 < rule       ? rule       : m_qag_rule          ).first ; }
+      // ======================================================================
+      /** calculate the integral usnig double adaptive CQUAD integrator  
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower integration edge 
+       *  @param xmax upper  integration edge
+       *  @param tag  uqniue label/tag  
+       *  @param rescale rescale function for better numerical precision  
+       *  @return the value of the integral 
+       */
+      inline double integrate_cquad
+      ( function1            f1             , 
+        const double         xmin           , 
+        const double         xmax           ,
+        const std::size_t    tag        = 0 , 
+        const unsigned short rescale    = 0 ,
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 ) const 
+      { return integrate_cquad_ 
+          ( std::cref ( f1 )    , 
+            xmin , xmax ,
+            m_workspace , 
+            tag  , rescale      , 
+            0 < aprecision ? aprecision : m_abs_precision_cquad , 
+            0 < rprecision ? rprecision : m_rel_precision_cquad ).first ; }
+      // ======================================================================      
+      /** calculate the integral using Romberg integrator  
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower integration edge 
+       *  @param xmax upper  integration edge
+       *  @param tag  uqniue label/tag  
+       *  @param rescale rescale function for better numerical precision  
+       *  @return the value of the integral 
+       */
+      inline double integrate_romberg
+      ( function1            f1             , 
+        const double         xmin           , 
+        const double         xmax           ,
+        const std::size_t    tag        = 0 , 
+        const unsigned short rescale    = 0 ,
+        const double         aprecision = 0 , 
+        const double         rprecision = 0 ) const 
+      { return integrate_romberg_ 
+          ( std::cref ( f1 )    , 
+            xmin , xmax ,
+            m_workspace , 
+            tag  , rescale      , 
+            0 < aprecision ? aprecision : m_abs_precision_romberg , 
+            0 < rprecision ? rprecision : m_rel_precision_romberg ).first ; }
+      // ======================================================================      
     public: // Integrationso for 2D-functions 
       // ======================================================================
       // 2D integration 
@@ -755,7 +834,7 @@ namespace Ostap
             0 < aprecision ? aprecision : m_abs_precision_qag , 
             0 < rprecision ? rprecision : m_rel_precision_qag , 
             0 != rule ? rule : m_qag_rule     ).first  ; }
-      // ========================================================================
+      // ======================================================================
     public: // SET OF STATIC PUBLIC METHODS With explicit WorksSpace)
       // ========================================================================
       /** calculate the integral 
@@ -1032,6 +1111,8 @@ namespace Ostap
             aprecision , 
             rprecision ).first ; }
       // ======================================================================
+    public:
+      // ======================================================================
       // Integration with doubly-adaptive CQUAD integrator  
       // ======================================================================
       /** calculate the integral using double adaptive  CQUAD integrator 
@@ -1048,7 +1129,7 @@ namespace Ostap
        */
       template <class FUNCTION1>
       static inline double integrate_cquad
-      ( function1            f1             , 
+      ( FUNCTION1            f1             , 
         const double         xmin           , 
         const double         xmax           , 
         const WorkSpace&     ws             , 
@@ -1079,7 +1160,7 @@ namespace Ostap
        */
       template <class FUNCTION1>
       static inline double integrate_romberg
-      ( function1            f1             , 
+      ( FUNCTION1            f1             , 
         const double         xmin           , 
         const double         xmax           , 
         const WorkSpace&     ws             , 

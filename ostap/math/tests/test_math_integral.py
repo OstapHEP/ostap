@@ -32,8 +32,12 @@ Also it tests Ostap::Math::Integrator
 from   ostap.core.pyrouts       import Ostap, SE  
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.math.integral      import ( integral  , romberg        ,
-                                         clenshaw_curtis           , 
+from   ostap.math.integral      import ( romberg                   ,
+                                         clenshaw_curtis           ,
+                                         integral_quad             ,
+                                         integral_dblquad          ,
+                                         integral_tplquad          ,
+                                         integral                  , 
                                          integral2 , genzmalik2    ,  
                                          integral3 , genzmalik3    ,
                                          complex_circle_integral   ,  
@@ -70,7 +74,7 @@ def test_integral ():
         ]
 
     scale = 1.e+12    
-    rows  = [  ( 'Function' ,  'I' , 'R' , 'CC'    , \
+    rows  = [  ( 'Function' ,  'I' , 'SP' , 'R' , 'CC' , \
                  'd(I) [%.0e]'  % ( 1.0 / scale )  , \
                  'd(R) [%.0e]'  % ( 1.0 / scale )  , \
                  'd(CC) [%.0e]' % ( 1.0 / scale )  , \
@@ -78,17 +82,19 @@ def test_integral ():
     
     for entry in funcs :
 
-        args = entry[:3]
-        vi   = integral        ( *entry[:3] , err = True )
-        vr   = romberg         ( *entry[:3] , err = True , maxdepth = 200 , epsrel = 1.e-8 , epsabs = 1.e-8 )
-        vc   = clenshaw_curtis ( *entry[:3] , err = True , maxdepth = 200 , epsrel = 1.e-8 , epsabs = 1.e-8 )
+        args  = entry[:3]
+        vi    = integral        ( *entry[:3] , err = True ,                  epsrel = 1.e-8 , epsabs = 1.e-8 )
+        vq    = integral_quad   ( *entry[:3] , err = True ,                  epsrel = 1.e-8 , epsabs = 1.e-8 )
+        vr    = romberg         ( *entry[:3] , err = True , maxdepth = 500 , epsrel = 1.e-8 , epsabs = 1.e-8 )
+        vc    = clenshaw_curtis ( *entry[:3] , err = True , maxdepth = 500 , epsrel = 1.e-8 , epsabs = 1.e-8 )
         
-        value   = entry[ 3]
+        value = entry[ 3]
         
         func    = 'int(%s,%+.5f,%+.5f)' % ( entry[0].__name__ , entry[1] , entry[2] )
 
         row = func                                       , \
               '%+.5f'  % vi                              , \
+              '%+.5f'  % vq                              , \
               '%+.5f'  % vr                              , \
               '%+.5f'  % vc                              , \
               '%+.5f'  % ( ( vi - value ) * scale )      , \
@@ -105,14 +111,90 @@ def test_integral ():
     logger.info ( '%s\n%s' % ( title , table ) ) 
     
 
+# =============================================================================
+def test_integral_2D ():
 
+    logger = getLogger('test_integral_2D')
+    logger.info ( 'Simple test for 2D-integrations' )
+
+    from math import sin, cos , exp, log, pi, e  
+
+    funcs = [
+        ( 'x*x+y*y'                     , lambda x,y: x*x+y*y                     , -1 , 1 , -1  , 1 , 8/3. )  ,
+        ( 'x*x+y*sin(y)'                , lambda x,y: x*x+y*sin(y)                , -1 , 1 , -2  , 1 , 6.085519557719447 ) , 
+        ( 'x*exp(x)+y*sin(u)'           , lambda x,y: x*exp(x)+y*sin(y)           , -2 , 1 , -2  , 2 , 12.07356999835915445374 ) ,
+        ( 'sin(x)*cos(x)+exp(y)*sin(y)' , lambda x,y: sin(x)*cos(x)+exp(y)*sin(y) ,  0 , 3 ,  0  , 3 , 35.60837524996321690196 ) 
+        ]
+
+    scale = 1.e+12    
+    rows  = [  ( 'Function' , 'GM' , 'I2' , 'SP', \
+                 'd(GM) [%.0e]' % ( 1.0 / scale )  , \
+                 'd(I2) [%.0e]' % ( 1.0 / scale )  , 'r(GM)' , 'r(I2)' ) ]
+    
+    for entry in funcs :
+
+        v1    = genzmalik2       ( *entry[1:6] , err = True , epsabs=1.49e-08, epsrel=1.49e-08 ) 
+        v2    = integral2        ( *entry[1:6] , err = True , epsabs=1.49e-08, epsrel=1.49e-08 ) 
+        vq    = integral_dblquad ( *entry[1:6] , err = True , epsabs=1.49e-08, epsrel=1.49e-08 ) 
+        vv    = entry[-1]
+
+        row = '%s(%+.1f,%+.1f,%+.1f,%+.1f)' % ( entry[0] , entry[2] , entry[3] , entry[4] , entry [5] ) , \
+              '%+.5f'  % v1                             , '%+.5f'  % v2                             , \
+              '%+.5f'  % vq                             , \
+              '%+.5f'  % ( ( v1 - vv   ) * scale )      , '%+.5f'  % ( ( v2 - vv ) * scale        ) , \
+              '%+5.3f' % ( ( v1 - vv   ) / v1.error() ) , '%+3.3f' % ( ( v2 - vv ) / v2.error() )
+
+        rows.append ( row )
+
+
+    title = '2D integrations '
+    table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
+# =============================================================================
+def test_integral_3D ():
+
+    logger = getLogger('test_integral_3D')
+    logger.info ( 'Simple test for 3D-integrations' )
+
+    from math import sin, cos , exp, log, pi, e  
+
+    from ostap.math.integral import  genzmalik3, integral3  
+    funcs = [
+        ( 'x*x+y*|y|'                      , lambda x,y,z: x*x+y*abs(y)                       , -1. , 2. , -1.  , 2. , -1. , 2. , 48 ) ,  
+        ( 'x*x+|y|+z*z*cos(z)'             , lambda x,y,z: x*x+y*abs(y)+z*z*cos(z)            , -1. , 2. , -1.  , 2. , -1. , 2. , 51.53827020952059001502 ) ,       
+        ( 'x*exp(x)+sin(y)*|y|+z*z*exp(z)' , lambda x,y,z: x*exp(x)+sin(y)*abs(y)+z*z*exp(z)  , -1. , 2. , -1.  , 2. , -1. , 2. , 202.53557154832049036486) ,       
+        ]
+    
+    scale = 1.e+12    
+    rows  = [  ( 'Function' , 'GM' , 'I3' , 'SP'   , \
+                 'd(GM) [%.0e]' % ( 1.0 / scale )  , \
+                 'd(I3) [%.0e]' % ( 1.0 / scale )  , 'r(GM)' , 'r(I3)' ) ]
+    
+    for entry in funcs :
+        
+        v1    = genzmalik3       ( *entry[1:8] , err = True , epsabs=1.49e-08, epsrel=1.49e-08 ) 
+        v2    = integral3        ( *entry[1:8] , err = True , epsabs=1.49e-08, epsrel=1.49e-08 )
+        vq    = integral_tplquad ( *entry[1:8] , err = True , epsabs=1.49e-08, epsrel=1.49e-08 ) 
+        vv    = entry[-1]
+
+        row = '%s(%+.1f,%+.1f.%+.1f.%+.1f,%+.1f,%+.1f)' % ( entry[0] , entry[2] , entry[3] , entry[4] , entry [5] , entry[6] , entry[7] ) , \
+              '%+.5f'  % v1                             , '%+.5f'  % v2                             , \
+              '%+.5f'  % vq                             , \
+              '%+.5f'  % ( ( v1 - vv   ) * scale )      , '%+.5f'  % ( ( v2 - vv ) * scale        ) , \
+              '%+5.3f' % ( ( v1 - vv   ) / v1.error() ) , '%+3.3f' % ( ( v2 - vv ) / v2.error() )
+
+        rows.append ( row )
+
+    title = '3D integrations '
+    table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+    
 # =============================================================================
 def test_inf_integrals ():
 
     logger = getLogger('test_inf_integrals')
-
     logger.info ( 'Test 1D-integrals for (semi)infinite intervals' )
-
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -174,9 +256,7 @@ def test_inf_integrals ():
 def test_cauchy_integrals ():
 
     logger = getLogger('test_cauchy_integrals')
-
     logger.info ( 'Test Cauchy principal value intervals' )
-
 
     from math               import pi, exp 
     from ostap.math.math_ve import sech 
@@ -238,7 +318,8 @@ def test_cauchy_integrals ():
 def test_integrators ():
 
     logger = getLogger('test_integrators')
-
+    logger.info ( 'Test C++ integrator(s)' )
+    
     from math import sin, pi 
 
     ## function to be integrated 
@@ -250,38 +331,34 @@ def test_integrators ():
     ## create the function object 
     f1 = make_fun1 ( ff ) 
 
-    N    = 100000
+    N    = 10000
     
-    scale = 1.e+12
+    scale = 1.e+15
 
-    def my_romberg         ( *args ) :
-        return romberg ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 )
-    
-    def my_clenshaw_curtis ( *args ) :
-        return clenshaw_curtis ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 ) 
-    
-    def my_integral  ( fun , low , high )  :
-        i = Integral ( fun , low )
-        return i ( high )
-    
-    def my_integral  ( fun , low , high )  :
-        i = IntegralCache  ( fun , low )
-        return i ( high )
+    def my_romberg         ( *args ) : return romberg         ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 )    
+    def my_clenshaw_curtis ( *args ) : return clenshaw_curtis ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 )
+    def my_scipy           ( *args ) : return integral_quad   ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 )
+    def my_integral        ( fun , xmin , xmax ) :
+        i = Integral ( fun , epsrel = 1.e-11 , epsabs = 1.e-11 )
+        return i.integral ( xmin , xmax ) 
     
     results = []
 
     I = Ostap.Math.Integrator() 
-    for_test = ( ( 'QAG'              , f1 , I.integrate         ) ,
-                 ( 'CQUAD'            , f1 , I.integrate_cquad   ) ,
-                 ( 'Romberg'          , f1 , I.integrate_romberg ) ,
-                 ( 'Native/1'         , f1 ,   integral          ) ,
-                 ( 'Native/2'         , ff ,   integral          ) ,
-                 ( 'Romberg/1'        , f1 ,  my_romberg         ) ,
-                 ( 'Romberg/2'        , ff ,  my_romberg         ) , 
-                 ( 'ClenshawCurtis/1' , f1 ,  my_clenshaw_curtis ) ,
-                 ( 'ClenshawCurtis/2' , ff ,  my_clenshaw_curtis ) , 
-                 ( 'Integral/1'       , f1 ,  my_integral        ) , 
-                 ( 'Integral/2'       , ff ,  my_integral        ) ) 
+    for_test = ( ( 'QAG/1'                , f1 , I.integrate          ) ,
+                 ( 'QAG/2'                , ff , I.integrate          ) ,
+                 ( 'CQUAD/1'              , f1 , I.integrate_cquad    ) ,
+                 ( 'CQUAD/2'              , ff , I.integrate_cquad    ) ,
+                 ( 'Romberg/1'            , f1 , I.integrate_romberg  ) ,
+                 ( 'Romberg/2'            , ff , I.integrate_romberg  ) ,
+                 ( '(py)Romberg/1'        , f1 ,  my_romberg          ) ,                 
+                 ( '(py)Romberg/2'        , ff ,  my_romberg          ) , 
+                 ( '(py)ClenshawCurtis/1' , f1 ,  my_clenshaw_curtis  ) ,
+                 ( '(py)ClenshawCurtis/2' , ff ,  my_clenshaw_curtis  ) , 
+                 ( '(py)SciPy/1'          , f1 ,  my_scipy            ) , 
+                 ( '(py)SciPy/2'          , ff ,  my_scipy            ) , 
+                 ( '(py)Integral/1'       , f1 ,  my_integral         ) , 
+                 ( '(py)Integral/2'       , ff ,  my_integral         ) ) 
             
     for name , fun , func in for_test : 
         cnt = SE()
@@ -308,35 +385,52 @@ def test_integrators2 ():
 
     logger = getLogger('test_integrators2')
 
-    fun1 = Ostap.Math.Gauss() 
-    fun2 = lambda x : fun1 ( x ) 
-    fun3 = make_fun1 ( fun1 )
-    fun4 = make_fun1 ( fun2 )
+    fun1   = Ostap.Math.Gauss() 
+    fun2   = lambda x : fun1 ( x )
     
-    low  = -1
-    high =  3
-    exact = Ostap.Math.gauss_cdf  ( high ) - Ostap.Math.gauss_cdf ( -3 )
+    fun3   = make_fun1 ( fun1 )
+    fun4   = make_fun1 ( fun2 )
     
-    N    = 50000
+    low   = -1
+    high  =  3
+    exact = Ostap.Math.gauss_cdf  ( high ) - Ostap.Math.gauss_cdf ( low  )
+    
+    N    = 1000
     
     scale = 1.e+15
-    
-    def my_integral  ( fun , low , high )  :
-        i = Integral ( fun , low )
-        return i ( high )
+
+    def my_scipy           ( *args ) : return integral_quad   ( *args , epsrel = 1.e-11 , epsabs = 1.e-11 )
+    def my_integral        ( fun , xmin , xmax ) :
+        i = Integral ( fun , epsrel = 1.e-11 , epsabs = 1.e-11 )
+        return i.integral ( xmin , xmax ) 
     
     results = []
 
     I = Ostap.Math.Integrator() 
-    for_test = ( ( 'QAG'         , fun1 ,  I.integrate         ) ,
-                 ( 'CQUAD'       , fun1 ,  I.integrate_cquad   ) ,
-                 ( 'Romberg'     , fun1 ,  I.integrate_romberg ) ,
+    for_test = ( ( 'QAG/1'       , fun1 ,  I.integrate         ) ,
+                 ( 'QAG/2'       , fun2 ,  I.integrate         ) ,
+                 ( 'QAG/3'       , fun3 ,  I.integrate         ) ,
+                 ( 'QAG/4'       , fun4 ,  I.integrate         ) ,                 
+                 ( 'CQUAD/1'     , fun1 ,  I.integrate_cquad   ) ,
+                 ( 'CQUAD/2'     , fun2 ,  I.integrate_cquad   ) ,
+                 ( 'CQUAD/3'     , fun3 ,  I.integrate_cquad   ) ,
+                 ( 'CQUAD/4'     , fun4 ,  I.integrate_cquad   ) ,
+                 ( 'Romberg/1'   , fun1 ,  I.integrate_romberg ) ,
+                 ( 'Romberg/2'   , fun2 ,  I.integrate_romberg ) ,
+                 ( 'Romberg/3'   , fun3 ,  I.integrate_romberg ) ,
+                 ( 'Romberg/4'   , fun4 ,  I.integrate_romberg ) ,                 
+                 ( 'SciPy/1'     , fun1 ,  my_scipy    ) ,
+                 ( 'SciPy/2'     , fun2 ,  my_scipy    ) ,
+                 ( 'SciPy/3'     , fun3 ,  my_scipy    ) ,
+                 ( 'SciPy/4'     , fun4 ,  my_scipy    ) ,
                  ( 'Integral/1'  , fun1 ,  my_integral ) , 
                  ( 'Integral/2'  , fun2 ,  my_integral ) , 
                  ( 'Integral/3'  , fun3 ,  my_integral ) , 
                  ( 'Integral/4'  , fun4 ,  my_integral ) )
                  
-            
+
+    for_test = sorted ( for_test , key = lambda s : s[0] )
+    
     for name , fun , func in for_test : 
         cnt = SE()
         with timing ( '%9s integrator' % name , logger = logger ) as t :  
@@ -357,44 +451,6 @@ def test_integrators2 ():
     table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
     logger.info ( '%s\n%s' % ( title , table ) ) 
  
-# =============================================================================
-def test_integral_2D ():
-
-    logger = getLogger('test_integral_2D')
-
-    logger.info ( 'Test for 2D-integration' )
-
-    from math import sin, cos , exp, log, pi, e  
-
-    funcs = [
-        ( 'x*x+y*y'                     , lambda x,y: x*x+y*y                     , -1 , 1 , -1  , 1 , 8/3. )  ,
-        ( 'x*x+y*sin(y)'                , lambda x,y: x*x+y*sin(y)                , -1 , 1 , -2  , 1 , 6.085519557719447 ) , 
-        ( 'x*exp(x)+y*sin(u)'           , lambda x,y: x*exp(x)+y*sin(y)           , -2 , 1 , -2  , 2 , 12.07356999835915445374 ) ,
-        ( 'sin(x)*cos(x)+exp(y)*sin(y)' , lambda x,y: sin(x)*cos(x)+exp(y)*sin(y) ,  0 , 3 ,  0  , 3 , 35.60837524996321690196 ) 
-        ]
-
-    scale = 1.e+12    
-    rows  = [  ( 'Function' , 'GM' , 'I2' , \
-                 'd(GM) [%.0e]' % ( 1.0 / scale )  , \
-                 'd(I2) [%.0e]' % ( 1.0 / scale )  , 'r(GM)' , 'r(I2)' ) ]
-    
-    for entry in funcs :
-
-        v1    = genzmalik2 ( *entry[1:6] , err = True )
-        v2    = integral2  ( *entry[1:6] , err = True )
-        vv    = entry[-1]
-
-        row = '%s(%+.1f,%+.1f,%+.1f,%+.1f)' % ( entry[0] , entry[2] , entry[3] , entry[4] , entry [5] ) , \
-              '%+.5f'  % v1                             , '%+.5f'  % v2                             , \
-              '%+.5f'  % ( ( v1 - vv   ) * scale )      , '%+.5f'  % ( ( v2 - vv ) * scale        ) , \
-              '%+5.3f' % ( ( v1 - vv   ) / v1.error() ) , '%+3.3f' % ( ( v2 - vv ) / v2.error() )
-
-        rows.append ( row )
-
-
-    title = '2D integrations '
-    table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
-    logger.info ( '%s\n%s' % ( title , table ) ) 
 
 
 # =============================================================================
@@ -462,43 +518,6 @@ def test_integrators_2D ():
     table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
     logger.info ( '%s\n%s' % ( title , table ) ) 
     
-# =============================================================================
-def test_integral_3D ():
-
-    logger = getLogger('test_integral_3D')
-
-    logger.info ( 'Test for 3D-integration' )
-
-    from math import sin, cos , exp, log, pi, e  
-
-    from ostap.math.integral import  genzmalik3, integral3  
-    funcs = [
-        ( 'x*x+y*|y|'                      , lambda x,y,z: x*x+y*abs(y)                       , -1. , 2. , -1.  , 2. , -1. , 2. , 48 ) ,  
-        ( 'x*x+|y|+z*z*cos(z)'             , lambda x,y,z: x*x+y*abs(y)+z*z*cos(z)            , -1. , 2. , -1.  , 2. , -1. , 2. , 51.53827020952059001502 ) ,       
-        ( 'x*exp(x)+sin(y)*|y|+z*z*exp(z)' , lambda x,y,z: x*exp(x)+sin(y)*abs(y)+z*z*exp(z)  , -1. , 2. , -1.  , 2. , -1. , 2. , 202.53557154832049036486) ,       
-        ]
-    
-    scale = 1.e+12    
-    rows  = [  ( 'Function' , 'GM' , 'I3' , \
-                 'd(GM) [%.0e]' % ( 1.0 / scale )  , \
-                 'd(I3) [%.0e]' % ( 1.0 / scale )  , 'r(GM)' , 'r(I3)' ) ]
-    
-    for entry in funcs :
-        
-        v1    = genzmalik3 ( *entry[1:8] , err = True )
-        v2    = integral3  ( *entry[1:8] , err = True )
-        vv    = entry[-1]
-
-        row = '%s(%+.1f,%+.1f.%+.1f.%+.1f,%+.1f,%+.1f)' % ( entry[0] , entry[2] , entry[3] , entry[4] , entry [5] , entry[6] , entry[7] ) , \
-              '%+.5f'  % v1                             , '%+.5f'  % v2                             , \
-              '%+.5f'  % ( ( v1 - vv   ) * scale )      , '%+.5f'  % ( ( v2 - vv ) * scale        ) , \
-              '%+5.3f' % ( ( v1 - vv   ) / v1.error() ) , '%+3.3f' % ( ( v2 - vv ) / v2.error() )
-
-        rows.append ( row )
-
-    title = '3D integrations '
-    table = T.table ( rows , title = title ,  prefix = '# ' , alignment = 'lllc' )
-    logger.info ( '%s\n%s' % ( title , table ) ) 
 
 # =============================================================================
 def test_integrators_3D ():
@@ -620,13 +639,12 @@ if '__main__' == __name__ :
     
     test_integrators      ()
     test_integrators2     ()
-    
+
     test_integrators_2D   ()
     test_integrators_3D   ()
 
     test_inf_integrals    ()
     test_cauchy_integrals ()
-
 
 # =============================================================================
 ##                                                                      The END 

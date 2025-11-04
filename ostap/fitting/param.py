@@ -345,7 +345,6 @@ class H1Func(object) :
         t = self.tf1()
         return t.draw( *args , **kwargs )
 
-
 # ==============================================================================
 ## helper class to wrap 2D-histogram as function 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -365,7 +364,6 @@ class H2Func(object) :
         x0 = x [ 0 ]
         y0 = x [ 1 ]
         return self._func ( self._histo ( x0 , y0 , interpolate = self._interp ) )
-
 
 # ==============================================================================
 ## create function object 
@@ -550,10 +548,10 @@ ROOT.TH1D . asFunc   = _h1_as_fun_
 ROOT.TH2F . asFunc   = _h2_as_fun_ 
 ROOT.TH2D . asFunc   = _h2_as_fun_ 
 
-ROOT.TH1F . integral = _h1_integral_ 
-ROOT.TH1D . integral = _h1_integral_
-ROOT.TH2F . integral = _h2_integral_ 
-ROOT.TH2D . integral = _h2_integral_
+ROOT.TH1F . integral_tf = _h1_integral_ 
+ROOT.TH1D . integral_tf = _h1_integral_
+ROOT.TH2F . integral_tf = _h2_integral_ 
+ROOT.TH2D . integral_tf = _h2_integral_
 
 # =============================================================================
 _decorated_classes_ = (
@@ -596,10 +594,10 @@ _new_methods_ = (
     ROOT.TH2F . asFunc   ,
     ROOT.TH2D . asFunc   ,
     #
-    ROOT.TH1F . integral ,
-    ROOT.TH1D . integral ,
-    ROOT.TH2F . integral ,
-    ROOT.TH2D . integral ,
+    ROOT.TH1F . integral_tf ,
+    ROOT.TH1D . integral_tf ,
+    ROOT.TH2F . integral_tf ,
+    ROOT.TH2D . integral_tf ,
     )
 # =============================================================================
 if '__main__' == __name__ :

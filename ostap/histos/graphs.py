@@ -43,6 +43,7 @@ from   ostap.core.ostap_types         import ( num_types   , integer_types ,
                                                sized_types , string_types  )   
 from   ostap.plotting.draw_attributes import copy_graph_attributes
 from   ostap.logger.pretty            import pretty_float
+from   ostap.math.integral            import Integral 
 from   ostap.utils.valerrors          import ( AsymErrors         ,
                                                ValWithErrors      ,
                                                ValWithMultiErrors )
@@ -738,8 +739,8 @@ def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
     >>> i     = graph.integral ( 0 , 1 )
     """
     if numerical :
-        from ostap.math.integral import integral 
-        return integral ( graph , xlow , xhigh )
+        i = Integral ( graph , epsabs = 1.e-6 , epsrel = 1.e-6 ) 
+        return i.integral ( xlow , xhigh )
     
     tf1 = graph.asTF1()
     return tf1.Integral( xlow , xhigh ) 
@@ -1562,7 +1563,9 @@ ROOT.TGraphAsymmErrors.__setitem__   = _grae_setitem_
 
 ROOT.TGraphAsymmErrors . transform   = _grae_transform_
 
-ROOT.TGraph       . integral         = _gr_integral_
+ROOT.TGraph       . integral           = _gr_integral_
+ROOT.TGraph       . no_native_integral = lambda s : True 
+
 ROOT.TGraph       . asTF1            = _gr_as_TF1_
 
 ROOT.TGraph            .sorted        = _gr_sorted_

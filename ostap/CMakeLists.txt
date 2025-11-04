@@ -508,15 +508,17 @@ endif()
     
 file(GLOB tests "${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/tests/test_*.py")
 
-## option(USE_NOSE "Use notetests to run main tests"  ON ) 
+option(USE_NOSE "Use notetests to run main tests"  OFF ) 
 
-find_program(NOSE_EXECUTABLE NAMES nosetests)
-if ( NOSE_EXECUTABLE )
-  message ( "Nosetest will be used for the main tests:" ${NOSE_EXECUTABLE} )
-else ()
-  message ( " No NOSETESTS: " ${USE_NOSE} "  and " ${NOSE_EXECUTABLE} ) 
-endif()
-    
+if ( USE_NOSE )
+  find_program(NOSE_EXECUTABLE NAMES nosetests)
+  if ( NOSE_EXECUTABLE )
+    message ( "Nosetest will be used for the main tests:" ${NOSE_EXECUTABLE} )
+  else ()
+    message ( " No NOSETESTS: " ${USE_NOSE} "  and " ${NOSE_EXECUTABLE} ) 
+  endif()
+endif() 
+
 foreach(filename ${tests})
   get_filename_component(tname ${filename} NAME_WE)
   string(CONCAT tname ostap. ${tname})

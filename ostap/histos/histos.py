@@ -58,7 +58,8 @@ from   ostap.utils.cidict             import cidict, cidict_fun
 from   ostap.utils.basic              import typename 
 from   ostap.logger.pretty            import pretty_float
 from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes
-from   ostap.stats.moments            import Quantile, Quantiles     
+from   ostap.stats.moments            import Quantile, Quantiles
+from   ostap.math.integral            import Integral, Integral2, Integral3 
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
@@ -2719,52 +2720,62 @@ class FUNCX  (object) : pass
 # ==============================================================================
 ## constant 
 class FUNC_C0(FUNCX) :
-    def __init__ ( self , value       ) : self.value = value 
-    def __call__ ( self , x ,      *y ) : return self.value 
-    def integral ( self , xmin , xmax ) : return ( xmax - xmin ) * self.value
+    def __init__ ( self , value                   ) : self.value = value 
+    def __call__ ( self , x    ,  *args , **kargs ) : return self.value 
+    def integral ( self ,
+                   xmin , xmax , *args , **kwargs ) : return ( xmax - xmin ) * self.value
+
     
 # ==============================================================================
 ## trivial 1D-function 
 class FUNC_F1(FUNCX) :
-    def __init__ ( self , func        ) : self.func = func 
-    def __call__ ( self , x    ,   *y ) : return self.func ( float ( x ) )  
-    def integral ( self , xmin , xmax ) : return self.func.Integral( xmin , xmax )
+    def __init__ ( self , func                    ) : self.func = func 
+    def __call__ ( self , x    , *args , **kwargs ) : return self.func ( float ( x ) , *args , **kwargs )  
+    def integral ( self ,
+                   xmin , xmax , *args , **kwargs ) :
+        i1 = Integral ( self , func , args = args , kwargs = kwargs , err = false )
+        return i1.integral ( xmin , xmax )
     
 # ==============================================================================
 ## trivial 2D-function 
 class FUNC_F2(FUNCX) :
-    def __init__ ( self , func        ) : self.func = func 
-    def __call__ ( self , x , y ,  *z ) : return self.func ( float ( x ) , float ( y ) ) 
+    def __init__ ( self , func                    ) : self.func = func 
+    def __call__ ( self , x , y ,*args , **kwargs ) : return self.func ( float ( x ) , float ( y ) , *args , **kwargs ) 
     def integral ( self ,
-                   xmin , xmax        ,
-                   ymin , ymax        ) : return self.func.Integral( xmin , xmax ,
-                                                                     ymin , ymax )
+                   xmin , xmax ,
+                   ymin , ymax , *args , **kwargs ) :
+        i2 = Integral2 ( self , func , args = args , kwargs = kwargs , err = false )
+        return i2.integral ( xmin , xmax ,
+                             ymin , ymax )
+    
 # ==============================================================================
 ## trivial 3D-function 
 class FUNC_F3(FUNCX) :
-    def __init__ ( self , func        ) : self.func = func 
-    def __call__ ( self , x , y ,  z  ) : return self.func ( float ( x ) ,
-                                                             float ( y ) ,
-                                                             float ( z ) ) 
+    def __init__ ( self , func                          ) : self.func = func 
+    def __call__ ( self , x , y ,  z , *args , **kwargs ) : return self.func ( float ( x ) ,
+                                                                               float ( y ) ,
+                                                                               float ( z ) , *args , **kwargs ) 
     def integral ( self ,
-                   xmin , xmax        ,
-                   ymin , ymax        , 
-                   zmin , zmax        ) : return self.func.Integral( xmin , xmax ,
-                                                                     xmin , xmax ,
-                                                                     zmin , zmax )
+                   xmin , xmax ,
+                   ymin , ymax , 
+                   zmin , zmax , *args , **kwargs ) :
+        i3 = Integral3 ( self , func , args = args , kwargs = kwargs , err = false )
+        return i3.integral ( xmin , xmax ,
+                             ymin , ymax , 
+                             zmin , zmax )
+    
 # ==============================================================================
-## everything else 
+## everything else ???
 class FUNC_OTHER(FUNCX) :
     def __init__ ( self , func        ) :
         self.func = func
         if hasattr ( self.func , 'integral' ) :
-            self.integral = lambda x,y,*z : self.func.integral ( x , y , *z ) 
+            self._integral = lambda x,y,*z,**kw : self.func.integral ( x , y , *z , **kw ) 
         else :
             from ostap.math.integral import integral
-            self.integral = lambda x,y,*z : integral ( self.func , x , y , *z ) 
-    def __call__ ( self , x , *y      ) : return self.func ( float ( x ) , *y ) 
-    def integral ( self , s ,  y , *z ) : return self.integral ( x , y , *z )
-
+            self._integral = lambda x,y,*z,**kw : integral ( self.func , x , y , *z , **kw ) 
+    def __call__ ( self , x , *y      , **kw ) : return self.func ( float ( x ) , *y , **kw ) 
+    def integral ( self , s ,  y , *z , **kw ) : return self._integral ( x , y , *z , **kw )
 
 
 # =============================================================================
@@ -2854,8 +2865,6 @@ def _h1_ioper_ ( h1 , h2 , oper ) :
         
     h1.ResetStats() 
     return h1 
-
-
 
 # =============================================================================
 ##  Division with the histograms 
@@ -4561,7 +4570,7 @@ def _h1_add_function_integral_ ( h1 , func ) :
         x         = i [ 1 ]
         y         = i [ 2 ]
         
-        ## calculate the integral of the function withing the bin 
+        ## calculate the integral of the function within the bin 
         ii        = ff.integral ( x.value() - x.error() , x.value()+x.error() )
 
         ## update 
@@ -5364,8 +5373,6 @@ def _h3_rescale_ ( h3 , factor = 1 ) :
 ROOT.TH3F. rescale_bins = _h3_rescale_ 
 ROOT.TH3D. rescale_bins = _h3_rescale_ 
 
-
-
 # =============================================================================
 ## sample the histogram using gaussian hypothesis
 #  @code
@@ -5595,7 +5602,6 @@ def _bin_overlap_2D_ ( x1 , y1 , x2 , y2 ) :
     #
     #
     return ( xmax - xmin ) * ( ymax - ymin ) / ( 4.0 * x1e * y1e )
-
 
 # ==============================================================================
 ## rebin 1D-histogram with NUMBERS 
@@ -6356,6 +6362,128 @@ def _h3_integrate_ ( h                         ,
                 
     return result 
 
+
+
+
+# =============================================================================
+## calculate the integral of TH1
+#  @code
+#  histo = ...
+#  i     = histo.integral ( 0.2 , 0.16 ) 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-08-31
+def _h1_integral_ ( histo , xmin , xmax , *args , **kwargs ) :
+    """ Calculate the integral of TH1
+    >>> histo = ...
+    >>> i1 = histo.integral ( 0.2 , 0.16 )
+    >>> i2 = histo.integral ( 0.2 , 0.16 , interpolate = 3 ) ## use cubic interpolation    
+    """
+    if   xmin == xmax or isequal ( xmin , xmax ) : return 0
+    elif xmax <  xmin : return -1 * _h1_integral ( histo , xmax , xmin , *args , **kwargs )
+    elif xmax <= histo.xmin () : return 0
+    elif xmin >= histo.xmax () : return 0
+
+    xmin = max ( xmin , histo.xmin () )
+    xmax = min ( xmax , histo.xmax () )
+
+    i1 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-8 , epsrel = 1.e-8 )
+    return i1.integral ( xmin , xmax ) 
+
+# =============================================================================
+## calculate the integral of TH2
+#  @code
+#  histo = ...
+#  i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 ) 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-08-31
+def _h2_integral_ ( histo ,
+                    xmin  , xmax ,
+                    ymin  , ymax , *args , **kwargs ) :
+    """ Calculate the integral of TH2
+    >>> histo = ...
+    >>> i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 ) 
+    """
+    if   xmin == xmax or isequal ( xmin , xmax ) : return 0
+    elif xmax <  xmin : return -1 * _h2_integral ( histo , xmax , xmin , ymin , ymax , *args , **kwargs )
+    elif xmax <= histo.xmin () : return 0
+    elif xmin >= histo.xmax () : return 0
+
+    if   ymin == ymax or isequal ( ymin , ymax ) : return 0
+    elif ymax <  xmin : return -1 * _h2_integral ( histo , xmin , xmax , ymax , ymin , *args , **kwargs )
+    elif ymax <= histo.ymin () : return 0
+    elif ymin >= histo.ymax () : return 0
+    
+    xmin = max ( xmin , histo.xmin () )
+    xmax = min ( xmax , histo.xmax () )
+
+    ymin = max ( ymin , histo.ymin () )
+    ymax = min ( ymax , histo.ymax () )
+
+    i2 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-6 , epsrel = 1.e-6 )
+    return i2.integral ( xmin , xmax , 
+                         ymin , ymax ) 
+
+# =============================================================================
+## calculate the integral of TH3
+#  @code
+#  histo = ...
+#  i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 , 0 , 1 ) 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-08-31
+def _h3_integral_ ( histo ,
+                    xmin  , xmax ,
+                    ymin  , ymax ,
+                    zmin  , zmax , *args , **kwargs ) :
+    """ Calculate the integral of TH3
+    >>> histo = ...
+    >>> i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 , 0 , 1 ) 
+    """
+
+    if   xmin == xmax or isequal ( xmin , xmax ) : return 0
+    elif xmax <  xmin : return -1 * _h3_integral ( histo , xmax , xmin , ymin , ymax , zmin , zmax *args , **kwargs )
+    elif xmax <= histo.xmin () : return 0
+    elif xmin >= histo.xmax () : return 0
+
+    if   ymin == ymax or isequal ( ymin , ymax ) : return 0
+    elif ymax <  ymin : return -1 * _h3_integral ( histo , xmin , xmax , ymax , ymin , zmin , zmax , *args , **kwargs )
+    elif ymax <= histo.ymin () : return 0
+    elif ymin >= histo.ymax () : return 0
+    
+    if   zmin == zmax or isequal ( zmin , zmax ) : return 0
+    elif zmax <  zmin : return -1 * _h3_integral ( histo , xmin , xmax , ymin , ymax , zmax , zmin , *args , **kwargs )
+    elif zmax <= histo.zmin () : return 0
+    elif zmin >= histo.zmax () : return 0
+    
+    xmin = max ( xmin , histo.xmin () )
+    xmax = min ( xmax , histo.xmax () )
+
+    ymin = max ( ymin , histo.ymin () )
+    ymax = min ( ymax , histo.ymax () )
+    
+    zmin = max ( zmin , histo.zmin () )
+    zmax = min ( zmax , histo.zmax () )
+    
+    i3 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-6 , epsrel = 1.e-6 )    
+    return i3.integral ( xmin , xmax , 
+                         ymin , ymax , 
+                         zmin , zmax ) 
+
+
+for t in ( ROOT.TH1F , ROOT.TH1D ) :
+    t.integral         = _h1_integral_
+    t.no_native_integral = lambda s : True 
+
+for t in ( ROOT.TH2F , ROOT.TH2D ) :
+    t.integral         = _h2_integral_
+    t.no_native_integral = lambda s : True 
+
+for t in ( ROOT.TH3F , ROOT.TH3D ) :
+    t.integral         = _h3_integral_
+    t.no_native_integral = lambda s : True 
+    
 # =============================================================================
 ## make transformation of histogram content 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -6447,6 +6575,8 @@ for t in ( ROOT.TH3F , ROOT.TH3D ) :
 
 # generic sscaling
 ROOT.TH1 . scale      = _h_scale_
+
+
 
 HStats   = Ostap.Utils.HistoStat
 # =============================================================================
