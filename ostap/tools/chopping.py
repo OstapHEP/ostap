@@ -855,7 +855,7 @@ class Trainer(object) :
                 BW = VE ( BW )
                 EB = VE ( EB )
                 s1 , e1  = BW.pretty_print ( precision = 4 , width = 6 , parentheses = False )
-                s2 , e2  = WB.pretty_print ( precision = 4 , width = 6 , parentheses = False )
+                s2 , e2  = EB.pretty_print ( precision = 4 , width = 6 , parentheses = False )
                 row = 'Background' , \
                     s1 , '%s10^{%+d}' % ( times , e1 ) if e1 else '' , \
                     s2 , '%s10^{%+d}' % ( times , e2 ) if e2 else '' 
