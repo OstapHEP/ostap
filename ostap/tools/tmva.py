@@ -2823,7 +2823,7 @@ def _weights2map_ ( weights ) :
         _map [ method ] = xml
 
     assert not _map .empty() , \
-           'Invalid MAP size %s for' % ( _map.size() , weights )
+           'Invalid MAP size %s for %s' % ( _map.size() , weights )
     
     assert not _map.empty() , "Invalid weights_files: %s"  % weights.files
     return _map , weights  
