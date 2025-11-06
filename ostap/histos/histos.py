@@ -7554,8 +7554,7 @@ ROOT.TH1D . equal_edges = _equal_edges_
 #  histo = ...
 #  q = histo.quantile ( 0.2 ) 
 #  @endcode
-#  @attention actual quantiles are etimated for density distribution
-def h1_quantile ( h1 , quantile , **kwargs ):
+def h1_quantile ( h1 , quantile , * , density = True , **kwargs ):
     """ Get the estimate for quantile for the hitogram
     
     >>> histo = ...
@@ -7567,8 +7566,9 @@ def h1_quantile ( h1 , quantile , **kwargs ):
     
     if    0 == quantile or isequal ( quantile + 1 , 1 ) or iszero ( quantile ) : return h1.xmin()
     elif  1 == quantile or isequal ( quantile     , 1 )                        : return h1.xmax() 
-    
-    hh = h1 if h1.is_density() else h1.density()
+
+    if density and not h1.is_density () : hh = h1.density()
+    else                                : hh = h1 
 
     assert hh.is_density() , "Histogram cannot be converted to density!"
     
@@ -7586,7 +7586,7 @@ def h1_quantile ( h1 , quantile , **kwargs ):
 #  q = histo.quantils ( 4 ) ## get quartiles  
 #  @endcode
 #  @attention actual quantiles are etimated for density distribution
-def h1_quantiles ( h1 , quantiles , **kwargs ):
+def h1_quantiles ( h1 , quantiles , * , density = True , **kwargs ):
     """ Get the estimate for quantiles for the hitogram
     
     >>> histo = ...
@@ -7598,13 +7598,12 @@ def h1_quantiles ( h1 , quantiles , **kwargs ):
     
     ## get the estimator
     q = Quantiles ( quantiles , h1.xmin() , h1.xmax() )
-         
-    hh = h1 if h1.is_density() else h1.density()
-    assert hh.is_density() , "Histogram cannot be converted to density!"
+    
+    if density and not h1.is_density () : hh = h1.density()
+    else                                : hh = h1
     
     ## use the estimator 
     return q ( hh )
-   
    
 for t in ( ROOT.TH1F , 
            ROOT.TH1D ) :

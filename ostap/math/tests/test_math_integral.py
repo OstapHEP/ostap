@@ -67,10 +67,10 @@ def test_integral ():
     from math import sin, cos , exp, log, pi, e  
 
     funcs = [
-        ( sin , 0      , pi , 2   ) ,
-        ( cos , 0      , pi , 0   ) ,
-        ( exp , 0      , 1  , e-1 ) ,
-        ( log , 1.e-8  , 1  , -1  )
+        ( sin , 0       , pi , 2   ) ,
+        ( cos , 0       , pi , 0   ) ,
+        ( exp , 0       , 1  , e-1 ) ,
+        ( log , 1.e-13  , 1  , -1  )
         ]
 
     scale = 1.e+12    
@@ -167,7 +167,7 @@ def test_integral_3D ():
         ]
     
     scale = 1.e+12    
-    rows  = [  ( 'Function' , 'GM' , 'I3' , 'SP'   , \
+    rows  = [  ( 'Function' , 'GM3' , 'I3' , 'SP'   , \
                  'd(GM) [%.0e]' % ( 1.0 / scale )  , \
                  'd(I3) [%.0e]' % ( 1.0 / scale )  , 'r(GM)' , 'r(I3)' ) ]
     
@@ -179,7 +179,8 @@ def test_integral_3D ():
         vv    = entry[-1]
 
         row = '%s(%+.1f,%+.1f.%+.1f.%+.1f,%+.1f,%+.1f)' % ( entry[0] , entry[2] , entry[3] , entry[4] , entry [5] , entry[6] , entry[7] ) , \
-              '%+.5f'  % v1                             , '%+.5f'  % v2                             , \
+              '%+.5f'  % v1                             , \
+              '%+.5f'  % v2                             , \
               '%+.5f'  % vq                             , \
               '%+.5f'  % ( ( v1 - vv   ) * scale )      , '%+.5f'  % ( ( v2 - vv ) * scale        ) , \
               '%+5.3f' % ( ( v1 - vv   ) / v1.error() ) , '%+3.3f' % ( ( v2 - vv ) / v2.error() )
@@ -541,11 +542,25 @@ def test_integrators_3D ():
                  'd(GM) [%.0e]' % ( 1.0 / scale )  , \
                  'd(I) [%.0e]'  % ( 1.0 / scale )  , 'r(GM)' , 'r(I)' ) ]
 
-    N = 20
+    N = 10
 
     results = []
-    
+
+    conf = { "epsabs" : 1.e-6 , "epsrel" : 1.e-6 } 
     I = Ostap.Math.Integrator()
+    I.set_precision_qag     ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_qagi    ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_qagil   ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_qagiu   ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_qagp    ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_qawc    ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_cpv     ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_cpvi    ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_kk      ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_cquad   ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_romberg ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_cube2   ( conf['epsabs'] , conf ['epsrel'] )
+    I.set_precision_cube3   ( conf['epsabs'] , conf ['epsrel'] )
     
     for entry in funcs :
 
@@ -556,13 +571,13 @@ def test_integrators_3D ():
         with timing ( 'GenzMalik3' ) as td :
             cnt  = SE() 
             for i in progress_bar ( range  ( N ) ) :
-                cnt +=  abs ( genzmalik3 ( *entry[1:8] , err = True ) - vv ) * scale                
+                cnt +=  abs ( genzmalik3 ( *entry[1:8] , err = True , **conf ) - vv ) * scale                
         results.append (  ( name , 'GenzMalik3' , cnt , td.delta ) ) 
 
         with timing ( 'Integral' ) as td :
             cnt  = SE() 
             for i in progress_bar ( range  ( N ) ) :
-                cnt +=  abs ( integral3 ( *entry[1:8] , err = True ) - vv ) * scale                
+                cnt +=  abs ( integral3 ( *entry[1:8] , err = True , **conf ) - vv ) * scale                
         results.append (  ( name , 'Integral3' , cnt , td.delta ) ) 
 
         with timing ( 'Cubature3' ) as td :

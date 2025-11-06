@@ -62,17 +62,17 @@ __all__     = (
     #
     "IntegralCache"   , ## (1D) numerical integration (as object, using scipy when/if possible)
     #
-    'complex_integral'         , ## integrate complex function over the contour in complex plance 
-    'complex_line_integral'    , ## integrate complex function over the line    in complex plance 
-    'complex_circle_integral'  , ## integrate complex function over the circle arc in complex plance
-    'complex_polygon_integral' , ## integrate complex function over the closed polygon in complex plance
+    'complex_integral'         , ## integrate complex function over the contour in complex plane 
+    'complex_line_integral'    , ## integrate complex function over the line    in complex plane 
+    'complex_circle_integral'  , ## integrate complex function over the circle arc in complex plane
+    'complex_polygon_integral' , ## integrate complex function over the closed polygon in complex plane
     ##
     ) 
 # =============================================================================
 from   ostap.core.ostap_types import num_types 
 from   ostap.math.ve          import VE
-from   ostap.math.base        import isequal, iszero, isfinite 
-from   ostap.utils.basic      import items_loop, memoize 
+from   ostap.math.base        import isequal, iszero, isfinite, Ostap  
+from   ostap.utils.basic      import items_loop, memoize, typename  
 from   sortedcontainers       import SortedKeyList  
 import ROOT, math, array, scipy  
 # =============================================================================
@@ -82,6 +82,182 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.integral' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
+eps_abs  = 1.49e-8
+eps_rel  = 1.49e-8
+eps_abs2 = eps_abs
+eps_rel2 = eps_rel
+eps_abs3 = eps_abs2 
+eps_rel3 = eps_rel2
+# =============================================================================
+## The basic Romberg' integration with Richardson's extrapolation
+def romberg_rule  ( fun              ,
+                    xmin             ,
+                    xmax             , * ,
+                    epsabs = eps_abs ,
+                    epsrel = eps_rel ,
+                    nmax   = 10      ) :
+    """ The basic Romberg' integration with Richardson's extrapolation
+    """
+    assert callable    ( fun ) , "Function  must be callable!"
+    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % xmin 
+    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % xmax  
+    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
+    
+    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
+    
+    nmax = min ( max ( nmax , 2 ) , 20 )
+    
+    rp = nmax * [ 0.0 ]
+    rc = nmax * [ 0.0 ]
+    
+    # starting value for integration step: full interval 
+    h  = xmax - xmin 
+
+    # here we have R ( 0 , 0 ) 
+    rc [ 0 ] = 0.5 * h * ( fun ( xmin ) + fun ( xmax ) )
+
+    rmax = abs ( rc [ 0 ] ) 
+    for n in range ( 1 , nmax ) :
+
+        i2 = 2 ** n 
+        
+        rp , rc   = rc , rp  # swap rows
+        
+        h  *= 0.5            # decrement the step 
+        
+        # use simple trapezoid rule to calculate R(n,0) 
+        rr = 0.0
+        for k in range ( 1 , i2 , 2 ) : rr += fun ( xmin + h * k )
+        
+        # here we have R ( n , 0 ) 
+        rc [ 0 ] = 0.5 * rp [ 0 ] + h * rr
+        
+        # calculate R ( n , m ) using Richardson's extrapolation
+        p4 = 1 
+        for m in range ( 1 , n + 1 ) :
+            p4   *= 4 
+            # here we have R(n,m)
+            rc [ m ] = rc [ m - 1 ] + ( rc [ m - 1 ] - rp [ m - 1 ] ) / ( p4 - 1 )
+            
+
+        result      = rc [ n     ] ## the last in the row 
+        penultimate = rc [ n - 1 ] ## penultimate in the row  
+        last        = rp [ n - 1 ] ## the last element in the previos row 
+            
+        # check their absolute and relative difference 
+        error  = max ( abs ( result - penultimate ) , abs ( result - last ) )
+
+        rmax   = max ( rmax ,
+                       abs ( result      ) ,
+                       abs ( penultimate ) ,
+                       abs ( last        ) ,
+                       abs ( rc [ 0 ]    ) ,
+                       abs ( rp [ 0 ]    ) )
+        
+        if 3 < n and error <= 0.5 * max ( epsabs , rmax  * epsrel ) : break 
+
+    ##  return 
+    return result , error 
+    
+
+# =============================================================================
+## Ovesimplified adaptive integration using <code>rule</code>
+#  - <code>rule</code> is used to get an esimate for integral and error
+#  - if not precision the interval wth largest ncertaity is bisected and
+#    the rule reapplied to subinterval  
+def adaptive_integral ( rule                ,
+                        fun                 ,
+                        xmin                ,
+                        xmax                , * ,                
+                        err      = False    , 
+                        epsabs   = eps_abs  ,
+                        epsrel   = eps_rel  ,
+                        args     = ()       , # additional positional arguments for the function calls 
+                        kwargs   = {}       , # additional keywords   arguments for the function calls
+                        nmax     = 20       , # steps in Richardson's extrapolation
+                        maxdepth = 1000     , # the maxmal depth
+                        rconf    = {}       , # configuratio of tje rule
+                        **other             ) : 
+    """ Ovesimplified adaptive integration using the specified `rule`
+    - `rule` is used to get an esimate for integral and the error
+    - if not precision the interval wth largest ncertaity is bisected and
+    the rule is reapplied to subinterval
+    """
+    ##
+    if other :
+        logger.warning ( "Adaptive[%s]: ignored parameters: %s" % ( typename ( rule ) ,
+                                                                    list ( other .keys() ) ) )
+    
+    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % xmin 
+    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % xmax  
+    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
+    assert isinstance  ( maxdepth , int       ) and 5 <  maxdepth     , "Invalid 'maxdepth'!"
+    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
+    
+    # the same edges ? 
+    if isequal ( xmin , xmax ) : return VE ( 0 , 0 ) if err else 0.0
+    
+    # we'll split regions by factor of 2
+    # For nested rules oen can get a large gain from memoization 
+    
+    func = memoize ( lambda x : float ( fun ( x , *args , **kwargs ) ) )
+    
+    ## (1) just one step: apply rule to whole interval 
+    result , error = rule ( func , xmin , xmax , epsabs = epsabs , epsrel = epsrel , *rconf )
+
+    ## (2) Already good ?
+    if error <= max ( epsabs , abs ( result ) * epsrel ) :
+        return VE ( result , error * error ) if err else result
+    
+    ## (3) start the adaptive machinery
+    
+    max_error = error
+    max_entry = xmin , xmax , 1
+
+    ## store of integration intervals 
+    results = { max_entry : ( result , error ) }
+    
+    while len ( results ) < maxdepth :
+
+        ## (1) remove the interval with the largest uncertainty from the store 
+        del results [ max_entry ]
+
+        ## (2) split it into two subintervals 
+        a1 , b1 , l1 = max_entry
+        c2 = 0.5 * ( a1 + b1 )
+
+        ## (3) insert new subintervals into the store 
+        new_epsabs  = max ( epsabs / 2 ** l1 , eps_abs ) 
+        results [ ( a1 , c2 , l1 + 1 ) ] = rule ( func , a1 , c2 , epsabs = new_epsabs , epsrel = epsrel , **rconf )
+        results [ ( c2 , b1 , l1 + 1 ) ] = rule ( func , c2 , b1 , epsabs = new_epsabs , epsrel = epsrel , **rconf )
+  
+        ## (4) get the integral&uncertainty and  find new interval with the largest uncertainty
+
+        result , error = 0 , 0
+        max_error = None
+        max_entry = None 
+        for key , entry in  results.items() :
+            r , e   = entry
+            result +=       r
+            error  += abs ( e ) 
+            if max_error is None or max_error < e :
+                max_error = e
+                max_entry = key
+
+        if error <= max ( epsabs , abs ( result ) * epsrel ) : break
+    
+    else :
+        # =====================================================================
+        logger.warning ( "Adaptive[%s]: maximal split is reached: %d " %  ( typename ( rule ) , len( results ) ) ) 
+
+    if error <= max ( epsabs , abs ( result ) * epsrel ) < error :
+            logger.warning ( "Adaptive[%s]: requested precision is not achieved: %.3g" % ( typename ( rule ) , error ) )
+            
+    return VE ( result , error * error ) if err else result  
+
+# ==============================================================================
 ## Straw-man replacement of scipy.integrate.quad when it is not available.
 #  Actually it is a primitive form of Romberg's adaptive integration
 #  @see https://en.wikipedia.org/wiki/Romberg's_method
@@ -96,8 +272,8 @@ def romberg ( fun                 ,
               xmin                ,
               xmax                , * , 
               err      = False    , 
-              epsabs   = 1.49e-8  ,
-              epsrel   = 1.49e-8  ,
+              epsabs   = eps_abs  ,
+              epsrel   = eps_rel  ,
               args     = ()       , # additional positional arguments for functionm call 
               kwargs   = {}       , # additional keywords   arguments for functionm call 
               nmax     = 20       , # steps in Richardson's extrapolation
@@ -113,143 +289,24 @@ def romberg ( fun                 ,
     >>> func = lambda x : x*x 
     >>> v    = romberg ( func , 0 , 1 ) 
     """
-    if other : logger.warning ( "Romberg: ignored parameters: %s" % list ( other .keys() ) )
-
-    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % a 
-    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % b     
-    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
-    assert isinstance  ( maxdepth , int       ) and 5 <  maxdepth     , "Invalid 'maxdepth'!"
-    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
-    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
-
-    ea = abs ( float ( epsabs ) ) * 10 
-    er = abs ( float ( epsrel ) ) * 10 
-
-    nmax = min ( max ( nmax , 2 ) , 24 )
-    
-    # the same edges 
-    if isequal ( xmin , xmax )  :
-        return VE ( 0 , 0 ) if err else 0.0
-
-    # =========================================================================
-    ## The basic Romberg' integration with Richardson's extrapolation
-    def _romberg_ ( f , a , b , ea , er , nmax ) :
-        """ The basic Romberg' integration with Richardson's extrapolation
-        """
-
-        nmax = min ( max ( nmax , 2 ) , 24 )
-        
-        rp = nmax * [ 0.0 ]
-        rc = nmax * [ 0.0 ]
-
-        # starting value for integration step: full interval 
-        h     =             (  b   -     a   )
-
-        # here we have R(0,0) 
-        rc [ 0 ] = 0.5 * h * ( f( b ) + f ( a ) )
-        
-        i2    = 1
-        nf    = 2  # number of function calls
-        for n in range ( 1 , nmax ) :
-            
-            nf         += i2     # count number of function calls 
-            rp , rc   = rc , rp  # swap rows
-
-            
-            h  *= 0.5            # decrement the step 
-
-            # use simple trapezoid rule to calculate R(n,0) 
-            rr      = 0.0
-            i2     *= 2 
-            for k in range ( 1 , i2 , 2 ) : rr += f ( a + h * k )
-                
-            # here we have R(n,0) 
-            rc [ 0 ] = 0.5 * rp [ 0 ] + h * rr
-            
-            # calculate R ( n , m ) using Richardson's extrapolation
-            p4 = 1 
-            for m in range ( 1 , n + 1 ) :
-                p4   *= 4 
-                # here we have R(n,m)
-                rc [ m ] = rc [ m -1 ] + ( rc [ m-1 ] - rp [ m-1] ) / ( p4 - 1 )
-
-            # inspect last two elements in the row     
-            e   = rc [ n     ]
-            p   = rc [ n - 1 ]
-            l   = rp [ n - 1 ] ## the last element in pre
-            
-            # check their absolute and relative difference 
-            d  = max ( abs ( e - p ) , abs ( e - l ) ) 
-            ae = max ( abs ( e ) , abs ( p ) , abs ( l ) , abs ( rc [ 0 ] ) , abs ( rp [ 0 ] ) )
-            
-            if 3 < n and d <= 0.5 * max ( ea , ae * er ) :
-                return e , d 
-            
-        e  = rc [ -1 ]
-        p  = rc [ -2 ]
-        l  = rp [ -2 ]
-        
-        return e , max ( abs ( e - p ) , abs ( e - l ) )
-
-    ## we'll split regions by factor of 2
-    # therefore  memoization helps a lot! 
-    func = memoize ( lambda x : float ( fun ( x , *args , **kwargs ) ) )
-
-    ## just one step
-    result , error = _romberg_ ( func , xmin , xmax , ea , er , nmax  )
-    
-    a , b = xmin , xmax 
-
-    max_error = error
-    max_entry = a , b , 1
-    results   = { max_entry :  ( result, error ) }
-
-    while  len ( results ) < maxdepth : 
-
-        if error <= ea and abs ( result * error ) <= er : break 
-
-        del results [ max_entry ]
-        
-        ## split max-entry
-        
-        a1, b1, l1 = max_entry
-        c2  = 0.5 * ( a1 + b1 )
-        nea = max ( ea / 2 ** l1 , 1.48e-8 ) 
-        results [ ( a1 , c2 , l1 + 1 ) ] = _romberg_ ( func , a1 , c2 , nea , er , nmax  )
-        results [ ( c2 , b1 , l1 + 1 ) ] = _romberg_ ( func , c2 , b1 , nea , er , nmax  )
-
-        result , error = 0 , 0
-        max_error = None
-        max_entry = None 
-        for key , entry in  results.items() :
-            r , e   = entry
-            result +=       r
-            error  += abs ( e ) 
-            if max_error is None or max_error < e :
-                max_error = e
-                max_entry = key
-
-        if error <= ea and abs ( result * error ) <= er : break 
-        
-    else :
-        # =====================================================================
-        logger.warning ( "Romberg: maximal split is reached: %d " % len( results ) )
-
-        
-    if error <= ea  and abs ( result * error ) <= er :        
-        return VE ( result , error * error ) if err else result  
-    
-    logger.warning ( "Robmerg: reqwested precision is not achieved: %.3g" % error )
-    return VE ( result , error * error ) if err else result  
+    return adaptive_integral ( romberg_rule        ,
+                               fun                 ,
+                               xmin     , xmax     ,
+                               err      = err      ,
+                               epsabs   = epsabs   ,
+                               epsrel   = epsrel   ,
+                               args     = args     ,
+                               kwargs   = kwargs   ,
+                               maxdepth = maxdepth , **other ) 
 
 
 # =============================================================================
 ## Clenshaw-Curtis quadratures 
 # =============================================================================
 ## Calculate abscissas and weights for
-#  the N-th order Clenshaw-Curtis quadratire (N+1 points)
+#  the N-th order Clenshaw-Curtis quadrature (N+1 points)
 @memoize 
-def clenshaw_curtis_rule ( N ) :
+def clenshaw_curtis_weights ( N ) :
     """ Calculate abscissas and weights for
     the N-th order Clenshaw-Curtis quadrature (N+1 points)
     """
@@ -268,7 +325,6 @@ def clenshaw_curtis_rule ( N ) :
     
     x = array.array ( 'd' , Np * [ 0 ] ) 
     w = array.array ( 'd' , Np * [ 0 ] )
-
 
     J , r = divmod ( N , 2 )
     N2    = J + r 
@@ -312,7 +368,7 @@ def clenshaw_curtis_rule ( N ) :
         w [ i ] = ww
 
     w [ 0 ] = w [ -1 ] = 1.0 / ( N * N + r - 1.0 )
-    
+
     return x , w
 
 # =============================================================================
@@ -324,7 +380,7 @@ def clenshaw_curtis_step ( f , xmin , xmax , N ) :
     half    = 0.5 * ( xmax - xmin )
     
     ## get abscissas and weights 
-    xx , ww = clenshaw_curtis_rule ( N )
+    xx , ww = clenshaw_curtis_weights ( N )
     
     result  = 0.0
     for abscissa , weight in zip ( xx , ww ) :
@@ -334,126 +390,81 @@ def clenshaw_curtis_step ( f , xmin , xmax , N ) :
         
     return result
 
+
+# =========================================================================
+## the  actual quadrature  
+def clenshaw_curtis_rule  ( fun              ,
+                            xmin             ,
+                            xmax             , * ,
+                            epsabs = eps_abs ,
+                            epsrel = eps_rel ,
+                            nmax   = 10      ) :
+    
+    """ The basic Clenshaw-Curtis' integration
+    """
+    assert callable    ( fun ) , "Function  must be callable!"
+    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % xmin 
+    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % xmax  
+    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
+
+    nmax = min ( max ( nmax , 4 ) , 20 )
+
+    rmax = 0
+    
+    n      = 1 
+    result = clenshaw_curtis_step ( fun , xmax , xmin , n )
+    
+    rmax   = abs ( result )
+    
+    for i in range ( 1 , nmax ) :
+        
+        n *= 2
+        
+        result2 = clenshaw_curtis_step ( fun , xmin , xmax , n )
+
+        error   = abs ( result2 - result ) 
+        result  = result2 
+        rmax    = max ( rmax , abs ( result  ) )
+        
+        if error <= 0.5 * max ( epsabs , rmax * epsrel ) : break
+
+    return result, error  
+
 # =============================================================================
 ## Clenshaw-Curtis adaptive quadrature
 #  @code
 #  func = lambda x : x*x 
 #  v    = clenshaw_curtis ( func , 0 , 1 ) 
 #  @endcode
-#  Since cLenshaw-Curtis is a nested quadratire, for
-#  complicated functions one can get significant gain with function cache
-#  @code
-#  func = ....
-#  from ostap.utils.utils import memoize 
-#  cache_func = memoize ( func )
-#  v    = clenshaw_curtis ( func , 0 , 1 ) 
-#  @endcode
 def clenshaw_curtis ( fun                 ,
                       xmin                ,
                       xmax                , * , 
                       err      = False    , 
-                      epsabs   = 1.49e-8  ,
-                      epsrel   = 1.49e-8  ,
+                      epsabs   = eps_abs  ,
+                      epsrel   = eps_rel  ,
                       args     = ()       ,
                       kwargs   = {}       , 
                       nmax     = 30       , 
                       maxdepth = 1000     , 
                       **other             ) :
-    """Clenshaw-Curtis adaptive quadrature
+    """ Clenshaw-Curtis adaptive quadrature
     >>> func = lambda x : x*x 
     >>> v    = clenshaw_curtis ( func , 0 , 1 ) 
-    - Since cLenshaw-Curtis is a nested quadratire, for
-    complicated functions oene can get significant gain with function cache
     >>> func = ....
     >>> from ostap.utils.utils import memoize 
     >>> cache_func = memoize ( func )
     >>> v = clenshaw_curtis ( cache_func , 0 , 1 ) 
     """
-    if other : logger.warning ( "Clenshaw-Curtis: ignored parameters: %s" % list ( other.keys() ) )
-
-    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % a 
-    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % b     
-    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
-    assert isinstance  ( maxdepth , int       ) and 5 <  maxdepth     , "Invalid 'maxdepth'!"
-    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
-    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
-    
-    # the same edges 
-    if isequal ( xmin , xmax )  :
-        return VE ( 0 , 0 ) if err else 0.0
-    
-    ea = abs ( float ( epsabs ) ) * 10 
-    er = abs ( float ( epsrel ) ) * 10 
-
-    # =========================================================================
-    ## the  actual quadrature  
-    def _clenshaw_curtis_ ( f , a  , b , ea , er , n0 ) :
-        
-        n1 = n0 
-        n2 = 2 * n1 if n1 else n1 + 2 
-        
-        ## 1st estimate for the integral 
-        r1 = clenshaw_curtis_step ( f , a , b , n1 )
-        
-        ## 2nd estimate for the integral 
-        r2 = clenshaw_curtis_step ( f , a , b , n2 )
-
-        return r2, abs ( r2 - r1 )  
-
-    
-    ## we'll split regions by factor of 2
-    # therefore  memoization helps a lot! 
-    func = memoize ( lambda x : float ( fun ( x , *args , **kwargs ) ) )
-
-    ## get the actual order 
-    n0 , _ = divmod ( nmax , 2 )
-    
-    ## just one step
-    result , error = _clenshaw_curtis_ ( func , xmin , xmax , ea , er , n0 )
-
-    a , b = xmin , xmax
-    
-    max_error = error
-    max_entry = a , b , 1
-    results   = { max_entry :  ( result, error ) }
-    
-    while  len ( results ) < maxdepth : 
-
-        if error <= ea and abs ( result * error ) <= er : break 
-
-        del results [ max_entry ]
-        
-        ## split max-entry
-        
-        a1, b1, l1 = max_entry
-        c2  = 0.5 * ( a1 + b1 )
-        nea = max ( ea / 2 ** l1 , 1.48e-8 ) 
-        results [ ( a1 , c2 , l1 + 1 ) ] = _clenshaw_curtis_ ( func , a1 , c2 , nea , er , nmax  )
-        results [ ( c2 , b1 , l1 + 1 ) ] = _clenshaw_curtis_ ( func , c2 , b1 , nea , er , nmax  )
-
-        result , error = 0 , 0
-        max_error = None
-        max_entry = None 
-        for key , entry in  results.items() :
-            r , e   = entry
-            result +=       r
-            error  += abs ( e ) 
-            if max_error is None or max_error < e :
-                max_error = e
-                max_entry = key
-
-        if error <= ea and abs ( result * error ) <= er : break 
-        
-    else : # ==================================================================
-        # =====================================================================
-        logger.warning ( "ClenshawCurtis: maximal split is reached: %d " % len( results ) )
-        
-    ## OK ? 
-    if error <= ea  and abs ( result * error ) <= er :        
-        return VE ( result , error * error ) if err else result  
-    
-    logger.warning ( "ClenshawCurtis: requested precision is not achieved: %.3g" % error )
-    return VE ( result , error * error ) if err else result  
+    return adaptive_integral ( clenshaw_curtis_rule ,
+                               fun                  ,
+                               xmin     , xmax      ,
+                               err      = err       ,
+                               epsabs   = epsabs    ,
+                               epsrel   = epsrel    , 
+                               args     = args      ,
+                               kwargs   = kwargs    ,
+                               maxdepth = maxdepth  , **other )
 
 # =============================================================================
 ## 1D integration 
@@ -467,12 +478,14 @@ from scipy.integrate import quad                as scipy_quad
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
-def integral_quad ( fun             ,
-                    xmin            ,
-                    xmax            , * , 
-                    args   = ()     ,
-                    kwargs = {}     ,
-                    err    = False  , **other         ) :
+def integral_quad ( fun              ,
+                    xmin             ,
+                    xmax             , * , 
+                    args   = ()      ,
+                    kwargs = {}      ,
+                    err    = False   ,
+                    epsabs = eps_abs ,
+                    epsrel = eps_rel , **other ) :
     """ Calculate the integral for the 1D-function using scipy
         
     >>> func = lambda x : x * x 
@@ -484,7 +497,12 @@ def integral_quad ( fun             ,
     
     other [ 'limit' ] = other.pop ( 'limit'  , 200 )              
        
-    result = scipy_quad ( func , xmin , xmax , args = args , **other )
+    result = scipy_quad ( func             ,
+                          xmin             ,
+                          xmax             ,
+                          args   = args    ,
+                          epsabs = eps_abs , 
+                          epsrel = eps_rel , **other )
 
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
@@ -832,12 +850,12 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
 #  print 'Integral: %s ' % r 
 #  @endcode 
 def genzmalik2 ( func   ,
-                 xmin   , xmax   ,
-                 ymin   , ymax   , * , 
-                 args   = ()     ,
-                 err    = False  ,
-                 epsabs = 1.5e-7 ,
-                 epsrel = 1.5e-7 ) :
+                 xmin   , xmax     ,
+                 ymin   , ymax     , * , 
+                 args   = ()       ,
+                 err    = False    ,
+                 epsabs = eps_abs2 ,
+                 epsrel = eps_abs2 ) :
     """ Adaptive numerical 2D integration using Genz&Malik's basic rule
     
     A.C. Genz, A.A. Malik, ``Remarks on algorithm 006: An adaptive algorithm for
@@ -882,13 +900,13 @@ def genzmalik2 ( func   ,
 #  print 'Integral: %s ' % r 
 #  @endcode 
 def genzmalik3 ( func   ,
-                 xmin   , xmax   ,
-                 ymin   , ymax   ,
-                 zmin   , zmax   , * , 
-                 args   = ()     ,
-                 err    = False  ,
-                 epsabs = 1.5e-7 ,
-                 epsrel = 1.5e-7 ) :
+                 xmin   , xmax     ,
+                 ymin   , ymax     ,
+                 zmin   , zmax     , * , 
+                 args   = ()       ,
+                 err    = False    ,
+                 epsabs = eps_abs3 ,
+                 epsrel = eps_rel3 ) :
     """ Adaptive numerical 3D integration using Genz&Malik's basic rule
     
     A.C. Genz, A.A. Malik, ``Remarks on algorithm 006: An adaptive algorithm for
@@ -931,11 +949,13 @@ from scipy.integrate import dblquad             as scipy_dblquad
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 def integral_dblquad ( fun  ,
-                       xmin , xmax    ,
-                       ymin , ymax    , * , 
-                       args   = ()    ,
-                       kwargs = {}    , 
-                       err    = False , **other ) :
+                       xmin , xmax       ,
+                       ymin , ymax       , * , 
+                       args   = ()       ,
+                       kwargs = {}       , 
+                       err    = False    ,
+                       epsabs = eps_abs2 ,
+                       epsrel = eps_rel2 , **other ) :
     """ Calculate the integral for the 2D-function using scipy
         
     >>> func = lambda x,y : x*x+y*y 
@@ -949,7 +969,9 @@ def integral_dblquad ( fun  ,
                              ymin , ymax     ,
                              lambda x : xmin ,
                              lambda x : xmax ,
-                             args = args     , **other )
+                             args   = args   ,
+                             epsabs = epsabs ,
+                             epsrel = epsrel ,  **other )
     
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
@@ -966,7 +988,9 @@ def integral2 ( fun    ,
                 ymin   , ymax   , * , 
                 args   = ()     ,
                 kwargs = {}     ,     
-                err    = False  , **other ) :
+                err    = False  ,
+                epsabs = eps_abs2 ,
+                epsrel = eps_rel2 , **other ) :
     """ Calculate the integral for the 2D-function using scipy
         
     >>> func = lambda x,y : x*x+y*y 
@@ -975,7 +999,9 @@ def integral2 ( fun    ,
     integrator = Integral2 ( fun             ,
                              args   = args   ,
                              kwargs = kwargs ,
-                             err    = err    , **other )
+                             err    = err    ,
+                             epsabs = epsabs ,
+                             epsrel = epsrel ,  **other )
     ## 
     return integrator.integral ( xmin , xmax ,
                                  ymin , ymax )
@@ -993,12 +1019,14 @@ from scipy.integrate import tplquad             as scipy_tplquad
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 def integral_tplquad ( fun  ,
-                       xmin , xmax    ,
-                       ymin , ymax    , 
-                       zmin , zmax    , * , 
-                       args   = ()    ,
-                       kwargs = {}    , 
-                       err    = False , **other ) :
+                       xmin , xmax       ,
+                       ymin , ymax       , 
+                       zmin , zmax       , * , 
+                       args   = ()       ,
+                       kwargs = {}       , 
+                       err    = False    ,
+                       epsabs = eps_abs3 ,
+                       epsrel = eps_rel3 , **other ) :
     """ Calculate the integral for the 3D-function using scipy
         
     >>> func = lambda x,y : x*x+y*y 
@@ -1014,7 +1042,9 @@ def integral_tplquad ( fun  ,
                              lambda z   : ymax ,
                              lambda y,z : xmin ,
                              lambda y,z : xmax , 
-                             args = args       , **other )
+                             args   = args     , 
+                             epsabs = epsabs   ,
+                             epsrel = epsrel   ,  **other )
     
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
@@ -1027,12 +1057,14 @@ def integral_tplquad ( fun  ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 def integral3 ( fun    ,
-                xmin   , xmax   ,
-                ymin   , ymax   ,
-                zmin   , zmax   , * , 
-                args   = ()     ,
-                kwargs = {}     , 
-                err    = False  , **other ) :
+                xmin   , xmax     ,
+                ymin   , ymax     ,
+                zmin   , zmax     , * , 
+                args   = ()       ,
+                kwargs = {}       ,  
+                err    = False    , 
+                epsabs = eps_abs3 ,
+                epsrel = eps_rel3 , **other ) :
     """ Calculate the integral for the 3D-function using scipy
         
     >>> func = lambda x,y,z : x*x+y*y+z*z
@@ -1041,7 +1073,9 @@ def integral3 ( fun    ,
     integrator = Integral3 ( fun             ,
                              args   = args   ,
                              kwargs = kwargs ,
-                             err    = err    , **other )
+                             err    = err    ,
+                             epsabs = epsabs ,
+                             epsrel = epsrel ,  **other )
     ##
     return integrator.integral ( xmin , xmax ,
                                  ymin , ymax ,
@@ -1056,7 +1090,12 @@ class IntegralBase(object) :
     """ Helper class to implement numerical integration 
     """
     ## Calculate the integral for the 1D-function
-    def __init__ ( self , integrator , func , args = () , kwargs = {} , err = False , **other ) :
+    def __init__ ( self ,
+                   integrator     ,
+                   func           ,
+                   args   = ()    ,
+                   kwargs = {}    ,
+                   err    = False , **other ) :
         """ Calculate the integral for the 1D-function
         
         >>> func   = ...
