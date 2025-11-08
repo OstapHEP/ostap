@@ -152,6 +152,7 @@ if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
 endif ( )
 
 message ( "----> CMAKE-INSTALL-PREFIX       : " ${CMAKE_INSTALL_PREFIX} ) 
+message ( "----> CMAKE-GENERATOR            : " ${CMAKE_GENERATOR} ) 
 
 add_subdirectory(source)
 add_subdirectory(scripts)

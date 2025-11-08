@@ -162,12 +162,27 @@ else
    return 206 
 fi 
 
+
+make_command=
+make_generator=
 if command -v ninja &> /dev/null
 then
-    echo -e "${prefix1}"' NINJA             : '$(which ninja   )
-    echo -e "${prefix1}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
-else
-     echo -e "${prefix1_error}"' NINJA is not found!'
+    make_command=ninja
+    make_generator="-G Ninja"
+    echo -e "${prefix1}"' NINJA             : '$(which   ninja   )
+    echo -e "${prefix1}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )    
+elif command -v gmake &> /dev/null
+then    
+    make_command=gmake
+    echo -e "${prefix1}"' GMAKE             : '$(which  gmake    )
+    echo -e "${prefix1}"' GMAKE version     : '$(gmake --version | grep -Eo "[0-9]\.[0-9]+" )    
+elif command -v make &> /dev/null
+then    
+    make_command=make
+    echo -e "${prefix1}"' MAKE              : '$(which  make    )
+    echo -e "${prefix1}"' MAKE version      : '$(make --version | grep -Eo "[0-9]\.[0-9]+" )
+else         
+    echo -e "${prefix1_error}"' neither NINJA nor (G)MAKE is found!'
     return 207 
 fi
 
@@ -194,11 +209,11 @@ fi
 # =========================================================================
 ## Clean build  directory (1) 
 # ==========================================================================
-if [[ -f ${OSTAP_BUILD}/build.ninja ]]
+if [[ -f ${OSTAP_BUILD}/build.ninja && "${make_command}" == "ninja" ]]
 then
     ( echo -e "${prefix1}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
-      cd ${OSTAP_BUILD} &&
-      ninja clean )
+	  cd ${OSTAP_BUILD} &&
+	  ${make_command} clean )
     
     sc=$?
     if [[ ${sc} -ne 0 ]]
@@ -208,6 +223,23 @@ then
 	unset OSTAP_BUILD OSTAP_INSTALL		
 	return ${sc}
     fi
+    
+elif [[ -f ${OSTAP_BUILD}/Makefile && "${make_command}" != "ninja" ]]
+then
+    
+    ( echo -e "${prefix1}"' [2/7] Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD} &&
+	  cd ${OSTAP_BUILD} &&
+	  ${make_command} clean )
+    
+    sc=$?
+    if [[ ${sc} -ne 0 ]]
+    then
+	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
+	## 
+	unset OSTAP_BUILD OSTAP_INSTALL		
+	return ${sc}
+    fi
+    
 fi
 
 # =========================================================================
@@ -240,16 +272,16 @@ fi
 # =========================================================================
 ## (FRESH) build 
 # ==========================================================================
-( echo -e "${prefix1}"' [4/7] First  pass of cmake&ninja&install    '${OSTAP_BUILD} && 
-  cd ${OSTAP_BUILD}                                                                 && 
-  cmake ${fresh} ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja   &&
-  ninja                                                                             && 
-  ninja install | grep -v Up-to-date | grep -v Installing )
+( echo -e "${prefix1}"' [4/7] First  pass of cmake&'${make_command}'&install    '${OSTAP_BUILD} && 
+    cd ${OSTAP_BUILD}                                                                           && 
+    cmake ${fresh} ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator}    &&
+    ${make_command} -j$(nproc --all)                                                            && 
+    ${make_command} install | grep -v Up-to-date | grep -v Installing )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefix1_error}"' [4/7] failure: first pass of cmake&ninja&insatll' ${sc} ${OSTAP_BUILD}
+    echo -e "${prefix1_error}"' [4/7] failure: first pass of cmake&'${make_command}'&install' ${sc} ${OSTAP_BUILD}
     ## 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
@@ -270,19 +302,20 @@ fi
 # =========================================================================
 ## Again ...
 # ==========================================================================
-( echo -e "${prefix1}"' [5/7] Second pass of cmake&ninja&install'    ${OSTAP_BUILD} &&
-  cd ${OSTAP_BUILD}                                                                 && 
-  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja    && 
-  ninja                                                                             && 
-  ninja install | grep -v Up-to-date | grep -v Installing )
+( echo -e "${prefix1}"' [5/7] Second pass of cmake&'${make_command}'&install'    ${OSTAP_BUILD} &&
+      cd ${OSTAP_BUILD}                                                                         && 
+      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator}   && 
+      ${make_command} -j$(nproc --all)                                                          && 
+      ${make_command} install | grep -v Up-to-date | grep -v Installing )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefix1_error}"' [4/7] failure: second pass of cmake&ninja&insatll ' ${sc} ${OSTAP_BUILD} 
+    echo -e "${prefix1_error}"' [4/7] failure: second pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
 fi
+
 
 # =========================================================================
 ## setup script must be here
@@ -301,32 +334,36 @@ fi
 # =========================================================================
 ## Again ...
 # ==========================================================================
-( echo -e "${prefix1}"' [6/7] Third  pass of cmake&ninja&install    '${OSTAP_BUILD} &&
-  cd ${OSTAP_BUILD}                                                                 && 
-  cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja    && 
-  ninja                                                                             && 
-  ninja install | grep -v Up-to-date | grep -v Installing )
+( echo -e "${prefix1}"' [6/7] Third  pass of cmake&'${make_command}'&install    '${OSTAP_BUILD} &&
+      cd ${OSTAP_BUILD}                                                                         && 
+      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_generator}   && 
+      ${make_command} -j$(nproc --all)                                                          && 
+      ${make_command} install | grep -v Up-to-date | grep -v Installing )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefix1_error}"' [6/7] failure: third pass of cmake&ninja&insatll ' ${sc} ${OSTAP_BUILD} 
+    echo -e "${prefix1_error}"' [6/7] failure: third pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
 fi
 
-## ( echo -e "${prefix1}"' [7/7] Last   pass of cmake&ninja&package'  ;
-##   cd ${OSTAP_BUILD} ;
-##   cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} -G Ninja ; ninja ; ninja package  )
+## ( echo -e "${prefix1}"' [7/7] Last   pass of cmake&'${make_command}'&package'                  && 
+##      cd ${OSTAP_BUILD}                                                                        && 
+##      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_gtenerator} &&
+##      ${make_command} -j                                                                       && 
+##      ${make_command} -j package )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefix1_error}"' [7/7] failure: last pass of cmake&ninja&insatll ' ${sc} ${OSTAP_BUILD} 
+    echo -e "${prefix1_error}"' [7/7] failure: last pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
 fi
 
+OSTAP_BUILDER=${make_command}
+echo -e "${prefix1}"' PROJECT BUILDER : '${OSTAP_BUILDER}
 echo -e "${prefix1}"' ROOTSYS         : '${ROOTSYS}
 echo -e "${prefix1}"' OSTAP_DIR       : '${OSTAP_DIR}
 echo -e "${prefix1}"' OSTAP_SOURCE    : '${OSTAP_SOURCE}
@@ -346,6 +383,7 @@ then
     tree -d -L 3 --charset UTF-8 ${OSTAP_INSTALL}
 fi 
 
+export OSTAP_BUILDER
 export OSTAP_SOURCE
 export OSTAP_BUILD
 export OSTAP_INSTALL
