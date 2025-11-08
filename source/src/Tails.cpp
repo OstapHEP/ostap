@@ -102,7 +102,7 @@ double Ostap::Math::LeftTail::evaluate
   const double F      ,
   const double dFoF   ) const
 {
-  if ( x0 < x ) { return 0 ; }
+  if ( x0 < x || !F || s_zero ( F ) ) { return 0 ; }
   //}
   const double delta = x - x0 ;
   //
@@ -132,7 +132,7 @@ double Ostap::Math::LeftTail::integral
   const double dFoF ) const
 {
   //
-  if      ( !F                     ) { return 0 ; }
+  if      ( !F || s_zero ( F )     ) { return 0 ; }
   else if ( s_equal ( low , high ) ) { return 0 ; }
   else if ( high <  low            ) { return - integral ( high , low , x0 , F , dFoF ) ; }
   else if ( x0   <= low            ) { return 0 ; }
@@ -189,7 +189,7 @@ double Ostap::Math::RightTail::evaluate
   const double dFoF   ) const
 
 {
-  if ( x < x0 ) { return 0 ; }
+  if ( x < x0 || !F || s_zero ( F ) ) { return 0 ; }
   //}
   const double delta = x - x0 ;
   //
@@ -219,7 +219,7 @@ double Ostap::Math::RightTail::integral
   const double dFoF ) const
 {
   //
-  if      ( !F                     ) { return 0 ; }
+  if      ( !F || s_zero ( F )     ) { return 0 ; }
   else if ( s_equal ( low , high ) ) { return 0 ; }
   else if ( high <  low            ) { return - integral ( high , low  , x0 , F , dFoF ) ; }
   else if ( high <= x0             ) { return 0 ; }
