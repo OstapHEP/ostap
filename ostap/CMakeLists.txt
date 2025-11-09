@@ -499,7 +499,7 @@ if ( OSTAP_TEST_PYTHON_WARNINGS )
 endif()
 
 if ( OSTAP_TEST_PYWARNINGS )  
-  message ( "----> All tests will be executed with PYWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  ) 
+  message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  ) 
 endif()
 
 # ========================================================================================
@@ -523,20 +523,20 @@ foreach(filename ${tests})
   get_filename_component(tname ${filename} NAME_WE)
   string(CONCAT tname ostap. ${tname})
 
-  string(FIND   ${tname}  parallel HAS_PARALLEL)
+  string(FIND   ${tname}  parallel TEST_PARALLEL)
 
-  if ( NOSE_EXECUTABLE AND HAS_PARALLEL LESS 0 )
+  if ( NOSE_EXECUTABLE AND TEST_PARALLEL LESS 0 )
     add_test (NAME ${tname}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary
       COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=10000 )    
   else   ()
     add_test (NAME ${tname}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary
-      COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
+      COMMAND ${PYTHON_EXECUTABLE} ${filename} )
   endif  ()
   
   if ( OSTAP_TEST_PYWARNINGS )
-    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT PYWARNINGS=${OSTAP_TEST_PYWARNINGS} )
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
   else () 
     set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 )
   endif() 

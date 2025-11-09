@@ -102,7 +102,7 @@ def test_integral ():
               '%+.5f'  % ( ( vc - value ) * scale )      , \
               '%+5.3f' % ( ( vi - value ) / vi.error() ) , \
               '%+3.3f' % ( ( vr - value ) / vr.error() ) , \
-              '%+3.3f' % ( ( vc - value ) / vr.error() )
+              '%+3.3f' % ( ( vc - value ) / vc.error() )
         
         rows.append ( row )
         

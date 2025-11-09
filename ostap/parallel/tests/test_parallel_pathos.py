@@ -236,7 +236,7 @@ def test_pathos_mp_callable2 () :
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
 def test_pathos_pp_function () :
-    """Test parallel processnig with pathos: ParallelPool  
+    """ Test parallel processing with pathos: ParallelPool  
     """
     logger = getLogger("test_pathos_pp_function") 
     if not pathos :
@@ -250,14 +250,15 @@ def test_pathos_pp_function () :
     
     from pathos.pools import ParallelPool as Pool 
 
-    pool = Pool ( ncpus ,
-                  secret='xxOGew', ppservers=[22602]
-                  )
+    ## pool = Pool ( ncpus ,
+    ##               secret='xxOGew', ppservers=[22602]
+    ##               )
+    pool = Pool ( ncpus ) 
     logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
 
     pool.restart ( True ) 
 
-    jobs = pool.uimap ( make_histo,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    jobs = pool.uimap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -279,7 +280,7 @@ def test_pathos_pp_function () :
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
 def test_pathos_pp_method () :
-    """ Test parallel processnig with pathos: ParallelPool  
+    """ Test parallel processing with pathos: ParallelPool  
     """
     logger = getLogger("test_pathos_pp_method ")
     if not pathos :
@@ -321,7 +322,7 @@ def test_pathos_pp_method () :
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
 def test_pathos_pp_callable1 () :
-    """Test parallel processnig with pathos: ParallelPool  
+    """ Test parallel processing with pathos: ParallelPool  
     """
     logger = getLogger("test_pathos_pp_callable1")         
     if not pathos :
@@ -367,7 +368,7 @@ def test_pathos_pp_callable1 () :
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
 def test_pathos_pp_callable2 () :
-    """Test parallel processnig with pathos: ParallelPool  
+    """ Test parallel processing with pathos: ParallelPool  
     """
     logger = getLogger("test_pathos_pp_callable2")         
     if not pathos :
@@ -376,7 +377,6 @@ def test_pathos_pp_callable2 () :
     
     logger.info ('Test job submission with %s' %  pathos ) 
     
-
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
     
@@ -413,14 +413,16 @@ def test_pathos_pp_callable2 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pathos_mp_function  ()
-    test_pathos_mp_method    ()
-    test_pathos_mp_callable1 ()
-    test_pathos_mp_callable2 ()
+    ## test_pathos_mp_function  ()
+    ## test_pathos_mp_method    ()
+    ## test_pathos_mp_callable1 ()
+    ## test_pathos_mp_callable2 ()
     
-    test_pathos_pp_function  ()
-    test_pathos_pp_method    ()
-    test_pathos_pp_callable1 ()
+    ## test_pathos_pp_function  ()
+    
+    ## test_pathos_pp_method    ()    
+    ## test_pathos_pp_callable1 ()
+    
     test_pathos_pp_callable2 ()
 
 

@@ -27,7 +27,7 @@ batch_env ( logger )
 # =============================================================================
 fix_ppsrv ( pp.Server )
     
-## simple    function that created and  fill a histogram 
+## simple    function that creates and fills a histogram 
 def make_histo  ( i , n ) :
     """ Simple    function that creates and  fills a histogram
     """
@@ -178,9 +178,9 @@ def test_pp_callable2 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pp_function  () 
-    test_pp_method    () 
-    test_pp_callable1 () 
+    ## test_pp_function  () 
+    ## test_pp_method    () 
+    ## test_pp_callable1 () 
     test_pp_callable2 () 
     
 # =============================================================================

@@ -35,33 +35,39 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
-    #
-    "integral"        , ## (1D) numerical integration (as function, using scipy when/if possible)
-    "integral2"       , ## (2D) numerical integration (as function, using scipy when/if possible)
-    "integral3"       , ## (3D) numerical integration (as function, using scipy when/if possible)
-    #
-    "Integral"        , ## (1D) numerical integration (as as object, using scipy when/if possible)
-    "Integral2"       , ## (2D) numerical integration (as as object, using scipy when/if possible)
-    "Integral3"       , ## (3D) numerical integration (as as object, using scipy when/if possible)
-    #
-    'Integrate2D_X'   , ## partial integration of 2D-function over x-range  
-    'Integrate2D_Y'   , ## partial integration of 2D-function over y-range
-    #
-    'Integrate3D_X'   , ## partial integration of 3D-function over x-range  
-    'Integrate3D_Y'   , ## partial integration of 3D-function over y-range
-    'Integrate3D_Z'   , ## partial integration of 3D-function over z-range
-    #
-    'Integrate3D_XY'  , ## partial integration of 3D-function over xy-range  
-    'Integrate3D_XZ'  , ## partial integration of 3D-function over xz-range
-    'Integrate3D_YZ'  , ## partial integration of 3D-function over yz-range
-    #
-    'romberg'         , ## (1D) numerical integration using Romberg's method
-    'clenshaw_curtis' , ## (1D) numerical integration using Clenshaw-Curtis adaptive quadrature
-    'genzmalik2'      , ## (2D) numerical integration using Genz&Malik's method
-    'genzmalik3'      , ## (3D) numerical integration using Genz&Malik's method
-    #
-    "IntegralCache"   , ## (1D) numerical integration (as object, using scipy when/if possible)
-    #
+    ##
+    "integral"                 , ## (1D) numerical integration (as function, using scipy when/if possible)
+    "integral2"                , ## (2D) numerical integration (as function, using scipy when/if possible)
+    "integral3"                , ## (3D) numerical integration (as function, using scipy when/if possible)
+    ##
+    "Integral"                 , ## (1D) numerical integration (as as object, using scipy when/if possible)
+    "Integral2"                , ## (2D) numerical integration (as as object, using scipy when/if possible)
+    "Integral3"                , ## (3D) numerical integration (as as object, using scipy when/if possible)
+    ##
+    'Integrate2D_X'            , ## partial integration of 2D-function over x-range  
+    'Integrate2D_Y'            , ## partial integration of 2D-function over y-range
+    ##
+    'Integrate3D_X'            , ## partial integration of 3D-function over x-range  
+    'Integrate3D_Y'            , ## partial integration of 3D-function over y-range
+    'Integrate3D_Z'            , ## partial integration of 3D-function over z-range
+    ##
+    'Integrate3D_XY'           , ## partial integration of 3D-function over xy-range  
+    'Integrate3D_XZ'           , ## partial integration of 3D-function over xz-range
+    'Integrate3D_YZ'           , ## partial integration of 3D-function over yz-range
+    ##
+    'romberg'                  , ## (1D) numerical integration using (adaptive) Romberg's method
+    'clenshaw_curtis'          , ## (1D) numerical integration using (adaptive) Clenshaw-Curtis' quadrature
+    'composite_boole'          , ## (1D) numerical integration using (adaptive) composite Boole  quadrature
+    ##
+    'integral_ostap'           , ## 1D (C++) integrator Ostap::Math::Integrator (GSL quadratures)
+    'integral2_ostap'          , ## 2D (C++) integrator Ostap::Math::Integrator (2D-cubature)
+    'integral3_ostap'          , ## 3D (C++) integrator Ostap::Math::Integrator (3D-cubature)
+    ##
+    'genzmalik2'               , ## (2D) numerical integration using Genz&Malik's method
+    'genzmalik3'               , ## (3D) numerical integration using Genz&Malik's method
+    ##
+    "IntegralCache"            , ## (1D) numerical integration (as object, using scipy when/if possible)
+    ##
     'complex_integral'         , ## integrate complex function over the contour in complex plane 
     'complex_line_integral'    , ## integrate complex function over the line    in complex plane 
     'complex_circle_integral'  , ## integrate complex function over the circle arc in complex plane
@@ -72,7 +78,10 @@ __all__     = (
 from   ostap.core.ostap_types import num_types 
 from   ostap.math.ve          import VE
 from   ostap.math.base        import isequal, iszero, isfinite, Ostap  
-from   ostap.utils.basic      import items_loop, memoize, typename  
+from   ostap.utils.basic      import items_loop, memoize, typename
+from   ostap.math.integrator  import ( integral_ostap  ,
+                                       integral2_ostap , 
+                                       integral3_ostap ) 
 from   sortedcontainers       import SortedKeyList  
 import ROOT, math, array, scipy  
 # =============================================================================
@@ -105,20 +114,21 @@ def romberg_rule  ( fun              ,
     assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
     
     assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
-    
+
+    ## adjust nmax
     nmax = min ( max ( nmax , 2 ) , 20 )
     
-    rp = nmax * [ 0.0 ]
-    rc = nmax * [ 0.0 ]
+    rp = ( nmax + 1 ) * [ 0.0 ]
+    rc = ( nmax + 1 ) * [ 0.0 ]
     
     # starting value for integration step: full interval 
     h  = xmax - xmin 
 
     # here we have R ( 0 , 0 ) 
     rc [ 0 ] = 0.5 * h * ( fun ( xmin ) + fun ( xmax ) )
-
+    
     rmax = abs ( rc [ 0 ] ) 
-    for n in range ( 1 , nmax ) :
+    for n in range ( 1 , nmax + 1 ) :
 
         i2 = 2 ** n 
         
@@ -128,45 +138,45 @@ def romberg_rule  ( fun              ,
         
         # use simple trapezoid rule to calculate R(n,0) 
         rr = 0.0
-        for k in range ( 1 , i2 , 2 ) : rr += fun ( xmin + h * k )
-        
+        for k in range ( 1 , i2 , 2 ) :
+            rr += fun ( xmin + h * k )
+
         # here we have R ( n , 0 ) 
         rc [ 0 ] = 0.5 * rp [ 0 ] + h * rr
         
         # calculate R ( n , m ) using Richardson's extrapolation
-        p4 = 1 
+        pp = 1 
         for m in range ( 1 , n + 1 ) :
-            p4   *= 4 
+            pp *= 2 ** 2  
             # here we have R(n,m)
-            rc [ m ] = rc [ m - 1 ] + ( rc [ m - 1 ] - rp [ m - 1 ] ) / ( p4 - 1 )
-            
-
-        result      = rc [ n     ] ## the last in the row 
-        penultimate = rc [ n - 1 ] ## penultimate in the row  
-        last        = rp [ n - 1 ] ## the last element in the previos row 
-            
-        # check their absolute and relative difference 
-        error  = max ( abs ( result - penultimate ) , abs ( result - last ) )
-
-        rmax   = max ( rmax ,
-                       abs ( result      ) ,
-                       abs ( penultimate ) ,
-                       abs ( last        ) ,
-                       abs ( rc [ 0 ]    ) ,
-                       abs ( rp [ 0 ]    ) )
+            rc [ m ] = rc [ m - 1 ] + ( rc [ m - 1 ] - rp [ m - 1 ] ) / ( pp - 1 )
         
-        if 3 < n and error <= 0.5 * max ( epsabs , rmax  * epsrel ) : break 
+        result      = rc [ n     ] ## the last in the row 
+        penultimate = rc [ n - 1 ] ## penultimate in the row
+        last        = rp [ n - 1 ] ## the last in the previous row
 
-    ##  return 
+        error       = max ( abs ( result - penultimate ) , abs ( result - last ) ) 
+
+        rmax        = max ( rmax ,
+                            abs ( result      ) ,
+                            abs ( penultimate ) ,
+                            abs ( last        ) ,
+                            abs ( rc [ 0 ]    ) ,
+                            abs ( rp [ 0 ]    ) )
+                    
+        # check their absolute and relative difference 
+        if 2 <= n and error <= 0.5 * max ( epsabs , rmax  * epsrel ) : break 
+
+    ##  return
     return result , error 
-    
 
 # =============================================================================
 ## Ovesimplified adaptive integration using <code>rule</code>
 #  - <code>rule</code> is used to get an esimate for integral and error
 #  - if not precision the interval wth largest ncertaity is bisected and
 #    the rule reapplied to subinterval  
-def adaptive_integral ( rule                ,
+def adaptive_integral ( rule_name           ,                         
+                        rule                ,
                         fun                 ,
                         xmin                ,
                         xmax                , * ,                
@@ -175,8 +185,7 @@ def adaptive_integral ( rule                ,
                         epsrel   = eps_rel  ,
                         args     = ()       , # additional positional arguments for the function calls 
                         kwargs   = {}       , # additional keywords   arguments for the function calls
-                        nmax     = 20       , # steps in Richardson's extrapolation
-                        maxdepth = 1000     , # the maxmal depth
+                        maxdepth = 1000     , # the maxmal number of intervals 
                         rconf    = {}       , # configuratio of tje rule
                         **other             ) : 
     """ Ovesimplified adaptive integration using the specified `rule`
@@ -186,26 +195,26 @@ def adaptive_integral ( rule                ,
     """
     ##
     if other :
-        logger.warning ( "Adaptive[%s]: ignored parameters: %s" % ( typename ( rule ) ,
-                                                                    list ( other .keys() ) ) )
+        logger.warning ( "Adaptive[%s]: ignored parameters: %s" % ( rule_name , list ( other .keys() ) ) )
     
+    assert callable    ( fun  )                                        , "`fun'  must be callable!" 
+    assert callable    ( rule )                                        , "`rule' must be callable!" 
     assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % xmin 
     assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % xmax  
-    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
-    assert isinstance  ( maxdepth , int       ) and 5 <  maxdepth     , "Invalid 'maxdepth'!"
-    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
-    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
+    assert isinstance  ( maxdepth , int       ) and 10 < maxdepth     , "Invalid 'maxdepth'!"
+    assert isinstance  ( epsabs   , float     ) and 0  <  epsabs      , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float     ) and 0  <  epsrel      , "Invalid 'epsrel'!"
     
     # the same edges ? 
     if isequal ( xmin , xmax ) : return VE ( 0 , 0 ) if err else 0.0
     
     # we'll split regions by factor of 2
-    # For nested rules oen can get a large gain from memoization 
+    # For nested rules one can get a large gain from memoization 
     
-    func = memoize ( lambda x : float ( fun ( x , *args , **kwargs ) ) )
+    func = memoize ( lambda x : float ( fun ( x , *args , **kwargs ) ) ) 
     
     ## (1) just one step: apply rule to whole interval 
-    result , error = rule ( func , xmin , xmax , epsabs = epsabs , epsrel = epsrel , *rconf )
+    result , error = rule ( func , xmin , xmax , epsabs = epsabs , epsrel = epsrel , **rconf )
 
     ## (2) Already good ?
     if error <= max ( epsabs , abs ( result ) * epsrel ) :
@@ -250,10 +259,10 @@ def adaptive_integral ( rule                ,
     
     else :
         # =====================================================================
-        logger.warning ( "Adaptive[%s]: maximal split is reached: %d " %  ( typename ( rule ) , len( results ) ) ) 
+        logger.warning ( "Adaptive[%s]: maximal split is reached: %d " %  ( rule_name , len( results ) ) ) 
 
     if error <= max ( epsabs , abs ( result ) * epsrel ) < error :
-            logger.warning ( "Adaptive[%s]: requested precision is not achieved: %.3g" % ( typename ( rule ) , error ) )
+            logger.warning ( "Adaptive[%s]: requested precision is not achieved: %.3g" % ( rule_name , error ) )
             
     return VE ( result , error * error ) if err else result  
 
@@ -274,9 +283,9 @@ def romberg ( fun                 ,
               err      = False    , 
               epsabs   = eps_abs  ,
               epsrel   = eps_rel  ,
-              args     = ()       , # additional positional arguments for functionm call 
-              kwargs   = {}       , # additional keywords   arguments for functionm call 
-              nmax     = 20       , # steps in Richardson's extrapolation
+              args     = ()       , # additional positional arguments for function call 
+              kwargs   = {}       , # additional keywords   arguments for function call 
+              nmax     = 10       , # binary steps in Richardson's extrapolation
               maxdepth = 1000     , # the maxmal depth
               **other             ) : 
     """ Straw-man replacement of scipy.integrate.quad when it is not available.
@@ -289,17 +298,106 @@ def romberg ( fun                 ,
     >>> func = lambda x : x*x 
     >>> v    = romberg ( func , 0 , 1 ) 
     """
-    return adaptive_integral ( romberg_rule        ,
-                               fun                 ,
-                               xmin     , xmax     ,
-                               err      = err      ,
-                               epsabs   = epsabs   ,
-                               epsrel   = epsrel   ,
-                               args     = args     ,
-                               kwargs   = kwargs   ,
-                               maxdepth = maxdepth , **other ) 
+    return adaptive_integral ( 'Romberg' , romberg_rule       ,
+                               fun                            ,
+                               xmin      , xmax               ,
+                               err       = err                ,
+                               epsabs    = epsabs             ,
+                               epsrel    = epsrel             ,
+                               args      = args               ,
+                               kwargs    = kwargs             ,
+                               maxdepth  = maxdepth           , 
+                               rconf     = { 'nmax' : nmax }  , **other ) 
 
+# =============================================================================
+## single step of composite Boole rule 
+def composite_boole_step ( fun  ,
+                           xmin ,
+                           xmax ,
+                           N    ) :
+    """ Single step of composite Boole rule 
+    """
+    assert 4 <=  N and 0 == N % 4 , "Invalid N=`%s'" % N
 
+    h = ( xmax - xmin ) / N
+
+    sum1 = sum ( fun ( xmin + h * i ) for i in range ( 1 , N     , 2 ) )
+    sum2 = sum ( fun ( xmin + h * i ) for i in range ( 2 , N - 1 , 4 ) )
+    sum3 = sum ( fun ( xmin + h * i ) for i in range ( 4 , N - 3 , 4 ) )
+
+    return 2 * h * ( 7 * ( fun ( xmin ) + fun ( xmax ) ) + 
+                     sum1 * 32 +
+                     sum2 * 12 +
+                     sum3 * 14 ) / 45 
+    
+# =============================================================================
+## composite Boole quadrature 
+def composite_boole_rule ( fun              ,
+                           xmin             ,
+                           xmax             , * ,
+                           epsabs = eps_abs ,
+                           epsrel = eps_rel ,
+                           nmax   = 10      ) :
+
+    assert callable    ( fun ) , "Function  must be callable!"
+    assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % xmin 
+    assert isinstance  ( xmax     , num_types ) and isfinite ( xmax ) , "Invalid `xmax' %s" % xmax  
+    assert isinstance  ( epsabs   , float     ) and 0 <  epsabs       , "Invalid 'epsabs'!"
+    assert isinstance  ( epsrel   , float     ) and 0 <  epsrel       , "Invalid 'epsrel'!"
+    
+    assert isinstance  ( nmax     , int       ) and 0 <= nmax         , "Invalid 'nmax'!"
+    
+    ## adjust nmax
+    nmax = min ( max ( nmax , 4 ) , 20 )
+    
+    rp = ( nmax + 1 ) * [ 0.0 ]
+    rc = ( nmax + 1 ) * [ 0.0 ]
+    
+    # starting value for integration step: full interval 
+    h  = xmax - xmin 
+
+    nc = 0 
+    # here we have R ( 0 , 0 ) 
+    rc [ 0 ] = composite_boole_step ( fun , xmin , xmax , 4 ) 
+    
+
+    rmax = abs ( rc [ 0 ] )
+    n1   = 3 
+    for n in range ( n1  , nmax + 1 ) :
+        
+        i2 = 2 ** n 
+        
+        rp , rc   = rc , rp  # swap rows
+    
+        # here we have R ( n , 0 ) 
+        rc [ 0 ] = composite_boole_step ( fun , xmin , xmax , i2 ) 
+        
+        # calculate R ( n , m ) using Richardson's extrapolation
+        mlast = n - n1 + 1  
+        pp    = 2**6 
+        for m in range ( 1 , n + 1 - n1 + 1 ) :
+            # here we have R(n,m)
+            rc [ m ] = rc [ m - 1 ] + ( rc [ m - 1 ] - rp [ m - 1 ] ) / ( pp - 1 )
+            pp *= 2**2  
+            
+        result      = rc [ mlast     ] ## the last in the row 
+        penultimate = rc [ mlast - 1 ] ## penultimate in the row
+        last        = rp [ mlast - 1 ] ## the last in the previous row 
+        
+        error       = max ( abs ( result - penultimate ) , abs ( result - last ) ) 
+        
+        rmax        = max ( rmax ,
+                            abs ( result      ) ,
+                            abs ( last        ) ,
+                            abs ( rc [ 0 ]    ) ,
+                            abs ( rp [ 0 ]    ) )
+        
+        # check their absolute and relative difference 
+        if error <= 0.5 * max ( epsabs , rmax  * epsrel ) : break 
+
+    ##  return 
+    return result , error 
+    
 # =============================================================================
 ## Clenshaw-Curtis quadratures 
 # =============================================================================
@@ -445,7 +543,7 @@ def clenshaw_curtis ( fun                 ,
                       epsrel   = eps_rel  ,
                       args     = ()       ,
                       kwargs   = {}       , 
-                      nmax     = 30       , 
+                      nmax     = 10       , 
                       maxdepth = 1000     , 
                       **other             ) :
     """ Clenshaw-Curtis adaptive quadrature
@@ -456,7 +554,8 @@ def clenshaw_curtis ( fun                 ,
     >>> cache_func = memoize ( func )
     >>> v = clenshaw_curtis ( cache_func , 0 , 1 ) 
     """
-    return adaptive_integral ( clenshaw_curtis_rule ,
+    return adaptive_integral ( 'Clwenshaw-Curtis'   ,
+                               clenshaw_curtis_rule ,
                                fun                  ,
                                xmin     , xmax      ,
                                err      = err       ,
@@ -464,7 +563,45 @@ def clenshaw_curtis ( fun                 ,
                                epsrel   = epsrel    , 
                                args     = args      ,
                                kwargs   = kwargs    ,
-                               maxdepth = maxdepth  , **other )
+                               maxdepth = maxdepth  ,
+                               rconf    = { 'nmax' : nmax } , **other )
+
+# =============================================================================
+## Cmposite boole adaptive quadrature
+#  @code
+#  func = lambda x : x*x 
+#  v    = composite_boole( func , 0 , 1 ) 
+#  @endcode
+def composite_boole ( fun                 ,
+                      xmin                ,
+                      xmax                , * , 
+                      err      = False    , 
+                      epsabs   = eps_abs  ,
+                      epsrel   = eps_rel  ,
+                      args     = ()       ,
+                      kwargs   = {}       , 
+                      nmax     = 10       , 
+                      maxdepth = 1000     , 
+                      **other             ) :
+    """ Clenshaw-Curtis adaptive quadrature
+    >>> func = lambda x : x*x 
+    >>> v    = clenshaw_curtis ( func , 0 , 1 ) 
+    >>> func = ....
+    >>> from ostap.utils.utils import memoize 
+    >>> cache_func = memoize ( func )
+    >>> v = clenshaw_curtis ( cache_func , 0 , 1 ) 
+    """
+    return adaptive_integral ( 'CompositeBoole'     ,
+                               composite_boole_rule ,
+                               fun                  ,
+                               xmin     , xmax      ,
+                               err      = err       ,
+                               epsabs   = epsabs    ,
+                               epsrel   = epsrel    , 
+                               args     = args      ,
+                               kwargs   = kwargs    ,
+                               maxdepth = maxdepth  ,
+                               rconf    = { 'nmax'  : nmax } , **other )
 
 # =============================================================================
 ## 1D integration 
@@ -505,7 +642,7 @@ def integral_quad ( fun              ,
                           epsrel = eps_rel , **other )
 
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
-
+    
 # =========================================================================
 ## Calculate the integral (from x0 to x) for the 1D-function 
 #  @code 
@@ -1279,7 +1416,7 @@ class IntegralBase(object) :
 
     @property
     def other ( self ) :
-        """Additional keyword arguments for the integration function"""
+        """Additional keyword arguments for the integrator"""
         return self.__other
 
 # =============================================================================
@@ -1289,7 +1426,15 @@ class IntegralBase(object) :
 #  func  = lambda x : x * x 
 #  iint  = Integral ( func , 0 ) ## specify x_low 
 #  value = iiint (  10  )        ## specify x_high 
-#  @endcode 
+#  @endcode
+# 
+#  Valid 1D integrators:
+#  - <code>integral_quad</code>   default (scipy)
+#  - <code>integral_ostap</code>  : <code>Ostap::Math::Integrator</code> (GSL quandratures)
+#  - <code>romberg</code>         : (adaptive) Romberg
+#  - <code>clenshaw_curtis</code> : (adaptive) Clenshaw-Curtis quandature 
+#  - <code>composite_boole</code> : (adaptive) composite Boole's rule
+#  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Integral(IntegralBase) :
@@ -1297,7 +1442,14 @@ class Integral(IntegralBase) :
     
     >>> func  = lambda x : x * x      ## define function 
     >>> iint  = Integral ( func , 0 ) ## specify x_low 
-    >>> value = iint (  10  )         ## specify x_high 
+    >>> value = iint (  10  )         ## specify x_high
+    
+    Valid 1D integrators:
+    - `integral_quad`   : default (scipy) 
+    - `integral_ostap`  : `Ostap.Math.Integrator`  (GSL quandratures) 
+    - `romberg`         : (adaptive) Romberg
+    - `clenshaw_curtis` : (adaptive) Clenshaw-Curtis quadature
+    - `composite_boole` : (adaptive) composite Boole's rule
     """
     ## Calculate the integral for the 1D-function
     def __init__ ( self        ,
@@ -1438,7 +1590,13 @@ class IntegralCache(Integral) :
 #  func  = lambda x,y : x*x+y*y 
 #  iint  = Integral2 ( func , 0 , 0 ) ## specify x_low, y_low 
 #  value = iiint (  10  , 20 )        ## specify x_high, y_high  
-#  @endcode 
+#  @endcode
+#
+#  Valid 2D integrators
+#  - <code>integral_dblquad</code> default (scipy)
+#  - <code>integral2_ostap</code> : <code>Ostap::Math::Integrator</code>  (2D-cubature)
+#  - <code>genzmalik2</code>      : Genz-Malik 2D integratinio 
+#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Integral2(Integral) :
@@ -1447,6 +1605,12 @@ class Integral2(Integral) :
     >>> func  = lambda x,y : x*x+y*y  ## define function 
     >>> iint  = Integral ( func , 0 , 0 ) ## specify x_low,  y_low  
     >>> value = iint (  10  , 20 )        ## specify x_high, y_high
+
+    Valid 2D integrators
+    - `integral_dblquad` default (scipy)
+    - `integral2_ostap` : `Ostap::Math::Integrator`  (2D-cubature)
+    - `genzmalik2`      : Genz-Malik 2D integration method
+    
     """
     ## Calculate the integral for the 2D-function
     def __init__ ( self ,
@@ -1513,6 +1677,12 @@ class Integral2(Integral) :
 #  iint  = Integral2 ( func , 0 , 0 , 0 ) ## specify x_low, y_low, z_low 
 #  value = iiint (  10  , 20 , 30 )        ## specify x_high, y_high , z_high
 #  @endcode 
+#
+#  Valid 3D integrators
+#  - <code>integral_tplquad</code> default (scipy)
+#  - <code>integral3_ostap</code> : <code>Ostap::Math::Integrator</code>  (3D-cubature)
+#  - <code>genzmalik3</code>      : Genz-Malik 3D integration methon
+#
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-06-06
 class Integral3(Integral2) :
@@ -1521,6 +1691,12 @@ class Integral3(Integral2) :
     >>> func  = lambda x,y : x*x+y*y+z*z  ## define function 
     >>> iint  = Integral ( func , 0 , 0 , 0 ) ## specify x_low,  y_low, z_low
     >>> value = iint (  10  , 20 , 30 )       ## specify x_high, y_high, z_high
+    
+    Valid 3D integrators
+    - `integral_tplquad` default (scipy)
+    - `integral3_ostap` : `Ostap.Math.Integrator`  (3D-cubature)
+    - `genzmalik3`      : Genz-Malik 3D integration method
+    
     """
     ## Calculate the integral for the 3D-function 
     def __init__ ( self ,

@@ -1030,7 +1030,8 @@ Ostap::Math::Integrator::integrate3_
   double  error  = -1 ;
   std::tie ( ierror , value , error ) = s_cubature.cubature 
     ( &F          ,   // the function  
-      500000      ,   // limits  
+      1000000     ,   // limits
+      //
       0 < aprecision ? aprecision : s_APRECISION_CUBE3D ,   // absolute precision 
       0 < rprecision ? rprecision : s_RPRECISION_CUBE3D ,   // relative precision 
       //

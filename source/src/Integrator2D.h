@@ -66,8 +66,8 @@ namespace Ostap
       public:
         // ====================================================================
         Result cubature 
-        ( const Fun*          fun                  , 
-          const unsigned      maxcalls   = 50000   ,
+        ( const Fun*          fun                   , 
+          const unsigned      maxcalls   = 100000   ,
           const double        aprecision = s_APRECISION_CUBE2D , 
           const double        rprecision = s_RPRECISION_CUBE2D ,
           const char*         reason     = nullptr ,       // message 
@@ -102,7 +102,7 @@ namespace Ostap
         Result cubature
         ( const std::size_t   tag                  ,
           const Fun*          fun                  , 
-          const unsigned      maxcalls   = 50000   ,
+          const unsigned      maxcalls   = 100000  ,
           const double        aprecision = s_APRECISION_CUBE2D , 
           const double        rprecision = s_RPRECISION_CUBE2D ,
           const char*         reason     = nullptr ,       // message 
@@ -175,7 +175,7 @@ namespace Ostap
       Integrator2D<FUNCTION>::s_cache = Integrator2D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 50000 ;
+      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 100000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL 
     // ========================================================================

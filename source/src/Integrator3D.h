@@ -69,7 +69,7 @@ namespace Ostap
         // ====================================================================
         Result cubature 
         ( const Fun*          fun                  , 
-          const unsigned      maxcalls   = 50000   ,
+          const unsigned      maxcalls   = 500000  ,
           const double        aprecision = s_APRECISION_CUBE3D , 
           const double        rprecision = s_RPRECISION_CUBE3D ,
           const char*         reason     = nullptr ,       // message 
@@ -104,7 +104,7 @@ namespace Ostap
         Result cubature
         ( const std::size_t   tag                  ,
           const Fun*          fun                  , 
-          const unsigned      maxcalls   = 50000   ,
+          const unsigned      maxcalls   = 500000  ,
           const double        aprecision = s_APRECISION_CUBE3D , 
           const double        rprecision = s_RPRECISION_CUBE3D ,
           const char*         reason     = nullptr ,       // message 
@@ -178,7 +178,7 @@ namespace Ostap
       Integrator3D<FUNCTION>::s_cache = Integrator3D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator3D<FUNCTION>::s_CACHESIZE = 75000 ;
+      const unsigned int Integrator3D<FUNCTION>::s_CACHESIZE = 100000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL 
     // ========================================================================
