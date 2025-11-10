@@ -123,7 +123,7 @@ class WorkManager(TaskManager) :
         - no merging of results  
         """
         
-        njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_typs ) else None ) ) 
+        njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) ) 
         with MP.Pool ( self.ncpus ) as pool : ##  pool_context ( self.pool ) as pool :
 
             ## create and submit jobs 
