@@ -1201,9 +1201,10 @@ def vct3_call ( fun3 , x , y , z , *args , **kwargs ) :
 def vct1_call_method ( method ) :
     """ decorator to enhace call-method for certain class
     """
-    def decorated_call1 ( who , x , *more , **kwargs ) :
-        fun1 = lambda x : method ( who , x , **kwargs )
-        return vct1_call ( fun1 , x , *more )
+    def decorated_call1 ( who , x , *args , **kwargs ) :
+        fun1 = lambda x : method ( who , x , *args , **kwargs )
+        return vct1_call ( fun1 , x )
+    decorated_call1.__doc__ = method.__doc__ 
     return decorated_call1
 
 # =============================================================================
@@ -1214,6 +1215,7 @@ def vct2_call_method ( method ) :
     def decorated_call2 ( who , x , y ,  *args , **kwargs ) :
         fun2 = lambda x, y : method ( who , x , y , *args ,  **kwargs  )
         return vct2_call ( fun2 , x , y )
+    decorated_call2.__doc__ = method.__doc__ 
     return decorated_call2
 
 # =============================================================================
@@ -1224,6 +1226,7 @@ def vct3_call_method ( method ) :
     def decorated_call3 ( who , x , y , z , *args , **kwargs ) :
         fun3 = lambda x, y, z : method ( who , x , y , z , *args , **kwargs )
         return vct3_call ( fun3 , x , y , z )
+    decorated_call3.__doc__ = method.__doc__ 
     return decorated_call3 
 
 # =============================================================================

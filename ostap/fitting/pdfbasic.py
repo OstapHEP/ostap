@@ -59,7 +59,11 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
-from   ostap.math.base          import iszero , isfinite , frexp10 , numpy  
+from   ostap.math.base          import ( iszero , isfinite , isequal , frexp10 ,  
+                                         vct1_call_method ,
+                                         vct2_call_method ,
+                                         vct3_call_method ) 
+
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
                                          valid_pointer , 
                                          rootException , 
@@ -81,7 +85,7 @@ import ostap.fitting.dataset
 import ostap.histos.histos
 import ostap.fitting.roocollections 
 # 
-import ROOT, math,  random, sys, abc  
+import ROOT, numpy, math,  random, sys, abc, warnings   
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -2224,16 +2228,17 @@ class APDF1 ( Components ) :
         histo = self.make_histo ( nbins = nbins ,
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
-
-        with rootException() :
+        
+        with rootException() , warnings.catch_warnings() :
+            warnings.simplefilter('ignore',RuntimeWarning) 
             hh = self.pdf.createHistogram (
                 hID ()    ,
                 self.xvar ,
                 self.binning ( histo.GetXaxis() , 'histo1x' ) ,
                 ROOT.RooFit.Extended ( False ) ,
                 ROOT.RooFit.Scaling  ( False ) ,            
-                )
-
+            )
+            
         ## nullify errors 
         for i in hh : hh.SetBinError ( i , 0 ) 
     
@@ -2589,16 +2594,15 @@ class PDF1(APDF1,FUN1) :
 
         self.__call_OK = isinstance ( self.xvar , ROOT.RooAbsRealLValue ) 
 
-
     # =========================================================================
-    ## simple 'function-like' interface 
+    ## simple 'function-like' interface
+    @vct1_call_method
     def __call__ ( self , x , error = False , normalized = True  ) :
         """ Function as a 'function'
         >>> fun  = ...
         >>> x = 1
         >>> y = fun ( x ) 
         """
-
         assert self.__call_OK , "Invalid type for xvar!"
         
         if error and not normalized :
@@ -2607,35 +2611,30 @@ class PDF1(APDF1,FUN1) :
             
         if error and not self.fit_result :
             error = False 
-
-        ## helper local function os SCALAR argument 
-        def eval_fun ( a , error , normalized , xmnmx  ) :
             
-            if xmnmx :
-                xmn , xmx = xmnmx
-                if not xmn <= a <= xmx : return 0
-                
-            ## change x-value 
-            self.xvar.setVal ( a )
-            ## evaluate the functin
+        ## min-max, if defined 
+        xmnmx = self.xminmax()
+
+        if xmnmx :    
+            xmn , xmx = xmnmx
+            if not xmn <= x <= xmx : return 0
+
+        ## ensure the value does not change after the call 
+        with SETVAR ( self.xvar ) :
+            
+            ## change x-value
+            self.xvar.setVal ( x )
+            
+            ## evaluate the function
             v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()
-            ## get ucertainties if/when availabke 
+            
+            ## get ucertainties if/when available 
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
                 if 0 <= e : v = VE ( v ,  e * e )
-            return v 
-
-        ## min-max, if defined 
-        xmnmx = self.xminmax()
+                
+        return v
         
-        ## ensure that after call the x-value is the same 
-        with SETVAR ( self.xvar ) :
-            ## vectorized argument ?
-            if numpy and isinstance ( x , numpy.ndarray ) :                
-                return numpy.asarray ( [ eval_fun ( v , error , normalized, xmnmx ) for v in x ] )
-            ## scalar...
-            return eval_fun ( x , error , normalized , xmnmx )
-
     # ========================================================================
     ## convert to float 
     def __float__ ( self ) :
@@ -3748,7 +3747,8 @@ class APDF2 (APDF1) :
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
         
-        with rootException() : 
+        with rootException() , warnings.catch_warnings() : 
+            warnings.simplefilter('ignore',RuntimeWarning)         
             hh = self.pdf.createHistogram (
                 hID()     ,
                 self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo2x' )   ,
@@ -3898,13 +3898,21 @@ class PDF2(APDF2,FUN2) :
 
     # =========================================================================
     ## simple 'function-like' interface 
+    @vct2_call_method
     def __call__ ( self , x , y , error = False , normalized = True ) :
-        """ Simple  function-like interface
+        """  Simple  function-like interface
         >>>  pdf = ...
         >>>  print ( pdf(0.1,0.5) ) 
         """
         assert self.__call_OK , "Invalid types for xvar/yvar!"
 
+        if error and not normalized :
+            self.error ( "Can't get error for non-normalized call" )
+            error = False
+            
+        if error and not self.fit_result :
+            error = False 
+       
         xmnmx = self.xminmax()
         if xmnmx :
             xmn , xmx = xmnmx 
@@ -3916,16 +3924,17 @@ class PDF2(APDF2,FUN2) :
             if not ymn <= y <= ymx : return 0
 
         with SETVAR ( self.xvar ) , SETVAR( self.yvar ) :
+            
             self.xvar.setVal ( x )
             self.yvar.setVal ( y )
             
-            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getValV ()
+            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getVal ()
             
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
-                if 0<= e : v = VE ( v ,  e * e )
+                if 0 <= e : v = VE ( v , e * e )
 
-            return v 
+        return v 
             
     # ========================================================================
     ## convert to float 
@@ -4086,7 +4095,6 @@ class PDF2(APDF2,FUN2) :
                        xvar = self.xvar  ,
                        yvar = self.yvar  ,
                        name = name if name else self.new_name ( 'fun2' ) ) 
-    
 
 # =============================================================================
 ## @class Generic2D_pdf
@@ -5023,7 +5031,8 @@ class APDF3 (APDF2) :
                                   hpars = hpars ,
                                   histo = histo , **kwargs )
         
-        with rootException() :
+        with rootException() , warnings.catch_warnings() : 
+            warnings.simplefilter('ignore',RuntimeWarning)         
             hh = self.pdf.createHistogram (
                 hID()     ,
                 self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo3x' )   ,
@@ -5181,11 +5190,20 @@ class PDF3(APDF3,FUN3) :
                          isinstance ( self.zvar , ROOT.RooAbsRealLValue )
         
     # ====================================================================================
-    ## simple 'function-like' interface 
+    ## simple 'function-like' interface
+    @vct3_call_method
     def __call__ ( self , x , y , z , error = False , normalized = True ) :
-        
+        """ Simple function-like interface, converting PDF3 to callable 
+        """
         assert self.__call_OK , "Invalid types for xvar/yvar/zvar!"
         
+       if error and not normalized :
+            self.error ( "Can't get error for non-normalized call" )
+            error = False
+            
+        if error and not self.fit_result :
+            error = False 
+            
         xmnmx = self.xminmax()
         if xmnmx :
             xmn , xmx = xmnmx 
@@ -5200,19 +5218,20 @@ class PDF3(APDF3,FUN3) :
         if zmnmx :
             zmn , zxmx = zmnmx 
             if not zmn <= z <= zmx : return 0
-
+            
         with SETVAR ( self.xvar ) , SETVAR ( self.yvar ) , SETVAR ( self.zvar ) :
+            
             self.xvar.setVal ( x )
             self.yvar.setVal ( y )
             self.zvar.setVal ( z )
             
-            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getValV ()
+            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getVal ()
             
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
-                if 0<= e : v = VE ( v ,  e * e )
+                if 0 <= e : v = VE ( v , e * e )
 
-            return v
+        return v
 
     # ========================================================================
     ## convert to float 

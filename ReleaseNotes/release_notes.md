@@ -4,7 +4,9 @@
    1. add treatment of `markup` into `logger` (default is  `markeup=False`)
    1. add methods `quantile` and `quantiles` methods for 1D histograms
    1. add `split_while` and `merge_while` methods for `TAxis`
-   1. Add `density` argument to `TH1(F,D).quantile(s)` method (default is `desity=True` )
+   1. add `density` argument to `TH1(F,D).quantile(s)` method (default is `density=True` )
+   1  more tweaks to `ostap.math.integral/integrator`. From now all the interfaces are largely coherent
+   1. modernize the `__call__` methods  for `funbasic/pdfbasic`
    
 ## Backward  incompatible 
 

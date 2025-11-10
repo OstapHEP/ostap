@@ -35,7 +35,10 @@ from   ostap.core.core               import ( Ostap         , hID ,
                                               valid_pointer ,
                                               roo_silent    ,                                              
                                               rootWarning   )
-from   ostap.math.base               import iszero , isequal, numpy   
+from   ostap.math.base               import ( iszero , isequal ,
+                                              vct1_call_method ,
+                                              vct2_call_method ,
+                                              vct3_call_method ) 
 from   ostap.fitting.utils           import make_name 
 from   ostap.fitting.variables       import SETVAR
 from   ostap.fitting.roofit          import PDF_fun 
@@ -50,7 +53,7 @@ from   ostap.logger.pretty           import pretty_float, fmt_pretty_values
 from   ostap.logger.symbols          import times 
 # 
 import ostap.fitting.roocollections
-import ROOT, math, sys, abc  
+import ROOT, numpy, math, sys, abc  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.funbasic' )
@@ -1536,7 +1539,8 @@ class FUN1(AFUN1,F1AUX) :
         self.__call_OK = isinstance ( self.xvar , ROOT.RooAbsRealLValue ) 
         
     # =========================================================================
-    ## simple 'function-like' interface 
+    ## simple 'function-like' interface
+    @vct1_call_method
     def __call__ ( self , x , normalized = False ) :
         """ Function as a 'function'
         >>> fun  = ...
@@ -1544,25 +1548,22 @@ class FUN1(AFUN1,F1AUX) :
         >>> y = fun ( x ) 
         """        
         assert self.__call_OK , "Invalid type for xvar!"
-
-        def eval_fun ( xv , normalized , xmnmx ) :
-            if xmnmx :
-                xmn , xmx = xmnmx
-                if not xmn <= xv <= xmx : return 0
             
-            self.xvar.setVal ( xv )     
-            return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()  
-        
         ## min-max, if defined 
         xmnmx = self.xminmax()
-        
-        ## ensure that after call the x-value is the same 
+
+        if xmnmx :    
+            xmn , xmx = xmnmx
+            if not xmn <= x <= xmx : return 0
+
+        ## ensure the value does not change after the call 
         with SETVAR ( self.xvar ) :
-            ## vectorized argument ?
-            if numpy and isinstance ( x , numpy.ndarray ) :                
-                return numpy.asarray ( [ eval_fun ( v , normalized, xmnmx ) for v in x ] )
-            ## scalar...
-            return eval_fun ( x , normalized , xmnmx )
+            
+            ## change x-value
+            self.xvar.setVal ( x )
+            
+            ## evaluate the functin
+            return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()
         
     # ========================================================================
     ## convert to float 
@@ -2487,10 +2488,6 @@ class AFUN2(AFUN1,YVar) :
                            in_range = in_range  ,
                            args     = args      , **kwargs )
 
-
-
-
-
 # =============================================================================
 ## @class FUN2
 #  The base class for 2D-function
@@ -2516,6 +2513,7 @@ class FUN2(AFUN2) :
 
     # =========================================================================
     ## simple 'function-like' interface 
+    @vct2_call_method
     def __call__ ( self , x , y , normalized = False ) :
         """ Function as a 'function'
         >>> fun  = ...
@@ -2524,7 +2522,6 @@ class FUN2(AFUN2) :
         >>> v = fun ( x , y ) 
         """
         assert self.__call_OK , "Invalid types for xvar/yvar!"
-
 
         xmnmx = self.xminmax()
         if xmnmx :
@@ -3581,6 +3578,7 @@ class FUN3(AFUN3) :
         
     # =========================================================================
     ## simple 'function-like' interface 
+    @vct3_call_method
     def __call__ ( self , x , y , z , normalized = False ) :
         """ Function as a 'function'
         >>> fun  = ...
@@ -4807,14 +4805,15 @@ def make_fun1 ( fun , name , xvar , logger = None , **kwargs ) :
     if   isinstance ( fun , AFUN1 ) : 
         
         ## return the same model
-        if   xvar is bkg.xvar and not  kwargs :
+        if   xvar is fun.xvar and not  kwargs :
             result = fun 
-            logger.debug ( 'make_fun1: %s model is copied to %s' % ( bkg , model ) )
+            logger.debug ( 'make_fun1: %s model is copied to %s' % ( fun , model ) )
         else :           ## make a clone : 
             result = fun.clone ( name = name , xvar = xvar , **kwargs )
-            logger.debug ( 'make_fun1: %s model is cloned to %s' % ( bkg , model ) )
+            logger.debug ( 'make_fun1: %s model is cloned to %s' % ( fun , model ) )
 
     elif isinstance ( fun , ROOT.RooAbsReal ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
+        
         result = Fun1D ( fun , xvar = xvar , name = name )
 
     elif isinstance ( fun , string_types ) :
