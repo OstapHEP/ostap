@@ -27,9 +27,10 @@ from   collections.abc          import Sized
 from   itertools                import repeat , count
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.task      import TaskManager
-from   ostap.io.checker         import PickleChecker as Checker 
+from   ostap.io.checker         import PickleChecker as Checker
+from   ostap.core.ostap_types   import sized_types 
 import multiprocessing          as     MP
-import sys, os, time
+import sys, os
 # =============================================================================
 from    ostap.logger.logger       import getLogger
 logger  = getLogger('ostap.parallel.parallel_gaudi')
@@ -122,17 +123,15 @@ class WorkManager(TaskManager) :
         - no merging of results  
         """
         
-        njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
+        njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_typs ) else None ) ) 
         with MP.Pool ( self.ncpus ) as pool : ##  pool_context ( self.pool ) as pool :
 
-            sys.stdout .flush ()
-            sys.stderr .flush ()
-            
             ## create and submit jobs 
             jobs = pool.imap_unordered ( job , jobs_args )
             
-            silent = self.silent or not progress
-            
+            progress = progress    or self.progress        
+            silent   = self.silent or not progress
+                   
             ## retrive (asynchronous) results from the jobs
             for result in progress_bar ( jobs                               ,
                                          max_value   = njobs                ,
@@ -140,18 +139,7 @@ class WorkManager(TaskManager) :
                                          silent      = silent               ) :
                 yield result                
                 
-            sys.stdout .flush ()
-            sys.stderr .flush ()
-            
-        if kwargs :
-            import ostap.logger.table as T 
-            rows = [ ( 'Argument' , 'Value' ) ]
-            for k , v in loop_items ( kw ) :
-                row = k , str ( v )
-                rows.append ( row )
-            title = 'iexecute:: %d unused arguments' % len ( kw ) 
-            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
+        if kwargs : self.extra_arguments ( **kwargs ) 
             
     # ========================================================================-
     ## get PP-statistics if/when possible 

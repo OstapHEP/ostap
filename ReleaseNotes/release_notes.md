@@ -1,3 +1,5 @@
+# v3.4.0.0 
+
 ## New features
 
    1. add `ostap.logger.colorized.markup`  (experimental) support for veyr simple pseudo-markup
@@ -7,7 +9,8 @@
    1. add `density` argument to `TH1(F,D).quantile(s)` method (default is `density=True` )
    1  more tweaks to `ostap.math.integral/integrator`. From now all the interfaces are largely coherent
    1. modernize the `__call__` methods  for `funbasic/pdfbasic`
-   
+   1. add paralellization  machinery based on `concurrent.futures`
+
 ## Backward  incompatible 
 
 ## Bug fixes

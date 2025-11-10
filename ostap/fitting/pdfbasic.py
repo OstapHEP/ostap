@@ -5197,7 +5197,7 @@ class PDF3(APDF3,FUN3) :
         """
         assert self.__call_OK , "Invalid types for xvar/yvar/zvar!"
         
-       if error and not normalized :
+        if error and not normalized :
             self.error ( "Can't get error for non-normalized call" )
             error = False
             
@@ -5220,7 +5220,7 @@ class PDF3(APDF3,FUN3) :
             if not zmn <= z <= zmx : return 0
             
         with SETVAR ( self.xvar ) , SETVAR ( self.yvar ) , SETVAR ( self.zvar ) :
-            
+                
             self.xvar.setVal ( x )
             self.yvar.setVal ( y )
             self.zvar.setVal ( z )
@@ -5230,7 +5230,7 @@ class PDF3(APDF3,FUN3) :
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
                 if 0 <= e : v = VE ( v , e * e )
-
+                
         return v
 
     # ========================================================================

@@ -13,25 +13,21 @@ import sys, os, time
 from   itertools                    import repeat , count
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.parallel.task          import Task, TaskManager 
-from   ostap.io.checker             import PickleChecker as Checker 
+from   ostap.io.checker             import PickleChecker as Checker
+from   ostap.core.ostap_types       import sized_types 
 # =============================================================================
 from   ostap.logger.logger          import getLogger
 logger  = getLogger('ostap.parallel.parallel_ipyparallel')
 # =============================================================================
-if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
-else                              : from collections     import Sized 
-# =============================================================================
 ## Try to import ipyparallel 
 ipp = None
 # =============================================================================
-if ( 3 , 6 ) <= sys.version_info : # ==========================================
+try : # =======================================================================
+    import ipyparallel as ipp
     # =========================================================================
-    try : # ===================================================================
-        import ipyparallel as ipp
-        # ====================================================================
-    except ImportError : # ===================================================
-        # ====================================================================
-        ipp = None
+except ImportError : # ========================================================
+    # =========================================================================
+    ipp = None
 # =============================================================================
 ## Use only relatively fresh versions of ipyparallel 
 if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
@@ -141,9 +137,11 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
             - no merging of results  
             """
             
-            njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
+            njobs    = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+            
+            progress = progress    or self.progress        
+            silent   = self.silent or not progress
 
-            silent = self.silent or not progress
             with ipp.Cluster ( **self.__kwargs ) as cluster :
 
                 if   self.__use_dill :
@@ -161,16 +159,7 @@ if ipp and ( 8 , 0 ) <= ipp.version_info : # ==================================
                                              silent      = silent               ) : 
                     yield result
                         
-            if kwargs :
-                import ostap.logger.table as T 
-                rows = [ ( 'Argument' , 'Value' ) ]
-                for k , v in loop_items ( kw ) :
-                    row = k , str ( v )
-                    rows.append ( row )
-                title = 'iexecute:: %d unused arguments' % len ( kw ) 
-                table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-                logger.warning ( '%s\n%s' % ( title , table ) )
-                    
+            if kwargs : self.extra_arguments ( **kwargs ) 
                     
         # ========================================================================-
         ## get PP-statistics if/when possible 

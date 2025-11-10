@@ -33,6 +33,7 @@ else                      : logger = getLogger ( __name__         )
 # =============================================================================
 ## possible types of workers 
 workers = ( 'PATHOS'           , 
+            'FUTURES'          , 
             'IPYPARALLEL'      , 
             'GAUDIMP'          ,
             'GAUDI'            ,
@@ -113,7 +114,7 @@ if 'IPYPARALLEL' == worker :
     try : # =====================================================================
         # =======================================================================
         from ostap.parallel.parallel_ipyparallel import WorkManager, Checker
-        logger.debug ('Use WorkManager from ostap.parallel.ipyparallel')
+        logger.debug ('Use WorkManager from ostap.parallel.parallel_ipyparallel')
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
@@ -121,13 +122,28 @@ if 'IPYPARALLEL' == worker :
         worker      = 'PATHOS'
 
 # ===============================================================================
+## Use concurrent futures ? 
+# ===============================================================================
+if 'FUTURES' == worker :
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        from ostap.parallel.parallel_futures import WorkManager, Checker
+        logger.debug ('Use WorkManager from ostap.parallel.parallel_futures')
+        # =======================================================================
+    except ImportError : # ======================================================
+        # =======================================================================
+        WorkManage, Checker = None, None
+        worker      = 'PATHOS'
+        
+# ===============================================================================
 ## Use PATHOS?
 # ===============================================================================
 if 'PATHOS' == worker and dill and not WorkManager :
     # ===========================================================================
     try : # =====================================================================
         from ostap.parallel.parallel_pathos import WorkManager, Checker
-        logger.debug ('Use WorkManager from ostap.parallel.pathos')
+        logger.debug ('Use WorkManager from ostap.parallel.parallel_pathos')
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
@@ -139,9 +155,8 @@ if 'PATHOS' == worker and dill and not WorkManager :
 if not WorkManager : # ==========================================================
     # ===========================================================================
     from ostap.parallel.parallel_gaudi  import WorkManager, Checker
-    logger.debug ('Use WorkManager from GaudiMP.Parallel' )
+    logger.debug ('Use WorkManager from ostap.parallel.parallel_gaudi' )
     worker = 'GAUDI'
-
 
 if not Checker : from ostap.io.pickling import Checker
 
@@ -158,7 +173,6 @@ if '__main__' == __name__ :
     logger.info ( ' Date    : %s' %         __date__      )
     logger.info ( ' Symbols : %s' %  list ( __all__     ) )
     logger.info ( 80*'*' ) 
-
 
 # =============================================================================
 ##                                                                      The END 

@@ -136,16 +136,6 @@ logging.disable ( ( logging.WARNING - 1 ) if quiet   else
 
 # =============================================================================
 ## check (and remove) obsolete sections 
-remove = set() 
-for k in config :
-    if k.startswith ( 'Parallel:' ) :
-        logger.error ( 'Section "%s" is obsolete! Switch to specific "Pathos:..." or "IPyparallel:..."' % k )
-        remove.add ( k ) 
-    elif k.startswith ( 'Parallel' ) :
-        logger.error ( 'Section "%s" is obsolete! Switch to specific "Pathos" or "IPyparallel"' % k )
-        remove.add ( k ) 
-for k in remove :
-    del config[k]
 
 # =============================================================================
 ## the final action...

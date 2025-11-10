@@ -46,6 +46,7 @@ from   ostap.parallel.task      import ( TaskManager   ,
                                          task_executor , func_executor )
 from   ostap.utils.basic        import loop_items 
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.core.ostap_types   import sized_types 
 from   ostap.parallel.utils     import get_local_port  , pool_context  
 import sys, os 
 # =============================================================================
@@ -262,18 +263,11 @@ class WorkManager (TaskManager) :
     ## context protocol: close/join/clear the pool 
     def __exit__   ( self , *_ ) :        
         if  self.pool :
-            self.pool.close()
+            self.pool.close ()
             self.pool.join  ()
             self.pool.clear ()
         sys.stdout .flush ()
         sys.stderr .flush ()
-
-    ## def __del__(self):
-    ##     self.__exit__ ()
-        
-    ##     del self.__pool
-    ##     del self.__ppservers 
-    ##     del self.__locals         
 
     # =========================================================================
     ## process the bare <code>executor</code> function
@@ -311,8 +305,10 @@ class WorkManager (TaskManager) :
             ## create and submit jobs 
             jobs = pool.uimap ( job , jobs_args )
             
-            njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , Sized ) else None ) ) 
-            silent = self.silent or not progress
+            njobs = kwargs.pop ( 'njobs' , kwargs.pop ( 'max_value' , len ( jobs_args ) if isinstance ( jobs_args , sized_types ) else None ) )
+
+            progress = progress    or self.progress 
+            silent   = self.silent or not progress
             
             ## retrive (asynchronous) results from the jobs
             for result in progress_bar ( jobs ,
@@ -321,15 +317,7 @@ class WorkManager (TaskManager) :
                                          silent      = silent               ) :
                 yield result
 
-        if kwargs :
-            import ostap.logger.table as T 
-            rows = [ ( 'Argument' , 'Value' ) ]
-            for k , v in loop_items ( kw ) :
-                row = k , str ( v )
-                rows.append ( row )
-            title = 'iexecute:: %d unused arguments' % len ( kw ) 
-            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
+        if kwargs : self.extra_arguments ( **kwargs ) 
             
     # =========================================================================
     ## get the statistics from the parallel python

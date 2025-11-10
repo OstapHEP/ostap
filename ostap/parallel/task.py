@@ -821,7 +821,7 @@ class TaskManager(object) :
     __metaclass__ = abc.ABCMeta
 
     def __init__  ( self                ,
-                    ncpus               ,
+                    ncpus               , * , 
                     silent      = False ,
                     progress    = True  ,
                     chunk_size  = -1    ,   
@@ -829,14 +829,13 @@ class TaskManager(object) :
                     dump_jobs   = 0     ,
                     dump_freq   = 0     ) :
      
-           
         self.__ncpus  = ncpus if isinstance  ( ncpus , int ) and 1 <= ncpus else numcpu()
         
         if not isinstance ( chunk_size , int ) or chunk_size <= 1 :
-            chunk_size  = 5 * ( ncpus + 1 )
+            chunk_size  = 5 * ( self.ncpus + 1 )
             
         self.__chunk_size = chunk_size 
-        self.__silent     = silent
+        self.__silent     = True if silent else False  
         self.__progress   = True if ( progress or not silent ) else False
 
         assert isinstance ( dump_freq , int ) and 0 <= dump_freq , \
