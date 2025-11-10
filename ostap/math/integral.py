@@ -631,15 +631,15 @@ def integral_quad ( fun              ,
     
     if kwargs : func = lambda x, *a : fun ( x , *a , **kwargs )
     else      : func = fun
-    
-    other [ 'limit' ] = other.pop ( 'limit'  , 200 )              
+
+    other [ 'limit' ] = other.pop ( 'limit' , 1000 )              
        
-    result = scipy_quad ( func             ,
-                          xmin             ,
-                          xmax             ,
-                          args   = args    ,
-                          epsabs = eps_abs , 
-                          epsrel = eps_rel , **other )
+    result = scipy_quad ( func            ,
+                          xmin            ,
+                          xmax            ,
+                          args   = args   ,
+                          epsabs = epsabs , 
+                          epsrel = epsrel , **other )
 
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
     

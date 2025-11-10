@@ -492,7 +492,7 @@ else  ()
    set ( OSTAP_TEST_PYTHON_WARNINGS "-Werror -Wignore::DeprecationWarning" ) 
 endif () 
 
-set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning" ) 
+set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning,once::UserWarning,once::IntegrationWarning" ) 
 
 if ( OSTAP_TEST_PYTHON_WARNINGS ) 
   MESSAGE ( "----> All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
