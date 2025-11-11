@@ -2276,14 +2276,16 @@ class ResoHypatia(ResoGenHyperbolic) :
                                            xvar       = xvar  ,
                                            sigma      = sigma ,
                                            zeta       = zeta  ,
+                                           lambd      = lambd , 
                                            fudge      = fudge ,
                                            mu         = mu    ,
                                            kappa      = kappa )
-
+        
+        pars = self.pdf.getParameters ( ROOT.nullptr )
         
         ## safe created generic PDF 
         self.__genhyp = Generic1D_pdf ( self.pdf , xvar = self.xvar , name = self.new_name ( 'GenHyp' ) )
-        
+
         ## prepare FFT convolution
         from ostap.fitting.resolution import ResoGauss 
         gname = self.generate_name ( 'gauss' , suffix = 'offset' ) 

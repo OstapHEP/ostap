@@ -494,9 +494,9 @@ endif ()
 
 set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning,once::UserWarning,once::IntegrationWarning" ) 
 
-if ( OSTAP_TEST_PYTHON_WARNINGS ) 
-  MESSAGE ( "----> All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
-endif()
+## if ( OSTAP_TEST_PYTHON_WARNINGS ) 
+##  MESSAGE ( "----> All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
+## endif()
 
 if ( OSTAP_TEST_PYWARNINGS )  
   message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  ) 
@@ -535,7 +535,7 @@ foreach(filename ${tests})
       COMMAND ${PYTHON_EXECUTABLE} ${filename} )
   endif  ()
   
-  if ( OSTAP_TEST_PYWARNINGS )
+  if ( OSTAP_TEST_PYWARNINGS AND TEST_PARALLEL LESS 0 )
     set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
   else () 
     set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 )

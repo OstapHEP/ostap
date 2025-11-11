@@ -2901,7 +2901,7 @@ class Generic1D_pdf(PDF1) :
         assert xvar and   isinstance ( xvar  , ROOT.RooAbsReal ) , "'xvar' must be ROOT.RooAbsReal"
         assert pdf  and ( isinstance ( pdf   , ROOT.RooAbsPdf  ) or \
                           ( isinstance ( pdf , ROOT.RooAbsReal ) ) ) , \
-                          "Invalid `pdf'' type`"
+                          "Invalid `pdf' type"
         
         name = ( prefix + name + suffix ) if name \
                else self.generate_name ( prefix = prefix , suffix = suffix , name = pdf.GetName() )
@@ -2909,10 +2909,10 @@ class Generic1D_pdf(PDF1) :
         ## initialize the base 
         PDF1 . __init__ ( self , name , xvar )
         ##
-        
+
         ## Does PDF depends on XVAR ?
-        if not pdf.depends_on ( xvar ) :
-            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , xvar.name ) ) 
+        if not pdf.depends_on ( self.xvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , self.xvar.name ) ) 
 
         ## PDF itself 
         self.pdf  = pdf
@@ -2922,14 +2922,13 @@ class Generic1D_pdf(PDF1) :
             for p in self.pdf.pdfList    ()    : self.alist1.add ( p )
             for f in self.pdf.orig_fracs ()[0] : self.alist2.add ( f )
             
-        if not self.xvar in self.params () : 
+        if isinstance ( self.xvar , ROOT.RooAbsRealLValue ) and not self.pdf.dependsOn ( self.xvar ) : 
             self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
-            
+
         ## add it to the list of signal components ?
         self.__add_to_signals = True if add_to_signals else False
         
         if self.add_to_signals : self.signals.add ( self.pdf )
-
         
         ## save the configuration
         self.config = {
@@ -4129,18 +4128,25 @@ class Generic2D_pdf(PDF2) :
         name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix ) 
         PDF2  . __init__ ( self , name , xvar , yvar )
 
+        ## Does PDF depends on XVAR ?
+        if not pdf.depends_on ( self.xvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , self.xvar.name ) ) 
+        ## Does PDF depends on YVAR ?
+        if not pdf.depends_on ( self.yvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , self.xvar.name ) ) 
+            
         ## PDF! 
         self.pdf = pdf
-        
+
+        if isinstance ( self.xvar , ROOT.RooAbsRealLValue ) and not self.pdf.dependsOn ( self.xvar ) : 
+            self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
+        if isinstance ( self.yvar , ROOT.RooAbsRealLValue ) and not self.pdf.dependsOn ( self.yvar ) : 
+            self.warning ("Function/PDF does not depend on yvar=%s" % self.yvar.name )
+
         ## get some structure 
         if isinstance ( self.pdf , ROOT.RooAddPdf ) :
             for p in self.pdf.pdfList    ()       : self.alist1.add ( p )
             for f in self.pdf.orig_fracs () [ 0 ] : self.alist2.add ( f )
-            
-        if not self.xvar in self.params () : 
-            self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
-        if not self.yvar in self.params () : 
-            self.warning ( "Function/PDF does not depend on yvar=%s" % self.yvar.name )
 
         ## add it to the list of signal components ?
         self.__add_to_signals = True if add_to_signals else False
@@ -5440,20 +5446,31 @@ class Generic3D_pdf(PDF3) :
         
         PDF3  . __init__ ( self , name , xvar , yvar , zvar )
 
+        ## Does PDF depend on XVAR ?
+        if not pdf.depends_on ( self.xvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , self.xvar.name ) ) 
+        ## Does PDF depend on YVAR ?
+        if not pdf.depends_on ( self.yvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , self.xvar.name ) ) 
+        ## Does PDF depend on ZVAR ?
+        if not pdf.depends_on ( self.zvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , self.zvar.name ) ) 
+
         ## PDF! 
         self.pdf = pdf
         
+        if isinstance ( self.xvar , ROOT.RooAbsRealLValue ) and not self.pdf.dependsOn ( self.xvar ) : 
+            self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
+        if isinstance ( self.yvar , ROOT.RooAbsRealLValue ) and not self.pdf.dependsOn ( self.yvar ) : 
+            self.warning ("Function/PDF does not depend on yvar=%s" % self.yvar.name )
+        if isinstance ( self.zvar , ROOT.RooAbsRealLValue ) and not self.pdf.dependsOn ( self.zvar ) : 
+            self.warning ("Function/PDF does not depend on zvar=%s" % self.zvar.name )
+
         ## get some structure 
         if isinstance ( self.pdf , ROOT.RooAddPdf ) :
             for p in self.pdf.pdfList    ()    : self.alist1.add ( p )
             for f in self.pdf.orig_fracs ()[0] : self.alist2.add ( f )
             
-        if not self.xvar in self.params () : 
-            self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
-        if not self.yvar in self.params () : 
-            self.warning ( "Function/PDF does not depend on yvar=%s" % self.yvar.name )
-        if not self.zvar in self.params () :
-            self.warning ( "Function/PDF does not depend on zvar=%s" % self.zvar.name )
 
         ## add it to the list of signal components ?
         self.__add_to_signals = True if add_to_signals else False

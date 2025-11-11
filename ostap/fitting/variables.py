@@ -1468,31 +1468,28 @@ _new_methods_ += [
 #     ...
 #  @endcode
 def depends_on ( fun , var ) :
-    """Does  this variable depends on another one?
-    
+    """ Does  this variable depends on another one?    
     >>> fun = ...
     >>> var = ...
-    >>> if fun.depends_on ( var ) :
-    ...
-    
+    >>> if fun.depends_on ( var ) :    
     """
-    if isinstance ( var , ROOT.RooAbsCollection ) :
-        for v in var :
-            if depends_on ( fun , v ) : return True
-        return False
-
-    fpars = fun.getParameters ( 0 )
+    if   isinstance ( var , ROOT.RooConstVar      ) : return False 
+    elif isinstance ( var , ROOT.RooAbsCollection ) :
+        return any ( depends ( fun , v ) for v in var )    
+    elif isinstance ( fun , ROOT.RooAbsArg ) and isinstance ( var , ROOT.RooAbsArg ) :
+        return True if fun.dependsOn ( var ) else False 
     
+    fpars = fun.getParameters ( ROOT.nullptr )
+
     ## direct dependency?
     if var in fpars : return True
 
     ## check indirect dependency
     if var and isinstance ( var , ROOT.RooAbsArg ) : 
-        vvars = var.getParameters ( 0 )
+        vvars = var.getParameters ( ROOT.nullptr )
         for v in vvars :
             if v in fpars : return True
             
-    ##
     return False 
 
 ROOT.RooAbsReal.depends_on  = depends_on
@@ -1508,7 +1505,7 @@ _new_methods_ += [
 #  @param name  binning name
 #  @see RooBinning
 def binning ( edges , nbins = 0 , name = '' ) :
-    """Create `RooBinnig` object
+    """ Create `RooBinnig` object
     - see ROOT.RooBinning
     """
     assert isinstance ( nbins , integer_types ) and 0 <= nbins, \

@@ -482,9 +482,10 @@ def test_hypatia () :
     
     logger = getLogger ( 'test_hypatia' )
 
-    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution' )
+    logger.info ('Test Hypatia: symmetric generalised Hyperbolic resolution' )
     from   ostap.fitting.resolution import ResoHypatia
-    reso = ResoHypatia ( 'Hypatia' , mass ,
+    reso = ResoHypatia ( 'Hypatia' ,
+                         xvar   = mass ,
                          sigma  = ( 0.1 , 0.01 , 5.0 ) ,
                          zeta   = ( 1.0 , 1.e-5 , 1.e+5 ) ,
                          lambd  = ( -20,20 ) ,
@@ -493,7 +494,7 @@ def test_hypatia () :
     for i in range ( 6 ) :
         result, frame = reso. fitTo ( dataset , silent = True  )
         
-    with use_canvas ( 'test_genhyperbolic' , wait = 1 ) : 
+    with use_canvas ( 'test_hypatia' , wait = 1 ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -708,10 +709,11 @@ def test_db() :
         
 # =============================================================================
 if '__main__' == __name__ :
+
     
     with timing ("Gauss"     , logger ) :  
         test_gauss          () ## single Gaussian resolution model
-        
+
     with timing ("2-Gauss"   , logger ) :  
         test_2gauss         () ## double Gaussian resolution model
         
@@ -763,6 +765,7 @@ if '__main__' == __name__ :
     with timing ("BatesShape" , logger ) :  
         test_bates_shape    ()   ## Bates Shape resolution model
 
+    
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  
         test_db ()          
