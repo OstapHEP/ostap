@@ -3,13 +3,11 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file ostap/fitting/tests/test_fitting_simfit1.py
-# Test module for ostap/fitting/simfit.py
-# - It tests the most simple "Simultaneous fit"
+# @file ostap/fitting/tests/test_fitting_gof_simfit.py
+# - Goodness-of-fit machenery for "Simultaneous fit"
 # ============================================================================= 
 """ Test module for ostap/fitting/simfit.py
-- It tests the most simple ``Simultaneous fit'' :
-Simultaneous fit of two 1D-distributions
+ - Goodness-of-fit machenery for "Simultaneous fit"
 """
 # ============================================================================= 
 __author__ = "Ostap developers"
@@ -19,6 +17,7 @@ from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env  
+from   ostap.fitting.simfit     import combined_data 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
@@ -28,7 +27,7 @@ import ROOT, random
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_simfit1' )
+    logger = getLogger ( 'test_stats_gof_simfit' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
@@ -38,14 +37,13 @@ batch_env ( logger )
 #
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 5  )
-xyz      = ROOT.RooRealVar ( 'test_xyz'  , 'Some test xyz'  , 0 , 10 )
 
 ## book very simple data set:
-varset1  = ROOT.RooArgSet  ( mass , xyz )
+varset1  = ROOT.RooArgSet  ( mass  )
 dataset1 = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset1 )  
 
 ## book very simple data set:
-varset2  = ROOT.RooArgSet  ( mass , xyz )
+varset2  = ROOT.RooArgSet  ( mass )
 dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )  
 
 ## high statistic, low-background "control channel"
@@ -60,12 +58,7 @@ for i in range ( NS1 )  :
     while not v1 in mass :
         v1 = random.gauss ( mean1 , sigma1 )
         
-    vv = random.triangular( 0 , 10, 1 ) 
-    while not vv in xyz : 
-        vv = random.triangular ( 0, 10 , 1 ) 
-
     mass.setVal  ( v1 )
-    xyz .setVal  ( vv )
     
     dataset1.add ( varset1 )
 
@@ -74,15 +67,12 @@ for i in range ( NB1 ) :
     while not v1 in mass :
         v1 = random.uniform ( 0 , 5  )
         
-    vv = random.triangular( 0 , 10, 9 ) 
-    while not vv in xyz : 
-        vv = random.triangular ( 0, 10 , 9 ) 
 
     mass.setVal  ( v1 )
-    xyz .setVal  ( vv )
     
     dataset1.add ( varset1 )
-        
+
+# ============================================================================
 ## low statistic, high-background "signal channel"
 NS2     =    500
 NB2     =  10000     
@@ -94,12 +84,7 @@ for i in range ( NS2 )  :
     while not v2 in mass : 
         v2 = random.gauss ( mean2 , sigma2 )
         
-    vv = random.expovariate ( 1/2.0 )
-    while not vv in xyz : 
-        vv = random.expovariate ( 1/2.0 )
-
     mass.setVal  ( v2 )
-    xyz .setVal  ( vv )
     dataset2.add ( varset2 )
 
 for i in range (NB2 ) :
@@ -107,46 +92,53 @@ for i in range (NB2 ) :
     while not v2 in mass : 
         v2 = random.uniform ( 0 , 5  )
         
-    vv = random.expovariate ( 1/2.0 )
-    while not vv in xyz : 
-        vv = random.expovariate ( 1/2.0 )
-
     mass.setVal  ( v2      )
-    xyz .setVal  ( 10 - vv )
     dataset2.add ( varset2 )
 
+sample  = ROOT.RooCategory ( 'sample' , 'sample'  , 'A' , 'B' )
 
-sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
+
+## combined datasets
+vars    = ROOT.RooArgSet ( mass )
+dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
+
+print ( 'DATASET\n' , dataset ) 
 
 models  = set()
 results = []
-graphs  = [] 
+graphs  = []
+
+signal1  = Models.Gauss_pdf ( 'G1'                 ,
+                              xvar  = mass         ,
+                              mean  = (0.5 , 2.5 ) ,
+                              sigma = (0.1 , 1.0 ) )
+
+model1   = Models.Fit1D ( suffix = 'MA' , signal = signal1 ,  background = -1 )
+model1.S = NS1
+model1.B = NB1 
+
+mean2    = signal1.vars_add      ( signal1.mean  , 1.0  )
+sigma2   = signal1.vars_multiply ( signal1.sigma , 0.5  )
+
+signal2  = Models.Gauss_pdf ( 'G2'            ,
+                              xvar  = mass    ,
+                              mean  = mean2   ,
+                              sigma = sigma2  )
+
+model2  = Models.Fit1D ( suffix = 'MB' , signal = signal2 ,  background = model1.background )
+model2.S = NS2
+model2.B = NB2 
+
+## combine PDFs
+model_sim  = Models.SimFit (
+    sample , { 'A' : model1  , 'B' : model2 } , name = 'X'
+)
+
+
 # =============================================================================
 def test_simfit1 () :
     
     logger = getLogger( 'test_simfit1' )
-    
-    signal1  = Models.Gauss_pdf ( 'G1'                 ,
-                                  xvar  = mass         ,
-                                  mean  = (0.5 , 2.5 ) ,
-                                  sigma = (0.1 , 1.0 ) )
-    
-    model1   = Models.Fit1D ( suffix = 'M1' , signal = signal1 ,  background = -1 )
-    model1.S = NS1
-    model1.B = NB1 
-    
-    
-    mean2    = signal1.vars_add      ( signal1.mean  , 1.0  )
-    sigma2   = signal1.vars_multiply ( signal1.sigma , 0.5  )
-    
-    signal2  = Models.Gauss_pdf ( 'G2'            ,
-                                  xvar  = mass    ,
-                                  mean  = mean2   ,
-                                  sigma = sigma2  )
-    
-    model2  = Models.Fit1D ( suffix = 'M2' , signal = signal2 ,  background = model1.background )
-    model2.S = NS2
-    model2.B = NB2 
     
     with use_canvas ( 'test_simfit1: fit dataset1' , wait = 2 ) : 
         # =========================================================================
@@ -162,100 +154,42 @@ def test_simfit1 () :
         logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
         # =========================================================================
 
-    ## combine data
-        
-    ## combine datasets
-    from ostap.fitting.simfit import combined_data 
-    vars    = ROOT.RooArgSet ( mass , xyz )
-    dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
-    
-    ## combine PDFs
-    model_sim  = Models.SimFit (
-        sample , { 'A' : model1  , 'B' : model2 } , name = 'X'
-        )
-    
+    graphs.append ( f1 ) 
+    graphs.append ( f2 ) 
     # =========================================================================
     r , f = model_sim.fitTo ( dataset , silent = True )
     r , f = model_sim.fitTo ( dataset , silent = True )
 
     title = 'Results of simultaneous fit'
     logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
+
+    dsA = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'A' ) )
+    dsB = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'B' ) )
     
     with use_canvas ( 'test_simfit1: fit both datasets & draw A' , wait = 2 ) :        
-        fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-        graphs.append ( fA )
+        fA = model_sim.draw ( 'A' , dsA , nbins = 50 )
     with use_canvas ( 'test_simfit1: fit both datasets & draw B' , wait = 2 ) :        
-        fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
-        graphs.append ( fB )
-
-
-    print ( 'RETURN HERE!' ) 
-    return
-
-
-            
-    with use_canvas ( 'test_simfit1: graph-NLL for S_M2' , wait = 2 ) :
-        from ostap.utils.ranges import vrange 
-        grs = model_sim.graph_nll     ( 'S_M2' , vrange ( 0 , 1000 , 100 ) , dataset , draw = True )
-        grs.draw('apl')
-        graphs.append ( grs )
-    with use_canvas ( 'test_simfit1: graph-profile for S_M2' , wait = 2 ) :
-        from ostap.utils.ranges import vrange 
-        grs = model_sim.graph_profile ( 'S_M2' , vrange ( 0 , 1000 , 50 ) , dataset , draw = True )
-        grs.draw('apl')
-        graphs.append ( grs )
-
-    with use_canvas ( 'test_simfit1: residual  for S_M2' , wait = 2 ) :
-        _ , residual , _  = model_sim.draw ( 'A' , dataset , nbins = 50 , residual = 'P' )
-        residual.draw()
-        graphs.append ( residual )
+        fB = model_sim.draw ( 'B' , dsB , nbins = 50 )
         
-    with use_canvas ( 'test_simfit1: pull for S_M2' , wait = 2 ) :
-        _ , _ , pull = model_sim.draw ( 'A' , dataset , nbins = 50 , pull     = 'P' )
-        pull.draw()
-        graphs.append ( pull )
-
     models.add ( model1        )
     models.add ( model2        )
     models.add ( model_sim     )
-    ## models.add ( model_sim.pdf )
-    
-    ## for k in model_sim.categories : models.add ( model_sim.categories[k] )
-    ## for k in model_sim.drawpdfs   : models.add ( model_sim.drawpdfs  [k] )
+
+    graphs.append  ( fA ) 
+    graphs.append  ( fB ) 
         
     results.append ( r1 ) 
     results.append ( r2 ) 
     results.append ( r  ) 
 
-    # ========================================================================
-    logger.info ( 'Make sPlot-analysis')
-    model_sim.sPlot ( dataset ) 
-
-    with use_canvas ( 'test_simfit1: sPlot/xyz for A (signal)'     , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , cuts = '(sample==0)*S_M1_sw' )
-
-    with use_canvas ( 'test_simfit1: sPlot/xyz for A (background)' , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , cuts = '(sample==0)*B_M1_sw' )
-
-    with use_canvas ( 'test_simfit1: sPlot/xyz for B (signal)'     , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , cuts = '(sample==1)*S_M2_sw' )
-
-    with use_canvas ( 'test_simfit1: sPlot/xyz for B (background)' , wait = 1 ) :
-        dataset.draw ( 'test_xyz' , cuts = '(sample==1)*B_M2_sw' )
-
-    # =========================================================================
-    ## test creation of dataset
-    # =========================================================================
-    ds_gen = model_sim.generate ( nEvents = { 'A' : len ( dataset1 ) ,
-                                              'B' : len ( dataset2 ) } ,
-                                  varset  = vars  )
-
-    rg , f = model_sim.fitTo ( ds_gen , silent = True )
-    rg , f = model_sim.fitTo ( ds_gen , silent = True )
+    ## GOF machinery
+    from ostap.stats.gof1d import GoFSimFit
     
-    title = 'Results of simultaneous fit to generated dataset'
-    logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
-   
+    gof = GoFSimFit ( model_sim      ,
+                      dataset        ,
+                      parameters = r )
+    
+    
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
@@ -277,19 +211,19 @@ def test_db() :
         db['models'  ] = models
         for r in results : db['result' + r.name ] = r 
         db['results' ] = results
-        db['graphs'  ] = graphs
         db.ls()
 
 # =============================================================================
 if '__main__' == __name__ :
 
     with timing( "simfit-1" ,   logger ) :  
-       test_simfit1 ()
+        test_simfit1 ()
+
         
     ## check finally that everything is serializeable:
     with timing ('Save to DB:'     , logger ) :
        test_db ()          
- 
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

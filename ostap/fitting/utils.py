@@ -400,8 +400,6 @@ def add_topic ( topics , stream  = -1 ) :
     """
     return Ostap.Utils.AddTopic ( topics , level , stream ) 
 
-
-
 # =============================================================================
 ## suppress certain message topics
 #  @code

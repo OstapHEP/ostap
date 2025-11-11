@@ -6,9 +6,9 @@
 [General]
 quiet        = False
 verbose      = False
-threadsafety = True 
-##implicitmt   = True 
-##parallel     = PATHOS
+## threadsafety = True 
+## implicitmt   = @OSTAP_NUMBER_OF_LOGICAL_CORES@ 
+parallel     = PATHOS
 
 [Canvas]
 width        = 1000
@@ -19,6 +19,13 @@ marginright  = 0.07
 marginleft   = 0.12
 
 [RooFit] 
+RemoveTopics = Plotting            ,
+               Caching             ,
+               Integration         ,
+               NumericIntegration  , 
+               Fitting             ,
+               InputArguments      ,
+               ObjectHandling
 
 [Fit Draw]
 

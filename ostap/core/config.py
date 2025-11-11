@@ -101,10 +101,8 @@ files_read = config.read ( config_files )
 ## sections
 general = config [ 'General' ]
 
-
-quiet   = general.getboolean ( 'Quiet'  , fallback = False )
-verbose = general.getboolean ( 'Verbose', fallback = False )
-
+quiet      = general.getboolean ( 'Quiet'      , fallback = False )
+verbose    = general.getboolean ( 'Verbose'    , fallback = False )
 
 # =============================================================================
 ## section with canvas configuration

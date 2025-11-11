@@ -50,7 +50,7 @@ logger.debug ( 'Simple utilities for goodness-of-fit studies' )
 # ============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
 #  @code
-#  ds = ... ## dataste as structured array
+#  ds = ... ## dataset as structured array
 #  mean, cov2 = mean_var ( ds ['x'] )
 #  @endcode
 #  - with weight 
@@ -81,7 +81,7 @@ def mean_var ( data , weight = None ) :
     return mean , var 
 
 # =============================================================================
-## Get the effectibe number of entries for 1D-array
+## Get the effective number of entries for 1D-array
 #  \f{ n_{eff} = \frac{  \left\langle x \right\rangle^2}
 #                     { \left\langle x^2 \right\rangle } \f}
 def nEff ( weights ) :
@@ -96,9 +96,9 @@ def nEff ( weights ) :
 
 # =============================================================================
 ## Get the "normalized" input datasets
-#  All floating felds  are calculated as
+#  All floating fields  are calculated as
 #  \f[ x = \frac{x - \left\langle x \right\rangle}{\sigma} \f]
-#  where \f$ \left\langle x \right\rangle\f$ is mena value
+#  where \f$ \left\langle x \right\rangle\f$ is a mean  value
 #  and \f$ \sigma \f$ is a standard deviation.
 # 
 #  @code
@@ -224,7 +224,7 @@ def normalize ( ds , *others , weight = () , first = True ) :
 
 # =============================================================================
 ## @class PERMUTATOR
-#  Helper class that allow to run permutattion test in parallel 
+#  Helper class that allow to run permutation test in parallel 
 class PERMUTATOR(object) :
     """ Helper class that allow to run permutation test in parallel 
     """
@@ -430,11 +430,17 @@ class Summary(object) :
         if not label in self.counters   : return None
         ##
         value   = self.estimators   [ label ]
-        ecdfs   = self.ecdfs        [ label ] 
+        ecdf    = self.ecdfs        [ label ] 
         counter = self.counters     [ label ] 
         ##
-        pvalue = ecdfs. estimate ( value ) ## get the p-value 
-        nsigma = significance ( pvalue )   ## convert oit to significace 
+        pvalue = ecdf. estimate ( value  ) ## estimate the p-value
+        #
+        clip = 0.1 * pvalue.error()
+        pv   = pvalue 
+        if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
+        elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+        nsigma = significance ( pv ) ## convert  it to significace
+        
         return self.Result ( value   ,
                              counter ,
                              pvalue  ,
@@ -475,15 +481,17 @@ class Summary(object) :
         vmn = vmin  / scale
         vmx = vmax  / scale
         
-        from ostap.logger.symbols import plus_minus, times         
+        from ostap.logger.symbols import plus_minus, times
+
+        sigma = nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf'
+
         return ( what  ,
                  fmtv  % vs ,
                  fmt   % ( vm.value() , vm.error() ) ,
                  fmtv  % vr                          ,
                  fmt2  %  ( vmn , vmx )              ,
                  ( '%s10^%+d' %  ( times , expo )  if expo else '' )   ,                  
-                 ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) , 
-                 ( nsigma       ) .toString ( '%%.2f %s %%-.2f' % plus_minus ) )
+                 ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) , sigma )
     
     # =========================================================================
     ## Make a summary table
@@ -551,13 +559,13 @@ class Summary(object) :
         value     = result.statistics
         xmin      = min ( xmin , value )
         xmax      = max ( xmax , value )
-        xmin , xmax  = axis_range ( xmin , xmax , delta = 0.10 )
+        xmin , xmax  = axis_range ( xmin , xmax , delta = 0.20 )
 
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
-        
+
         result    = ecdf.draw  ( opts , *args , **kwargs ) 
-        line      = ROOT.TLine ( value , 0 , value , 1 )
+        line      = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
         ## 
         line.SetLineWidth ( 4 ) 
         line.SetLineColor ( 8 ) 
@@ -568,9 +576,10 @@ class Summary(object) :
 
 # =============================================================================
 ## @class GoFSummary
-#  Helper class for format summary table 
+#  Helper class for format GoF summary table 
 class GoFSummary ( object) :
-    
+    """ Helper class for format GoF summary table 
+    """
     def __init__ ( self ) :
         self.__header = ( 'Method' , 't-value' , '' , '#Toys' , 'p-value [%]' , '#sigma' ) 
         self.__items  = []
@@ -613,8 +622,7 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    if not numpy : logger.warning ("Numpy  is not avalaille!") 
-    if not jl    : logger.warning ("Joblib is not avalaille!") 
+    if not jl : logger.warning ("Joblib is not avalaille!") 
 
 # =============================================================================
 ##                                                                      The END 

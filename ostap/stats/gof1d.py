@@ -31,13 +31,13 @@ from   ostap.core.meta_info     import root_info
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import SE, VE, Ostap
-from   ostap.math.base          import doubles, axis_range, numpy, np2raw    
+from   ostap.math.base          import doubles, axis_range, np2raw    
 from   ostap.math.models        import f1_draw
-from   ostap.utils.basic        import numcpu, loop_items  
-from   ostap.stats.gof_utils    import Estimators,Summary
+from   ostap.utils.basic        import numcpu, loop_items, typename   
+from   ostap.stats.gof_utils    import Estimators, Summary
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
-import ROOT, math
+import ROOT, math, numpy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -215,7 +215,7 @@ def ZA  ( cdf_data ) :
     result  = sum ( flog ( Fi ) / ( n - i - 0.5 ) + flog ( 1 - Fi ) / ( i + 0.5 ) for ( i , Fi )  in enumerate ( cdf_data ) )
     return -1 * result    
 # =============================================================================
-## Get ZK statististics
+## Get Zhang's ZK statististics
 #  @code
 #  cdf_data = ...
 #  zk       = ZK ( cdf_data )
@@ -224,7 +224,7 @@ def ZA  ( cdf_data ) :
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
 #  @return ZK statistics ZK 
 def ZK  ( cdf_data ) :
-    """ Get ZK statististics 
+    """ Get Zhang's ZK statististics 
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at X data points
     >>> cdf_data =...
     >>> zk       = ZK ( cdf_data )    
@@ -248,7 +248,7 @@ def ZK  ( cdf_data ) :
                    ( n - i - 0.5 ) * flog ( ( n - i - 0.5 ) / ( n * ( 1 - Fi ) ) ) for ( i , Fi ) in enumerate ( cdf_data ) )
     return result 
 # =============================================================================
-## Get ZC statististics
+## Get Zhang's ZC statististics
 #  @code
 #  cdf_data = ...
 #  zc       = ZC ( cdf_data )
@@ -257,7 +257,7 @@ def ZK  ( cdf_data ) :
 #  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
 #  @return ZC statistics ZC
 def ZC  ( cdf_data ) :
-    """ Get ZC statististics 
+    """ Get Zhang's ZC statististics 
     - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
     >>> cdf_data =...
     >>> zc       = ZC ( cdf_data )    
@@ -287,17 +287,17 @@ class GoF1D(Estimators) :
     """ Goodness-of-fit 1D-case 
     - see https://doi.org/10.1111/1467-9868.00337
     """
-    def __init__ ( self           ,
-                   pdf            ,
-                   dataset        ,
-                   cdf     = None ) :
+    def __init__ ( self              ,
+                   pdf               ,
+                   dataset           ,
+                   cdf        = None ,
+                   parameters = {}   ) :
         
-        assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `pdf`:%s'     % type ( pdf     )
-        assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `dataset`:%s' % type ( dataset )
-
+        assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `pdf`:%s'     % typename ( pdf     )
+        assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `dataset`:%s' % typename ( dataset )
         
         vars = pdf.vars
-        assert 1 == len ( vars )   , 'GoF1D: Only 1D-pdfs are allowed!'
+        assert 1 == len ( vars )   , 'GoF1D: Only 1D-PDFs are allowed!'
         assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( self.xvar.name ) 
 
         original_cdf = cdf
@@ -307,7 +307,7 @@ class GoF1D(Estimators) :
         self.__store = () 
         if not cdf_ok :
             cdf = pdf.cdf ()
-            ## make atry to get underlying c++ cdf-function from PDF 
+            ## make a try to get the underlying c++ cdf-function from PDF 
             if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
             if hasattr ( pdf.pdf , 'function' ) :
                 if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
@@ -326,7 +326,7 @@ class GoF1D(Estimators) :
 
         ## store PDF 
         self.__pdf        = pdf        
-        self.__parameters = pdf.parameters ( dataset ) 
+        self.__parameters = parameters if parameters else pdf.parameters ( dataset ) 
 
         ## store CDF 
         self.__cdf   = cdf
@@ -344,7 +344,7 @@ class GoF1D(Estimators) :
         ## empirical CDF function 
         self.__ecdf = Ostap.Math.ECDF ( data2vct ( data ) )
 
-        ## evalute CDF for sorted data 
+        ## evaluate CDF for sorted data 
         cdf_data = self.clip ( self.__vct_cdf ( data ) ) 
         
         self.__estimators = {
@@ -357,7 +357,6 @@ class GoF1D(Estimators) :
             'ZC'  : ZC                 ( cdf_data ) ,
         }
         
-
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object"""
@@ -369,11 +368,11 @@ class GoF1D(Estimators) :
                  'estimators' : self.estimators   , 
                  'store'      : self.__store      }
     
-    ## De-serialize th eobject 
+    ## De-serialize the object 
     def __setstate__ ( self , state ) :
         """ De-serialize the object """         
         self.__pdf        = state.pop ( 'pdf'        ) 
-        self.__parameters = state.pop ( 'parameters' ) 
+        self.__parameters = state.pop ( 'parameters' , {}  ) 
         self.__cdf        = state.pop ( 'cdf'        )
         self.__ecdf       = state.pop ( 'ecdf'       )
         self.__estimators = state.pop ( 'estimators' ) 
@@ -430,10 +429,10 @@ class GoF1D(Estimators) :
         return self.__parameters
     
     # =========================================================================
-    ## Get Kolmogorov-Smirnov statistiscs 
+    ## Get Kolmogorov-Smirnov statistics 
     @property 
     def kolmogorov_smirnov_estimator ( self ) :
-        """ Get Kolmogorov-Smirnov statistiscs KS
+        """ Get Kolmogorov-Smirnov' statistics KS
         """
         return self.__estimators.get('KS',None) 
 
@@ -441,7 +440,7 @@ class GoF1D(Estimators) :
     ## Get Kuiper  statististics 
     @property 
     def kuiper_estimator ( self ) :
-        """ Get Kuiperstatistics
+        """ Get Kuiper' statistics K 
         """        
         return self.__estimators.get('K', None ) 
                 
@@ -449,7 +448,7 @@ class GoF1D(Estimators) :
     ## Get Anderson-Darling  statistiscs 
     @property 
     def anderson_darling_estimator ( self ) :
-        """ Get Anderson-Darling statistiscs 
+        """ Get Anderson-Darling statistiscs AD
         """
         return self.__estimators.get ( 'AD' , None ) 
 
@@ -516,7 +515,7 @@ class GoF1D(Estimators) :
             if hasattr ( cdf , 'xmin' ) : xmin = min ( xmin , cdf.xmin () )
             if hasattr ( cdf , 'xmax' ) : xmax = max ( xmax , cdf.xmax () )
 
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.10 )
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
         
         xmin = kwargs.pop ( 'xmin' , xmin )
         xmax = kwargs.pop ( 'xmax' , xmax )
@@ -534,7 +533,123 @@ class GoF1D(Estimators) :
         
         r2 = ecdf.draw ( optsame  , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
         return r1 , r2
+
     
+# =============================================================================
+## @class GoFSimFit
+#  Goodness-of-fit for simultaneous 1D-fits
+#  - All components of the simultaneous fit must be 1D-components 
+#  - GoF is estimated for each 1D-component
+class GoFSimFit(object) :
+    """ Goodness-of-fit for Simultaneous 1D-fits
+    - All components of the Simultaneous fit must be 1D-components!
+    - GoF is estimated for each 1D-component
+    """
+    def __init__ ( self               ,
+                   pdf                ,
+                   dataset            ,
+                   parameters  = None ) :
+
+        from ostap.fitting.simfit import SimFit 
+        assert isinstance ( pdf     , SimFit          ) , 'Invalid type of `pdf`:%s'     % typename ( pdf     )
+        assert isinstance ( dataset , ROOT.RooDataSet ) , 'Invalid type of `dataset`:%s' % typename ( dataset )
+
+        assert pdf.sample in dataset , "Sample category `%s` not in dataset!" % pdf.sample.name 
+
+        self.__pdf        = pdf
+        self.__parameters = parameters if parameters else pdf.parameters ( dataset )
+        
+        self.__pdf.load_params ( self.__parameters , silent = True ) 
+        
+        self.__gofs = {}
+        sample = self.__pdf.sample
+        
+        for key , cmp  in pdf.categories.items ()  :
+            assert isinstance ( cmp , PDF1 ) , "Component `%s` is not PDF1` %s" % ( key , typename ( cmp ) )
+            obs      = cmp.pdf.getObservables ( dataset )
+            category = '%s==%s::%s' ( sample.name , sample.name , key ) 
+            ds       = dataset.subset ( variables = obs ,cuts = category )
+            gof      = Gof1D ( cmp , ds )
+            self.__gofs[ key ] = gof 
+            
+    @property
+    def pdf ( self ) :
+        """`pdf`: SimFit/PDF for simultaneous fit
+        """
+        return self.__pdf
+    
+    @property
+    def sample ( self ) :
+        """sample`: sample/category  variable for simultaneous fit
+        """
+        return self.pdf.sample 
+        
+    @property
+    def kolmogorov_smirnov_estimator ( self ) :
+        """ Get Kolmogorov-Smirnov statistics' KS
+        """
+        return { key : v.kolmogorov_smirnov_estimator for key , v in self.__gofs.items () }
+    
+    @property
+    def kuiper_estimator ( self ) :
+        """ Get Kuiper' statistics K
+        """
+        return { key : v.kuiper_estimator for key , v in self.__gofs.items () }
+
+    @property
+    def anderson_darling_estimator ( self ) :
+        """ Get Anderson-Darling' statistics AD
+        """
+        return { key : v.anderson_darling_estimator for key , v in self.__gofs.items () }
+    
+    @property
+    def cramer_von_mises_estimator ( self ) :
+        """ Get Cramer-on Mises' statistics CM
+        """
+        return { key : v.cramer_von_mises_estimator for key , v in self.__gofs.items () }
+    
+    @property
+    def ZK_estimator ( self ) :
+        """ Get Zhang's statistics ZK
+        """
+        return { key : v.ZK_estimator for key , v in self.__gofs.items () }
+    
+    @property
+    def ZA_estimator ( self ) :
+        """ Get Zhang's statistics ZA
+        """
+        return { key : v.ZA_estimator for key , v in self.__gofs.items () }
+    
+    @property
+    def ZC_estimator ( self ) :
+        """ Get Zhang's statistics ZC
+        """
+        return { key : v.ZC_estimator for key , v in self.__gofs.items () }
+    
+    ## Draw fit CDF & empirical ECDF 
+    def draw  ( self , sample , opts = '' , *args , **kwargs ) :
+        """ Draw fit CDF & empirical CDF
+        """
+        gof = self.__gofs.get ( sample , None )
+        if gof is None : raise KeyError ( "Invaild sample `%s`" % sample )
+        return gof.draw ( opts , *args , **kwargs )
+    
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object"""
+        self.pdf.load_params ( self.__parameters , silent = True )
+        return { 'pdf'        : self.pdf    ,
+                 'parameters' : self.__parameters , 
+                 'gofs'       : self.__gofs }
+    
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object """         
+        self.__pdf        = state.pop ( 'pdf'  )
+        self.__parameters = state.pop ( 'parameters' , {} ) 
+        self.__gofs       = state.pop ( 'gofs' )
+        self.pdf.load_params ( self.__parameters , silent = True )
+        
 # =============================================================================
 ## @class GoF1DToys
 #  Check Goodness of 1D-fits using toys 
@@ -544,7 +659,7 @@ class GoF1DToys(GoF1D,Summary) :
     ## result of GoF-toys 
     Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
     # =========================================================================
-    ## Initialize Gof!D toys object :
+    ## Initialize GoF1D toys object :
     #  @code
     #  gof  = GoF1D     ( ... ) 
     #  toys = GoF1DToys ( gof )
@@ -649,7 +764,8 @@ class GoF1DToys(GoF1D,Summary) :
 
             cnt += ks 
             ## delete data
-            if isinstance ( dset , ROOT.RooDataSet ) : 
+            if isinstance ( dset , ROOT.RooDataSet ) :
+                dset.clear () 
                 dset = Ostap.MoreRooFit.delete_data ( dset )
                 
             del dset
@@ -776,6 +892,7 @@ class GoF1DToys(GoF1D,Summary) :
         return self 
 
     plot = Summary.draw 
+    draw = Summary.draw 
 
 # =============================================================================
 if '__main__' == __name__ :

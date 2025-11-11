@@ -80,7 +80,6 @@ elif 5 == arguments.Level : level = logging.WARNING   - 2
 elif 6 == arguments.Level : level = logging.ERROR     - 2
 elif 7 <= arguments.Level : level = logging.CRITICAL  - 2
 
-
 logging.disable ( level  )
 
 if level <= logging.INFO : 
@@ -135,7 +134,6 @@ if arguments.Profile :
         _pstat.print_stats()
         print(_sio.getvalue())
             
-
     import atexit 
     atexit.register ( _end_profile_ , _pr ) 
     _pr.enable()
@@ -246,6 +244,17 @@ for _s in _startups :
 del parse_args, getLogger
 del _startups,_executed,_s,_ss 
 
+
+# =============================================================================
+## suppress excessive (?) RooFit printout
+# =============================================================================
+if arguments.Quiet and not arguments.Verbose and 3 < arguments.Level :
+    from ostap.fitting.utils import suppress_topics
+    suppress_topics ( "Plotting"       , "Caching"            , "Eval" , 
+                      "Integration"    , "NumericIntegration" ,
+                      "Fitting"        , "InputArguments"     ,
+                      "ObjectHandling" )
+    
 # =============================================================================
 ## execute the files, defined as arguments
 # =============================================================================
@@ -312,7 +321,8 @@ def load_macro ( pattern ) :
             root_macros.append ( m )
             _loaded += 1 
         
-    return _loaded 
+    return _loaded
+
 # =============================================================================    
 ## perform treatment of the file 
 def treat_file ( f ) :
@@ -439,7 +449,6 @@ for pattern in arguments.files :
     if not _glob :
         treat_file ( pattern )
 del treat_file
-
     
 # =============================================================================
 ## list names of opened ROOT files 

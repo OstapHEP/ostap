@@ -15,6 +15,7 @@ from   ostap.utils.ranges     import vrange
 from   ostap.utils.root_utils import batch_env
 from   ostap.utils.timing     import timing 
 from   ostap.math.math_ve     import significance
+from   ostap.core.core        import VE 
 import ostap.fitting.models   as     M 
 import ostap.stats.gof1d      as     G1D 
 import ostap.stats.gofnd      as     GnD
@@ -30,7 +31,7 @@ batch_env ( logger )
 
 xvar  = ROOT.RooRealVar ( 'x', '', 0, 10)
 gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 5 , sigma = 1 )
-model = M.Fit1D         ( signal = gauss , background = 'flat'     )
+model = M.Fit1D         ( signal = gauss , background = 'flat' , fix_norm = True )
 
 ND    = 100
 
@@ -74,7 +75,12 @@ def run_PPD ( pdf , data, result , logger ) :
             pdf.load_params ( result , silent = True ) 
             tvalue         = ppd          ( pdf , data )
             tvalue, pvalue = ppd.pvalue   ( pdf , data )
-            nsigma         = significance ( pvalue ) 
+            
+            clip = 0.1 * pvalue.error()
+            pv   = pvalue 
+            if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
+            elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+            nsigma = significance ( pv ) ## convert  it to significace
         
         tv , texpo = pretty_float ( tvalue )
         pvalue *= 100
@@ -111,7 +117,12 @@ def run_DNN  ( pdf , data, result , logger ) :
         pdf.load_params ( result , silent = True )        
         tvalue         = dnn          ( pdf , data )
         tvalue, pvalue = dnn.pvalue   ( pdf , data )
-        nsigma         = significance ( pvalue ) 
+
+        clip = 0.1 * pvalue.error()
+        pv   = pvalue 
+        if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
+        elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+        nsigma = significance ( pv ) ## convert  it to significace
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
@@ -142,7 +153,12 @@ def run_USTAT  ( pdf , data, result , logger ) :
     with timing ( 'uStat-test' , logger = logger ) : 
         tvalue         = ustat        ( pdf , data )    
         tvalue, pvalue = ustat.pvalue ( pdf , data )
-        nsigma         = significance ( pvalue ) 
+        
+        clip = 0.1 * pvalue.error()
+        pv   = pvalue 
+        if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
+        elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+        nsigma = significance ( pv ) ## convert  it to significace
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
@@ -298,8 +314,8 @@ def test_bad_fit_1 ( ) :
     
     with use_canvas ( 'test_bad_fit_1: GoF/Kolmogorov-Smirnov' , wait = 1 ) :
         dks = toys.draw('Kolmogorov-Smirnov')
-    with use_canvas ( 'test_bad_fit_1: GoF/Andersen-Darling' , wait = 1 ) :
-        dad = toys.draw('Andersen-Darling')
+    with use_canvas ( 'test_bad_fit_1: GoF/Anderson-Darling' , wait = 1 ) :
+        dad = toys.draw('Anderson-Darling')
     with use_canvas ( 'test_bad_fit_1: GoF/Cramer-von Mises' , wait = 1 ) :
         dcm = toys.draw('Cramer-von Mises')
     with use_canvas ( 'test_bad_fit_1: GoF/Kuiper'           , wait = 1 ) :
@@ -330,9 +346,9 @@ def test_bad_fit_1 ( ) :
 # ===============================================================================
 if '__main__' == __name__ :
 
-    test_good_fit_1 ()  ## fit Gauss       to Gauss 
-    test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
-    test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
+    ## test_good_fit_1 ()  ## fit Gauss       to Gauss 
+    ## test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
+    ## test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
     test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
 
 # ===============================================================================

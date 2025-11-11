@@ -920,11 +920,11 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             ( n.startswith ( '_' ) and '__' in n )        
         good = lambda n : not bad ( n ) 
 
-        row = 'Attributes' ,', '.join ( d for d in dir ( self ) if good ( d ) ) 
-        rows.append ( row )
+        
+        ## row = 'Attributes' ,', '.join ( d for d in dir ( self ) if good ( d ) ) 
+        ## rows.append ( row )
 
         return rows
-
 
     # ========================================================================
     ## print at table 

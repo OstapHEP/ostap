@@ -179,7 +179,6 @@ def combined_data ( sample          ,
             
     return ds
 
-
 # =============================================================================
 ## create combined binned dataset for simultaneous fit as RooDataHist 
 #  - combine 2D histograms:
@@ -468,7 +467,6 @@ class SimFit (VarMaker,ConfigReducer) :
             'sample'     : self.sample     ,
             'categories' : self.categories ,
             }
-
     
     @property
     def sample  ( self ) :
@@ -531,7 +529,7 @@ class SimFit (VarMaker,ConfigReducer) :
     #  options = pdf.draw_option ( 'signal_style' )
     #  @endcode 
     def draw_option ( self , key , default = () , **kwargs ) :
-        """Get the certain predefined drawing option
+        """ Get the certain predefined drawing option
         >>> options = ROOT.RooFit.LineColor(2), ROOT.RooFit.LineWidth(4)
         >>> pdf = ...
         >>> pdf.draw_options['signal_style'] = options 
@@ -611,8 +609,8 @@ class SimFit (VarMaker,ConfigReducer) :
     #  pdf.draw ( 'signal' , dataset , nbins = 100 ) 
     #  @endcode 
     def draw ( self           ,
-               category       ,  ## must be specified! 
-               dataset        ,  ## must be specified!
+               category       ,      ## must be specified! 
+               dataset        , * ,  ## must be specified!
                nbins   =  100 ,
                silent  = True ,
                args    = ()   , 
@@ -648,7 +646,9 @@ class SimFit (VarMaker,ConfigReducer) :
         
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
 
-        _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  ) 
+        _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  )
+        ## _proj  = ROOT.RooFit.ProjWData  ( dataset  )
+        
         _slice = ROOT.RooFit.Slice      ( self.sample    , category )
         for key in  ( 'total_fit_options'           ,
                       #
@@ -713,7 +713,8 @@ class SimFit (VarMaker,ConfigReducer) :
                     self.error("Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
                     return None 
 
-            elif isinstance ( draw_pdf , PDF1 ) :                
+            elif isinstance ( draw_pdf , PDF1 ) :
+                print ( 'I AM SIMFIT_DRAW!'  , kwargs , draw_pdf  ) 
                 return draw_pdf.draw ( dataset = dataset ,
                                        nbins   = nbins   ,
                                        silent  = silent  ,
@@ -883,7 +884,8 @@ class SimFit (VarMaker,ConfigReducer) :
                    sample        = True  ,
                    silent        = True  , 
                    storage       = None  ,
-                   category_args = {}    ) :
+                   category_args = {}    ,
+                   data_as_dict  = False ) :
         """ Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } ) ## generate dataset with 10000 events
@@ -937,7 +939,7 @@ class SimFit (VarMaker,ConfigReducer) :
                                    storage  = storage  ,
                                    args     = cargs    )
 
-            if ds.isWeighted() :
+            if ds.isWeighted() and not data_as_dict :
                 ds , weight  = ds.unWeighted ()
                 if weight : wvar = getattr ( ds , weight )
                 
@@ -946,6 +948,9 @@ class SimFit (VarMaker,ConfigReducer) :
                 if not v in vars : vars.add ( v ) 
                 ## vars       |= ds.varset()                 
 
+        ## return data as dictionary
+        if data_as_dict : return data
+        
         ## combine generated datasets
         args = () if not weight else ( ROOT.RooFit.WeightVar ( weight ) , )
         result = combined_data ( self.sample ,
@@ -983,7 +988,11 @@ class SimFit (VarMaker,ConfigReducer) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
-    def load_params ( self , params = {}  , dataset = None , silent = False , **kwargs ) :
+    def load_params ( self                ,
+                      params      = {}    ,
+                      dataset     = None  , * , 
+                      silent      = False ,
+                      unused_warn = True  , **kwargs ) :
         """ Load parameters from external dictionary <code>{ name : value }</code>
         #  or sequence of <code>RooAbsReal</code> objects
         >>> pdf      = ...
@@ -993,8 +1002,11 @@ class SimFit (VarMaker,ConfigReducer) :
         >>> params = ( A , B , C , ... )
         >>> pdf.load_params ( params , dataset )  
         """
-        return self.pdf.load_params ( params = params , dataset = dataset , silent = silent , **kwargs )
-
+        return self.pdf.load_params ( params      = params      ,
+                                      dataset     = dataset     ,
+                                      silent      = silent      , 
+                                      unused_warn = unused_warn , **kwargs )
+    
     # =========================================================================
     ##  Does this function depend on this variable,
     #   @code
