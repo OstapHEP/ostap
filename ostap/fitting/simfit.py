@@ -714,7 +714,7 @@ class SimFit (VarMaker,ConfigReducer) :
                     return None 
 
             elif isinstance ( draw_pdf , PDF1 ) :
-                print ( 'I AM SIMFIT_DRAW!'  , kwargs , draw_pdf  ) 
+                print ( 'I AM SIMFIT_DRAW!'  , kwargs ) ## , draw_pdf  ) 
                 return draw_pdf.draw ( dataset = dataset ,
                                        nbins   = nbins   ,
                                        silent  = silent  ,
