@@ -569,7 +569,7 @@ class GoFSimFit(object) :
             obs      = cmp.pdf.getObservables ( dataset )
             category = '%s==%s::%s' % ( sample.name , sample.name , key ) 
             ds       = dataset.subset ( variables = obs ,cuts = category )
-            gof      = Gof1D ( cmp , ds )
+            gof      = GoF1D ( cmp , ds )
             self.__gofs[ key ] = gof 
             
     @property
