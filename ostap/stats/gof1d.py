@@ -567,7 +567,7 @@ class GoFSimFit(object) :
         for key , cmp  in pdf.categories.items ()  :
             assert isinstance ( cmp , PDF1 ) , "Component `%s` is not PDF1` %s" % ( key , typename ( cmp ) )
             obs      = cmp.pdf.getObservables ( dataset )
-            category = '%s==%s::%s' ( sample.name , sample.name , key ) 
+            category = '%s==%s::%s' % ( sample.name , sample.name , key ) 
             ds       = dataset.subset ( variables = obs ,cuts = category )
             gof      = Gof1D ( cmp , ds )
             self.__gofs[ key ] = gof 
