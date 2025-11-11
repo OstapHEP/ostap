@@ -18,7 +18,6 @@
    1. fix two typos in `tmva&chopping` (Thanks to @klxy555 Mingkai Sun) -  Close issue #40
    1. more fixes for `tmva` (Thanks to @klxy555 Mingkai Sun) 
 
-
 # v3.3.1.0 
 
 ## New features
