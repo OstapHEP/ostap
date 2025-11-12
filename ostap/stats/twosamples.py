@@ -24,7 +24,6 @@ from   ostap.core.core        import SE, VE, Ostap
 from   ostap.utils.basic      import typename 
 from   ostap.math.base        import doubles, axis_range, numpy   
 from   ostap.math.models      import f1_draw 
-from   ostap.stats.gof_utils  import Estimators,Summary
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math, array   
@@ -390,7 +389,7 @@ def ZC ( data1 , data2 , pooled = None , ranks1 = None , ranks2 = None ) :
 # =============================================================================
 ## @class TSTest
 #  Two-Sample Test
-class TSTest(Estimators):
+class TSTest(object):
     """ Two-sample test 
     """
     def __init__ ( self  ,
@@ -442,14 +441,14 @@ class TSTest(Estimators):
 
     # =========================================================================
     ## Print the summary as Table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
-        """ Print the summary as Table
-        """
-        title = title if title else 'Two Sample Test'
-        return Estimators.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
-  
-    __repr__ = table 
-    __str__  = table 
+    ## def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
+    ##    """ Print the summary as Table
+    ##    """
+    ##    title = title if title else 'Two Sample Test'
+    ##    return Estimators.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
+    ## 
+    ##  __repr__ = table 
+    ## __str__  = table 
 
     # =========================================================================
     @property
@@ -497,8 +496,8 @@ class TSTest(Estimators):
         """        
         return self.estimators.get ( 'ZC' , None ) 
     
-    __repr__ = Estimators.table
-    __str__  = Estimators.table
+    ## __repr__ = Estimators.table
+    ## __str__  = Estimators.table
     
     # =========================================================================
     def ks_acccept ( self , alpha ) :
@@ -552,7 +551,7 @@ class TSTest(Estimators):
 # =============================================================================
 ## @class TSToys
 #  Two-Sample Test
-class TSToys(TSTest,Summary):
+class TSToys(TSTest):
     """ Two-sample test 
     """
     def __init__ ( self           ,
@@ -695,24 +694,25 @@ class TSToys(TSTest,Summary):
 
     # =========================================================================
     ## Print the summary as Table
-    def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
-        """ Print the summary as Table
-        """
-        if   not title and self.nToys :
-            title = 'Two Sampel Test with #%d toys' % self.nToys  
-        elif not title :
-            title = 'Two Sample Test'        
-        return Summary.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
+    ## def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
+    ##    """ Print the summary as Table
+    ##    """
+    ##    if   not title and self.nToys :
+    ##        title = 'Two Sampel Test with #%d toys' % self.nToys  
+    ##    elif not title :
+    ##        title = 'Two Sample Test'        
+    ##    return Summary.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
 
-    __repr__ = table 
-    __str__  = table 
+    ##__repr__ = table 
+    ##__str__  = table 
     
     # =========================================================================
     ## Draw ECDF for toys & statistical estgimator 
-    def draw  ( self , what , opts = '' , *args , **kwargs ) :
-        """ Draw ECDF for toys & statistical estgimator 
-        """
-        return Summary.draw ( self , what , opts = opts , *args , **kwargs ) 
+    ## def draw  ( self , what , opts = '' , *args , **kwargs ) :
+    ##     """ Draw ECDF for toys & statistical estgimator 
+    ##    """
+    ##    return Summary.draw ( self , what , opts = opts , *args , **kwargs ) 
+    
 # =============================================================================
 if '__main__' == __name__ :
     

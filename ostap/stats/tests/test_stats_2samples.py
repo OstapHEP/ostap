@@ -40,11 +40,11 @@ def test_2samples_good () :
     
     test   = TSTest ( ds1 , ds2 )
     title  = 'Test good samples'
-    logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
+    ## logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
     toys   = TSToys ( ds1 , ds2 )
     title  = 'Toys good samples'
-    logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
+    ## logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
 
     with use_canvas ( 'test_2samples_good/test'                    , wait = 1 ) : test.draw()    
     with use_canvas ( 'test_2samples_good/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
@@ -62,11 +62,11 @@ def test_2samples_same () :
         
     test   = TSTest ( ds1 , ds1 )                   
     title  = 'Test same samples'
-    logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
+    ## logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
     toys   = TSToys ( ds1 , ds1 )
     title  = 'Toys same samples'
-    logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
+    ##  logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
 
     with use_canvas ( 'test_2samples_same/test'                    , wait = 1 ) : test.draw()    
     with use_canvas ( 'test_2samples_same/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
@@ -84,11 +84,11 @@ def test_2samples_bad1 () :
     
     test   = TSTest ( ds1 , ds3 )
     title  = 'Test bad/1 samples'
-    logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
+    ## logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
     toys   = TSToys ( ds1 , ds3 )
     title  = 'Toys bad/1 samples'
-    logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
+    ##  logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
     
     with use_canvas ( 'test_2samples_bad1/test'                    , wait = 1 ) : test.draw()    
     with use_canvas ( 'test_2samples_bad1/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
@@ -106,11 +106,11 @@ def test_2samples_bad2 () :
     
     test   = TSTest ( ds1 , ds4  )
     title  = 'Test bad/2 samples'
-    logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
+    ## logger.info ( '%s:\n%s' % ( title , test.table ( title = title , prefix = '# ' ) ) )
 
     toys   = TSToys ( ds1 , ds4 )
     title  = 'Toys bad/2 samples'
-    logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
+    ##  logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
     
     with use_canvas ( 'test_2samples_bad2/test'                    , wait = 1 ) : test.draw()    
     with use_canvas ( 'test_2samples_bad2/toys Kolmogorov-Smirnov' , wait = 1 ) : toys.draw ('KS') 
