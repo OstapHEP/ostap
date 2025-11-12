@@ -33,6 +33,7 @@ from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import VE, Ostap
 from   ostap.math.base          import doubles, axis_range, np2raw    
 from   ostap.math.models        import f1_draw
+from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.basic        import numcpu, loop_items, typename   
 from   ostap.stats.counters     import SE, EffCounter 
 from   ostap.logger.pretty      import pretty_float
@@ -933,31 +934,31 @@ class GoF1DToys(GoF1D) :
         """ Draw ECDF for toys & statistical estgimator 
         """
         key = cidict_fun ( what ) 
-        if   key in self.KS_keys and 'KS' in self.ecdfs :             
+        if   key in KS_keys and 'KS' in self.ecdfs :             
             result = self.result ( 'KS' )
             ecdf   = self.ecdfs  [ 'KS' ]
             logger.info ( 'Toy resuls for Kolmogorov-Smirnov estimate' ) 
-        elif key in self.K_keys  and 'K'  in self.ecdfs : 
+        elif key in K_keys  and 'K'  in self.ecdfs : 
             result = self.result ( 'K' )
             ecdf   = self.ecdfs  [ 'K' ]
             logger.info ( 'Toy resuls for Kuiper estimate' ) 
-        elif key in self.AD_keys and 'AD' in self.ecdfs :             
+        elif key in AD_keys and 'AD' in self.ecdfs :             
             result = self.result ( 'AD' )
             ecdf   = self.ecdfs  [ 'AD' ]
             logger.info ( 'Toy resuls for Anderson-Darling estimate' ) 
-        elif key in self.CM_keys  and 'CM' in self.ecdfs : 
+        elif key in CM_keys  and 'CM' in self.ecdfs : 
             result = self.result  ( 'CM' )
             ecdf   = self.ecdfs   [ 'CM' ]
             logger.info ( 'Toy resuls for Cramer-von Mises  estimate' ) 
-        elif key in self.ZK_keys  and 'ZK' in self.ecdfs : 
+        elif key in ZK_keys  and 'ZK' in self.ecdfs : 
             result = self.result  ( 'ZK' )
             ecdf   = self.ecdfs   [ 'ZK' ]
             logger.info ( 'Toy resuls for Zhang/ZK estimate' ) 
-        elif key in self.ZA_keys  and 'ZA' in self.ecdfs :  
+        elif key in ZA_keys  and 'ZA' in self.ecdfs :  
             result = self.result  ( 'ZA' )
             ecdf   = self.ecdfs   [ 'ZA' ]
             logger.info ( 'Toy resuls for Zhang/ZA estimate' ) 
-        elif key in self.ZC_keys and 'ZC' in self.ecdfs : 
+        elif key in ZC_keys and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
             logger.info ( 'Toy resuls for Zhang/ZC estimate' ) 
