@@ -1,5 +1,7 @@
 ## New features
 
+  1.modernize GoF-machinery to allow GoF for SimFit 
+  
 ## Backward  incompatible 
 
 ## Bug fixes

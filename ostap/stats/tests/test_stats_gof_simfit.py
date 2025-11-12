@@ -134,20 +134,19 @@ model_sim  = Models.SimFit (
     sample , { 'A' : model1  , 'B' : model2 } , name = 'X'
 )
 
-
 # =============================================================================
 def test_simfit1 () :
     
-    logger = getLogger( 'test_simfit1' )
+    logger = getLogger( 'test_gof_simfit1' )
     
-    with use_canvas ( 'test_simfit1: fit dataset1' , wait = 2 ) : 
+    with use_canvas ( 'test_gof_simfit1: fit dataset1' , wait = 2 ) : 
         # =========================================================================
         ## fit 1
         r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
         title = 'Results of fit to dataset1'
         logger.info ( '%s\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
         
-    with use_canvas ( 'test_simfit1: fit dataset2' , wait = 2 ) : 
+    with use_canvas ( 'test_gof_simfit1: fit dataset2' , wait = 2 ) : 
         ## fit 2
         r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
         title = 'Results of fit to dataset2'
@@ -163,12 +162,13 @@ def test_simfit1 () :
     title = 'Results of simultaneous fit'
     logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
 
+    print ( 'FIX ME FIXE ME FIXE ME , ROOT issue!' )
     dsA = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'A' ) )
     dsB = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'B' ) )
     
-    with use_canvas ( 'test_simfit1: fit both datasets & draw A' , wait = 2 ) :        
+    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw A' , wait = 2 ) :        
         fA = model_sim.draw ( 'A' , dsA , nbins = 50 )
-    with use_canvas ( 'test_simfit1: fit both datasets & draw B' , wait = 2 ) :        
+    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw B' , wait = 2 ) :        
         fB = model_sim.draw ( 'B' , dsB , nbins = 50 )
         
     models.add ( model1        )
@@ -183,12 +183,22 @@ def test_simfit1 () :
     results.append ( r  ) 
 
     ## GOF machinery
-    from ostap.stats.gof1d import GoFSimFit
+    from ostap.stats.gof1d import GoFSimFit, GoFSimFitToys 
     
     gof = GoFSimFit ( model_sim      ,
                       dataset        ,
                       parameters = r )
-    
+
+    with use_canvas ( 'test_gof_simfit1: GoF-A' , wait = 2 ) : gof.draw ( 'A' )
+    with use_canvas ( 'test_gof_simfit1: GoF-B' , wait = 2 ) : gof.draw ( 'B' )
+        
+    title = 'GoF for 1D SimFit' 
+    logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
+
+    toys = GoFSimFitToys ( gof )
+    toys.run ( 10 , silent = False )
+
+    print ( 'TOYS' , toys ) 
     
 # =============================================================================
 ## check that everything is serializable

@@ -310,7 +310,6 @@ def test_bad_fit_1 ( ) :
             toys = G1D.GoF1DToys ( gof )
             toys = toys.run ( nToys = 1000 ) 
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
-
     
     with use_canvas ( 'test_bad_fit_1: GoF/Kolmogorov-Smirnov' , wait = 1 ) :
         dks = toys.draw('Kolmogorov-Smirnov')

@@ -377,7 +377,6 @@ _new_methods_ += [
     VSE .__repr__   ,
     VSE .__str__    ]
 
-
 # ==============================================================================
 ## @class EffCounter
 #  A primitive "effciciency" counter

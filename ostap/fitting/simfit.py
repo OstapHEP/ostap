@@ -90,9 +90,8 @@ def combined_data ( sample          ,
     ## collect all vars 
     all_vars = ROOT.RooArgSet()
     for label in labels :
-
         dset = None 
-        if isinstance ( datasets , dict ) : dset = datasets[label]
+        if isinstance ( datasets , dict ) : dset = datasets [ label ]
         else :
             for ds in datasets :
                 if label == ds [ 0 ] :
@@ -128,7 +127,7 @@ def combined_data ( sample          ,
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
 
     args = args + tuple ( largs )
-        
+    
     vars = ROOT.RooArgSet()
     if    isinstance ( varset , ROOT.RooAbsReal     ) : vars.add ( varset )
     elif  isinstance ( varset , ROOT.RooAbsCategory ) : vars.add ( varset )
@@ -365,7 +364,7 @@ class SimFit (VarMaker,ConfigReducer) :
         self.__sample       = sample 
 
         ## observables 
-        self.__observables  = ROOT.RooArgSet( self.__sample )
+        self.__observables  = ROOT.RooArgSet ( self.__sample )
         
         # =====================================================================
         ## components
@@ -386,7 +385,7 @@ class SimFit (VarMaker,ConfigReducer) :
             if not isinstance  ( cmp , ( PDF1 , PDF2 , PDF3 ) ) :
                 raise TypeError ( 'Can not find the proper category component: "%s"' % label ) 
             
-            self.__categories [ label ] = cmp
+            self.__categories [ str ( label ) ] = cmp
             _xv = cmp.xvar
 
         sim_pdf     = PDF1 ( self.name + '_Sim' , xvar = _xv )            
@@ -396,8 +395,7 @@ class SimFit (VarMaker,ConfigReducer) :
             self.sample )
         
         ## get all observables  
-        for label in self.categories :
-            pdf = self.categories[ label ]
+        for label, pdf  in self.categories.items () :
             for v in pdf.observables :
                 if not v in self.__observables :
                     self.__observables.add ( v )
@@ -647,7 +645,6 @@ class SimFit (VarMaker,ConfigReducer) :
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
 
         _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  )
-        ## _proj  = ROOT.RooFit.ProjWData  ( dataset  )
         
         _slice = ROOT.RooFit.Slice      ( self.sample    , category )
         for key in  ( 'total_fit_options'           ,
@@ -714,7 +711,6 @@ class SimFit (VarMaker,ConfigReducer) :
                     return None 
 
             elif isinstance ( draw_pdf , PDF1 ) :
-                print ( 'I AM SIMFIT_DRAW!'  , kwargs ) ## , draw_pdf  ) 
                 return draw_pdf.draw ( dataset = dataset ,
                                        nbins   = nbins   ,
                                        silent  = silent  ,
@@ -866,7 +862,6 @@ class SimFit (VarMaker,ConfigReducer) :
                                  nLL            = nLL            ,
                                  args           = args           , **kwargs )
 
-    
     # =========================================================================
     ## generate toy-sample according to PDF
     #  @code
@@ -884,8 +879,7 @@ class SimFit (VarMaker,ConfigReducer) :
                    sample        = True  ,
                    silent        = True  , 
                    storage       = None  ,
-                   category_args = {}    ,
-                   data_as_dict  = False ) :
+                   category_args = {}    ) : 
         """ Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } ) ## generate dataset with 10000 events
@@ -894,7 +888,6 @@ class SimFit (VarMaker,ConfigReducer) :
         >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } , varset , sample = False )
         >>> data   = model.generate ( { 'A' : 100 , 'B' : 200 } , varset , sample = True  )
         """
-
         from   ostap.core.ostap_types   import dictlike_types
         
         labels = self.sample.labels()
@@ -919,7 +912,7 @@ class SimFit (VarMaker,ConfigReducer) :
                     
         ## generate all categories separately:        
         for label in nEvents :
-            
+
             nevts =  nEvents [ label ] 
 
             cargs = []
@@ -931,6 +924,7 @@ class SimFit (VarMaker,ConfigReducer) :
             vv    = ROOT.RooArgSet ()
             for v in self.vars :
                 if v in varset : vv.add ( v )
+
             ds    = pdf.generate ( nevts               ,
                                    varset   = vv       ,
                                    binning  = binning  ,
@@ -939,7 +933,7 @@ class SimFit (VarMaker,ConfigReducer) :
                                    storage  = storage  ,
                                    args     = cargs    )
 
-            if ds.isWeighted() and not data_as_dict :
+            if ds.isWeighted() :
                 ds , weight  = ds.unWeighted ()
                 if weight : wvar = getattr ( ds , weight )
                 
@@ -948,9 +942,6 @@ class SimFit (VarMaker,ConfigReducer) :
                 if not v in vars : vars.add ( v ) 
                 ## vars       |= ds.varset()                 
 
-        ## return data as dictionary
-        if data_as_dict : return data
-        
         ## combine generated datasets
         args = () if not weight else ( ROOT.RooFit.WeightVar ( weight ) , )
         result = combined_data ( self.sample ,
@@ -964,6 +955,7 @@ class SimFit (VarMaker,ConfigReducer) :
             del ds
             
         return result 
+
     # =========================================================================
     ## perform sPlot-analysis 
     #  @code

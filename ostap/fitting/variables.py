@@ -906,7 +906,7 @@ def _racat_items_ ( cat ) :
     """
     
     for label , index  in cat._old_iter_ () :
-        yield label , index
+        yield str ( label ) , index
     
 if not hasattr ( ROOT.RooAbsCategory , '_old_iter_' ) :
     ROOT.RooAbsCategory._old_iter_ =  ROOT.RooAbsCategory.__iter__
@@ -969,7 +969,6 @@ def _rcat_setitem_ ( cat , label , value ) :
         
     raise TypeError ("Invalid type for label/index %s/%s" %  ( label , value ) )
 
-
 # =============================================================================
 ## Get the list/tuple of categories 
 #  @code
@@ -986,7 +985,7 @@ def _racat_labels_ ( cat  ) :
     >>> labels = cat.names () ## ditto 
     >>> labels = cat.keys  () ## ditto 
     """
-    return tuple ( l  for (l,_) in cat.items() )
+    return tuple ( str ( l )   for (l,_) in cat.items() )
 
 # =============================================================================
 ## print RooCategory instance
@@ -1015,8 +1014,9 @@ ROOT.RooAbsCategory.keys          = _racat_labels_
 ROOT.RooCategory   .__str__       = _rcat_str_ 
 ROOT.RooCategory   .__repr__      = _rcat_str_
 
-ROOT.RooCategory   .__int__       = lambda s : s.getCurrentIndex () 
-ROOT.RooCategory   .getVal        = lambda s : s.getCurrentIndex ()
+ROOT.RooAbsCategory   .__int__       = lambda s :       s.getCurrentIndex () 
+ROOT.RooAbsCategory   .getVal        = lambda s :       s.getCurrentIndex ()
+ROOT.RooAbsCategory   .__float__     = lambda s : 1.0 * s.getCurrentIndex () 
     
 ROOT.RooCategory   .setVal        = _rcat_setval_ 
 
