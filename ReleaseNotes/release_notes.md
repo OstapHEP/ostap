@@ -1,6 +1,8 @@
 ## New features
 
-  1.modernize GoF-machinery to allow GoF for SimFit 
+  1. modernize GoF-machinery to allow GoF for SimFit 
+  1. add `draw` and parallel evaluation for Goodnes-of-Fit test for simFit case
+  1. add more symbols into `symbols.py`
   
 ## Backward  incompatible 
 

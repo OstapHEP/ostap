@@ -89,7 +89,7 @@ class WorkManager(TaskManager) :
         ## 
         with concurrent.futures.ProcessPoolExecutor ( max_workers = self.ncpus ) as executor:
             
-            results = executor.map ( job , jobs_args , chunksize = self.chunk_size )                
+            results = executor.map ( job , jobs_args ) ## , chunksize = self.chunk_size )                
             for result in progress_bar ( results                            ,
                                          max_value   = njobs                ,
                                          description = kwargs.pop ( 'description' , "Jobs:" ) ,

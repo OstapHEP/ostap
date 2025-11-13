@@ -2626,7 +2626,7 @@ class PDF1(APDF1,FUN1) :
             self.xvar.setVal ( x )
             
             ## evaluate the function
-            v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()
+            v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ( ROOT.nullptr )
             
             ## get ucertainties if/when available 
             if error and self.fit_result :
@@ -3927,7 +3927,7 @@ class PDF2(APDF2,FUN2) :
             self.xvar.setVal ( x )
             self.yvar.setVal ( y )
             
-            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getVal ()
+            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getVal ( ROOT.nullptr )
             
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
@@ -5231,7 +5231,7 @@ class PDF3(APDF3,FUN3) :
             self.yvar.setVal ( y )
             self.zvar.setVal ( z )
             
-            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getVal ()
+            v = self.pdf.getVal ( self.vars ) if normalized else self.pdf.getVal ( ROOT.nullpr )
             
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )

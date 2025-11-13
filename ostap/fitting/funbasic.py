@@ -1563,7 +1563,7 @@ class FUN1(AFUN1,F1AUX) :
             self.xvar.setVal ( x )
             
             ## evaluate the functin
-            return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()
+            return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ( ROOT.nullptr )
         
     # ========================================================================
     ## convert to float 
@@ -2538,7 +2538,7 @@ class FUN2(AFUN2) :
             self.xvar.setVal ( x )
             self.yvar.setVal ( y )
             
-            return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()  
+            return self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ( ROOT.nullptr )  
 
     # ========================================================================
     ## convert to float 

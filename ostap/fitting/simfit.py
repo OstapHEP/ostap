@@ -91,37 +91,6 @@ def combined_data ( sample          ,
     ## collect all vars 
     all_vars = ROOT.RooArgSet()
 
-    """
-    for label in labels :
-        dset = None 
-        if isinstance ( datasets , dict ) : dset = datasets [ label ]
-        else :
-            for ds in datasets :
-                if label == ds [ 0 ] :
-                    dset =  ds [ 1 ]
-                    break
-                
-        assert dset and isinstance ( dset , ROOT.RooAbsData ),\
-               'Invalid data set for label %s' % label
-
-        for v in dset.vars :
-            if not v in all_vars : all_vars.add ( v ) 
-
-        ##assert not dset.isNonPoissonWeighted () ,\
-        ##       'Weighted data cannot be combined!'
-
-        if not dset.isWeighted () :
-            largs.append (  ROOT.RooFit.Import ( str  ( label ) , dset ) )
-        else :
-            store_error      = dset.store_error      () 
-            store_asym_error = dset.store_asym_error ()            
-            uwdset , wnam    = dset.unWeighted ()
-            assert uwdset and wnam, "Cannot 'unweight' dataset!"
-            largs.append   ( ROOT.RooFit.Import ( str ( label ) , uwdset ) )
-            ds_keep.append ( uwdset ) 
-            weights.add    ( str ( wnam ) )
-    """
-
     imports = {} 
     for label in labels :
         dset = None 
@@ -175,7 +144,7 @@ def combined_data ( sample          ,
                 vv = all_vars [ v ]
                 vars.add ( vv )
             else : 
-                assert TypeError ( 'Invalid variable [%d] %s/%s' % ( i , v , type ( v ) ) )
+                assert TypeError ( 'Invalid variable [%d] %s/%s' % ( i , v , typename ( v ) ) )
 
     wset = ROOT.RooArgSet() 
     if weight :
@@ -390,7 +359,7 @@ class SimFit (VarMaker,ConfigReducer) :
             sample =  _cat
             
         assert isinstance ( sample , ROOT.RooCategory ),\
-               'Invalid type for "sample":' % ( sample ,  type ( sample ) )
+               'Invalid type for "sample":' % ( sample ,  typename ( sample ) )
         
         name = name if name else self.generate_name ( 'simfit' , '' , sample.GetName() )
         
@@ -654,10 +623,6 @@ class SimFit (VarMaker,ConfigReducer) :
         >>> pdf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
         
-        if ( 6 , 37 ) <= root_info :
-            logger.warning ( "SimFit.draw: there is ROOT issue #20383, the plot can be wrong!" )
-            
-                             
         dvar = None
         if   isinstance ( category , ( tuple , list ) ) and 2 == len ( category ) :
             category , dvar = category 
@@ -675,10 +640,24 @@ class SimFit (VarMaker,ConfigReducer) :
                'Category %s is not in %s' % ( category , self.samples )
         assert self.sample in dataset      ,\
                'Category %s is not in dataset' % self.sample.GetName()
-                
-        ## 
+
         sname = self.sample.GetName() 
-        dcut  = ROOT.RooFit.Cut ( "%s==%s::%s"  % ( sname , sname , category ) )
+        scut  = "%s==%s::%s"  % ( sname , sname , category )
+        
+        dskeep = dataset
+        
+        if ( 6 , 37 ) <= root_info :
+            from ostap.logger.colorized import markup
+            message  = 'SimFit.draw(%s): ' % category 
+            message += "There is ROOT issue #20383 (from 27.08.2025). "
+            message += 'Temporary "bypass" is applied! '
+            message += markup ( "Check the plot - it ***COULD*** be ***TERRIBLY*** wrong!" ) 
+            logger.warning ( message )
+            observables  = self.pdf.pdf.getObservables ( dataset )
+            dataset      = dataset.subset ( observables , cuts = scut )
+
+        ## 
+        dcut  = ROOT.RooFit.Cut ( scut )
 
         kwargs [ 'data_options' ] = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , )
         
@@ -706,59 +685,61 @@ class SimFit (VarMaker,ConfigReducer) :
         cat_pdf  = self.categories [ category ]
         draw_pdf = self.drawpdfs   [ category ]
 
-        if 1 < 2 : 
-        ## with KeepArgs     ( draw_pdf . signals     , cat_pdf . signals     ) as _k1 ,\
-        ##          KeepArgs ( draw_pdf . backgrounds , cat_pdf . backgrounds ) as _k2 ,\
-        ##          KeepArgs ( draw_pdf . components  , cat_pdf . components  ) as _k3 ,\
-        ##          KeepArgs ( draw_pdf . crossterms1 , cat_pdf . crossterms1 ) as _k4 ,\
-        ##          KeepArgs ( draw_pdf . crossterms2 , cat_pdf . crossterms2 ) as _k5 :
-
-            if   isinstance ( draw_pdf , PDF3 ) :
-
-                if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) :    
-                    return draw_pdf.draw3 ( dataset = dataset ,
-                                            nbins   = nbins   ,
-                                            silent  = silent  ,
-                                            args    = args    , **kwargs )
-                elif 2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) : 
-                    return draw_pdf.draw2 ( dataset = dataset ,
-                                            nbins   = nbins   ,
-                                            silent  = silent  ,
-                                            args    = args    , **kwargs )
-                elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
-                    return draw_pdf.draw1 ( dataset = dataset ,
-                                            nbins   = nbins   ,
-                                            silent  = silent  ,
-                                            args    = args    , **kwargs )
-                else :
-                    self.error("Unknown 'dvar' for 3D-draw pdf!")
-                    return None
-                
-            elif isinstance ( draw_pdf , PDF2 ) :
-                
-                if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
-                    return draw_pdf.draw2 ( dataset = dataset ,
-                                            nbins   = nbins   ,
-                                            silent  = silent  ,
-                                            args    = args    , **kwargs )
-                elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
-                    return draw_pdf.draw1 ( dataset = dataset ,
-                                            nbins   = nbins   ,
-                                            silent  = silent  ,
-                                            args    = args    , **kwargs )
-                else :
-                    self.error("Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
-                    return None 
-
-            elif isinstance ( draw_pdf , PDF1 ) :
-                return draw_pdf.draw ( dataset = dataset ,
-                                       nbins   = nbins   ,
-                                       silent  = silent  ,
-                                       args    = args    , **kwargs )
-
-            self.error ("draw: inconsistent combination of draw_pdf '%s' and dvar '%s'" % (
-                type ( draw_pdf ) , dvar ) )
+        result = None
+        
+        if   isinstance ( draw_pdf , PDF3 ) :
             
+            if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) :    
+                result = draw_pdf.draw3 ( dataset = dataset ,
+                                          nbins   = nbins   ,
+                                          silent  = silent  ,
+                                          args    = args    , **kwargs )
+            elif 2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) : 
+                result = draw_pdf.draw2 ( dataset = dataset ,
+                                          nbins   = nbins   ,
+                                          silent  = silent  ,
+                                          args    = args    , **kwargs )
+            elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
+                result = draw_pdf.draw1 ( dataset = dataset ,
+                                          nbins   = nbins   ,
+                                          silent  = silent  ,
+                                          args    = args    , **kwargs )
+            else :
+                self.error("Unknown 'dvar' for 3D-draw pdf!")
+                
+        elif isinstance ( draw_pdf , PDF2 ) :
+            
+            if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
+                result = draw_pdf.draw2 ( dataset = dataset ,
+                                          nbins   = nbins   ,
+                                          silent  = silent  ,
+                                          args    = args    , **kwargs )
+            elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
+                result = draw_pdf.draw1 ( dataset = dataset ,
+                                          nbins   = nbins   ,
+                                          silent  = silent  ,
+                                          args    = args    , **kwargs )
+            else :
+                self.error("Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
+
+        elif isinstance ( draw_pdf , PDF1 ) :
+            result = draw_pdf.draw ( dataset = dataset ,
+                                     nbins   = nbins   ,
+                                     silent  = silent  ,
+                                     args    = args    , **kwargs )
+        else :
+            
+            self.error ("draw: inconsistent combination of draw_pdf '%s' and dvar '%s'" % (
+                typename  ( draw_pdf ) , dvar ) )
+
+
+        ## temporarily, for fix 
+        if not dskeep is dataset :
+            dataset.clear()
+            del dataset 
+        
+        return result
+
     # =========================================================================
     ## create NLL
     #  @code

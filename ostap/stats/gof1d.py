@@ -293,8 +293,8 @@ def ZC  ( cdf_data ) :
 def vct_clip ( input , silent = True ) :
     """ Clip input CDF arrays"""
     vmin , vmax = 1.e-12 , 1 - 1.e-10
-    if silent and ( numpy.min ( input ) < vmin or vmax < numpy.max ( input ) ) :
-        logger.warning ( 'Adjust CDF to be %s<cdf<%s' % ( vmin , fmax ) ) 
+    if not silent and ( numpy.min ( input ) < vmin or vmax < numpy.max ( input ) ) :
+        logger.warning ( 'Adjust CDF to be %s<cdf<%s' % ( vmin , vmax ) ) 
     return numpy.clip ( input , a_min = vmin , a_max = vmax )
 
 # ==============================================================================
@@ -318,38 +318,19 @@ class GoF1D(object) :
         assert 1 == len ( vars )   , 'GoF1D: Only 1D-PDFs are allowed!'
         assert pdf.xvar in dataset , 'GoF1D: `xvar`:%s is not in dataset!' % ( self.xvar.name ) 
 
-        original_cdf = cdf
+        self.__original_cdf = cdf if cdf and callable ( cdf ) else None 
         
-        cdf_ok = cdf and callable ( cdf )
-
-        self.__store = () 
-        if not cdf_ok :
-            cdf = pdf.cdf ()
-            ## make a try to get the underlying c++ cdf-function from PDF 
-            if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
-            if hasattr ( pdf.pdf , 'function' ) :
-                if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
-                fun = pdf.pdf.function()
-                if hasattr ( fun , 'cdf' ) :
-                    # =========================================================
-                    try : # ===================================================
-                        # =====================================================
-                        a = fun.cdf ( 0.0 )
-                        def cdf ( x ) : return fun.cdf ( x ) 
-                        self.__store = pdf , cdf , fun
-                        # =====================================================
-                    except TypeError : # ======================================
-                        # =====================================================
-                        pass 
-
         ## store PDF 
         self.__pdf        = pdf        
-        self.__parameters = parameters if parameters else pdf.parameters ( dataset ) 
+        self.__parameters = parameters if parameters else pdf.parameters ( dataset )
+        
+        ## re-load parameters
+        self.__pdf.load_params ( self.__parameters , silent = True )
 
-        ## store CDF 
-        self.__cdf   = cdf
-
-        ## vectorized version of CDF 
+        ## get/construct/store  CDF 
+        self.__cdf = self.get_cdf ( cdf ) 
+        
+        ## get the vectorized version of CDF 
         self.__vct_cdf = numpy.vectorize ( self.__cdf )
         
         ## data in a form of numpy sructured array
@@ -377,29 +358,66 @@ class GoF1D(object) :
         
     ## serialize the object 
     def __getstate__ ( self ) :
-        """ Serialize the object"""
+        """ Serialize the object
+        """
         self.pdf.load_params ( self.__parameters , silent = True )
-        return { 'pdf'        : self.pdf          ,
-                 'parameters' : self.__parameters , 
-                 'cdf'        : self.cdf          ,
-                 'ecdf'       : self.ecdf         ,
-                 'estimators' : self.estimators   , 
-                 'store'      : self.__store      }
+        return { 'pdf'        : self.pdf            ,
+                 'parameters' : self.__parameters   , 
+                 'cdf'        : self.__original_cdf ,
+                 'ecdf'       : self.ecdf           ,
+                 'estimators' : self.estimators     } 
     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
-        """ De-serialize the object """
-        print ( 'I AM SET STATE' , state.keys() ) 
-        self.__pdf        = state.pop ( 'pdf'        ) 
-        self.__parameters = state.pop ( 'parameters' , {}  ) 
-        self.__cdf        = state.pop ( 'cdf'        )
-        self.__ecdf       = state.pop ( 'ecdf'       )
-        self.__estimators = state.pop ( 'estimators' ) 
-        self.__store      = state.pop ( 'store' , () )
-        ## vectorized form of CDF 
-        self.__vct_cdf    = numpy.vectorize ( self.cdf )
+        """ De-serialize the object
+        """
+        self.__pdf          = state.pop ( 'pdf'        ) 
+        self.__parameters   = state.pop ( 'parameters' , {}  ) 
+        self.__original_cdf = state.pop ( 'cdf'        )
+        self.__ecdf         = state.pop ( 'ecdf'       )
+        self.__estimators   = state.pop ( 'estimators' ) 
+
+        ## (1) re-load parameters 
         self.pdf.load_params ( self.__parameters , silent = True )
-                               
+        ## (2) re-reconstruct CDF 
+        self.__cdf     = self.get_cdf ( self.__original_cdf )         
+        ## vectorized form of CDF 
+        self.__vct_cdf = numpy.vectorize ( self.cdf )
+                
+    # =========================================================================
+    ## Get/Construct CDF 
+    def get_cdf ( self , cdf ) :
+        """ Get/Construct CDF
+        """
+        ## CDF is OK 
+        if cdf and callable ( cdf ) : return cdf
+
+        ## get CDF from PDF:
+        pdf = self.__pdf
+
+        ## consruct the CDF based on RooFit machinery 
+        cdf = pdf.cdf()
+        
+        ## make a try to get the underlying c++ cdf-function from PDF 
+        if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
+        if hasattr ( pdf.pdf , 'function' ) :
+            if hasattr ( pdf.pdf , 'setPars' ) : pdf.pdf.setPars()
+            ## get the underlying C++ function 
+            fun = pdf.pdf.function()
+            if hasattr ( fun , 'cdf' ) :
+                # =========================================================
+                try : # ===================================================
+                    # =====================================================
+                    a = fun.cdf ( 0.0 )
+                    def cdf ( x ) : return fun.cdf ( x ) 
+                    self.__store = pdf , cdf , fun
+                    # =====================================================
+                except TypeError : # ======================================
+                    # =====================================================
+                    pass
+        ## 
+        return cdf
+    
     # =========================================================================
     @property
     def estimators ( self ) :
@@ -629,7 +647,11 @@ class GoF1DToys(GoF1D) :
 
     # ===============================================================================
     ## run toys 
-    def run ( self , nToys = 1000 , parallel = False , silent = False , nSplit = 0 ) :
+    def run ( self ,
+              nToys    = 1000   , * ,
+              parallel = False  ,
+              silent   = False  ,
+              nSplit   = 0      ) :
         """ Run toys 
         """
         assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
@@ -922,31 +944,31 @@ class GoF1DToys(GoF1D) :
         if   key in Keys [ 'KS' ] and 'KS' in self.ecdfs :             
             result = self.result ( 'KS' )
             ecdf   = self.ecdfs  [ 'KS' ]
-            logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
+            ## logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
         elif key in Keys [ 'K'  ] and 'K'  in self.ecdfs : 
             result = self.result ( 'K' )
             ecdf   = self.ecdfs  [ 'K' ]
-            logger.info ( 'Toy results for Kuiper estimate' ) 
+            ## logger.info ( 'Toy results for Kuiper estimate' ) 
         elif key in Keys [ 'AD' ] and 'AD' in self.ecdfs :             
             result = self.result ( 'AD' )
             ecdf   = self.ecdfs  [ 'AD' ]
-            logger.info ( 'Toy results for Anderson-Darling estimate' ) 
+            ## logger.info ( 'Toy results for Anderson-Darling estimate' ) 
         elif key in Keys [ 'CM' ] and 'CM' in self.ecdfs : 
             result = self.result  ( 'CM' )
             ecdf   = self.ecdfs   [ 'CM' ]
-            logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
+            ## logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
         elif key in Keys [ 'ZK' ]  and 'ZK' in self.ecdfs : 
             result = self.result  ( 'ZK' )
             ecdf   = self.ecdfs   [ 'ZK' ]
-            logger.info ( 'Toy results for Zhang/ZK estimate' ) 
+            ## logger.info ( 'Toy results for Zhang/ZK estimate' ) 
         elif key in Keys [ 'ZA' ]   and 'ZA' in self.ecdfs :  
             result = self.result  ( 'ZA' )
             ecdf   = self.ecdfs   [ 'ZA' ]
-            logger.info ( 'Toy results for Zhang/ZA estimate' ) 
+            ## logger.info ( 'Toy results for Zhang/ZA estimate' ) 
         elif key in Keys [ 'ZC' ] and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
-            logger.info ( 'Toy results for Zhang/ZC estimate' ) 
+            ## logger.info ( 'Toy results for Zhang/ZC estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
             
@@ -1230,20 +1252,24 @@ class GoFSimFitToys(GoFSimFit) :
 
     # ===============================================================================
     ## run toys 
-    def run ( self , nToys = 1000 , parallel = False , silent = False , nSplit = 0 ) :
+    def run ( self ,
+              nToys    = 1000  , * ,
+              parallel = False ,
+              silent   = False ,
+              nSplit   = 0     ) :
         """ Run toys 
         """
         assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
 
-        ## 
-        ## if parallel :
-        ##    from ostap.parallel.parallel_gof1d import parallel_gof1dtoys as parallel_toys 
-        ##    self += parallel_toys ( gof      = self       ,
-        ##                            nToys    = nToys      ,
-        ##                            nSplit   = nSplit     ,
-        ##                            silent   = True       ,
-        ##                            progress = not silent )
-        ##    return self 
+        if parallel :
+            
+            from ostap.parallel.parallel_gof1d import parallel_gof1dtoys as parallel_toys 
+            self += parallel_toys ( gof      = self       ,
+                                    nToys    = nToys      ,
+                                    nSplit   = nSplit     ,
+                                    silent   = True       ,
+                                    progress = not silent )
+            return self 
 
         
         results  = { k : defaultdict(list) for k in self.gofs } 
@@ -1294,8 +1320,8 @@ class GoFSimFitToys(GoFSimFit) :
                 total_AD = total_AD and gof .  anderson_darling_estimator <= ad
                 total_CM = total_CM and gof .  cramer_von_mises_estimator <= cm
                 total_ZK = total_ZK and gof .                ZK_estimator <= zk 
-                total_ZA = total_ZK and gof .                ZA_estimator <= za 
-                total_ZC = total_ZK and gof .                ZC_estimator <= zc 
+                total_ZA = total_ZA and gof .                ZA_estimator <= za 
+                total_ZC = total_ZC and gof .                ZC_estimator <= zc 
                 
                 cnts = counters [ key ]                
                 cnts [ 'KS' ] += ks
@@ -1443,7 +1469,6 @@ class GoFSimFitToys(GoFSimFit) :
         ##
         pvalue = ecdf. estimate ( value  ) ## estimate the p-value
         #
-
         pv     = clip_pvalue  ( pvalue , 0.5 )
         nsigma = significance ( pv ) ## convert  it to significace
         
@@ -1539,7 +1564,7 @@ class GoFSimFitToys(GoFSimFit) :
             sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
 
             label = Labels.get( e , e ) 
-            row   = label , infostr ( '*' ) , '' , '' , '' , '' , '' , pvalue , sigma 
+            row   = label , infostr ( '***' ) , '---' , '---' , '---' , '---' , ''  , pvalue , sigma 
             rows.append ( row ) 
 
         rows  = [ header ] + sorted ( rows )
@@ -1559,38 +1584,38 @@ class GoFSimFitToys(GoFSimFit) :
             raise KeyError (  "draw: Invalid `sample`:%s" % sample  )
 
         ecdfs = self.ecdfs[ sample ]
-        
+
         key = cidict_fun ( what )
         if   key in Keys [ 'KS' ] and 'KS' in ecdfs :             
             result = self.result ( sample , 'KS' )
             ecdf   = ecdfs [ 'KS' ]
-            logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
+            ## logger.info ( 'Toy results for %s/Kolmogorov-Smirnov estimate' % sample ) 
         elif key in Keys [ 'K'  ] and 'K'  in ecdfs : 
             result = self.result ( sample , 'K' )
             ecdf   = ecdfs [ 'K' ]
-            logger.info ( 'Toy results for Kuiper estimate' ) 
+            ## logger.info ( 'Toy results for %s/Kuiper estimate'             % sample ) 
         elif key in Keys [ 'AD' ] and 'AD' in ecdfs :             
             result = self.result ( sample , 'AD' )
             ecdf   = ecdfs  [ 'AD' ]
-            logger.info ( 'Toy results for Anderson-Darling estimate' ) 
+            ## logger.info ( 'Toy results for %s/Anderson-Darling estimate'   % sample ) 
         elif key in Keys [ 'CM' ] and 'CM' in ecdfs : 
             result = self.result  ( sample , 'CM' )
             ecdf   = ecdfs   [ 'CM' ]
-            logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
+            ## logger.info ( 'Toy results for %s/Cramer-von Mises  estimate'  % sample ) 
         elif key in Keys [ 'ZK' ]  and 'ZK' in ecdfs : 
             result = self.result  ( sample , 'ZK' )
             ecdf   = ecdfs   [ 'ZK' ]
-            logger.info ( 'Toy results for Zhang/ZK estimate' ) 
+            ## logger.info ( 'Toy results for %s/Zhang/ZK estimate'           % sample ) 
         elif key in Keys [ 'ZA' ]   and 'ZA' in ecdfs :  
             result = self.result  ( sample , 'ZA' )
             ecdf   = ecdfs   [ 'ZA' ]
-            logger.info ( 'Toy results for Zhang/ZA estimate' ) 
+            ## logger.info ( 'Toy results for %s/Zhang/ZA estimate'           % sample ) 
         elif key in Keys [ 'ZC' ] and 'ZC' in ecdfs : 
             result = self.result  ( sample , 'ZC' )
             ecdf   = ecdfs   [ 'ZC' ]
-            logger.info ( 'Toy results for Zhang/ZC estimate' ) 
+            ## logger.info ( 'Toy results for %s/Zhang/ZC estimate'           % sample ) 
         else :
-            raise KeyError (  "draw: Invalid `what`:%s" % what )
+            raise KeyError (  "draw: Invalid `sample/what`: %s/%s" % ( sample , what ) )
             
         xmin , xmax = ecdf.xmin () , ecdf.xmax ()
         value       = result.statistics
@@ -1643,6 +1668,9 @@ class GoFSimFitToys(GoFSimFit) :
             if not key in self.__total : self.__total [ key ]  = content
             else                       : self.__total [ key ] += content
 
+        ## (4) number of toys
+        self.__nToys += other.nToys
+                
         return self 
 
 # =============================================================================

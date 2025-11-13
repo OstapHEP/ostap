@@ -112,7 +112,7 @@ signal1  = Models.Gauss_pdf ( 'G1'                 ,
                               mean  = (0.5 , 2.5 ) ,
                               sigma = (0.1 , 1.0 ) )
 
-model1   = Models.Fit1D ( suffix = 'MA' , signal = signal1 ,  background = -1 )
+model1   = Models.Fit1D ( suffix = 'MA' , signal = signal1 ,  background = 'flat' )
 model1.S = NS1
 model1.B = NB1 
 
@@ -162,17 +162,20 @@ def test_simfit1 () :
     logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
 
 
-    if ( 6 , 37 ) <= root_info : 
+    """
+    if ( 6 , 37 ) <= root_info and 1 > 2 :
+        sample = model_sim.sample 
         logger.warning ( 'There is ROOT issue #20383, use temporary local "fix"' )
         dsA = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'A' ) )
         dsB = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'B' ) )
     else :
         dsA , dsB = dataset , dataset
-
+    """
+    
     with use_canvas ( 'test_gof_simfit1: fit both datasets & draw A' , wait = 2 ) :        
-        fA = model_sim.draw ( 'A' , dsA , nbins = 50 )
+        fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
     with use_canvas ( 'test_gof_simfit1: fit both datasets & draw B' , wait = 2 ) :        
-        fB = model_sim.draw ( 'B' , dsB , nbins = 50 )
+        fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
         
     models.add ( model1        )
     models.add ( model2        )
@@ -199,10 +202,17 @@ def test_simfit1 () :
     logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
 
     toys = GoFSimFitToys ( gof )
-    toys.run ( 100 , silent = False )
+    toys.run ( 500 , silent = False , parallel = True )
 
-    title = 'GoF for 1D SimFit 100 toys)' 
+    title = 'GoF for 1D SimFit %s toys)' % toys.nToys  
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
+
+    ## 
+    for sample, g in toys.gofs.items () : 
+        for k in g.estimators :
+            with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
+                toys .draw ( sample , k )
+            
 
 # =============================================================================
 ## check that everything is serializable

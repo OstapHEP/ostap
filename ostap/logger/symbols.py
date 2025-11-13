@@ -228,8 +228,35 @@ chi2             = '\U0001D6D8\U000000B2' if show else 'chi2'
 chi2ndf          = '%s/ndf' % chi2 
 
 ## lowercase Greek letters 
+greek_lower_alpha     = '\U000003B1'  if show else 'alpha'
+greek_lower_beta      = '\U000003B2'  if show else 'beta'
+greek_lower_gamma     = '\U000003B3'  if show else 'gamma'
+greek_lower_delta     = '\U000003B4'  if show else 'delta'
+greek_lower_epsilon   = '\U000003B5'  if show else 'epsilon'
+greek_lower_zeta      = '\U000003B6'  if show else 'zeta'
+greek_lower_eta       = '\U000003B7'  if show else 'eta'
+greek_lower_theta     = '\U000003B8'  if show else 'theta'
+greek_lower_iota      = '\U000003B9'  if show else 'iota'
+greek_lower_kappa     = '\U000003BA'  if show else 'kappa'
+greek_lower_lambda    = '\U000003BB'  if show else 'lambda'
+greek_lower_mu        = '\U000003BC'  if show else 'mu'
+greek_lower_nu        = '\U000003BD'  if show else 'nu'
+greek_lower_xi        = '\U000003BE'  if show else 'xi'
+greek_lower_omicron   = '\U000003BF'  if show else 'omicron'
+greek_lower_pi        = '\U000003C0'  if show else 'pi'
+greek_lower_rho       = '\U000003C1'  if show else 'rho'
 greek_lower_sigma     = '\U000003C3'  if show else 'sigma'
-greek_lower_chi       = '\U0001D6D8'  if show else 'chi'
+greek_lower_tau       = '\U000003C4'  if show else 'tau'
+greek_lower_ypsilon   = '\U000003C5'  if show else 'ypsilon'
+greek_lower_phi       = '\U000003C6'  if show else 'phi'
+greek_lower_chi       = '\U0001D6C7'  if show else 'chi'
+greek_lower_psi       = '\U0001D6C8'  if show else 'psi'
+greek_lower_omega     = '\U0001D6C9'  if show else 'omega'
+
+
+
+## toys = teddy bear 
+toys                  = '\U0000F9F8'  if show else 'toys'
 
 ## star/convolution oprator
 asterisk         = '\U00002731'           if show else '*'

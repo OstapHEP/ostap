@@ -139,9 +139,9 @@ def run_DNN  ( pdf , data, result , logger ) :
     return dnn.histo 
 
 # ==============================================================================
-## Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
+## Run USTAT Goodness-of-Fit test
 def run_USTAT  ( pdf , data, result , logger ) :
-    """ Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
+    """ Run USTAT Goodness-of-Fit test
     """
 
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
@@ -167,7 +167,7 @@ def run_USTAT  ( pdf , data, result , logger ) :
     row     = tv , '10^%+d' % texpo if texpo else '' , pvalue, nsigma 
     rows.append ( row )
     
-    title= 'Goodness-of-fit USTAT-test'
+    title= 'Goodness-of-Fit USTAT-test'
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
 
@@ -193,7 +193,7 @@ def test_good_fit_1 ( ) :
         gauss.load_params ( r , silent = True ) 
         with timing ( 'GoF1D-toys' , logger = logger ) : 
             toys = G1D.GoF1DToys ( gof )
-            toys = toys.run ( nToys = 500 )
+            toys = toys.run ( nToys = 500 , parallel = True )
         logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
 
     del gof
@@ -246,6 +246,7 @@ def test_good_fit_2 ( ) :
         keep.add ( udist1 ) 
         with use_canvas ( 'test_good_fit_2: DNN' , wait = 1 ) :
             udist1.draw()
+            
     udist2 = run_USTAT ( model , data_g , r , logger )
     if udist2 :
         keep.add ( udist2 ) 
@@ -313,11 +314,11 @@ def test_bad_fit_1 ( ) :
     
     with use_canvas ( 'test_bad_fit_1: GoF/Kolmogorov-Smirnov' , wait = 1 ) :
         dks = toys.draw('Kolmogorov-Smirnov')
-    with use_canvas ( 'test_bad_fit_1: GoF/Anderson-Darling' , wait = 1 ) :
+    with use_canvas ( 'test_bad_fit_1: GoF/Anderson-Darling'   , wait = 1 ) :
         dad = toys.draw('Anderson-Darling')
-    with use_canvas ( 'test_bad_fit_1: GoF/Cramer-von Mises' , wait = 1 ) :
+    with use_canvas ( 'test_bad_fit_1: GoF/Cramer-von Mises'   , wait = 1 ) :
         dcm = toys.draw('Cramer-von Mises')
-    with use_canvas ( 'test_bad_fit_1: GoF/Kuiper'           , wait = 1 ) :
+    with use_canvas ( 'test_bad_fit_1: GoF/Kuiper'             , wait = 1 ) :
         dcm = toys.draw('Kuiper')
     with use_canvas ( 'test_bad_fit_1: GoF/ZK' , wait = 1 ) :
         dzk = toys.draw('ZK')
@@ -331,13 +332,12 @@ def test_bad_fit_1 ( ) :
     udist1 = run_DNN ( gauss , data_b , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
-        with use_canvas ( 'test_bad_fit_1: DNN' , wait = 1 ) :
-            udist1.draw()
+        with use_canvas ( 'test_bad_fit_1: DNN' , wait = 1 ) : udist1.draw()
+        
     udist2 = run_USTAT ( gauss , data_b , r , logger )
     if udist2 :
         keep.add ( udist2 ) 
-        with use_canvas ( 'test_bad_fit_3: USTAT' , wait = 1 ) :
-            udist2.draw()
+        with use_canvas ( 'test_bad_fit_3: USTAT' , wait = 1 ) : udist2.draw()
             
     del gof
     del toys
@@ -345,10 +345,10 @@ def test_bad_fit_1 ( ) :
 # ===============================================================================
 if '__main__' == __name__ :
 
-    ## test_good_fit_1 ()  ## fit Gauss       to Gauss 
+    test_good_fit_1 ()  ## fit Gauss       to Gauss 
     ## test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
     ## test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
-    test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
+    ## test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
 
 # ===============================================================================
 ##                                                                        The END 
