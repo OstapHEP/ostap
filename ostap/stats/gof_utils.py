@@ -216,7 +216,47 @@ def normalize ( ds , *others , weight = () , first = True ) :
             
     return tuple ( result ) 
 
+# =============================================================================
+## Short labels for various statitical estimators 
+Labels = {
+    'KS' : 'Kolmogorov-Smirnov' ,
+    'K'  : 'Kuiper'             ,
+    'AD' : 'Anderson-Darling'   ,
+    'CM' : 'Cramer-von Mises'   ,
+    'ZK' : 'Zhang/ZK'           ,
+    'ZA' : 'Zhang/ZA'           ,
+    'ZC' : 'Zhang/ZC'           ,        
+}
+## lower-case shortcuts:
+Keys = {    
+    'KS' : ( 'ks' , 'kolmogorov' , 'kolmogorovsmirnov' ) , 
+    'K'  : ( 'k'  , 'kuiper'                           ) , 
+    'AD' : ( 'ad' , 'anderson'   , 'andersondarling'   ) , 
+    'CM' : ( 'cm' , 'cramer'     , 'cramervonmises'    ) , 
+    'ZK' : ( 'zk' , 'zhangk'     , 'zhangzk'           ) , 
+    'ZA' : ( 'za' , 'zhanga'     , 'zhangza'           ) , 
+    'ZC' : ( 'zc' , 'zhangc'     , 'zhangzc'           ) , 
+    }
+# =============================================================================
+assert Labels.keys() == Keys.keys() , "Mismatch between Labels & Keys structures!"
+# =============================================================================
 
+# =============================================================================
+## clip p-value 
+def clip_pvalue ( pvalue , clip = 0.5 ) :
+    """ Clip p-value
+    """
+    pv = VE ( pvalue )
+    ## everything is fine, no need to clip 
+    if 0 < pv.value() < 1 : return pv  
+    ##
+    clip = min ( 0.5 , abs ( clip ) * pv.error () )
+    ## 
+    if   1 <= pv : pv = VE ( 1 - clip , pv.cov2() )
+    elif 0 >= pv : pv = VE (     clip , pv.cov2() )
+    ## 
+    return pv 
+    
 # =============================================================================
 ## @class PERMUTATOR
 #  Helper class that allow to run permutation test in parallel 

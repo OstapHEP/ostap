@@ -26,7 +26,6 @@ __all__     = (
     'GoF1DToys'          , ## helper utility for GoF estimate with toys 
     )
 # =============================================================================
-from   collections              import defaultdict, namedtuple
 from   ostap.core.meta_info     import root_info 
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
@@ -39,8 +38,10 @@ from   ostap.stats.counters     import SE, EffCounter
 from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
-from   ostap.logger.symbols     import plus_minus, times
-from   ostap.logger.colorized   import infostr 
+from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
+from   ostap.logger.colorized   import infostr
+from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue  
+from   collections              import defaultdict, namedtuple
 import ostap.logger.table       as     T
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
@@ -287,25 +288,6 @@ def ZC  ( cdf_data ) :
     result = sum ( ( flog ( ( 1.0 / Fi - 1 ) / ( ( n - 0.5 ) / ( i + 0.25 ) - 1 ) ) ) ** 2 for ( i , Fi ) in enumerate ( cdf_data ) )
     return result
 
-# =============================================================================
-## Short labels for various statitical estimators 
-Labels = {
-    'KS' : 'Kolmogorov-Smirnov' ,
-    'K'  : 'Kuiper'             ,
-    'AD' : 'Anderson-Darling'   ,
-    'CM' : 'Cramer-von Mises'   ,
-    'ZK' : 'Zhang/ZK'           ,
-    'ZA' : 'Zhang/ZA'           ,
-    'ZC' : 'Zhang/ZC'           ,        
-}
-## lower-case shortcuts:
-KS_keys = 'ks' , 'kolmogorov' , 'kolmogorovsmirnov' 
-K_keys  = 'k'  , 'kuiper'  
-AD_keys = 'ad' , 'anderson'   , 'andersondarling' 
-CM_keys = 'cm' , 'cramer'     , 'cramervonmises' 
-ZK_keys = 'zk' , 'zhangk'     , 'zhangzk'
-ZA_keys = 'za' , 'zhanga'     , 'zhangza'
-ZC_keys = 'zc' , 'zhangc'     , 'zhangzc'
 # =========================================================================
 ## Clip input CDF arrays 
 def vct_clip ( input , silent = True ) :
@@ -843,10 +825,7 @@ class GoF1DToys(GoF1D) :
         ##
         pvalue = ecdf. estimate ( value  ) ## estimate the p-value
         #
-        clip = 0.5 * pvalue.error()
-        pv   = pvalue 
-        if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
-        elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+        pv     = clip_pvalue ( pvalue , 0.5 ) 
         nsigma = significance ( pv ) ## convert  it to significace
         
         return self.Result ( value   ,
@@ -890,14 +869,14 @@ class GoF1DToys(GoF1D) :
         vmx = vmax  / scale
         
         pvalue = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
-        sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+        nsigma = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
 
         return ( what  ,
                  fmtv  % vs ,
                  fmt   % ( vm.value() , vm.error() ) ,
                  fmtv  % vr                          ,
                  fmt2  %  ( vmn , vmx )              ,
-                 ( '%s10^%+d' %  ( times , expo )  if expo else '' ) , pvalue , sigma )
+                 ( '%s10^%+d' %  ( times , expo )  if expo else '' ) , pvalue , nsigma )
 
     # =========================================================================
     ## Make a summary table
@@ -905,7 +884,14 @@ class GoF1DToys(GoF1D) :
         """ Make a summary table
         """
         import ostap.logger.table  as     T                 
-        header = ( 'Statistics' , 'value' , 'mean' , 'rms' , 'min/max' , 'factor' , 'p-value [%]' , '#sigma' )
+        header = ( 'Statistics'        ,
+                   'value'             ,
+                   'mean'              , 
+                   'rms'               ,
+                   'min/max'           ,
+                   'factor'            ,
+                   'p-value [%]'       ,
+                   '#%s' % greek_lower_sigma )
         rows   = [] 
         
         for label in self.ecdfs :
@@ -917,7 +903,6 @@ class GoF1DToys(GoF1D) :
             row = self.row ( the_label , result , width = width , precision = precision )
             rows.append ( row ) 
                     
-        if rows : rows = T.remove_empty_columns ( rows )
         if   not title and self.nToys : title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
         elif not title                : title = 'Goodness of 1D-fit'
 
@@ -934,42 +919,42 @@ class GoF1DToys(GoF1D) :
         """ Draw ECDF for toys & statistical estgimator 
         """
         key = cidict_fun ( what ) 
-        if   key in KS_keys and 'KS' in self.ecdfs :             
+        if   key in Keys [ 'KS' ] and 'KS' in self.ecdfs :             
             result = self.result ( 'KS' )
             ecdf   = self.ecdfs  [ 'KS' ]
-            logger.info ( 'Toy resuls for Kolmogorov-Smirnov estimate' ) 
-        elif key in K_keys  and 'K'  in self.ecdfs : 
+            logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
+        elif key in Keys [ 'K'  ] and 'K'  in self.ecdfs : 
             result = self.result ( 'K' )
             ecdf   = self.ecdfs  [ 'K' ]
-            logger.info ( 'Toy resuls for Kuiper estimate' ) 
-        elif key in AD_keys and 'AD' in self.ecdfs :             
+            logger.info ( 'Toy results for Kuiper estimate' ) 
+        elif key in Keys [ 'AD' ] and 'AD' in self.ecdfs :             
             result = self.result ( 'AD' )
             ecdf   = self.ecdfs  [ 'AD' ]
-            logger.info ( 'Toy resuls for Anderson-Darling estimate' ) 
-        elif key in CM_keys  and 'CM' in self.ecdfs : 
+            logger.info ( 'Toy results for Anderson-Darling estimate' ) 
+        elif key in Keys [ 'CM' ] and 'CM' in self.ecdfs : 
             result = self.result  ( 'CM' )
             ecdf   = self.ecdfs   [ 'CM' ]
-            logger.info ( 'Toy resuls for Cramer-von Mises  estimate' ) 
-        elif key in ZK_keys  and 'ZK' in self.ecdfs : 
+            logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
+        elif key in Keys [ 'ZK' ]  and 'ZK' in self.ecdfs : 
             result = self.result  ( 'ZK' )
             ecdf   = self.ecdfs   [ 'ZK' ]
-            logger.info ( 'Toy resuls for Zhang/ZK estimate' ) 
-        elif key in ZA_keys  and 'ZA' in self.ecdfs :  
+            logger.info ( 'Toy results for Zhang/ZK estimate' ) 
+        elif key in Keys [ 'ZA' ]   and 'ZA' in self.ecdfs :  
             result = self.result  ( 'ZA' )
             ecdf   = self.ecdfs   [ 'ZA' ]
-            logger.info ( 'Toy resuls for Zhang/ZA estimate' ) 
-        elif key in ZC_keys and 'ZC' in self.ecdfs : 
+            logger.info ( 'Toy results for Zhang/ZA estimate' ) 
+        elif key in Keys [ 'ZC' ] and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
-            logger.info ( 'Toy resuls for Zhang/ZC estimate' ) 
+            logger.info ( 'Toy results for Zhang/ZC estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
             
         xmin , xmax = ecdf.xmin () , ecdf.xmax ()
-        value     = result.statistics
-        xmin      = min ( xmin , value )
-        xmax      = max ( xmax , value )
-        xmin , xmax  = axis_range ( xmin , xmax , delta = 0.20 )
+        value       = result.statistics
+        xmin        = min ( xmin , value )
+        xmax        = max ( xmax , value )
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
 
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
@@ -1458,10 +1443,8 @@ class GoFSimFitToys(GoFSimFit) :
         ##
         pvalue = ecdf. estimate ( value  ) ## estimate the p-value
         #
-        clip = 0.5 * pvalue.error()
-        pv   = pvalue 
-        if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
-        elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+
+        pv     = clip_pvalue  ( pvalue , 0.5 )
         nsigma = significance ( pv ) ## convert  it to significace
         
         return self.Result ( value   ,
@@ -1522,15 +1505,15 @@ class GoFSimFitToys(GoFSimFit) :
         """ Make a summary table
         """
         import ostap.logger.table  as     T                 
-        header = ( 'Statistics'  ,
-                   'Sample'      , 
-                   'value'       , 
-                   'mean'        ,
-                   'rms'         ,
-                   'min/max'     ,
-                   'factor'      ,
-                   'p-value [%]' ,
-                   '#sigma'      ) 
+        header = ( 'Statistics'        ,
+                   'Sample'            , 
+                   'value'             , 
+                   'mean'              ,
+                   'rms'               ,
+                   'min/max'           ,
+                   'factor'            ,
+                   'p-value [%]'       ,
+                   '#%s' % greek_lower_sigma ) 
         
         rows = []
         for sample , ecdfs in self.ecdfs.items()  :
@@ -1549,10 +1532,7 @@ class GoFSimFitToys(GoFSimFit) :
             ## get the binomial efficiency 
             pvalue = cnt.efficiency
 
-            clip   = 0.5 * pvalue.error()
-            pv     = pvalue 
-            if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
-            elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+            pv     = clip_pvalue ( pvalue , 0.5 )
             nsigma = significance ( pv ) ## convert  it to significace
             
             pvalue = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
@@ -1562,7 +1542,6 @@ class GoFSimFitToys(GoFSimFit) :
             row   = label , infostr ( '*' ) , '' , '' , '' , '' , '' , pvalue , sigma 
             rows.append ( row ) 
 
-
         rows  = [ header ] + sorted ( rows )
         rows  = T.remove_empty_columns ( rows ) 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lcccccccc' , style = style )
@@ -1570,6 +1549,68 @@ class GoFSimFitToys(GoFSimFit) :
     __repr__ = table
     __str__  = table
 
+    
+    # =========================================================================
+    ## Draw ECDF for toys & statistical estimator 
+    def draw  ( self , sample , what , opts = '' , *args , **kwargs ) :
+        """ Draw ECDF for toys & statistical estgimator 
+        """
+        if not sample in self.ecdfs :
+            raise KeyError (  "draw: Invalid `sample`:%s" % sample  )
+
+        ecdfs = self.ecdfs[ sample ]
+        
+        key = cidict_fun ( what )
+        if   key in Keys [ 'KS' ] and 'KS' in ecdfs :             
+            result = self.result ( sample , 'KS' )
+            ecdf   = ecdfs [ 'KS' ]
+            logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
+        elif key in Keys [ 'K'  ] and 'K'  in ecdfs : 
+            result = self.result ( sample , 'K' )
+            ecdf   = ecdfs [ 'K' ]
+            logger.info ( 'Toy results for Kuiper estimate' ) 
+        elif key in Keys [ 'AD' ] and 'AD' in ecdfs :             
+            result = self.result ( sample , 'AD' )
+            ecdf   = ecdfs  [ 'AD' ]
+            logger.info ( 'Toy results for Anderson-Darling estimate' ) 
+        elif key in Keys [ 'CM' ] and 'CM' in ecdfs : 
+            result = self.result  ( sample , 'CM' )
+            ecdf   = ecdfs   [ 'CM' ]
+            logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
+        elif key in Keys [ 'ZK' ]  and 'ZK' in ecdfs : 
+            result = self.result  ( sample , 'ZK' )
+            ecdf   = ecdfs   [ 'ZK' ]
+            logger.info ( 'Toy results for Zhang/ZK estimate' ) 
+        elif key in Keys [ 'ZA' ]   and 'ZA' in ecdfs :  
+            result = self.result  ( sample , 'ZA' )
+            ecdf   = ecdfs   [ 'ZA' ]
+            logger.info ( 'Toy results for Zhang/ZA estimate' ) 
+        elif key in Keys [ 'ZC' ] and 'ZC' in ecdfs : 
+            result = self.result  ( sample , 'ZC' )
+            ecdf   = ecdfs   [ 'ZC' ]
+            logger.info ( 'Toy results for Zhang/ZC estimate' ) 
+        else :
+            raise KeyError (  "draw: Invalid `what`:%s" % what )
+            
+        xmin , xmax = ecdf.xmin () , ecdf.xmax ()
+        value       = result.statistics
+        xmin        = min ( xmin , value )
+        xmax        = max ( xmax , value )
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
+
+        kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
+        kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
+
+        result    = ecdf.draw  ( opts , *args , **kwargs ) 
+        line      = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        ## 
+        line.SetLineWidth ( 4 ) 
+        line.SetLineColor ( 8 ) 
+        line.draw ( 'same' )
+        ##
+        self._line = line
+        return result, line  
+    
     # =========================================================================
     ## merge two objects:
     def merge ( self , other ) :

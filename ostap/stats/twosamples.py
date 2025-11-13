@@ -18,12 +18,19 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
-from   ostap.core.ostap_types import listlike_types 
-from   collections            import defaultdict
+from   ostap.core.ostap_types import listlike_types, sequence_types  
 from   ostap.core.core        import SE, VE, Ostap
-from   ostap.utils.basic      import typename 
+from   ostap.utils.basic      import loop_items, typename 
 from   ostap.math.base        import doubles, axis_range, numpy   
-from   ostap.math.models      import f1_draw 
+from   ostap.math.models      import f1_draw
+from   ostap.utils.cidict     import cidict_fun
+from   ostap.logger.pretty    import pretty_float
+from   ostap.stats.gof_utils  import Labels, Keys, clip_pvalue 
+from   ostap.math.math_ve     import significance
+from   ostap.math.ve          import fmt_pretty_ve
+from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma
+from   collections            import defaultdict, namedtuple 
+import ostap.logger.table     as     T
 import ostap.fitting.ds2numpy 
 import ostap.fitting.roofit
 import ROOT, math, array   
@@ -45,17 +52,19 @@ else                        : data2vct = lambda s : doubles ( s )
 #  cdf  = ecdf_from_data ( data ) 
 #  @endcode 
 #  @param data input dataset 
-#  @return empirical cumulative distribution function 
+#  @return empirical cumulative distribution function
+#  @see Ostap::Math::ECDF 
 def ecdf_from_data  ( data ) :
     """ Transform data into empirical CDF 
     - data : input dataset 
     >>> data = ...
-    >>> cdf  = ecdf_from_data ( data ) 
+    >>> cdf  = ecdf_from_data ( data )
+    - see `Ostap.Math.ECDF`
     """
     if   isinstance  ( data , Ostap.Math.ECDF        ) : return data 
     elif numpy and isinstance ( data , numpy.ndarray ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data , array.array            ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
-    elif isinstance  ( data1 , listlike_types        ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
+    elif isinstance  ( data  , array.array           ) : return Ostap.Math.ECDF ( data2vct ( data ) ) 
+    elif isinstance  ( data1 , sequence_types        ) : return Ostap.Math.ECDF ( doubles  ( data ) ) 
     ## 
     raise TypeError ( "ecdf_from_data: Unsupported `data' type: %s" % typename ( data1 ) )
 # ===============================================================================
@@ -441,15 +450,37 @@ class TSTest(object):
 
     # =========================================================================
     ## Print the summary as Table
-    ## def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
-    ##    """ Print the summary as Table
-    ##    """
-    ##    title = title if title else 'Two Sample Test'
-    ##    return Estimators.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
-    ## 
-    ##  __repr__ = table 
-    ## __str__  = table 
+    def table ( self             , * , 
+                title     = ''   ,
+                prefix    = ''   ,
+                precision = 4    , 
+                width     = 6    ,
+                style     = None ) :
+        """ Print the summary as Table
+        """
+        ##
+        header = ( 'Statistics' , 'Value' , '' ) 
+        rows   = [] 
+        
+        for label , value  in loop_items ( self.estimators ) :
+            
+            the_label = Labels.get ( label , label )
 
+            result , expo = pretty_float ( value , width = width , precision = precision )
+
+            if expo : row = the_label , result , '10^%+d' % expo
+            else    : row = the_label , result 
+            rows.append ( row )
+
+        rows = [ header ] + sorted ( rows ) 
+        title = title if title else 'Two samples Test' 
+        rows  = T.remove_empty_columns ( rows )
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' , style = style  )
+
+    ## print estimator as table 
+    __repr__ = table
+    __str__  = table
+    
     # =========================================================================
     @property
     def estimators ( self ) :
@@ -496,9 +527,6 @@ class TSTest(object):
         """        
         return self.estimators.get ( 'ZC' , None ) 
     
-    ## __repr__ = Estimators.table
-    ## __str__  = Estimators.table
-    
     # =========================================================================
     def ks_acccept ( self , alpha ) :
 
@@ -530,12 +558,12 @@ class TSTest(object):
 
         xmin  , xmax  = ecdf .xmin (), ecdf .xmax()
         xmin1 , xmax1 = ecdf1.xmin (), ecdf1.xmax()
-        xmin2 , xmax2 = ecdf1.xmin (), ecdf1.xmax()
+        xmin2 , xmax2 = ecdf2.xmin (), ecdf2.xmax()
 
         xmin = min ( xmin , xmin1 , xmin2 )
         xmax = max ( xmax , xmax1 , xmax2 )
 
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.05 )
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.15 )
 
         xmin = kwargs.pop ( 'xmin' , xmin )
         xmax = kwargs.pop ( 'xmax' , xmax )
@@ -554,12 +582,16 @@ class TSTest(object):
 class TSToys(TSTest):
     """ Two-sample test 
     """
+    ## result of 2-samples test
+    Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
+    # =========================================================================
+    ## Initialize TSToys object 
     def __init__ ( self           ,
                    data1          ,
                    data2          ,
                    nToys  = 100   , 
                    silent = False ) :
-
+        
         ## initialize the base
         TSTest.__init__ ( self , data1 , data2 )
 
@@ -692,26 +724,164 @@ class TSToys(TSTest):
         """        
         return self.result ( 'ZC' ) 
 
-    # =========================================================================
-    ## Print the summary as Table
-    ## def table ( self , title = '' , prefix = '' , width = 5 , precision = 3 , style = None ) :
-    ##    """ Print the summary as Table
-    ##    """
-    ##    if   not title and self.nToys :
-    ##        title = 'Two Sampel Test with #%d toys' % self.nToys  
-    ##    elif not title :
-    ##        title = 'Two Sample Test'        
-    ##    return Summary.table ( self , title = title , prefix = prefix , width = width , precision = precision , style = style )
-
-    ##__repr__ = table 
-    ##__str__  = table 
+    # ========================================================================
+    ## Helper method to get the result
+    def result ( self , label ) :
+        """ Helper method to get the result 
+        """
+        if not label in self.estimators : return None
+        if not label in self.ecdfs      : return None
+        if not label in self.counters   : return None
+        ##
+        value   = self.estimators   [ label ]
+        ecdf    = self.ecdfs        [ label ] 
+        counter = self.counters     [ label ] 
+        ##
+        pvalue = ecdf. estimate ( value  ) ## estimate the p-value
+        #
+        pv = clip_pvalue ( pvalue , 0.5 ) 
+        nsigma = significance ( pv ) ## convert  it to significace
+        
+        return self.Result ( value   ,
+                             counter ,
+                             pvalue  ,
+                             nsigma  )
     
     # =========================================================================
-    ## Draw ECDF for toys & statistical estgimator 
-    ## def draw  ( self , what , opts = '' , *args , **kwargs ) :
-    ##     """ Draw ECDF for toys & statistical estgimator 
-    ##    """
-    ##    return Summary.draw ( self , what , opts = opts , *args , **kwargs ) 
+    ## format a row in the summary table
+    def row  ( self , what , result , width = 6 , precision = 4 ) :
+        """ Format a row in the sumamry table
+        """
+        value      = result.statistics
+        counter    = result.counter
+        pvalue     = result.pvalue
+        nsigma     = result.nsigma
+        
+        mean       = counter.mean   ()
+        rms        = counter.rms    () 
+        vmin, vmax = counter.minmax () 
+        
+        mxv = max ( abs ( value        ) ,
+                    abs ( mean.value() ) ,
+                    mean.error()         , rms ,
+                    abs ( vmin )  , abs ( vmax ) ) 
+        
+        fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
+                                                  width       = width       ,
+                                                  precision   = precision   , 
+                                                  parentheses = False       )
+        
+        if expo : scale = 10**expo
+        else    : scale = 1
+        
+        fmt2 = '%s/%s' % ( fmtv , fmtv ) 
+
+        vs  = value / scale
+        vm  = mean  / scale
+        vr  = rms   / scale
+        vmn = vmin  / scale
+        vmx = vmax  / scale
+        
+        pvalue = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+        sigma  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+
+        return ( what  ,
+                 fmtv  % vs ,
+                 fmt   % ( vm.value() , vm.error() ) ,
+                 fmtv  % vr                          ,
+                 fmt2  %  ( vmn , vmx )              ,
+                 ( '%s10^%+d' %  ( times , expo )  if expo else '' ) , pvalue , sigma )
+    
+    # =========================================================================
+    ## Make a summary table
+    def table ( self , title = '' , prefix = '' , width = 6 , precision = 4 , style = None ) :
+        """ Make a summary table
+        """
+        import ostap.logger.table  as     T                 
+        header = ( 'Statistics'   ,
+                   'value'       ,
+                   'mean'        ,
+                   'rms'         ,
+                   'min/max'     ,
+                   'factor'      ,
+                   'p-value [%]' ,
+                   '#%s' % greek_lower_sigma )
+        rows   = [] 
+        
+        for label in self.ecdfs :
+            
+            result  = self.result ( label )
+            if not result : continue
+
+            the_label = Labels.get ( label , label )
+            row = self.row ( the_label , result , width = width , precision = precision )
+            rows.append ( row ) 
+                    
+        if   not title and self.nToys : title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
+        elif not title                : title = 'Goodness of 1D-fit'
+
+        rows = [ header ] + sorted ( rows ) 
+        rows = T.remove_empty_columns ( rows ) 
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccc' , style = style )
+
+    __repr__ = table
+    __str__  = table
+
+    # =========================================================================
+    ## Draw ECDF for toys & statistical estimator 
+    def draw  ( self , what , opts = '' , *args , **kwargs ) :
+        """ Draw ECDF for toys & statistical estgimator 
+        """
+        key = cidict_fun ( what ) 
+        if   key in Keys [ 'KS' ] and 'KS' in self.ecdfs :             
+            result = self.result ( 'KS' )
+            ecdf   = self.ecdfs  [ 'KS' ]
+            logger.info ( 'Toy results for Kolmogorov-Smirnov estimate' ) 
+        elif key in Keys [ 'K'  ] and 'K'  in self.ecdfs : 
+            result = self.result ( 'K' )
+            ecdf   = self.ecdfs  [ 'K' ]
+            logger.info ( 'Toy results for Kuiper estimate' ) 
+        elif key in Keys [ 'AD' ] and 'AD' in self.ecdfs :             
+            result = self.result ( 'AD' )
+            ecdf   = self.ecdfs  [ 'AD' ]
+            logger.info ( 'Toy results for Anderson-Darling estimate' ) 
+        elif key in Keys [ 'CM' ] and 'CM' in self.ecdfs : 
+            result = self.result  ( 'CM' )
+            ecdf   = self.ecdfs   [ 'CM' ]
+            logger.info ( 'Toy results for Cramer-von Mises  estimate' ) 
+        elif key in Keys [ 'ZK' ]  and 'ZK' in self.ecdfs : 
+            result = self.result  ( 'ZK' )
+            ecdf   = self.ecdfs   [ 'ZK' ]
+            logger.info ( 'Toy results for Zhang/ZK estimate' ) 
+        elif key in Keys [ 'ZA' ]   and 'ZA' in self.ecdfs :  
+            result = self.result  ( 'ZA' )
+            ecdf   = self.ecdfs   [ 'ZA' ]
+            logger.info ( 'Toy results for Zhang/ZA estimate' ) 
+        elif key in Keys [ 'ZC' ] and 'ZC' in self.ecdfs : 
+            result = self.result  ( 'ZC' )
+            ecdf   = self.ecdfs   [ 'ZC' ]
+            logger.info ( 'Toy results for Zhang/ZC estimate' ) 
+        else :
+            raise KeyError (  "draw: Invalid `what`:%s" % what )
+
+        xmin , xmax = ecdf.xmin () , ecdf.xmax ()
+        value       = result.statistics
+        xmin        = min ( xmin , value )
+        xmax        = max ( xmax , value )
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
+
+        kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
+        kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
+
+        result    = ecdf.draw  ( opts , *args , **kwargs ) 
+        line      = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        ## 
+        line.SetLineWidth ( 4 ) 
+        line.SetLineColor ( 8 ) 
+        line.draw ( 'same' )
+        ##
+        self._line = line
+        return result, line
     
 # =============================================================================
 if '__main__' == __name__ :

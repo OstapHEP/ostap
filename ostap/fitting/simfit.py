@@ -21,6 +21,7 @@ __all__     = (
     'combined_hdata' , ## prepare combined binned dataset for the simultaneous fit
     )
 # =============================================================================
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import std , Ostap , dsID
 from   ostap.utils.basic        import items_loop  , typename
 from   ostap.utils.utils        import chunked 
@@ -89,6 +90,8 @@ def combined_data ( sample          ,
 
     ## collect all vars 
     all_vars = ROOT.RooArgSet()
+
+    """
     for label in labels :
         dset = None 
         if isinstance ( datasets , dict ) : dset = datasets [ label ]
@@ -117,7 +120,40 @@ def combined_data ( sample          ,
             largs.append   ( ROOT.RooFit.Import ( str ( label ) , uwdset ) )
             ds_keep.append ( uwdset ) 
             weights.add    ( str ( wnam ) )
-            
+    """
+
+    imports = {} 
+    for label in labels :
+        dset = None 
+        if isinstance ( datasets , dict ) : dset = datasets [ label ]
+        else :
+            for ds in datasets :
+                if label == ds [ 0 ] :
+                    dset =  ds [ 1 ]
+                    break
+                
+        assert dset and isinstance ( dset , ROOT.RooAbsData ),\
+               'Invalid data set for label %s' % label
+
+        for v in dset.vars :
+            if not v in all_vars : all_vars.add ( v ) 
+
+        ##assert not dset.isNonPoissonWeighted () ,\
+        ##       'Weighted data cannot be combined!'
+
+        if not dset.isWeighted () :
+            imports [ str ( label ) ] = dset 
+        else :
+            store_error      = dset.store_error      () 
+            store_asym_error = dset.store_asym_error ()            
+            uwdset , wnam    = dset.unWeighted ()
+            assert uwdset and wnam, "Cannot 'unweight' dataset!"
+            ds_keep.append ( uwdset ) 
+            weights.add    ( str ( wnam ) )
+            imports [ str ( label ) ] =  uwdset                       
+
+    largs.append ( ROOT.RooFit.Import ( imports ) )
+    
     ## we can do with only one weight variable!
     assert len ( weights ) < 2 , 'Invalid number of weights %s' % list ( weights )
 
@@ -617,7 +653,11 @@ class SimFit (VarMaker,ConfigReducer) :
         >>> pdf.fitTo ( dataset )
         >>> pdf.draw ( 'signal' , dataset , nbins = 100 ) 
         """
-
+        
+        if ( 6 , 37 ) <= root_info :
+            logger.warning ( "SimFit.draw: there is ROOT issue #20383, the plot can be wrong!" )
+            
+                             
         dvar = None
         if   isinstance ( category , ( tuple , list ) ) and 2 == len ( category ) :
             category , dvar = category 
@@ -1241,7 +1281,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
 
 # =============================================================================
 ##                                                                      The END 

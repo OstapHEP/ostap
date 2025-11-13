@@ -12,7 +12,8 @@
 # ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
-# ============================================================================= 
+# =============================================================================
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
@@ -102,8 +103,6 @@ sample  = ROOT.RooCategory ( 'sample' , 'sample'  , 'A' , 'B' )
 vars    = ROOT.RooArgSet ( mass )
 dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
 
-print ( 'DATASET\n' , dataset ) 
-
 models  = set()
 results = []
 graphs  = []
@@ -162,10 +161,14 @@ def test_simfit1 () :
     title = 'Results of simultaneous fit'
     logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
 
-    print ( 'FIX ME FIXE ME FIXE ME , ROOT issue!' )
-    dsA = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'A' ) )
-    dsB = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'B' ) )
-    
+
+    if ( 6 , 37 ) <= root_info : 
+        logger.warning ( 'There is ROOT issue #20383, use temporary local "fix"' )
+        dsA = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'A' ) )
+        dsB = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'B' ) )
+    else :
+        dsA , dsB = dataset , dataset
+
     with use_canvas ( 'test_gof_simfit1: fit both datasets & draw A' , wait = 2 ) :        
         fA = model_sim.draw ( 'A' , dsA , nbins = 50 )
     with use_canvas ( 'test_gof_simfit1: fit both datasets & draw B' , wait = 2 ) :        
@@ -196,10 +199,11 @@ def test_simfit1 () :
     logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
 
     toys = GoFSimFitToys ( gof )
-    toys.run ( 10 , silent = False )
+    toys.run ( 100 , silent = False )
 
-    print ( 'TOYS' , toys ) 
-    
+    title = 'GoF for 1D SimFit 100 toys)' 
+    logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
+
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================

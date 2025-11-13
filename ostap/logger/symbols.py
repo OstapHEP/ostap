@@ -223,10 +223,13 @@ delta_symbol     = '\U00000394'           if show else 'delta'
 ## Number
 number           = '\U00002116'           if show else '#'
 ## chi2
-chi2             = '\U000003C7\U000000B2' if show else 'chi2'
 chi2             = '\U0001D6D8\U000000B2' if show else 'chi2'
 ## chi2/ndf 
 chi2ndf          = '%s/ndf' % chi2 
+
+## lowercase Greek letters 
+greek_lower_sigma     = '\U000003C3'  if show else 'sigma'
+greek_lower_chi       = '\U0001D6D8'  if show else 'chi'
 
 ## star/convolution oprator
 asterisk         = '\U00002731'           if show else '*'
