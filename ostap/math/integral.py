@@ -225,45 +225,53 @@ def adaptive_integral ( rule_name           ,
     max_error = error
     max_entry = xmin , xmax , 1
 
-    ## store of integration intervals 
-    results = { max_entry : ( result , error ) }
+    entry   = xmin , xmax , 1  , result , error
     
-    while len ( results ) < maxdepth :
+    ## store intervals sorted by estimated uncertainty 
+    results = SortedKeyList ( [ entry  ] , key = lambda e :  e [ -1 ] ) 
 
-        ## (1) remove the interval with the largest uncertainty from the store 
-        del results [ max_entry ]
+    while results and len ( results ) < maxdepth :
+
+        ## (1) remove the interval with the largest uncertainty from the store
+        max_entry = results.pop () 
 
         ## (2) split it into two subintervals 
-        a1 , b1 , l1 = max_entry
-        c2 = 0.5 * ( a1 + b1 )
+        low , high , level , r , e = max_entry
+        mid = 0.5 * ( low + high )
 
         ## (3) insert new subintervals into the store 
-        new_epsabs  = max ( epsabs / 2 ** l1 , eps_abs ) 
-        results [ ( a1 , c2 , l1 + 1 ) ] = rule ( func , a1 , c2 , epsabs = new_epsabs , epsrel = epsrel , **rconf )
-        results [ ( c2 , b1 , l1 + 1 ) ] = rule ( func , c2 , b1 , epsabs = new_epsabs , epsrel = epsrel , **rconf )
-  
-        ## (4) get the integral&uncertainty and  find new interval with the largest uncertainty
+        ## new_epsabs  = max ( epsabs / 2 ** level , eps_abs )
+        new_epsabs  = epsabs / 2 ** level
 
-        result , error = 0 , 0
-        max_error = None
-        max_entry = None 
-        for key , entry in  results.items() :
-            r , e   = entry
-            result +=       r
-            error  += abs ( e ) 
-            if max_error is None or max_error < e :
-                max_error = e
-                max_entry = key
+        r1 , e1 = rule ( func , low , mid  , epsabs = new_epsabs , epsrel = epsrel , **rconf )
+        r2 , e2 = rule ( func , mid , high , epsabs = new_epsabs , epsrel = epsrel , **rconf )
 
-        if error <= max ( epsabs , abs ( result ) * epsrel ) : break
+        entry1 = low , mid  , level + 1 , r1 , e1
+        entry2 = mid , high , level + 1 , r2 , e2
+        
+        results.add ( entry1 )
+        results.add ( entry2 )
+
+        ## FAST update result & error 
+        result += ( r1 + r2 - r ) 
+        error  += ( e1 + e2 - e )
+
+        if error <= 0.5 * max ( epsabs , abs ( result ) * epsrel ) : break
     
     else :
         # =====================================================================
-        logger.warning ( "Adaptive[%s]: maximal split is reached: %d " %  ( rule_name , len( results ) ) ) 
+        logger.warning ( "Adaptive[%s]: maximal split is reached: %d " %  ( rule_name , len ( results ) ) ) 
 
-    if error <= max ( epsabs , abs ( result ) * epsrel ) < error :
-            logger.warning ( "Adaptive[%s]: requested precision is not achieved: %.3g" % ( rule_name , error ) )
-            
+    ## (4) get the integral & uncertainty
+    result , error = 0 , 0
+    for entry in results :
+        _ , _ , _ , r , e = entry
+        result += r
+        error  += e
+        
+    if max ( epsabs , abs ( result ) * epsrel ) < error :
+        logger.warning ( "Adaptive[%s]: requested precision is not achieved: %.3g" % ( rule_name , error ) )
+
     return VE ( result , error * error ) if err else result  
 
 # ==============================================================================
@@ -285,7 +293,7 @@ def romberg ( fun                 ,
               epsrel   = eps_rel  ,
               args     = ()       , # additional positional arguments for function call 
               kwargs   = {}       , # additional keywords   arguments for function call 
-              nmax     = 10       , # binary steps in Richardson's extrapolation
+              nmax     = 6        , # binary steps in Richardson's extrapolation
               maxdepth = 1000     , # the maxmal depth
               **other             ) : 
     """ Straw-man replacement of scipy.integrate.quad when it is not available.
@@ -337,7 +345,7 @@ def composite_boole_rule ( fun              ,
                            xmax             , * ,
                            epsabs = eps_abs ,
                            epsrel = eps_rel ,
-                           nmax   = 10      ) :
+                           nmax   = 8       ) :
 
     assert callable    ( fun ) , "Function  must be callable!"
     assert isinstance  ( xmin     , num_types ) and isfinite ( xmin ) , "Invalid `xmin' %s" % xmin 
@@ -580,7 +588,7 @@ def composite_boole ( fun                 ,
                       epsrel   = eps_rel  ,
                       args     = ()       ,
                       kwargs   = {}       , 
-                      nmax     = 10       , 
+                      nmax     = 8        , 
                       maxdepth = 1000     , 
                       **other             ) :
     """ Clenshaw-Curtis adaptive quadrature
@@ -1529,7 +1537,7 @@ class IntegralCache(Integral) :
                                              kwargs = kwargs ,
                                              err    = err    , **other  )
         
-        ## the first trivial entry in the cache 
+        ## the first (trivial) entry in the cache 
         entry        = self.xmin , 0.0  
         self.__cache = SortedKeyList ( [ entry ] , key = lambda e : e[0] )
         
