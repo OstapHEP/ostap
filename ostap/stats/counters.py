@@ -416,14 +416,18 @@ class EffCounter(object):
         return self.__A
     # =========================================================================
     @property
-    def success  ( self ) :
-        """`success` : number of `success' cases (same as `accepted')"""
-        return self.__A
-    # =========================================================================
-    @property
     def rejected ( self ) :
         """`rejected` : number of `rejected' cases"""
-        return self.__R 
+        return self.__R
+    @property
+    def success  ( self ) :
+        """`success` : number of `success' cases (same as `accepted')"""
+        return self.accepted 
+    # =========================================================================
+    @property
+    def failure  ( self ) :
+        """`failure` : number of `failed' cases (same as `rejected')"""
+        return self.rejected 
     # =========================================================================
     @property
     def total    ( self ) :

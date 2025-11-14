@@ -1,3 +1,12 @@
+## New features
+
+   1. some tweaks for root-finder
+   
+## Backward  incompatible 
+
+## Bug fixes
+
+
 # v3.5.0.0 
 
 ## New features
