@@ -218,11 +218,9 @@ def signum ( x ) :
     """ Get the sign of the number
     >>> signum ( -10  ) , signum(0),   signum ( +2.5 ) 
     """
-    ### for integers
-    from ostap.core.ostap_types import is_integer as _is_integer 
-    if _is_integer ( x ) : return 0 if 0 == x else +1 if 0<x else -1
-    ## for floating numbers
-    return 0 if iszero ( x ) else +1 if 0 < x else -1
+    if   0 < x : return +1
+    elif 0 > x : return -1 
+    else       : return  0
 
 # =============================================================================
 ## the same sign ?

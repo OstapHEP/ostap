@@ -81,12 +81,13 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import num_types  
-from   ostap.math.base        import samesign , iszero , isequal  , isfinite   
+from   ostap.math.base        import samesign, iszero, isequal, isfinite, signum    
 from   ostap.utils.basic      import counted
 from   ostap.stats.counters   import EffCounter
-from   ostap.logger.pretty    import pretty_float 
+from   ostap.logger.pretty    import pretty_float, fmt_pretty_values 
+from   ostap.logger.colorized import attention, allright  
 import ostap.logger.table     as     T 
-import sys, collections
+import math, sys, collections
 # =============================================================================
 # logging 
 # =============================================================================
@@ -227,6 +228,172 @@ def steffensen ( fun  ,  x  , fx = None ) :
     return x - fx / gx
 
 # ============================================================================
+## Single step of STFA method: Imporved regular falsi + steffenson-like
+#  @see Xinyuan Wu, Zuhe Shen, Jianlin Xia, "An improved regula falsi method
+#  with quadratic convergence of both diameter and point for enclosing
+#  simple zeros of nonlinear equations", Applied Mathematics and Computation,
+#  144, 2 2003
+#  @see https://doi.org/10.1016/S0096-3003(02)00414-9},
+#  @see https://www.sciencedirect.com/science/article/pii/S0096300302004149},
+def STFA ( fun , a , b , c = None ) :
+    """ Single step of STFA method:
+    - Imporoved regular falsi + steffenson-like
+    - see Xinyuan Wu, Zuhe Shen, Jianlin Xia, "An improved regula falsi method
+    with quadratic convergence of both diameter and point for enclosing
+    simple zeros of nonlinear equations", Applied Mathematics and Computation, 144, 2 2003
+    - see https://doi.org/10.1016/S0096-3003(02)00414-9},
+    - see https://www.sciencedirect.com/science/article/pii/S0096300302004149},
+    """
+    ## check brackets 
+    if   0 == a.fx or iszero ( a.fx ) : return a , a , b
+    elif 0 == b.fx or iszero ( b.fx ) : return b , a , b
+    ## 
+    ## (1) regular falsi step
+    if c is None or not a.x < c.x < b.x : 
+        c = ( a.x * b.fx - b.x * a.fx ) / ( b.fx - a.fx )
+        c = Point ( c , fun ( c ) )
+        ## 
+    if   0 == c.fx or iszero ( c.fx ) : return c , a , b 
+    elif samesign ( a.fx , c.fx )     : abar , bbar = c , b
+    elif samesign ( b.fx , c.fx )     : abat , bbar = a , c
+    else                              : return c , a , b 
+    ##
+    
+
+# ===========================================================================
+## Single step of Regular failsi-Bisection-Parabolic method
+#
+#  @see Alojz Suhadolnik, "Combined bracketing methods for solving nonlinear equations", ,
+#       Applied Mathematics Letters}, 25, 11 (2012)
+#  @see https://doi.org/10.1016/j.aml.2012.02.006},
+#  @see https://www.sciencedirect.com/science/article/pii/S0893965912000778},
+#
+#  @see Somkid Intep, "A review of bracketing methods for finding zeros of nonlinear functions".
+#       Applied Mathematical Sciences, Vol. 12, 2018, no. 3, 137-146
+#  @see https://doi.org/10.12988/ams.2018.811
+def RBP ( fun , a , b , c = None ) : 
+    """ Single step of Regular failsi-Bisection-Parabolic method
+    
+    - see Alojz Suhadolnik, "Combined bracketing methods for solving nonlinear equations", ,
+           Applied Mathematics Letters}, 25, 11 (2012)
+    - see https://doi.org/10.1016/j.aml.2012.02.006},
+    - see https://www.sciencedirect.com/science/article/pii/S0893965912000778},
+    
+    - see Somkid Intep, "A review of bracketing methods for finding zeros of nonlinear functions".
+       Applied Mathematical Sciences, Vol. 12, 2018, no. 3, 137-146
+    - see https://doi.org/10.12988/ams.2018.811
+    """
+    ## check brackets 
+    if   0 == a.fx or iszero ( a.fx ) : return a , a , b
+    elif 0 == b.fx or iszero ( b.fx ) : return b , a , b
+    ## 
+    ## (1) regular falsi step
+    if c is None or not a.x < c.x < b.x : 
+        c = ( a.x * b.fx - b.x * a.fx ) / ( b.fx - a.fx )
+        if not a.x < c < b.x : c = 0.5 * ( a.x + b.x ) 
+        c = Point ( c , fun ( c ) )
+        if 0 == c.fx or iszero ( c.fx ) : return c , a , b     ## RETURN 
+        print ( 'C is :' , c , a.x < c.x < b.x )
+        
+    ab = a.x - b.x
+    ac = a.x - c.x
+    bc = b.x - c.x 
+    
+    A  = ( a.fx - c.fx ) / ac
+    A += ( c.fx - b.fx ) / bc 
+    A /= ab 
+    
+    B  = ( c.fx - a.fx ) * bc / ac 
+    B -= ( c.fx - b.fx ) * ac / bc   
+    B /= ab
+    
+    C = c.fx
+
+    pp = lambda x : A * x * x + B * x + C 
+    
+    print ( 'PARABOLA?' , pp ( a.x       ) , pp ( b.x      ) , pp ( c.x )       )
+    print ( 'PARABOLA!' , pp ( a.x - c.x ) , pp ( b.x -c.x ) , pp ( c.x - c.x ) )
+    
+    D = B * B - 4 * A * C
+
+    print ( 'HERE-3/' , A , B , C , D ) 
+    if D < 0                       : return None , a , b ## RETURN 
+
+    Q = B + signum ( B ) * math.sqrt ( D )
+    p = c.x - 2 * C / Q
+    
+    print ( 'HERE-3/' , A , B , C , D , p ) 
+    
+    if not a.x < p < b.x            : return None , a , b  ## RETURN 
+    ## 
+    p = Point ( p , fun ( p ) )
+
+    ## zero is found ? 
+    if 0 == p.fx or iszero ( p.fx ) : return p , a , b     ## RETURN 
+
+    ## update the interval
+    
+    if samesign ( a.fx , p.fx ) :
+        a , b  = p , c if samesign ( b.fx , c.fx ) else b 
+    else :
+        b , a  = p , c if samesign ( a.fx , c.fx ) else a 
+
+    dab = ( a.fx - b.fx ) / ( b.x - a.x )
+
+    if 0.1 < abs ( dab ) < 10 :
+        ## regular falsi 
+        c = ( a.x * b.fx - b.x * a.fx ) / ( b.fx - a.fx )
+    else :
+        ## bisection 
+        c = 0.5 * ( a.x + b.x )
+        
+    return Point ( c , fun ( c ) ) , a , b            ## RETURN 
+
+# ============================================================================
+## Single step of Muller's emthod
+#  @see https://en.wikipedia.org/wiki/Muller%27s_method
+def muller ( x0 , x1 , x2 , *other ) :
+    """ Single step of Muller's method
+    - see https://en.wikipedia.org/wiki/Muller%27s_method
+    """
+    points  = ( x0 , x1 , x2 ) + other
+    x0 , x1 , x2 = points [ -3 : ]
+
+    h0 = x1.x - x0.x
+    h1 = x2.x - x1.x
+
+    if not h0      : return None
+    if not h1      : return None
+    if not h1 + h1 : return None
+
+    print ( 'MULLER 2' , h0 , h1 )
+    
+    d0 = ( x1.fx - x0.fx ) / h0 
+    d1 = ( x2.fx - x1.fx ) / h1
+
+    ## parabola's coefficients: 
+    a  = ( d1 - d0 ) / ( h1 + h0 )
+    b  = a * h1 + d1
+    c  = x2.fx
+
+    pp = lambda x : a * x * x + b * x + c
+
+    print ( 'PARABOLA?' , pp ( x0.x  - x2.x ) , pp ( x1.x - x2.x ) , pp ( 0 ) )
+    
+    ## Parabola's discriminant 
+    D  = b * b - 4 * a * c
+    
+    if D < 0 : return None  ## RETURN
+    
+    Q = b + signum ( b ) * math.sqrt ( D )
+    
+    if not Q : return None 
+    
+    dx = -2 * c / Q
+
+    return x2.x + dx
+     
+# ============================================================================
 ## make an inverse linear interpolation, aka "secant", aka "regular falsi"
 #  @see https://en.wikipedia.org/wiki/Secant_method
 #  @see https://en.wikipedia.org/wiki/False_position_method
@@ -287,7 +454,7 @@ secant        = inverse_linear
 regular_falsi = inverse_linear
 
 # =============================================================================
-## Inverse parabolic interppolaiton
+## Inverse parabolic interppolation
 #  @see https://en.wikipedia.org/wiki/Inverse_quadratic_interpolation
 #  @code
 #  xa , xb , xc = ...
@@ -555,13 +722,12 @@ def aitken_delta2 ( x0 , x1 , x2 , *others  ) :
     - https://en.wikipedia.org/wiki/Aitken%27s_delta-squared_process
     """
     points = ( x0 , x1 , x2 ) + others 
-    xn , xn1 , xn2 = points [ -3 : ] 
+    xn , xn1 , xn2 = [ p.x for p in points [ -3 : ] ] 
 
     dd  = ( xn - xn1 ) + ( xn2 - xn1 )
     if not dd or iszero ( dd ) : return None
     return ( xn * xn2 - xn1 * xn1 )  / dd 
 
-    
 # ========================================================================================
 ## @class RootResults
 #  Helper class to keep results of root-finding procedure
@@ -580,7 +746,8 @@ class RootResults ( object ):
                   'iterations'        , 
                   'root'              ,
                   'value'             ,
-                 'counters'          )
+                  'bracket'           , 
+                  'counters'          )
     
     CONVERGED = 'converged'
     SIGNERR   = 'sign error'
@@ -595,6 +762,7 @@ class RootResults ( object ):
                     derivative2_calls = 0    ,                                      
                     flag              = 0    , 
                     value             = None ,
+                    bracket           = ()   , 
                     counters          = {}   ) : 
         
         self.root              = root
@@ -606,7 +774,7 @@ class RootResults ( object ):
         self.status            = self.flag_map.get ( flag , '*UNKNOWN*' )
         self.value             = value
         self.counters          = counters
-        
+        self.bracket           = bracket 
     # ====================================================================
     ## format it as the table 
     def table   ( self             ,
@@ -620,15 +788,33 @@ class RootResults ( object ):
         header = '' , 'value' , '' 
         rows   = [ header ]
 
-        r , e  = pretty_float ( self.root , precision = precision , width = width )
+        r , e  = pretty_float ( self.root , precision = precision , width = width , with_sign = True )
         row    = 'Root' , r , '10^%+d' % e if e else ''
         rows.append ( row )
-        
-        row    = 'Status' , attention ( self.status ) if self.flag else self.status 
+
+        row    = 'Status' , attention ( self.status ) if self.flag else allright ( self.status ) 
         rows.append ( row )
 
+        if self.bracket :
+            a , b = self.bracket
+            fmtv , expo = fmt_pretty_values ( a , b ,
+                                              precision = precision , 
+                                              width     = width     ,
+                                              with_sign = True      )
+            if expo : 
+                fa = fmtv % ( a / 10**expo )
+                fb = fmtv % ( b / 10**expo )
+                v  = '[%s,%s]' % ( fa , fb )
+                row = 'Bracket' , v , '10^%+d' % expo
+            else :
+                fa = fmtv % ( a )
+                fb = fmtv % ( b )
+                v  = '[%s,%s]' % ( fa , fb )
+                row = 'Bracket' , v , '' 
+            rows.append ( row ) 
+
         if not self.value is None :            
-            r , e  = pretty_float ( self.value , precision = precision , width = width )
+            r , e  = pretty_float ( self.value , precision = precision , width = width , with_sign = True )
             row    = 'Function value' , r , '10^%+d' % e if e else ''            
             rows.append ( row )
 
@@ -903,11 +1089,8 @@ class RootFinder(object) :
         
         self.__disp    = True    if disp        else False
         
-        ## keep the last three root estimates for the Aitken scheme 
-        self.__aitken  = []
-        
-        ## keep the last three/four approximations for inverse cubic/parabolic interpolation
-        self.__inverse = [] 
+        ## keep several previous approximations for inverse polynomial, Muller or Aitken
+        self.__roots   = [] 
 
         self.__counters = collections.defaultdict ( EffCounter )
         
@@ -924,7 +1107,12 @@ class RootFinder(object) :
     
     # =========================================================================
     ## Return result/root with optional report 
-    def __result ( self , root , * , iteration = 0 , flag = 0 , value = None ) :
+    def __result ( self       ,
+                   root      , * ,
+                   iteration = 0    ,
+                   value     = None ,
+                   bracket   = ()   , 
+                   flag      = 0    ) :
         """ Return result/root with optional report 
         """
         if not self.__full_output : return root
@@ -935,7 +1123,8 @@ class RootFinder(object) :
                                     derivative1_calls = self.__deriv1.calls if self.__deriv1 else 0 ,
                                     derivative2_calls = self.__deriv2.calls if self.__deriv2 else 0 ,
                                     value             = value           , 
-                                    flag              = flag            , 
+                                    flag              = flag            ,
+                                    bracket           = bracket         , 
                                     counters          = self.__counters )
 
     # =========================================================================
@@ -966,25 +1155,24 @@ class RootFinder(object) :
 
         ## check the root at left edge 
         fa = self.__fun ( a )
-        if 0 == fa or iszero ( fa ) : return self.__result ( a , value = fa ) ## RETURN
+        if 0 == fa or iszero ( fa ) : return self.__result ( a , value = fa , bracket = ( a , b ) ) ## RETURN
 
         ## check the root at right edge 
         fb = self.__fun ( b )
-        if 0 == fb or iszero ( fb ) : return self.__result ( b , value = fb ) ## RETURN
+        if 0 == fb or iszero ( fb ) : return self.__result ( b , value = fb , bracket = ( a , b  ) ) ## RETURN
 
         ## correct bracketing interval ?
         if samesign ( fa ,  fb ) :
             if self.__disp :
                 raise RuntimeError ('RootFinder.solve: invalid bracketing interval (%s,%s)/(%s,%s)' % ( a , fa , b , fb ) )
             else           :
-                return self.__result ( 0.5 * ( a  + b ) , flag = -2  )  ## RETURN
+                return self.__result ( 0.5 * ( a  + b ) , flag = -1 , bracket = ( a , b ) )  ## RETURN
             
         a = Point ( a ,  fa )
         b = Point ( b ,  fb )
 
-        ## initialize Aitken and Inverse Interpolation structures 
-        self.__inverse = [ a   , b   ] 
-        self.__aitken  = [ a.x , b.x ]   
+        ## initialize 
+        self.__roots = [ a , b ] 
         
         ## Guess is not specified or invalid 
         if guess is None or not a.x <= guess <= b.x :
@@ -1004,15 +1192,15 @@ class RootFinder(object) :
         guess = Point ( guess , self.__fun ( guess ) )
 
         ## check the function value and shrink the interval, if/when  possible 
-        if 0 == guess.fx or iszero ( guess.fx  ) : return self.__result ( guess.x , value = guess.fx ) ##  RETURN
+        if 0 == guess.fx or iszero ( guess.fx  ) : return self.__result ( guess.x , value = guess.fx , bracket = ( a.x , b.x ) ) ##  RETURN
         elif samesign ( a.fx , guess.fx ) : a , b = guess , b 
         elif samesign ( b.fx , guess.fx ) : a , b = a     , guess
-        else                        : return self.__result ( guess.x , value = guess.fx  ) ##   RETURN
+        else                        : return self.__result ( guess.x , value = guess.fx , bracket = ( a.x , b.x ) ) ##   RETURN
         
         ## initialize Aitken and Inverse Interpolation structures 
-        self.__inverse = [ a , b , guess ] 
-        self.__aitken  = []   
-
+        self.__roots  = [ a , b ] 
+        self.__aitken = [ a , b ]   
+        
         print ( 'FIND/0' , a , b )
 
         x0 = guess.x 
@@ -1024,7 +1212,7 @@ class RootFinder(object) :
             print ( 'FIND/i/1' , i , x ,  a , b )
             
             ## zero is found ?
-            if not x.fx or iszero ( x.fx ) : return self.__result ( x.x , iteration = i + 1 , value = x.fx ) 
+            if not x.fx or iszero ( x.fx ) : return self.__result ( x.x , iteration = i + 1 , value = x.fx , bracket = ( a.x , b.x ) ) 
         
             print ( 'FIND/i/2' , i , x ,  a , b )
 
@@ -1035,22 +1223,25 @@ class RootFinder(object) :
 
             ## bracketing interval is already very small 
             dx2 = self.__xtol + self.__rtol * abs ( a.x - b.x )
-            if abs ( b.x - a.x   ) * 4 < dx2 : return self.__result ( x.x , iteration = i + 1 , value = x.fx ) 
+            if abs ( b.x - a.x   ) * 4 < dx2 : return self.__result ( x.x , iteration = i + 1 , value = x.fx , bracket = ( a.x , b.x ) ) 
             
             print ( 'FIND/i/4' , i , x ,  a , b )
 
             x0 = x.x
             
-        if self.__disp :
-            raise RuntimeError ( 'RootFinder.solve: no convergency for %d iterations' % i ) 
+        message = 'RootFinder.solve: no convergency for %d iterations' % i 
+        if self.__disp : raise RuntimeError ( message )
+        else           : logger.warning     ( message ) 
             
-        return self.__result ( x.x , i , -2 ) 
+        return self.__result ( x.x , iteration = i , flag = -2 , value = x.fx , bracket = ( a.x , b.x ) ) 
 
     # =========================================================================
     def __make_step ( self , x0 , a , b ) :
 
-        ## do not keep too many approximations 
-        self.__inverse = self.__inverse [ -4 : ]
+        ## do not keep too many approximations
+        
+        self.__roots = self.__roots [ -5 : ]
+        print  ( 'MAKE STEP' , self.__roots )
         
         ## 
         old_len =  b.x - a.x
@@ -1075,15 +1266,14 @@ class RootFinder(object) :
             else             : self.__counters [ 'newton' ] += ok  
             if ok : 
                 x = Point ( xx , self.__fun ( xx ) ) 
-                self.__inverse.append ( x  )  
-                self.__aitken .append ( xx )
+                self.__roots.append ( x  )
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
-                else                              : return x , a , b ## RETURN
-                
-                print ( 'Newton:' , x , a , b )
-                
+                else                              : return x , a , b ## RETURN                
+                print ( 'Newton:' , x , a , b , self.__roots ) 
+
+        """
         # =====================================================================
         ## (3) try  Steffensen's method
         if x is None or not a.x <= x.x <= b.x : 
@@ -1098,8 +1288,7 @@ class RootFinder(object) :
                 ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
                 if ok : 
                     x = Point ( xx , self.__fun ( xx ) ) 
-                    self.__inverse.append ( x  )
-                    self.__aitken .append ( xx )                
+                    self.__roots.append ( x  )
                     if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                     elif samesign ( a.fx , x.fx )     : a , b = x , b  
                     elif samesign ( b.fx , x.fx )     : a , b = a , x  
@@ -1107,71 +1296,86 @@ class RootFinder(object) :
                     print ( 'Steffensen' , x , a , b )
             else :
                 print ( 'No steffensen', a.x , x0 + fx0 , b.x ) 
-
+        """
+        
         # =====================================================================
-        ## (4) Inverse polynomial interpolation: we always have some points here
-        if False : ## ( x is None or not a.x <= x.x <= b.x ) and 2 <= len ( self.__inverse ) :
-                  
-            xx = inverse_polynomial ( *self.__inverse )
+        ## (4) Try Muller's method
+        if 3 <= len ( self.__roots ) and ( x is None or not a.x < x.x <= b.x ) :
+            print ( 'BEFORE MULLER' , self.__roots) 
+            xx = muller ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
-            self.__counters [ 'inverse' ] += ok
-            if ok : 
+            self.__counters [ 'muller' ] += ok
+            if ok :
                 x = Point ( xx , self.__fun ( xx ) ) 
-                self.__inverse.append ( x  )
-                self.__aitken .append ( xx )            
+                self.__roots.append ( x  )
+                print ( 'MULLER: added ' , x )
                 if   0 == x.fx or iszero ( x.fx )     : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )         : a , b = x , b  
                 elif samesign ( b.fx , x.fx )         : a , b = a , x  
                 else                                  : return x , a , b ## RETURN
-                print ( 'INVERSE' , x , a , b , self.__inverse ) 
+                print ( 'MULLER' , x , a , b , self.__roots ) 
+                                            
+        # =====================================================================
+        ## (5) Inverse polynomial interpolation: we always have some points here
+        if False : ## ( x is None or not a.x <= x.x <= b.x ) and 2 <= len ( self.__roots ) :
+                  
+            xx = inverse_polynomial ( *self.__roots )
+            ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
+            self.__counters [ 'inverse' ] += ok
+            if ok : 
+                x = Point ( xx , self.__fun ( xx ) ) 
+                self.__roots.append ( x  )
+                if   0 == x.fx or iszero ( x.fx )     : return x , a , b ## RETURN
+                elif samesign ( a.fx , x.fx )         : a , b = x , b  
+                elif samesign ( b.fx , x.fx )         : a , b = a , x  
+                else                                  : return x , a , b ## RETURN
+                print ( 'INVERSE' , x , a , b , self.__roots ) 
 
         # =====================================================================
-        ## (5) secant is "almost never" fails 
+        ## (6) secant is "almost never" fails 
         if x is None or not a.x <= x.x <= b.x :
             
-            xx = inverse_linear ( a , b )
+            xx = secant ( a , b )
             ## OK ?
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x 
             self.__counters [ 'secant' ] += ok
             if ok : 
                 x = Point ( xx , self.__fun ( xx ) ) 
-                self.__inverse.append ( x  )
-                self.__aitken .append ( xx )                
+                self.__roots.append ( x  )
+                print ( 'SECANT: added ' , x )
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
-                else                              : return x , a , b ## RETURN
-                 
-                print ( 'Inverse_linear' , x , a , b )
+                else                              : return x , a , b ## RETURN                 
+                print ( 'SECANT' , x , a , b , self.__roots )
 
         # =====================================================================
-        ## (6) Try Aitken-delta2 scheme if we have enough approximations
-        ## if x is None and 3 <= len ( self.__aitken ) : 
+        ## (7) Try Aitken-delta2 scheme if we have enough approximations
         if 3 <= len ( self.__aitken ) : 
 
-            xx = aitken_delta2 ( *self.__aitken )
+            xx = aitken_delta2 ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
             ## accept Aitken only if it improves the estimate 
             if ok :
                 fxx = self.__fun ( xx )
                 if not x is None :
                     ok  = abs ( fxx ) <= abs ( x.fx )                
-            print ( 'AITKEN/2' , self.__aitken , xx , ok )            
+            print ( 'AITKEN/2' , self.__roots , xx , ok )            
             self.__counters [ 'aitken' ] += ok
             if ok :
                 ## x = Point ( xx , self.__fun ( xx ) ) 
                 x = Point ( xx , fxx ) 
-                self.__inverse.append ( x  )
+                self.__roots.append ( x  )
+                print ( 'AITKEN: added' , x ) 
                 ## self.__aitken .append ( xx )            
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x
                 else                              : return x , a , b ## RETURN                
-                print ( 'Aitken:' , x , a , b )
-
+                print ( 'Aitken:' , x , a , b , self.__roots )
 
         # =====================================================================        
-        ## (7) Force bisection as "ultima ratio regum"
+        ## (8) Force bisection as "ultima ratio regum"
         if x is None or not a.x <= x.x <= b.x :
             
             a , b = bisection ( self.__fun , a , b )
@@ -1180,8 +1384,6 @@ class RootFinder(object) :
             if ok : 
                 xx = 0.5 * ( a.x + b.x  )  
                 x  = Point ( xx , self.__fun ( xx ) )
-                ## self.__inverse.append ( x  )
-                ## self.__aitken .append ( xx )
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x
@@ -1209,8 +1411,6 @@ class RootFinder(object) :
             if samesign ( na.fx , a.fx      ) :
                 a = na 
                 print ( 'AGRESSIVE SPLIT RIGHT' , x , na , a , b , b.x - a.x ) 
-        """
-
         
         delta = b.x - a.x
         if 3 * delta > old_len :
@@ -1228,7 +1428,7 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x
                 else                              : return x , a , b ## RETURN                
                 print ( 'BISECTION/2' , x , a , b )
-
+        """
                    
         return x , a , b 
 
@@ -1390,7 +1590,7 @@ def find_root ( fun                 ,     ## the function
                           xtol        = xtol        ,
                           rtol        = rtol        ,
                           full_output = full_output , 
-                          disp        = True        )
+                          disp        = disp        )
     
     return solver.find ( a , b )
 
@@ -1419,10 +1619,10 @@ def findroot_scipy ( fun                 , ## the function
     return scipy_brentq ( the_fun ,
                           a       ,
                           b       ,
-                          args    = args            ,
-                          maxiter = maxiter         ,
-                          xtol    = xtol            ,
-                          rtol    = rtol            ,
+                          args        = args        ,
+                          maxiter     = maxiter     ,
+                          xtol        = xtol        ,
+                          rtol        = rtol        ,
                           full_output = full_output ,
                           disp        = disp        ) 
 
