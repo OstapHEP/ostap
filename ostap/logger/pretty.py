@@ -73,7 +73,7 @@ def fmt_pretty_values ( *values             ,
                         precision   = 4     ,
                         with_sign   = True  ,
                         latex       = False ) : 
-    """ Formats for nice printout of the object with errors  ( strings + exponent)
+    """ Formats for nice printout of the numerical objects ( strings + exponent)
     >>> fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 ) 
     """
     if not values : values = (  0, )  
