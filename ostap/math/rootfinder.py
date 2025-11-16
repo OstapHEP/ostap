@@ -402,6 +402,12 @@ def secant ( a , b ) :
     if   afx < dfx : return 0.5 * ( a.x + b.x )  ## ATTENTION! 
     elif bfx < dfx : return 0.5 * ( a.x + b.x )  ## ATTENTION! 
     ## regular falsi 
+ 
+    ## bisection 
+    if   isequal ( a.x  , b.x  ) : return 0.5 * ( a.x + b.x )
+    elif isequal ( a.fx , b.fx ) : return 0.5 * ( a.x + b.x ) 
+    
+    ## regular falsi     
     return ( a.x * b.fx - b.x * a.fx ) / ( b.fx - a.fx )
 
 regular_falsi = secant
@@ -1248,8 +1254,7 @@ class RootFinder(object) :
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
-                else                              : return x , a , b ## RETURN                
-                print ( 'Newton:' , x , a , b , self.__roots ) 
+                else                              : return x , a , b ## RETURN                 
                 updated = True
                 shrink  = ( b.x - a.x ) / cur_len 
                 if self.__deriv2 : self.__shrinks [ 'halley' ] += shrink
