@@ -227,9 +227,9 @@ def steffensen ( fun  ,  x  , fx = None ) :
 #  with quadratic convergence of both diameter and point for enclosing
 #  simple zeros of nonlinear equations", Applied Mathematics and Computation,
 #  144, 2 2003
-#  @see https://doi.org/10.1016/S0096-3003(02)00414-9},
-#  @see https://www.sciencedirect.com/science/article/pii/S0096300302004149},
-def STFA ( fun , a , b , c = None ) :
+#  @see https://doi.org/10.1016/S0096-3003(02)00414-9
+#  @see https://www.sciencedirect.com/science/article/pii/S0096300302004149
+def STFA ( fun , a , b , x = None ) :
     """ Single step of STFA method:
     - Imporoved regular falsi + steffenson-like
     - see Xinyuan Wu, Zuhe Shen, Jianlin Xia, "An improved regula falsi method
@@ -241,18 +241,37 @@ def STFA ( fun , a , b , c = None ) :
     ## check brackets 
     if   0 == a.fx or iszero ( a.fx ) : return a , a , b
     elif 0 == b.fx or iszero ( b.fx ) : return b , a , b
-    ## 
-    ## (1) regular falsi step
-    if c is None or not a.x < c.x < b.x : 
-        c = ( a.x * b.fx - b.x * a.fx ) / ( b.fx - a.fx )
-        c = Point ( c , fun ( c ) )
-        ## 
-    if   0 == c.fx or iszero ( c.fx ) : return c , a , b 
-    elif samesign ( a.fx , c.fx )     : abar , bbar = c , b
-    elif samesign ( b.fx , c.fx )     : abat , bbar = a , c
-    else                              : return c , a , b 
     ##
+    d = b.x - a.x 
+    if x is None or not a.x < x.x < b.x :        
+        x = 0.5 * ( a.x + b.x )
+        x = Point ( x , fun ( x ) )
+        if 0 == x.fx or iszero ( x.fx ) : return x , a , b
+
+    ## (1) regular falsi step
+    c = ( a.x * b.fx - b.x * a.fx ) / ( b.fx - a.fx )
+    c = Point ( c , fun ( c ) )
     
+    if 0 == c.fx or iszero ( c.fx )     : return c , a , b
+    elif samesign ( a.fx , c.fx )       : abar , bbar = c , b
+    elif samesign ( b.fx , c.fx )       : abar , bbar = a , c
+    else                                : return c , a , b
+
+    ##
+    if  c.fx == x.fx or isequal ( c.fx , x.fx ) : return None , abar , bbar
+
+    mu   = ( b.x - a.x ) / ( b.fx - a.fx )
+    cbar = x.x - mu * x.fx * x.fx / ( x.fx - c.fx )    
+    cbar = Point ( cbar , fun ( cbar ) )
+
+    if abar.x <= cbar.x <= bbar.x :
+        x = cbar        
+        if   samesign ( abar.fx , cbar.fx ) : a , b = cbar , bbar
+        elif samesign ( bbar.fx , cbar.fx ) : a , b = abar , cbar 
+    else : 
+        x , a , b = c , a , b 
+
+    return x , a , b 
 
 # ===========================================================================
 ## Single step of Regular failsi-Bisection-Parabolic method
@@ -668,16 +687,15 @@ def toms748 ( fun , a , b , c = None ) :
     if 0 == e.fx or iszero ( e.fx )        : return e , a , b    ## RETURN 
 
     ## (MANUAL) re-bracketing 
-
     x1 , x2 , x3 = sorted ( ( c , d , e ) )
     if   not samesign ( a .fx , x1.fx ) : a , b = a  , x1
     elif not samesign ( x1.fx , x2.fx ) : a , b = x1 , x2
     elif not samesign ( x2.fx , x3.fx ) : a , b = x2 , x3
     elif not samesign ( x3.fx ,  b.fx ) : a , b = x3 ,  b 
-    
-    if   a.x < e.x < b.x : return e , a , b
-    elif a.x < d.x < b.x : return d , a , b
-    elif a.x < c.x < b.x : return c , a , b
+
+    if   a.x <= e.x <= b.x : return e , a , b
+    elif a.x <= d.x <= b.x : return d , a , b
+    elif a.x <= c.x <= b.x : return c , a , b
     
     f = secant ( a , b )
     f = Point  ( f , fun ( f ) )
@@ -706,10 +724,15 @@ class RootResults ( object ):
                   'counters'          ,
                   'shrinks'           )
     
-    CONVERGED = 'converged'
-    SIGNERR   = 'sign error'
-    CONVERR   = 'convergence error'
-    flag_map  = { 0 : CONVERGED, -1 : SIGNERR , -2 : CONVERR }
+    CONVERGED   = 'converged'
+    SIGNERR     = 'sign error'
+    CONVERR     = 'convergence error'
+    ZEROFOUND   = 'converged/zero found'
+    STABLEPOINT = 'converged/stable point'
+    BRACKETED   = 'converged/bracketed'
+    
+    flag_map  = {  0 : CONVERGED , -1 : SIGNERR     , -2 : CONVERR   ,
+                   1 : ZEROFOUND ,  2 : STABLEPOINT ,  3 : BRACKETED }
     
     def __init__  ( self                     ,
                     root                     ,
@@ -751,28 +774,34 @@ class RootResults ( object ):
         r , e  = pretty_float ( self.root , precision = precision , width = width , with_sign = True )
         row    = 'Root' , r , '10^%+d' % e if e else ''
         rows.append ( row )
-
-        row    = 'Status' , attention ( self.status ) if self.flag else allright ( self.status ) 
+                   
+        row    = 'Status' , attention ( self.status ) if self.flag < 0 else allright ( self.status ) 
         rows.append ( row )
 
         if self.bracket :
             a , b = self.bracket
-            fmtv , expo = fmt_pretty_values ( a , b ,
+            fmtv , expo = fmt_pretty_values ( a , b , 
                                               precision = precision , 
                                               width     = width     ,
                                               with_sign = True      )
             if expo : 
                 fa = fmtv % ( a / 10**expo )
                 fb = fmtv % ( b / 10**expo )
-                v  = '[%s,%s]' % ( fa , fb )
+                v  = '[%s,%s]' % ( fa , fb)
                 row = 'Bracket' , v , '10^%+d' % expo
             else :
                 fa = fmtv % ( a )
                 fb = fmtv % ( b )
                 v  = '[%s,%s]' % ( fa , fb )
                 row = 'Bracket' , v , '' 
+            rows.append ( row )
+            
+            c = b - a 
+            fc , ec  = pretty_float ( c , precision = precision , width = width , with_sign = True )
+            if ec : row = 'Lenght' , fc , '10^%+d' % ec 
+            else  : row = 'Length' , fc  
             rows.append ( row ) 
-
+            
         if not self.value is None :            
             r , e  = pretty_float ( self.value , precision = precision , width = width , with_sign = True )
             row    = 'Function value' , r , '10^%+d' % e if e else ''            
@@ -1132,24 +1161,26 @@ class RootFinder(object) :
         self.__shrinks  .clear()
         self.__iteration  = 0 
 
-        
+    
         ## swap them if needed 
         a , b = ( a , b ) if a < b else ( b , a )
 
         ## check the root at left edge 
         fa = self.__fun ( a )
-        if 0 == fa or iszero ( fa ) : return self.__result ( a , value = fa , bracket = ( a , b ) ) ## RETURN
+        if 0 == fa or iszero ( fa ) :
+            return self.__result ( a , value = fa , bracket = ( a , b ) , flag = 1 )
 
         ## check the root at right edge 
         fb = self.__fun ( b )
-        if 0 == fb or iszero ( fb ) : return self.__result ( b , value = fb , bracket = ( a , b  ) ) ## RETURN
+        if 0 == fb or iszero ( fb ) :
+            return self.__result ( b , value = fb , bracket = ( a , b ) , flag = 1 )
 
         ## correct bracketing interval ?
         if samesign ( fa ,  fb ) :
             if self.__disp :
                 raise RuntimeError ('RootFinder.solve: invalid bracketing interval (%s,%s)/(%s,%s)' % ( a , fa , b , fb ) )
             else           :
-                return self.__result ( 0.5 * ( a + b ) , flag = RootResult.SIGNERR  , bracket = ( a , b ) )  ## RETURN
+                return self.__result ( 0.5 * ( a + b ) , flag = -1   , bracket = ( a , b ) )  ## RETURN
             
         a = Point ( a ,  fa )
         b = Point ( b ,  fb )
@@ -1177,10 +1208,12 @@ class RootFinder(object) :
         guess = Point ( guess , self.__fun ( guess ) )
 
         ## check the function value and shrink the interval, if/when  possible 
-        if 0 == guess.fx or iszero ( guess.fx  ) : return self.__result ( guess.x , value = guess.fx , bracket = ( a.x , b.x ) ) ##  RETURN
+        if 0 == guess.fx or iszero ( guess.fx  ) :
+            return self.__result ( guess.x , value = guess.fx , bracket = ( a.x , b.x ) , flag = 1 ) ##  RETURN
         elif samesign ( a.fx , guess.fx ) : a , b = guess , b 
         elif samesign ( b.fx , guess.fx ) : a , b = a     , guess
-        else                        : return self.__result ( guess.x , value = guess.fx , bracket = ( a.x , b.x ) ) ##   RETURN
+        else :
+            return self.__result ( guess.x , value = guess.fx , bracket = ( a.x , b.x ) , flag = 1 ) ##  RETURN
         
         ## initialize Aitken and Inverse Interpolation structures 
         self.__roots     = [] 
@@ -1195,20 +1228,21 @@ class RootFinder(object) :
 
             ## get new x and new bracketing interval 
             x , a , b = self.__make_step ( a , b , guess )
-
-            ## zero is found ?
-            if not x.fx or iszero ( x.fx ) : return self.__result ( x.x , value = x.fx , bracket = ( a.x , b.x ) ) 
         
-            ## no difference with respect to previsou estimate 
-            if 3 < self.__iteration :
+            ## zero is found ?
+            if not x.fx or iszero ( x.fx ) :
+                return self.__result ( x.x , value = x.fx , bracket = ( a.x , b.x ) , flag = 1  )
+            
+            ## no difference with respect to the previous estimate 
+            if 2 < self.__iteration :
                 dx = abs ( x.x - guess.x )
                 if dx < 0.5 * max ( self.__xtol , self.__rtol * dx )  :
-                    return self.__result ( x.x , value = x.fx , bracket = ( a.x , b.x ) ) 
+                   return self.__result ( x.x , value = x.fx , bracket = ( a.x , b.x ) , flag = 2 )
 
-            ## bracketing interval is already very small 
+            ## Bracketing interval is already very small 
             dab = abs ( b.x - a.x )
             if dab < 0.5 * max ( self.__xtol , self.__rtol * dab )  :
-                return self.__result ( x.x , value = x.fx , bracket = ( a.x , b.x ) ) 
+                return self.__result ( x.x , value = x.fx , bracket = ( a.x , b.x ) , flag = 3 )
             
             ## next guess: 
             guess = x
@@ -1230,7 +1264,7 @@ class RootFinder(object) :
         the_len = b.x - a.x
 
         ## if guess is not specified or invalid 
-        if x is None or not a.x < x.x < b.x : 
+        if x is None or not a.x <= x.x <= b.x : 
             ## (0.1) make a secant step
             xx = secant ( a , b )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
@@ -1270,6 +1304,25 @@ class RootFinder(object) :
                     else             : self.__shrinks [ 'newton' ] += shrink
                 
         # =====================================================================
+        ## (3)  SFTA: "falsi-setffensen"
+        # =====================================================================
+        if not updated or not a.x <= x.x <= b.x :
+            cur_len = b.x - a.x 
+            xx , a , b = STFA ( self.__fun , a , b , x )
+            ok = not xx is None and a.x <= xx.x <= b.x
+            if self.__full_output : self.__counters [ 'STFA' ] += ok              
+            if ok :
+                x = xx
+                if not x in self.__roots : self.__roots.append ( x  )
+                if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
+                elif samesign ( a.fx , x.fx )     : a , b = x , b  
+                elif samesign ( b.fx , x.fx )     : a , b = a , x  
+                else                              : return x , a , b ## RETURN                 
+                updated = True
+                if self.__full_output : 
+                    shrink  = ( b.x - a.x ) / cur_len
+                    self.__shrinks [ 'STFA' ] += shrink
+        
         ## (3) try  Steffensen's method only if the  interval is already shrinked
         if 0 <= self.__iteration                  and \
            not updated                            and \
@@ -1280,7 +1333,7 @@ class RootFinder(object) :
             ##
             xx = steffensen ( self.__fun , x.x , fx = x.fx )
             ## OK ?
-            ok = not xx is None and isfinite ( xx ) and a.x < xx < b.x
+            ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
             if self.__full_output : self.__counters [ 'steffensen' ] += ok
             if ok :
                 cur_len = b.x - a.x 
@@ -1294,15 +1347,16 @@ class RootFinder(object) :
                 if self.__full_output : 
                     shrink  = ( b.x - a.x ) / cur_len 
                     self.__shrinks [ 'Steffensen' ] += shrink 
-
+                
         # =====================================================================
         ## (4) Try TOMS748  method
-        if not updated or not a.x < x.x < b.x :
+        if False : ## not updated or not a.x <= x.x <= b.x :
             cur_len = b.x - a.x 
             xx , a , b = toms748 ( self.__fun , a , b , x )
-            ok = not xx is None and isfinite and a.x <= xx.x <= b.x
-            if self.__full_output : self.__counters [ 'toms748' ] += ok 
+            ok = not xx is None and a.x <= xx.x <= b.x
+            if self.__full_output : self.__counters [ 'TOMS748' ] += ok 
             if ok :
+                x = xx 
                 if not x in self.__roots : self.__roots.append ( x  )
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
@@ -1310,12 +1364,12 @@ class RootFinder(object) :
                 else                              : return x , a , b ## RETURN                    
                 updated = True                
                 if self.__full_output :                 
-                    shrink  = ( b.x - a.x ) / cur_len 
-                    self.__shrinks [ 'TOMS748' ] += shrink 
+                    shrink  = ( b.x - a.x ) / cur_len
+                    self.__shrinks [ 'TOMS748' ] += shrink                 
                 
         # =====================================================================
         ## (5) Try RBP method
-        if not updated or not a.x <= x.x <= b.x :
+        if False : ## not updated or not a.x <= x.x <= b.x :
             cur_len = b.x - a.x 
             xx , a , b  = RBP ( self.__fun , a , b , x )
             ok = not xx is None and a.x <= xx.x <= b.x
@@ -1331,7 +1385,7 @@ class RootFinder(object) :
                 if self.__full_output : 
                     shrink  = ( b.x - a.x ) / cur_len 
                     self.__shrinks [ 'RBP' ] += shrink 
-                    
+
         # =====================================================================
         ## (6) Try Muller's method
         if 3 <= len ( self.__roots )  : ## and ( not updated or not a.x <= x.x <= b.x ) :
@@ -1349,15 +1403,16 @@ class RootFinder(object) :
                 updated = True
                 if self.__full_output :                     
                     shrink  = ( b.x - a.x ) / cur_len 
-                    self.__shrinks [ 'muller' ] += shrink 
-                
+                    self.__shrinks [ 'muller' ] += shrink
+
         # =====================================================================
         ## (7) secant is "almost never" fails 
-        if not updated or not a.x <= x.x <= b.x :            
+        if not updated or not a.x <= x.x <= b.x :
+            print ( 'SECANT' , updated , not a.x <= x.x <= b.x )
             xx = secant ( a , b )
             ## OK ?
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x 
-            if self.__full_output : self.__counters [ 'secant' ] += ok
+            if self.__full_output : self.__counters [ 'secant/R' ] += ok
             if ok :
                 cur_len = b.x - a.x 
                 x = Point ( xx , self.__fun ( xx ) ) 
@@ -1372,7 +1427,7 @@ class RootFinder(object) :
                     self.__shrinks [ 'secant' ] += shrink 
 
         # =====================================================================
-        ## check inverse cubic:        
+        ## (8)  check inverse cubic:        
         if 4 <= len ( self.__roots ) :
             xx = inverse_cubic ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
@@ -1388,8 +1443,8 @@ class RootFinder(object) :
                 updated = True
                 if self.__full_output :                     
                     shrink  = ( b.x - a.x ) / cur_len 
-                    self.__shrinks [ 'invese_cubic' ] += shrink 
-                                                
+                    self.__shrinks [ 'invese_cubic' ] += shrink                     
+            
         # =====================================================================
         ## (8) Try Aitken-delta2 scheme if we have enough approximations
         if 3 <= len ( self.__roots ) :
@@ -1398,7 +1453,7 @@ class RootFinder(object) :
             ## accept Aitken only in case it really improves the root estimate 
             if ok :
                 fxx = self.__fun ( xx )
-                ok = not x is None and abs ( fxx ) <= abs ( x.fx )
+                ok  = not x is None and abs ( fxx ) <= abs ( x.fx )
             if self.__full_output : self.__counters [ 'aitken' ] += ok
             if ok :
                 cur_len = b.x - a.x 
