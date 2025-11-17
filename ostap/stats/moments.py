@@ -117,6 +117,7 @@ __all__     = (
 # =============================================================================
 from ostap.core.ostap_types import integer_types, num_types, sequence_types 
 from ostap.math.base        import pos_infinity, neg_infinity
+from ostap.utils.basic      import typename 
 from ostap.stats.funstats   import FunBASE1D 
 # =============================================================================
 # logging 
@@ -286,8 +287,10 @@ class BaseMoment(FunBASE1D) :
         total    = integral ( self.xmax ) 
 
         assert 0 < total , "median: Integral is non-positive %s" % total
-        
+
+        ## fnuction
         qfun = lambda x : integral ( x ) / total  - 0.5
+        ## derivative 
         dfun = lambda x : float ( func ( x , *args , **kwargs ) ) /  total 
 
         ## @see https://en.wikipedia.org/wiki/Median#Inequality_relating_means_and_medians
@@ -315,9 +318,10 @@ class BaseMoment(FunBASE1D) :
         return rf.find ( self.xmin , self.xmax )
 
     # ========================================================================
-    ## get the quantile
+    ## get the quantile for function/distributino
     def quantile ( self , func , quantile , *args , **kwargs ) :
-
+        """ Get quantile
+        """
         assert isinstance ( quantile , num_types ) and 0 <= quantile <= 1,\
             "Invalid `quantile' %s " % quantile 
     
@@ -343,36 +347,42 @@ class BaseMoment(FunBASE1D) :
         return rf.find ( self.xmin , self.xmax )
         
     # ========================================================================
-    ## get quantiles  
+    ## get quantiles   (0 and 1 quantiles will be included)
     def quantiles ( self , func , quantiles  , *args , **kwargs ) :
- 
-        if isinstance   ( quantiles , integer_types  ) and 1 <= quantiles : 
-            quantiles = tuple  (   i * 1.0 / quantiles for i in range ( 1 , quantiles ) )
-        else : 
-            
-            assert isinstance ( quantiles , sequence_types ) , \
-                "`quantiles' must be sequence!"
-                
-            quantiles = tuple ( q for q in quantiles )
-            assert all ( isinstance ( q , num_types ) for q in quantiles ), \
-                "Invalid `quantiles' %s" % str ( quantiles  )
+        """ Get quantiles  (0 and 1 quantiles will be included)
+        """
+        if isinstance   ( quantiles , integer_types  ) and 1 <= quantiles :            
+            quantiles = tuple  ( i * 1.0 / quantiles for i in range ( 1 , quantiles ) )
 
-            quantiles = tuple ( q for q in quantiles if 0 < q < 1  ) 
-            if not quantiles : return self.xmin , self.xmax 
-            quantiles = sorted ( set ( quantiles ) ) 
+        assert isinstance ( quantiles , sequence_types ) , \
+            "`quantiles' must be sequence: %s" % typename ( quantiles ) 
         
+        quantiles = tuple ( q for q in quantiles )
+        assert all ( isinstance ( q , num_types ) for q in quantiles ), \
+            "Invalid `quantiles' %s" % str ( quantiles  )
+
+        ## filter quantiles: 
+        quantiles = tuple ( q for q in quantiles if 0 < q < 1  )
+        ## trivial case
+        if not quantiles : return self.xmin , self.xmax
+        ## eliminate duplicates and sort them (for efficiency) 
+        quantiles = sorted ( set ( quantiles ) ) 
+
         args   = args   if args   else self.args 
         kwargs = kwargs if kwargs else self.kwargs 
 
         ## need to know the integral
-        from ostap.math.integral   import IntegralCache as IC  
+        from ostap.math.integral   import IntegralCache as IC
+
+        ## need to solve equations 
         from ostap.math.rootfinder import RootFinder    as RF 
 
         integral = IC ( func , self.xmin , err = False ,  args = args , kwargs = kwargs )
         total    = integral  ( self.xmax )        
         
-        assert 0 < total , "quantiles: Integral is non-positive %" % total 
- 
+        assert 0 < total , "quantiles: Integral is non-positive %s" % total 
+
+        ## derivative 
         dfun     = lambda x : float ( func ( x , *args , **kwargs ) ) /  total 
  
         results  = [ self.xmin ]
@@ -380,7 +390,7 @@ class BaseMoment(FunBASE1D) :
             
             qfun = lambda x : integral ( x ) / total - Q  
             rf    = RF ( qfun , deriv1 = dfun )
-            r     = rf.find ( results [ -1 ] , self.xmax ) 
+            r     = rf.find ( results [ -1 ] , self.xmax , guess = results [ -1 ] ) 
             results.append ( r )
             
         results.append ( self.xmax )        

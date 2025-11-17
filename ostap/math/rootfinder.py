@@ -199,7 +199,6 @@ def steffensen ( fun  ,  x  , fx = None ) :
     >>> for i in  range ( 10 ) :
     ...      x = steffensen ( fun , x )
     ...      print i, x
-
     
     References
     ----------
@@ -218,9 +217,7 @@ def steffensen ( fun  ,  x  , fx = None ) :
     gx = fun ( x + fx ) / fx - 1
     if 0 == gx or iszero ( gx ) : return None
     
-    if not -1 < gx < 0 :
-        print ( 'steffensen' , gx )
-        ## return None 
+    if not -1 < gx < 0 : return None 
 
     return x - fx / gx
 
@@ -811,8 +808,8 @@ class RootResults ( object ):
             rows.append ( row ) 
             for key,cnt  in self.shrinks.items() :
                 smean       = cnt.mean() 
-                value, expo = smean.pretty_print ( precision   = precision ,
-                                                   width       = width     ,
+                value, expo = smean.pretty_print ( precision   = 2  ,
+                                                   width       = 4  ,
                                                    parentheses = False     )
                 row     = key , value , '10^%+d' % expo if expo else '' 
                 rows.append ( row ) 
@@ -1047,7 +1044,7 @@ class RootFinder(object) :
             if has_args : fderiv1 = lambda x : deriv1 ( x , *self.args , **self.kwargs )
             else        : fderiv1 = deriv1
             if deriv2 : 
-                assert callable( deriv2 ) , "Invalid second derivative`deriv2'"
+                assert callable( deriv2 ) , "Invalid second derivative `deriv2'"
                 if has_args : fderiv2 = lambda x : deriv2 ( x , *self.args , **self.kwargs )
                 else        : fderiv2 = deriv2
      
@@ -1080,6 +1077,12 @@ class RootFinder(object) :
         """`kwargs`: optional keyword arguments for fun/deriv1/deriv2
         """
         return self.__kwargs 
+
+    @property
+    def full_output ( self ) :
+        """`full_output` : provide detailed information
+        """
+        return self.__full_output
     
     # =========================================================================
     ## Return result/root with optional report 
@@ -1159,16 +1162,16 @@ class RootFinder(object) :
         assert guess is None or isinstance ( guess , num_types ) , \
             "Invaild `guess` type %s" % typename ( guess )
 
-        ## check the provides guess 
+        ## check the provided guess 
         if guess is None or not a.x <= guess <= b.x :
             
             ## use the secant as the 1st approximation 
             guess = secant ( a , b )
             ok    = not guess is None and isfinite ( guess ) and a.x <= guess <= b.x
-            self.__counters [ 'secant' ] += ok
+            if self.__full_output : self.__counters [ 'secant' ] += ok
             if not ok :
                 guess = 0.5 * ( a.x + b.x )
-                self.__counters [ 'bisection' ] += 1
+                if self.__full_output : self.__counters [ 'bisection' ] += 1
 
         ## calcualate fun(guess) 
         guess = Point ( guess , self.__fun ( guess ) )
@@ -1225,18 +1228,22 @@ class RootFinder(object) :
         
         ## the lenght of the interval brackeing interval 
         the_len = b.x - a.x
-        
+
+        ## if guess is not specified or invalid 
         if x is None or not a.x < x.x < b.x : 
-            ## make a secant step
+            ## (0.1) make a secant step
             xx = secant ( a , b )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
-            self.__counters [ 'secant' ] += ok
-            if not ok : xx =  0.5 * ( a.x + b.x )            
+            if self.__full_output : self.__counters [ 'secant' ] += ok
+            if not ok :
+                ## (0.2) 
+                xx =  0.5 * ( a.x + b.x )            
+                if self.__full_output : self.__counters [ 'bisection' ] += ok
             x = Point ( xx , self.__fun ( xx ) )
 
         updated = False 
         # =====================================================================
-        ## (1,2) try Halley's and/or Newton methods
+        ## (1&2) try Halley and/or Newton methods
         if self.__deriv1 :            
             ## 
             xx = halley_newton ( self.__fun    ,
@@ -1244,41 +1251,49 @@ class RootFinder(object) :
                                  self.__deriv1 , 
                                  deriv2 = self.__deriv2 , fx = x.fx )
             ## OK ?
-            ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x 
-            if self.__deriv2 : self.__counters [ 'halley' ] += ok  
-            else             : self.__counters [ 'newton' ] += ok  
+            ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
+            if self.__full_output : 
+                if self.__deriv2 : self.__counters [ 'halley' ] += ok  
+                else             : self.__counters [ 'newton' ] += ok  
             if ok :
                 cur_len = b.x - a.x 
                 x = Point ( xx , self.__fun ( xx ) ) 
-                ## if not x in self.__roots : self.__roots.append ( x  )
+                if not x in self.__roots : self.__roots.append ( x  )
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN                 
                 updated = True
-                shrink  = ( b.x - a.x ) / cur_len 
-                if self.__deriv2 : self.__shrinks [ 'halley' ] += shrink
-                else             : self.__shrinks [ 'newton' ] += shrink
+                if self.__full_output : 
+                    shrink  = ( b.x - a.x ) / cur_len
+                    if self.__deriv2 : self.__shrinks [ 'halley' ] += shrink
+                    else             : self.__shrinks [ 'newton' ] += shrink
                 
         # =====================================================================
         ## (3) try  Steffensen's method only if the  interval is already shrinked
-        if 10 <= self.__iteration and not updated and a.x <= x.x <= b.x and a.x <= x.x + x.fx <= b.x and not isequal ( x.x + x.fx , x.x ) :         
+        if 0 <= self.__iteration                  and \
+           not updated                            and \
+           a.x <= x.x <= b.x                      and \
+           a.x <= x.x + x.fx <= b.x               and \
+           abs ( x.fx ) < 0.1 * abs ( b.x - a.x ) and \
+           not isequal ( x.x + x.fx , x.x ) :         
             ##
             xx = steffensen ( self.__fun , x.x , fx = x.fx )
             ## OK ?
             ok = not xx is None and isfinite ( xx ) and a.x < xx < b.x
-            self.__counters [ 'steffensen' ] += ok
+            if self.__full_output : self.__counters [ 'steffensen' ] += ok
             if ok :
                 cur_len = b.x - a.x 
                 x = Point ( xx , self.__fun ( xx ) ) 
-                ## if not x in self.__roots : self.__roots.append ( x  )
+                if not x in self.__roots : self.__roots.append ( x  )
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN                    
                 updated = True
-                shrink  = ( b.x - a.x ) / cur_len 
-                self.__shrinks [ 'Steffensen' ] += shrink 
+                if self.__full_output : 
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'Steffensen' ] += shrink 
 
         # =====================================================================
         ## (4) Try TOMS748  method
@@ -1286,16 +1301,17 @@ class RootFinder(object) :
             cur_len = b.x - a.x 
             xx , a , b = toms748 ( self.__fun , a , b , x )
             ok = not xx is None and isfinite and a.x <= xx.x <= b.x
-            self.__counters [ 'toms748' ] += ok 
+            if self.__full_output : self.__counters [ 'toms748' ] += ok 
             if ok :
                 if not x in self.__roots : self.__roots.append ( x  )
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN                    
-                updated = True
-                shrink  = ( b.x - a.x ) / cur_len 
-                self.__shrinks [ 'TOMS748' ] += shrink 
+                updated = True                
+                if self.__full_output :                 
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'TOMS748' ] += shrink 
                 
         # =====================================================================
         ## (5) Try RBP method
@@ -1303,7 +1319,7 @@ class RootFinder(object) :
             cur_len = b.x - a.x 
             xx , a , b  = RBP ( self.__fun , a , b , x )
             ok = not xx is None and a.x <= xx.x <= b.x
-            self.__counters [ 'RBP' ] += ok
+            if self.__full_output : self.__counters [ 'RBP' ] += ok
             if ok :
                 x = xx
                 ## if not x in self.__roots : self.__roots.append ( x  )
@@ -1312,26 +1328,28 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )         : a , b = a , x  
                 else                                  : return x , a , b ## RETURN
                 updated = True
-                shrink  = ( b.x - a.x ) / cur_len 
-                self.__shrinks [ 'RBP' ] += shrink 
-
+                if self.__full_output : 
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'RBP' ] += shrink 
+                    
         # =====================================================================
         ## (6) Try Muller's method
         if 3 <= len ( self.__roots )  : ## and ( not updated or not a.x <= x.x <= b.x ) :
             xx = muller ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
-            self.__counters [ 'muller' ] += ok
+            if self.__full_output : self.__counters [ 'muller' ] += ok
             if ok :
                 cur_len = b.x - a.x 
                 x = Point ( xx , self.__fun ( xx ) ) 
-                ## if not x in self.__roots : self.__roots.append ( x  )
+                if not x in self.__roots : self.__roots.append ( x  )
                 if   0 == x.fx or iszero ( x.fx )     : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )         : a , b = x , b  
                 elif samesign ( b.fx , x.fx )         : a , b = a , x  
                 else                                  : return x , a , b ## RETURN
                 updated = True
-                shrink  = ( b.x - a.x ) / cur_len 
-                self.__shrinks [ 'muller' ] += shrink 
+                if self.__full_output :                     
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'muller' ] += shrink 
                 
         # =====================================================================
         ## (7) secant is "almost never" fails 
@@ -1339,7 +1357,7 @@ class RootFinder(object) :
             xx = secant ( a , b )
             ## OK ?
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x 
-            self.__counters [ 'secant' ] += ok
+            if self.__full_output : self.__counters [ 'secant' ] += ok
             if ok :
                 cur_len = b.x - a.x 
                 x = Point ( xx , self.__fun ( xx ) ) 
@@ -1348,23 +1366,40 @@ class RootFinder(object) :
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x  
                 else                              : return x , a , b ## RETURN                 
-                print ( 'SECANT' , x , a , b , self.__roots )
                 updated = True
-                shrink  = ( b.x - a.x ) / cur_len 
-                self.__shrinks [ 'secant' ] += shrink 
-                
+                if self.__full_output :                     
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'secant' ] += shrink 
+
+        # =====================================================================
+        ## check inverse cubic:        
+        if 4 <= len ( self.__roots ) :
+            xx = inverse_cubic ( *self.__roots )
+            ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
+            if self.__full_output : self.__counters [ 'inverse_cubic' ] += ok
+            if ok :
+                cur_len = b.x - a.x 
+                x = Point ( xx , self.__fun ( xx ) ) 
+                if not x in self.__roots : self.__roots.append ( x  )
+                if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
+                elif samesign ( a.fx , x.fx )     : a , b = x , b  
+                elif samesign ( b.fx , x.fx )     : a , b = a , x  
+                else                              : return x , a , b ## RETURN                 
+                updated = True
+                if self.__full_output :                     
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'invese_cubic' ] += shrink 
+                                                
         # =====================================================================
         ## (8) Try Aitken-delta2 scheme if we have enough approximations
         if 3 <= len ( self.__roots ) :
-            
             xx = aitken_delta2 ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
-            ## accept Aitken only if it improves the estimate 
+            ## accept Aitken only in case it really improves the root estimate 
             if ok :
                 fxx = self.__fun ( xx )
-                if not x is None :
-                    ok  = abs ( fxx ) <= abs ( x.fx )                
-            self.__counters [ 'aitken' ] += ok
+                ok = not x is None and abs ( fxx ) <= abs ( x.fx )
+            if self.__full_output : self.__counters [ 'aitken' ] += ok
             if ok :
                 cur_len = b.x - a.x 
                 x = Point ( xx , fxx ) 
@@ -1374,9 +1409,10 @@ class RootFinder(object) :
                 elif samesign ( b.fx , x.fx )     : a , b = a , x
                 else                              : return x , a , b ## RETURN                
                 updated = True
-                shrink  = ( b.x - a.x ) / cur_len 
-                self.__shrinks [ 'aitken' ] += shrink 
-                
+                if self.__full_output :                     
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'aitken' ] += shrink 
+
         # =====================================================================        
         ## (9) Force bisection as "ultima ratio regum"
         new_len = b.x - a.x
@@ -1384,18 +1420,22 @@ class RootFinder(object) :
             cur_len = b.x - a.x 
             a , b = bisection ( self.__fun , a , b )
             ok = not samesign ( a.fx , b.fx ) 
-            self.__counters [ 'bisection' ] += ok
+            if self.__full_output : self.__counters [ 'bisection' ] += ok
             if ok : 
                 if not a.x <= x.x <= b.x :
                     xx = 0.5 * ( a.x + b.x  )  
                     x  = Point ( xx , self.__fun ( xx ) )
+                ## 
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
                 elif samesign ( b.fx , x.fx )     : a , b = a , x
-                else                              : return x , a , b ## RETURN                
-                shrink  = ( b.x - a.x ) / cur_len 
-                self.__shrinks [ 'bisection' ] += shrink 
+                else                              : return x , a , b ## RETURN
+                ## 
+                if self.__full_output :                     
+                    shrink  = ( b.x - a.x ) / cur_len 
+                    self.__shrinks [ 'bisection' ] += shrink 
 
+        ## final... 
         return x , a , b 
 
 # ===========================================================================================
@@ -1568,7 +1608,6 @@ from scipy.optimize import brentq as scipy_brentq
 def findroot_scipy ( fun                 ,     ## the function
                      a                   ,     ## low-edge  of bracheting interval 
                      b                   , * , ## high edge of bracketing interval
-                     guess       = None  ,     ## guess - ignored 
                      args        = ()    ,     ## additional positioal arguments for function (&derivatives) call  
                      kwargs      = {}    ,     ## additional keyword   arguments for function (&derivatives) call   
                      maxiter     = 100   ,
@@ -1577,9 +1616,8 @@ def findroot_scipy ( fun                 ,     ## the function
                      full_output = False ,
                      disp        = True  , **other ) :
     
-    if other :
-        logger.warning ( "Extra arguments [%s] are ignored!" % ( ','.join ( k for k in other ) ) )
-
+    if other : logger.warning ( "Extra arguments [%s] are ignored!" % ( ','.join ( k for k in other ) ) )
+    
     ## wrap keyword arguemnts 
     if kwargs : the_fun = lambda x, *a : fun  ( x , *a, **kwargs )
     else      : the_fun = fun
@@ -1594,9 +1632,12 @@ def findroot_scipy ( fun                 ,     ## the function
                           full_output = full_output ,
                           disp        = disp        ) 
 
-
+# =============================================================================
+findroot_brent = findroot_scipy
+findtoot_ostap = find_root 
+# =============================================================================
 ## as default, use scipy version 
-findroot = findroot_scipy
+findroot       = findroot_scipy
 
 # =============================================================================
 ## solve equation \f$ f(x)=C \f$
@@ -1635,9 +1676,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
-    if findroot is find_root : 
-        logger.warning ("scipy.optimize.brentq is not available, use local `find_root'-replacement")
 
 # =============================================================================
 ##                                                                      The END 
