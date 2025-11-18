@@ -2104,9 +2104,9 @@ bool Ostap::Math::Needham::setC
   const double c1 ,
   const double c2 )
 {
-  const double c0_ = std::fabs ( c0  ) ;
-  const double c1_ = std::fabs ( c1  ) ;
-  const double c2_ =             c2    ;
+  const double c0_ = std::abs ( c0  ) ;
+  const double c1_ = std::abs ( c1  ) ;
+  const double c2_ =            c2    ;
   //
   if ( s_equal ( c0_ , m_c0 ) &&
        s_equal ( c1_ , m_c1 ) &&
@@ -2132,7 +2132,7 @@ std::size_t Ostap::Math::Needham::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_cb.tag () , m_c0 , m_c1 , m_c2 ) ; 
 }
 // ============================================================================
-// show alpha as functon of sigma 
+// show alpha as function of sigma 
 // ============================================================================
 double Ostap::Math::Needham::alpha
 ( const double sigma ) const 

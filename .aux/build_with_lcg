@@ -2,7 +2,6 @@
 LCG=$1
 CMTCONFIG=$2
 
-
 mkdir build
 cd    build
 
