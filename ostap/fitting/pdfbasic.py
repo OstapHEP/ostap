@@ -663,9 +663,9 @@ class APDF1 ( Components ) :
             # ============================================================
             try : # ======================================================
                 # ========================================================
-                with rootException() , warnings.catch_warnings() :
-                    warnings.simplefilter ( 'default' , RuntimeWarning ) 
-                    return Ostap.MoreRooFit.fitTo ( model , data , *options )
+                ##  with rootException() , warnings.catch_warnings() :
+                ##  warnings.simplefilter ( 'default' , RuntimeWarning ) 
+                return Ostap.MoreRooFit.fitTo ( model , data , *options )
                 # ========================================================                
             except Exception : # =========================================
                 # ========================================================
@@ -683,9 +683,9 @@ class APDF1 ( Components ) :
                 # ========================================================
                 try : # ==================================================
                     # ====================================================
-                    with rootException() , warnings.catch_warnings() :
-                        warnings.simplefilter ( 'default' , RuntimeWarning ) 
-                        return model.fitTo ( data , *options )
+                    ## with rootException() , warnings.catch_warnings() :
+                    ## warnings.simplefilter ( 'default' , RuntimeWarning ) 
+                    return model.fitTo ( data , *options )
                     # ====================================================
                 except Exception : # =====================================
                     # ====================================================
@@ -699,9 +699,9 @@ class APDF1 ( Components ) :
         # ================================================================
         try : # ==========================================================
             # ============================================================
-            with rootException() , warnings.catch_warnings() :
-                warnings.simplefilter ( 'default' , RuntimeWarning ) 
-                return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+            ## with rootException() , warnings.catch_warnings() :
+            ## warnings.simplefilter ( 'default' , RuntimeWarning ) 
+            return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
             # ============================================================                        
         except Exception : # =============================================
             # ============================================================
