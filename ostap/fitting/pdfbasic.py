@@ -663,7 +663,9 @@ class APDF1 ( Components ) :
             # ============================================================
             try : # ======================================================
                 # ========================================================
-                with rootException() : return Ostap.MoreRooFit.fitTo ( model , data , *options )
+                with rootException() , warnings.catch_warnings() :
+                    warnings.simplefilter ( 'default' , RuntimeWarning ) 
+                    return Ostap.MoreRooFit.fitTo ( model , data , *options )
                 # ========================================================                
             except Exception : # =========================================
                 # ========================================================
@@ -680,8 +682,10 @@ class APDF1 ( Components ) :
             if len ( options ) <= NARGMAX  :
                 # ========================================================
                 try : # ==================================================
-                    # ====================================================                    
-                    with rootException() : return model.fitTo ( data , *options )
+                    # ====================================================
+                    with rootException() , warnings.catch_warnings() :
+                        warnings.simplefilter ( 'default' , RuntimeWarning ) 
+                        return model.fitTo ( data , *options )
                     # ====================================================
                 except Exception : # =====================================
                     # ====================================================
@@ -694,8 +698,10 @@ class APDF1 ( Components ) :
         cmd = command ( *options )
         # ================================================================
         try : # ==========================================================
-            # ============================================================            
-            with rootException () : return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+            # ============================================================
+            with rootException() , warnings.catch_warnings() :
+                warnings.simplefilter ( 'default' , RuntimeWarning ) 
+                return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
             # ============================================================                        
         except Exception : # =============================================
             # ============================================================
@@ -2259,7 +2265,7 @@ class APDF1 ( Components ) :
                                   histo = histo , **kwargs )
         
         with rootException() , warnings.catch_warnings() :
-            warnings.simplefilter('ignore',RuntimeWarning) 
+            warnings.simplefilter ( 'ignore' , RuntimeWarning ) 
             hh = self.pdf.createHistogram (
                 hID ()    ,
                 self.xvar ,
@@ -3776,7 +3782,7 @@ class APDF2 (APDF1) :
                                   histo = histo , **kwargs )
         
         with rootException() , warnings.catch_warnings() : 
-            warnings.simplefilter('ignore',RuntimeWarning)         
+            warnings.simplefilter ( 'ignore' , RuntimeWarning )         
             hh = self.pdf.createHistogram (
                 hID()     ,
                 self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo2x' )   ,
@@ -5067,7 +5073,7 @@ class APDF3 (APDF2) :
                                   histo = histo , **kwargs )
         
         with rootException() , warnings.catch_warnings() : 
-            warnings.simplefilter('ignore',RuntimeWarning)         
+            warnings.simplefilter ( 'ignore' , RuntimeWarning )         
             hh = self.pdf.createHistogram (
                 hID()     ,
                 self.xvar ,                    self.binning ( histo.GetXaxis() , 'histo3x' )   ,

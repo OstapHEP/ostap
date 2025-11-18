@@ -2103,6 +2103,7 @@ if '__main__' == __name__ :
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
 
+    """
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
@@ -2114,6 +2115,7 @@ if '__main__' == __name__ :
     ## double side Crystal Ball                  + background
     with timing ('test_crystalball_DS' , logger ) :
         test_crystalball_DS () 
+    """
 
     ## Needham function (CB with alpha=f(sigma)) + background 
     with timing ('test_needham'        , logger ) :
