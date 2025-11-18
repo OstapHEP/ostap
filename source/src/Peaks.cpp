@@ -2111,6 +2111,20 @@ bool Ostap::Math::Needham::setSigma
 ( const double value )
 {
   if ( !m_cb.setSigma ( value ) ) { return false ; }
+  //
+  double a = alpha ( sigma () ) ;
+  if ( a < 1.e-10 )
+    {
+      std::cerr
+	<< " NEEDHAM SIGMA"
+	<< " a = " << a
+	<< " s = " << sigma () 
+	<< " c0  " << m_c0 
+	<< " c1  " << m_c1
+	<< " c2  " << m_c2 
+	<< std::endl ;
+    }
+  //
   return m_cb.setAlpha ( alpha ( sigma () ) ) ;
 }
 // ============================================================================
@@ -2132,6 +2146,19 @@ bool Ostap::Math::Needham::setC
   m_c0 = c0_ ;
   m_c1 = c1_ ;
   m_c2 = c2_ ;
+  //
+  double a = alpha ( sigma () ) ;
+  if ( a < 1.e-10 )
+    {
+      std::cerr
+	<< " NEEDHAM C "
+	<< " a = " << a
+	<< " s = " << sigma () 
+	<< " c0  " << m_c0 
+	<< " c1  " << m_c1
+	<< " c2  " << m_c2 
+	<< std::endl ;
+    }
   //
   return m_cb.setAlpha ( alpha ( sigma () ) ) ;
 }
