@@ -1296,8 +1296,8 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core      , 
-	const double              alpha = 2 , 
-	const double              n     = 1 ) ;
+	      const double              alpha = 2 , 
+	      const double              n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core Gaussian function 
@@ -1305,7 +1305,7 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core ,
-	const Ostap::Math::Tail&  tail ) ;
+	      const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1505,10 +1505,21 @@ namespace Ostap
        */
       inline double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const
+	      const double xhigh ) const
       { return m_cb.non_gaussian ( xlow , xhigh ) ; } 
       // ======================================================================
-    public:
+    public: // components 
+      // ======================================================================
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss&    core       () const { return m_cb.core () ; }
+      /// get the Gaussian core 
+      const Ostap::Math::Gauss&    gauss      () const { return m_cb.core () ; }
+      /// get left tail
+      const Ostap::Math::LeftTail& tail       () const { return m_cb.tail () ; }
+      /// get left tail
+      const Ostap::Math::LeftTail& tail_left  () const { return m_cb.tail () ; }
+      // ======================================================================
+       public:
       // ======================================================================
       /// get the tag 
       std::size_t tag () const ;

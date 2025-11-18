@@ -2182,14 +2182,20 @@ double Ostap::Math::Needham::alpha
 ( const double sigma ) const 
 {
   const double sc1 = std::abs ( sigma / m_c1 ) ;
-  if ( sc1 < 1 )
-    {
-      const double q = std::pow ( sc1 , m_c2 ) ;
-      return q < 1 ? m_c0 * q / ( 1 + q ) : m_c0 * 1 / ( 1 / q + 1 ) ;
-    }
   //
-  const double q = std::pow ( sc1 , m_c2 ) ;
-  return q < 1 ? m_c0 * q / ( 1 + q ) : m_c0 * 1 / ( 1 / q + 1 ) ;
+  static const double s_min_A = 0.01 ;
+  /// avoid overflows (1) 
+  if ( 1 <= sc1 ) 
+  {
+    const double q = std::pow ( sc1 , m_c2 ) ;
+    const double a = m_c0 * q / ( 1 + q ) ; 
+    return std::hypot ( s_min_A , a ) ; 
+  }
+  /// avoid overflows (2)
+  const double Q = std::pow ( 1 / sc1 , m_c2 ) ;
+  const double a = m_c0 / ( Q + 1 ) ;
+  return std::hypot ( s_min_A , a ) ;
+ //
 }
 // ============================================================================
 /*  constructor from all parameters
