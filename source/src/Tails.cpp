@@ -96,7 +96,6 @@ Ostap::Math::LeftTail::LeftTail
  *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
  */
 // ============================================================================
-#include <iostream>
 double Ostap::Math::LeftTail::evaluate
 ( const double x      ,
   const double x0     ,
@@ -107,17 +106,6 @@ double Ostap::Math::LeftTail::evaluate
   //}
   const double delta = x - x0 ;
   //
-  if ( F <= 0 || dFoF <= 0 )
-    {
-      std::cerr
-	<< " LEFT TAIL"
-	<< " F "     << F
-	<< " dFoF "  << dFoF
-	<< " x  "    << x
-	<< " x0 "    << x0 	
-	<< std::endl ;		
-    }
-
   Ostap::Assert ( 0 < F && 0 < dFoF ,
                   "Invalid parameter `dFoF`: log-derivative must be positive!" ,
                   "Ostap::Math::LeftTail::evaluate" ,
