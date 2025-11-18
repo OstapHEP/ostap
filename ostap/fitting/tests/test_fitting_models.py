@@ -2106,7 +2106,6 @@ if '__main__' == __name__ :
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
-
         
     ## right-side Crystal Ball                   + background
     with timing ('test_crystalball_RS' , logger ) :
@@ -2119,15 +2118,17 @@ if '__main__' == __name__ :
     ## Needham function (CB with alpha=f(sigma)) + background 
     with timing ('test_needham'        , logger ) :
         test_needham        ()
-    
+
+    """
     ## Apollonios function                       + background 
     with timing ('test_apollonios'     , logger ) :
         test_apollonios     () 
 
     ## modified ApolloniosL function              + background
-    with timing ('test_apollonioisL'   , logger ) :
+    with timing ('test_apolloniousL'   , logger ) :
         test_apolloniosL    () 
 
+    
     ## bifurcated Gaussian function              + background
     with timing ('test_bifurcated'     , logger ) :
         test_bifurcated     () 
@@ -2295,6 +2296,8 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
+
+    """
     
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

@@ -651,28 +651,57 @@ class APDF1 ( Components ) :
         """ Invoke `model.fitTo ( data , *options)` command
         - merge arguments using `ROOT.RooFit::MultiArg` to shorted list
         """
-        
-        NARGS = 8
-        
         assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
             "fit_to: invalid argument types: %s" % list ( options  ) 
-
+        
         if 'fitrange' in model.all_string_attributes() :
             model.removeStringAttribute ( 'fitrange' )
-            
-        ## No need to restructure options: 
-        if  ( 6 , 32 ) <= root_info :
-            return Ostap.MoreRooFit.fitTo ( model , data , *options )
 
-        ##  for "small" number of arguments use the standard function 
-        if len ( options ) <= NARGS and root_info < ( 6, 29 ) :
-            return model.fitTo ( data , *options )
-        
+        # ================================================================
+        ## No need to restructure options: 
+        if  ( 6 , 32 ) <= root_info :            
+            # ============================================================
+            try : # ======================================================
+                # ========================================================
+                with rootException() : return Ostap.MoreRooFit.fitTo ( model , data , *options )
+                # ========================================================                
+            except Exception : # =========================================
+                # ========================================================
+                self.error ( "Error from fit_to %s\n%s" % ( typename ( model ) , self ) , exc_info = True )
+                raise
+            
+        # ================================================================
+        ## special treatment for old ROOT: it does not like too many arguments 
+        elif root_info < ( 6 , 29 ) : # ==================================
+            # ============================================================
+            NARGMAX = 8
+            # ============================================================
+            ##  for "small" number of arguments use the standard function 
+            if len ( options ) <= NARGMAX  :
+                # ========================================================
+                try : # ==================================================
+                    # ====================================================                    
+                    with rootException() : return model.fitTo ( data , *options )
+                    # ====================================================
+                except Exception : # =====================================
+                    # ====================================================
+                    self.error ( "Error from fit_to %s\n%s" % ( typename ( model ) , self ) , exc_info = True )
+                    raise
+                
+        # ================================================================
+        ## merge arguments into linked list 
         from ostap.fitting.roocmdarg import command 
         cmd = command ( *options )
-            
-        return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
-
+        # ================================================================
+        try : # ==========================================================
+            # ============================================================            
+            with rootException () : return Ostap.MoreRooFit.fitTo ( model , data , *options )
+            # ============================================================                        
+        except Exception : # =============================================
+            # ============================================================
+            self.error ( "Error from fit_to %s\n%s" % ( typename ( model ) , self ) , exc_info = True )
+            raise
+    
     # ===============================================================================
     ## refit up-to N-times till good fit result/cov matrix quality 
     def reFit ( self , *args , **kwargs ) :

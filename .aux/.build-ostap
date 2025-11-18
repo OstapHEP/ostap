@@ -162,7 +162,6 @@ else
    return 206 
 fi 
 
-
 make_command=
 make_generator=
 if command -v ninja &> /dev/null

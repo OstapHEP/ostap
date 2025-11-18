@@ -1,8 +1,14 @@
+## New features
+
+## Backward  incompatible 
+
+## Bug fixes
+
 # v3.5.1.0 
 
 ## New features
 
-   1. some tweaks for root-finder
+   1. some tweaks for root-finder(s)
    
 ## Backward  incompatible 
 
@@ -12,7 +18,7 @@
 
 ## New features
 
-  1. modernize GoF-machinery to allow GoF for SimFit 
+  1. modernize GoF-machinery to allow GoF for SimFit (1D case-only) 
   1. add `draw` and parallel evaluation for Goodnes-of-Fit test for simFit case
   1. add more symbols into `symbols.py`
   1. `interal.py` : simplify `adaptive_integral` code and change the underlying itegration store type from `dict` to `SortedKeyList`
@@ -52,7 +58,7 @@
   1. add method for adding new edge to the historgam axis
   1. add method to split certain bin into N parts  
   1. impove self-printout of histogram axes 
-  1. optiize numeric integration - make  a try to call the internl `integral` method
+  1. optimize numeric integration - make  a try to call the internal `integral` method
   1. extent integration tests
   1. more tweaks for polynomials
   1. add `FunMNMX` got get brute-force minmax estimator for functions

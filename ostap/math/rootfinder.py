@@ -647,12 +647,12 @@ def aitken_delta2 ( x0 , x1 , x2 , *others  ) :
     ----------
     - https://en.wikipedia.org/wiki/Aitken%27s_delta-squared_process
     """
-    points = ( x0 , x1 , x2 ) + others 
-    xn , xn1 , xn2 = [ p.x for p in points [ -3 : ] ] 
-
-    dd  = ( xn - xn1 ) + ( xn2 - xn1 )
-    if not dd or iszero ( dd ) : return None
-    return ( xn * xn2 - xn1 * xn1 )  / dd 
+    x0 , x1 , x2 = [ p.x for p in ( ( x0 , x1 , x2 ) + others ) [ -3 : ] ]
+    
+    dd = x2 + x0 - 2 * x1
+    if not dd or iszero ( dd ) : return
+    
+    return ( x2 * x0 - x1 * x1 ) / dd 
 
 # ========================================================================================
 ## A bit simpified version of single step of TOMS748
@@ -1323,9 +1323,9 @@ class RootFinder(object) :
                     shrink  = ( b.x - a.x ) / cur_len
                     self.__shrinks [ 'STFA' ] += shrink
         
-        ## (3) try  Steffensen's method only if the  interval is already shrinked
-        if 0 <= self.__iteration                  and \
-           not updated                            and \
+        # =====================================================================
+        ## (4) try  Steffensen's method only if the  interval is already shrinked
+        if not updated                            and \
            a.x <= x.x <= b.x                      and \
            a.x <= x.x + x.fx <= b.x               and \
            abs ( x.fx ) < 0.1 * abs ( b.x - a.x ) and \
@@ -1349,8 +1349,8 @@ class RootFinder(object) :
                     self.__shrinks [ 'Steffensen' ] += shrink 
                 
         # =====================================================================
-        ## (4) Try TOMS748  method
-        if False : ## not updated or not a.x <= x.x <= b.x :
+        ## (5) Try TOMS748  method
+        if not updated or not a.x <= x.x <= b.x :
             cur_len = b.x - a.x 
             xx , a , b = toms748 ( self.__fun , a , b , x )
             ok = not xx is None and a.x <= xx.x <= b.x
@@ -1368,8 +1368,8 @@ class RootFinder(object) :
                     self.__shrinks [ 'TOMS748' ] += shrink                 
                 
         # =====================================================================
-        ## (5) Try RBP method
-        if False : ## not updated or not a.x <= x.x <= b.x :
+        ## (6) Try RBP method
+        if not updated or not a.x <= x.x <= b.x :
             cur_len = b.x - a.x 
             xx , a , b  = RBP ( self.__fun , a , b , x )
             ok = not xx is None and a.x <= xx.x <= b.x
@@ -1387,7 +1387,7 @@ class RootFinder(object) :
                     self.__shrinks [ 'RBP' ] += shrink 
 
         # =====================================================================
-        ## (6) Try Muller's method
+        ## (7) Try Muller's method
         if 3 <= len ( self.__roots )  : ## and ( not updated or not a.x <= x.x <= b.x ) :
             xx = muller ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
@@ -1406,9 +1406,8 @@ class RootFinder(object) :
                     self.__shrinks [ 'muller' ] += shrink
 
         # =====================================================================
-        ## (7) secant is "almost never" fails 
+        ## (8) secant is "almost never" fails 
         if not updated or not a.x <= x.x <= b.x :
-            print ( 'SECANT' , updated , not a.x <= x.x <= b.x )
             xx = secant ( a , b )
             ## OK ?
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x 
@@ -1427,7 +1426,7 @@ class RootFinder(object) :
                     self.__shrinks [ 'secant' ] += shrink 
 
         # =====================================================================
-        ## (8)  check inverse cubic:        
+        ## (9)  check inverse cubic:        
         if 4 <= len ( self.__roots ) :
             xx = inverse_cubic ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
@@ -1446,7 +1445,7 @@ class RootFinder(object) :
                     self.__shrinks [ 'invese_cubic' ] += shrink                     
             
         # =====================================================================
-        ## (8) Try Aitken-delta2 scheme if we have enough approximations
+        ## (10) Try Aitken-delta2 scheme if we have enough approximations
         if 3 <= len ( self.__roots ) :
             xx = aitken_delta2 ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
@@ -1469,7 +1468,7 @@ class RootFinder(object) :
                     self.__shrinks [ 'aitken' ] += shrink 
 
         # =====================================================================        
-        ## (9) Force bisection as "ultima ratio regum"
+        ## (11) Force bisection as "ultima ratio regum"
         new_len = b.x - a.x
         if not updated or not a.x <= x.x <= b.x or 3 * new_len > the_len :
             cur_len = b.x - a.x 

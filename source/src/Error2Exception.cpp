@@ -51,7 +51,8 @@ namespace
         Ostap::Assert ( false                                              ,
                         tag + message                                      ,
                         ( location && location [ 0 ] ) ? location : "ROOT" ,
-                        ERROR_ROOT + level                                 ) ; 
+                        ERROR_ROOT + level                                 , 
+			__FILE__ , __LINE__                                ) ; 
       }
     else if ( kWarning <= level && Py_IsInitialized() ) 
       {

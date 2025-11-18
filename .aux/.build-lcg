@@ -79,7 +79,6 @@ for run in {1..50}; do
     
 done
 
-
 ( ls -al  /cvmfs/sft.cern.ch/lcg/releases/binutils/ 2>&1 > /dev/null )
 
 if [[ ${LCG} && -d /cvmfs/sft.cern.ch/lcg/views/${LCG} ]]
@@ -113,6 +112,8 @@ else
     echo -e ${prefix_error}' No valid LCG/PLATFORM/setup script: ' ${LCG_SETUP}
     return 130 
 fi
+
+
 
 ##  check ROOTSYS 
 if [[    ${ROOTSYS}                 &&
@@ -212,11 +213,32 @@ else
     return 201
 fi     
 
+## check CMAKE & NINJA
+
+if command -v cmake &> /dev/null 
+then
+    echo -e "${prefix}"' CMAKE             : '$(which cmake   )
+    echo -e "${prefix}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+   echo -e "${prefix_error}"' CMAKE is not found!'
+   return 202 
+fi
+
+if command -v ninja &> /dev/null 
+then
+    echo -e "${prefix}"' NINJA             : '$(which ninja   )
+    echo -e "${prefix}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+   echo -e "${prefix_error}"' NINJA is not found!'
+   return 203 
+fi 
+
+
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
-    if command -v ninja &> /dev/null
+    if command -v ninja &> /dev/null 
     then
-        ( echo -e ${prefix}' Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD}  ; cd ${OSTAP_BUILD} ; ninja clean )
+	( echo -e ${prefix}' Clean  OSTAP_BUILD   build remnants   '${OSTAP_BUILD}  ; cd ${OSTAP_BUILD} ; ninja clean )
     fi
 fi
 
