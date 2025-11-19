@@ -631,7 +631,7 @@ namespace Ostap
     // ========================================================================
   public: /// statistc for single variable
     // =========================================================================
-    /** get the nmnber of good entries 
+    /** get the number of good entries 
      *  @param data (INPUT) input dat 
      *  @param selecttion (INPUT) selection criteria 
      *  @param first      (INPUT) the first event to process (inclusibe) 
@@ -656,7 +656,7 @@ namespace Ostap
       const Ostap::EventIndex first     = Ostap::FirstEvent ,
       const Ostap::EventIndex last      = Ostap::LastEvent  ) const ;    
     // ========================================================================
-  public: /// statistc for single variable
+  public: /// statistic for single variable
     // =========================================================================
     /** build statistic for the <code>expression</code>
      *  @param tree       (INPUT) the tree 

@@ -329,7 +329,7 @@ def data_the_moment ( data               ,
                            parallel   = parallel  )
 
 # =============================================================================
-## Is there at leats one good entry ?
+## Is there at least one good entry ?
 def data_hasEntry ( data               ,
                     cuts      = ""     , *args , 
                     cut_range = ""     ,
@@ -2438,7 +2438,11 @@ def data_decorate ( klass ) :
     klass.the_moment      = data_the_moment
 
     klass.hasEntry        = data_hasEntry 
-    klass.has_entry       = data_hasEntry 
+    klass.has_entry       = data_hasEntry
+    
+    klass.data_size       = data_size 
+    klass.num_entries     = data_size 
+    klass.n_entries       = data_size 
 
     klass.ECDF            = data_ECDF 
     klass.moment          = data_moment

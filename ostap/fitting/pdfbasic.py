@@ -474,7 +474,7 @@ class APDF1 ( Components ) :
         ## check fit ranges 
         rng = check_arg ( 'RangeByName' , *opts )
         ok  = self.check_ranges ( dataset , rng.getString ( 0 ) if rng else '' )
-        if not ok : self.warning ( 'fitTo: ranges are not OK (Data set has entries outside fitting range)' ) 
+        if not ok : self.warning ( 'fitTo: ranges are not OK (Dataset has entries outside fitting range)' ) 
     
         ## #
         ## ## check the limits/ranges 
@@ -2529,6 +2529,10 @@ class APDF1 ( Components ) :
             if hasattr ( v , 'hasMax' ) and hasattr ( v , 'getMax' ) and v.hasMax ( cut_range ) :
                 vmax  = v.getMax ( cut_range )
                 if isfinite ( vmax ) : cuts |= ( ROOT.TCut ( v.name ) > vmax )
+
+        print ( 'CHECK RANGES:' ,
+                cuts ,'\n' ,
+                dataset.num_entries ( str ( cuts ) , cut_range = cut_range ) ) 
 
         return not dataset.hasEntry ( cuts = cuts , cut_range = cut_range ) 
 

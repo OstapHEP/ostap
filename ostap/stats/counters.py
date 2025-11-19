@@ -251,11 +251,11 @@ def cnt_row ( counter , key = '' ) :
     from   ostap.logger.symbols   import times
     
     return '%s' % key , \
-        nEff  , '%s10^{%+d}' % ( times , expo0 ) if expo0 else ''  , \
-        vsum  , '%s10^{%+d}' % ( times , expo1 ) if expo1 else ''  , \
-        mean  , '%s10^{%+d}' % ( times , expo2 ) if expo2 else ''  , \
-        rms   , '%s10^{%+d}' % ( times , expo3 ) if expo3 else ''  , \
-        mnmx  , '%s10^{%+d}' % ( times , expo4 ) if expo4 else '' 
+        nEff  , '%s10^%+d' % ( times , expo0 ) if expo0 else ''  , \
+        vsum  , '%s10^%+d' % ( times , expo1 ) if expo1 else ''  , \
+        mean  , '%s10^%+d' % ( times , expo2 ) if expo2 else ''  , \
+        rms   , '%s10^%+d' % ( times , expo3 ) if expo3 else ''  , \
+        mnmx  , '%s10^%+d' % ( times , expo4 ) if expo4 else '' 
 
 # =============================================================================
 ## Build 1 or 3 rows in the table for the counter :
