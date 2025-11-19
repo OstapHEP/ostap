@@ -454,7 +454,7 @@ models.append ( CB2_pdf )
 #  @date 2011-07-25
 class Needham_pdf(Gauss_pdf,TailN) :
     """ Needham function: specific parameterisation of Crystal Ball function with
-    - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
+    - alpha(sigma) = c_0 * Q / ( 1 + Q ) , where Q = (sigma/c_1)**c_2 
 
     For majority of physics cases `n` can/should be fixed to 0 ( corresponds to `N=1`) 
 
@@ -482,7 +482,6 @@ class Needham_pdf(Gauss_pdf,TailN) :
                              xvar          ,
                              mean  =  mean ,
                              sigma = sigma ) 
-
         ## 
         TailN . __init__   ( self , n = ZERO if n is None else n  )
 

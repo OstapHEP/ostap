@@ -170,7 +170,7 @@ class RootOnlyShelf(shelve.Shelf):
         with ROOTCWD() : ## NB: preserve current directory in ROOT!
             rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args )
             if not rfile or not rfile.IsOpen() :
-                raise IOError("Can't open ``%s'' with mode ``%s''" % ( filename , mode ) )
+                raise IOError("Can't open `%s' with mode `%s'" % ( filename , mode ) )
             shelve.Shelf.__init__ ( self , rfile , writeback )
             
         self.nominal_dbname = filename
@@ -235,7 +235,6 @@ class RootOnlyShelf(shelve.Shelf):
     def __enter__   ( self       ) : return self 
     def __exit__    ( self , *_  ) : self.close ()
 
-
     # =============================================================================
     ## get the object from the ROOT file 
     def get ( self , key , default = None ) :
@@ -261,7 +260,14 @@ class RootOnlyShelf(shelve.Shelf):
             if self.writeback:
                 self.cache [ key ] = value
         return value
-    
+
+    # ==============================================================================
+    ## fake "sync" method, no action 
+    def sync ( self ) :
+        """ fake "sync" method, no action
+        """
+        pass 
+
     # =============================================================================
     ## put item into ROOT-file 
     #  @code
@@ -276,23 +282,41 @@ class RootOnlyShelf(shelve.Shelf):
         if self.writeback : self.cache [ key ] = value
         self.dict [ key ] = value 
 
-    ## ## close the database 
-    ## def close ( self ) :
-    ##     """Close the database
-    ##     """
-    ##    shelve.Shelf.close ( self )
-        
+    # =========================================================================
+    ## close the database 
+    def close ( self ) :
+        """ Close the database / close ROOT file 
+        """
+        if self.dict and self.dict.IsOpen () :
+            self.dict.Close ()
+            self.dict = None 
+                
     # =========================================================================
     ## list the available keys 
-    def ls    ( self ) :
-        """List the available keys as table .
+    def ls_table ( self , prefix = '# ' ) :
+        """ List the available keys as table .
         
         >>> db = ...
-        >>> db.ls() ## all keys
+        >>> db.ls_table () ## all keys
+        >>> db.ls       () ## ditto 
         
         """
-        return self.dict.ls_table( prefix = "# ")
+        if self.dict and self.dict.IsOpen () : 
+            return self.dict.ls_table( prefix = prefix )
 
+    ls = ls_table 
+    # =========================================================================
+    ## list the available keys 
+    def ls_tree ( self , prefix = '' ) :
+        """ List the available keys as tree .
+        
+        >>> db = ...
+        >>> db.ls_tree () ## all keys
+   
+        """
+        if self.dict and self.dict.IsOpen () : 
+            return self.dict.ls_tree ( prefix = prefix )
+        
     @property
     def dbtype ( self ) :
         """`dbtype` : the acual type of DB: `root`"""
@@ -468,10 +492,10 @@ class RootShelf(RootOnlyShelf):
         self.dict [ key ] = value
 
     ## close the database 
-    def close ( self ) :
-        """Close the database
-        """
-        RootOnlyShelf.close ( self )
+    ## def close ( self ) :
+    ##    """ Close the database
+    ##    """
+    ##    RootOnlyShelf.close ( self )
         
     # =========================================================================
     ## list the available keys 
@@ -541,7 +565,6 @@ class RootShelf(RootOnlyShelf):
         ll    = getLogger ( n )
         line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )
-
 
 # =============================================================================
 ## helper function to open RootShelve data base

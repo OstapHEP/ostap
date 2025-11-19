@@ -121,6 +121,7 @@ def _rd_setitem_ ( rdir , name , tobj ) :
         rdir.cd()
         with implicitMT ( False ) : 
             return rdir.WriteTObject( tobj , dirname , 'WriteDelete' )
+        
         ## DO NOT DELETE OBJECT IN ROOT 
         ## ROOT.SetOwnership( tobj , False )
         ## return val 
@@ -632,13 +633,13 @@ def _rf_exit_  ( self , *_ ) :
 
 
 # =============================================================================
-## create the graphical representation of the directory structure
+## Create the graphical representation of the directory structure as tree 
 #  @code
 #  rdir = ...
 #  for o in rdir.make_graph () : print o.showme() 
 #  @endocode
 def _rd_make_tree_ ( rdir , parent = None , last = False ) :
-    """ Create the graphical representation of the directory structure
+    """ Create the graphical representation of the directory structure as tree 
     >>> rdir = ...
     >>> for o in rdir.make_graph () : print o.showme() 
     """
@@ -651,7 +652,7 @@ def _rd_make_tree_ ( rdir , parent = None , last = False ) :
             if isinstance ( item , ROOT.TFile ) :
                 name = os.path.basename ( name )
             return name + '/'
-        return '%s %% %s' % ( name , item .GetClassName() ) 
+        return '%-30s : %s' % ( name , item .GetClassName() ) 
     
     ## create the root of the tree 
     root = DisplayTree ( rdir , parent , display , isdir = True , last = last ) 

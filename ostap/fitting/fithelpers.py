@@ -2101,9 +2101,9 @@ class FitHelper(VarMaker) :
         else :
             
             raise TypeError ( "Invalid 'config' (%s,%s)/(%s,%s)" % (
-                first , second , type ( first ) , type ( second ) ) )
+                first , second , typename ( first ) , typename ( second ) ) )
 
-        ## create multivariate gaussian constraint  
+        ## create multivariate gaussian constraint
         mgauss = ROOT.RooMultiVarGaussian ( name , title , vlist , first , second )
         
         self.aux_keep.append ( vlist  )

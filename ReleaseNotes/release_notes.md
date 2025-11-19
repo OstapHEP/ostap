@@ -1,5 +1,8 @@
 ## New features
 
+  1, some tweaks for Crystall Ball&friends
+  1. some tiny fixed for `Root(Only)Shelf` 
+  
 ## Backward  incompatible 
 
 ## Bug fixes
