@@ -84,9 +84,10 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core          import Ostap
 from   ostap.fitting.pdfbasic   import Generic1D_pdf
-from   ostap.fitting.fithelpers import ( ZERO    ,
-                                         Tail    , LeftTail  , RightTail ,
-                                         SigmaLR , TwoSigmas )                                          
+from   ostap.fitting.fithelpers import ( ZERO     ,
+                                         TailN    , Tail      , 
+                                         LeftTail , RightTail ,
+                                         SigmaLR  , TwoSigmas )                                          
 from   ostap.fitting.fit1d      import RESOLUTION, CheckMean 
 import ROOT, math 
 # =============================================================================    
@@ -99,8 +100,8 @@ models = set()
 ## single gaussian model for resolution
 # =============================================================================
 ## @class ResoGauss
-#  Trivial single (bifurcated) Gaussian resolution model
-#  in terms of avergae sigma and asymmetry 
+#  Trivial single (or bifurcated) Gaussian resolution model
+#  in terms of average sigma and asymmetry 
 class ResoGauss(RESOLUTION,SigmaLR) :
     """ Trivial (bifurcated) gaussian resolution model
     - in terms of average sigma and asymmetry 
@@ -162,7 +163,7 @@ models.add ( ResoGauss )
 # =============================================================================
 ## @class ResoGaussA
 #  Trivial single (bifurcated) Gaussian resolution model
-#  in terms of left and right sigmas 
+#  in terms of Left and Right sigmas 
 class ResoGaussA(RESOLUTION,TwoSigmas) :
     """ Trivial (bifurcated) gaussian resolution model
     """
@@ -170,7 +171,7 @@ class ResoGaussA(RESOLUTION,TwoSigmas) :
                    name           ,   ## the name 
                    xvar           ,   ## the variable 
                    sigmaL         ,   ## the left sigma
-                   sigmaR = None  ,   ## if rigth sigmais None : symmetric case 
+                   sigmaR = None  ,   ## if rigth sigma is None : symmetric case 
                    fudge  = 1     ,   ## fudge-factor 
                    mean    = None ) :  ## mean-value
 
@@ -246,7 +247,7 @@ models.add ( ResoGaussA )
 
 # =============================================================================
 ## @class ResoGauss2
-#  Double (symetric) Gaussian model for  resolution.
+#  Double (symmetric) Gaussian model for  resolution.
 #  Parameters: 
 #  - sigma of core Gaussian
 #  - ratio of wide/core widths
@@ -527,7 +528,7 @@ models.add ( ResoApoA )
 #
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
-class ResoCB2(RESOLUTION,Tail,LeftTail,RightTail) :
+class ResoCB2(ResoGauss,Tail,LeftTail,RightTail) :
     """ (A)Symmetric double-sided Crystal Ball model for resolution
     - (symmetric) Gaussian core 
     - power-law tails
@@ -551,12 +552,13 @@ class ResoCB2(RESOLUTION,Tail,LeftTail,RightTail) :
                    psiAlpha = None ) : ## asymmetry for alpha
 
         ## initialize the base 
-        RESOLUTION.__init__ ( self,
-                              name  = name  ,
-                              xvar  = xvar  ,
-                              sigma = sigma ,
-                              mean  = mean  ,
-                              fudge = fudge )
+        ResoGauss.__init__ ( self,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             sigma = sigma ,
+                             mean  = mean  ,
+                             fudge = fudge ,
+                             psi   = ZERO  )
         
         ## get "mean" alpha and N 
         Tail.__init__ ( self , alpha = alpha , n = n ) 
@@ -565,12 +567,12 @@ class ResoCB2(RESOLUTION,Tail,LeftTail,RightTail) :
         self.__psiA = self.make_var ( ZERO if psiAlpha is None else psiAlpha , 
                                       'psi_alpha_%s'       % self.name        ,
                                       '#psi_{@alpha}(%s)'  % self.name        ,
-                                      None , 0 , -16 , +16  )
+                                      None , 0 , -16 , +16 )
         ## Asymmetry in N  
         self.__psiN = self.make_var ( ZERO if psiN is None else psiN , 
                                       'psi_n_%s'           % self.name       ,
                                       '#psi_{n}(%s)'       % self.name       ,
-                                      None , 0 , -16 , +16  )
+                                      None , 0 , -16 , +16 )
         
         self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , halfsum = self.alpha , psi = self.__psiA )
         self.__AV_N     = self.asymmetry_vars ( 'n'     , halfsum = self.n     , psi = self.__psiN )
@@ -646,7 +648,7 @@ models.add ( ResoCB2 )
 #   - power-law tails
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
-class ResoCB2A(RESOLUTION,LeftTail,RightTail) :
+class ResoCB2A(ResoGauss,LeftTail,RightTail) :
     """ (A)Symmetric double-sided Crystal Ball model for resolution
     - Gaussian core 
     - power-law tails
@@ -665,13 +667,14 @@ class ResoCB2A(RESOLUTION,LeftTail,RightTail) :
                    mean   = None ) : ## the mean value
 
         ## initialize the base 
-        RESOLUTION.__init__ ( self          ,
-                              name  = name  ,
-                              xvar  = xvar  ,
-                              sigma = sigma ,
-                              mean  = mean  ,
-                              fudge = fudge )
-
+        ResoGauss.__init__ ( self          ,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             sigma = sigma ,
+                             mean  = mean  ,
+                             fudge = fudge ,
+                             psi   = ZERO  )
+        
         LeftTail   .__init__ ( self , alpha = alphaL , n = nL )
         RightTail  .__init__ ( self ,
                                alpha = alphaL if alphaR is None else alphaR ,
@@ -731,7 +734,7 @@ models.add ( ResoCB2A )
 #  @see Ostap::Math::Needham
 #  @see Ostap::Models::Needham
 #  @see Nededham_pdf
-class ResoNeedham(RESOLUTION) :
+class ResoNeedham(ResoGauss,TailN) :
     """ Nedham's function
     - variant of Crystal Ball function with alpha = alpha(sigma)     
     """
@@ -745,13 +748,18 @@ class ResoNeedham(RESOLUTION) :
                    n       = ROOT.RooFit.RooConst ( 0 ) , 
                    fudge   = 1    ,   ## fudge-factor
                    mean    = None ) : ## the mean value
-        
-        super(ResoNeedham,self).__init__ ( name  = name  ,
-                                           xvar  = xvar  ,
-                                           sigma = sigma ,
-                                           mean  = mean  ,
-                                           fudge = fudge )
-        
+
+        ## initialize the base 
+        ResoGauss.__init__ ( self ,
+                             name  = name   ,
+                             xvar  = xvar   ,
+                             sigma = sigma  ,
+                             mean  = mean   ,
+                             fudge = fudge  ,
+                             psi   = ZERO   )
+        ## 
+        TailN . __init__   ( self , n = ZERO if n is None else n  )
+
         self.__c0 = self.make_var ( c0                  ,
                                     "c0_%s"     % name  ,
                                     "c_{0}(%s)" % name  ,
@@ -779,9 +787,6 @@ class ResoNeedham(RESOLUTION) :
                                        'n_%s'       % name ,
                                        'n_{N}(%s)'  % name ,
                                        None , 0 , -1 , 100 )
-        
-        ## true parameter 
-        self.__N = Ostap.MoreRooFit.TailN ( 'N_%s' % name , self.__n )
         
         self.needham = Ostap.Models.Needham (
             self.roo_name ( 'needham_' ) , 
@@ -834,20 +839,6 @@ class ResoNeedham(RESOLUTION) :
     def c2 ( self, value ) :
         self.set_value ( self.__c2 , value )
         
-    @property
-    def n ( self ) :
-        """n-parameter for Crystal Ball tail"""
-        return self.__n
-    @n.setter
-    def n ( self, value ) :
-        self.set_value ( self.__n , value ) 
-
-    @property
-    def N ( self ) :
-        """`N` : actual N-parameter used for Crystal Ball """
-        return self.__N
-  
-
 models.add ( ResoNeedham )
 
 # =============================================================================

@@ -3931,7 +3931,7 @@ class SigmaLR(object) :
 # - <code>N</code> (Internal) parameter for power-law tail
 # @see Ostap::Math::Tail::N
 class TailN(object) :  
-    """ Helper mixin class to define power-law power-law tails 
+    """ Helper mixin class to define the power-law tails 
     used for CrystalBall-like functions
     
      It defines two properties
@@ -4136,7 +4136,7 @@ class Tail(TailN) :
         self.__alpha = self.make_var ( alpha       ,
                                        name_alpha  ,
                                        title_alpha , 
-                                       None        , 1.5 ,  0.3 , 5.0 )
+                                       None        , 1.50 ,  0.45 , 5.00 )
     @property
     def alpha ( self ) :
         """'alpha': alpha-parameter for CrystalBall-like power-law tail
@@ -4196,7 +4196,7 @@ class LeftTail(TailNL) :
         self.__alphaL = self.make_var ( alpha       ,
                                         name_alpha  ,
                                         title_alpha , 
-                                        None        , 1.5 ,  0.3 , 5.0 )
+                                        None        , 1.50 ,  0.45 , 5.00 )
         
     @property
     def alphaL ( self ) :
@@ -4255,7 +4255,7 @@ class RightTail(TailNR) :
         self.__alphaR = self.make_var ( alpha       ,
                                         name_alpha  ,
                                         title_alpha , 
-                                        None        , 1.5 ,  0.3 , 5   )
+                                        None        , 1.50 , 0.45 , 5.00 )
         
     @property
     def alphaR ( self ) :

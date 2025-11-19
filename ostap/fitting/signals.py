@@ -276,7 +276,12 @@ class CrystalBall_pdf(Gauss_pdf,Tail,LeftTail) :
         #
         ## initialize the bases
         #
-        Gauss_pdf .__init__ ( self , name , xvar , mean , sigma )
+        Gauss_pdf .__init__ ( self  ,
+                              name  ,
+                              xvar  ,
+                              mean  = mean  ,
+                              sigma = sigma )
+        
         Tail      .__init__ ( self , alpha = alpha      , n  = n      ) 
         LeftTail  .__init__ ( self , alpha = self.alpha , n  = self.n ) 
 
@@ -291,6 +296,7 @@ class CrystalBall_pdf(Gauss_pdf,Tail,LeftTail) :
             self.sigma   ,
             self.alpha   ,           
             self.n       )
+        
         ## save the configuration
         self.config = {
             'name'  : self.name  ,
@@ -322,7 +328,12 @@ class CrystalBallRS_pdf(Gauss_pdf,Tail,RightTail) :
                    n        = None   ) : 
                    
         ##  the base 
-        Gauss_pdf .__init__ ( self , name , xvar , mean , sigma )
+        Gauss_pdf .__init__ ( self  ,
+                              name  ,
+                              xvar  ,
+                              mean  = mean  ,
+                              sigma = sigma )
+        
         Tail      .__init__ ( self , alpha = alpha      , n  = n      ) 
         RightTail .__init__ ( self , alpha = self.alpha , n  = self.n ) 
         #        
@@ -357,7 +368,7 @@ models.append ( CrystalBallRS_pdf )
 #  @see CrystalBall_pdf 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class CB2_pdf(PEAK,LeftTail,RightTail) :
+class CB2_pdf(Gauss_pdf,LeftTail,RightTail) :
     """ Double sided Crystal Ball function with both left and rigth sides
     It appears to be very powerful and is used for many LHCb papers to describe
     B-hadron mass signals, especially for B->J/psi X final states 
@@ -382,9 +393,14 @@ class CB2_pdf(PEAK,LeftTail,RightTail) :
         #
         ## initialize the base
         # 
-        Gauss_pdf .__init__ ( self , name , xvar , mean , sigma )
-        LeftTail  .__init__ ( self , alpha = alphaL , n = nL    ) 
-        RightTail .__init__ ( self , alpha = alphaR , n = nR    ) 
+        Gauss_pdf .__init__ ( self  ,
+                              name  ,
+                              xvar  ,
+                              mean  = mean ,
+                              sigma = sigma )
+        
+        LeftTail  .__init__ ( self , alpha = alphaL , n = nL ) 
+        RightTail .__init__ ( self , alpha = alphaR , n = nR ) 
 
         self.pdf = Ostap.Models.CrystalBallDS(
             self.roo_name ( 'cb2_' ) , 
@@ -440,7 +456,7 @@ class Needham_pdf(Gauss_pdf,TailN) :
     """ Needham function: specific parameterisation of Crystal Ball function with
     - alpha(sigma) = a_0 + sigma*(a_1+sigma*a_2)
 
-    For majority of physics cases n can/should  be fixed to 0 ( corresponds to N=1) 
+    For majority of physics cases `n` can/should be fixed to 0 ( corresponds to `N=1`) 
 
     The function is well suitable to fit dimuon final states: 
     - J/psi   -> mu+ mu-
@@ -594,6 +610,7 @@ class Apollonios_pdf(PEAK,SigmaLR) :
                             sigma      = sigma           ,
                             mean_name  = 'm0_%s'  % name ,
                             mean_title = 'm_0_%s' % name )
+        
         SigmaLR.__init__ ( self, self.sigma , psi = psi  )
         
         ## beta-parameter     
@@ -797,7 +814,11 @@ class DoubleGauss_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar , mean , sigma )
+        PEAK.__init__  ( self          ,
+                         name          ,
+                         xvar          ,
+                         mean  = mean  ,
+                         sigma = sigma )
         
         self.__scale    = self.make_var ( scale ,
                                           'SigmaScale'        + name ,
