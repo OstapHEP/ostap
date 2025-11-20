@@ -2530,11 +2530,8 @@ class APDF1 ( Components ) :
                 vmax  = v.getMax ( cut_range )
                 if isfinite ( vmax ) : cuts |= ( ROOT.TCut ( v.name ) > vmax )
 
-        print ( 'CHECK RANGES:' ,
-                cuts ,'\n' ,
-                dataset.num_entries ( str ( cuts ) , cut_range = cut_range ) ) 
-
-        return not dataset.hasEntry ( cuts = cuts , cut_range = cut_range ) 
+        has_entry = dataset.hasEntry ( cuts = cuts , cut_range = cut_range ) 
+        return not has_entry 
 
     # =========================================================================
     ## Make PDF1 object
