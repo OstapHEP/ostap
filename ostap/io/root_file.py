@@ -508,7 +508,6 @@ def _rd_ikeyskeys_ ( rdir                           ,
                      no_dir    = True               ,
                      select    = lambda key : True  ,
                      exclude   = lambda key : False ) :
-                     
     """ Iterator over  keyname/key pairs  from ROOT file/directory
     >>> for kname, key in rfile.ikeyskeys() :
     ...    print kname , key.GetClassName()
