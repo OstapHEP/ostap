@@ -114,7 +114,7 @@ def fmt_pretty_values ( *values             ,
 # ==================================================================================
 ## Formats for nice printout of the object with errors  ( string + exponent)
 #  @code
-#  fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 ) ) 
+#  fmtv , fmte , expo = fmt_pretty_errors ( number , ( e1 , e2 , e3 ) ) 
 #  @endcode
 #  @return formats for nice string and the separate exponent 
 def fmt_pretty_errors ( value               ,
@@ -124,7 +124,7 @@ def fmt_pretty_errors ( value               ,
                         with_sign   = True  ,
                         latex       = False ) : 
     """ Formats for nice printout of the object with errors  ( strings + exponent)
-    >>> fmtv , fmte , expo = fmt_pretty_errs ( number , ( e1 , e2 , e3 )  ) 
+    >>> fmtv , fmte , expo = fmt_pretty_errors ( number , ( e1 , e2 , e3 )  ) 
     """
     assert isinstance ( width  , integer_types ) and \
         isinstance ( precision , integer_types ) and 2 <= precision < width, \
@@ -197,7 +197,7 @@ def fmt_pretty_errors ( value               ,
 #  fmt , expo = fmt_pretty_float ( number ) 
 #  @endcode
 #  @return format for nice string and the separate exponent 
-def fmt_pretty_float ( value             ,
+def fmt_pretty_float ( value             , * , 
                        width     = 6     ,
                        precision = 4     ,
                        with_sign = True  ,
@@ -228,8 +228,8 @@ def fmt_pretty_float ( value             ,
 #  fmt, fmtv, fmte, expo = fmt_pretty_error ( value , error  ) 
 #  @endcode
 #  @return formats nice string and the separate exponent 
-def fmt_pretty_error ( value              ,
-                       error                , 
+def fmt_pretty_error ( value               ,
+                       error               , * ,  
                        width       = 6     ,
                        precision   = 4     ,
                        with_sign   = True  , 
@@ -268,7 +268,7 @@ def fmt_pretty_error ( value              ,
 #  @return formats for nice string and the separate exponent 
 def fmt_pretty_error2 ( value               ,
                         errlow              ,
-                        errhigh             ,
+                        errhigh             , * , 
                         width       = 6     ,
                         precision   = 4     ,
                         with_sign   = True  , 
@@ -309,7 +309,7 @@ def fmt_pretty_error2 ( value               ,
 #  s , expo = pretty_float ( number ) 
 #  @endcode
 #  @return nice stirng and the separate exponent 
-def pretty_float ( value             ,
+def pretty_float ( value             , * , 
                    width     = 6     ,
                    precision = 4     ,
                    with_sign = True  ,
@@ -344,7 +344,7 @@ def pretty_float ( value             ,
 #  @endcode
 #  @return nice string and the separate exponent 
 def pretty_error ( value               ,
-                   error               , 
+                   error               , * , 
                    width       = 6     ,
                    precision   = 4     ,
                    parentheses = True  ,
@@ -400,7 +400,7 @@ def pretty_error ( value               ,
 #  @return nice string and the separate exponent 
 def pretty_error2 ( value               ,
                     errlow              ,
-                    errhigh             ,
+                    errhigh             , * , 
                     width       = 6     ,
                     precision   = 4     ,
                     parentheses = True  ,
@@ -437,7 +437,6 @@ def pretty_error2 ( value               ,
     
     return fmt % values , expo 
 
-
 # ===============================================================================
 ## nice printout of the asymmetric  errors  ( string + exponent)
 #  @code
@@ -445,7 +444,7 @@ def pretty_error2 ( value               ,
 #  @endcode
 #  @return nice string and the separate exponent 
 def pretty_errors ( errlow              ,
-                    errhigh             ,
+                    errhigh             , * , 
                     width       = 6     ,
                     precision   = 4     ,
                     parentheses = True  ,
@@ -507,7 +506,7 @@ def add_expo ( value , expo , fmt = '%%s %s 10^%%+d' % times ) :
 #  s , expo = pretty_ae (  ae ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_ae  ( errors              ,
+def pretty_ae  ( errors              , * , 
                  width       = 6     ,
                  precision   = 4     ,
                  parentheses = True  ,
@@ -530,7 +529,7 @@ def pretty_ae  ( errors              ,
 #  s , expo = pretty_vae (  ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_vae ( value               ,
+def pretty_vae ( value               , * , 
                  width       = 6     ,
                  precision   = 4     ,
                  parentheses = True  ,
@@ -552,7 +551,7 @@ def pretty_vae ( value               ,
 #  obj = ...
 #  prnt , expo = pretty_print ( obj ) 
 #  @endcode
-def pretty_print ( what              ,
+def pretty_print ( what              , * , 
                    width     = 6     ,
                    precision = 4     ,
                    latex     = False , 
@@ -579,7 +578,7 @@ def pretty_print ( what              ,
 #  obj  = ...
 #  prnt = nice_print ( obj ) 
 #  @endcode
-def nice_print ( what              ,
+def nice_print ( what              , * , 
                  width     = 6     ,
                  precision = 4     ,
                  latex     = False ,
@@ -610,7 +609,7 @@ def nice_print ( what              ,
 #  obj = ...
 #  prnt , expo = pretty_latex ( obj ) 
 #  @endcode
-def pretty_latex ( what              ,
+def pretty_latex ( what              , * , 
                    width     = 6     ,
                    precision = 4     ,
                    **kwargs          ) :
@@ -630,7 +629,7 @@ def pretty_latex ( what              ,
 #  obj  = ...
 #  prnt = nice_latex ( obj ) 
 #  @endcode
-def nice_latex  ( what              ,
+def nice_latex  ( what              , * , 
                   width     = 6     ,
                   precision = 4     ,
                   **kwargs          ) :
@@ -651,12 +650,12 @@ def nice_latex  ( what              ,
 #  s , expo = pretty_vme (  ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_vme ( value               ,
+def pretty_vme ( value               , * , 
                  width       = 6     ,
                  precision   = 4     ,
                  parentheses = True  ,
                  latex       = False ) :
-    """ Nice printout of the ValueWithError object  ( string + exponent)
+    """ Nice printout of the ValueWithMultiError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
     """

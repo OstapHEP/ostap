@@ -2,6 +2,8 @@
 
   1, some tweaks for Crystal Ball&friends
   1. some tiny fixed for `Root(Only)Shelf` 
+  1. add comparison (in a form of the table) for two RooFitResult obejcts
+  1. add `select` and `exclude` arguments for `ls_table/ls_tree` methods
   
 ## Backward  incompatible 
 

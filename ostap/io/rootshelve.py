@@ -293,7 +293,7 @@ class RootOnlyShelf(shelve.Shelf):
                 
     # =========================================================================
     ## list the available keys 
-    def ls_table ( self , prefix = '# ' ) :
+    def ls_table ( self , prefix = '# ' , **kwargs ) :
         """ List the available keys as table .
         
         >>> db = ...
@@ -302,24 +302,26 @@ class RootOnlyShelf(shelve.Shelf):
         
         """
         if self.dict and self.dict.IsOpen () : 
-            return self.dict.ls_table( prefix = prefix )
+            return self.dict.ls_table ( prefix = prefix , **kwargs )
 
     ls = ls_table 
     # =========================================================================
     ## list the available keys 
-    def ls_tree ( self , prefix = '' ) :
+    def ls_tree ( self , prefix = '' , **kwargs ) :
         """ List the available keys as tree .
         
         >>> db = ...
         >>> db.ls_tree () ## all keys
+        >>> db.ls_tree ( select  = lambda key : 'TProcessID' != key.GetClassName() )
+        >>> db.ls_tree ( exclude = lambda key : 'TProcessID' == key.GetClassName() )
    
         """
         if self.dict and self.dict.IsOpen () : 
-            return self.dict.ls_tree ( prefix = prefix )
+            return self.dict.ls_tree ( prefix = prefix , **kwargs )
         
     @property
     def dbtype ( self ) :
-        """`dbtype` : the acual type of DB: `root`"""
+        """`dbtype` : the actual type of database: `root`"""
         return 'root'
     
 # =============================================================================

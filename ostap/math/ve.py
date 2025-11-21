@@ -501,7 +501,7 @@ VE.poisson = _ve_poisson_
 #  fmt , fmtv , fmte , expo = fmt_pretty_ve ( number ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def fmt_pretty_ve ( value               ,
+def fmt_pretty_ve ( value               , * , 
                     width       = 6     ,
                     precision   = 4     ,
                     parentheses = True  ,
@@ -522,12 +522,45 @@ def fmt_pretty_ve ( value               ,
                               latex       = latex       )
 
 # =============================================================================
+## Formats for nice printout of several ValueWithError object  ( string + exponent)
+#  @code
+#  fmt , fmtv , fmte , expo = fmt_pretty_ves ( number1 , number2  , number3  ) 
+#  @endcode
+#  @return nice string and the separate exponent 
+def fmt_pretty_ves ( *values   , 
+                     width       = 6     ,
+                     precision   = 4     ,
+                     parentheses = True  ,
+                     with_sign   = True  ,
+                     latex       = False ) :
+    """ Formats for nice printout of several ValueWithError objects  ( string + exponent)
+    >>> fmt , fmtv , fmte , expo = fmt_pretty_ves ( v1 , v2 , ... ) 
+    """
+    assert 2 <= len ( values ) and all ( isinstance ( v , VE ) for v in values ) , \
+        "Invalid `value' parameter: %s" % typename ( values )
+    
+    ## decode object 
+    vmean = sum ( float ( v ) for v in values )
+    cov2  = max ( v.cov2()    for v in values )
+    cov2  = max ( cov2 , sum ( ( v.value() - vmean ) ** 2  for v in values ) / len ( values ) )
+    value = VE  ( vmean , cov2 ) 
+    return fmt_pretty_ve ( value ,
+                           width       = width       ,  
+                           precision   = precision   ,                           
+                           parentheses = parentheses ,
+                           with_sign   = with_sign   ,
+                           latex       = latex       )
+# =============================================================================
+#
+
+
+# =============================================================================
 ## nice printout of the ValueWithError object  ( string + exponent)
 #  @code
 #  s , expo = pretty_ve ( number ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_ve ( value               ,
+def pretty_ve ( value               , * , 
                 width       = 7     ,
                 precision   = 5     ,
                 parentheses = True  ,
@@ -553,7 +586,7 @@ def pretty_ve ( value               ,
 #  result =  nice_ve ( number ) 
 #  @endcode
 #  @return nice string 
-def nice_ve ( value               ,
+def nice_ve ( value               , * , 
               width       = 7     ,
               precision   = 5     ,
               parentheses = True  ,

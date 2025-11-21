@@ -134,6 +134,7 @@ arrows_all       = ''.join ( ( '\U00002190' ,'\U00002196' ,
 langle           = '\U00003008' if show else '<'
 rangle           = '\U00003009' if show else '>'
 ellipsis         = '\U00002026' if show else '...'
+same             = '\U00002261' if show else 'same'
 
 clock_ticks      = ''.join ( ( '\U0001f558' , '\U0001f567' ,
                                '\U0001f550' , '\U0001f55C' , 
@@ -224,6 +225,8 @@ delta_symbol     = '\U00000394'           if show else 'delta'
 number           = '\U00002116'           if show else '#'
 ## chi2
 chi2             = '\U0001D6D8\U000000B2' if show else 'chi2'
+## chi2
+chisq            = chi2 
 ## chi2/ndf 
 chi2ndf          = '%s/ndf' % chi2 
 

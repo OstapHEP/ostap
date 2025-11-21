@@ -375,8 +375,32 @@ def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
                 
         return _res
 
-    
-# =============================================================================a
+# ===========================================================================#
+## Iterator over keys in ROOT file/directory 
+def _rd_ikeys_  ( rdir                           ,
+                  resursive = True               ,
+                  no_dir    = False              ,
+                  select    = lambda key : True  ,
+                  exclude   = lambda key : False ) :
+    """ Iterator over keys in ROOT file/directory
+    """
+           
+    with ROOTCWD () :
+        rdir.cd ()
+        klist = rdir.GetListOfKeys() 
+        for key in klist :
+            kname = key.GetName()
+            idir  = rdir.GetDirectory ( kname )
+            if not idir or no no_dir : 
+                if select ( key ) and not exclude ( key ) : yield kname
+            if idir and recursive and not idir is rdir : 
+                for k in _rd_keys_ ( idir ,
+                                     recursive = recursive ,
+                                     no_dir    = no_dir    ,
+                                     select    = select    ,
+                                     exclude   = exclude   ) : yield k
+                
+# =============================================================================
 ## Iterate over the content of ROOT file/directory 
 #  @code
 #  for key,obj in rfile.iteritems() : print key,obj
@@ -391,7 +415,12 @@ def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
-def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_dir = True  ) :
+def _rd_iteritems_ ( rdir                      ,
+                     fun       = lambda k,t,o : True ,
+                     recursive = True                ,
+                     no_dir    = True                ,
+                     select    = lambda key : True   ,
+                     exclude   = lambda key : False  ) :
     """ Iterate over the content of ROOT directory/file:
     >>> for key,obj  in rfile.iteritems()           : print key , obj
     >>> for key,hist in rfile.iteritems( ROOT.TH1 ) : print key , hist
@@ -412,9 +441,16 @@ def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_di
                 idir   = rdir.GetDirectory ( inam ) 
                 if not idir or not no_dir : 
                     obj = rdir.Get ( inam )
-                    if fun ( inam , i , obj ) : yield inam , obj
+                    if fun ( inam , i , obj ) :
+                        if select ( i ) and not exclude ( i ) :
+                            yield inam , obj
                 if recursive and idir and not idir is rdir :
-                    for k, o in _rd_iteritems_ ( idir , fun , recursive , no_dir ) :
+                    for k, o in _rd_iteritems_ ( idir                  ,
+                                                 fun       = fun       ,
+                                                 recursive = recursive ,
+                                                 no_dir    = no_dir    ,
+                                                 select    = select    ,
+                                                 exclude   = exclude   ) :
                         yield k , o
 
 # =============================================================================a
@@ -428,7 +464,12 @@ def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_di
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
-def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
+def _rd_iterkeys_ ( rdir                           ,
+                    typ       = None               ,
+                    recursive = True               ,
+                    no_dir    = True               ,
+                    select    = lambda key : True  ,
+                    exclude   = lambda key : False ) :
     """ Iterate over the keys in ROOT file/directory 
     >>> for key,obj  in rfile.iteritems()           : print key , obj
     >>> for key,hist in rfile.iteritems( ROOT.TH1 ) : print key , hist
@@ -443,9 +484,15 @@ def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
                 inam   = i.GetName()
                 idir   = rdir.GetDirectory ( inam ) 
                 if not idir or not no_dir : 
-                    if typ is None  or isinstance ( rdir.Get ( inam ) , typ ) : yield inam 
+                    if typ is None  or isinstance ( rdir.Get ( inam ) , typ ) :
+                        if select ( i ) and not exclude ( i ) : yield inam 
                 if recursive and idir  and not idir is rdir :
-                    for k in _rd_iterkeys_ ( idir , typ , recursive , no_dir ) :
+                    for k in _rd_iterkeys_ ( idir                  ,
+                                             typ       = typ       ,
+                                             recursive = recursive ,
+                                             no_dir    = no_dir    ,
+                                             select    = select    ,
+                                             exclude   = exclude   ) :
                         yield k
 
 # =============================================================================a
@@ -456,7 +503,12 @@ def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
-def _rd_ikeyskeys_ ( rdir , recursive = True , no_dir = True ) :
+def _rd_ikeyskeys_ ( rdir                           ,
+                     recursive = True               ,
+                     no_dir    = True               ,
+                     select    = lambda key : True  ,
+                     exclude   = lambda key : False ) ;
+                     
     """ Iterator over  keyname/key pairs  from ROOT file/directory
     >>> for kname, key in rfile.ikeyskeys() :
     ...    print kname , key.GetClassName()
@@ -468,17 +520,24 @@ def _rd_ikeyskeys_ ( rdir , recursive = True , no_dir = True ) :
         klst = rdir.GetListOfKeys()
         
         for key in klst :
-            
+
+            if 
             kname = key.GetName()
 
             kdir  = rdir.GetDirectory ( kname )            
             if not kdir or not no_dir :
-                yield kname, key 
+                
+                if select ( key ) and not exclude ( key ) : 
+                    yield kname, key 
             
             if recursive and kdir and not kdir is rdir :
-                for kn,kk in _rd_ikeyskeys_ ( kdir , recursive , no_dir ) :
+                for kn,kk in _rd_ikeyskeys_ ( kdir                  ,
+                                              recursive = recursive ,
+                                              no_dir    = no_dir    ,
+                                              select    = select    ,
+                                              exclude   = exclude   ) :
                     yield kname + '/' + kn , kk 
-
+                
 # =============================================================================a
 ## Iterate over the content of ROOT file/directory 
 #  @code
@@ -494,7 +553,12 @@ def _rd_ikeyskeys_ ( rdir , recursive = True , no_dir = True ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
-def _rd_itervalues_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_dir = True ) :
+def _rd_itervalues_ ( rdir  ,
+                      fun       = lambda k,t,o : True ,
+                      recursive = True                ,
+                      no_dir    = True                ,
+                      select    = lambda key : True   ,
+                      exclude   = lambda key : False  ) : 
     """ Iterate over the content of ROOT directory/file:
     >>> for obj  in rfile.itervalues ()             : print obj
     >>> for hist in rfile.itervalues ( ROOT.TH1 )   : print hist
@@ -504,9 +568,14 @@ def _rd_itervalues_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_d
     with ROOTCWD() :
         ##
         rdir.cd()
-        for key , obj in _rd_iteritems_ ( rdir , fun , recursive , no_dir ) :
+        for key , obj in _rd_iteritems_ ( rdir                  ,
+                                          fun       = fun       ,
+                                          recursive = recursive ,
+                                          no_dir    = no_dir    ,
+                                          select    = select    ,
+                                          exclude   = exclude   ) :
             yield obj 
-
+            
 # =============================================================================a
 ## Iterate (recursive) over the content in ROOT file/directory
 #  @code
@@ -515,7 +584,7 @@ def _rd_itervalues_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_d
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 def _rd_iter_ ( rdir ) :
-    """Iterate (recursive) over the content in ROOT file/directory
+    """ Iterate (recursive) over the content in ROOT file/directory
     >>> for obj  in rfile : print obj
     """
     ##
@@ -638,7 +707,11 @@ def _rf_exit_  ( self , *_ ) :
 #  rdir = ...
 #  for o in rdir.make_graph () : print o.showme() 
 #  @endocode
-def _rd_make_tree_ ( rdir , parent = None , last = False ) :
+def _rd_make_tree_ ( rdir                         ,
+                     parent  = None               ,
+                     last    = False              ,
+                     select  = lambda key : True  , 
+                     exclude = lambda key : False ) :
     """ Create the graphical representation of the directory structure as tree 
     >>> rdir = ...
     >>> for o in rdir.make_graph () : print o.showme() 
@@ -655,7 +728,11 @@ def _rd_make_tree_ ( rdir , parent = None , last = False ) :
         return '%-30s : %s' % ( name , item .GetClassName() ) 
     
     ## create the root of the tree 
-    root = DisplayTree ( rdir , parent , display , isdir = True , last = last ) 
+    root = DisplayTree ( rdir         ,
+                         parent       ,
+                         display      ,
+                         isdir = True ,
+                         last  = last ) 
                             
     yield root
 
@@ -667,8 +744,8 @@ def _rd_make_tree_ ( rdir , parent = None , last = False ) :
     for key in rdir.GetListOfKeys() :
         kname = key.GetName()
         kdir  = rdir.GetDirectory ( kname ) 
-        if kdir : dirs.append ( kdir )
-        else    : objs.append ( key  ) 
+        if kdir                                     : dirs.append ( kdir )
+        elif select ( key ) and not exclude ( key ) : objs.append ( key  ) 
 
     objs.sort ( key = lambda s : s.GetName() )
     dirs.sort ( key = lambda s : s.GetName() )
@@ -676,9 +753,13 @@ def _rd_make_tree_ ( rdir , parent = None , last = False ) :
     ndirs = len ( dirs )
     for i , d  in enumerate ( dirs ) :
         last = ndirs == i + 1
-        for l in _rd_make_tree_ ( d , parent = root , last = last ) :
+        for l in _rd_make_tree_ ( d ,
+                                  parent  = root    ,
+                                  last    = last    ,
+                                  select  = select  ,
+                                  exclude = exclude ) :
             yield l
-        
+            
     nobjs = len ( objs ) 
     for i , o in enumerate ( objs ) :
         last = nobjs == i + 1
@@ -690,12 +771,17 @@ def _rd_make_tree_ ( rdir , parent = None , last = False ) :
 #  rdir = ...
 #  print rdir.show_tree()
 #  @endcode
-def _rd_show_tree_ ( rdir , prefix = '' ) :
+def _rd_show_tree_ ( rdir                        ,
+                     prefix  = ''                 ,
+                     select  = lambda key : True  , 
+                     exclude = lambda key : False ) :
     """ Show the tree directory structure
     >>> rdir = ...
     >>> print rdir.show_tree()
     """
-    lines = [ prefix + line.showme () for line in _rd_make_tree_ ( rdir ) ]
+    lines = [ prefix + line.showme () for line in _rd_make_tree_ ( rdir ,
+                                                                   select  = select  , 
+                                                                   exclude = exclude ) ]
     return '\n'.join ( lines ) 
 
 # =============================================================================
@@ -704,27 +790,39 @@ def _rd_show_tree_ ( rdir , prefix = '' ) :
 #  rdir = ...
 #  rdir.ls_tree()
 #  @endcode
-def _rd_ls_tree_ ( rdir , prefix = '' ) :
+def _rd_ls_tree_ ( rdir                         ,
+                   prefix  = ''                 ,
+                   select  = lambda key : True  , 
+                   exclude = lambda key : False ) :
     """ Show the tree directory structure
     >>> rdir = ...
     >>> rdir.ls_tree()
     """
     logger.info ( "Directory %s\n%s" % ( rdir.GetName () ,
-                                         _rd_show_tree_ ( rdir , prefix = prefix ) ) ) 
-
+                                         _rd_show_tree_ ( rdir ,
+                                                          prefix  = prefix  ,
+                                                          select  = select  , 
+                                                          exclude = exclude ) ) ) 
+    
 # =============================================================================
 ## Show the content of the directory as a table
 #  @code
 #  rdir = ...
 #  rdir.ls_table ()
 #  @endcode  
-def _rd_table_ ( rdir , title = '' , prefix = '# ' ) :
+def _rd_table_ ( rdir                         ,
+                 title   = ''                 ,
+                 prefix  = '# '               , 
+                 select  = lambda key : True  ,
+                 exclude = lambda key : False ) :
     """ Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
     """
     
-    lines   = [  ( n , k.GetClassName() , k.GetObjlen () ) for ( n , k ) in _rd_ikeyskeys_ ( rdir ) ]
+    lines = [ ( n , k.GetClassName(), k.GetObjlen () ) for ( n , k ) in _rd_ikeyskeys_ ( rdir ,
+                                                                                         select  = select  ,
+                                                                                         exclude = exclude ) ]
     lines.sort()
     maxkey  = 5
     maxtype = 5
@@ -771,14 +869,22 @@ def _rd_table_ ( rdir , title = '' , prefix = '# ' ) :
 #  rdir = ...
 #  rdir.ls_table ()
 #  @endcode  
-def _rd_ls_table_ ( rdir , prefix = '# ' , title = '' ) :
+def _rd_ls_table_ ( rdir          ,
+                    prefix = '# ' ,
+                    title  = ''   , 
+                    select  = lambda key : True  ,
+                    exclude = lambda key : False ) :
     """ Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
     """
 
     title = title if title else full_path ( rdir ) 
-    table = _rd_table_ ( rdir , prefix = prefix , title = title )
+    table = _rd_table_ ( rdir ,
+                         prefix  = prefix  ,
+                         title   = title   ,
+                         select  = select  ,
+                         exclude = exclude )
 
     logger.info ( 'Directory %s:\n%s' % ( title , table ) )
 

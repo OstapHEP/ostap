@@ -423,7 +423,7 @@ class VarMaker (object) :
             vname = vvars [ 0 ]
             if isinstance ( vname , string_types ) :
                 assert vname and ( ( not name ) or vname == name ) , \
-                       "make_var: invalid specification of 'name' : %s/%s" % ( vname , name )
+                    "make_var: invalid specification of 'name' : %s/%s" % ( vname , name )
                 name  = vname 
                 vvars = vvars [1:]
 
@@ -464,8 +464,8 @@ class VarMaker (object) :
             ## attention! for 3-tuple the order is (value, min, max)
             if 3 == len ( vvars ) : vvars = vvars [ 1 ] , vvars [ 0 ] , vvars [ 2 ] 
             if 3 == len ( vargs ) : vargs = vargs [ 1 ] , vargs [ 0 ] , vargs [ 2 ] 
-            if vvars != vvars_ : self.warning ( "make_var[%s]:  %s -> %s " % ( name , str ( vvars_ ) , str ( vvars ) ) )  
-            if vargs != vargs_ : self.warning ( "make_var[%s]:  %s -> %s " % ( name , str ( vargs_ ) , str ( vargs ) ) )  
+            if vvars != vvars_ : self.warning ( "make_var[%s]: %s -> %s " % ( name , str ( vvars_ ) , str ( vvars ) ) )  
+            if vargs != vargs_ : self.warning ( "make_var[%s]: %s -> %s " % ( name , str ( vargs_ ) , str ( vargs ) ) )  
 
             ## there should be at least one useful number! 
             assert 1 <= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
@@ -559,7 +559,7 @@ class VarMaker (object) :
             else     : self.debug   ( "make_var[%s]: %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
 
             ## check the name: 
-            if usedRootID ( name ) : self.warning ( "make_var[%s]: name is already used by ROOT/RooFit" % name )
+            ## if usedRootID ( name ) : self.warning ( "make_var[%s]: name is already used by ROOT/RooFit" % name )
                 
             ## create the variable!
             var = ROOT.RooRealVar ( name , title , *params ) 

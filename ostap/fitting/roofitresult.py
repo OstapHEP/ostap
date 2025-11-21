@@ -21,9 +21,12 @@ from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 from   ostap.utils.valerrors    import ValWithErrors, AsymErrors   
 from   ostap.logger.colorized   import allright, attention, attstr 
-from   ostap.logger.pretty      import pretty_float, pretty_error2
-from   ostap.logger.symbols     import show 
-import ostap.math.linalg        as     LA 
+from   ostap.logger.pretty      import pretty_float, pretty_error2, fmt_pretty_values
+from   ostap.math.ve            import fmt_pretty_ves
+from   ostap.math.base          import isequal 
+from   ostap.logger.symbols     import show, same, chisq   
+import ostap.math.linalg        as     LA
+import ostap.logger.table       as     T 
 import ostap.fitting.variables     
 import ostap.fitting.printable
 import ROOT, math, sys, ctypes  
@@ -300,7 +303,6 @@ def _rfr_results_( self , *vars ) :
 
     return v
 
-    
 # ==============================================================================
 ## Get vector of eigenvalues for the covariance matrix
 #  @code
@@ -371,7 +373,6 @@ def _rfr_max_cor_ ( self , v ) :
             pmax = p.name
             
     return rmax , pmax 
-
     
 # ===============================================================================
 ## get fit-parameter as attribute
@@ -1025,7 +1026,194 @@ def _rfr_kullback_ ( r1 , r2 ) :
         logger.error ("Error from SVectorWithError::kullack_leibler")
 
     return result 
+
+# =============================================================================
+## Compare two fit-result objects 
+# =============================================================================
+def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
+    """ Compare two fit-result objects
+    """
+    assert isinstance ( r1 , ROOT.RooFitResult ) , "`r1' is not RooFitResult!"
+    assert isinstance ( r2 , ROOT.RooFitResult ) , "`r2' is not RooFitResult!"
     
+    
+    float1        = set    ( p.name for p in r1.floatParsFinal() )
+    float2        = set    ( p.name for p in r2.floatParsFinal() )
+    common_floats = float1 | float2
+    float1        = float1 - common_floats 
+    float2        = float2 - common_floats
+    common_floats = sorted ( common_floats )
+    float1        = sorted ( float1 ) 
+    float2        = sorted ( float2 ) 
+
+    fixed1       = set    ( p.name for p in r1.constPars() )
+    fixed2       = set    ( p.name for p in r2.constPars() )
+    common_fixed = fixed1 & fixed2     
+    fixed1       = fixed1 - common_fixed 
+    fixed2       = fixed2 - common_fixed 
+
+    common_fixed = sorted ( common_fixed )
+    fixed1       = sorted ( fixed1 ) 
+    fixed2       = sorted ( fixed2 ) 
+
+    if not common_floats and not common_fixed :
+        logger.warning ( 'There are neither common float nor common fixed parametters!' ) 
+    
+    precision = 4
+    width     = 6
+    
+    rows = [ ('Parameter' , 'Value' , '' , 'Fit result #1' , 'Fit result #2' , '' , '' ) ] 
+    
+    if common_floats :
+        row = '*Common FLOAT*' ,
+        rows.append ( row ) 
+        for p in common_floats :
+            v1 = r1 [ p ] . asVE ()  
+            v2 = r2 [ p ] . asVE () 
+            fmt, _ , _  , expo = fmt_pretty_ves ( v1 , v2 ,
+                                                  width       = width     , 
+                                                  precision   = precision ,
+                                                  parentheses = False     )
+            if expo :
+                scale = 10**expo
+                v1   /= scale
+                v2   /= scale
+                v1    = fmt % ( v1.value () , v1.error() )
+                v2    = fmt % ( v2.value () , v2.error() )                
+                row = '- %s' % p , '' , '' , v1 , v2 , '10^%+d' % expo
+            else :
+                v1    = fmt % ( v1.value () , v1.error() )
+                v2    = fmt % ( v2.value () , v2.error() )                
+                row = '- %s' % p , '' , '' , v1 , v2 , ''
+                
+            rows.append ( row )
+            
+        res1 = r1.results ( *common_floats )
+        res2 = r2.results ( *common_floats )
+
+        kl   = res1.kullback_leibler ( res2 )
+        if kl <= -999 :
+            row = 'Kullback-Leibler' , 'error' 
+        else : 
+            kl , ee = pretty_float ( kl , precision = precision , width = width )            
+            if ee : row = 'Kullback-Leibler' , kl , '10^%+d' % ee
+            else  : row = 'Kullback-Leibler' , kl   
+            
+        rows.append ( row ) 
+
+        c2      = res1.chi2 ( res2 )
+        c2 , ee = pretty_float ( c2 , precision = precision , width = width )            
+        if ee : row = chisq , c2 , '10^%+d' % ee
+        else  : row = chisq , c2 
+        rows.append ( row ) 
+
+        if 2 <= len ( common_floats ) :
+            
+            ev1 = Ostap.Math.EigenSystems.eigenValues ( res1.cov2 () )
+            ev2 = Ostap.Math.EigenSystems.eigenValues ( res2.cov2 () )
+            
+            v1 = min ( ev1 ) 
+            v2 = min ( ev2 )
+            fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
+            if expo :
+                scale = 10 ** expo 
+                row = 'Min eigen-value' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+            else :
+                row = 'Min eigen-value' , '' , '' , fmt % v1 , fmt % v2 
+            rows.append ( row )
+
+            v1 = max ( ev1 ) 
+            v2 = max ( ev2 )
+            fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
+            if expo :
+                scale = 10 ** expo 
+                row = 'Max eigen-value' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+            else :
+                row = 'Max eigen-value' , '' , '' , fmt % v1 , fmt % v2 
+            rows.append ( row )
+
+            v1 = sum ( ev1 ) 
+            v2 = sum ( ev2 )
+            fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
+            if expo :
+                scale = 10 ** expo 
+                row = 'Trace/Spur' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+            else :
+                row = 'Trace/Spur' , '' , '' , fmt % v1 , fmt % v2 
+            rows.append ( row )
+
+            v1,v2 = 1,1
+            for v in ev1 : v1 *= v 
+            for v in ev2 : v2 *= v
+            
+            fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
+            if expo :
+                scale = 10 ** expo 
+                row = 'Determinant' , '' , '' , fmt % ( v1 / scale ) , fmt % ( v2 / scale ) , '10^%+d' % expo
+            else :
+                row = 'Determinant' , '' , '' , fmt % v1 , fmt % v2 
+            rows.append ( row )
+
+    if float1 or float2  :
+        row = '*FLOAT*' ,
+        rows.append ( row ) 
+        for p in float1 :
+            v = r1 [ p ] . asVE ()
+            v , e = v.pretty_print ( width = width , precision = precision , parentheses = False )
+            if e : row = '- %s' % p , '' , '' , v , '' , '10^%+d' % e
+            else : row = '- %s' % p , '' , '' , v , '' 
+            rows.append ( row )
+        for p in float2 :
+            v = r2 [ p ] . asVE ()
+            v , e = v.pretty_print ( width = width , precision = precision , parentheses = False )
+            if e : row = '- %s' % p , '' , '' , '' , v , '10^%+d' % e
+            else : row = '- %s' % p , '' , '' , '' , v , '' 
+            rows.append ( row )
+        
+    if common_fixed : 
+        row = '*Common FIXED*' ,
+        rows.append ( row ) 
+        for p in common_fixed :
+            v1 = float ( r1 [ p ] ) 
+            v2 = float ( r2 [ p ] ) 
+            fmt, expo = fmt_pretty_values ( v1 , v2 , precision = precision , width = width )
+            ok  = same if  v1 == v2 or isequal ( v1 , v2 ) else '' 
+            if expo :
+                scale = 10**expo 
+                v1 = fmt % ( v1 / scale )
+                v2 = fmt % ( v2 / scale )
+                row = '- %s' % p , '' , '' , v1 , v2 , '10^%+d' % expo , ok 
+            else :
+                v1 = fmt %   v1
+                v2 = fmt %   v2 
+                row = '- %s' % p , '' , '' , v1 , v2 , '' , ok 
+                
+            rows.append ( row ) 
+
+    if fixed1 or fixed2 :        
+        row = '*FIXED*' ,
+        rows.append ( row ) 
+        for p in fixed1 :
+            v = float ( r1 [ p ] )
+            v , e = pretty_float ( v , precision = precision , width = width )
+            if e : row = '- %s' % p , '' , '' , v  , '' , '10^%+d' % e
+            else : row = '- %s' % p , '' , '' , v
+            rows.append ( row ) 
+        for p in fixed2 :
+            v = float ( r2 [ p ] )
+            v , e = pretty_float ( v , precision = precision , width = width )
+            if e : row = '- %s' % p , '' , '' , ''  , v , '10^%+d' % e
+            else : row = '- %s' % p , '' , '' , ''  , v 
+            rows.append ( row ) 
+                                                 
+    rows = T.remove_empty_columns ( rows )
+    title = title if title else 'Compare RooFirResults'
+    return T.table ( rows               ,
+                     title     = title  ,
+                     prefix    = prefix ,
+                     alignment = 'lccccccccccc' ,
+                     style     = style  ) 
+
 # =============================================================================
 ## Run MIGRAD for RooMinimizer object
 #  @code
@@ -1222,6 +1410,8 @@ ROOT.RooFitResult . evaluate           = _rfr_evaluate_
 ROOT.RooFitResult . kullback           = _rfr_kullback_
 ROOT.RooFitResult . kullback_leibler   = _rfr_kullback_
 ROOT.RooFitResult . cov_eigenvalues    = _rfr_eigenvalues_
+
+ROOT.RooFitResult . compare            = _rfr_compare_
 
 ROOT.RooFitResult . table              = _rfr_table_
 ROOT.RooFitResult . __len__            = _rfr_len_ 

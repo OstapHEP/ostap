@@ -255,70 +255,34 @@ namespace Ostap
     };
     typedef GF<XYZPoint, XYZLine, Plane3D> XYZGeomFun;
     // ========================================================================
+    
     class EigenSystems
     {
       // ======================================================================
     public : // eigen values
       // ======================================================================
-      // 2x2
-      static Ostap::Vector2 eigenValues
-      ( const Ostap::SymMatrix2x2& mtrx          ,
-        const bool                 sorted = true )
+      template <class T, unsigned int D>
+      static inline ROOT::Math::SVector<T,D>
+      eigenValues
+      ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx          ,
+	const bool                                                    sorted = true )
       {
-        Ostap::Math::GSL::EigenSystem system ;
-        return system.eigenValues ( mtrx , sorted ) ;
-      }
-      // 3x3
-      static Ostap::Vector3 eigenValues
-      ( const Ostap::SymMatrix3x3& mtrx          ,
-        const bool                 sorted = true )
-      {
-        Ostap::Math::GSL::EigenSystem system ;
-        return system.eigenValues ( mtrx , sorted ) ;
-      }
-      // 4x4
-      static Ostap::Vector4 eigenValues
-      ( const Ostap::SymMatrix4x4& mtrx          ,
-        const bool                 sorted = true )
-      {
-        Ostap::Math::GSL::EigenSystem system ;
-        return system.eigenValues ( mtrx , sorted ) ;
+	const Ostap::Math::GSL::EigenSystem system {};
+	return system.eigenValues ( mtrx , sorted ) ;
       }
       // ======================================================================
     public: // eigen vectors
       // ======================================================================
-    public: // eigen vectors
-      // ======================================================================
-      // 2x2
+      template <class T, unsigned int D>
       static StatusCode eigenVectors
-      ( const Ostap::SymMatrix2x2&   mtrx          ,
-        Ostap::Vector2&              vals          ,
-        std::vector<Ostap::Vector2>& vecs          ,
-        const bool                   sorted = true )
+      ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
+	ROOT::Math::SVector<T,D>&                                     vals , 
+	std::vector<ROOT::Math::SVector<T,D> >&                       vecs , 
+	const bool                   sorted = true )
       {
-        Ostap::Math::GSL::EigenSystem system ;
-        return system.eigenVectors ( mtrx , vals , vecs , sorted ) ;
-      }
-      // 3x3
-      static StatusCode eigenVectors
-      ( const Ostap::SymMatrix3x3&   mtrx          ,
-        Ostap::Vector3&              vals          ,
-        std::vector<Ostap::Vector3>& vecs          ,
-        const bool                   sorted = true )
-      {
-        Ostap::Math::GSL::EigenSystem system ;
-        return system.eigenVectors ( mtrx , vals , vecs , sorted ) ;
-      }
-      // 4x4
-      static StatusCode eigenVectors
-      ( const Ostap::SymMatrix4x4&   mtrx          ,
-        Ostap::Vector4&              vals          ,
-        std::vector<Ostap::Vector4>& vecs          ,
-        const bool                   sorted = true )
-      {
-        Ostap::Math::GSL::EigenSystem system ;
-        return system.eigenVectors ( mtrx , vals , vecs , sorted ) ;
-      }
+	Ostap::Math::GSL::EigenSystem system ;
+	return system.eigenVectors ( mtrx , vals , vecs , sorted ) ;
+      }      
       // ======================================================================
     } ;
     // ========================================================================
