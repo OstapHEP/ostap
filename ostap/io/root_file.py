@@ -391,7 +391,7 @@ def _rd_ikeys_  ( rdir                           ,
         for key in klist :
             kname = key.GetName()
             idir  = rdir.GetDirectory ( kname )
-            if not idir or no no_dir : 
+            if not idir or not no_dir : 
                 if select ( key ) and not exclude ( key ) : yield kname
             if idir and recursive and not idir is rdir : 
                 for k in _rd_keys_ ( idir ,
@@ -507,7 +507,7 @@ def _rd_ikeyskeys_ ( rdir                           ,
                      recursive = True               ,
                      no_dir    = True               ,
                      select    = lambda key : True  ,
-                     exclude   = lambda key : False ) ;
+                     exclude   = lambda key : False ) :
                      
     """ Iterator over  keyname/key pairs  from ROOT file/directory
     >>> for kname, key in rfile.ikeyskeys() :
@@ -517,11 +517,10 @@ def _rd_ikeyskeys_ ( rdir                           ,
     with ROOTCWD() :
         ##
         rdir.cd() 
-        klst = rdir.GetListOfKeys()
+        klist = rdir.GetListOfKeys()
         
-        for key in klst :
+        for key in kllist :
 
-            if 
             kname = key.GetName()
 
             kdir  = rdir.GetDirectory ( kname )            
@@ -529,13 +528,13 @@ def _rd_ikeyskeys_ ( rdir                           ,
                 
                 if select ( key ) and not exclude ( key ) : 
                     yield kname, key 
-            
+                    
             if recursive and kdir and not kdir is rdir :
-                for kn,kk in _rd_ikeyskeys_ ( kdir                  ,
-                                              recursive = recursive ,
-                                              no_dir    = no_dir    ,
-                                              select    = select    ,
-                                              exclude   = exclude   ) :
+                for kn , kk in _rd_ikeyskeys_ ( kdir                  ,
+                                                recursive = recursive ,
+                                                no_dir    = no_dir    ,
+                                                select    = select    ,
+                                                exclude   = exclude   ) :
                     yield kname + '/' + kn , kk 
                 
 # =============================================================================a
