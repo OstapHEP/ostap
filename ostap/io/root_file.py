@@ -518,7 +518,7 @@ def _rd_ikeyskeys_ ( rdir                           ,
         rdir.cd() 
         klist = rdir.GetListOfKeys()
         
-        for key in kllist :
+        for key in klist :
 
             kname = key.GetName()
 
