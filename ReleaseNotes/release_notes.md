@@ -1,9 +1,11 @@
 ## New features
 
   1, some tweaks for Crystal Ball&friends
-  1. some tiny fixed for `Root(Only)Shelf` 
-  1. add comparison (in a form of the table) for two RooFitResult obejcts
-  1. add `select` and `exclude` arguments for `ls_table/ls_tree` methods
+  1. some tiny fixes for `Root(Only)Shelf` 
+  1. add comparison (in a form of table) for two `RooFitResult` objects
+  1. add `select` and `exclude` arguments for `ls_table/ls_tree` methods for ROOT directories and `Root(Only)Shelf` databases 
+  1. `.build-ostap` : unset the `PYTHONNOUSERSITE` environment variable (if set)
+  1. some optimisation for `RDirectory.(i)keys` methods 
   
 ## Backward  incompatible 
 
@@ -36,7 +38,7 @@
 
 ## New features
 
-   1. add `ostap.logger.colorized.markup`  (experimental) support for veyr simple pseudo-markup
+   1. add `ostap.logger.colorized.markup`  (experimental) support for very simple "pseudo-markup"
    1. add treatment of `markup` into `logger` (default is  `markeup=False`)
    1. add methods `quantile` and `quantiles` methods for 1D histograms
    1. add `split_while` and `merge_while` methods for `TAxis`

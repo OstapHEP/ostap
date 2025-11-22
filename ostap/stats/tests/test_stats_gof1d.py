@@ -15,7 +15,8 @@ from   ostap.utils.ranges     import vrange
 from   ostap.utils.root_utils import batch_env
 from   ostap.utils.timing     import timing 
 from   ostap.math.math_ve     import significance
-from   ostap.core.core        import VE 
+from   ostap.core.core        import VE
+from   ostap.stats.gof_utils  import clip_pvalue  
 import ostap.fitting.models   as     M 
 import ostap.stats.gof1d      as     G1D 
 import ostap.stats.gofnd      as     GnD
@@ -54,15 +55,6 @@ keep = set()
 def run_PPD ( pdf , data, result , logger ) :
     """ Run Point-to_point dissimilarity Goodness-of-Fit test"""
 
-    from ostap.math.base    import numpy, scipy 
-    if not numpy or not scipy :
-        logger.warning ('No numpy/scipy: skip the PPD estimate!')
-        return
-    from ostap.stats.gof_np import s2u,cdist
-    if not s2u or not cdist:
-        logger.warning ('No s4u/cdist: skip the PPD estimate!')
-        return
-        
     # =========================================================================
     #  - Point to Point Dissimilarity test  with Gaussian distance using different "sigma"
     rows  = [ ( 'PPD/sigma' , 't-value'  , 'x[..]', 'p-value [%]' , '#sigma') ]
@@ -75,17 +67,14 @@ def run_PPD ( pdf , data, result , logger ) :
             pdf.load_params ( result , silent = True ) 
             tvalue         = ppd          ( pdf , data )
             tvalue, pvalue = ppd.pvalue   ( pdf , data )
-            
-            clip = 0.1 * pvalue.error()
-            pv   = pvalue 
-            if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
-            elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
-            nsigma = significance ( pv ) ## convert  it to significace
+
+            pv     = clip_pvalue  ( pvalue ) 
+            nsigma = significance ( pv ) ## convert  it to significance
         
         tv , texpo = pretty_float ( tvalue )
         pvalue *= 100
-        pvalue  = '%4.1f +/- %.1f' %  ( pvalue.value() , pvalue.error () )
-        nsigma  = '%.1f +/- %.1f'  %  ( nsigma.value() , nsigma.error () )
+        pvalue  = '%4.1f +/- %.1f' % ( pvalue.value() , pvalue.error () )
+        nsigma  = '%.1f +/- %.1f'  % ( nsigma.value() , nsigma.error () )
         row = '%.2f' % sigma , tv , '10^%+d' % texpo if texpo else '' , pvalue , nsigma 
         rows.append ( row ) 
         
@@ -100,16 +89,7 @@ import ostap.stats.ustat as U
 def run_DNN  ( pdf , data, result , logger ) :
     """ Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
     """
-    
-    from ostap.math.base    import numpy, scipy 
-    if not numpy or not scipy :
-        logger.warning ('No numpy/scipy: skip the PPD estimate!')
-        return
-    from ostap.stats.gof_np import s2u,cdist
-    if not s2u or not cdist:
-        logger.warning ('No s4u/cdist: skip the PPD estimate!')
-        return
-    
+
     rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
 
     with timing ( 'DNN-test' , logger = logger ) : 
@@ -118,10 +98,7 @@ def run_DNN  ( pdf , data, result , logger ) :
         tvalue         = dnn          ( pdf , data )
         tvalue, pvalue = dnn.pvalue   ( pdf , data )
 
-        clip = 0.1 * pvalue.error()
-        pv   = pvalue 
-        if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
-        elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+        pv     = clip_pvalue  ( pvalue ) 
         nsigma = significance ( pv ) ## convert  it to significace
 
     tv , texpo = pretty_float ( tvalue )
@@ -154,15 +131,12 @@ def run_USTAT  ( pdf , data, result , logger ) :
         tvalue         = ustat        ( pdf , data )    
         tvalue, pvalue = ustat.pvalue ( pdf , data )
         
-        clip = 0.1 * pvalue.error()
-        pv   = pvalue 
-        if   1 <= pvalue.value() : pv = VE ( 1 - clip , pv.cov2() )
-        elif 0 >= pvalue.value() : pv = VE (     clip , pv.cov2() )
+        pv     = clip_pvalue  ( pvalue ) 
         nsigma = significance ( pv ) ## convert  it to significace
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
-    pvalue  = '%4.1f +/- %.1f' %  ( pvalue.value() , pvalue.error() )
+    pvalue  = '%4.1f +/- %.1f' %  ( pvalue.value() , pvalue.error () )
     nsigma  = '%.1f +/- %.1f'  %  ( nsigma.value() , nsigma.error () )
     row     = tv , '10^%+d' % texpo if texpo else '' , pvalue, nsigma 
     rows.append ( row )
@@ -346,9 +320,9 @@ def test_bad_fit_1 ( ) :
 if '__main__' == __name__ :
 
     test_good_fit_1 ()  ## fit Gauss       to Gauss 
-    ## test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
-    ## test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
-    ## test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
+    test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
+    test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
+    test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
 
 # ===============================================================================
 ##                                                                        The END 

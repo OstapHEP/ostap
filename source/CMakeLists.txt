@@ -219,7 +219,7 @@ target_include_directories (ostap
 REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
                             SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
 
-add_library           ( ostapDict MODULE ostap.cxx)
+add_library           ( ostapDict MODULE ostap.cxx )
 add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 
@@ -256,6 +256,12 @@ install(EXPORT ostap-export
 
 enable_testing()
 
-add_test (NAME ostap.test_aclic_cpp1 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2 COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp    -q -b -l -x ) 
-add_test (NAME ostap.test_aclic_cpp2 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2 COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp+   -q -b -l -x ) 
-add_test (NAME ostap.test_aclic_cpp3 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2 COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp++  -q -b -l -x ) 
+add_test ( NAME ostap.test_aclic_cpp1
+           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp    -q -b -l -x ) 
+add_test ( NAME ostap.test_aclic_cpp2
+           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp+   -q -b -l -x ) 
+add_test ( NAME ostap.test_aclic_cpp3
+           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp++  -q -b -l -x ) 

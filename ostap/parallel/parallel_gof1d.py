@@ -77,7 +77,9 @@ class GoF1DTask (Task) :
         """ The actual processing of toys 
         """
         ##
-        from   ostap.stats.gof1d       import GoF1D, GoFSimFit, GoF1DToys, GoFSimFitToys
+        from   ostap.stats.gof1d       import GoF1D     , GoF1DToys
+        from   ostap.stats.gof_simfit  import GoFSimFit , GoFSimFitToys
+        ## 
         if   isinstance ( self.__gof , GoF1D     ) : toys = GoF1DToys     ( gof = self.__gof )
         elif isinstance ( self.__gof , GoFSimFit ) : toys = GoFSimFitToys ( gof = self.__gof )
         else :
@@ -100,7 +102,8 @@ def parallel_gof1dtoys ( gof             ,
                          progress = True , **kwargs ) :
     """ Run GoF1D/GoFSimFit toys in parallel 
     """
-    from   ostap.stats.gof1d import GoF1D, GoFSimFit, GoF1DToys, GoFSimFitToys
+    from   ostap.stats.gof1d       import GoF1D     , GoF1DToys
+    from   ostap.stats.gof_simfit  import GoFSimFit , GoFSimFitToys
     
     assert isinstance ( gof ,  ( GoF1D, GoFSimFit ) ) , \
         'Invalid "gof" type : %s' % typename ( gof )
@@ -113,10 +116,7 @@ def parallel_gof1dtoys ( gof             ,
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
         'Invalid "nSplit" argument %s/%s' % ( nSplit , type ( nSplit ) )
 
-    print ( 'I AM HERE PARALL/1 ' ) 
     if nSplit < 2 or numcpu ()  < 2 :
-
-        print ( 'I AM HERE PARALLEL/2 ' ) 
 
         if   isinstance ( gof , GoF1D     ) : toys = GoF1DToys     ( gof )
         elif isinstance ( gof , GoFSimFit ) : toys = GoFsimFitToys ( gof )
@@ -126,8 +126,6 @@ def parallel_gof1dtoys ( gof             ,
                    silent   = silent or not progress ) 
         return toys
 
-    print ( 'I AM HERE PARALLEL/3 ' ) 
-        
     ## create work manager 
     wmgr  = WorkManager ( silent   = silent and not progress ,
                           progress = progress or not silent  , **kwargs )

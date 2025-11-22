@@ -648,10 +648,10 @@ class SimFit (VarMaker,ConfigReducer) :
         
         if ( 6 , 37 ) <= root_info :
             from ostap.logger.colorized import markup
-            message  = 'SimFit.draw(%s): ' % category 
-            message += "There is ROOT issue #20383 (from 27.08.2025). "
-            message += 'Temporary "bypass" is applied! '
-            message += markup ( "Check the plot - it ***COULD*** be ***TERRIBLY*** wrong!" ) 
+            message      = 'SimFit.draw(%s): ' % category 
+            message     += "There is ROOT issue https://github.com/root-project/root/issues/20383 (from 27.08.2025, fixed(?) @ Nov 2025). "
+            message     += 'Temporary "bypass" is applied! '
+            message     += markup ( "Check the plot - it ***COULD*** be ***TERRIBLY*** wrong!" ) 
             logger.warning ( message )
             observables  = self.pdf.pdf.getObservables ( dataset )
             dataset      = dataset.subset ( observables , cuts = scut )

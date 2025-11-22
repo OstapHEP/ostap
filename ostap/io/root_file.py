@@ -351,40 +351,30 @@ def _rd_delitem_ ( rdir , name , cycle=';*') :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
-def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
+def _rd_keys_ ( rdir                           ,
+                recursive = True               ,
+                no_dir    = True               , 
+                select    = lambda key : True  ,
+                exclude   = lambda key : False ) :
     """ Get all keys from ROOT file/directory
     >>> keys = rfile.keys() 
     """
-    _res = []
-    if not rdir : return _res 
-    ##
-    with ROOTCWD() :
-        ##
-        rdir.cd() 
-        _lst = tuple ( k.GetName() for k in rdir.GetListOfKeys() ) 
-        if not _lst :  return _res
-        
-        for inam in _lst :
-
-            idir = rdir.GetDirectory ( inam )            
-            if not idir or not no_dir : _res.append ( inam )
-            
-            if recursive and idir and not idir is rdir :
-                ikeys = _rd_keys_ ( idir , recursive , no_dir )
-                for k in ikeys : _res.append ( inam + '/' + k )
-                
-        return _res
+    if not rdir : return ()
+    return tuple ( k for k in _rd_ikeys_ ( rdir ,
+                                           recursive = recursive ,
+                                           no_dir    = no_dir    ,
+                                           select    = select    ,
+                                           exclude   = exclude   ) )
 
 # ===========================================================================#
 ## Iterator over keys in ROOT file/directory 
 def _rd_ikeys_  ( rdir                           ,
-                  resursive = True               ,
-                  no_dir    = False              ,
+                  recursive = True               ,
+                  no_dir    = True               ,
                   select    = lambda key : True  ,
                   exclude   = lambda key : False ) :
     """ Iterator over keys in ROOT file/directory
     """
-           
     with ROOTCWD () :
         rdir.cd ()
         klist = rdir.GetListOfKeys() 
@@ -394,11 +384,13 @@ def _rd_ikeys_  ( rdir                           ,
             if not idir or not no_dir : 
                 if select ( key ) and not exclude ( key ) : yield kname
             if idir and recursive and not idir is rdir : 
-                for k in _rd_keys_ ( idir ,
-                                     recursive = recursive ,
-                                     no_dir    = no_dir    ,
-                                     select    = select    ,
-                                     exclude   = exclude   ) : yield k
+                for k in _rd_ikeys_ ( idir ,
+                                      recursive = recursive ,
+                                      no_dir    = no_dir    ,
+                                      select    = select    ,
+                                      exclude   = exclude   ) :
+                    kk = kname , k 
+                    yield '/'.join ( kk )
                 
 # =============================================================================
 ## Iterate over the content of ROOT file/directory 
@@ -541,7 +533,7 @@ def _rd_ikeyskeys_ ( rdir                           ,
 #  @code
 #  for  obj  in rfile.itervalues() : print obj
 #  @endcode
-#  The scan can be limited only by objcets of certain type, e.g. histograms: 
+#  The scan can be limited only by objects of certain type, e.g. histograms: 
 #  @code
 #  for  hist in rfile.itervalues( ROOT.TH1 ) : print hist 
 #  @endcode
@@ -901,6 +893,7 @@ ROOT.TDirectory.__iter__     = _rd_iter_
 
 ROOT.TDirectory.get            = _rd_get_
 ROOT.TDirectory.keys           = _rd_keys_
+ROOT.TDirectory.ikeys          = _rd_ikeys_
 ROOT.TDirectory.has_key        = _rd_contains_
 ROOT.TDirectory.items          = _rd_iteritems_
 ROOT.TDirectory.iteritems      = _rd_iteritems_
@@ -982,6 +975,7 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
     Attention:  IOError exception is raised for invalid file/open_mode
     """
     with ROOTCWD () :
+        # ===================================================================
         logger.debug ("Open  ROOT file %s/'%s'" % ( fname , mode ) )
         rinit = rfile._old_init_ ( fname , open_mode ( mode ) , *args )
         if not rfile or not rfile.IsOpen() or rfile.IsZombie () :
@@ -1005,19 +999,20 @@ def _rf_new_open_ ( fname , mode = '' , args = () , exception = False ) :
     """
     with ROOTCWD() :
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
-        try : 
+        # ======================================================================
+        try : # ================================================================
             fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
-        except ( OSError, IOError ) :
-            if exception : raise
-            else : 
-                logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
-                return None 
-            
-        if not fopen or not fopen.IsOpen() :
-            if  exception : 
-                raise IOError ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
-            else :
-                logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            # ==================================================================
+        except ( OSError, IOError ) : # ========================================
+            # ==================================================================
+            if exception : raise # =============================================
+            logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            return None
+
+        # ======================================================================
+        if not fopen or not fopen.IsOpen() or fopen.IsZombie () : # ============
+            if  exception : raise IOError ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+            logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
             
         return fopen
         
@@ -1029,7 +1024,7 @@ def _rf_new_open_ ( fname , mode = '' , args = () , exception = False ) :
 #  f.Close()
 #  print ROOT.gROOT.CurrentDirectory()
 #  @endcode
-def _rf_new_close_ ( rfile , options = '' ) :
+def _rf_new_close_ ( rfile , option = '' ) :
     """ Close ROOT-file without making it a current working directory
     >>> print ROOT.gROOT.CurrentDirectory()
     >>> f = ROOT.TFile.Open('test_file.root','recreate')
@@ -1040,7 +1035,7 @@ def _rf_new_close_ ( rfile , options = '' ) :
     if rfile and rfile.IsOpen() :
         ## with ROOTCWD() :
         logger.debug ( "Close ROOT file %s" % rfile.GetName() ) 
-        return rfile ._old_close_ ( options )
+        return rfile ._old_close_ ( option )
             
 # =============================================================================
 ## another name, just for convinince
@@ -1545,6 +1540,7 @@ _new_methods_   = (
     #
     ROOT.TDirectory.get          , 
     ROOT.TDirectory.keys         ,
+    ROOT.TDirectory.ikeys        ,
     ROOT.TDirectory.has_key      ,
     ROOT.TDirectory.iteritems    ,
     ROOT.TDirectory.items        ,

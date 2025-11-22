@@ -46,13 +46,13 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
 ## @class GoFnD
-#  A base class for numpy-relarted family of methods to probe goodness-of fit
+#  A base class for numpy-related family of methods to probe goodness-of-fit
 class GoF(AGoF) :
-    """ A base class for numpy-related family of methods to probe goodness-of fit
+    """ A base class for numpy-related family of methods to probe goodness-of-fit
     """
     def __init__ ( self             ,
                    gof              , ## actual GoF-evaluator
-                   mcFactor = 10    ,
+                   mcFactor = 20    ,
                    sample   = False ) : 
         
         assert isinstance ( mcFactor, int ) and 1 <= mcFactor , \
@@ -136,10 +136,10 @@ class GoF(AGoF) :
         
         ## delete 
         if isinstance ( data2  , ROOT.RooDataSet ) :
-            data2 = Ostap.MoreRooFit.delete_data ( data2 )
+            data2.clear()
             
-        del data2
-        
+        del data2 
+            
         return ds1, ds2
                    
 # =============================================================================
@@ -152,7 +152,7 @@ class GoF(AGoF) :
 #  Important parameters:
 #  - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data
 #  - mc2mc    : (bool) should distances witng (large) mc-dataste be accounted? 
-#  - Ntoys    : (int)  number of permutations/toys 
+#  - nToys    : (int)  number of permutations/toys 
 #  - psi      : type of psi/distance function 
 #  - sigma    : sigma scale (used for psi=`gaussian`)
 class PPD(GoF) : 
@@ -164,18 +164,18 @@ class PPD(GoF) :
     Important parameters:
     
     - mc2mc    : (bool)  should distances within (large) mc-dataste be accounted? 
-    - Ntoys   : (int)   number of permutations/toys 
+    - nToys    : (int)   number of permutations/toys 
     - psi      : (str)   type of psi/distance function 
     - sigma    : (float) sigma scale (used for psi=`gaussian`) 
-    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size od real data
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
     """
     # =========================================================================
     ## create the estimator
-    #  @param mc2mc    : (bool) should distances within (large) mc-dataste be accounted? 
+    #  @param mc2mc    : (bool) should distances within (large) mc-dataset be accounted for? 
     #  @param Ntoys    : (int)  number of permutations/toys 
     #  @param psi      : type of psi/distance function 
     #  @param sigma    : sigma scale (used for psi=`gaussian`)
-    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data    
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
     def __init__ ( self                   ,
                    mc2mc     = False      ,
                    nToys     = 1000       ,
@@ -189,7 +189,7 @@ class PPD(GoF) :
         Parameters  
 
         - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data
-        - mc2mc    : (bool) should distances within (large) mc-dataste be accounted? 
+        - mc2mc    : (bool) should distances within (large) mc-dataset be accounted for? 
         - Ntoys    : (int)  number of permutations/toys 
         - psi      : type of psi/distance function 
         - sigma    : sigma scale (used for psi=`gaussian`)
@@ -255,7 +255,6 @@ class DNN(GoF) :
     - see https://doi.org/10.1088/1748-0221/5/09/P09004
     - see http://arxiv.org/abs/arXiv:1003.1768 
     """
-
     def __init__ ( self             ,
                    histo    = 100   ,
                    nToys    = 100   ,
@@ -276,13 +275,14 @@ class DNN(GoF) :
         
     @property
     def dnn ( self ) :
-        """`ppd` : Distance-to-Nearest-Neighbour calculator for numpy sata"""
+        """`dnn` : Distance-to-Nearest-Neighbour calculator for numpy data"""
         return self.gof  
 
     # =========================================================================
-    ## Transform pdf&data
+    ## (internal method) Transform pdf&data
     def transform ( self , pdf , data ) :
-        """ Transform pdf&data """
+        """ (internal method) Transform pdf&data
+        """
 
         vs1  = pdf .vars
         vs2  = data.get()

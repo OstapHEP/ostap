@@ -19,6 +19,7 @@ from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env  
 from   ostap.fitting.simfit     import combined_data 
+from   ostap.stats.gof_simfit   import GoFSimFit, GoFSimFitToys 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
@@ -160,17 +161,6 @@ def test_simfit1 () :
 
     title = 'Results of simultaneous fit'
     logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
-
-
-    """
-    if ( 6 , 37 ) <= root_info and 1 > 2 :
-        sample = model_sim.sample 
-        logger.warning ( 'There is ROOT issue #20383, use temporary local "fix"' )
-        dsA = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'A' ) )
-        dsB = dataset.subset ( [ sample.name , mass.name ] , cuts = '%s==%s::%s' % ( sample.name , sample.name , 'B' ) )
-    else :
-        dsA , dsB = dataset , dataset
-    """
     
     with use_canvas ( 'test_gof_simfit1: fit both datasets & draw A' , wait = 2 ) :        
         fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
@@ -188,8 +178,8 @@ def test_simfit1 () :
     results.append ( r2 ) 
     results.append ( r  ) 
 
+    """
     ## GOF machinery
-    from ostap.stats.gof1d import GoFSimFit, GoFSimFitToys 
     
     gof = GoFSimFit ( model_sim      ,
                       dataset        ,
@@ -212,8 +202,20 @@ def test_simfit1 () :
         for k in g.estimators :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
                 toys .draw ( sample , k )
-            
+    """
 
+    from   ostap.stats.gof_simfit   import PPDSimFit
+    gof_ppd = PPDSimFit ( model_sim          , 
+                          dataset            ,
+                          parameters = r     ,                          
+                          mcFactor   = 20    , 
+                          nToys      = 1000  ,
+                          sigma      = 0.5   ,
+                          silent     = False )
+
+    print ( 'PPD:', gof_ppd.tvalues() )
+    print ( 'PPD:', gof_ppd.pvalues() )
+    
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
