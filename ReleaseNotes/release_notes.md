@@ -60,15 +60,15 @@
 
   1. add (python) method `density` for polynomials
   1. add `Quantiles` & `quantiles` in `moments.py`
-  1. some tweaks for `IntegralCache`, use `SortedKeyList` for cache 
-  1. add dependeny on `sortedconteiners`
+  1. some tweaks for `IntegralCache`: use `SortedKeyList` for cache 
+  1. add dependence on `sortedconteiners`
   1. add method for adding new edge to the historgam axis
   1. add method to split certain bin into N parts  
   1. impove self-printout of histogram axes 
-  1. optimize numeric integration - make  a try to call the internal `integral` method
+  1. optimize numeric integration - make  a try to call the internal `integral` method if/when available 
   1. extent integration tests
   1. more tweaks for polynomials
-  1. add `FunMNMX` got get brute-force minmax estimator for functions
+  1. add `FunMNMX` to get the brute-force `minmax` estimator for functions
   1. add support for vector/array/sequence-like arguments for 1d/2d&3d-histogram  `__call__` method
   1. some tweaks for build scripts to make them more easy to use
   1. enforce uniqie ROOT/RooFit names 
