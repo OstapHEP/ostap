@@ -970,7 +970,7 @@ class GoF1DToys(GoF1D) :
         result    = ecdf.draw  ( opts , *args , **kwargs )
         
         ## vertical line 
-        line      = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        line1    = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
         ##
 
         ## horisontal line 
