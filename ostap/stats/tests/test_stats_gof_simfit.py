@@ -178,7 +178,6 @@ def test_simfit1 () :
     results.append ( r2 ) 
     results.append ( r  ) 
 
-    """
     ## GOF machinery
     
     gof = GoFSimFit ( model_sim      ,
@@ -202,19 +201,19 @@ def test_simfit1 () :
         for k in g.estimators :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
                 toys .draw ( sample , k )
-    """
-
+    
     from   ostap.stats.gof_simfit   import PPDSimFit
     gof_ppd = PPDSimFit ( model_sim          , 
                           dataset            ,
                           parameters = r     ,                          
-                          mcFactor   = 20    , 
-                          nToys      = 1000  ,
+                          mcFactor   = 5     , 
+                          nToys      = 100   ,
                           sigma      = 0.5   ,
+                          parallel   = True  , 
                           silent     = False )
 
-    print ( 'PPD:', gof_ppd.tvalues() )
-    print ( 'PPD:', gof_ppd.pvalues() )
+    print ( 'PPD-t:', gof_ppd.tvalues() )
+    print ( 'PPD-p:', gof_ppd.pvalues() )
     
 # =============================================================================
 ## check that everything is serializable
