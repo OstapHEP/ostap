@@ -331,7 +331,11 @@ class USTAT(AGoF) :
         t_value   = estimator ( pdf , data )        
 
         ## prepare toys
-        toys = TOYS ( self , t_value , pdf = pdf , Ndata = len ( data ) , sample = self.sample )
+        toys = TOYS ( self                   ,
+                      t_value = t_value      ,
+                      pdf     = pdf          ,
+                      Ndata   = len ( data ) ,
+                      sample  = self.sample  )
         
         silent = self.silent
         self.__silent = True

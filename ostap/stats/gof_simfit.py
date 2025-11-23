@@ -695,14 +695,29 @@ class GoFSimFitToys(GoFSimFit) :
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
 
         result    = ecdf.draw  ( opts , *args , **kwargs ) 
-        line      = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        line1     = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        
+        ## horisontal line 
+        xmin      = kwargs['xmin']
+        xmax      = kwargs['xmax']
+        dx        = ( xmax - xmin ) / 100 
+        e         = ecdf ( value )
+        line2     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
         ## 
-        line.SetLineWidth ( 4 ) 
-        line.SetLineColor ( 8 ) 
-        line.draw ( 'same' )
+        line2.SetLineWidth ( 2 ) 
+        line2.SetLineColor ( 4 ) 
+        line2.SetLineStyle ( 9 ) 
+        ## 
+        line1.SetLineWidth ( 4 ) 
+        line1.SetLineColor ( 8 )
         ##
-        self._line = line
-        return result, line  
+        line2.draw ( 'same' )
+        line1.draw ( 'same' )
+        ##
+        self._line1 = line1
+        self._line2 = line2
+        ##
+        return result, line1, line2   
     
     # =========================================================================
     ## merge two objects:
@@ -773,8 +788,11 @@ class GoFSimFitType(GoFSimFitBase) :
 
             ## the method 
             self.gofs  [ key ] = GOF_type ( **config )
-            self.N     [ key ] = len ( dset ) 
-
+            self.N     [ key ] = len ( dset )
+            
+        self.__tvalues = {}
+        self.__pvalues = {}
+        
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object"""
@@ -793,13 +811,13 @@ class GoFSimFitType(GoFSimFitBase) :
     def __call__ ( self ) :
         """ Get dictionary of t-values (for each SimFit component)
         """
-        tvalues = {}
-        ## evaluate t-values for each component 
-        for key , value in self.__cmp.items()  :
-            cmp, data = value
-            gof = self.gofs [ key ]
-            tvalues [ key ] = gof ( cmp , data )
-        return tvalues
+        if not self.__tvalues :
+            ## evaluate t-values for each component 
+            for key , value in self.__cmp.items()  :
+                cmp, data = value
+                gof = self.gofs [ key ]
+                self.__tvalues [ key ] = gof ( cmp , data )
+        return self.__tvalues
     
     # =========================================================================
     ## Get dictionary of t-values (for each SimFit component)
@@ -810,13 +828,115 @@ class GoFSimFitType(GoFSimFitBase) :
     def pvalues ( self ) :
         """ Get dictionary of t-values (for each SimFit component)
         """
-        pvalues = {}
-        ## evaluate t&p-values for each component 
-        for key , value in self.__cmp.items()  :
-            cmp, data = value
-            gof = self.gofs [ key ]
-            pvalues [ key ] = gof.pvalue ( cmp , data )
-        return pvalues
+        if not self.__pvalues : 
+            ## evaluate t&p-values for each component 
+            for key , value in self.__cmp.items()  :
+                cmp, data = value
+                gof = self.gofs [ key ]
+                if not gof.silent :
+                    logger.info ( 'GoF.pvalues[%s]: processing sample "%s"' % ( typename ( gof ) , key ) )
+                self.__pvalues [ key ] = gof.pvalue ( cmp , data )                
+        return self.__pvalues
+    
+    # =========================================================================
+    ## Draw ECDF for toys & statistical estimator 
+    def draw  ( self , sample , opts = '' , *args , **kwargs ) :
+        """ Draw ECDF for toys & statistical estgimator 
+        """
+        gof = self.gofs.get ( sample , None ) 
+        if not gof : raise KeyError ( 'Unknown sample "%s"!' % sample )
+        ## draw it
+        t = self.tvalues()[sample]
+        return gof.draw ( tvalue = t , opts = opts , *args , **kwargs )
+    
+    # =========================================================================
+    def table ( self             , * , 
+                title     = ''   ,
+                prefix    = ''   ,
+                precision = 4    , 
+                width     = 6    ,
+                style     = None ) :
+        """ Print the summary as Table  (for SimFit)
+        """
+        gof_type = typename ( self )             
+        tvalues  = self.tvalues () 
+        pvalues  = self.pvalues ()
+        title    = title if title else 'GoF:%s' % gof_type
+        
+        tvalues  = self.tvalues () 
+        pvalues  = self.pvalues () 
+
+        rows     = [ ( 'Sample'            , 
+                       't-value'           , 
+                       't-mean'            ,
+                       't-rms'             ,
+                       't-min/max'         ,
+                       'factor'            ,
+                       'p-value [%]'       ,
+                       '#%s' % greek_lower_sigma ) ] 
+                     
+        for sample in sorted ( pvalues ) :
+            
+            tvalue , pvalue = pvalues [ sample ]
+            tv     , te     = pretty_float ( tvalue , width = width , precision = precision  , with_sign = True ) 
+            
+            if te : row = sample , tv , '%s10^%+d' % ( times , te  ) 
+            else  : row = sample , tv , ''
+            
+            ## ECDF ?
+            gof  = self.gofs [ sample ]
+            ecdf = gof.ecdf
+
+            if ecdf :
+                counter    = ecdf   .counter ()
+                tmean      = counter.mean    ()
+                trms       = counter.rms     ()
+                tmin, tmax = counter.minmax  ()
+                mxv = max ( abs ( tvalue )        ,
+                            abs ( tmean.value() ) ,
+                            tmean.error()         , trms ,
+                            abs ( tmin )  , abs ( tmax ) )                        
+                fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  tmean.cov2() ) ,
+                                                          width       = width       ,
+                                                          precision   = precision   , 
+                                                          parentheses = False       )                    
+                if expo : scale = 10**expo
+                else    : scale = 1
+                
+                tv    = tvalue / scale
+                tmean = tmean  / scale 
+                trms  = trms   / scale 
+                tmin  = tmin   / scale
+                tmax  = tmax   / scale
+                
+                row = ( sample        ,
+                        fmtv % tvalue ,
+                        fmt  % ( tmean.value() , tmean.error() ) , 
+                        fmtv % trms   , 
+                        '%s/%s' % ( fmtv % tmin , fmtv % tmax ) )
+                
+                if expo : row +=  '%s10^%+d' % ( times , expo ) ,
+                else    : row +=  '' , 
+                
+            
+            pv     = clip_pvalue ( pvalue , 0.5 ) 
+            nsigma = significance ( pv ) ## convert  it to significace
+            
+            p = pvalue * 100 
+            pvalue = '% 5.2f %s %-.2f' % ( p.value() , plus_minus , p.error () )
+            n = nsigma 
+            nsigma = '%.2f %s %-.2f'   % ( n.value() , plus_minus , n.error () ) if float ( nsigma ) < 1000 else '+inf'
+            
+            row +=  pvalue , nsigma
+            
+            rows.append ( row ) 
+
+        rows  = T.remove_empty_columns ( rows )
+        title = title if title else 'Goodness-Of-Fit %s for simfit' % gof_type  
+        return T.table ( rows                 ,
+                         title     = title    ,
+                         prefix    = '# '     ,
+                         alignment = 'llcccc' ) 
         
 # =============================================================================
 ## Goodness-of-fit estimator for SimFit using PPD method
@@ -869,13 +989,12 @@ class USTATSimFit(GoFSimFitType) :
     """ Goodness-of-fit estimator for SimFit using USTAT method
     """    
     def __init__ ( self               ,
-                pdf                ,
+                   pdf                ,
                    dataset            ,
                    parameters  = None , **config ) :
         
-        from   ostap.stats.ustat  import USTAT 
         GoFSimFitType.__init__ ( self ,
-                                 GOF_type   = USTAT      , 
+                                 GOF_type   = GoFnD.USTAT , 
                                  pdf        = pdf        ,
                                  dataset    = dataset    ,
                                  parameters = parameters , **config ) 

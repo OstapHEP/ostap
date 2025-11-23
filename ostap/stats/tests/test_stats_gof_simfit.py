@@ -17,9 +17,18 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.root_utils   import batch_env  
+from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.basic        import typename, numcpu 
+from   ostap.math.math_ve       import significance
 from   ostap.fitting.simfit     import combined_data 
-from   ostap.stats.gof_simfit   import GoFSimFit, GoFSimFitToys 
+from   ostap.stats.gof_simfit   import ( GoFSimFit   , GoFSimFitToys ,
+                                         PPDSimFit   ,
+                                         DNNSimFit   ,
+                                         USTATSimFit )  
+from   ostap.stats.gof_utils    import clip_pvalue  
+from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
+from   ostap.logger.pretty      import pretty_float
+import ostap.logger.table       as     T 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
 import ostap.fitting.roofit 
@@ -113,7 +122,7 @@ signal1  = Models.Gauss_pdf ( 'G1'                 ,
                               mean  = (0.5 , 2.5 ) ,
                               sigma = (0.1 , 1.0 ) )
 
-model1   = Models.Fit1D ( suffix = 'MA' , signal = signal1 ,  background = 'flat' )
+model1   = Models.Fit1D ( suffix = 'MA' , signal = signal1 ,  background = 'flat' , fix_norm = True )
 model1.S = NS1
 model1.B = NB1 
 
@@ -125,7 +134,7 @@ signal2  = Models.Gauss_pdf ( 'G2'            ,
                               mean  = mean2   ,
                               sigma = sigma2  )
 
-model2  = Models.Fit1D ( suffix = 'MB' , signal = signal2 ,  background = model1.background )
+model2  = Models.Fit1D ( suffix = 'MB' , signal = signal2 ,  background = model1.background , fix_norm = True )
 model2.S = NS2
 model2.B = NB2 
 
@@ -178,7 +187,11 @@ def test_simfit1 () :
     results.append ( r2 ) 
     results.append ( r  ) 
 
-    ## GOF machinery
+    # =============================================================================
+    ## GOF machiner
+    # =============================================================================
+
+    """
     
     gof = GoFSimFit ( model_sim      ,
                       dataset        ,
@@ -202,19 +215,58 @@ def test_simfit1 () :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
                 toys .draw ( sample , k )
     
-    from   ostap.stats.gof_simfit   import PPDSimFit
-    gof_ppd = PPDSimFit ( model_sim          , 
-                          dataset            ,
-                          parameters = r     ,                          
-                          mcFactor   = 5     , 
-                          nToys      = 100   ,
-                          sigma      = 0.5   ,
-                          parallel   = True  , 
-                          silent     = False )
-
-    print ( 'PPD-t:', gof_ppd.tvalues() )
-    print ( 'PPD-p:', gof_ppd.pvalues() )
+    """
     
+    if numcpu() < 10 : logger.info ( 'tests for CPU-expensive PPD,DNN & USTAT methods are disabled' )
+    else :
+    
+        nToys    = 50 ## realistic values should be in excess of 100
+        mcFactor =  5 ## realistic values should be in excess of 10  
+        
+        gof_ppd   = PPDSimFit   ( model_sim             , 
+                                  dataset               ,
+                                  parameters = r        ,                          
+                                  mcFactor   = mcFactor , 
+                                  nToys      = nToys    ,
+                                  sigma      = 0.5      , ## can be (and should be!) varies between 0.1 and 1.0 
+                                  parallel   = True     , 
+                                  silent     = False    )
+        
+        gof_dnn   = DNNSimFit   ( model_sim             , 
+                                  dataset               ,
+                                  parameters = r        ,                          
+                                  nToys      = nToys    ,
+                                  parallel   = True     , 
+                                  silent     = False    )
+        
+        gof_ustat = USTATSimFit ( model_sim             , 
+                                  dataset               ,
+                                  parameters = r        ,                          
+                                  nToys      = 100      ,
+                                  parallel   = True     , 
+                                  silent     = False    )
+
+        rows = [  ( 'Method'      ,
+                    'Sample'      ,
+                    't-value'     ,
+                    't-mean'      ,
+                    't-rms'       ,
+                    't min/max'   ,
+                    'p-value [%]' , '#%s' % greek_lower_sigma ) ]
+        
+        for gof in ( gof_ppd , gof_dnn , ) : ## , gof_ustat ) :
+
+            gof_type = typename ( gof )
+            
+            with timing ( 'Processing %s' % gof_type , logger = logger ) :
+
+                title = 'GoF %s' % gof_type  
+                logger.info ( '%s\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) ) 
+
+            for sample  in gof.gofs :
+                with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) , wait = 1 ) :
+                    gof.draw ( sample  )
+
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================

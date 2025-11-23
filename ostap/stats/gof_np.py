@@ -32,35 +32,8 @@ from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu 
 from   ostap.stats.gof          import AGoFnp
 from   ostap.utils.memory       import memory, memory_enough
-from   ostap.math.base          import numpy, scipy, scipy_version, numpy_version  
-import os, abc, ROOT   
-# =============================================================================
-s2u,cdist = None , None
-# =============================================================================
-if numpy and scipy :
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================  
-        from numpy.lib.recfunctions import structured_to_unstructured as s2u
-        from scipy.spatial.distance import cdist                      as cdist
-        ## =====================================================================
-        if ( 1 , 6 , 0 ) <= scipy_version :
-            qconf = { 'k' : [ 2 ] , 'workers' : -1 }
-            def neighbour_distances ( tree , data ) :
-                dist , xx = tree.query ( data , **qconf )
-                del xx 
-                return dist.flatten() 
-        else : # ==============================================================
-            qconf = { 'k' :   2                    }
-            def neighbour_distances ( tree , data ) :
-                dist , xx = tree.query ( data , **qconf )
-                del xx 
-                return numpy.delete ( dist , 0 , axis = 1 ).flatten()         
-        # =====================================================================
-    except ImportError :
-        # =====================================================================
-        s2u        = None
-        cdist      = None
+from   ostap.math.base          import scipy_version, numpy_version  
+import ROOT, os, abc, numpy, scipy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -69,6 +42,31 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gofnd' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
+# =============================================================================
+s2u,cdist = None , None
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================  
+    from numpy.lib.recfunctions import structured_to_unstructured as s2u
+    from scipy.spatial.distance import cdist                      as cdist
+    ## ========================================================================
+    if ( 1 , 6 , 0 ) <= scipy_version :
+        qconf = { 'k' : [ 2 ] , 'workers' : -1 }
+        def neighbour_distances ( tree , data ) :
+            dist , xx = tree.query ( data , **qconf )
+            del xx 
+            return dist.flatten() 
+    else : # =================================================================
+        qconf = { 'k' :   2                    }
+        def neighbour_distances ( tree , data ) :
+            dist , xx = tree.query ( data , **qconf )
+            del xx 
+            return numpy.delete ( dist , 0 , axis = 1 ).flatten()         
+        # =====================================================================
+except ImportError :
+    # =========================================================================
+    s2u        = None
+    cdist      = None
 # =============================================================================
 ## @class GoFnp 
 #  A base class for numpy-related family of methods to probe goodness-of-fit
@@ -223,7 +221,9 @@ class PPDnp(GoFnp) :
         ## check validity of `psi`
         scale = -0.5/(self.sigma**2) 
         self.__distance_type , _ , self.__increasing = psi_conf ( psi , scale )
-        
+
+        self.__ecdf   = None 
+
     # =========================================================================
     @property
     def mc2mc ( self ) :
@@ -366,12 +366,19 @@ class PPDnp(GoFnp) :
             counter = permutator     ( self.nToys , silent = self.silent )
 
             
+        self.__ecdf   = permutator.ecdf
+        
         p_value = counter.eff
         
         if self.__increasing : p_value = 1 - p_value
 
-        return t_value , p_value 
-
+        return t_value , p_value
+    
+    @property
+    def ecdf ( self ) :
+        """`ecdf` : empirical CDF for t-value distributon from permutations"""
+        return self.__ecdf
+    
 # =============================================================================
 ## @class DNNnp
 #  Distance-to-Nearest-Neighour GoF-method 

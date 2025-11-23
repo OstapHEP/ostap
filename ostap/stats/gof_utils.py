@@ -18,22 +18,17 @@ __all__     = (
     'normalize'  , ## "normalize" variables in dataset/structured array
 )
 # =============================================================================
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import VE, Ostap
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.core.ostap_types   import string_types
-from   ostap.math.base          import axis_range, numpy   
+from   ostap.math.base          import doubles, axis_range
 from   ostap.stats.counters     import EffCounter
 from   ostap.utils.basic        import numcpu, loop_items 
 from   ostap.utils.utils        import splitter
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
-import ROOT, sys, math  
-# =============================================================================
-## float types in pumy 
-np_floats = ( numpy.float16  ,
-              numpy.float32  ,
-              numpy.float64  ,
-              numpy.float128 ) if numpy else () 
+import ROOT, sys, math, numpy  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -41,8 +36,17 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof_utils' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-logger.debug ( 'Simple utilities for goodness-of-fit studies' )
+logger.debug ( 'Simple utilities for goodness-of-fit studies' )#
+# =============================================================================
+# float types in numpy
+np_floats = ( numpy.float16  ,
+              numpy.float32  ,
+              numpy.float64  ,
+              numpy.float128 )
 # ============================================================================
+if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
+else                        : data2vct = lambda s : doubles ( s ) 
+# =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
 #  @code
 #  ds = ... ## dataset as structured array
@@ -264,25 +268,52 @@ class PERMUTATOR(object) :
     """ Helper class that allow to run permutation test in parallel 
     """
     def __init__ ( self, gof, t_value , ds1 , ds2 ) :
+        
         self.gof     = gof
         self.ds1     = ds1
         self.ds2     = ds2
         self.t_value = t_value
+        self.__ecdf  = None
         
     # =========================================================================
     ## run N-permutations 
     def __call__ ( self , N , silent = True ) :
+        
+        counter, tvalues = self.run_toys ( N = N , silent = silent )
+        
+        if not self.__ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues , True )
+        else               : self.__ecdf.add ( data2vct ( tvalues )  )
+        
+        return counter 
+
+    # =========================================================================
+    ## run N-toys 
+    def run_toys ( self, N , silent = True ) :
+        """ Run N-toys
+        """
+        
         numpy.random.seed()
         n1      = len ( self.ds1 )
         pooled  = numpy.concatenate ( [ self.ds1 , self.ds2 ] )
         counter = EffCounter()
+        tvalues = [] 
         for i in progress_bar ( N , silent = silent , description = 'Permutations:') : 
             numpy.random.shuffle ( pooled )            
             tv       = self.gof.t_value ( pooled [ : n1 ] , pooled [ n1: ] )
+            tvalues.append ( float ( tv ) )
             counter += bool ( self.t_value < tv  )            
         del pooled
-        return counter
+        return counter, tuple ( tvalues )
 
+    @property 
+    def ecdf ( self ) :
+        """`ecdf` : empirical CDF for t-values from permutations 
+        """
+        return self.__ecdf
+    @ecdf.setter
+    def ecdf ( self , value ) :
+        self.__ecdf = value
+        
 # =============================================================================
 jl = None 
 # =============================================================================
@@ -295,22 +326,31 @@ if False : # ==================================================================
         # =====================================================================
         ## Run NN-permutations in parallel using joblib 
         def joblib_run ( self , NN , silent = True ) :
-            """ Run NN-permutations in parallel using joblib """
+            """ Run NN-permutations in parallel using joblib
+            """
             me    = math.ceil ( memory_enough() ) + 1 
             nj    = min ( 2 * numcpu () + 3 , me ) 
             lst   = splitter ( NN , nj )
-            if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used' % nj ) 
+            njobs = len ( [ k for k in splitter ( NN , nj ) ] )
+            if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used with joblib' % njobs ) 
             ## 
             conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
             if    (1,3,0) <= jl_version < (1,4,0) : conf [ 'return_as' ] = 'generator'           
             elif  (1,4,0) <= jl_version           : conf [ 'return_as' ] = 'unordered_generator'
             ##
-            input   = ( jl.delayed (self)( N ) for N in lst )
+            input   = ( jl.delayed (self.run_toys)( N ) for N in lst )
             counter = EffCounter()
+            tvalues = () 
             results = jl.Parallel ( **conf ) ( input )
-            for r in progress_bar ( results , max_value = nj , silent = silent , description = 'Permutations:') :
-                counter += r
-            ## 
+            for r in progress_bar ( results , max_value = njobs , silent = silent , description = 'Permutations:') :
+                cnt , tvals = r 
+                counter += cnt
+                tvalues += tvals 
+                ##
+                
+            if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
+            else             : self.ecdf.add ( data2vct ( tvalues )  )
+
             return counter
         # =====================================================================
         PERMUTATOR.run = joblib_run        
@@ -330,16 +370,22 @@ if not jl : # =================================================================
         me    = math.ceil ( memory_enough() ) + 1 
         nj    = min ( 2 * numcpu () + 3 , me ) 
         lst   = splitter ( NN , nj )
-        ##
-        if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used' % nj ) 
+        njobs = len ( [ k for k in splitter ( NN , nj ) ] )
+        if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used with WorkManager' % njobs ) 
         counter = EffCounter()
+        tvalues = () 
         ## 
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self , lst , progress = not silent  , njobs = nj , description = 'Permutations:') :
-                counter += result 
-        # 
+            for result in manager.iexecute ( self.run_toys , lst , progress = not silent  , njobs = njobs , description = 'Permutations:') :
+                cnt , tvals = result 
+                counter += cnt
+                tvalues += tvals 
+        ##
+        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
+        else             : self.ecdf.add ( data2vct ( tvalues )  )
+        ## 
         return counter
     # =========================================================================
     logger.debug ( 'Parallel will be  used for parallel permutations')
@@ -353,52 +399,93 @@ if not jl : # =================================================================
 class TOYS(object) :
     """ Helper class that allow to run permutation test in parallel 
     """
-    def __init__ ( self, gof , t_value , pdf , Ndata , sample = False ) :
+    def __init__ ( self    , 
+                   gof     , * , 
+                   t_value ,
+                   pdf     ,
+                   Ndata   , sample = False ) :
+        
         self.gof     = gof
         self.pdf     = pdf
         self.Ndata   = Ndata 
         self.t_value = t_value
         self.sample  = gof.sample 
         self.silent  = gof.silent
+        self.__ecdf  = None 
         
     # =========================================================================
     ## run N-toys 
     def __call__ ( self , N , silent = True ) :
-        """ Run N-toys """
-        ROOT.gRandom.SetSeed() 
-        ROOT.RooRandom.randomGenerator().SetSeed()
-        counter = EffCounter()
+        """ Run N-toys
+        """
+        
+        counter, tvalues = self.run_toys ( N = N , silent = silent )
+
+        if not self.__ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues , True )
+        else               : self.__ecdf.add ( data2vct ( tvalues )  )
+                            
+        return counter 
+
+    # =========================================================================
+    ## run N-toys 
+    def run_toys ( self, N , silent = True ) :
+        """ Run N-toys
+        """
+        ROOT.gRandom                     .SetSeed () 
+        ROOT.RooRandom.randomGenerator() .SetSeed ()
+        
+        counter = EffCounter ()
+        tvalues = [] 
         for i in range ( N ) :
             
-            ds = self.pdf.generate ( self.Ndata , sample = self.sample )
-            tv = self.gof ( self.pdf , ds )
+            dset     = self.pdf.generate ( self.Ndata , sample = self.sample )
+            tv       = self.gof ( self.pdf , dset )
             counter += bool ( self.t_value < tv  )
-           
-            if isinstance ( ds , ROOT.RooDataSet ) :
-                ds = Ostap.MoreRooFit.delete_data ( ds )
-            del ds
-            
-        return counter 
+
+            tvalues.append ( tv ) 
+            if isinstance  ( dset , ROOT.RooDataSet ) : dset.clear () 
+            del dset
+                            
+        return counter, tuple ( tvalues ) 
 
     # =========================================================================
     ## Run N-toys in parallel using WorkManager
     def run ( self , NN , silent = False ) :
-        """ Run NN-permutations in parallel using WorkManager"""
+        """ Run NN-toys in parallel using WorkManager
+        """
         me    = math.ceil ( memory_enough() ) + 1 
         nj    = min ( 2 * numcpu () + 3 , me ) 
         lst   = splitter ( NN , nj )
-        if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % nj ) 
+        njobs = len ( [ k for k in splitter ( NN , nj ) ] )
+        if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % njobs ) 
         ##
         counter = EffCounter()
+        tvalues = ()
         ## 
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self , lst , progress = not silent , njobs = nj , description = 'Toys:' ) :
-                counter += result 
-        # 
+            for result in manager.iexecute ( self.run_toys , lst , progress = not silent , njobs = njobs , description = 'Toys:' ) :
+                cnt , tvals = result
+                counter += cnt
+                tvalues += tvals  
+        #
+        
+        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues, True  )
+        else             : self.ecdf.add ( data2vct ( tvalues )  )
+        
         return counter
 
+    @property 
+    def ecdf ( self ) :
+        """`ecdf` : empirical CDF for t-values from toys
+        """
+        return self.__ecdf
+    @ecdf.setter
+    def ecdf ( self , value ) :
+        self.__ecdf = value
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     

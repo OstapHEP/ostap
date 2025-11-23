@@ -26,11 +26,10 @@ __all__     = (
     'GoF1DToys'          , ## helper utility for GoF estimate with toys 
     )
 # =============================================================================
-from   ostap.core.meta_info     import root_info 
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import VE, Ostap
-from   ostap.math.base          import doubles, axis_range, np2raw    
+from   ostap.math.base          import axis_range, np2raw    
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.basic        import loop_items, typename   
@@ -40,7 +39,7 @@ from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
 from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
 from   ostap.logger.colorized   import infostr
-from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue  
+from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, data2vct  
 from   collections              import defaultdict, namedtuple
 import ostap.logger.table       as     T
 import ostap.fitting.ds2numpy 
@@ -54,9 +53,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof1d' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
-# =============================================================================
-if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
-else                        : data2vct = lambda s : doubles ( s ) 
 # =============================================================================
 ## @var NL
 #  use C++ if length of data exceeds NL, otherwise Python is OK 
@@ -700,7 +696,7 @@ class GoF1DToys(GoF1D) :
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) :
                 dset.clear () 
-                dset = Ostap.MoreRooFit.delete_data ( dset )
+                ## dset = Ostap.MoreRooFit.delete_data ( dset )
                 
             del dset
             del data
@@ -927,7 +923,7 @@ class GoF1DToys(GoF1D) :
     # =========================================================================
     ## Draw ECDF for toys & statistical estimator 
     def draw  ( self , what , opts = '' , *args , **kwargs ) :
-        """ Draw ECDF for toys & statistical estgimator 
+        """ Draw ECDF for toys & statistical estimator 
         """
         key = cidict_fun ( what ) 
         if   key in Keys [ 'KS' ] and 'KS' in self.ecdfs :             
@@ -970,15 +966,34 @@ class GoF1DToys(GoF1D) :
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
 
-        result    = ecdf.draw  ( opts , *args , **kwargs ) 
+        ## draw ECDF 
+        result    = ecdf.draw  ( opts , *args , **kwargs )
+        
+        ## vertical line 
         line      = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
-        ## 
-        line.SetLineWidth ( 4 ) 
-        line.SetLineColor ( 8 ) 
-        line.draw ( 'same' )
         ##
-        self._line = line
-        return result, line  
+
+        ## horisontal line 
+        xmin      = kwargs['xmin']
+        xmax      = kwargs['xmax']
+        dx        = ( xmax - xmin ) / 100 
+        e         = ecdf ( value )
+        line2     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
+        ## 
+        line2.SetLineWidth ( 2 ) 
+        line2.SetLineColor ( 4 ) 
+        line2.SetLineStyle ( 9 ) 
+        ##
+        line1.SetLineWidth  ( 4 ) 
+        line1.SetLineColor  ( 8 )
+        ##
+        line2.draw ( 'same' )
+        line1.draw ( 'same' )
+        ##
+        self._line1 = line1
+        self._line2 = line2
+        ##
+        return result, line1, line2   
 
 # =============================================================================
 if '__main__' == __name__ :
