@@ -366,9 +366,11 @@ class PPDnp(GoFnp) :
             counter = permutator     ( self.nToys , silent = self.silent )
 
             
-        self.__ecdf   = permutator.ecdf
+        self.__ecdf  = permutator.ecdf
         
         p_value = counter.eff
+
+        print ( 'PPD P-VALUE' , t_value , p_value , self.__increasing )
         
         if self.__increasing : p_value = 1 - p_value
 
@@ -376,7 +378,7 @@ class PPDnp(GoFnp) :
     
     @property
     def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distributon from permutations"""
+        """`ecdf` : empirical CDF for t-value distribution from permutations"""
         return self.__ecdf
     
 # =============================================================================
