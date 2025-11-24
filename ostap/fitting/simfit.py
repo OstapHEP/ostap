@@ -641,45 +641,47 @@ class SimFit (VarMaker,ConfigReducer) :
         assert self.sample in dataset      ,\
                'Category %s is not in dataset' % self.sample.GetName()
 
-        sname = self.sample.GetName() 
-        scut  = "%s==%s::%s"  % ( sname , sname , category )
+        sname      = self.sample.GetName() 
+        sample_cut = "%s==%s::%s"  % ( sname , sname , category )
         
         dskeep = dataset
         
         if ( 6 , 37 ) <= root_info :
             from ostap.logger.colorized import markup
             message      = 'SimFit.draw(%s): ' % category 
-            message     += "There is ROOT issue https://github.com/root-project/root/issues/20383 (from 27.08.2025, fixed(?) @ Nov 2025). "
+            message     += "There is ROOT issue https://github.com/root-project/root/issues/20383 (from 27.08.2025). "
             message     += 'Temporary "bypass" is applied! '
             message     += markup ( "Check the plot - it ***COULD*** be ***TERRIBLY*** wrong!" ) 
             logger.warning ( message )
             observables  = self.pdf.pdf.getObservables ( dataset )
-            dataset      = dataset.subset ( observables , cuts = scut )
+            dataset      = dataset.subset ( observables , cuts = sample_cut )
 
-        ## 
-        dcut  = ROOT.RooFit.Cut ( scut )
+        ##        
+        data_cut  = ROOT.RooFit.Cut ( sample_cut )
 
-        kwargs [ 'data_options' ] = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , )
+        ## New options to draw data: 
+        kwargs [ 'data_options' ] = self.draw_option ( 'data_options' , **kwargs ) +  ( data_cut , )
         
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
 
-        _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  )
+        _project = ROOT.RooFit.ProjWData  ( self.sample , dataset  )        
+        _slice   = ROOT.RooFit.Slice      ( self.sample , category )
         
-        _slice = ROOT.RooFit.Slice      ( self.sample    , category )
         for key in  ( 'total_fit_options'           ,
                       #
                       'signal_options'              ,
                       'background_options'          ,
-                      'component_options'           ,
+                      'background2D_options'        ,
                       'crossterm1_options'          ,
                       'crossterm2_options'          ,
+                      'component_options'           ,
                       #
                       'combined_signal_options'     ,
                       'combined_background_options' ,
                       'combined_component_options'  ) :
 
-            kwargs [ key ] = self.draw_option ( key , **kwargs ) + ( _slice , _proj ) 
-        
+            kwargs [ key ] = self.draw_option ( key , **kwargs ) + ( _slice , _project ) 
+            
         from ostap.fitting.roocollections import KeepArgs
 
         cat_pdf  = self.categories [ category ]
@@ -705,7 +707,7 @@ class SimFit (VarMaker,ConfigReducer) :
                                           silent  = silent  ,
                                           args    = args    , **kwargs )
             else :
-                self.error("Unknown 'dvar' for 3D-draw pdf!")
+                self.error ( "Unknown 'dvar' for 3D-draw pdf!" )
                 
         elif isinstance ( draw_pdf , PDF2 ) :
             
@@ -720,7 +722,7 @@ class SimFit (VarMaker,ConfigReducer) :
                                           silent  = silent  ,
                                           args    = args    , **kwargs )
             else :
-                self.error("Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
+                self.error ( "Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
 
         elif isinstance ( draw_pdf , PDF1 ) :
             result = draw_pdf.draw ( dataset = dataset ,

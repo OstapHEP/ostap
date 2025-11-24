@@ -47,14 +47,15 @@ batch_env ( logger )
 # =============================================================================
 #
 ## make simple test mass 
-mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 5  )
+mass1    = ROOT.RooRealVar ( 'test_mass1' , 'Some test mass' , 0 , 5  )
+mass2    = ROOT.RooRealVar ( 'test_mass2' , 'Some test mass' , 0 , 5  )
 
 ## book very simple data set:
-varset1  = ROOT.RooArgSet  ( mass  )
+varset1  = ROOT.RooArgSet  ( mass1  )
 dataset1 = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset1 )  
 
 ## book very simple data set:
-varset2  = ROOT.RooArgSet  ( mass )
+varset2  = ROOT.RooArgSet  ( mass2 )
 dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )  
 
 ## high statistic, low-background "control channel"
@@ -66,20 +67,19 @@ NB1    = 1000
 for i in range ( NS1 )  :
     
     v1 = random.gauss ( mean1 , sigma1 )
-    while not v1 in mass :
+    while not v1 in mass1 :
         v1 = random.gauss ( mean1 , sigma1 )
         
-    mass.setVal  ( v1 )
+    mass1.setVal  ( v1 )
     
     dataset1.add ( varset1 )
 
 for i in range ( NB1 ) :
     v1 = random.uniform ( 0 , 5  )
-    while not v1 in mass :
+    while not v1 in mass1 :
         v1 = random.uniform ( 0 , 5  )
         
-
-    mass.setVal  ( v1 )
+    mass1.setVal  ( v1 )
     
     dataset1.add ( varset1 )
 
@@ -92,25 +92,24 @@ sigma2  = sigma1 * 0.5
 
 for i in range ( NS2 )  :
     v2 = random.gauss ( mean2 , sigma2 )
-    while not v2 in mass : 
+    while not v2 in mass2 : 
         v2 = random.gauss ( mean2 , sigma2 )
         
-    mass.setVal  ( v2 )
+    mass2.setVal  ( v2 )
     dataset2.add ( varset2 )
 
 for i in range (NB2 ) :
     v2 = random.uniform ( 0 , 5  )
-    while not v2 in mass : 
+    while not v2 in mass2 : 
         v2 = random.uniform ( 0 , 5  )
         
-    mass.setVal  ( v2      )
+    mass2.setVal  ( v2      )
     dataset2.add ( varset2 )
 
 sample  = ROOT.RooCategory ( 'sample' , 'sample'  , 'A' , 'B' )
 
-
 ## combined datasets
-vars    = ROOT.RooArgSet ( mass )
+vars    = ROOT.RooArgSet ( mass1  , mass2  )
 dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
 
 models  = set()
@@ -118,7 +117,7 @@ results = []
 graphs  = []
 
 signal1  = Models.Gauss_pdf ( 'G1'                 ,
-                              xvar  = mass         ,
+                              xvar  = mass1        ,
                               mean  = (0.5 , 2.5 ) ,
                               sigma = (0.1 , 1.0 ) )
 
@@ -130,7 +129,7 @@ mean2    = signal1.vars_add      ( signal1.mean  , 1.0  )
 sigma2   = signal1.vars_multiply ( signal1.sigma , 0.5  )
 
 signal2  = Models.Gauss_pdf ( 'G2'            ,
-                              xvar  = mass    ,
+                              xvar  = mass2   ,
                               mean  = mean2   ,
                               sigma = sigma2  )
 
@@ -191,8 +190,6 @@ def test_simfit1 () :
     ## GOF machiner
     # =============================================================================
 
-    """
-    
     gof = GoFSimFit ( model_sim      ,
                       dataset        ,
                       parameters = r )
@@ -215,13 +212,12 @@ def test_simfit1 () :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
                 toys .draw ( sample , k )
     
-    """
     
     if numcpu() < 10 : logger.info ( 'tests for CPU-expensive PPD,DNN & USTAT methods are disabled' )
     else :
     
-        nToys    = 50 ## realistic values should be in excess of 100
-        mcFactor =  5 ## realistic values should be in excess of 10  
+        nToys    = 50 ## realistic values should be well in excess of 100
+        mcFactor =  5 ## realistic values should be well in excess of 10  
         
         gof_ppd   = PPDSimFit   ( model_sim             , 
                                   dataset               ,
@@ -245,14 +241,6 @@ def test_simfit1 () :
                                   nToys      = 100      ,
                                   parallel   = True     , 
                                   silent     = False    )
-
-        rows = [  ( 'Method'      ,
-                    'Sample'      ,
-                    't-value'     ,
-                    't-mean'      ,
-                    't-rms'       ,
-                    't min/max'   ,
-                    'p-value [%]' , '#%s' % greek_lower_sigma ) ]
         
         for gof in ( gof_ppd , gof_dnn , ) : ## , gof_ustat ) :
 
@@ -276,7 +264,8 @@ def test_db() :
 
     logger.info('Saving all objects into DBASE')
     with timing('Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
-        db['mass'     ] = mass
+        db['mass1'    ] = mass1
+        db['mass2'    ] = mass2
         db['vars1'    ] = varset1
         db['vars2'    ] = varset2
         db['dataset1' ] = dataset1

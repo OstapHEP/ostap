@@ -816,18 +816,17 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     # =========================================================================
     ## invoke <code>what.plotOn (frame , *options)</code> command
     #  - merge arguments using <code>RooFit::MultiArg</code> to shorted list
-    def plot_on ( self , what , frame , *options ) :
+    def plot_on ( self , what , frame , *options , **kwargs ) :
         """ Invoke `what.plotOn (frame , *options)` command
         - merge arguments using `ROOT.RooFit::MultiArg` to shorted list
         """
         
-        NARGS = 8
 
         assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
                "plot_on: invalid argument types: %s" % list ( options  ) 
 
-        
         ## for "small' number of arguments use the standard function 
+        NARGS = 8
         if len ( options ) <= NARGS and root_info < ( 6 , 29 ) :
             return what.plotOn ( frame  , *options )
         

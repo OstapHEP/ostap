@@ -39,7 +39,8 @@ def _rca_print_ ( self ) :
     ## RooAbsReal::plotOn arguments
     if   'DrawOption'           == name : return "DrawOptions('%s')"    %   self.getString ( 0 )
     elif 'SliceVars'            == name : return "Slice({.})"
-    elif 'SliceCat'             == name : return "Slice({.})"
+    elif 'SliceCat'             == name : return "Slice(%s,%s)"         % ( self.getObject ( 0 ).GetName() if self.getObject(0) else '???' ,
+                                                                            self.getString ( 0 )           )
     elif 'Project'              == name : return "Project({.})"
     elif 'ProjData'             == name : return "ProjWData({.})"
     elif 'ProjData'             == name : return "ProjWData({.})"

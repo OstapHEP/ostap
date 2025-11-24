@@ -766,7 +766,7 @@ class APDF1 ( Components ) :
     def _draw_total  ( self  , frame  , *args , **kwargs ) :
         """ Helper method to draw total fit curve 
         """
-        totoptions   = self.draw_option (  'total_fit_options' , **kwargs )        
+        totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
         self.plot_on ( self.pdf , frame , *totoptions ) 
         
     # ================================================================================
