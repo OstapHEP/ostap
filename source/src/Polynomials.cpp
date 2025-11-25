@@ -24,6 +24,7 @@
 #include "Ostap/Positive.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Bernstein1D.h"
+#include "Ostap/Bernulli.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -1357,6 +1358,35 @@ Ostap::Math::Polynomial::iadd
 Ostap::Math::Polynomial&
 Ostap::Math::Polynomial::isub
 ( const Ostap::Math::KarlinStudden& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() )  ,  
+                  "Cannot subtract Polynomials with different domains" , 
+                  "Ostap::Math::Polynomial::isub"                , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+  //
+  return iadd ( Polynomial ( other ) ) ;
+}// ============================================================================
+// Add       polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::iadd
+( const Ostap::Math::Bernulli& other ) 
+{
+  //
+  Ostap::Assert ( s_equal ( xmin() , other.xmin() ) , 
+                  "Cannot sum Polynomials with different domains" ,
+                  "Ostap::Math::Polynomial::iadd"                 , 
+                  INCONSISTENT_RANGES , __FILE__, __LINE__       )  ;
+
+  return iadd ( Polynomial ( other ) ) ;
+}
+// ============================================================================
+// Subtract      polynomials (with the same domain!)
+// ============================================================================
+Ostap::Math::Polynomial&
+Ostap::Math::Polynomial::isub
+( const Ostap::Math::Bernulli& other ) 
 {
   //
   Ostap::Assert ( s_equal ( xmin() , other.xmin() )  ,  
