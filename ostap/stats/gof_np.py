@@ -162,18 +162,19 @@ class GoFnp (AGoFnp) :
 #   distance_type , transform, increasing = psi_conf ( 'linear' )
 #   @endcode
 def psi_conf ( psi , scale = 1.0 ) :
-    """ Define configuration for psi-function for PPD method"""
+    """ Define configuration for psi-function for PPD method
+    """
 
-    if   psi in ( 'euclidean'  , 'linear'  ) :                 ## psi = x 
-        return 'euclidean'   , None                           , True 
-    elif psi in ( 'euclidean2' , 'sqeuclidean', 'squared' ) :  ## psi = x**2
-        return 'sqeuclidean' , None                           , True  
-    elif psi in ( 'inverse'    , 'coulomb' ) :                 ## psi = 1/x 
-        return 'euclidean'   , lambda x : 1.0/x               , False 
-    elif psi in ( 'log'   , 'logarithm'    ) :                 ## psi = -log(x)
-        return 'sqeuclidean' , lambda x : -numpy.log ( x )    , False 
-    elif psi in ( 'gauss' , 'gaussian'     ) :                 ## psi = exp (-x*x/0.5)
-        return 'sqeuclidean' , lambda x :  numpy.exp ( scale*x ) , False 
+    if   psi in ( 'euclidean'  , 'linear'  ) :                       ## psi = x 
+        return 'euclidean'     , None                                , True 
+    elif psi in ( 'euclidean2' , 'sqeuclidean', 'squared' ) :        ## psi = x**2
+        return 'sqeuclidean'   , None                                , True  
+    elif psi in ( 'inverse'    , 'coulomb' ) :                       ## psi = 1/x 
+        return 'euclidean'     , lambda x : 1.0/x                    , False 
+    elif psi in ( 'log'        , 'logarithm'    ) :                  ## psi = -log(x)
+        return 'sqeuclidean'   , lambda x : -numpy.log ( x )         , False 
+    elif psi in ( 'gauss'      , 'gaussian'     ) :                  ## psi = exp (-x*x/0.5)
+        return 'sqeuclidean'   , lambda x :  numpy.exp ( scale * x ) , False 
     elif isinstance ( psi , string_types ) :
         return psi , None , True         
 
@@ -219,7 +220,7 @@ class PPDnp(GoFnp) :
         self.__maxsize   = max ( maxsize , 100000  )
         
         ## check validity of `psi`
-        scale = -0.5/(self.sigma**2) 
+        scale = -0.5 / ( self.sigma ** 2 ) 
         self.__distance_type , _ , self.__increasing = psi_conf ( psi , scale )
 
         self.__ecdf   = None 
