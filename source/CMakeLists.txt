@@ -21,6 +21,7 @@ find_program ( ROOT_EXE_EXECUTABLE    NAMES root.exe    )
 message ( "----> ROOT            executable : " ${ROOT_EXECUTABLE} )
 message ( "----> ROOT.EXE        executable : " ${ROOT_EXE_EXECUTABLE} )
 message ( "----> ROOT config     executable : " ${ROOT_CONFIG_EXECUTABLE} )
+message ( "----> ROOT C++        flags      : " ${ROOT_CXX_FLAGS} )
     
 # =============================================================================
 ## Locate proper Python/PythonLibs 
@@ -88,11 +89,16 @@ else()
   message ( SEND_ERROR "----> No GSL libraries are found!" )
 endif() 
 
+
+set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS} )
+
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register")
 ## set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
+
+message ( "----> C++             flags      : " ${CMAKE_CXX_FLAGS} )
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
