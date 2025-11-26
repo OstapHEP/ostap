@@ -238,8 +238,8 @@ Ostap::Math::RationalBernstein::RationalBernstein
   const unsigned short       p    ,     
   const double               xmin , 
   const double               xmax ) 
-  : m_p ( a.begin() , a.begin() + ( p < a.size() ? p : a.size() ) , xmin , xmax ) 
-  , m_q ( a.begin() + ( p < a.size() ? p : a.size() ) , a.end()   , xmin , xmax ) 
+  : m_p ( a.begin () , a.begin() + ( p < a.size() ? p : a.size() )           , xmin , xmax ) 
+  , m_q ( a.begin ()             + ( p < a.size() ? p : a.size() ) , a.end() , xmin , xmax ) 
   , m_workspace () 
 {}
 // ============================================================================    
@@ -248,7 +248,7 @@ Ostap::Math::RationalBernstein::RationalBernstein
 double Ostap::Math::RationalBernstein::evaluate ( const double x ) const 
 { return 
     x < xmin () ? 0.0 : 
-        x > xmax () ? 0.0 : 
+    x > xmax () ? 0.0 : 
     ( m_p ( x ) / m_q ( x ) ) / ( m_p.xmax() - m_p.xmin () ) ; }
 // ============================================================================
 // all parameters (by value!!!)

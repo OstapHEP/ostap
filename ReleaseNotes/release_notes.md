@@ -1,8 +1,12 @@
+# v3.5.3.0 
+
+  1. set of tiny fixes (mainly for conda) 
+  
 # v3.5.2.0 
 
 ## New features
 
-  1, some tweaks for Crystal Ball&friends
+  1. some tweaks for Crystal Ball&friends
   1. some tiny fixes for `Root(Only)Shelf` 
   1. add comparison (in a form of table) for two `RooFitResult` objects
   1. add `select` and `exclude` arguments for `ls_table/ls_tree` methods for ROOT directories and `Root(Only)Shelf` databases 

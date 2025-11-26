@@ -43,10 +43,9 @@ macro(find_python_module_version module)
 endmacro(find_python_module_version)
 
 if(DEFINED ENV{VIRTUAL_ENV} OR DEFINED ENV{CONDA_PREFIX})
-   ## set(PIP_ARGS)
-   set(PIP_ARGS "--user")
+  set(PIP_ARGS)
 else()
-   set(PIP_ARGS "--user")
+  set(PIP_ARGS "--user")
 endif()
 
 # ========================================================================================
