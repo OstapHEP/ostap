@@ -100,6 +100,7 @@ endif()
 
 message ( "----> C++             flags      : " ${CMAKE_CXX_FLAGS} )
 
+  
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
   "${CMAKE_CURRENT_BINARY_DIR}/.ostap.build"
@@ -123,11 +124,21 @@ endfunction( MAKE_DICT )
 
 ## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
 
+if ( ${ROOT_CXX_STANDARD} )
+  set ( CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD} )
+  message ( "----> ROOT/C++        standard   : " ${ROOT_CXX_STANDARD} )
+  message ( "----> C++             satndard   : " ${CMAKE_CXX_STANDARD} )
+endif ()
+
 
 include(CMake_OSTAP.cmake) 
 
 
-if(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
+if ( ${ROOT_CXX_STANDARD} )
+  
+  set_property ( TARGET ostap PROPERTY CXX_STANDARD ${CMAKE_CXX_STANDARD}  )
+  
+elseif(ROOT_VERSION VERSION_LESS_EQUAL "6.31.00")
 
   execute_process ( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx26
                     OUTPUT_VARIABLE CXX26_ROOT
