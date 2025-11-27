@@ -126,8 +126,8 @@ endfunction( MAKE_DICT )
 
 if ( ${ROOT_CXX_STANDARD} )
   set ( CMAKE_CXX_STANDARD ${ROOT_CXX_STANDARD} )
-  message ( "----> ROOT/C++        standard   : " ${ROOT_CXX_STANDARD} )
-  message ( "----> C++             satndard   : " ${CMAKE_CXX_STANDARD} )
+  message ( "----> ROOT/C++        standard   : " ${ROOT_CXX_STANDARD}  )
+  message ( "----> C++             standard   : " ${CMAKE_CXX_STANDARD} )
 endif ()
 
 
