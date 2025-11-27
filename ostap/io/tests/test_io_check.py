@@ -42,12 +42,6 @@ def test_io_check() :
             row = attention ( 'BSDDB3' ) , attention ( '---' )   , attention ( '---' ) 
         rows.append ( row )
 
-    if DB.use_lmdb and DB.lmdb : 
-        row = 'LMDB' , DB.lmdb.__name__ , DB.lmdb.__file__ ,
-    else :
-        row = attention ( 'LMDB' ) , attention ( '---' )   , attention ( '---' ) 
-    rows.append ( row )
-
     row = 'SqliteDict' , ostap.io.sqlitedict.__name__ , ostap.io.sqlitedict.__file__ 
     rows.append ( row )
     
