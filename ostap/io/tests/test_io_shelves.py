@@ -154,7 +154,6 @@ def test_shelves1():
     # ===================================================================================
     
     backends  = [
-        'lmdb'      , 
         'berkleydb' ,
         'berkley'   ,
         'bsddb3'    ,
@@ -217,7 +216,6 @@ def test_shelves2 () :
     if zstshelve : shelves.append ( zstshelve )
 
     backends  = [
-        'lmdb'       , 
         'berkeleydb' , 'berkeley' , 'berkeley-db' , 
         'bsddb3'     ,
         'sqlite3'    , 'sqlite'   , 'sql' , 
