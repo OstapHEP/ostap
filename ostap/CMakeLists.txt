@@ -232,7 +232,7 @@ endif()
 find_python_module ( berkeleydb QUIET )
 if ( NOT ${PY_berkeleydb_FOUND} )
   if     (  "3.10.0" VERSION_LESS ${PYTHON_VERSION}  )
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install  berkeleydb           ${PIP_ARGS})
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install     berkeleydb           ${PIP_ARGS})
   elseif (  "3.9.0"  VERSION_LESS ${PYTHON_VERSION}  )
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install -I "berkeleydb==18.1.14" ${PIP_ARGS})
   elseif (  "3.8.0"  VERSION_LESS ${PYTHON_VERSION}  )
@@ -263,21 +263,6 @@ if ( ${PYTHON_VERSION} VERSION_LESS       "3.10.0" )
 endif()
     
 # ========================================================================================
-## lmdb : check&install only if mdb_stat exists ...
-# ========================================================================================  
-find_program(MDB_STAT_EXECUTABLE NAMES mdb_stat)
-if ( ${MDB_STAT_EXECUTABLE} )
-   find_python_module ( lmdb        QUIET )
-   if ( NOT ${PY_lmdb_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lmdb ${PIP_ARGS})
-   endif()    
-   find_python_module ( lmdb        QUIET )
-   if ( NOT ${PY_lmdb_FOUND} )
-      message ( "----> warning (optional)            lmdb is NOT found!" )
-   endif() 
-endif()
-
-# ========================================================================================
 ## tkrzw 
 # ========================================================================================
 ##
@@ -285,6 +270,7 @@ find_python_module ( tkrzw QUIET )
 if ( NOT ${PY_tkrzw_FOUND} )  
    message ( "----> warning (optional)           tkrzw is NOT found!" ) 
 endif()
+
 
 # ========================================================================================
 ## sortedcontainers
@@ -423,11 +409,6 @@ if ( ${PY_bsddb3_FOUND} )
   message ( "----> bsddb3           version    : " ${PY_bsddb3_VERSION} )             
 endif()
 ##
-if ( ${PY_lmdb_FOUND} )
-  find_python_module_version ( lmdb ) 
-  message ( "----> lmdb             version    : " ${PY_lmdb_VERSION} )             
-endif() 
-##
 if ( ${PY_tkrzw_FOUND} )
   find_python_module_version ( tkrzw ) 
   message ( "----> tkrzw            version    : " ${PY_tkrzw_VERSION} )             
@@ -492,10 +473,6 @@ else  ()
 endif () 
 
 set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning,once::UserWarning,once::IntegrationWarning" ) 
-
-## if ( OSTAP_TEST_PYTHON_WARNINGS ) 
-##  MESSAGE ( "----> All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
-## endif()
 
 if ( OSTAP_TEST_PYWARNINGS )  
   message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  ) 
@@ -568,9 +545,9 @@ foreach(filename ${allfiles})
    string(REPLACE "/" "_"       testname ${testname})
    string(CONCAT  testname ostap.runit_  ${testname})
 
-   add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
+   add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${filename} )
 
-   set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ENVIRONMENT OSTAP_CMAKE_TEST=1 ) 
+   set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
 
 endforeach() 
 

@@ -1,3 +1,7 @@
+# v3.5.4.0 
+
+  1. remove lmdb 
+
 # v3.5.3.0 
 
   1. set of tiny fixes (mainly for conda) 

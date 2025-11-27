@@ -130,23 +130,6 @@ if sys.version_info < ( 3 , 10 ) :
         use_bsddb3  = False 
 
 # =============================================================================
-## make a try to use LMDB
-use_lmdb = False
-# =============================================================================
-## make a try for LMDB 
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import lmdb 
-    from ostap.io.lmdbdict import LmdbDict, islmdb 
-    use_lmdb = True
-    # =========================================================================
-except ImportError  : # =======================================================
-    # =========================================================================
-    lmdb     = None 
-    use_lmdb = False 
-
-# =============================================================================
 if (3,13) <= sys.version_info : # =============================================
     # =========================================================================
     try : # ===================================================================
@@ -200,10 +183,6 @@ def whichdb ( filename  ) :
     ## dbase is identified 
     if tst : return tst 
 
-    ## make a try with LMDB 
-    if use_lmdb and os.path.exists  ( filename ) and os.path.isdir ( filename ) :
-        if islmdb ( filename ) : return 'lmdb'
-    
     ## non-existing DB  ? 
     if tst is None     : return tst
     
@@ -288,7 +267,7 @@ isdbase = whichdb
 #  only if it doesn't exist; and 'n' always creates a new database.
 # 
 #  - Actually it is a bit extended  form of <code>dbm.open</code>, that
-#    accounts for <code>bsbdb3</code>, <code>sqlite3</code> and <code>lmdbdict</code>
+#    accounts for <code>bsbdb3</code>, <code>sqlite3</code> 
 def dbopen ( file               ,
              flag       = 'r'   ,
              mode       = 0o666 ,
@@ -305,7 +284,7 @@ def dbopen ( file               ,
     Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
     only if it doesn't exist; and 'n' always creates a new database.
     
-    - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3`,`sqlite3`,'berkeleydb' and `lmdb`
+    - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3`,`sqlite3`,'berkeleydb' 
     """
 
     if 'n' in flag and os.path.exists ( file ) and os.path.isfile ( file ) :
@@ -339,8 +318,6 @@ def dbopen ( file               ,
                 return SqliteDict      ( filename = file , flag = flag , **kwargs )                        
             elif use_bsddb3     and 'bsddb3'     == db :
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
-            elif use_lmdb       and 'lmdb'       == db :
-                return LmdbDict        ( path     = file , flag = flag , **kwargs )
             elif db_gnu  and db in ( 'dbm.gnu'  , ) :
                 if kwargs : logger.warning ( message ) 
                 return db_gnu.open ( file , flag , mode )
@@ -378,9 +355,6 @@ def dbopen ( file               ,
     if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
-    if use_lmdb       and check in ( 'lmdb' , ) :
-        return LmdbDict    ( path    = file , flag = flag , **kwargs )
-    
     if check in ( 'sqlite3' , 'sqlite' ) :
         return SqliteDict ( filename = file , flag = flag , **kwargs )
 
@@ -426,10 +400,6 @@ def dbfiles ( dbtype , basename ) :
         return '%s.dat' % basename , '%s.dir' % basename , 
     elif dbtype in ( 'dbm.sqlite3' , ) : 
         return basename , ## '%s-wal' % basename , ## '%s-shm' % basename , 
-    elif dbtype in ( 'lmdb', ) : 
-        return ( os.path.join ( basename , ''         ) , ## directory 
-                 os.path.join ( basename , 'data.mdb' ) ,
-                 os.path.join ( basename , 'lock.mdb' ) )
     else :
         return basename ,
 
@@ -496,7 +466,6 @@ if '__main__' == __name__ :
     logger.info  ('Available DB-backends are:' )
     if use_berkeleydb : logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb ) ) 
     if use_bsddb3     : logger.info ( ' - BSDDB3     : %s' % str ( bsddb3     ) ) 
-    if use_lmdb       : logger.info ( ' - LMDB       : %s' % str ( lmdb       ) ) 
     if db_gnu         : logger.info ( ' - GNU dbase  : %s' % str ( db_gnu     ) ) 
     if db_dbm         : logger.info ( ' - NDBM       : %s' % str ( db_dbm     ) ) 
     if db_dumb        : logger.info ( ' - DUMB       : %s' % str ( db_dumb    ) ) 
