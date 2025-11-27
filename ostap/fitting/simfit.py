@@ -664,8 +664,10 @@ class SimFit (VarMaker,ConfigReducer) :
         
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
 
-        _project = ROOT.RooFit.ProjWData  ( self.sample , dataset  )        
-        _slice   = ROOT.RooFit.Slice      ( self.sample , category )
+        if root_info < ( 6 , 28 ) : _project = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  )        
+        else                      : _project = ROOT.RooFit.ProjWData  ( self.sample    , dataset  )
+            
+        _slice   = ROOT.RooFit.Slice      ( self.sample    , category )
         
         for key in  ( 'total_fit_options'           ,
                       #
