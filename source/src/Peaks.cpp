@@ -2076,14 +2076,20 @@ Ostap::Math::Needham::Needham
   const double c0    ,
   const double c1    ,
   const double c2    ,
-  const double n     ) 
-  : m_cb  ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
-  , m_c0  ( -1 )
-  , m_c1  ( -1 )
-  , m_c2  ( -1 )
+  const double n     , 
+  const double amin  ) 
+  : m_cb   ( m0 , sigma , 1 , 0 ) // Ostap::Math:CrystalBall
+  , m_c0   ( -1 )
+  , m_c1   ( -1 )
+  , m_c2   ( -1 )
+  , m_amin ( std::abs ( amin )  )
 {
   setC      ( c0 , c1 , c2 ) ;
   m_cb.setN ( n            ) ;
+  Ostap::Assert ( 0 < m_amin  && m_amin < 1 ,
+		  "Parameter 'amin' must be 0<amin<1"    ,
+		  "Ostap::Math::Needham" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
 }
 // ============================================================================
 // destructor
@@ -2130,7 +2136,12 @@ double Ostap::Math::Needham::pdf ( const double x ) const
 std::size_t Ostap::Math::Needham::tag () const 
 {
   static const std::string s_name = "Needham" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_cb.tag () , m_c0 , m_c1 , m_c2 ) ; 
+  return Ostap::Utils::hash_combiner ( s_name      ,
+				       m_cb.tag () ,
+				       m_c0        ,
+				       m_c1        ,
+				       m_c2        ,
+				       m_amin      ) ; 
 }
 // ============================================================================
 // show alpha as function of sigma 
@@ -2140,18 +2151,17 @@ double Ostap::Math::Needham::alpha
 {
   const double sc1 = std::abs ( sigma / m_c1 ) ;
   //
-  static const double s_min_A = 0.01 ;
   /// avoid overflows (1) 
   if ( 1 <= sc1 ) 
-  {
-    const double q = std::pow ( sc1 , m_c2 ) ;
-    const double a = m_c0 * q / ( 1 + q ) ; 
-    return std::hypot ( s_min_A , a ) ; 
-  }
+    {
+      const double q = std::pow ( sc1 , m_c2 ) ;
+      const double a = m_c0 * q / ( 1 + q ) ; 
+      return std::hypot ( m_amin , a ) ; 
+    }
   /// avoid overflows (2)
   const double Q = std::pow ( 1 / sc1 , m_c2 ) ;
   const double a = m_c0 / ( Q + 1 ) ;
-  return std::hypot ( s_min_A , a ) ;
+  return std::hypot ( m_amin , a ) ;
  //
 }
 // ============================================================================

@@ -1401,7 +1401,7 @@ namespace Ostap
      *  - thanks to Matthew Needham
      *
      *  - alpha is parameterized as function of sigma 
-     *  \f$ \alpha(\sigma) = c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} }\f$ 
+     *  \f$ \alpha(\sigma) = \sqrt { \alpha_{min}^2 + ( c_0\frac{ (\sigma/c_1)^{c_2}}{ 1 + (\sigma/c_1)^{c_2} } )^2\f$ 
      *
      *  @attention For majority of physics cases <code>n</code> 
      *             can be fixed <code>n=0</code> (corresponds to <code>N=1</code>
@@ -1413,7 +1413,8 @@ namespace Ostap
      *  - for \f$ c_0 \f$ :  \f$ 2.0 \le c_0 \le 3.0 \f$ 
      *  - for \f$ c_1 \f$ :  \f$ c_2 \approx O(\sigma) \f$ 
      *  - for \f$ c_2 \f$ :  \f$ c_2 \approx O(10) \f$   
-     * 
+     *  - for \f$ \alpha_{min} \f$ : \f$ \alpha_{min} \approx (0.01) \ll 1 \f$,
+     *
      *  @see Ostap::Math::CrystalBall
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2012-05-13
@@ -1428,6 +1429,7 @@ namespace Ostap
        *  @param c0     c0       parameter
        *  @param c1     c1       parameter
        *  @param c2     c2       parameter
+       *  @param amin   amin     parameter
        */
       Needham
       ( const double m0    = 3096.0 ,   // for J/psi
@@ -1435,7 +1437,9 @@ namespace Ostap
         const double c0    =    2.5 ,
         const double c1    =   13.5 ,   // similar to sigma 
         const double c2    =   10   ,
-        const double n     =    0   ) ; // note that it is different from internal N!
+        const double n     =    0   ,   // note that it is different from internal N!
+	const double amin  =  0.01  ) ; // cut-off parameter for alpha
+      
       /// destructor
       ~Needham() ;
       // ======================================================================
@@ -1466,6 +1470,10 @@ namespace Ostap
       // ======================================================================
       /// alpha as function of sigma 
       double alpha ( const double sigma ) const ;
+      /// minimal/cut-off value of alpha
+      inline double amin      () const { return m_amin ; }
+      /// minimal/cut-off value of alpha
+      inline double alpha_min () const { return m_amin ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1505,7 +1513,7 @@ namespace Ostap
        */
       inline double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const
+	const double xhigh ) const
       { return m_cb.non_gaussian ( xlow , xhigh ) ; } 
       // ======================================================================
     public: // components 
@@ -1519,7 +1527,7 @@ namespace Ostap
       /// get left tail
       const Ostap::Math::LeftTail& tail_left  () const { return m_cb.tail () ; }
       // ======================================================================
-       public:
+    public:
       // ======================================================================
       /// get the tag 
       std::size_t tag () const ;
@@ -1534,6 +1542,8 @@ namespace Ostap
       double m_c1                   ;  // c1_parameter
       /// c0-parameter
       double m_c2                   ;  // c2_parameter
+      /// alpha min parameter
+      double m_amin          { 0.01 } ; // amin-parameter
       // ======================================================================
     } ; //                                The end of class Ostap::Math::Needham 
     // ========================================================================
