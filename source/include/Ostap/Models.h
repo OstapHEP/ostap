@@ -3625,7 +3625,7 @@ namespace Ostap
      *  \f[ f(x;\mu, \beta,\gamma) = 
      *   \frac{ z + z^{-1}}{2\gamma(x-\mu)}\phi( \frac{1}{\gamma}(z-z^{-1}) \f]
      *  where
-     *   - \f$ z=\frac{x-\mu}{\beta}\f$
+     *   - \f$ z=\sqrt{\frac{x-\mu}{\beta}}\f$
      *   - \f$ \phi\f$ is Gaussian PDF 
      */
     class BirnbaumSaunders
