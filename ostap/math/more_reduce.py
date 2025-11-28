@@ -906,6 +906,17 @@ Ostap.Math.BetaPrime. __reduce__ = _ombprim_reduce_
 Ostap.Math.Beta     . __reduce__ = _ombprim_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::FDistribution
+#  @see Ostap::Math::FDistribution
+def _ombprimf_reduce_ ( s ) :
+    """Reduce `Ostap.Math.FDistribution`
+    - see `Ostap.Math.FDistribution`
+    """
+    return root_factory , ( type ( s ) , s.d1 () , s.d2() , s.scale() , s.shift () )
+
+Ostap.Math.FDistribution. __reduce__ = _ombprimf_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::GenBetaPrime
 #  @see Ostap::Math::GenBetaPrime
 def _omgenbprim_reduce_ ( s ) :

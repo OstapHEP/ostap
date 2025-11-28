@@ -1765,6 +1765,18 @@ double Ostap::Math::BetaPrime::skewness  () const
   return 2 * ( 2 * a + b - 1 ) / ( b - 3 ) * std::sqrt( ( b - 2 ) / a / ( a + b - 1 ) ) ;
 }
 // ===========================================================================
+double Ostap::Math::BetaPrime::kurtosis  () const 
+{
+  if ( beta() <= 4 || s_equal ( beta() , 4 ) )
+    { return std::numeric_limits<double>::quiet_NaN(); } 
+  //  
+  const double a = alpha () ;
+  const double b = beta  () ;
+  //  
+  return 6 * (  a * ( a + b - 1 ) * ( 5 * b - 11 ) + ( b - 1 ) * ( b - 1 ) * ( b - 2 ) ) /
+    ( a * ( a + b - 1 ) * ( b - 3 ) * ( b - 4 ) ) ;
+}
+// ===========================================================================
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::BetaPrime::tag () const 
@@ -1774,9 +1786,112 @@ std::size_t Ostap::Math::BetaPrime::tag () const
 }
 // ============================================================================
 
+// ============================================================================
+/*  constructor from all parameters 
+ *  @param d1  d1-parameter d1>0
+ *  @param d2  d2-parameter d2>0
+ *  @param scale  scale-parameter
+ *  @param shift  shift-parameter
+ */
+// ============================================================================
+Ostap::Math::FDistribution::FDistribution
+( const double d1    ,
+  const double d2    ,
+  const double scale ,
+  const double shift )
+  : m_betap ( 0.5 * d1 , 0.5 * d2 )
+  , m_scale ( scale )
+  , m_shift ( shift )
+{}
+// ============================================================================
+bool Ostap::Math::FDistribution::setScale ( const double value ) 
+{
+  if ( s_equal ( value , m_scale  ) ) { return false ; }
+  m_scale  = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::FDistribution::setShift ( const double value ) 
+{
+  if ( s_equal ( value , m_shift  ) ) { return false ; }
+  m_shift  = value ;
+  return true ;
+}
+// ============================================================================
+// evaluate F-distribution
+// ============================================================================
+double Ostap::Math::FDistribution::pdf ( const double x ) const 
+{
+  //
+  const double s = d1 () / d2 () ;
+  const double z = ( x - m_shift ) / m_scale ;
+  //
+  return m_betap.pdf ( z * s ) * s / m_scale ;
+}
+// ============================================================================
+double Ostap::Math::FDistribution::cdf ( const double x ) const 
+{
+  //
+  const double z = ( x - m_shift ) / m_scale ;
+  const double s = d1 () / d2 () ;
+  return m_betap.cdf ( z * s ) ;
+}
+// ===========================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::FDistribution::tag () const 
+{ 
+  static const std::string s_name = "FDistribution"  ;
+  return Ostap::Utils::hash_combiner ( s_name         ,
+				       m_betap.tag () ,
+				       m_scale        ,
+				       m_shift        ) ; 
+}
+// ============================================================================
+double Ostap::Math::FDistribution::mean () const 
+{
+  const double s = m_scale / ( d1 () / d2 () ) ;
+  return m_shift + s * m_betap.mean () ;  
+}
+// ============================================================================
+double Ostap::Math::FDistribution::mode () const 
+{
+  const double s = m_scale / ( d1 () / d2 () ) ;
+  return m_shift + s * m_betap.mode() ;
+}
+// ============================================================================
+double Ostap::Math::FDistribution::variance () const 
+{
+  const double s = m_scale / ( d1 () / d2 () ) ;
+  return s * s * m_betap.variance () ;  
+}
+// ===========================================================================
+double Ostap::Math::FDistribution::sigma () const 
+{
+  if ( m_betap.beta() <= 2 || s_equal ( m_betap.beta() , 2 ) ) { return -1.e+9 ; }  
+  return std::sqrt ( variance () ) ;
+}
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::FDistribution::integral () const { return 1 ; }  
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::FDistribution::integral
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
-// generalized Beta' 
+// Generalized Beta' 
 // ============================================================================
 /*  constructor with all parameters 
  *  @param alpha \f$\alpha\f$-parameter 
@@ -5056,8 +5171,6 @@ std::size_t Ostap::Math::FisherZ::tag () const
 }
 // ============================================================================
 
-
-
 // ============================================================================
 Ostap::Math::BirnbaumSaunders::BirnbaumSaunders
 ( const double mu    , // location 
@@ -5138,13 +5251,13 @@ double Ostap::Math::BirnbaumSaunders::evaluate ( const double x ) const
   if ( x <= m_mu ) { return 0 ; }
   //
   const double z2 = ( x - m_mu ) / m_beta ;
-  const double z  = std::sqrt ( z ) ;
+  const double z  = std::sqrt ( z2 ) ;
   const double zi = 1/z ;   
   //
   const double qq = Ostap::Math::gauss_pdf ( ( z - zi ) / m_gamma ) ;
   if ( s_zero ( qq )  )  { return 0 ; }
   //
-  return qq *  ( z + zi ) / ( 2 * m_gamma * x ) ;
+  return qq *  ( z + zi ) / ( 2 * m_gamma * ( x - m_mu ) ) ;
 }
 // ============================================================================
 // get integral 

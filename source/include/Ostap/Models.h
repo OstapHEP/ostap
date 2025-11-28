@@ -1125,7 +1125,7 @@ namespace Ostap
       /// evaluate beta'-distributions
       double pdf        ( const double x ) const ;
       /// evaluate beta'-distributions
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
@@ -1143,6 +1143,7 @@ namespace Ostap
       double sigma2     () const { return variance () ; }
       double sigma      () const ;
       double skewness   () const ;
+      double kurtosis   () const ;
       // ======================================================================
     public: // direct setters
       // ======================================================================
@@ -1176,6 +1177,93 @@ namespace Ostap
       /// auxillary intermediate parameter
       double m_aux { 1 } ;                  // auxillary intermediate parameter
       // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class FDistribution
+     *  Speficif re-parameterizaiton of Beta-prime distribution
+     *  @see https://en.wikipedia.org/wiki/F-distribution
+     *  http://en.wikipedia.org/wiki/Beta_prime_distribution
+     */
+    class FDistribution
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      /** constructor from all parameters 
+       *  @param d1  d1-parameter d1>0
+       *  @param d2  d2-parameter d2>0
+       *  @param scale  (additional) scale-parameter
+       *  @param shift  (additional) shift-parameter
+       */
+      FDistribution
+      ( const double d1    = 1 ,
+	const double d2    = 1 ,
+        const double scale = 1 ,
+        const double shift = 0 ) ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// evaluate F-distribution
+      double pdf        ( const double x ) const ;
+      /// evaluate F-distribution
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// get parameter d1 
+      inline double d1    () const { return 2 * m_betap.alpha () ; } 
+      /// get parameter d2 
+      inline double d2    () const { return 2 * m_betap.beta  () ; }
+      /// scale 
+      inline double scale () const { return m_scale ; }
+      /// shift 
+      inline double shift () const { return m_shift ; }
+      // ======================================================================
+    public: // general properties
+      // ======================================================================
+      double mean       () const ;
+      double mode       () const ;
+      double variance   () const ;
+      double dispersion () const { return variance () ; }
+      double sigma2     () const { return variance () ; }
+      double sigma      () const ;
+      // ======================================================================
+      inline double skewness   () const { return m_betap.skewness () ; } 
+      inline double kurtosis   () const { return m_betap.kurtosis () ; } 
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set parameter d1 
+      inline bool setD1    ( const double value ) { return m_betap.setAlpha ( 0.5 * value ) ; } 
+      /// set parameter d1 
+      inline bool setD2    ( const double value ) { return m_betap.setBeta  ( 0.5 * value ) ; }
+      /// global scale 
+      bool        setScale ( const double value ) ;
+      /// global shift 
+      bool        setShift ( const double value ) ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      double integral ()                    const ;
+      double cdf      ( const double x    ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// beta' distribution
+      Ostap::Math::BetaPrime m_betap { 1 , 1 } ;
+      /// global scale 
+      double                 m_scale { 1 } ;
+      /// global shift 
+      double                 m_shift { 0 } ;
+      // ======================================================================      
     } ;
     // ========================================================================
     /** @class GenBetaPrime

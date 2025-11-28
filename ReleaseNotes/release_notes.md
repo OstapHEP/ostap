@@ -2,12 +2,15 @@
 
  1. allow to define `amin` parameter (cut-off for alpha, top avoid vanishing of alpha-parameter) for `Ostap::Math::Needham` via
     constructor
-
-
+ 1. add `Ostap::Math::FDistribution`
+ 
 ## Backward  incompatible 
 
 ## Bug fixes
 
+ 1. fix `Ostap::Math::BirnbaumSaunders::evaluate`
+ 
+ 
 # v3.5.4.0 
 
   1. remove lmdb 

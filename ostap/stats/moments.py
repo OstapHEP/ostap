@@ -909,7 +909,7 @@ class Mode(Median) :
             args   = args  ) 
             ##  kwargs = kwargs ) ## NOT YET
         
-        return result.x
+        return float ( result.x ) 
     
     def __str__ ( self ) :
         return "Mode(%s,%s)" % ( self.xmin , self.xmax )
