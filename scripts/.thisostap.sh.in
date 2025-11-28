@@ -4,6 +4,12 @@
 # Helper script to  define the environment for ostap-@OSTAP_VERSION@ 
 # =====================================================================
 
+if [[ $PYTHONNOUSERSITE ]]
+then
+    echo 'thisostap.h: unset PYTHONNOUSERSITE' $PYTHONNOUSERSITE
+    unset PYTHONNOUSERSITE
+fi
+    
 function _path_prepend {
 cat<<EOF | python - $1 $2 
 import os,sys

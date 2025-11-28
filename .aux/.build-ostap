@@ -45,7 +45,7 @@ then
     true
 else 
     echo -e ${prefix1_error}' No valid ROOTSYS directory:' ${ROOTSYS}
-    return 200
+    return 210
 fi
 
 # ==========================================================================
@@ -69,7 +69,7 @@ else
     echo -e ${prefix1_error}' No valid source directory is found! '${OSTAP_SOURCE}
     ## 
     unset OSTAP_SOURCE OSTAP_BUILD OSTAP_INSTALL		
-    return 201
+    return 211
 fi
 
 # ==========================================================================
@@ -89,7 +89,7 @@ then
     echo -e ${prefix1_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
     ## 
     unset OSTAP_BUILD OSTAP_INSTALL		
-    return 203
+    return 212
 fi
 
 echo -e "${prefix1}"' Use OSTAP_INSTALL = '${OSTAP_INSTALL}
@@ -140,7 +140,7 @@ else
     echo -e ${prefix1_error}' No valid build directory is found! '${OSTAP_BUILD}
     ## 
     unset OSTAP_BUILD OSTAP_INSTALL		
-    return 204 
+    return 213 
 fi  
 
 if command -v python &> /dev/null 
@@ -149,7 +149,7 @@ then
     echo -e "${prefix1}"' PYTHON version    : '$(python --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix1_error}"'PYTHOH in not found!'
-   return 205 
+   return 214
 fi 
 
 if command -v cmake &> /dev/null 
@@ -158,7 +158,16 @@ then
     echo -e "${prefix1}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix1_error}"' CMAKE is not found!'
-   return 206 
+   return 215 
+fi
+
+if command -v ctest &> /dev/null 
+then
+    echo -e "${prefix1}"' CTEST             : '$(which ctest   )
+    echo -e "${prefix1}"' CTEST version     : '$(ctest --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+   echo -e "${prefix1_error}"' CTEST is not found!'
+   return 216 
 fi 
 
 make_command=
@@ -181,7 +190,7 @@ then
     echo -e "${prefix1}"' MAKE version      : '$(make --version | grep -Eo "[0-9]\.[0-9]+" )
 else         
     echo -e "${prefix1_error}"' neither NINJA nor (G)MAKE is found!'
-    return 207 
+    return 217 
 fi
 
 # ==========================================================================
@@ -332,7 +341,7 @@ else
     echo -e "${prefix1_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh
     ## 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return 211
+    return 218
 fi
 
 # =========================================================================

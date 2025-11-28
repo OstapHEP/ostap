@@ -224,15 +224,23 @@ else
    return 202 
 fi
 
+if command -v ctest &> /dev/null 
+then
+    echo -e "${prefix}"' CTEST             : '$(which ctest   )
+    echo -e "${prefix}"' CTEST version     : '$(ctest --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+   echo -e "${prefix_error}"' CTEST is not found!'
+   return 203 
+fi
+
 if command -v ninja &> /dev/null 
 then
     echo -e "${prefix}"' NINJA             : '$(which ninja   )
     echo -e "${prefix}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' NINJA is not found!'
-   return 203 
+   return 204 
 fi 
-
 
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
 then
@@ -263,13 +271,12 @@ elif [[     ${OSTAP_INSTALL} &&
        ! -w ${OSTAP_INSTALL} ]]
 then
     echo -e ${prefix_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
-    return 203
+    return 205
 else
     OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG${LCG_VERSION}/${PLATFORM}
     OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL})
     ## echo -e ${prefix}' Use OSTAP_INSTALL  = '${OSTAP_INSTALL}
 fi
-
 
 echo -e ${prefix}' LCG VERSION    : '${LCG}
 echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
