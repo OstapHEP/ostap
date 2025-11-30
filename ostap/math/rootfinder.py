@@ -1695,18 +1695,18 @@ findroot       = findroot_scipy
 
 
 ## a tiny wrapper for `scipy.optimize.brentq`
-def findroot_ostap_cpp ( fun                 ,     ## the function
-                         a                   ,     ## low-edge  of bracheting interval 
-                         b                   , * , ## high edge of bracketing interval
-                         args        = ()    ,     ## additional positioal arguments for function (&derivatives) call  
-                         kwargs      = {}    ,     ## additional keyword   arguments for function (&derivatives) call   
-                         maxiter     = 100   ,
-                         xtol        = _xtol ,
-                         rtol        = _rtol ,
-                         full_output = False ,
-                         disp        = True  , 
-                         deriv1      = None  , 
-                         deriv2      = None  , **other ) :
+def findroot_ostap2 ( fun                 ,     ## the function
+                      a                   ,     ## low-edge  of bracheting interval 
+                      b                   , * , ## high edge of bracketing interval
+                      args        = ()    ,     ## additional positioal arguments for function (&derivatives) call  
+                      kwargs      = {}    ,     ## additional keyword   arguments for function (&derivatives) call   
+                      maxiter     = 100   ,
+                      xtol        = _xtol ,
+                      rtol        = _rtol ,
+                      full_output = False ,
+                      disp        = True  , 
+                      deriv1      = None  , 
+                      deriv2      = None  , **other ) :
     
     if other : logger.warning ( "Extra arguments [%s] are ignored!" % ( ','.join ( k for k in other ) ) )
     
