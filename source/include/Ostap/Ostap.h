@@ -138,6 +138,7 @@
 #include "Ostap/Quantiles.h"
 #include "Ostap/Range.h"
 #include "Ostap/Rational.h"
+#include "Ostap/RootFinder.h"
 #include "Ostap/RooFitUtils.h"
 #include "Ostap/RooFun.h"
 #include "Ostap/RootID.h"

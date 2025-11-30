@@ -78,7 +78,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import num_types  
-from   ostap.math.base        import samesign, iszero, isequal, isfinite, signum    
+from   ostap.math.base        import samesign, iszero, isequal, isfinite, signum, Ostap     
 from   ostap.utils.basic      import counted
 from   ostap.stats.counters   import SE, EffCounter
 from   ostap.logger.pretty    import pretty_float, fmt_pretty_values 
@@ -1077,7 +1077,6 @@ class RootFinder(object) :
                 if has_args : fderiv2 = lambda x : deriv2 ( x , *self.args , **self.kwargs )
                 else        : fderiv2 = deriv2
      
-     
         self.__fun     = counted ( ffun    ) if self.__full_output             else ffun  
         self.__deriv1  = counted ( fderiv1 ) if self.__full_output and fderiv1 else fderiv1 
         self.__deriv2  = counted ( fderiv2 ) if self.__full_output and fderiv2 else fderiv2
@@ -1676,6 +1675,7 @@ def findroot_scipy ( fun                 ,     ## the function
     if kwargs : the_fun = lambda x, *a : fun  ( x , *a, **kwargs )
     else      : the_fun = fun
     
+    
     return scipy_brentq ( the_fun ,
                           a       ,
                           b       ,
@@ -1688,10 +1688,80 @@ def findroot_scipy ( fun                 ,     ## the function
 
 # =============================================================================
 findroot_brent = findroot_scipy
-findtoot_ostap = find_root 
+findroot_ostap = find_root 
 # =============================================================================
 ## as default, use scipy version 
 findroot       = findroot_scipy
+
+
+## a tiny wrapper for `scipy.optimize.brentq`
+def findroot_ostap_cpp ( fun                 ,     ## the function
+                         a                   ,     ## low-edge  of bracheting interval 
+                         b                   , * , ## high edge of bracketing interval
+                         args        = ()    ,     ## additional positioal arguments for function (&derivatives) call  
+                         kwargs      = {}    ,     ## additional keyword   arguments for function (&derivatives) call   
+                         maxiter     = 100   ,
+                         xtol        = _xtol ,
+                         rtol        = _rtol ,
+                         full_output = False ,
+                         disp        = True  , 
+                         deriv1      = None  , 
+                         deriv2      = None  , **other ) :
+    
+    if other : logger.warning ( "Extra arguments [%s] are ignored!" % ( ','.join ( k for k in other ) ) )
+    
+    
+    
+    
+    ## wrap keyword arguemnts 
+    if args or kwargs : the_fun = lambda x : fun  ( x , *args , **kwargs )
+    else              : the_fun = fun
+                        
+    ##  get c++ RootFinder 
+    rf = Ostap.Math.RootFinder ( maxiter , -1.0 , xtol , rtol )
+
+    af = float ( a ) 
+    bf = float ( b )
+     
+    import ctypes 
+    aa = ctypes.c_double ( min ( af , bf ) ) 
+    bb = ctypes.c_double ( max ( af , bf ) ) 
+    
+    ## use half sum as the first approximaiton to the root 
+    rr = ctypes.c_double ( 0.5  * ( af  + bf ) ) 
+    
+    if deriv1 and callable ( deriv1 ) :
+        
+        if args or kwargs : the_der1 = lambda x : deriv1 ( x , *args , ** kwargs )
+        else              : the_der1 = deriv1
+        
+        if deriv2 and callable ( deriv2 ) :
+            
+            if args or kwargs : the_der2 = lambda x : deriv2 ( x , *args , ** kwargs )
+            else              : the_der2 = deriv1  
+             
+            sc = rf.root ( the_fun  , the_der1 , the_der2 , rr , aa , bb )
+        else :
+            sc = rf.root ( the_fun , the_der1 , rr , aa , bb )
+    else : 
+        sc = rf.root ( the_fun , rr , aa , bb )
+
+    r = rr.value
+    a = aa.value 
+    b = bb.value 
+    
+    if not sc.isSuccess() :
+        message = 'RootFinder.root: Status code %s for %d fun-calls' % ( sc , rf.ncalls() ) 
+        if    disp : raise RuntimeError ( message )
+        else       : logger.warning     ( message ) 
+      
+    if not full_output : return r 
+    
+    return r , RootResults ( r ,
+                             iterations     = rf.ncalls ()  ,
+                             function_calls = rf.ncalls ()  ,
+                             bracket        = ( a , b )     ) 
+
 
 # =============================================================================
 ## solve equation \f$ f(x)=C \f$
