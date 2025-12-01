@@ -427,16 +427,16 @@ Ostap::Math::RootFinder::root
   // iterate while the maximum number of function calls is reached 
   do  
   {
-    /// (1) make a inngle (combined) step 
+    /// (1) make a single (combined) step 
     Ostap::StatusCode sc = step ( cfun , r , a , b , cder1 , cder2 ) ;  
     if ( sc.isFailure   () ) { return sc ; }
     //
     /// (2) root is found? 
-    if ( is_root ( r.fx () , m_froot ) )               { return Ostap::StatusCode::SUCCESS ; }
+    if ( is_root ( r , m_froot ) )                                 { return Ostap::StatusCode::SUCCESS ; }
 
     /// (3) delta  is very small 
     const double dx = std::abs ( r.x () - x ) ;
-    if ( 4 * dx <= std::max ( m_atolerance , m_rtolerance * dx ) ) { return Ostap::StatusCode::SUCCESS ; }
+    if ( 2 * dx <= std::max ( m_atolerance , m_rtolerance * dx ) ) { return Ostap::StatusCode::SUCCESS ; }
 
     /// (4) bracket is small enough  
     const double ab = std::abs ( b.x () - a.x () ) ;
@@ -446,7 +446,7 @@ Ostap::Math::RootFinder::root
   }
   while ( m_ncalls < m_maxcalls ) ; 
   // 
-  return Ostap::StatusCode::SUCCESS ;
+  return NumCallsLimit ;
 }
 // =============================================================================
 /*  find a root in [a,b]
@@ -559,7 +559,7 @@ Ostap::Math::RootFinder::step
       if ( is_root ( c , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
     }
   //
-  return NumCallsLimit ;
+  return Ostap::StatusCode::SUCCESS ;
 }
 // =============================================================================
 //                                                                      The END 

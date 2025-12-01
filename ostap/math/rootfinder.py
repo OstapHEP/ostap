@@ -653,6 +653,7 @@ def aitken_delta2 ( x0 , x1 , x2 , *others  ) :
     if not dd or iszero ( dd ) : return
     
     return ( x2 * x0 - x1 * x1 ) / dd 
+    ## return x0 - ( x1 - x0 ) * ( x1 - x0 ) / dd 
 
 # ========================================================================================
 ## A bit simpified version of single step of TOMS748
@@ -1221,6 +1222,7 @@ class RootFinder(object) :
         self.__iteration = 0
         self.__iteration = 0
 
+        zeroes = [ guess ]
         while self.__iteration <= self.__maxiter :
 
             self.__iteration += 1 
@@ -1244,8 +1246,8 @@ class RootFinder(object) :
                 return self.__result ( x.x , value = x.fx , bracket = ( a.x , b.x ) , flag = 3 )
             
             ## next guess: 
-            guess = x
-
+            guess = x 
+            
         message = 'RootFinder.solve: no convergency for %d iterations' % self.__iteration 
         if self.__disp : raise RuntimeError ( message )
         else           : logger.warning     ( message ) 
@@ -1349,7 +1351,7 @@ class RootFinder(object) :
                 
         # =====================================================================
         ## (5) Try TOMS748  method
-        if not updated or not a.x <= x.x <= b.x :
+        if True : ## not updated or not a.x <= x.x <= b.x :
             cur_len = b.x - a.x 
             xx , a , b = toms748 ( self.__fun , a , b , x )
             ok = not xx is None and a.x <= xx.x <= b.x
@@ -1387,7 +1389,7 @@ class RootFinder(object) :
 
         # =====================================================================
         ## (7) Try Muller's method
-        if 3 <= len ( self.__roots )  : ## and ( not updated or not a.x <= x.x <= b.x ) :
+        if False : ## 3 <= len ( self.__roots )  : ## and ( not updated or not a.x <= x.x <= b.x ) :
             xx = muller ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
             if self.__full_output : self.__counters [ 'muller' ] += ok
@@ -1426,7 +1428,7 @@ class RootFinder(object) :
 
         # =====================================================================
         ## (9)  check inverse cubic:        
-        if 4 <= len ( self.__roots ) :
+        if False : ## 4 <= len ( self.__roots ) :
             xx = inverse_cubic ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
             if self.__full_output : self.__counters [ 'inverse_cubic' ] += ok
@@ -1445,7 +1447,7 @@ class RootFinder(object) :
             
         # =====================================================================
         ## (10) Try Aitken-delta2 scheme if we have enough approximations
-        if 3 <= len ( self.__roots ) :
+        if False : ## 3 <= len ( self.__roots ) :
             xx = aitken_delta2 ( *self.__roots )
             ok = not xx is None and isfinite ( xx ) and a.x <= xx <= b.x
             ## accept Aitken only in case it really improves the root estimate 
@@ -1467,7 +1469,7 @@ class RootFinder(object) :
                     self.__shrinks [ 'aitken' ] += shrink 
 
         # =====================================================================        
-        ## (11) Force bisection as "ultima ratio regum"
+        ## (11) Force bisection as "the ultima ratio regum"
         new_len = b.x - a.x
         if not updated or not a.x <= x.x <= b.x or 3 * new_len > the_len :
             cur_len = b.x - a.x 
@@ -1476,8 +1478,8 @@ class RootFinder(object) :
             if self.__full_output : self.__counters [ 'bisection' ] += ok
             if ok : 
                 if not a.x <= x.x <= b.x :
-                    xx = 0.5 * ( a.x + b.x  )  
-                    x  = Point ( xx , self.__fun ( xx ) )
+                    x = secant ( a , b )  
+                    x = Point  ( x , self.__fun ( x ) )
                 ## 
                 if   0 == x.fx or iszero ( x.fx ) : return x , a , b ## RETURN
                 elif samesign ( a.fx , x.fx )     : a , b = x , b  
@@ -1710,9 +1712,6 @@ def findroot_ostap2 ( fun                 ,     ## the function
     
     if other : logger.warning ( "Extra arguments [%s] are ignored!" % ( ','.join ( k for k in other ) ) )
     
-    
-    
-    
     ## wrap keyword arguemnts 
     if args or kwargs : the_fun = lambda x : fun  ( x , *args , **kwargs )
     else              : the_fun = fun
@@ -1740,9 +1739,9 @@ def findroot_ostap2 ( fun                 ,     ## the function
             if args or kwargs : the_der2 = lambda x : deriv2 ( x , *args , ** kwargs )
             else              : the_der2 = deriv1  
              
-            sc = rf.root ( the_fun  , the_der1 , the_der2 , rr , aa , bb )
+            sc = rf.root ( the_fun  , rr , aa , bb , the_der1 , the_der2 )
         else :
-            sc = rf.root ( the_fun , the_der1 , rr , aa , bb )
+            sc = rf.root ( the_fun , rr , aa , bb , the_der1 )
     else : 
         sc = rf.root ( the_fun , rr , aa , bb )
 
