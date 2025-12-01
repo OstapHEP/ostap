@@ -10,6 +10,7 @@
 // Ostap
 // =============================================================================
 #include "Ostap/RootFinder.h"
+#include "Ostap/Math.h"
 // =============================================================================
 // Local
 // =============================================================================
@@ -56,7 +57,7 @@ namespace
   inline bool bracket 
   ( const Ostap::Math::RootFinder::Point& a , 
     const Ostap::Math::RootFinder::Point& b )
-  { return bracket ( a.fx () , b.fx () ) ; }
+  { return !s_equal ( a.x () , b.x () ) && bracket ( a.fx () , b.fx () ) ; }
   // ===========================================================================
   template <class FUNCTION, 
             class DERIVATIVE1,
@@ -73,7 +74,7 @@ namespace
     // newton step 
     const double d1 = deriv1  ( r.x() ) ;
     ++ncalls ;
-    if ( s_zero ( d1 ) ) { return false ; }
+    if ( s_zero ( d1 ) )  { return false ; }
     double rn = r.fx() / d1 ;
     // halley's correction
     if ( deriv2 ) 
@@ -88,8 +89,8 @@ namespace
       r = Ostap::Math::RootFinder::Point ( x , fun ( x ) ) ;
       ++ncalls ;
       //
-      if      ( bracket ( a.fx () , r.fx () ) ) { b = r ; }
-      else if ( bracket ( b.fx () , r.fx () ) ) { a = r ; }
+      if      ( bracket ( a , r ) ) { b = r ; }
+      else if ( bracket ( b , r ) ) { a = r ; }
       //
       return true ; 
     } 
@@ -127,17 +128,26 @@ namespace
     //
     r = Ostap::Math::RootFinder::Point ( x , fun ( x ) ) ; 
     ++ncalls ;
-    if ( is_root ( r , froot ) ) { return true ; } 
+    if ( is_root ( r , froot ) ) 
+    { 
+      if      ( bracket ( a , r ) ) { b = r ; }
+      else if ( bracket ( b , r ) ) { a = r ; }
+      return true ; 
+    } 
   }
 
   /// regular falsi step
   const double xc = secant ( a , b ) ;
   Ostap::Math::RootFinder::Point c ( xc , fun ( xc ) ) ;
-  if ( is_root ( c       , froot ) )    { r = c  ; return true ; } 
+  if ( is_root ( c       , froot ) || s_equal ( c.fx() , r.fx() ) )     
+  {  
+    r = c  ;
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return true ; 
+  } 
 
-  if ( s_equal ( c.fx () , r.fx () ) )  { r = c  ; return true ; }
-
-  Ostap::Math::RootFinder::Point  abar(0,0) , bbar(0,0) ;
+  Ostap::Math::RootFinder::Point  abar ( 0 , 0 ) , bbar ( 0 , 0 ) ;
   if      ( bracket ( a , c ) ) { abar = a ; bbar = c ; }
   else if ( bracket ( b , c ) ) { abar = c ; bbar = b ;  }   
 
@@ -156,7 +166,13 @@ namespace
 
   Ostap::Math::RootFinder::Point  cbar( cbx , fun ( cbx ) ) ;
   ++ncalls ;
-  if ( is_root ( cbar , froot ) )    { r = cbar  ; return true ; } 
+  if ( is_root ( cbar , froot ) )   
+  { 
+    r = cbar  ; 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return true ; 
+  } 
 
   if ( abar.x() <= cbar.x() && cbar.x() <= bbar.x() )
   {
@@ -239,36 +255,143 @@ namespace
  }
  // ==========================================================================
  template <class FUNCTION>
- inline bool toms748
- ( const FUNCTION&                 fun    , 
+ inline bool RBP
+ ( const FUNCTION& fun ,  
    Ostap::Math::RootFinder::Point& r      , 
    Ostap::Math::RootFinder::Point& a      , 
    Ostap::Math::RootFinder::Point& b      , 
    std::size_t&                    ncalls , 
    const double                    froot  ) 
+{
+  if ( a.x() <  r.x() && r.x () < b .x() )  {} 
+  else 
   {
-   // 
-   if ( r.x() < a.x() || b.x () < r.x() )
-   {
-     const  double x = secant  ( a , b ) ;
-     r = Ostap::Math::RootFinder::Point ( x  , fun ( x ) ) ;
-     ++ncalls ; 
-     if ( is_root ( r , froot ) ) { return true ; } 
-   }
-   // 
-   const double d = inverse_parabolic ( a  , b , r ) ;
-   if ( !std::isfinite ( d ) || d <= a.x() || b.x() <= d ) { return false ; }
+    const double x = secant  ( a , b ) ;
+    r = Ostap::Math::RootFinder::Point ( x  , fun ( x ) ) ;
+    ++ncalls ; 
+    if ( is_root ( r , froot ) ) 
+    {  
+      if      ( bracket ( a , r ) ) { b = r ; }
+      else if ( bracket ( b , r ) ) { a = r ; }
+      return true ; 
+    } 
+  }
+  //
+  const Ostap::Math::RootFinder::Point& c = r ; 
 
-   Ostap::Math::RootFinder::Point pd ( d , fun ( d ) ) ;
+  // paraboilc interpolation
+  const double ab = a.x () - b.x () ;
+  const double ac = a.x () - c.x () ;  
+  const double bc = b.x () - c.x () ; 
+
+  const double A  = ( ( a.fx () - c.fx () ) / ac      + ( c.fx () - b.fx () ) / bc      ) / ab ;
+  const double B  = ( ( c.fx () - a.fx () ) * bc / ac - ( c.fx () - b.fx () ) * ac / bc ) / ab ; 
+  const double C  = c.fx () ;
+  
+  const double D = B * B - 4 * A * C ;
+  if ( D < 0 ) 
+  { 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return false ; 
+  }
+
+  const double Q = B + Ostap::Math::signum ( B ) *  std::sqrt ( D ) ; 
+  
+  const double x1 = c.x () - 2 * C / Q ; 
+  if ( x1 <= a.x () ||  b.x() <= x1 )
+  {
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return false ; 
+  }
+
+  Ostap::Math::RootFinder::Point p ( x1 , fun ( x1 ) ) ;
+  ++ncalls ;
+  if ( is_root ( p , froot ) || s_equal ( c.x () , p.x () ) ) 
+  {
+    r  = p ; 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return true ; 
+  }
+  //
+  const Ostap::Math::RootFinder::Point* r1 = ( c.x () < p.x() ) ? &c : &p ;
+  const Ostap::Math::RootFinder::Point* r2 = ( c.x () < p.x() ) ? &p : &c ;
+  // 
+  if      ( bracket (  a  , *r1 ) ) { b = *r1 ; }
+  else if ( bracket ( *r1 , *r2 ) ) { a = *r1 ; b = *r2 ; }
+  else if ( bracket ( *r2 ,  b  ) ) { a = *r2 ; } 
+
+  const double x2 = secant ( a , b ) ;
+  r =  Ostap::Math::RootFinder::Point ( x2 , fun ( x2 ) ) ;
+  ++ncalls ;
+
+  if      ( bracket ( a , r ) ) { b = r ; }
+  else if ( bracket ( b , r ) ) { a = r ; }
+
+  return true ; 
+}
+// ==========================================================================
+template <class FUNCTION>
+inline bool toms748
+( const FUNCTION&                 fun    , 
+  Ostap::Math::RootFinder::Point& r      , 
+  Ostap::Math::RootFinder::Point& a      , 
+  Ostap::Math::RootFinder::Point& b      , 
+  std::size_t&                    ncalls , 
+  const double                    froot  ) 
+{
+  // 
+  if ( r.x() < a.x() || b.x () < r.x() )
+  {
+   const  double x = secant  ( a , b ) ;
+   r = Ostap::Math::RootFinder::Point ( x  , fun ( x ) ) ;
    ++ncalls ; 
-   if ( is_root ( pd , froot ) ) { r = pd ; return true ; } 
+   if ( is_root ( r , froot ) ) 
+   { 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return true ; 
+   } 
+  }
+  // 
+  const double d = inverse_parabolic ( a  , b , r ) ;
+  if ( !std::isfinite ( d ) || d <= a.x() || b.x() <= d ) 
+  { 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return false ; 
+  }
 
-   const double e = inverse_cubic ( a , b , r , pd ) ; 
-   if ( !std::isfinite ( e ) || e <= a.x() || b.x() <= e ) { return false ; }
+  Ostap::Math::RootFinder::Point pd ( d , fun ( d ) ) ;
+  ++ncalls ; 
+  if ( is_root ( pd , froot ) ) 
+  { 
+    r = pd ; 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return true ; 
+  } 
+
+  const double e = inverse_cubic ( a , b , r , pd ) ; 
+  if ( !std::isfinite ( e ) || e <= a.x() || b.x() <= e ) 
+  { 
+    if  ( std::abs ( pd.fx () ) < std::abs ( r.fx () ) ) { r = pd ; }
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return false ; 
+  }
 
    Ostap::Math::RootFinder::Point pe ( e , fun ( e ) ) ;
    ++ncalls ; 
-   if ( is_root ( pe , froot ) ) { r = pe ; return true ; } 
+   if ( is_root ( pe , froot ) ) 
+   {
+     r = pe ; 
+     if      ( bracket ( a , r ) ) { b = r ; }
+     else if ( bracket ( b , r ) ) { a = r ; }
+     return true ; 
+    } 
 
    std::array<Ostap::Math::RootFinder::Point,3> p { r , pe , pd } ;
    std::sort ( p.begin () , p.end () ) ;
@@ -278,9 +401,26 @@ namespace
    else if ( bracket ( p [ 1 ] , p [ 2 ] ) ) { a = p [ 1 ] ; b = p [ 2 ] ; }
    else if ( bracket ( p [ 2 ] , b       ) ) { a = p [ 2 ]               ; }
 
-   if      ( a.x () <= pe.x () && pe.x () <= b.x () ) { r = pe ; return true ; }
-   else if ( a.x () <= pd.x () && pd.x () <= b.x () ) { r = pd ; return true ; }
-   else if ( a.x () <= r .x () && r .x () <= b.x () ) {          return true ; }
+   if      ( a.x () <= pe.x () && pe.x () <= b.x () ) 
+   {
+     r = pe ; 
+     if      ( bracket ( a , r ) ) { b = r ; }
+     else if ( bracket ( b , r ) ) { a = r ; }
+     return true ; 
+   }
+   else if ( a.x () <= pd.x () && pd.x () <= b.x () ) 
+   { 
+    r = pd ; 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return true ; 
+   }
+   else if ( a.x () <= r .x () && r .x () <= b.x () ) 
+   { 
+    if      ( bracket ( a , r ) ) { b = r ; }
+    else if ( bracket ( b , r ) ) { a = r ; }
+    return true ; 
+   }
 
    const double x = secant ( a , b ) ;
    r = Ostap::Math::RootFinder::Point  ( x , fun ( x ) ) ;
@@ -505,24 +645,32 @@ Ostap::Math::RootFinder::step
   if ( derivative1 )
   {
     updated = newton_halley ( fun , derivative1 , derivative2 , r , a , b , m_ncalls ) ;
-    if ( updated && a.x () <= r.x () && r.x() <= b.x() && 
-         is_root ( r , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
+    if ( updated && a.x () <= r.x () && r.x() <= b.x() 
+         && is_root ( r , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
   }
   
   /// single step of SFTA method  
   if ( !updated )  
   {
     updated = SFTA ( fun , r , a , b , m_ncalls , m_froot ) ;  
-    if ( updated && a.x () <= r.x () && r.x() <= b.x() && 
-         is_root ( r , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
+    if ( updated && a.x () <= r.x () && r.x() <= b.x() 
+         && is_root ( r , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
   }
 
   /// use TOM748 
   if ( !updated )
   {
     updated = toms748 ( fun , r , a , b , m_ncalls , m_froot ) ;  
-    if ( updated && a.x () <= r.x () && r.x() <= b.x() && 
-         is_root ( r , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
+    if ( updated && a.x () <= r.x () && r.x() <= b.x() 
+         && is_root ( r , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
+  }
+
+  /// use RPD 
+  if ( !updated )
+  {
+    updated = RBP ( fun , r , a , b , m_ncalls , m_froot ) ;  
+    if ( updated && a.x () <= r.x () && r.x() <= b.x() 
+         && is_root ( r , m_froot ) ) {  return Ostap::StatusCode::SUCCESS ; }
   }
 
   /// use a bullet-proof secant method 

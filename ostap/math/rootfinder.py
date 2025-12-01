@@ -1548,7 +1548,7 @@ def find_root ( fun                 ,     ## the function
                 guess       = None  , 
                 args        = ()    ,     ## additional positioal arguments for function (&derivatives) call  
                 kwargs      = {}    ,     ## additional keyword   arguments for function (&derivatives) call   
-                maxiter     = 100   ,
+                maxiter     = 200   ,
                 xtol        = _xtol ,
                 rtol        = _rtol ,
                 full_output = False ,
@@ -1665,7 +1665,7 @@ def findroot_scipy ( fun                 ,     ## the function
                      b                   , * , ## high edge of bracketing interval
                      args        = ()    ,     ## additional positioal arguments for function (&derivatives) call  
                      kwargs      = {}    ,     ## additional keyword   arguments for function (&derivatives) call   
-                     maxiter     = 100   ,
+                     maxiter     = 200   ,
                      xtol        = _xtol ,
                      rtol        = _rtol ,
                      full_output = False ,
@@ -1702,7 +1702,7 @@ def findroot_ostap2 ( fun                 ,     ## the function
                       b                   , * , ## high edge of bracketing interval
                       args        = ()    ,     ## additional positioal arguments for function (&derivatives) call  
                       kwargs      = {}    ,     ## additional keyword   arguments for function (&derivatives) call   
-                      maxiter     = 100   ,
+                      maxiter     = 200   ,
                       xtol        = _xtol ,
                       rtol        = _rtol ,
                       full_output = False ,
