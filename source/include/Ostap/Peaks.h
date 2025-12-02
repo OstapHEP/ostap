@@ -1426,20 +1426,20 @@ namespace Ostap
       /** constructor from all parameters
        *  @param m0     m0       parameter
        *  @param sigma  sigma    parameter
-       *  @param c0     c0       parameter
-       *  @param c1     c1       parameter
-       *  @param c2     c2       parameter
+       *  @param c0     c0       parameter (should be between 1 and 4, a bit less than 3 ) 
+       *  @param c1     c1       parameter (should be close to `sigma`)
+       *  @param c2     c2       parameter (should be in excess of 2) 
+       *  @param n      n        parameter
        *  @param amin   amin     parameter
        */
       Needham
-      ( const double m0    = 3096.0 ,   // for J/psi
-        const double sigma =   13.5 ,
-        const double c0    =    2.5 ,
-        const double c1    =   13.5 ,   // similar to sigma 
-        const double c2    =   10   ,
-        const double n     =    0   ,   // note that it is different from internal N!
-	const double amin  =  0.01  ) ; // cut-off parameter for alpha
-      
+      ( const double m0    = 3096.0  ,   // for J/psi
+        const double sigma =   13.5  ,
+        const double c0    =    2.5  ,   // (should be between 1 and 4, a bit less than 3 ) 
+        const double c1    =   13.5  ,   // (should be sclose to `sigma`)
+        const double c2    =   10    ,   // (should be in excess of 2) 
+        const double n     =    0    ,   // note that it is different from internal N!
+	const double amin  =    0.01 ) ; // cut-off parameter for alpha      
       /// destructor
       ~Needham() ;
       // ======================================================================

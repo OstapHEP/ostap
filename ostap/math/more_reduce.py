@@ -473,7 +473,8 @@ def _ommatt_reduce_ ( peak ) :
                             peak.c0    () ,
                             peak.c1    () ,
                             peak.c2    () ,
-                            peak.n     () , peak.amin () ) 
+                            peak.n     () ,
+                            peak.amin  () ) 
 
 Ostap.Math.Needham  . __reduce__ = _ommatt_reduce_
 

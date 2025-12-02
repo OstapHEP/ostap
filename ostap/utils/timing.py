@@ -92,10 +92,10 @@ class Timer(object):
                     name   = ''                   ,
                     logger = ''                   ,
                     format = 'Timing %-18s %.3fs' ,
-                    start  = ''                   ) :
+                    start  = ''                   ) : 
         
         self.__name   = name
-        
+
         if   logger and isinstance ( logger , _logger_t ) :
             self.logger = logger.info
         elif logger and callable   ( logger ) :
@@ -107,20 +107,30 @@ class Timer(object):
 
         self.format        = format
         
-        if    start               : self.start_message = start
-        elif '' == start and name : self.start_message = 'Start  %s' % name
-        else                      : self.start_message = ''
-
-        self.__delta = -100000
+        if   start              : self.start_message = start
+        elif name and not start : self.start_message = 'Start  %s' % name
+        else                    : self.start_message = ''
         
+        self.__start = -100000
+        self.__stop  = -100000
+        self.__delta = -100000
+
+    # ==========================================================================
+    ## context manager: ENTER 
     def __enter__ ( self ) :
-        self.__start = _timer ()
-        self.__delta = 0 
+        """ Context manager: ENTER
+        """
         if self.logger and self.start_message :
             self.logger ( clock_symbol + self.start_message )
+        self.__delta = 0 
+        self.__start = _timer ()
         return self
     
+    # ==========================================================================
+    ## context manager: EXIT 
     def __exit__  ( self, *_ ) :
+        """ Context manager: EXIT
+        """        
         self.__stop  = _timer ()
         self.__delta = self.__stop - self.__start
         

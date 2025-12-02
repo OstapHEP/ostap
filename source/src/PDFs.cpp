@@ -1983,6 +1983,27 @@ double Ostap::Models::CrystalBallDS::maxVal  ( Int_t      code ) const
 // Needham
 // ============================================================================
 Ostap::Models::Needham::Needham
+( const char*          name  ,
+  const char*          title ,
+  RooAbsReal&          x     ,
+  RooAbsReal&          m0    ,
+  RooAbsReal&          sigma ,
+  const double         c0    ,
+  const double         c1    ,
+  const double         c2    ,
+  const double         n     ,
+  const double         amin  )
+  : Needham ( name , title ,
+              x  , m0 , sigma ,
+	      RooFit::RooConst ( c0 ) ,
+	      RooFit::RooConst ( c1 ) ,
+	      RooFit::RooConst ( c2 ) ,
+	      RooFit::RooConst ( n  ) , amin )
+{}
+// ============================================================================
+// Needham
+// ============================================================================
+Ostap::Models::Needham::Needham
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
@@ -1990,10 +2011,11 @@ Ostap::Models::Needham::Needham
   RooAbsReal&          sigma     ,    
   RooAbsReal&          c0        ,    
   RooAbsReal&          c1        ,    
-  RooAbsReal&          c2        )
+  RooAbsReal&          c2        , 
+  const double         amin      )
   : Needham ( name , title ,
               x  , m0 , sigma ,
-              c0 , c1 , c2 , RooFit::RooConst ( 0 ) )
+              c0 , c1 , c2 , RooFit::RooConst ( 0 ) , amin )
 {}
 // ============================================================================
 // Needham
@@ -2007,7 +2029,8 @@ Ostap::Models::Needham::Needham
   RooAbsReal&          c0        ,    
   RooAbsReal&          c1        ,    
   RooAbsReal&          c2        ,
-  RooAbsReal&          n         )
+  RooAbsReal&          n         ,
+  const double         amin      )
   : RooAbsPdf ( name , title )
     //
   , m_x       ( "!x"       , "Observable"                 , this , x      ) 
@@ -2020,7 +2043,13 @@ Ostap::Models::Needham::Needham
     //
   , m_n       ( "!n"       , "n-parameter"                , this , n     ) 
     //
-  , m_needham ( 100 , 1 , 1.9 , 0 , 0 ) 
+  , m_needham ( 100  ,
+		1    ,
+		2.0  ,
+		1.0  ,
+		10   ,
+		0    ,
+		amin ) 
 {
   //
   setPars () ;
@@ -2064,7 +2093,9 @@ void Ostap::Models::Needham::setPars () const
   //
   m_needham . setM0    ( m_m0     ) ;
   m_needham . setSigma ( m_sigma  ) ;
-  m_needham . setC     ( m_c0  , m_c1 , m_c2 ) ;
+  m_needham . setC     ( m_c0     ,
+			 m_c1     ,
+			 m_c2     ) ;
   m_needham . setN     ( m_n      ) ;
 }
 // ============================================================================
@@ -2097,7 +2128,7 @@ Double_t Ostap::Models::Needham::analyticalIntegral
                   INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars ();
-  return m_needham.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+  return m_needham.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
 Int_t  Ostap::Models::Needham::getMaxVal ( const RooArgSet& vars ) const 
@@ -2109,12 +2140,12 @@ Int_t  Ostap::Models::Needham::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::Needham::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                       ,
-                  "Invalid MaxVal code"           ,
+  Ostap::Assert ( 1 == code                 ,
+                  "Invalid MaxVal code"     ,
                   "Ostap::Models::Needham"  ,
-                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+                  INVALID_MAXVAL_CODE       , __FILE__ , __LINE__  ) ;
   setPars() ;
-  return 1.01 * m_needham ( m_needham.mode( ) ) ;
+  return 1.01 * m_needham ( m_needham.mode ( ) ) ;
 }
 // ============================================================================
 // get current alpha 

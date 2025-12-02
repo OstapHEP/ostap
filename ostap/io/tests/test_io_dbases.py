@@ -52,18 +52,29 @@ if python_info < ( 3 , 10 ) :
         # ====================================================================
     except ImportError: # ====================================================
         # ====================================================================
-        logger.warning ( 'bsddb3      is not accessible!' )
+        logger.warning ( 'bsddb3      is not accessible anymore!' )
         
 # ============================================================================
 try : # ======================================================================
     # ========================================================================
     from ostap.io.sqlitedict import SqliteDict
-    item = 'SqliteDict' , CleanUp.tempfile ( prefix = 'ostap-SqliteDB-' , suffix = '.sql') , SqliteDict
+    item = 'SqliteDict' , CleanUp.tempfile ( prefix = 'ostap-SQLite3DB-' , suffix = '.sql') , SqliteDict
     dbases.append ( item )
     # ========================================================================
 except ImportError: # ========================================================
     # ========================================================================
     logger.warning ( 'SQliteDict  is not accessible!' )
+
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================    
+    from dbm.sqlite3 import open as sqlite3_open
+    item = 'dbm.sqlite3' , CleanUp.tempfile ( prefix = 'ostap-SQLite3DB-' , suffix = '.db' ) , sqlite3_open
+    dbases.append ( item )
+    # =========================================================================
+except ImportError: # =========================================================
+    # =========================================================================
+    logger.warning ( 'dbm.sqlite3 is not accessible!' )
 
 # =============================================================================
 try : # =======================================================================
@@ -93,13 +104,30 @@ except ImportError: # =========================================================
 try : # =======================================================================
     # =========================================================================
     from dbm.dumb import open as dumb_open
-    ## def ndbm_open ( filename , flag = 'r' ) : return _ndbm_open ( filename , flag )        
     item = 'dbm.dumb' , CleanUp.tempfile ( prefix = 'ostap-DumbDB-' , suffix = '.db' ) , dumb_open
     dbases.append ( item )
     # =========================================================================
 except ImportError: # =========================================================
     # =========================================================================
     logger.warning ( 'dbm.dumb is not accessible!' )
+
+    
+h1 = ROOT.TH1D ( 'h1' , '' , 100 , 0, 1 )
+h2 = ROOT.TH2D ( 'h2' , '' , 100 , 0, 1 , 100 , 0 , 1 )
+h3 = ROOT.TH3D ( 'h3' , '' ,  20 , 0, 1 ,  20 , 0 , 1 , 20 , 0 , 1 )
+
+if not h1.GetSumw2() : h1.Sumw2()
+if not h2.GetSumw2() : h2.Sumw2()
+if not h3.GetSumw2() : h3.Sumw2()
+
+for i in range ( 1000 ) :
+    x = random.gauss ( 0.5 , 0.1 )
+    y = random.gauss ( 0.5 , 0.1 )
+    z = random.gauss ( 0.5 , 0.1 )
+    h1.Fill ( x         , random.uniform ( 0, 1 ) ) 
+    h2.Fill ( x , y     , random.uniform ( 0, 1 ) ) 
+    h3.Fill ( x , y , z , random.uniform ( 0, 1 ) ) 
+    
     
 data = {
     'string'  : 'string'         ,
@@ -108,23 +136,29 @@ data = {
     'list'    : [1,2,3]          ,
     'set'     : set ( [1,2,3] )  ,
     'tuple'   : ('a', 'b', 'c' ) ,
-    'histo'   : ROOT.TH1D ( 'h1' , '' , 100 , 0, 1 )
+    'histo'   : h1 , 
+    'histo2'  : h2 , 
+    'histo3'  : h3 , 
 }
 
+# =============================================================================
 if ( 3 , 0 ) <= sys.version_info : 
     def the_key ( key ) :  return key.encode ( 'utf-8' )
 else :
     def the_key ( key ) :  return key
 
-
 dbases.reverse() 
 
 hh = ROOT.TH1D ( 'histp' , 'title' , 500 , 0 , 10 )
-for i in range ( 1000 ) : hh.Fill ( random.gauss ( 5 , 1 ) ) 
+if not hh.GetSumw2() : hh.Sumw2()
+for i in range ( 1000 ) :
+    hh.Fill ( random.gauss ( 5 , 1 ) , random.uniform ( 0, 1 ) ) 
+    
 # =============================================================================
 ## test databases 
 def test_dbases () :
-    """ Test databases """
+    """ Test databases 
+    """
 
     times = [ ( 'DB' , 'write/read' , 'time [ms]' ) ]
     
@@ -132,8 +166,10 @@ def test_dbases () :
         
         tag, filename, dbase = item
 
-        with timing () as tm : 
-            db = dbase ( filename , flag = 'n'  )         
+        with timing () as tm :
+            
+            db = dbase ( filename , flag = 'n'  )
+            
             for datum in data :
                 
                 key   = the_key ( datum ) 
@@ -149,6 +185,7 @@ def test_dbases () :
                 db [ key ] = pickle.dumps ( vv ) 
                 
             if hasattr ( db , 'sync' ) : db.sync  ()
+            
             db.close ()
 
         row = tag , 'write' , '%.1f' % ( tm.delta * 1000 ) 
@@ -178,11 +215,11 @@ def test_dbases () :
         
     import ostap.logger.table as T
     
-    title = 'Test databases'
+    title = 'Test DBASE backends'
     table = T.table ( rows ,title = title , prefix = '# ' , alignment = 'llcc' ) 
     logger.info ( '%s:\n%s' % ( title , table ) ) 
 
-    title = 'Test CPUY'
+    title = 'Test CPU for DBASE backends'
     table = T.table ( times ,title = title , prefix = '# ' , alignment = 'lc' ) 
     logger.info ( '%s:\n%s' % ( title , table ) ) 
     

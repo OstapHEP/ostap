@@ -1272,25 +1272,39 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       Needham
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          m0        ,
-        RooAbsReal&          sigma     ,
-        RooAbsReal&          c0        ,
-        RooAbsReal&          c1        ,
-        RooAbsReal&          c2        , 
-        RooAbsReal&          n         ) ;
+      ( const char*          name        ,
+        const char*          title       ,
+        RooAbsReal&          x           ,
+        RooAbsReal&          m0          ,
+        RooAbsReal&          sigma       ,
+	const double         c0          ,
+	const double         c1          ,
+	const double         c2          ,
+	const double         n    = 0.00 ,
+	const double         amin = 0.01 ) ;
       /// constructor from all parameters
       Needham
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          m0        ,
-        RooAbsReal&          sigma     ,
-        RooAbsReal&          c0        ,
-        RooAbsReal&          c1        ,
-        RooAbsReal&          c2        ) ;
+      ( const char*          name        ,
+        const char*          title       ,
+        RooAbsReal&          x           ,
+        RooAbsReal&          m0          ,
+        RooAbsReal&          sigma       ,
+        RooAbsReal&          c0          ,
+        RooAbsReal&          c1          ,
+        RooAbsReal&          c2          , 
+        RooAbsReal&          n           ,
+	const double         amin = 0.01 ) ;
+      /// constructor from all parameters
+      Needham
+      ( const char*          name        ,
+        const char*          title       ,
+        RooAbsReal&          x           ,
+        RooAbsReal&          m0          ,
+        RooAbsReal&          sigma       ,
+        RooAbsReal&          c0          ,
+        RooAbsReal&          c1          ,
+        RooAbsReal&          c2          , 
+	const double         amin = 0.01 ) ;
       /// "copy" constructor
       Needham ( const Needham& right , const char* name = 0 ) ;
       /// virtual destructor
@@ -1337,13 +1351,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x      () const { return m_x      .arg() ; }
-      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
-      const RooAbsReal& sigma  () const { return m_sigma  .arg() ; }
-      const RooAbsReal& c0     () const { return m_c0     .arg() ; }
-      const RooAbsReal& c1     () const { return m_c1     .arg() ; }
-      const RooAbsReal& c2     () const { return m_c2     .arg() ; }
-      const RooAbsReal& n      () const { return m_n      .arg() ; }
+      const RooAbsReal& x      () const { return m_x      .arg  () ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg  () ; }
+      const RooAbsReal& sigma  () const { return m_sigma  .arg  () ; }
+      const RooAbsReal& c0     () const { return m_c0     .arg  () ; }
+      const RooAbsReal& c1     () const { return m_c1     .arg  () ; }
+      const RooAbsReal& c2     () const { return m_c2     .arg  () ; }
+      const RooAbsReal& n      () const { return m_n      .arg  () ; }
+      inline double     amin   () const { return m_needham.amin () ; }      
       // ======================================================================
     protected:
       // ======================================================================

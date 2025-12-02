@@ -300,15 +300,17 @@ class CompressShelf (shelve.Shelf,CUBase) :
             dct  [ 'Pickle protocol'             ] = protocol
             dct  [ 'Compress level'              ] = self.compresslevel
             dct  [ 'Compress type'               ] = self.compresstype 
-            dct  [ 'Underlying dbase type'       ] = self.dbtype 
+            dct  [ 'Underlying DBASE type'       ] = self.dbtype 
+            dct  [ 'Underlying DBASE dict'       ] = typename ( self.dict )  
             self [ '__metainfo__'                ] = dct
 
         if 'r' != self.mode and 'n' != self.mode :            
             dct  = self.get ( '__metainfo__' , ordered_dict () )
-            if self.protocol      != dct.get ( 'Pickle protocol'       , 0  ) : dct [ 'Pickle protocol'       ] = self.protocol            
-            if self.compresslevel != dct.get ( 'Compress level'        , 0  ) : dct [ 'Compress level'        ] = self.compresslevel
-            if self.compresstype  != dct.get ( 'Compress type'         , '' ) : dct [ 'Compress type'         ] = self.compresstype
-            if self.dbtype        != dct.get ( 'Underlying dbase type' , '' ) : dct [ 'Underlying dbase type' ] = self.dbtype
+            if self.protocol          != dct.get ( 'Pickle protocol'       , 0  ) : dct [ 'Pickle protocol'       ] = self.protocol            
+            if self.compresslevel     != dct.get ( 'Compress level'        , 0  ) : dct [ 'Compress level'        ] = self.compresslevel
+            if self.compresstype      != dct.get ( 'Compress type'         , '' ) : dct [ 'Compress type'         ] = self.compresstype
+            if self.dbtype            != dct.get ( 'Underlying DBASE type' , '' ) : dct [ 'Underlying DBASE type' ] = self.dbtype
+            if typename ( self.dict ) != dct.get ( 'Underlying DBASE dict' , '' ) : dct [ 'Underlying DBASE dict' ] = typename ( self.dict ) 
             self [ '__metainfo__' ] = dct
 
         if not self.silent :
@@ -506,13 +508,6 @@ class CompressShelf (shelve.Shelf,CUBase) :
             row = "META:%s" % k , '' , '' , str ( meta[k] )
             table.append ( row  ) 
                 
-        if hasattr ( self.dict , 'tables' ) :
-            tables = self.dict.tables()
-            if tables :
-                row = 'META:*Tables*' ,  '' , '' , '[' + ','.join ( t for t in tables ) + ']' 
-                table.append ( row )
-
-                
         for k in keys :
 
             ## skip it
@@ -627,8 +622,11 @@ class CompressShelf (shelve.Shelf,CUBase) :
             if self.compresstype  != dct.get ( 'Compress type'         , '' ) : 
                 dct  [ 'Compress type'               ] = self.compresstype
             ## 
-            if self.dbtype        != dct.get ( 'Underlying dbase type' , '' ) : 
-                dct  [ 'Underlying dbase type'       ] = self.dbtype
+            if self.dbtype        != dct.get ( 'Underlying DBASE type' , '' ) : 
+                dct  [ 'Underlying DBASE type'       ] = self.dbtype
+            ## 
+            if self.dbtype        != dct.get ( 'Underlying DBASE dict' , '' ) : 
+                dct  [ 'Underlying DBASE dict'       ] = typename ( self.dict ) 
             ## 
             self [ '__metainfo__'                ] = dct
 
@@ -790,6 +788,8 @@ class CompressShelf (shelve.Shelf,CUBase) :
         if self.zip :
             with zipfile.ZipFile ( output , 'w' , allowZip64 = True ) as zfile :
                 for f in sorted ( files ) :
+                    ## if not os.path.exists ( f ) and ( f.endswith ( '-wal' ) or f.endswith ( '-shm' ) ) : continue
+                    ## if not os.path.isfile ( f ) : continue 
                     _ , name = os.path.split ( f  )
                     if fdir : name = os.path.join ( fdir , name ) 
                     zfile.write ( f  , name  )        
@@ -803,6 +803,8 @@ class CompressShelf (shelve.Shelf,CUBase) :
             
             with tarfile.open ( output , self.taropts ) as tfile :
                 for f in sorted ( files ) :
+                    ## if not os.path.exists ( f ) and ( f.endswith ( '-wal' ) or f.endswith ( '-shm' ) ) : continue
+                    ## if not os.path.isfile ( f ) : continue                     
                     _ , name = os.path.split ( f )
                     if fdir : name = os.path.join ( fdir , name )                         
                     tfile.add ( f  , name  )

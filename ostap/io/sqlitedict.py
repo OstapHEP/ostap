@@ -31,8 +31,8 @@ __all__ = (
 # =============================================================================
 from   collections import UserDict      as     DictClass
 from   threading                        import Thread
-from   queue import Queue
-from   ostap.io.pickling                 import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
+from   queue                            import Queue
+from   ostap.io.pickling                import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
 import sys, os, io, sqlite3, traceback, logging 
 # =============================================================================# 
 from ostap.logger.logger import getLogger
@@ -138,8 +138,9 @@ class SqliteDict(DictClass):
                    flag         = 'c'      ,
                    tablename    = 'Dict'   ,
                    autocommit   = False    ,
-                   ## journal_mode = "DELETE" ,
-                   journal_mode = "OFF"    ,
+                   journal_mode = "DELETE" ,
+                   ## journal_mode = "WAL" ,
+                   ## journal_mode = "OFF" ,
                    timeout      = 30       ) :
         """ Initialize a thread-safe sqlite-backed dictionary. The dictionary will
         be a table `tablename` in database file `filename`. A single file (=database)
@@ -162,6 +163,7 @@ class SqliteDict(DictClass):
           'n': create a new database (erasing any existing tables, not just `tablename`!).
 
         """
+        ## ignore table name from argument 
         tablename = 'Dict'
         
         ## temporary DB ?
@@ -202,9 +204,8 @@ class SqliteDict(DictClass):
         self.timeout      = timeout 
 
         ## check it! 
-        with Connect ( self.filename , self.flag , timeout = self.timeout ) : pass  
-
-        logger.debug ( "opening Sqlite table %r in %s" % ( tablename , filename ) )
+        with Connect ( self.filename , self.flag , timeout = self.timeout ) :
+            logger.debug ( "opening Sqlite table %r in %s" % ( tablename , filename ) )
         
         MAKE_TABLE = 'CREATE TABLE IF NOT EXISTS "%s" (key TEXT PRIMARY KEY, value BLOB)' % self.tablename
         self.conn = self._new_conn()
@@ -226,7 +227,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## Context manager: ENTER 
     def __enter__(self):
-        """ Context manager:ENTER
+        """ Context manager: ENTER
         """
         if self.conn is None: self.conn = self._new_conn()
         return self
@@ -238,10 +239,12 @@ class SqliteDict(DictClass):
         """
         self.sync  ()  ## ADDED 
         self.close ()
-        
+
+    # =========================================================================
     def __str__(self):
         return "SqliteDict(%s)" % (self.filename)
-    
+
+    # =========================================================================
     def __repr__(self):
         return str(self)  # no need of something complex
 
@@ -269,7 +272,8 @@ class SqliteDict(DictClass):
     __nonzero__ = __bool__ 
     # =========================================================================
     def tables ( self ) :
-        """ Get list of tables in DBASE"""
+        """ Get list of tables in the database 
+        """
         GET_TABLES = "SELECT name FROM sqlite_master WHERE type='table';"
         tables = [] 
         for table in self.conn.select ( GET_TABLES ) :
@@ -279,7 +283,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## encode value: input -> dbase 
     def encode_value ( self , value ) : 
-        """ encode value: 
+        """ encode the value: 
         - input -> dbase 
         """
         return sqlite3.Binary ( value ) 
@@ -287,7 +291,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## decode value: dbase -> ouput (no-op) 
     def decode_value ( self , value ) :
-        """ decode value: (no-op) 
+        """ decode the value: (no-op) 
         - dbase -> output 
         """
         return value 
@@ -345,7 +349,7 @@ class SqliteDict(DictClass):
 
     # =========================================================================
     ## iterator over *key,value) pairs 
-    def items(self):
+    def items ( self ) :
         """ Iterator over (key,value) pairs 
         >>> db = ...
         >>> for k,v in db.items () : ... 
@@ -355,14 +359,14 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## The key in dbase? 
     def __contains__(self, key):
-        """ Is the key in the dbase? """
+        """ Is the key in the data base? """
         HAS_ITEM = 'SELECT 1 FROM "%s" WHERE key = ?' % self.tablename
         return self.conn.select_one ( HAS_ITEM , ( key , ) ) is not None
     
     # =========================================================================
     ## get value form DB 
     def get ( self , key , default = None ) :
-        """ Get value from dbase 
+        """ Get the value from the data base 
         >>> db = ...
         >>> value = db.get ( key , 42 ) 
         """
@@ -374,36 +378,34 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## get value from DB 
     def __getitem__ ( self , key ) :
-        """ Get value from dbase 
+        """ Get the value from the data base 
         >>> db = ...
         >>> value = db [ key ] 
-        """
+        """        
         GET_ITEM = 'SELECT value FROM "%s" WHERE key = ?' % self.tablename
         item = self.conn.select_one(GET_ITEM, (key,))
         if item is None: raise KeyError(key)        
         return self.decode_value  ( item [ 0 ] )
-
+                
     # =========================================================================
     ## write value to dbase
-    def __setitem__(self, key, value):
-        """ Write value to dbase 
+    def __setitem__ ( self , key , value ) :
+        """ Write the value to the data base 
         >>> db = ...
         >>> db [ key ] = value 
         """
-        if self.readonly :
-            raise RuntimeError ( 'Refusing to write to read-only SqliteDict' )
+        if self.readonly : raise RuntimeError ( 'Refusing to write to read-only SqliteDict' )
         ADD_ITEM = 'REPLACE INTO "%s" (key, value) VALUES (?,?)' % self.tablename        
         self.conn.execute(ADD_ITEM, ( key , self.encode_value ( value ) ) )
         
     # =========================================================================
     ## delete the element from dbase 
-    def __delitem__(self, key):
-        """ Delete the element fomr dbase 
+    def __delitem__ ( self , key ) :
+        """ Delete the element from the data base 
         >>> db = ...
         >>> del db [ key ] 
         """
-        if self.readonly :
-            raise RuntimeError ( 'Refusing to delete from read-only SqliteDict' )
+        if self.readonly : raise RuntimeError ( 'Refusing to delete from read-only SqliteDict' )
         if key not in self: raise KeyError ( key )        
         DEL_ITEM = 'DELETE FROM "%s" WHERE key = ?' % self.tablename
         self.conn.execute ( DEL_ITEM , ( key , ) )
@@ -411,13 +413,12 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## update many elements in a single go 
     def update ( self , items = () , **kwargs  ) :
-        """ Update many elements in a single go
+        """ Update many elements to  the database in a single go
         >>> db = ...
         >>> db.update ( ... ) 
         """
-        if self.readonly :
-            raise RuntimeError('Refusing to update read-only SqliteDict')
-        
+        if self.readonly : raise RuntimeError('Refusing to update read-only SqliteDict')
+        ## 
         if   hasattr ( items , 'items'     ) : items = items.items     ()
         elif hasattr ( items , 'iteritems' ) : items = items.iteritems ()
         ##
@@ -433,7 +434,7 @@ class SqliteDict(DictClass):
     # =========================================================================
     ## iterate over keys 
     def __iter__ ( self ) :
-        """ Iterat eover keys 
+        """ Iterate over keys 
         >>> db = ...
         >>> for key in db : ... 
         """
@@ -446,8 +447,7 @@ class SqliteDict(DictClass):
         >>> db = ....
         >>> db.clear() 
         """
-        if self.readonly :
-            raise RuntimeError('Refusing to clear read-only SqliteDict')
+        if self.readonly : raise RuntimeError('Refusing to clear read-only SqliteDict')
 
         CLEAR_ALL = 'DELETE FROM "%s";' % self.tablename  # avoid VACUUM, as it gives "OperationalError: database schema has changed"
         self.conn.commit ()
@@ -457,28 +457,25 @@ class SqliteDict(DictClass):
     @staticmethod
     def get_tablenames(filename):
         """ Get the names of the tables in an sqlite db as a list"""
-        if not os.path.isfile(filename):
-            raise IOError('file %s does not exist' % (filename))
-        GET_TABLENAMES = 'SELECT name FROM sqlite_master WHERE type="table"'
-        
+        if not os.path.isfile ( filename ) : raise IOError('file %s does not exist' % (filename))
+        GET_TABLENAMES = 'SELECT name FROM sqlite_master WHERE type="table"'        
         with Connect ( filename , 'r' , timeout = self.timeout ) as conn:
             cursor = conn.execute ( GET_TABLENAMES )
             res    = cursor.fetchall()
-
         return [ name [ 0 ] for name in res ]
 
     # =========================================================================
     ## persissts all data on dist 
     def commit ( self , blocking = True ):
-        """ Persist all data to disk.
-        
+        """ Persist all data to disk.        
         When `blocking` is False, the commit command is queued, but the data is
         not guaranteed persisted (default implication when autocommit=True).
         """
-        if self.conn is not None: self.conn.commit ( blocking )
+        if self.conn is not None :
+            self.conn.commit ( blocking )
 
     # =========================================================================
-    ## persissts all data on dist 
+    ## persists all data on disk 
     sync = commit
 
     # =========================================================================
@@ -517,8 +514,7 @@ class SqliteDict(DictClass):
         """ Close session and Delete the underlying database file
         - Use with care.
         """
-        if self.readonly :
-            raise RuntimeError('Refusing to terminate read-only SqliteDict')
+        if self.readonly : raise RuntimeError('Refusing to terminate read-only SqliteDict')
         
         self.close()
 
@@ -578,7 +574,6 @@ class SqliteMultithread(Thread):
         self.exception = None
         self.log       = logging.getLogger('sqlitedict.SqliteMultithread')
         self.start()
-
 
     # =========================================================================
     def run ( self ) :
@@ -720,6 +715,7 @@ class SqliteMultithread(Thread):
                 break
             yield rec
 
+    # =========================================================================
     def select_one(self, req, arg=None):
         """ Return only the first row of the SELECT, or None if there are no matching rows."""
         try:
@@ -727,6 +723,7 @@ class SqliteMultithread(Thread):
         except StopIteration:
             return None
 
+    # =========================================================================
     def commit(self, blocking=True):
         if blocking:
             # by default, we await completion of commit() unless
@@ -738,6 +735,7 @@ class SqliteMultithread(Thread):
             # otherwise, we fire and forget as usual.
             self.execute('--commit--')
 
+    # =============================================================================
     def close(self, force=False):
         if force:
             # If a SqliteDict is being killed or garbage-collected, then select_one()
@@ -753,7 +751,75 @@ class SqliteMultithread(Thread):
             self.select_one('--close--')
             self.join()
 
-                        
+# =================================================================================
+if ( 3 , 13 ) <= sys.version_info :
+    # =============================================================================
+    dbm_sqlite3 = None 
+    try : # =======================================================================
+        # =========================================================================
+        import sqlite3 
+        import dbm.sqlite3 as dbm_sqlite3
+        from   dbm.sqlite3 import suppress, BUILD_TABLE, Path, _ERR_REINIT, _normalize_uri 
+
+        ## swith the journal mode from 'WAL' to 'DELETE'
+
+        def _new_db_init_ ( self, path, /, *, flag, mode):
+
+            if hasattr (self ,  "_cx"): raise error( _ERR_REINIT )
+
+            path = os.fsdecode(path)
+            match flag:
+                case "r":
+                    flag = "ro"
+                case "w":
+                    flag = "rw"
+                case "c":
+                    flag = "rwc"
+                    Path(path).touch(mode=mode, exist_ok=True)
+                case "n":
+                    flag = "rwc"
+                    Path(path).unlink(missing_ok=True)
+                    Path(path).touch(mode=mode)
+                case _:
+                    raise ValueError("Flag must be one of 'r', 'w', 'c', or 'n', "
+                                     f"not {flag!r}")
+
+            # We use the URI format when opening the database.
+            uri = _normalize_uri(path)
+            uri = f"{uri}?mode={flag}"
+            if flag == "ro":
+                # Add immutable=1 to allow read-only SQLite access even if wal/shm missing
+                uri += "&immutable=1"
+
+            try:
+                self._cx = sqlite3.connect(uri, autocommit=True, uri=True)
+            except sqlite3.Error as exc:
+                raise error(str(exc))
+
+            if flag != "ro":
+                # This is an optimization only; it's ok if it fails.
+                with suppress(sqlite3.OperationalError):
+                    ## self._cx.execute("PRAGMA journal_mode = wal")
+                    self._cx.execute("PRAGMA journal_mode = DELETE")
+
+                if flag == "rwc":
+                    self._execute(BUILD_TABLE)
+
+        ## redefine __init__ method
+        dbm_sqlite3._Database.__init__ = _new_db_init_
+        
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
+        pass
+
+
 # =============================================================================
-#                                                                       The END 
+if '__main__' == __name__ :
+
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+    
+# =============================================================================
+##                                                                      The END 
 # =============================================================================

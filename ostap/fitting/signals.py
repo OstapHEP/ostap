@@ -15,7 +15,7 @@
 #  @date 2011-07-25
 # 
 # =============================================================================
-"""Set of useful PDFs for various 'signal' 1D and 2D fits
+""" Set of useful PDFs for various 'signal' 1D, 2D&3D fits
 
 It includes
 
@@ -466,15 +466,16 @@ class Needham_pdf(Gauss_pdf,TailN) :
     quarkonia production in dimuon final states
     """
     
-    def __init__ ( self                ,
-                   name                ,
-                   xvar                ,
-                   mean     = 3.096    , ## 
-                   sigma    = 0.013    , ##  
-                   c0       = 2.5      , ## 
-                   c1       = None     , ## should be close to sigma  (inverse with respect to original Matt's code)
-                   c2       = 10.0     ,
-                   n        = ROOT.RooFit.RooConst ( 0 ) ) : 
+    def __init__ ( self                                  ,
+                   name                                  ,
+                   xvar                                  ,
+                   mean     = 3.096                      ,  ## 
+                   sigma    = 0.013                      ,  ##  
+                   c0       = 2.5                        ,  ## should be between 1 and 4, ideally - a bit less than 3
+                   c1       = None                       ,  ## should be close to sigma  (inverse with respect to original Matt's code)
+                   c2       = 10.0                       ,  ## should be well above 2 
+                   n        = ROOT.RooFit.RooConst ( 0 ) ,
+                   amin     = 0.01                       ) : ## should be between 0 and 1, ideally just above zero 
         
         ## initialize the base class 
         Gauss_pdf.__init__ ( self          ,
@@ -483,8 +484,11 @@ class Needham_pdf(Gauss_pdf,TailN) :
                              mean  =  mean ,
                              sigma = sigma ) 
         ## 
-        TailN . __init__   ( self , n = ZERO if n is None else n  )
+        TailN . __init__  ( self , n = ZERO if n is None else n  )
 
+        assert isinstance ( amin , num_types ) and 0 < amin < 1.0 , \
+            "Invalid `amin' %s " % amin 
+        
         ## c0 variable 
         self.__c0 = self.make_var ( c0                  ,
                                     "c0_%s"     % name  ,
@@ -532,14 +536,15 @@ class Needham_pdf(Gauss_pdf,TailN) :
         
         ## save the configuration
         self.config = {
-            'name'   : self.name  ,
-            'xvar'   : self.xvar  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma ,
-            'c0'     : self.c0    ,
-            'c1'     : self.c1    ,
-            'c2'     : self.c2    ,
-            'n'      : self.n     ,
+            'name'   : self.name        ,
+            'xvar'   : self.xvar        ,
+            'mean'   : self.mean        ,
+            'sigma'  : self.sigma       ,
+            'c0'     : self.c0          ,
+            'c1'     : self.c1          ,
+            'c2'     : self.c2          ,
+            'n'      : self.n           ,
+            'amin'   : self.pdf.amin () ,  
         }
         
     @property
@@ -553,7 +558,7 @@ class Needham_pdf(Gauss_pdf,TailN) :
     @property
     def c1 ( self ) :
         """'c1'-parameter for Needham function, 
-        Attention: the parameter is *INVERSE* with respect to original Matt's code!
+        Attention: the parameter is *INVERSE* with respect to the original Matt's code!
         """
         return self.__c1
     @c1.setter
@@ -567,7 +572,25 @@ class Needham_pdf(Gauss_pdf,TailN) :
     @c2.setter
     def c2 ( self, value ) :
         self.set_value ( self.__c2 , value )
-        
+
+    @property
+    def alpha ( self ) :
+        """`alpha` : the actual value of alpha-parametter  (same as `a`) 
+        """
+        return self.pdf.alpha()
+    
+    @property
+    def a ( self ) :
+        """`a` : the actual value of a-parameter, same as `alpha` 
+        """
+        return self.alpha
+    
+    @property
+    def amin ( self ) :
+        """`amin` : minimal value/cut-off/soft recoil for `a` : a = hypot ( a_min , a ) 
+        """
+        return self.pdf.amin()
+    
 models.append ( Needham_pdf )    
 # =============================================================================
 ## @class Apollonios_pdf

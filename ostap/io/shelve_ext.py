@@ -44,7 +44,7 @@ _old_shelve_open_ = shelve.open
 #
 # ========================================================
 ## A bit extended version of shelve.open
-def _new_shelve_open_ ( filename , *kargs , **kwargs ) :
+def _new_shelve_open_ ( filename , *args , **kwargs ) :
     """ A bit extended version of shelve.open:
     
     >>> db1 = open ('$HOME/a.db')
@@ -58,14 +58,14 @@ def _new_shelve_open_ ( filename , *kargs , **kwargs ) :
     filename = os.path.expandvars ( filename )
     filename = os.path.abspath    ( filename )
     #
-    return _old_shelve_open_ ( filename , *kargs , **kwargs ) 
+    return _old_shelve_open_ ( filename , *args , **kwargs ) 
 
 _new_shelve_open_ .__doc__ += '\n' + _old_shelve_open_ .__doc__ 
 
 # =============================================================================
 ## List DB-keys 
 def _ls_ ( self )  :
-    """List DB-keys :
+    """ List DB-keys :
     
     >>> db = ...
     >>> db.ls() 

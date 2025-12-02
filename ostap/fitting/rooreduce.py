@@ -1369,7 +1369,8 @@ Ostap.Models.PseudoVoigt.__reduce__ = _rvoigt_reduce_
 # =============================================================================
 ## reduce CrystalBall
 def _rcb_reduce_ ( pdf ):
-    """ Reduce CristalBall"""
+    """ Reduce CristalBall
+    """
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1385,7 +1386,8 @@ Ostap.Models.CrystalBallRS .__reduce__ = _rcb_reduce_
 # =============================================================================
 ## reduce CrystalBallDS
 def _rcb2_reduce_ ( pdf ):
-    """ Reduce CristalBallDS"""
+    """ Reduce CristalBallDS
+    """
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1402,7 +1404,8 @@ Ostap.Models.CrystalBallDS .__reduce__ = _rcb2_reduce_
 # =============================================================================
 ## reduce Needham
 def _rneedham_reduce_ ( pdf ):
-    """ Reduce Needham"""
+    """ Reduce Needham
+    """
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -1412,7 +1415,8 @@ def _rneedham_reduce_ ( pdf ):
                                   pdf.c0     () ,
                                   pdf.c1     () ,
                                   pdf.c2     () , 
-                                  pdf.n      () )
+                                  pdf.n      () ,
+                                  pdf.amin   () )
 
 Ostap.Models.Needham .__reduce__ = _rneedham_reduce_ 
 

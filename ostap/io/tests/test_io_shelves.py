@@ -33,7 +33,7 @@ import ostap.io.zipshelve    as     zipshelve
 import ostap.io.bz2shelve    as     bz2shelve
 import ostap.io.rootshelve   as     rootshelve
 import ostap.logger.table    as     T 
-import ROOT, os, random
+import ROOT, os, sys, random
 # =============================================================================
 # logging 
 # =============================================================================
@@ -154,21 +154,22 @@ def test_shelves1():
     # ===================================================================================
     
     backends  = [
-        'berkleydb' ,
-        'berkley'   ,
-        'bsddb3'    ,
+        'berkeleydb',
+        'berkeley'  ,
+        'dbhash'    , 
         'sqlite'    ,
         'sqlite3'   ,
         'dbm.gnu'   ,
         'dbm.ndbm'  ,
         'dbm.dumb'  ,
-        'dbhash'    ,
-        'dbm'       ,        
-        'gdbm'      ,        
-        'dumbdbm'   ,
-        'std'       ,
-    ]
-
+        'std'       ]
+    
+    if sys.version_info < ( 3 , 10 ) :  backends.append ( 'bsddb3' )
+    if sys.version_info < ( 3 ,  0 ) :
+        backends.add ( 'dbm'     )
+        backends.add ( 'gdbm'    )
+        backends.add ( 'dumbdbm' )
+    
     clones = {}
     
     with zipshelve .open ( names [ 'db_zip'  ] , 'r' ) as original : 
@@ -217,17 +218,23 @@ def test_shelves2 () :
 
     backends  = [
         'berkeleydb' , 'berkeley' , 'berkeley-db' , 
-        'bsddb3'     ,
         'sqlite3'    , 'sqlite'   , 'sql' , 
         #
-        'dbm.gnu'   , 'gdbm'     ,
-        'dbm.ndbm'  , 'dbm'      ,
-        'dbm.dumb'  , 'dumbdbm'  ,
+        'dbm.gnu'   , 
+        'dbm.ndbm'  , 
+        'dbm.dumb'  , 
         'dbhash'    ,        
-        'standard'  , 'std' , 
+        'standard'  ,
+        'std'       , 
         #
         ''          , None  ,         
     ]
+
+    if sys.version_info < ( 3 , 10 ) :  backends.append ( 'bsddb3' )
+    if sys.version_info < ( 3 ,  0 ) :
+        backends.add ( 'dbm'     )
+        backends.add ( 'gdbm'    )
+        backends.add ( 'dumddbm' )
     
     for sh in shelves :        
         for b in backends :            

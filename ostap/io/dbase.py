@@ -25,11 +25,18 @@ __all__ = (
     )
 # =============================================================================
 import sys, os, collections
+import ostap.io.shelve_ext
 from   ostap.logger.logger  import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dbase' )
 else                      : logger = getLogger ( __name__         )
 # =============================================================================
-from ostap.io.sqlitedict import SqliteDict, issqlite3
+try : # =======================================================================
+    import sqlite3 
+    from ostap.io.sqlitedict import SqliteDict, issqlite3
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    SqliteDict, issqlite3 = None , None 
 # =============================================================================
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
@@ -54,8 +61,6 @@ try : # =======================================================================
 except ImportError :
     # =========================================================================
     db_dbm = None
-# =============================================================================
-db_hash = None
 # =============================================================================
 import dbm.dumb as db_dumb
 # =============================================================================
@@ -130,7 +135,7 @@ if sys.version_info < ( 3 , 10 ) :
         use_bsddb3  = False 
 
 # =============================================================================
-if (3,13) <= sys.version_info : # =============================================
+if ( 3 , 13 ) <= sys.version_info : # =========================================
     # =========================================================================
     try : # ===================================================================
         import dbm.sqlite3
@@ -176,7 +181,7 @@ def whichdb ( filename  ) :
     - Actually it is a bit extended  form of `dbm.whichdb`
     that accounts for `bsddb3` and `sqlite3`
     """
-    
+
     ## use the standard function 
     tst = std_whichdb ( filename  )
 
@@ -225,14 +230,17 @@ def whichdb ( filename  ) :
         # =====================================================================
         return ""
 
+    # =========================================================================
     # Check for GNU dbm
     if magic in (0x13579ace, 0x13579acd, 0x13579acf):
         return "dbm.gnu"
 
+    # =========================================================================
     # Check for old Berkeley db hash file format v2
     if magic in ( 0x00061561 , 0x61150600 ):
         return "bsddb185"
-
+    
+    # =========================================================================
     # Later versions of Berkeley db hash file have a 12-byte pad in
     # front of the file type
     # =========================================================================
@@ -244,6 +252,7 @@ def whichdb ( filename  ) :
         # =====================================================================
         return ""
 
+    # =========================================================================
     # Check for BSD hash
     if magic in ( 0x00061561 , 0x61150600 ):
         return "berkeleydb" if use_berkeleydb else "bsddb3"
@@ -309,24 +318,21 @@ def dbopen ( file               ,
         ## check the preferred database type:
         for db in db_types :
                         
-            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , ''    ) :  ## NB!!
+            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash'   , '' ) :  ## NB!!
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
-            elif use_sqlite3    and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite' , 'sql3' , 'sql' , '' ) : ## NB 
+            elif SqliteDict     and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' , '' ) : ## NB!!
+                return SqliteDict      ( filename = file , flag = flag , **kwargs )                        
+            elif use_sqlite3    and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' , '' ) : ## NB
                 if kwargs : logger.warning ( message ) 
                 return sqlite3_open ( file , flag , mode )
-            elif                    db in ( 'sqlite3'     , 'sqlite'  , 'sql3' , 'sql' , ''  ) : ## NB!! 
-                return SqliteDict      ( filename = file , flag = flag , **kwargs )                        
-            elif use_bsddb3     and 'bsddb3'     == db :
+            elif use_bsddb3     and db in ( 'bsddb3' , 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash' ) : 
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
-            elif db_gnu  and db in ( 'dbm.gnu'  , ) :
+            elif db_gnu  and db in ( 'dbm.gnu'  , 'gdbm' , 'gnu' , 'dbm' ) :
                 if kwargs : logger.warning ( message ) 
                 return db_gnu.open ( file , flag , mode )
-            elif db_dbm  and db in ( 'dbm.ndbm' , ) :
+            elif db_dbm  and db in ( 'dbm.ndbm' , 'ndbm' ) :
                 if kwargs : logger.warning ( message  ) 
                 return db_dbm.open ( file , flag , mode )
-            elif db_hash and db in ( 'dbhash' , ) :
-                if kwargs : logger.warning ( message ) 
-                return db_hash.open ( file , flag , mode )
             elif db in ( 'dbm.dumb' , 'dumbdbm' , 'dumb' ) :
                 if kwargs : logger.warning ( message ) 
                 return db_dumb.open ( file , flag , mode )
@@ -334,18 +340,18 @@ def dbopen ( file               ,
                 if kwargs : logger.warning ( message )                 
                 return std_db.open ( file , flag , mode )
 
-        if db_types :
-            logger.warning  ( 'DB-type hints not used: [%s]' %  (  ','.join ( db for fn in db_types ) ) ) 
-        
-        if concurrent and use_berkeleydb :
-            return berkeleydb_open ( file , flag , mode , **kwargs ) 
+        if db_types : logger.warning  ( 'DB-type hints not used: [%s]' %  (  ','.join ( db for fn in db_types ) ) ) 
 
-        if concurrent and use_bsddb3     :
-            return bsddb3_open     ( file , flag , mode , **kwargs ) 
-
+        ## require the concurrent database 
         if concurrent :
-            return SqliteDict      ( filename = file , flag = flag , **kwargs )
-
+            if   use_berkeleydb : return berkeleydb_open ( file            , flag , mode , **kwargs ) 
+            elif use_bsddb3     : return bsddb3_open     ( file            , flag , mode , **kwargs ) 
+            elif SqliteDict     : return SqliteDict      ( filename = file , flag = flag , **kwargs )
+            elif use_sqlite3    :
+                if kwargs : logger.warning ( message ) 
+                return sqlite3_open ( file , flag , mode )
+            logger.warning ( "No concurrent dbase backend is available" )
+            
         if kwargs : logger.warning ( message ) 
         return std_db.open ( file , flag , mode ) 
 
@@ -355,10 +361,13 @@ def dbopen ( file               ,
     if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
-    if check in ( 'sqlite3' , 'sqlite' ) :
+    if SqliteDict     and check in ( 'sqlite3' , 'sqlite' ) :
         return SqliteDict ( filename = file , flag = flag , **kwargs )
 
     if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+
+    ## dbm.sqlite3 
+    if use_sqlite3 : return sqlite3_open ( file , flag , mode )
 
     ## as a lasty resort - use the standard stuff 
     return std_db.open ( file , flag , mode )  
@@ -399,7 +408,7 @@ def dbfiles ( dbtype , basename ) :
     elif dbtype in ( 'dbm.dumb'    , ) : 
         return '%s.dat' % basename , '%s.dir' % basename , 
     elif dbtype in ( 'dbm.sqlite3' , ) : 
-        return basename , ## '%s-wal' % basename , ## '%s-shm' % basename , 
+        return basename , ## '%s-wal' % basename , '%s-shm' % basename , 
     else :
         return basename ,
 
@@ -464,13 +473,13 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     logger.info  ('Available DB-backends are:' )
-    if use_berkeleydb : logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb ) ) 
-    if use_bsddb3     : logger.info ( ' - BSDDB3     : %s' % str ( bsddb3     ) ) 
-    if db_gnu         : logger.info ( ' - GNU dbase  : %s' % str ( db_gnu     ) ) 
-    if db_dbm         : logger.info ( ' - NDBM       : %s' % str ( db_dbm     ) ) 
-    if db_dumb        : logger.info ( ' - DUMB       : %s' % str ( db_dumb    ) ) 
-    if db_hash        : logger.info ( ' - DBHASH     : %s' % str ( db_hash    ) ) 
-        
+    if use_berkeleydb : logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb  ) ) 
+    if use_bsddb3     : logger.info ( ' - BSDDB3     : %s' % str ( bsddb3      ) ) 
+    if db_gnu         : logger.info ( ' - GNU dbase  : %s' % str ( db_gnu      ) ) 
+    if db_dbm         : logger.info ( ' - NDBM       : %s' % str ( db_dbm      ) ) 
+    if db_dumb        : logger.info ( ' - DUMB       : %s' % str ( db_dumb     ) ) 
+    if use_sqlite3    : logger.info ( ' - SQLITE3    : %s' % str ( dbm.sqlite3 ) ) 
+    logger.info ( ' - SQLITEDICT : %s' % str ( ostap.io.sqlitedict ) ) 
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

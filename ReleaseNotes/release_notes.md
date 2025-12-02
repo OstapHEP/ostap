@@ -3,8 +3,14 @@
  1. allow to define `amin` parameter (cut-off for alpha, top avoid vanishing of alpha-parameter) for `Ostap::Math::Needham` via
     constructor
  1. add `Ostap::Math::FDistribution`
- 
+ 1. some tweaks for  databases & shelves
+ 1. switch the journal mode in sqlite-dbases to `REMOVE` (rollback), It is slightly less efficient, but better for our purposes.
+ 1. some tweaks for Needham&Co : consistently propagate the value of `amin` from python to C++ and vice versa  
+
 ## Backward  incompatible 
+
+  1. remove `sql3shelve`
+  
 
 ## Bug fixes
 
@@ -12,6 +18,8 @@
  
  
 # v3.5.4.0 
+
+## Backward  incompatible
 
   1. remove lmdb 
 
