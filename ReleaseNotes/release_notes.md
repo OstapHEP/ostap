@@ -6,12 +6,13 @@
  1. some tweaks for  databases & shelves
  1. switch the journal mode in sqlite-dbases to `REMOVE` (rollback), It is slightly less efficient, but better for our purposes.
  1. some tweaks for Needham&Co : consistently propagate the value of `amin` from python to C++ and vice versa  
+ 1. `sqlitedict.py`   replace `match/case` with `if/elif`.
 
 ## Backward  incompatible 
 
   1. remove `sql3shelve`
+  1. rename `SqliteDict` to `SQLiteDict`
   
-
 ## Bug fixes
 
  1. fix `Ostap::Math::BirnbaumSaunders::evaluate`

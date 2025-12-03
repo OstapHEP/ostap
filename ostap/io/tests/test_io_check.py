@@ -42,7 +42,7 @@ def test_io_check() :
             row = attention ( 'BSDDB3' ) , attention ( '---' )   , attention ( '---' ) 
         rows.append ( row )
 
-    row = 'SqliteDict' , ostap.io.sqlitedict.__name__ , ostap.io.sqlitedict.__file__ 
+    row = 'SQLiteDict' , ostap.io.sqlitedict.__name__ , ostap.io.sqlitedict.__file__ 
     rows.append ( row )
     
     if DB.db_gnu : 

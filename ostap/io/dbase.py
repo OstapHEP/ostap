@@ -32,11 +32,11 @@ else                      : logger = getLogger ( __name__         )
 # =============================================================================
 try : # =======================================================================
     import sqlite3 
-    from ostap.io.sqlitedict import SqliteDict, issqlite3
+    from ostap.io.sqlitedict import SQLiteDict, issqlite3
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    SqliteDict, issqlite3 = None , None 
+    SQLiteDict, issqlite3 = None , None 
 # =============================================================================
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
@@ -320,8 +320,8 @@ def dbopen ( file               ,
                         
             if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash'   , '' ) :  ## NB!!
                 return berkeleydb_open ( file            , flag , mode , **kwargs ) 
-            elif SqliteDict     and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' , '' ) : ## NB!!
-                return SqliteDict      ( filename = file , flag = flag , **kwargs )                        
+            elif SQLiteDict     and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' , '' ) : ## NB!!
+                return SQLiteDict      ( filename = file , flag = flag , **kwargs )                        
             elif use_sqlite3    and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' , '' ) : ## NB
                 if kwargs : logger.warning ( message ) 
                 return sqlite3_open ( file , flag , mode )
@@ -346,7 +346,7 @@ def dbopen ( file               ,
         if concurrent :
             if   use_berkeleydb : return berkeleydb_open ( file            , flag , mode , **kwargs ) 
             elif use_bsddb3     : return bsddb3_open     ( file            , flag , mode , **kwargs ) 
-            elif SqliteDict     : return SqliteDict      ( filename = file , flag = flag , **kwargs )
+            elif SQLiteDict     : return SQLiteDict      ( filename = file , flag = flag , **kwargs )
             elif use_sqlite3    :
                 if kwargs : logger.warning ( message ) 
                 return sqlite3_open ( file , flag , mode )
@@ -361,8 +361,8 @@ def dbopen ( file               ,
     if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
-    if SqliteDict     and check in ( 'sqlite3' , 'sqlite' ) :
-        return SqliteDict ( filename = file , flag = flag , **kwargs )
+    if SQLiteDict     and check in ( 'sqlite3' , 'sqlite' ) :
+        return SQLiteDict ( filename = file , flag = flag , **kwargs )
 
     if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
 

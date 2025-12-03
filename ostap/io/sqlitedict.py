@@ -9,10 +9,11 @@
 # This code was inspired by:
 #  * http://code.activestate.com/recipes/576638-draft-for-an-sqlite3-based-dbm/
 #  * http://code.activestate.com/recipes/526618/
+# ============================================================================
 """ A lightweight wrapper around Python's sqlite3 database, with a dict-like interface
 and multi-thread access support::
 
->>> mydict = SqliteDict('some.db', autocommit=True) # the mapping will be persisted to file `some.db`
+>>> mydict = SQLiteDict('some.db', autocommit=True) # the mapping will be persisted to file `some.db`
 >>> mydict['some_key'] = any_picklable_object
 >>> print mydict['some_key']
 >>> print len(mydict) # etc... all dict functions work
@@ -25,7 +26,7 @@ don't forget to call `mydict.commit()` when done with a transaction.
 """
 # =============================================================================
 __all__ = (
-    'SqliteDict' , ## sqlite3-persistent dictionary
+    'SQLiteDict' , ## sqlite3-persistent dictionary
     'issqlite3'  , ## is it a  sqlite3 file?
     )
 # =============================================================================
@@ -122,12 +123,12 @@ class Connect ( object ) :
         return self.__connect
     
 # =============================================================================
-## @class SqliteDict
-#  A downgraded version of the original `SqliteDict`  (no pickling!)
+## @class SQLiteDict
+#  A downgraded version of the original `SqliteDict` (no pickling!)
 #  - Keys are strings or bytes
 #  - Values are bytes 
-class SqliteDict(DictClass):
-    """ A downgraded version of the original SqliteDict  (no pickling!)
+class SQLiteDict(DictClass):
+    """ A downgraded version of the original SqliteDict (no pickling!)
       - Keys are strings or bytes
       - Values are bytes 
     """
@@ -174,7 +175,7 @@ class SqliteDict(DictClass):
 
         ## valid flag ? 
         self.flag = flag
-        if self.flag not in SqliteDict.VALID_FLAGS:
+        if self.flag not in SQLiteDict.VALID_FLAGS:
             raise RuntimeError ( "Unrecognized flag: %s" % flag )
         
         ## read-only DB ? 
@@ -218,7 +219,7 @@ class SqliteDict(DictClass):
     #  ========================================================================
     ## make new connection 
     def _new_conn ( self ) :
-        return SqliteMultithread ( self.filename                    ,
+        return SQLiteMultithread ( self.filename                    ,
                                    self.flag                        ,
                                    autocommit   = self.autocommit   ,
                                    journal_mode = self.journal_mode ,
@@ -242,7 +243,7 @@ class SqliteDict(DictClass):
 
     # =========================================================================
     def __str__(self):
-        return "SqliteDict(%s)" % (self.filename)
+        return "SQLiteDict(%s)" % (self.filename)
 
     # =========================================================================
     def __repr__(self):
@@ -394,7 +395,7 @@ class SqliteDict(DictClass):
         >>> db = ...
         >>> db [ key ] = value 
         """
-        if self.readonly : raise RuntimeError ( 'Refusing to write to read-only SqliteDict' )
+        if self.readonly : raise RuntimeError ( 'Refusing to write to read-only SQLiteDict' )
         ADD_ITEM = 'REPLACE INTO "%s" (key, value) VALUES (?,?)' % self.tablename        
         self.conn.execute(ADD_ITEM, ( key , self.encode_value ( value ) ) )
         
@@ -405,7 +406,7 @@ class SqliteDict(DictClass):
         >>> db = ...
         >>> del db [ key ] 
         """
-        if self.readonly : raise RuntimeError ( 'Refusing to delete from read-only SqliteDict' )
+        if self.readonly : raise RuntimeError ( 'Refusing to delete from read-only SQLiteDict' )
         if key not in self: raise KeyError ( key )        
         DEL_ITEM = 'DELETE FROM "%s" WHERE key = ?' % self.tablename
         self.conn.execute ( DEL_ITEM , ( key , ) )
@@ -417,7 +418,7 @@ class SqliteDict(DictClass):
         >>> db = ...
         >>> db.update ( ... ) 
         """
-        if self.readonly : raise RuntimeError('Refusing to update read-only SqliteDict')
+        if self.readonly : raise RuntimeError('Refusing to update read-only SQLiteDict')
         ## 
         if   hasattr ( items , 'items'     ) : items = items.items     ()
         elif hasattr ( items , 'iteritems' ) : items = items.iteritems ()
@@ -447,7 +448,7 @@ class SqliteDict(DictClass):
         >>> db = ....
         >>> db.clear() 
         """
-        if self.readonly : raise RuntimeError('Refusing to clear read-only SqliteDict')
+        if self.readonly : raise RuntimeError('Refusing to clear read-only SQLiteDict')
 
         CLEAR_ALL = 'DELETE FROM "%s";' % self.tablename  # avoid VACUUM, as it gives "OperationalError: database schema has changed"
         self.conn.commit ()
@@ -514,7 +515,7 @@ class SqliteDict(DictClass):
         """ Close session and Delete the underlying database file
         - Use with care.
         """
-        if self.readonly : raise RuntimeError('Refusing to terminate read-only SqliteDict')
+        if self.readonly : raise RuntimeError('Refusing to terminate read-only SQLiteDict')
         
         self.close()
 
@@ -536,15 +537,14 @@ class SqliteDict(DictClass):
         try:
             self.close ( do_log = False ,  force = True )
         except Exception:
-            # prevent error log flood in case of multiple SqliteDicts
+            # prevent error log flood in case of multiple SQLiteDicts
             # closed after connection lost (exceptions are always ignored
             # in __del__ method.
             pass
         
-
 # =============================================================================
-# @class SqliteMultithread
-class SqliteMultithread(Thread):
+# @class SQLiteMultithread
+class SQLiteMultithread(Thread):
     """ Wrap sqlite connection in a way that allows concurrent requests from multiple threads.
 
     This is done by internally queueing the requests and processing them sequentially
@@ -558,7 +558,7 @@ class SqliteMultithread(Thread):
                    journal_mode ,
                    timeout = 5  ) :
         
-        super ( SqliteMultithread , self) .__init__()
+        super ( SQLiteMultithread , self) .__init__()
         self.filename     = filename
         self.flag         = flag 
         self.autocommit   = autocommit
@@ -572,7 +572,7 @@ class SqliteMultithread(Thread):
         self.daemon    = True
         
         self.exception = None
-        self.log       = logging.getLogger('sqlitedict.SqliteMultithread')
+        self.log       = logging.getLogger('sqlitedict.SQLiteMultithread')
         self.start()
 
     # =========================================================================
@@ -768,21 +768,19 @@ if ( 3 , 13 ) <= sys.version_info :
             if hasattr (self ,  "_cx"): raise error( _ERR_REINIT )
 
             path = os.fsdecode(path)
-            match flag:
-                case "r":
-                    flag = "ro"
-                case "w":
-                    flag = "rw"
-                case "c":
-                    flag = "rwc"
-                    Path(path).touch(mode=mode, exist_ok=True)
-                case "n":
-                    flag = "rwc"
-                    Path(path).unlink(missing_ok=True)
-                    Path(path).touch(mode=mode)
-                case _:
-                    raise ValueError("Flag must be one of 'r', 'w', 'c', or 'n', "
-                                     f"not {flag!r}")
+            
+            if   flag == 'r' : flag = "ro"
+            elif flag == 'w' : flag = "rw"
+            elif flag == 'c' :
+                flag = "rwc"
+                Path(path).touch(mode=mode, exist_ok=True)
+            elif flag == 'n' :
+                flag = "rwc"
+                Path(path).unlink(missing_ok=True)
+                Path(path).touch(mode=mode)
+            else :
+                raise ValueError("Flag must be one of 'r', 'w', 'c', or 'n', "
+                                 f"not {flag!r}")
 
             # We use the URI format when opening the database.
             uri = _normalize_uri(path)

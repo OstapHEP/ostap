@@ -57,8 +57,8 @@ if python_info < ( 3 , 10 ) :
 # ============================================================================
 try : # ======================================================================
     # ========================================================================
-    from ostap.io.sqlitedict import SqliteDict
-    item = 'SqliteDict' , CleanUp.tempfile ( prefix = 'ostap-SQLite3DB-' , suffix = '.sql') , SqliteDict
+    from ostap.io.sqlitedict import SQLiteDict
+    item = 'SQLiteDict' , CleanUp.tempfile ( prefix = 'ostap-SQLite3Dict-' , suffix = '.sql') , SQLiteDict
     dbases.append ( item )
     # ========================================================================
 except ImportError: # ========================================================
