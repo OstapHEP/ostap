@@ -134,7 +134,7 @@ Ostap::Math::Quantile::Quantile
   , m_counter {}  
 {
   Ostap::Assert ( Classic  == s || Adaptive == s          ,
-                  "Invalid Initialization steategy"       ,  
+                  "Invalid Initialization strategy"       ,  
                   "Ostap::Math::Quantile"                 ,
                   INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //		  
@@ -255,7 +255,7 @@ double Ostap::Math::Quantile::quantile () const
   // regular case 
   if ( 5 < m_N ) { return m_q [ 2 ] ; }  
   //
-  /// if there are not enogth entry, use the explicit quantile  estimator
+  /// if there are not enougth entry, use the explicit quantile  estimator
   const Ostap::Math::HarrellDavis hd {} ;
   return hd ( m_q.begin() , m_q.begin() + m_N , m_p ) ; 
 }
@@ -273,9 +273,6 @@ std::array<double,3> Ostap::Math::Quantile::quantiles () const
 // ============================================================================
 // Constructor from vector of probabiliies 
 // ============================================================================
-#include <iostream>
-#include "Ostap/ToStream.h"
-
 Ostap::Math::Quantiles::Quantiles
 ( const std::vector<double>& p )
   : m_p  (   )
@@ -308,9 +305,6 @@ Ostap::Math::Quantiles::Quantiles
   m_ns . resize ( MC , 0.0 ) ;
   m_n  . resize ( MC , 0   ) ;
   //
-  std::cerr << " PROBS " ;
-  Ostap::Utils::toStream ( m_p , std::cerr) << std::endl ;
-           
 }
 // ============================================================================
 // from quantile index 
@@ -340,8 +334,6 @@ Ostap::Math::Quantiles::Quantiles
   m_ns . resize ( MC , 0.0 ) ;
   m_n  . resize ( MC , 0   ) ;
   // ===========================================================================
-  std::cerr << " PROBS: " ;
-  Ostap::Utils::toStream ( m_p , std::cerr) << std::endl ;
 }
 // =============================================================================
 // reset quantile 
@@ -391,7 +383,6 @@ Ostap::Math::Quantiles::add
       return *this ;
       // ==============================================================
     }
-
   // ==================================================================
   const auto ik = std::upper_bound ( m_q.begin() , m_q.end() , value ) ;
   

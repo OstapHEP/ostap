@@ -1371,7 +1371,7 @@ def data_kurtosis ( data               ,
 ## get the (approximate) quantiles for the data using P2-algorithm
 #  @code
 #  data =  ...
-#  print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
+#  print ( data_quantiles ( data , 3 , 'mass' , 'pt>1' ) ) 
 #  @endcode
 #
 #  @see https://aakinshin.net/posts/p2-quantile-estimator-intro/
@@ -1391,7 +1391,7 @@ def  data_quantiles ( data               ,
     """ Get the (approximate) quantiles for the data using P2-algorithm 
     >>> data =  ...
     >>> data =  ...
-    >>> print data_quantiles t ( data , 3 , 'mass' , 'pt>1' ) 
+    >>> print ( data_quantiles ( data , 3 , 'mass' , 'pt>1' ) ) 
     - see https://aakinshin.net/posts/p2-quantile-estimator-intro/
     - see https://aakinshin.net/posts/p2-quantile-estimator-adjusting-order/
     - see https://aakinshin.net/posts/p2-quantile-estimator-initialization/

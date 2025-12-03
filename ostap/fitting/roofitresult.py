@@ -275,9 +275,8 @@ def _rfr_results_( self , *vars ) :
     if not vars :
         return None
     
-
     elif 1 == len ( vars ) :
-        return self.param ( vars [0]) [0] 
+        return self.param ( vars [ 0 ] ) [ 0 ] 
         
     args = ROOT.RooArgList ()
     for v in vars :
