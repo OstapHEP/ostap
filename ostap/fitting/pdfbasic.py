@@ -123,7 +123,7 @@ def all_args ( *args ) :
 
 # =============================================================================
 ## @class Components
-#  Helper base class that keeps the major fit-pdf components\
+#  Helper base class that keeps the major fit-pdf components
 #
 #  - signals
 #  - backgrounds 
@@ -269,7 +269,7 @@ class Components ( object ) :
     ## List/tuple of structural components from `self.alist1` 
     @abc.abstractmethod
     def cmp_alist ( self ) :
-        """ Generator os structural components from `self.alist` 
+        """ Generator of structural components from `self.alist` 
         """
         pass 
 
@@ -282,7 +282,7 @@ class Components ( object ) :
         return self.cmp_alist()
 
     # ======================================================================
-    ## add few roes into the table 
+    ## add few rows into the table 
     def tab_rows ( self , dataset = None ) :
         """ Add few rows into the table 
         """
@@ -305,8 +305,68 @@ class Components ( object ) :
                 row = '   ' + n , typename ( c ) , what 
                 rows.append ( row )
                 
-        return rows 
-            
+        return rows
+    
+    # =========================================================================
+    ## Get all parameters from all signal components
+    #  @code
+    #  data  = ...
+    #  model = ...    
+    #  signal_pars = model.signal_parameters ( data  )
+    #  @endcode 
+    def signal_parameters ( self , dataset = None ) :
+        """ Get all parameters from all signal components
+
+        >>> data  = ...
+        >>> model = ...    
+        >>> signal_pars = model.signal_parameters ( data  )
+        """        
+        sigpars = ROOT.RooArgSet()
+        
+        if dataset is None or not dataset :
+            dataset = self.vars if hasattr ( self , 'vars' ) else ROOT.nullptr             
+
+        assert dataset is ROOT.nullptr or \
+            ( isinstance ( dataset , ( ROOT.RooAbsData , ROOT.RooArgSet ) ) and dataset ) ,\
+            "Invalid dataset/varset: %s" % typename ( dataset )
+        
+        for s in self.signals :
+            pars = s.getParameters ( dataset )
+            for p in pars :
+                if not p in sigpars  : sigpars.add ( p ) 
+
+        return sigpars 
+
+    # =========================================================================
+    ## Get all parameters from all background components
+    #  @code
+    #  data  = ...
+    #  model = ...    
+    #  bkg_pars = model.background_parameters ( data  )
+    #  @endcode 
+    def background_parameters ( self , dataset = None ) :
+        """ Get all parameters from all signal components
+
+        >>> data  = ...
+        >>> model = ...    
+        >>> bkg_pars = model.background_parameters ( data  )
+        """        
+        bkgpars = ROOT.RooArgSet()
+        
+        if dataset is None or not dataset :
+            dataset = self.vars if hasattr ( self , 'vars' ) else ROOT.nullptr             
+
+        assert dataset is ROOT.nullptr or \
+            ( isinstance ( dataset , ( ROOT.RooAbsData , ROOT.RooArgSet ) ) and dataset ) ,\
+            "Invalid dataset :%s" % typename ( dataset )
+        
+        for s in self.backgrounds :
+            pars = s.getParameters ( dataset )
+            for p in pars :
+                if not p in bkgpars  : bkgpars.add ( p ) 
+
+        return bkgpars 
+    
 # =============================================================================
 ## @class APDF1
 #  The helper MIXIN class for implementation of various PDF-wrappers

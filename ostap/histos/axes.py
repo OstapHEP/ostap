@@ -440,13 +440,21 @@ def _axis_join_ ( axis , *bins ) :
     nbins = axis.GetNbins ()
     
     ## nothing to be merged/joined 
-    if 1 >= nbins : return axis 
+    if 1 >= nbins : return axis
+    
+    ## number of histogram edges 
+    ne = nbins + 1
 
-    assert all ( isinstance ( e , integer_types ) and 1 <= e and e + 1 < nbins for e in bins ) , \
-        "Invalid `bins': [%s]" %  ( ','.join ( str ( b ) for b in bins ) ) 
+    assert all ( isinstance ( e , integer_types ) for e in bins if 1 <= nbins + e and e + 1 <= nbins ) , \
+        "Invalid `bins': [%s]" %  ( ','.join ( str ( b ) for b in bins ) )
 
-    ## aliminate duplicates, sort and reverse 
-    bins  = list ( reversed ( sorted ( set ( b for b in bins ) ) ) )
+    ## valid positive values 
+    bins2  = tuple (         e for e in bins if 1 <= e and e + 1 <= nbins  )
+    ## valid negative values 
+    bins2 += tuple ( nbins + e for e in bins if 1 <= nbins + e and e <= -1 )
+    
+    ## eliminate duplicates, sort and reverse 
+    bins  = list ( reversed ( sorted ( set ( b for b in bins2 ) ) ) )
 
     ## initial list of edges 
     edges = list ( e for e in axis.edges () )
