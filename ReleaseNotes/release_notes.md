@@ -7,7 +7,7 @@
  1. switch the journal mode in sqlite-dbases to `REMOVE` (rollback), It is slightly less efficient, but better for our purposes.
  1. some tweaks for Needham&Co : consistently propagate the value of `amin` from python to C++ and vice versa  
  1. `sqlitedict.py`   replace `match/case` with `if/elif`.
- 1.  add dedicated methons `Components.signal_parameters` and `Components.background_parameters` for easy access to corresponisg parameters 
+ 1.  add dedicated methods `Components.signal_parameters` and `Components.background_parameters` for easy access to corresponisg parameters 
  
 ## Backward  incompatible 
 
@@ -18,7 +18,7 @@
 
  1. fix `Ostap::Math::BirnbaumSaunders::evaluate`
  1. fix the bug in `TAxis.join` method 
- 
+
 # v3.5.4.0 
 
 ## Backward  incompatible
