@@ -86,7 +86,7 @@ then
     true 
 else
     echo -e ${prefix_error}' Valid LCGs are:' `ls /cvmfs/sft.cern.ch/lcg/views`
-    return 110  
+    return 110
 fi
 
 if [[ ${PLATFORM} && -d /cvmfs/sft.cern.ch/lcg/views/${LCG}/${PLATFORM} ]]
@@ -94,7 +94,7 @@ then
     true
 else
     echo -e ${prefix_error}' Valid platforms are:' `ls /cvmfs/sft.cern.ch/lcg/views/$LCG`
-    return 120
+    return 111
 fi
 
 LCG_VIEWS=/cvmfs/sft.cern.ch/lcg/views
@@ -110,10 +110,8 @@ then
     source ${LCG_SETUP}
 else
     echo -e ${prefix_error}' No valid LCG/PLATFORM/setup script: ' ${LCG_SETUP}
-    return 130 
+    return 112 
 fi
-
-
 
 ##  check ROOTSYS 
 if [[    ${ROOTSYS}                 &&
@@ -126,7 +124,7 @@ then
     true
 else 
     echo -e ${prefix_error}' No valid ROOTSYS directory ' ${ROOTSYS}
-    return 140
+    return 113
 fi
 
 OSTAP_SOURCE=${3:-${OSTAP_SOURCE}}
@@ -134,8 +132,10 @@ OSTAP_SOURCE=${3:-${OSTAP_SOURCE}}
 source_found=
 for source_dir in ${OSTAP_SOURCE:-${OSTAP_HOME}} \
 		  ${OSTAP_HOME:-${PWD}}          \
+		  ${HOME}/ostap                  \
 		  ${PWD}                         \
-		  ../                      
+		  ../                            \
+		  ./                      
 do
     ## echo 'source_dir' ${source_dir} 
     ## valid structure of the source directory:
@@ -166,7 +166,7 @@ then
     echo -e ${prefix}' Use OSTAP_SOURCE   = '${OSTAP_SOURCE}
 else
     echo -e ${prefix_error}' No ostap source drectory found!'
-    return 150 
+    return 114 
 fi
     
 ## parameter #4: build directory
@@ -210,7 +210,7 @@ then
     OSTAP_BUILD=$(realpath ${OSTAP_BUILD})
 else
     echo -e ${prefix_error}' No valid build directory is found! '${OSTAP_BUILD}
-    return 201
+    return 115
 fi     
 
 ## check CMAKE & NINJA
@@ -221,7 +221,7 @@ then
     echo -e "${prefix}"' CMAKE version     : '$(cmake --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' CMAKE is not found!'
-   return 202 
+   return 116
 fi
 
 if command -v ctest &> /dev/null 
@@ -230,7 +230,16 @@ then
     echo -e "${prefix}"' CTEST version     : '$(ctest --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' CTEST is not found!'
-   return 203 
+   return 117 
+fi
+
+if command -v cpack &> /dev/null 
+then
+    echo -e "${prefix}"' CPACK             : '$(which cpack   )
+    echo -e "${prefix}"' CPACK version     : '$(cpack --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+   echo -e "${prefix_error}"' CPACK is not found!'
+   return 118 
 fi
 
 if command -v ninja &> /dev/null 
@@ -239,7 +248,7 @@ then
     echo -e "${prefix}"' NINJA version     : '$(ninja --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
    echo -e "${prefix_error}"' NINJA is not found!'
-   return 204 
+   return 119 
 fi 
 
 if [[ -f ${OSTAP_BUILD}/build.ninja ]]
@@ -271,7 +280,7 @@ elif [[     ${OSTAP_INSTALL} &&
        ! -w ${OSTAP_INSTALL} ]]
 then
     echo -e ${prefix_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
-    return 205
+    return 120
 else
     OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG${LCG_VERSION}/${PLATFORM}
     OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL})

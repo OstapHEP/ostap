@@ -75,7 +75,7 @@ fi
 # ==========================================================================
 ## INSTALL directory 
 # ==========================================================================
-if [[ ${OSTAP_INSTALL} && "${OSTAP_INSTALL}}" ]]
+if [[ ${OSTAP_INSTALL} && "${OSTAP_INSTALL}" ]]
 then
     OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL} )
 else
@@ -148,7 +148,7 @@ then
     echo -e "${prefix1}"' PYTHON            : '$(which python )
     echo -e "${prefix1}"' PYTHON version    : '$(python --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
 else
-   echo -e "${prefix1_error}"'PYTHOH in not found!'
+   echo -e "${prefix1_error}"'PYTHON in not found!'
    return 214
 fi 
 
@@ -168,6 +168,15 @@ then
 else
    echo -e "${prefix1_error}"' CTEST is not found!'
    return 216 
+fi
+
+if command -v ctest &> /dev/null 
+then
+    echo -e "${prefix1}"' CPACK             : '$(which cpack   )
+    echo -e "${prefix1}"' CPACK version     : '$(cpack --version | grep -Eo "[0-9]\.[0-9]+\.[0-9]" )
+else
+   echo -e "${prefix1_error}"' CPACK is not found!'
+   return 217 
 fi 
 
 make_command=
@@ -190,7 +199,7 @@ then
     echo -e "${prefix1}"' MAKE version      : '$(make --version | grep -Eo "[0-9]\.[0-9]+" )
 else         
     echo -e "${prefix1_error}"' neither NINJA nor (G)MAKE is found!'
-    return 217 
+    return 218 
 fi
 
 # ==========================================================================
@@ -310,7 +319,7 @@ then
 else 
     echo -e "${prefix1_error}"' Missing install directory! '${OSTAP_INSTALL}
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return 210
+    return 219
 fi 
 
 # =========================================================================
@@ -341,7 +350,7 @@ else
     echo -e "${prefix1_error}"' No thisostap.sh is found ' ${OSTAP_INSTALL}/thisostap.sh
     ## 
     unset  OSTAP_BUILD OSTAP_INSTALL		
-    return 218
+    return 220
 fi
 
 # =========================================================================
