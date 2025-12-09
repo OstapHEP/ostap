@@ -1,3 +1,5 @@
+# v3.6.0.0 
+
 ## New features
 
   1. add counter for sum_i value_i * weight_i for `Ostap::WStatEntity` - From now it allows the correct evaluation of uncertainty for
@@ -7,7 +9,7 @@
 ## Backward  incompatible 
 
   1. From now the constructor for `Ostap::WStatEntity` object requires the third counter (for value_i * weight_i ).
-     the old counters could not be deserialized now  
+     The old counters could not be deserialized now  
 
 ## Bug fixes
 
