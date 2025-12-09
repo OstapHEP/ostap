@@ -98,6 +98,7 @@ from   ostap.utils.progress_conf       import progress_conf
 import ostap.frames.frames             as     F 
 import ostap.parallel.parallel_statvar as P 
 import ostap.logger.table              as     T
+import ostap.stats.counters 
 import ostap.stats.moment 
 import ROOT 
 # =============================================================================
@@ -890,9 +891,9 @@ def data_sum ( data               ,
     result2 = {} 
     if isinstance ( result , dictlike_types ) :
         for key , r in loop_items ( result ) : 
-            result2 [ key ] = VE ( r.sum() , r.sum2() )
+            result2 [ key ] = r.sum()
     else :
-        result2 = VE ( result.sum() , result.sum2() )
+        result2 = result.sum() 
     
     return result2 
         
