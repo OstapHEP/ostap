@@ -8,7 +8,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
 #  @date 2009-09-12
 # =============================================================================
-"""Simple counters 
+""" Simple counters 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
@@ -16,9 +16,10 @@ __date__    = "2009-09-12"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'SE'             , ## simple smart counter (1-bi histo)  C++ Ostap::StatEntity 
-    'WSE'            , ## simple smart counter with weight :     Ostap::WStatEntity 
-    'NSE'            , ## simple smart running counter     :     Ostap::NStatEntity
+    'SE'             , ## simple smart counter (1-bi histo)    C++ Ostap::StatEntity 
+    'WSE'            , ## simple smart counter with weight :   C++ Ostap::WStatEntity 
+    'NSE'            , ## simple smart running counter     :   c++ Ostap::NStatEntity
+    'EE'             , ## simple (binomial) efficinecy counter C++ Ostap::EffEntity
     'table_counters' , ## make table of counters
     'EffCounter'     , ## simple counter for efficiency
     ) 
@@ -28,6 +29,7 @@ from   ostap.math.base        import std, isequal, isequalf, iszero
 from   ostap.utils.basic      import typename 
 from   ostap.core.ostap_types import ( dictlike_types , sequence_types ,
                                        integer_types  , sized_types    )
+from   ostap.logger.symbols   import times 
 import ROOT, cppyy, math, sys  
 # =============================================================================
 _new_methods_ = []
@@ -35,21 +37,22 @@ _new_methods_ = []
 SE    = Ostap.StatEntity 
 WSE   = Ostap.WStatEntity 
 NSE   = Ostap.NStatEntity 
+EE    = Ostap.EffEntity
 
 # =============================================================================
 # minor decoration for StatEntity 
 # ============================================================================= 
-if not hasattr ( SE , '_orig_sum'  ) : 
-    _orig_sum    = SE.sum
-    SE._orig_sum = _orig_sum
+if not hasattr ( SE , 'cpp_sum'  ) : 
+    _cpp_sum_se = SE.sum
+    SE.cpp_sum  = _cpp_sum_se 
     
-if not hasattr ( SE , '_orig_mean' ) : 
-    _orig_mean    = SE.mean
-    SE._orig_mean = _orig_mean
+if not hasattr ( SE , 'cpp_mean' ) : 
+    _cpp_mean_se = SE.mean
+    SE.cpp_mean  = _cpp_mean_se 
 
-SE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2 ()      )
-SE. minmax  = lambda s :    ( s.min        () , s.max  ()      ) 
-SE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
+SE. sum     = lambda s : VE ( s.cpp_sum  () , s.sum2    ()      )
+SE. minmax  = lambda s :    ( s.min      () , s.max     ()     ) 
+SE. mean    = lambda s : VE ( s.cpp_mean () , s.meanErr () **2 )
 
 # ==============================================================================
 ## Update the counter
@@ -157,7 +160,8 @@ _new_methods_ += [
 # =============================================================================
 ## equal counters?
 def _wse_eq_ ( s1 , s2 ) :
-    """ Numerically equal counters?"""
+    """ Numerically equal counters?
+    """
     ##
     if not isinstance ( s2 , WSE ) : return NotImplemented
     ##
@@ -171,7 +175,8 @@ def _wse_eq_ ( s1 , s2 ) :
 # =============================================================================
 ## non-equal counters?
 def _wse_ne_ ( s1 , s2 ) :
-    """ Numerically non-equal counters?"""
+    """ Numerically non-equal counters?
+    """
     ##
     if not isinstance ( s2 , WSE ) : return NotImplemented
     ##    
@@ -183,22 +188,26 @@ WSE.__ne__ = _wse_ne_
 # =============================================================================
 # minor decoration for WStatEntity 
 # ============================================================================= 
-if not hasattr ( WSE , '_orig_sum'  ) : 
-    _orig_sum     = WSE.sum
-    WSE._orig_sum = _orig_sum
+if not hasattr ( WSE , 'cpp_sum'  ) : 
+    _cpp_sum_wse = WSE.sum
+    WSE.cpp_sum  = _cpp_sum_wse
 
-if not hasattr ( WSE , '_orig_mean' ) : 
-    _orig_mean_wse = WSE.mean
-    WSE._orig_mean = _orig_mean_wse
+if not hasattr ( WSE , 'cpp_mean' ) : 
+    _cpp_mean_wse = WSE.mean
+    WSE.cpp_mean  = _cpp_mean_wse
     
-WSE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2()       )
-WSE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
-WSE. minmax  = lambda s : ( s.min () , s.max () ) 
+WSE. sum     = lambda s : VE ( s.cpp_sum  () , s.wsum2()      )
+WSE. mean    = lambda s : VE ( s.cpp_mean () , s.meanErr()**2 )
+WSE. minmax  = lambda s : ( s.min  () , s. max () ) ## value  min/max 
+WSE.vminmax  = lambda s : ( s.min  () , s. max () ) ## value  min/max 
+WSE.wminmax  = lambda s : ( s.wmin () , s.wmax () ) ## weight min/max 
 
 _new_methods_ += [
     WSE.sum         ,
     WSE.mean        ,
-    WSE.minmax      ,
+    WSE. minmax     ,
+    WSE.vminmax     ,
+    WSE.wminmax     ,
     WSE.__add__     ,
     WSE.__eq__      ,
     WSE.__ne__      ,
@@ -263,10 +272,15 @@ def cnt_rows ( cnt , key = '' ) :
     """ Build 1 or 3 rows in the table for the counter """
     
     if   isinstance ( cnt , WSE ) :
-        return \
-            cnt_row ( cnt             , ( '%s'         % key ) if key else ''       ) , \
-            cnt_row ( cnt.values   () , ( '%s/values'  % key ) if key else 'values' ) , \
-            cnt_row ( cnt.weights  () , ( '%s/weights' % key ) if key else 'weight' ) ,
+        weights = cnt.weights () 
+        trivial = weights.min() == 1 and weights.max() == 1
+        name    = '%s' % key if key else ''
+        if trivial : name += " trivial"
+        result  = cnt_row ( cnt , name ) ,
+        if trivial : return result 
+        return result + ( cnt_row ( cnt.values  () , ( '%s/values'  %   key ) if key else 'values'  ) , \
+                          cnt_row ( cnt.weights () , ( '%s/weights' %   key ) if key else 'weights' ) , 
+                          cnt_row ( cnt.vtimesw () , ( '%s/v %s w'  % ( key , times ) if key else 'v %s w' % times ) ) ) 
     
     elif isinstance ( cnt , NSE ) :
         return \
@@ -351,13 +365,46 @@ SE   .__str__  = lambda s : table_counters ( { '' : s } , title = 'Counter' )
 NSE  .__repr__ = lambda s : table_counters ( { '' : s } , title = 'Counter' )
 NSE  .__str__  = lambda s : table_counters ( { '' : s } , title = 'Counter' )  
 
+# ============================================================================
+## nice print for EffEntity 
+def _ee_table_ ( cnt ,
+                 title     = ''   ,
+                 prefix    = ''   ,
+                 precision = 4    ,
+                 width     = 6    ,
+                 style     = None ) :
+    """ Nice print for EffEntity 
+    """
+    rows = [ ( '#accepted' , '#rejected' , 'eff [%]' , '' ) ]
+    
+    e = cnt.efficiency() * 100
+    e , expo = e.pretty_print ( width     = width     ,
+                                precision = precision )
+    
+    if expo : row  = '%s' % cnt.accepted() , '%s' % cnt.rejected() , e , '%s10^%+d' % ( times , expo ) 
+    else    : row  = '%s' % cnt.accepted() , '%s' % cnt.rejected() , e 
+    rows.append ( row )
+
+    import ostap.logger.table as T
+    rows = T.remove_empty_columns ( rows ) 
+    if not title : title = 'Efficiency counter' 
+    table = T.table ( rows , prefix = prefix , title = title , alignment = "cccc" , style = style )
+    #
+    return table 
+
+EE.table    = _ee_table_
+EE.__str__  = _ee_table_
+EE.__repr__ = _ee_table_
+
 _new_methods_ += [
     SE .__repr__   ,
     SE .__str__    ,
     NSE.__repr__   ,
     NSE.__str__    ,
-    table_counters ]
-
+    table_counters ,
+    EE . table     ,
+    EE .__repr__   ,
+    EE .__str__    ]
         
 # =============================================================================
 WSE .__repr__ = lambda s : table_counters ( { '' : s } , title = 'Counter' )
@@ -367,6 +414,7 @@ VSE .__str__  = lambda s : table_counters ( s , title = 'Counters' )
 VSE .__repr__ = lambda s : table_counters ( s , title = 'Counters' )
 VWSE.__str__  = lambda s : table_counters ( s , title = 'Counters' )
 VWSE.__repr__ = lambda s : table_counters ( s , title = 'Counters' )
+
 
 _new_methods_ += [
     WSE.__repr__    ,
@@ -404,11 +452,19 @@ class EffCounter(object):
     """
     __slots__ = '__A' , '__R'
     # =========================================================================
-    def __init__ ( self ) :
+    def __init__ ( self         ,
+                   accepted = 0 ,
+                   rejected = 0 ) :
+
+        assert isinstance ( accepted , integer_types ) and 0 <= accepted , \
+            "Invalid `accepted' value %s" % accepted
+        assert isinstance ( rejected , integer_types ) and 0 <= rejected , \
+            "Invalid `rejected' value %s" % rejected
+        
         ## accepted 
-        self.__A = 0 ## acccepted
+        self.__A = accepted ## acccepted
         ## rejected          
-        self.__R = 0 ## rejected 
+        self.__R = rejected ## rejected 
     # =========================================================================
     @property
     def accepted ( self ) :
@@ -451,7 +507,7 @@ class EffCounter(object):
         else     : self.__R += 1 
         return self
     # ========================================================================
-    ## Add two conuters 
+    ## Add two counters 
     def __add__ ( self , other ) :
         """ Add two counters """
         if isinstance ( other , EffCounter ) :
@@ -479,7 +535,44 @@ class EffCounter(object):
     def __setstate__ ( self , state ) :
         self.__A , self.__R = state
     # ==========================================================================
+
+# ============================================================================
+## nice print for EffEntity 
+def _ec_table_ ( cnt ,
+                 title     = ''   ,
+                 prefix    = ''   ,
+                 precision = 4    ,
+                 width     = 6    ,
+                 style     = None ) :
+    """ Nice print for EffCounter  
+    """
+    rows = [ ( '#accepted' , '#rejected' , 'eff [%]' , '' ) ]
     
+    e = 100 * cnt.efficiency 
+    e , expo = e.pretty_print ( width     = width     ,
+                                precision = precision )
+    
+    if expo : row  = '%s' % cnt.accepted , '%s' % cnt.rejected , e , '%s10^%+d' % ( times , expo ) 
+    else    : row  = '%s' % cnt.accepted , '%s' % cnt.rejected , e 
+    rows.append ( row )
+
+    import ostap.logger.table as T
+    rows = T.remove_empty_columns ( rows ) 
+    if not title : title = 'Effficiency counter'
+    table = T.table ( rows , prefix = prefix , title = title , alignment = "cccc" , style = style )
+    #
+    return table 
+
+EffCounter.table    = _ec_table_
+EffCounter.__str__  = _ec_table_
+EffCounter.__repr__ = _ec_table_
+
+
+_new_methods_ += [
+    EffCounter.table     , 
+    EffCounter.__str__   , 
+    EffCounter.__repr__  ] 
+
 # ==============================================================================
 ## REDUCE 
 # ==============================================================================
@@ -506,7 +599,8 @@ def  _wse_reduce_ ( cnt ) :
                              cnt.mu      () ,
                              cnt.mu2     () ,
                              cnt.values  () ,
-                             cnt.weights () )
+                             cnt.weights () , 
+                             cnt.vtimesw () )
 # =============================================================================
 ## Reduce Ostap::NStatEntity 
 def  _nse_reduce_ ( cnt ) :
@@ -521,10 +615,23 @@ SE .__reduce__ =  _se_reduce_
 WSE.__reduce__ = _wse_reduce_
 NSE.__reduce__ = _nse_reduce_
 
+# =============================================================================
+## Reduce Ostap::EffEntity 
+def _ee_reduce_ ( cnt ) :
+    """ Reduce `Ostap.EffEntity` object
+    """
+    return  root_factory , ( type ( cnt )    ,
+                             cnt.accepted () ,
+                             cnt.rejected () )
+
+EE .__reduce__ =  _ee_reduce_
+
+
 _new_methods_ += [
     SE .__reduce__ , 
     WSE.__reduce__ , 
     NSE.__reduce__ , 
+    EE .__reduce__ , 
 ]
 
 # ==============================================================================
@@ -532,7 +639,10 @@ _new_methods_ = tuple ( _new_methods_ )
 
 # =============================================================================
 _decorated_classes_ = (
-    SE , WSE , NSE 
+    SE  ,
+    WSE ,
+    NSE ,
+    EE  , 
     )
 
 # =============================================================================

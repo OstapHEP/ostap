@@ -33,11 +33,13 @@ namespace
 // ============================================================================
 // constructor from StatEntity of values 
 // ============================================================================
-Ostap::WStatEntity::WStatEntity ( const Ostap::StatEntity& values ) 
+Ostap::WStatEntity::WStatEntity
+( const Ostap::StatEntity& values ) 
   : m_mu      ( values.mu      () ) 
   , m_mu2     ( values.mu2     () ) 
   , m_values  ( values            ) 
   , m_weights ( values.n () , 1 , 0 , 1 , 1 )  // weights are trivial!
+  , m_vtimesw ( values            ) 
 {}
 // ============================================================================
 // full constructor
@@ -46,11 +48,13 @@ Ostap::WStatEntity::WStatEntity
 ( const double             mu      ,
   const double             mu2     ,
   const Ostap::StatEntity& values  ,
-  const Ostap::StatEntity& weights )
+  const Ostap::StatEntity& weights , 
+  const Ostap::StatEntity& vtimesw ) 
   : m_mu      ( mu      )
   , m_mu2     ( mu2     )
   , m_values  ( values  ) 
   , m_weights ( weights ) 
+  , m_vtimesw ( vtimesw ) 
 {
   Ostap::Assert ( std::isfinite ( m_mu   ) &&
                   std::isfinite ( m_mu2  )           , 
@@ -73,6 +77,11 @@ Ostap::WStatEntity::WStatEntity
                   "Ostap::WStatEntity" ,
                   INVALID_PARS , __FILE__ , __LINE__ ) ;
   //
+  Ostap::Assert ( m_values.n () == m_vtimesw.n () , 
+                  "Ostap::WStatWEntity: inconsistent values/vtimesw counters!" ,
+                  "Ostap::WStatEntity" ,
+                  INVALID_PARS , __FILE__ , __LINE__ ) ;
+  //
   if ( s_zero ( m_mu2 ) ) { m_mu2 = 0 ; }
   //
 }
@@ -85,15 +94,25 @@ bool Ostap::WStatEntity::isfinite () const
     std::isfinite ( m_mu  ) &&
     std::isfinite ( m_mu2 ) &&
     m_values .isfinite ()   &&
-    m_weights.isfinite ()   ;
+    m_weights.isfinite ()   && 
+    m_vtimesw.isfinite ()   ;
 }
 // ============================================================================
 // Is it OK ?
 // ============================================================================
 bool Ostap::WStatEntity::ok () const
 {
-  if  ( empty() ) { return !m_mu && !m_mu2 && m_values.empty() && m_weights.empty() ; }
-  return isfinite () && m_values.ok() && m_weights.ok () ;
+  if  ( empty() )
+    { return !m_mu && !m_mu2
+	&& m_values .empty ()
+	&& m_weights.empty () 
+	&& m_vtimesw.empty () ;
+    }
+  //
+  return isfinite   ()
+    && m_values.ok  ()
+    && m_weights.ok ()
+    && m_vtimesw.ok () ;
 }   
 // ============================================================================
 // update statistics 
@@ -109,10 +128,13 @@ Ostap::WStatEntity::add
   //
   if ( empty () ) 
     {
-      m_mu       = value  ;
-      m_mu2      = 0      ;
-      m_values  += value  ; 
-      m_weights += weight ;    
+      //
+      m_mu       = value          ;
+      m_mu2      = 0              ;
+      m_values  += value          ; 
+      m_weights += weight         ;
+      m_vtimesw += value * weight ;
+      //
       return *this ;
     }
   //
@@ -121,7 +143,7 @@ Ostap::WStatEntity::add
   //
   const long double W     = wA + wB               ;
   //
-  // if      ( !W ) { /* soem action is needed ? */ } 
+  // if      ( !W ) { /* Is some action needed here ??? */ } 
   if ( !wA )
     {
       m_mu  = value ;
@@ -139,6 +161,7 @@ Ostap::WStatEntity::add
   //
   m_values  += value  ;                          // UPDATE 
   m_weights += weight ;                          // UPDATE 
+  m_vtimesw += value * weight ;                  // UPDATE 
   //
   return *this ;
 }
@@ -168,15 +191,16 @@ Ostap::WStatEntity::add
   m_mu2 = fA * m_mu2 + fB * other.m_mu2  + fA * fB * delta * delta ; // UPDATE 
   //
   m_values  += other.m_values  ; // UPDATE 
-  m_weights += other.m_weights ; // UPDATE 
+  m_weights += other.m_weights ; // UPDATE
+  m_vtimesw += other.m_vtimesw ; // UPDATE 
   //
   return *this ;
 }
 // ============================================================================
 // sum_i weight_i*value_i
 // ============================================================================
-double Ostap::WStatEntity::sum   () const  // sum_i weight_i * value_i
-{ return 0 < n () ? m_mu * sumw () : 0.0 ; }
+// double Ostap::WStatEntity::sum   () const  // sum_i weight_i * value_i
+// { return 0 < n () ? m_mu * sumw () : 0.0 ; }
 // ============================================================================
 // sum_i weight_i*(value_i**2)
 // ============================================================================

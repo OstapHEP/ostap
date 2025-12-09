@@ -1,6 +1,13 @@
 ## New features
 
+  1. add counter for sum_i value_i * weight_i for `Ostap::WStatEntity` - From now it allows the correct evaluation of uncertainty for
+    the weighted sums (many thanks to @DmitryYuGolubkov Dima Golubkov)  
+  1. add `Ostap::EffEntity` as C++ version of `ostap.stats.counters.EffCounter` with binomial efficiency & binomial interval estimations
+  
 ## Backward  incompatible 
+
+  1. From now the constructorr for `Ostap::WStatEntity` object requires the third counter (for value_i * weight_i ).
+     the old counters could not be deserialized now  
 
 ## Bug fixes
 

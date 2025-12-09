@@ -30,21 +30,22 @@ namespace Ostap
     /// constructor from StatEntity of values 
     WStatEntity					
     ( const StatEntity& values ) ;
-    /// full constructor
+    /// full constructor (used for deserialization)
     WStatEntity
     ( const double      mu      ,
       const double      mu2     ,
-      const StatEntity& values  ,
-      const StatEntity& weights ) ;
+      const StatEntity& values  ,   // statistics of values 
+      const StatEntity& weights ,   // statistics of weights  
+      const StatEntity& vtimesw ) ; // statistics of value*weight 
     // ======================================================================
   public: // the basic getters 
     // ======================================================================
     /// total number of entries 
-    inline size_type n   () const { return m_weights.n () ; }
+    inline size_type        n          () const { return m_weights.n () ; }
     /// the first weighted moment/mean-value 
-    inline double    mu  () const { return m_mu           ; }
+    inline double           mu         () const { return m_mu           ; }
     /// the second central weighted moment/dispersion/variance  
-    inline double    mu2 () const { return m_mu2 ; }
+    inline double           mu2        () const { return m_mu2          ; }
     // ======================================================================
   public: // derived getters and aliases 
     // ======================================================================
@@ -71,16 +72,29 @@ namespace Ostap
     /// maximal value (for non-zero weights) 
     inline double           max        () const { return m_values. max () ; }       
     // ======================================================================
+    /// minimal weight
+    inline double           wmin       () const { return m_weights. min () ; }
+    /// maximal value (for non-zero weights) 
+    inline double           wmax        () const { return m_weights. max () ; }       
+    // ======================================================================
   public: // helper sums 
     // ======================================================================
-    /// sum_i weight_i*value_i
-    double                   sum   () const ; // sum_i weight_i * value_i
+    /// weighted sum: sum_i weight_i*value_i
+    inline double           sum   () const { return wsum () ; }
     /// sum_i weight_i*value_i**2
-    double                   sum2  () const ; // sum_i weight_i * value_i**2
+    double                  sum2  () const ; // sum_i weight_i * value_i**2
+    /// sum of "bare" values:  sum_i value_i
+    inline double           sumv  () const { return  m_values.sum   () ; }
+    /// sum of squared values: sum_i value_i**2 
+    inline double           sumv2 () const { return  m_values.sum2  () ; }    
     /// sum_i weight_i  
-    inline double            sumw  () const {  return m_weights.sum  () ; }
+    inline double           sumw  () const {  return m_weights.sum  () ; }
     /// sum_i weight_i*wight_i   
-    inline double            sumw2 () const {  return m_weights.sum2 () ; }
+    inline double           sumw2 () const {  return m_weights.sum2 () ; }
+    /// weighted sum: sum_i  value_i*weight_i
+    inline double           wsum  () const {  return m_vtimesw.sum  () ; }
+    /// sum_i (value_i*weight_i)**2
+    inline double           wsum2 () const {  return m_vtimesw.sum2 () ; }    
     // ======================================================================
   public:  // statistics &  weights and values 
     // ======================================================================
@@ -88,6 +102,8 @@ namespace Ostap
     inline const Ostap::StatEntity& weights () const { return m_weights ; }
     /// get the statistic of values with non-zero weight 
     inline const Ostap::StatEntity& values  () const { return m_values  ; }
+    /// get the statistics of value*weight
+    inline const Ostap::StatEntity& vtimesw () const { return m_vtimesw ; }    
     // ======================================================================
   public:
     // ======================================================================
@@ -187,6 +203,8 @@ namespace Ostap
     Ostap::StatEntity m_values  {} ;
     /// statistic of weights 
     Ostap::StatEntity m_weights {} ;
+    /// statistic of values*weights 
+    Ostap::StatEntity m_vtimesw {} ;    
     // ======================================================================
   };
   // ========================================================================

@@ -38,6 +38,7 @@
 #include "Ostap/DataFrameUtils.h"
 #include "Ostap/Differences.h"
 #include "Ostap/Digit.h"
+#include "Ostap/EffEntity.h"
 #include "Ostap/ECDF.h"
 #include "Ostap/EPDF.h"
 #include "Ostap/EigenSystem.h"
