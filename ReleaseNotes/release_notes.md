@@ -6,7 +6,7 @@
   
 ## Backward  incompatible 
 
-  1. From now the constructorr for `Ostap::WStatEntity` object requires the third counter (for value_i * weight_i ).
+  1. From now the constructor for `Ostap::WStatEntity` object requires the third counter (for value_i * weight_i ).
      the old counters could not be deserialized now  
 
 ## Bug fixes
