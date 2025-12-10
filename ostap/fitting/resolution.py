@@ -82,6 +82,7 @@ __all__     = (
 
     )
 # =============================================================================
+from   ostap.core.ostap_types   import integer_types, num_types  
 from   ostap.core.core          import Ostap
 from   ostap.fitting.pdfbasic   import Generic1D_pdf
 from   ostap.fitting.fithelpers import ( ZERO     ,
@@ -171,9 +172,9 @@ class ResoGaussA(RESOLUTION,TwoSigmas) :
                    name           ,   ## the name 
                    xvar           ,   ## the variable 
                    sigmaL         ,   ## the left sigma
-                   sigmaR = None  ,   ## if rigth sigma is None : symmetric case 
+                   sigmaR = None  ,   ## if right sigma is None : symmetric case 
                    fudge  = 1     ,   ## fudge-factor 
-                   mean    = None ) :  ## mean-value
+                   mean    = None ) : ## mean-value
 
         sigma_name  = ''
         sigma_title = '' 
@@ -714,7 +715,7 @@ class ResoCB2A(ResoGauss,LeftTail,RightTail) :
 models.add ( ResoCB2A )
 # ===============================================================================
 ## @class ResoNeedham
-#  Needham's functiobn:
+#  Needham's function:
 #  - variant of Crystall Ball function with alpha = alpha(sigma)
 #
 # - alpha is parameterized as function of sigma 
@@ -747,7 +748,8 @@ class ResoNeedham(ResoGauss,TailN) :
                    c2             ,   ## c2: close to 10
                    n       = ROOT.RooFit.RooConst ( 0 ) , 
                    fudge   = 1    ,   ## fudge-factor
-                   mean    = None ) : ## the mean value
+                   mean    = None ,   ## the mean value
+                   amin    = 0.01 ) : ## soft cutoff for the tail parameter 
 
         ## initialize the base 
         ResoGauss.__init__ ( self ,
@@ -759,6 +761,9 @@ class ResoNeedham(ResoGauss,TailN) :
                              psi   = ZERO   )
         ## 
         TailN . __init__   ( self , n = ZERO if n is None else n  )
+
+        assert isinstance ( amin , num_types ) and 0 < amin < 1 , \
+            "Invalid `amin' %s " % amin 
 
         self.__c0 = self.make_var ( c0                  ,
                                     "c0_%s"     % name  ,
@@ -782,11 +787,12 @@ class ResoNeedham(ResoGauss,TailN) :
                                     "c_{2}(%s)" % name  ,
                                     True , 10 , 1 , 50  )
         
-        ## effective parameteter 
-        self.__n     = self.make_var ( n                   ,
-                                       'n_%s'       % name ,
-                                       'n_{N}(%s)'  % name ,
-                                       None , 0 , -1 , 100 )
+        ## effective parameter 
+        self.__n  = self.make_var ( n                   ,
+                                    'n_%s'       % name ,
+                                    'n_{N}(%s)'  % name ,
+                                    None , 0 , -1 , 100 )
+        
         
         self.needham = Ostap.Models.Needham (
             self.roo_name ( 'needham_' ) , 
@@ -797,22 +803,24 @@ class ResoNeedham(ResoGauss,TailN) :
             self.c0    ,
             self.c1    ,
             self.c2    ,
-            self.n     , 
+            self.n     ,
+            amin       , 
             )
         
         self.pdf = self.needham
         
         ## save the configuration
         self.config = {
-            'name'   : self.name  ,
-            'xvar'   : self.xvar  ,
-            'mean'   : self.mean  ,
-            'sigma'  : self.sigma ,
-            'c0'     : self.c0    ,
-            'c1'     : self.c1    ,
-            'c2'     : self.c2    ,
-            'n'      : self.n     ,
-            'fudge'  : self.fudge ,
+            'name'   : self.name       ,
+            'xvar'   : self.xvar       ,
+            'mean'   : self.mean       ,
+            'sigma'  : self.sigma      ,
+            'c0'     : self.c0         ,
+            'c1'     : self.c1         ,
+            'c2'     : self.c2         ,
+            'n'      : self.n          ,
+            'fudge'  : self.fudge      ,
+            'amin'   : self.pdf.amin() 
         }
 
     @property
@@ -838,6 +846,18 @@ class ResoNeedham(ResoGauss,TailN) :
     @c2.setter
     def c2 ( self, value ) :
         self.set_value ( self.__c2 , value )
+        
+    @property
+    def amin ( self ) :
+        """`amin` : minimal value/cut-off/soft recoil for `a` : a = hypot ( a_min , a ) 
+        """
+        return self.pdf.amin()
+
+    @property
+    def alpha ( self ) :
+        """`alpha` : get the actual value of `alpha`-parameter
+        """
+        return self.pdf.alpha()
         
 models.add ( ResoNeedham )
 

@@ -486,7 +486,7 @@ class Needham_pdf(Gauss_pdf,TailN) :
         ## 
         TailN . __init__  ( self , n = ZERO if n is None else n  )
 
-        assert isinstance ( amin , num_types ) and 0 < amin < 1.0 , \
+        assert isinstance ( amin , num_types ) and 0 < amin < 1 , \
             "Invalid `amin' %s " % amin 
         
         ## c0 variable 
@@ -531,7 +531,8 @@ class Needham_pdf(Gauss_pdf,TailN) :
             self.c0    ,
             self.c1    ,
             self.c2    ,
-            self.n     , 
+            self.n     ,
+            amin       , 
             )
         
         ## save the configuration

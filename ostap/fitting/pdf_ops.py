@@ -674,12 +674,12 @@ def pdf_convolution ( pdf , resolution ) :
     # ==================================================================
     
     if isinstance ( resolution , Sum1D ) :
-        logger.info ( "Convolution of sum --> sum of convolutions" ) 
+        logger.debug ( "Convolution of sum --> sum of convolutions" ) 
         cnvs = [ pdf_convolution ( pdf , reso ) for reso in resolution ]
         return Sum1D ( cnvs , fractions = resolution.fractions  )
     
     if isinstance ( pdf        , Sum1D ) :
-        logger.info ( "Convolution of sum --> sum of convolutions" ) 
+        logger.debug ( "Convolution of sum --> sum of convolutions" ) 
         cnvs = [ pdf_convolution ( p , resoluton ) for  p in pdf  ]
         return Sum1D ( cnvs , fractions = pdf.fractions  )
 
