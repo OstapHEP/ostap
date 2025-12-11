@@ -5932,6 +5932,7 @@ double Ostap::Math::Das::integral
   //
   const double sL = m_mu - m_kL * m_sigma ;
   if ( low < sL && sL < high ) { return integral ( low , sL ) + integral ( sL , high ) ; }
+  //
   const double sR = m_mu + m_kR * m_sigma ;
   if ( low < sR && sR < high ) { return integral ( low , sR ) + integral ( sR , high ) ; }
   //

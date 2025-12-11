@@ -57,6 +57,7 @@ __all__     = (
     'ResoGaussA'        , ## single-(bifurcated) Gaussian resolution model,
     'ResoGauss2'        , ## double-Gaussian resolution model,
     'ResoApo'           , ## Apollonios resolution model,
+    'ResoCB'            , ## Crystal Ball resolution model
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
     'ResoCB2A'          , ## double-sided Crystal Ball resolution model,
     'ResoNeedham'       , ## variant of Crystal Ball funxtion
@@ -73,13 +74,13 @@ __all__     = (
     'ResoHyperbolic'    , ## Hyperbolic resolution model
     'ResoGenHyperbolic' , ## Generalised Hyperbolic resolution model
     'ResoHypatia'       , ## Hypatia resoltuion model
-    'ResoDas'           , ## Das resolution model
+    'ResoDas'           , ## Das resolution model in terms of k and kappa
+    'ResoDasLR'         , ## Das resolution model in terms of kL & kR 
     'ResoMeixner'       , ## Meixner resolution model    
     'ResoBukin2'        , ## Bukin2 resolution model
     'ResoNormalLaplace' , ## Normal Laplace resolution model
     'ResoGenGaussV1'    , ## Generalized  Gaussian v1
     'ResoBatesShape'    , ## Bates-shape models (spline-like finite model)
-
     )
 # =============================================================================
 from   ostap.core.ostap_types   import integer_types, num_types  
@@ -427,7 +428,7 @@ class ResoApoA(RESOLUTION,TwoSigmas) :
                    name         ,   ## the  name 
                    xvar         ,   ## the variable 
                    sigmaL       ,   ## left sigma
-                   sigmaR       ,   ## rigth sigma, if None : symmetric case 
+                   sigmaR       ,   ## right sigma, if None : symmetric case 
                    beta  = 1    ,   ## beta parameter 
                    fudge = 1    ,   ## fudge-factor 
                    mean  = None ) : ## the mean value 
@@ -713,6 +714,68 @@ class ResoCB2A(ResoGauss,LeftTail,RightTail) :
         }
         
 models.add ( ResoCB2A )
+
+# =============================================================================
+## @class ResoCB
+#   Crystal Ball model for resolution
+#   - (symmetric) Gaussian core 
+#   - power-law tails
+#  @see Ostap::Math::CrystalBall
+#  @see Ostap::Models::CrystalBall
+class ResoCB(ResoGauss,Tail) :
+    """ (A)Symmetric double-sided Crystal Ball model for resolution
+    - Gaussian core 
+    - power-law tails
+    see Ostap.Math.CrystalBallDS
+    see Ostap.Models.CrystalBallDS
+    """
+    def __init__ ( self          , 
+                   name          ,   ## the   name 
+                   xvar          ,   ## the   variable 
+                   sigma         ,   ## core  resolution
+                   alpha  = 1.5  ,   ## alpha
+                   n      = 1    ,   ##  
+                   fudge  = 1    ,   ## fudge-factor 
+                   mean   = None ) : ## the mean value
+
+        ## initialize the base 
+        ResoGauss.__init__ ( self          ,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             sigma = sigma ,
+                             mean  = mean  ,
+                             fudge = fudge ,
+                             psi   = ZERO  )
+        
+        Tail   .__init__ ( self , alpha = alpha , n = n )
+        
+        ## actual PDF 
+        self.cb = Ostap.Models.CrystalBall (
+            self.roo_name ( 'rcb_' )       ,
+            "Resolution Crystal Ball %s" % self.name ,
+            self.xvar           ,
+            self.mean           , 
+            self.sigma_corr     , ## ATTENTION!
+            self.alpha          ,
+            self.n              ) 
+    
+        ## the final PDF 
+        self.pdf = self.cb
+
+        ##  save   the configuration
+        self.config = {
+            'name'     : self.name   ,
+            'xvar'     : self.xvar   ,
+            'mean'     : self.mean   ,
+            'sigma'    : self.sigma  ,
+            'alpha'    : self.alpha  ,
+            'n'        : self.n      ,
+            'fudge'    : self.fudge  ,
+        }
+        
+models.add ( ResoCB )
+
+
 # ===============================================================================
 ## @class ResoNeedham
 #  Needham's function:
@@ -1773,7 +1836,7 @@ class ResoSinhAsinh(RESOLUTION) :
         
 # =============================================================================
 ## @class ResoLogistic
-#  Logistic, aka "sech-square" PDF
+#  Logistic, aka "sech-square(d)" PDF
 #  \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
 #   where
 #   \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
@@ -1783,7 +1846,7 @@ class ResoSinhAsinh(RESOLUTION) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class ResoLogistic(RESOLUTION) :
-    r""" Logistic, aka 'sech-square' PDF
+    r""" Logistic, aka 'sech-square(d)' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
      \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
@@ -1870,7 +1933,7 @@ class ResoGenLogisticIV(RESOLUTION) :
                                        '#gamma(%s)' % name ,
                                        None , 1 , 1.e-5 , 100 ) 
         
-        if kappa is None :
+        if kappa is None or self.__kappa is ZERO :
             
             self.__alpha = self.gamma
             self.__beta  = self.gamma
@@ -1891,11 +1954,11 @@ class ResoGenLogisticIV(RESOLUTION) :
         self.pdf = Ostap.Models.GenLogisticIV (
             self.roo_name ( 'rgl4_' ) , 
             "Resolution GenLogisticIV %s" % self.name ,
-            self.xvar      ,
-            self.mean      ,
-            self.sigma     , 
-            self.alpha     , 
-            self.beta      ) 
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr , ## ATTENTION!!  
+            self.alpha      , 
+            self.beta       ) 
 
         ## save the configuration
         self.config = {
@@ -1961,7 +2024,7 @@ class ResoHyperbolic(RESOLUTION) :
                    zeta      = 1    ,   ## shape parameter 
                    fudge     = 1    ,   ## fudge parameter 
                    mu        = None ,   ## related to mean 
-                   kappa     = None ) : ## asymmetry
+                   kappa     = None ) : ## related to asymmetry
         
         ## initialize the base 
         super(ResoHyperbolic,self).__init__ ( name       = name  ,
@@ -1981,7 +2044,7 @@ class ResoHyperbolic(RESOLUTION) :
         ## mu 
         self.__mu    = self.mean 
 
-        ## parameter kappa - asymmetry
+        ## parameter kappa, related to asymmetry
         self.__kappa = self.make_var ( ZERO if kappa is None else kappa  ,
                                        'kappa_%s'    % name ,
                                        '#kappa(%s)'  % name ,
@@ -2031,46 +2094,41 @@ class ResoHyperbolic(RESOLUTION) :
     def kappa ( self , value ) :
         self.set_value ( self.__kappa, value )
 
-
     @property
     def alpha ( self ) :
         """'alpha' : value of canonical parameter 'alpha' """
-        self.pdf.setPars ()
-        return self.pdf.function().alpha ()
+        return self.pdf.alpha ()
 
     @property
     def beta ( self ) :
         """'beta' : value of canonical parameter 'beta'"""
-        self.pdf.setPars ()
-        return self.pdf.function().beta ()
+        return self.pdf.beta ()
 
     @property
     def gamma ( self ) :
         """'gamma' : value of canonical parameter 'gamma'"""
-        self.pdf.setPars ()
-        return self.pdf.function().gamma ()
+        return self.pdf.gamma ()
     
     @property
     def delta ( self ) :
         """'delta' : value of canonical parameter 'delta'"""
-        self.pdf.setPars ()
-        return self.pdf.function().delta ()
+        return self.pdf.delta ()
 
     @property
     def nominal_mean ( self ) :
-        """'nominal_mean' : the actual mean of distribution"""
+        """'nominal_mean' : the mean of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().mean  ()
 
     @property
     def nominal_mode ( self ) :
-        """'nominal_mode' : the actual mode of distribution"""
+        """'nominal_mode' : the mode of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().mode ()
     
     @property
     def nominal_variance ( self ) :
-        """'nominal_variance' : actual variance of distribution"""
+        """'nominal_variance' : nominal variance of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().variance ()
 
@@ -2079,7 +2137,6 @@ class ResoHyperbolic(RESOLUTION) :
         """'nominal_rms' : actual RMS of distribution"""
         self.pdf.setPars ()
         return self.pdf.function().rms ()
-
 
 # =============================================================================
 ## @class ResoGenHyperbolic
@@ -2188,26 +2245,22 @@ class ResoGenHyperbolic(RESOLUTION) :
     @property
     def alpha ( self ) :
         """'alpha' : value of canonical parameter 'alpha'"""
-        self.pdf.setPars ()
-        return self.pdf.function().alpha ()
+        return self.pdf.alpha ()
 
     @property
     def beta ( self ) :
         """'beta' : value of canonical parameter 'beta'"""
-        self.pdf.setPars ()
-        return self.pdf.function().beta ()
+        return self.pdf.beta ()
 
     @property
     def gamma ( self ) :
         """'gamma' : value of canonical parameter 'gamma'"""
-        self.pdf.setPars ()
-        return self.pdf.function().gamma ()
+        return self.pdf.gamma ()
     
     @property
     def delta ( self ) :
         """'delta' : value of canonical parameter 'delta'"""
-        self.pdf.setPars ()
-        return self.pdf.function().delta ()
+        return self.pdf.delta ()
 
     @property
     def nominal_mean ( self ) :
@@ -2355,10 +2408,12 @@ class ResoHypatia(ResoGenHyperbolic) :
 
 # =============================================================================
 ## @class ResoDas
+#  Parameterization of Das' model in terms of `k` and `kappa` 
 #  @see Ostap::Math::Das
 #  @see Ostap::Models::Das
 class ResoDas(RESOLUTION) :
-    """ Das resoltuon model: gaussian with exponential tails 
+    """ Das resolution model: gaussian with exponential tails 
+    - Parameterization of Das' model in terms of `k` and `kappa` 
     - see Ostap::Math::Das
     - see Ostap::Models::Das
     - see Das_pdf 
@@ -2453,10 +2508,94 @@ class ResoDas(RESOLUTION) :
         """'kR' : right tail parameter"""
         return self.__AV_K.var2 
 
+# =============================================================================
+## @class ResoDasLR
+#  Parameterization of Das' model in terms of `kL` and `kR`
+#  @see Ostap::Math::Das
+#  @see Ostap::Models::Das
+class ResoDasLR(RESOLUTION) :
+    """ Das resolution model: gaussian with exponential tails 
+    - Parameterization of Das' model in terms of `kL` and `kR` 
+    - see Ostap::Math::Das
+    - see Ostap::Models::Das
+    - see Das_pdf 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,   ## related to sigma
+                   kL        = None ,   ## left tail parameter
+                   kR        = None ,   ## if use left parameter is None 
+                   fudge     = 1    ,   ## fudge-parameter 
+                   mean      = None ) : ## related to mean 
+        
+        ## initialize the base 
+        super(ResoDasLR,self).__init__ ( name  = name  ,
+                                         xvar  = xvar  ,
+                                         sigma = sigma ,
+                                         mean  = mean  ,
+                                         fudge = fudge )
+        
+        self.__kL     = self.make_var ( kL                  ,
+                                        'kL_%s'     % name  ,  
+                                        'k_{L}(%s)' % name  ,
+                                        None , 2.0 , 0.1 , 15 )
+        
+        self.__kR     = self.make_var ( self.__kL if kR is None else kR , 
+                                        'kR_%s'     % name  ,  
+                                        'k_{R}(%s)' % name  ,
+                                        None , 2,0 , 0.1 , 15 )
+        ## mu 
+        self.__mu    = self.mean 
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Das (
+            self.roo_name ( 'rdas_' ) , 
+            "Resolution Das %s" % self.name ,
+            self.xvar       ,
+            self.mu         ,
+            self.sigma_corr ,
+            self.kL         ,
+            self.kR         )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'kL'        : self.kL    ,
+            'kR'        : self.kR    ,
+            'fudge'     : self.fudge }
 
+    @property
+    def mu ( self ) :
+        """'mu' : location parameter (same as 'mean')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :
+        self.mean = value
+
+    @property
+    def kL ( self ) :
+        """'k' : (left) tail parameter"""
+        return self.__kL
+    @kL.setter
+    def kL ( self , value ) :
+        self.set_value ( self.__kL , value ) 
+
+    @property
+    def kR ( self ) :
+        """'kR' : (right) tail parameter"""
+        return self.__kR
+    @kR.setter
+    def kR ( self , value ) :
+        self.set_value ( self.__kR , value ) 
+        
 # =============================================================================
 ## @class ResoMeixner
-# Meixner resoltuion model
+# Meixner resolution model
 #
 # @see Grigoletto, M., & Provasi, C. (2008). 
 #      "Simulation and Estimation of the Meixner Distribution". 
@@ -2464,7 +2603,7 @@ class ResoDas(RESOLUTION) :
 # @see https://doi.org/10.1080/03610910802395679
 # @see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
 # 
-# Original distribtion is parameterise with 
+# Original distribution is parameterised with 
 #  - location parameter m 
 #  - scale parameter    a 
 #  - shape parameter b : \f$ - \pi < b < +\pi \f$
@@ -2490,7 +2629,7 @@ class ResoMeixner(RESOLUTION) :
     - see https://doi.org/10.1080/03610910802395679
     - see https://reference.wolfram.com/language/ref/MeixnerDistribution.html
 
-    Original distribtion is parameterise with 
+    Original distribution is parameterise with 
       - location parameter m 
       - scale parameter    a 
       - shape parameter b :  -pi < b < +pip 
@@ -2500,7 +2639,7 @@ class ResoMeixner(RESOLUTION) :
       - b = 2  atan ( psi )  
       - a^2 = sigma^2 * ( cos ( b ) + 1 ) / d 
     
-    For resoltuionn model  we keep psi=0 (symmetric case)
+    For resoltuion model  we keep psi=0 (symmetric case)
     """
     def __init__ ( self         ,
                    name         ,
@@ -2513,12 +2652,12 @@ class ResoMeixner(RESOLUTION) :
         ## initialize the base
         super(ResoMeixner,self).__init__( name        = name  ,
                                           xvar        = xvar  ,
-                                          sigma       = alpha ,                                     
+                                          sigma       = sigma ,                                     
                                           mean        = mean  ,
                                           fudge       = fudge )
 
         ## Here we consider only symmetri case 
-        self.__psi   = ROOT.RooFit.RooConst ( 0 )
+        self.__psi   = ZERO 
     
         self.__shape = self.make_var ( shape                ,
                                        'shape_%s'   % name  ,
@@ -2534,7 +2673,7 @@ class ResoMeixner(RESOLUTION) :
             self.xvar       ,
             self.mean       ,
             self.sigma_corr ,
-            self.__psi      , ## ATTENTION! 
+            self.__psi      , ## ATTENTION - we keep psi = 0 - symmetric case! 
             self.shape      )
         
         ## save the configuration
@@ -2836,10 +2975,10 @@ class ResoNormalLaplace(RESOLUTION) :
 # =============================================================================
 ## @class ResoBukin2
 #  Resolution function based on Buni2_pdf: sum of two
-#  exponental modified Gaussina functions
+#  exponental modified Gaussian functions
 class ResoBukin2(RESOLUTION) :
     """ Resolution function based on Buni2_pdf: sum of two
-    exponental modified Gaussina functions
+    exponental modified Gaussian functions
     """
     def __init__ ( self            ,
                    name            ,
@@ -3003,7 +3142,7 @@ class ResoBukin2(RESOLUTION) :
 #  @see Ostap::Math::Bates
 #  @see Ostap::Math::IrwinHall
 #  @see Ostap::Models::BatesShape
-#  For good fits parameter n shoul be rather large. e.g.  n>10 
+#  For good fits parameter n should be rather large. e.g.  n>10 
 class ResoBatesShape(RESOLUTION) :
     """ BatesShape resolution model (spline-like finite model) 
     - see Ostap::Math::BatesShape

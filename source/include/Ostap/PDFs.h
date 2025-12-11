@@ -2234,8 +2234,7 @@ namespace Ostap
      *   - \f$ z = \frac{x-\mu}{\sigma} \f$ 
      *   - \f$ \phi(z) \f$ is Gaussian PDF  
      *   - \f$  R(x)   \f$ is Mill's ratio 
-     *  @see Ostap::Math::nills_normal 
-     *  @see Ostap::Math::nills_normal 
+     *  @see Ostap::Math::mills_normal 
      *  @see Ostap::Math::NormalLaplace
      */    
     class NormalLaplace: public RooAbsPdf 
@@ -7520,6 +7519,13 @@ namespace Ostap
       const RooAbsReal& zeta  () const { return m_zeta  .arg() ; }
       const RooAbsReal& kappa () const { return m_kappa .arg() ; }
       // ======================================================================
+    public: // canonical parameters 
+      // ======================================================================
+      double alpha () const ;
+      double beta  () const ;
+      double gamma () const ;      
+      double delta () const ;      
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x     ;
@@ -7656,6 +7662,13 @@ namespace Ostap
       const RooAbsReal& zeta  () const { return m_zeta   .arg() ; }
       const RooAbsReal& kappa () const { return m_kappa  .arg() ; }
       const RooAbsReal& lambd () const { return m_lambda .arg() ; }
+      // ======================================================================
+    public: // canonical parameters 
+      // ======================================================================
+      double alpha () const ;
+      double beta  () const ;
+      double gamma () const ;      
+      double delta () const ;      
       // ======================================================================
     protected:
       // =====================================================================

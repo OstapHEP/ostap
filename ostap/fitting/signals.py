@@ -3324,31 +3324,25 @@ class Hyperbolic_pdf(PEAK) :
     @property
     def alpha ( self ) :
         """'alpha' : value of canonical parameter 'alpha'"""
-        self.pdf.setPars ()
-        return self.pdf.function().alpha ()
+        return self.pdf.alpha ()
 
     @property
     def beta ( self ) :
         """'beta' : value of canonical parameter 'beta'"""
-        self.pdf.setPars ()
-        return self.pdf.function().beta ()
+        return self.pdf.beta ()
 
     @property
     def gamma ( self ) :
         """'gamma' : value of canonical parameter 'gamma'"""
-        self.pdf.setPars ()
-        return self.pdf.function().gamma ()
+        return self.pdf.gamma ()
     
     @property
     def delta ( self ) :
         """'delta' : value of canonical parameter 'delta'"""
-        self.pdf.setPars ()
-        return self.pdf.function().delta ()
+        return self.pdf.delta ()
 
         
 models.append ( Hyperbolic_pdf )      
-
-
 
 # =============================================================================
 ## @class GenHyperbolic_pdf 
@@ -3812,8 +3806,6 @@ class ExGauss2_pdf(PEAK) :
     
 models.append ( ExGauss2_pdf )      
 
-
-
 # =============================================================================
 ## @class Bukin2_pdf
 #  Sum of  two exponentially modified Gaussian functions
@@ -4009,47 +4001,44 @@ models.append ( Bukin2_pdf )
 #   - \f$ k_L,k_R \ge 0 \f$ 
 #   - \f$ z = \frac{x-\mu}{\sigma} \f$ 
 #   - \f$ \phi(z) \f$ is Gaussian PDF  
-#   - \f$  R(x)   \f$ is Mill's ratio 
-#  @see Ostap::Math::nills_normal 
-#  @see Ostap::Math::nills_normal 
+#   - \f$  R(x)   \f$ is Mill's ratio
+#
+#  @see Ostap::Math::mills_normal 
 #  @see Ostap::Math::NormalLaplace
 #
 class NormalLaplace_pdf(PEAK) :
-    """Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
-    It behaves line core Gaussian with exponential tails 
+    """ Distribution for a sum of Gaussian and (asymmertric) Laplace variables 
+    It behaves like core Gaussian with exponential tails 
     - see Wiliam J. Reed, 'The Normal-Laplace Distribution Relatives', October, 2004
     - see https://www.math.uvic.ca/faculty/reed/NL.draft.1.pdf
     - see Reed, W.J, 'The Normal-Laplace Distribution and Its Relatives'. 
     In: Balakrishnan, N., Sarabia, J.M., Castillo, E. (eds) 
     'Advances in Distribution Theory, Order Statistics, and Inference. 
     Statistics for Industry and Technology'. Birkhäuser Boston. 
-    - see https://doi.org/10.1007/0-8176-4487-3_4
-    
-    - see Ostap::Math::nills_normal 
-    - see Ostap::Math::nills_normal 
+    - see https://doi.org/10.1007/0-8176-4487-3_4    
+    - see Ostap::Math::mills_normal 
     - see Ostap::Math::NormalLaplace
     """
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
                    mu        = None ,   ## related to mean
-                   varsigma  =  1   ,   ## relatd  to width
+                   varsigma  =  1   ,   ## related to width
                    kL        =  0   ,
                    kR        =  0   ) :
         # 
         ## initialize the base
         #        
         PEAK.__init__  ( self , name , xvar                  , 
-                              mean        = mu                    ,
-                              sigma       = varsigma              ,
-                              mean_name   = 'mu_%s'        % name ,
-                              mean_title  = '#mu(%s)'      % name ,
-                              sigma_name  = 'varsigma_%s'  % name ,
-                              sigma_title = 'varsigma(%s)' % name )
+                         mean        = mu                    ,
+                         sigma       = varsigma              ,
+                         mean_name   = 'mu_%s'        % name ,
+                         mean_title  = '#mu(%s)'      % name ,
+                         sigma_name  = 'varsigma_%s'  % name ,
+                         sigma_title = 'varsigma(%s)' % name )
         
         self.__mu       = self.mean 
         self.__varsigma = self.sigma
-        
         
         ## kL 
         self.__kL = self.make_var ( kL                 ,
@@ -4132,7 +4121,7 @@ models.append ( NormalLaplace_pdf )
 #  - \f$ k_L \ge 0\f$
 #  - \f$ k_R \ge 0\f$
 #
-#  @see Souvik Das, "A simple alternative to Crystall Ball fnuction"
+#  @see Souvik Das, "A simple alternative to Crystall Ball function"
 #                   arXiv:1603.08591  [hep-ex]
 #  @see https://arxiv.org/abs/1603.08591
 #  @attention - the function is not normalized! 
@@ -4179,7 +4168,7 @@ class Das_pdf(PEAK) :
                    sigma = None ,    ## width parameter
                    kL    = None ,    ## left tail parameter
                    kR    = None ,    ## right tail parameter
-                   k     = None ,    ## tail parameer  (alternaike)
+                   k     = None ,    ## tail parameter (alternative)
                    kappa = None ) :  ## tail asymmetry (alternative) 
         
         #
@@ -4597,8 +4586,6 @@ class FupN_pdf(PEAK) :
 models.append ( Up_pdf ) 
 # =============================================================================
 
-
-
 # =============================================================================
 ## @class Voigt_pdf
 #  Voigt-pdf distribution
@@ -4610,8 +4597,8 @@ models.append ( Up_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Voigt_pdf(PEAK) :
-    """Voigt function:
-    Convolution of non-relativistic Breit-Wigner with gaussian resolution
+    """ Voigt function:
+    Convolution of non-relativistic Breit-Wigner with Gaussian resolution
     
     The implementation relied on Faddeeva function 
     http://en.wikipedia.org/wiki/Faddeeva_function
@@ -4903,7 +4890,7 @@ models.append ( BreitWigner_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2018-11-25
 class BWMC_pdf(PEAK) :
-    """Multi-channel version of Relativistic Breit-Wigner function
+    """ Multi-channel version of Relativistic Breit-Wigner function
 
     >>> m_Kp  =  493.677 * MeV    ## mass of K+ 
     >>> m_Kz  =  497.614 * MeV    ## mass of K0
@@ -5232,7 +5219,6 @@ class BWI_pdf (BreitWigner_pdf) :
         ## now take care on the phase
         # =====================================================================
 
-
         if   isinstance ( phase , PDF1 ) and self.xvar is phase.xvar :
             
             ## almost ideal case , but the scale factor is needed 
@@ -5412,8 +5398,7 @@ class BWI_pdf (BreitWigner_pdf) :
         iT = I.integral ( self.cmp_total        , xmin = xmn , xmax = xmx )
                 
         return iS/iT, iB/iT, iI/iT  
-    
-        
+            
 # =============================================================================
 ## @class BWPS
 #  Breit-Wigner function modulated with extra phase-space and polynomial factors
@@ -5434,10 +5419,10 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
                    the_phis  = None ) :
 
         if   isinstance ( breitwigner , Ostap.Math.BWPS ) : pass
-        elif isinstance ( breitwigner , tuple ) :
+        elif isinstance ( breitwigner , tuple           ) :
             breitwigner = Ostap.Math.BWPS  ( *breitwigner )
         else :
-            raise ArgumentError("BWPS_pdf: Invalidd type of breitwigner") 
+            raise ArgumentError("BWPS_pdf: Invalid type of `breitwigner`") 
         
         ## initialize the base classes 
         BreitWigner_pdf.__init__  ( self ,
@@ -5491,8 +5476,6 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
 
     
 models.append ( BWPS_pdf )
-
-
 
 # =============================================================================
 ## @class BW3L_pdf

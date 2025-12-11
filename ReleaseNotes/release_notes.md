@@ -1,9 +1,10 @@
 ## New features
 
+  1. add `ResoCB` resolution function
+
 ## Backward  incompatible 
 
 ## Bug fixes
-
 
 # v3.6.0.0 
 

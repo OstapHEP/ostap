@@ -9211,9 +9211,17 @@ Double_t Ostap::Models::Hyperbolic::analyticalIntegral
   return m_hyperbolic.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
-
-
+double Ostap::Models::Hyperbolic::alpha () const
+{ setPars() ; return m_hyperbolic.alpha () ; }
+// ============================================================================
+double Ostap::Models::Hyperbolic::beta  () const
+{ setPars() ; return m_hyperbolic.beta  () ; }
+// ============================================================================
+double Ostap::Models::Hyperbolic::gamma () const
+{ setPars() ; return m_hyperbolic.gamma () ; }
+// ============================================================================
+double Ostap::Models::Hyperbolic::delta () const
+{ setPars() ; return m_hyperbolic.delta () ; }
 
 // ============================================================================
 /*  constructor from all parameters
@@ -9312,8 +9320,18 @@ Double_t Ostap::Models::GenHyperbolic::analyticalIntegral
   return m_hyperbolic.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
-
+double Ostap::Models::GenHyperbolic::alpha () const
+{ setPars() ;    return m_hyperbolic.alpha () ; }
+// ============================================================================
+double Ostap::Models::GenHyperbolic::beta  () const
+{ setPars() ;    return m_hyperbolic.beta  () ; }
+// ============================================================================
+double Ostap::Models::GenHyperbolic::gamma () const
+{ setPars() ;    return m_hyperbolic.gamma () ; }
+// ============================================================================
+double Ostap::Models::GenHyperbolic::delta () const
+{ setPars() ;    return m_hyperbolic.delta () ; }
+// ============================================================================
 
 // ============================================================================
 /** constructor from all parameters

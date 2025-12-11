@@ -104,7 +104,7 @@ def normalize_data ( data , another = None  ) :
                 if 0 < ii : return data / ii
             except TypeError : pass
 
-        ## use numerical intgration as last resort
+        ## use numerical integration as the last resort
         if num_integration :
             import ostap.math.integral as II
             ii = II.integral ( data , xmin , xmax )
@@ -786,17 +786,24 @@ class WeightingPlot(object) :
     @property
     def w  ( self )   :
         """`w`  - relative weight (relative importance of this variable)
+        - the importance can be (de/in)creased, if needed. 
         """
-        return self.__w 
+        return self.__w
+    
     @property
     def ignore ( self ) :
-        """`ignore` : do not use variable in reweights, but use for comparsion
+        """`ignore` : do not use variable in reweights; use for comparsion only
+        - the reweighting results for this variable ar nto saved to database 
         """
         return self.__ignore
     
 # =============================================================================
 from collections import namedtuple 
-ComparisonPlot = namedtuple ( 'ComparisonPlot' , ( 'what' , 'data' , 'mc' , 'weight' ) )
+ComparisonPlot = namedtuple ( 'ComparisonPlot' ,
+                              ( 'what'   ,
+                                'data'   ,
+                                'mc'     ,
+                                'weight' ) )
 
 _store = set() 
 # =============================================================================
@@ -1047,6 +1054,7 @@ def makeWeights  ( dataset                      ,
     
     nplots  = len ( plots )
 
+    ## #itemd that have been updated at this iterations and *not-good*
     for_update   = 0 
     ## list of plots to compare 
     cmp_plots    = []
@@ -1103,33 +1111,41 @@ def makeWeights  ( dataset                      ,
         else                                  : w = hdata / hmc              ## NB!
 
         # =====================================================================
+        ## Here we need to get the statistics of weights
+        # =====================================================================
         ## scale & get the statistics of weights
-        wstat  = w.stat() 
-        wmean  = wstat.mean() 
-        w    /= wmean.value()
+        wstat  = w.stat      () 
+        wmean  = wstat.mean  () 
+        w     /= wmean.value ()
         
-        wstat  = w.stat     ()
-        wmean  = wstat.mean ()
+        wstat  = w.stat      ()
+        wmean  = wstat.mean  ()
 
         ## RMS: 
-        wrms   = wstat.rms  () / wmean  
-        ## MINMAX: 
-        wmin  , wmax = wstat.minmax()
-        ## CHI2:
+        wrms   = wstat.rms   () / wmean
         
+        ## MINMAX: 
+        wmin , wmax = wstat.minmax()
+        ## CHI2:
         meanv  = float ( wmean )
         ndf    = len ( w ) 
         c2ndf  = sum ( w [ i ].chi2 ( meanv ) for i in w ) 
         c2ndf /= ndf 
+
+        # =====================================================================
+        ## make decision
+        # =====================================================================
         
         good1 = abs   ( wmax - wmin ) <= minmax
         good2 = float ( wrms        ) <= delta
-        good3 = c2ndf                 <= 1 
+        good3 = c2ndf                 <= maxchi2 
         good  = good1 and good2 and good3 ## small variance?         
         #
-
-        good  = good1 and good2  and good3 ## small variance?         
         
+        # =====================================================================
+        ## document the decision 
+        # =====================================================================
+                
         ## build  the row in the summary table 
         row = [ address  , '%-6.3f/%6.3f' % ( wmin , wmax ) ] 
 
@@ -1152,7 +1168,7 @@ def makeWeights  ( dataset                      ,
         ## apply weight truncation:
         if not ignore and wtruncate : 
             wmin , wmax = wtruncate
-            truncated = False 
+            truncated   = False 
             for i in w  :
                 we = w [ i ]
                 if   we.value() < wmin :
@@ -1175,11 +1191,13 @@ def makeWeights  ( dataset                      ,
 
         rows [ address ] = tuple ( row ) 
         
-        #
-        ## make decision based on the variance of weights 
-        #
+        # =====================================================================
+        ## prepare the reweighting entry to datatbase  
+        # =====================================================================
         if not ignore  :
-            ## update DB for "not-good" or "forced" entries 
+            # =================================================================
+            ## update DB only for "not-good" or "forced" entries
+            # =================================================================
             if force_update or not good :
                 if not good : for_update += 1
                 save_to_db.append ( ( address , ww , hdata0 , hmc0 , hdata , hmc , w ) )
@@ -1193,10 +1211,12 @@ def makeWeights  ( dataset                      ,
     nactive = len ( active )  
 
     if   power is None :
-        ## Variables are uncorelate
+        ## Variables are 100% uncorelated? power can be 1.0 
         p1 = 1.0
-        ## Varibales are 100% correlated
+        ## Variables are 100% correlated? power should be 1/nactive  
         p2 = 1.0 / ( nactive - 1 ) if 2 <= nactive  else 1.0
+        ## 
+        ## for realistic case take something intermediate 
         ## 
         alpha   = 0.75 
         ## average between 100% correlated and 100% uncorrelated 
@@ -1204,10 +1224,13 @@ def makeWeights  ( dataset                      ,
         
     elif power and callable ( power )                          : eff_exp = power ( nactive ) 
     elif isinstance ( power , num_types ) and 0 < power <= 2.0 : eff_exp = 1.0 * power 
-    elif 1 == nactive and 1 < len ( plots )                    : eff_exp = 0.95 
-    elif 1 == nactive                                          : eff_exp = 1.05 ## alight overreweighting
+    elif 1 == nactive and 1 < len ( plots )                    : eff_exp = 0.95 ## slight underreweighting
+    elif 1 == nactive                                          : eff_exp = 1.05 ## slight overreweighting
     else                                                       : eff_exp = 1.05 / max ( nactive - 1 , 1 ) 
 
+    # =============================================================================
+    ## save the results into data base +  abit of black magid with effective exponent 
+    # =============================================================================
     while database and save_to_db :
 
         entry = save_to_db.pop() 
@@ -1215,13 +1238,14 @@ def makeWeights  ( dataset                      ,
         address , ww , hd0 , hm0 , hd , hm , weight = entry  
 
         cnt = weight.stat()
-        mnw, mxw = cnt.minmax()
+        mnw , mxw = cnt.minmax()
 
-        if 1 < nactive and 1 != ww :
+        if 1 < nactive and 1 != ww :            
             eff_exp *= ww
             logger.info  ("%s: apply `effective exponent' of %.3f for `%s'" % ( tag , eff_exp  , address ) )
 
-        if 1 != eff_exp and 0 < eff_exp : 
+        if 1 != eff_exp and 0 < eff_exp :
+            
             weight = weight ** eff_exp
 
             row = list ( rows [ address ] )
@@ -1247,14 +1271,14 @@ def makeWeights  ( dataset                      ,
             if debug and True :
                 addr        = '%s:%s' % ( address , tag_rw_suffix ) 
                 rw = list  ( db.get ( addr , [] ) )
-                e2 = tuple ( entry [ 2: ] ) 
+                e2 = tuple ( entry [ 2 : ] ) 
                 rw.append ( e2 )                  
                 db [ addr ] = tuple ( rw ) 
                         
         del hd0, hm0 , hd , hm , weight , entry 
 
     table = [  header ]
-    for   row in   rows  : table.append ( rows[row] )
+    for   row in   rows  : table.append ( rows [ row ] )
         
     import ostap.logger.table as Table
     table = Table.remove_empty_columns ( table ) 
