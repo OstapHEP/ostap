@@ -785,6 +785,23 @@ def _omdas_reduce_ ( peak ) :
 
 Ostap.Math.Das. __reduce__ = _omdas_reduce_
 
+
+# =============================================================================
+## Reduce Ostap::Math::ADas
+#  @see Ostap::Math::ADas
+def _omadas_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.ADas`
+    - see `Ostap.Math.ADas`
+    """
+    return root_factory , ( type ( peak )  , 
+                            peak.mu     () ,
+                            peak.sigmaL () , 
+                            peak.sigmaR () , 
+                            peak.kL     () , 
+                            peak.kR     () )
+
+Ostap.Math.ADas. __reduce__ = _omadas_reduce_
+
 # =============================================================================
 ## Reduce Ostap::Math::Hat
 #  @see Ostap::Math::Hat

@@ -5851,57 +5851,21 @@ Ostap::Math::Das::Das
   const double sigma  , // width parameter 
   const double kL     , // left tails 
   const double kR     ) // right tail 
-  : m_mu    ( mu ) 
-  , m_sigma ( std::abs ( sigma ) ) 
-  , m_kL    ( std::abs ( kL    ) ) 
-  , m_kR    ( std::abs ( kR    ) ) 
+  : m_core  ( mu , sigma )
+  , m_left  ( kL )
+  , m_right ( kR ) 
 {}
-// ============================================================================
-bool Ostap::Math::Das::setMu    ( const double value ) 
-{
-  if ( s_equal ( value , m_mu  ) ) { return false ; }
-  m_mu = value ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Das::setSigma ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
-  m_sigma = avalue ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Das::setKL ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_kL ) ) { return false ; }
-  m_kL = avalue ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Das::setKR ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_kR ) ) { return false ; }
-  m_kR = avalue ;
-  return true ;
-}
 // ============================================================================
 // evaluate  pdf 
 // ============================================================================
 double Ostap::Math::Das::pdf ( const  double x ) const 
 {
-  const double dx = ( x - m_mu ) / m_sigma ;
-  ///
-  static const double s_N = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
+  const double _xL = xL () ;
+  if ( x <= _xL ) { return m_left  ( x , _xL , m_core ( _xL ) , m_core.dFoF ( _xL ) ) ;  }
+  const double _xR = xR () ;
+  if ( x >= _xR ) { return m_right ( x , _xR , m_core( _xR ) , m_core.dFoF ( _xR ) ) ;  }
   //
-  return 
-    ( dx  <= - m_kL ) ? 
-    s_N * std::exp ( m_kL * ( 0.5 * m_kL + dx ) ) / m_sigma : 
-    ( dx  >=   m_kR ) ? 
-    s_N * std::exp ( m_kR * ( 0.5 * m_kR - dx ) ) / m_sigma : 
-    s_N * std::exp ( -0.5 * dx * dx             ) / m_sigma ;
+  return m_core ( x ) ; 
 }
 // ============================================================================
 // get the integral 
@@ -5909,15 +5873,11 @@ double Ostap::Math::Das::pdf ( const  double x ) const
 double Ostap::Math::Das::integral () const 
 {
   //
-  static const double s_N = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
-  //
-  return 
-    // gaussian core 
-    Ostap::Math::gauss_int ( -m_kL , m_kR ) 
-    // left  tail
-    + s_N * std::exp ( -0.5 * m_kL * m_kL ) / m_kL 
-    // right tail
-    + s_N * std::exp ( -0.5 * m_kR * m_kR ) / m_kR ;  
+  const double _xL = xL () ;
+  const double _xR = xR () ;
+  return m_core .integral ( _xL , _xR ) 
+       + m_left .integral ( _xL , _xL , m_core ( _xL ) , m_core.dFoF ( _xL ) ) 
+       + m_right.integral ( _xR , _xR , m_core ( _xR ) , m_core.dFoF ( _xR ) ) ; 
 }
 // =============================================================================
 // get the integral 
@@ -5930,32 +5890,16 @@ double Ostap::Math::Das::integral
   if      ( s_equal ( low , high ) ) { return 0 ; }
   else if (           low > high   ) { return - integral ( high , low ) ; }
   //
-  const double sL = m_mu - m_kL * m_sigma ;
-  if ( low < sL && sL < high ) { return integral ( low , sL ) + integral ( sL , high ) ; }
+  const double _xL = xL () ;
+  const double _xR = xR () ;
   //
-  const double sR = m_mu + m_kR * m_sigma ;
-  if ( low < sR && sR < high ) { return integral ( low , sR ) + integral ( sR , high ) ; }
+  if ( low < _xL && _xL < high ) { return integral ( low , _xL ) + integral ( _xL , high ) ; }
+  if ( low < _xR && _xR < high ) { return integral ( low , _xR ) + integral ( _xR , high ) ; }
   //
-  static const double s_N = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
+  if ( high <= _xL ) { return m_left .integral ( low , high , _xL , m_core ( _xL ) , m_core.dFoF ( _xL ) ) ; }
+  if ( low  >= _xR ) { return m_right.integral ( low , high , _xR , m_core ( _xR ) , m_core.dFoF ( _xR ) ) ; }
   //
-  // left tail 
-  if ( std::max ( low , high ) <= sL )
-  {
-    const double k2h = 0.5* m_kL * m_kL ;
-    const double kS  = m_kL / m_sigma   ;
-    return s_N * ( std::exp ( k2h + ( high - m_mu ) * kS ) - 
-                   std::exp ( k2h + ( low  - m_mu ) * kS ) ) / m_kL ;
-  }
-  /// right tail
-  if ( std::min ( low , high ) >= sR )
-  {
-    const double k2h = 0.5* m_kR * m_kR ;
-    const double kS  = m_kR / m_sigma   ;
-    return s_N * ( std::exp ( k2h - ( low  - m_mu ) * kS ) - 
-                   std::exp ( k2h - ( high - m_mu ) * kS ) ) / m_kR ;
-  }
-  // gaussian core 
-  return Ostap::Math::gauss_int ( low ,  high , m_mu , m_sigma );
+  return m_core.integral ( low , high ) ;
 }
 // ============================================================================
 // get the tag 
@@ -5963,13 +5907,94 @@ double Ostap::Math::Das::integral
 std::size_t Ostap::Math::Das::tag () const 
 { 
   static const std::string s_name = "Das" ;
-  return Ostap::Utils::hash_combiner ( s_name   , 
-                             m_mu     , 
-                             m_sigma  , 
-                             m_kL     , 
-                             m_kR     ) ;
+  return Ostap::Utils::hash_combiner ( s_name  , 
+                                       m_core .tag  () ,  
+                                       m_left .tag  () , 
+                                       m_right.tag  () ) ; 
 }
 // ============================================================================
+
+
+// ============================================================================
+/*  constructor with full parameters 
+ *  @param mu peak location 
+ *  @param sigma sigma for Gaussian Core 
+ *  @param kL    left tail parameter 
+ *  @param kR    right tail parameter 
+ */
+// ============================================================================
+Ostap::Math::ADas::ADas 
+( const double mu     , // location parameter 
+  const double sigmaL , // leftt width parameter 
+  const double sigmaR , // right width parameter
+  const double kL     , // left tails 
+  const double kR     ) // right tail 
+  : m_core  ( mu , sigmaL , sigmaR )
+  , m_left  ( kL )
+  , m_right ( kR ) 
+{}
+// ============================================================================
+// evaluate  pdf 
+// ============================================================================
+double Ostap::Math::ADas::pdf ( const  double x ) const 
+{
+  const double _xL = xL () ;
+  if ( x <= _xL ) { return m_left  ( x , _xL , m_core ( _xL ) , m_core.dFoF ( _xL ) ) ;  }
+  const double _xR = xR () ;
+  if ( x >= _xR ) { return m_right ( x , _xR , m_core ( _xR ) , m_core.dFoF ( _xR ) ) ;  }
+  //
+  return m_core ( x ) ; 
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::ADas::integral () const 
+{
+  //
+  const double _xL = xL () ;
+  const double _xR = xR () ;
+  return m_core .integral ( _xL , _xR ) 
+       + m_left .integral ( _xL , _xL , m_core ( _xL ) , m_core.dFoF ( _xL ) ) 
+       + m_right.integral ( _xR , _xR , m_core ( _xR ) , m_core.dFoF ( _xR ) ) ; 
+}
+// =============================================================================
+// get the integral 
+// =============================================================================
+double Ostap::Math::ADas::integral 
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if (           low > high   ) { return - integral ( high , low ) ; }
+  //
+  const double _xL = xL () ;
+  const double _xR = xR () ;
+  //
+  if ( low < _xL && _xL < high ) { return integral ( low , _xL ) + integral ( _xL , high ) ; }
+  if ( low < _xR && _xR < high ) { return integral ( low , _xR ) + integral ( _xR , high ) ; }
+  //
+  if ( high <= _xL ) { return m_left .integral ( low , high , _xL , m_core ( _xL ) , m_core.dFoF ( _xL ) ) ; }
+  if ( low  >= _xR ) { return m_right.integral ( low , high , _xR , m_core ( _xR ) , m_core.dFoF ( _xR ) ) ; }
+  //
+  return m_core.integral ( low , high ) ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::ADas::tag () const 
+{ 
+  static const std::string s_name = "ADas" ;
+  return Ostap::Utils::hash_combiner ( s_name  , 
+                                       m_core .tag  () ,  
+                                       m_left .tag  () , 
+                                       m_right.tag  () ) ; 
+}
+// ============================================================================
+
+
+
+
 
 // ============================================================================
 /*  constructor with full parameters 

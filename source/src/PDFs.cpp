@@ -9334,14 +9334,14 @@ double Ostap::Models::GenHyperbolic::delta () const
 // ============================================================================
 
 // ============================================================================
-/** constructor from all parameters
+/*  constructor from all parameters
  *  @param name  name of PDF
  *  @param title name of PDF
  *  @param x      observable 
  *  @param mu     location 
  *  @param sigma  width for Gaussian core 
- *  @param kL     left tail 
- *  @param kR     right tail 
+ *  @param alphaL     left tail 
+ *  @param alphaR     right tail 
  */
 // ============================================================================
 Ostap::Models::Das::Das 
@@ -9350,18 +9350,38 @@ Ostap::Models::Das::Das
   RooAbsReal&          x      ,   // observable 
   RooAbsReal&          mu     ,   // location
   RooAbsReal&          sigma  ,   // width 
-  RooAbsReal&          kL     ,   // left tail 
-  RooAbsReal&          kR     )   // right tail 
+  RooAbsReal&          alphaL ,   // left tail 
+  RooAbsReal&          alphaR )   // right tail 
   : RooAbsPdf    ( name , title ) 
-  , m_x          ( "x"      , "Observable"            , this , x      ) 
-  , m_mu         ( "mu"     , "Location parameter"    , this , mu     ) 
-  , m_sigma      ( "sigma"  , "Sigma    parameter"    , this , sigma  ) 
-  , m_kL         ( "kL"     , "Left tail"             , this , kL     ) 
-  , m_kR         ( "kR"     , "Right tail"            , this , kR     ) 
+  , m_x          ( "!x"      , "Observable"            , this , x      ) 
+  , m_mu         ( "!mu"     , "Location parameter"    , this , mu     ) 
+  , m_sigma      ( "!sigma"  , "Sigma    parameter"    , this , sigma  ) 
+  , m_alphaL     ( "!alphaL" , "Left tail"             , this , alphaL ) 
+  , m_alphaR     ( "!alphaR" , "Right tail"            , this , alphaR ) 
   , m_das ()  
 {
   setPars () ;  
 }
+// ============================================================================
+/** constructor from all parameters
+ *  @param name  name of PDF
+ *  @param title name of PDF
+ *  @param x      observable 
+ *  @param mu     location 
+ *  @param sigma  width for Gaussian core 
+ *  @param alpha      left&right tails 
+ */
+// ============================================================================
+Ostap::Models::Das::Das 
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,  // observable 
+  RooAbsReal&          mu     ,  // location
+  RooAbsReal&          sigma  ,  // width 
+  RooAbsReal&          alpha  )  // left&right & tails 
+  : Das ( name  , title , x  , mu , sigma , alpha , alpha )
+  {}
+
 // ============================================================================
 // copy constructor
 // ============================================================================
@@ -9370,11 +9390,11 @@ Ostap::Models::Das::Das
   const char*                      name  ) 
   : RooAbsPdf    ( right , name ) 
     //
-  , m_x          ( "x"      , this , right.m_x      ) 
-  , m_mu         ( "mu"     , this , right.m_mu     )  
-  , m_sigma      ( "sigma"  , this , right.m_sigma  ) 
-  , m_kL         ( "kL"     , this , right.m_kL     ) 
-  , m_kR         ( "kR"     , this , right.m_kR     ) 
+  , m_x          ( "!x"      , this , right.m_x      ) 
+  , m_mu         ( "!mu"     , this , right.m_mu     )  
+  , m_sigma      ( "!sigma"  , this , right.m_sigma  ) 
+  , m_alphaL     ( "!alphaL" , this , right.m_alphaL ) 
+  , m_alphaR     ( "!alphaR" , this , right.m_alphaR ) 
   , m_das        ( right.m_das ) 
 {
   setPars () ;  
@@ -9390,8 +9410,7 @@ void Ostap::Models::Das::setPars () const
 { 
   m_das.setMu     ( m_mu     ) ;
   m_das.setSigma  ( m_sigma  ) ;
-  m_das.setKL     ( m_kL     ) ;
-  m_das.setKR     ( m_kR     ) ;
+  m_das.setAlpha  ( m_alphaL , m_alphaR ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -9425,6 +9444,123 @@ Double_t Ostap::Models::Das::analyticalIntegral
   return m_das.integral ( xmin , xmax ) ;
 }
 // ============================================================================
+
+// ============================================================================
+/** constructor from all parameters
+ *  @param name  name of PDF
+ *  @param title name of PDF
+ *  @param x      observable 
+ *  @param mu     location 
+ *  @param sigma  width for Gaussian core 
+ *  @param alphaL     left tail 
+ *  @param alphaR     right tail 
+ */
+// ============================================================================
+Ostap::Models::ADas::ADas 
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,   // observable 
+  RooAbsReal&          mu     ,   // location
+  RooAbsReal&          sigmaL ,   // width 
+  RooAbsReal&          sigmaR ,   // width 
+  RooAbsReal&          alphaL ,   // left tail 
+  RooAbsReal&          alphaR )   // right tail 
+  : RooAbsPdf    ( name , title ) 
+  , m_x          ( "!x"      , "Observable"            , this , x      ) 
+  , m_mu         ( "!mu"     , "Location parameter"    , this , mu     ) 
+  , m_sigmaL     ( "!sigmaL" , "Sigma-L  parameter"    , this , sigmaL ) 
+  , m_sigmaR     ( "!sigmaR" , "Sigma-R   arameter"    , this , sigmaR ) 
+  , m_alphaL     ( "!alphaL" , "Left tail"             , this , alphaL ) 
+  , m_alphaR     ( "!alphaR" , "Right tail"            , this , alphaR ) 
+  , m_adas ()  
+{
+  setPars () ;  
+}
+// ============================================================================
+/** constructor from all parameters
+ *  @param name  name of PDF
+ *  @param title name of PDF
+ *  @param x      observable 
+ *  @param mu     location 
+ *  @param sigma  width for Gaussian core 
+ *  @param alpha     left&right tails 
+ */
+// ============================================================================
+Ostap::Models::ADas::ADas 
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,  // observable 
+  RooAbsReal&          mu     ,  // location
+  RooAbsReal&          sigma  ,  // width 
+  RooAbsReal&          alpha  )  // left&right & tails 
+  : ADas ( name  , title , x  , mu , sigma , sigma , alpha , alpha )
+  {}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::ADas::ADas
+( const Ostap::Models::ADas& right ,
+  const char*                      name  ) 
+  : RooAbsPdf    ( right , name ) 
+    //
+  , m_x          ( "!x"      , this , right.m_x      ) 
+  , m_mu         ( "!mu"     , this , right.m_mu     )  
+  , m_sigmaL     ( "!sigmaL" , this , right.m_sigmaL ) 
+  , m_sigmaR     ( "!sigmaR" , this , right.m_sigmaR ) 
+  , m_alphaL     ( "!alphaL" , this , right.m_alphaL ) 
+  , m_alphaR     ( "!alphaR" , this , right.m_alphaR ) 
+  , m_adas       ( right.m_adas ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::ADas*
+Ostap::Models::ADas::clone ( const char* name ) const 
+{ return new Ostap::Models::ADas( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::ADas::setPars () const 
+{ 
+  m_adas.setMu     ( m_mu     ) ;
+  m_adas.setSigma  ( m_sigmaL , m_sigmaR ) ;
+  m_adas.setAlpha  ( m_alphaL , m_alphaR ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::ADas::evaluate() const 
+{
+  setPars() ;
+  return m_adas ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::ADas::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::ADas::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_adas.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
 
 
 
@@ -11532,6 +11668,7 @@ ClassImp(Ostap::Models::KGaussian          )
 ClassImp(Ostap::Models::Hyperbolic         )
 ClassImp(Ostap::Models::GenHyperbolic      )
 ClassImp(Ostap::Models::Das                )
+ClassImp(Ostap::Models::ADas                )
 ClassImp(Ostap::Models::PositiveSpline     ) 
 ClassImp(Ostap::Models::MonotonicSpline    ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )

@@ -160,6 +160,7 @@ from   ostap.fitting.funbasic   import FUN1 , Fun1D
 from   ostap.fitting.pdfbasic   import PDF1 , all_args
 from   ostap.fitting.fit1d      import PEAK , PEAKMEAN , CheckMean
 from   ostap.fitting.fithelpers import ( Phases  , ZERO      , 
+                                         TailAL  , TailAR    , 
                                          TailN   , TailNL    , TailNR    ,
                                          Tail    , LeftTail  , RightTail ,
                                          SigmaLR , TwoSigmas )    
@@ -4105,7 +4106,7 @@ class NormalLaplace_pdf(PEAK) :
 models.append ( NormalLaplace_pdf )      
 
 # =============================================================================
-# @class Das_pdf
+## @class Das_pdf
 #  Simple gaussian function with exponential tails.
 #  It corresponds to <code>ExpGaussExp</code> function, 
 #  \f[ 
@@ -4137,7 +4138,7 @@ models.append ( NormalLaplace_pdf )
 #
 # @see Ostap::Math::Das
 # @see Ostap::Models::Das
-class Das_pdf(PEAK) :
+class Das_pdf(PEAK,TailAL,TailAR) :
     r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from ref below
     
@@ -4161,16 +4162,14 @@ class Das_pdf(PEAK) :
     - see Ostap.Math.Das
     - see Ostap.Models.Das
     """
-    def __init__ ( self         ,
-                   name         ,    ## the name of PDF
-                   xvar         ,    ## observable
-                   mu    = None ,    ## location parameter
-                   sigma = None ,    ## width parameter
-                   kL    = None ,    ## left tail parameter
-                   kR    = None ,    ## right tail parameter
-                   k     = None ,    ## tail parameter (alternative)
-                   kappa = None ) :  ## tail asymmetry (alternative) 
-        
+    def __init__ ( self          ,
+                   name          ,    ## the name of PDF
+                   xvar          ,    ## observable
+                   mu     = None ,   ## location parameter
+                   sigma  = None ,   ## width parameter
+                   alphaL = None ,   ## left tail parameter
+                   alphaR = None ) : ## right tail parameter
+            
         #
         ## initialize the base
         # 
@@ -4180,67 +4179,9 @@ class Das_pdf(PEAK) :
                               mean_name   = 'mu_%s'    % name ,
                               mean_title  = '#mu_(%s)' % name ) 
         
+        TailAL  .__init__ ( self , alpha = alphaL )
+        TailAR .__init__ ( self , alpha = alphaR )
         
-        if k is None and kappa is None :
-            
-            self.__kL    = self.make_var ( kL ,
-                                           'kL_%s'    % name ,   
-                                           '#k_L(%s)' % name ,
-                                           None , 1 , 1.e-6 , 1000 )
-            self.__kR    = self.make_var ( kR ,
-                                           'kR_%s'    % name ,   
-                                           '#k_R(%s)' % name ,
-                                           None , 1 , 1.e-6 , 1000 )
-
-            ## name of k-variable 
-            k = Ostap.MoreRooFit.Addition2 ( self.roo_name ( 'k' , self.name ) ,
-                                            '0.5*(kL+kR)' , 
-                                             self.kL ,
-                                             self.kR ,
-                                             0.5     ,
-                                             0.5     )
-            
-            self.__k     = self.make_var ( k , k.name , k.title , None , 1 , 1.e-6 , 1000 )
-            
-            kk = Ostap.MoreRooFit.Asymmetry ( self.roo_name ('kappa' , self.name ) ,
-                                              '0.5*(kL-rR)/(kL+kR)' ,
-                                              self.kL ,
-                                              self.kR ,
-                                              0.5     ) 
-            
-            self.__kappa = self.make_var ( kk , kk.name , kk.title , None , 0 , -1 , 1 )
- 
-        elif kL is None and kR is None :
-            
-            self.__k     = self.make_var ( k                    ,
-                                           'k_%s'      % name   ,  
-                                           'k(%s)'     % name   ,
-                                           None , 1 , 1.e-6 , 1000 )
-            self.__kappa = self.make_var ( kappa                ,
-                                           'kappa_%s'   % name  ,  
-                                           '#kappa(%s)' % name  ,
-                                           None , 0 , -1 , 1 )
-
-            
-            kl = Ostap.MoreRooFit.Combination ( self.roo_name ( 'kL' , self.name ) ,
-                                                'k*(1+kappa)' , 
-                                                self.k        ,
-                                                self.kappa    ,
-                                                1 , 1 , 1     )
-            kr = Ostap.MoreRooFit.Combination ( self.roo_name ( 'kR' , self.name ) ,
-                                                'k*(1-kappa)' , 
-                                                self.k        ,
-                                                self.kappa    ,
-                                                1 , 1 , -1    )
-            
-            self.__kL     = self.make_var ( kl , kl.name , kl.title , None , 1 , 1.e-6 , 1000 )
-            self.__kR     = self.make_var ( kr , kr.name , kr.title , None , 1 , 1.e-6 , 1000 )
-
-        else :
-            
-            raise TypeError( 'Invalid setting for k/kappa/kL/kR!' )
-
-
         ## build PDF
         self.pdf = Ostap.Models.Das (
             self.roo_name ( 'das_' ) ,
@@ -4248,19 +4189,17 @@ class Das_pdf(PEAK) :
             self.xvar                ,
             self.mu                  ,
             self.sigma               ,
-            self.kL                  ,
-            self.kR                  )
+            self.alphaL              ,
+            self.alphaR              )
 
         ## save configuration
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'mu'    : self.mu    ,
-            'sigma' : self.sigma ,
-            'kL'    : self.kL    if ( k  is None and kappa is None ) else None ,
-            'kR'    : self.kR    if ( k  is None and kappa is None ) else None ,
-            'k'     : self.k     if ( kL is None and kR    is None ) else None ,
-            'kappa' : self.kappa if ( kL is None and kR    is None ) else None ,
+            'name'   : self.name   ,
+            'xvar'   : self.xvar   ,
+            'mu'     : self.mu     ,
+            'sigma'  : self.sigma  ,
+            'alphaL' : self.alphaL , 
+            'alphaR' : self.alphaR ,
             }
 
     @property
@@ -4271,43 +4210,116 @@ class Das_pdf(PEAK) :
     @mu.setter 
     def mu ( self ,value ) :
         self.mean = value 
+        
+# =============================================================================
+## @class ADas_pdf
+#  Simple gaussian function with exponential tails.
+#  It corresponds to <code>ExpGaussExp</code> function, 
+#  \f[ 
+#   f (x ; \mu, \sigma, k_L, k_R ) = \frac{1}{\sqrt{2\pi}\sigma}
+#   \left\{ \begin{array}[lcl}
+#  \mathrm{e}^{  \frac{k_L^2}{2} + k_L\left(\frac{x-mu}{\sigma}\right) }
+#   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right) < -k_L \\   
+#  \mathrm{e}^{ \frac{1}{s} \left( \frac{x-\mu}{\sigma}\right)^2}
+#   & \mathrm{for}  &  -k_L < \left(\frac{x-\mu}{\sigma}\right) < k_R \\    
+#  \mathrm{e}^{  \frac{k_R^2}{2} - k_R\left(\frac{x-mu}{\sigma}\right) }
+#   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right)> k_R   
+#  \end{array} \right. \f]
+#  - \f$ k_L \ge 0\f$
+#  - \f$ k_R \ge 0\f$
+#
+#  @see Souvik Das, "A simple alternative to Crystall Ball function"
+#                   arXiv:1603.08591  [hep-ex]
+#  @see https://arxiv.org/abs/1603.08591
+#  @attention - the function is not normalized! 
+#  Function was used in 
+#  @see CMS collaboration, V.Khachatryan, 
+#       "Search for resonant pair production of Higgs bosons decaying 
+#        to two bottom quark\textendash{}antiquark pairs 
+#        in proton-proton collisions at 8 TeV}",
+#        Phys. Lett. B749 (2015) 560 
+# @see https://arxiv.org/abs/1503.04114 
+# @see https://doi.org/10.1016/j.physletb.2015.08.047 
+# - Gaussian function is restored when \f$k_L,k_R \rigtharrow +\infty\f$
+#
+# @see Ostap::Math::Das
+# @see Ostap::Models::Das
+class ADas_pdf(PEAK,SigmaLR,TailAL,TailAR) :
+    r"""Simple gaussian function with exponential tails.
+    It corresponds to `ExpGaussExp` function from ref below
     
-    @property
-    def kL  ( self ) :
-        """'kL' : left tail parameter
-        """
-        return self.__kL
-    @kL.setter
-    def kL ( self , value ) :
-        self.setValue ( self.__kL , value )
+    - see Souvik Das, 'A simple alternative to Crystall Ball fnuction'
+    arXiv:1603.08591  [hep-ex]
+    
+    - see https://arxiv.org/abs/1603.08591
+
+    Function was used in 
+    - see CMS collaboration, V.Khachatryan, 
+    'Search for resonant pair production of Higgs bosons decaying 
+    to two bottom quark\textendash{}antiquark pairs 
+    in proton-proton collisions at 8 TeV',
+    Phys. Lett. B749 (2015) 560
+    
+    - see https://arxiv.org/abs/1503.04114 
+    - see https://doi.org/10.1016/j.physletb.2015.08.047
+    
+    Gaussian function is restored when \f$k_L,k_R \rigtharrow +\infty\f$
+    
+    - see Ostap.Math.Das
+    - see Ostap.Models.Das
+    """
+    def __init__ ( self           ,
+                   name           ,   ## the name of PDF
+                   xvar           ,   ## observable
+                   mu      = None ,   ## location parameter
+                   sigma   = None ,   ## width parameter
+                   alphaL  = None ,   ## left tail parameter
+                   alphaR  = None ,   ## right tail parameter
+                   psi     = None ) : ## 
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self , name , xvar ,
+                              mean        = mu                ,
+                              sigma       = sigma             ,
+                              mean_name   = 'mu_%s'    % name ,
+                              mean_title  = '#mu_(%s)' % name )
+         
+         
+        SigmaLR .__init__ ( self , self.sigma , psi = psi )
+        TailAL  .__init__ ( self , alpha = alphaL )
+        TailAR  .__init__ ( self , alpha = alphaR )
+        
+        ## build PDF
+        self.pdf = Ostap.Models.ADas (
+            self.roo_name ( 'das_' ) ,
+            'Das %s' % self.name     ,
+            self.xvar                ,
+            self.mu                  ,
+            self.sigmaL              ,
+            self.sigmaR              , 
+            self.alphaL              ,
+            self.alphaR              )
+
+        ## save configuration
+        self.config = {
+            'name'   : self.name   ,
+            'xvar'   : self.xvar   ,
+            'mu'     : self.mu     ,
+            'sigma'  : self.sigma  ,
+            'psi'    : self.psi    , 
+            'alphaL' : self.alphaL , 
+            'alphaR' : self.alphaR ,
+            }
 
     @property
-    def kR  ( self ) :
-        """'kR' : left tail parameter
+    def mu ( self ) :
+        """'mu' : peak location, same as 'mean'
         """
-        return self.__kR
-    @kR.setter
-    def kR ( self , value ) :
-        self.setValue ( self.__kR , value )
-
-    @property
-    def k   ( self ) :
-        """'k' : (kL+kR)/2 parameter
-        """
-        return self.__k
-    @k.setter
-    def k ( self , value ) :
-        self.setValue ( self.__k , value )
-
-    @property
-    def kappa ( self ) :
-        """'k' : 0.5*(kL-kR)/(kL+kR) parameter
-        """
-        return self.__kappa
-    @kappa.setter
-    def kappa ( self , value ) :
-        self.setValue ( self.__kappa , value )
-
+        return self.mean
+    @mu.setter 
+    def mu ( self ,value ) :
+        self.mean = value 
 
 # =============================================================================
 # @class FisherZ_pdf

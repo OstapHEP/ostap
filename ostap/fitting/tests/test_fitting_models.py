@@ -1053,8 +1053,8 @@ def test_das_1 () :
                                   xvar      = mass               ,
                                   mu        = signal_gauss.mean  ,
                                   sigma     = signal_gauss.sigma ,
-                                  kL        = ( 1 , 0.1 , 10.0 ) ,
-                                  kR        = ( 1 , 0.1 , 10.0 ) ) ,
+                                  alphaL    = ( 1 , 0.1 , 10.0 ) ,
+                                  alphaR    = ( 1 , 0.1 , 10.0 ) ) ,
         background = background   ,
         S = S , B = B ,
         )
@@ -1090,8 +1090,9 @@ def test_das_2 () :
                                   xvar      = mass               ,
                                   mu        = signal_gauss.mean  ,
                                   sigma     = signal_gauss.sigma ,
-                                  k         = ( 1 , 0.1 , 10.0 ) ,
-                                  kappa     = ( 0  , -1 , 1    ) ) ,
+                                  alphaL    = ( 1 , 0.1 , 10.0 ) ,
+                                  alphaR    = ( 1 , 0.1 , 10.0 ) ) ,
+                                  
         background = background   ,
         S = S , B = B ,
         )

@@ -4095,10 +4095,145 @@ class TailNR(object) :
         return self.__NR
 
 
+# ==============================================================================
+##  @class  TailA
+#   Helper mixin class  to define alpha-parameter for tails 
+#   It defines fillowinng properties
+#   - alpha
+#   - a    
+class TailA(object) :
+    """ Helper mixin class  to define alpha-parameter for tails 
+    It defines two properties
+    - alpha
+    - a
+    """    
+    def __init__  ( self               , 
+                    alpha       = None ,
+                    name_alpha  = ''   , 
+                    title_alpha = ''   ) :
+        
+        name = self.name 
+        
+        if not name_alpha  : name_alpha  = 'alpha_%s'    % name 
+        if not title_alpha : title_alpha = '#alpha(%s)'  % name        
+
+        ## parameter alpha         ## parameter alpha         ## parameter alpha 
+        self.__alpha = self.make_var ( alpha       ,
+                                       name_alpha  ,
+                                       title_alpha , 
+                                       None        , 1.50 ,  0.45 , 5.00 )
+
+    @property
+    def alpha ( self ) :
+        """'alpha': alpha-parameter for Crysta Ball-like power-law tail
+        """
+        return self.__alpha 
+    @alpha.setter
+    def alpha ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
+        
+    @property
+    def a ( self ) :
+        """'a:': alpha-parameter for Crystal Ball-like power-law tail (same as 'alpha')"""
+        return self.alpha
+    @a.setter
+    def a ( self, value ) :
+        self.alpha = value 
+
+# ==============================================================================
+##  @class  TailAL
+#   Helper mixin class  to define alpha-parameter for tails 
+#   It defines fillowinng properties
+#   - alphaL
+#   - aL    
+class TailAL(object) :
+    """ Helper mixin class  to define alpha-parameter for tails 
+    It defines two properties
+    - alphaL
+    - aL
+    """    
+    def __init__  ( self               , 
+                    alpha       = None ,
+                    name_alpha  = ''   , 
+                    title_alpha = ''   ) :
+        
+        name = self.name 
+        
+        if not name_alpha  : name_alpha  = 'alphaL_%s'       % name 
+        if not title_alpha : title_alpha = '#alpha_{L}(%s)'  % name        
+
+        ## parameter alpha         ## parameter alpha         ## parameter alpha 
+        self.__alphaL = self.make_var ( alpha       ,
+                                       name_alpha  ,
+                                       title_alpha , 
+                                       None        , 1.50 ,  0.45 , 5.00 )
+
+    @property
+    def alphaL ( self ) :
+        """'alphaL': alpha-parameter for left Crystal Ball-like power-law tail
+        """
+        return self.__alphaL 
+    @alphaL.setter
+    def alphaL ( self, value ) :
+        self.set_value ( self.__alphaL , value ) 
+        
+    @property
+    def aL ( self ) :
+        """'aL': alpha-parameter for left Crystal Ball-like power-law tail (same as 'alphaL')"""
+        return self.alphaL
+    @aL.setter
+    def aL ( self, value ) :
+        self.alphaL = value 
+
+# ==============================================================================
+##  @class  TailAR
+#   Helper mixin class  to define alpha-parameter for tails 
+#   It defines fillowinng properties
+#   - alphaR
+#   - aR    
+class TailAR(object) :
+    """ Helper mixin class  to define alpha-parameter for tails 
+    It defines two properties
+    - alphaR
+    - aR
+    """    
+    def __init__  ( self               , 
+                    alpha       = None ,
+                    name_alpha  = ''   , 
+                    title_alpha = ''   ) :
+        
+        name = self.name 
+        
+        if not name_alpha  : name_alpha  = 'alphaR_%s'       % name 
+        if not title_alpha : title_alpha = '#alpha_{R}(%s)'  % name        
+
+        ## parameter alpha         ## parameter alpha         ## parameter alpha 
+        self.__alphaR = self.make_var ( alpha      ,
+                                       name_alpha  ,
+                                       title_alpha , 
+                                       None        , 1.50 ,  0.45 , 5.00 )
+
+    @property
+    def alphaR ( self ) :
+        """'alphaR': alpha-parameter for right Crystal Ball-like power-law tail
+        """
+        return self.__alphaR 
+    @alphaR.setter
+    def alphaR ( self, value ) :
+        self.set_value ( self.__alphaR , value ) 
+        
+    @property
+    def aR ( self ) :
+        """'aR': alpha-parameter for right Crystal Ball-like power-law tail (same as 'alphaR')"""
+        return self.alphaR
+    @aR.setter
+    def aR ( self, value ) :
+        self.alphaR = value 
+
 # =============================================================================
 ## @class Tail
 #  Helper mixin class to define CrystalBall-like power-law tails
-class Tail(TailN) :
+class Tail(TailN,TailA) :
     """ Helper mixin class to define CrystalBall-like power-law tails
     
     It defines four properties:
@@ -4125,39 +4260,15 @@ class Tail(TailN) :
                         title_n = title_n  , 
                         name_N  = name_N   , 
                         title_N = title_N  )  
-
-        ## get the name 
-        name = self.name
-        
-        if not name_alpha  : name_alpha  = 'alpha_%s'    % name 
-        if not title_alpha : title_alpha = '#alpha(%s)'  % name        
-
-        ## parameter alpha         ## parameter alpha         ## parameter alpha 
-        self.__alpha = self.make_var ( alpha       ,
-                                       name_alpha  ,
-                                       title_alpha , 
-                                       None        , 1.50 ,  0.45 , 5.00 )
-    @property
-    def alpha ( self ) :
-        """'alpha': alpha-parameter for CrystalBall-like power-law tail
-        """
-        return self.__alpha 
-    @alpha.setter
-    def alpha ( self, value ) :
-        self.set_value ( self.__alpha , value ) 
-        
-    @property
-    def a ( self ) :
-        """'a:': alpha-parameter for CrystalBall-like power-law tail (same as 'alpha')"""
-        return self.alpha
-    @a.setter
-    def a ( self, value ) :
-        self.alpha = value 
+        TailA.__init__ ( self , 
+                        alpha       = alpha       , 
+                        name_alpha  = name_alpha  , 
+                        title_alpha = title_alpha ) 
 
 # =============================================================================
 ## @class LeftTail
 #  Helper mixin class to define CrystalBall-like power-law tails
-class LeftTail(TailNL) :
+class LeftTail(TailNL,TailAL) :
     """ Helper mixin class to define CrystalBall-like power-law tails
     
     It defines four properties:
@@ -4185,39 +4296,16 @@ class LeftTail(TailNL) :
                           title_n = title_n  , 
                           name_N  = name_N   , 
                           title_N = title_N  )  
+        TailAL.__init__ ( self , 
+                          alpha       = alpha       , 
+                          name_alpha  = name_alpha  , 
+                          title_alpha = title_alpha ) 
 
-        ## get the name 
-        name = self.name
-        
-        if not name_alpha  : name_alpha  = 'alphaL_%s'       % name
-        if not title_alpha : title_alpha = '#alpha_{L}(%s)'  % name        
-        
-        ## parameter alpha 
-        self.__alphaL = self.make_var ( alpha       ,
-                                        name_alpha  ,
-                                        title_alpha , 
-                                        None        , 1.50 ,  0.45 , 5.00 )
-        
-    @property
-    def alphaL ( self ) :
-        """'alpha': alpha-parameter for CrystalBall-like power-law (left) tail (same as 'aL')"""
-        return self.__alphaL
-    @alphaL.setter
-    def alphaL ( self, value ) :
-        self.set_value ( self.__alphaL , value ) 
-
-    @property
-    def aL ( self ) :
-        """'aL': alpha-parameter for CrystalBall-like power-law (left) tail (same as 'alphaL')"""
-        return self.alphaL
-    @aL.setter
-    def aL ( self, value ) :
-        self.alphaL = value 
 
 # =============================================================================
 ## @class RightTail
 #  Helper mixin class to define CrystalBall-like (right) power-law tails
-class RightTail(TailNR) :
+class RightTail(TailNR,TailAR) :
     """ Helper mixin class to define CrystalBall-like (right) power-law tails
     
     It defines four properties:
@@ -4244,35 +4332,12 @@ class RightTail(TailNR) :
                           title_n = title_n  , 
                           name_N  = name_N   , 
                           title_N = title_N  ) 
-         
-        ## get the name 
-        name = self.name
-        
-        if not name_alpha  : name_alpha  = 'alphaR_%s'       % name
-        if not title_alpha : title_alpha = '#alpha_{R}(%s)'  % name        
-        
-        ## parameter alpha 
-        self.__alphaR = self.make_var ( alpha       ,
-                                        name_alpha  ,
-                                        title_alpha , 
-                                        None        , 1.50 , 0.45 , 5.00 )
-        
-    @property
-    def alphaR ( self ) :
-        """'alphaR': alpha-parameter for CrystalBall-like power-law (right) tail (same as 'aR')"""
-        return self.__alphaR
-    @alphaR.setter
-    def alphaR ( self, value ) :
-        self.set_value ( self.__alphaR , value )
-        
-    @property
-    def aR ( self ) :
-        """'aR': alpha-parameter for CrystalBall-like power-law (right) tail (same as 'aalphaR')"""
-        return self.alphaR
-    @aR.setter
-    def aR ( self, value ) :
-        self.alphaR = value 
-
+        TailAR.__init__ ( self , 
+                          alpha       = alpha       , 
+                          name_alpha  = name_alpha  , 
+                          title_alpha = title_alpha ) 
+  
+    
 # =============================================================================
 if '__main__' == __name__ :
     

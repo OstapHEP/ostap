@@ -2461,10 +2461,27 @@ def _rdas_reduce_ ( pdf ):
                                   pdf.x        () ,                            
                                   pdf.mu       () ,                            
                                   pdf.sigma    () ,
-                                  pdf.kL       () ,
-                                  pdf.kR       () )
+                                  pdf.alphaL   () ,
+                                  pdf.alphaR   () )
 
 Ostap.Models.Das.__reduce__ = _rdas_reduce_ 
+
+# =============================================================================
+## reduce ADas
+def _radas_reduce_ ( pdf ):
+    """ Reduce ADas"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () ,                            
+                                  pdf.mu       () ,                            
+                                  pdf.sigmaL   () ,
+                                  pdf.sigmaR   () , 
+                                  pdf.alphaL   () ,
+                                  pdf.alphaR   () )
+
+Ostap.Models.ADas.__reduce__ = _radas_reduce_ 
+
 
 # =============================================================================
 ## reduce GenInvGauss
