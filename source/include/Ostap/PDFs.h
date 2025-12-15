@@ -1470,7 +1470,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class CrystalBallDSA
-     *  double-sided ``Crystal Ball-function'' with asymmetric core 
+     *  double-sided `Crystal Ball-function' with asymmetric core 
      *  for description of gaussian with the tail
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @see Ostap::Math::CrystalBallDoubleSided
@@ -1567,6 +1567,108 @@ namespace Ostap
       mutable Ostap::Math::CrystalBallDoubleSidedA m_cb2 ;       // the function
       // ======================================================================
     } ;
+
+
+    // ========================================================================
+    /** @class CrystalBallDSE
+     *  double-sided Crystal Ball-like function: 
+     *  - asymmetric core 
+     *  - left power-law tail 
+     *  - right exponential tail
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @see Ostap::Math::CrystalBallDoubleSided
+     *  @date 2011-05-25
+     */
+    class  CrystalBallDSE : public RooAbsPdf
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::CrystalBallDSE, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      CrystalBallDSE
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          m0        ,
+        RooAbsReal&          sigmaL    ,  //
+        RooAbsReal&          sigmaR    ,  //
+        RooAbsReal&          alphaL    ,  //
+        RooAbsReal&          nL        ,  //
+        RooAbsReal&          alphaR    ) ;
+      /// "copy" constructor
+      CrystalBallDSE ( const CrystalBallDSE& right , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~CrystalBallDSE () ;
+      /// clone
+      CrystalBallDSE* clone ( const char* name ) const override;
+      // ======================================================================
+    public : // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      CrystalBallDSE () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::CrystalBallDoubleSidedE& function() const
+      { return m_cb2 ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigmaL () const { return m_sigmaL .arg() ; }
+      const RooAbsReal& sigmaR () const { return m_sigmaR .arg() ; }
+      const RooAbsReal& alphaL () const { return m_alphaL .arg() ; }
+      const RooAbsReal& alphaR () const { return m_alphaR .arg() ; }
+      const RooAbsReal& nL     () const { return m_nL     .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_m0     ;
+      RooRealProxy m_sigmaL ;
+      RooRealProxy m_sigmaR ;
+      RooRealProxy m_alphaL ;
+      RooRealProxy m_nL     ;
+      RooRealProxy m_alphaR ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::CrystalBallDoubleSidedE m_cb2 ;       // the function
+      // ======================================================================
+    } ;
+
+    
     // ========================================================================
     /** @class Apollonios
      *  An asymetric Apollonious function 

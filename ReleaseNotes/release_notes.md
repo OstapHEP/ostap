@@ -6,6 +6,7 @@
   1. small tweaks for `Ostap::Math::Laplace` and `Ostap::Math::Hilbert`
   1. add `Ostap::Math::CrystalBallA` ,`Ostap::Models::CrystalBallA` & `CrystalBallA_pdf` - variants of Crystal Ball function with asymmetryc core 
   1. add `Ostap::Math::CrystalBalDoubleSidedA` ,`Ostap::Models::CrystalBallDSA` & `CB2A_pdf` - variants of double-sided Crystal Ball function with asymmetryc core 
+  1. add `Ostap::Math::CrystalBalDoubleSidedE` ,`Ostap::Models::CrystalBallDSE` & `CB2E_pdf` - variants of double-sided Crystal Ball function with asymmetryc core 
   
 ## Backward  incompatible 
 

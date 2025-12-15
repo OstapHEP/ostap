@@ -2476,8 +2476,6 @@ std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const
 // ============================================================================
 
 
-
-
 // ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter
@@ -2616,8 +2614,6 @@ std::size_t Ostap::Math::CrystalBallA::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_core.tag () , m_tail.tag () ) ; 
 }
 // ============================================================================
-
-
 
 
 // ============================================================================
@@ -2801,6 +2797,185 @@ std::size_t Ostap::Math::CrystalBallDoubleSidedA::tag () const
 				       m_right.tag () ) ;
 }
 // ============================================================================
+
+
+// ============================================================================
+/* constructor from all parameters
+ *  @param m0     m0          parameter
+ *  @param sigmaL left sigma       parameter
+ *  @param sigmaR right sigma       parameter
+ *  @param alphaL alpha_L     parameter
+ *  @param nL     n_L         parameter  (N-1 for "standard" definition)
+ *  @param alphaR alpha_R parameter
+ */
+// ============================================================================
+Ostap::Math::CrystalBallDoubleSidedE::CrystalBallDoubleSidedE
+( const double m0      ,
+  const double sigmaL  ,
+  const double sigmaR  ,
+  const double alphaL  ,
+  const double nL      ,
+  const double alphaR  )
+  : m_core  ( m0     , sigmaL , sigmaR  )
+  , m_left  ( alphaL , nL     )
+  , m_right ( alphaR )
+{}
+// ============================================================================
+/* constructor from core and tail  parameters
+ *  @param core core Gaussian 
+ *  @param alphaL  alpha_L     parameter
+ *  @param nL      n_L         parameter  (N-1 for "standard" definition)
+ *  @param alphaR  alpha_R parameter
+ *  @param nR      n_R         parameter  (N-1 for "standard" definition)
+ */
+// ============================================================================
+Ostap::Math::CrystalBallDoubleSidedE::CrystalBallDoubleSidedE
+( const Ostap::Math::BifurcatedGauss& core    , 
+  const double                        alphaL  ,
+  const double                        nL      ,
+  const double                        alphaR  ) 
+  : m_core  ( core )
+  , m_left  ( alphaL , nL    )
+  , m_right ( alphaR )
+{}
+// ========================================================================
+/*  constructor from all components  
+ *  @param core core Gaussian 
+ *  @param left  left  tail
+ *  @param right right tail
+ */
+// ========================================================================
+Ostap::Math::CrystalBallDoubleSidedE::CrystalBallDoubleSidedE
+( const Ostap::Math::BifurcatedGauss& core  ,
+  const Ostap::Math::LeftTail&        left  ,
+  const Ostap::Math::RightExpTail&    right )
+  : m_core  ( core  )
+  , m_left  ( left  )
+  , m_right ( right )
+{}
+// ============================================================================
+//  evaluate CrystalBall's function
+// ============================================================================
+double Ostap::Math::CrystalBallDoubleSidedE::pdf ( const double x ) const
+{
+  //
+  // Left tail ? 
+  const double xl =  xL () ;
+  if ( x < xl )
+    {
+      // f( xL )
+      const double F    = m_core ( xl ) ; // f (xl)         
+      // f'/f(xL) 
+      const double dFoF = m_core.dFoF ( xl )     ; // f'/f    (xl) 
+      return m_left ( x , xl , F , dFoF ) ;
+    } 
+  //
+  // right tail ?
+  const double xr =  xR () ;
+  if ( xr < x )
+    {      
+      // f( xL )
+      const double F    = m_core ( xr ) ; // f (xl)         
+      // f'/f(xL) 
+      const double dFoF = m_core.dFoF ( xr )     ; // f'/f    (xl) 
+      return m_right ( x , xr , F , dFoF ) ;      
+    }
+  //
+  // core gaussian 
+  return m_core ( x ) ; 
+}
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::CrystalBallDoubleSidedE::integral
+( const double low ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0.0 ; } // RETURN
+  else if (           low > high   ) { return - integral ( high , low ) ; }
+  //
+  // split at xL 
+  const double xl = xL () ;
+  if ( low < xl && xl < high ) { return integral ( low , xl ) + integral ( xl , high ) ; }
+  
+  // split at x 
+  const double xr = xR () ;
+  if ( low < xr && xr < high ) { return integral ( low , xr ) + integral ( xr , high ) ; }
+    
+  // left tail
+  if      ( high <= xl )
+    {
+      // f(xl)
+      const double F    = m_core ( xl ) ; // f (xl)         
+      // f'/f(xL) 
+      const double dFoF = m_core.dFoF ( xl )     ; // f'/f    (xl)
+      //
+      return m_left.integral ( low , high , xl , F , dFoF ) ;
+    }
+  // right tail 
+  else if ( xr <= low  )
+    {
+      // f(xr)
+      const double F    = m_core ( xr ) ; // f    (xr)         
+      // f'/f(xr) 
+      const double dFoF = m_core.dFoF ( xr )     ; // f'/f (xr)
+      //
+      return m_right.integral ( low , high , xr , F , dFoF ) ;
+    }
+  // core Gaussian 
+  return m_core.integral ( low , high ) ;
+}
+// ============================================================================
+/*  Get the integral from the the negative to positive infinity 
+ *  @attention +infinity is returned for <code>n=0(N=1)</code>
+ */
+// ============================================================================
+double Ostap::Math::CrystalBallDoubleSidedE::integral() const
+{
+  const double nl = NL () ;
+  if ( nl <= 1 || s_equal ( nl , 1.0 ) ) { return s_POSINF ; }
+  //
+  const double xl = xL () ;
+  const double xr = xR () ;
+  ///
+  return m_core.integral ( xl , xr ) 
+    + m_left .integral ( xl , xl , m_core ( xl ) , m_core.dFoF ( xl ) ) 
+    + m_right.integral ( xr , xr , m_core ( xr ) , m_core.dFoF ( xr ) ) ;
+}
+// ============================================================================
+/* quantify the effect of tails, difference from Gaussian
+ *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+ * where 
+ * - \f$ I_{CB} \f$ is integral over Gaussian function 
+ * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+ */
+// ============================================================================
+double Ostap::Math::CrystalBallDoubleSidedE::non_gaussian
+( const double xlow  ,
+  const double xhigh ) const
+{
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; } // convention
+  else if ( xhigh < xlow             ) { return -non_gaussian ( xhigh , xlow ) ; } 
+  //
+  const double I_CB =        integral ( xlow , xhigh ) ;
+  const double I_G  = m_core.integral ( xlow , xhigh ) ;
+  //
+  return 1 - I_G / I_CB ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::CrystalBallDoubleSidedE::tag () const 
+{ 
+  static const std::string s_name = "CrystalBallDoubleSidedE" ;
+  return Ostap::Utils::hash_combiner ( s_name         ,
+				       m_core .tag () ,
+				       m_left .tag () ,
+				       m_right.tag () ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // Apollonios

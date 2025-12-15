@@ -96,6 +96,7 @@ __all__ = (
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
     'CB2A_pdf'               , ## double-sided Crystal Ball function with asymmetric code 
+    'CB2E_pdf'               , ## double-sided Crystal Ball function with asymmetric code
     'CrystalBallA_pdf'       , ## variant of Crystal Ball function with asymmetric core 
     'Needham_pdf'            , ## Needham's function for J/psi or Y fits 
     'Apollonios_pdf'         , ## bifurcated Apollonios function         
@@ -766,9 +767,13 @@ models.append ( CrystalBallA_pdf )
 
 # =============================================================================
 ## @class CB2A_pdf
-#  Double sided Crystal Ball function with both left and rigth sides and asymmetric core 
+# Variant of Double sided Crystal Ball function: 
+# -  asymmetric core 
+# -  leff & right power-law tails 
 class CB2A_pdf(BifurcatedGauss_pdf,LeftTail,RightTail) :
-    """ Double sided Crystal Ball function with both left and rigth sides and asymmetric core 
+    """ Variant of double-sided Crystal Ball function: 
+    -  asymmetric core 
+    -  leff & right power-law tails 
     """
     def __init__ ( self             ,
                    name             ,
@@ -820,6 +825,66 @@ class CB2A_pdf(BifurcatedGauss_pdf,LeftTail,RightTail) :
             }
 
 models.append ( CB2A_pdf )    
+
+# =============================================================================
+## @class CB2E_pdf
+# Variant of Double sided Crystal Ball function: 
+# - asymmetric core 
+# - left power-law tail (like normal Crystal Ball function)
+# - right exponential tail (like Das function)
+class CB2E_pdf(BifurcatedGauss_pdf,LeftTail,TailAR) :
+    """ Variant of Double sided Crystal Ball function: 
+    - asymmetric core 
+    - left power-law tail  lke Crystal Ball function 
+    - right exponential tail like Das functions 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             , 
+                   mean      = None ,
+                   sigma     = None ,
+                   alphaL    = None ,
+                   alphaR    = None ,
+                   nL        = None ,
+                   psi       = None ) : 
+        
+        #
+        ## initialize the base
+        # 
+        BifurcatedGauss_pdf .__init__ ( self  ,
+                                        name  ,
+                                        xvar  ,
+                                        mean  = mean  ,
+                                        sigma = sigma ,
+                                        psi   = psi   )
+        
+        LeftTail  .__init__ ( self , alpha = alphaL , n = nL ) 
+        TailAR    .__init__ ( self , alpha = alphaR ) 
+
+        self.pdf = Ostap.Models.CrystalBallDSE (
+            self.roo_name ( 'cb2a_' ) , 
+            "double-sided Crystal Ball %s" % self.name ,
+            self.xvar    ,
+            self.mean    ,
+            self.sigmaL  ,
+            self.sigmaR  ,
+            self.alphaL  ,
+            self.nL      ,
+            self.alphaR  )
+        
+        ## save the configuration
+        self.config = {
+            'name'   : self.name   ,
+            'xvar'   : self.xvar   ,
+            'mean'   : self.mean   ,
+            'sigma'  : self.sigma  ,
+            'alphaL' : self.alphaL ,
+            'alphaR' : self.alphaR ,
+            'nL'     : self.nL     ,
+            'psi'    : self.psi    ,
+            }
+
+models.append ( CB2E_pdf )    
 
 # =============================================================================
 ## @class Apollonios_pdf
