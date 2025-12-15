@@ -222,7 +222,6 @@ def test_crystalball () :
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         model.signal.alpha.release()
-        model.signal.n    .release()
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
@@ -249,6 +248,8 @@ def test_crystalball_RS () :
         background = background   ,
         S = S , B = B 
         )
+
+    model.signal.n.fix ( 8 )
     
     model.S = NS 
     model.B = NB
@@ -286,7 +287,10 @@ def test_crystalball_DS () :
         background = background   ,
         S = S , B = B 
         )
-    
+
+    model.signal.nL.fix ( 8 )
+    model.signal.nR.fix ( 8 )
+
     model.S = NS 
     model.B = NB
     
@@ -323,6 +327,8 @@ def test_needham() :
         background = background   ,
         S = S , B = B 
         )
+
+    
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
         model.signal.mean .release()
@@ -394,6 +400,9 @@ def test_crystalball_DSA () :
         S = S , B = B 
     )
     
+    model.signal.nL.fix(8)
+    model.signal.nR.fix(8)
+    
     model.S = NS 
     model.B = NB
     
@@ -431,6 +440,8 @@ def test_crystalball_DSE () :
         S = S , B = B 
     )
     
+    model.signal.nL.fix ( 8 )
+
     model.S = NS 
     model.B = NB
     
@@ -2243,8 +2254,6 @@ if '__main__' == __name__ :
     with timing ('test_crystalball_DSE' , logger ) :
         test_crystalball_DSE () 
         
-    """ 
-        
     ## Apollonios function                       + background 
     with timing ('test_apollonios'     , logger ) :
         test_apollonios     () 
@@ -2422,7 +2431,6 @@ if '__main__' == __name__ :
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
     
-    """
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()

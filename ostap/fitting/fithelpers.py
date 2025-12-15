@@ -3593,12 +3593,20 @@ class AsymVars(object) :
         ##         
         
         maker = self.__var_maker
-        if not v1_name      : v1_name      = maker.roo_name ( prefix = var_name , suffix = L ) 
-        if not v2_name      : v2_name      = maker.roo_name ( prefix = var_name , suffix = R ) 
+        name  = maker.name 
+
         
-        if not halfsum_name : halfsum_name = maker.roo_name ( prefix = var_name )
-        if not kappa_name   : kappa_name   = maker.roo_name ( prefix = 'kappa'  , name = var_name )
-        if not psi_name     : psi_name     = maker.roo_name ( prefix = 'psi'    , name = var_name )
+        ## if not v1_name      : v1_name      = maker.roo_name ( prefix = var_name , suffix = L ) 
+        ## if not v2_name      : v2_name      = maker.roo_name ( prefix = var_name , suffix = R )         
+        ## if not halfsum_name : halfsum_name = maker.roo_name ( prefix = var_name )
+        ## if not kappa_name   : kappa_name   = maker.roo_name ( prefix = 'kappa'  , name = var_name )
+        ## if not psi_name     : psi_name     = maker.roo_name ( prefix = 'psi'    , name = var_name )
+
+        if not v1_name      : v1_name      = '%s_%s_%s' % ( var_name , name     , L      ) 
+        if not v2_name      : v2_name      = '%s_%s_%s' % ( var_name , name     , R      ) 
+        if not halfsum_name : halfsum_name = '%s_%s_%s' % ( var_name , name     , 'mean' ) 
+        if not kappa_name   : kappa_name   = '%s_%s_%s' % ( 'kappa'  , var_name , name   ) 
+        if not psi_name     : psi_name     = '%s_%s_%s' % ( 'psi'    , var_name , name   ) 
         
         ## 1st valid trivial  case : single var1 , everything else is None 
         if isinstance ( var1 , ROOT.RooAbsReal ) and ( var2 is None or var2 is var1 ) \
@@ -3667,7 +3675,8 @@ class AsymVars(object) :
                 halfsum    = var1
                 kappa, psi = ZERO, ZERO 
                 
-            else : 
+            else :
+                
                 names = var1.name , var2.name
                 ## convert variables into halfsum & asymmetry 
                 halfsum , kappa = self.__var_maker.vars_to_asymmetry (
