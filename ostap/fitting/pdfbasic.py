@@ -718,7 +718,7 @@ class APDF1 ( Components ) :
             model.removeStringAttribute ( 'fitrange' )
 
         # ================================================================
-        ## No need to restructure options: 
+        ## No need to restructure the options
         if  ( 6 , 32 ) <= root_info :            
             # ============================================================
             try : # ======================================================

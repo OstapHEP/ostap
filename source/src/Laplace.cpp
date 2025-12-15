@@ -18,6 +18,27 @@
  *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
  */
 // =============================================================================
+/*  constructor from the function
+ *   @param func   the function
+ *   @param tag     unique tag/label for cache 
+ *   @param aprecision absolute precision 
+ *   @param rprecision relative precision 
+ *   @param size    size of integration workspace  
+ */
+// =============================================================================
+Ostap::Math::Laplace::Laplace
+( Ostap::Math::Laplace::function1 func       ,
+  const std::size_t               tag        ,
+  const double                    aprecision ,
+  const double                    rprecision ,
+  const std::size_t               size       )
+  : m_func       ( func       )
+  , m_tag        ( tag        ) 
+  , m_aprecision ( aprecision ) 
+  , m_rprecision ( rprecision )
+  , m_integrator ( size       )
+{} 
+// =============================================================================
 double Ostap::Math::Laplace::operator() ( const double x ) const
 {
   auto the_fun = [x,this] ( const double z ) -> double

@@ -25,21 +25,30 @@ namespace Ostap
     class Hilbert
     {
       // ======================================================================
+    public: 
+      // ======================================================================
+      /// the actual function type 
+      typedef std::function<double(double)>                         function1 ;
+      // ======================================================================
+    public: 
+      // ======================================================================
       /**  templated constructor from the function
        *   @param func   the function
        *   @param tag     unique tag/label for cache 
-       *   @param rescale rescale function for better numerical precison 
+       *   @param rescale rescale function for better numerical precision 
+       *   @param aprecision absolute precision 
+       *   @param rprecision relative precision 
        *   @param size    size of integration workspace  
        */
       template <class FUNCTION>
-        Hilbert 
-        ( FUNCTION             func           ,
-          const std::size_t    tag        = 0 ,
-          const unsigned short rescale    = 0 ,
-          const double         aprecision = 0 ,
-          const double         rprecision = 0 ,
-          const double         width      = 0 ,           
-          const std::size_t    size       = 0 )
+      Hilbert 
+      ( FUNCTION             func           ,
+	const std::size_t    tag        = 0 ,
+	const unsigned short rescale    = 0 ,
+	const double         aprecision = 0 ,
+	const double         rprecision = 0 ,
+	const double         width      = 0 ,           
+	const std::size_t    size       = 0 )
         : m_func       ( func       )
         , m_tag        ( tag        ) 
         , m_rescale    ( rescale    )
@@ -47,27 +56,46 @@ namespace Ostap
         , m_rprecision ( rprecision )
         , m_width      ( width      )
         , m_integrator ( size       )
-        {} ;
+      {} ;
       // ======================================================================
+      /** constructor from the function
+       *   @param func   the function
+       *   @param tag     unique tag/label for cache 
+       *   @param rescale rescale function for better numerical precision 
+       *   @param aprecision absolute precision 
+       *   @param rprecision relative precision 
+       *   @param size    size of integration workspace  
+       */
+      Hilbert 
+      ( function1            func           ,
+	const std::size_t    tag        = 0 ,
+	const unsigned short rescale    = 0 ,
+	const double         aprecision = 0 ,
+	const double         rprecision = 0 ,
+	const double         width      = 0 ,           
+	const std::size_t    size       = 0 ) ;
+      // ======================================================================      
     public:
       // ======================================================================
       /**  templated creator from the function
        *   @param func   the function
        *   @param tag     unique tag/label for cache 
-       *   @param rescale rescale function for better numerical precison 
+       *   @param rescale rescale function for better numerical precision 
+       *   @param aprecision absolute precision 
+       *   @param rprecision relative precision 
        *   @param size    size of integration workspace  
        */
       template <class FUNCTION>
-        inline static Hilbert
-        create
-        ( FUNCTION             func           ,
-          const std::size_t    tag        = 0 ,
-          const unsigned short rescale    = 0 ,
-          const double         aprecision = 0 ,
-          const double         rprecision = 0 ,
-          const double         width      = 0 ,                     
-          const std::size_t    size       = 0 )
-          { return Hilbert ( func , tag , rescale , aprecision , rprecision , width , size ) ; }        
+      inline static Hilbert
+      create
+      ( FUNCTION             func           ,
+	const std::size_t    tag        = 0 ,
+	const unsigned short rescale    = 0 ,
+	const double         aprecision = 0 ,
+	const double         rprecision = 0 ,
+	const double         width      = 0 ,                     
+	const std::size_t    size       = 0 )
+      { return Hilbert ( func , tag , rescale , aprecision , rprecision , width , size ) ; }        
       // ======================================================================
     public:
       // ======================================================================
@@ -82,7 +110,7 @@ namespace Ostap
     private: 
       // ======================================================================
       /// the function 
-      std::function<double(double)>  m_func       ; // the function
+      function1                      m_func       ; // the function
       /// unique tag/label 
       std::size_t                    m_tag        ; // unique tag/label 
       /// rescale function for better numerical precision 

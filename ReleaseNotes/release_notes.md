@@ -1,12 +1,13 @@
 ## New features
 
   1. add `ResoCB` resolution function
- 1. re-write  `Ostap::Math::Das` 
+  1. re-write  `Ostap::Math::Das` 
   1. add `Ostap::Math::ADas`- asymmetric version of Das function 
-
+  1. small tweaks for `Ostap::Math::Laplace` and `Ostap::Math::Hilbert`
+  
 ## Backward  incompatible 
 
-   1.  `k` for Das function is `alpha` now 
+  1.  `k` for Das function is `alpha` now 
 
 ## Bug fixes
 
