@@ -30,12 +30,16 @@ namespace
   // ==========================================================================
   // Limits? 
   // ==========================================================================
-  static_assert ( std::numeric_limits<float> ::is_specialized        ,
-                  "std::numeric_limits<float>  is not specialized"   ) ;
-  static_assert ( std::numeric_limits<double>::is_specialized        ,
-                  "std::numeric_limits<double> is not specialized"   ) ;
-  static_assert ( std::numeric_limits<double>::has_denorm            ,
-                  "std::numeric_limits<double> doed not have denorm" ) ;
+  static_assert ( std::numeric_limits<float> ::is_specialized           ,
+                  "std::numeric_limits<float>  is not specialized"      ) ;
+  static_assert ( std::numeric_limits<double>::is_specialized           ,
+                  "std::numeric_limits<double> is not specialized"      ) ;
+  static_assert ( std::numeric_limits<double>::has_denorm               ,
+                  "std::numeric_limits<double> does not have denorm"    ) ;
+  static_assert ( std::numeric_limits<double>::has_infinity             ,
+                  "std::numeric_limits<double> does not have infinity"  ) ;
+  static_assert ( std::numeric_limits<double>::has_quiet_NaN            ,
+                  "std::numeric_limits<double> does not have quiet NaN" ) ;
   // ==========================================================================
   static_assert ( std::numeric_limits<unsigned short> ::is_specialized        ,
                   "std::numeric_limits<unsigned short>  is not specialized" ) ;
@@ -46,10 +50,22 @@ namespace
   static_assert ( std::numeric_limits<unsigned long>  ::is_specialized        ,
                   "std::numeric_limits<unsigned long> is not specialized"   ) ;
   // ==========================================================================
-  /** @var s_INFINITY
-   *  representation of positive INFINITY
+  /** @var s_POSINF
+   *  True positive infinity 
    */
-  constexpr double s_INFINITY  = 0.8 * std::numeric_limits<double>::max ()  ;
+  constexpr double  s_POSINF =  std::numeric_limits<double>::infinity () ;
+  static_assert ( 0 < s_POSINF , "+infty/s_POSINF is not positive!"   ) ;
+  // ==========================================================================
+  /** @var s_NEGINF
+   *  True negative infinity 
+   */
+  constexpr double s_NEGINF = -std::numeric_limits<double>::infinity () ;
+  static_assert ( 0 > s_NEGINF , "-infty/s_NEGINF is not negative!"   ) ;  
+  // ==========================================================================
+  /** @var s_INFINITY
+   *  representation of the almost maximal double 
+   */
+  constexpr double s_INFINITY  = 0.9 * std::numeric_limits<double>::max ()  ;
   // ==========================================================================
   /** @var s_SMALL
    *  representation of positive "small"
@@ -57,8 +73,8 @@ namespace
   constexpr double s_SMALL  = 10 * std::numeric_limits<double>::denorm_min () ;
   constexpr double s_SMALL2 =  2 * std::numeric_limits<double>::min        () ;
   // ==========================================================================
-  static_assert ( 0       < s_SMALL  , "``s_SMALL'' is not positive" ) ;
-  static_assert ( s_SMALL < s_SMALL2 , "``S_SMALL'' is too large"    ) ;
+  static_assert ( 0       < s_SMALL  , "`s_SMALL' is not positive" ) ;
+  static_assert ( s_SMALL < s_SMALL2 , "`S_SMALL' is too large"    ) ;
   // ==========================================================================
   static_assert ( std::numeric_limits<unsigned int>::is_specialized , 
                   "std::numeric_limits<usigned int> is not specialized" ) ;

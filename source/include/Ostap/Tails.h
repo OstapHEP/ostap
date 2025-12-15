@@ -32,7 +32,8 @@ namespace Ostap
       /** Tail parameters 
        *  @param alpha alpha-parameter
        */
-      AlphaTail ( const double alpha = 2 ) ;
+      AlphaTail
+      ( const double alpha = 2 ) ;
       // ======================================================================
     public: // getters 
       // ======================================================================
@@ -59,7 +60,7 @@ namespace Ostap
     } ; //                              The end of class Ostap::Math::AlphaTail
     // ========================================================================
     /** @class Tail
-     *  Representanton of the tail for Crystal Ball-like functions 
+     *  Representation of the tail for Crystal Ball-like functions 
      */
     class Tail : public Ostap::Math::AlphaTail 
     {
@@ -86,7 +87,7 @@ namespace Ostap
        */
       Tail
       ( const double alpha = 2 ,
-	      const double n     = 1 ) ;
+	const double n     = 1 ) ;
       // ======================================================================
     public: // getters 
       // ======================================================================
@@ -108,7 +109,8 @@ namespace Ostap
     private :
       // ======================================================================
       /// tail parameter n 
-      double m_n     { 1 } ; // tail parameter n       
+      double m_n     { 0 } ; // tail parameter n       
+      double m_N     { 1 } ; // tail parameter N = N(n) 
       // ======================================================================
     } ; //                                   The end of class Ostap::Math::Tail
     // ========================================================================
@@ -131,7 +133,7 @@ namespace Ostap
        */
       LeftTail
       ( const double alpha = 2 ,
-	      const double n     = 1 ) ;
+	const double n     = 1 ) ;
       // ======================================================================
       /// Tail parameters 
       LeftTail ( const Ostap::Math::Tail& tail ) ;
@@ -146,9 +148,9 @@ namespace Ostap
        */
       double evaluate
       ( const double x      ,
-	      const double x0     ,
-	      const double F      ,
-	      const double dFoF   ) const ;
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const ;
       // ======================================================================
       /** evaluate the (left) tail function
        *  @param x    the x point 
@@ -158,9 +160,9 @@ namespace Ostap
        */
       inline double operator() 
       ( const double x      ,
-	      const double x0     ,
-	      const double F      ,
-	      const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -173,10 +175,22 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	      const double high ,
-	      const double x0   ,
-	      const double F    ,
-	      const double dFoF ) const ;
+	const double high ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
+      // ======================================================================
+      /** get the integral of power-law function from negative infinity to <code>high</code>
+       *  @paral high high integral edge 
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double integral
+      ( const double high ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -204,7 +218,7 @@ namespace Ostap
        */
       RightTail
       ( const double alpha = 2 ,
-	      const double n     = 1 ) ;
+	const double n     = 1 ) ;
       // ======================================================================
       /// Tail parameters 
       RightTail ( const Ostap::Math::Tail& tail ) ;
@@ -219,9 +233,9 @@ namespace Ostap
        */
       double evaluate
       ( const double x      ,
-	      const double x0     ,
-	      const double F      ,
-	      const double dFoF   ) const ;
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const ;
       // ======================================================================
       /** evaluate the (left) tail function
        *  @param x    the x point 
@@ -231,9 +245,9 @@ namespace Ostap
        */
       inline double operator() 
       ( const double x      ,
-	      const double x0     ,
-	      const double F      ,
-	      const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -246,10 +260,22 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	      const double high ,
-	      const double x0   ,
-	      const double F    ,
-	      const double dFoF ) const ;
+	const double high ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
+      // ======================================================================
+      /** get the integral of power-law function from <code>low</code> to positive infinity 
+       *  @paral low  low  integral edge 
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x<x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double integral
+      ( const double low  ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -261,147 +287,147 @@ namespace Ostap
     /** class LeftExpTail
      *  Exponential tail for Das-like functions
      */    
-     class LeftExpTail : public Ostap::Math::AlphaTail 
-     {
-        // ====================================================================
-      public :  
-        // ====================================================================
-        LeftExpTail ( const double alpha = 2 ) ;
-        LeftExpTail ( const Ostap::Math::AlphaTail& tail ) ;
-        // ====================================================================
-      public :
-        // ======================================================================
-        /** evaluate the (left) tail function
-         *  @param x    the x point 
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        double evaluate
-        ( const double x      ,
-	        const double x0     ,
-	        const double F      ,
-	        const double dFoF   ) const ;
-        // ======================================================================
-        /** evaluate the (left) tail function
-         *  @param x    the x point 
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        inline double operator() 
-        ( const double x      ,
-	        const double x0     ,
-	        const double F      ,
-	        const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
-        // ====================================================================
-      public:
-        // ======================================================================
-        /** get the integral of exponential function
-         *  @paral low  low  integral edge 
-         *  @paral high high integral edge
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        double integral
-        ( const double low  ,
-	        const double high ,
-	        const double x0   ,
-	        const double F    ,
-	        const double dFoF ) const ;
-        // ======================================================================
-        /** get the integral of exponential function
-         *  @paral high high integral edge
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        double integral
-        ( const double high ,
-	        const double x0   ,
-	        const double F    ,
-	        const double dFoF ) const ;
+    class LeftExpTail : public Ostap::Math::AlphaTail 
+    {
+      // ====================================================================
+    public :  
+      // ====================================================================
+      LeftExpTail ( const double alpha = 2 ) ;
+      LeftExpTail ( const Ostap::Math::AlphaTail& tail ) ;
+      // ====================================================================
+    public :
       // ======================================================================
-     public :
-        // ====================================================================
-        /// get the tag 
-        std::size_t tag () const ;
-        // ====================================================================
-     }; //                                The end of class Ostap::Math::ExpTail
-     // =======================================================================
+      /** evaluate the (left) tail function
+       *  @param x    the x point 
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double evaluate
+      ( const double x      ,
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const ;
+      // ======================================================================
+      /** evaluate the (left) tail function
+       *  @param x    the x point 
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      inline double operator() 
+      ( const double x      ,
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+      // ====================================================================
+    public:
+      // ======================================================================
+      /** get the integral of exponential function
+       *  @paral low  low  integral edge 
+       *  @paral high high integral edge
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double integral
+      ( const double low  ,
+	const double high ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
+      // ======================================================================
+      /** get the integral of exponential function
+       *  @paral high high integral edge
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double integral
+      ( const double high ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
+      // ======================================================================
+    public :
+      // ====================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ====================================================================
+    }; //                                The end of class Ostap::Math::ExpTail
+    // =======================================================================
     /** class RightExpTail
      *  Exponential tail for Das-like functions
      */    
-     class RightExpTail : public Ostap::Math::AlphaTail 
-     {
-        // ====================================================================
-      public :  
-        // ====================================================================
-        RightExpTail ( const double alpha = 2 ) ;
-        RightExpTail ( const Ostap::Math::AlphaTail& tail ) ;
-        // ====================================================================
-      public :
-        // ======================================================================
-        /** evaluate the (left) tail function
-         *  @param x    the x point 
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        double evaluate
-        ( const double x      ,
-	        const double x0     ,
-	        const double F      ,
-	        const double dFoF   ) const ;
-        // ======================================================================
-        /** evaluate the (left) tail function
-         *  @param x    the x point 
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        inline double operator() 
-        ( const double x      ,
-	        const double x0     ,
-	        const double F      ,
-	        const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
-        // ====================================================================
-      public : 
-        // ======================================================================
-        /** get the integral of exponential function
-         *  @paral low  low  integral edge 
-         *  @paral high high integral edge
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x<x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        double integral
-        ( const double low  ,
-	        const double high ,
-	        const double x0   ,
-	        const double F    ,
-	        const double dFoF ) const ;
-       // ======================================================================
-        /** get the integral of exponential function
-         *  @paral low  low  integral edge 
-         *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x<x_0\f$ 
-         *  @param F    function value \f$ f(x_0) \f$ at normalization point 
-         *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
-         */
-        double integral
-        ( const double low  ,
-	        const double x0   ,
-	        const double F    ,
-	        const double dFoF ) const ;
-       // ======================================================================
-      public:
-        // ====================================================================
-        /// get the tag 
+    class RightExpTail : public Ostap::Math::AlphaTail 
+    {
+      // ====================================================================
+    public :  
+      // ====================================================================
+      RightExpTail ( const double alpha = 2 ) ;
+      RightExpTail ( const Ostap::Math::AlphaTail& tail ) ;
+      // ====================================================================
+    public :
+      // ======================================================================
+      /** evaluate the (left) tail function
+       *  @param x    the x point 
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double evaluate
+      ( const double x      ,
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const ;
+      // ======================================================================
+      /** evaluate the (left) tail function
+       *  @param x    the x point 
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x>x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      inline double operator() 
+      ( const double x      ,
+	const double x0     ,
+	const double F      ,
+	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+      // ====================================================================
+    public : 
+      // ======================================================================
+      /** get the integral of exponential function
+       *  @paral low  low  integral edge 
+       *  @paral high high integral edge
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x<x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double integral
+      ( const double low  ,
+	const double high ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
+      // ======================================================================
+      /** get the integral of exponential function
+       *  @paral low  low  integral edge 
+       *  @param x0   normalization point \f$ f(x) \equiv 0 \f$ for \f$ x<x_0\f$ 
+       *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+       *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+       */
+      double integral
+      ( const double low  ,
+	const double x0   ,
+	const double F    ,
+	const double dFoF ) const ;
+      // ======================================================================
+    public:
+      // ====================================================================
+      /// get the tag 
         std::size_t tag () const ;
-        // ====================================================================
-     }; //                                The end of class Ostap::Math::ExpTail
-     // =======================================================================
+      // ====================================================================
+    }; //                                The end of class Ostap::Math::ExpTail
+    // =======================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

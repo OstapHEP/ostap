@@ -66,7 +66,8 @@ Ostap::Math::Tail::Tail
 ( const double alpha  ,
   const double n      )
   : AlphaTail ( alpha ) 
-  , m_n     ( std::abs ( n     ) )
+  , m_n (                        std::abs ( n )   )
+  , m_N ( Ostap::Math::Tail::N ( std::abs ( n ) ) )
 {}
 // ============================================================================
 bool Ostap::Math::Tail::setN      ( const double value )
@@ -75,7 +76,8 @@ bool Ostap::Math::Tail::setN      ( const double value )
   value_        = s_zero   ( value_ ) ? 0.0 : value_ ;
   if ( s_equal ( value_ , m_n     ) ) { return false ; }
   //
-  m_n = value_ ;
+  m_n = value_    ;
+  m_N = N ( m_n ) ;
   return true ;
 }
 // ============================================================================
@@ -163,6 +165,37 @@ double Ostap::Math::LeftTail::integral
   const double b  = 1 + x0 * dFoF / nn ;
   //
   return F * Ostap::Math::cavalieri ( -nn , low , high , a , b ) ;
+}
+// ===========================================================================
+/*  get the integral of power-law function from negatove infinity to <code>high</code>
+ *  @paral high high interal edge
+ *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+ *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+ */
+// ===========================================================================
+double Ostap::Math::LeftTail::integral
+( const double high ,
+  const double x0   , 
+  const double F    ,
+  const double dFoF ) const
+{
+  //
+  if      ( !F || s_zero ( F ) ) { return 0 ; }
+  else if ( x0   <  high       ) { return integral ( x0  , x0 , F , dFoF ) ; }
+  //
+  Ostap::Assert ( 0 < F && 0 < dFoF ,
+                  "Invalid parameter `dFoF`: log-derivative must be positive!" ,
+                  "Ostap::Math::LeftTail::integral" ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double nn = N () ;
+  /// infinite ?
+  if ( nn < 1 || s_equal ( nn , 1.0 ) ) { return s_POSINF  ; }  // ATTENTION! 
+  /// get the integral
+  const double kappa = dFoF ; 
+  const double beta  = nn - kappa * ( high - x0 ) ;
+  //
+  return - F * beta * std::pow ( nn / beta , nn ) / ( kappa * ( 1 - nn ) ) ;
 }
 // ============================================================================
 // get the tag 
@@ -252,6 +285,40 @@ double Ostap::Math::RightTail::integral
   return F * Ostap::Math::cavalieri ( -nn , low , high , a , b ) ;
 }
 // ============================================================================
+/*  get the integral of power-law function from low to positive infinity 
+ *  @paral low  low  interal edge 
+ *  @param F    function value \f$ f(x_0) \f$ at normalization point 
+ *  @param dFoF value of log-dervative \f$ \frac{f^\prime(x_0)}{f(x_0)}\f$  at normalization point 
+ */
+// ===========================================================================
+double Ostap::Math::RightTail::integral
+( const double low  ,
+  const double x0   , 
+  const double F    ,
+  const double dFoF ) const
+{
+  //
+  if      ( !F || s_zero ( F ) ) { return 0 ; }
+  else if ( low  <  x0         ) { return integral ( x0 , x0 , F , dFoF ) ; }
+  //
+  Ostap::Assert ( 0 < F && 0 > dFoF ,
+                  "Invalid parameter `dFoF`: log-derivative must be negative!" ,
+                  "Ostap::Math::RightTail::integral" ,
+                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  // Cavalieri's integral:
+  //
+  const double nn = N () ;
+  // infinite ?
+  if ( nn < 1 || s_equal ( nn , 1.0 ) ) { return s_POSINF  ; }  // ATTENTION! 
+  
+  /// get the integral
+  const double kappa = dFoF ; 
+  const double beta  = nn - kappa * ( low - x0 ) ;
+  //
+  return F * beta * std::pow ( nn / beta , nn ) / ( kappa * ( 1 - nn ) ) ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::RightTail::tag () const 
@@ -260,8 +327,6 @@ std::size_t Ostap::Math::RightTail::tag () const
   return Ostap::Utils::hash_combiner ( s_name , Ostap::Math::Tail::tag() ) ; 
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // ExpTail 
