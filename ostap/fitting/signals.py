@@ -95,6 +95,7 @@ __all__ = (
     'CrystalBall_pdf'        , ## Crystal-ball function
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
+    'CrystalBallA_pdf'       , ## variant of Crystal Ball function with asymmetric core 
     'Needham_pdf'            , ## Needham's function for J/psi or Y fits 
     'Apollonios_pdf'         , ## bifurcated Apollonios function         
     'ApolloniosL_pdf'        , ## bigurcated Apollonios function with power-law tail
@@ -225,8 +226,91 @@ class Gauss_pdf(PEAK) :
             'mean'  : self.mean  ,
             'sigma' : self.sigma ,
             }
+        
+    @property
+    def mu ( self ) :
+        """'mu' : peak location, same as `mean` and `location` 
+        """
+        return self.mean
+    @mu.setter 
+    def mu ( self ,value ) :
+        self.mean = value
 
-models.append ( Gauss_pdf ) 
+    @property
+    def location ( self ) :
+        """'location' : peak location, same as `mean` and  `mu`
+        """
+        return self.mean
+    @location.setter 
+    def location ( self ,value ) :
+        self.mean = value
+
+        
+models.append ( Gauss_pdf )
+
+# =============================================================================
+## @class BifurcatedGauss_pdf
+#  Aka a split normal distribution 
+#  @see https://en.wikipedia.org/wiki/Split_normal_distribution
+#  simple wrapper over bifurcated-gaussian
+#  @see RooGaussian
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-07-25
+class BifurcatedGauss_pdf(Gauss_pdf,SigmaLR) :
+    """ Bifurcated Gauss function
+    
+    Aka a split normal distribution 
+    - see https://en.wikipedia.org/wiki/Split_normal_distribution
+
+    f(x; mu, sigma_l, sigma_r ) ~ exp ( -0.5 * dx^2 )
+    
+    with
+    delta x  = (x-mu)/sigma_l for  x < mu
+    delta x  = (x-mu)/sigma_r for  x > mu
+    and
+    sigma_{l,r} = sigma * ( 1 + kappa)
+    with asymmetry parameter -1 < kappa < 1 
+    
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   xvar         ,
+                   mean  = None ,
+                   sigma = None ,
+                   psi   = None ) : 
+        #
+        ## initialize the base
+        # 
+        Gauss_pdf.__init__  ( self       ,
+                              name       ,
+                              xvar       ,
+                              mean       ,
+                              sigma      , 
+                              mean_name  = 'mu_%s'    % name ,
+                              mean_title = '#mu_(%s)' % name )
+        ## sigmas 
+        SigmaLR .__init__  ( self , self.sigma , psi = psi  )
+    
+        ## finally build pdf
+        self.pdf = Ostap.Models.BifurcatedGauss (
+            self.roo_name ( "bfgauss_" )  , 
+            "Bifurcated Gauss %s" % self.name ,
+            self.xvar   ,
+            self.mean   ,
+            self.sigmaL ,
+            self.sigmaR )
+
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'psi'       : self.psi   ,
+            }
+        
+models.append ( BifurcatedGauss_pdf )
+
 # =============================================================================
 ## @class CrystalBall_pdf
 #  @see Ostap::Models::CrystalBall
@@ -310,7 +394,8 @@ class CrystalBall_pdf(Gauss_pdf,Tail,LeftTail) :
             'n'     : self.n     ,
             }
 
-models.append ( CrystalBall_pdf )    
+models.append ( CrystalBall_pdf )
+
 # =============================================================================
 ## @class CrystalBallRS_pdf
 #  Crystal Ball function with the right side tail.
@@ -595,7 +680,87 @@ class Needham_pdf(Gauss_pdf,TailN) :
         """
         return self.pdf.amin()
     
-models.append ( Needham_pdf )    
+models.append ( Needham_pdf )
+
+
+# =============================================================================
+## @class CrystalBallA_pdf
+#  @see Ostap::Models::CrystalBallA
+#  @see Ostap::Math::CrystalBallA
+#  Variant of Crystal Ball function with asymmetric bifurcated gaussian core 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2011-07-25
+class CrystalBallA_pdf(BifurcatedGauss_pdf,Tail,LeftTail) :
+    """ Crystal Ball function L Gaussian core + (left) power-law tail 
+    http://en.wikipedia.org/wiki/Crystal_Ball_function
+    
+    - T. Skwarnicki,
+    'A study of the radiative cascade transitions between the Upsilon-Prime
+    and Upsilon resonances', Ph.D Thesis, DESY F31-86-02(1986), Appendix E.
+    http://inspirehep.net/record/230779/files/f31-86-02.pdf
+    - J. E. Gaiser,
+    'Charmonium Spectroscopy from Radiative Decays of the J/Psi and Psi-Prime',
+    Ph.D. Thesis, SLAC-R-255 (1982), Appendix F, p 178
+    http://www.slac.stanford.edu/cgi-wrap/getdoc/slac-r-255.pdf
+    - M. J. Oreglia,
+    'A Study of the Reactions psi prime --> gamma gamma psi',
+    Ph.D. Thesis, SLAC-R-236 (1980), Appendix D.
+    http://www.slac.stanford.edu/pubs/slacreports/slac-r-236.html
+    
+    Note:
+    - Unlike the original definition parameter 'n' here is transfromed: N=N(n) 
+    - Typical value of parameter alpha for 'physical' peaks is 1.5<alpha<3.0,
+    - For large alpha (e.g. alpha>3), there is no sensitivity for n;
+    - similarly in the limit of large n, sensitivity for alpha is minimal
+    """
+    def __init__ ( self            ,
+                   name            ,
+                   xvar            ,
+                   mean     = None , 
+                   sigma    = None ,
+                   alpha    = None ,
+                   n        = None ,
+                   psi      = None ) : 
+        
+        #
+        ## initialize the bases
+        #
+        BifurcatedGauss_pdf .__init__ ( self  ,
+                                        name  ,
+                                        xvar  ,
+                                        mean  = mean  ,
+                                        sigma = sigma ,
+                                        psi   = psi   )
+        
+        Tail      .__init__ ( self , alpha = alpha      , n  = n      ) 
+        LeftTail  .__init__ ( self , alpha = self.alpha , n  = self.n ) 
+        
+        ## finally build PDF 
+        #
+        self.pdf = Ostap.Models.CrystalBallA (
+            self.roo_name ( 'cb_'  )       , 
+            'Crystal Ball %s' % self.name  ,
+            self.xvar    ,
+            self.mean    ,
+            self.sigmaL  ,
+            self.sigmaR  ,
+            self.alpha   ,           
+            self.n       )
+        
+        ## save the configuration
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mean'  : self.mean  ,
+            'sigma' : self.sigma ,
+            'alpha' : self.alpha , 
+            'n'     : self.n     ,
+            'psi'   : self.psi   ,
+        }
+        
+models.append ( CrystalBallA_pdf )
+
+
 # =============================================================================
 ## @class Apollonios_pdf
 #  simple wrapper over bifurcated/asymmetric Apollonios PDF 
@@ -760,69 +925,12 @@ class ApolloniosL_pdf(Apollonios_pdf,Tail,LeftTail) :
 models.append ( ApolloniosL_pdf )
 
 # =============================================================================
-## @class BifurcatedGauss_pdf
-#  Aka a split normal distribution 
-#  @see https://en.wikipedia.org/wiki/Split_normal_distribution
-#  simple wrapper over bifurcated-gaussian
-#  @see RooGaussian
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2011-07-25
-class BifurcatedGauss_pdf(Gauss_pdf,SigmaLR) :
-    """ Bifurcated Gauss function
-    
-    Aka a split normal distribution 
-    - see https://en.wikipedia.org/wiki/Split_normal_distribution
-
-    f(x; mu, sigma_l, sigma_r ) ~ exp ( -0.5 * dx^2 )
-    
-    with
-    delta x  = (x-mu)/sigma_l for  x < mu
-    delta x  = (x-mu)/sigma_r for  x > mu
-    and
-    sigma_{l,r} = sigma * ( 1 + kappa)
-    with asymmetry parameter -1 < kappa < 1 
-    
-    """
-    def __init__ ( self         ,
-                   name         ,
-                   xvar         ,
-                   mean  = None ,
-                   sigma = None ,
-                   psi   = None ) : 
-        #
-        ## initialize the base
-        # 
-        PEAK    .__init__  ( self , name , xvar , mean , sigma ) 
-        SigmaLR .__init__  ( self , self.sigma  , psi = psi    )
-
-        #
-        ## finally build pdf
-        self.pdf = Ostap.Models.BifurcatedGauss (
-            self.roo_name ( "bfgauss_" )  , 
-            "Bifurcated Gauss %s" % self.name ,
-            self.xvar   ,
-            self.mean   ,
-            self.sigmaL ,
-            self.sigmaR )
-
-        ## save the configuration
-        self.config = {
-            'name'      : self.name  ,
-            'xvar'      : self.xvar  ,
-            'mean'      : self.mean  ,
-            'sigma'     : self.sigma ,
-            'psi'       : self.psi   ,
-            }
-
-models.append ( BifurcatedGauss_pdf )
-
-# =============================================================================
 ## @class DoubleGauss_pdf
 #  simple wrapper over double gaussian
 #  @see RooGaussian
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-12
-class DoubleGauss_pdf(PEAK) :
+class DoubleGauss_pdf(Gauss_pdf) :
     """ Double Gauss :
 
     f(x;mu,sigma,scale,fraction) =
@@ -840,11 +948,11 @@ class DoubleGauss_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self          ,
-                         name          ,
-                         xvar          ,
-                         mean  = mean  ,
-                         sigma = sigma )
+        Gauss_pdf.__init__  ( self          ,
+                              name          ,
+                              xvar          ,
+                              mean  = mean  ,
+                              sigma = sigma )
         
         self.__scale    = self.make_var ( scale ,
                                           'SigmaScale'        + name ,
@@ -1309,7 +1417,7 @@ models.append ( Novosibirsk_pdf )
 #  @see Analusis::Models::Bukin
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
-class Bukin_pdf(PEAK) :
+class Bukin_pdf(Gauss_pdf) :
     """ Bukin function, aka 'modified Novosibirsk function':
     - asymmetrical gaussian-like core
     - exponential (optionally gaussian) asymmetrical tails
@@ -1343,7 +1451,7 @@ class Bukin_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name  , xvar , mean , sigma )
+        Gauss_pdf.__init__  ( self , name  , xvar , mean , sigma )
         #
         ## treat the specific parameters
         #
@@ -1428,7 +1536,7 @@ models.append ( Bukin_pdf )
 #  @see Ostap::Math::StudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class StudentT_pdf(PEAK,TailN) :
+class StudentT_pdf(Gauss_pdf,TailN) :
     """ Student-T distribution:
     http://en.wikipedia.org/wiki/Student%27s_t-distribution
     
@@ -1451,8 +1559,8 @@ class StudentT_pdf(PEAK,TailN) :
         #
         ## initialize the base
         # 
-        PEAK  .__init__  ( self , name , xvar , mean , sigma ) 
-        TailN .__init__  ( self , n = n )
+        Gauss_pdf.__init__  ( self , name , xvar , mean , sigma ) 
+        TailN    .__init__  ( self , n = n )
         #
         ## finally build pdf
         # 
@@ -1483,7 +1591,7 @@ models.append ( StudentT_pdf )
 #  @see Ostap::Math::BifurcatedStudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BifurcatedStudentT_pdf(PEAK,SigmaLR,TailNL,TailNR) :
+class BifurcatedStudentT_pdf(BifurcatedGauss_pdf,SigmaLR,TailNL,TailNR) :
     """ Bifurcated Student-T distribution:
 
     f(dx) ~ (1 + dx^2/n)^{-(n+1)/2 }
@@ -1512,8 +1620,12 @@ class BifurcatedStudentT_pdf(PEAK,SigmaLR,TailNL,TailNR) :
         #
         ## initialize the base
         # 
-        PEAK    .__init__  ( self , name , xvar , mean , sigma     )
-        SigmaLR .__init__  ( self , sigma = self.sigma , psi = psi )
+        BifurcatedFauss_pdf.__init__  ( self  ,
+                                        name  ,
+                                        xvar  ,
+                                        mean  = mean  ,
+                                        sigma = sigma ,
+                                        psi   = psi   )
         TailNL  .__init__  ( self , n = nL )
         TailNR  .__init__  ( self , n = nR )
         #
@@ -1539,7 +1651,6 @@ class BifurcatedStudentT_pdf(PEAK,SigmaLR,TailNL,TailNR) :
             'nL'        : self.nL    ,
             'nR'        : self.nR    ,
             }
-
 
 models.append ( BifurcatedStudentT_pdf )      
 
@@ -1946,7 +2057,7 @@ models.append ( SkewGenError_pdf )
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-02
-class SinhAsinh_pdf(PEAK) :
+class SinhAsinh_pdf(Gauss_pdf) :
     """ SinhAsinh-function: 
     see Jones, M. C.; Pewsey, A. (2009).
     'Sinh-arcsinh distributions'. Biometrika 96 (4): 761. 
@@ -1973,10 +2084,14 @@ class SinhAsinh_pdf(PEAK) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name  , xvar , mean , sigma )
+        Gauss_pdf.__init__  ( self       ,
+                              name       ,
+                              xvar       ,
+                              mean       = mean             ,
+                              sigma      = sigma            , 
+                              mean_name  = 'mu_%s'   % name ,
+                              mean_title = '#mu(%s)' % name )
         
-        ##
-        self.__mu      = self.mean
         self.__epsilon = self.make_var ( epsilon ,
                                          'epsilon_%s'   % name ,
                                          '#epsilon(%s)' % name ,
@@ -2024,13 +2139,6 @@ class SinhAsinh_pdf(PEAK) :
     def delta ( self, value ) :
         self.set_value ( self.__delta , value ) 
 
-    @property
-    def mu ( self ) :
-        """'mu'-parameter (location) for Sinh-Asinh function (same as 'mean')"""
-        return self.__mu
-    @mu.setter
-    def mu (  self , value ) :
-        self.set_value ( self.__mu , value ) 
                 
 models.append ( SinhAsinh_pdf )      
 
@@ -2209,7 +2317,7 @@ models.append ( JohnsonSU_pdf )
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-019
-class Meixner_pdf(PEAK) :
+class Meixner_pdf(Gauss_pdf) :
     """ Meixner distribution
     - see Grigoletto, M., & Provasi, C. (2008). 
         `Simulation and Estimation of the Meixner Distribution'. 
@@ -2238,13 +2346,11 @@ class Meixner_pdf(PEAK) :
         #
         ## initialize the base
         #
-        PEAK.__init__  ( self    , name , xvar ,
-                         mean        = mu               ,
-                         sigma       = sigma            ,
-                         mean_name   = 'mu_%s'   % name ,
-                         mean_title  = '#mu(%s)' % name )
-        
-        self.__mu   = self.mean
+        Gauss_pdf.__init__  ( self    , name , xvar ,
+                              mean       = mu               ,
+                              sigma      = sigma            ,
+                              mean_name  = 'mu_%s'   % name ,
+                              mean_title = '#mu(%s)' % name )
         
         self.__psi  = self.make_var ( psi                  ,
                                       'psi_%s'     % name   ,
@@ -2276,14 +2382,6 @@ class Meixner_pdf(PEAK) :
             'psi'       : self.psi     ,
             'shape'     : self.shape   ,
             }
-
-    @property
-    def mu  ( self ) :
-        """`mu`: mu-parameter for Meixner function, same as `mean` but not a mean!"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :
-        self.set_value ( self.__mu , value ) 
 
     @property
     def psi ( self ) :
@@ -2326,7 +2424,7 @@ models.append ( Meixner_pdf )
 #  @see Ostap::Models::Atlas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-024
-class Atlas_pdf(PEAK) :
+class Atlas_pdf(Gauss_pdf) :
     r"""Modified gaussian with exponential tails
     \f$  f(x) \propto \exp( -frac{\delta x^{1+\dfrac{1}{1+\delta x/2}}}{2})\f$,
     where \f$\delta x = \left| x - \mu \right|/\sigma\f$
@@ -2341,7 +2439,7 @@ class Atlas_pdf(PEAK) :
         #
         ## initialize the base
         #        
-        PEAK.__init__  ( self , name , xvar , mean, sigma  )
+        Gauss_pdf.__init__  ( self , name , xvar , mean = mean , sigma = sigma )
         
         #
         ## finally build pdf
@@ -2372,7 +2470,7 @@ models.append ( Atlas_pdf )
 #  @see Ostap::Models::Slash
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-004
-class Slash_pdf(PEAK) :
+class Slash_pdf(Gauss_pdf) :
     """Symmetric function with very heavy tails.
     - see https://en.wikipedia.org/wiki/Slash_distribution
     The tails  are so heavy that moments does not exists
@@ -2386,13 +2484,14 @@ class Slash_pdf(PEAK) :
                    scale   = None ) : ## related to scale
 
         ## initialize the base
-        PEAK.__init__  ( self , name , xvar  ,
+        Gauss_pdf.__init__  ( self , name , xvar  ,
                               mean        = mean  ,
                               sigma       = scale ,
+                              mean_name   = 'mu_%s'      % name ,
+                              mean_title  = '#mu(%s)'    % name ,        
                               sigma_name  = 'scale_%s'   % name ,
                               sigma_title = '#scale(%s)' % name )
         
-        self.__scale = self.sigma
 
         ## finally build pdf
         self.pdf = Ostap.Models.Slash (
@@ -2409,24 +2508,16 @@ class Slash_pdf(PEAK) :
             'mean'      : self.mean  ,
             'scale'     : self.scale ,
             }
-    @property
-    def mu ( self ) :
-        """'mu'  - location parameter, the same as 'mean' or 'location'"""
-        return self.mean
-    @property
-    def location ( self ) :
-        """'location'  - location parameter, the same as 'mean' or 'mu'"""
-        return self.mean
+        
     @property
     def scale ( self ) :
         """'scale'  - scale parameter, the same as 'sigma'"""
-        return self.__scale
+        return self.sigma
     @scale.setter
     def scale ( self , value ) :
-        self.set_value ( self.__scale , value ) 
-    
+        self.sigma = value
+        
 models.append ( Slash_pdf )      
-
 
 # =============================================================================
 ## @class AsymmetricLaplace_pdf
@@ -2438,7 +2529,7 @@ models.append ( Slash_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-004
 class AsymmetricLaplace_pdf(PEAK) :
-    r"""Asymmetric version of Laplace distribution:
+    r""" Asymmetric version of Laplace distribution:
     
     f(x) \propto \exp ( \pm \dfrac { x- \mu } { \lambda_{ L , R } } )
     
@@ -2564,7 +2655,7 @@ models.append ( AsymmetricLaplace_pdf )
 #
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-04-025
-class Sech_pdf(PEAK) :
+class Sech_pdf(Gauss_pdf) :
     r"""Hyperbolic secant distribution or 'inverse-cosh' distribution
     
     The hyperbolic secant distribution shares many properties with the 
@@ -2589,7 +2680,7 @@ class Sech_pdf(PEAK) :
         #
         ## initialize the base
         #        
-        PEAK.__init__  ( self , name , xvar , mean , sigma  )
+        Gauss_pdf.__init__  ( self , name , xvar , mean = mean , sigma = sigma  )
         
         #
         ## finally build pdf
@@ -2726,7 +2817,7 @@ models.append ( Losev_pdf )
 #  @see Ostap::Models::Logistic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
-class Logistic_pdf(PEAK) :
+class Logistic_pdf(Gauss_pdf) :
     r""" Logistic, aka 'sech-square' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
@@ -2743,9 +2834,8 @@ class Logistic_pdf(PEAK) :
 
         #
         ## initialize the base
-        #
-        
-        PEAK.__init__  ( self , name , xvar , mean , sigma  )
+        #        
+        Gauss_pdf.__init__  ( self , name , xvar , mean = mean , sigma = sigma  )
         
         #
         ## finally build pdf
@@ -2779,7 +2869,7 @@ models.append ( Logistic_pdf )
 #  @see Ostap::Models::Logistic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
-class GenLogisticIV_pdf(PEAK) :
+class GenLogisticIV_pdf(Gauss_pdf) :
     """Genrealized Logistic Type IV with location/scale
     - Type I   : beta  = 1 
     - Type II  : alpha = 1 
@@ -2798,9 +2888,8 @@ class GenLogisticIV_pdf(PEAK) :
 
         #
         ## initialize the base
-        #
-        
-        PEAK.__init__  ( self , name , xvar , mean , sigma  )
+        #        
+        Gauss_pdf.__init__  ( self , name , xvar , mean , sigma  )
         
         ## alpha
         self.__alpha = self.make_var ( alpha               ,
@@ -2857,7 +2946,7 @@ class GenLogisticIV_pdf(PEAK) :
 models.append ( GenLogisticIV_pdf )      
 
 # =============================================================================
-## @class BatesShapoe_pdf
+## @class BatesShape_pdf
 #  Modified Bates distribution such that it has mean of \f$ \mu \f$
 #  and rms of \f$ \sigma \f$, \f$ n>0\f$ is just a shape parameters 
 #  @see https://en.wikipedia.org/wiki/Bates_distribution
@@ -2868,7 +2957,7 @@ models.append ( GenLogisticIV_pdf )
 #  @see Ostap::Math::IrwinHall
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2022-01-09
-class BatesShape_pdf(PEAK) :
+class BatesShape_pdf(Gauss_pdf) :
     """Modified Bates distribution such that it has mean of mu 
     and rms of sigma ,  n>0 is just a shape parameters 
     - see https://en.wikipedia.org/wiki/Bates_distribution
@@ -2888,7 +2977,7 @@ class BatesShape_pdf(PEAK) :
         #
         ## initialize the base
         #
-        PEAK.__init__  ( self , name , xvar , mean , sigma  )
+        Gauss_pdf.__init__  ( self , name , xvar , mean , sigma  )
 
         ## 
         assert isinstance ( n , integer_types ) and 1 <= n , 'Inmvalid parameteter n!'
@@ -2914,7 +3003,6 @@ class BatesShape_pdf(PEAK) :
             'sigma'     : self.sigma ,
             'n'         : self.n     ,
             }
-
     
     @property
     def n ( self ) :
@@ -3076,7 +3164,6 @@ class QGaussian_pdf(PEAK) :
 
 models.append ( QGaussian_pdf )      
 
-
 # =============================================================================
 ## @class KGaussian_pdf 
 #  k-Gaussian distribution:
@@ -3229,7 +3316,7 @@ models.append ( KGaussian_pdf )
 #  @see Ostap::Math::Hyperbolic
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
-class Hyperbolic_pdf(PEAK) :
+class Hyperbolic_pdf(Gauss_pdf) :
     r"""Hyperbolic distribution
     - see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
     - see  Barndorff-Nielsen, Ole, 
@@ -3259,14 +3346,11 @@ class Hyperbolic_pdf(PEAK) :
         #
         ## initialize the base
         #        
-        PEAK.__init__  ( self , name , xvar               , 
+        Gauss_pdf.__init__  ( self , name , xvar               , 
                               mean        = mu                 ,
                               sigma       = sigma              ,
                               mean_name   = 'mu_%s'     % name ,
                               mean_title  = '#mu(%s)'   % name )
-        
-        
-        self.__mu    = self.mean 
         
         ## Zeta
         self.__zeta  = self.make_var ( zeta                ,
@@ -3300,14 +3384,6 @@ class Hyperbolic_pdf(PEAK) :
             'zeta'      : self.zeta  ,
             'kappa'     : self.kappa }
         
-    @property
-    def mu ( self ) :
-        """'mu' : location parameter, same as 'mean')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :    
-        self.set_value ( self.__mu , value )
-
     @property 
     def zeta  ( self ) :
         """'zeta' : dimensioneless parameter, related to shape"""
@@ -3431,8 +3507,7 @@ class GenHyperbolic_pdf(Hyperbolic_pdf) :
         
         #
         ## initialize the base
-        #
-        
+        #        
         Hyperbolic_pdf.__init__  ( self ,
                                    name   = name  ,
                                    xvar   = xvar  , 
@@ -3499,7 +3574,7 @@ models.append ( GenHyperbolic_pdf )
 # @see Ostap::Models::GenHyperbolic
 class Hypatia_pdf(GenHyperbolic_pdf) :
     r""" Variant of Hypatia pdf
-    Convolution of Generalized Hyperbolic distrobution with 'offset'
+    Convolution of Generalized Hyperbolic distribution with 'offset'
     Gaussian distribution
     
     - see D. Martinez Santos, F. Duipertois,
@@ -3635,12 +3710,12 @@ class ExGauss_pdf(PEAK) :
     """ Exponentially modified Gaussian function, EMG
     - see https://en.wikipedia.org/wiki/Exponentially_modified_Gaussian_distribution
     
-    It is a distibutiin for the varibale that is a 
+    It is a distibutioon for the variable that is a 
     sum (or difference for negative k)  
     of a Gaussian and exponential variables.
 
     - k = 0 : Gaussian distribution
-    - k>0  corresponds to the rigth tail  
+    - k>0  corresponds to the right tail  
     - k<0  corresponds to the left tail  
     
     - see Reed, W.J, "The Normal-Laplace Distribution and Its Relatives". 
@@ -3663,12 +3738,12 @@ class ExGauss_pdf(PEAK) :
         ## initialize the base
         #        
         PEAK.__init__  ( self , name , xvar                  , 
-                              mean        = mu                    ,
-                              sigma       = varsigma              ,
-                              mean_name   = 'mu_%s'        % name ,
-                              mean_title  = '#mu(%s)'      % name ,
-                              sigma_name  = 'varsigma_%s'  % name ,
-                              sigma_title = 'varsigma(%s)' % name )
+                         mean        = mu                    ,
+                         sigma       = varsigma              ,
+                         mean_name   = 'mu_%s'        % name ,
+                         mean_title  = '#mu(%s)'      % name ,
+                         sigma_name  = 'varsigma_%s'  % name ,
+                         sigma_title = 'varsigma(%s)' % name )
         
         self.__mu       = self.mean 
         self.__varsigma = self.sigma
@@ -3722,10 +3797,9 @@ class ExGauss_pdf(PEAK) :
     
 models.append ( ExGauss_pdf )      
 
-
 # =============================================================================
 ## @class ExGauss2_pdf
-#  Varianit of Exponentially modified Gaussian function
+#  Variant of Exponentially modified Gaussian function
 #  parameterised in terms of the mode
 #  @see Ostap::Math::NormalLaplace 
 #  @see Ostap::Mdoels::NormalLaplace 
@@ -4140,7 +4214,7 @@ models.append ( NormalLaplace_pdf )
 #
 # @see Ostap::Math::Das
 # @see Ostap::Models::Das
-class Das_pdf(PEAK,TailAL,TailAR) :
+class Das_pdf(Gauss_pdf,TailAL,TailAR) :
     r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from the ref below
     
@@ -4175,7 +4249,7 @@ class Das_pdf(PEAK,TailAL,TailAR) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar ,
+        Gauss_pdf.__init__  ( self , name , xvar ,
                               mean        = mu                ,
                               sigma       = sigma             ,
                               mean_name   = 'mu_%s'    % name ,
@@ -4212,6 +4286,8 @@ class Das_pdf(PEAK,TailAL,TailAR) :
     @mu.setter 
     def mu ( self ,value ) :
         self.mean = value 
+
+models.append ( Das_pdf )      
         
 # =============================================================================
 ## @class ADas_pdf
@@ -4246,7 +4322,7 @@ class Das_pdf(PEAK,TailAL,TailAR) :
 #
 # @see Ostap::Math::Das
 # @see Ostap::Models::Das
-class ADas_pdf(PEAK,SigmaLR,TailAL,TailAR) :
+class ADas_pdf(BifurcatedGauss_pdf,TailAL,TailAR) :
     r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from ref below
     
@@ -4281,14 +4357,11 @@ class ADas_pdf(PEAK,SigmaLR,TailAL,TailAR) :
         #
         ## initialize the base
         # 
-        PEAK.__init__  ( self , name , xvar ,
-                              mean        = mu                ,
-                              sigma       = sigma             ,
-                              mean_name   = 'mu_%s'    % name ,
-                              mean_title  = '#mu_(%s)' % name )
-         
-         
-        SigmaLR .__init__ ( self , self.sigma , psi = psi )
+        BifurcatedGauss_pdf.__init__  ( self , name , xvar  ,
+                                        mean        = mu    ,
+                                        sigma       = sigma ,
+                                        psi         = psi   ) 
+
         TailAL  .__init__ ( self , alpha = alphaL )
         TailAR  .__init__ ( self , alpha = alphaR )
         
@@ -4314,14 +4387,7 @@ class ADas_pdf(PEAK,SigmaLR,TailAL,TailAR) :
             'alphaR' : self.alphaR ,
             }
 
-    @property
-    def mu ( self ) :
-        """'mu' : peak location, same as 'mean'
-        """
-        return self.mean
-    @mu.setter 
-    def mu ( self ,value ) :
-        self.mean = value 
+models.append ( ADas_pdf )      
 
 # =============================================================================
 # @class FisherZ_pdf
@@ -4419,6 +4485,7 @@ class FisherZ_pdf(PEAK) :
     def d2 ( self , value ) :
         self.setValue ( self.__d2 , value )
 
+models.append ( FisherZ_pdf )      
         
 # ==============================================================================
 ## @class Hat_pdf

@@ -338,6 +338,41 @@ def test_needham() :
     models.add     ( model   )
     results.append ( result  )
 
+# =============================================================================
+## CrystalBall woith asymmetric core 
+# =============================================================================
+def test_crystalballa () :
+    
+    logger = getLogger ( 'test_crystalballa' )
+    logger.info ('Test CrystalBallA_pdf: Crystal Ball  function with asymmetric core' )
+    
+    ## composite model: signal + background 
+    model = Models.Fit1D (
+        signal     = Models.CrystalBallA_pdf ( name  = 'CBA'    , ## the name 
+                                               xvar  = mass     , ## the variable   
+                                               alpha = (2,1,5)  , ## tail parameter
+                                               n     = (3,1,9)  , ## tail parameter
+                                               psi   = ( 0 , -0.5 , 0.5 ) , 
+                                               sigma = signal_gauss.sigma ,   ## reuse sigma from gauss
+                                               mean  = signal_gauss.mean  ) , ## reuse mean  from gauss 
+        background = background   ,
+        S = S , B = B 
+        )
+    
+    model.signal.n.fix(8)
+    
+    with rooSilent() : 
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        model.signal.alpha.release()
+        model.signal.n    .release()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        
+    make_print ( model , result , 'Crystal Ball/A model' , logger )
+                      
+    models.add     ( model  )
+    results.append ( result )
+    
 # ==========================================================================
 ## Apollonios
 # ==========================================================================
@@ -1072,7 +1107,7 @@ def test_das () :
         signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model , result , "Das model (1) " , logger )        
+    make_print ( model , result , "Das model" , logger )        
 
     models.add     ( model  )
     results.append ( result )
@@ -1111,7 +1146,7 @@ def test_adas () :
         signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 , silent = True )
         
-    make_print ( model , result , "Das model (2) " , logger )        
+    make_print ( model , result , "ADas model" , logger )        
 
     models.add     ( model  )
     results.append ( result )
@@ -2105,7 +2140,6 @@ if '__main__' == __name__ :
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
 
-    """
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
@@ -2122,6 +2156,10 @@ if '__main__' == __name__ :
     with timing ('test_needham'        , logger ) :
         test_needham        ()
 
+    ## Crystal Ball/A                              + background
+    with timing ('test_crystalballa'   , logger ) :
+        test_crystalballa   () 
+        
     ## Apollonios function                       + background 
     with timing ('test_apollonios'     , logger ) :
         test_apollonios     () 
@@ -2199,8 +2237,6 @@ if '__main__' == __name__ :
     with timing ('test_atlas'          , logger ) :
         test_atlas          () 
 
-    """
-        
     ## Das                                       + background 
     with timing ('test_das'             , logger ) :
         test_das            () 
@@ -2209,7 +2245,6 @@ if '__main__' == __name__ :
     with timing ('test_adas'             , logger ) :
         test_adas           () 
 
-    """ 
     ## BatesShape
     with timing ( 'test_bates_shape'  , logger ) :
         test_bates_shape      () 
@@ -2301,7 +2336,6 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
-    """
     
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

@@ -1629,7 +1629,6 @@ double Ostap::Models::PseudoVoigt::maxVal  ( Int_t      code ) const
 
 
 
-
 // ============================================================================
 // constructor form all parameters 
 // ============================================================================
@@ -2156,6 +2155,124 @@ double Ostap::Models::Needham::alpha   () const
   return m_needham.alpha () ;
 }
 // ============================================================================
+
+// ============================================================================
+// constructor form all parameters 
+// ============================================================================
+Ostap::Models::CrystalBallA::CrystalBallA
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          m0        ,
+  RooAbsReal&          sigmaL    ,    
+  RooAbsReal&          sigmaR    ,    
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          n         ) 
+  : RooAbsPdf ( name , title )
+//
+  , m_x       ( "!x"       , "Observable"   , this , x      ) 
+  , m_m0      ( "!m0"      , "CB/mass"      , this , m0     ) 
+  , m_sigmaL  ( "!sigmaL"  , "CB/sigma"     , this , sigmaL )
+  , m_sigmaR  ( "!sigmaR"  , "CB/sigma"     , this , sigmaR )
+//
+  , m_alpha   ( "!alpha"   , "CB/alpha"     , this , alpha  ) 
+  , m_n       ( "!n"       , "CB/n"         , this , n      ) 
+//
+  , m_cb      ( 100 , 1 , 1 , 10 ) 
+{
+  //
+  setPars () ;
+  //
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::CrystalBallA::CrystalBallA
+( const Ostap::Models::CrystalBallA& right , 
+  const char*                          name  ) 
+  : RooAbsPdf ( right , name )
+    //
+  , m_x       ( "!x"       , this , right.m_x      ) 
+  , m_m0      ( "!m0"      , this , right.m_m0     ) 
+  , m_sigmaL  ( "!sigmaL"  , this , right.m_sigmaL )
+  , m_sigmaR  ( "!sigmaR"  , this , right.m_sigmaR )
+    //
+  , m_alpha   ( "!alpha"   , this , right.m_alpha  ) 
+  , m_n       ( "!n"       , this , right.m_n      ) 
+//
+  , m_cb      ( 100 , 1 , 1 , 10 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::CrystalBallA::~CrystalBallA(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::CrystalBallA*
+Ostap::Models::CrystalBallA::clone ( const char* name ) const 
+{ return new Ostap::Models::CrystalBallA (*this , name ) ; }
+// ============================================================================
+void Ostap::Models::CrystalBallA::setPars () const 
+{
+  //
+  m_cb.setM0      ( m_m0     ) ;
+  m_cb.setSigma   ( m_sigmaL , m_sigmaR ) ;
+  m_cb.setAlpha   ( m_alpha  ) ;
+  m_cb.setN       ( m_n      ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::CrystalBallA::evaluate() const
+{
+  //
+  setPars () ;
+  //
+  return m_cb ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::CrystalBallA::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::CrystalBallA::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  Ostap::Assert ( 1 == code                     ,
+                  "Invalid Integration code"    ,
+                  "Ostap::Models::CrystalBallA" ,
+                  INVALID_INTEGRATION_CODE      , __FILE__ , __LINE__  ) ;
+  //
+  setPars ();
+  return m_cb.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::CrystalBallA::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::CrystalBallA::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid MaxVal code"          ,
+                  "Ostap::Models::CrystalBallA"  ,
+                  INVALID_MAXVAL_CODE            , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_cb ( m_cb.mode ()  ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // Apollonios
@@ -11603,6 +11720,7 @@ ClassImp(Ostap::Models::PseudoVoigt        )
 ClassImp(Ostap::Models::CrystalBall        ) 
 ClassImp(Ostap::Models::CrystalBallRS      ) 
 ClassImp(Ostap::Models::CrystalBallDS      ) 
+ClassImp(Ostap::Models::CrystalBallA       ) 
 ClassImp(Ostap::Models::Needham            ) 
 ClassImp(Ostap::Models::Apollonios         ) 
 ClassImp(Ostap::Models::ApolloniosL        ) 

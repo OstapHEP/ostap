@@ -1377,6 +1377,102 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class CrystalBallA
+     *  The special parametrization of `Crystal Ball-function' with asymmetric core 
+     *  @see Ostap::Math::CrystalBallA
+     *  @see Ostap::Math::CrystalBall
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2012-05-13
+     */
+    class  CrystalBallA : public RooAbsPdf
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::CrystalBallA, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      CrystalBallA
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          m0        ,
+        RooAbsReal&          sigmaL    ,
+        RooAbsReal&          sigmaR    ,
+        RooAbsReal&          alpha     ,
+        RooAbsReal&          n         ) ;  // n-1
+      /// "copy" constructor
+      CrystalBallA ( const CrystalBallA& right , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~CrystalBallA () ;
+      /// clone
+      CrystalBallA* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      CrystalBallA () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::CrystalBallA& function() const { return m_cb ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x      .arg() ; }
+      const RooAbsReal& m0     () const { return m_m0     .arg() ; }
+      const RooAbsReal& sigmaL () const { return m_sigmaL .arg() ; }
+      const RooAbsReal& sigmaR () const { return m_sigmaR .arg() ; }
+      const RooAbsReal& alpha  () const { return m_alpha  .arg() ; }
+      const RooAbsReal& n      () const { return m_n      .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_m0     ;
+      RooRealProxy m_sigmaL ;
+      RooRealProxy m_sigmaR ;
+      RooRealProxy m_alpha  ;
+      RooRealProxy m_n      ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::CrystalBallA m_cb ;                  // the function
+      // ======================================================================
+    } ;
+
+
+
+    
+    // ========================================================================
     /** @class Apollonios
      *  An asymetric Apollonious function 
      *

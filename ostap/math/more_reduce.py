@@ -448,7 +448,7 @@ Ostap.Math.Novosibirsk. __reduce__ = _omnovo_reduce_
 ## Reduce Ostap::Math::CrystalBall
 #  @see Ostap::Math::CristalBall
 def _omcb_reduce_ ( peak ) :
-    """Reduce `Ostap.Math.CrystalBall`
+    """ Reduce `Ostap.Math.CrystalBall`
     - see `Ostap.Math.CrystalBall`
     """
     return root_factory , ( type ( peak ) ,
@@ -459,6 +459,22 @@ def _omcb_reduce_ ( peak ) :
 
 Ostap.Math.CrystalBall         . __reduce__ = _omcb_reduce_
 Ostap.Math.CrystalBallRightSide. __reduce__ = _omcb_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::CrystalBallA
+#  @see Ostap::Math::CristalBallA
+def _omcba_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.CrystalBallA`
+    - see `Ostap.Math.CrystalBallA`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.m0     () ,
+                            peak.sigmaL () ,
+                            peak.sigmaR () ,
+                            peak.alpha  () ,
+                            peak.n      () )
+
+Ostap.Math.CrystalBallA  . __reduce__ = _omcba_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::Needham

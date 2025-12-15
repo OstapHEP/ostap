@@ -1384,6 +1384,23 @@ Ostap.Models.CrystalBall   .__reduce__ = _rcb_reduce_
 Ostap.Models.CrystalBallRS .__reduce__ = _rcb_reduce_ 
 
 # =============================================================================
+## reduce CrystalBallA
+def _rcba_reduce_ ( pdf ):
+    """ Reduce CristalBallA
+    """
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () , 
+                                  pdf.m0     () ,
+                                  pdf.sigmaL () ,
+                                  pdf.sigmaR () ,
+                                  pdf.alpha  () ,
+                                  pdf.n      () )
+
+Ostap.Models.CrystalBallA .__reduce__ = _rcba_reduce_ 
+
+# =============================================================================
 ## reduce CrystalBallDS
 def _rcb2_reduce_ ( pdf ):
     """ Reduce CristalBallDS

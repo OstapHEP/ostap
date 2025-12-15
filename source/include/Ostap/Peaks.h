@@ -1325,7 +1325,7 @@ namespace Ostap
       inline bool setM0    ( const double value ) { return m_core.setM0    ( value ) ; }
       inline bool setSigma ( const double value ) { return m_core.setSigma ( value ) ; }
       inline bool setN     ( const double value ) { return m_tail.setN     ( value ) ; } 
-      bool        setAlpha ( const double value ) ;
+      inline bool setAlpha ( const double value ) { return m_tail.setAlpha ( value ) ; }
       // ======================================================================
       inline bool setMu    ( const double value ) { return setM0 ( value ) ; }
       inline bool setPeak  ( const double value ) { return setM0 ( value ) ; }
@@ -1378,11 +1378,6 @@ namespace Ostap
       Ostap::Math::Gauss    m_core  {} ; // core gaussian
       /// (left) Tail
       Ostap::Math::LeftTail m_tail  {} ;
-      // ======================================================================
-    private :
-      // ======================================================================
-      /// helper constants
-      double m_A { -1 } ; // exp(-0.5*alpha_R^2)/sqrt(2pi)
       // ======================================================================
     } ;
     // ========================================================================
@@ -1860,7 +1855,143 @@ namespace Ostap
       /// helper normalization constant
       double m_AR  { -1 } ;  // exp(-0.5*alpha_R^2)/sqrt(2pi)
       // ======================================================================
-    } ;    
+    } ;
+    // ========================================================================
+    /** @Class CrystalBallA 
+     *  Variant of Crystal Ball function with asymmetric/bifurcated  core 
+     *  @see Ostap::Math::CrystalBall 
+     *  @see Ostap::Math::BifurcatedGauss 
+     *  @see Ostap::Math::LeftTail 
+     */
+    class  CrystalBallA 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param m0     m0       parameter
+       *  @param sigmaL left sigma   parameter
+       *  @param sigmaR right sigma  parameter
+       *  @param alpha  alpha    parameter
+       *  @param n      n        (external) parameter (not the same as *internal* N)
+       */
+      CrystalBallA 
+      ( const double m0     = 0 ,
+        const double sigmaL = 1 ,
+        const double sigmaR = 1 ,
+        const double alpha  = 2 ,
+        const double n      = 1 ) ;
+      // ======================================================================
+      /** constructor from gaussian and tail parameeter 
+       */
+      CrystalBallA 
+      ( const Ostap::Math::BifurcatedGauss& core      , 
+	const double                        alpha = 2 , 
+	const double                        n     = 1 ) ;
+      // ======================================================================
+      /** constructor from gaussian and tail 
+       *  @parameter core bifurcated Gaussian function 
+       *  @parameter tail tail     function 
+       */
+      CrystalBallA 
+      ( const Ostap::Math::BifurcatedGauss& core ,
+	const Ostap::Math::Tail&            tail ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate CrystalBall's function
+      double        pdf        ( const double x ) const ;
+      /// evaluate CrystalBall's function
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: // trivial accessors
+      // ======================================================================
+      inline double m0     () const { return m_core.m0     () ; }
+      inline double mu     () const { return m_core.m0     () ; }
+      inline double peak   () const { return m_core.m0     () ; }
+      inline double sigmaL () const { return m_core.sigmaL () ; }
+      inline double sigmaR () const { return m_core.sigmaR () ; }
+      inline double alpha  () const { return m_tail.alpha  () ; }
+      inline double n      () const { return m_tail.n      () ; }      
+      /// Internal N-parameter
+      inline double N      () const { return m_tail.N      () ; } // internal N parameter
+      /// squared alpha 
+      inline double alpha2 () const { return m_tail.alpha2 () ; }
+      // ======================================================================
+    public:            
+      // ======================================================================
+      /// mode of the distribution 
+      inline double mode () const { return m_core.mode () ; }
+      /// the point where Gaussian meets power-law
+      inline double xL   () const { return m_core.m0 () - m_tail.alpha () * m_core.sigmaL ()  ; }
+      // ======================================================================
+    public: // trivial accessors
+      // ======================================== ==============================
+      inline bool setM0     ( const double value  ) { return m_core.setM0     ( value ) ; }
+      inline bool setSigmaL ( const double value  ) { return m_core.setSigmaL ( value ) ; }
+      inline bool setSigmaR ( const double value  ) { return m_core.setSigmaR ( value ) ; }
+      inline bool setSigma  ( const double valueL ,
+			      const double valueR ) { return m_core.setSigma  ( valueL , valueR  ) ; }
+      inline bool setSigma  ( const double value  ) { return m_core.setSigma  ( value ) ; }
+      inline bool setN      ( const double value  ) { return m_tail.setN      ( value ) ; } 
+      inline bool setAlpha  ( const double value  ) { return m_tail.setAlpha  ( value ) ; } 
+      // ======================================================================
+      inline bool setMu    ( const double value ) { return setM0 ( value ) ; }
+      inline bool setPeak  ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMode  ( const double value ) { return setM0 ( value ) ; }
+      inline bool setMass  ( const double value ) { return setM0 ( value ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between low and high
+      double integral
+      ( const double low ,
+        const double high ) const ;
+      // ======================================================================
+      /** get the integral from the negative to positive infinity 
+       *  @attention +infinity is returned for <code>n=0(N=1)</code>
+       */
+      double integral () const ;
+      // ======================================================================
+    public: // components 
+      // ======================================================================
+      /// get the bifurcated Gaussian core 
+      const Ostap::Math::BifurcatedGauss& core      () const { return m_core ; }
+      /// get left tail
+      const Ostap::Math::LeftTail&        tail      () const { return m_tail ; }
+      /// get left tail
+      const Ostap::Math::LeftTail&        tail_left () const { return m_tail ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /** quantify the effect of the tail, difference from Gaussian
+       *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
+       * where 
+       * - \f$ I_{CB} \f$ is integral over Gaussian function 
+       * - \f$ I_{G}  \f$ is integral over Crystal Ball function 
+       */
+      double non_gaussian 
+      ( const double xlow  ,
+	const double xhigh ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// core Gaussian 
+      Ostap::Math::BifurcatedGauss m_core  {} ; // core gaussian
+      /// (left) Tail
+      Ostap::Math::LeftTail        m_tail  {} ;
+      // ======================================================================
+    } ;
+    
+    
+
+
+    
     // ========================================================================
     /** @class Apollonios
      *  "Bifurcated Apollonios"
