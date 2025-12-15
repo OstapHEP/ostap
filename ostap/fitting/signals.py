@@ -95,6 +95,7 @@ __all__ = (
     'CrystalBall_pdf'        , ## Crystal-ball function
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
+    'CB2A_pdf'               , ## double-sided Crystal Ball function with asymmetric code 
     'CrystalBallA_pdf'       , ## variant of Crystal Ball function with asymmetric core 
     'Needham_pdf'            , ## Needham's function for J/psi or Y fits 
     'Apollonios_pdf'         , ## bifurcated Apollonios function         
@@ -446,7 +447,8 @@ class CrystalBallRS_pdf(Gauss_pdf,Tail,RightTail) :
             'n'     : self.n     ,
             }
 
-models.append ( CrystalBallRS_pdf )    
+models.append ( CrystalBallRS_pdf )
+
 # =============================================================================
 ## @class CB2_pdf
 #  Double-sided Cristal Ball function
@@ -514,6 +516,8 @@ class CB2_pdf(Gauss_pdf,LeftTail,RightTail) :
             }
 
 models.append ( CB2_pdf )    
+
+
 # =============================================================================
 ## @class Needham_pdf
 # The special parametrization by Matthew NEEDHAM of
@@ -760,6 +764,62 @@ class CrystalBallA_pdf(BifurcatedGauss_pdf,Tail,LeftTail) :
         
 models.append ( CrystalBallA_pdf )
 
+# =============================================================================
+## @class CB2A_pdf
+#  Double sided Crystal Ball function with both left and rigth sides and asymmetric core 
+class CB2A_pdf(BifurcatedGauss_pdf,LeftTail,RightTail) :
+    """ Double sided Crystal Ball function with both left and rigth sides and asymmetric core 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             , 
+                   mean      = None ,
+                   sigma     = None ,
+                   alphaL    = None ,
+                   alphaR    = None ,
+                   nL        = None ,
+                   nR        = None ,
+                   psi       = None ) : 
+        
+        #
+        ## initialize the base
+        # 
+        BifurcatedGauss_pdf .__init__ ( self  ,
+                                        name  ,
+                                        xvar  ,
+                                        mean  = mean  ,
+                                        sigma = sigma ,
+                                        psi   = psi   )
+        
+        LeftTail  .__init__ ( self , alpha = alphaL , n = nL ) 
+        RightTail .__init__ ( self , alpha = alphaR , n = nR ) 
+
+        self.pdf = Ostap.Models.CrystalBallDSA(
+            self.roo_name ( 'cb2a_' ) , 
+            "double-sided Crystal Ball %s" % self.name ,
+            self.xvar    ,
+            self.mean    ,
+            self.sigmaL  ,
+            self.sigmaR  ,
+            self.alphaL  ,
+            self.nL      ,
+            self.alphaR  ,
+            self.nR      )
+
+        ## save the configuration
+        self.config = {
+            'name'   : self.name   ,
+            'xvar'   : self.xvar   ,
+            'mean'   : self.mean   ,
+            'sigma'  : self.sigma  ,
+            'alphaL' : self.alphaL ,
+            'alphaR' : self.alphaR ,
+            'nL'     : self.nL     ,
+            'nR'     : self.nR     ,
+            'psi'    : self.psi    ,
+            }
+
+models.append ( CB2A_pdf )    
 
 # =============================================================================
 ## @class Apollonios_pdf
@@ -4932,7 +4992,7 @@ class BreitWigner_pdf(PEAK) :
         >>> argand = bw.argand ( npx = 1000 )
         >>> argand.draw ( 'al')  
         """
-        bw = self.pdf.function()
+        bw    = self.pdf.function()
         xmnmx = self.xminmax() 
         if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
         if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 

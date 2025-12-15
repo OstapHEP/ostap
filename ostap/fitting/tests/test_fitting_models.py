@@ -339,7 +339,7 @@ def test_needham() :
     results.append ( result  )
 
 # =============================================================================
-## CrystalBall woith asymmetric core 
+## CrystalBall with asymmetric core 
 # =============================================================================
 def test_crystalballa () :
     
@@ -372,7 +372,45 @@ def test_crystalballa () :
                       
     models.add     ( model  )
     results.append ( result )
+
+# =============================================================================
+## double sided CrystalBall with asymmetric core 
+# =============================================================================
+def test_crystalball_DSA () :
     
+    logger = getLogger ( 'test_crystalball_DSA' )
+    logger.info ('Test CrystalBallDSA_pdf: double-sided Crystal Ball function' )
+    model = Models.Fit1D (
+        signal = Models.CB2A_pdf ( name   = 'CB2A'               , 
+                                   xvar   = mass                 ,
+                                   nL     = 10                   , 
+                                   nR     = 10                   , 
+                                   alphaL = (1.5,0.5,3)          , 
+                                   alphaR = (1.4,0.5,3)          , 
+                                   sigma  = signal_gauss.sigma   ,  
+                                   mean   = signal_gauss.mean    ,
+                                   psi    = ( 0.03 , -0.5 , +0.5 ) ) , 
+        background = background   ,
+        S = S , B = B 
+    )
+    
+    model.S = NS 
+    model.B = NB
+    
+    with rooSilent() : 
+        result, frame = model. fitTo ( dataset0 )
+        model.signal.aL.release()
+        model.signal.aR.release()
+        result, frame = model. fitTo ( dataset0 )
+        model.signal.aL.fix(1.5) 
+        model.signal.aR.fix(1.5)    
+        result, frame = model. fitTo ( dataset0 )
+        
+    make_print ( model, result , 'Double-sided Crystal Ball/A model' , logger )
+
+    models.add ( model )
+    results.append ( result  )
+
 # ==========================================================================
 ## Apollonios
 # ==========================================================================
@@ -2159,7 +2197,11 @@ if '__main__' == __name__ :
     ## Crystal Ball/A                              + background
     with timing ('test_crystalballa'   , logger ) :
         test_crystalballa   () 
-        
+
+    ## double side Crystal Ball/A                  + background
+    with timing ('test_crystalball_DSA' , logger ) :
+        test_crystalball_DSA () 
+
     ## Apollonios function                       + background 
     with timing ('test_apollonios'     , logger ) :
         test_apollonios     () 
@@ -2336,7 +2378,7 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
-    
+
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()

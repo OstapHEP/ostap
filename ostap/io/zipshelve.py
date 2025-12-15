@@ -143,7 +143,7 @@ else                      : logger = getLogger ( __name__             )
 logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
 # =============================================================================
 ## @class ZipShelf
-#  Zipped-version of ``shelve''-database
+#  Zipped-version of `shelve'-database
 #    Modes: 
 #    - 'r' Open existing database for reading only
 #    - 'w' Open existing database for reading and writing
@@ -152,7 +152,7 @@ logger.debug ( "Simple generic (c)Pickle-based ``zipped''-database"   )
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
 class ZipShelf(CompressShelf):
-    """Zipped-version of ``shelve''-database
+    """ Zipped-version of `shelve'-database
     Modes: 
     - 'r'  Open existing database for reading only
     - 'w'  Open existing database for reading and writing
@@ -181,7 +181,7 @@ class ZipShelf(CompressShelf):
     # ==========================================================================
     ## compress (zip)  the item  using <code>zlib.compress</code>
     def compress_item ( self , value ) :
-        """Compress (zip) the item using ``zlib.compress''
+        """ Compress (zip) the item using ``zlib.compress''
         - see zlib.compress
         """
         return zlib.compress ( self.pickle ( value ) , self.compresslevel )
@@ -189,11 +189,10 @@ class ZipShelf(CompressShelf):
     # =========================================================================
     ## uncompress (unzip) the item using <code>zlib.decompress</code>
     def uncompress_item ( self , value ) :
-        """Uncompress (nuzip) the item using ``zlib.decompress''
+        """ Uncompress (unzip) the item using ``zlib.decompress''
         -  see zlib.decompress
         """        
         return self.unpickle ( zlib.decompress ( value ) ) 
-
 
 # =============================================================================
 ## helper function to access ZipShelve data base
@@ -222,7 +221,7 @@ def open ( dbname         ,
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
 class TmpZipShelf(ZipShelf,TmpDB):
-    """TEMPORARY Zipped-version of ``shelve''-database     
+    """ TEMPORARY Zipped-version of ``shelve''-database     
     """    
     def __init__( self                                   ,
                   protocol    = HIGHEST_PROTOCOL         , 

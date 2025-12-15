@@ -1873,13 +1873,13 @@ Ostap::Models::CrystalBallDS::CrystalBallDS
   RooAbsReal&          nR        )
   : RooAbsPdf ( name , title )
 //
-  , m_x       ( "x"       , "Observable"                 , this , x      ) 
-  , m_m0      ( "m0"      , "mass"                       , this , m0     ) 
-  , m_sigma   ( "sigma"   , "sigma"                      , this , sigma  )
-  , m_alphaL  ( "alphaL"  , "(left) alpha = 1 + |alpha|" , this , alphaL ) 
-  , m_nL      ( "nL"      , "(left) n     = 1 + |n|"     , this ,     nL ) 
-  , m_alphaR  ( "alphaR"  , "(left) alpha = 1 + |alpha|" , this , alphaR ) 
-  , m_nR      ( "nR"      , "(left) n     = 1 + |n|"     , this ,     nR ) 
+  , m_x       ( "!x"       , "Observable"                 , this , x      ) 
+  , m_m0      ( "!m0"      , "mass"                       , this , m0     ) 
+  , m_sigma   ( "!sigma"   , "sigma"                      , this , sigma  )
+  , m_alphaL  ( "!alphaL"  , "(left) alpha = 1 + |alpha|" , this , alphaL ) 
+  , m_nL      ( "!nL"      , "(left) n     = 1 + |n|"     , this ,     nL ) 
+  , m_alphaR  ( "!alphaR"  , "(left) alpha = 1 + |alpha|" , this , alphaR ) 
+  , m_nR      ( "!nR"      , "(left) n     = 1 + |n|"     , this ,     nR ) 
 //  
   , m_cb2 ( 10 , 1 , 1 , 1 , 1  , 1 ) 
 {
@@ -1895,13 +1895,13 @@ Ostap::Models::CrystalBallDS::CrystalBallDS
   const char*                            name ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x       ( "x"       , this , right.m_x      ) 
-  , m_m0      ( "m0"      , this , right.m_m0     ) 
-  , m_sigma   ( "sigma"   , this , right.m_sigma  )
-  , m_alphaL  ( "alphaL"  , this , right.m_alphaL ) 
-  , m_nL      ( "nL"      , this , right.m_nL     ) 
-  , m_alphaR  ( "alphaR"  , this , right.m_alphaR ) 
-  , m_nR      ( "nR"      , this , right.m_nR     ) 
+  , m_x       ( "!x"       , this , right.m_x      ) 
+  , m_m0      ( "!m0"      , this , right.m_m0     ) 
+  , m_sigma   ( "!sigma"   , this , right.m_sigma  )
+  , m_alphaL  ( "!alphaL"  , this , right.m_alphaL ) 
+  , m_nL      ( "!nL"      , this , right.m_nL     ) 
+  , m_alphaR  ( "!alphaR"  , this , right.m_alphaR ) 
+  , m_nR      ( "!nR"      , this , right.m_nR     ) 
 //  
   , m_cb2     ( right.m_cb2 ) 
 {
@@ -1923,10 +1923,8 @@ void Ostap::Models::CrystalBallDS::setPars () const
   //
   m_cb2.setM0     ( m_m0     ) ;
   m_cb2.setSigma  ( m_sigma  ) ;
-  m_cb2.setAlphaL ( m_alphaL ) ;
-  m_cb2.setAlphaR ( m_alphaR ) ;
-  m_cb2.setNL     ( m_nL     ) ;
-  m_cb2.setNR     ( m_nR     ) ;
+  m_cb2.setAlpha  ( m_alphaL , m_alphaR ) ; 
+  m_cb2.setN      ( m_nL     , m_nR     ) ;
   //
 }
 // ============================================================================
@@ -2272,6 +2270,129 @@ double Ostap::Models::CrystalBallA::maxVal  ( Int_t      code ) const
   return 1.01 * m_cb ( m_cb.mode ()  ) ;
 }
 // ============================================================================
+
+
+
+// ============================================================================
+// Double-sided CrystalBall
+// ============================================================================
+Ostap::Models::CrystalBallDSA::CrystalBallDSA
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          m0        ,
+  RooAbsReal&          sigmaL    ,    
+  RooAbsReal&          sigmaR    ,    
+  RooAbsReal&          alphaL    ,    
+  RooAbsReal&          nL        ,    
+  RooAbsReal&          alphaR    ,    
+  RooAbsReal&          nR        )
+  : RooAbsPdf ( name , title )
+//
+  , m_x       ( "!x"       , "Observable"                 , this , x      ) 
+  , m_m0      ( "!m0"      , "mass"                       , this , m0     ) 
+  , m_sigmaL  ( "!sigmaL"  , "sigma/L"                    , this , sigmaL )
+  , m_sigmaR  ( "!sigmaR"  , "sigma/R"                    , this , sigmaR )
+  , m_alphaL  ( "!alphaL"  , "(left) alpha = 1 + |alpha|" , this , alphaL ) 
+  , m_nL      ( "!nL"      , "(left) n     = 1 + |n|"     , this ,     nL ) 
+  , m_alphaR  ( "!alphaR"  , "(left) alpha = 1 + |alpha|" , this , alphaR ) 
+  , m_nR      ( "!nR"      , "(left) n     = 1 + |n|"     , this ,     nR ) 
+//  
+  , m_cb2 ( 10 , 1 , 1 , 1 , 1  , 1 ) 
+{
+  //
+  setPars () ;
+  //
+}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Models::CrystalBallDSA::CrystalBallDSA
+( const Ostap::Models::CrystalBallDSA& right , 
+  const char*                            name ) 
+  : RooAbsPdf ( right , name ) 
+//
+  , m_x       ( "!x"       , this , right.m_x      ) 
+  , m_m0      ( "!m0"      , this , right.m_m0     ) 
+  , m_sigmaL  ( "!sigmaL"  , this , right.m_sigmaL )
+  , m_sigmaR  ( "!sigmaR"  , this , right.m_sigmaR )
+  , m_alphaL  ( "!alphaL"  , this , right.m_alphaL ) 
+  , m_nL      ( "!nL"      , this , right.m_nL     ) 
+  , m_alphaR  ( "!alphaR"  , this , right.m_alphaR ) 
+  , m_nR      ( "!nR"      , this , right.m_nR     ) 
+//  
+  , m_cb2     ( right.m_cb2 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::CrystalBallDSA::~CrystalBallDSA(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::CrystalBallDSA*
+Ostap::Models::CrystalBallDSA::clone( const char* name ) const 
+{ return new Ostap::Models::CrystalBallDSA(*this,name) ; }
+// ============================================================================
+void Ostap::Models::CrystalBallDSA::setPars () const 
+{
+  //
+  m_cb2.setM0     ( m_m0     ) ;
+  m_cb2.setSigma  ( m_sigmaL , m_sigmaR ) ;
+  m_cb2.setAlpha  ( m_alphaL , m_alphaR ) ;
+  m_cb2.setN      ( m_nL     , m_nR     ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::CrystalBallDSA::evaluate() const 
+{
+  setPars () ;
+  return m_cb2     ( m_x      ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::CrystalBallDSA::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::CrystalBallDSA::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid Integration code"      ,
+                  "Ostap::Models::CrystalBallDSA" ,
+                  INVALID_INTEGRATION_CODE        , __FILE__ , __LINE__  ) ;
+  //
+  setPars ();
+  return m_cb2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::CrystalBallDSA::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::CrystalBallDSA::maxVal  ( Int_t      code ) const
+{
+  Ostap::Assert ( 1 == code                        ,
+                  "Invalid MaxVal code"            ,
+                  "Ostap::Models::CrystalBallDSA"  ,
+                  INVALID_MAXVAL_CODE              , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_cb2 ( m_cb2.mode () ) ;
+}
+// ============================================================================
+
 
 
 // ============================================================================
@@ -11721,6 +11842,7 @@ ClassImp(Ostap::Models::CrystalBall        )
 ClassImp(Ostap::Models::CrystalBallRS      ) 
 ClassImp(Ostap::Models::CrystalBallDS      ) 
 ClassImp(Ostap::Models::CrystalBallA       ) 
+ClassImp(Ostap::Models::CrystalBallDSA     ) 
 ClassImp(Ostap::Models::Needham            ) 
 ClassImp(Ostap::Models::Apollonios         ) 
 ClassImp(Ostap::Models::ApolloniosL        ) 

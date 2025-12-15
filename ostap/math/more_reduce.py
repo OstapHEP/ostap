@@ -523,6 +523,20 @@ def _omcb2_reduce_ ( peak ) :
 Ostap.Math.CrystalBallDoubleSided. __reduce__ = _omcb2_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::CrystalBallDoubleSidedA
+#  @see Ostap::Math::CristalBallDoubleSidedA 
+def _omcb2a_reduce_ ( peak ) :
+    """ Reduce `Ostap.Math.CrystalBallDoubleSidedA`
+    - see `Ostap.Math.CrystalBallDoubleSidedA`
+    """
+    return root_factory , ( type ( peak )  , peak.m0() ,
+                            peak.sigmaL () , peak.sigmaR () ,
+                            peak.alphaL () , peak.nL     () ,
+                            peak.alphaR () , peak.nR     () )
+                            
+Ostap.Math.CrystalBallDoubleSidedA. __reduce__ = _omcb2a_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::Apollonios
 #  @see Ostap::Math::Apollonios
 def _omapo_reduce_ ( peak ) :

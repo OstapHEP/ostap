@@ -1418,6 +1418,7 @@ def _rcb2_reduce_ ( pdf ):
 
 Ostap.Models.CrystalBallDS .__reduce__ = _rcb2_reduce_ 
 
+
 # =============================================================================
 ## reduce Needham
 def _rneedham_reduce_ ( pdf ):
@@ -1436,6 +1437,25 @@ def _rneedham_reduce_ ( pdf ):
                                   pdf.amin   () )
 
 Ostap.Models.Needham .__reduce__ = _rneedham_reduce_ 
+
+# =============================================================================
+## reduce CrystalBallDSA
+def _rcb2a_reduce_ ( pdf ):
+    """ Reduce CristalBallDSA
+    """
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () , 
+                                  pdf.m0     () ,
+                                  pdf.sigmaL () ,
+                                  pdf.sigmaR () ,
+                                  pdf.alphaL () ,
+                                  pdf.nL     () ,
+                                  pdf.alphaR () ,
+                                  pdf.nR     () )
+
+Ostap.Models.CrystalBallDSA .__reduce__ = _rcb2a_reduce_ 
 
 # =============================================================================
 ## reduce Meixner
@@ -3018,6 +3038,8 @@ _decorated_classes_ = (
     Ostap.Models.CrystalBall           , 
     Ostap.Models.CrystalBallRS         , 
     Ostap.Models.CrystalBallDS         , 
+    Ostap.Models.CrystalBallA          , 
+    Ostap.Models.CrystalBallDSA        , 
     Ostap.Models.Needham               ,
     Ostap.Models.Apollonios            , 
     Ostap.Models.ApolloniosL           , 

@@ -4,7 +4,8 @@
   1. re-write  `Ostap::Math::Das` 
   1. add `Ostap::Math::ADas`- asymmetric version of Das function 
   1. small tweaks for `Ostap::Math::Laplace` and `Ostap::Math::Hilbert`
-  1. add `Ostap::Math::CrystalBallA` ,`Ostap::Models::CrystalBallA` & `CrystalBallA_pdf` - varinats of Crystal Ball function with asymmetryc core 
+  1. add `Ostap::Math::CrystalBallA` ,`Ostap::Models::CrystalBallA` & `CrystalBallA_pdf` - variants of Crystal Ball function with asymmetryc core 
+  1. add `Ostap::Math::CrystalBalDoubleSidedA` ,`Ostap::Models::CrystalBallDSA` & `CB2A_pdf` - variants of double-sided Crystal Ball function with asymmetryc core 
   
 ## Backward  incompatible 
 
