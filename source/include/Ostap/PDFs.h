@@ -1567,8 +1567,6 @@ namespace Ostap
       mutable Ostap::Math::CrystalBallDoubleSidedA m_cb2 ;       // the function
       // ======================================================================
     } ;
-
-
     // ========================================================================
     /** @class CrystalBallDSE
      *  double-sided Crystal Ball-like function: 

@@ -121,7 +121,7 @@ def test_gauss () :
     models.add ( reso  )
     
 # =============================================================================
-## Symmetric Apollonios
+## (A)symmetric Apollonios
 # =============================================================================
 def test_apo () :
     
@@ -129,7 +129,7 @@ def test_apo () :
 
     logger.info ('Test ResoApo:  asymmetric Apollonios resolution model' )
     from   ostap.fitting.resolution import ResoApo
-    reso = ResoApo ( 'Apollonios' , mass ,
+    reso = ResoApo ( 'Apo' , mass ,
                      mean  = ( 0.0 , -0.1  , 0.1 ) , 
                      sigma = ( 0.4 ,  0.1  , 1.0 ) ,
                      beta  = ( 1    , 1.e-5 , 100 ) ,
@@ -148,21 +148,50 @@ def test_apo () :
     models.add ( reso )
 
 # =============================================================================
+## (A)symmetric Apollonios
+# =============================================================================
+def test_apoA () :
+    
+    logger = getLogger ( 'test_apoa' )
+
+    logger.info ('Test ResoApoA:  asymmetric Apollonios resolution model' )
+    from   ostap.fitting.resolution import ResoApoA
+    reso = ResoApoA ( 'ApoA' , mass ,
+                      mean   = ( 0.0 , -0.1  , 0.1 ) , 
+                      sigmaL = ( 0.4 ,  0.1  , 1.0 ) ,
+                      sigmaR = ( 0.4 ,  0.1  , 1.0 ) ,
+                      beta  = ( 1    , 1.e-5 , 100 ) )
+    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    with use_canvas ( 'test_apo' , wait = 1 ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'Asymmetric Apollonios/A', logger )
+        
+    models.add ( reso )
+    
+
+# =============================================================================
 ## Asymmetric double-sided Crystal Ball 
 # =============================================================================
 def test_cb2 () :
     
     logger = getLogger ( 'test_cb2' )
-
+    
     logger.info ('Test ResoCB2: asymmetric double-sided Crystal Ball resolution model' )
     from   ostap.fitting.resolution import ResoCB2
-    reso = ResoCB2 ( 'CrystalBall2' , mass ,
+    reso = ResoCB2 ( 'CB2' , mass ,
                      mean     = ( 0.0 , -0.1  ,  0.1 ) , 
                      sigma    = ( 0.2 ,  0.1  ,  1.0 ) ,
-                     alpha    = ( 1.0 ,  0.5  ,  3.0 ) ,
-                     n        = ( 1.0 ,  0.0  , 20.0 ) ,
-                     psiN     = ( 0   ,  -5   , +5   ) ,
-                     psiAlpha = ( 0   ,  -5   , +5   ) )
+                     alphaL   = ( 1.0 ,  0.5  ,  3.0 ) ,
+                     alphaR   = ( 1.0 ,  0.5  ,  3.0 ) ,                     
+                     nL       = ( 1.0 ,  0.0  , 20.0 ) ,
+                     nR       = ( 1.0 ,  0.0  , 20.0 ) ,
+                     psi      = ( 0.0 , -0.5  , 0.5  ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
@@ -178,6 +207,38 @@ def test_cb2 () :
     models.add ( reso )
 
 
+# =============================================================================
+## Asymmetric double-sided Crystal Ball 
+# =============================================================================
+def test_cb2a () :
+    
+    logger = getLogger ( 'test_cba2' )
+    
+    logger.info ('Test ResoCB2A: asymmetric double-sided Crystal Ball resolution model' )
+    from   ostap.fitting.resolution import ResoCB2A
+    reso = ResoCB2A ( 'CB2A' , mass ,
+                      mean     = ( 0.0 , -0.1  ,  0.1 ) , 
+                      sigmaL   = ( 0.2 ,  0.1  ,  1.0 ) ,
+                      sigmaR   = ( 0.2 ,  0.1  ,  1.0 ) ,
+                      alphaL   = ( 1.0 ,  0.5  ,  3.0 ) ,
+                      alphaR   = ( 1.0 ,  0.5  ,  3.0 ) ,                     
+                      nL       = ( 1.0 ,  0.0  , 20.0 ) ,
+                      nR       = ( 1.0 ,  0.0  , 20.0 ) )
+    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
+    with use_canvas ( 'test_cb2' , wait = 1 ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :
+        make_print ( reso , result , 'Asymmetric Crystal Ball/A', logger )
+        
+    models.add ( reso )
+
+    
 # =============================================================================
 ## Asymmetric Bukin
 # =============================================================================
@@ -658,9 +719,16 @@ if '__main__' == __name__ :
         
     with timing ("Apo"       , logger ) :  
         test_apo        () ## Apollonios resoltuion model
+
+    with timing ("ApoA"       , logger ) :  
+        test_apoA       () ## Apollonios resoltuion model
         
     with timing ("CB2"       , logger ) :  
         test_cb2        () ## double-sided Crystal Ball resoltuion model
+
+    with timing ("CB2A"      , logger ) :  
+        test_cb2a       () ## double-sided Crystal Ball resoltuion model
+
         
     with timing ("Bukin"     , logger ) :  
         test_bukin      () ## Bukin resolution model

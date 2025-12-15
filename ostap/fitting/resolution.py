@@ -53,13 +53,15 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'ResoGauss'         , ## single-(bifurcated) Gaussian resolution model,
+    'ResoGauss'         , ## single (or bifurcated) Gaussian resolution model,
     'ResoGaussA'        , ## single-(bifurcated) Gaussian resolution model,
     'ResoGauss2'        , ## double-Gaussian resolution model,
     'ResoApo'           , ## Apollonios resolution model,
+    'ResoApoA'          , ## Apollonios resolution model,
     'ResoCB'            , ## Crystal Ball resolution model
     'ResoCB2'           , ## double-sided Crystal Ball resolution model,
     'ResoCB2A'          , ## double-sided Crystal Ball resolution model,
+    'ResoCB2E'          , ## double-sided Crystal Ball resolution model,
     'ResoNeedham'       , ## variant of Crystal Ball funxtion
     'ResoStudentT'      , ## Student-T resolution model,
     'ResoPearsonIV'     , ## Pearson Tyep IV resolution model
@@ -75,7 +77,7 @@ __all__     = (
     'ResoGenHyperbolic' , ## Generalised Hyperbolic resolution model
     'ResoHypatia'       , ## Hypatia resoltuion model
     'ResoDas'           , ## Das resolution model in terms of k and kappa
-    'ResoDasLR'         , ## Das resolution model in terms of kL & kR 
+    'ResoDasA'          , ## Das resolution model in terms of kL & kR 
     'ResoMeixner'       , ## Meixner resolution model    
     'ResoBukin2'        , ## Bukin2 resolution model
     'ResoNormalLaplace' , ## Normal Laplace resolution model
@@ -89,6 +91,7 @@ from   ostap.fitting.pdfbasic   import Generic1D_pdf
 from   ostap.fitting.fithelpers import ( ZERO     ,
                                          TailN    , Tail      , 
                                          LeftTail , RightTail ,
+                                         TailAR   , TailAL    , 
                                          SigmaLR  , TwoSigmas )                                          
 from   ostap.fitting.fit1d      import RESOLUTION, CheckMean 
 import ROOT, math 
@@ -105,7 +108,7 @@ models = set()
 #  Trivial single (or bifurcated) Gaussian resolution model
 #  in terms of average sigma and asymmetry 
 class ResoGauss(RESOLUTION,SigmaLR) :
-    """ Trivial (bifurcated) gaussian resolution model
+    """ Trivial single (or bifurcated) Gaussian resolution model
     - in terms of average sigma and asymmetry 
     """
     def __init__ ( self         ,
@@ -123,13 +126,14 @@ class ResoGauss(RESOLUTION,SigmaLR) :
                               sigma = sigma ,                                     
                               mean  = mean  ,
                               fudge = fudge )
-        
+
         ## left/right sigmas, use *CORRECTED* sigma 
         SigmaLR    .__init__ ( self , self.sigma_corr , psi = psi ) 
         
         ## simple Gaussian model 
-        if psi is None or self.psi is ZERO or self.sigmaL is self.sigmaR : 
+        if self.symmetric_core :
             
+            ## simple Gaussian model 
             self.gauss = ROOT.RooGaussian (
                 self.roo_name ( 'rgauss_' )       ,
                 "Resolution Gauss %s" % self.name ,
@@ -137,16 +141,16 @@ class ResoGauss(RESOLUTION,SigmaLR) :
                 self.mean       , 
                 self.sigma_corr ) ## ATTENTION: sigma_corr is CORRECTED! 
             
-        ## Bifurcated Gaussian model
         else :
             
+            ## Bifurcated Gaussian model
             self.gauss = Ostap.Models.BifurcatedGauss ( 
                 self.roo_name ( 'rbfgauss_' )                , 
                 "Resolution Bifurcated Gauss %s" % self.name ,
-                self.xvar   ,
-                self.mean   , 
-                self.sigmaL , ## already CORRECTED
-                self.sigmaR ) ## already CORRECTED    
+                self.xvar        ,
+                self.mean        , 
+                self.sigmaL_corr , ## already CORRECTED
+                self.sigmaR_corr ) ## already CORRECTED    
             
         self.pdf = self.gauss
 
@@ -159,6 +163,22 @@ class ResoGauss(RESOLUTION,SigmaLR) :
             'fudge' : self.fudge ,
             'psi'   : self.psi   , 
             }
+
+    @property
+    def sigmaL_corr ( self ) :
+        """'sigmaL_corr': left sigma (corrected) """
+        return self.sigmaL
+    
+    @property
+    def sigmaR_corr ( self ) :
+        """'sigmaR_corr': right sigma (corrected) """
+        return self.sigmaR
+    
+    @property
+    def symmetric_core ( self ) :
+        """`symmetric_core` : symmtric Core/Gaussian component?
+        """
+        return self.psi is None or self.psi is ZERO or self.sigmaL is self.sigmaR 
 
 models.add ( ResoGauss ) 
 
@@ -192,16 +212,16 @@ class ResoGaussA(RESOLUTION,TwoSigmas) :
                              fudge       = fudge       ,
                              sigma_name  = sigma_name  , 
                              sigma_title = sigma_title )
-
+        
         ## use *UNCORRECTED* sigma here 
         TwoSigmas.__init__ ( self , sigmaL = self.sigma , sigmaR = sigmaR ) 
 
-        ## simple Gaussian model 
-        if self.sigmaL is self.sigmaR : 
+        if self.symmetric_core : 
 
             self.__sigmaL_corr = self.sigma_corr 
             self.__sigmaR_corr = self.sigma_corr 
             
+            ## simple Gaussian model 
             self.gauss = ROOT.RooGaussian (
                 self.roo_name ( 'rgaussA_' )       ,
                 "Resolution Gauss %s" % self.name ,
@@ -209,12 +229,12 @@ class ResoGaussA(RESOLUTION,TwoSigmas) :
                 self.mean              , 
                 self.sigma_corr        ) ## ATTENTION: sigma is CORRECTED
 
-        ## Bifurcated Gaussian model
         else :
 
             self.__sigmaL_corr = self.sigma_corr 
             self.__sigmaR_corr = self.correct    ( self.sigmaR ) 
             
+            ## Bifurcated Gaussian model
             self.gauss = Ostap.Models.BifurcatedGauss ( 
                 self.roo_name ( 'rbfgaussA_' )                , 
                 "Resolution Bifurcated Gauss %s" % self.name ,
@@ -239,11 +259,18 @@ class ResoGaussA(RESOLUTION,TwoSigmas) :
     def sigmaL_corr ( self ) :
         """'sigmaL_corr': left sigma (corrected) """
         return self.__sigmaL_corr
+    
     @property
     def sigmaR_corr ( self ) :
         """'sigmaR_corr': right sigma (corrected) """
         return self.__sigmaR_corr
     
+    @property
+    def symmetric_core ( self ) :
+        """`symmetric_core` : symmtric Core/Gaussian component?
+        """
+        return self.psi is None or self.psi is ZERO or self.sigmaL is self.sigmaR 
+
 models.add ( ResoGaussA ) 
 # =============================================================================
 
@@ -254,7 +281,7 @@ models.add ( ResoGaussA )
 #  - sigma of core Gaussian
 #  - ratio of wide/core widths
 #  - fraction of core(narrow) component
-class ResoGauss2(RESOLUTION) :
+class ResoGauss2(ResoGauss) :
     """ Double (symmetric) Gaussian resolution model
     - sigma of core Gaussian
     - ratio of wide/core widths
@@ -270,11 +297,12 @@ class ResoGauss2(RESOLUTION) :
                    mean     = None ) : ## the mean value
         
         ## initialize the base 
-        super(ResoGauss2,self). __init__ ( name  = name  ,
-                                           xvar  = xvar  ,
-                                           sigma = sigma ,
-                                           mean  = mean  ,
-                                           fudge = fudge )
+        ResoGauss . __init__ ( name  = name  ,
+                               xvar  = xvar  ,
+                               sigma = sigma ,
+                               mean  = mean  ,
+                               fudge = fudge )
+        
         ## fraction of sigma-1-component 
         self.__fraction = self.make_var ( fraction                   , 
                                           'CoreFraction_%s'   % self.name ,
@@ -286,8 +314,7 @@ class ResoGauss2(RESOLUTION) :
                                          'SigmaScale_%s'     % self.name ,
                                          'SigmaScale(%s)'    % self.name ,
                                          None , 1.5  , 1.001 , 50 ) 
-        
-        #
+        # 
         ## build the resolution model
         # 
         self.pdf = Ostap.Models.DoubleGauss (
@@ -342,7 +369,7 @@ models.add ( ResoGauss2 )
 #   - exponential tails
 #  @see Ostap::Models::Apollonios2 
 #  @see Ostap::Math::Apollonios2 
-class ResoApo(RESOLUTION,SigmaLR) :
+class ResoApo(ResoGauss) :
     """ (A)Symmetric variant of Apollonios model for the resolution function
     - (asymmetrical) Gaussian core 
     - exponential tails
@@ -359,33 +386,30 @@ class ResoApo(RESOLUTION,SigmaLR) :
                    psi   = None ) : ## asymmetry parameter psi: kappa = tanh(psi) 
         
         ##  initlialize the base 
-        RESOLUTION.__init__ ( self          ,
-                              name  = name  ,
-                              xvar  = xvar  ,
-                              sigma = sigma ,
-                              mean  = mean  ,
-                              fudge = fudge )
+        ResoGauss.__init__ ( self          ,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             sigma = sigma ,
+                             mean  = mean  ,
+                             psi   = psi   , 
+                             fudge = fudge ) 
         
-        ## left/right sigmas, use *CORRECTED* sigma 
-        SigmaLR    .__init__ ( self , self.sigma_corr , psi = psi ) 
-        
-      
         ## beta-parameter 
         self.__beta    = self.make_var ( beta ,
                                          'beta_%s'   % name  ,
                                          '#beta(%s)' % name  ,
                                          None , 0.0001 , 10000 )
-
+        
         ## build the resolution model
         self.apo  = Ostap.Models.Apollonios (
             self.roo_name ( 'rapo_' )       ,
             "Resolution Apollonios %s" % self.name ,
-            self.xvar       ,
-            self.mean       ,
-            self.sigmaL     , ## ATTENTION: already CORRECTED
-            self.sigmaR     , ## ATTENTION: already CORRECTED
-            self.beta       ) 
-
+            self.xvar        ,
+            self.mean        ,
+            self.sigmaL_corr , ## ATTENTION: already CORRECTED
+            self.sigmaR_corr , ## ATTENTION: already CORRECTED
+            self.beta        ) 
+        
         ## finaly, set PDF
         self.pdf = self.apo
 
@@ -417,61 +441,35 @@ models.add ( ResoApo )
 #   - exponential tails
 #  @see Ostap::Models::Apollonios2 
 #  @see Ostap::Math::Apollonios2 
-class ResoApoA(RESOLUTION,TwoSigmas) :
+class ResoApoA(ResoGaussA) :
     """ (A)Symmetric variant of Apollonios model for the resolution function
     - (asymmetrical) Gaussian core 
     - exponential tails
     see Ostap.Models.Apollonios
     see Ostap.Math.Apollonios
     """
-    def __init__ ( self         ,
-                   name         ,   ## the  name 
-                   xvar         ,   ## the variable 
-                   sigmaL       ,   ## left sigma
-                   sigmaR       ,   ## right sigma, if None : symmetric case 
-                   beta  = 1    ,   ## beta parameter 
-                   fudge = 1    ,   ## fudge-factor 
-                   mean  = None ) : ## the mean value 
+    def __init__ ( self          ,
+                   name          ,   ## the  name 
+                   xvar          ,   ## the variable 
+                   sigmaL        ,   ## left sigma
+                   sigmaR = None ,   ## right sigma, if None : symmetric case 
+                   beta   = 1    ,   ## beta parameter 
+                   fudge  = 1    ,   ## fudge-factor 
+                   mean   = None ) : ## the mean value 
         
-        sigma_name  = ''
-        sigma_title = '' 
-        if not sigmaR is None :
-            sigma_name  = 'sigmaL_%s'      % name 
-            sigma_title = '#sigma_{L}(%s)' % name
-
         ##  initlialize the base 
-        RESOLUTION.__init__ ( self ,
-                              name        = name        ,
-                              xvar        = xvar        ,
-                              sigma       = sigmaL      ,
-                              mean        = mean        ,
-                              fudge       = fudge       ,
-                              sigma_name  = sigma_name  , 
-                              sigma_title = sigma_title )
+        ResoGaussA.__init__ ( self ,
+                              name   = name        ,
+                              xvar   = xvar        ,
+                              sigmaL = sigmaL      ,
+                              sigmaR = sigmaR      ,
+                              mean   = mean        ,
+                              fudge  = fudge       )
         
         ## use *UNCORRECTED* sigma here 
         TwoSigmas.__init__ ( self , sigmaL = self.sigma , sigmaR = sigmaR ) 
-
-        ## symmetric case
-        if self.sigmaL is self.sigmaR : 
-            
-            self.__sigmaL_corr = self.sigma_corr 
-            self.__sigmaR_corr = self.sigma_corr
-            
-        else :
-            
-            self.__sigmaL_corr = self.sigma_corr 
-            self.__sigmaR_corr = self.correct    ( self.sigmaR ) 
-            
-        ## beta-parameter 
-        self.__beta    = self.make_var ( beta ,
-                                         'beta_%s'   % name  ,
-                                         '#beta(%s)' % name  ,
-                                         None , 0.0001 , 10000 )
-
-        #
+        
         ## build the resolution model
-        #
         self.apo  = Ostap.Models.Apollonios (
             self.roo_name ( 'rapo_' )       ,
             "Resolution Apollonios %s" % self.name ,
@@ -502,99 +500,80 @@ class ResoApoA(RESOLUTION,TwoSigmas) :
     def beta ( self , value ) :
         self.set_value ( self.__beta , value )
 
-    @property
-    def psi ( self ) :
-        """'kappa' : asymmetry parameter: kappa = tanh ( psi ) """
-        return self.__AV_SIGMA.psi
-        
-    @property
-    def sigmaL_corr ( self ) :
-        """'sigmaL_corr': left sigma (corrected) """
-        return self.__sigmaL_corr
-    @property
-    def sigmaR_corr ( self ) :
-        """'sigmaR_corr': right sigma (corrected) """
-        return self.__sigmaR_corr
-    
 models.add ( ResoApoA )
 
 # ===============================================================================
 ## @class ResoCB2
 #  (A)Symmetrical double-sided Crystal Ball model for resolution
 #   - Gaussian core 
-#   - power-law left & tails
-#
-#  Parameterisation in terms of :
-#   - 'average' and 'asymetry for left/rigth tails: <code>alpha</code>, <code>psiAlpha</code>
-#   - 'average' and 'asymetry for left/rigth tails: <code>n</code>, <code>psin</code>
+#   -left & right  power-law tails 
 #
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
-class ResoCB2(ResoGauss,Tail,LeftTail,RightTail) :
+class ResoCB2(ResoGauss,LeftTail,RightTail) :
     """ (A)Symmetric double-sided Crystal Ball model for resolution
     - (symmetric) Gaussian core 
-    - power-law tails
-    
-    Parameterisation in terms of :
-    - 'average' and 'asymetry for left/rigth tails: `alpha` and  `psiAlpha`
-    - 'average' and 'asymetry for left/rigth tails: `n`     and `psiN`
-    
+    - left & right power-law tails    
     - see Ostap.Math.CrystalBallDS
+    - see Ostap.Math.CrystalBallDSA
     - see Ostap.Models.CrystalBallDS
+    - see Ostap.Models.CrystalBallDSA
     """
-    def __init__ ( self            ,  
-                   name            ,   ## the  name 
-                   xvar            ,   ## the  variable 
-                   sigma           ,   ## core resolution
-                   alpha    = 1.5  ,   ## alpha  
-                   n        = 5    ,   ## power-law exponent
-                   fudge    = 1    ,   ## fudge-factor 
-                   mean     = None ,   ## the mean value
-                   psiN     = None ,   ## asymmetry for N
-                   psiAlpha = None ) : ## asymmetry for alpha
-
+    def __init__ ( self          ,  
+                   name          ,   ## the  name 
+                   xvar          ,   ## the  variable 
+                   sigma         ,   ## core resolution                    
+                   alphaL = 1.5  ,   ## left alpha                   
+                   nL     = 5    ,   ## left power-law exponent
+                   alphaR = None ,   ## right alpha: if none, equal to left 
+                   nR     = None ,   ## right power-law exponen, if None , equal to left                    
+                   fudge  = 1    ,   ## fudge-factor 
+                   mean   = None ,   ## the mean value
+                   psi    = None ) :
+        
         ## initialize the base 
-        ResoGauss.__init__ ( self,
+        ResoGauss.__init__ ( self          ,
                              name  = name  ,
                              xvar  = xvar  ,
                              sigma = sigma ,
                              mean  = mean  ,
                              fudge = fudge ,
-                             psi   = ZERO  )
+                             psi   = psi   )
         
-        ## get "mean" alpha and N 
-        Tail.__init__ ( self , alpha = alpha , n = n ) 
+        LeftTail .__init__ ( self , alpha = alphaL , n = nL )
+        RightTail.__init__ ( self ,
+                             alpha = self.alphaL if alphaR is None else alphaR ,
+                             n     = self.nL     if nR     is None else nR     )
         
-        ## Asymmetry in alpha 
-        self.__psiA = self.make_var ( ZERO if psiAlpha is None else psiAlpha , 
-                                      'psi_alpha_%s'       % self.name        ,
-                                      '#psi_{@alpha}(%s)'  % self.name        ,
-                                      None , 0 , -16 , +16 )
-        ## Asymmetry in N  
-        self.__psiN = self.make_var ( ZERO if psiN is None else psiN , 
-                                      'psi_n_%s'           % self.name       ,
-                                      '#psi_{n}(%s)'       % self.name       ,
-                                      None , 0 , -16 , +16 )
+        if self.symmetric_core :
         
-        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , halfsum = self.alpha , psi = self.__psiA )
-        self.__AV_N     = self.asymmetry_vars ( 'n'     , halfsum = self.n     , psi = self.__psiN )
+            ## actual PDF 
+            self.cb2 = Ostap.Models.CrystalBallDS (
+                self.roo_name ( 'rcb2_' )       ,
+                "Resolution double-sided Crystal Ball %s" % self.name ,
+                self.xvar           ,
+                self.mean           , 
+                self.sigma_corr     , ## ATTENTION!
+                self.alphaL         ,
+                self.nL             ,
+                self.alphaR         ,
+                self.nR             )
+            
+        else :
         
-        ## Left& tails 
-        LeftTail .__init__ ( self , alpha = self.__AV_ALPHA.var1 , n = self.__AV_N.var1 )
-        RightTail.__init__ ( self , alpha = self.__AV_ALPHA.var2 , n = self.__AV_N.var2 )
-        
-        ## actual PDF 
-        self.cb2 = Ostap.Models.CrystalBallDS (
-            self.roo_name ( 'rcb2_' )       ,
-            "Resolution double-sided Crystal Ball %s" % self.name ,
-            self.xvar           ,
-            self.mean           , 
-            self.sigma_corr     , ## ATTENTION!
-            self.alphaL         ,
-            self.nL             ,
-            self.alphaR         ,
-            self.nR             )
-        
+            ## actual PDF 
+            self.cb2 = Ostap.Models.CrystalBallDSA (
+                self.roo_name ( 'rcb2_' )       ,
+                "Resolution double-sided Crystal Ball/A %s" % self.name ,
+                self.xvar           ,
+                self.mean           , 
+                self.sigmaL_corr    , ## ATTENTION!
+                self.sigmaR_corr    , ## ATTENTION!
+                self.alphaL         ,
+                self.nL             ,
+                self.alphaR         ,
+                self.nR             )
+            
         ## the final PDF 
         self.pdf = self.cb2
 
@@ -604,53 +583,24 @@ class ResoCB2(ResoGauss,Tail,LeftTail,RightTail) :
             'xvar'     : self.xvar     ,
             'mean'     : self.mean     ,
             'sigma'    : self.sigma    ,
-            'alpha'    : self.alpha    ,
-            'n'        : self.n        ,
+            'alphaL'   : self.alphaL   ,
+            'nL'       : self.nL       ,
+            'alphaR'   : None if alphaR is None else self.alphaR ,
+            'nR'       : None if nR     is None else self.nR     ,
             'fudge'    : self.fudge    ,
-            'psiAlpha' : self.psiAlpha ,
-            'psiN'     : self.psiN     ,
+            'psi'      : self.psi      ,
             }
-
-    @property
-    def psiN ( self ) :
-        """'psiN' : asymmetry for parameter 'n', kappa = tanh(psi) 
-        """
-        return self.__AV_N.psi 
-    @psiN.setter
-    def psiN ( self , value ) :
-        self.__AV_N.psi = value
-        
-    @property
-    def psiAlpha ( self ) :
-        """'psiAlpha' : asymmetry for parameter 'alpha', kappa = tanh(psi) 
-        """
-        return self.__AV_ALPHA.psi 
-    @psiAlpha.setter
-    def psiAlpha ( self , value ) :
-        self.__AV_ALPHA.psi = value 
-
-    @property
-    def kappaAlpha ( self ) :
-        """'kappaAlpha' : asymmetry for parameter 'alpha'
-        """
-        return self.__AV_ALPHA.kappa
-    
-    @property
-    def kappaN     ( self ) :
-        """'kappaN' : asymmetry for parameter 'n'
-        """
-        return self.__AV_N.kappa
 
 models.add ( ResoCB2 )
 
 # =============================================================================
 ## @class ResoCB2A
-#  (A)Symmetrical double-sided Crystal Ball model for resolution
-#   - (symmetric) Gaussian core 
+#  (A)symmetrical double-sided Crystal Ball model for resolution
+#   - (asymmetric) Gaussian core 
 #   - power-law tails
 #  @see Ostap::Math::CrystalBallDS
 #  @see Ostap::Models::CrystalBallDS
-class ResoCB2A(ResoGauss,LeftTail,RightTail) :
+class ResoCB2A(ResoGaussA,LeftTail,RightTail) :
     """ (A)Symmetric double-sided Crystal Ball model for resolution
     - Gaussian core 
     - power-law tails
@@ -660,43 +610,58 @@ class ResoCB2A(ResoGauss,LeftTail,RightTail) :
     def __init__ ( self          , 
                    name          ,   ## the   name 
                    xvar          ,   ## the   variable 
-                   sigma         ,   ## core  resolution
+                   sigmaL = None ,   ## left core  resolution
+                   sigmaR = None ,   ## right core  resolution
                    alphaL = 1.5  ,   ## left  alpha
                    alphaR = None ,   ## right alpha (the same as left alpha if None)
                    nL     = 5    ,   ## left  N 
-                   nR     = None ,   ## right N 
+                   nR     = None ,   ## right N  (the same as left N if Npone ) 
                    fudge  = 1    ,   ## fudge-factor 
-                   mean   = None ) : ## the mean value
+                   mean   = None ) :  ## the mean value
 
         ## initialize the base 
-        ResoGauss.__init__ ( self          ,
-                             name  = name  ,
-                             xvar  = xvar  ,
-                             sigma = sigma ,
-                             mean  = mean  ,
-                             fudge = fudge ,
-                             psi   = ZERO  )
+        ResoGaussA.__init__ ( self            , 
+                              name   = name   ,
+                              xvar   = xvar   ,
+                              sigmaL = sigmaL ,
+                              sigmaR = sigmaR ,
+                              mean   = mean   ,
+                              fudge  = fudge  ,
+                              psi    = psi    )
         
-        LeftTail   .__init__ ( self , alpha = alphaL , n = nL )
+        LeftTail   .__init__ ( self , alpha = alphaL , n = nL )        
         RightTail  .__init__ ( self ,
-                               alpha = alphaL if alphaR is None else alphaR ,
-                               n     = nL     if nR     is None else nR     )
-        
-        self.__AV_ALPHA = self.asymmetry_vars ( 'alpha' , var1 = self.alphaL , var2 = self.alphaR )
-        self.__AV_N     = self.asymmetry_vars ( 'n'     , var1 = self.nL     , var2 = self.nR     )
-        
-        ## actual PDF 
-        self.cb2 = Ostap.Models.CrystalBallDS (
-            self.roo_name ( 'rcb2_' )       ,
-            "Resolution double-sided Crystal Ball %s" % self.name ,
-            self.xvar           ,
-            self.mean           , 
-            self.sigma_corr     , ## ATTENTION!
-            self.alphaL         ,
-            self.nL             ,
-            self.alphaR         ,
-            self.nR             )
-    
+                               alpha = self.alphaL if alphaR is None else alphaR ,
+                               n     = self.nL     if nR     is None else nR     )
+
+        if self.symmetric_core : 
+            
+            ## actual PDF 
+            self.cb2 = Ostap.Models.CrystalBallDS (
+                self.roo_name ( 'rcb2_' )       ,
+                "Resolution double-sided Crystal Ball %s" % self.name ,
+                self.xvar           ,
+                self.mean           , 
+                self.sigma_corr     , ## ATTENTION!
+                self.alphaL         ,
+                self.nL             ,
+                self.alphaR         ,
+                self.nR             )
+            
+        else :
+            
+            self.cb2 = Ostap.Models.CrystalBallDSA (
+                self.roo_name ( 'rcb2_' )       ,
+                "Resolution double-sided Crystal Ball/A %s" % self.name ,
+                self.xvar           ,
+                self.mean           , 
+                self.sigmaL_corr    , ## ATTENTION: sigmaL is already corrected!
+                self.sigmaR_corr    , ## ATTENTION: sigmaL is already corrected! 
+                self.alphaL         ,
+                self.nL             ,
+                self.alphaR         ,
+                self.nR             )
+            
         ## the final PDF 
         self.pdf = self.cb2
 
@@ -711,14 +676,86 @@ class ResoCB2A(ResoGauss,LeftTail,RightTail) :
             'fudge'    : self.fudge  ,
             'alphaR'   : None if self.alphaR is self.alphaL else self.alphaR ,
             'nR'       : None if self.nR     is self.nL     else self.nR     ,
+            'psi'      : self.psi    
         }
         
 models.add ( ResoCB2A )
 
+
+# ===============================================================================
+## @class ResoCB2E
+#  (A)symmetrical double-sided Crystal Ball model for resolution
+#   - asymmetric Gaussian core 
+#   - left power-law tail
+#   - rigth exponential tail 
+#
+#  @see Ostap::Math::CrystalBallDS
+#  @see Ostap::Models::CrystalBallDS
+class ResoCB2E(ResoGauss,LeftTail,TailAR) :
+    """ (A)Symmetric double-sided Crystal Ball model for resolution
+    - (symmetric) Gaussian core 
+    - left power-law tail
+    - right exponential tail
+    - see Ostap.Math.CrystalBallDSE
+    - see Ostap.Models.CrystalBallDSE
+    """
+    def __init__ ( self          ,  
+                   name          ,   ## the  name 
+                   xvar          ,   ## the  variable 
+                   sigma         ,   ## core resolution                    
+                   alphaL = 1.5  ,   ## left alpha                   
+                   nL     = 5    ,   ## left power-law exponent
+                   alphaR = None ,   ## right alpha: if none, equal to left 
+                   fudge  = 1    ,   ## fudge-factor 
+                   mean   = None ,   ## the mean value
+                   psi    = None ) :
+        
+        ## initialize the base 
+        ResoGauss.__init__ ( self          ,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             sigma = sigma ,
+                             mean  = mean  ,
+                             fudge = fudge ,
+                             psi   = psi   )
+        
+        LeftTail .__init__ ( self , alpha = alphaL , n = nL )
+        TailAR   .__init__ ( self , alpha = alphaR )
+        
+        ## actual PDF 
+        self.cb2 = Ostap.Models.CrystalBallDSE (
+            self.roo_name ( 'rcb2_' )       ,
+            "Resolution double-sided Crystal Ball/E %s" % self.name ,
+            self.xvar           ,
+            self.mean           , 
+            self.sigmaL_corr    , ## ATTENTION!
+            self.sigmaR_corr    , ## ATTENTION!
+            self.alphaL         ,
+            self.nL             ,
+            self.alphaR         ) 
+            
+        ## the final PDF 
+        self.pdf = self.cb2
+
+        ##  save the configuration
+        self.config = {
+            'name'     : self.name   ,
+            'xvar'     : self.xvar   ,
+            'mean'     : self.mean   ,
+            'sigma'    : self.sigma  ,
+            'alphaL'   : self.alphaL ,
+            'nL'       : self.nL     ,
+            'alphaR'   : self.alphaR ,
+            'fudge'    : self.fudge  ,
+            'psi'      : self.psi    ,
+            }
+
+models.add ( ResoCB2E )
+
 # =============================================================================
 ## @class ResoCB
 #   Crystal Ball model for resolution
-#   - (symmetric) Gaussian core 
+#   - (asymmetric) Gaussian core 
 #   - power-law tails
 #  @see Ostap::Math::CrystalBall
 #  @see Ostap::Models::CrystalBall
@@ -736,7 +773,8 @@ class ResoCB(ResoGauss,Tail) :
                    alpha  = 1.5  ,   ## alpha
                    n      = 1    ,   ##  
                    fudge  = 1    ,   ## fudge-factor 
-                   mean   = None ) : ## the mean value
+                   mean   = None ,   ## the mean value
+                   psi    = None ) : 
 
         ## initialize the base 
         ResoGauss.__init__ ( self          ,
@@ -745,20 +783,36 @@ class ResoCB(ResoGauss,Tail) :
                              sigma = sigma ,
                              mean  = mean  ,
                              fudge = fudge ,
-                             psi   = ZERO  )
+                             psi   = psi   )
         
         Tail   .__init__ ( self , alpha = alpha , n = n )
+
         
-        ## actual PDF 
-        self.cb = Ostap.Models.CrystalBall (
-            self.roo_name ( 'rcb_' )       ,
-            "Resolution Crystal Ball %s" % self.name ,
-            self.xvar           ,
-            self.mean           , 
-            self.sigma_corr     , ## ATTENTION!
-            self.alpha          ,
-            self.n              ) 
-    
+        if self.symmetric_core : 
+            
+            ## actual PDF 
+            self.cb = Ostap.Models.CrystalBall (
+                self.roo_name ( 'rcb_' )       ,
+                "Resolution Crystal Ball %s" % self.name ,
+                self.xvar           ,
+                self.mean           , 
+                self.sigma_corr     , ## ATTENTION!
+                self.alpha          ,
+                self.n              )
+            
+        else :
+            
+            self.cb = Ostap.Models.CrystalBallA (
+                self.roo_name ( 'rcba_' )       ,
+                "Resolution Crystal Ball/A %s" % self.name ,
+                self.xvar           ,
+                self.mean           , 
+                self.sigmaL_corr    , ## ATTENTION: sigmaL is already corrected 
+                self.sigmaR_corr    , ## ATTENTION: sigmaR is already corrected 
+                self.alpha          ,
+                self.n              )
+            
+            
         ## the final PDF 
         self.pdf = self.cb
 
@@ -770,11 +824,10 @@ class ResoCB(ResoGauss,Tail) :
             'sigma'    : self.sigma  ,
             'alpha'    : self.alpha  ,
             'n'        : self.n      ,
-            'fudge'    : self.fudge  ,
-        }
+            'psi'      : self.psi    , 
+            'fudge'    : self.fudge  }
         
 models.add ( ResoCB )
-
 
 # ===============================================================================
 ## @class ResoNeedham
@@ -799,7 +852,7 @@ models.add ( ResoCB )
 #  @see Ostap::Models::Needham
 #  @see Nededham_pdf
 class ResoNeedham(ResoGauss,TailN) :
-    """ Nedham's function
+    """ Needham's function
     - variant of Crystal Ball function with alpha = alpha(sigma)     
     """
     def __init__ ( self           ,  
@@ -1437,7 +1490,7 @@ models.add ( ResoSkewGenError )
 #  @see Ostap::Models::Sech 
 #  @see Ostap::Math::Sech 
 #  @see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
-class ResoSech(RESOLUTION) :
+class ResoSech(ResoGauss) :
     """Sech/hyperbolic secant  for the resolution:
     - Gaussian-like core
     - exponential tails 
@@ -1454,12 +1507,11 @@ class ResoSech(RESOLUTION) :
                    mean  = None ) :
         
         ## initialize the base 
-        super(ResoSech,self).__init__ ( name  = name  ,
-                                        xvar  = xvar  ,
-                                        sigma = sigma ,
-                                        mean  = mean  ,
-                                        fudge = fudge )
-
+        ResoGauss.__init__ ( name  = name  ,
+                             xvar  = xvar  ,
+                             sigma = sigma ,
+                             mean  = mean  ,
+                             fudge = fudge )        
         #
         ## finally build pdf
         # 
@@ -2408,191 +2460,152 @@ class ResoHypatia(ResoGenHyperbolic) :
 
 # =============================================================================
 ## @class ResoDas
-#  Parameterization of Das' model in terms of `k` and `kappa` 
+#  Parameterization of Das' model in terms of aigma and psi 
 #  @see Ostap::Math::Das
 #  @see Ostap::Models::Das
-class ResoDas(RESOLUTION) :
+class ResoDas(ResoGauss,TailAL,TailAR) :
     """ Das resolution model: gaussian with exponential tails 
     - Parameterization of Das' model in terms of `k` and `kappa` 
     - see Ostap::Math::Das
     - see Ostap::Models::Das
     - see Das_pdf 
     """
-    def __init__ ( self             ,
-                   name             ,
-                   xvar             ,
-                   sigma     = None ,   ## related to sigma
-                   k         = None ,   ## tail parameter  
-                   fudge     = 1    ,   ## fudge-parameter 
-                   mean      = None ,   ## related to mean 
-                   kappa     = None ) : ## asymmetry 
+    def __init__ ( self          ,
+                   name          ,
+                   xvar          ,
+                   sigma  = None ,   ## related to sigma
+                   alphaL = None ,
+                   alphaR = None ,
+                   fudge  = 1    ,   ## fudge-parameter 
+                   mean   = None ,   ## related to mean 
+                   psi    = None ) : ## asymmetry 
         
         ## initialize the base 
-        super(ResoDas,self).__init__ ( name  = name  ,
-                                       xvar  = xvar  ,
-                                       sigma = sigma ,
-                                       mean  = mean  ,
-                                       fudge = fudge )
+        ResoGauss. __init__ ( name  = name  ,
+                              xvar  = xvar  ,
+                              sigma = sigma ,
+                              mean  = mean  ,
+                              fudge = fudge ,
+                              psi   = psi   )
         
-        self.__k     = self.make_var ( k                    ,
-                                       'k_%s'      % name   ,  
-                                       'k(%s)'     % name   ,
-                                       None , 1 , 1.e-6 , 1000 )
+        TailAL.__init__  ( self , alpha = alphaL )        
+        TailAR.__init__  ( self , alpha = self.alphaL if alphaR is None else alphaR )
         
-        ## parameter kappa  
-        self.__kappa = self.make_var ( ZERO if kappa is None else kappa ,
-                                       'kappa_%s'    % name ,
-                                       '#kappa(%s)'  % name ,
-                                       None , 0 , -1 , +1 ) 
-        
-        if kappa  is None or self.__kappa is ZERO :
-            self.__AV_K = self.asymmetry_vars ( 'k' , var1    = self.__k , var2 = self.__k )
-        else :
-            self.__AV_K = self.asymmetry_vars ( 'k' , halfsum = self.__k , kappa = self.__kappa  )
-            
-        ## mu 
-        self.__mu    = self.mean 
         #
         ## finally build pdf
-        # 
-        self.pdf = Ostap.Models.Das (
-            self.roo_name ( 'rdas_' ) , 
-            "Resolution Das %s" % self.name ,
-            self.xvar       ,
-            self.mu         ,
-            self.sigma_corr ,
-            self.kL         ,
-            self.kR         )
-        
+        #
+        if self.symmetric_core : 
+
+            ## core is symmetric 
+            self.pdf = Ostap.Models.Das (
+                self.roo_name ( 'rdas_' ) , 
+                "Resolution Das %s" % self.name ,
+                self.xvar       ,
+                self.mu         ,
+                self.sigma_corr , ## CORRECTED 
+                self.alphaL     ,
+                self.alphaR     )
+            
+        else :
+
+            ## core is asymmetric
+            self.pdf = Ostap.Models.ADas (
+                self.roo_name ( 'rdas_' ) , 
+                "Resolution Das/A %s" % self.name ,
+                self.xvar        ,
+                self.mu          ,
+                self.sigmaL_corr , ## ATTENTION sigmaL is already corrected 
+                self.sigmaR_corr , ## ATTENTION sigmaR is already corrected 
+                self.alphaL      ,
+                self.alphaR      )
+                        
         ## save the configuration
         self.config = {
-            'name'      : self.name  ,
-            'xvar'      : self.xvar  ,
-            'mean'      : self.mean  ,
-            'sigma'     : self.sigma ,
-            'k'         : self.k     ,
-            'kappa'     : self.kappa , 
-            'fudge'     : self.fudge }
+            'name'      : self.name   ,
+            'xvar'      : self.xvar   ,
+            'mean'      : self.mean   ,
+            'sigma'     : self.sigma  ,
+            'alphaL'    : self.alphaL ,
+            'alphaR'    : None if alphaR is None else self.alphaR ,
+            'psi'       : self.psi    , 
+            'fudge'     : self.fudge  }
 
-    @property
-    def mu ( self ) :
-        """'mu' : location parameter (same as 'mean')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :
-        self.mean = value
-
-    @property
-    def k ( self ) :
-        """'k' : tail parameter (exponential slope)"""
-        return self.__k
-    @k.setter
-    def k ( self , value ) :
-        self.set_value ( self.__k , value ) 
         
-    @property
-    def kappa ( self ) :
-        """'kappa' : dimensionless parameter, related to asymmetry"""
-        return self.__kappa
-    @kappa.setter
-    def kappa ( self , value ) :
-        self.set_value ( self.__kappa , value )
-
-    @property
-    def kL  ( self ) :
-        """'kL' : left tail parameter"""
-        return self.__AV_K.var1 
-
-    @property
-    def kR  ( self ) :
-        """'kR' : right tail parameter"""
-        return self.__AV_K.var2 
-
 # =============================================================================
-## @class ResoDasLR
-#  Parameterization of Das' model in terms of `kL` and `kR`
+## @class ResoDasA
+#  Parameterization of Das' model in terms of sigmaL/sigmaR
 #  @see Ostap::Math::Das
 #  @see Ostap::Models::Das
-class ResoDasLR(RESOLUTION) :
-    """ Das resolution model: gaussian with exponential tails 
-    - Parameterization of Das' model in terms of `kL` and `kR` 
+class ResoDasA(ResoGaussA,TailAL,TailAR) :
+    """ Das resolution model: 
+    - (asymmetryc) Gaussian core
+    - Lef&rigth expoenntial tails 
+    - see Ostap::Math::ADas
     - see Ostap::Math::Das
+    - see Ostap::Models::ADas
     - see Ostap::Models::Das
     - see Das_pdf 
     """
-    def __init__ ( self             ,
-                   name             ,
-                   xvar             ,
-                   sigma     = None ,   ## related to sigma
-                   kL        = None ,   ## left tail parameter
-                   kR        = None ,   ## if use left parameter is None 
-                   fudge     = 1    ,   ## fudge-parameter 
-                   mean      = None ) : ## related to mean 
+    def __init__ ( self          ,
+                   name          ,
+                   xvar          ,
+                   sigmaL = None ,   ## related to sigma
+                   sigmaR = None ,   ## related to sigma
+                   alphaL = None ,   ## left tail parameter
+                   alphaR = None ,   ## if use left parameter is None 
+                   fudge  = 1    ,   ## fudge-parameter 
+                   mean   = None ) :
         
         ## initialize the base 
-        super(ResoDasLR,self).__init__ ( name  = name  ,
-                                         xvar  = xvar  ,
-                                         sigma = sigma ,
-                                         mean  = mean  ,
-                                         fudge = fudge )
+        ResoGaussA.__init__ ( name   = name   ,
+                              xvar   = xvar   ,
+                              sigmaL = sigmaL ,
+                              sigmaR = sigmaR ,
+                              mean   = mean   ,
+                              fudge  = fudge  )
         
-        self.__kL     = self.make_var ( kL                  ,
-                                        'kL_%s'     % name  ,  
-                                        'k_{L}(%s)' % name  ,
-                                        None , 2.0 , 0.1 , 15 )
+        TailAL.__init__  ( self , alpha = alphaL )        
+        TailAR.__init__  ( self , alpha = self.alphaL if alphaR is None else alphaR )
         
-        self.__kR     = self.make_var ( self.__kL if kR is None else kR , 
-                                        'kR_%s'     % name  ,  
-                                        'k_{R}(%s)' % name  ,
-                                        None , 2,0 , 0.1 , 15 )
-        ## mu 
-        self.__mu    = self.mean 
         #
         ## finally build pdf
-        # 
-        self.pdf = Ostap.Models.Das (
-            self.roo_name ( 'rdas_' ) , 
-            "Resolution Das %s" % self.name ,
-            self.xvar       ,
-            self.mu         ,
-            self.sigma_corr ,
-            self.kL         ,
-            self.kR         )
-        
+        #
+        if self.symmetric_core :
+
+            ## symmetric core 
+            self.pdf = Ostap.Models.Das (
+                self.roo_name ( 'rdas_' ) , 
+                "Resolution Das %s" % self.name ,
+                self.xvar       ,
+                self.mu         ,
+                self.sigma_corr ,
+                self.alphaL     ,
+                self.alphaR     )
+            
+        else :
+            
+            ## core is asymmetric
+            self.pdf = Ostap.Models.ADas (
+                self.roo_name ( 'rdas_' ) , 
+                "Resolution Das %s" % self.name ,
+                self.xvar        ,
+                self.mu          ,
+                self.sigmaL_corr ,
+                self.sigmaR_corr ,
+                self.alphaL      ,
+                self.alphaR      )
+                        
         ## save the configuration
         self.config = {
-            'name'      : self.name  ,
-            'xvar'      : self.xvar  ,
-            'mean'      : self.mean  ,
-            'sigma'     : self.sigma ,
-            'kL'        : self.kL    ,
-            'kR'        : self.kR    ,
+            'name'      : self.name   ,
+            'xvar'      : self.xvar   ,
+            'mean'      : self.mean   ,
+            'sigmaL'    : self.sigmaL ,
+            'alphaL'    : self.alphaL ,            
+            'sigmaR'    : None if sigmaR is None else self.sigmaR ,
+            'alphaR'    : None if alphaR is None else self.alphaR ,
             'fudge'     : self.fudge }
 
-    @property
-    def mu ( self ) :
-        """'mu' : location parameter (same as 'mean')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :
-        self.mean = value
-
-    @property
-    def kL ( self ) :
-        """'k' : (left) tail parameter"""
-        return self.__kL
-    @kL.setter
-    def kL ( self , value ) :
-        self.set_value ( self.__kL , value ) 
-
-    @property
-    def kR ( self ) :
-        """'kR' : (right) tail parameter"""
-        return self.__kR
-    @kR.setter
-    def kR ( self , value ) :
-        self.set_value ( self.__kR , value ) 
-        
 # =============================================================================
 ## @class ResoMeixner
 # Meixner resolution model
