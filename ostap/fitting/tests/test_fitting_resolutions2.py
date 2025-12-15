@@ -433,9 +433,10 @@ def test_das () :
     logger.info ('Test Das: Gaussian with symmetric exponential tails ' )
     from   ostap.fitting.resolution import ResoDas
     reso = ResoDas ( 'Das' , mass ,
-                     mean  = ( 0.1 , -3 , 3 ) ,                    
-                     k     = ( 1.0 , 1.e-5 , 200 ) ,
-                     kappa = ( 0.1 , -1 , 1  ) )  
+                     mean  = ( 0.1 , -3 , 3 ) ,  
+                     sigma  = ( 0.5  ,  0.1  ,  1.0  ) ,                
+                     alphaL = ( 1.0 , 0.1  , 15 ) ,
+                     psi    =  ( 0.1 , -0.5 , 0.5  ) )  
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )

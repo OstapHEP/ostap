@@ -241,9 +241,9 @@ def test_cb2 () :
     logger.info ('Test ResoCB2: symmetric double-sided Crystal Ball resolution' )
     from   ostap.fitting.resolution import ResoCB2
     reso = ResoCB2( 'CrystalBall2' , mass ,                        
-                    sigma = ( 0.4 ,  0.01 ,  5.0 ) ,
-                    n     = ( 1.0 ,  0.0  , 20.0 ) ,
-                    alpha = ( 1.0 ,  0.5  ,  5.0 ) )
+                    sigma  = ( 0.4 ,  0.01 ,  5.0 ) ,
+                    nL     = ( 1.0 ,  0.0  , 20.0 ) ,
+                    alphaL = ( 1.0 ,  0.5  ,  5.0 ) )
     
     result, frame = reso. fitTo ( dataset , silent = True  )
     result, frame = reso. fitTo ( dataset , silent = True  )    
@@ -550,8 +550,8 @@ def test_das () :
     logger.info ('Test Das: Gaussian with symmetric exponential tails ' )
     from   ostap.fitting.resolution import ResoDas
     reso = ResoDas ( 'Das' , mass ,
-                     k     = ( 1.33 , 1.e-5 , 20 ) , 
-                     sigma = ( 0.41 , 0.01 , 5.0 ) )
+                     alphaL = ( 1.33 , 1.e-5 , 20 ) , 
+                     sigma  = ( 0.41 , 0.01 , 5.0 ) )
     
     result, frame = reso. fitTo ( dataset , silent = True  )
     result, frame = reso. fitTo ( dataset , silent = True  )    

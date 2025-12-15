@@ -297,7 +297,8 @@ class ResoGauss2(ResoGauss) :
                    mean     = None ) : ## the mean value
         
         ## initialize the base 
-        ResoGauss . __init__ ( name  = name  ,
+        ResoGauss . __init__ ( self  , 
+                               name  = name  ,
                                xvar  = xvar  ,
                                sigma = sigma ,
                                mean  = mean  ,
@@ -466,8 +467,12 @@ class ResoApoA(ResoGaussA) :
                               mean   = mean        ,
                               fudge  = fudge       )
         
-        ## use *UNCORRECTED* sigma here 
-        TwoSigmas.__init__ ( self , sigmaL = self.sigma , sigmaR = sigmaR ) 
+       
+        ## beta-parameter 
+        self.__beta    = self.make_var ( beta ,
+                                         'beta_%s'   % name  ,
+                                         '#beta(%s)' % name  ,
+                                         None , 0.0001 , 10000 )
         
         ## build the resolution model
         self.apo  = Ostap.Models.Apollonios (
@@ -626,8 +631,7 @@ class ResoCB2A(ResoGaussA,LeftTail,RightTail) :
                               sigmaL = sigmaL ,
                               sigmaR = sigmaR ,
                               mean   = mean   ,
-                              fudge  = fudge  ,
-                              psi    = psi    )
+                              fudge  = fudge  )
         
         LeftTail   .__init__ ( self , alpha = alphaL , n = nL )        
         RightTail  .__init__ ( self ,
@@ -670,13 +674,13 @@ class ResoCB2A(ResoGaussA,LeftTail,RightTail) :
             'name'     : self.name   ,
             'xvar'     : self.xvar   ,
             'mean'     : self.mean   ,
-            'sigma'    : self.sigma  ,
+            'sigmaL'   : self.sigma  ,
             'alphaL'   : self.alphaL ,
             'nL'       : self.nL     ,
             'fudge'    : self.fudge  ,
-            'alphaR'   : None if self.alphaR is self.alphaL else self.alphaR ,
-            'nR'       : None if self.nR     is self.nL     else self.nR     ,
-            'psi'      : self.psi    
+            'sigmaR'   : None if sigmaR is None else self.sigmaL_corr ,
+            'alphaR'   : None if alphaR is None else self.alphaR      ,
+            'nR'       : None if nR     is None else self.nR          ,
         }
         
 models.add ( ResoCB2A )
@@ -1507,7 +1511,8 @@ class ResoSech(ResoGauss) :
                    mean  = None ) :
         
         ## initialize the base 
-        ResoGauss.__init__ ( name  = name  ,
+        ResoGauss.__init__ ( self  , 
+                             name  = name  ,
                              xvar  = xvar  ,
                              sigma = sigma ,
                              mean  = mean  ,
@@ -2481,7 +2486,8 @@ class ResoDas(ResoGauss,TailAL,TailAR) :
                    psi    = None ) : ## asymmetry 
         
         ## initialize the base 
-        ResoGauss. __init__ ( name  = name  ,
+        ResoGauss. __init__ ( self  , 
+                              name  = name  ,
                               xvar  = xvar  ,
                               sigma = sigma ,
                               mean  = mean  ,
@@ -2501,7 +2507,7 @@ class ResoDas(ResoGauss,TailAL,TailAR) :
                 self.roo_name ( 'rdas_' ) , 
                 "Resolution Das %s" % self.name ,
                 self.xvar       ,
-                self.mu         ,
+                self.mean       ,
                 self.sigma_corr , ## CORRECTED 
                 self.alphaL     ,
                 self.alphaR     )
@@ -2513,7 +2519,7 @@ class ResoDas(ResoGauss,TailAL,TailAR) :
                 self.roo_name ( 'rdas_' ) , 
                 "Resolution Das/A %s" % self.name ,
                 self.xvar        ,
-                self.mu          ,
+                self.mean        ,
                 self.sigmaL_corr , ## ATTENTION sigmaL is already corrected 
                 self.sigmaR_corr , ## ATTENTION sigmaR is already corrected 
                 self.alphaL      ,
@@ -2557,7 +2563,8 @@ class ResoDasA(ResoGaussA,TailAL,TailAR) :
                    mean   = None ) :
         
         ## initialize the base 
-        ResoGaussA.__init__ ( name   = name   ,
+        ResoGaussA.__init__ ( self   , 
+                              name   = name   ,
                               xvar   = xvar   ,
                               sigmaL = sigmaL ,
                               sigmaR = sigmaR ,
