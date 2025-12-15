@@ -518,10 +518,6 @@ Ostap::Math::Gauss::Gauss
   //
 }
 // ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Gauss::~Gauss (){}
-// ============================================================================
 // evaluate Bifurcated Gaussian
 // ============================================================================
 double Ostap::Math::Gauss::evaluate ( const double x ) const
@@ -600,10 +596,6 @@ Ostap::Math::GenGaussV1::GenGaussV1
   setBeta ( beta ) ;
   //
 }
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::GenGaussV1::~GenGaussV1(){}
 // ============================================================================
 bool Ostap::Math::GenGaussV1::setMu        ( const double value ) 
 {
@@ -729,10 +721,6 @@ Ostap::Math::GenGaussV2::GenGaussV2
   setKappa ( kappa ) ;
   //
 }
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::GenGaussV2::~GenGaussV2(){}
 // ============================================================================
 bool Ostap::Math::GenGaussV2::setXi        ( const double value ) 
 {
@@ -878,10 +866,6 @@ Ostap::Math::SkewGauss::SkewGauss
   , m_omega   ( std::abs ( omega ) ) 
   , m_alpha   (            alpha   ) 
 {}
-// ============================================================================
-// desctructor
-// ============================================================================
-Ostap::Math::SkewGauss::~SkewGauss(){}
 // ============================================================================
 bool Ostap::Math::SkewGauss::setXi        ( const double value ) 
 {
@@ -1483,10 +1467,6 @@ Ostap::Math::Bukin::Bukin
   //
 }
 // ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Bukin::~Bukin () {}
-// ============================================================================
 bool Ostap::Math::Bukin::setPeak  ( const double value )
 {
   if ( s_equal ( value , m_peak ) ) { return false ; }
@@ -1740,10 +1720,6 @@ Ostap::Math::Novosibirsk::Novosibirsk
   m_lambda = x_sinh ( m_tau * s_Novosibirsk ) ;
   //
 }
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Novosibirsk::~Novosibirsk() {}
 // ============================================================================
 // set parameter m0
 // ============================================================================
@@ -2050,6 +2026,21 @@ double Ostap::Math::CrystalBall::integral
 			   dFoF ) ;  
 }
 // ============================================================================
+/*  get the integral from the the negative to positive infinity 
+ *  @attention +infinity is returned for <code>n=0(N=1)</code>
+ */
+// ============================================================================
+double Ostap::Math::CrystalBall::integral() const
+{
+  const double nn = N() ;
+  if ( nn <= 1 || s_equal ( nn , 1.0 ) ) { return s_POSINF ; }
+  //
+  const double xl = xL () ;
+  ///
+  return m_tail.integral ( xl , xl , m_core ( xl ) , m_core.dFoF ( xl ) )
+    + ( 1 - m_core.cdf ( xl ) ) ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBall::tag () const 
@@ -2091,10 +2082,6 @@ Ostap::Math::Needham::Needham
 		  "Ostap::Math::Needham" ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
 }
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Needham::~Needham(){}
 // ============================================================================
 bool Ostap::Math::Needham::setSigma
 ( const double value )
@@ -2258,6 +2245,21 @@ double Ostap::Math::CrystalBallRightSide::integral
 			   F    ,
 			   dFoF ) ;
 }
+// ============================================================================
+/*  get the integral from the the negative to positive infinity 
+ *  @attention +infinity is returned for <code>n=0(N=1)</code>
+ */
+// ============================================================================
+double Ostap::Math::CrystalBallRightSide::integral() const
+{
+  const double nn = N() ;
+  if ( nn <= 1 || s_equal ( nn , 1.0 ) ) { return s_POSINF ; }
+  //
+  const double xr = xR () ;
+  ///
+  return m_tail.integral ( xr , xr , m_core ( xr ) , m_core.dFoF ( xr ) ) + m_core.cdf ( xr ) ;
+}
+// ============================================================================
   
 // =========================================================================
 // get the tag 
@@ -2474,43 +2476,25 @@ double Ostap::Math::CrystalBallDoubleSided::integral
   // core Gaussian 
   return m_core.integral ( low , high ) ;
 }
- 
-//  const double xR = m_m0 + m_alphaR * m_sigma ;
-//   //
-//   // split into proper subintervals
-//   //
-//   if ( low < xR && xR < high ) { return integral ( low , xR ) + integral ( xR , high ) ; }
-//   //
-//   // Z = (x-x0)/sigma 
-//   //
-//   const double zlow  = ( low  - m_m0 ) / sigma() ;
-//   const double zhigh = ( high - m_m0 ) / sigma() ;
-//   //
-//   // Gaussian core 
-//   if ( xL <= low && high <= xR ) { return Ostap::Math::gauss_int ( zlow  , zhigh ) ; } 
-//   // left tail 
-//   else if ( high <= xL ) 
-//     {
-//       const double nn = NL () ;
-//       /// tail
-//       const double a  =   - m_alphaL            / nn ;
-//       const double b  = 1 - m_alphaL * m_alphaL / nn ;
-//       //  
-//       return m_AL * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;      
-//     }
-//   // right tail
-//   else if ( xR <= low )
-//     {
-//       const double nn = NR () ;
-//       /// tail
-//       const double a  =   + m_alphaR            / nn ;
-//       const double b  = 1 - m_alphaR * m_alphaR / nn ;
-//       //  
-//       return m_AR * Ostap::Math::cavalieri ( -nn , zlow , zhigh , a , b ) ;      
-//     }
-//   //
-//   return 0 ;
-// }
+// ============================================================================
+/*  Get the integral from the the negative to positive infinity 
+ *  @attention +infinity is returned for <code>n=0(N=1)</code>
+ */
+// ============================================================================
+double Ostap::Math::CrystalBallDoubleSided::integral() const
+{
+  const double nl = NL () ;
+  if ( nl <= 1 || s_equal ( nl , 1.0 ) ) { return s_POSINF ; }
+  const double nr = NR () ;
+  if ( nr <= 1 || s_equal ( nr , 1.0 ) ) { return s_POSINF ; }
+  //
+  const double xl = xL () ;
+  const double xr = xR () ;
+  ///
+  return m_core.integral ( xl , xr ) 
+    + m_left .integral ( xl , xl , m_core ( xl ) , m_core.dFoF ( xl ) ) 
+    + m_right.integral ( xr , xr , m_core ( xr ) , m_core.dFoF ( xr ) ) ;
+}
 // ============================================================================
 /* quantify the effect of tails, difference from Gaussian
  *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
@@ -2823,10 +2807,6 @@ Ostap::Math::Atlas::Atlas
   , m_workspace ()
 {}
 // ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Atlas::~Atlas(){}
-// ============================================================================
 // get variance:  very good numerical approximation d
 // ============================================================================
 double Ostap::Math::Atlas::variance () const { return 3 * m_sigma * m_sigma ; }
@@ -2960,10 +2940,6 @@ Ostap::Math::Sech::Sech
   : m_mean  (             mean    ) 
   , m_sigma (  std::abs ( sigma ) )
 {}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Sech::~Sech(){}
 // ============================================================================
 // evaluate sech function 
 // ============================================================================
@@ -3188,10 +3164,6 @@ Ostap::Math::Logistic::Logistic
   , m_sigma (  std::abs ( sigma ) )
 {}
 // ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Logistic::~Logistic(){}
-// ============================================================================
 // evaluate sech function 
 // ============================================================================
 double Ostap::Math::Logistic::pdf ( const double x ) const 
@@ -3287,10 +3259,6 @@ std::size_t Ostap::Math::Logistic::tag () const
 }
 // ============================================================================
 
-
-
-
-
 // ============================================================================
 /*  constructor with all parameters
  *  @param mu    \f$\mu  \f$-parameter
@@ -3315,10 +3283,6 @@ Ostap::Math::GenLogisticIV::GenLogisticIV
   setAlpha ( alpha ) ;
   setBeta  ( beta  ) ;
 }
-// ============================================================================
-// Destructor
-// ============================================================================
-Ostap::Math::GenLogisticIV::~GenLogisticIV(){}
 // ============================================================================
 // set parameter mu 
 // ============================================================================
@@ -3566,10 +3530,6 @@ Ostap::Math::StudentT::StudentT
   setN ( n ) ;  
 }
 // ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::StudentT::~StudentT (){}
-// ============================================================================
 // set the proper parameters
 // ============================================================================
 bool Ostap::Math::StudentT::setM ( const double x )
@@ -3688,10 +3648,6 @@ Ostap::Math::BifurcatedStudentT::BifurcatedStudentT
   setNL ( nL ) ;  
   setNR ( nR ) ;  
 }
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::BifurcatedStudentT::~BifurcatedStudentT (){}
 // ============================================================================
 // set the proper parameters
 // ============================================================================
@@ -4169,8 +4125,6 @@ Ostap::Math::SinhAsinh::SinhAsinh
   , m_delta    ( std::abs ( delta    ) ) 
 {}
 // ============================================================================
-Ostap::Math::SinhAsinh::~SinhAsinh(){}
-// ============================================================================
 bool Ostap::Math::SinhAsinh::setMu      ( const double value ) 
 {
   if ( s_equal ( value , m_mu  ) ) { return false ; }
@@ -4351,10 +4305,6 @@ Ostap::Math::JohnsonSU::JohnsonSU
   , m_gamma   (            gamma    ) 
 {}
 // ============================================================================
-// Destructor
-// ============================================================================
-Ostap::Math::JohnsonSU::~JohnsonSU(){}
-// ============================================================================
 // get the mean value
 // ============================================================================
 double Ostap::Math::JohnsonSU::mean() const 
@@ -4491,10 +4441,6 @@ Ostap::Math::Slash::Slash
   : m_mu    ( mu ) 
   , m_scale ( std::abs ( scale ) ) 
 {}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Slash::~Slash(){}
 // ============================================================================
 bool Ostap::Math::Slash::setMu    ( const double value ) 
 {
@@ -4699,7 +4645,6 @@ std::size_t Ostap::Math::RaisingCosine::tag () const
 }
 // ============================================================================
 
-
 // ============================================================================
 /*  constructor from all parameters 
  *  @param mu  peak location
@@ -4715,10 +4660,6 @@ Ostap::Math::AsymmetricLaplace::AsymmetricLaplace
   , m_lambdaL ( std::abs ( lambdaL ) ) 
   , m_lambdaR ( std::abs ( lambdaR ) ) 
 {}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::AsymmetricLaplace::~AsymmetricLaplace(){}
 // ============================================================================
 bool Ostap::Math::AsymmetricLaplace::setMu    ( const double value ) 
 {

@@ -92,9 +92,9 @@ namespace Ostap
     public: // getters 
       // ======================================================================
       /// tail n-parameter n     (external) 
-      inline double n      () const { return m_n       ; }
-      /// true tail N-parameter (internal) 
-      inline double N      () const { return N ( m_n ) ; } // internal N parameter      
+      inline double n      () const { return m_n ; }
+      /// true tail N-parameter (internal) N=N(n) 
+      inline double N      () const { return m_N ; } // internal N parameter      
       // ======================================================================
     public:  // setters 
       // ======================================================================
@@ -108,9 +108,10 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
-      /// tail parameter n 
-      double m_n     { 0 } ; // tail parameter n       
-      double m_N     { 1 } ; // tail parameter N = N(n) 
+      /// external tail parameter n 
+      double m_n { 0 } ; // external tail parameter n       
+      /// internal tail parameter n 
+      double m_N { 1 } ; // internal tail parameter N = N(n) 
       // ======================================================================
     } ; //                                   The end of class Ostap::Math::Tail
     // ========================================================================

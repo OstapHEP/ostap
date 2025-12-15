@@ -53,9 +53,9 @@ namespace Ostap
       /// evaluate Bifurcated Gaussian
       double evaluate   ( const double x ) const ;
       /// evaluate Bifurcated Gaussian
-      double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
       /// evaluate Bifurcated Gaussian
-      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -180,8 +180,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate Bifurcated Gaussian
-      double pdf        ( const double x ) const ;
-      double operator() ( const double x ) const { return pdf ( x )  ; }
+      double        pdf        ( const double x ) const ;
+      inline double operator() ( const double x ) const { return pdf ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -264,17 +264,14 @@ namespace Ostap
       ( const double peak  = 0 ,
         const double sigma = 1 ) ;
       // ======================================================================
-      /// destructor
-      ~Gauss() ;
-      // ======================================================================
     public:
       // ======================================================================
       /// evaluate Gaussian
-      double evaluate   ( const double x ) const ;
+      double        evaluate   ( const double x ) const ;
       /// evaluate Gaussian
-      double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
       /// evaluate Gaussian
-      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -309,13 +306,13 @@ namespace Ostap
       ( const double low  ,
         const double high ) const ;
       ///  get CDF 
-      double cdf      ( const double x    ) const ;
+      double cdf  ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /** get the logarithmic derivative
-        * \f$ \frac{ f6\prime}{f}  \f$
-        */  
+       * \f$ \frac{ f6\prime}{f}  \f$
+       */  
       double  dFoF ( const  double x ) const ; 
       // ======================================================================
       // get normalized version of the variable 
@@ -360,8 +357,13 @@ namespace Ostap
       ( const double mu    = 0 ,
         const double alpha = 1 ,
         const double beta  = 2 ) ; // beta=2 correponds to gaussian
-      /// desctructor
-      ~GenGaussV1() ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// get pdf
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      /// get pdf
+      double        pdf        ( const double x ) const ;
       // ======================================================================
     public: // primary getters
       // ======================================================================
@@ -419,13 +421,6 @@ namespace Ostap
       /// kurtosis 
       double kurtosis    () const ;
       // ======================================================================
-    public :
-      // ======================================================================
-      /// get pdf
-      inline double operator() ( const double x ) const { return pdf ( x ) ; }
-      /// get pdf
-      double pdf        ( const double x ) const ;
-      // ======================================================================
     public:  // integrals
       // ======================================================================
       double cdf      ( const double x ) const ;
@@ -474,8 +469,13 @@ namespace Ostap
       ( const double xi    = 0 ,
         const double alpha = 1 ,
         const double kappa = 0 ) ; // kappa=0 correponds to gaussian
-      /// desctructor
-      ~GenGaussV2() ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// get PDF
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      /// get PDF
+      double        pdf        ( const double x ) const ;
       // ======================================================================
     public: // primary getters
       // ======================================================================
@@ -510,13 +510,6 @@ namespace Ostap
       //
       double skewness    () const ;
       double kurtosis    () const ;
-      // ======================================================================
-    public :
-      // ======================================================================
-      /// get PDF
-      inline double operator() ( const double x ) const { return pdf ( x ) ; }
-      /// get PDF
-      double pdf               ( const double x ) const ;
       // ======================================================================
     public:  // integrals
       // ======================================================================
@@ -564,8 +557,12 @@ namespace Ostap
       ( const double xi    = 0 ,
         const double omega = 1 ,
         const double alpha = 0 ) ; // alpha=0 correponds to gaussian
-      /// desctructor
-      ~SkewGauss () ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// get pdf
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      double        pdf        ( const double x ) const ;
       // ======================================================================
     public: // primary getters
       // ======================================================================
@@ -597,12 +594,6 @@ namespace Ostap
       double sigma       () const ;
       double skewness    () const ;
       double kurtosis    () const ;
-      // ======================================================================
-    public :
-      // ======================================================================
-      /// get pdf
-      double operator() ( const double x ) const { return pdf ( x ) ; }
-      double pdf        ( const double x ) const ;
       // ======================================================================
     public:  // integrals
       // ======================================================================
@@ -1030,7 +1021,6 @@ namespace Ostap
     /** @class Bukin
      *  ``Bukin-function'', aka "Modified Novosibirsk function"
      *  for description of asymmetric peaks with the exponential tails
-     *
      *  @see http://arxiv.org/abs/1107.5751
      *  @see https://doi.org/10.1007/JHEP06(2012)141
      *  @date 2011-04-19
@@ -1052,9 +1042,6 @@ namespace Ostap
         const double xi     = 0 ,
         const double rhoL   = 0 ,
         const double rhoR   = 0 ) ;
-      // ======================================================================
-      /// destructor
-      ~Bukin () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1169,8 +1156,6 @@ namespace Ostap
       ( const double m0    = 0 ,
         const double sigma = 1 ,
         const double tau   = 0 ) ;
-      /// destructor
-      ~Novosibirsk () ;                                           // destructor
       // ======================================================================
     public:
       // ======================================================================
@@ -1297,8 +1282,8 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core      , 
-	      const double              alpha = 2 , 
-	      const double              n     = 1 ) ;
+	const double              alpha = 2 , 
+	const double              n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core Gaussian function 
@@ -1306,7 +1291,7 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core ,
-	      const Ostap::Math::Tail&  tail ) ;
+	const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1354,6 +1339,11 @@ namespace Ostap
       ( const double low ,
         const double high ) const ;
       // ======================================================================
+      /** get the integral from the negative to positive infinity 
+       *  @attention +infinity is returned for <code>n=0(N=1)</code>
+       */
+      double integral () const ;
+      // ======================================================================
     public: // components 
       // ======================================================================
       /// get the Gaussian core 
@@ -1380,7 +1370,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const ;
+	const double xhigh ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1441,8 +1431,6 @@ namespace Ostap
         const double c2    =   10    ,   // (should be in excess of 2) 
         const double n     =    0    ,   // note that it is different from internal N!
 	const double amin  =    0.01 ) ; // cut-off parameter for alpha      
-      /// destructor
-      ~Needham() ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1499,10 +1487,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// get integral between low and high
-      double integral
+      inline double integral
       ( const double low ,
         const double high ) const
       { return m_cb.integral ( low , high ) ; }
+      // ======================================================================
+      /** get the integral from the the negative to positive infinity 
+       *  @attention +infinity is returned for <code>n=0(N=1)</code>
+       */      
+      inline double integral () const { return m_cb.integral () ; }
       // ======================================================================
     public: //
       // ======================================================================
@@ -1520,13 +1513,13 @@ namespace Ostap
     public: // components 
       // ======================================================================
       /// get the Gaussian core 
-      const Ostap::Math::Gauss&    core       () const { return m_cb.core () ; }
+      const Ostap::Math::Gauss&    core      () const { return m_cb.core () ; }
       /// get the Gaussian core 
-      const Ostap::Math::Gauss&    gauss      () const { return m_cb.core () ; }
+      const Ostap::Math::Gauss&    gauss     () const { return m_cb.core () ; }
       /// get left tail
-      const Ostap::Math::LeftTail& tail       () const { return m_cb.tail () ; }
+      const Ostap::Math::LeftTail& tail      () const { return m_cb.tail () ; }
       /// get left tail
-      const Ostap::Math::LeftTail& tail_left  () const { return m_cb.tail () ; }
+      const Ostap::Math::LeftTail& tail_left () const { return m_cb.tail () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1582,7 +1575,7 @@ namespace Ostap
        */
       CrystalBallRightSide  
       ( const Ostap::Math::Gauss& core ,
-	      const Ostap::Math::Tail&  tail ) ;
+	const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1609,7 +1602,7 @@ namespace Ostap
       /// mode of the distribution 
       inline double mode () const { return m_core.mode () ; }
       /// the point where Gaussian meets power-law
-      inline double xR   () const { return m0 () + alpha () * sigma()  ; }
+      inline double xR   () const { return m_core.m0 () + alpha () * sigma()  ; }
       // ======================================================================
     public: // trivial accessors
       // ======================================================================
@@ -1629,6 +1622,11 @@ namespace Ostap
       double integral
       ( const double low ,
         const double high ) const ;
+      // ======================================================================
+      /** get the integral from the the negative to positive infinity 
+       *  @attention +infinity is returned for <code>n=0(N=1)</code>
+       */      
+      double integral () const ;
       // ======================================================================
     public: // components 
       // ======================================================================
@@ -1720,7 +1718,7 @@ namespace Ostap
       CrystalBallDoubleSided
       ( const Ostap::Math::Gauss&     core  ,
         const Ostap::Math::LeftTail&  left  ,
-	      const Ostap::Math::RightTail& right ) ;
+	const Ostap::Math::RightTail& right ) ;
       // ========================================================================
       /** constructor from all components  
        *  @param cb CrystalBall function (left tail) 
@@ -1728,7 +1726,7 @@ namespace Ostap
        */
       CrystalBallDoubleSided
       ( const Ostap::Math::CrystalBall& cb    , 
-	      const Ostap::Math::RightTail  & right ) ;
+	const Ostap::Math::RightTail  & right ) ;
       // =======================================================================
       /** constructor from all components  
        *  @param cb CrystalBallRightSide function (right tail) 
@@ -1736,7 +1734,7 @@ namespace Ostap
        */
       CrystalBallDoubleSided
       ( const Ostap::Math::CrystalBallRightSide& cb   , 
-	      const Ostap::Math::LeftTail            & left ) ;      
+	const Ostap::Math::LeftTail            & left ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1793,11 +1791,11 @@ namespace Ostap
       /// set both alpha-parameters 
       bool        setAlpha
       ( const double valueL ,
-	      const double valueR ) ;
+	const double valueR ) ;
       /// set both n-parameters 
       bool        setN 
       ( const double valueL ,
-	      const double valueR ) ;
+	const double valueR ) ;
       // ======================================================================
       /// set both alpha-parameters 
       inline bool setAlpha ( const double value )
@@ -1812,6 +1810,11 @@ namespace Ostap
       double integral
       ( const double low  ,
         const double high ) const ;
+      // ======================================================================
+      /** get the integral from the the negative to positive infinity 
+       *  @attention +infinity is returned for <code>n=0(N=1)</code>
+       */      
+      double integral () const ;
       // ======================================================================
     public: // components 
       // ======================================================================
@@ -1980,7 +1983,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class ApolloniosL
-     *  An Apollonious core with power-law tail on right side
+     *  An Apollonious core with power-law tail on left side
      *  @see  Ostap::Math::Apollonios
      *  @see  Ostap::Math::LeftTail 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2113,8 +2116,6 @@ namespace Ostap
       ( const double mass  = 0 ,
         const double sigma = 1 ,
         const double n     = 2 ) ;
-      /// destructor
-      ~StudentT() ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2215,8 +2216,6 @@ namespace Ostap
         const double sigmaR = 1 ,
         const double nL     = 2 ,
         const double nR     = 2 ) ;
-      /// destructor
-      ~BifurcatedStudentT() ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2314,8 +2313,6 @@ namespace Ostap
       double m_normR  ;
       // ======================================================================
     } ;
-    // ========================================================================
-    
     // ========================================================================
     /**  @class PearsonIV 
      *   Pearson Type IV distribution  
@@ -2496,8 +2493,6 @@ namespace Ostap
         const double scale     = 1   ,
         const double epsilon   = 0   ,
         const double delta     = 1   ) ;
-      /// destructor
-      ~SinhAsinh() ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2615,8 +2610,6 @@ namespace Ostap
         const double lambda  = 1 ,   // related to variance
         const double delta   = 1 ,   // shape
         const double gamma   = 0 ) ; // shape
-      /// destructor
-      ~JohnsonSU () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2707,8 +2700,6 @@ namespace Ostap
       Atlas   
       ( const double mean   = 0  ,
         const double sigma  = 1  ) ;
-      /// destructor
-      ~Atlas () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2811,8 +2802,6 @@ namespace Ostap
       Sech 
       ( const double mean   = 0  ,
         const double sigma  = 1  ) ;
-      /// destructor
-      ~Sech () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2911,8 +2900,6 @@ namespace Ostap
       Logistic  
       ( const double mean  = 0  ,
         const double sigma = 1  ) ;
-      /// destructor
-      ~Logistic () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3018,8 +3005,6 @@ namespace Ostap
         const double sigma = 1 ,   // scale 
         const double alpha = 1 ,   // expo tail 
         const double beta  = 1 ) ; // expo tail 
-      /// destructor
-      ~GenLogisticIV () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3234,8 +3219,6 @@ namespace Ostap
       Slash
       ( const double mu    = 0 ,   // location 
         const double scale = 1 ) ; // scale ;      
-      /// destructor
-      ~Slash() ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3313,8 +3296,6 @@ namespace Ostap
       ( const double mu      = 0 ,   // location 
         const double lambdaL = 1 ,   // left  exponential slope 
         const double lambdaR = 1 ) ; // right exponential slope 
-      ///  destructor 
-      ~AsymmetricLaplace() ;
       // ======================================================================
     public:
       // ======================================================================
