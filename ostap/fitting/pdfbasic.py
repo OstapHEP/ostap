@@ -55,7 +55,7 @@ __all__     = (
     ## 
 )
 # =============================================================================
-from   ostap.core.meta_info     import root_info
+from   ostap.core.meta_info     import root_info, python_info 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
@@ -717,15 +717,19 @@ class APDF1 ( Components ) :
         if 'fitrange' in model.all_string_attributes() :
             model.removeStringAttribute ( 'fitrange' )
 
+        if ( 3 , 11 ) <= python_info : kw = { 'category' : RuntimeWarning }
+        else                         : kw = {}
+        
         # ================================================================
         ## No need to restructure the options
         if  ( 6 , 32 ) <= root_info :            
             # ============================================================
             try : # ======================================================
                 # ========================================================
-                ##  with rootException() , warnings.catch_warnings() :
-                ##  warnings.simplefilter ( 'default' , RuntimeWarning ) 
-                return Ostap.MoreRooFit.fitTo ( model , data , *options )
+                ## convert ROOT errors to exceptions and ROOT warnings to warnings  
+                with rootException() , warnings.catch_warnings ( **kw ) :
+                    warnings.simplefilter ( 'always' , RuntimeWarning ) 
+                    return Ostap.MoreRooFit.fitTo ( model , data , *options )                    
                 # ========================================================                
             except Exception : # =========================================
                 # ========================================================
@@ -743,9 +747,10 @@ class APDF1 ( Components ) :
                 # ========================================================
                 try : # ==================================================
                     # ====================================================
-                    ## with rootException() , warnings.catch_warnings() :
-                    ## warnings.simplefilter ( 'default' , RuntimeWarning ) 
-                    return model.fitTo ( data , *options )
+                    ## convert ROOT errors to exceptions and ROOT warnings to warnings  
+                    with rootException() , warnings.catch_warnings ( **kw ) :
+                        warnings.simplefilter ( 'always' , RuntimeWarning ) 
+                        return model.fitTo ( data , *options )
                     # ====================================================
                 except Exception : # =====================================
                     # ====================================================
@@ -759,9 +764,10 @@ class APDF1 ( Components ) :
         # ================================================================
         try : # ==========================================================
             # ============================================================
-            ## with rootException() , warnings.catch_warnings() :
-            ## warnings.simplefilter ( 'default' , RuntimeWarning ) 
-            return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
+            ## convert ROOT errors to exceptions and ROOT warnings to warnings  
+            with rootException() , warnings.catch_warnings ( **kw ) :
+                warnings.simplefilter ( 'default' , RuntimeWarning ) 
+                return Ostap.MoreRooFit.fitTo ( model , data , cmd  )
             # ============================================================                        
         except Exception : # =============================================
             # ============================================================

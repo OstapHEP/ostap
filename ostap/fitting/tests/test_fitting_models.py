@@ -1042,14 +1042,14 @@ def test_atlas () :
 # ==========================================================================
 ## Das
 # ==========================================================================
-def test_das_1 () :
+def test_das () :
     
-    logger = getLogger ( 'test_das_1' )
+    logger = getLogger ( 'test_das' )
        
     
     logger.info ('Test Das_pdf: Das pdf with two tails' ) 
     model = Models.Fit1D (
-        signal = Models.Das_pdf ( name = 'Das1' , 
+        signal = Models.Das_pdf ( name = 'Das' , 
                                   xvar      = mass               ,
                                   mu        = signal_gauss.mean  ,
                                   sigma     = signal_gauss.sigma ,
@@ -1078,21 +1078,22 @@ def test_das_1 () :
     results.append ( result )
 
 # ==========================================================================
-## Das
+## ADas
 # ==========================================================================
-def test_das_2 () :
+def test_adas () :
     
-    logger = getLogger ( 'test_das_2' )
+    logger = getLogger ( 'test_adas' )
        
-    logger.info ('Test Das_pdf: Das pdf with tail and asymmetry' ) 
+    logger.info ('Test ADas_pdf:  asymmetric Das ' ) 
     model = Models.Fit1D (
-        signal = Models.Das_pdf ( name = 'Das2' , 
-                                  xvar      = mass               ,
-                                  mu        = signal_gauss.mean  ,
-                                  sigma     = signal_gauss.sigma ,
-                                  alphaL    = ( 1 , 0.1 , 10.0 ) ,
-                                  alphaR    = ( 1 , 0.1 , 10.0 ) ) ,
-                                  
+        signal = Models.ADas_pdf ( name = 'ADas' , 
+                                   xvar   = mass                 ,
+                                   mu     = signal_gauss.mean     ,
+                                   sigma  = signal_gauss.sigma    ,
+                                   psi    = ( 0.01 , -0.5 ,-0.5 ) ,
+                                   alphaL = ( 1 , 0.1 , 10.0 )    ,
+                                   alphaR = ( 1 , 0.1 , 10.0 ) )  ,
+        
         background = background   ,
         S = S , B = B ,
         )
@@ -2104,6 +2105,7 @@ if '__main__' == __name__ :
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
 
+    """
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
@@ -2191,23 +2193,27 @@ if '__main__' == __name__ :
     ## Johnson-SU distribution                   + background 
     with timing ('test_johnsonSU'      , logger ) :
         test_johnsonSU      () 
-
+    
+    
     ## Modified Gaussian used by ATLAS/Zeus      + background 
     with timing ('test_atlas'          , logger ) :
         test_atlas          () 
+
+    """
         
-    ## Das/1                                       + background 
-    with timing ('test_das_1'             , logger ) :
-        test_das_1            () 
+    ## Das                                       + background 
+    with timing ('test_das'             , logger ) :
+        test_das            () 
 
-    ## Das/2                                       + background 
-    with timing ('test_das_2'             , logger ) :
-        test_das_2            () 
+    ## ADas                                       + background 
+    with timing ('test_adas'             , logger ) :
+        test_adas           () 
 
+    """ 
     ## BatesShape
     with timing ( 'test_bates_shape'  , logger ) :
         test_bates_shape      () 
-        
+
     ## Hat                                       + background 
     with timing ('test_hat'             , logger ) :
         test_hat            () 
@@ -2295,7 +2301,8 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
-
+    """
+    
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()

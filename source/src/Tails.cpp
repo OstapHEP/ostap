@@ -174,8 +174,6 @@ std::size_t Ostap::Math::LeftTail::tag () const
 }
 // ============================================================================
 
-
-
 // ============================================================================
 // RightTail 
 // ============================================================================
@@ -377,8 +375,8 @@ double Ostap::Math::LeftExpTail::integral
   //
   const double kappa = dFoF ; 
   //
-  const double B = std::exp ( kappa * high ) / kappa ; 
-  const double A = std::exp ( kappa * low  ) / kappa ;  
+  const double B = std::exp ( kappa * ( high - x0 ) ) / kappa ; 
+  const double A = std::exp ( kappa * ( low  - x0 ) ) / kappa ;  
   //
   return F * ( B - A ) ; 
 }
@@ -412,8 +410,8 @@ double Ostap::Math::RightExpTail::integral
   // 
   const double kappa = dFoF ; 
   //
-  const double B = std::exp ( kappa * high ) / kappa ; 
-  const double A = std::exp ( kappa * low  ) / kappa ;  
+  const double B = std::exp ( kappa * ( high - x0 ) ) / kappa ; 
+  const double A = std::exp ( kappa * ( low  - x0 ) ) / kappa ;  
   //
   return F * ( B - A ) ; 
   // 
@@ -444,7 +442,7 @@ double Ostap::Math::LeftExpTail::integral
   //
   const double kappa = dFoF ; 
   //
-  const double B = std::exp ( kappa * high ) / kappa ; 
+  const double B = std::exp ( kappa * ( high - x0 ) ) / kappa ; 
   //
   return F * B ; 
 }
@@ -473,7 +471,7 @@ double Ostap::Math::RightExpTail::integral
   // 
   const double kappa = dFoF ; 
   //
-  const double A = std::exp ( kappa * low  ) / kappa ;  
+  const double A = std::exp ( kappa * ( low - x0 ) ) / kappa ;  
   //
   return -F * A ; 
   // 

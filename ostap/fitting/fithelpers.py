@@ -3851,7 +3851,7 @@ class TwoSigmas(object) :
         
     @property
     def sigmaL ( self ) :
-        """'sigmaL' :  (left) sigma """
+        """`sigmaL` :  (left) sigma """
         return self.__AV_SIGMA_2.var1
     @sigmaL.setter
     def sigmaL ( self , value ) :
@@ -3859,7 +3859,8 @@ class TwoSigmas(object) :
 
     @property
     def sigmaR  ( self ) :
-        """'sigmaR' : (right) sigma """
+        """`sigmaR` : (right) sigma 
+        """
         return self.__AV_SIGMA_2.var2
     @sigmaR.setter
     def sigmaR ( self , value ) :
@@ -3867,17 +3868,18 @@ class TwoSigmas(object) :
 
     @property
     def sigma_mean ( self ) :
-        """`sigma_mean` : average 'sigma'-parameter: (sigma:+sigmaR)/2"""
+        """`sigma_mean` : average 'sigma'-parameter: (sigmaL+sigmaR)/2
+        """
         return self.__AV_SIGMA_2.halfsum
     
     @property
     def kappa  ( self ) :
-        """'kappa' : left/right asymmetry for sigmaL kappa = tanh(psi) """
+        """`kappa` : left/right asymmetry for sigmaL kappa = tanh(psi) """
         return self.__AV_SIGMA_2.kappa 
 
     @property
     def psi ( self ) :
-        """'psi' : left/right asymmetry for sigma: kappa = tanh(psi) """
+        """`psi` : left/right asymmetry for sigma: kappa = tanh(psi) """
         return self.__AV_SIGMA_2.psi         
 
 # =============================================================================

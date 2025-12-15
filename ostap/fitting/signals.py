@@ -52,6 +52,7 @@ Empricial PDFs to describe narrow peaks
   - Hyperbolic_pdf
   - GenHyperbolic_pdf
   - Das_pdf
+  - ADas_pdf
   - ExGauss_pdf
   - ExGauss2_pdf
   - Bukin2_pdf
@@ -119,6 +120,7 @@ __all__ = (
     'Hyperbolic_pdf'         , ## Hyperbolic distribution
     'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
     'Das_pdf'                , ## Das: Gaussian with exponential tails 
+    'ADas_pdf'               , ## ADas: asymmetr8ic version of Das 
     'Hypatia_pdf'            , ## Generalised Hyperbolic distribution
     'ExGauss_pdf'            , ## ExGauss distribution 
     'ExGauss2_pdf'           , ## ExGauss distribution parameterised in terms of the mode 
@@ -4140,7 +4142,7 @@ models.append ( NormalLaplace_pdf )
 # @see Ostap::Models::Das
 class Das_pdf(PEAK,TailAL,TailAR) :
     r"""Simple gaussian function with exponential tails.
-    It corresponds to `ExpGaussExp` function from ref below
+    It corresponds to `ExpGaussExp` function from the ref below
     
     - see Souvik Das, 'A simple alternative to Crystall Ball fnuction'
     arXiv:1603.08591  [hep-ex]
@@ -4179,7 +4181,7 @@ class Das_pdf(PEAK,TailAL,TailAR) :
                               mean_name   = 'mu_%s'    % name ,
                               mean_title  = '#mu_(%s)' % name ) 
         
-        TailAL  .__init__ ( self , alpha = alphaL )
+        TailAL .__init__ ( self , alpha = alphaL )
         TailAR .__init__ ( self , alpha = alphaR )
         
         ## build PDF
