@@ -1620,7 +1620,7 @@ class BifurcatedStudentT_pdf(BifurcatedGauss_pdf,SigmaLR,TailNL,TailNR) :
         #
         ## initialize the base
         # 
-        BifurcatedFauss_pdf.__init__  ( self  ,
+        BifurcatedGauss_pdf.__init__  ( self  ,
                                         name  ,
                                         xvar  ,
                                         mean  = mean  ,
