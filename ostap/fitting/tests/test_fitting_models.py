@@ -84,8 +84,8 @@ model_gauss = Models.Fit1D(
     background = background   
     )
 
-signal_gauss.sigma.setMin (  0.1 * m.error () )
-signal_gauss.sigma.setMax ( 10.0 * m.error () )
+signal_gauss.sigma.setMin ( 0.5 * m.error () )
+signal_gauss.sigma.setMax ( 5.0 * m.error () )
 
 S = model_gauss.S
 B = model_gauss.B
@@ -972,32 +972,31 @@ def test_SkewGenT () :
                                        xvar      = mass                   ,
                                        mu        = signal_gauss.mean      ,
                                        sigma     = signal_gauss.sigma     ,
-                                       psi       = ( 0   ,  -0.5  , 0.5   ) ,  
-                                       r         = ( 0.5 ,  1.e-4 , 100 ) ,
-                                       zeta      = ( 1   ,  1.e-4 , 999 ) ) ,
+                                       psi       = ( 0    ,  -0.3  , 0.3   ) ,  
+                                       r         = ( 0.45 ,  1.e-4 , 100 ) ,
+                                       zeta      = ( 10   ,  1.e-4 , 999 ) ) ,
         background = background   ,
         S = S , B = B ,
         )
-
 
     signal = model.signal 
     model.S = NS 
     model.B = NB
 
-    model.signal.psi.fix   ( 0 )
-    model.signal.r  .fix   ()
-    model.signal.zeta.fix ()  
-    model.signal.mu.fix   ( 3.1 )
+    model.signal.psi  .fix ()
+    model.signal.r    .fix ()
+    model.signal.zeta .fix ()  
+    model.signal.mu   .fix ( 3.1 )
     
     with rooSilent() :
-        result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         signal.mu    .release ()
         signal.sigma .release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
-        signal.psi   .release ()
         signal.r     .release ()
         signal.zeta  .release ()
+        result, frame = model. fitTo ( dataset0 , silent = True )
+        signal.psi   .release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         
@@ -2225,6 +2224,7 @@ if '__main__' == __name__ :
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
 
+    """
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
@@ -2308,11 +2308,14 @@ if '__main__' == __name__ :
     ## PearsonIV                                      + background
     with timing ('test_PearsonIV'          , logger ) :
         test_PearsonIV ()
-        
+    s
+    """
+    
     ## SkewGenT                                      + background
     with timing ('test_SkewGenT'          , logger ) :
         test_SkewGenT () 
 
+    """
     ## SkewGenError                                      + background
     with timing ('test_SkewGenError'          , logger ) :
         test_SkewGenError () 
@@ -2429,6 +2432,8 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
+    
+    """
     
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
