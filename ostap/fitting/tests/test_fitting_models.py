@@ -2226,7 +2226,6 @@ if '__main__' == __name__ :
     with timing ('test_gauss'          , logger ) :
         test_gauss          () 
 
-    """
     ## Crystal Ball                              + background
     with timing ('test_crystalball'    , logger ) :
         test_crystalball    () 
@@ -2311,13 +2310,11 @@ if '__main__' == __name__ :
     with timing ('test_PearsonIV'          , logger ) :
         test_PearsonIV ()
     s
-    """
     
     ## SkewGenT                                      + background
     with timing ('test_SkewGenT'          , logger ) :
         test_SkewGenT () 
 
-    """
     ## SkewGenError                                      + background
     with timing ('test_SkewGenError'          , logger ) :
         test_SkewGenError () 
@@ -2434,9 +2431,7 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           ()
-    
-    """
-    
+
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()
