@@ -733,9 +733,12 @@ class APDF1 ( Components ) :
                 # ========================================================                
             except Exception : # =========================================
                 # ========================================================
-                self.error ( "Error from fit_to %s\n%s" % ( typename ( model ) , self ) , exc_info = True )
+                self.error ( "Exception from %s/%s fit_tp\n%s" % ( typename ( self  ) , 
+                                                                   typename ( model ) , 
+                                                                   self               ) , exc_info = True )
                 raise
             
+        """
         # ================================================================
         ## special treatment for old ROOT: it does not like too many arguments 
         elif root_info < ( 6 , 29 ) : # ==================================
@@ -754,8 +757,11 @@ class APDF1 ( Components ) :
                     # ====================================================
                 except Exception : # =====================================
                     # ====================================================
-                    self.error ( "Error from fit_to %s\n%s" % ( typename ( model ) , self ) , exc_info = True )
+                    self.error ( "Exception from %s/%s fit_to\n%s" % ( typename ( self  ) ,
+                                                                       typename ( model ) , 
+                                                                       self             ) , exc_info = True )
                     raise
+        """
                 
         # ================================================================
         ## merge arguments into linked list 
@@ -771,7 +777,9 @@ class APDF1 ( Components ) :
             # ============================================================                        
         except Exception : # =============================================
             # ============================================================
-            self.error ( "Error from fit_to %s\n%s" % ( typename ( model ) , self ) , exc_info = True )
+            self.error ( "Exception from %s/%s fit_to\n%s" % ( typename ( self  ) , 
+                                                               typename ( model ) , 
+                                                           self             ) , exc_info = True )
             raise
     
     # ===============================================================================
