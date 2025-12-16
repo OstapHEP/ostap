@@ -86,6 +86,8 @@ model_gauss = Models.Fit1D(
 
 signal_gauss.sigma.setMin ( 0.5 * m.error () )
 signal_gauss.sigma.setMax ( 5.0 * m.error () )
+signal_gauss.mean .setMin ( m.value () - 1.0 * m.error () )
+signal_gauss.mean .setMax ( m.value () + 1.0 * m.error () )
 
 S = model_gauss.S
 B = model_gauss.B
@@ -972,9 +974,9 @@ def test_SkewGenT () :
                                        xvar      = mass                   ,
                                        mu        = signal_gauss.mean      ,
                                        sigma     = signal_gauss.sigma     ,
-                                       psi       = ( 0    ,  -0.3  , 0.3   ) ,  
-                                       r         = ( 0.45 ,  1.e-4 , 100 ) ,
-                                       zeta      = ( 10   ,  1.e-4 , 999 ) ) ,
+                                       psi       = ( 0    ,  -0.3  , 0.3  ) ,  
+                                       r         = ( 0.45 ,  0.01  , 5    ) ,
+                                       zeta      = ( 10   ,  0.01  , 100  ) ) ,
         background = background   ,
         S = S , B = B ,
         )
