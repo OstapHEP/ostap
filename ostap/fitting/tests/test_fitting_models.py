@@ -2309,7 +2309,6 @@ if '__main__' == __name__ :
     ## PearsonIV                                      + background
     with timing ('test_PearsonIV'          , logger ) :
         test_PearsonIV ()
-    s
     
     ## SkewGenT                                      + background
     with timing ('test_SkewGenT'          , logger ) :
@@ -2326,7 +2325,6 @@ if '__main__' == __name__ :
     ## Johnson-SU distribution                   + background 
     with timing ('test_johnsonSU'      , logger ) :
         test_johnsonSU      () 
-    
     
     ## Modified Gaussian used by ATLAS/Zeus      + background 
     with timing ('test_atlas'          , logger ) :
