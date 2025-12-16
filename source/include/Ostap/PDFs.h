@@ -9088,7 +9088,7 @@ namespace Ostap
        RooAbsReal&  x     ,
        RooAbsReal&  mu    ,   // location/mean  
        RooAbsReal&  sigma ,   // scale/rms 
-       RooAbsReal&  xi    ,   // related to asymmetry 
+       RooAbsReal&  psi   ,   // related to asymmetry 
        RooAbsReal&  r     ,   // shape parameter 
        RooAbsReal&  zeta  ) ; // shape parameter 
       /// copy constructor 
@@ -9134,7 +9134,7 @@ namespace Ostap
       const RooAbsReal& x       () const { return m_x     .arg() ; }
       const RooAbsReal& mu      () const { return m_mu    .arg() ; }
       const RooAbsReal& sigma   () const { return m_sigma .arg() ; }
-      const RooAbsReal& xi      () const { return m_xi    .arg() ; }
+      const RooAbsReal& psi     () const { return m_psi   .arg() ; }
       const RooAbsReal& r       () const { return m_r     .arg() ; }
       const RooAbsReal& zeta    () const { return m_zeta  .arg() ; }
       // ======================================================================
@@ -9143,7 +9143,7 @@ namespace Ostap
       RooRealProxy   m_x      {} ;
       RooRealProxy   m_mu     {} ;
       RooRealProxy   m_sigma  {} ;
-      RooRealProxy   m_xi     {} ;
+      RooRealProxy   m_psi    {} ;
       RooRealProxy   m_r      {} ;
       RooRealProxy   m_zeta   {} ;
       // ======================================================================

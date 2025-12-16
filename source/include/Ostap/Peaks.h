@@ -4930,7 +4930,7 @@ namespace Ostap
      *  In this view here we adopt sligth reparameterisation in terms of 
      *  - \f$ 0 < r \f$, such as  \f$  r = \frac{1}{p} 
      *  - \f$ 0< \zeta \f$, such as \f$ pq = \zeta + 4 \f$
-     *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+     *  - \f$ -\infty < \psi < +\infty \f$, such as \f$ \lambda  = \tanh \psi \f$   
      *
      *  Usage of \f$ \zeta\f$ ensures the existance of the  mean, RMS, sewness & kurtosis
      * 
@@ -4963,14 +4963,14 @@ namespace Ostap
       /** constructor with full parameters 
        *  @param mu    related to location 
        *  @param sigma related to RSM/scale/width 
-       *  @param xi     related to asymmetry/skewness
+       *  @param psi     related to asymmetry/skewness
        *  @param r      shape parameter 
        *  @param alpha  shape parameter    
        */
       SkewGenT  
       ( const double mu     = 0   ,    // location parameter 
         const double sigma  = 1   ,    // width parameter 
-        const double xi     = 0   ,    // asymmetry/skewness parameter 
+        const double psi    = 0   ,    // asymmetry/skewness parameter 
         const double r      = 0.5 ,    // shape parameter 
         const double zeta   = 1   ) ;  // shape parameter 
       // ======================================================================
@@ -4990,7 +4990,7 @@ namespace Ostap
       /// width/scale parameter 
       inline double sigma () const { return m_sigma ; }
       /// asymmetry/skewness  parameter      
-      inline double xi    () const { return m_xi    ; }
+      inline double psi   () const { return m_psi   ; }
       /// shape parameter 
       inline double r     () const { return m_r     ; }
       /// shape parameter 
@@ -5019,7 +5019,7 @@ namespace Ostap
       // ======================================================================
       bool setMu    ( const double value ) ;
       bool setSigma ( const double value ) ;
-      bool setXi    ( const double value ) ;
+      bool setPsi   ( const double value ) ;
       bool setR     ( const double value ) ;
       bool setZeta  ( const double value ) ;
       // ======================================================================
@@ -5056,7 +5056,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5087,7 +5087,7 @@ namespace Ostap
       /// width/scale 
       double m_sigma  { 1   } ; // width/scale parameter
       /// asymmetry/skewness parameter 
-      double m_xi     { 0   } ;
+      double m_psi    { 0   } ;
       /// shape parametyer 
       double m_r      { 0.5 } ;
       /// shape parametyer 

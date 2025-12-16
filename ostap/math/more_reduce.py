@@ -627,7 +627,7 @@ def _omsgt_reduce_ ( peak ) :
     - see `Ostap.Math.SkewGenT`
     """
     return root_factory , ( type ( peak )   , peak.mu   () ,
-                            peak.sigma  ()  , peak.xi   () ,
+                            peak.sigma  ()  , peak.psi  () ,
                             peak.r      ()  , peak.zeta () )
 
 Ostap.Math.SkewGenT. __reduce__ = _omsgt_reduce_

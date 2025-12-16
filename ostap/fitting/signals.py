@@ -1948,7 +1948,7 @@ class SkewGenT_pdf(PEAK) :
                    xvar         ,
                    mu           , 
                    sigma    = 1 ,
-                   xi       = 0 ,
+                   psi      = 0 ,
                    r        = 0 ,
                    zeta     = 1 ) :
         #
@@ -1965,11 +1965,11 @@ class SkewGenT_pdf(PEAK) :
         ## location parameter 
         self.__mu       = self.mean
         
-        ## xi parameter (asymmetry) 
-        self.__xi     = self.make_var ( xi                     ,
-                                        'xi_%s'         % name ,
-                                        '#xi_{SGT}(%s)' % name ,
-                                        False , 0 , -5 , 5  ) 
+        ## psi parameter (asymmetry) 
+        self.__psi = self.make_var ( psi                    ,
+                                    'psi_%s'         % name ,
+                                    '#psi_{SGT}(%s)' % name ,
+                                    False , 0 , -15 , 15  ) 
         
         ## r parameter (shape)
         self.__r      = self.make_var ( r                     ,
@@ -1989,7 +1989,7 @@ class SkewGenT_pdf(PEAK) :
             self.xvar   ,
             self.mu     ,
             self.sigma  ,
-            self.xi     ,
+            self.psi    ,
             self.r      ,
             self.zeta   )
         
@@ -1999,7 +1999,7 @@ class SkewGenT_pdf(PEAK) :
             'xvar'      : self.xvar     ,
             'mu'        : self.mu       ,
             'sigma'     : self.sigma    ,
-            'xi'        : self.xi       ,
+            'psi'       : self.psi      ,
             'r'         : self.r        ,
             'zeta'      : self.zeta     ,
             }
@@ -2013,12 +2013,12 @@ class SkewGenT_pdf(PEAK) :
         self.set_value ( self.__mu , value ) 
 
     @property
-    def xi ( self ) :
-        """'xi'-parameter for SkewGenT distribution (related to asymmetry)"""
-        return self.__xi
-    @xi.setter
-    def xi ( self, value ) :
-        self.set_value ( self.__xi , value ) 
+    def psi ( self ) :
+        """'psi'-parameter for SkewGenT distribution (related to asymmetry)"""
+        return self.__psi
+    @psi.setter
+    def psi ( self, value ) :
+        self.set_value ( self.__psi , value ) 
 
     @property     
     def r ( self ) :
@@ -2035,7 +2035,6 @@ class SkewGenT_pdf(PEAK) :
     @zeta .setter
     def zeta ( self, value ) :
         self.set_value ( self.__zeta , value ) 
-
 
 models.append ( SkewGenT_pdf )      
 

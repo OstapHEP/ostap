@@ -11,7 +11,8 @@
 ## Backward  incompatible 
 
   1.  `k` for Das function is `alpha` now 
-
+  1. `SkewGenT` : rename `xi` to `psi`
+  
 ## Bug fixes
 
 # v3.6.0.0 

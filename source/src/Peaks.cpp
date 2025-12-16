@@ -6398,12 +6398,12 @@ std::size_t Ostap::Math::ADas::tag () const
 Ostap::Math::SkewGenT::SkewGenT  
 ( const double mu     ,    // location parameter 
   const double sigma  ,    // width parameter 
-  const double xi     ,    // asymmetry/skewness parameter 
+  const double psi    ,    // asymmetry/skewness parameter 
   const double r      ,    // shape parameter 
   const double zeta   )    // shape parameter 
   : m_mu     ( mu    ) 
   , m_sigma  ( sigma ) 
-  , m_xi     ( xi    ) 
+  , m_psi    ( psi   ) 
   , m_r      ( std::abs ( r    ) ) 
   , m_zeta   ( std::abs ( zeta ) )   
   , m_lambda ( -100  ) 
@@ -6413,7 +6413,7 @@ Ostap::Math::SkewGenT::SkewGenT
 {
   setMu      ( mu    ) ;
   setSigma   ( sigma ) ;
-  setXi      ( xi    ) ;
+  setPsi     ( psi   ) ;
   setR       ( r     ) ;
   setZeta    ( zeta  ) ;
 }
@@ -6439,15 +6439,16 @@ bool Ostap::Math::SkewGenT::setSigma
   return true ;
 }
 // ======================================================================
-// set xi-parameter
+// set psi-parameter
 // ======================================================================
-bool Ostap::Math::SkewGenT::setXi
+bool Ostap::Math::SkewGenT::setPsi
 ( const double value ) 
 {
-  if ( s_equal ( value , m_xi )
+  if ( s_equal ( value , m_psi )
        && -1<= m_lambda 
        &&      m_lambda <= 1 ) { return false ; }
-  m_xi     = value ;
+  //
+  m_psi    = value ;
   m_lambda = std::tanh ( value ) ; 
   //
   return true ;
@@ -6658,7 +6659,7 @@ double Ostap::Math::SkewGenT::non_gaussian
 // ============================================================================
 double Ostap::Math::SkewGenT::skewness   () const 
 {
-  if ( s_zero ( m_lambda ) || s_zero ( m_xi ) ) { return 0 ; }
+  if ( s_zero ( m_lambda ) || s_zero ( m_psi ) ) { return 0 ; }
   //
   const double qq = q ()  ;
   const double vs = v_scale () * m_sigma ;
@@ -6669,7 +6670,7 @@ double Ostap::Math::SkewGenT::skewness   () const
   //
   return 
     m_lambda * std::pow ( vs , 3 ) * ( 8 * l2  * std::pow ( m_b3 , 3   ) - 
-                                       3 * ( 3 * l2 + 1 ) * m_b2 * m_b3   +
+                                       3 * ( 3 * l2 + 1 ) * m_b2 * m_b3  +
                                        2 * (     l2 + 1 ) * b4 ) ;  
 }
 // ============================================================================
@@ -6681,7 +6682,7 @@ std::size_t Ostap::Math::SkewGenT::tag () const
   return Ostap::Utils::hash_combiner ( s_name   , 
                              m_mu     , 
                              m_sigma  , 
-                             m_xi     , 
+                             m_psi    , 
                              m_r      , 
                              m_zeta   ) ;
 }

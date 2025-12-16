@@ -1714,7 +1714,7 @@ def _rsgt_reduce_ ( pdf ):
                                   pdf.x        () , 
                                   pdf.mu       () ,
                                   pdf.sigma    () ,                            
-                                  pdf.xi       () ,                            
+                                  pdf.psi      () ,                            
                                   pdf.r        () ,                            
                                   pdf.zeta     () )
 

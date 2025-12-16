@@ -10463,7 +10463,7 @@ Ostap::Models::SkewGenT::SkewGenT
   RooAbsReal&  x     ,
   RooAbsReal&  mu    ,   // location/mean  
   RooAbsReal&  sigma ,   // scale/rms 
-  RooAbsReal&  xi    ,   // related to asymmetry 
+  RooAbsReal&  psi   ,   // related to asymmetry 
   RooAbsReal&  r     ,   // shape parameter 
   RooAbsReal&  zeta  )   // shape parameter 
   : RooAbsPdf ( name , title )
@@ -10471,7 +10471,7 @@ Ostap::Models::SkewGenT::SkewGenT
   , m_x       ( "!x"     , "x-observable"  , this , x     )
   , m_mu      ( "!mu"    , "location/mean" , this , mu    )
   , m_sigma   ( "!sigma" , "sigma/rms"     , this , sigma )
-  , m_xi      ( "!xi"    , "asymmetry"     , this , xi    )
+  , m_psi     ( "!psi"   , "asymmetry"     , this , psi   )
   , m_r       ( "!r"     , "r-shape"       , this , r     )
   , m_zeta    ( "!zeta"  , "zeta-shape"    , this , zeta  )
     //
@@ -10490,7 +10490,7 @@ Ostap::Models::SkewGenT::SkewGenT
   , m_x        ( "!x"      , this , right.m_x     ) 
   , m_mu       ( "!mu"     , this , right.m_mu    ) 
   , m_sigma    ( "!sigma"  , this , right.m_sigma ) 
-  , m_xi       ( "!xiu"    , this , right.m_xi    ) 
+  , m_psi      ( "!psi"    , this , right.m_psi   ) 
   , m_r        ( "!r"      , this , right.m_r     ) 
   , m_zeta     ( "!zeta"   , this , right.m_zeta  ) 
     //
@@ -10511,7 +10511,7 @@ void Ostap::Models::SkewGenT::setPars () const
 {
   m_sgt.setMu     ( m_mu    ) ;
   m_sgt.setSigma  ( m_sigma ) ;
-  m_sgt.setXi     ( m_xi    ) ;
+  m_sgt.setPsi    ( m_psi   ) ;
   m_sgt.setR      ( m_r     ) ;
   m_sgt.setZeta   ( m_zeta  ) ;
 }
@@ -10545,8 +10545,6 @@ Double_t Ostap::Models::SkewGenT::analyticalIntegral
   return m_sgt.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
-
 
 
 // ============================================================================

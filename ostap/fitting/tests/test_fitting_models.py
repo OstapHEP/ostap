@@ -965,7 +965,6 @@ def test_PearsonIV () :
 def test_SkewGenT () :
     
     logger = getLogger ( 'test_SkewGenT' )
-       
     
     logger.info ('Test SkewGenT_pdf: skewed generalised t-distribution' ) 
     model = Models.Fit1D (
@@ -973,7 +972,7 @@ def test_SkewGenT () :
                                        xvar      = mass                   ,
                                        mu        = signal_gauss.mean      ,
                                        sigma     = signal_gauss.sigma     ,
-                                       xi        = ( 0   ,  -1    , 1   ) ,  
+                                       psi       = ( 0   ,  -0.5  , 0.5   ) ,  
                                        r         = ( 0.5 ,  1.e-4 , 100 ) ,
                                        zeta      = ( 1   ,  1.e-4 , 999 ) ) ,
         background = background   ,
@@ -985,8 +984,8 @@ def test_SkewGenT () :
     model.S = NS 
     model.B = NB
 
-    model.signal.xi.fix   ( 0 )
-    model.signal.r .fix   ()
+    model.signal.psi.fix   ( 0 )
+    model.signal.r  .fix   ()
     model.signal.zeta.fix ()  
     model.signal.mu.fix   ( 3.1 )
     
@@ -996,7 +995,7 @@ def test_SkewGenT () :
         signal.mu    .release ()
         signal.sigma .release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
-        signal.xi    .release ()
+        signal.psi   .release ()
         signal.r     .release ()
         signal.zeta  .release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
