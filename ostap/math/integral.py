@@ -1202,6 +1202,7 @@ def integral_tplquad ( fun  ,
                        args   = ()       ,
                        kwargs = {}       , 
                        err    = False    ,
+                       silent = False    , 
                        epsabs = eps_abs3 ,
                        epsrel = eps_rel3 , **other ) :
     """ Calculate the integral for the 3D-function using scipy
