@@ -49,13 +49,14 @@ namespace Ostap
         Nearest          , // no interpolation 
         Linear           , // linear interpolaiton 
         Quadratic        , // parabolic interpolation
-        Cubic            , // cubic interpolaiton 
+        Cubic            , // cubic interpolation
+	Last    = Cubic  , // last interpolation index 
         Default = Linear
       } ;
       // ======================================================================
     public: // 1D interpolation 
       // ======================================================================
-      /** linear interpolation between two points 
+      /** Linear interpolation between two points 
        *  @param x  (INPUT) the x-value
        *  @param x0 (INPUT) x-coordinate of the first  point 
        *  @param x1 (INPUT) x-coordinate of the second point 
@@ -70,7 +71,7 @@ namespace Ostap
           const Ostap::Math::ValueWithError& y0 , 
           const Ostap::Math::ValueWithError& y1 ) ;
       // ======================================================================
-      /** quadratic (parabolic)  interpolation between three points 
+      /** Quadratic (parabolic)  interpolation between three points 
        *  @param x  (INPUT) the x-value
        *  @param x0 (INPUT) x-coordinate of the first  point 
        *  @param x1 (INPUT) x-coordinate of the second point 
@@ -89,7 +90,7 @@ namespace Ostap
           const Ostap::Math::ValueWithError& y1 , 
           const Ostap::Math::ValueWithError& y2 ) ;
       // ======================================================================
-      /** qubic interpolation between four points 
+      /** Cubic interpolation between four points 
        *  @param x  (INPUT) the x-value
        *  @param x0 (INPUT) x-coordinate of the first  point 
        *  @param x1 (INPUT) x-coordinate of the second point 
@@ -180,7 +181,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /** interpolate 1D histogram 
+      /** Interpolate 1D histogram 
        *  @param h1          (INPUT) input histogram 
        *  @param x           (INPUT) the x-value 
        *  @param t           (INPUT) interpolation type 
@@ -200,7 +201,7 @@ namespace Ostap
           const bool   extrapolate = false  , 
           const bool   density     = false  ) ;
       // ======================================================================
-      /** interpolate 2D histogram 
+      /** Interpolate 2D histogram 
        *  @param h2          (INPUT) input histogram 
        *  @param x           (INPUT) the x-value 
        *  @param y           (INPUT) the y-value 
@@ -224,7 +225,7 @@ namespace Ostap
           const bool   extrapolate = false  , 
           const bool   density     = false  ) ;
       // ======================================================================
-      /** interpolate 3D histogram 
+      /** Interpolate 3D histogram 
        *  @param h3          (INPUT) input histogram 
        *  @param x           (INPUT) the x-value 
        *  @param y           (INPUT) the y-value 

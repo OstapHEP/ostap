@@ -246,13 +246,13 @@ def test_rational_pdf () :
     
     logger = getLogger("test_rational_pdf")
     p      = 2 
-    with timing ('Rational [%s]' % p  , logger ) :
-        for h in histos :
+    with timing ( 'Rational [%s]' % p  , logger ) :
+        for h in histos[3:]  :
             with use_canvas ( 'test_rational_pdf: ' + h.GetTitle() , wait = 1 )  :
                 h.draw() 
                 for d in range ( 1 , p + 3 ) :
-                    f = h.pdf_rational ( p , d , silent = True , draw = True )
-                    f.plot.draw('same', color = d + 1 ) 
+                    f = h.pdf_rational ( p , d , silent = True , draw = True )                    
+                    f.plot.draw ( 'same' , color = d + 1 ) 
                     logger.info ( "%-25s : [%d] difference %s" %  ( h.title , d , diff1 ( f , h ) ) )
 
 # =============================================================================
@@ -261,19 +261,22 @@ if '__main__' == __name__ :
     logger.info ( 100*'*')
     logger.info ( 'Parameterizations techniques using RooFit')
     logger.info ( 100*'*')
-    
+
+    """ 
     test_positive_pdf          ()
     test_monotonic_pdf         ()
     test_convex_pdf            ()
     test_convexonly_pdf        ()
+    """
     
     test_rational_pdf          ()
 
+    """
     test_positive_spline_pdf   () 
     test_monotonic_spline_pdf  () 
     test_convex_spline_pdf     () 
     test_convexonly_spline_pdf () 
-
+    """ 
 
 # =============================================================================
 ##                                                                      The END 

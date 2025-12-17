@@ -98,7 +98,7 @@ __all__     = (
     'Erf'        , ## error function
     'Erfc'       , ## complementary error function
     'Gamma'      , ## gamma function
-    'LogGamma'   , ## logarithm of gamma fnuction
+    'LogGamma'   , ## logarithm of gamma function
     'iGamma'     , ## 1/Gamma 
     'Sqrt'       , ## square root
     'Cbrt'       , ## cubic root

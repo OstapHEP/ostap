@@ -10280,8 +10280,9 @@ namespace Ostap
          const double         xmin  , 
          const double         xmax  ) ;
       /// copy 
-      Rational ( const Rational& right          , 
-                 const char*     name = nullptr ) ;
+      Rational
+      ( const Rational& right          , 
+	const char*     name = nullptr ) ;
       /// destructor 
       virtual ~Rational() ;
       /// clone method
@@ -10314,10 +10315,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// access to underlying function
-      const Ostap::Math::RationalPositive& function () const { return m_rational ; }
-      /// access to underlying function
-      const Ostap::Math::RationalPositive& rational () const { return m_rational ; }
+      /// access to underlying rational function
+      const Ostap::Math::RationalPositive& function    () const { return m_rational ; }
+      /// access to underlying rational function
+      const Ostap::Math::RationalPositive& rational    () const { return m_rational ; }
+      /// access to numerator of underlying   rational function
+      const Ostap::Math::Positive&         numerator   () const { return m_rational.  numerator () ; }
+      /// access to denomerator of underlying rational function
+      const Ostap::Math::Positive&         denominator () const { return m_rational.denominator () ; }
       // ======================================================================      
     public:
       // ======================================================================

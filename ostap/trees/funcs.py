@@ -6,7 +6,8 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Decoration of Tree/Chain objects for efficient use in python"""
+""" Decoration of Tree/Chain objects for efficient use in python
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -16,8 +17,8 @@ __all__     = (
     'FuncData'          , ## helper base class for 'RooAbsData-function'
     'PyTreeFunction'    , ## 'TTree-function' that uses python function/callable 
     'PyDataFunction'    , ## 'Data-function' that uses python function/callable
-    "pyfun_tree"        , ## ditto, but as fnuction 
-    "pyfun_data"        , ## ditto, but as fnuction 
+    "pyfun_tree"        , ## ditto, but as function 
+    "pyfun_data"        , ## ditto, but as function 
     'FuncFormula'       , ## simple wrapper over TTreeFormula/Ostap::Formula  
     'FuncRooFormula'    , ## simple wrapper over RooFormulaVar  
     'FuncTH1'           , ## TH1-based Tree-function 

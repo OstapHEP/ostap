@@ -54,6 +54,7 @@ from   ostap.math.math_ve             import significance
 from   ostap.utils.progress_bar       import progress_bar
 from   ostap.math.random_ext          import poisson
 from   ostap.utils.utils              import accumulate
+from   ostap.logger.utils             import print_args 
 from   ostap.utils.cidict             import cidict, cidict_fun  
 from   ostap.utils.basic              import typename 
 from   ostap.logger.pretty            import pretty_float
@@ -78,8 +79,86 @@ logger.debug ( 'Decoration of historams')
 ## valid profile types 
 profile_types = ROOT.TProfile , ROOT.TProfile2D , ROOT.TProfile3D  
 # =============================================================================
-
 _new_methods_  = []  
+# =============================================================================
+## interplation setting 
+# =============================================================================
+Nearest   = int ( Ostap.Math.HistoInterpolation.Nearest   ) 
+Linear    = int ( Ostap.Math.HistoInterpolation.Linear    ) 
+Quadratic = int ( Ostap.Math.HistoInterpolation.Quadratic ) 
+Cubic     = int ( Ostap.Math.HistoInterpolation.Cubic     ) 
+Default   = int ( Ostap.Math.HistoInterpolation.Default   ) 
+Last      = int ( Ostap.Math.HistoInterpolation.Last      ) 
+# =============================================================================
+## Get the interpolation type for 1D histogram interpolation
+#  @see Ostap::Math::HistoInterpolation
+#  @see Ostap::Math::HistoInterpolation::Type
+def interpolation_1D ( interpolate ) :
+    """ Get the interpolation type for 1D histogram interpolation
+    - see `Ostap.Math.HistoInterpolation`
+    - see `Ostap.Math.HistoInterpolation.Type`
+    """
+    if isinstance ( interpolate , integer_types ) and 0 <= interpolate <= Last :
+        return int ( interpolate )
+    ## 
+    return Default if interpolate else Nearest
+
+# =============================================================================
+## Get the interpolation type for 2D histogram interpolation
+#  @see Ostap::Math::HistoInterpolation
+#  @see Ostap::Math::HistoInterpolation::Type
+def interpolation_2D ( interpolate ) :
+    """ Get the interpolation type for 3D histogram interpolation
+    - see `Ostap.Math.HistoInterpolation`
+    - see `Ostap.Math.HistoInterpolation.Type`
+    """
+    if isinstance ( interpolate , integer_types ) :
+        tx = interpolation_1D ( interpolate )
+        return tx , tx
+
+    ## no interpolation ?
+    if not interpolate : return Nearest , Nearest
+    
+    if  isinstance ( interpolate , sized_types ) : 
+        if 2 <= len ( interpolate ) :
+            tx , ty = interpolate [ : 2 ] 
+            return interpolation_1D ( tx ) , interpolation_1D ( ty )
+        if 1 <= len ( interpolate ) :
+            tx , = interpolate
+            return interpolation_1D ( tx ) , Default 
+        
+    return Default, Default
+
+# =============================================================================
+## Get the interpolation type for 3D histogram interpolation
+#  @see Ostap::Math::HistoInterpolation
+#  @see Ostap::Math::HistoInterpolation::Type
+def interpolation_3D ( interpolate ) :
+    """ Get the interpolation type for 3D histogram interpolation
+    - see `Ostap.Math.HistoInterpolation`
+    - see `Ostap.Math.HistoInterpolation.Type`
+    """
+    if isinstance ( interpolate , integer_types ) :
+        tx = interpolation_1D ( interpolate )
+        return tx , tx, tx 
+
+    ## no interpolation ?
+    if not interpolate : return Nearest , Nearest, Nearest 
+    
+    if  isinstance ( interpolate , sized_types ) :
+        
+        if   3 <= len ( interpolate ) :
+            tx, ty, tz = interpolate [ : 3 ] 
+            return interpolation_1D ( tx ) , interpolation_1D ( ty ) , interpolation_1D ( tz )         
+        elif 2 <= len ( interpolate ) :
+            tx, ty     = interpolate
+            return interpolation_1D ( tx ) , interpolation_1D ( ty ) , Default 
+        elif 1 <= len ( interpolate ) :
+            tx, = interpolate
+            return interpolation_1D ( tx ) , Default , Default 
+
+    return Default, Default, Default 
+
 # =============================================================================
 ## ensure that object/histogram is created in ROOT.gROOT
 #  @attention clone is always goes to ROOT main memory!
@@ -97,7 +176,7 @@ def _h_new_init_ ( self , *args ) :
         ## optionally:
         if not self.GetSumw2() : self.Sumw2()
         return init 
-    
+
 # =============================================================================
 ## a bit modified 'Clone' function for histograms
 #  - it automatically assign unique ID
@@ -886,13 +965,9 @@ def _h1_call_ ( h1                  ,
     """
     #
     assert func is None or callable ( func ) , "`func' must be None or callable!"
-    # 
-    tx  = 1 
-    if isinstance ( interpolate , int ) and 0 <= interpolate :
-        tx = interpolate
-    elif not interpolate :
-        tx  = 0
-
+    ## 
+    tx  = interpolation_1D ( interpolate ) 
+    ##
     ## configuration of low-level interpolator 
     config = tx , edges , extrapolate , density
 
@@ -1608,13 +1683,7 @@ def _h2_call_ ( h2                  ,
     #
     assert func is None or callable ( func ) , "`func' must be None or callable!"
     #
-    tx , ty = 1 , 1 
-    if   not interpolate : tx , ty = 0 , 0 
-    elif isinstance ( interpolate , sequence_types ) and \
-         isinstance ( interpolate , sized_types    ) and 2 == len ( interpolate ) :
-        
-        tx = int ( interpolate [ 0 ] )
-        ty = int ( interpolate [ 1 ] )
+    tx , ty = interpolation_2D ( interpolate )
 
     ## configuration of low-level interpolator 
     config = tx , ty , edges , extrapolate , density
@@ -1730,15 +1799,8 @@ def _h3_call_ ( h3                  ,
     """
     #
     assert func is None or callable ( func ) , "`func' must be None or callable!"
-    # 
-    tx, ty, tz  = 1, 1, 1 
-    if   not interpolate : tx, ty, tz  = 0 , 0 , 0 
-    elif isinstance ( interpolate , sequence_types ) and \
-         isinstance ( interpolate , sized_types    ) and 3 == len ( interpolate ) :
-        
-        tx = int ( interpolate [ 0 ] ) 
-        ty = int ( interpolate [ 1 ] ) 
-        tz = int ( interpolate [ 2 ] )
+    #
+    tx , ty, tz  = interpolation_3D ( interpolate )
 
     ## configuration of low-level interpolator 
     config = tx , ty , tz , edges , extrapolate , density
@@ -6373,22 +6435,42 @@ def _h3_integrate_ ( h                         ,
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
-def _h1_integral_ ( histo , xmin , xmax , *args , **kwargs ) :
+def _h1_integral_ ( histo , xmin , xmax , * , silent = False , **kwargs ) :
     """ Calculate the integral of TH1
     >>> histo = ...
     >>> i1 = histo.integral ( 0.2 , 0.16 )
     >>> i2 = histo.integral ( 0.2 , 0.16 , interpolate = 3 ) ## use cubic interpolation    
     """
+    assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , \
+        "Ibnvalid histogram type %s" % typename ( histo )
+    
     if   xmin == xmax or isequal ( xmin , xmax ) : return 0
-    elif xmax <  xmin : return -1 * _h1_integral ( histo , xmax , xmin , *args , **kwargs )
+    elif xmax <  xmin : return -1 * _h1_integral ( histo , xmax , xmin , **kwargs )
     elif xmax <= histo.xmin () : return 0
     elif xmin >= histo.xmax () : return 0
 
     xmin = max ( xmin , histo.xmin () )
     xmax = min ( xmax , histo.xmax () )
 
-    i1 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-8 , epsrel = 1.e-8 )
-    return i1.integral ( xmin , xmax ) 
+    ## i1 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-8 , epsrel = 1.e-8 )
+    ## return i1.integral ( xmin , xmax )
+    
+    kw = cidict ( transform = cidict_fun , **kwargs )    
+    tx = interpolation_1D ( kw.pop ( 'interpolate' , Default ) )
+    
+    hi = Ostap.Math.Histo1D ( histo  ,
+                              tx     ,
+                              kw.pop ( 'edges'       , True  ) ,
+                              kw.pop ( 'extrapolate' , False ) ,
+                              kw.pop ( 'density'     , False ) )
+    
+    if kw and not silent :
+        title = 'Extra/unprocessed arguments'
+        table = print_args ( title = title , prefix = '# ' , **kw )        
+        logger.warning ( '%s:\n%s' % ( title , table ) )
+        
+    ## calculate the integral        
+    return hi.integral ( xmin , xmax ) 
 
 # =============================================================================
 ## calculate the integral of TH2
@@ -6400,18 +6482,22 @@ def _h1_integral_ ( histo , xmin , xmax , *args , **kwargs ) :
 #  @date   2015-08-31
 def _h2_integral_ ( histo ,
                     xmin  , xmax ,
-                    ymin  , ymax , *args , **kwargs ) :
+                    ymin  , ymax , * , silent = False , **kwargs ) :
     """ Calculate the integral of TH2
     >>> histo = ...
     >>> i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 ) 
     """
+    
+    assert isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() , \
+        "Invalid histogram type %s" % typename ( histo )
+
     if   xmin == xmax or isequal ( xmin , xmax ) : return 0
-    elif xmax <  xmin : return -1 * _h2_integral ( histo , xmax , xmin , ymin , ymax , *args , **kwargs )
+    elif xmax <  xmin : return -1 * _h2_integral ( histo , xmax , xmin , ymin , ymax , **kwargs )
     elif xmax <= histo.xmin () : return 0
     elif xmin >= histo.xmax () : return 0
 
     if   ymin == ymax or isequal ( ymin , ymax ) : return 0
-    elif ymax <  xmin : return -1 * _h2_integral ( histo , xmin , xmax , ymax , ymin , *args , **kwargs )
+    elif ymax <  xmin : return -1 * _h2_integral ( histo , xmin , xmax , ymax , ymin , **kwargs )
     elif ymax <= histo.ymin () : return 0
     elif ymin >= histo.ymax () : return 0
     
@@ -6421,9 +6507,25 @@ def _h2_integral_ ( histo ,
     ymin = max ( ymin , histo.ymin () )
     ymax = min ( ymax , histo.ymax () )
 
-    i2 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-6 , epsrel = 1.e-6 )
-    return i2.integral ( xmin , xmax , 
-                         ymin , ymax ) 
+    ## i2 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-6 , epsrel = 1.e-6 )
+    ## return i2.integral ( xmin , xmax , ymin , ymax )
+
+    kw      = cidict ( transform = cidict_fun , **kwargs )
+    tx , ty = interpolation_2D ( kw.pop ( 'interpolate' , ( Default , Default ) ) )     
+    hi      = Ostap.Math.Histo2D ( histo ,
+                                   interpolation_1D ( kw.pop ( 'interpolateX' , tx ) ) ,
+                                   interpolation_1D ( kw.pop ( 'interpolateY' , ty ) ) ,
+                                   kwargs.pop ( 'edges'        , True  ) ,
+                                   kwargs.pop ( 'extrapolate'  , False ) ,
+                                   kwargs.pop ( 'density'      , False ) )
+    ## 
+    if kw and not silent :
+        title = 'Extra/unprocessed arguments'
+        table = print_args ( title = title , prefix = '# ' , **kw )        
+        logger.warning ( '%s:\n%s' % ( title , table ) )
+
+    ## calculate the interal 
+    return hi.integral ( xmin , xmax , ymin , ymax )  
 
 # =============================================================================
 ## calculate the integral of TH3
@@ -6436,24 +6538,26 @@ def _h2_integral_ ( histo ,
 def _h3_integral_ ( histo ,
                     xmin  , xmax ,
                     ymin  , ymax ,
-                    zmin  , zmax , *args , **kwargs ) :
+                    zmin  , zmax , * , silent = False , **kwargs ) :
     """ Calculate the integral of TH3
     >>> histo = ...
     >>> i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 , 0 , 1 ) 
     """
+    assert isinstance ( histo , ROOT.TH3 ) and 3 == histo.dim() , \
+        "Invalid histogram type %s" % typename ( histo )
 
     if   xmin == xmax or isequal ( xmin , xmax ) : return 0
-    elif xmax <  xmin : return -1 * _h3_integral ( histo , xmax , xmin , ymin , ymax , zmin , zmax *args , **kwargs )
+    elif xmax <  xmin : return -1 * _h3_integral ( histo , xmax , xmin , ymin , ymax , zmin , zmax , **kwargs )
     elif xmax <= histo.xmin () : return 0
     elif xmin >= histo.xmax () : return 0
 
     if   ymin == ymax or isequal ( ymin , ymax ) : return 0
-    elif ymax <  ymin : return -1 * _h3_integral ( histo , xmin , xmax , ymax , ymin , zmin , zmax , *args , **kwargs )
+    elif ymax <  ymin : return -1 * _h3_integral ( histo , xmin , xmax , ymax , ymin , zmin , zmax , **kwargs )
     elif ymax <= histo.ymin () : return 0
     elif ymin >= histo.ymax () : return 0
     
     if   zmin == zmax or isequal ( zmin , zmax ) : return 0
-    elif zmax <  zmin : return -1 * _h3_integral ( histo , xmin , xmax , ymin , ymax , zmax , zmin , *args , **kwargs )
+    elif zmax <  zmin : return -1 * _h3_integral ( histo , xmin , xmax , ymin , ymax , zmax , zmin , **kwargs )
     elif zmax <= histo.zmin () : return 0
     elif zmin >= histo.zmax () : return 0
     
@@ -6466,11 +6570,29 @@ def _h3_integral_ ( histo ,
     zmin = max ( zmin , histo.zmin () )
     zmax = min ( zmax , histo.zmax () )
     
-    i3 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-6 , epsrel = 1.e-6 )    
-    return i3.integral ( xmin , xmax , 
-                         ymin , ymax , 
-                         zmin , zmax ) 
-
+    ## i3 = Integral ( histo , args = args , kwargs = kwargs , epsabs = 1.e-6 , epsrel = 1.e-6 )    
+    ## return i3.integral ( xmin , xmax , 
+    ##                     ymin , ymax , 
+    ##                     zmin , zmax )
+    
+    kw = cidict ( transform = cidict_fun , **kwargs ) 
+    tx , ty , tz = interpolation_3D ( kw.pop ( 'interpolate' , ( Default , Default , Default ) ) ) 
+    
+    hi = Ostap.Math.Histo3D ( histo ,
+                              interpolation_1D ( kw.pop ( 'interpolateX' , tx ) ) ,
+                              interpolation_1D ( kw.pop ( 'interpolateY' , ty ) ) ,
+                              interpolation_1D ( kw.pop ( 'interpolateZ' , tz ) ) ,
+                              kwargs.pop ( 'edges'        , True  ) ,
+                              kwargs.pop ( 'extrapolate'  , False ) ,
+                              kwargs.pop ( 'density'      , False ) )
+    
+    if kw and not silent :
+        title = 'Extra/unprocessed arguments'
+        table = print_args ( title = title , prefix = '# ' , **kw )        
+        logger.warning ( '%s:\n%s' % ( title , table ) )
+        
+    return hi.integral ( xmin , xmax , ymin , ymax , zmin , zmax )
+    
 
 for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t.integral         = _h1_integral_

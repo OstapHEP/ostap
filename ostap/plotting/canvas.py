@@ -163,7 +163,7 @@ class KeepCanvas(Wait) :
         """
         
         Wait.__enter__ ( self )
-        
+        ## 
         self.__context = Ostap.Utils.PadContext()
         self.__context.enter() 
         ## 
@@ -218,7 +218,7 @@ def keepCanvas ( *args , **kwargs ) :
 
 # =============================================================================
 ## @class InvisibleCanvas
-#  Use context ``invisible canvas''
+#  Use context `invisible canvas'
 #  @code
 #  with InvisibleCanvas() :
 #  ... do somehing here 
@@ -1322,10 +1322,25 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         UseStyle  .__init__ ( self , **style_conf     )
         UsePad    .__init__ ( self , **pad_conf       ) 
         Batch     .__init__ ( self , self.__invisible )
-            
-    ## context manager: exit 
-    def __enter__ ( self ) :
 
+        
+    # =================================================================
+    ## Context manager: ENTER
+    # - save  the current canvas as "previous"
+    # - apply  new style setting
+    # - update batch setting 
+    # - create new canvas (if needed), make it active/current and store if it if requested
+    # - apply new pad setting
+    # @return current active canvas 
+    def __enter__ ( self ) :
+        """ Context manager: ENTER
+        - save  the current canvas as "previous"
+        - apply  new style setting
+        - update batch setting 
+        - create new canvas (if needed), make it active/current and store if it if requested
+        - apply new pad setting
+        - return the current activce  canvas 
+        """
         ## (1) use context manager 
         KeepCanvas.__enter__ ( self )
         UseStyle  .__enter__ ( self ) 
@@ -1361,13 +1376,23 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         if self.__keep : _keep.append ( self.__cnv ) 
 
         return self.__cnv  ## return current canvas 
-    
-    ## context manager: exit 
+
+    # =================================================================
+    ## context manager: EXIT 
+    # - update current canvas 
+    # - make a plot, if requested 
+    # - switch back to the previous pad   setting 
+    # - switch back to the previous batch setting 
+    # - switch back to the previous style setting 
+    # - switch back to the previous canvas    
     def __exit__ ( self , *_ ) :
-        """ Context manager EXIT 
-        - update canvas 
+        """ Context manager: EXIT 
+        - update current canvas 
         - make a plot, if requested 
-        - switch to the previous canvas
+        - switch back to the previous pad   setting 
+        - switch back to the previous batch setting 
+        - switch back to the previous style setting 
+        - switch back to the previous canvas
         """
         if self.__cnv :
             self.__cnv.Update()            
@@ -1381,14 +1406,14 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
                 plot = plot.replace ( ' ' , '_' ) 
                 self.__cnv >> plot
                 
-        ## swith back to pad configuration
-        UsePad   .__exit__  ( self , *_ )
-        ## switch back to  batch regime 
-        Batch    .__exit__  ( self , *_ )
-        ## swith back to old style
-        UseStyle.__exit__   ( self , *_ )
-        ## switch to the previous canvas
-        KeepCanvas.__exit__ ( self , *_ )
+        ## switch back to the previous pad setting 
+        UsePad     .__exit__ ( self , *_ )
+        ## switch back to the previous batch settting 
+        Batch      .__exit__ ( self , *_ )
+        ## switch back to the previous style setting 
+        UseStyle   .__exit__ ( self , *_ )
+        ## switch back to the previous canvas 
+        KeepCanvas .__exit__ ( self , *_ )
         ## 
         self.__cnv = None 
     

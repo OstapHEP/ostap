@@ -505,6 +505,7 @@ double Ostap::Math::Histo2D::integral
   if      ( ymax <= ya->GetXmin () ) { return 0 ; }
   else if ( ymin >= ya->GetXmax () ) { return 0 ; }
   //
+  // (1) no interpoaltion? regular sum 
   if ( Ostap::Math::HistoInterpolation::Nearest == m_tx && 
        Ostap::Math::HistoInterpolation::Nearest == m_ty && 
        xmin <= xa->GetXmin() && xa->GetXmax() <= xmax   && 
@@ -525,13 +526,35 @@ double Ostap::Math::Histo2D::integral
     }
     return result ;
   }
-  //
+  //  
   const double x_min = std::max ( xmin , xa->GetXmin () ) ;
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   const double y_min = std::max ( ymin , ya->GetXmin () ) ;
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
   //
-  // use cubature   
+  const unsigned int xbin_min = std::max ( xa -> FindFixBin ( xmin ) , 1              ) ;
+  const unsigned int xbin_max = std::min ( xa -> FindFixBin ( xmax ) , xa->GetNbins() ) ;
+  //
+  // (1) split it if too many x-bins 
+  if ( xbin_max > s_MAX_BINS + xbin_min || tiny_bin ( *xa , x_min , x_max ) )
+  {
+    const int    bin_mid = ( xbin_max + xbin_min ) / 2 ;
+    const double x_mid  = xa->GetBinCenter ( bin_mid ) ;
+    return integral ( x_min , x_mid , y_min , y_max ) + integral ( x_mid , x_max , y_min , y_max ) ;
+  }
+  //
+  const unsigned int ybin_min = std::max ( ya -> FindFixBin ( y_min ) , 1              ) ;
+  const unsigned int ybin_max = std::min ( ya -> FindFixBin ( y_max ) , ya->GetNbins() ) ;
+  //
+  // (2) split it if too many y-bins 
+  if ( ybin_max > s_MAX_BINS + ybin_min || tiny_bin ( *ya , y_min , y_max ) )
+  {
+    const int    bin_mid = ( ybin_max + ybin_min ) / 2 ;
+    const double y_mid  = ya->GetBinCenter ( bin_mid ) ;
+    return integral ( x_min , x_max , y_min , y_mid ) + integral ( x_min , x_max , y_mid , y_max ) ;
+  }
+  //
+  // (3) use cubature   
   static const Ostap::Math::GSL::Integrator2D<Histo2D> s_cubature{} ;
   static const char s_message[] = "Integral(Histo2D)" ;
   const auto F = s_cubature.make_function ( this , x_min , x_max , y_min , y_max ) ;
@@ -661,6 +684,7 @@ double Ostap::Math::Histo3D::integral
   if      ( zmax <= za->GetXmin () ) { return 0 ; }
   else if ( zmin >= za->GetXmax () ) { return 0 ; }
   //
+  // (1) No interpoaltion? use regular sum 
   if ( Ostap::Math::HistoInterpolation::Nearest == m_tx && 
        Ostap::Math::HistoInterpolation::Nearest == m_ty && 
        Ostap::Math::HistoInterpolation::Nearest == m_tz && 
@@ -696,10 +720,49 @@ double Ostap::Math::Histo3D::integral
   const double z_min = std::max ( zmin , za->GetXmin () ) ;
   const double z_max = std::min ( zmax , za->GetXmax () ) ;
   //
-  // use cubature   
+  const unsigned int xbin_min = std::max ( xa -> FindFixBin ( xmin ) , 1              ) ;
+  const unsigned int xbin_max = std::min ( xa -> FindFixBin ( xmax ) , xa->GetNbins() ) ;
+  //
+  // (1) split it if too many x-bins 
+  if ( xbin_max > s_MAX_BINS + xbin_min || tiny_bin ( *xa , x_min , x_max ) )
+  {
+    const int    bin_mid = ( xbin_max + xbin_min ) / 2 ;
+    const double x_mid  = xa->GetBinCenter ( bin_mid ) ;
+    return
+      integral ( x_min , x_mid , y_min , y_max , z_min , z_max ) +
+      integral ( x_mid , x_max , y_min , y_max , z_min , z_max ) ;
+  }
+  //
+  const unsigned int ybin_min = std::max ( ya -> FindFixBin ( y_min ) , 1              ) ;
+  const unsigned int ybin_max = std::min ( ya -> FindFixBin ( y_max ) , ya->GetNbins() ) ;
+  //
+  // (2) split it if too many y-bins 
+  if ( ybin_max > s_MAX_BINS + ybin_min || tiny_bin ( *ya , y_min , y_max ) )
+  {
+    const int    bin_mid = ( ybin_max + ybin_min ) / 2 ;
+    const double y_mid   = ya->GetBinCenter ( bin_mid ) ;
+    return
+      integral ( x_min , x_max , y_min , y_mid , z_min , z_max ) +
+      integral ( x_min , x_max , y_mid , y_max , z_min , z_max ) ;
+  }
+  //
+  const unsigned int zbin_min = std::max ( za -> FindFixBin ( z_min ) , 1              ) ;
+  const unsigned int zbin_max = std::min ( za -> FindFixBin ( z_max ) , za->GetNbins() ) ;
+  //
+  // (3) split it if too many z-bins 
+  if ( zbin_max > s_MAX_BINS + zbin_min || tiny_bin ( *za , z_min , z_max ) )
+  {
+    const int    bin_mid = ( zbin_max + zbin_min ) / 2 ;
+    const double z_mid   = za->GetBinCenter ( bin_mid ) ;
+    return
+      integral ( x_min , x_max , y_min , y_max , z_min , z_mid ) +
+      integral ( x_min , x_max , y_min , y_max , z_mid , z_max ) ;
+  }
+  //
+  // (3) use cubature   
   static const Ostap::Math::GSL::Integrator3D<Histo3D> s_cubature{} ;
   static const char s_message[] = "Integral(Histo3D)" ;
-  const auto F = s_cubature.make_function ( this , 
+  const auto F = s_cubature.make_function ( this  , 
                                             x_min , x_max , 
                                             y_min , y_max ,
                                             z_min , z_max ) ;
@@ -749,6 +812,32 @@ double Ostap::Math::Histo3D::integrateXY
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   const double y_min = std::max ( ymin , ya->GetXmin () ) ;
   const double y_max = std::min ( ymax , ya->GetXmax () ) ;
+  //
+  const unsigned int xbin_min = std::max ( xa -> FindFixBin ( xmin ) , 1              ) ;
+  const unsigned int xbin_max = std::min ( xa -> FindFixBin ( xmax ) , xa->GetNbins() ) ;
+  //
+  // (1) split it if too many x-bins 
+  if ( xbin_max > s_MAX_BINS + xbin_min || tiny_bin ( *xa , x_min , x_max ) )
+  {
+    const int    bin_mid = ( xbin_max + xbin_min ) / 2 ;
+    const double x_mid  = xa->GetBinCenter ( bin_mid ) ;
+    return
+      integrateXY ( z , x_min , x_mid , y_min , y_max ) +
+      integrateXY ( z , x_mid , x_max , y_min , y_max ) ;
+  }
+  //
+  const unsigned int ybin_min = std::max ( ya -> FindFixBin ( y_min ) , 1              ) ;
+  const unsigned int ybin_max = std::min ( ya -> FindFixBin ( y_max ) , ya->GetNbins() ) ;
+  //
+  // (2) split it if too many y-bins 
+  if ( ybin_max > s_MAX_BINS + ybin_min || tiny_bin ( *ya , y_min , y_max ) )
+  {
+    const int    bin_mid = ( ybin_max + ybin_min ) / 2 ;
+    const double y_mid   = ya->GetBinCenter ( bin_mid ) ;
+    return
+      integrateXY ( z , x_min , x_max , y_min , y_mid ) +
+      integrateXY ( z , x_min , x_max , y_mid , y_max ) ;
+  }
   //
   // use 2D-cubature   
   //
@@ -807,8 +896,34 @@ double Ostap::Math::Histo3D::integrateYZ
   const double z_min = std::max ( zmin , za->GetXmin () ) ;
   const double z_max = std::min ( zmax , za->GetXmax () ) ;
   //
-  // use 2D-cubature   
+  // 
+  const unsigned int ybin_min = std::max ( ya -> FindFixBin ( y_min ) , 1              ) ;
+  const unsigned int ybin_max = std::min ( ya -> FindFixBin ( y_max ) , ya->GetNbins() ) ;
   //
+  // (2) split it if too many y-bins 
+  if ( ybin_max > s_MAX_BINS + ybin_min || tiny_bin ( *ya , y_min , y_max ) )
+  {
+    const int    bin_mid = ( ybin_max + ybin_min ) / 2 ;
+    const double y_mid   = ya->GetBinCenter ( bin_mid ) ;
+    return
+      integrateYZ ( x , y_min , y_mid , z_min , z_max ) +
+      integrateYZ ( x , y_mid , y_max , z_min , z_max ) ;
+  }
+  //
+  const unsigned int zbin_min = std::max ( za -> FindFixBin ( z_min ) , 1              ) ;
+  const unsigned int zbin_max = std::min ( za -> FindFixBin ( z_max ) , za->GetNbins() ) ;
+  //
+  // (3) split it if too many z-bins 
+  if ( zbin_max > s_MAX_BINS + zbin_min || tiny_bin ( *za , z_min , z_max ) )
+  {
+    const int    bin_mid = ( zbin_max + zbin_min ) / 2 ;
+    const double z_mid   = za->GetBinCenter ( bin_mid ) ;
+    return
+      integrateYZ ( x , y_min , y_max , z_min , z_mid ) +
+      integrateYZ ( x , y_min , y_max , z_mid , z_max ) ;
+  }
+  //
+  // use 2D-cubature   
   typedef Ostap::Math::IntegrateYZ<Histo3D> FYZ ;
   const FYZ fyz ( this , x ) ;
   //
@@ -863,6 +978,32 @@ double Ostap::Math::Histo3D::integrateXZ
   const double x_max = std::min ( xmax , xa->GetXmax () ) ;
   const double z_min = std::max ( zmin , za->GetXmin () ) ;
   const double z_max = std::min ( zmax , za->GetXmax () ) ;
+  //  
+  const unsigned int xbin_min = std::max ( xa -> FindFixBin ( xmin ) , 1              ) ;
+  const unsigned int xbin_max = std::min ( xa -> FindFixBin ( xmax ) , xa->GetNbins() ) ;
+  //
+  // (1) split it if too many x-bins 
+  if ( xbin_max > s_MAX_BINS + xbin_min || tiny_bin ( *xa , x_min , x_max ) )
+  {
+    const int    bin_mid = ( xbin_max + xbin_min ) / 2 ;
+    const double x_mid  = xa->GetBinCenter ( bin_mid ) ;
+    return
+      integrateXZ ( y , x_min , x_mid , z_min , z_max ) +
+      integrateXZ ( y , x_mid , x_max , z_min , z_max ) ;
+  }
+  //
+  const unsigned int zbin_min = std::max ( za -> FindFixBin ( z_min ) , 1              ) ;
+  const unsigned int zbin_max = std::min ( za -> FindFixBin ( z_max ) , za->GetNbins() ) ;
+  //
+  // (3) split it if too many z-bins 
+  if ( zbin_max > s_MAX_BINS + zbin_min || tiny_bin ( *za , z_min , z_max ) )
+  {
+    const int    bin_mid = ( zbin_max + zbin_min ) / 2 ;
+    const double z_mid   = za->GetBinCenter ( bin_mid ) ;
+    return
+      integrateXZ ( y , x_min , x_max , z_min , z_mid ) +
+      integrateXZ ( y , x_min , x_max , z_mid , z_max ) ;
+  }
   //
   // use 2D-cubature   
   //
@@ -1134,7 +1275,6 @@ double Ostap::Math::Histo3D::integrateZ
   return  result ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // Random numbers 

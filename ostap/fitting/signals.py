@@ -137,8 +137,8 @@ __all__ = (
     'BatesShape_pdf'         , ## Bates-shape
     'FisherZ_pdf'            , ## Fisher's Z-distribution 
     'Hat_pdf'                , ## hat function (smoth&finite)
-    'Up_pdf'                 , ## finite atomin fnuction up
-    'FupN_pdf'               , ## finite atomin fnuction up
+    'Up_pdf'                 , ## finite atomin function up
+    'FupN_pdf'               , ## finite atomin function up
     'Meixner_pdf'            , ## Meixner 
     #
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
@@ -4342,7 +4342,7 @@ class Das_pdf(Gauss_pdf,TailAL,TailAR) :
     r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from the ref below
     
-    - see Souvik Das, 'A simple alternative to Crystall Ball fnuction'
+    - see Souvik Das, 'A simple alternative to Crystall Ball function'
     arXiv:1603.08591  [hep-ex]
     
     - see https://arxiv.org/abs/1603.08591
@@ -4450,7 +4450,7 @@ class ADas_pdf(BifurcatedGauss_pdf,TailAL,TailAR) :
     r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from ref below
     
-    - see Souvik Das, 'A simple alternative to Crystall Ball fnuction'
+    - see Souvik Das, 'A simple alternative to Crystall Ball function'
     arXiv:1603.08591  [hep-ex]
     
     - see https://arxiv.org/abs/1603.08591

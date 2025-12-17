@@ -1140,7 +1140,7 @@ def Cl ( n , x ) :
     return _Cl_ ( n , x )
 
 # =============================================================================
-## Standard Clausen functions, aka Gleisher-Clausen fnuctions  
+## Standard Clausen functions, aka Gleisher-Clausen functions  
 #  \f[ \begin{array}{lcc}
 #      Sl_{2m+2} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+2}}& \\ 
 #      Sl_{2m+1} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+1}}& \\ 

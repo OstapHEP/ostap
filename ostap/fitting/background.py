@@ -75,7 +75,7 @@ models  = []
 ##  @class PolyBase
 #   helper base class to implement various polynomial-like shapes
 class PolyBase(PDF1,Phases) :
-    """Helper base class to implement various polynomial-like shapes
+    """ Helper base class to implement various polynomial-like shapes
     """
     def __init__ ( self , name , power , xvar , the_phis = None ) :
         ## check  the arguments 
@@ -90,7 +90,7 @@ class PolyBase(PDF1,Phases) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Bkg_pdf(PolyBase) :
-    """Exponential function, modulated by the positive polynomial:
+    """ Exponential function, modulated by the positive polynomial:
     
     f(x) ~ exp(-tau*X) * Pol_n(x)
     where Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
@@ -177,7 +177,7 @@ models.append ( Bkg_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PolyPos_pdf(PolyBase) :
-    """Positive (Bernstein) polynomial: 
+    """ Positive (Bernstein) polynomial: 
     
     f(x) = Pol_n(x)
     with Pol_n(x)>= 0 over the whole range 
@@ -221,7 +221,7 @@ class PolyPos_pdf(PolyBase) :
                 
     @property
     def power ( self ) :
-        """``power''-parameter (polynomial order) for PolyPos function"""
+        """`power'-parameter (polynomial order) for PolyPos function"""
         return self.__power
 
 
@@ -237,7 +237,7 @@ models.append ( PolyPos_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class KarlinShapley_pdf(PolyBase) :
-    """Positive Karlin-Shapley  polynomial: 
+    """ Positive Karlin-Shapley  polynomial: 
     
     f(x) = Pol_n(x)
     with Pol_n(x)>= 0 over the whole range 
@@ -321,7 +321,7 @@ models.append ( KarlinShapley_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class KarlinStudden_pdf(PolyBase) :
-    """Positive Karlin-Studden polynomial: 
+    """ Positive Karlin-Studden polynomial: 
     
     f(x) = Pol_n(x)
     with Pol_n(x)>= 0 for x > xmin 
@@ -415,7 +415,6 @@ class KarlinStudden_pdf(PolyBase) :
 
 models.append ( KarlinStudden_pdf ) 
 
-
 # =============================================================================
 ## @class Rational_pdf
 #  Ratinal function: ratio of two positve bernstein polynomials 
@@ -424,7 +423,7 @@ models.append ( KarlinStudden_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2023-09-15
 class Rational_pdf(PolyBase) :
-    """Rational fnuction: ratio of two positive Bernstein polynomials  
+    """ Rational function: ratio of two positive Bernstein polynomials  
     - see Ostap.Models.Rational
     - see Ostap.Math.RationalPositive
     """
@@ -462,6 +461,24 @@ class Rational_pdf(PolyBase) :
             self.phi_list        ,
             self.x_min           ,
             self.x_max           )
+
+        ## numerator as Ostap PDF 
+        self.__numerator   = PolyPos_pdf (
+            name     = 'numerator_%s' % self.name ,
+            xvar     = self.xvar            ,
+            power    = np                   ,
+            xmin     = self.x_min           ,
+            xmax     = self.x_max           ,
+            the_phis = self.phi_list[:np]   )
+        
+        ## denomiinator as Ostap PDF 
+        self.__denominator = PolyPos_pdf (
+            name     = 'denominato_%s' % self.name ,
+            xvar     = self.xvar            ,
+            power    = n - np               ,
+            xmin     = self.x_min           ,
+            xmax     = self.x_max           ,
+            the_phis = self.phi_list[np:]   )
         
         ## save configuration 
         self.config = {
@@ -508,6 +525,21 @@ class Rational_pdf(PolyBase) :
         """'qpars' : parameters of denumorator"""
         return self.pars[ self.np : ]
 
+    @property
+    def numerator  ( slef ) :
+        """`numerator` : get numerator of rational function as Ostap PDF
+        """
+        self.pdf.setPars()
+        self._numerator.pdf.setPars()         
+        return self.__numerator 
+    
+    @property
+    def denominator ( slef ) :
+        """`denominator` : get the denominator of ratioal function as Ostap PDF
+        """
+        self.pdf.setPars()
+        self._denomiinator.pdf.setPars()         
+        return self.__numerator 
     
 models.append ( Rational_pdf ) 
 
@@ -521,7 +553,7 @@ models.append ( Rational_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-01-31
 class Linear_pdf (PolyPos_pdf) :
-    """Positive Linear (Bernstein) polynomial:     
+    """ Positive Linear (Bernstein) polynomial:     
     >>>  mass = ROOT.RooRealVar( ... )
     >>>  bkg  = Linear_pdf ( 'B' , mass )
     """
@@ -606,7 +638,7 @@ models.append ( Parabolic_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-10-03
 class PolyEven_pdf(PolyBase) :
-    """Positive (Bernstein) even polynomial: 
+    """ Positive (Bernstein) even polynomial: 
     
     f(x) = Pol_n(x)
     with Pol_n(x)>= 0 over the whole range
@@ -664,7 +696,7 @@ models.append ( PolyEven_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Monotonic_pdf(PolyBase) :
-    """Positive monotonic (Bernstein) polynomial:
+    """ Positive monotonic (Bernstein) polynomial:
     
     f(x) = Pol_n(x)
     with f(x)>= 0 over the whole range and
@@ -1003,7 +1035,7 @@ models.append ( PSPol_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSLeftExpoPol_pdf(PolyBase) :
-    r"""The phase space function modified with positive polynomial 
+    r""" The phase space function modified with positive polynomial 
     
     # f(x) ~ Phi_{l}(x;x_{low}) \mathrm{e}^{-\left|\tau\right| x } P_{N}(x) 
     where :
@@ -1119,7 +1151,7 @@ models.append ( PSLeftExpoPol_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-03-26
 class TwoExpoPoly_pdf(PolyBase) :
-    """Difference of two exponential function, modulated by the positive polynomial:
+    """ Difference of two exponential functions, modulated by the positive polynomial:
     
     f(x) ~ ( exp(-alpha*x) - exp(-(alpha_delta)*x) *  Pol_n(x)
     where Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
@@ -1239,13 +1271,13 @@ models.append ( TwoExpoPoly_pdf )
 
 # =============================================================================
 ## @class  Sigmoid_pdf
-#  Sigmoid function modulated wit hpositive polynomial
+#  Sigmoid function modulated with positive polynomial
 #  @see Ostap::Models::PolySigmoid
 #  @see Ostap::Math::Sigmoid
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class Sigmoid_pdf(PolyBase) :
-    """A ``sigmoid'' function modulated by the positive (Bernstein) polynomial 
+    """ Sigmoid function modulated by the positive (Bernstein) polynomial 
     f(x) = 0.5*(1+tahn(alpha*(x-x0))*Pol_n(x)
     """
     ## constructor
@@ -1350,7 +1382,7 @@ models.append ( Sigmoid_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSpline_pdf(PolyBase) :
-    """A positive spline, a compositon of M-splines with non-negative coefficients
+    """ A positive spline, a compositon of M-splines with non-negative coefficients
 
     >>> mass   = ... ## the variable
     >>> order  = 3   ## spline order
@@ -1419,7 +1451,7 @@ models.append ( PSpline_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class MSpline_pdf(PolyBase) :
-    """A positive monotonic spline
+    """ A positive monotonic spline
 
     >>> mass   = ... ## the variable
     >>> order  = 3   ## spline order
@@ -1482,7 +1514,7 @@ models.append ( MSpline_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class CSpline_pdf(PolyBase) :
-    """A positive monotonic convex/concave spline
+    """ A positive monotonic convex/concave spline
 
     >>> mass   = ... ## the variable
     >>> order  = 3   ## spline order
@@ -1674,7 +1706,7 @@ models.append ( PS2_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSLeft_pdf(PDF1) :
-    """Left edge of N-body phase space function (with possible scaling)
+    """ Left edge of N-body phase space function (with possible scaling)
     >>> mass  = ... ## mass variable
     >>> low   = 139 + 139 + 139  ## 3 pion mass
     >>> model = PSLeft_pdf ( 'PDF' , mass , 3 , low )   
@@ -1877,7 +1909,7 @@ models.append ( PSRight_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSNL_pdf(PDF1) :
-    """L-body phase space from N-body decay
+    """ L-body phase space from N-body decay
     >>> mass  = ... ## mass variable
     >>> low   = 3*139       ## 3*m(pi)
     >>> high  = 5.278-3.096 ## m(B)-m(J/psi)
@@ -2098,23 +2130,22 @@ models.append ( PS23L_pdf )
 #  <code>phasespace</code>
 # 
 class PSSmear_pdf ( PDF1 ) :
-    """Usefull class to represent ``smear'' phase space function
+    """ Usefull class to represent ``smear'' phase space function
     >>> pspdf = PSPol_pdf ( ... )
     >>> smeared_pdf = PSSmear_pdf ( pspdf , sigma = 2.5 * MeV , step = 0.5 , nstep = 8 ) 
 
-    This PDF is a weighted sum of ``2*nstep+1`` components
+    This PDF is a weighted sum of `2*nstep+1` components
     with fixed coefficients. Each component corresponds to small shift in
     left or right edge of the phase space, and the components
-    are weighted accoring to gaussian function
+    are weighted according to gaussian function
     
     It is *not* a real convolution with Gaussian function, but some approximation
-    taking ``step`` small enough and ``nstep`` large enough,
-    such as product of ``step`` and ``nstep`` exceeds 3,
+    taking `step` small enough and `nstep` large enough,
+    such as product of `step*nstep` exceeds 3,
     one can get very good approximation to real convolution
     
     The gaussian function for smear/convolution is evaluated at folloiwing points
     
-
     The phase-space-based PDF is required to have a method <code>phasespace</code>
     that returns object of the type :
     - class Ostap.Math.PhaseSpaceNL    
@@ -2334,7 +2365,7 @@ class PSSmear_pdf ( PDF1 ) :
 #  @see Ostap::Math::PhaseSpace3s    
 #  @see Ostap::Math::PhaseSpaceLeft
 class PSSmear2_pdf ( PDF1 ) :
-    """ Usefull class to represent ``smear'' phase space function
+    """ Usefull class to represent `smear' phase space function
     >>> pspdf  = PSPol_pdf ( ... )
     >>> gamma  = 10 * MeV 
     >>> shape  = lambda x : 1.0/(x*x+0.25*gamma*gamma)
@@ -2543,7 +2574,7 @@ class PSSmear2_pdf ( PDF1 ) :
 ##  @class RooPolyBase
 #   helper base class to implement various polynomial-like shapes
 class RooPolyBase(PDF1,ParamsPoly) :
-    """Helper base class to implement various polynomial-like shapes
+    """ Helper base class to implement various polynomial-like shapes
     """
     def __init__ ( self , name , xvar , power = 1 , pars = None ) :
         ## check  the arguments 
@@ -2562,7 +2593,7 @@ class RooPolyBase(PDF1,ParamsPoly) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-04-27
 class RooPoly_pdf(RooPolyBase) :
-    """Trivial Ostap wrapper for the native RooPolynomial PDF from RooFit
+    """ Trivial Ostap wrapper for the native RooPolynomial PDF from RooFit
     - see ROOT.RooPolynomial
     >>> xvar = ...
     >>> poly = RooPoly_pdf ( 'P4' , xvar , 4 ) ;
@@ -2632,7 +2663,7 @@ class RooPoly_pdf(RooPolyBase) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-04-27
 class RooCheb_pdf(RooPolyBase) :
-    """Trivial Ostap wrapper for the native RooChebyshev PDF from RooFit
+    """ Trivial Ostap wrapper for the native RooChebyshev PDF from RooFit
     - see ROOT.RooChebushev 
     >>> xvar = ...
     >>> poly = RooCheb_pdf ( 'P4' , xvar , 4 ) ;
@@ -2690,7 +2721,7 @@ class RooCheb_pdf(RooPolyBase) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2019-04-27
 class RooKeys1D_pdf(PDF1) :
-    """Trivial Ostap wrapper for the native RooNDKeysPdf from RooFit
+    """ Trivial Ostap wrapper for the native RooNDKeysPdf from RooFit
     - see ROOT.RooKeysPdf
     >>> xvar = ...
     >>> pdf  = RooKeys_pdf ( 'Keys' , xvar , data  )
@@ -2801,7 +2832,7 @@ class RooKeys1D_pdf(PDF1) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-04-03
 def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
-    """Helper function to create various popular 1D-background models
+    """ Helper function to create frequently used 1D-background models
     
     Possible values for ``bkg'':
     

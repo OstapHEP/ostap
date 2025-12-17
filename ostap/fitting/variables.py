@@ -2131,7 +2131,7 @@ def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
 #  var  = var_max ( var1 , var2 ) 
 #  @endcode 
 def var_max ( a , b = 1 , name = '' , title = '' ) :
-    """Maximal from two fnuctions f(x) = max(a,b)
+    """Maximal from two functions f(x) = max(a,b)
     >>> var = ...
     >>> e   = var_max ( var ) 
     """
@@ -2154,7 +2154,7 @@ def var_max ( a , b = 1 , name = '' , title = '' ) :
 #  var  = var_min ( var1 , var2 ) 
 #  @endcode 
 def var_min ( a , b = 1 , name = '' , title = '' ) :
-    """Minimal from two fnuctions f(x) = min(a,b)
+    """Minimal from two functions f(x) = min(a,b)
     >>> var = ...
     >>> e   = var_min ( var ) 
     """

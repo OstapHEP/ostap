@@ -1196,7 +1196,7 @@ models.append ( Manca_pdf )
 ## @class Manca2_pdf 
 #  the final full PDF for Y->mu+mu- fit
 #  This is an effective function for fit in global bin, without pt/y-binning
-#  - Y signals are parameterised by the double-sided Cruystal Ball fnuctions
+#  - Y signals are parameterised by the double-sided Cruystal Ball functions
 #
 #  Parameters of three Upsilon peaks are related:
 #  - Y(2S) mass is calculated as  <code>m(Y(1S))+dm21</code>
@@ -1212,7 +1212,7 @@ class Manca2_pdf (MANCA) :
     - three double-sided Crystal Ball functions for Y(1S), Y(2S) and Y(3S) peaks
     - constrants for their resolutions and masses 
     - background: ... 
-    The Y signals are parameterised by the double-sided Crystal Ball fnuctions
+    The Y signals are parameterised by the double-sided Crystal Ball functions
 
     Parameters of three Upsilon peaks are related:
     - Y(2S) mass is calculated as `m(Y(1S))+dm21`

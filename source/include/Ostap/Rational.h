@@ -352,7 +352,7 @@ namespace Ostap
     { return ( -a ) += b ; }
     // ========================================================================
     /** @class RationalPositive 
-     *  Rational fnuction as ratio of two positive Bernstein polyhomials 
+     *  Rational function as ratio of two positive Bernstein polynomials 
      *  \f[ R ( x ) = \frac{B(x)}{P(x) \f]
      *  @see Ostap::Math::Positive 
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch

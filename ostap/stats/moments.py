@@ -288,7 +288,7 @@ class BaseMoment(FunBASE1D) :
 
         assert 0 < total , "median: Integral is non-positive %s" % total
 
-        ## fnuction
+        ## function
         qfun = lambda x : integral ( x ) / total  - 0.5
         ## derivative 
         dfun = lambda x : float ( func ( x , *args , **kwargs ) ) /  total 

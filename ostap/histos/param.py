@@ -620,7 +620,7 @@ def _h1_rational_  ( h1               ,
                      params = ()      ,
                      limits = ()      ,
                      refit  = 1       ) :
-    """ Represent histo as ratioal fnuction, based on Floater-Hormann's
+    """ Represent histo as ratioal function, based on Floater-Hormann's
     rational barycentric interpolant 
     
     >>> h = ...                    # the histogram
@@ -2003,15 +2003,28 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
     name   = VarMaker.generate_name (  'pdf' , '' , h1.GetName() )
     ##
     pdf    = pdf_type     ( name , h1.xvar , *pars )
-    ## fit the histogram 
-    r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
-    ##
-    func = pdf.pdf.function()
+    ## fit the histogram
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
+        # =======================================================================
+    except Exception : # ========================================================
+        # =======================================================================
+        logger.error ( 'Exception from %s/%s fitHisto' % ( typename ( pdf     ) ,
+                                                           typename ( pdf.pdf ) ) , exc_info = True )
+        raise
+        
+        ## 
+    if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
+    if hasattr ( pdf.pdf , 'function' ) : func = pdf.pdf.function()
+    else                                : func = lambda x : pdf ( x )
+        
     ##
     from ostap.fitting.roofit import PDF_fun
     pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
     ##
-    norm = VE ( h1.integrate().value() , 0 )
+    norm   = VE ( h1.integrate() ).value() 
     ##
     params = ParamPDFInfo ( r , pdf , func , norm , pdf_fun , f )
     h1._param_PDF_info = params
@@ -2435,7 +2448,84 @@ def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import Rational_pdf
-    return _h1_pdf_ ( h1 , Rational_pdf , ( p , q ) , *args , **kwargs )
+    from ostap.fitting.variables  import FIXVAR 
+    
+    mn , mx = h1.minmax()
+    if mn.value() < 0 or mx.value() <= 0 :
+        raise AttributeError("Histo goes to negative %s/%s" % ( mn , mx ) )
+    ##
+    if not hasattr ( h1 , 'xvar' ) :
+        h1.xvar = ROOT.RooRealVar ( 'x' + h1.GetName() , 'xvar(%s)' % h1.GetName() , *h1.xminmax() )
+
+    ## create pdf
+    from ostap.fitting.fithelpers import VarMaker 
+    name   = VarMaker.generate_name (  'pdf' , '' , h1.GetName() )
+    ##
+    ## pdf    = pdf_type     ( name , h1.xvar , *pars )
+    pdf    = Rational_pdf ( name , h1.xvar , p , q )
+
+    # ===========================================================================
+    ## fit the histogram
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        ## all pars 
+        apars = tuple ( v for v in pdf.pdf.pars() )
+        ## numerator 
+        pvars = tuple ( v for v in apars [  :p ]  )
+        ## denominator 
+        qvars = tuple ( v for v in apars [ p:  ]  )
+
+        for qv in qvars :
+            if hasattr ( qv , 'setValue' ) : qv.setValue ( 0 ) 
+            
+        kw = {}
+        kw.update ( kwargs )
+        kw['draw'] = False
+        
+        ## (1) fix denominator and fit with numertor-only
+        if qvars : 
+            with FIXVAR ( qvars ) :
+                r , _  = pdf.fitHisto ( h1 , *args, **kw )
+                
+        ## (2) fix numerator and fit with denominator -only
+        if pvars : 
+            with FIXVAR ( pvars ) :
+                r , _  = pdf.fitHisto ( h1 , *args, **kw )
+                
+        ## (3) fix denominator and fit with numertor-only
+        if qvars :            
+            with FIXVAR ( qvars ) :
+                r , _  = pdf.fitHisto ( h1 , *args, **kw  )
+
+        ## (4) the final fit 
+        r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
+            
+        # =======================================================================
+    except Exception : # ========================================================
+        # =======================================================================
+        logger.error ( 'Exception from %s/%s fitHisto' % ( typename ( pdf     ) ,
+                                                           typename ( pdf.pdf ) ) , exc_info = True )
+        raise
+    
+    ## 
+    if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars()
+    ## 
+    if hasattr ( pdf.pdf , 'function' ) : func = pdf.pdf.function()
+    else                                : func = lambda x : pdf ( x )
+        
+    ##
+    from ostap.fitting.roofit import PDF_fun
+    pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
+    ##
+    norm   = VE ( h1.integrate() ).value() 
+    ##
+    params = ParamPDFInfo ( r , pdf , func , norm , pdf_fun , f )
+    h1._param_PDF_info = params
+    return params 
+
+    
+    ## return _h1_pdf_ ( h1 , Rational_pdf , ( p , q ) , *args , **kwargs )
 
 # =============================================================================
 

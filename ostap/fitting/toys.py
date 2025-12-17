@@ -19,7 +19,7 @@ __all__     = (
     'make_jackknife'   , ## run Jackknife analysis 
     'make_bootstrap'   , ## run Bootstrapanalysis 
     "make_funtoys"     , ## propagate fit uncertainties for the model features 
-    "vars_transform"   , ## helper fnuction to transform the variables
+    "vars_transform"   , ## helper function to transform the variables
     "print_stats"      , ## print toys      statistics 
     "print_jackknife"  , ## print jackknife statistics 
     "print_bootstrap"  , ## print bootstrap statistics 

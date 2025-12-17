@@ -26,8 +26,8 @@ __all__     = (
     'Prod2D_pdf'  , ## helper class to implement product of two RAW PDFs 
     'Prod3D_pdf'  , ## helper class to implement product of two RAW PDFs
     #
-    'pdf_product' , ## helper fnuction to create a product of PDFs  
-    'pdf_sum'     , ## helper fnuction to create a non-extended sum of PDFs  
+    'pdf_product' , ## helper function to create a product of PDFs  
+    'pdf_sum'     , ## helper function to create a non-extended sum of PDFs  
     )
 # =============================================================================
 from   ostap.core.ostap_types import sequence_types, sized_types 

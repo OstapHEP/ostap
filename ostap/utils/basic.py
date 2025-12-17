@@ -353,7 +353,6 @@ def typename ( o ) :
                      getattr ( to , '__qualname__' ,\
                                getattr ( to , '__name__' ) ) )
     
-
 # ==============================================================================
 ## get the total  size of files/directories
 #  @code
@@ -553,6 +552,27 @@ else : # ======================================================================
         - see `functools.lru_cache`
         """
         return functools.lru_cache(maxsize=None)(user_function)
+
+# =============================================================================
+## Print/format warning message in one line
+#  @see warnings.WarnigMessage 
+def wm_print ( wm , with_category = True ) : 
+    """ Print/format warning message in one line
+    - see warnings.WarningMessage 
+    """
+    if with_category:
+        msg = "%%s,category=%s,file=%%s,line#=%%d"
+        msg = msg % wm._categrory_name
+    else : msg = "%s,file=%s,line#=%d"
+    ## 
+    fname = wm.filename 
+    if 60 < len ( fname ) : fname = os.path.basename ( fname ) 
+    msg = msg % ( wm.message , fname , wm.lineno )
+    msg = msg.replace ( '.,' , ',' )
+    msg = msg.replace ( '\n' , ' ' )
+    while '  ' in msg : msg = msg.replace ( '  ' , ' ' )    
+    if wm.line : msg += '%s' % wm.line    
+    return msg
 
 # =============================================================================
 if __name__ == '__main__' :

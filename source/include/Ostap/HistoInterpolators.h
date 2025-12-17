@@ -83,8 +83,7 @@ namespace Ostap
        */
       Histo1D 
       ( const TH1& histo ,
-        const Ostap::Math::HistoInterpolation::Type t = 
-        Ostap::Math::HistoInterpolation::Default ,
+        const Ostap::Math::HistoInterpolation::Type t = Ostap::Math::HistoInterpolation::Default ,
         const bool edges       = true  , 
         const bool extrapolate = false , 
         const bool density     = false ) ;

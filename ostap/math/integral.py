@@ -75,15 +75,16 @@ __all__     = (
     ##
     ) 
 # =============================================================================
+from   ostap.core.meta_info   import python_info 
 from   ostap.core.ostap_types import num_types 
 from   ostap.math.ve          import VE
 from   ostap.math.base        import isequal, iszero, isfinite, Ostap  
-from   ostap.utils.basic      import items_loop, memoize, typename
+from   ostap.utils.basic      import items_loop, memoize, typename, wm_print 
 from   ostap.math.integrator  import ( integral_ostap  ,
                                        integral2_ostap , 
                                        integral3_ostap ) 
 from   sortedcontainers       import SortedKeyList  
-import ROOT, math, array, scipy  
+import ROOT, math, array, scipy, warnings   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -180,7 +181,8 @@ def adaptive_integral ( rule_name           ,
                         fun                 ,
                         xmin                ,
                         xmax                , * ,                
-                        err      = False    , 
+                        err      = False    ,
+                        silent   = False    , 
                         epsabs   = eps_abs  ,
                         epsrel   = eps_rel  ,
                         args     = ()       , # additional positional arguments for the function calls 
@@ -260,8 +262,8 @@ def adaptive_integral ( rule_name           ,
     
     else :
         # =====================================================================
-        logger.warning ( "Adaptive[%s]: maximal split is reached: %d " %  ( rule_name , len ( results ) ) ) 
-
+        if not silent : logger.warning ( "Adaptive[%s]: maximal split is reached: %d " %  ( rule_name , len ( results ) ) ) 
+        
     ## (4) get the integral & uncertainty
     result , error = 0 , 0
     for entry in results :
@@ -270,7 +272,7 @@ def adaptive_integral ( rule_name           ,
         error  += e
         
     if max ( epsabs , abs ( result ) * epsrel ) < error :
-        logger.warning ( "Adaptive[%s]: requested precision is not achieved: %.3g" % ( rule_name , error ) )
+        if not silent : logger.warning ( "Adaptive[%s]: requested precision is not achieved: %.3g" % ( rule_name , error ) )
 
     return VE ( result , error * error ) if err else result  
 
@@ -289,6 +291,7 @@ def romberg ( fun                 ,
               xmin                ,
               xmax                , * , 
               err      = False    , 
+              silent   = False    , 
               epsabs   = eps_abs  ,
               epsrel   = eps_rel  ,
               args     = ()       , # additional positional arguments for function call 
@@ -310,6 +313,7 @@ def romberg ( fun                 ,
                                fun                            ,
                                xmin      , xmax               ,
                                err       = err                ,
+                               silent    = silent             , 
                                epsabs    = epsabs             ,
                                epsrel    = epsrel             ,
                                args      = args               ,
@@ -546,7 +550,8 @@ def clenshaw_curtis_rule  ( fun              ,
 def clenshaw_curtis ( fun                 ,
                       xmin                ,
                       xmax                , * , 
-                      err      = False    , 
+                      err      = False    ,
+                      silent   = False    , 
                       epsabs   = eps_abs  ,
                       epsrel   = eps_rel  ,
                       args     = ()       ,
@@ -567,6 +572,7 @@ def clenshaw_curtis ( fun                 ,
                                fun                  ,
                                xmin     , xmax      ,
                                err      = err       ,
+                               silent   = silent    , 
                                epsabs   = epsabs    ,
                                epsrel   = epsrel    , 
                                args     = args      ,
@@ -583,7 +589,8 @@ def clenshaw_curtis ( fun                 ,
 def composite_boole ( fun                 ,
                       xmin                ,
                       xmax                , * , 
-                      err      = False    , 
+                      err      = False    ,
+                      silent   = False    , 
                       epsabs   = eps_abs  ,
                       epsrel   = eps_rel  ,
                       args     = ()       ,
@@ -604,6 +611,7 @@ def composite_boole ( fun                 ,
                                fun                  ,
                                xmin     , xmax      ,
                                err      = err       ,
+                               silent   = silent    , 
                                epsabs   = epsabs    ,
                                epsrel   = epsrel    , 
                                args     = args      ,
@@ -612,9 +620,19 @@ def composite_boole ( fun                 ,
                                rconf    = { 'nmax'  : nmax } , **other )
 
 # =============================================================================
+## Treatment of warnings from scipy 
+# =============================================================================
+from scipy.integrate import IntegrationWarning
+if ( 3 , 11 ) <= python_info : wconf = { 'category' : IntegrationWarning ,
+                                         'record'   : True               }
+else                         : wconf = { 'record'   : True               }
+wfilter = { 'category': IntegrationWarning }
+
+# =============================================================================
 ## 1D integration 
 # =============================================================================
 from scipy.integrate import quad                as scipy_quad
+
 # =========================================================================
 ## Calculate the integral (from x0 to x) for the 1D-function 
 #  @code 
@@ -630,7 +648,8 @@ def integral_quad ( fun              ,
                     kwargs = {}      ,
                     err    = False   ,
                     epsabs = eps_abs ,
-                    epsrel = eps_rel , **other ) :
+                    epsrel = eps_rel ,
+                    silent = False   , **other ) :
     """ Calculate the integral for the 1D-function using scipy
         
     >>> func = lambda x : x * x 
@@ -641,14 +660,20 @@ def integral_quad ( fun              ,
     else      : func = fun
 
     other [ 'limit' ] = other.pop ( 'limit' , 1000 )              
-       
-    result = scipy_quad ( func            ,
-                          xmin            ,
-                          xmax            ,
-                          args   = args   ,
-                          epsabs = epsabs , 
-                          epsrel = epsrel , **other )
-
+    
+    with  warnings.catch_warnings ( **wconf ) as ws :
+        warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )        
+        result = scipy_quad ( func            ,
+                              xmin            ,
+                              xmax            ,
+                              args   = args   ,
+                              epsabs = epsabs , 
+                              epsrel = epsrel , **other )
+        if not silent :            
+            for w in ws :
+                msg = wm_print ( w , with_category = False )
+                logger.warning ( '%s from scipy: %s' % ( w._category_name , msg ) ) 
+        
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
     
 # =========================================================================
@@ -1100,7 +1125,8 @@ def integral_dblquad ( fun  ,
                        kwargs = {}       , 
                        err    = False    ,
                        epsabs = eps_abs2 ,
-                       epsrel = eps_rel2 , **other ) :
+                       epsrel = eps_rel2 ,
+                       silent = False    , **other ) :
     """ Calculate the integral for the 2D-function using scipy
         
     >>> func = lambda x,y : x*x+y*y 
@@ -1110,14 +1136,20 @@ def integral_dblquad ( fun  ,
     if kwargs : func = lambda x, y ,  *a : fun ( x , y , *a , **kwargs )
     else      : func = fun
     
-    result = scipy_dblquad ( func ,
-                             ymin , ymax     ,
-                             lambda x : xmin ,
-                             lambda x : xmax ,
-                             args   = args   ,
-                             epsabs = epsabs ,
-                             epsrel = epsrel ,  **other )
-    
+    with  warnings.catch_warnings ( **wconf ) as ws :
+        warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )                
+        result = scipy_dblquad ( func ,
+                                 ymin , ymax     ,
+                                 lambda x : xmin ,
+                                 lambda x : xmax ,
+                                 args   = args   ,
+                                 epsabs = epsabs ,
+                                 epsrel = epsrel ,  **other )
+        if not silent :            
+            for w in ws :
+                msg = wm_print ( w , with_category = False )
+                logger.warning ( '%s from scipy: %s' % ( w._category_name , msg ) ) 
+
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
 # ==============================================================================
@@ -1181,16 +1213,22 @@ def integral_tplquad ( fun  ,
     if kwargs : func = lambda x, y , z , *a : fun ( x , y , z , *a , **kwargs )
     else      : func = fun
     
-    result = scipy_tplquad ( func ,
-                             zmin , zmax ,
-                             lambda z   : ymin ,
-                             lambda z   : ymax ,
-                             lambda y,z : xmin ,
-                             lambda y,z : xmax , 
-                             args   = args     , 
-                             epsabs = epsabs   ,
-                             epsrel = epsrel   ,  **other )
-    
+    with  warnings.catch_warnings ( **wconf ) as ws :
+        warnings.simplefilter ( 'ignore' if silent else 'always' , **wfilter )                
+        result = scipy_tplquad ( func ,
+                                 zmin , zmax ,
+                                 lambda z   : ymin ,
+                                 lambda z   : ymax ,
+                                 lambda y,z : xmin ,
+                                 lambda y,z : xmax , 
+                                 args   = args     , 
+                                 epsabs = epsabs   ,
+                                 epsrel = epsrel   ,  **other )
+        if not silent :            
+            for w in ws :
+                msg = wm_print ( w , with_category = False )
+                logger.warning ( '%s from scipy: %s' % ( w._category_name , msg ) ) 
+            
     return VE ( result [ 0 ] , result [ 1 ] ** 2 ) if err else result [ 0 ]
 
 # =========================================================================
@@ -1209,7 +1247,8 @@ def integral3 ( fun    ,
                 kwargs = {}       ,  
                 err    = False    , 
                 epsabs = eps_abs3 ,
-                epsrel = eps_rel3 , **other ) :
+                epsrel = eps_rel3 ,
+                silent = False    , **other ) :
     """ Calculate the integral for the 3D-function using scipy
         
     >>> func = lambda x,y,z : x*x+y*y+z*z
@@ -1220,7 +1259,8 @@ def integral3 ( fun    ,
                              kwargs = kwargs ,
                              err    = err    ,
                              epsabs = epsabs ,
-                             epsrel = epsrel ,  **other )
+                             epsrel = epsrel ,
+                             silent = silent , **other )
     ##
     return integrator.integral ( xmin , xmax ,
                                  ymin , ymax ,
@@ -1240,7 +1280,8 @@ class IntegralBase(object) :
                    func           ,
                    args   = ()    ,
                    kwargs = {}    ,
-                   err    = False , **other ) :
+                   err    = False ,
+                   silent = False , **other ) :
         """ Calculate the integral for the 1D-function
         
         >>> func   = ...
@@ -1260,6 +1301,7 @@ class IntegralBase(object) :
         self.__integrator3D = other.pop ( 'integrator3D' , None )
         
         self.__other  = other
+        self.__silent = silent
         
     ## Calculate the integral for the 1D-function
     def _integrate_1D_ ( self  , 
@@ -1270,9 +1312,13 @@ class IntegralBase(object) :
 
         xmn = float ( xmn )
         xmx = float ( xmx )
+
+        err    = other.get ( 'err'    , self.err    )
+        silent = other.get ( 'silent' , self.silent )
+        other [ 'err'    ] = err
+        other [ 'silent' ] = silent 
         
-        if xmn == xmx or isequal ( xmn , xmx ) :
-            return VE ( 0 , 0 ) if self.err else 0
+        if xmn == xmx or isequal ( xmn , xmx ) : return VE ( 0 , 0 ) if err else 0
         
         args   =  args  if   args else self.args
         kwargs = kwargs if kwargs else self.kwargs 
@@ -1281,9 +1327,9 @@ class IntegralBase(object) :
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args     and \
-           not kwargs   and \
-           not self.err and \
+        if not args   and \
+           not kwargs and \
+           not err    and \
            hasattr ( func , 'integral' ) and not hasattr ( func , 'no_native_integral' ) : 
             # ================================================================ 
             try : # ==========================================================
@@ -1291,14 +1337,13 @@ class IntegralBase(object) :
                 # ============================================================
             except TypeError : 
                 pass
-                
+        
         ## (2) use python integration
         integrator = self.__integrator
-        return integrator ( func              ,
-                            xmn    , xmx      ,
-                            args   = args     ,
-                            kwargs = kwargs   ,  
-                            err    = self.err , **other  )
+        return integrator ( func                 ,
+                            xmn    , xmx         ,
+                            args   = args        ,
+                            kwargs = kwargs      , **other  )
 
     ## Calculate the integral for the 2D-function
     def _integrate_2D_ ( self   ,
@@ -1312,24 +1357,27 @@ class IntegralBase(object) :
         kwargs = kwargs if kwargs else self.kwargs 
         other  = other  if other  else self.other
         
+        err    = other.get ( 'err'    , self.err    )
+        silent = other.get ( 'silent' , self.silent )
+        other [ 'err'    ] = err
+        other [ 'silent' ] = silent 
+
         xmn = float ( xmn )
         xmx = float ( xmx )
         
-        if xmn == xmx or isequal ( xmn , xmx ) :
-            return VE ( 0 , 0 ) if self.err else 0
+        if xmn == xmx or isequal ( xmn , xmx ) : return VE ( 0 , 0 ) if err else 0
         
         ymn = float ( ymn )
         ymx = float ( ymx )
         
-        if ymn == ymx or isequal ( ymn , ymx ) :
-            return VE ( 0 , 0 )  if self.err else 0
+        if ymn == ymx or isequal ( ymn , ymx ) : return VE ( 0 , 0 ) if err else 0
         
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args     and \
-           not kwargs   and \
-           not self.err and \
+        if not args   and \
+           not kwargs and \
+           not err    and \
            hasattr ( func , 'integral' ) and not hasattr ( func , 'no_native_integral' ) : 
             # ================================================================ 
             try : # ==========================================================
@@ -1340,12 +1388,11 @@ class IntegralBase(object) :
             
         ## (2) use python integration
         integrator = self.__integrator
-        return integrator ( func              ,
-                            xmn    , xmx      ,
-                            ymn    , ymx      ,
-                            args   = args     ,
-                            kwargs = kwargs   , 
-                            err    = self.err , **other )
+        return integrator ( func            ,
+                            xmn    , xmx    ,
+                            ymn    , ymx    ,
+                            args   = args   ,
+                            kwargs = kwargs , **other )
 
     ## Calculate the integral for the 3D-function
     def _integrate_3D_ ( self   ,
@@ -1360,30 +1407,32 @@ class IntegralBase(object) :
         kwargs = kwargs if kwargs else self.kwargs 
         other  = other  if other  else self.other
         
+        err    = other.get ( 'err'    , self.err    )
+        silent = other.get ( 'silent' , self.silent )
+        other [ 'err'    ] = err
+        other [ 'silent' ] = silent 
+
         xmn = float ( xmn )
         xmx = float ( xmx )
         
-        if xmn == xmx or isequal ( xmn , xmx ) :
-            return VE ( 0 , ) if self.err else 0
+        if xmn == xmx or isequal ( xmn , xmx ) : return VE ( 0 , 0 ) if err else 0
         
         ymn = float ( ymn )
         ymx = float ( ymx )
         
-        if ymn == ymx or isequal ( ymn , ymx ) :
-            return VE ( 0 , ) if self.err else 0
+        if ymn == ymx or isequal ( ymn , ymx ) : return VE ( 0 , 0 ) if err else 0
         
         zmn = float ( zmn )
         zmx = float ( zmx )
         
-        if zmn == zmx  or isequal ( zmn , zmx ) :
-            return VE ( 0 , 0 ) if self.err else 0
+        if zmn == zmx  or isequal ( zmn , zmx ) : return VE ( 0 , 0 ) if err else 0
         
         # ====================================================================
         ## (1) make a try to invoke the internal integral method
         # ====================================================================
-        if not args     and \
-           not kwargs   and \
-           not self.err and \
+        if not args   and \
+           not kwargs and \
+           not err    and \
            hasattr ( func , 'integral' ) and not hasattr ( func , 'no_native_integral' ) : 
             # ================================================================ 
             try : # ==========================================================
@@ -1395,12 +1444,11 @@ class IntegralBase(object) :
         ## (2) use python integration
         integrator = self.__integrator
         return integrator ( func   ,
-                            xmn    , xmx      ,
-                            ymn    , ymx      ,
-                            zmn    , zmx      ,
-                            args   = args     ,
-                            kwargs = kwargs   , 
-                            err    = self.err , **other )
+                            xmn    , xmx    ,
+                            ymn    , ymx    ,
+                            zmn    , zmx    ,
+                            args   = args   ,
+                            kwargs = kwargs , **other )
     
     @property
     def func ( self ) :
@@ -1427,6 +1475,12 @@ class IntegralBase(object) :
         """Additional keyword arguments for the integrator"""
         return self.__other
 
+    @property
+    def silent ( self ) :
+        """`silent` : silent integration (suppress warninsg)
+        """
+        return self.__silent
+    
 # =============================================================================
 ## @class Integral
 #  Calculate the integral (from x0 to x) for the 1D-function 
@@ -1460,12 +1514,13 @@ class Integral(IntegralBase) :
     - `composite_boole` : (adaptive) composite Boole's rule
     """
     ## Calculate the integral for the 1D-function
-    def __init__ ( self        ,
-                   func        ,
-                   xlow   =  0 , * ,
-                   args   = () ,
-                   kwargs = {} ,  
-                   err    = False , **other  ) :
+    def __init__ ( self           ,
+                   func           ,
+                   xlow   =  0    , * ,
+                   args   = ()    ,
+                   kwargs = {}    ,  
+                   err    = False ,
+                   silent = False , **other  ) :
         """ Calculate the integral for the 1D-function
         
         >>> func   = ...
@@ -1476,13 +1531,13 @@ class Integral(IntegralBase) :
         super(Integral,self).__init__( func       = func       ,
                                        args       = args       ,
                                        kwargs     = kwargs     , 
+                                       integrator = integrator ,                                       
                                        err        = err        ,
-                                       integrator = integrator , **other )
+                                       silent     = silent     , **other )
         
         self.__xmin   = float ( xlow ) 
         
-
-    ## Calcualety integral for 1D function from xmin to xmax 
+    ## Calculate the integral for 1D function from xmin to xmax 
     def integral ( self , xmin , xmax , *args , **kwargs ) :
         """ Calculate the integral for 1D function from xmin to xmax 
         """
@@ -1525,7 +1580,8 @@ class IntegralCache(Integral) :
                    xlow   = 0     , * ,
                    args   = ()    ,
                    kwargs = {}    ,
-                   err    = False , **other ) :
+                   err    = False ,
+                   silent = False , **other ) :
         """ Calculate the integral for the 1D-function
         
         >>> func = ...
@@ -1535,7 +1591,8 @@ class IntegralCache(Integral) :
                                              xlow   = xlow   ,
                                              args   = args   ,
                                              kwargs = kwargs ,
-                                             err    = err    , **other  )
+                                             err    = err    ,
+                                             silent = silent , **other  )
         
         ## the first (trivial) entry in the cache 
         entry        = self.xmin , 0.0  
@@ -1622,12 +1679,13 @@ class Integral2(Integral) :
     """
     ## Calculate the integral for the 2D-function
     def __init__ ( self ,
-                   func        ,
-                   xlow   = 0  ,
-                   ylow   = 0  , * , 
-                   args   = () ,
-                   kwargs = {} ,
-                   err    = False , **other ) :
+                   func           ,
+                   xlow   = 0     ,
+                   ylow   = 0     , * , 
+                   args   = ()    ,
+                   kwargs = {}    ,
+                   err    = False ,
+                   silent = False , **other ) :
         """ Calculate the integral for the 2D-function
         
         >>> func   = ...
@@ -1638,10 +1696,11 @@ class Integral2(Integral) :
         integrator = other.pop ('integrator' , integral_dblquad ) 
         Integral.__init__ ( self ,
                             func ,
-                            xlow       = xlow   ,
-                            args       =  args  ,
-                            kwargs     = kwargs ,
-                            err        = err    ,
+                            xlow       = xlow       ,
+                            args       =  args      ,
+                            kwargs     = kwargs     ,
+                            err        = err        ,
+                            silent     = silent     , 
                             integrator = integrator , **other )
         
         self.__ymin   = float ( ylow ) 
@@ -1714,7 +1773,8 @@ class Integral3(Integral2) :
                    zlow   = 0     , * , 
                    args   = ()    ,
                    kwargs = {}    ,
-                   err    = False , **other ) :
+                   err    = False ,
+                   silent = False , **other ) :
         """ Calculate the integral for the 3D-function 
         
         >>> func   = ...
@@ -1730,6 +1790,7 @@ class Integral3(Integral2) :
                              args       = args       ,
                              kwargs     = kwargs     ,
                              err        = err        ,
+                             silent     = silent     , 
                              integrator = integrator , **other )
         #
         self.__zmin   = float ( zlow )
@@ -1793,11 +1854,12 @@ class Integrate2D_X(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self  , 
-                   fun2d  , 
-                   xmin   , xmax  , * , 
-                   args   = ()    , 
-                   kwargs = {}    , 
-                   err    = False , **other ) :
+                    fun2d  , 
+                    xmin   , xmax  , * , 
+                    args   = ()    , 
+                    kwargs = {}    , 
+                    err    = False ,
+                    silent = False , **other ) :
         r""" Construct the integration object
         
         f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx
@@ -1813,7 +1875,8 @@ class Integrate2D_X(IntegralBase) :
                                 args       = args       , 
                                 kwargs     = kwargs     ,
                                 integrator = integrator , 
-                                err        = err        , **other  )
+                                err        = err        ,
+                                silent     = silent     , **other  )
         self.__xmin = xmin 
         self.__xmax = xmax 
 
@@ -1860,11 +1923,12 @@ class Integrate2D_Y(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self          , 
-                   fun2d          , 
-                   ymin   , ymax  , * ,  
-                   args   = ()    , 
-                   kwargs = {}    , 
-                   err    = False , **other ) :
+                    fun2d          , 
+                    ymin   , ymax  , * ,  
+                    args   = ()    , 
+                    kwargs = {}    , 
+                    err    = False ,
+                    silent = False , **other ) :
         r""" Construct the integration object
         
         f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy
@@ -1875,10 +1939,11 @@ class Integrate2D_Y(IntegralBase) :
         """
         integrator = other.pop ( 'integrator' , integral_quad  )
         IntegralBase.__init__ ( self , 
-                                func       = fun2d  ,
-                                args       = args   ,
-                                kwargs     = kwargs , 
-                                err        = err    ,
+                                func       = fun2d      ,
+                                args       = args       ,
+                                kwargs     = kwargs     , 
+                                err        = err        ,
+                                silent     = silent     , 
                                 integrator = integrator , **other )
         self.__ymin = ymin
         self.__ymax = ymax 
@@ -1934,11 +1999,13 @@ class Integrate3D_X(Integrate2D_X) :
     """
 
     ## construct the integration object 
-    def __init__  ( self  , 
-                   fun3d  , 
-                   xmin   , xmax , * , 
-                   args   = ()   , 
-                   kwargs = {}   , err = False , **other ) :
+    def __init__  ( self   , 
+                    fun3d  , 
+                    xmin   , xmax , * , 
+                    args   = ()    , 
+                    kwargs = {}    ,
+                    err    = False ,
+                    silent = False , **other ) :
         r""" Construct the integration object
         
         f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
@@ -1947,11 +2014,12 @@ class Integrate3D_X(Integrate2D_X) :
         >>> fyz     = Integral3D_X( fun3d , xmin = 0 , xmax = 1 )
         >>> print fyz ( 1 , 2 )
         """
-        Integrate2D_X.__init__ ( self  , fun3d  ,
-                                xmin   , xmax   , 
-                                args   = args   ,
-                                kwargs = kwargs , 
-                                err    = err    , **other )
+        Integrate2D_X.__init__ ( self   , fun3d  ,
+                                 xmin   , xmax   , 
+                                 args   = args   ,
+                                 kwargs = kwargs , 
+                                 err    = err    ,
+                                 silent = silent , **other )
         
     ##  evaluate the function (perform y-integration) 
     def __call__ ( self , y  , z , *args , **kwargs ) :
@@ -1996,7 +2064,8 @@ class Integrate3D_Y(Integrate2D_Y) :
                     ymin   , ymax  , * , 
                     args   = ()    , 
                     kwargs = {}    , 
-                    err    = False , **other ) :
+                    err    = False ,
+                    silent = False , **other ) :
         r""" Construct the integration object
         
         f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
@@ -2005,11 +2074,12 @@ class Integrate3D_Y(Integrate2D_Y) :
         >>> fxy     = Integral3D_Y( fun3d , ymin = 0 , ymax = 1 )
         >>> print fxy ( 1 , 2 )
         """
-        Integrate2D_Y.__init__ ( self   , fun3d , 
+        Integrate2D_Y.__init__ ( self   , fun3d  , 
                                  ymin   , ymax   , 
                                  args   = args   , 
                                  kwargs = kwargs , 
-                                 err    = err    , **other )
+                                 err    = err    ,
+                                 silent = silent , **other )
         
     ##  evaluate the function (perform y-integration) 
     def __call__ ( self , x  , z , *args , **kwargs ) :
@@ -2053,7 +2123,8 @@ class Integrate3D_Z(IntegralBase) :
                     zmin   , zmax  , * , 
                     args   = ()    , 
                     kwargs = {}    , 
-                    err    = False , **other  ) :
+                    err    = False ,
+                    silent = False , **other  ) :
         r""" Construct the integration object
         
         f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
@@ -2067,7 +2138,8 @@ class Integrate3D_Z(IntegralBase) :
                                 func       = fun3d      , 
                                 args       = args       ,
                                 kwargs     = kwargs     , 
-                                err        = err        , 
+                                err        = err        ,
+                                silent     = silent     , 
                                 integrator = integrator , **other )
         self.__zmin = zmin
         self.__zmax = zmax
@@ -2129,7 +2201,8 @@ class Integrate3D_XY(Integrate3D_X) :
                     ymin   , ymax  , * ,  
                     args   = ()    ,
                     kwargs = {}    , 
-                    err    = False , **other ) :
+                    err    = False ,
+                    silent = False , **other ) :
         r""" Construct the integration object
         
         f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
@@ -2140,15 +2213,16 @@ class Integrate3D_XY(Integrate3D_X) :
         """
         integrator = other.pop ( 'integrator' , integral_dblquad  )
         Integrate3D_X.__init__ ( self      , 
-                                fun3d      , 
-                                xmin       , xmax       , 
-                                args       = args       , 
-                                kwargs     = kwargs     ,
-                                integrator = integrator , **other  ) 
+                                 fun3d      , 
+                                 xmin       , xmax       , 
+                                 args       = args       , 
+                                 kwargs     = kwargs     ,
+                                 err        = err        ,
+                                 silent     = silent     ,  
+                                 integrator = integrator , **other  ) 
         self.__ymin = ymin
         self.__ymax = ymax
-        
-        
+                
     ##  evaluate the function (perform xy-integration) 
     def __call__ ( self , z , *args , **kwargs ) :
         r""" Evaluate the function (perform (xy)-integration)
@@ -2203,7 +2277,8 @@ class Integrate3D_XZ(Integrate3D_X) :
                     zmin   , zmax  , * , 
                     args   = ()    , 
                     kwargs = {}    , 
-                    err    = False , **other ) :
+                    err    = False ,
+                    silent = False , **other ) :
         r"""Construct the integration object
         
         f(y) = \int_{x_{min}}^{x_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dx dz
@@ -2218,7 +2293,8 @@ class Integrate3D_XZ(Integrate3D_X) :
                                  xmin       , xmax       , 
                                  args       = args       , 
                                  kwargs     = kwargs     , 
-                                 err        = err        , 
+                                 err        = err        ,
+                                 silent     = silent     , 
                                  integrator = integrator , **other )
         self.__zmin = zmin
         self.__zmax = zmax
@@ -2278,7 +2354,8 @@ class Integrate3D_YZ(Integrate3D_Y) :
                     zmin   , zmax  , * , 
                     args   = ()    ,
                     kwargs = {}    , 
-                    err    = False , **other ) :
+                    err    = False ,
+                    silent = False , **other ) :
         r""" Construct the integration object
         f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
         
@@ -2292,8 +2369,9 @@ class Integrate3D_YZ(Integrate3D_Y) :
                                  xmin       , xmax       , 
                                  args       = args       , 
                                  kwargs     = kwargs     , 
-                                 err        = err        , 
-                                integrator = integrator , **other )
+                                 err        = err        ,
+                                 silent     = silent     , 
+                                 integrator = integrator , **other )
         self.__zmin = zmin
         self.__zmax = zmax
         
@@ -2340,7 +2418,8 @@ def complex_integral ( func                    ,
                        cnt_deriv = None        ,  
                        args      = ()          ,
                        kwargs    = {}          ,  
-                       err       = False       , **other ) :
+                       err       = False       ,
+                       silent    = False       , **other ) :
 
     if cnt_deriv is None :
         
@@ -2368,8 +2447,8 @@ def complex_integral ( func                    ,
     fun_im = lambda t : complex ( func ( contour ( t ) , *args , **kwargs ) * cnt_deriv ( t ) ) . imag
 
 
-    i_re = Integral ( fun_re , tmin , err = err , **other )
-    i_im = Integral ( fun_im , tmin , err = err , **other )
+    i_re = Integral ( fun_re , tmin , err = err , silent = silent , **other )
+    i_im = Integral ( fun_im , tmin , err = err , silent = silent , **other )
    
     int_re = i_re ( tmax )
     int_im = i_im ( tmax )
@@ -2400,7 +2479,8 @@ def complex_line_integral ( func           ,
                             b              , * , 
                             args   = ()    ,
                             kwargs = {}    , 
-                            err    = False , **other ) :
+                            err    = False ,
+                            silent = False , **other ) :
     """ Calculate the complex contour integral along the line in complex plane
     >>> a   = 0
     >>> b   = (1+1j)*2*math.pi 
@@ -2417,7 +2497,8 @@ def complex_line_integral ( func           ,
         cnt_deriv = lambda t :       b - a       ,  
         args      = args                         ,
         kwargs    = kwargs                       , 
-        err       = err                          , **other )
+        err       = err                          ,
+        silent    = silent                       , **other )
 
 # ==========================================================================
 ## Get a contour integral over the *closed* polygon
@@ -2429,7 +2510,8 @@ def complex_polygon_integral ( func            ,
                                polygon         , * , 
                                args    = ()    ,
                                kwargs  = {}    , 
-                               err     = False , **other ) :
+                               err     = False ,
+                               silent  = False , **other ) :
     """ Get a contour integral over the *closed* polygon
     >>> func = ...
     >>> r = complex_polygon_integral( func , ( -1 , 1 , 1+1j , -1+1j ) )
@@ -2448,7 +2530,8 @@ def complex_polygon_integral ( func            ,
                                        points [1]      ,
                                        args   = args   , 
                                        kwargs = kwargs , 
-                                       err    = err    , **other )
+                                       err    = err    ,
+                                       silent = silent , **other )
     ## make a closed polygon
     N = len ( points ) 
     points.append ( point [ 0 ] )
@@ -2463,7 +2546,8 @@ def complex_polygon_integral ( func            ,
                                      p1 , p2 , 
                                      args   = args   ,
                                      kwargs = kwargs , 
-                                     err    = err    , **other )
+                                     err    = err    ,
+                                     silent = silent , **other )
         
         if err  :
             result += r [ 0 ]
@@ -2471,7 +2555,7 @@ def complex_polygon_integral ( func            ,
         else :
             result += r
 
-    return result if not err else (result, error)
+    return result if not err else ( result , error )
                            
 # ===========================================================================
 ## calculate the contour integral over the circle in the complex plane
@@ -2490,7 +2574,8 @@ def complex_circle_integral ( func                          ,
                               limits = ( 0. , 2 * math.pi ) , 
                               args   = ()                   ,
                               kwargs = {}                   , 
-                              err    = False                , **other  ) :
+                              err    = False                ,
+                              silent = False                , **other  ) :
     """ Calculate the contour integral over the circle in the complex plane
     >>> result = complex_circle_integral ( lambda z : 1.0/z , center = 0+0j , radius = 1 )
     """
@@ -2505,7 +2590,8 @@ def complex_circle_integral ( func                          ,
         cnt_deriv = lambda t :     R * ( -math.sin ( t ) + math.cos ( t ) * 1j ) ,        
         args      = args                                                  ,
         kwargs    = kwargs                                                , 
-        err       = err                                                   , **other  ) 
+        err       = err                                                   ,
+        silent    = silent                                                , **other  ) 
 
 # =============================================================================
 if '__main__' == __name__ :
