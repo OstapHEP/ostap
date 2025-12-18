@@ -25,9 +25,9 @@ __all__     = (
     'Generic2D_pdf'    , ## wrapper over imported RooFit (2D)-pdf
     'Generic3D_pdf'    , ## wrapper over imported RooFit (3D)-pdf
     ##
-    'Shape1D_pdf'      , ## 1D-Generic/fixed shape from C++ callable 
-    'Shape2D_pdf'      , ## 2D-Generic/fixed shape from C++ callable 
-    'Shape3D_pdf'      , ## 3D-Generic/fixed shape from C++ callable 
+    'Shape1D_pdf'      , ## 1D-Generic/fixed shape from (C++) callable 
+    'Shape2D_pdf'      , ## 2D-Generic/fixed shape from (C++) callable 
+    'Shape3D_pdf'      , ## 3D-Generic/fixed shape from (C++) callable 
     ##
     'Histo1D_pdf'      , ## simple PDF from 1D-histogram
     'Histo2D_pdf'      , ## simple PDF from 2D-histogram

@@ -10257,7 +10257,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Rational, 1) ;
+      ClassDefOverride(Ostap::Models::Rational, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -10316,13 +10316,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying rational function
-      const Ostap::Math::RationalPositive& function    () const { return m_rational ; }
-      /// access to underlying rational function
-      const Ostap::Math::RationalPositive& rational    () const { return m_rational ; }
+      inline const Ostap::Math::RationalPositive& rational    () const
+      { setPars () ; return m_rational ; } 
       /// access to numerator of underlying   rational function
-      const Ostap::Math::Positive&         numerator   () const { return m_rational.  numerator () ; }
+      inline const Ostap::Math::Positive&         numerator   () const
+      { setPars () ; return m_rational.numerator() ; } 	
       /// access to denomerator of underlying rational function
-      const Ostap::Math::Positive&         denominator () const { return m_rational.denominator () ; }
+      inline const Ostap::Math::Positive&         denominator () const 
+      { setPars () ; return m_rational.denominator() ; } 	
+      /// access to underlying rational function
+      inline const Ostap::Math::RationalPositive& function    () const
+      { setPars () ; return m_rational ; } 	
       // ======================================================================      
     public:
       // ======================================================================

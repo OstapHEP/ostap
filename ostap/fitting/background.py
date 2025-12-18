@@ -431,7 +431,7 @@ class Rational_pdf(PolyBase) :
     def __init__ ( self             ,
                    name             ,  ## the name 
                    xvar             ,  ## the variable 
-                   np       = 1     ,  ## degree if numerator 
+                   np       = 1     ,  ## degree of numerator 
                    nq       = 1     ,  ## degree of denumerator 
                    xmin     = None  ,  ## optional x-min
                    xmax     = None  ,  ## optional x-max 
@@ -445,56 +445,57 @@ class Rational_pdf(PolyBase) :
         #
         n  = len ( self.phis )
         np = min ( n , np )
-        nq =       n - np 
-        
+        nq =       n - np         
         #
         ## xmin/xmax
         self.__x_min , self.__x_max = self.xmnmx ( xmin , xmax )
         #
         
-        ## build the model
+        ## build numerator and denominator (mainly for debuging purposes)
+        
+        ## (1) numerator as Ostap PDF 
+        self.__numerator   = PolyPos_pdf (
+            name     = 'numerator_%s' % self.name ,
+            xvar     = self.xvar              ,
+            power    = np                     ,
+            xmin     = self.x_min             ,
+            xmax     = self.x_max             ,
+            the_phis = self.phi_list [ : np ] ) ## ATTENTION! 
+        
+        ## (2) denominator as Ostap PDF 
+        self.__denominator = PolyPos_pdf (
+            name     = 'denominator_%s' % self.name ,
+            xvar     = self.xvar              ,
+            power    = nq                     ,
+            xmin     = self.x_min             ,
+            xmax     = self.x_max             ,
+            the_phis = self.phi_list [ np : ] ) ## ATTENTION 
+        
+        ## (3) Finally build the model
         self.pdf   = Ostap.Models.Rational (
             self.roo_name ( "rat_"  ) ,
             "Rational function %s" % self.name , 
-            self.xvar            ,
-            np                   , 
-            self.phi_list        ,
-            self.x_min           ,
-            self.x_max           )
+            self.xvar                    ,
+            self.__numerator   .phi_list , 
+            self.__denominator .phi_list , 
+            self.x_min                   ,
+            self.x_max                   )
 
-        ## numerator as Ostap PDF 
-        self.__numerator   = PolyPos_pdf (
-            name     = 'numerator_%s' % self.name ,
-            xvar     = self.xvar            ,
-            power    = np                   ,
-            xmin     = self.x_min           ,
-            xmax     = self.x_max           ,
-            the_phis = self.phi_list[:np]   )
-        
-        ## denomiinator as Ostap PDF 
-        self.__denominator = PolyPos_pdf (
-            name     = 'denominato_%s' % self.name ,
-            xvar     = self.xvar            ,
-            power    = n - np               ,
-            xmin     = self.x_min           ,
-            xmax     = self.x_max           ,
-            the_phis = self.phi_list[np:]   )
-        
         ## save configuration 
         self.config = {
-            'name'     : self.name     ,
-            'xvar'     : self.xvar     ,
-            'np'       : self.pdf.p () ,            
-            'nq'       : self.pdf.q () ,            
-            'the_phis' : self.phis     ,
-            'xmin'     : self.x_min    ,
-            'xmax'     : self.x_max    ,            
-            }
-                
+            'name'     : self.name  ,
+            'xvar'     : self.xvar  ,
+            'np'       : self.np    ,            
+            'nq'       : self.nq    ,            
+            'the_phis' : self.phis  ,
+            'xmin'     : self.x_min ,
+            'xmax'     : self.x_max }
+        
     @property
     def np ( self ) :
         """`np'-parameter - degree of numerator"""
         return self.pdf.p ()
+    
     @property
     def nq ( self ) :
         """`nq'-parameter - degree of denomerator"""
@@ -517,29 +518,31 @@ class Rational_pdf(PolyBase) :
 
     @property
     def ppars ( self ) :
-        """'ppars' : parameters of numerator"""
-        return self.pars[ : self.np ]
+        """'ppars' : parameters of numerator
+        """
+        return self.pars [ : self.np ]
 
     @property
     def qpars ( self ) :
-        """'qpars' : parameters of denumorator"""
-        return self.pars[ self.np : ]
+        """'qpars' : parameters of denumerator
+        """
+        return self.pars [ self.np : ]
 
     @property
-    def numerator  ( slef ) :
-        """`numerator` : get numerator of rational function as Ostap PDF
+    def numerator  ( self ) :
+        """`numerator` : get numerator of rational function as Ostap PDF 
         """
         self.pdf.setPars()
-        self._numerator.pdf.setPars()         
+        self.__numerator.pdf.setPars()         
         return self.__numerator 
     
     @property
-    def denominator ( slef ) :
-        """`denominator` : get the denominator of ratioal function as Ostap PDF
+    def denominator ( self ) :
+        """`denominator` : get the denominator of rational function as Ostap PDF 
         """
         self.pdf.setPars()
-        self._denomiinator.pdf.setPars()         
-        return self.__numerator 
+        self.__denominator.pdf.setPars()         
+        return self.__denominator  
     
 models.append ( Rational_pdf ) 
 

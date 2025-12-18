@@ -134,7 +134,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
-from   ostap.core.ostap_types import integer_types, long_type, num_types
+from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.core.core        import cpp, VE, funID, Ostap
 from   ostap.math.param       import ( legendre_sum      ,
                                        chebyshev_sum     ,
@@ -591,7 +591,6 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
     
     return func 
         
-
 # =============================================================================
 ## represent 1D-histo as rational function. based on Floater-Hormann's
 #  rational barycentric interpolant
@@ -611,7 +610,7 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
 def _h1_rational_  ( h1               ,
-                     n                , ## degree of numerator 
+                     p                , ## degree of numerator 
                      d                ,
                      opts   = 'SQ0'   ,
                      xmin   = inf_neg ,
@@ -636,12 +635,18 @@ def _h1_rational_  ( h1               ,
     >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
     >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
     """
+    ## 
+    assert isinstance ( p , integer_types ) and 0 <= p , "Invalid p: %s" % p
+    assert isinstance ( d , integer_types ) and 0 <= d , "Invalid d: %s" % d
+    ##
     xmin = max ( xmin , h1.xmin() ) 
-    xmax = min ( xmax , h1.xmax() )  
+    xmax = min ( xmax , h1.xmax() )
+    ##
     # make reasonable approximation
-    func  = rational_fun ( h1 , n , d , xmin , xmax )
+    func  = rational_fun ( h1 , p , d , xmin , xmax )
     ## make a fit 
-    if not params : params = tuple ( [ p for p in func.pars() ] ) 
+    if not params : params = tuple ( [ v for v in func.pars() ] )
+    ## 
     from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
@@ -1987,39 +1992,75 @@ _new_methods_ += [
 
 # =============================================================================
 ## parameterize positive histogram with certain PDF
-def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
-    """ Parameterize positive histogram with certain PDF
+#   @param h1 1D-histogram
+#   @param pdf_type Either the type of fit-PDF  or ready-to-use PDF
+#   @param pars     tuple of parameters for PDF creation in case `pdf_type` is `type` 
+#   @param args     addtitional positional argumetts for `PDF.fitHisto ( histo , *args , **kwargs )`
+#   @param pdfpars  additional keyword arguments for PDF creation in case `pdf_type` is `type`
+#   @param kwargs   addtitional keyword argument for `PDF.fitHisto ( histo , *args , **kwargs )`
+#   @return ParamPDFInfo 
+def _h1_pdf_ ( h1 , pdf_type , pars , *args , pdfpars = {} , **kwargs ) :
+    """ Parameterize the positive histogram with certain PDF
+    
+    - `h1`       : 1D-histogram
+    - `pdf_type` : either the type of the fit-PDF or ready-to-use PDF1 instance 
+    - `pars`     : tuple of parameters for PDF creation in case `pdf_type` is `type` 
+    - `args`     : addtitional positional argumetts for `PDF.fitHisto ( histo , *args , **kwargs )`
+    - `pdfpars`  : additional  keyword arguments for PDF creation in case `pdf_type` is `type`
+    - `kwargs`   : addtitional keyword argument for `PDF.fitHisto ( histo , *args , **kwargs )`
+
+    return `ParamPDFInfo` object 
+
     """
+    assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim() ,\
+        "Invalid 1D-histogram type: %s" % typename ( h1 ) 
     ##
     mn , mx = h1.minmax()
-    if mn.value() < 0 or mx.value() <= 0 :
-        raise AttributeError("Histo goes to negative %s/%s" % ( mn , mx ) )
+    assert 0 <= mn.value () and 0 < mx.value() , "Histo goes to negative: %s/%s" % ( mn , mx )
     ##
     if not hasattr ( h1 , 'xvar' ) :
-        h1.xvar = ROOT.RooRealVar ( 'x' + h1.GetName() , 'xvar(%s)' % h1.GetName() , *h1.xminmax() )
-
+        vname   = 'x' + h1.GetName()
+        vname   = vname.strip().replace(' ', '_').replace('*', '_')
+        h1.xvar = ROOT.RooRealVar ( vname , 'xvar(%s)' % h1.GetName() , *h1.xminmax() )
+        
     ## create pdf
-    from ostap.fitting.fithelpers import VarMaker 
+    from ostap.fitting.fithelpers import VarMaker
+    from ostap.fitting.pdfbasic   import PDF1
+    ## 
     name   = VarMaker.generate_name (  'pdf' , '' , h1.GetName() )
     ##
-    pdf    = pdf_type     ( name , h1.xvar , *pars )
+    ## ready to use PDF is supplied 
+    if   isinstance ( pdf_type , PDF1 )  :
+        ## use the supplied PDF 
+        if pars    : logger.warning ( "Ignore specified `pars` arguments: %s"   % str ( pars    ) )
+        if pdfpars : logger.warning ( "Ignore specified `pdfpars` argument: %s" % str ( pdfpars ) )
+        pdf = pdt_type
+    elif isinstance ( pdf_type , type ) and issubclass ( pdf_type , PDF1 ) :
+        ## create new pdf 
+        pdf    = pdf_type     ( name , h1.xvar , *pars , **pdfpars )
+    else :
+        raise TypeError( "Invalid `pdf_type/pars/pdfpars` setting!" ) 
+
+    ## refit ? 
+    refit = kwargs.pop ( 'refit' , 8 ) 
+    # ===========================================================================
     ## fit the histogram
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
-        r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
+        r , f  = pdf.fitHisto ( h1 , *args, refit = refit , **kwargs )
         # =======================================================================
     except Exception : # ========================================================
         # =======================================================================
         logger.error ( 'Exception from %s/%s fitHisto' % ( typename ( pdf     ) ,
                                                            typename ( pdf.pdf ) ) , exc_info = True )
         raise
-        
-        ## 
-    if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars() 
+
+    ## 
+    if hasattr ( pdf.pdf , 'setPars'  ) : pdf.pdf.setPars()
+    ## 
     if hasattr ( pdf.pdf , 'function' ) : func = pdf.pdf.function()
     else                                : func = lambda x : pdf ( x )
-        
     ##
     from ostap.fitting.roofit import PDF_fun
     pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
@@ -2045,7 +2086,7 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_positive_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_positive_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with the positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_positive ( 3 )
@@ -2058,8 +2099,7 @@ def _h1_pdf_positive_ ( h1 , degree , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import PolyPos_pdf
-    return _h1_pdf_ ( h1 , PolyPos_pdf , (degree,) , *args , **kwargs )
-
+    return _h1_pdf_ ( h1 , PolyPos_pdf , (degree,) , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the positive polynomial
@@ -2078,7 +2118,7 @@ def _h1_pdf_positive_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
+def _h1_pdf_even_ ( h1 , halfdegree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with the positive even polynomial
     >>> h1 = ...
     >>> results = h1.pdf_even ( 2 )
@@ -2093,8 +2133,7 @@ def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import PolyEven_pdf
-    return _h1_pdf_ ( h1 , PolyEven_pdf , (halfdegree,) , *args , **kwargs )
-
+    return _h1_pdf_ ( h1 , PolyEven_pdf , (halfdegree,) , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the monotonic positive polynomial
@@ -2111,7 +2150,7 @@ def _h1_pdf_even_ ( h1 , halfdegree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_monotonic_ ( h1 , degree , increasing , *args , **kwargs ) :
+def _h1_pdf_monotonic_ ( h1 , degree , increasing , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_monotonic ( 3 , increasing = True )
@@ -2124,7 +2163,7 @@ def _h1_pdf_monotonic_ ( h1 , degree , increasing , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import Monotonic_pdf
-    return _h1_pdf_ ( h1 , Monotonic_pdf , (degree,increasing) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , Monotonic_pdf , (degree,increasing) , *args , pdfpars = {} , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the increasing positive polynomial
@@ -2141,7 +2180,7 @@ def _h1_pdf_monotonic_ ( h1 , degree , increasing , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_increasing_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_increasing ( 3 )
@@ -2153,7 +2192,7 @@ def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_monotonic_ ( h1 , degree , True , *args , **kwargs ) 
+    return _h1_pdf_monotonic_ ( h1 , degree , True , *args , pdfpars = pdfpars , **kwargs ) 
 
 # =============================================================================
 ## parameterize/fit histogram with the decreasing positive polynomial
@@ -2170,7 +2209,7 @@ def _h1_pdf_increasing_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_decreasing_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_decreasing_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with the monotonic positive polynomial
     >>> h1 = ...
     >>> results = h1.pdf_decreasing ( 3 )
@@ -2182,7 +2221,7 @@ def _h1_pdf_decreasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_monotonic_ ( h1 , degree , False , *args , **kwargs ) 
+    return _h1_pdf_monotonic_ ( h1 , degree , False , *args , pdfpars = pdfpars , **kwargs ) 
 
 # =============================================================================
 ## parameterize/fit histogram with the convex polynomial
@@ -2199,7 +2238,7 @@ def _h1_pdf_decreasing_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_convex_ ( h1 , degree , increasing , *args , **kwargs ) :
+def _h1_pdf_convex_ ( h1 , degree , increasing , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with convex polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convex ( 3 , increasing = True )
@@ -2212,7 +2251,7 @@ def _h1_pdf_convex_ ( h1 , degree , increasing , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import Convex_pdf
-    return _h1_pdf_ ( h1 , Convex_pdf , (degree,increasing,True) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , Convex_pdf , (degree,increasing,True) , *args , pdfpars = {} , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the convex increasing polynomial
@@ -2229,7 +2268,7 @@ def _h1_pdf_convex_ ( h1 , degree , increasing , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_convex_increasing_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_convex_increasing_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with convex increasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convex_increasing ( 3 ,)
@@ -2241,7 +2280,7 @@ def _h1_pdf_convex_increasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_convex_ ( h1 , degree , True , *args , **kwargs )
+    return _h1_pdf_convex_ ( h1 , degree , True , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the convex decreasing polynomial
@@ -2258,7 +2297,7 @@ def _h1_pdf_convex_increasing_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_convex_decreasing_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_convex_decreasing_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with convex decreasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convex_decreasing ( 3 ,)
@@ -2270,7 +2309,7 @@ def _h1_pdf_convex_decreasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_convex_ ( h1 , degree , False , *args , **kwargs )
+    return _h1_pdf_convex_ ( h1 , degree , False , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the concave polynomial
@@ -2287,7 +2326,7 @@ def _h1_pdf_convex_decreasing_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_concave_ ( h1 , degree , increasing , *args , **kwargs ) :
+def _h1_pdf_concave_ ( h1 , degree , increasing , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with concave polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concave ( 3 , increasing = True )
@@ -2300,7 +2339,7 @@ def _h1_pdf_concave_ ( h1 , degree , increasing , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import Convex_pdf
-    return _h1_pdf_ ( h1 , Convex_pdf , (degree,increasing,False) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , Convex_pdf , (degree,increasing,False) , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the concave increasing polynomial
@@ -2317,7 +2356,7 @@ def _h1_pdf_concave_ ( h1 , degree , increasing , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_concave_increasing_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_concave_increasing_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with concave increasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concave_increasing ( 3 )
@@ -2329,7 +2368,7 @@ def _h1_pdf_concave_increasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_concave_ ( h1 , degree , True , *args , **kwargs )
+    return _h1_pdf_concave_ ( h1 , degree , True , *args , pdfpars = {} , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the concave decreasing polynomial
@@ -2346,7 +2385,7 @@ def _h1_pdf_concave_increasing_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_concave_decreasing_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_concave_decreasing_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with concave decreasing polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concave_decreasing ( 3 )
@@ -2358,7 +2397,7 @@ def _h1_pdf_concave_decreasing_ ( h1 , degree , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
-    return _h1_pdf_concave_ ( h1 , degree , False , *args , **kwargs )
+    return _h1_pdf_concave_ ( h1 , degree , False , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the convex polynomial
@@ -2375,7 +2414,7 @@ def _h1_pdf_concave_decreasing_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_convexpoly_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_convexpoly_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with convex polynomial
     >>> h1 = ...
     >>> results = h1.pdf_convexpoly ( 3 )
@@ -2388,7 +2427,7 @@ def _h1_pdf_convexpoly_ ( h1 , degree , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import ConvexOnly_pdf
-    return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,True) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,True) , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the concave polynomial
@@ -2405,7 +2444,7 @@ def _h1_pdf_convexpoly_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
+def _h1_pdf_concavepoly_ ( h1 , degree , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with convex polynomial
     >>> h1 = ...
     >>> results = h1.pdf_concavepoly ( 3 )
@@ -2418,7 +2457,7 @@ def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
     >>> frame   = results[-1] ## frame/RooPlot 
     """
     from ostap.fitting.background import ConvexOnly_pdf
-    return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,False) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , ConvexOnly_pdf , (degree,False) , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the rational function 
@@ -2435,7 +2474,7 @@ def _h1_pdf_concavepoly_ ( h1 , degree , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2023-09-19
-def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
+def _h1_pdf_rational_ ( h1 , p , d  , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with the rational function 
     >>> h1 = ...
     >>> results = h1.pdf_rational ( 3 , 3 )
@@ -2447,6 +2486,10 @@ def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
     >>> pdf_fun = results[ 4] ## pdf-function (normalized)
     >>> frame   = results[-1] ## frame/RooPlot 
     """
+
+    assert isinstance ( p , integer_types ) and 0 <= p , "Invalid p: %s" % p
+    assert isinstance ( d , integer_types ) and 0 <= d , "Invalid d: %s" % d
+
     from ostap.fitting.background import Rational_pdf
     from ostap.fitting.variables  import FIXVAR 
     
@@ -2462,7 +2505,7 @@ def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
     name   = VarMaker.generate_name (  'pdf' , '' , h1.GetName() )
     ##
     ## pdf    = pdf_type     ( name , h1.xvar , *pars )
-    pdf    = Rational_pdf ( name , h1.xvar , p , q )
+    pdf    = Rational_pdf ( name , h1.xvar , p , d , *pdfpars )
 
     # ===========================================================================
     ## fit the histogram
@@ -2470,35 +2513,29 @@ def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
     try : # =====================================================================
         # =======================================================================
         ## all pars 
-        apars = tuple ( v for v in pdf.pdf.pars() )
-        ## numerator 
-        pvars = tuple ( v for v in apars [  :p ]  )
-        ## denominator 
-        qvars = tuple ( v for v in apars [ p:  ]  )
-
+        apars = tuple ( v for v in pdf.pars )
+        pvars = tuple ( v for v in apars [   : p ] ) ## numerator pars 
+        qvars = tuple ( v for v in apars [ p :   ] ) ## denominator parameters 
+        
         for qv in qvars :
-            if hasattr ( qv , 'setValue' ) : qv.setValue ( 0 ) 
-            
+            if hasattr ( qv , 'setValue' ) and not qv.isConstant() : qv.setValue ( 0 ) 
+                
         kw = {}
         kw.update ( kwargs )
-        kw['draw'] = False
-        
-        ## (1) fix denominator and fit with numertor-only
-        if qvars : 
-            with FIXVAR ( qvars ) :
-                r , _  = pdf.fitHisto ( h1 , *args, **kw )
-                
-        ## (2) fix numerator and fit with denominator -only
-        if pvars : 
-            with FIXVAR ( pvars ) :
-                r , _  = pdf.fitHisto ( h1 , *args, **kw )
-                
-        ## (3) fix denominator and fit with numertor-only
-        if qvars :            
-            with FIXVAR ( qvars ) :
-                r , _  = pdf.fitHisto ( h1 , *args, **kw  )
+        kw [ 'draw'   ] = False
+        kw [ 'silent' ] = True
+        kw [ 'refit'  ] = 5 
 
-        ## (4) the final fit 
+        if pvars and qvars :
+            
+            ## (1) fix denominator and fit with numerator-only
+            with FIXVAR ( qvars ) : r , _  = pdf.fitHisto ( h1 , *args , **kw )        
+            ## (2) fix numerator and re-fit with denominator-only
+            with FIXVAR ( pvars ) : r , _  = pdf.fitHisto ( h1 , *args , **kw )
+            ## (3) fix denominator and re-fit with numerator-only
+            with FIXVAR ( qvars ) : r , _  = pdf.fitHisto ( h1 , *args , **kw  )            
+                
+        ## (4) the final fit
         r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
             
         # =======================================================================
@@ -2506,6 +2543,30 @@ def _h1_pdf_rational_ ( h1 , p , q  , *args , **kwargs ) :
         # =======================================================================
         logger.error ( 'Exception from %s/%s fitHisto' % ( typename ( pdf     ) ,
                                                            typename ( pdf.pdf ) ) , exc_info = True )
+
+        pdf.pdf.setPars ()
+
+        fun  = pdf.pdf.function()
+        fun1 = fun.numerator   ()
+        fun2 = fun.denominator () 
+
+        from ostap.utils.ranges import vrange
+
+        print ('histo' , h1 )
+        
+        print ('FUN/1' , fun1 )
+        print ('FUN/2' , fun2 )
+        print ('FUN  ' , fun  )
+
+        xmin, xmax = h1.xminmax()
+        
+        print ('FUN/1' , list ( fun1 ( x ) for x in vrange ( xmin , xmax , 20 ) ) )
+        print ('FUN/2' , list ( fun2 ( x ) for x in vrange ( xmin , xmax , 20 ) ) )
+        print ('FUN  ' , list ( fun  ( x ) for x in vrange ( xmin , xmax , 20 ) ) )
+        
+        pdf.numerator  .draw ()
+        pdf.denominator.draw ()
+        
         raise
     
     ## 
@@ -2575,7 +2636,7 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
+def _h1_pdf_pspline_ ( h1 , spline , *args , pdfpars = {} , **kwargs ) :
     """Parameterize/fit histogram with positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_pSpline ( spline = (3,2) )
@@ -2591,7 +2652,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
         spline = PS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] )
     #
     from ostap.fitting.background import PSpline_pdf
-    return _h1_pdf_ ( h1 , PSpline_pdf , ( spline , ) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , PSpline_pdf , ( spline , ) , *args , pdfpars = pdfpars , **kwargs )
 
 
 # =============================================================================
@@ -2606,7 +2667,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
+def _h1_pdf_mspline_ ( h1 , spline , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with monotonic positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_mSpline ( spline = (3,2,True) )
@@ -2622,7 +2683,7 @@ def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
         spline = MS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] )
         #
     from ostap.fitting.background import MSpline_pdf
-    return _h1_pdf_ ( h1 , MSpline_pdf , ( spline , ) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , MSpline_pdf , ( spline , ) , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## parameterize/fit histogram with the convex/concave monotonic positive  b-spline 
@@ -2636,7 +2697,7 @@ def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
+def _h1_pdf_cspline_ ( h1 , spline , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with convex/concave montonic positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_cSpline ( spline = (3,2,True,True) )
@@ -2652,7 +2713,7 @@ def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] , spline[3] )
     #
     from ostap.fitting.background import CSpline_pdf
-    return _h1_pdf_ ( h1 , CSpline_pdf , ( spline , ) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , CSpline_pdf , ( spline , ) , *args , pdfpars = pdfpars , **kwargs )
 
 
 # =============================================================================
@@ -2667,7 +2728,7 @@ def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
+def _h1_pdf_convexSpline_ ( h1 , spline , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with convex positive b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_convexSpline ( spline = (3,2) )
@@ -2683,7 +2744,7 @@ def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , True )
         #
     from ostap.fitting.background import CPSpline_pdf
-    return _h1_pdf_ ( h1 , CPSpline_pdf , ( spline , ) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , CPSpline_pdf , ( spline , ) , *args , pdfpars = pdfpars , **kwargs )
 
 
 # =============================================================================
@@ -2698,7 +2759,7 @@ def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-26
-def _h1_pdf_concaveSpline_ ( h1 , spline , *args , **kwargs ) :
+def _h1_pdf_concaveSpline_ ( h1 , spline , *args , pdfpars = {} , **kwargs ) :
     """ Parameterize/fit histogram with positive concave b-spline 
     >>> h1 = ...
     >>> results = h1.pdf_concaveSpline ( spline =  ( 3 , 2 ) )
@@ -2714,7 +2775,7 @@ def _h1_pdf_concaveSpline_ ( h1 , spline , *args , **kwargs ) :
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , False )
         #
     from ostap.fitting.background import CPSpline_pdf
-    return _h1_pdf_ ( h1 , CPSpline_pdf , ( spline , ) , *args , **kwargs )
+    return _h1_pdf_ ( h1 , CPSpline_pdf , ( spline , ) , *args , pdfpars = pdfpars , **kwargs )
 
 # =============================================================================
 ## decorate !
@@ -2797,7 +2858,8 @@ def _h1_legendre_sum_fill_ ( h1 , N , **kwargs ) :
         if  not xmin <= xx <= xmax : continue                 
         yy     = y.value() 
         volume = 2 * x.error() 
-        lsum.fill ( xx , yy * volume ) 
+        lsum.fill ( xx , yy * volume )
+        
     return lsum 
 
 # =============================================================================
