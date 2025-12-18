@@ -224,7 +224,7 @@ def test_convex_spline_pdf () :
                     ( h3 , h3.pdf_cSpline ( ( 3 , 2 , True  , False ) , silent = True , draw = True ) ) , 
                     ( h4 , h4.pdf_cSpline ( ( 3 , 2 , False , False ) , silent = True , draw = True ) ) ] 
         
-    for h , f in zip params :
+    for h , f in params :
         with use_canvas ( 'test_convex_spline_pdf: ' + h.GetTitle() , wait = 1 )  :
             f.plot.draw () 
             logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
