@@ -217,7 +217,8 @@ def _h1_param_sum_ ( h1               ,
     if normalized :
         
         ## calculate the integral in range 
-        _integral_ = h1.integrate ( xmin = xmin , xmax = xmax )    
+        ## _integral_ = h1.integrate ( xmin = xmin , xmax = xmax ) 
+        _integral_ = h1.integral ( xmin = xmin , xmax = xmax )
         fun.SetParameter ( 0 , _integral_ )
         
         for i in range ( 0, b.npars() ) :
@@ -643,7 +644,7 @@ def _h1_rational_  ( h1               ,
     xmax = min ( xmax , h1.xmax() )
     ##
     # make reasonable approximation
-    func  = rational_fun ( h1 , p , d , xmin , xmax )
+    func  = rational_fun ( h1 , p + d , d , xmin , xmax )
     ## make a fit 
     if not params : params = tuple ( [ v for v in func.pars() ] )
     ## 
@@ -2065,7 +2066,7 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args , pdfpars = {} , **kwargs ) :
     from ostap.fitting.roofit import PDF_fun
     pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
     ##
-    norm   = VE ( h1.integrate() ).value() 
+    norm   = h1.integral() 
     ##
     params = ParamPDFInfo ( r , pdf , func , norm , pdf_fun , f )
     h1._param_PDF_info = params

@@ -101,9 +101,9 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
                               
     from ostap.math.integral import integral as _integral 
 
-    d1 = _integral ( _fun1_ , xmin , xmax )
-    d2 = _integral ( _fun2_ , xmin , xmax )
-    dd = _integral ( _fund_ , xmin , xmax )
+    d1 = _integral ( _fun1_ , xmin , xmax , silent = True )
+    d2 = _integral ( _fun2_ , xmin , xmax , silent = True )
+    dd = _integral ( _fund_ , xmin , xmax , silent = True )
         
     import math
     return "%.4e" % math.sqrt(dd/math.sqrt(d1*d2)) 
@@ -291,18 +291,18 @@ def test_convex_poly () :
 # =============================================================================
 def test_rational () :
 
-    n    = 6
+    p    = 2
     funs = set() 
     logger =   getLogger("test_rational")
-    with timing ( 'Rational [%s]' % n , logger ) :
-        for h in  ( h1 , h2 , h3 , h4 ) :
-            with use_canvas ( 'test_rational %s' % h.GetTitle() , wait = 2 ) :  
-                h.draw()
-                for d in range ( 0 , n + 1 ) : 
-                    f = h.rational ( n = n , d = d )
+    for h in  ( h1 , h2 , h3 , h4 ) :
+         for d in range ( 0 , p + 3 ) : 
+            with timing ( 'Rational [%d/%d]' % ( p , d )  , logger ) :
+                with use_canvas ( 'test_rational [%d/%d] %s' % ( p , d , h.GetTitle() ) , wait = 2 ) :  
+                    h.draw()
+                    f = h.rational ( p = p , d = d )
                     f.tf1.draw('same', color = d + 1 )
                     funs.add ( f ) 
-                    logger.info ( "%-25s : [%d] difference %s" %  ( h.title , d , diff2 ( f , h ) ) )
+                    logger.info ( "%-25s : [%d/%d] difference %s" %  ( h.title , p , d , diff2 ( f , h ) ) )
 
 # =============================================================================
 def test_brational () :

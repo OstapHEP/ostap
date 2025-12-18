@@ -174,12 +174,13 @@ def legendre_sum ( func , N , xmin , xmax , **kwargs ) :
 
     from ostap.math.integral import integral as _integral 
     
+    silent = kwargs.pop ( 'silent' , True )
     args = deepcopy ( kwargs ) if kwargs else {} 
     for n in range ( N + 1 ) :
         
         li     = L_ ( n ) 
         fun_n  = lambda x : func ( x ) * li ( tx ( x ) )        
-        c_n    = _integral ( fun_n , xmin , xmax , **args ) * ( 2 * n + 1 ) * idx
+        c_n    = _integral ( fun_n , xmin , xmax , silent = silent , **args ) * ( 2 * n + 1 ) * idx
             
         lsum.setPar ( n , c_n ) 
         
@@ -411,6 +412,7 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
     basis = Ostap.Math.BernsteinDualBasis.basis ( N  )
     assert basis , 'cannot acquire Bernstein dual Basis!'
 
+    silent = kwargs.pop ( 'silent' , True )
     ##for i, dual  in  enumerate ( range ( 0 , N + 1 ) :
     for i, dual  in  enumerate ( basis ) : 
 
@@ -430,7 +432,7 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
 
         ## use integration 
         if kwargs : args = deepcopy ( kwargs )
-        c_i = _integral ( fun_i , xmin , xmax , **args ) / ( xmax - xmin )
+        c_i = _integral ( fun_i , xmin , xmax , silent = silent , **args ) / ( xmax - xmin )
             
         bsum.setPar( i , c_i )
         
@@ -491,6 +493,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     from ostap.math.integral import integral as _integral 
     
     args = {}
+    silent = kwargs.pop ( 'silent' , True )
 
     ## basis = Ostap.Math.BernsteinDualBasis.element ( bsum.degree() , i ) 
     ## assert dual, 'Cannot acquare element of Bernstein dual basis!'
@@ -515,7 +518,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
 
         ## use integration 
         if kwargs : args = deepcopy ( kwargs )
-        c_i = _integral ( fun_i , xmin , xmax , **args ) / ( xmax - xmin )
+        c_i = _integral ( fun_i , xmin , xmax , silent = silent , **args ) / ( xmax - xmin )
             
         b_i[i] = c_i 
         
