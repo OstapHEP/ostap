@@ -360,7 +360,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================
         ## 1b) add  "weight" variable to dataset 
-        mcds.add_reweighting ( weighter ,  name = 'weight' , progress = True )
+        mcds  = mcds.add_reweighting ( weighter ,  name = 'weight' , progress = True )
         title = 'Reweighted dataset at iteration #%d' % iter 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
                                                           title     = title    ,

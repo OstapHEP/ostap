@@ -16,7 +16,8 @@ __all__     = (
     'add_reweighting'  , ## add new branch to loooong TChain in parallel
     ) 
 # =============================================================================
-from   ostap.parallel.parallel import Task, WorkManager
+from   ostap.utils.basic       import numcpu, typename  
+from   ostap.parallel.parallel import Task  , WorkManager
 import ROOT
 # =============================================================================
 # logging 
@@ -29,7 +30,7 @@ else                       : logger = getLogger ( __name__     )
 #  parallel adding of reweighting info for looong TChains
 #  @see ostap/trees/trees.py
 class AddReweighting(Task) :
-    """Add reweighting information to loooong TChain in parallel
+    """ Add reweighting information to loooong TChain in parallel
     """
     def __init__          ( self , branch_name  , reweighter ) :
         self.branch_name = branch_name
@@ -66,6 +67,49 @@ class AddReweighting(Task) :
             
     ## get the results 
     def results ( self ) : return self.__output
+
+# =============================================================================================
+## @class AddReweightingDS
+#  parallel adding of reweighting info for dataset 
+#  @see ostap/trees/trees.py
+class AddReweightingDS(Task) :
+    """ Add reweighting information to dataset
+    """
+    def __init__          ( self , branch_name  , reweighter ) :
+        self.branch_name = branch_name
+        self.reweighter  = reweighter
+        self.__output    = ()
+    
+    def initialize_local  ( self )                : self.__output = () 
+    def initialize_remote ( self , jobid = -1   ) : self.__output = () 
+    def process           ( self , jobid , dset ) :
+
+        import ostap.tools.reweight
+        import ostap.fitting.dataset
+        
+        files = []  
+        dset.add_reweighting ( weighter = self.reweighter  ,
+                               name     = self.branch_name ,
+                               progress = False            , 
+                               report   = False            ,
+                               parallel = False            )
+
+        ## list of processed  files
+        self.__output = dset 
+
+        return self.__output 
+        
+    ## merge results/datasets 
+    def merge_results( self , result , jobid = -1 ) :
+        
+        if not self.__output : self.__output = result
+        else                 :
+            self.__output += result 
+            result.clear ()     ## ATTTENTION!!! 
+            del result
+            
+    ## get the results 
+    def results ( self ) : return self.__output
     
 # =================================================================================
 ## Add reweighting to TChain in parallel
@@ -79,7 +123,7 @@ def add_reweighting ( chain            ,
                       name             ,
                       verbose  = True  ,
                       report   = True  , **kwargs ) :
-    """Add reweihting info for loong chain in parallel
+    """ Add reweihting info for loong chain in parallel
     - see ROOT.TTree.add_reweighting
     >>> chain = ....
     >>> chain.padd_reweighting ( 'new_branch' , 'px*py' )     
@@ -119,16 +163,19 @@ def add_reweighting ( chain            ,
 ROOT.TTree .padd_reweighting = add_reweighting 
 ROOT.TChain.padd_reweighting = add_reweighting 
 
+ROOT.RooDataSet .padd_reweighting = add_reweighting 
+
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.TTree  ,
-    ROOT.TChain ,    
+    ROOT.TTree      ,
+    ROOT.TChain     ,
+    ROOT.RooDataSet    
     )
 
 _new_methods_       = (
-    ROOT.TTree .padd_reweighting , 
-    ROOT.TChain.padd_reweighting , 
-    )
+    ROOT.TTree .padd_reweighting      , 
+    ROOT.TChain.padd_reweighting      , 
+    ROOT.RooDataSet .padd_reweighting )
 
 # =============================================================================
 if '__main__' == __name__ :

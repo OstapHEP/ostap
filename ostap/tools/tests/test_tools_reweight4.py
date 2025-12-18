@@ -56,6 +56,9 @@ dbname       = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-rew
 NDATA        =  500000
 NMC          = 1000000
 
+NDATA        =  50000
+NMC          = 100000
+
 rmax = 20 
 
 def prepare_data ( ) : 
@@ -276,7 +279,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================
         ## 1b) add  "weight" variable to dataset 
-        mcds.add_reweighting ( weighter ,  name = 'weight' , progress = True )
+        mcds  = mcds.add_reweighting ( weighter ,  name = 'weight' , progress = True , parallel = True )
         title = 'Reweighted dataset at iteration #%d' % iter 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'r1' , 'r2' , 'r3' ] ,
                                                           title     = title    ,
@@ -302,7 +305,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     ##  power = lambda n : pmax if n <= 1 else pmax * ( 0.66666 / n + 0.33333 )
 
     the_plots = plots
-    power =  1.0/3 
+    power     = 0.666
     
     ## if   iter < 3 : the_plots = plots [ : 1 ]
     ## elif iter < 4 : the_plots = plots [ : 4 ]
@@ -319,7 +322,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             mcds                   , ## what to be reweighted
             the_plots              , ## reweighting plots/setup
             dbname                 , ## DBASE with reweighting constant 
-            delta      = 0.02      , ## stopping criteria
+            delta      = 0.03      , ## stopping criteria
             minmax     = 0.08      , ## stopping criteria  
             power      = power     , ## tune: effective power
             wtruncate  = wtruncate , ## truncate weights 

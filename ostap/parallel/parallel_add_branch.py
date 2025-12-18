@@ -94,7 +94,43 @@ class AddUnpreparedBranch(AddNewBranch) :
         
         self.recipe_args = args
         return AddNewBranch.process ( self , jobid , tree ) 
+
+# =============================================================================================
+## @class AddNewVar 
+#  parallel adding of new variable to RooDataSet 
+#  @see ostap/trees/trees.py
+class AddNewVar(Task) :
+    """ Add new variable into RooDataset 
+    """
+    def __init__          ( self , varname , what ) :
+        self.varname  = varname 
+        self.what     = what 
+        self.__output = ()
     
+    def initialize_local  ( self )                : self.__output = () 
+    def initialize_remote ( self , jobid = -1   ) : self.__output = () 
+    def process           ( self , jobid , dset ) :
+        
+        import ostap.fitting.dataset        
+        self.__output = dset.add_new_var ( varname  = self.varname ,
+                                           what     = self.what    ,
+                                           progress = False        , 
+                                           report   = False        )
+        
+        return self.__output 
+        
+    ## merge results/datasets 
+    def merge_results( self , result , jobid = -1 ) :
+        
+        if not self.__output : self.__output = result
+        else                 :
+            self.__output += result 
+            result.clear ()     ## ATTTENTION!!! 
+            del result
+            
+    ## get the results 
+    def results ( self ) : return self.__output
+
 # =================================================================================
 ## Add new branch  to TChain in parallel
 #  @see ROOT.TTree.add_new_branch
@@ -165,7 +201,7 @@ def add_new_branch ( chain           ,
         chain      = push_2chain ( chain , *args , progress = progress , report = report )            
         missing    = sorted ( branch for branch in expected if not branch in chain  )
         if missing : logger.warning ( 'Missing expected brnaches: %s' % ( ', '.join ( m for m in missing ) ) )
-        logger.attention ( "A (SLOQ) sequentional processing was used..." ) 
+        logger.attention ( "A (SLOW) sequentional processing was used..." ) 
         return chain                           
     else  : # =================================================================
         # =====================================================================

@@ -169,7 +169,7 @@ def _rad_getitem_ ( data , index ) :
     >>> dataset  = ... 
     >>> event, weight  = dataset [4]                 ## index 
 
-    - For unweighted ddatsets `weight` is `None`    
+    - For unweighted datsets `weight` is `None`    
 
     >>> events = dataset[0:1000]            ## slice
     >>> events = dataset[0:-1:10]           ## slice 
@@ -315,7 +315,7 @@ def _rad_iadd_ ( ds1 , ds2 ) :
     >>> dset1  = ...
     >>> dset2  = ...
     >>> dset1 += dset2
-    """
+    """    
     if isinstance ( ds1 , ROOT.RooDataSet ) and isinstance ( ds2 , ROOT.RooDataSet ) :
         ##
         w1 = ds1.isWeighted()
@@ -324,9 +324,9 @@ def _rad_iadd_ ( ds1 , ds2 ) :
         if   w1 and w2 : pass
         elif w1        : return NotImplemented 
         elif w2        : return NotImplemented 
-        ## 
-        npw1 = ds1.IsNonPoissonWeighted()
-        npw2 = ds2.IsNonPoissonWeighted()
+        ##        
+        npw1 = ds1.isNonPoissonWeighted()
+        npw2 = ds2.isNonPoissonWeighted()
         ##
         if   npw1 and npw2 : pass
         elif npw1          : return NotImplemented 
@@ -383,7 +383,6 @@ def _rad_add_ ( ds1 , ds2 ) :
         return result
     
     return NotImplemented
-
 
 # =============================================================================
 # merge/append two datasets into a single one 
@@ -2274,11 +2273,13 @@ def _ds_table_0_ ( dataset                 ,
     ## adjust first/last 
     first, last = evt_range ( dataset , first , last )
     
-    vars = [ i.GetName() for i in varset if i.GetName() in vars ]
+    vars  = [ i.GetName() for i in varset if i.GetName() in vars ]
         
     _vars = []
 
-    stat = dataset.statVars ( vars , cuts , first , last , cut_range = cut_range )
+    stat  = dataset.statVars ( vars , cuts , first , last , cut_range = cut_range )
+
+    
     for v in  stat :
         vv  = getattr ( varset , v )
         s   = stat [ v ] 

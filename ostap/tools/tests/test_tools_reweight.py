@@ -154,7 +154,7 @@ for iter in range ( 1 , maxIter + 1  ) :
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
       
         ## 1b) add "weight" variable to the dataset
-        mcds.add_reweighting ( weighter , name = 'weight' , progress = True , report = False )
+        mcds = mcds.add_reweighting ( weighter , name = 'weight' , progress = True , report = False )
         if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) % mcds )
         
     with timing ( tag + ': make the actual reweighting:' , logger = logger ) :

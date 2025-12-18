@@ -32,7 +32,7 @@ from   ostap.math.operations  import Mul  as MULT       ## needed for proper abs
 from   ostap.trees.funcs      import FuncTree, FuncData ## add weight to TTree/RooDataSet
 from   ostap.utils.utils      import CallThem, AttrGetter 
 from   ostap.utils.strings    import is_formula
-from   ostap.utils.basic      import typename 
+from   ostap.utils.basic      import typename, numcpu  
 from   ostap.math.reduce      import root_factory
 from   ostap.logger.symbols   import plus_minus, thumb_up , checked_no, checked_yes, number, chi2ndf   
 from   ostap.logger.colorized import allright , attention
@@ -1363,6 +1363,9 @@ class W2Tree(FuncTree) :
         return  self.__weight
 
 # =============================================================================
+## helper factory for proper (de)serialization 
+def w2d_factory ( *args ) : return W2Data ( *args ) 
+# =============================================================================
 ## @class W2Data
 #  Helper class to add the weight into <code>RooDataSet</code>
 #  @code
@@ -1395,6 +1398,9 @@ class W2Data(FuncData) :
         w = self.__weight ( d ) 
         return w
     
+    ## REDUCE 
+    def __reduce__  ( self ) : return w2d_factory , ( self.weight , ) 
+
     @property
     def weight ( self ) :
         """`weight' : get the weighter object"""
@@ -1438,7 +1444,7 @@ def tree_add_reweighting ( tree                 ,
     ## create the weighting function 
     wfun = W2Tree ( weighter )
     
-    if parallel and isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles :
+    if parallel and isinstance ( tree , ROOT.TChain ) and 1 < tree.nFiles and 1 < numcpu () :
         from ostap.parallel.parallel import Checker
         checker = Checker()
         if checker.pickles ( weighter , wfun ) :         
@@ -1464,7 +1470,8 @@ def data_add_reweighting ( data                ,
                            weighter            ,
                            name     = 'weight' ,
                            progress = False    ,
-                           report   = True     ) :
+                           report   = True     ,
+                           parallel = False    ) :
     """ Add specific re-weighting information into dataset
     
     >>> w    = Weight ( ... ) ## weighting object ostap.tools.reweight.Weight 
@@ -1482,10 +1489,99 @@ def data_add_reweighting ( data                ,
         logger.attention ( 'Weighter object is empty! Add 1.0 to the data' )
         return data.add_new_var ( name , "1.0" , progress = progress )
         
+    if parallel and 1 < numcpu () :
+        from ostap.parallel.parallel import Checker
+        checker = Checker()
+        if checker.pickles ( weighter ) :
+            return parallel_data_add_reweighting ( data                ,
+                                                   weighter            ,
+                                                   name     = name     ,
+                                                   progress = progress ,
+                                                   report   = report   )   
+
+    ## regular sequential processing 
+    return data.add_new_var ( name , wfun , progress = progress ) 
+
+# ===========================================================================
+## Add reweighting to very large RooDataSet by splitting it into chunks and
+#  processing the chunks in parallel 
+def parallel_data_add_reweighting ( dataset          ,
+                                    weighter         , 
+                                    name             ,
+                                    verbose  = True  ,
+                                    report   = True  , **kwargs ) :
+    """ Add reweighting to very large RooDataSet by splititng it into chunks and
+     processing the chunks in parallel 
+    """
+    assert isinstance( dataset , ROOT.RooDataSet ) , \
+        "Invald type for `dataset` : %s" % typename ( dataset ) 
+    
+    if numcpu() < 2 : return data_add_reweighting ( dataset  ,
+                                                    weighter ,
+                                                    name     = name    ,
+                                                    verbose  = verbose ,
+                                                    report   = report  ) 
+
     ## create the weighting function 
     wfun = W2Data ( weighter  )
 
-    return data.add_new_var ( name , wfun , progress = progress ) 
+    ## list of branches 
+    branches = set ( dataset.branches() ) if report else set() 
+
+    from ostap.parallel.parallel import Checker, WorkManager
+    
+    checker = Checker()
+    if not checker.pickles ( weighter , wfun ) :
+        return data_add_reweighting ( dataset , weighter , name , verbose = verbose , report = report  ) 
+
+    nchunks  = 3 * numcpu ()
+    
+    
+    ## split dataset into `nchunks` chunks:
+    from ostap.utils.utils       import split_n_range
+    chunks = ( dataset [ i : j ] for i , j in split_n_range ( 0 , len ( dataset ) , nchunks ) )
+
+    ## Task to add new variable
+    from ostap.parallel.parallel_add_branch import AddNewVar 
+    task     = AddNewVar    ( name  ,  wfun  )
+    wmgr     = WorkManager  ( silent = not verbose , **kwargs )
+    
+    ## start processing 
+    wmgr.process ( task , chunks )
+
+    ## new dataset 
+    newds = task.results()
+
+    ## check consistency: 
+    assert len ( dataset ) == len ( newds ) , "Mismatch in dataset sizes!"
+    
+    if report :
+        new_branches = sorted ( set ( newds.branches() ) - branches )
+        if new_branches :
+            n = len ( new_branches )
+            if 1 >= n : title = "Added %s variable to RooDataSet(%s)"  % ( n , dataset.GetName () ) 
+            else      : title = "Added %s variables to RooDataSet(%s)" % ( n , dataset.GetName () )
+            table = newds.table ( new_branches , title = title , prefix = '# ' )
+            logger.info ( '%s:\n%s' % ( title , table ) )
+        else :                                
+            logger.error ( "No variables are added to RooDataSet(%s)" %  dataset.GetName () )
+
+
+    dataset.add_new_var ( name , '1' )             
+    dataset.clear ()
+
+    dataset.append ( newds )
+
+    newds.clear()
+    del newds
+    del task
+
+    
+    return dataset
+
+##    del dataset
+##    del task    
+##    return newds 
 
 ROOT.RooDataSet.add_reweighting = data_add_reweighting
 

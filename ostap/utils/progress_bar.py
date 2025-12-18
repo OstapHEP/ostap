@@ -538,6 +538,7 @@ class RunningBar(object):
         timebar += ' ' + arrow_right 
         timebar += ' ' + end.strftime   ('%a %d %b %Y, %I:%M%p')
         
+        sys.stdout.flush ()
         sys.stdout.write ( self.prefix + ( _done_ % self.amount ) + ' ' + clock + timebar + '\n' ) 
         sys.stdout.flush ()
         self.silent = True
@@ -569,7 +570,7 @@ def running_bar ( iterable , frequency = 100 , description = '' , **kwargs ) :
         for i in iterable :
             bar += 1
             yield i
-
+            
 # =============================================================================
 ## helper function to display progress bar
 #  @code 
