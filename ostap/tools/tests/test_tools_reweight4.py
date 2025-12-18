@@ -17,6 +17,7 @@ __all__     = ()  ## nothing to be imported
 from   ostap.core.pyrouts     import Ostap 
 from   ostap.histos.histos    import h1_axis, h2_axes, h3_axes 
 from   ostap.utils.timing     import timing
+from   ostap.utils.basic      import numcpu 
 from   ostap.logger.colorized import attention, allright
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
@@ -41,6 +42,18 @@ logger.info ( 'Test for ND-Reweighting machinery')
 ## set batch from environment 
 batch_env ( logger )
 # =============================================================================
+
+
+if 4 <= numcpu () : 
+    
+    NDATA  =  500000
+    NMC    = 1000000
+    
+else :
+     
+    NDATA  =   10000
+    NMC    =   10000
+
 testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight4-' )
 
 tag_data_r   = 'DATA_R_histogram'
@@ -52,12 +65,6 @@ tag_data     = 'DATA_tree'
 tag_mc       = 'MC_tree'
 
 dbname       = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight4-'   )
-
-NDATA        =  500000
-NMC          = 1000000
-
-NDATA        =  50000
-NMC          = 100000
 
 rmax = 20 
 

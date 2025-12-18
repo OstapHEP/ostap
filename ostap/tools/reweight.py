@@ -1508,7 +1508,7 @@ def data_add_reweighting ( data                ,
 def parallel_data_add_reweighting ( dataset          ,
                                     weighter         , 
                                     name             ,
-                                    verbose  = True  ,
+                                    progress = True  ,
                                     report   = True  , **kwargs ) :
     """ Add reweighting to very large RooDataSet by splititng it into chunks and
      processing the chunks in parallel 
@@ -1518,9 +1518,10 @@ def parallel_data_add_reweighting ( dataset          ,
     
     if numcpu() < 2 : return data_add_reweighting ( dataset  ,
                                                     weighter ,
-                                                    name     = name    ,
-                                                    verbose  = verbose ,
-                                                    report   = report  ) 
+                                                    name     = name     ,
+                                                    progress = progress ,
+                                                    report   = report   , 
+                                                    parallel = False    ) 
 
     ## create the weighting function 
     wfun = W2Data ( weighter  )
@@ -1532,7 +1533,12 @@ def parallel_data_add_reweighting ( dataset          ,
     
     checker = Checker()
     if not checker.pickles ( weighter , wfun ) :
-        return data_add_reweighting ( dataset , weighter , name , verbose = verbose , report = report  ) 
+        return data_add_reweighting ( dataset , 
+                                     weighter , 
+                                     name     = name     , 
+                                     progress = progress ,
+                                     report   = report   , 
+                                     parallel = False    ) 
 
     nchunks  = 3 * numcpu ()
     
@@ -1543,8 +1549,10 @@ def parallel_data_add_reweighting ( dataset          ,
 
     ## Task to add new variable
     from ostap.parallel.parallel_add_branch import AddNewVar 
-    task     = AddNewVar    ( name  ,  wfun  )
-    wmgr     = WorkManager  ( silent = not verbose , **kwargs )
+    task     = AddNewVar    ( name  ,  wfun    )
+    verbose  = kwargs.pop ( 'verbose' ,      False  )
+    silent   = kwargs.pop ( 'silent'  , not verbose )  
+    wmgr     = WorkManager  ( silent = silent , **kwargs )
     
     ## start processing 
     wmgr.process ( task , chunks )
