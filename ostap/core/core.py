@@ -559,7 +559,6 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
                 if fc :
                     if   'Opacity' in kw : obj.SetFillColorAlpha ( fc , kw.pop ('Opacity' ) ) 
                     elif 'Opaque'  in kw : obj.SetFillColorAlpha ( fc , kw.pop ('Opaque'  ) ) 
-
                     
         ## Min/max values  
 
@@ -643,7 +642,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             # =================================================================
         except: # =============================================================
             # =================================================================
-            logger.error ( 'Exception here!!' , exc_info = True )
+            logger.error ( 'Exception from get_pad/pad_update!' , exc_info = True )
             
         # =====================================================================
         ## Lin/log scale ?
@@ -717,7 +716,6 @@ def tnamed_path ( obj ) :
 ROOT.TNamed.path      = property ( tnamed_path , None , None , tnamed_path.__doc__ ) 
 ROOT.TNamed.fullpath  = property ( tnamed_path , None , None , tnamed_path.__doc__ )  
 ROOT.TNamed.full_path = property ( tnamed_path , None , None , tnamed_path.__doc__ ) 
-
 
 # =============================================================================
 ## `topdir': get the top directory for the given directory

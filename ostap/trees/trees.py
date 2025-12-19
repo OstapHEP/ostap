@@ -2505,9 +2505,9 @@ ROOT.TTree.add_new_branch  = add_new_branch
 ROOT.TTree.add_new_buffer  = add_new_buffer 
 
 # ============================================================================
-## Produce  "efficiency" histogram for boolean <code>criteriaon</c>
-#  as function of valiabed listed as <code>expressions</code>
-#  internally it creatd two histogram
+## Produce  "efficiency" histogram for boolean <code>criterion</c>
+#  as function of variables listed as <code>expressions</code>
+#  internally it creates two histograms
 #  - "accepted" for events accepted by (boolean) criterion
 #  - "rejected" for events rekected by (boolean) criterion
 #
@@ -2565,10 +2565,10 @@ def tree_efficiency ( tree        ,
                       use_frame   = False       , 
                       parallel    = False       , 
                       progress    = False       ) : 
-    """ Produce  "efficiency" histogram for boolean <code>criteriaon</c>
-    as function of valiabed listed as <code>expressions</code>
-    internally it creatd two histogram
-    - "acepted" for events accepted by (boolean) criterion
+    """ Produce  "efficiency" histogram for boolean <code>criterion</c>
+    as function of valiables listed as <code>expressions</code>
+    internally it creatd two histograms
+    - "accepted" for events accepted by (boolean) criterion
     - "rejected" for events rekected by (boolean) criterion 
     
     tree:       (INPUT)  input tree 
@@ -2633,8 +2633,7 @@ def tree_efficiency ( tree        ,
 
     histo.Reset() 
     if not histo.GetSumw2() : histo.Sumw2() 
-    
-    
+        
     ## delegate processing to DataFrame machinery if requested and possible 
     if use_frame and good_for_frame ( tree , first , last ) :
         import ostap.frames.frames as F 

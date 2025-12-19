@@ -340,7 +340,10 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
     conf.update ( base_config ) ## the base configuration 
     conf.update ( config      ) ## 
     conf.update ( kwargs      ) 
-          
+
+    ## a bit special treatment due to long name 
+    if 'TextFormat' in conf : conf [ 'PaintTextFormat' ] = conf.pop ( 'TextFormat' ) 
+
     changed = {}
     
     for attr in style_setters  [ 0 ] :
@@ -587,11 +590,18 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
     elif 'ColorPalette' in conf :
         changed [ 'ColorPalette' ] = ROOT.kDarkBodyRadiator
         style.SetPalette ( conf.pop ( 'ColorPalette' ) )
-        
+    
     ## Extra attributes 
     for e in extra :
         if e in conf : conf.pop ( e ) 
-        
+
+
+    # ========================================================================
+    ## for "old" root (<6.30) is it not a method of TStyle!!
+    if 'AxisMaxDigits' in conf :
+        changed [ 'AxisMaxDigits' ] = ROOT.TGAxis.GetMaxDigits()
+        ROOT.TGAxis.SetMaxDigits ( conf.pop ( 'AxisMaxDigits' , 3 ) ) 
+
     if conf :
         logger.warning ( "set_style: unprocessed parameters: %s" % list ( conf.keys() ) )
         
@@ -834,7 +844,9 @@ def make_ostap_style ( name                      ,
     conf [ 'PadTickY'          ] = get_int   ( config , 'PadTickY'           , 1     )
     conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'       , margin_top    )    
 
-    conf [ 'PaintTextFormat'   ] = get_str   ( config , 'PaintTextFormat'    , 'g' )    
+    conf [ 'PaintTextFormat'   ] = 'g'
+    if   'PaintTextFormat' in config : conf [ 'PaintTextFormat' ] = get_str ( config , 'PaintTextFormat'    , 'g' )        
+    elif      'TextFormat' in config : conf [ 'PaintTextFormat' ] = get_str ( config , 'TextFormat'         , 'g' )
 
     if 'PaperSize_X' in config  or 'PaperSize_Y' in config :
         
@@ -967,7 +979,6 @@ def make_ostap_style ( name                      ,
 # =============================================================================
 ## read the configuration files and create the styles 
 make_styles () 
-
 
 # =============================================================================
 import atexit

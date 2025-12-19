@@ -129,7 +129,7 @@ def adjust_histo_range ( histo ) :
         histo.SetMaximum  ( 1.05 )
         histo.SetContour  ( 50   )
         
-    elif 0.90 <= vmin and vmax <= 1.10 :
+    if 0.90 <= vmin and vmax <= 1.10 :
         
         histo.SetMinimum  ( 0.90 )
         histo.SetMaximum  ( 1.10 )
@@ -160,8 +160,9 @@ def adjust_histo_range ( histo ) :
         histo.SetMaximum  ( vmx  )
         histo.SetContour  ( 50   )
 
-    ## reset minimum again
-    histo.SetMinimum  ( min ( vmin , 0.0 ) )
+    ## reset minimum again for 1D histograms 
+    if isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() : 
+        histo.SetMinimum  ( min ( vmin , 0.0 ) )
     
     return histo 
     
@@ -833,11 +834,11 @@ def _cmp_draw_ ( self ) :
         rows = [ ( '' , 'value' , 'x' , 'y' , 'z' ) ]
         
         x , y , z = ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , az.GetBinCenter ( minz )        
-        row  = 'Min-weight' , '%.3f' % minv , '%.4g' % x , '%.4g' % y , '%.4g' % z
+        row  = 'Min-weight' , '%.2f' % minv , '%.4g' % x , '%.4g' % y , '%.4g' % z
         rows.append ( row )
 
         x , y , z = ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , az.GetBinCenter ( maxz )        
-        row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x , '%.4g' % y , '%.4g' % z
+        row  = 'Max-weight' , '%.2f' % maxv , '%.4g' % x , '%.4g' % y , '%.4g' % z
         rows.append ( row )
 
         title = 'Comparison plot for %s' % self.what
@@ -852,11 +853,11 @@ def _cmp_draw_ ( self ) :
         ny = hw.binsy()
 
         from ostap.plotting.style import useStyle 
-        with useStyle ( 'Z' ) :
+        with useStyle ( 'Z' , textformat = '.2f' ) :
             
-            if   10 <  nx and 10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
-            elif 10 <  nx or  10 < ny : hw.draw  ( 'cont4z' ,                copy = True )
-            else                      : hw.texte ( 'colz'   , fmt = '5.3f' , copy = True )
+            if   10 <  nx and 10 < ny : hw.draw  ( 'cont4z' , copy = True )
+            elif 10 <  nx or  10 < ny : hw.draw  ( 'cont4z' , copy = True )
+            else                      : hw.texte ( 'colz'   , copy = True )
     
         minx, miny = hw.minimum_bin()
         maxx, maxy = hw.maximum_bin()
@@ -867,27 +868,32 @@ def _cmp_draw_ ( self ) :
         minv = hw [ minx, miny ]
         maxv = hw [ maxx, maxy ]
 
-        pmin = ROOT.TMarker ( ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , 43 )
-        pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 47 )
+        pmin1 = ROOT.TMarker ( ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , 43 )
+        pmax1 = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 47 )        
+        pmin1.SetMarkerColor ( 2 )
+        pmax1.SetMarkerColor ( 2 )        
+        pmin1.SetMarkerSize  ( 2 )
+        pmax1.SetMarkerSize  ( 2 )
         
-        pmin.SetMarkerColor ( 2 )
-        pmax.SetMarkerColor ( 2 )
-        pmin.SetMarkerSize  ( 6 )
-        pmax.SetMarkerSize  ( 6 )
-        pmin.DrawClone() 
-        pmax.DrawClone()
+        pmin2 = pmin1.Clone  () 
+        pmax2 = pmax1.Clone  () 
+        pmin2.SetMarkerSize  ( pmin1.GetMarkerSize() + 1  )
+        pmax2.SetMarkerSize  ( pmax1.GetMarkerSize() + 1  )
+        pmin2.SetMarkerColor ( 0 )
+        pmax2.SetMarkerColor ( 0 )
 
-        _store.add ( pmin )
-        _store.add ( pmax )
+        for p in ( pmin2 , pmax2 , pmin1 , pmax1 ) :
+            p.DrawClone ()
+            _store.add ( p ) 
         
         rows = [ ( '' , 'value' , 'x' , 'y'  ) ]
         
         x , y = ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) 
-        row  = 'Min-weight' , '%.3f' % minv , '%.4g' % x , '%.4g' % y 
+        row  = 'Min-weight' , '%.2f' % minv , '%.4g' % x , '%.4g' % y 
         rows.append ( row )
 
         x , y = ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) 
-        row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x , '%.4g' % y 
+        row  = 'Max-weight' , '%.2f' % maxv , '%.4g' % x , '%.4g' % y 
         rows.append ( row )
 
         title = 'Comparison plot for %s' % self.what
@@ -896,15 +902,16 @@ def _cmp_draw_ ( self ) :
 
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         
-        if hasattr ( hw , 'red' ) : hw .red ()         
-
+        if hasattr ( hw , 'red' ) : hw .red()         
+        hw.SetLineWidth   ( 2 )
+        
         hw.draw  ( copy = True )
-        hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed )
+        hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed  )
 
         minx = hw.minimum_bin()
         maxx = hw.maximum_bin()
 
-        ax = hw.GetXaxis()
+        ax   = hw.GetXaxis()
 
         minv = hw [ minx ]
         maxv = hw [ maxx ]
@@ -912,13 +919,26 @@ def _cmp_draw_ ( self ) :
         rows = [ ( '' , 'value' , 'x' ) ]
         
         x = ax.GetBinCenter ( minx ) 
-        row  = 'Min-weight' , '%.3f' % minv , '%.4g' % x 
+        row  = 'Min-weight' , '%.2f' % minv , '%.4g' % x 
         rows.append ( row )
 
         x    = ax.GetBinCenter ( maxx ) 
-        row  = 'Max-weight' , '%.3f' % maxv , '%.4g' % x 
+        row  = 'Max-weight' , '%.2f' % maxv , '%.4g' % x 
         rows.append ( row )
 
+        pmin = ROOT.TMarker ( ax.GetBinCenter ( minx ) , 1.0 , 43 )
+        pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , 1.0 , 47 )
+        
+        pmin.SetMarkerColor ( 92 )
+        pmax.SetMarkerColor ( 92 )
+        pmin.SetMarkerSize  (  3 )
+        pmax.SetMarkerSize  (  2 )
+        pmin.DrawClone() 
+        pmax.DrawClone()
+
+        _store.add ( pmin )
+        _store.add ( pmax )
+                
         title = 'Comparison plot for %s' % self.what
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcc' )
         logger.info ( '%s:\n%s' % ( title , table ) )
@@ -1225,7 +1245,7 @@ def makeWeights  ( dataset                      ,
     elif power and callable ( power )                          : eff_exp = power ( nactive ) 
     elif isinstance ( power , num_types ) and 0 < power <= 2.0 : eff_exp = 1.0 * power 
     elif 1 == nactive and 1 < len ( plots )                    : eff_exp = 0.95 ## slight underreweighting
-    elif 1 == nactive                                          : eff_exp = 1.05 ## slight overreweighting
+    elif 1 == nactive                                          : eff_exp = 1.01 ## slight overreweighting
     else                                                       : eff_exp = 1.05 / max ( nactive - 1 , 1 ) 
 
     # =============================================================================
@@ -1499,6 +1519,9 @@ def data_add_reweighting ( data                ,
                                                    progress = progress ,
                                                    report   = report   )   
 
+    ## create the weighting function 
+    wfun = W2Data ( weighter )
+
     ## regular sequential processing 
     return data.add_new_var ( name , wfun , progress = progress ) 
 
@@ -1507,8 +1530,8 @@ def data_add_reweighting ( data                ,
 #  processing the chunks in parallel 
 def parallel_data_add_reweighting ( dataset          ,
                                     weighter         , 
-                                    name             ,
-                                    progress = True  ,
+                                    name             ,                                    
+                                    progress = True  ,                                    
                                     report   = True  , **kwargs ) :
     """ Add reweighting to very large RooDataSet by splititng it into chunks and
      processing the chunks in parallel 
@@ -1523,11 +1546,11 @@ def parallel_data_add_reweighting ( dataset          ,
                                                     report   = report   , 
                                                     parallel = False    ) 
 
-    ## create the weighting function 
-    wfun = W2Data ( weighter  )
-
     ## list of branches 
     branches = set ( dataset.branches() ) if report else set() 
+
+    ## create the weighting function 
+    wfun = W2Data ( weighter  )
 
     from ostap.parallel.parallel import Checker, WorkManager
     
@@ -1540,19 +1563,19 @@ def parallel_data_add_reweighting ( dataset          ,
                                      report   = report   , 
                                      parallel = False    ) 
 
+
     nchunks  = 3 * numcpu ()
-    
-    
+        
     ## split dataset into `nchunks` chunks:
     from ostap.utils.utils       import split_n_range
     chunks = ( dataset [ i : j ] for i , j in split_n_range ( 0 , len ( dataset ) , nchunks ) )
 
     ## Task to add new variable
     from ostap.parallel.parallel_add_branch import AddNewVar 
-    task     = AddNewVar    ( name  ,  wfun    )
-    verbose  = kwargs.pop ( 'verbose' ,      False  )
-    silent   = kwargs.pop ( 'silent'  , not verbose )  
-    wmgr     = WorkManager  ( silent = silent , **kwargs )
+    task     = AddNewVar   ( name            ,  wfun    )
+
+    silent   = kwargs.pop ( 'silent'  , not progress )    
+    wmgr     = WorkManager ( silent = silent , progress = progress , **kwargs )
     
     ## start processing 
     wmgr.process ( task , chunks )

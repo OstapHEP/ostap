@@ -175,8 +175,8 @@ logging_levels = { logging.ALWAYS    : 'ALWAYS   '  ,
 
 for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
 # =============================================================================
-logging_format      = '# %(name)-30s %(levelname)-7s %(message)s'
-logging_file_format = '# %(asctime)s %(name)-30s %(levelname)-7s %(message)s'
+logging_format      = '# %(name)-35s %(levelname)-7s %(message)s'
+logging_file_format = '# %(asctime)s %(name)-35s %(levelname)-7s %(message)s'
 logging_date_format = "%Y-%m-%d %H:%M:%S" 
 
 ## The basic configuration 

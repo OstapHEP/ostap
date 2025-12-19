@@ -259,7 +259,8 @@ def parallel_fill ( chain                  ,
                     max_files    = 5       ,
                     use_frame    =  20000  ,   ## important 
                     silent       = False   ,
-                    job_chunk    = -1      , **kwargs ) :
+                    job_chunk    = -1      ,
+                    progress     = True    , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -295,7 +296,7 @@ def parallel_fill ( chain                  ,
                        trivial   = trivial           ,
                        use_frame = use_frame         ) 
     
-    wmgr  = WorkManager ( silent     = silent     , **kwargs )
+    wmgr  = WorkManager ( silent     = silent  , progress = True , **kwargs )
     trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
     wmgr.process ( task , trees , chunk_size = job_chunk )
     del trees
@@ -411,7 +412,8 @@ def parallel_make_dataset ( chain                ,
                             title      = ''      ,
                             silent     =  False  , 
                             max_files  =  1      ,
-                            job_chunk  = -1      , **kwargs ) :
+                            job_chunk  = -1      ,
+                            progress   = True    , **kwargs ) :
     """ Create RooDataset from the tree using parallel Tree->Frame->Dataset transformation 
     >>> tree = ...
     >>> ds   = tree.pmake_dataset ( [ 'px , 'py' , 'pz' ] ) 
@@ -441,7 +443,7 @@ def parallel_make_dataset ( chain                ,
                         title     = title     )
     
     
-    wmgr  = WorkManager ( silent    = silent , **kwargs )
+    wmgr  = WorkManager ( silent    = silent , progress = progress , **kwargs )
     trees = ch.split    ( chunk_size = -1 , max_files = max_files )
     wmgr.process ( task , trees , chunk_size = job_chunk )
     del trees
@@ -462,7 +464,6 @@ def parallel_make_dataset ( chain                ,
 
 ROOT.TChain.pmake_dataset = parallel_make_dataset 
 ROOT.TTree .pmake_dataset = parallel_make_dataset
-
 
 # ===================================================================================
 ## parallel processing of loooong chain/tree 

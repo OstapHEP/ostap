@@ -6230,7 +6230,7 @@ def _h1_integrate_ ( h                           ,
     ##
     for i in h.items() :
 
-        ibinx = i[0]
+        ibinx = i [ 0 ]
 
         if lowx <= ibinx < highx : 
 
@@ -6435,7 +6435,7 @@ def _h3_integrate_ ( h                         ,
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
-def _h1_integral_ ( histo , xmin , xmax , * , silent = False , **kwargs ) :
+def _h1_integral_ ( histo , xmin = None , xmax = None , * , silent = False , **kwargs ) :
     """ Calculate the integral of TH1
     >>> histo = ...
     >>> i1 = histo.integral ( 0.2 , 0.16 )
@@ -6443,6 +6443,9 @@ def _h1_integral_ ( histo , xmin , xmax , * , silent = False , **kwargs ) :
     """
     assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , \
         "Ibnvalid histogram type %s" % typename ( histo )
+
+    if xmin is None : xmin = histo.xmin ()
+    if xmax is None : xmax = histo.xmax ()
     
     if   xmin == xmax or isequal ( xmin , xmax ) : return 0
     elif xmax <  xmin : return -1 * _h1_integral ( histo , xmax , xmin , **kwargs )
@@ -6481,8 +6484,8 @@ def _h1_integral_ ( histo , xmin , xmax , * , silent = False , **kwargs ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _h2_integral_ ( histo ,
-                    xmin  , xmax ,
-                    ymin  , ymax , * , silent = False , **kwargs ) :
+                    xmin  = None , xmax = None ,
+                    ymin  = None , ymax = None , * , silent = False , **kwargs ) :
     """ Calculate the integral of TH2
     >>> histo = ...
     >>> i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 ) 
@@ -6490,6 +6493,11 @@ def _h2_integral_ ( histo ,
     
     assert isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() , \
         "Invalid histogram type %s" % typename ( histo )
+    
+    if xmin is None : xmin = histo.xmin ()
+    if xmax is None : xmax = histo.xmax ()
+    if ymin is None : ymin = histo.ymin ()
+    if ymax is None : ymax = histo.ymax ()
 
     if   xmin == xmax or isequal ( xmin , xmax ) : return 0
     elif xmax <  xmin : return -1 * _h2_integral ( histo , xmax , xmin , ymin , ymax , **kwargs )
@@ -6536,15 +6544,22 @@ def _h2_integral_ ( histo ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _h3_integral_ ( histo ,
-                    xmin  , xmax ,
-                    ymin  , ymax ,
-                    zmin  , zmax , * , silent = False , **kwargs ) :
+                    xmin  = None , xmax = None ,
+                    ymin  = None , ymax = None ,
+                    zmin  = None , zmax = None , * , silent = False , **kwargs ) :
     """ Calculate the integral of TH3
     >>> histo = ...
     >>> i     = histo.integral ( 0.2 , 0.16 , 0.1 , 1.0 , 0 , 1 ) 
     """
     assert isinstance ( histo , ROOT.TH3 ) and 3 == histo.dim() , \
         "Invalid histogram type %s" % typename ( histo )
+    
+    if xmin is None : xmin = histo.xmin ()
+    if xmax is None : xmax = histo.xmax ()
+    if ymin is None : ymin = histo.ymin ()
+    if ymax is None : ymax = histo.ymax ()
+    if zmin is None : zmin = histo.zmin ()
+    if zmax is None : zmax = histo.zmax ()
 
     if   xmin == xmax or isequal ( xmin , xmax ) : return 0
     elif xmax <  xmin : return -1 * _h3_integral ( histo , xmax , xmin , ymin , ymax , zmin , zmax , **kwargs )

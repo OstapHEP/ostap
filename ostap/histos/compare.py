@@ -93,7 +93,7 @@ def _h1_cmp_fit_ ( h1              ,
     from ostap.fitting.param import C1Fun 
     f2 = C1Fun    ( h2 , *h1.xminmax() ) 
     f2.release    ( 0     )
-    c  = float    ( h1.integrate() ) / float ( h2.integrate() )
+    c  = float    ( h1.integral () ) / float ( h2.integral () )
     f2.set        ( 0 , c , 0.1 * c )
     f2.set_limits ( 0 , 1.e-6 * c , 1.e+3 * c ) 
     f2.fix        ( 1 , 0 )
@@ -288,7 +288,6 @@ def _h3_cmp_chi2_ ( h1              ,
     c2ndf = chi2/ndf 
     return c2ndf, ROOT.TMath.Prob ( chi2 , ndf ) 
 
-
 ROOT.TH3F.cmp_chi2 = _h3_cmp_chi2_
 ROOT.TH3D.cmp_chi2 = _h3_cmp_chi2_
 
@@ -298,9 +297,8 @@ def _h1_chi2_cmp_ ( h1                                    ,
                     func                                  ,
                     integral = False                      ,
                     select   = lambda x,y,v : True        ,
-                    chi2     = lambda v1,v2 : v1.chi2(v2) ) :
-    
-    """Calculate chi2 for histogram and ``function''
+                    chi2     = lambda v1,v2 : v1.chi2(v2) ) :    
+    """ Calculate chi2 for histogram and ``function''
     >>> h1   = ... ## the first histo
     >>> func = ... ## the the function 
     >>> chi2ndf,prob  = h1.chi2_cmp ( func , integral = False )
@@ -316,8 +314,7 @@ def _h1_chi2_cmp_ ( h1                                    ,
     elif integral :
         ## use numerical integration 
         from ostap.math.intergal import integral as _integral_
-        _func_  = lambda x , xl , xr : _integral_ ( func , xl , xr ) / ( xr - xl )
-
+        _func_  = lambda x , xl , xr : _integral_ ( func , xl , xr , silent = True ) / ( xr - xl )
 
     ## helper function
     def _chi2_ ( c , histo , func , accept , funchi2 )  :
@@ -399,9 +396,9 @@ def _h1_cmp_costheta_ ( h1              ,
     params = lims [ 0 ] , lims [ 1 ]     
     
     from ostap.math.integral import integral as _integral_
-    r1   = _integral_ ( lambda x : f1 ( x ) ** 2    , *params )
-    r2   = _integral_ ( lambda x : f2 ( x ) ** 2    , *params )
-    r12  = _integral_ ( lambda x : f1 ( x ) * f2(x) , *params )
+    r1   = _integral_ ( lambda x : f1 ( x ) ** 2    , *params , silent = True )
+    r2   = _integral_ ( lambda x : f2 ( x ) ** 2    , *params , silent = True )
+    r12  = _integral_ ( lambda x : f1 ( x ) * f2(x) , *params , silent = True )
  
     return r12 / ( r1 * r2 ) ** 0.5 
 
@@ -448,9 +445,9 @@ def _h2_cmp_costheta_ ( h1              ,
     params = xlims [ 0 ] , xlims [ 1 ] , ylims [ 0 ] , ylims [ 1 ] 
     
     from ostap.math.integral import integral2 as _integral2_
-    r1   = _integral2_ ( lambda x , y : f1 ( x , y ) ** 2           , *params ) 
-    r2   = _integral2_ ( lambda x , y : f2 ( x , y ) ** 2           , *params ) 
-    r12  = _integral2_ ( lambda x , y : f1 ( x , y ) * f2 ( x , y ) , *params )
+    r1   = _integral2_ ( lambda x , y : f1 ( x , y ) ** 2           , *params , silent = True ) 
+    r2   = _integral2_ ( lambda x , y : f2 ( x , y ) ** 2           , *params , silent = True ) 
+    r12  = _integral2_ ( lambda x , y : f1 ( x , y ) * f2 ( x , y ) , *params , silent = True )
     
     return r12 / ( r1 * r2 ) ** 0.5 
 
@@ -465,7 +462,7 @@ ROOT.TH2D.cmp_cos = _h2_cmp_costheta_
 def _h3_cmp_costheta_ ( h1              ,
                         h2              ,
                         density = False ) :  
-    """Compare the 3D-histograms (as functions)
+    """ Compare the 3D-histograms (as functions)
     Calculate the scalar product and get ``cos(theta)'' from it
     
     >>> h1 = ... ## the first histo
@@ -496,9 +493,9 @@ def _h3_cmp_costheta_ ( h1              ,
     params = xlims [ 0 ] , xlims [ 1 ] , ylims [ 0 ] , ylims [ 1 ] , zlims [ 0 ] , zlims [ 1 ] 
         
     from ostap.math.integral import integral3 as _integral3_
-    r1   = _integral3_ ( lambda x , y , z : f1 ( x , y , z ) ** 2               , *params )
-    r2   = _integral3_ ( lambda x , y , z : f2 ( x , y , z ) ** 2               , *params )
-    r12  = _integral3_ ( lambda x , y , z : f1 ( x , y , z ) * f2 ( x , y , z ) , *params ) 
+    r1   = _integral3_ ( lambda x , y , z : f1 ( x , y , z ) ** 2               , *params , silent = True )
+    r2   = _integral3_ ( lambda x , y , z : f2 ( x , y , z ) ** 2               , *params , silent = True )
+    r12  = _integral3_ ( lambda x , y , z : f1 ( x , y , z ) * f2 ( x , y , z ) , *params , silent = True ) 
     
     return r12 / ( r1 * r2 ) ** 0.5 
 
@@ -682,14 +679,14 @@ def _h1_cmp_dist_ ( h1              ,
     params = lims [ 0 ] , lims [ 1 ]
     
     from ostap.math.integral import integral as _integral_    
-    r1 = _integral_ ( lambda x : f1 ( x ) ** 2 , *params ) / volume 
-    r2 = _integral_ ( lambda x : f2 ( x ) ** 2 , *params ) / volume 
+    r1 = _integral_ ( lambda x : f1 ( x ) ** 2 , *params , silent = True ) / volume 
+    r2 = _integral_ ( lambda x : f2 ( x ) ** 2 , *params , silent = True ) / volume 
         
     sf1  = 1.0 / r1 ** 0.5 
     sf2  = 1.0 / r2 ** 0.5 
 
     df   = lambda x : ( sf1 * f1 ( x ) - sf2 * f2 ( x ) ) ** 2 
-    d12  = _integral_ ( df  , *params ) / volume 
+    d12  = _integral_ ( df  , *params , silent = True ) / volume 
     
     return d12 ** 0.5 
 
@@ -741,14 +738,14 @@ def _h2_cmp_dist_ ( h1              ,
     params = xlims [ 0 ] , xlims [ 1 ] , ylims [ 0 ] , ylims [ 1 ]
 
     from ostap.math.integral import integral2 as _integral2_    
-    r1 = _integral2_ ( lambda x , y : f1 ( x , y ) ** 2 , *params ) / volume 
-    r2 = _integral2_ ( lambda x , y : f2 ( x , y ) ** 2 , *params ) / volume 
+    r1 = _integral2_ ( lambda x , y : f1 ( x , y ) ** 2 , *params , silent = True ) / volume 
+    r2 = _integral2_ ( lambda x , y : f2 ( x , y ) ** 2 , *params , silent = True ) / volume 
         
     sf1  = 1.0 / r1 ** 0.5 
     sf2  = 1.0 / r2 ** 0.5 
 
     df   = lambda x , y : ( sf1 * f1 ( x , y ) - sf2 * f2 ( x , y ) ) ** 2 
-    d12  = _integral2_ ( df , *params ) / volume 
+    d12  = _integral2_ ( df , *params , silent = True ) / volume 
     
     return d12 ** 0.5 
 
@@ -802,14 +799,14 @@ def _h3_cmp_dist_ ( h1              ,
     params = xlims [ 0 ] , xlims [ 1 ] , ylims [ 0 ] , ylims [ 1 ] , zlims [ 0 ] , zlims [ 1 ]
 
     from ostap.math.integral import integral3 as _integral3_    
-    r1 = _integral3_ ( lambda x , y , z : f1 ( x , y , z ) ** 2 , *params ) / volume 
-    r2 = _integral3_ ( lambda x , y , z : f2 ( x , y , z ) ** 2 , *params ) / volume 
+    r1 = _integral3_ ( lambda x , y , z : f1 ( x , y , z ) ** 2 , *params , silent = True ) / volume 
+    r2 = _integral3_ ( lambda x , y , z : f2 ( x , y , z ) ** 2 , *params , silent = True ) / volume 
         
     sf1  = 1.0 / r1 ** 0.5 
     sf2  = 1.0 / r2 ** 0.5 
 
     df   = lambda x , y , z : ( sf1 * f1 ( x , y , z ) - sf2 * f2 ( x , y , z ) ) ** 2 
-    d12  = _integral3_ ( df , *params ) / volume 
+    d12  = _integral3_ ( df , *params , silent = True ) / volume 
     
     return d12 ** 0.5 
 
@@ -1249,11 +1246,6 @@ def _h3_cmp_minmax_ ( h1                         ,
 ROOT.TH3F.cmp_minmax = _h3_cmp_minmax_
 ROOT.TH3D.cmp_minmax = _h3_cmp_minmax_
 
-
-
-
-
-
 # =============================================================================
 ## calculate and print some statistic for comparison
 #  @code
@@ -1310,10 +1302,12 @@ def _h1_cmp_prnt_ ( h1                  ,
     numbers = []
 
     area =  h1.integrate ()  , h2.integrate ()
+    ## area =  h1.integral  ()  , h2.integral  ()
     mean =  h1.mean      ()  , h2.mean      ()
     rms  =  h1.rms       ()  , h2.rms       ()   
     skew =  h1.skewness  ()  , h2.skewness  ()   
     kurt =  h1.kurtosis  ()  , h2.kurtosis  ()
+    
     numbers.append ( area )
     numbers.append ( mean )
     numbers.append ( rms  )
@@ -1360,8 +1354,6 @@ def _h1_cmp_prnt_ ( h1                  ,
     
 ROOT.TH1D.cmp_prnt = _h1_cmp_prnt_
 ROOT.TH1F.cmp_prnt = _h1_cmp_prnt_ 
-
-
 
 # =============================================================================
 ## calculate and print some statistic for comparison
