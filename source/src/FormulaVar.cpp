@@ -150,11 +150,11 @@ Ostap::makeFormula
   if ( !ptr || !ptr->ok() ) { return nullptr ; }
   //
   std::unique_ptr<Ostap::FormulaVar> result
-                        ( new Ostap::FormulaVar ( name       , 
-                                                  title      , 
-                                                  expression , 
-                                                  used       , 
-                                                  true       ) ) ;
+    ( new Ostap::FormulaVar ( name       , 
+			      title      , 
+			      expression , 
+			      used       , 
+			      true       ) ) ;
   //
   if ( !result || !result->ok() ) { return nullptr ; }
   //
@@ -212,18 +212,18 @@ Ostap::makeFormula
   if ( allow_empty && Ostap::trivial ( expression ) ) { return nullptr ; } // RETURN!
   if ( allow_null  && !data                         ) { return nullptr ; } // RETURN
   //
-  Ostap::Assert ( nullptr != data                      ,  
-		  "Invalid RooAbdData"                 , 
-		  "Ostap::FormulaVar::makeFormula"     ,
-		  INVALID_DATA , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( nullptr != data                       ,  
+		  "Invalid RooAbsData"                  , 
+		  "Ostap::FormulaVar::makeFormula"      , 
+		  INVALID_DATA , __FILE__ , __LINE__    ) ;
   //
   const RooArgSet*  aset = data -> get() ;
   if ( allow_null && nullptr == aset ) { return nullptr ; }
   //
-  Ostap::Assert ( nullptr != aset                      ,  
-		  "Invalid varset"                     , 
-		  "Ostap::FormulaVar::makeFormula"     ,
-		  INVALID_ARGSET , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( nullptr != aset                       ,  
+		  "Invalid varset"                      , 
+		  "Ostap::FormulaVar::makeFormula"      , 
+		  INVALID_ARGSET , __FILE__ , __LINE__  ) ;
   // convert set to list 
   const RooArgList alst { *aset } ;
   // make formula 
@@ -231,8 +231,8 @@ Ostap::makeFormula
   if ( allow_null && ( !result || !result->ok () ) ) { return nullptr ; } 
   //
   Ostap::Assert ( result && result->ok ()               ,  
-		  "Invalid formula"                     , 
-		  "Ostap::FormulaVar::makeFormula"      ,
+		  "Invalid formula: " + expression      , 
+		  "Ostap::FormulaVar::makeFormula"      , 
 		  INVALID_FORMULA , __FILE__ , __LINE__ ) ;
   //
   return result ;
@@ -421,6 +421,14 @@ Ostap::FormulaVar::FormulaVar
 //  destructor 
 // ============================================================================
 Ostap::FormulaVar::~FormulaVar(){}
+// ============================================================================
+// Fake default constructor 
+// ============================================================================
+Ostap::FormulaVar::FormulaVar()
+  : FormulaVar ( Ostap::tmp_name ( "formula_" , "1" ) ,
+		 "1" ,
+		 RooArgList() ) 
+{}    
 // ============================================================================
 // get true formula expression 
 // ============================================================================

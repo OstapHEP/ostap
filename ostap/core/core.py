@@ -425,7 +425,7 @@ def check_color ( color ) :
     return color
 
 # =============================================================================
-## alowed argument for draw-function 
+## alowed arguments for draw-function 
 draw_args = frozenset ( [ 'linecolor'   , 'markercolor' , 'fillcolor'   , 'color' , 
                           'linestyle'   , 'linewidth'   , 'width'       ,
                           'markerstyle' , 'markersize'  , 'marker'      ,
@@ -436,9 +436,11 @@ draw_args = frozenset ( [ 'linecolor'   , 'markercolor' , 'fillcolor'   , 'color
                           'xaxislabeloffset' ,
                           'yaxislabeloffset' ,
                           'zaxislabeloffset' ,
-                          'copy' ,
-                          'logx' ,
-                          'logy' ] )
+                          'copy'  ,
+                          'logx'  ,
+                          'logy'  , 
+                          'gridx' ,
+                          'gridy' ] )
 ## ============================================================================
 ## remove "draw-args" from dictionary of arguments 
 def remove_draw_args ( kwargs  ) :
@@ -650,7 +652,15 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             pad = Ostap.Utils.get_pad() 
             if pad and 'LogX' in kw : pad.SetLogx ( kw.pop ( 'LogX' ) )
             if pad and 'LogY' in kw : pad.SetLogy ( kw.pop ( 'LogY' ) )
-                
+            
+        # =====================================================================
+        ## GridX/GridY  ?
+        if 'GridY' in kw or 'GridX' in kw :            
+            pad = Ostap.Utils.get_pad() 
+            if pad and 'GridX' in kw : pad.SetGridx ( kw.pop ( 'GridX' ) )
+            if pad and 'GridY' in kw : pad.SetGridy ( kw.pop ( 'GridY' ) )
+
+        # =====================================================================
         # =====================================================================
         if kw : # =============================================================
             # =================================================================

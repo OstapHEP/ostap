@@ -363,7 +363,7 @@ class Weight(object) :
     #  return True if there is at leats one rweweigjtig recorf in database
     def __bool__    ( self ) :
         """ non-empty weighter?
-        - return True if there is at leats one rweweigjtig recorf in database        
+        - return True if there is at least one weweigjtig recorf in database        
         """
         with DBASE.open ( self.dbase , 'r' ) as db : 
             rws = db.get( tag_reweightings , () )
@@ -903,7 +903,6 @@ def _cmp_draw_ ( self ) :
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         
         if hasattr ( hw , 'red' ) : hw .red()         
-        hw.SetLineWidth   ( 2 )
         
         hw.draw  ( copy = True )
         hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed  )

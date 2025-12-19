@@ -599,8 +599,8 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
     # ========================================================================
     ## for "old" root (<6.30) is it not a method of TStyle!!
     if 'AxisMaxDigits' in conf :
-        changed [ 'AxisMaxDigits' ] = ROOT.TGAxis.GetMaxDigits()
-        ROOT.TGAxis.SetMaxDigits ( conf.pop ( 'AxisMaxDigits' , 3 ) ) 
+        changed [ 'AxisMaxDigits' ] = ROOT.TGaxis.GetMaxDigits()
+        ROOT.TGaxis.SetMaxDigits ( conf.pop ( 'AxisMaxDigits' , 3 ) ) 
 
     if conf :
         logger.warning ( "set_style: unprocessed parameters: %s" % list ( conf.keys() ) )

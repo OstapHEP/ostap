@@ -7716,7 +7716,7 @@ def h1_quantile ( h1 , quantile , * , density = True , **kwargs ):
     return q ( hh )
     
 # =============================================================================
-## Get the estimate for quantils for the hitogram
+## Get the estimate for quantiles for the hitogram
 #  @code
 #  histo = ...
 #  q = histo.quantils ( [ 0.1, 0.2 , 0.5]  )

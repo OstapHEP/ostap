@@ -1,3 +1,5 @@
+# v3.6.1.0 
+
 ## New features
 
   1. add `ResoCB` resolution function
