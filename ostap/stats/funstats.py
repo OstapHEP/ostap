@@ -38,9 +38,10 @@ else                       : logger = getLogger ( __name__               )
 class FunARGS(object) :
     """ Helper base class to keep addtional arguments for function
     """
-    def __init__ ( self , *args , **kwargs ) :
+    def __init__ ( self , *args , silent = True , **kwargs ) :
         self.__args   = args
         self.__kwargs = kwargs
+        self.__silent = True if silent else False 
     @property
     def args ( self ) :
         """`args` : additional positional arguments for function call
@@ -51,7 +52,11 @@ class FunARGS(object) :
         """`kwargs` : additional keyword arguments for function call
         """
         return self.__kwargs
-
+    @property
+    def silent ( self ) :
+        """`silent`: silent processing/suppress warning  messages?
+        """    
+        return self.__silent 
 # =============================================================================
 ## @class FunBASE1D
 #  Helper base class to keep xmin/xmax/args/kwargs for 1D function 
@@ -59,13 +64,18 @@ class FunBASE1D(FunARGS) :
     """ Helper base class to keep xmin/xmax/args/kwargs for 1D function 
     """
     def __init__ ( self , xmin , xmax , *args , **kwargs ) :
+        
         FunARGS.__init__ ( self , *args , **kwargs )
+        
         assert isinstance ( xmin , num_types ) , "Invalid `xmin' type" % typename ( xmin )
         assert isinstance ( xmax , num_types ) , "Invalid `xmax' type" % typename ( xmax )
+        
         xmin = float ( xmin )
-        xmax = float ( xmax )        
-        self.__xmin = min ( xmin , xmax ) 
-        self.__xmax = max ( xmin , xmax )
+        xmax = float ( xmax )   
+             
+        self.__xmin   = min ( xmin , xmax ) 
+        self.__xmax   = max ( xmin , xmax )
+     
     @property
     def  xmin ( self ) :
         "`xmin'- low edge of the X-interval"
@@ -139,11 +149,18 @@ class FunMEAN(FunBASE1D) :
     # =========================================================================
     ## integrate the function between xmin and xmax 
     def integral ( self , func , xmin , xmax , *args , **kwargs ) :
-        """ Integrate the function between xmin and xmax"""
+        """ Integrate the function between xmin and xmax
+        """
+        silent = kwargs.pop ( 'silent', self.silent )
         args   =   args if   args else self.args
-        kwargs = kwargs if akwrgs else self.kwargs         
+        kwargs = kwargs if kwargs else self.kwargs         
         from ostap.math.integral import Integral as II  
-        integrator = II ( func , err = False , args = args , kwargs = kwargs )
+        integrator = II ( func             , 
+                          args   = args    , 
+                          kwargs = kwargs  , 
+                          err    = False   , 
+                          silent = silent  ) 
+                          
         return integrator.integrate ( xmin , xmax )
 
     ## mean value of function over the interval 
@@ -195,7 +212,6 @@ class FunMNMX(FunRMS) :
     """ Estimate the min/max for the function using brute-force approach
     - attentoon the approximation could be rather rude 
     """
-    
     def __init__ ( self , xmin , xmax , N = 100 , NMAX = 100000 , *args , **kwargs ) :
         
         super(FunMNMX,self).__init__  ( xmin , xmax , *args , **kwargs )

@@ -264,12 +264,14 @@ class BaseMoment(FunBASE1D) :
     def integral ( self , func , xmin , xmax , *args , **kwargs ) :
         """ Integrate the function between xmin and xmax
         """
+        silent = kwargs.pop ( 'silent' , self.silent ) 
         from ostap.math.integral import Integral as II
         integrator = II ( func              ,
                           xmin              ,
                           args   = args     ,
                           kwargs = kwargs   , 
-                          err    = self.err )
+                          err    = self.err , 
+                          silent = silent   )
         return integrator ( xmax , *args )
 
     # ==========================================================================
@@ -280,10 +282,17 @@ class BaseMoment(FunBASE1D) :
         from ostap.math.integral   import IntegralCache as IC
         from ostap.math.rootfinder import RootFinder    as RF 
 
+        silent = kwargs.pop( 'silent' , self.silent )
         args   = args   if args   else self.args 
         kwargs = kwargs if kwargs else self.kwargs 
         
-        integral = IC     ( func ,  self.xmin , err = False ,  args = args , kwargs = kwargs )
+        integral = IC     ( func           ,  
+                           self.xmin       , 
+                           err    = False  , 
+                           silent = silent ,  
+                           args   = args   , 
+                           kwargs = kwargs )
+        
         total    = integral ( self.xmax ) 
 
         assert 0 < total , "median: Integral is non-positive %s" % total
@@ -325,6 +334,7 @@ class BaseMoment(FunBASE1D) :
         assert isinstance ( quantile , num_types ) and 0 <= quantile <= 1,\
             "Invalid `quantile' %s " % quantile 
     
+        silent = kwargs.pop ( 'silent' , self.silent )
         args   = args   if args   else self.args 
         kwargs = kwargs if kwargs else self.kwargs 
         
@@ -335,7 +345,13 @@ class BaseMoment(FunBASE1D) :
         from ostap.math.integral   import IntegralCache as IC  
         from ostap.math.rootfinder import RootFinder    as RF 
 
-        integral = IC ( func , self.xmin , err = False ,  args = args , kwargs = kwargs )
+        integral = IC ( func            , 
+                        self.xmin       , 
+                        err    = False  , 
+                        silent = silent ,  
+                        args   = args   , 
+                        kwargs = kwargs )
+        
         total    = integral  ( self.xmax )        
 
         assert 0 < total , "quantile: Integral is non-positive %s" % total 
@@ -368,6 +384,7 @@ class BaseMoment(FunBASE1D) :
         ## eliminate duplicates and sort them (for efficiency) 
         quantiles = sorted ( set ( quantiles ) ) 
 
+        silent = kwargs.pop ( 'silent' , self.silent )
         args   = args   if args   else self.args 
         kwargs = kwargs if kwargs else self.kwargs 
 
@@ -377,7 +394,12 @@ class BaseMoment(FunBASE1D) :
         ## need to solve equations 
         from ostap.math.rootfinder import RootFinder    as RF 
 
-        integral = IC ( func , self.xmin , err = False ,  args = args , kwargs = kwargs )
+        integral = IC ( func            , 
+                        self.xmin       , 
+                        err    = False  ,  
+                        silent = silent , 
+                        args   = args   , 
+                        kwargs = kwargs )
         total    = integral  ( self.xmax )        
         
         assert 0 < total , "quantiles: Integral is non-positive %s" % total 
