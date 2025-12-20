@@ -200,15 +200,20 @@ class UseStyle(object):
             self.__old_style = ROOT.gStyle 
             self.__new_style.cd   ()
             if groot : groot.SetStyle   ( self.__new_style.GetName()  ) ## NEW!
-            if self.style_config :
-                self.__changed = set_style ( self.__new_style , self.style_config ) 
             groot.ForceStyle ( True )
+            logger.debug ( "Switch to `%s' style!" % self.__new_style.GetName() ) 
+        
+        if self.__new_style or self.style_config :
+            self.__changed = set_style ( ROOT.gStyle , self.style_config ) 
+                
             pad = ROOT.Ostap.Utils.get_pad    () 
             if pad : pad.UseCurrentStyle ()
             ## cnv = ROOT.Ostap.Utils.get_canvas () 
             ## if cnv : cnv.UseCurrentStyle ()
-            logger.debug ( "Switch to `%s' style!" % self.__new_style.GetName() ) 
-                           
+            ## logger.debug ( "Switch to `%s' style!" % self.__new_style.GetName() ) 
+        
+        self.__new_style = ROOT.gStyle           
+          
     ## context  manager: exit
     def __exit__  ( self , *_ ) :
 
@@ -220,7 +225,7 @@ class UseStyle(object):
             groot = ROOT.ROOT.GetROOT()
             groot.SetStyle   ( self.__old_style.GetName()  ) ## NEW!
             groot.ForceStyle ( self.__force_style ) 
-            logger.debug ( "Swith to `%s' style!" % self.__old_style.GetName() ) 
+            logger.debug ( "Switch to `%s' style!" % self.__old_style.GetName() ) 
 
         self.__new_style = None
         self.__old_style = None

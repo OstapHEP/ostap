@@ -343,6 +343,9 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
 
     ## a bit special treatment due to long name 
     if 'TextFormat' in conf : conf [ 'PaintTextFormat' ] = conf.pop ( 'TextFormat' ) 
+    
+    if 'colz' in conf and conf.pop('colz', False ) and not 'PadRightMargin' in conf :
+        conf [ 'PadRightMargin' ] = margin_left  
 
     changed = {}
     
@@ -838,8 +841,8 @@ def make_ostap_style ( name                      ,
     conf [ 'PadColor'          ] = get_int   ( config , 'PadColor'           , 0     )
     conf [ 'PadGridX'          ] = get_bool  ( config , 'PadGridX'           , False )
     conf [ 'PadGridY'          ] = get_bool  ( config , 'PadGridY'           , False )
-    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'      , margin_left   )    
-    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'     , margin_left if colz else margin_right  )    
+    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'      , margin_left )    
+    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'     , margin_left if colz else margin_right )    
     conf [ 'PadTickX'          ] = get_int   ( config , 'PadTickX'           , 1     )
     conf [ 'PadTickY'          ] = get_int   ( config , 'PadTickY'           , 1     )
     conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'       , margin_top    )    

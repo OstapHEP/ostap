@@ -1,5 +1,9 @@
 ## New features
 
+    1. 'ostap/stats/moments.py` : suppress excessive warning messages from (scipy) xintegration  
+    1. some tweaks for canvas,styles,pads...
+    
+
 ## Backward  incompatible 
 
 ## Bug fixes

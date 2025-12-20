@@ -42,7 +42,8 @@ from   ostap.utils.root_utils    import Batch
 from   ostap.utils.timing        import Wait
 from   ostap.plotting.makestyles import ( canvas_width , canvas_height ,
                                           margin_left  , margin_right  ,
-                                          margin_top   , margin_bottom )
+                                          margin_top   , margin_bottom , 
+                                          set_style    )
 from   ostap.plotting.style      import UseStyle 
 import ostap.core.core         
 import ROOT, os, tempfile, math   
@@ -286,8 +287,8 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
         if cnvlst : cnv = cnvlst.get ( name , None )
         
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
-        ## _canvases.append ( cnv )
-        set_pad ( cnv , **kwargs )
+        ## _canvases.append ( cnv ) 
+        set_pad   ( cnv         , **kwargs )
         return cnv 
 
     ## create new canvas
@@ -1212,7 +1213,7 @@ class UsePad(object) :
 
         self.__pad         = pad if ( pad and isinstance ( pad , ROOT.TAttPad ) ) else None 
         self.__pad_config  = config
-        self.__changed     = {} 
+        self.__pad_changed = {} 
 
         unknown = set() 
         for k in config :
@@ -1230,7 +1231,7 @@ class UsePad(object) :
         if not self.__pad : self.__pad = Ostap.Utils.get_pad() 
         
         if self.pad and self.pad_config : 
-            self.__changed = set_pad ( self.pad , **self.pad_config )
+            self.__pad_changed = set_pad ( self.pad , **self.pad_config )
 
         return self 
         
@@ -1240,8 +1241,8 @@ class UsePad(object) :
         Restore configuration of TPad 
         """
         
-        if self.pad and self.changed :
-            set_pad ( self.pad , **self.changed )
+        if self.pad and self.pad_changed :
+            set_pad ( self.pad , **self.pad_changed )
             
         self.__pad = None
         
@@ -1256,9 +1257,9 @@ class UsePad(object) :
         return self.__pad_config
 
     @property
-    def changed ( self ) :
+    def pad_changed ( self ) :
         """`changed' : changed parameters"""
-        return self.__changed
+        return self.__pad_changed
     
 # =============================================================================
 ## helper context manager to modify <code>TAttPad</code>
@@ -1317,7 +1318,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
             key = cidict_fun ( k )
             if key in pad_keys : pad_conf   [ k ] = kwargs [ k ]
             else               : style_conf [ k ] = kwargs [ k ]
-
+ 
         KeepCanvas.__init__ ( self , wait             )
         UseStyle  .__init__ ( self , **style_conf     )
         UsePad    .__init__ ( self , **pad_conf       ) 
