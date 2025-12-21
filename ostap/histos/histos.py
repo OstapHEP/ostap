@@ -9598,6 +9598,7 @@ def histos_overlay ( lefts     , rights , * ,
                      ropts     = ()     , 
                      lkwargs   = {}     , 
                      rkwargs   = {}     , 
+                     copy      = True   , 
                      xmin      = None   , xmax   = None , 
                      ylmin     = None   , ylmax  = None ,
                      yrmin     = None   , yrmax  = None ) :
@@ -9670,35 +9671,58 @@ def histos_overlay ( lefts     , rights , * ,
         xrmax = max ( h.GetXaxis().GetXmax() for h in rights )
         xmin  = min ( xlmin , xrmin )
         xmax  = max ( xlmax , xrmax )
-    
+        
     lmin  = min ( h.GetMinimum () for h in lefts  )
     lmax  = max ( h.GetMaximum () for h in lefts  )
+    
     rmin  = min ( h.GetMinimum () for h in rights )
     rmax  = max ( h.GetMaximum () for h in rights )
-   
-    ylmin = lmin if ylmin is None else ylmin
-    ylmax = lmax if ylmax is None else ylmax
-    yrmin = rmin if yrmin is None else yrmin
-    yrmax = rmax if yrmax is None else yrmax
+       
+       
+    assert ylmin is None or ( 0 < ylmin or not  left_log ) , "Invalid `y1min` for log-scale"
+    assert ylmax is None or ( 0 < ylmax or not  left_log ) , "Invalid `y1max` for log-scale"
+    assert yrmin is None or ( 0 < yrmin or not right_log ) , "Invalid `yrmin` for log-scale"
+    assert yrmax is None or ( 0 < yrmax or not right_log ) , "Invalid `yrmax` for log-scale"
     
-   
+    assert ( ylmin is None or ylmax is None ) or ylmin < ylmax, "Invalid `ylmin/ylmax`" 
+    assert ( yrmin is None or yrmax is None ) or yrmin < yrmax, "Invalid `yrmin/yrmax`" 
+         
+    if ylmin is None or ylmax is None :
+        
+        if not ylmin is None : lmin = ylmin 
+        if not ylmax is None : lmax = ylmax 
+        
+        if left_log : 
+            assert 0 < lmax  , 'Non-positive (left) y-max %s log-scale' % lmax 
+            if lmin <= 0 :
+                yl     = min ( 0.2 , 1.e-6 * lmax ) 
+                if not ylmin is None  and 0 < ylmin : yl = ylmin  
+                logger.warning ( 'histos_overlay: adjust non-positive (left)  Y-min %+g %s %+.1e [log-scale]' % ( lmin , arrow_right , yl ) )
+                lmin  = yl
+                
+        lmin, lmax = axis_range ( lmin , lmax , delta = 0.05 , log_margin = 0.40 , log = left_log  ) 
+        
+        if ylmin is None : ylmin = lmin 
+        if ylmax is None : ylmax = lmax 
+                 
+    if yrmin is None or yrmmax is None : 
+        
+        if not yrmin is None : lmin = yrmin 
+        if not yrmax is None : lmax = yrmax 
     
-    if left_log : 
-        assert 0 < ylmax  , 'Non-positive (left) y-max %s log-scale' % ylmax 
-        if ylmin <= 0 :
-            yl     = min ( 0.2 , 1.e-6 * ylmax ) 
-            logger.warning ( 'histos_overlay: adjust non-positive (left)  Y-min %+g %s %+.1e [log-scale]' % ( ylmin , arrow_right , yl ) )
-            ylmin  = yl 
-             
-    if right_log : 
-        assert 0 < yrmax  , 'Non-positive (right) max %s log-scale' % yrmax 
-        if yrmin <= 0 :
-            yr     = min ( 0.2 , 1.e-6 * yrmax ) 
-            logger.warning ( 'histos_overlay: adjust non-positive (right) Y-min %+g %s %+.1e [log-scale]' % ( yrmin , arrow_right , yr ) )
-            yrmin  = yr 
-            
-    ylmin, ylmax = axis_range ( ylmin , ylmax , delta = 0.05 , log_margin = 0.40 , log = left_log  )
-    yrmin, yrmax = axis_range ( yrmin , yrmax , delta = 0.05 , log_margin = 0.40 , log = right_log )
+        if right_log : 
+            assert 0 < rmax  , 'Non-positive (right) max %s log-scale' % rmax 
+            if rmin <= 0 :
+                yr     = min ( 0.2 , 1.e-6 * rmax ) 
+                if not ylmin is None  and 0 < ylmin : yl = ylmin  
+                logger.warning ( 'histos_overlay: adjust non-positive (right) Y-min %+g %s %+.1e [log-scale]' % ( rmin , arrow_right , yr ) )
+                rmin  = yr 
+                
+        rmin, rmax = axis_range ( rmin , rmax , delta = 0.05 , log_margin = 0.40 , log = right_log )
+        
+        if yrmin is None : yrmin = rmin 
+        if yrmax is None : yrmax = rmax 
+        
         
     fL = ROOT.TH1F ( hID() , '' , 1 , xmin , xmax )
     fL.SetMinimum  ( ylmin ) 
@@ -9711,9 +9735,8 @@ def histos_overlay ( lefts     , rights , * ,
 
     ## Left objects
     
-    
     fL.draw ( copy = True , logy = left_log )
-    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) : h.draw ('same' + opt , **kw )    
+    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) : h.draw ('same' + opt , copy = copy , **kw )    
     clear_pad.Draw()
     
     clear_pad.cd ( )
@@ -9721,7 +9744,7 @@ def histos_overlay ( lefts     , rights , * ,
     if right_log : clear_pad.SetLogy( right_log )
         
     fR.DrawCopy ('Y+') 
-    for h , opt , kw in zip ( rights , ropts , rkwargs ) : h.draw( 'same' + opt , **kw )    
+    for h , opt , kw in zip ( rights , ropts , rkwargs ) : h.draw( 'same' + opt , copy = copy , **kw )    
     clear_pad.Draw()
     
     cnv.Update() 
@@ -9743,6 +9766,7 @@ def _h1_overlay_left_ ( histo , *rights ,
                         ropts     = ()     , 
                         lkwargs   = {}     , 
                         rkwargs   = {}     , 
+                        copy      = True   , 
                         xmin      = None   , xmax   = None , 
                         ylmin     = None   , ylmax  = None ,
                         yrmin     = None   , yrmax  = None ) :
@@ -9760,7 +9784,8 @@ def _h1_overlay_left_ ( histo , *rights ,
                             lopts     = ( lopts   , ) , 
                             ropts     = ropts     , 
                             lwargs    = ( lkwargs , ) ,
-                            rkwargs   = rkwargs   , 
+                            rkwargs   = rkwargs   ,
+                            copy      = copy      , 
                             xmin      = xmin      , 
                             xmax      = xmax      ,
                             ylmin     = ylmin     , 
@@ -9783,6 +9808,7 @@ def _h1_overlay_right_ ( histo , *lefts ,
                         ropts     = ""     , 
                         lkwargs   = {}     , 
                         rkwargs   = {}     , 
+                        copy      = True   , 
                         xmin      = None   , xmax   = None , 
                         ylmin     = None   , ylmax  = None ,
                         yrmin     = None   , yrmax  = None ) : 
@@ -9800,7 +9826,8 @@ def _h1_overlay_right_ ( histo , *lefts ,
                             lopts     = ( lopts   , ) , 
                             ropts     = ropts     , 
                             lwargs    = ( lkwargs , ) ,
-                            rkwargs   = rkwargs   , 
+                            rkwargs   = rkwargs   ,
+                            copy      = copy      ,  
                             xmin      = xmin      , 
                             xmax      = xmax      ,
                             ylmin     = ylmin     , 

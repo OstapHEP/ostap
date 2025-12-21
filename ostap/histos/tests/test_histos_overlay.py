@@ -57,14 +57,15 @@ def test_overlay () :
     h3.green()
     h4.yellow() 
 
+    store = [] 
     for  left_log in ( True , False  ) :
         for right_log in ( True , False ) : 
             for clipx in ( True , False ) : 
-                with use_canvas ( "overlay 4 Log left/right=%s/%s clipx=%s" %  ( left_log , right_log , clipx ) , wait = 2  ) : 
+                with use_canvas ( "overlay 4 Log left/right=%s/%s clipx=%s" %  ( left_log , right_log , clipx ) , wait = 2 , colz = True , keep = True ) : 
                     lefts  = h2 , h1 
                     rights = h3 , h4 
-                    histos_overlay ( lefts , rights , right_log = right_log , left_log = left_log , clipx = clipx )
-                    
+                    r = histos_overlay ( lefts , rights , right_log = right_log , left_log = left_log , clipx = clipx )
+                    store.append ( r )
                     
 # =============================================================================
 if '__main__' == __name__ :
