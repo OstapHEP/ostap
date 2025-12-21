@@ -878,12 +878,21 @@ def num_range ( value , N = 1 ) :
     
 # =============================================================================
 ## Find suitable range for histogram axis 
-def axis_range ( xmin , xmax , delta = 0.02 , log = False ) :
+def axis_range ( xmin , xmax , delta = 0.02 , log_margin = 0.45 , log = False ) :
     """ Find suitable range for histogram axis
     """
     xmn = min ( xmin , xmax )
     xmx = max ( xmin , xmax )
     
+    if log : 
+        assert 0 < log_margin < 1 , "axis_range log-gargin must be between 0 and 1: %s"%  log_margin
+        assert 0 < xmn < xmx , "axis_range: xmin/xmax must be positive for log-scale %+g/%+g" % ( xmn , xmx ) 
+        xmn *= ( 1 - log_margin )
+        xmx *= ( 1 + log_margin )
+        l = math.floor ( math.log10 ( xmn ) ) 
+        m = math.ceil  ( math.log10 ( xmx ) )
+        return 10**l , 10**m
+        
     ## 1) special case
     if iszero ( xmn ) and iszero ( xmx ) : return ( -1.0 , 1.0 )
     

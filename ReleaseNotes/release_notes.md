@@ -2,7 +2,7 @@
 
     1. 'ostap/stats/moments.py` : suppress excessive warning messages from (scipy) xintegration  
     1. some tweaks for canvas,styles,pads...
-    
+    1. `histos.py`  : add function `histos_overlay` to draw superimposed histogram with different y-scales 
 
 ## Backward  incompatible 
 

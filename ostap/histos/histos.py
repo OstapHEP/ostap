@@ -31,9 +31,10 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info           import root_info 
-from   ostap.core.ostap_types         import ( integer_types  , num_types   ,
-                                               long_type      , sized_types , 
-                                               sequence_types ) 
+from   ostap.core.ostap_types         import ( integer_types  , num_types    ,
+                                               long_type      , sized_types  , 
+                                               sequence_types , string_types , 
+                                               dictlike_types ) 
 from   ostap.core.core                import ( cpp      , Ostap     , 
                                                ROOTCWD  , rootID    , 
                                                funcID   , funID     , fID             ,
@@ -47,9 +48,9 @@ from   ostap.core.core                import ( cpp      , Ostap     ,
                                                natural_number       ,
                                                valid_pointer        )
 from   ostap.math.base                import ( frexp10      , isequalf      ,
-                                               pos_infinity , neg_infinity  ,
-                                               vct1_call    , vct2_call     ,
-                                               vct3_call    ) 
+                                               pos_infinity , neg_infinity ,
+                                               vct1_call    , vct2_call    ,
+                                               vct3_call    , axis_range   ) 
 from   ostap.math.math_ve             import significance
 from   ostap.utils.progress_bar       import progress_bar
 from   ostap.math.random_ext          import poisson
@@ -61,6 +62,7 @@ from   ostap.logger.pretty            import pretty_float
 from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes
 from   ostap.stats.moments            import Quantile, Quantiles
 from   ostap.math.integral            import Integral, Integral2, Integral3 
+from   ostap.logger.symbols           import arrow_right
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
@@ -9560,6 +9562,257 @@ ROOT.TH2D.__repr__ = _h2_table_
 ROOT.TH3F.__repr__ = _h3_table_
 ROOT.TH3D.__repr__ = _h3_table_
 
+
+# ============================================================================
+## draw two sets of histograms with different Y-axes 
+#  - "left set"   with the scale on leftY -axis
+#  - 'right set"  with the scale on the right Y-axis
+#  @code
+#  left_histos  = hL1, hL2, hL3 ## three histograms of `left set'
+#  right_histos = hR1, hR2      ## two histogram of `right set`
+# 
+#  with use_canvas ( 'My canvas' , colz = True ) :
+#       histo_overlay ( lefts , right ) 
+#  
+#  @endcode
+#  @param lefts     the list of input histogram od the `left set`
+#  @param rights    the list  of input histogram of the `right set`
+#  @param right_log use log scle for right set?
+#  @param left_log  use log-scale foe the left set?
+#  @param clipx     use x-range from the first left histogram or the combined range?
+#  @param lopts     sequence of individual drawing options (strings) for histos from left set
+#  @param ropts     sequence of individual drawing options (strings) for histos from right set
+#  @param lkwargs   sequence of individual drawing options (dicts) for histos from left  set
+#  @param rkwargs   sequence of individual drawing options (dicts) for histos from right set
+#  @param xmin      if not None use it as low-edge of drawing range 
+#  @param xmax      if not None use it as upper-edge of drawing range 
+#  @param ylmin     if not None use it as low-Y edge of drawing range for left set 
+#  @param yrmin     if not None use it as low-Y edge of drawing range for right set 
+#  @param ylmax     if not None use it as upper-Y edge of drawing range for left set 
+#  @param yrmax     if not None use it as upper-Y edge of drawing range for right set 
+def histos_overlay ( lefts     , rights , * , 
+                     right_log = False  ,
+                     left_log  = False  ,  
+                     clipx     = True   ,
+                     lopts     = ()     , 
+                     ropts     = ()     , 
+                     lkwargs   = {}     , 
+                     rkwargs   = {}     , 
+                     xmin      = None   , xmax   = None , 
+                     ylmin     = None   , ylmax  = None ,
+                     yrmin     = None   , yrmax  = None ) :
+    """ Draw two sets of historgams with different Y-axes
+    - `left set` with the scale on the left Y-axis
+    - `right set` with the scael on the right Y-axis
+
+    >>> left_histos  = hL1, hL2, hL3 ## three histograms of `left set'
+    >>> right_histos = hR1, hR2      ## two histogram of `right set`
+    >>>  with use_canvas ( 'My canvas' , colz = True ) :
+    ...       histo_overlay ( lefts , right ) 
+    
+    `lefts`     : the list of input histogram od the `left set`
+    `rights`    : the list  of input histogram of the `right set`
+    `right_log` : use log scale for right set?
+    `left_log`  : use log-scale foe the left set?
+    `clipx`     : use x-range from the first left histogram or the combined range?
+    `lopts`     : sequence of individual drawing options (strings) for histos from left set
+    `ropts`     : sequence of individual drawing options (strings) for histos from right set
+    `lkwargs`   : sequence of individual drawing options (dicts) for histos from left  set
+    `rkwargs`   : sequence of individual drawing options (dicts) for histos from right set
+    `xmin`      : if not None use it as low-edge of drawing range 
+    `xmax`      : if not None use it as upper-edge of drawing range 
+    `ylmin`     : if not None use it as low-Y edge of drawing range for left set 
+    `yrmin`     : if not None use it as low-Y edge of drawing range for right set 
+    `ylmax`     : if not None use it as upper-Y edge of drawing range for left set 
+    `yrmax`     : if not None use it as upper-Y edge of drawing range for right set 
+    """
+
+    if isinstance ( lefts  , ROOT.TH1 ) : lefts  = lefts  , 
+    if isinstance ( rights , ROOT.TH1 ) : rights = rights ,  
+
+    assert lefts and all ( isinstance ( v , ROOT.TH1 ) and 1 == v.dim()  for v in lefts  ) , \
+        "Invalid object in `lefts`"
+        
+    assert rights and all ( isinstance ( v , ROOT.TH1 ) and 1 == v.dim()  for v in rights ) , \
+        "Invalid object in `rights`"
+          
+    # Use a base pad (the canvas) and then a transparent pad
+    clear_pad = ROOT.TPad ('clear_pad' , '' , 0 , 0 , 1 , 1 )
+    clear_pad.SetFillColor      ( 0    )
+    clear_pad.SetFillStyle      ( 4000 )
+    clear_pad.SetFrameFillStyle ( 0    )  
+    
+    cnv = Ostap.Utils.get_canvas() 
+    cnv.SetTicky ( 0 )
+
+    from itertools  import chain, repeat 
+    
+    if isinstance ( lopts   , string_types   ) : lopts   = repeat ( lopts   )
+    else                                       : lopts   = chain  ( lopts   , repeat ( '' ) )
+    if isinstance ( ropts   , string_types   ) : ropts   = repeat ( ropts   )
+    else                                       : ropts   = chain  ( ropts   , repeat ( '' ) )
+    if isinstance ( lkwargs , dictlike_types ) : lkwargs = repeat ( lkwargs ) 
+    else                                       : lkwargs = chain  ( lkwargs , repeat ( {} ) )
+    if isinstance ( rkwargs , dictlike_types ) : rkwargs = repeat ( rkwargs )
+    else                                       : rkwargs = chain  ( rkwargs , repeat ( {} ) )
+ 
+    if clipx : 
+        
+        h1    = lefts [ 0 ]
+        xmin  = h1.GetXaxis().GetXmin() if xmin is None else xmin
+        xmax  = h1.GetXaxis().GetXmax() if xmax is None else xmax 
+        
+    else :
+          
+        xlmin = min ( h.GetXaxis().GetXmin() for h in lefts  )
+        xlmax = max ( h.GetXaxis().GetXmax() for h in lefts  )
+        xrmin = min ( h.GetXaxis().GetXmin() for h in rights )
+        xrmax = max ( h.GetXaxis().GetXmax() for h in rights )
+        xmin  = min ( xlmin , xrmin )
+        xmax  = max ( xlmax , xrmax )
+    
+    lmin  = min ( h.GetMinimum () for h in lefts  )
+    lmax  = max ( h.GetMaximum () for h in lefts  )
+    rmin  = min ( h.GetMinimum () for h in rights )
+    rmax  = max ( h.GetMaximum () for h in rights )
+   
+    ylmin = lmin if ylmin is None else ylmin
+    ylmax = lmax if ylmax is None else ylmax
+    yrmin = rmin if yrmin is None else yrmin
+    yrmax = rmax if yrmax is None else yrmax
+    
+   
+    
+    if left_log : 
+        assert 0 < ylmax  , 'Non-positive (left) y-max %s log-scale' % ylmax 
+        if ylmin <= 0 :
+            yl     = min ( 0.2 , 1.e-6 * ylmax ) 
+            logger.warning ( 'histos_overlay: adjust non-positive (left)  Y-min %+g %s %+.1e [log-scale]' % ( ylmin , arrow_right , yl ) )
+            ylmin  = yl 
+             
+    if right_log : 
+        assert 0 < yrmax  , 'Non-positive (right) max %s log-scale' % yrmax 
+        if yrmin <= 0 :
+            yr     = min ( 0.2 , 1.e-6 * yrmax ) 
+            logger.warning ( 'histos_overlay: adjust non-positive (right) Y-min %+g %s %+.1e [log-scale]' % ( yrmin , arrow_right , yr ) )
+            yrmin  = yr 
+            
+    ylmin, ylmax = axis_range ( ylmin , ylmax , delta = 0.05 , log_margin = 0.40 , log = left_log  )
+    yrmin, yrmax = axis_range ( yrmin , yrmax , delta = 0.05 , log_margin = 0.40 , log = right_log )
+        
+    fL = ROOT.TH1F ( hID() , '' , 1 , xmin , xmax )
+    fL.SetMinimum  ( ylmin ) 
+    fL.SetMaximum  ( ylmax )  
+    
+    ## Right  frame
+    fR = ROOT.TH1F ( hID () , '' , 1 , xmin , xmax )
+    fR.SetMinimum  ( yrmin ) 
+    fR.SetMaximum  ( yrmax )  
+
+    ## Left objects
+    
+    
+    fL.draw ( copy = True , logy = left_log )
+    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) : h.draw ('same' + opt , **kw )    
+    clear_pad.Draw()
+    
+    clear_pad.cd ( )
+    clear_pad.SetTicks(0, 0)
+    if right_log : clear_pad.SetLogy( right_log )
+        
+    fR.DrawCopy ('Y+') 
+    for h , opt , kw in zip ( rights , ropts , rkwargs ) : h.draw( 'same' + opt , **kw )    
+    clear_pad.Draw()
+    
+    cnv.Update() 
+    
+    return lefts + rights 
+    
+# ============================================================================
+## overlay this histogram with another group of hisogram with right Y-axis 
+#  @code
+#  histo = ...
+#  h2, h3 = ... other histograms
+#  histo.overlay_left  ( h2 , h3 ) 
+#  @endcode 
+def _h1_overlay_left_ ( histo , *rights , 
+                        right_log = False  ,
+                        left_log  = False  ,  
+                        clipx     = True   ,
+                        lopts     = ""     , 
+                        ropts     = ()     , 
+                        lkwargs   = {}     , 
+                        rkwargs   = {}     , 
+                        xmin      = None   , xmax   = None , 
+                        ylmin     = None   , ylmax  = None ,
+                        yrmin     = None   , yrmax  = None ) :
+    """ Overlay this histogram with another group of hisogram with right Y-axis
+    >>> histo = ...
+    >>> h2, h3 = ... other histograms   
+    >>> histo.overlay_left  ( h2 , h3 ) 
+    """
+    assert rights , "The list of `right` histograms is empty!"
+    lefts  = histo , 
+    return histos_overlay ( lefts     , rights    , 
+                            right_log = right_log , 
+                            left_log  = left_log  , 
+                            clipx     = clipx     ,
+                            lopts     = ( lopts   , ) , 
+                            ropts     = ropts     , 
+                            lwargs    = ( lkwargs , ) ,
+                            rkwargs   = rkwargs   , 
+                            xmin      = xmin      , 
+                            xmax      = xmax      ,
+                            ylmin     = ylmin     , 
+                            ylmax     = ylmax     , 
+                            yrmin     = yrmin     , 
+                            yrmax     = yrmax     )       
+        
+# ============================================================================
+## overlay this histogram using rigth Y-axis with another group of hisogram with left Y-axis  
+#  @code
+#  histo = ...
+#  h2, h3 = ... other histograms
+#  histo.overlay_right  ( h2 , h3 ) 
+#  @endcode 
+def _h1_overlay_right_ ( histo , *lefts , 
+                        right_log = False  ,
+                        left_log  = False  ,  
+                        clipx     = True   ,
+                        lopts     = ()     , 
+                        ropts     = ""     , 
+                        lkwargs   = {}     , 
+                        rkwargs   = {}     , 
+                        xmin      = None   , xmax   = None , 
+                        ylmin     = None   , ylmax  = None ,
+                        yrmin     = None   , yrmax  = None ) : 
+    """ Overlay this histogram with another group of hisogram with right Y-axis
+    >>> histo = ...
+    >>> h2, h3 = ... other histograms   
+    >>> histo.overlay_right  ( h2 , h3 ) 
+    """
+    assert lefts , "The list of `lefts` histograms is empty!"
+    rights = histo , 
+    return histos_overlay ( lefts     , rights    , 
+                            right_log = right_log , 
+                            left_log  = left_log  , 
+                            clipx     = clipx     ,
+                            lopts     = ( lopts   , ) , 
+                            ropts     = ropts     , 
+                            lwargs    = ( lkwargs , ) ,
+                            rkwargs   = rkwargs   , 
+                            xmin      = xmin      , 
+                            xmax      = xmax      ,
+                            ylmin     = ylmin     , 
+                            ylmax     = ylmax     , 
+                            yrmin     = yrmin     , 
+                            yrmax     = yrmax     )          
+    
+    
+for h in ( ROOT.TH1F  , ROOT.TH1D ) :
+    h.overlay_left  = _h1_overlay_left_
+    h.overlay_right = _h1_overlay_right_ 
+     
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1   ,
@@ -10200,6 +10453,10 @@ _new_methods_  += (
     ROOT.TH1F.quantiles      , 
     ROOT.TH1D.quantiles      , 
     ##
+    ROOT.TH1F.overlay_left   , 
+    ROOT.TH1F.overlay_right  ,  
+    ROOT.TH1D.overlay_left   , 
+    ROOT.TH1D.overlay_right  ,  
 )
 
 # =============================================================================
