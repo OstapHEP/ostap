@@ -9647,7 +9647,10 @@ def histos_overlay ( lefts     , rights , * ,
     cnv.SetTicky ( 0 )
 
     from itertools  import chain, repeat 
-    
+
+    if not lopts : lopts = '' ,
+    if not ropts : lopts = '' ,
+
     if isinstance ( lopts   , string_types   ) : lopts   = repeat ( lopts   )
     else                                       : lopts   = chain  ( lopts   , repeat ( '' ) )
     if isinstance ( ropts   , string_types   ) : ropts   = repeat ( ropts   )
@@ -9748,7 +9751,9 @@ def histos_overlay ( lefts     , rights , * ,
     ## Left objects
     
     fL.draw ( copy = True , logy = left_log )
-    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) : h.draw ('same' + opt , copy = copy , **kw )    
+    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) :
+        print ('LEFTS', opt, type(opt) , type(kw) )
+        h.draw ('same' + opt , copy = copy , **kw )    
     clear_pad.Draw()
     
     clear_pad.cd ( )
@@ -9795,7 +9800,7 @@ def _h1_overlay_left_ ( histo , *rights ,
                             clipx     = clipx     ,
                             lopts     = ( lopts   , ) , 
                             ropts     = ropts     , 
-                            lwargs    = ( lkwargs , ) ,
+                            lrwargs   = ( lkwargs , ) ,
                             rkwargs   = rkwargs   ,
                             copy      = copy      , 
                             xmin      = xmin      , 
@@ -9813,17 +9818,17 @@ def _h1_overlay_left_ ( histo , *rights ,
 #  histo.overlay_right  ( h2 , h3 ) 
 #  @endcode 
 def _h1_overlay_right_ ( histo , *lefts , 
-                        right_log = False  ,
-                        left_log  = False  ,  
-                        clipx     = True   ,
-                        lopts     = ()     , 
-                        ropts     = ""     , 
-                        lkwargs   = {}     , 
-                        rkwargs   = {}     , 
-                        copy      = True   , 
-                        xmin      = None   , xmax   = None , 
-                        ylmin     = None   , ylmax  = None ,
-                        yrmin     = None   , yrmax  = None ) : 
+                         right_log = False  ,
+                         left_log  = False  ,  
+                         clipx     = True   ,
+                         lopts     = ()     , 
+                         ropts     = ""     , 
+                         lkwargs   = {}     , 
+                         rkwargs   = {}     , 
+                         copy      = True   , 
+                         xmin      = None   , xmax   = None , 
+                         ylmin     = None   , ylmax  = None ,
+                         yrmin     = None   , yrmax  = None ) : 
     """ Overlay this histogram with another group of hisogram with right Y-axis
     >>> histo = ...
     >>> h2, h3 = ... other histograms   
@@ -9837,7 +9842,7 @@ def _h1_overlay_right_ ( histo , *lefts ,
                             clipx     = clipx     ,
                             lopts     = ( lopts   , ) , 
                             ropts     = ropts     , 
-                            lwargs    = ( lkwargs , ) ,
+                            lkwargs   = ( lkwargs , ) ,
                             rkwargs   = rkwargs   ,
                             copy      = copy      ,  
                             xmin      = xmin      , 

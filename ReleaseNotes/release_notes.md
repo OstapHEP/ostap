@@ -8,6 +8,8 @@
     1. `simfit` : complete the action, related to root-project/root#20383 and root-project/root#20618
     1. `make_bkg` : improve the printout in case of extra/unused/ignored argumetns 
     1. add `map2table_ex` function to `ostap.logger.utils` module 
+    1. tiny tweaks for reweighting
+
 
 ## Backward  incompatible 
 

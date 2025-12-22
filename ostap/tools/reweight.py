@@ -24,7 +24,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
-from   ostap.core.pyrouts     import VE, SE, Ostap 
+from   ostap.core.pyrouts     import VE, SE, Ostap, hID  
 from   ostap.math.base        import iszero, axis_range 
 from   ostap.utils.strings    import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
@@ -115,7 +115,7 @@ def normalize_data ( data , another = None  ) :
         
 # =============================================================================
 ## Set the proper axis range for the comparison plots
-def adjust_histo_range ( histo ) :
+def adjust_histo_range ( histo , min_zero = True ) :
     """ Set the proper axis range for the comparison plots
     """
     
@@ -161,9 +161,9 @@ def adjust_histo_range ( histo ) :
         histo.SetContour  ( 50   )
 
     ## reset minimum again for 1D histograms 
-    if isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() : 
+    if min_zero and isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() : 
         histo.SetMinimum  ( min ( vmin , 0.0 ) )
-    
+
     return histo 
     
 # =============================================================================
@@ -815,8 +815,9 @@ def _cmp_draw_ ( self ) :
     hd   = self.data
     hmc  = self.mc
     hw   = self.weight 
-
-    adjust_histo_range ( hw ) 
+        
+    adjust_histo_range ( hw )
+    
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
 
         hw.draw  ( copy = True )
@@ -902,7 +903,7 @@ def _cmp_draw_ ( self ) :
 
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         
-        if hasattr ( hw , 'red' ) : hw .red()         
+        if hasattr ( hw , 'yellow' ) : hw .yellow ()         
         
         hw.draw  ( copy = True )
         hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed  )
@@ -947,8 +948,8 @@ def _cmp_draw_ ( self ) :
         hd  = hd .clone()
         hmc = hmc.clone()
         
-        if hasattr ( hd     , 'green'  ) : hd .green   () 
-        if hasattr ( hmc    , 'blue'   ) : hmc.blue   () 
+        if hasattr ( hd     , 'red'   ) : hd .red   () 
+        if hasattr ( hmc    , 'blue'  ) : hmc.blue  () 
         rmax   = 1.2 * max ( hd .GetMaximum () , hmc.GetMaximum() )
         hd .SetMinimum ( 0 )
         hmc.SetMinimum ( 0 )
@@ -963,7 +964,7 @@ def _cmp_draw_ ( self ) :
     elif isinstance ( hd  , ROOT.TH1 ) and 1 == hd.dim() :
 
         hd = hd.clone()
-        if hasattr ( hd     , 'green'  ) : hd .green   () 
+        if hasattr ( hd     , 'red'  ) : hd .red   () 
         rmax   = 1.2 *       hd .GetMaximum ()         
         hd .SetMinimum ( 0 )
         pad = ROOT.Ostap.Utils.get_pad () 
@@ -984,6 +985,8 @@ def _cmp_draw_ ( self ) :
             scale  = pad.GetUymax() / rmax
             hmc .Scale ( scale  )
         hmc .draw  ( 'same' , copy = True )
+
+        return self
 
 ComparisonPlot. draw = _cmp_draw_
 
@@ -1311,7 +1314,11 @@ def makeWeights  ( dataset                      ,
         if groot and not groot.IsBatch() : 
             from ostap.plotting.canvas import use_canvas 
             for item in cmp_plots :
-                with use_canvas ( '%s/%s' % ( tag , item.what ) ) : item.draw()
+                colz = \
+                    isinstance ( item.data   , ROOT.TH1 ) and 1 == item.data  .dim () and \
+                    isinstance ( item.mc     , ROOT.TH1 ) and 1 == item.mc    .dim () and \
+                    isinstance ( item.weight , ROOT.TH1 ) and 1 == item.weight.dim ()                
+                with use_canvas ( '%s/%s' % ( tag , item.what ) , colz = colz ) : item.draw()
 
         ## save comparison plots to database 
         if debug and True :
