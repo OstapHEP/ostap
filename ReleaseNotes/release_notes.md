@@ -9,7 +9,7 @@
     1. `make_bkg` : improve the printout in case of extra/unused/ignored argumetns 
     1. add `map2table_ex` function to `ostap.logger.utils` module 
     1. tiny tweaks for reweighting
-
+    1. update `ds2numpy` : add `wname` argument to rename weight for strutured output 
 
 ## Backward  incompatible 
 

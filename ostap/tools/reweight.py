@@ -817,6 +817,7 @@ def _cmp_draw_ ( self ) :
     hw   = self.weight 
         
     adjust_histo_range ( hw )
+
     
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
 
@@ -904,7 +905,7 @@ def _cmp_draw_ ( self ) :
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         
         if hasattr ( hw , 'yellow' ) : hw .yellow ()         
-        
+
         hw.draw  ( copy = True )
         hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed  )
 
@@ -947,7 +948,7 @@ def _cmp_draw_ ( self ) :
 
         hd  = hd .clone()
         hmc = hmc.clone()
-        
+
         if hasattr ( hd     , 'red'   ) : hd .red   () 
         if hasattr ( hmc    , 'blue'  ) : hmc.blue  () 
         rmax   = 1.2 * max ( hd .GetMaximum () , hmc.GetMaximum() )
@@ -972,7 +973,7 @@ def _cmp_draw_ ( self ) :
             scale  = pad.GetUymax() / rmax
             hd  .Scale ( scale  )
         hd  .draw  ( 'same' , copy = True )
-        
+
     elif isinstance ( hmc , ROOT.TH1 ) and 1 == hmc.dim() :
 
         hmc = hmc.clone()
@@ -986,7 +987,7 @@ def _cmp_draw_ ( self ) :
             hmc .Scale ( scale  )
         hmc .draw  ( 'same' , copy = True )
 
-        return self
+    return self
 
 ComparisonPlot. draw = _cmp_draw_
 

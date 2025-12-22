@@ -84,7 +84,6 @@ class Reweighter(object) :
     def weight ( self                   ,
                  original               ,
                  original_weight = None ) :
-
         
         return self.reweighter.predict_weights (
             original        = original         ,

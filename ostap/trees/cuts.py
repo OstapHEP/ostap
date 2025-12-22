@@ -62,7 +62,7 @@ def trivial ( expression ) :
 #  vars_lst, cuts, input_string = vars_and_cuts ( 'x', 'y<0' )
 #  vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
 #  @endcode
-def vars_and_cuts ( expressions , cuts ) :
+def vars_and_cuts ( expressions , cuts , allow_empty = False ) :
     """ Prepare the arguments: variable names and cuts 
     >>> vars_lst, cuts, input_string = vars_and_cuts ( 'x', 'y<0' )
     >>> vars_lst, cuts, input_string = vars_and_cuts ( ('x','y','z') , 'y<0' )
@@ -74,6 +74,26 @@ def vars_and_cuts ( expressions , cuts ) :
         expressions  = split_string ( str ( expressions ) , strip = True , respect_groups = True )
         input_string = 1 == len ( expressions )
 
+
+    # ===========================================================================
+    ## CUTS
+    # ===========================================================================
+    
+    assert isinstance ( cuts , expression_types ) or not cuts , \
+        'Invalid type of cuts: %s' % str ( cuts ) 
+    
+    cuts = str ( cuts ).strip() if cuts else ''
+
+    ## if cut is trivial : make it really trivial! 
+    if cuts and trivial ( cuts ) : cuts = ''
+
+    # ============================================================================
+    ## VARIABLES 
+    # ============================================================================
+
+    ## EMPTY ?
+    if allow_empty and not expressions : return () , cuts , input_string ## ATTENTION!
+        
     assert expressions and all ( s and isinstance ( s , expression_types ) for s in expressions ) , \
         "Invalid expression(s) : %s" % str ( expressions )
 
@@ -83,6 +103,9 @@ def vars_and_cuts ( expressions , cuts ) :
         if subexpr : full    += subexpr
     expressions  = tuple ( full ) 
 
+    ## EMPTY ?
+    if allow_empty and not expressions : return () , cuts , input_string ## ATTENTION!! 
+    
     assert expressions and all ( s and isinstance ( s , expression_types ) for s in expressions ) , \
         "Invalid expression(s) : %s" % str ( expressions )
     
@@ -90,16 +113,11 @@ def vars_and_cuts ( expressions , cuts ) :
 
     exprs = tuple ( s for s in exprs if s )
 
+    ## EMPTY ? 
+    if allow_empty and not exprs : return () , cuts , input_string ## ATTENTION!! 
+        
     assert exprs and all ( exprs ) , "Invalid expressions: %s" % str ( exprs )
     
-    assert isinstance ( cuts , expression_types ) or not cuts , \
-        'Invaild type of cuts: %s' % str ( cuts ) 
-    
-    cuts = str ( cuts ).strip() if cuts else ''
-
-    ## if cut is trivial : make it really trivial! 
-    if cuts and trivial ( cuts ) : cuts = ''
-
     return exprs , cuts, input_string 
 
 # =============================================================================

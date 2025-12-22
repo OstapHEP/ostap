@@ -2219,7 +2219,6 @@ def _h2_texte_ ( h2 , opts = '' , fmt = '' , *args , **kwargs ) :
 ROOT.TH2F . texte = _h2_texte_
 ROOT.TH2D . texte = _h2_texte_
 
-
 # =============================================================================
 ## calculate the efficiency histogram using the binomial errors
 #  @code 

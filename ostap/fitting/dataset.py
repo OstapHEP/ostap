@@ -2951,11 +2951,12 @@ _new_methods_ += [
 #  varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
 #  @endcode
 def ds_slice ( data                     ,
-               expressions              ,
+               expressions              , * , 
                cuts       = ''          ,
                cut_range  = ''          ,
                structured = True        ,
-               transpose  = True        , 
+               transpose  = True        ,
+               progress   = True        , 
                first      = FIRST_ENTRY ,
                last       = LAST_ENTRY  ) :
     
@@ -2974,7 +2975,6 @@ def ds_slice ( data                     ,
     ## decode cuts & the expressions 
     varlst, cuts , _ = vars_and_cuts  ( expressions , cuts )
     
-
     ## (4) display progress ? 
     progress = progress_conf ( progress )
     
