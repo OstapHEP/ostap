@@ -4,7 +4,8 @@
     1. some tweaks for canvas,styles,pads...
     1. `histos.py`  : add function `histos_overlay` to draw superimposed histogram with different y-scales 
     1. remove `IntegrationWarning` from ctest' `PYWARNINGS` (it tens to produce confusing reports)
-    
+    1. `overlay` : pick up label font, size, color and offset from the frst left/right histogram 
+
 ## Backward  incompatible 
 
 ## Bug fixes

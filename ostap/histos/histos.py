@@ -9727,11 +9727,23 @@ def histos_overlay ( lefts     , rights , * ,
     fL = ROOT.TH1F ( hID() , '' , 1 , xmin , xmax )
     fL.SetMinimum  ( ylmin ) 
     fL.SetMaximum  ( ylmax )  
+
+    hL = lefts [ 0 ] 
+    fL.SetLabelColor  ( hL.GetLabelColor  () )
+    fL.SetLabelFont   ( hL.GetLabelFont   () )
+    fL.SetLabelOffset ( hL.GetLabelOffset () )
+    fL.SetLabelSize   ( hL.GetLabelSize   () )
     
     ## Right  frame
     fR = ROOT.TH1F ( hID () , '' , 1 , xmin , xmax )
     fR.SetMinimum  ( yrmin ) 
     fR.SetMaximum  ( yrmax )  
+
+    hR = rights [ 0 ] 
+    fR.SetLabelColor  ( hR.GetLabelColor  () )
+    fR.SetLabelFont   ( hR.GetLabelFont   () )
+    fR.SetLabelOffset ( hR.GetLabelOffset () )
+    fR.SetLabelSize   ( hR.GetLabelSize   () )
 
     ## Left objects
     
