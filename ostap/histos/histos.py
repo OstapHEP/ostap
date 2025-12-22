@@ -9649,7 +9649,7 @@ def histos_overlay ( lefts     , rights , * ,
     from itertools  import chain, repeat 
 
     if not lopts : lopts = '' ,
-    if not ropts : lopts = '' ,
+    if not ropts : ropts = '' ,
 
     if isinstance ( lopts   , string_types   ) : lopts   = repeat ( lopts   )
     else                                       : lopts   = chain  ( lopts   , repeat ( '' ) )
@@ -9751,9 +9751,7 @@ def histos_overlay ( lefts     , rights , * ,
     ## Left objects
     
     fL.draw ( copy = True , logy = left_log )
-    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) :
-        print ('LEFTS', opt, type(opt) , type(kw) )
-        h.draw ('same' + opt , copy = copy , **kw )    
+    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) : h.draw ('same' + opt , copy = copy , **kw )    
     clear_pad.Draw()
     
     clear_pad.cd ( )
