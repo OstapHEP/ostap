@@ -5,6 +5,9 @@
     1. `histos.py`  : add function `histos_overlay` to draw superimposed histogram with different y-scales 
     1. remove `IntegrationWarning` from ctest' `PYWARNINGS` (it tens to produce confusing reports)
     1. `overlay` : pick up label font, size, color and offset from the frst left/right histogram 
+    1. `simfit` : complete the action, related to root-project/root#20383 and root-project/root#20618
+    1. `make_bkg` : improve the printout in case of extra/unused/ignored argumetns 
+    1. add `map2table_ex` function to `ostap.logger.utils` module 
 
 ## Backward  incompatible 
 

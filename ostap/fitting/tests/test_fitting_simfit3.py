@@ -149,7 +149,7 @@ def test_simfit3() :
         graphs.append ( fx )
         graphs.append ( fy )
     with use_canvas ( 'test_simfit3: profile ' ) :
-        grs = model_S.graph_profile ( 'SSM2' , vrange ( 100 , 1000 , 50 ) , dataset2 , draw = True )
+        grs = model_S.graph_profile ( 'SSM2' , vrange ( 100 , 1000 , 30 ) , dataset2 , draw = True )
         grs.draw('apl')
         graphs.append ( grs )
                                        
@@ -210,10 +210,9 @@ def test_simfit3() :
     
     with use_canvas ( 'test_simfit3:  profile-sim' , wait = 3 ) :
         
-        grs = model_sim.graph_profile ( 'SSM2' , vrange ( 100 , 1000 , 50 ) , dataset , draw = True )
+        grs = model_sim.graph_profile ( 'SSM2' , vrange ( 100 , 1000 , 30 ) , dataset , draw = True )
         grs.draw('apl')
         graphs.append ( grs )
-
 
     # =========================================================================
     ## test creation of dataset
@@ -227,15 +226,12 @@ def test_simfit3() :
     
     title = 'Results of simultaneous fit to generated dataset'
     logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
-
- 
-        
+       
 # =============================================================================
 if '__main__' == __name__ :
 
     with timing ("simfit-3", logger ) :
         test_simfit3 () 
-
 
 # =============================================================================
 ##                                                                      The END 

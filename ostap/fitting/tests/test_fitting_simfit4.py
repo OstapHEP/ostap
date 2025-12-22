@@ -131,7 +131,6 @@ def test_simfit4() :
     model_N.S = NS1 
     model_N.B = NB1 
     
-    
     ## 3rd order positive polynomial 
     bkg_S = Models.make_bkg ( -3 , 'Bkg_S' , mass2  )
     ## model for fitting of low-statistic signal channel 
@@ -165,7 +164,7 @@ def test_simfit4() :
         graphs.append ( fS )
         
     with use_canvas ( 'test_simfit4: profile ' ) :
-        grs = model_S.graph_profile ( 'S_S' , vrange ( 50 , 1200 , 100 ) , dataset2 , draw = True )
+        grs = model_S.graph_profile ( 'S_S' , vrange ( 50 , 1200 , 25 ) , dataset2 , draw = True )
         grs.draw('apl')
         graphs.append ( grs )
         
@@ -199,7 +198,7 @@ def test_simfit4() :
     with use_canvas ( 'test_simfit4: S' ) : fS  = model_sim.draw ( 'S'   , dataset , nbins = 50 )
     
     with use_canvas ( 'test_simfit4: profile-sim' , wait = 3 ) :       
-       grs = model_sim.graph_profile ( 'S_S' , vrange ( 100 , 1000 , 50 ) , dataset , draw = True )
+       grs = model_sim.graph_profile ( 'S_S' , vrange ( 100 , 1000 , 30 ) , dataset , draw = True )
        grs.draw('apl')
        graphs.append ( grs )
        title = 'Simultaneous fit'
@@ -218,7 +217,6 @@ def test_simfit4() :
     title = 'Results of simultaneous fit to generated dataset'
     logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
 
-    
 # =============================================================================
 if '__main__' == __name__ :
 

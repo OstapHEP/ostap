@@ -59,7 +59,9 @@ from   ostap.core.ostap_types   import integer_types , num_types
 from   ostap.math.base          import iszero
 from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf, Flat1D,  Sum1D
 from   ostap.fitting.fithelpers import Phases, ParamsPoly
-from   ostap.utils.ranges       import vrange 
+from   ostap.utils.ranges       import vrange
+from   ostap.utils.basic        import typename 
+from   ostap.logger.utils       import print_args 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger      import getLogger
@@ -2891,8 +2893,11 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     
     if   bkg is None :         
         model = Flat1D ( name = name , xvar =  xvar )
-        if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
-        
+        if kwargs :
+            title  = 'make_bkg(%s): %d ignored arguments' % ( bkg , len ( kwargs ) )
+            title2 = 'Ignored arguments'
+            logger.warning ( '%s:\n%s' % ( title , print_args ( title = title2 , prefix = '# ' , **kwargs ) ) ) 
+            
     ## regular case: use Bkg_pdf or PolyPos_pdf as baseline background shapes 
     elif isinstance ( bkg , integer_types ) :
 
@@ -2900,40 +2905,54 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         elif 0 > bkg : model = PolyPos_pdf ( name , power = abs ( bkg ) , xvar = xvar , **kwargs )
         else         :
             model = Flat1D      ( name = name             , xvar = xvar )
-            if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
-
+            if kwargs :
+                title  = 'make_bkg(%s): %d ignored arguments' % ( bkg , len ( kwargs ) )
+                title2 = 'Ignored arguments'
+                logger.warning ( '%s:\n%s' % ( title , print_args ( title = title2 , prefix = '# ' , **kwargs ) ) ) 
+                
     ## native RooFit pdf ? 
     elif isinstance ( bkg , ROOT.RooAbsPdf ) :
 
         ## use Generic1D_pdf 
         model = Generic1D_pdf ( bkg , xvar = xvar , name = name ) 
-        if kwargs : logger.warning ('make_bkg: kwargs %s are ignored' % kwargs )
-
+        if kwargs :
+            title  = 'make_bkg(%s): %d ignored arguments' % ( typename ( bkg ) , len ( kwargs ) )
+            title2 = 'Ignored arguments'
+            logger.warning ( '%s:\n%s' % ( title , print_args ( title = title2 , prefix = '# ' , **kwargs ) ) ) 
+            
     ## some Ostap-based background model ?
     elif isinstance ( bkg , PDF1 ) : 
 
         ## return the same model/PDF 
         if   xvar is bkg.xvar and not  kwargs :
             model = bkg  ##  use the same stuff 
-            logger.debug ( 'make_bkg: %s model is copied to %s' % ( bkg , model ) )
+            logger.debug ( "make_bkg: %s model is `copied' to %s" % ( bkg , model ) )
 
         else :           ## make a clone : 
             model = bkg.clone ( name = name , xvar = xvar , **kwargs )
-            logger.debug ( 'make_bkg: %s model is cloned to %s' % ( bkg , model ) )
+            logger.debug ( "make_bkg: %s model is `cloned' to %s" % ( bkg , model ) )
         
     ## interprete it as exponential slope for Bkg-pdf 
     elif isinstance ( bkg , ROOT.RooAbsReal ) \
              or   isinstance ( bkg , float )  \
-             or ( isinstance ( bkg , tuple ) and 1 < len ( bkg ) <=3 ) :
+             or ( isinstance ( bkg , tuple ) and 1 < len ( bkg ) <= 3 ) :
         
         model = Bkg_pdf ( name , xvar = xvar , tau = bkg , power = 0 , **kwargs )
-        if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
+        if kwargs :            
+            strbkg = typename ( bkg ) if isinstance ( bkg , ROOT.RooAbsReal ) else str ( bkg ) 
+            title  = 'make_bkg(%s): %d ignored arguments' % ( strbkg , len ( kwargs ) )
+            title2 = 'Ignored arguments'
+            logger.warning ( '%s:\n%s' % ( title , print_args ( title = title2 , prefix = '# ' , **kwargs ) ) ) 
 
     ## exponent 
     elif bkg is math.exp : 
         
         model = Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )
-        if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
+        if kwargs :            
+            strbkg = 'math.exp'
+            title  = 'make_bkg(%s): %d ignored arguments' % ( strbkg , len ( kwargs ) )
+            title2 = 'Ignored arguments'
+            logger.warning ( '%s:\n%s' % ( title , print_args ( title = title2 , prefix = '# ' , **kwargs ) ) ) 
 
     ## strings ....
     elif isinstance ( bkg , str ) :
@@ -2941,9 +2960,9 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         bkg = bkg.strip().lower()
 
         if   bkg in ( '' , 'const' , 'constant' , 'flat' , 'uniform' , 'p0' , 'pol0' , 'poly0' ) :
-            return make_bkg ( 0 , name , xvar   , logger = logger , **kwargs ) 
+            return make_bkg ( 0 , name , xvar    , logger = logger , **kwargs ) 
         elif bkg in ( 'e' , 'exp' , 'expo' , 'e0' , 'exp0' , 'expo0' ) :
-            return Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )        
+            return Bkg_pdf ( name , xvar = xvar  , power = 0 , **kwargs )        
         elif bkg in ( 'e+' , 'exp+' , 'expo+' ) : 
             model = Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )
             model.tau.setMin ( 0 )            
@@ -2967,69 +2986,68 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if incr : 
             degree = int ( incr.group ( 'degree' ) )
-            bkg    = Monotonic_pdf ( name , xvar , power = degree , increasing = True )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = Monotonic_pdf ( name , xvar , power  = degree , increasing = True )
+            return make_bkg ( bkg ,  name , xvar , logger = logger , **kwargs  )
         
         decr = re.search ( r'(decreasing|decrease|decr|dec|d)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr : 
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = Monotonic_pdf ( name , xvar , power = degree , increasing = False )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = Monotonic_pdf ( name , xvar , power  = degree , increasing = False )
+            return make_bkg ( bkg ,  name , xvar , logger = logger , **kwargs  )
         
         decr = re.search ( r'(convex|cx)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = True )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = ConvexOnly_pdf ( name , xvar , power  = degree , convex = True )
+            return make_bkg ( bkg ,   name , xvar , logger = logger , **kwargs  )
 
         decr = re.search ( r'(concave|cv)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = False )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = ConvexOnly_pdf ( name , xvar , power  = degree , convex = False )
+            return make_bkg ( bkg ,   name , xvar , logger = logger , **kwargs  )
 
         decr = re.search ( r'(convex|cx)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = False, convex = True )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = False, convex = True )
+            return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
             
         decr = re.search ( r'(convex|cx)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = True , convex = True )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = True , convex = True )
+            return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
             
         decr = re.search ( r'(concave|cv)(( *)|(_*))(decreasing|dec)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = False, convex = False )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = False, convex = False )
+            return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
             
         decr = re.search ( r'(concave|cv)(( *)|(_*))(increasing|inc)(( *)|(_*))(?P<degree>\d{1,3})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = Convex_pdf ( name , xvar , power = degree , increasing = True , convex = False )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = Convex_pdf (   name , xvar , power  = degree , increasing = True , convex = False )
+            return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
 
         decr = re.search ( r'(roochebyshev|roocheb|chebyshev|cheb|rc)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = RooCheb_pdf ( name , xvar , power = degree )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
+            bkg    = RooCheb_pdf (  name , xvar , power = degree )
+            return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
         
         decr = re.search ( r'(roopoly|rp|r)(( *)|(_*))(?P<degree>\d{1,2})' , bkg , re.IGNORECASE )
         if decr :
             degree = int ( decr.group ( 'degree' ) )
-            bkg    = RooPoly_pdf ( name , xvar , power = degree )
-            return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
-        
+            bkg    = RooPoly_pdf (  name , xvar , power  = degree )
+            return make_bkg ( bkg , name , xvar , logger = logger , **kwargs  )
+
     if model :
-        logger.debug ( 'make_bkg: created model is %s' % model ) 
+        logger.debug ( 'make_bkg: created model is %s' % type ( model ) ) 
         return model
 
-    raise  TypeError("make_bkg: Wrong type of 'bkg' object: %s/%s " % ( bkg , type ( bkg ) ) ) 
-
+    raise  TypeError ( "make_bkg(%s): Wrong type of `bkg' object: %s " % ( bkg , typename ( bkg ) ) ) 
 
 # =============================================================================
 if '__main__' == __name__ : 

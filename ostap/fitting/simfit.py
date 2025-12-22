@@ -437,23 +437,27 @@ class SimFit (VarMaker,ConfigReducer) :
         self.__drawpdfs   = {}
         for key in sorted ( keys ) :
 
-            cmp = self.categories [ key ] 
+            pdf = sim_pdf.pdf.getPdf  ( key )
+            assert pdf and isinstance ( pdf , ROOT.RooAbsPdf ) , "Invalid PDF component `%s`" % key
+            
+            cmp = self.categories [ key ]
+            
             if isinstance  ( cmp , PDF3 ) :
-                dpdf = Generic3D_pdf ( sim_pdf.pdf , 
-                                       cmp.xvar    ,
-                                       cmp.yvar    ,
-                                       cmp.zvar    ,
+                dpdf = Generic3D_pdf ( pdf , 
+                                       cmp.xvar       ,
+                                       cmp.yvar       ,
+                                       cmp.zvar       ,
                                        name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False )
             elif isinstance  ( cmp , PDF2 ) :
-                dpdf = Generic2D_pdf ( sim_pdf.pdf , 
-                                       cmp.xvar    ,
-                                       cmp.yvar    ,
+                dpdf = Generic2D_pdf ( pdf , 
+                                       cmp.xvar       ,
+                                       cmp.yvar       ,
                                        name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False )
             elif isinstance  ( cmp , PDF1 ) :
-                dpdf = Generic1D_pdf ( sim_pdf.pdf , 
-                                       cmp.xvar    ,
+                dpdf = Generic1D_pdf ( pdf            , 
+                                       cmp.xvar       ,
                                        name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False  )
                 
@@ -643,14 +647,15 @@ class SimFit (VarMaker,ConfigReducer) :
 
         sname      = self.sample.GetName() 
         sample_cut = "%s==%s::%s"  % ( sname , sname , category )
+
         
         dskeep = dataset
         
-        if ( 6 , 37 ) <= root_info :
+        if ( 6 , 37 ) <= root_info < ( 6 , 39 ) :
             from ostap.logger.colorized import markup
             message      = 'SimFit.draw(%s): ' % category 
             message     += "There is ROOT issue https://github.com/root-project/root/issues/20383 (from 27.08.2025). "
-            message     += 'Temporary "bypass" is applied! '
+            message     += "Temporary ``bypass'' is applied!"
             message     += markup ( "Check the plot - it ***COULD*** be ***TERRIBLY*** wrong!" ) 
             logger.warning ( message )
             observables  = self.pdf.pdf.getObservables ( dataset )
@@ -664,26 +669,32 @@ class SimFit (VarMaker,ConfigReducer) :
         
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
 
-        if root_info < ( 6 , 28 ) : _project = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  )        
-        else                      : _project = ROOT.RooFit.ProjWData  ( self.sample    , dataset  )
-            
-        _slice   = ROOT.RooFit.Slice      ( self.sample    , category )
-        
-        for key in  ( 'total_fit_options'           ,
-                      #
-                      'signal_options'              ,
-                      'background_options'          ,
-                      'background2D_options'        ,
-                      'crossterm1_options'          ,
-                      'crossterm2_options'          ,
-                      'component_options'           ,
-                      #
-                      'combined_signal_options'     ,
-                      'combined_background_options' ,
-                      'combined_component_options'  ) :
 
-            kwargs [ key ] = self.draw_option ( key , **kwargs ) + ( _slice , _project ) 
+        
+        ## for Update drawing options wi
+        if False : 
             
+            if root_info < ( 6 , 28 ) : _project = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  )        
+            else                      : _project = ROOT.RooFit.ProjWData  ( self.sample    , dataset  )
+            
+            _slice   = ROOT.RooFit.Slice      ( self.sample    , category )
+            
+            for key in  ( 'total_fit_options'           ,
+                          #
+                          'signal_options'              ,
+                          'background_options'          ,
+                          'background2D_options'        ,
+                          'crossterm1_options'          ,
+                          'crossterm2_options'          ,
+                          'component_options'           ,
+                          #
+                          'combined_signal_options'     ,
+                          'combined_background_options' ,
+                          'combined_component_options'  ) :
+                
+                kwargs [ key ] = self.draw_option ( key , **kwargs ) + ( _slice , _project ) 
+
+
         from ostap.fitting.roocollections import KeepArgs
 
         cat_pdf  = self.categories [ category ]

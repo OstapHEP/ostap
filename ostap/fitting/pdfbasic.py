@@ -2999,7 +2999,8 @@ class Generic1D_pdf(PDF1) :
     >>> pdf     = Generic1D_pdf ( raw_pdf , xvar = x )
     """
     ## constructor 
-    def __init__ ( self , pdf , xvar = None  ,
+    def __init__ ( self           , pdf   ,
+                   xvar           = None  ,
                    name           = ''    ,
                    add_to_signals = True  ,
                    prefix         = ''    ,
@@ -3014,7 +3015,7 @@ class Generic1D_pdf(PDF1) :
                           "Invalid `pdf' type"
         
         name = ( prefix + name + suffix ) if name \
-               else self.generate_name ( prefix = prefix , suffix = suffix , name = pdf.GetName() )
+            else self.generate_name ( prefix = prefix , suffix = suffix , name = pdf.GetName() )
         
         ## initialize the base 
         PDF1 . __init__ ( self , name , xvar )
@@ -3058,8 +3059,6 @@ class Generic1D_pdf(PDF1) :
         """'add_to_signals' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
 
-        
-
 # =============================================================================
 ## Helper function to create the PDF/PDF2/PDF3
 #  @param pdf   input pdf of funcntion   <code>RooAbsReal</code> or <code>RooAbsPdf</code>
@@ -3082,7 +3081,6 @@ def make_pdf ( pdf , args , name = '' ) :
     elif 3 == num : return Generic3D_pdf ( fun , name = name , *args )
     
     raise TypeError ( "Invalid length of arguments %s " % num ) 
-
 
 # =============================================================================
 ## 2D Stuff goes here 

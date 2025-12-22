@@ -10,7 +10,8 @@
 #  @date   2013-02-10
 #  
 # =============================================================================
-"""Module with some simple but useful utilities"""
+""" Module with some simple but useful utilities
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -38,8 +39,9 @@ __all__     = (
     'multicolumn'        , ## format the list of strings into multicolumn block
     'DisplayTree'        , ## display tree-like structures
     ##
-    'print_args'         , ## print aguments as table
-    'map2table'          , ## Format map/dict-like object  as a table
+    'print_args'         , ## print all aguments as 3-column table
+    'map2table'          , ## Format map/dict-like object  as a 2-column table
+    'map2table_ex'       , ## Format map/dict-like object  as a 3-column table
     # =========================================================================
 ) # ===========================================================================
 # =============================================================================
@@ -189,16 +191,17 @@ class DisplayTree ( object ) :
                                                self.isdir    ,
                                                self.last     ) 
     __repr__ = __str__
-
-
+    
 # ============================================================================
 ## Print all arguments as table
-#  Two keyword argument are also used for formatting of internal table 
+#  Two keyword argument are not considered as "arguments" and just ignored
+#  (used of only for formatting the output table)
 #  - prefix 
 #  - title
-def print_args ( *args , **kwargs ) :
+def print_args ( *args , title = '' , prefix = '' , **kwargs ) :
     """ Print all arguments as table 
-    Two keyword argument are also used for formatting of internal table 
+    Two keyword argument are not considered as "arguments" and  justr ignored 
+    (used of only for formatting the output table)
     - `prefix` 
     - `title` 
     """
@@ -208,31 +211,42 @@ def print_args ( *args , **kwargs ) :
         row  = '#%d' % i , typename ( a ) , prntrf ( a )
         rows.append ( row )
 
-    if 'prefix' in kwargs : kwargs [ '*prefix' ] = kwargs.pop ( 'prefix' )
-    if 'title'  in kwargs : kwargs [ '*title'  ] = kwargs.pop ( 'title'  ) 
+    ## if 'prefix' in kwargs : kwargs [ '*prefix' ] = kwargs.pop ( 'prefix' )
+    ## if 'title'  in kwargs : kwargs [ '*title'  ] = kwargs.pop ( 'title'  ) 
     
     for key in sorted ( kwargs ) :
         v    = kwargs [ key ] 
         row  = '%s' % key , typename ( v ) , prntrf  ( v )
         rows.append ( row  )
 
-    prefix = kwargs.pop ( '*prefix' , '' )
-    if not prefix or not isinstance ( prefix , string_types ) : prefix = ''
-    title  = kwargs.pop ( '*title' , 'Arguments' )
-    if not title  or not isinstance ( title  , string_types ) : title = 'Arguments'
+    ## prefix = kwargs.pop ( '*prefix' , '' )
+    ## if not prefix or not isinstance ( prefix , string_types ) : prefix = ''
+    ## title  = kwargs.pop ( '*title' , 'Arguments' )
+    ## if not title  or not isinstance ( title  , string_types ) : title = 'Arguments'
     
     import ostap.logger.table as T
-    return T.table ( rows , title = title , prefix = prefix , alignment = 'rww' ) 
+    return T.table ( rows      ,
+                     title     = title  if title else 'Arguments',
+                     prefix    = prefix ,
+                     alignment = 'rww'  ) 
 
 # =============================================================================
 ## Format map/dict-like object  as a table
+#  @code
+#  map = ...
+#  title = 'My dictionary'
+#  print ( map2table ( map , title = title ) ) 
+#  @endcode 
 def map2table ( dct                             ,
-                header    = ( 'Key' , 'Value' ) ,  
+                header    = ( 'Key' , 'Value' ) ,
                 prefix    = ''                  ,
                 title     = ''                  ,
                 alignment = 'rl'                ,
                 style     = ''                  ) :
     """ Format map/dict-like object  as a table
+    >>> map = ...
+    >>> title = 'My dictionary'
+    >>> print ( map2table ( map , title = title ) ) 
     """
     rows = [ header ]
     map  = {}
@@ -248,13 +262,45 @@ def map2table ( dct                             ,
                      prefix    = prefix    ,
                      alignment = alignment ,
                      style     = style     ) 
-    
+
+# =============================================================================
+## Format map/dict-like object  as a "extended" table (with type for values)
+#  @code
+#  map = ...
+#  title = 'My dictionary'
+#  print ( map2table_ex ( map , title = title ) ) 
+#  @endcode 
+def map2table_ex ( dct                                    ,
+                   header    = ( 'Key' , 'Type' , 'Value' ) ,
+                   prefix    = ''                  ,
+                   title     = ''                  ,
+                   alignment = 'rcc'               ,
+                   style     = ''                  ) :
+    """ Format map/dict-like object  as a table
+    >>> map = ...
+    >>> title = 'My dictionary'
+    >>> print ( map2table ( map , title = title ) ) 
+    """
+    rows = [ header ]
+    map  = {}
+    map.update ( dct )
+    for key in sorted ( map ) :
+        value = map [ key ]
+        row   = str ( key ) , typename ( value ) , str ( value )
+        rows.append ( row )
+        
+    import ostap.logger.table as T
+    return T.table ( rows                  ,
+                     title     = title     ,
+                     prefix    = prefix    ,
+                     alignment = alignment ,
+                     style     = style     ) 
+
 # =============================================================================
 if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
         
 # =============================================================================
 ##                                                                     The END 
