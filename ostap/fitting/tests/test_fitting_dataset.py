@@ -14,9 +14,11 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.core          import dsID, hID, Ostap 
 from   ostap.plotting.canvas    import use_canvas 
-from   ostap.utils.root_utils   import batch_env 
+from   ostap.utils.root_utils   import batch_env
+from   ostap.utils.basic        import typename 
 import ostap.logger.table       as     T
 import ostap.fitting.roofit
+import ostap.fitting.ds2numpy 
 import ostap.math.models   
 import ostap.trees.trees   
 import ostap.histos.histos 
@@ -143,32 +145,32 @@ logger.info ( 'Print symmetrized   weighted sample:\n%s' % ws6.table ( prefix = 
 # =============================================================================
 ss7 = ss6 - 3 
 ws7 = ws6 - 3 
-logger.info ( 'Print remove#3 unweighted sample:\n%s' % ss7.table ( prefix = '# ' ) )
-logger.info ( 'Print remove#3   weighted sample:\n%s' % ws7.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #3 unweighted sample:\n%s' % ss7.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #3   weighted sample:\n%s' % ws7.table ( prefix = '# ' ) )
 
 # =============================================================================
 ## (11) remove variable 
 # =============================================================================
 ss8 = ss7 - 'Pt1' 
 ws8 = ws7 - 'Pt1'
-logger.info ( 'Print remove#Pt1 unweighted sample:\n%s' % ss8.table ( prefix = '# ' ) )
-logger.info ( 'Print remove#Pt1   weighted sample:\n%s' % ws8.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #Pt1 unweighted sample:\n%s' % ss8.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #Pt1   weighted sample:\n%s' % ws8.table ( prefix = '# ' ) )
 
 # =============================================================================
 ## (12) remove variables 
 # =============================================================================
 ss9 = ss7 - 'Pt1,Pt2' 
 ws9 = ws7 - 'Pt1,Pt2'
-logger.info ( 'Print remove#Pt  unweighted sample:\n%s' % ss9.table ( prefix = '# ' ) )
-logger.info ( 'Print remove#Pt    weighted sample:\n%s' % ws9.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #Pt  unweighted sample:\n%s' % ss9.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #Pt    weighted sample:\n%s' % ws9.table ( prefix = '# ' ) )
 
 # =============================================================================
 ## (13) remove variables 
 # =============================================================================
 ss10 = ss7 - ('Pt1','Pt2')
 ws10 = ws7 - ('Pt1','Pt2')
-logger.info ( 'Print remove#Pt1,Pt2 unweighted sample:\n%s' % ss10.table ( prefix = '# ' ) )
-logger.info ( 'Print remove#Pt1,Pt2   weighted sample:\n%s' % ws10.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #Pt1,Pt2 unweighted sample:\n%s' % ss10.table ( prefix = '# ' ) )
+logger.info ( 'Print remove #Pt1,Pt2   weighted sample:\n%s' % ws10.table ( prefix = '# ' ) )
 
 # =============================================================================
 ## (14) project 
@@ -205,14 +207,14 @@ lw = weighted.project ( lw  , 'Pt1' , cuts = 'Mass<5' )
 # =============================================================================
 ## (17) plot 
 # =============================================================================
-with use_canvas ( "test_fitting_datatset: dataset.draw" , wait = 2 ) :
+with use_canvas ( "test_fitting_dataset: dataset.draw" , wait = 2 ) :
     
     hd = dataset.draw ( 'Pt1' , cuts = 'Mass<5' , color = 2 , xmin = 0 , xmax = 100 )
 
     hd.draw ( 'same' , color = 2 )
     ld.draw ( 'same' , color = 2 , width = 3 )
     
-with use_canvas ( "test_fitting_datatset: weighted.draw" , wait  =2 ) :
+with use_canvas ( "test_fitting_dataset: weighted.draw" , wait  =2 ) :
 
     hw = weighted.draw ( 'Pt1' , cuts = 'Mass<5' , color = 4 , xmin = 0 , xmax = 100 )
     
@@ -241,6 +243,88 @@ hd2 = dataset .project ( hd2 , 'Pt2'     , cuts = 'Mass<5' )
 hd.draw(color = 2)
 hd1.draw( 'same' , color = 4)
 hd2.draw( 'same' , color = 8)
+
+# =============================================================================
+## (19) conversion to numpy: 'to_numpy'
+# =============================================================================
+ds = dataset  [:50] 
+ws = weighted [:50]
+
+vars = 'Mass' , 'Pt1' , 'Pt2'
+
+rr = ds.to_numpy ( vars )
+rw = ws.to_numpy ( vars )
+
+logger.info ( 'Using `ROOT.RooDataset.to_numpy` method' ) 
+logger.info ( 'to_numpy unweighted sample: type=%s names: %s' % ( typename ( rr ) , ','.join ( sorted( str ( v ) for v in rr ) ) ) ) 
+logger.info ( 'to_numpy   weighted sample: type=%s names: %s' % ( typename ( rw ) , ','.join ( sorted( str ( v ) for v in rw ) ) ) ) 
+
+
+# =============================================================================
+## (20) conversion to numpy: 'tonumpy'
+# =============================================================================
+ds = dataset  [:15] 
+ws = weighted [:15]
+
+vars = 'Mass' , 'Pt1' 
+
+rr = ds.tonumpy ( vars )
+rw = ws.tonumpy ( vars )
+
+logger.info ( 'Using `tonumpy/ds2numpy` method/function' ) 
+logger.info ( 'tonumpy unweighted sample: type=%s shape:%s names: %s\n%s' % ( typename ( rr ) ,
+                                                                              rr.shape        , 
+                                                                              ','.join ( rr.dtype.names ) , rr ) )
+logger.info ( 'tonumpy  weighted sample: type=%s shape:%s names: %s\n%s' % ( typename ( rr ) ,
+                                                                             rr.shape        , 
+                                                                             ','.join ( rr.dtype.names ) , rr ) )
+
+# =============================================================================
+## (21) conversion to numpy: 'tonumpy'
+# =============================================================================
+ds = dataset  [:15] 
+ws = weighted [:15]
+
+vars = 'Mass' , 'Pt1' 
+
+rr , rrw = ds.tonumpy ( vars , weight_split = True ) 
+rw , rww = ws.tonumpy ( vars , weight_split = True ) 
+
+logger.info ( 'Using `tonumpy/ds2numpy(weight_split=True)` method/function' ) 
+logger.info ( 'tonumpy unweighted sample: type=%s shape:%s names: %s\n%s' % ( typename ( rr ) ,
+                                                                              rr.shape        , 
+                                                                              ','.join ( rr.dtype.names ) , rr ) )
+logger.info ( 'tonumpy  weighted sample: type=%s shape:%s names: %s\n%s' % ( typename ( rr ) ,
+                                                                             rr.shape        , 
+                                                                             ','.join ( rr.dtype.names ) , rr ) )
+
+# =============================================================================
+## (22) conversion to numpy: 'tonumpy'
+# =============================================================================
+ds = dataset  [:15] 
+ws = weighted [:15]
+
+vars = 'Mass' , 'Pt1' 
+
+rr = ds.tonumpy ( vars , structured = False )
+rw = ws.tonumpy ( vars , structured = False )
+logger.info ( 'Using `tonumpy/ds2numpy(structured=False)` method/function' ) 
+logger.info ( 'tonumpy unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+logger.info ( 'tonumpy   weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+
+# =============================================================================
+## (23) conversion to numpy: 'tonumpy'
+# =============================================================================
+ds = dataset  [:15] 
+ws = weighted [:15]
+
+vars = 'Mass' , 'Pt1' 
+
+rr , rrw = ds.tonumpy ( vars , structured = False , weight_split = True ) 
+rw , rww = ws.tonumpy ( vars , structured = False , weight_split = True ) 
+logger.info ( 'Using `tonumpy/ds2numpy(structured=False,weight_split=True)` method/function' ) 
+logger.info ( 'tonumpy unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+logger.info ( 'tonumpy   weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
 
 # =============================================================================
 ##                                                                       The END 

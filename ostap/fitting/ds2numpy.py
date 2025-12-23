@@ -18,20 +18,22 @@ __version__ = "$Revision$"
 __author__  = "Artem Egorychev Artem.Egorychev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
-    )
+    'ds2numpy' , ## conversion of RoDataSet into numpy array
+    'ds2cdfs'  , ## get empirical cumulative distributions from RooDataSet
+)
 # =============================================================================
 from   ostap.core.meta_info         import root_info
 from   ostap.core.ostap_types       import string_types, dictlike_types, sized_types
 from   ostap.core.core              import Ostap
 from   ostap.utils.basic            import loop_items, typename  
 from   ostap.utils.utils            import split_range
-from   ostap.math.base              import doubles, numpy  
+from   ostap.math.base              import doubles
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.trees.cuts             import vars_and_cuts 
 import ostap.fitting.roocollections
-import ROOT
+import ROOT, numpy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -43,7 +45,7 @@ logger.debug( 'Convert RooDataSet into numpy array')
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
-if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT     
+if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT     
     # =========================================================================
     ## Convert dataset into numpy array using <code>ROOT.RooAbsData</code> interface 
     #  @see ROOT.RooAbsData.getBatches
@@ -52,15 +54,20 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
     #  @see ROOT.RooAbsDataStore.getBatches
     #  @see ROOT.RooAbsDataStore.getCategoryBatches
     #  @see ROOT.RooAbsDataStore.getWeightBatche
-    #  @attention conversion to ROOT.RooVectorDataStore is used! 
-    def ds2numpy ( dataset            , 
-                   var_lst            ,
-                   cuts       = ''    ,
-                   cut_range  = ''    , 
-                   silent     = True  ,
-                   more_vars  = {}    ,
-                   structured = True  , 
-                   wname      = ''    ) : ## rename weight variable 
+    #  @attention conversion to ROOT.RooVectorDataStore is used!
+    #
+    #  Unlike <code>to_numpy</code> method it allows more flexible outp
+    #   - structured array (default) vs unstructured array
+    #   - split data and weight columns     
+    def ds2numpy ( dataset                , 
+                   var_lst                , * , 
+                   cuts        = ''       ,
+                   cut_range   = ''       , 
+                   silent      = True     ,
+                   more_vars   = {}       ,
+                   structured  = True     ,
+                   weight_name = 'weight' , 
+                   weight_split = False   ) :
         """ Convert dataset into numpy array using `ROOT.RooAbsData` iterface 
         - see ROOT.RooAbsData.getBatches
         - see ROOT.RooAbsData.getCategoryBatches
@@ -69,6 +76,11 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         - see ROOT.RooAbsDataStore.getCategoryBatches
         - see ROOT.RooAbsDataStore.getWeightBatche    
         - attention: Conversion to `ROOT.RooVectorDataStore` is used! 
+
+        Unlike `ROOT.RooDataSet.to_numpy` method it allows more flexible outp
+        - structured array (default) vs unstructured array
+        - optional split data and weight columns     
+
         """
         
         if isinstance ( var_lst , string_types ) : var_lst = [ var_lst ]
@@ -102,10 +114,11 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 dstmp  = dataset.subset ( vnames , cuts = cuts , cut_range = cut_range )
             result = ds2numpy ( dstmp     ,
                                 vnames    ,
-                                more_vars  = more_vars  ,
-                                silent     = silent     ,
-                                structured = structured , 
-                                wname      = wname      )
+                                more_vars    = more_vars    ,
+                                silent       = silent       ,
+                                structured   = structured   , 
+                                weight_name  = weight_name  ,
+                                weight_split = weight_split )
             ## dstmp.erase()
             dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
             del dstmp 
@@ -116,12 +129,13 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         if cuts or cut_range :
             with useStorage ( ROOT.RooAbsData.Vector ) :
                 dstmp = dataset.subset ( vnames if not more_vars else [] , cuts = cuts , cut_range = cut_range )
-            result = ds2numpy ( dstmp  ,
-                                vnames ,
-                                more_vars  = more_vars  ,
-                                silent     = silent     ,
-                                structured = structured ,
-                                wname      = wname      ) 
+            result = ds2numpy ( dstmp        ,
+                                vnames       ,
+                                more_vars    = more_vars    ,
+                                silent       = silent       ,
+                                structured   = structured   ,
+                                weight_name  = weight_name  ,
+                                weight_split = weight_split )
             ## dstmp.erase()
             dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
             del dstmp 
@@ -255,12 +269,12 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
 
         ## add PDF values (explicit loop)
         if funcs :  
-            for i, item  in enumerate ( source ) :
+            for i, item  in progress_bar ( enumerate ( source ) , silent = silent , description = 'Entries:' ) : 
                 entry , _ = item 
                 for vname , func , obsvars in funcs :
                     obsvars.assign ( entry )
                     data [ vname ] [ i ] = func.getVal()   
-                
+                    
         if delsource :
             source.reset()
             del source
@@ -271,43 +285,52 @@ if numpy and ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             assert len ( data ) <= len ( dataset ) , "Mismatch in input/output lengths!"
 
         del    funcs
-        del    formulas 
-
-        if weight and wname and wname != weight :
-            from numpy.lib import recfunctions as rfn
-            data = rfn.rename_fields ( data , { str ( weight) : str ( wname ) } ) 
-
-        if not wname : return data
-
-        if weight :                
-            w    = data [ wname ]
-            data = data [ [ v for v in data.dtype.names if v != wname ] ]
-            return data , w                                        ## RETURN 
+        del    formulas
         
-        return data, None                                          ## RETURN
+        # =======================================================================
+        ## The final actions:
+        # =======================================================================
 
-    # =========================================================================
-    __all__  = __all__ + ( 'ds2numpy' , )
-    ROOT.RooDataSet.tonumpy = ds2numpy 
-    ROOT.RooDataSet.tonp    = ds2numpy
-    ROOT.RooDataSet.to_np   = ds2numpy
-    _new_methods_ += [ ROOT.RooDataSet.tonumpy ,
-                       ROOT.RooDataSet.tonp    ,
-                       ROOT.RooDataSet.to_np   ]
-    
+        ## (1) rename weight column 
+        if weight and weight_name and weight_name != weight and not weight_name in data.dtype.names : 
+            from numpy.lib import recfunctions as rfn
+            data   = rfn.rename_fields ( data , { weight : weight_name } ) 
+            weight = weight_name
+
+        ## (2) split `weight` column from `data` columns 
+        weights  = None        
+        if weight and weight_split :
+            weights = data [ weight ]
+            data    = data [ [ v for v in data.dtype.names if v != weight ] ]
+
+        ## (3) convert to unstructured array, if requested 
+        if not structured :
+            from numpy.lib.recfunctions import structured_to_unstructured as s2u
+            data = s2u ( data , copy = False )
+        
+        ## 
+        return ( data , weights ) if weight_split else data          ## RETURN
+
 # =============================================================================
-elif numpy  :  ## ROOT < 6.26 
+else : 
     # =========================================================================
     ## Convert dataset into numpy array using (slow) explicit loops 
-    def ds2numpy ( dataset            ,
-                   var_lst            ,
-                   cuts       = ''    ,
-                   cut_range  = ''    , 
-                   silent     = False ,
-                   more_vars  = {}    ,
-                   structured = True  , 
-                   wname      = ''    ) :
+    #  Unlike <code>to_numpy</code> method it allows more flexible outp
+    #   - structured array (default) vs unstructured array
+    #   - split data and weight columns     
+    def ds2numpy ( dataset                 ,
+                   var_lst                 ,
+                   cuts         = ''       , * , 
+                   cut_range    = ''       ,  
+                   silent       = False    ,
+                   more_vars    = {}       ,
+                   structured   = True     ,
+                   weight_name  = 'weight' , 
+                   weight_split = False    ) :
         """ Convert dataset into numpy array using (slow) explicit loops
+        Unlike `ROOT.RooDataSet.to_numpy` method it allows more flexible outp
+        - structured array (default) vs unstructured array
+        - optional split data and weight columns             
         """
         
         if isinstance ( var_lst , string_types ) : var_lst = [ var_lst ]
@@ -338,14 +361,16 @@ elif numpy  :  ## ROOT < 6.26
         nvars = len ( dataset.get() )
         if 2 * len ( vnames )  <= nvars and not more_vars  :
             dstmp  = dataset.subset ( vnames )
-            result = ds2numpy ( dstmp                   ,
-                                vnames                  ,
-                                cuts       = cuts       ,
-                                cut_range  = cut_range  ,
-                                structured = structured ,
-                                wname      = wname      )
+            result = ds2numpy ( dstmp                       ,
+                                vnames                      ,
+                                cuts         = cuts         ,
+                                cut_range    = cut_range    ,
+                                structured   = structured   ,
+                                weight_name  = weight_name  ,
+                                weight_split = weight_split )
             ## dstmp.erase()
-            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp )
+            dstmp.clear() 
             del dstmp 
             return result
         
@@ -354,13 +379,15 @@ elif numpy  :  ## ROOT < 6.26
         if cuts or cut_range :
             with useStorage ( ROOT.RooAbsData.Vector ) :
                 dstmp = dataset.subset ( vnames if not more_vars else [] ,  cuts = cuts , cut_range = cut_range )
-            result = ds2numpy ( dstmp      ,
-                                vnames     ,
-                                more_vars  = more_vars  ,
-                                structured = structured ,
-                                wname      = wname      )
+            result = ds2numpy ( dstmp        ,
+                                vnames       ,
+                                more_vars    = more_vars    ,
+                                structured   = structured   ,
+                                weight_name  = weight_name  ,
+                                weight_split = weight_split )
             ## dstmp.erase()
-            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            dstmp.clear() 
             del dstmp 
             return result
         
@@ -457,93 +484,93 @@ elif numpy  :  ## ROOT < 6.26
         del funcs
         del formulas
 
-        if wname and not weight :
-            logger.warning ( "Dataset is not weighted, `wname` os ignored" ) 
-            wname = '' 
-            
-        if wname and wname != weight :
+       # =======================================================================
+        ## The final actions:
+        # =======================================================================
+
+        ## (1) rename weight column 
+        if weight and weight_name and weight_name != weight and not weight_name in data.dtype.names : 
             from numpy.lib import recfunctions as rfn
-            data = rfn.rename_fields ( data , { weight : wname } ) 
+            data   = rfn.rename_fields ( data , { weight : weight_name } ) 
+            weight = weight_name
 
-        if not wname : return data
+        ## (2) split `weight` column from `data` columns 
+        weights  = None        
+        if weight and weight_split :
+            weights = data [ weight ]
+            data    = data [ [ v for v in data.dtype.names if v != weight ] ]
 
-        if weight :                
-            w    = data [ wname ]
-            data = data [ [ v for v in data.dtype.names if v != wname ] ]
-            return data , w                                        ## RETURN 
+        ## (3) convert to unstructured array, if requested 
+        if not structured :
+            from numpy.lib.recfunctions import structured_to_unstructured as s2u
+            data = s2u ( data , copy = False )
         
-        return data, None                                          ## RETURN
-    
-    # =========================================================================
-    __all__  = __all__ + ( 'ds2numpy' , )
-    ROOT.RooDataSet.tonumpy = ds2numpy 
-    ROOT.RooDataSet.tonp    = ds2numpy
-    ROOT.RooDataSet.to_np   = ds2numpy
-    _new_methods_ += [ ROOT.RooDataSet.tonumpy ,
-                       ROOT.RooDataSet.tonp    ,
-                       ROOT.RooDataSet.to_np   ]
-    
-# =============================================================================
-else    : # ===================================================================
-# =============================================================================
-    logger.warning ( "Numpy is not available: no action" )
+        ## 
+        return ( data , weights ) if weight_split else data          ## RETURN
 
+# =========================================================================
+ROOT.RooDataSet.tonumpy = ds2numpy 
+ROOT.RooDataSet.tonp    = ds2numpy
+ROOT.RooDataSet.to_np   = ds2numpy
+_new_methods_ += [ ROOT.RooDataSet.tonumpy ,
+                   ROOT.RooDataSet.tonp    ,
+                   ROOT.RooDataSet.to_np   ]
+    
 # ==============================================================================
-if numpy : # ======================================================================
-    # ==========================================================================
-    if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
-    else                        : data2vct = lambda s : doubles ( s ) 
-    # ==========================================================================
-    ## Get the dict of empirical cumulative distribution functions from dataset
-    #  @code
-    #  dataset = ...
-    #  ecdfs   = dataset.ecdfs ( 'a,b,c' , 'pt>10' ) 
-    #  @endcode
-    #  @see Ostap::Math::ECDF
-    def ds2cdfs ( dataset           ,
-                  variables         ,
-                  cuts       = ''   ,
-                  cut_range  = ''   ,
-                  more_vars  = {}   , 
-                  silent     = True ) :
-        """ Get the dict of empirical cumulative distribution functions from dataset
-        - see `Ostap.Math.ECDF`
-        >>> dataset = ...
-        >>> ecdfs   = dataset.ecdfs ( 'a,b,c' , 'pt>10' ) 
-        """
-        assert not more_vars or isinstance ( more_vars , dictlike_types ) , \
-            "ds2cdfs: invalid type of `more_vars`" % typename ( more_vars )
+if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
+else                        : data2vct = lambda s : doubles ( s ) 
+# ==========================================================================
+## Get the dict of empirical cumulative distribution functions from dataset
+#  @code
+#  dataset = ...
+#  ecdfs   = dataset.ecdfs ( 'a,b,c' , 'pt>10' ) 
+#  @endcode
+#  @see Ostap::Math::ECDF
+def ds2cdfs ( dataset           ,
+              variables         ,
+              cuts       = ''   ,
+              cut_range  = ''   ,
+              more_vars  = {}   , 
+              silent     = True ) :
+    """ Get the dict of empirical cumulative distribution functions from dataset
+    - see `Ostap.Math.ECDF`
+    >>> dataset = ...
+    >>> ecdfs   = dataset.ecdfs ( 'a,b,c' , 'pt>10' ) 
+    """
+    assert not more_vars or isinstance ( more_vars , dictlike_types ) , \
+        "ds2cdfs: invalid type of `more_vars`" % typename ( more_vars )
+    
+    ## decode the list of variables 
+    varlst, cuts ,  _ = vars_and_cuts ( variables , cuts , allow_empty = more_vars )
         
-        ## decode the list of variables 
-        varlst, cuts ,  _ = vars_and_cuts ( variables , cuts , allow_empty = more_vars )
-        
-        extra  = [ v for v in varlst if not v in dataset ]
-        assert varlst and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
+    extra  = [ v for v in varlst if not v in dataset ]
+    assert varlst and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
 
-        if dataset.isWeighted() :
-            logger.warning ( 'ds2cdfs: dataset is weighted! Weight will be ignored!')
-
-        ## 1) get data as numpy-array 
-        data = ds2numpy ( dataset               ,
-                          varlst                ,
-                          cuts      = cuts      ,
-                          cut_range = cut_range ,
-                          more_vars = more_vars , 
-                          silent    = silent    )
+    if dataset.isWeighted() :
+        logger.warning ( 'ds2cdfs: dataset is weighted! Weight will be ignored!')
         
-        result = {}
-        for vname in varlst    : result [ vname ] = Ostap.Math.ECDF ( data2vct ( data [ vname ] ) ) 
-        for vname in more_vars : result [ vname ] = Ostap.Math.ECDF ( data2cvt ( data [ vname ] ) ) 
-            
-        del data
-        return result 
-
-    __all__  = __all__ + ( 'ds2cdfs' , )
-    ROOT.RooDataSet.cdfs  = ds2cdfs
-    ROOT.RooDataSet.ecdfs = ds2cdfs
-    _new_methods_ += [ ROOT.RooDataSet.cdfs  ,
-                       ROOT.RooDataSet.ecdfs ]
+    ## 1) get data as numpy-array 
+    data = ds2numpy ( dataset               ,
+                      varlst                ,
+                      cuts      = cuts      ,
+                      cut_range = cut_range ,
+                      more_vars = more_vars , 
+                      silent    = silent    )
         
+    result = {}
+    for vname in varlst    : result [ vname ] = Ostap.Math.ECDF ( data2vct ( data [ vname ] ) ) 
+    for vname in more_vars : result [ vname ] = Ostap.Math.ECDF ( data2cvt ( data [ vname ] ) ) 
+    
+    del data
+    return result 
+
+
+
+ROOT.RooDataSet.cdfs  = ds2cdfs
+ROOT.RooDataSet.ecdfs = ds2cdfs
+_new_methods_ += [ ROOT.RooDataSet.cdfs  ,
+                   ROOT.RooDataSet.ecdfs ]
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooDataSet , 
@@ -555,8 +582,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
-    if not numpy : logger.warninf ( "NumPpy is not availabele!" ) 
 
 # =============================================================================
 ##                                                                      The END 
