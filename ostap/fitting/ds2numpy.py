@@ -398,6 +398,13 @@ else :
             return result
         
         # =======================================================
+        weighted          = dataset.isWeighted ()
+        store_errors      = weighted and dataset.store_errors      ()
+        store_asym_errors = weighted and dataset.store_asym_errors ()         
+        if store_errors or store_asym_errors :
+            logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
+  
+        # =======================================================
         funcs    = []
         formulas = []
         varlst   = dataset.varlst () 
