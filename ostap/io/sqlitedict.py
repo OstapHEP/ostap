@@ -759,9 +759,9 @@ if ( 3 , 13 ) <= sys.version_info :
         # =========================================================================
         import sqlite3 
         import dbm.sqlite3 as dbm_sqlite3
-        from   dbm.sqlite3 import suppress, BUILD_TABLE, Path, _ERR_REINIT, _normalize_uri 
+        from   dbm.sqlite3 import suppress, BUILD_TABLE, Path, _ERR_REINIT, _normalize_uri, error 
 
-        ## swith the journal mode from 'WAL' to 'DELETE'
+        ## switch the journal mode from 'WAL' to 'DELETE'
 
         def _new_db_init_ ( self, path, /, *, flag, mode):
 
