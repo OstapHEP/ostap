@@ -81,14 +81,18 @@ class Reweighter(object) :
                               target_weight   = target_weight   )
             
     # =========================================================================
+    ## Get/predict  new weights for (new) original
     def weight ( self                   ,
                  original               ,
                  original_weight = None ) :
-        
+        """ Get/predict  new weights for (new) original
+        """
         return self.reweighter.predict_weights (
             original        = original         ,
-            original_weight = original_weight  ) 
-        
+            original_weight = original_weight  )
+    
+    new_weight = weight
+    
 # =============================================================================
 if '__main__' == __name__ :
         

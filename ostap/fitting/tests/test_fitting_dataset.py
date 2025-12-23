@@ -198,8 +198,8 @@ hw.draw()
 ## (16) parameterise (==project) 
 # =============================================================================
 
-ld = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
-lw = Ostap.Math.LegendreSum ( 12 , 0 , 50 )
+ld = Ostap.Math.LegendreSum ( 12 , 0 , 100 )
+lw = Ostap.Math.LegendreSum ( 12 , 0 , 100 )
 
 ld = dataset .project ( ld  , 'Pt1' , cuts = 'Mass<5' )
 lw = weighted.project ( lw  , 'Pt1' , cuts = 'Mass<5' )
@@ -325,6 +325,52 @@ rw , rww = ws.tonumpy ( vars , structured = False , weight_split = True )
 logger.info ( 'Using `tonumpy/ds2numpy(structured=False,weight_split=True)` method/function' ) 
 logger.info ( 'tonumpy unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
 logger.info ( 'tonumpy   weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+
+# =============================================================================
+## (24) conversion to numpy: 'slice'
+# =============================================================================
+ds = dataset  [:10] 
+ws = weighted [:10]
+
+vars = 'Mass' , 'Pt1' 
+
+rr , rrw = ds.slice ( vars ) 
+rw , rww = ws.slice ( vars )
+
+logger.info ( 'Using `slice` method/function' ) 
+logger.info ( 'slice   unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+logger.info ( 'slice     weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+
+# =============================================================================
+## (25) conversion to numpy: 'slice'
+# =============================================================================
+ds = dataset  [:10] 
+ws = weighted [:10]
+
+vars = 'Mass' , 'Pt1' 
+
+rr , rrw = ds.slice ( vars , structured = False ) 
+rw , rww = ws.slice ( vars , structured = False )
+
+logger.info ( 'Using `slice(structured=False)` method/function' ) 
+logger.info ( 'slice   unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+logger.info ( 'slice     weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+
+# =============================================================================
+## (26) conversion to numpy: 'slice'
+# =============================================================================
+ds = dataset  [:10] 
+ws = weighted [:10]
+
+vars = 'Mass' , 'Pt1' 
+
+rr , rrw = ds.slice ( vars , structured = False , transpose = True ) 
+rw , rww = ws.slice ( vars , structured = False , transpose = True )
+
+logger.info ( 'Using `slice(structured=False,transpose=True)` method/function' ) 
+logger.info ( 'slice   unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+logger.info ( 'slice     weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+
 
 # =============================================================================
 ##                                                                       The END 

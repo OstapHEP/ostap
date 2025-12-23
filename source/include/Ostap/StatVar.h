@@ -978,21 +978,23 @@ namespace Ostap
     typedef Ostap::Dict<Column> Table  ;
     // ========================================================================    
     /** Get data table from RooAbsData 
-     *  @param data       (input)  data 
-     *  @param table      (UPDATE) tale 
-     *  @param selection  (INPUT)  selection/cut (treated as weight!)
-     *  @param cut_range  (INPUT) if non empty: use events only from this cut-range
-     *  @param first      (INPUT) the first event to process (inclusibe) 
-     *  @param last       (INPUT) the last event to process (exclusive) 
+     *  @param data         (input)  data 
+     *  @param table        (UPDATE) tale 
+     *  @param selection    (INPUT)  selection/cut (treated as weight!)
+     *  @param cut_range    (INPUT)  if non empty: use events only from this cut-range
+     *  @param weight_total (INPUT   add selection/cut weight to data-weight 
+     *  @param first        (INPUT)  the first event to process (inclusive) 
+     *  @param last         (INPUT)  the last event to process (exclusive) 
      *  @return status code 
      */
     Ostap::StatusCode get_table
-    ( const RooAbsData*         data                  ,
-      Ostap::StatVar::Table&    table                 ,
-      const std::string&        selection  = ""       ,
-      const std::string&        cut_range  = ""       ,
-      const Ostap::EventIndex   first      = Ostap::FirstEvent ,
-      const Ostap::EventIndex   last       = Ostap::LastEvent  ) const ; 
+    ( const RooAbsData*         data                 ,
+      Ostap::StatVar::Table&    table                ,
+      const std::string&        selection    = ""    ,
+      const std::string&        cut_range    = ""    ,
+      const bool                weight_total = false , 
+      const Ostap::EventIndex   first        = Ostap::FirstEvent ,
+      const Ostap::EventIndex   last         = Ostap::LastEvent  ) const ; 
     // ========================================================================
   public: 
     // ========================================================================

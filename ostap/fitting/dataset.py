@@ -49,7 +49,7 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
-import ostap.io.root_file 
+import ostap.io.root_file
 import ROOT, random, math, os, sys, ctypes  
 # =============================================================================
 # logging 
@@ -2933,14 +2933,12 @@ ROOT.RooDataSet.to_tree            = ds_to_tree
 ROOT.RooDataSet.toTree             = ds_to_tree
 ROOT.RooDataSet.asTree             = ds_to_tree
 
-
 _new_methods_ += [
     ROOT.RooDataSet.as_tree ,
     ROOT.RooDataSet.to_tree ,
     ROOT.RooDataSet.toTree  ,
     ROOT.RooDataSet.asTree
     ]
-
     
 # =============================================================================d
 ## Get "slice" from <code>RooAbsData</code> in form of numpy array
@@ -2950,15 +2948,16 @@ _new_methods_ += [
 #  varr , weights = data.slice ( 'a , b , c' , 'd>0' )
 #  varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
 #  @endcode
-def ds_slice ( data                     ,
-               expressions              , * , 
-               cuts       = ''          ,
-               cut_range  = ''          ,
-               structured = True        ,
-               transpose  = True        ,
-               progress   = True        , 
-               first      = FIRST_ENTRY ,
-               last       = LAST_ENTRY  ) :
+def ds_slice ( data                       ,
+               expressions                , * , 
+               cuts         = ''          ,
+               cut_range    = ''          ,
+               weight_total = False       , 
+               structured   = True        ,
+               transpose    = True        ,
+               progress     = True        , 
+               first        = FIRST_ENTRY ,
+               last         = LAST_ENTRY  ) :
     
     """ Get "slice" from <code>RooAbsData</code> in form of numpy array
     >>> data = ...
@@ -2967,6 +2966,9 @@ def ds_slice ( data                     ,
     >>> varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
     """
     
+    ## input data type 
+    assert isinstance ( data , ROOT.RooAbsData ) , "Invalid `data` type: %s" % typename ( data )
+    
     ## adjust first/last indices 
     first , last = evt_range ( data , first , last ) 
     if last <= first :
@@ -2974,67 +2976,94 @@ def ds_slice ( data                     ,
     
     ## decode cuts & the expressions 
     varlst, cuts , _ = vars_and_cuts  ( expressions , cuts )
-    
+
+    assert len ( varlst ) == len ( set ( varlst ) ) , \
+        "Variables are not unique: %s" % ( ','.join ( varlst ) ) 
+
     ## (4) display progress ? 
     progress = progress_conf ( progress )
     
     ## (5) create the driver 
-    sv = StatVar ( progress )
-
-    ## 
-    table = Ostap.StatVar.Table  ()
-    for v in varlst : table [ v ] 
+    sv       = Ostap.StatVar ( progress )
     
+    ## 
+    table   = Ostap.StatVar.Table  ()
+    for v in varlst : table [ v ] 
+
     ## get data
-    with rootException() :        
-        sc = Ostap.StatVar.get_table ( dataset   ,
-                                       table     ,
-                                       cuts      ,
-                                       cut_range ,
-                                       first     ,
-                                       last      )        
-        assert sc.isSuccess () , "Error code from Ostap::StatVar::get_table %s" % s
-        
-    result = []
+    sc = sv.get_table ( data         ,
+                        table        ,
+                        cuts         ,
+                        cut_range    ,
+                        weight_total , 
+                        first        ,
+                        last         )        
+    assert sc.isSuccess    () , "Error code from Ostap::StatVar::get_table %s" % sc
+    
+    missing    = sorted ( v for v in varlst if not v in table  )    
+    assert not missing , "Variables are not in the table: %s" % ','.join ( missing )
+
+    import numpy
+    from   collections import OrderedDict 
+
+    nEvents = 0    
+    result  = OrderedDict()   ## ensure ordering! 
     for var in varlst :
-        column = table [ var ]
-        result.append  ( numpy.asarray ( column , dtype = numpy.float64 ) )
+        column         = table [ var ]
+        result [ var ] = numpy.asarray ( column , dtype = numpy.float64 , copy = True )
+        ## check the size 
+        n              = len ( column )
+        if not nEvents : nEvents = n
+        assert  n == nEvents , "Invalid array size %d/%d" % ( n , events )
+        nEvents = n
+        ##         
         column.clear   () 
         table.erase    ( var ) 
 
     if not result :
         return () , None 
+
+    weights  = None
     
-    weights = None 
-    if cuts or data.isWeighted() :
-        assert 1 == table.size()  , "Here table must have size equal to 1!"
-        for key in table :
-            column  = table [ key ]        
-            weights = numpy.asarray ( column , dtype = numpy.float64 ) 
-            result.append ( weights ) 
-            column.clear () 
-        del table
-        
+    weighted          = data.isWeighted ()
+    store_errors      = weighted and data.store_errors      ()
+    store_asym_errors = weighted and data.store_asym_errors () 
+
+    if store_errors or store_asym_errors :
+        logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
+    
+    wname    = '' if not weighted else str ( data.wname () )
+    if weighted :
+        assert 1 == table.size()  , "Here table *MUST* have size equal to 1!"
+        column  = table [ wname ]
+        weights = numpy.asarray ( column , dtype = numpy.float64 , copy = True ) 
+        column.clear ()
+        table.erase ( wname )
+
+    assert table.empty() , "At this moment the table *MUST* be empty!"
+    
+    del table
+
     if structured :
         
-        dt    = numpy.dtype (  ( v , numpy.float64 ) for v in varlst )
+        dt    = numpy.dtype ( [ ( str ( v ) , numpy.float64 ) for v in result ] )
         dt    = numpy.dtype ( dt )
-        part  = numpy.zeros ( num , dtype = dt )        
-        for v in result : part [ v ] = result [ v ]
+        part  = numpy.zeros ( nEvents , dtype = dt )
+        for v, d in result.items()  : part [ v ] = d 
         result = part
-        
+
     else :
 
-        if weights :
-            weights = result [ -1]
-            result  = result [:-1]
-            if numpy.all ( weights == 1 ) : weights = None 
-   
+        ## convert dictionary into tuple 
+        result = tuple ( d for v , d in result.items() )
+
         result = numpy.stack ( result )
         if transpose : result = numpy.transpose ( result )
 
+    if not weights is None and numpy.all ( weights == 1 ) :
+        weights = None 
+        
     return result, weights 
-
 
 ROOT.RooAbsData.slice = ds_slice 
 

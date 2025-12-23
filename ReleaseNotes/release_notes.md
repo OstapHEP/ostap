@@ -10,10 +10,13 @@
     1. add `map2table_ex` function to `ostap.logger.utils` module 
     1. tiny tweaks for reweighting
     1. update `ds2numpy` : add `wname` argument to rename weight for strutured output 
+    1. `statvars.py` : issue the warning messages when weight uncertainties are defiend but ignored
 
 ## Backward  incompatible 
 
 ## Bug fixes
+
+    1. `daatset.py`: fix `ds_slice`
 
 # v3.6.1.0 
 

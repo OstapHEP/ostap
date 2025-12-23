@@ -278,8 +278,9 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """
+    name = name.strip ()
     if not name : name = 'glCanvas'
-
+        
     cnv    = None 
     groot  = ROOT.ROOT.GetROOT()
     if groot :
@@ -298,6 +299,8 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     wtopx = int ( ( 30 * len ( cnvlst ) ) % mx )
     wtopy = int ( ( 25 * len ( cnvlst ) ) % my ) 
 
+    title = title.strip ()
+    
     ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
     cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
 
@@ -1356,7 +1359,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
                 self.__name = 'gl_canvas#%d' % hash ( h ) 
                 
         if not self.__title :
-            self.__title = 'Ostap Canvas: %s' % self.__name 
+            self.__title = self.__name.strip() 
 
         ## (2) create/use new canvas 
         self.__cnv = getCanvas ( name   = self.__name   ,

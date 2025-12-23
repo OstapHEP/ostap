@@ -141,6 +141,12 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             del dstmp 
             return result
 
+        weighted          = dataset.isWeighted ()
+        store_errors      = weighted and dataset.store_errors      ()
+        store_asym_errors = weighted and dataset.store_asym_errors ()         
+        if store_errors or store_asym_errors :
+            logger.warning ("Weight uncertainties are defined, but will be ignored!") 
+  
         funcs    = []
         formulas = []
         varlst   = dataset.varlst () 
@@ -215,11 +221,11 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
 
         dtypes = [] 
         for v in vnames :
-            if   v in doubles    : dtypes.append ( ( v      , numpy.float64 ) ) 
-            elif v in categories : dtypes.append ( ( v      , numpy.int64   ) )
+            if   v in doubles    : dtypes.append ( ( str ( v      ) , numpy.float64 ) ) 
+            elif v in categories : dtypes.append ( ( str ( v      ) , numpy.int64   ) )
 
-        for f in funcs           : dtypes.append ( ( f[0]   , numpy.float64 ) ) 
-        if weight                : dtypes.append ( ( weight , numpy.float64 ) ) 
+        for f in funcs           : dtypes.append ( ( str ( f[0]   ) , numpy.float64 ) ) 
+        if weight                : dtypes.append ( ( str ( weight ) , numpy.float64 ) ) 
             
         ## get data in batches
         nevts  = len ( dataset ) 
@@ -239,9 +245,9 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             if doubles :
                 dpart   = source.getBatches ( first , num )
                 for d in dpart :
-                    dname  = d.first.name
-                    buffer = d.second
-                    payload = numpy.frombuffer ( buffer.data(), dtype = numpy.float64, count = buffer.size() )
+                    dname   = d.first.name
+                    buffer  = d.second
+                    payload = numpy.frombuffer ( buffer.data() , dtype = numpy.float64 , count = buffer.size() )
                     if   dname in doubles : part [ dname ] = payload
                     elif dname == weight  : part [ dname ] = payload
                 del dpart
@@ -251,7 +257,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 for c in cpart :
                     cname   = c.first.name
                     buffer  = c.second 
-                    payload = numpy.frombuffer ( buffer.data(), dtype = numpy.int64, count = buffer.size() )
+                    payload = numpy.frombuffer ( buffer.data() , dtype = numpy.int64 , count = buffer.size() )
                     if cname in categories : part [ cname ] = payload 
                 del cpart
                 
@@ -450,10 +456,11 @@ else :
 
         dtypes = [] 
         for v in vnames :
-            if   v in doubles    : dtypes.append ( ( v      , numpy.float64 ) ) 
-            elif v in categories : dtypes.append ( ( v      , numpy.int64   ) )
-        for f in funcs           : dtypes.append ( ( f[0]   , numpy.float64 ) ) 
-        if weight                : dtypes.append ( ( weight , numpy.float64 ) ) 
+            if   v in doubles    : dtypes.append ( ( str ( v      ) , numpy.float64 ) ) 
+            elif v in categories : dtypes.append ( ( str ( v      ) , numpy.int64   ) )
+            
+        for f in funcs           : dtypes.append ( ( str ( f[0]   ) , numpy.float64 ) ) 
+        if weight                : dtypes.append ( ( str ( weight ) , numpy.float64 ) ) 
                     
         ## create data 
         data = numpy.zeros ( len ( dataset )  , dtype = dtypes )
@@ -464,7 +471,7 @@ else :
             evt, the_weight = item
             
             for v in evt :
-                vname = v.name
+                vname = str ( v.name ) 
                 if   vname in doubles    : data [ vname  ] [ i ] = float ( v  )
                 elif vname in categories : data [ vname  ] [ i ] = int   ( v  )
 

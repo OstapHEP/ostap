@@ -2280,22 +2280,24 @@ Ostap::StatusCode Ostap::StatVar::statCov
 // get tanle fomr RooAbsData 
 // ============================================================================
 /* Get data table from RooAbsData 
- *  @param data       (input)  data 
- *  @param table      (UPDATE) table 
- *  @param selection  (INPUT)  selection/cut (treated as weight!)
- *  @param cut_range  (INPUT)  if non empty: use events only from this cut-range
- *  @param first      (INPUT)  the first event to process (inclusibe) 
- *  @param last       (INPUT)  the last event to process (exclusive) 
+ *  @param data         (INPUT)  data 
+ *  @param table        (UPDATE) table 
+ *  @param selection    (INPUT)  selection/cut (treated as weight!)
+ *  @param cut_range    (INPUT)  if non empty: use events only from this cut-range
+ *  @param weight_total (INPUT   add selection/cut weight to data-weight 
+ *  @param first        (INPUT)  the first event to process (inclusibe) 
+ *  @param last         (INPUT)  the last event to process (exclusive) 
  *  @return status code  
  */
 // ============================================================================
 Ostap::StatusCode Ostap::StatVar::get_table
-( const RooAbsData*         data       ,
-  Ostap::StatVar::Table&    table      ,
-  const std::string&        selection  ,
-  const std::string&        cut_range  ,
-  const Ostap::EventIndex   first      ,
-  const Ostap::EventIndex   last       ) const
+( const RooAbsData*         data         ,
+  Ostap::StatVar::Table&    table        ,
+  const std::string&        selection    ,
+  const std::string&        cut_range    ,
+  const bool                weight_total , 
+  const Ostap::EventIndex   first        ,
+  const Ostap::EventIndex   last         ) const
 {
   // clear data dable ;
   for ( Table::iterator i = table.begin () ; table.end() != i ; ++i ) { i->second.clear() ; }
@@ -2351,7 +2353,7 @@ Ostap::StatusCode Ostap::StatVar::get_table
       for ( std::size_t i = 0 ; i < N ; ++i )
         { results [ i ].push_back ( formulae.evaluate ( i ) ) ; }
       /// add the combined weight 
-      if ( wsep ) { results.back().push_back ( weight  ) ; }  
+      if ( wsep ) { results.back().push_back ( weight_total ? weight : wd ) ; }  
       //     
     }
   //

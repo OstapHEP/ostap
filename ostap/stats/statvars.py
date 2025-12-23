@@ -248,6 +248,13 @@ def data_get_stat ( data               ,
 
     ## (6) RooFit ?
     if isinstance ( data , ROOT.RooAbsData ) :
+        
+        weighted          = data.isWeighted ()
+        store_errors      = weighted and data.store_errors      ()
+        store_asym_errors = weighted and data.store_asym_errors ()         
+        if store_errors or store_asym_errors :
+            logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
+
         with rootException() :
             the_args = var_lst + ( cuts , cut_range ) + args 
             sc       = sv.get_stat ( data , statobj , *the_args )
@@ -359,7 +366,14 @@ def data_hasEntry ( data               ,
     ## (6) RooFit ?
     if isinstance ( data , ROOT.RooAbsData ) :
         ## trivial case 
-        if not cuts and not cut_range and not data.isWeigted() : return True 
+        if not cuts and not cut_range and not data.isWeigted() : return True
+        
+        weighted          = data.isWeighted ()
+        store_errors      = weighted and data.store_errors      ()
+        store_asym_errors = weighted and data.store_asym_errors ()         
+        if store_errors or store_asym_errors :
+            logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
+
         with rootException() :
             return sv.hasEntry ( data , cuts , cut_range , *args )
         
@@ -417,8 +431,15 @@ def data_size ( data               ,
 
     ## (6) RooFit ?
     if isinstance ( data , ROOT.RooAbsData ) :
-        ## trivial case 
+        ## trivial case        
         if not cuts and not cut_range and not data.isWeighted() : return last - first 
+        
+        weighted          = data.isWeighted ()
+        store_errors      = weighted and data.store_errors      ()
+        store_asym_errors = weighted and data.store_asym_errors ()         
+        if store_errors or store_asym_errors :
+            logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
+            
         with rootException() :
             return sv.size ( data , cuts , cut_range , *args )
 
@@ -605,11 +626,17 @@ def data_statistic ( data               ,
         TCNT = Ostap.StatEntity
         vcnt = Ostap.StatVar. StatVector ()
 
-
     ## variable names 
     vnames = strings ( var_lst ) 
     
     if isinstance ( data , ROOT.RooAbsData ) :
+        
+        weighted          = data.isWeighted ()
+        store_errors      = weighted and data.store_errors      ()
+        store_asym_errors = weighted and data.store_asym_errors ()         
+        if store_errors or store_asym_errors :
+            logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
+        
         with rootException() :
             sc   = sv.statVars ( data , vcnt , vnames  , cuts , cut_range , *args )
             assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc  
@@ -776,6 +803,13 @@ def data_covariance ( data        ,
     vnames = strings ( var_lst )
     
     if isinstance ( data , ROOT.RooAbsData ) :
+        
+        weighted          = data.isWeighted ()
+        store_errors      = weighted and data.store_errors      ()
+        store_asym_errors = weighted and data.store_asym_errors ()         
+        if store_errors or store_asym_errors :
+            logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
+
         with rootException() :
             if 2 == N : sc = sv.statCov ( data , result , var_lst[0] , var_lst[1] , cuts , cut_range , *args )
             else      : sc = sv.statCov ( data , result , vnames                  , cuts , cut_range , *args )
