@@ -855,12 +855,13 @@ def _cmp_draw_ ( self ) :
         ny = hw.binsy()
 
         from ostap.plotting.style import useStyle 
-        with useStyle ( 'Z' , textformat = '.2f' ) :
+        with useStyle ( 'Z' ) :
             
-            if   10 <  nx and 10 < ny : hw.draw  ( 'cont4z' , copy = True )
-            elif 10 <  nx or  10 < ny : hw.draw  ( 'cont4z' , copy = True )
-            else                      : hw.texte ( 'colz'   , copy = True )
-    
+            if   10 <  nx and 10 < ny : hw.draw  ( 'cont4z' ,              copy = True )
+            elif 10 <  nx or  10 < ny : hw.draw  ( 'cont4z' ,              copy = True )
+            else                      : hw.texte ( 'colz'   , fmt = '.2f', copy = True )
+
+        ROOT.gStyle.SetPaintTextFormat ( '.2f' ) 
         minx, miny = hw.minimum_bin()
         maxx, maxy = hw.maximum_bin()
 
@@ -872,8 +873,8 @@ def _cmp_draw_ ( self ) :
 
         pmin1 = ROOT.TMarker ( ax.GetBinCenter ( minx ) , ay.GetBinCenter ( miny ) , 43 )
         pmax1 = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , ay.GetBinCenter ( maxy ) , 47 )        
-        pmin1.SetMarkerColor ( 2 )
-        pmax1.SetMarkerColor ( 2 )        
+        pmin1.SetMarkerColor ( 8 )
+        pmax1.SetMarkerColor ( 8 )        
         pmin1.SetMarkerSize  ( 2 )
         pmax1.SetMarkerSize  ( 2 )
         
@@ -884,9 +885,7 @@ def _cmp_draw_ ( self ) :
         pmin2.SetMarkerColor ( 0 )
         pmax2.SetMarkerColor ( 0 )
 
-        for p in ( pmin2 , pmax2 , pmin1 , pmax1 ) :
-            p.DrawClone ()
-            _store.add ( p ) 
+        for p in ( pmin2 , pmax2 , pmin1 , pmax1 ) : p.DrawClone ()
         
         rows = [ ( '' , 'value' , 'x' , 'y'  ) ]
         
@@ -927,19 +926,23 @@ def _cmp_draw_ ( self ) :
         row  = 'Max-weight' , '%.2f' % maxv , '%.4g' % x 
         rows.append ( row )
 
-        pmin = ROOT.TMarker ( ax.GetBinCenter ( minx ) , 1.0 , 43 )
-        pmax = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , 1.0 , 47 )
+        pmin1 = ROOT.TMarker ( ax.GetBinCenter ( minx ) , 1.0 , 43 )
+        pmax1 = ROOT.TMarker ( ax.GetBinCenter ( maxx ) , 1.0 , 47 )
         
-        pmin.SetMarkerColor ( 92 )
-        pmax.SetMarkerColor ( 92 )
-        pmin.SetMarkerSize  (  3 )
-        pmax.SetMarkerSize  (  2 )
-        pmin.DrawClone() 
-        pmax.DrawClone()
+        pmin1.SetMarkerColor ( 8 )
+        pmax1.SetMarkerColor ( 8 )
+        pmin1.SetMarkerSize  ( 2 )
+        pmax1.SetMarkerSize  ( 2 )
 
-        _store.add ( pmin )
-        _store.add ( pmax )
-                
+        pmin2 = pmin1.Clone  () 
+        pmax2 = pmax1.Clone  () 
+        pmin2.SetMarkerSize  ( pmin1.GetMarkerSize() + 1  )
+        pmax2.SetMarkerSize  ( pmax1.GetMarkerSize() + 1  )
+        pmin2.SetMarkerColor ( 0 )
+        pmax2.SetMarkerColor ( 0 )
+
+        for p in ( pmin2 , pmax2 , pmin1 , pmax1 ) : p.DrawClone ()
+        
         title = 'Comparison plot for %s' % self.what
         table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lcc' )
         logger.info ( '%s:\n%s' % ( title , table ) )

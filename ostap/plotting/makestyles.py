@@ -316,6 +316,19 @@ ROOT.TStyle.table = table_style
 ## extra attributes 
 extra = 'NumberOfColors' , 'showeditor', 'showeventstatus', 'showtoolbar', 'basestyle', 'ostaplike'
 # =============================================================================
+## Get rigth margin form 'COLZ' attribute 
+def get_right_margin ( colz , scale = 1.25 ) :
+    """ Get the right margin from 'COLZ' attribute 
+    """
+    if isinstance ( colz , float ) and 0 < colz and colz * margin_right + margin_left < 1 :
+        ## increment the right margin: good value is around 2  
+        return colz * margin_right             
+    elif colz :
+        return 2    * margin_right             
+    
+    return -1
+
+# =============================================================================
 ## Set the style from the configuration dictionary
 #  @code
 #  config = ...
@@ -344,9 +357,11 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
     ## a bit special treatment due to long name 
     if 'TextFormat' in conf : conf [ 'PaintTextFormat' ] = conf.pop ( 'TextFormat' ) 
     
-    if 'colz' in conf and conf.pop('colz', False ) and not 'PadRightMargin' in conf :
-        conf [ 'PadRightMargin' ] = margin_left  
-
+    if 'colz' in conf and not 'PadRightMargin' in conf :
+        colz  = conf.pop ( 'colz' , False )
+        right = get_right_margin ( colz )
+        if 0 < right : conf [ 'PadRightMargin' ] = right 
+            
     changed = {}
     
     for attr in style_setters  [ 0 ] :
@@ -714,7 +729,8 @@ def make_ostap_style ( name                      ,
     kw = cidict ( transform = cidict_fun )
     kw.update   ( kwargs ) 
     
-    colz       = kw.pop ( 'colz'        , get_bool  ( config , 'colz'       , False            ) )
+    colz       = kw.pop ( 'colz'        , False )
+    
     scale      = kw.pop ( 'scale'       , get_float ( config , 'scale'      , 1.0              ) )
     font       = kw.pop ( 'font'        , get_int   ( config , 'font'       , ostap_font       ) )
     line_width = kw.pop ( 'line_width'  , get_int   ( config , 'line_width' , ostap_line_width ) )
@@ -841,8 +857,11 @@ def make_ostap_style ( name                      ,
     conf [ 'PadColor'          ] = get_int   ( config , 'PadColor'           , 0     )
     conf [ 'PadGridX'          ] = get_bool  ( config , 'PadGridX'           , False )
     conf [ 'PadGridY'          ] = get_bool  ( config , 'PadGridY'           , False )
-    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'      , margin_left )    
-    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'     , margin_left if colz else margin_right )    
+    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'      , margin_left )
+
+    right = get_right_margin ( colz )
+    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'     , right if 0 < right else margin_right )
+    
     conf [ 'PadTickX'          ] = get_int   ( config , 'PadTickX'           , 1     )
     conf [ 'PadTickY'          ] = get_int   ( config , 'PadTickY'           , 1     )
     conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'       , margin_top    )    

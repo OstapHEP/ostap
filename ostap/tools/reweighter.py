@@ -51,7 +51,7 @@ class Reweighter(object) :
         return self.__reweighter
 
     # =========================================================================
-    ## the main method to train the underlying BDT
+    ## The main method to train/fit the underlying BDT
     #  @param original  2D-array of data that needs to be reweighted ("MC")
     #  @param target    2D-array of data that is a rewighting target ("data")
     #  @param original_weight 1D array of input weights for "MC" dataset
@@ -62,7 +62,7 @@ class Reweighter(object) :
                     target                     ,
                     original_weight     = None ,
                     target_weight       = None ) :
-        """ The main method to train the underlying BDT
+        """ The main method to train/fit the underlying BDT
         - see hep_ml.reweight.GBReweighter        
         """
         
@@ -81,15 +81,15 @@ class Reweighter(object) :
                               target_weight   = target_weight   )
             
     # =========================================================================
-    ## Get/predict  new weights for (new) original
+    ## Get/predict new weights for (new) original
     def weight ( self                   ,
                  original               ,
                  original_weight = None ) :
         """ Get/predict  new weights for (new) original
         """
         return self.reweighter.predict_weights (
-            original        = original         ,
-            original_weight = original_weight  )
+            original        = original        ,
+            original_weight = original_weight )
     
     new_weight = weight
     
