@@ -3005,12 +3005,15 @@ def ds_slice ( data                       ,
 
     import numpy
     from   collections import OrderedDict 
-
+    
+    kwcopy = {}
+    if '2.2' <= numpy.__version__  : kwcopy[ 'copy' ] = True 
+    
     nEvents = 0    
     result  = OrderedDict()   ## ensure ordering! 
     for var in varlst :
         column         = table [ var ]
-        result [ var ] = numpy.asarray ( column , dtype = numpy.float64 , copy = True )
+        result [ var ] = numpy.asarray ( column , dtype = numpy.float64 , **kwcopy  )
         ## check the size 
         n              = len ( column )
         if not nEvents : nEvents = n
@@ -3036,7 +3039,7 @@ def ds_slice ( data                       ,
     if weighted :
         assert 1 == table.size()  , "Here table *MUST* have size equal to 1!"
         column  = table [ wname ]
-        weights = numpy.asarray ( column , dtype = numpy.float64 , copy = True ) 
+        weights = numpy.asarray ( column , dtype = numpy.float64 , **kwcopy ) 
         column.clear ()
         table.erase ( wname )
 
