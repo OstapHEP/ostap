@@ -14,6 +14,8 @@
 
 ## Backward  incompatible 
 
+    1. change interface of `(GB)Reweighter` 
+
 ## Bug fixes
 
     1. `daatset.py`: fix `ds_slice`

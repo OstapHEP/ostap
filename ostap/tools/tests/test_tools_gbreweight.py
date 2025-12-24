@@ -233,7 +233,6 @@ def test_gbreweight() :
     try : # ===================================================================
         # =====================================================================
         from ostap.tools.reweighter import Reweighter
-        rw = Reweighter ()
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
@@ -249,15 +248,20 @@ def test_gbreweight() :
     # =========================================================================
     data = Data ( testdata , 'DATA_tree' )
     mc   = Data ( testdata , tag_mc      ) 
+       
+    print ( 'DATA ' , type ( data ) )
+    print ( 'MC   ' , type ( mc   ) )
     
-    ddata , wdata = data.chain.slice ( 'x , y' , transpose = True )
-    dmc   , wmc   = mc  .chain.slice ( 'x , y' , transpose = True )
+    ## ddata , wdata = data.chain , [ 'x' , 'y' ] , structured = False , weight_split = True  )
+    ## dmc   , wmc   = mc  .chain, [ 'x' , 'y' ] , structured = False , weight_split = True  )
+
+    return 
 
     ## train BDT
-    rw.reweight ( original = dmc , target = ddata ) 
+    rw = Reweighter ( original = dmc , target = ddata ) 
     
     ## new weights 
-    wnew = rw.weight ( original = dmc )
+    wnew = rw ( original = dmc )
     ## mc.chain.add_new_branch ( wnew , name = 'w')
     mc.chain.add_new_buffer ( 'w' , wnew )
     
@@ -269,14 +273,9 @@ def test_gbreweight() :
     wvar = '%d*w/%s' % ( len ( data.chain ) , wsum.value() )
     
     nn   = '%s' % ( len ( data.chain ) * 1.0 / len ( mc.chain) ) 
-
-    print ( ' IAM HERE-1' )
     
     for i, phi in enumerate ( vrange ( 0 , 2*math.pi , 10 ) ) :
-        
-        print ( ' IAM HERE-2' , i , phi ) 
-
-        
+                
         dvar = '%.6f*x+%.6f*y' % ( math.cos ( phi ) , math.sin ( phi ) )
         
         mn , mx = data.chain.statVar ( dvar ).minmax()
@@ -307,7 +306,6 @@ def test_gbreweight() :
 # =============================================================================
 if '__main__' == __name__ :
     
-
     test_gbreweight() 
     
 # =============================================================================
