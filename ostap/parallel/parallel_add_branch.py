@@ -105,27 +105,27 @@ class AddNewVar(Task) :
     def __init__          ( self , varname , what ) :
         self.varname  = varname 
         self.what     = what 
-        self.__output = ()
+        self.__output = {} 
     
-    def initialize_local  ( self )                : self.__output = () 
-    def initialize_remote ( self , jobid = -1   ) : self.__output = () 
+    def initialize_local  ( self )                : self.__output = {} 
+    def initialize_remote ( self , jobid = -1   ) : self.__output = {}
     def process           ( self , jobid , dset ) :
         
         import ostap.fitting.dataset        
-        self.__output = dset.add_new_var ( varname  = self.varname ,
-                                           what     = self.what    ,
-                                           progress = False        , 
-                                           report   = False        )
+        result = dset.add_new_var ( varname  = self.varname ,
+                                    what     = self.what    ,
+                                    progress = False        , 
+                                    report   = False        )
         
+        self.__output = { jobid : result }
         return self.__output 
         
     ## merge results/datasets 
-    def merge_results( self , result , jobid = -1 ) :
+    def merge_results( self , result , jobid ) :
         
         if not self.__output : self.__output = result
         else                 :
-            self.__output += result 
-            result.clear ()     ## ATTTENTION!!! 
+            self.__output.update ( result )
             del result
             
     ## get the results 
@@ -252,6 +252,7 @@ _new_methods_       = (
     ROOT.TTree .padd_new_branch ,
     ROOT.TChain.padd_new_branch ,
     )
+
 # =============================================================================
 if '__main__' == __name__ :
     

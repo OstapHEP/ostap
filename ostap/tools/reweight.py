@@ -1576,6 +1576,69 @@ def parallel_data_add_reweighting ( dataset          ,
 
     nchunks  = 3 * numcpu ()
         
+    nevents = len ( dataset )
+    ## split dataset into `nchunks` chunks:
+    from ostap.utils.utils       import split_n_range
+    chunks = ( dataset [ i : j ] for i , j in split_n_range ( 0 , len ( dataset ) , nchunks ) )
+
+    ## Task to add new variable
+    from ostap.parallel.parallel_add_branch import AddNewVar 
+    task     = AddNewVar   ( name  ,  wfun    )
+
+    silent   = kwargs.pop ( 'silent'  , not progress )    
+    wmgr     = WorkManager ( silent = silent , progress = progress , **kwargs )
+    
+    ## start processing 
+    wmgr.process ( task , chunks )
+
+    ## gettresult
+    results = task.results() 
+    
+    nn = sum ( len( r ) for _ , r in results.items() )
+    assert nEvents == nn , "Mismatch in dataset sizes: %dvs %d" % ( nn , nEvents )
+
+# ===========================================================================
+## Add reweighting to very large RooDataSet by splitting it into chunks and
+#  processing the chunks in parallel 
+def parallel_data_add_reweighting ( dataset          ,
+                                    weighter         , 
+                                    name             ,                                    
+                                    progress = True  ,                                    
+                                    report   = True  , **kwargs ) :
+    """ Add reweighting to very large RooDataSet by splititng it into chunks and
+     processing the chunks in parallel 
+    """
+    assert isinstance( dataset , ROOT.RooDataSet ) , \
+        "Invald type for `dataset` : %s" % typename ( dataset ) 
+    
+    if numcpu() < 2 : return data_add_reweighting ( dataset  ,
+                                                    weighter ,
+                                                    name     = name     ,
+                                                    progress = progress ,
+                                                    report   = report   , 
+                                                    parallel = False    ) 
+
+    ## list of branches 
+    branches = set ( dataset.branches() ) if report else set() 
+
+    ## create the weighting function 
+    wfun = W2Data ( weighter  )
+
+    from ostap.parallel.parallel import Checker, WorkManager
+    
+    checker = Checker()
+    if not checker.pickles ( weighter , wfun ) :
+        return data_add_reweighting ( dataset , 
+                                     weighter , 
+                                     name     = name     , 
+                                     progress = progress ,
+                                     report   = report   , 
+                                     parallel = False    ) 
+
+
+    nchunks  = 3 * numcpu ()
+    nEvents  = len ( dataset )    
+    
     ## split dataset into `nchunks` chunks:
     from ostap.utils.utils       import split_n_range
     chunks = ( dataset [ i : j ] for i , j in split_n_range ( 0 , len ( dataset ) , nchunks ) )
@@ -1590,35 +1653,38 @@ def parallel_data_add_reweighting ( dataset          ,
     ## start processing 
     wmgr.process ( task , chunks )
 
-    ## new dataset 
-    newds = task.results()
-
-    ## check consistency: 
-    assert len ( dataset ) == len ( newds ) , "Mismatch in dataset sizes!"
+    results = task.results()
     
+    ## sum of sizes for the resultinng datasets 
+    nn = sum ( len ( d ) for j,d in results.items() )
+    assert nn == nEvents , "Mismath in input/output dataset sizes: %d vs %d" % ( nEvents , nn )
+
+    ## add fake weight 
+    dataset.add_new_var ( name , '1' )             
+    dataset.clear ()
+
+    for jobid in sorted ( results ) :
+        ds = results [ jobid ]
+        dataset.append ( ds ) 
+        ds.clear()
+        
+    del results 
+    del task 
+               
     if report :
-        new_branches = sorted ( set ( newds.branches() ) - branches )
+        new_branches = sorted ( set ( dataset.branches() ) - branches )
         if new_branches :
             n = len ( new_branches )
             if 1 >= n : title = "Added %s variable to RooDataSet(%s)"  % ( n , dataset.GetName () ) 
             else      : title = "Added %s variables to RooDataSet(%s)" % ( n , dataset.GetName () )
-            table = newds.table ( new_branches , title = title , prefix = '# ' )
+            table = dataset.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) )
-        else :                                
-            logger.error ( "No variables are added to RooDataSet(%s)" %  dataset.GetName () )
-
-
-    dataset.add_new_var ( name , '1' )             
-    dataset.clear ()
-
-    dataset.append ( newds )
-
-    newds.clear()
-    del newds
-    del task
-
+            
+        else : logger.error ( "No variables are added to RooDataSet(%s)" %  dataset.GetName () )
+    
     
     return dataset
+
 
 ##    del dataset
 ##    del task    
