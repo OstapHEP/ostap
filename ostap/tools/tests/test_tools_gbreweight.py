@@ -249,21 +249,15 @@ def test_gbreweight() :
     data = Data ( testdata , 'DATA_tree' )
     mc   = Data ( testdata , tag_mc      ) 
        
-    print ( 'DATA ' , type ( data ) )
-    print ( 'MC   ' , type ( mc   ) )
-    
-    ## ddata , wdata = data.chain , [ 'x' , 'y' ] , structured = False , weight_split = True  )
-    ## dmc   , wmc   = mc  .chain, [ 'x' , 'y' ] , structured = False , weight_split = True  )
+    ddata , wdata = data.chain.slice  ( [ 'x' , 'y' ] , structured = False )
+    dmc   , wmc   = mc  .chain.slice  ( [ 'x' , 'y' ] , structured = False )
 
-    return 
-
-    ## train BDT
     rw = Reweighter ( original = dmc , target = ddata ) 
     
     ## new weights 
     wnew = rw ( original = dmc )
     ## mc.chain.add_new_branch ( wnew , name = 'w')
-    mc.chain.add_new_buffer ( 'w' , wnew )
+    mc.chain.add_new_buffer ( wnew , name = 'w' )
     
     ## reload data 
     data = Data ( testdata , 'DATA_tree' )
@@ -274,13 +268,11 @@ def test_gbreweight() :
     
     nn   = '%s' % ( len ( data.chain ) * 1.0 / len ( mc.chain) ) 
     
-    for i, phi in enumerate ( vrange ( 0 , 2*math.pi , 10 ) ) :
+    for i, phi in enumerate ( vrange ( 0 , 2*math.pi , 16 ) ) :
                 
         dvar = '%.6f*x+%.6f*y' % ( math.cos ( phi ) , math.sin ( phi ) )
         
         mn , mx = data.chain.statVar ( dvar ).minmax()
-
-        continue
     
         h1 = ROOT.TH1D ( hID() , '' , 100 , *axis_range ( mn , mx , delta = 0.05 ) ) 
         h2 = h1.clone()
@@ -289,6 +281,10 @@ def test_gbreweight() :
         data.chain.project ( h1 , dvar        ) ## data 
         mc  .chain.project ( h2 , dvar , nn   ) ## original (non-weighted) MC 
         mc  .chain.project ( h3 , dvar , wvar ) ## weighted  MC 
+        
+        h1 = h1.density()
+        h2 = h2.density()
+        h3 = h3.density() 
         
         mn , mx = h1.minmax()
         mn , mx = axis_range ( 0 , mx , delta = 0.7 )
