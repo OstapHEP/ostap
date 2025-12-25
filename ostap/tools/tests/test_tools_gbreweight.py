@@ -278,9 +278,9 @@ def test_gbreweight() :
         h2 = h1.clone()
         h3 = h1.clone()
         
-        data.chain.project ( h1 , dvar        ) ## data 
-        mc  .chain.project ( h2 , dvar , nn   ) ## original (non-weighted) MC 
-        mc  .chain.project ( h3 , dvar , wvar ) ## weighted  MC 
+        data.chain.project ( h1 , dvar       ) ## data 
+        mc  .chain.project ( h2 , dvar ,     ) ## original (non-weighted) MC 
+        mc  .chain.project ( h3 , dvar , 'w' ) ## weighted  MC 
         
         h1 = h1.density()
         h2 = h2.density()
@@ -289,9 +289,10 @@ def test_gbreweight() :
         mn , mx = h1.minmax()
         mn , mx = axis_range ( 0 , mx , delta = 0.7 )
         h1.SetMaximum ( mx ) 
-        h1.blue()
-        h2.green()
-        h3.red() 
+        
+        h1.red   ()
+        h2.green ()
+        h3.blue  () 
     
         h1.draw ( '' )
         h2.draw ( 'same hist')

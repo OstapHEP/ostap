@@ -17,7 +17,7 @@ __all__     = (
     'Reweighter' , 
     ) 
 # =============================================================================
-import numpy 
+import numpy, os  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -27,11 +27,15 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
+    varname = 'NUMEXPR_MAX_THREADS'
+    if not varname in os.environ :
+        from ostap.utils.basic import numcpu 
+        os.environ[ varname ]  = '%d'% numcpu ()  
     from hep_ml.reweight import GBReweighter as GBRW 
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    logger.error ( "Cannot import `GBReweighter` from `hep_ml.reweight`")
+    logger.error ( "Cannot import `GBReweighter` from `hep_ml.reweight`" , exc_info = True )
     GBRW = None 
     __all__ = () 
 # =============================================================================
@@ -58,10 +62,8 @@ if GBRW : # ===================================================================
             """ Helper class for reweighting using `GBReweighter`
             - see hep_ml.reweight.GBReweighter
             """
-            
             self.__kwargs     = kwargs 
             self.__reweighter = GBRW ( **kwargs ) 
-            
             shape1 = original.shape
             shape2 = target.shape 
             
@@ -85,12 +87,12 @@ if GBRW : # ===================================================================
             else      : 
                 from ostap.utils.basic   import NoContext    as context 
             
-            with context () : 
+            with context () :
                 self.__reweighter.fit ( original        ,
                                         target          ,
                                         original_weight = original_weight , 
                                         target_weight   = target_weight   )
-                        
+                         
         @property
         def kwargs ( self ) :
             """`kwargs`: actual configuration usef for clreationn of `GBReweighter`"""
