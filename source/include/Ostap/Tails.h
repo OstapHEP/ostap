@@ -87,7 +87,7 @@ namespace Ostap
        */
       Tail
       ( const double alpha = 2 ,
-	const double n     = 1 ) ;
+	      const double n     = 1 ) ;
       // ======================================================================
     public: // getters 
       // ======================================================================
@@ -149,9 +149,9 @@ namespace Ostap
        */
       double evaluate
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const ;
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const ;
       // ======================================================================
       /** evaluate the (left) tail function
        *  @param x    the x point 
@@ -161,9 +161,9 @@ namespace Ostap
        */
       inline double operator() 
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -176,10 +176,10 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	const double high ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double high ,
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
       /** get the integral of power-law function from negative infinity to <code>high</code>
        *  @paral high high integral edge 
@@ -189,9 +189,9 @@ namespace Ostap
        */
       double integral
       ( const double high ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -219,7 +219,7 @@ namespace Ostap
        */
       RightTail
       ( const double alpha = 2 ,
-	const double n     = 1 ) ;
+	      const double n     = 1 ) ;
       // ======================================================================
       /// Tail parameters 
       RightTail ( const Ostap::Math::Tail& tail ) ;
@@ -234,9 +234,9 @@ namespace Ostap
        */
       double evaluate
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const ;
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const ;
       // ======================================================================
       /** evaluate the (left) tail function
        *  @param x    the x point 
@@ -246,9 +246,9 @@ namespace Ostap
        */
       inline double operator() 
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -261,10 +261,10 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	const double high ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double high ,
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
       /** get the integral of power-law function from <code>low</code> to positive infinity 
        *  @paral low  low  integral edge 
@@ -274,9 +274,9 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -306,9 +306,9 @@ namespace Ostap
        */
       double evaluate
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const ;
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const ;
       // ======================================================================
       /** evaluate the (left) tail function
        *  @param x    the x point 
@@ -318,9 +318,9 @@ namespace Ostap
        */
       inline double operator() 
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
       // ====================================================================
     public:
       // ======================================================================
@@ -333,10 +333,10 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	const double high ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double high ,
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
       /** get the integral of exponential function
        *  @paral high high integral edge
@@ -346,9 +346,9 @@ namespace Ostap
        */
       double integral
       ( const double high ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
     public :
       // ====================================================================
@@ -378,9 +378,9 @@ namespace Ostap
        */
       double evaluate
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const ;
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const ;
       // ======================================================================
       /** evaluate the (left) tail function
        *  @param x    the x point 
@@ -390,9 +390,9 @@ namespace Ostap
        */
       inline double operator() 
       ( const double x      ,
-	const double x0     ,
-	const double F      ,
-	const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
+	      const double x0     ,
+	      const double F      ,
+	      const double dFoF   ) const { return evaluate ( x , x0 , F , dFoF ) ; } 
       // ====================================================================
     public : 
       // ======================================================================
@@ -405,10 +405,10 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	const double high ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double high ,
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
       /** get the integral of exponential function
        *  @paral low  low  integral edge 
@@ -418,17 +418,32 @@ namespace Ostap
        */
       double integral
       ( const double low  ,
-	const double x0   ,
-	const double F    ,
-	const double dFoF ) const ;
+	      const double x0   ,
+	      const double F    ,
+	      const double dFoF ) const ;
       // ======================================================================
     public:
-      // ====================================================================
+      // =====================================================================
       /// get the tag 
         std::size_t tag () const ;
-      // ====================================================================
+      // ====================================================================='
     }; //                                The end of class Ostap::Math::ExpTail
-    // =======================================================================
+    // ========================================================================
+    /** get alpha-parameter for the (left) tail of Needham function
+     *  @see Ostap::Math::Needham
+     *  @param sigma (INOUT) sigma-parameter
+     *  @param c0    (INPUT) c0-parameter
+     *  @param c1    (INPUT) c1-parameterter 
+     *  @param c2    (INPUT) c2-parameter
+     *  @param amin  (INPUT) a_min parammeter
+     */
+    double needham_alpha 
+    ( const double sigma      , 
+      const double c0         , 
+      const double c1         , 
+      const double c2         ,
+      const double amin = 0.1 ) ;
+    // ======================================================================== 
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

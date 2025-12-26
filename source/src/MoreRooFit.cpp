@@ -110,6 +110,7 @@ ClassImp(Ostap::MoreRooFit::Rank          )
 ClassImp(Ostap::MoreRooFit::ABC           )
 ClassImp(Ostap::MoreRooFit::Clamp         )
 ClassImp(Ostap::MoreRooFit::TailN         )
+ClassImp(Ostap::MoreRooFit::NeedhamAlpha  )     
 // ============================================================================
 #endif 
 // ============================================================================
@@ -2062,8 +2063,6 @@ Double_t Ostap::MoreRooFit::Clamp::evaluate () const
     xx <= m_a || s_equal ( xx , m_a ) ? m_a : 
     xx >= m_b || s_equal ( xx , m_b ) ? m_b : xx ;
 }
-
-
 // ============================================================================
 // constructor with one variables 
 // ============================================================================
@@ -2104,6 +2103,75 @@ Ostap::MoreRooFit::TailN::clone ( const char* newname ) const
 // ============================================================================
 Double_t Ostap::MoreRooFit::TailN::evaluate () const
 { return Ostap::Math::Tail::N ( m_x ) ; }
+// ============================================================================
+
+
+
+
+// ============================================================================
+// constructor with variable
+// ============================================================================
+Ostap::MoreRooFit::NeedhamAlpha::NeedhamAlpha
+( const char* name  , 
+  const char* title , 
+  RooAbsReal& sigma ,
+  RooAbsReal& c0    , 
+  RooAbsReal& c1    ,
+  RooAbsReal& c2    ,
+  const double amin )  
+  : RooAbsReal ( name , title )
+  , m_sigma ( "!sigma" , "aigma" , this , sigma )
+  , m_c0    ( "!c0"    , "c0"    , this , c0    )
+  , m_c1    ( "!c1"    , "c1"    , this , c1    )
+  , m_c2    ( "!c2"    , "c2"    , this , c2    )
+  , m_amin  ( amin )
+{}
+// ===========================================================================
+Ostap::MoreRooFit::NeedhamAlpha::NeedhamAlpha
+( const char* name  , 
+  const char* title , 
+  RooAbsReal& sigma ,
+  const double c0   , 
+  const double c1   ,
+  const double c2   ,
+  const double amin )  
+: NeedhamAlpha ( name  , 
+                 title , 
+                 sigma , 
+                 RooFit::RooConst ( c0 ) ,
+                 RooFit::RooConst ( c1 ) ,
+                 RooFit::RooConst ( c2 ) ,
+                 amin )
+{} 
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::NeedhamAlpha::NeedhamAlpha
+( const Ostap::MoreRooFit::NeedhamAlpha& right , 
+  const char*                             name  ) 
+  : RooAbsReal ( right , name )
+  , m_sigma ( "!sigma" , this , right.m_sigma ) 
+  , m_c0    ( "!c0"    , this , right.m_c0    ) 
+  , m_c1    ( "!c1"    , this , right.m_c1    ) 
+  , m_c2    ( "!c2"    , this , right.m_c2    ) 
+  , m_amin  ( right.m_amin )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::NeedhamAlpha::~NeedhamAlpha(){}; 
+// ============================================================================
+/// clone
+Ostap::MoreRooFit::NeedhamAlpha*
+Ostap::MoreRooFit::NeedhamAlpha::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::NeedhamAlpha ( *this , newname ) ; } 
+// ============================================================================
+Double_t Ostap::MoreRooFit::NeedhamAlpha::evaluate () const
+{ return Ostap::Math::needham_alpha ( m_sigma , 
+                                      m_c0    , 
+                                      m_c1    , 
+                                      m_c2    , 
+                                      m_amin  ) ; }
 // ============================================================================
 
 // ============================================================================

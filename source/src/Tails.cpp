@@ -557,6 +557,41 @@ std::size_t Ostap::Math::RightExpTail::tag () const
   static const std::string s_name = "RightExtTail" ;
   return Ostap::Utils::hash_combiner ( s_name , Ostap::Math::AlphaTail::tag() ) ; 
 }
+//
+/* get alpha-parameter for the (left) tail of Needham function
+ *  @see Ostap::Math::Needham
+ *  @param sigma (INOUT) sigma-parameter
+ *  @param c0    (INPUT) c0-parameter
+ *  @param c1    (INPUT) c1-parameterter 
+ *  @param c2    (INPUT) c2-parameter
+ *  @param amin  (INPUT) a_min parammeter
+ */
+// ============================================================================ 
+double Ostap::Math::needham_alpha 
+( const double sigma , 
+  const double c0    , 
+  const double c1    , 
+  const double c2    ,
+  const double amin  ) 
+{
+  Ostap::Assert ( 0 < c1 , 
+                  "Invalid parameter c1: must be positive!" ,
+                  "Ostap::Math::needham_alpha" , 
+                  INVALID_PARAMETER , __FILE__ , __LINE__) ;
+
+  const double sc1 = std::abs ( sigma / c1 ) ;
+  /// avoid overflows (1)
+  if ( 1 <= sc1 )
+    {
+      const double q = std::pow ( sc1 , c2 ) ;
+      const double a = c0 * q / ( 1 + q ) ;
+      return std::hypot ( amin , a ) ;
+    }
+  /// avoid overflows (2)
+  const double Q = std::pow ( 1.0 / sc1 , c2 ) ;
+  const double a = c0 / ( Q + 1 ) ;
+  return std::hypot ( amin , a ) ; 
+}
 
 // ============================================================================
 //                                                                      The END 

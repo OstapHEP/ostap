@@ -1331,8 +1331,8 @@ def tree_slice ( tree                     ,
         tree.SetEstimate ( last - first )
         
         ## run internal ROOT machinery 
-        num   = tree.Draw ( vars , cuts , "goff" , last - first , first )
-        num  = tree.GetSelectedRows ()    
+        num = tree.Draw ( vars , cuts , "goff" , last - first , first )
+        num = tree.GetSelectedRows ()    
         if tree.GetEstimate() < num :
             tree.SetEstimate ( num )
             logger.debug ( 'Re-run Draw(goff) machinery' ) 

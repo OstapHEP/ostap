@@ -3829,8 +3829,8 @@ namespace Ostap
       Rank 
       ( const std::string&      name  , 
         const std::string&      title ,
-	const int               rank  ,
-	const RooAbsCollection& vars  ) ;
+	      const int               rank  ,
+	      const RooAbsCollection& vars  ) ;
       // ======================================================================
       /// default constructor 
       Rank   () =  default ;
@@ -3984,7 +3984,70 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    
+  
+    class NeedhamAlpha : public RooAbsReal 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::NeedhamAlpha , 1 ) ;
+      // ========================================================================
+      public: 
+      // ========================================================================
+      /// constructor from name, title and all variables 
+      NeedhamAlpha  
+      ( const char*  name       , 
+        const char*  title      , 
+        RooAbsReal&  sigma      , 
+        RooAbsReal&  c0         , 
+        RooAbsReal&  c1         ,
+        RooAbsReal&  c2         ,
+        const double amin = 0.1 ) ;
+      /// constructor from name, title and all variables 
+      NeedhamAlpha  
+      ( const char*  name       , 
+        const char*  title      , 
+        RooAbsReal&  sigma      , 
+        const double c0         , 
+        const double c1         ,
+        const double c2         ,
+        const double amin = 0.1 ) ;
+      /// copy constructo
+      NeedhamAlpha
+      ( const NeedhamAlpha& right    , 
+        const char*         name = 0 ) ;
+      /// destructor  
+      virtual ~NeedhamAlpha() ;
+      /// clone
+      NeedhamAlpha* clone ( const char* newname ) const override ;
+      /// fake defautl constructor (needed for serisalization)
+      NeedhamAlpha () = default ;
+      // ========================================================================
+    protected:
+      // ========================================================================
+      /// the main method 
+      Double_t evaluate () const override ;
+      // ========================================================================
+    public:
+      // ========================================================================
+      inline const RooAbsReal& sigma () const { return m_sigma .arg () ; }
+      inline const RooAbsReal& c0    () const { return m_c0    .arg () ; }
+      inline const RooAbsReal& c1    () const { return m_c1    .arg () ; }
+      inline const RooAbsReal& c2    () const { return m_c2    .arg () ; }
+      inline double            amin  () const { return m_amin          ; }     
+      // ========================================================================
+    protected:
+      // ========================================================================
+      /// sigma
+      RooRealProxy m_sigma ; // sigma-parameter
+      /// c0    
+      RooRealProxy m_c0    ; // c0-parameter
+      /// c1    
+      RooRealProxy m_c1    ; // c1-parameter
+      /// c2    
+      RooRealProxy m_c2    ; // c2-parameter
+      /// amin  
+      double       m_amin  ; // amin  
+      // ========================================================================
+    } ;
     // ========================================================================
     /** @class ProductPdf
      *  Oversimplified product of two PDF

@@ -2125,22 +2125,11 @@ std::size_t Ostap::Math::Needham::tag () const
 // ============================================================================
 double Ostap::Math::Needham::alpha
 ( const double sigma ) const 
-{
-  const double sc1 = std::abs ( sigma / m_c1 ) ;
-  //
-  /// avoid overflows (1) 
-  if ( 1 <= sc1 ) 
-    {
-      const double q = std::pow ( sc1 , m_c2 ) ;
-      const double a = m_c0 * q / ( 1 + q ) ; 
-      return std::hypot ( m_amin , a ) ; 
-    }
-  /// avoid overflows (2)
-  const double Q = std::pow ( 1 / sc1 , m_c2 ) ;
-  const double a = m_c0 / ( Q + 1 ) ;
-  return std::hypot ( m_amin , a ) ;
- //
-}
+{ return Ostap::Math::needham_alpha ( sigma  , 
+                                      m_c0   , 
+                                      m_c1   , 
+                                      m_c2   , 
+                                      m_amin ) ; }
 // ============================================================================
 /*  constructor from all parameters
  *  @param m0 m0 parameter

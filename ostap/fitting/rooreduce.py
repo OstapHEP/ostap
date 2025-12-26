@@ -2960,6 +2960,25 @@ def _rrmrfr_reduce_ ( fun ) :
 
 Ostap.MoreRooFit.Rank . __reduce__ = _rrmrfr_reduce_
 
+# ============================================================================  
+## reduce NeedhamAlpha
+def _rrmrf_alpha_reduce ( fun ) :
+    """ Reduce Ostap.MoreRooFit.NeedhamAlpha"""
+    cc = isinstance ( fun.c0 () , ROOT.RooConstaVar ) and \
+         isinstance ( fun.c1 () , ROOT.RooConstaVar ) and \
+         isinstance ( fun.c2 () , ROOT.RooConstaVar )
+         
+    return root_store_factory , ( type ( fun ) ,
+                                  fun.name     ,
+                                  fun.title    ,                                  
+                                  fun.sigma () ,
+                                  float ( fun.c0 () ) if cc else fun.c0 () , 
+                                  float ( fun.c1 () ) if cc else fun.c1 () ,
+                                  float ( fun.c2 () ) if cc else fun.c2 () , 
+                                  fun.amin () ) 
+    
+Ostap.MoreRooFit.NeedhamAlpha . __reduce__ = _rrmrf_alpha_reduce
+
 # =============================================================================
 ## reduce Ostap::Functions::FuncRooTH1 
 def _rfth1_reduce_ ( fun ):
