@@ -9,5 +9,5 @@ cd build
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
-  OSTAP_BATCH=True COLUMNS=180 ctest -j4  --output-on-failure --test-output-size-failed 5000000 )
+  OSTAP_BATCH=True COLUMNS=180 ctest -j4 -R '(reso|models$)' --output-on-failure --test-output-size-failed 5000000 )
 

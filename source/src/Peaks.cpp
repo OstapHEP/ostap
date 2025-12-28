@@ -186,10 +186,34 @@ namespace
     const double sigmaL ,
     const double sigmaR )
   : m_peak    ( peak )
-  , m_sigmaL  ( std::abs ( sigmaL ) )
-  , m_sigmaR  ( std::abs ( sigmaR ) )
+  , m_sigmaL  ( -1 )
+  , m_sigmaR  ( -1 )
+  , m_kappa   (  0 )
+  , m_psi     (  0 )  
+{
+  setSigma ( sigmaL , sigmaR ) ;
+}
+// ============================================================================
+/*  constructor from all parameters
+ *  @param peak    the peak posiion
+ *  @param sigma   avegrate sigma 
+ */
+// ============================================================================
+Ostap::Math::BifurcatedGauss::BifurcatedGauss
+( const double peak   ,
+  const double sigma  )
+: BifurcatedGauss ( peak , sigma , sigma ) 
 {}
 // ============================================================================
+/*  constructor from all parameters
+ *  @param peak    gaussian 
+ */
+// ============================================================================
+Ostap::Math::BifurcatedGauss::BifurcatedGauss
+( const Ostap::Math::Gauss& gauss ) 
+: BifurcatedGauss ( gauss.peak() , gauss.sigma() , gauss.sigma() ) 
+{}
+// =====================================================================
 // evaluate Bifurcated Gaussian
 // ============================================================================
 double Ostap::Math::BifurcatedGauss::evaluate ( const double x ) const
@@ -281,36 +305,42 @@ double Ostap::Math::BifurcatedGauss::integral
 std::size_t Ostap::Math::BifurcatedGauss::tag () const 
 {
   static const std::string s_name = "BiFurcatedGauss" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_peak , m_sigmaL , m_sigmaR ) ; 
+  return Ostap::Utils::hash_combiner ( s_name   , 
+                                       m_peak   , 
+                                       m_sigmaL , 
+                                       m_sigmaR ) ; 
 }
 // ============================================================================
-
+bool Ostap::Math::BifurcatedGauss::setSigma
+ ( const double valueL ,
+   const double valueR )
+{
+  const double valueL_ = std::abs ( valueL ) ;
+  const double valueR_ = std::abs ( valueR ) ;
+  if ( s_equal ( m_sigmaL , valueL_ ) && 
+       s_equal ( m_sigmaR , valueR_ ) ) { return false ; }
+  //
+  m_sigmaL = valueL_ ;
+  m_sigmaR = valueR_ ;
+  //
+  m_kappa  = ( m_sigmaL - m_sigmaR ) / ( m_sigmaL + m_sigmaR ) ;
+  m_psi    = std::atanh ( m_kappa ) ;
+  //
+  return true ;
+}
 // ============================================================================
 bool Ostap::Math::BifurcatedGauss::setSigmaL ( const double value )
-{
+{ 
   const double value_ = std::abs ( value ) ;
   if ( s_equal ( m_sigmaL , value_ ) ) { return false ; }
-  m_sigmaL = value_ ;
-  //
-  return true ;
-}
+  return setSigma ( value , m_sigmaR ) ;
+} 
 // ============================================================================
 bool Ostap::Math::BifurcatedGauss::setSigmaR ( const double value )
-{
+{ 
   const double value_ = std::abs ( value ) ;
-  if ( s_equal ( m_sigmaR , value_ ) ) { return false ; }
-  m_sigmaR = value_ ;
-  //
-  return true ;
-}
-// =============================================================================
-bool Ostap::Math::BifurcatedGauss::setSigma
-( const double valueL , 
-  const double valueR ) 
-{
-  const bool m1 = setSigmaL ( valueL ) ;
-  const bool m2 = setSigmaR ( valueR ) ;
-  return m1 || m2 ;  
+  if ( s_equal ( m_sigmaL , value_ ) ) { return false ; }
+  return setSigma ( m_sigmaL , value ) ; 
 }
 // ============================================================================
 bool Ostap::Math::BifurcatedGauss::setPeak( const double value )
@@ -328,14 +358,23 @@ bool Ostap::Math::BifurcatedGauss::setPeak( const double value )
 bool Ostap::Math::BifurcatedGauss::setKappa
 ( const double value )
 {
+  // =========================================================================
   Ostap::Assert ( std::abs ( value ) < 1                   ,
 		  "Parameter 'kappa' must be |kappa|<1"    ,
 		  "Ostap::Math::BifurcatedGauss::setKappa" ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
   //
+  if ( s_equal ( value , m_kappa ) ) { return false ; }
+  //  
   const double s = sigma () ; 
-  return setSigma ( s * ( 1 + value ) ,
-		    s * ( 1 - value ) ) ;
+  //
+  m_kappa  = value ;
+  m_psi    = std::atanh  ( m_kappa ) ; 
+  // 
+  m_sigmaL = s * ( 1 + m_kappa ) ;
+  m_sigmaR = s * ( 1 - m_kappa ) ;
+  //
+  return true ;
 }
 // ============================================================================
 /*  set asymmetry keeping average sigma untouched
@@ -344,16 +383,18 @@ bool Ostap::Math::BifurcatedGauss::setKappa
 // ============================================================================
 bool Ostap::Math::BifurcatedGauss::setPsi
 ( const double value )
-{ return setKappa ( std::tanh ( value ) ) ; }
-// ============================================================================
-/* sigma-asymmetry:
- *  \f$ \kappa  \equiv \tanh \psi \f$ 
- */ 
-// ============================================================================
-double Ostap::Math::BifurcatedGauss::psi       () const
-{
-  const double k = kappa () ;
-  return std::atanh ( k ) ; 
+{ 
+  if ( s_equal ( m_psi , value ) ) { return false ; } 
+  //
+  const double s = sigma () ; 
+  //
+  m_psi   = value                ;
+  m_kappa = std::tanh ( m_psi )  ;
+  //
+  m_sigmaL = s * ( 1 + m_kappa ) ;
+  m_sigmaR = s * ( 1 - m_kappa ) ; 
+  //
+  return true ;
 }
 // ============================================================================
 /* constructor from all parameters

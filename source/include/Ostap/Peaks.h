@@ -26,6 +26,91 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
+    /** @class  Gauss 
+     *  trivial gaussian , just for completeness 
+     */
+    class Gauss
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param peak    the peak posiion
+       *  @param sigma   the peak width 
+       */
+      Gauss
+      ( const double peak  = 0 ,
+        const double sigma = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate Gaussian
+      double        evaluate   ( const double x ) const ;
+      /// evaluate Gaussian
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Gaussian
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// peak position
+      double peak    () const { return m_peak    ; }
+      double m0      () const { return m_peak    ; }
+      double mu      () const { return m_peak    ; }
+      double mode    () const { return m_peak    ; }
+      double mass    () const { return m_peak    ; }
+      /// sigma
+      double sigma   () const { return m_sigma   ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// peak position 
+      bool setPeak    ( const double value ) ;
+      /// left sigma 
+      bool setSigma   ( const double value ) ;
+      // ======================================================================
+      /// peak position 
+      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
+      // ======================================================================
+    public: // integrals & CDF
+      // ======================================================================
+      /// get the integral
+      double integral () const ;
+      /// get the integral between low and high limits
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      ///  get CDF 
+      double cdf  ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the logarithmic derivative
+       * \f$ \frac{ f6\prime}{f}  \f$
+       */  
+      double  dFoF ( const  double x ) const ; 
+      // ======================================================================
+      // get normalized version of the variable 
+      inline double t ( const double x ) const 
+      { return ( x - m_peak ) / m_sigma ;}
+      // ======================================================================
+    public:
+      // ======================================================================  
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private: // parameters
+      // ======================================================================
+      /// the peak position
+      double m_peak   ;       //                              the peak position
+      /// sigma 
+      double m_sigma  ;       // sigma
+      // ======================================================================
+    } ; 
+    // ========================================================================
     /** @class BifurcatedGauss
      *  Aka a split normal distribution 
      *  @see https://en.wikipedia.org/wiki/Split_normal_distribution
@@ -47,6 +132,21 @@ namespace Ostap
       ( const double peak   = 0 ,
         const double sigmaL = 1 ,
         const double sigmaR = 1 ) ;
+      // =====================================================================
+      /** constructor from all parameters
+       *  @param peak    the peak posiion
+       *  @param siggma  average sigma 
+       */
+      BifurcatedGauss
+      ( const double peak   ,
+        const double sigma  ) ;
+      // =====================================================================
+      /** constructor from all parameters
+       *  @param peak    the peak posiion
+       *  @param gauss   Gaussian peak 
+       */
+      BifurcatedGauss
+      ( const Gauss& gauss ) ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -77,25 +177,24 @@ namespace Ostap
     public:
       // ======================================================================      
       /// average sigma 
-      inline double sigma     () const { return 0.5  * ( m_sigmaL + m_sigmaR )            ; }
+      inline double sigma     () const { return 0.5  * ( m_sigmaL + m_sigmaR ) ; }
       /// sigma-asymmetry 
-      inline double asymmetry () const { return 0.5  * ( m_sigmaL - m_sigmaR ) / sigma () ; }
+      inline double asymmetry () const { return m_kappa ; }
       /// sigma-asymmetry       
-      inline double asym      () const { return asymmetry () ; }
+      inline double asym      () const { return m_kappa ; }
       /// sigma-asymmetry 
-      inline double kappa     () const { return asymmetry () ; }
+      inline double kappa     () const { return m_kappa ; }
       /** sigma-asymmetry:
        *  \f$ \kappa  \equiv \tanh \psi \f$ 
        */ 
-      double        psi       () const ; 
+      inline double psi       () const { return m_psi   ; } 
       // ======================================================================
-      /** set asymetry keeping average sigma untouched
+      /** set asymmetry keeping average sigma untouched
        *  \f$ \left| \kappa \right| < 1 \f$ 
        */
       bool setKappa ( const double value ) ;
       // ======================================================================
       /** set asymmetry keeping average sigma untouched
-       *  \f$ \left| \kappa \right| < 1 \f$ 
        */
       bool setPsi   ( const double value ) ;
       // ======================================================================
@@ -107,7 +206,7 @@ namespace Ostap
       bool setSigmaL  ( const double value ) ;
       /// right sigma 
       bool setSigmaR  ( const double value ) ;
-      /// set both sigmas simultaneously
+      /// set both sigmas simultaneously (main method)
       bool setSigma   
       ( const double valueL ,
         const double valueR ) ;
@@ -147,11 +246,15 @@ namespace Ostap
     private: // parameters
       // ======================================================================
       /// the peak position
-      double m_peak   ;       //                              the peak position
+      double m_peak   { 0 } ;       //                              the peak position
       /// sigma left
-      double m_sigmaL ;       // sigma-left
+      double m_sigmaL { 1 } ;       // sigma-left
       /// sigma right
-      double m_sigmaR ;       // sigma-right
+      double m_sigmaR { 1 } ;       // sigma-right
+      /// asymmetry 
+      double m_kappa  { 0 } ; 
+      /// psi 
+      double m_psi    { 0 } ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -245,91 +348,6 @@ namespace Ostap
       double m_fraction ;       // fraction
       /// scale
       double m_scale    ;       // scale
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class  Gauss 
-     *  trivial gaussian , just for completeness 
-     */
-    class Gauss
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** constructor from all parameters
-       *  @param peak    the peak posiion
-       *  @param sigma   the peak width 
-       */
-      Gauss
-      ( const double peak  = 0 ,
-        const double sigma = 1 ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// evaluate Gaussian
-      double        evaluate   ( const double x ) const ;
-      /// evaluate Gaussian
-      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
-      /// evaluate Gaussian
-      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// peak position
-      double peak    () const { return m_peak    ; }
-      double m0      () const { return m_peak    ; }
-      double mu      () const { return m_peak    ; }
-      double mode    () const { return m_peak    ; }
-      double mass    () const { return m_peak    ; }
-      /// sigma
-      double sigma   () const { return m_sigma   ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// peak position 
-      bool setPeak    ( const double value ) ;
-      /// left sigma 
-      bool setSigma   ( const double value ) ;
-      // ======================================================================
-      /// peak position 
-      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
-      // ======================================================================
-    public: // integrals & CDF
-      // ======================================================================
-      /// get the integral
-      double integral () const ;
-      /// get the integral between low and high limits
-      double integral 
-      ( const double low  ,
-        const double high ) const ;
-      ///  get CDF 
-      double cdf  ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the logarithmic derivative
-       * \f$ \frac{ f6\prime}{f}  \f$
-       */  
-      double  dFoF ( const  double x ) const ; 
-      // ======================================================================
-      // get normalized version of the variable 
-      inline double t ( const double x ) const 
-      { return ( x - m_peak ) / m_sigma ;}
-      // ======================================================================
-    public:
-      // ======================================================================  
-      /// get the tag 
-      std::size_t tag () const ;
-      // ======================================================================
-    private: // parameters
-      // ======================================================================
-      /// the peak position
-      double m_peak   ;       //                              the peak position
-      /// sigma 
-      double m_sigma  ;       // sigma
       // ======================================================================
     } ;
     // ========================================================================
@@ -1282,8 +1300,8 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core      , 
-	const double              alpha = 2 , 
-	const double              n     = 1 ) ;
+	      const double              alpha = 2 , 
+	      const double              n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core Gaussian function 
@@ -1291,7 +1309,7 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core ,
-	const Ostap::Math::Tail&  tail ) ;
+	      const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1370,7 +1388,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1502,7 +1520,7 @@ namespace Ostap
        */
       inline double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const
+	      const double xhigh ) const
       { return m_cb.non_gaussian ( xlow , xhigh ) ; } 
       // ======================================================================
     public: // components 
@@ -1561,8 +1579,8 @@ namespace Ostap
        */
       CrystalBallRightSide
       ( const Ostap::Math::Gauss& core      , 
-	const double              alpha = 2 , 
-	const double              n     = 1 ) ;
+	      const double              alpha = 2 , 
+	      const double              n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core Gaussian function 
@@ -1570,7 +1588,7 @@ namespace Ostap
        */
       CrystalBallRightSide  
       ( const Ostap::Math::Gauss& core ,
-	const Ostap::Math::Tail&  tail ) ;
+	      const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1708,7 +1726,7 @@ namespace Ostap
       CrystalBallDoubleSided
       ( const Ostap::Math::Gauss&     core  ,
         const Ostap::Math::LeftTail&  left  ,
-	const Ostap::Math::RightTail& right ) ;
+	      const Ostap::Math::RightTail& right ) ;
       // ========================================================================
       /** constructor from all components  
        *  @param cb CrystalBall function (left tail) 
@@ -1716,7 +1734,7 @@ namespace Ostap
        */
       CrystalBallDoubleSided
       ( const Ostap::Math::CrystalBall& cb    , 
-	const Ostap::Math::RightTail  & right ) ;
+	      const Ostap::Math::RightTail  & right ) ;
       // =======================================================================
       /** constructor from all components  
        *  @param cb CrystalBallRightSide function (right tail) 
@@ -1724,7 +1742,7 @@ namespace Ostap
        */
       CrystalBallDoubleSided
       ( const Ostap::Math::CrystalBallRightSide& cb   , 
-	const Ostap::Math::LeftTail            & left ) ;      
+	      const Ostap::Math::LeftTail            & left ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1778,20 +1796,20 @@ namespace Ostap
       // ======================================================================
       inline bool setN
       ( const double valueL , 
-	const double valueR ) 
+	      const double valueR ) 
       {
-	const bool updatedL = m_left .setN ( valueL ) ;
-	const bool updatedR = m_right.setN ( valueR ) ;
-	return updatedL || updatedR ;
+	      const bool updatedL = m_left .setN ( valueL ) ;
+	      const bool updatedR = m_right.setN ( valueR ) ;
+	      return updatedL || updatedR ;
       }
       // ======================================================================      
       inline bool setAlpha
       ( const double valueL , 
-	const double valueR ) 
+	      const double valueR ) 
       {
-	const bool updatedL = m_left .setAlpha ( valueL ) ;
-	const bool updatedR = m_right.setAlpha ( valueR ) ;
-	return updatedL || updatedR ;
+	      const bool updatedL = m_left .setAlpha ( valueL ) ;
+	      const bool updatedR = m_right.setAlpha ( valueR ) ;
+	      return updatedL || updatedR ;
       }      
       // ======================================================================
       /// set both alpha-parameters 
@@ -1832,7 +1850,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1879,8 +1897,8 @@ namespace Ostap
        */
       CrystalBallA 
       ( const Ostap::Math::BifurcatedGauss& core      , 
-	const double                        alpha = 2 , 
-	const double                        n     = 1 ) ;
+	      const double                        alpha = 2 , 
+	      const double                        n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core bifurcated Gaussian function 
@@ -1888,7 +1906,7 @@ namespace Ostap
        */
       CrystalBallA 
       ( const Ostap::Math::BifurcatedGauss& core ,
-	const Ostap::Math::Tail&            tail ) ;
+	      const Ostap::Math::Tail&            tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1924,7 +1942,7 @@ namespace Ostap
       inline bool setSigmaL ( const double value  ) { return m_core.setSigmaL ( value ) ; }
       inline bool setSigmaR ( const double value  ) { return m_core.setSigmaR ( value ) ; }
       inline bool setSigma  ( const double valueL ,
-			      const double valueR ) { return m_core.setSigma  ( valueL , valueR  ) ; }
+			                        const double valueR ) { return m_core.setSigma  ( valueL , valueR  ) ; }
       inline bool setSigma  ( const double value  ) { return m_core.setSigma  ( value ) ; }
       inline bool setN      ( const double value  ) { return m_tail.setN      ( value ) ; } 
       inline bool setAlpha  ( const double value  ) { return m_tail.setAlpha  ( value ) ; } 
@@ -1970,7 +1988,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -2031,7 +2049,7 @@ namespace Ostap
       CrystalBallDoubleSidedA
       ( const Ostap::Math::BifurcatedGauss& core  ,
         const Ostap::Math::LeftTail&        left  ,
-	const Ostap::Math::RightTail&       right ) ;
+	      const Ostap::Math::RightTail&       right ) ;
       // ========================================================================
     public:
       // ======================================================================
@@ -2087,20 +2105,20 @@ namespace Ostap
       // ======================================================================      
       inline bool setN
       ( const double valueL , 
-	const double valueR ) 
+	      const double valueR ) 
       {
-	const bool updatedL = m_left .setN ( valueL ) ;
-	const bool updatedR = m_right.setN ( valueR ) ;
-	return updatedL || updatedR ;
+	      const bool updatedL = m_left .setN ( valueL ) ;
+	      const bool updatedR = m_right.setN ( valueR ) ;
+	      return updatedL || updatedR ;
       }
       // ======================================================================      
       inline bool setAlpha
       ( const double valueL , 
-	const double valueR ) 
+	      const double valueR ) 
       {
-	const bool updatedL = m_left .setAlpha ( valueL ) ;
-	const bool updatedR = m_right.setAlpha ( valueR ) ;
-	return updatedL || updatedR ;
+	      const bool updatedL = m_left .setAlpha ( valueL ) ;
+	      const bool updatedR = m_right.setAlpha ( valueR ) ;
+	      return updatedL || updatedR ;
       }      
       /// set both alpha-parameters 
       inline bool setAlpha ( const double value ) { return setAlpha ( value , value ) ; } 
@@ -2109,7 +2127,7 @@ namespace Ostap
       // ======================================================================
       inline bool setSigma
       ( const double valueL ,
-	const double valueR ) { return m_core  .setSigma ( valueL , valueR ) ; }
+	      const double valueR ) { return m_core  .setSigma ( valueL , valueR ) ; }
       //
       inline bool setSigma  ( const double value  ) { return m_core  .setSigma ( value ) ; }
       // ======================================================================
@@ -2144,7 +2162,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	const double xhigh ) const ;
+	      const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2211,7 +2229,7 @@ namespace Ostap
       CrystalBallDoubleSidedE
       ( const Ostap::Math::BifurcatedGauss& core  ,
         const Ostap::Math::LeftTail&        left  ,
-	const Ostap::Math::RightExpTail&    right ) ;
+	      const Ostap::Math::RightExpTail&    right ) ;
       // ========================================================================
     public:
       // ======================================================================
@@ -4807,8 +4825,8 @@ namespace Ostap
        *  @param mu peak location 
        *  @param sigmaL left sigma for Bifurcated Gaussian Core 
        *  @param sigmaR right sigma for bigurcatd Gaussian core
-       *  @param kL    left tail parameter 
-       *  @param kR    right tail parameter 
+       *  @param alphaL left tail parameter 
+       *  @param alphaR right tail parameter 
        */
       ADas 
       ( const double mu     = 0 ,    // location parameter 
@@ -4840,23 +4858,23 @@ namespace Ostap
       inline double kappa    () const { return m_core.kappa  () ; }
       /// sigma asymmetry kappa = tanh ( psi )
       inline double psi      () const { return m_core.psi    () ; } 
-      /// avergae sigma 
+      /// averagae sigma 
       inline double sigma    () const { return m_core.sigma  () ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
       /// set location parameter 
-      bool        setMu       ( const double value ) { return m_core.setMu      ( value ) ; }
+      inline bool  setMu       ( const double value ) { return m_core.setMu      ( value ) ; }
       /// set width parameter 
-      bool        setSigmaL   ( const double value ) { return m_core.setSigmaL  ( value ) ; }
+      inline bool  setSigmaL   ( const double value ) { return m_core.setSigmaL  ( value ) ; }
        /// set width parameter 
-      bool        setSigmaR   ( const double value ) { return m_core.setSigmaL  ( value ) ; }
+      inline  bool setSigmaR   ( const double value ) { return m_core.setSigmaR  ( value ) ; }
       /// set left tail 
-      bool        setAlphaL   ( const double value ) { return m_left.setAlpha   ( value ) ; }
+      inline bool setAlphaL    ( const double value ) { return m_left .setAlpha  ( value ) ; }
       /// set right tail 
-      bool        setAlphaR   ( const double value ) { return m_right.setAlpha  ( value ) ; }
+      inline bool setAlphaR    ( const double value ) { return m_right.setAlpha  ( value ) ; }
       /// set location parameter 
-      inline bool setLocation ( const double value ) { return setMu ( value ) ; }
+      inline bool setLocation  ( const double value ) { return setMu ( value ) ; }
       /// set both K simutaneously :
       bool setAlpha 
       ( const double aL , 
