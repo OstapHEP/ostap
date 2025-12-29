@@ -1154,6 +1154,9 @@ ROOT.TAxis.max_binwidth  = property ( _axis_maxbinw_   , None  , None ,  _axis_m
 ROOT.TAxis.mean_binwidth = property ( _axis_meanbinw_  , None  , None ,  _axis_meanbinw_  . __doc__ )
 ROOT.TAxis.binwidths     = property ( _axis_binwidths_ , None  , None ,  _axis_binwidths_ . __doc__ )
 
+
+
+
 _decorated_classes_ = (
     ROOT.TAxis  ,
 )

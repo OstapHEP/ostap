@@ -41,9 +41,9 @@ except ImportError : # ========================================================
 # =============================================================================
 if GBRW : # ===================================================================
     # =========================================================================
-    if not hasattr ( numpy , 'float' ) :
-        logger.warning ( 'No `numpy.float`... add it!')
-        numpy.float = numpy.float64
+    ## if not hasattr ( numpy , 'float' ) :
+    ##    logger.warning ( 'No `numpy.float`... add it!')
+    ##    numpy.float = numpy.float64
     # =========================================================================
     ## @class Reweighter
     #  Helper class for reweighting using <code>GBReweighter</code>

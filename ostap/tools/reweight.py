@@ -71,8 +71,10 @@ tag_rw_suffix    = 'REWEIGHTING'
 def normalize_data ( data , another = None  ) :
     """ Make a try to normalize the distribution 
     """
-    if   isinstance ( data, ROOT.TH1   ) : return data.density()
-    elif hasattr    ( data, 'density'  ) : return data.density()
+    if   isinstance ( data, ROOT.TH1   ) :
+        return data if data.is_density ( silent = False ) else data.density ( silent = False )
+    elif hasattr    ( data, 'density'  ) :
+        return data.density()
 
     ## (1) make a try to use internal integration
     my_integral = None if not hasattr ( data , 'integral' ) else data.integral 
@@ -221,7 +223,8 @@ class Weight(object) :
     ## constructor of  
     def __init__ ( self                   ,
                    dbase   = "weights.db" , ## the name of data base with the weights 
-                   factors = []           ) :
+                   factors = []           ,
+                   silent  = False        ) :
         
         #
         ## make some statistic
@@ -233,6 +236,7 @@ class Weight(object) :
         if not factors : return
         self.__dbase   = dbase
         self.__factors = tuple ( factors ) 
+        self.__silent  = True if silent else False
         
         ## open database
 
@@ -277,7 +281,7 @@ class Weight(object) :
 
                 ## get the reweighting infromation from database 
                 functions  = db.get ( funname , [] ) ## db[ funname ]
-                if not functions :
+                if not functions and not self.silent :
                     logger.warning ( "Weight: No reweighting is available for `%s', skip it" % funname )
                     continue
                                 
@@ -358,6 +362,12 @@ class Weight(object) :
         """'nZeroes': Number of null weights"""
         return self.__nzeroes
 
+    @property
+    def silent  ( self ) :
+        """`silent` : silent processing?
+        """
+        return self.__silent
+    
     # ==============================================================================
     ## non-empty weighter?
     #  return True if there is at leats one rweweigjtig recorf in database
@@ -1103,9 +1113,9 @@ def makeWeights  ( dataset                      ,
         # normalize the data
         #
         hdata = hdata0
-        if isinstance ( hdata , ROOT.TH1 ) and not hdata.is_density() : 
-            hdata = hdata.density ()
-            logger.atention ( "'Data' histogram converted to 'density' for '%s'" %  what )
+        if isinstance ( hdata , ROOT.TH1 ) and not hdata.is_density( silent = False ) : 
+            hdata = hdata.density ( silent = False )
+            logger.attention ( "'Data' histogram converted to 'density' for '%s'" %  what )
             
         # =====================================================================
         ## make a plot on (MC) data with the weight

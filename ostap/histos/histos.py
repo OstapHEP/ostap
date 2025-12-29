@@ -209,7 +209,7 @@ def _h_new_clone_ ( self , name = '' , title = '' , prefix = '' , suffix = '' ) 
         ## optionally 
         if not nh.GetSumw2() : nh.Sumw2()
 
-    if title : nh.SetTitle ( title ) 
+    if title : nh.SetTitle ( title )
     return nh
 
 # =============================================================================
@@ -8584,22 +8584,30 @@ ROOT.TH1.riemann_sum = _h_riemann_sum_
 
 # =============================================================================
 ## does this histogram reprsent the density?
-def _h_isDensity_ ( h1 ) :
+def _h_isDensity_ ( h1 , silent = False ) :
     """ Does this histogram reprsent the density?
     """
-    return isequalf ( h1.riemann_sum () , 1.0 ) 
+    if not silent :
+        nb = h1.GetNbinsX() * h1.GetNbinsY() * h1.GetNbinsZ() 
+        for i in range ( 1 , nb + 1 ) :
+            c = float ( h1.GetBinContent ( i ) ) 
+            if 0 <= c : continue 
+            logger.warning ( 'is_density: Negative bins %s/%s' % ( h1.GetName() , h1.GetTitle() ) ) 
+            break
     
+    return isequalf ( h1.riemann_sum () , 1.0 ) 
+
 # =============================================================================
 ## represent histogram as ``density''
 #  - the function with unit integral over the range
-def _h_density_ ( h1 ) :
+def _h_density_ ( h1 , silent = False ) :
     """ Represent histogram as  `density'
     - the function with unit integral over the range
     """
-    if h1.is_density () :
+    if h1.is_density ( silent = silent ) :
         ## it is already density!, return the clone
-        return h1.clone()
-    
+        return h1.clone ()
+
     ## take into account bin width
     hh  = h1.rescale_bins ( 1 )
     
