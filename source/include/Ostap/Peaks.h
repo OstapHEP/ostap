@@ -129,17 +129,17 @@ namespace Ostap
        *  @param sigmaR  (right sigma)
        */
       BifurcatedGauss
-      ( const double peak   = 0 ,
-        const double sigmaL = 1 ,
-        const double sigmaR = 1 ) ;
+      ( const double peak   ,
+        const double sigmaL ,
+        const double sigmaR ) ;
       // =====================================================================
       /** constructor from all parameters
        *  @param peak    the peak posiion
        *  @param siggma  average sigma 
        */
       BifurcatedGauss
-      ( const double peak   ,
-        const double sigma  ) ;
+      ( const double peak   =  0 ,
+        const double sigma  =  1 ) ;
       // =====================================================================
       /** constructor from all parameters
        *  @param peak    the peak posiion

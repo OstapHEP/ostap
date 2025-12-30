@@ -15,7 +15,8 @@ __date__    = "2014-10-19"
 __version__ = '$Revision$'
 __all__     = ()
 # =============================================================================
-from ostap.utils.cidict import cidict, cidict_fun 
+from ostap.core.meta_info import root_info
+from ostap.utils.cidict   import cidict, cidict_fun 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -176,7 +177,9 @@ def create_color ( R , G , B , alpha = 1 , name = '' ) :
     assert 0 <= alpha <= 1 , "create_color: Invalid `alpha`=%s" % alpha
     
     ## color exist ? 
-    color = ROOT.TColor.GetColor ( R , G , B , alpha )
+    if ( 6 , 32 ) <= root_info : color = ROOT.TColor.GetColor ( R , G , B , alpha )
+    else                       : color = ROOT.TColor.GetColor ( R , G , B )
+    
     if 0 <= color :
         groot = ROOT.GetROOT()
         if groot : 
