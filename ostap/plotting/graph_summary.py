@@ -66,11 +66,13 @@ __all__     = (
     'error_band'    , ## prepare drawing for the error band(s)
     )
 # =============================================================================
-from   ostap.core.ostap_types import num_types, string_types  
+from   ostap.core.ostap_types import num_types, string_types, integer_types, sequence_types    
 from   ostap.core.core        import VE , hID 
+from   ostap.utils.basic      import typename 
 from   ostap.utils.cidict     import cidict , cidict_fun 
-from   ostap.utils.ranges     import vrange  
+from   ostap.utils.ranges     import vrange
 from   ostap.math.base        import pos_infinity, neg_infinity
+from   ostap.logger.utils     import map2table 
 import ostap.histos.graphs  
 import ROOT
 # =============================================================================
@@ -82,7 +84,7 @@ import ROOT
 #  v , ep , en = value_errors ( VE(0.1,0.2**2) , 0.2 , (-0.1,0.4) , (-0.2,0.1) , 0.3 )
 #  @endcode 
 def value_errors ( value , *errors ) :
-    """Helper function to decode/pack/unpack/transform  errors and value
+    """ Helper function to decode/pack/unpack/transform  errors and value
     
     >>> v , ep , en = value_errors ( 0.1            , 0.2 , (-0.1,0.4) , (-0.2,0.1) , 0.3 ) 
     >>> v , ep , en = value_errors ( VE(0.1,0.2**2) , 0.2 , (-0.1,0.4) , (-0.2,0.1) , 0.3 )
@@ -108,7 +110,7 @@ def value_errors ( value , *errors ) :
         value = value.value()
         
     else :
-        raise TypeError( 'Invalid value %s/%s ' % ( value , type ( value ) ) ) 
+        raise TypeError( 'Invalid value %s/%s ' % ( value , typename ( value ) ) ) 
     
     for i, e in enumerate ( errors ) :
         
@@ -126,6 +128,8 @@ def value_errors ( value , *errors ) :
 
     return value , tuple ( _errsp ) , tuple (_errsn )
 
+
+import ostap.plotting.color as C 
 # =============================================================================
 ## Helper function to prepare drawing the error band
 #  @code
@@ -133,7 +137,7 @@ def value_errors ( value , *errors ) :
 #  for o in objects : o.draw()
 #  @endcode
 def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
-    """Helper function to prepare drawing the error band(s)
+    """ Helper function to prepare drawing the error band(s)
     >>> objects = error_band ( 1 , 0.2 , (-0.1,0.4) , (0.1,-0.3) , min_value = 0 , max_value = 10 , transpose = False )
     >>> for o in objects  : o.draw()
     """
@@ -148,21 +152,46 @@ def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
         
     boxes = []
         
-    ## fill color 
-    fcolor = config.get ( 'fill_color' , ROOT.kOrange )
+    ## fill color(s) 
+    fcolor = config.get ( 'band_color' , 'yellow' )
 
+    ## number of bangs 
+    nbands = min ( len ( eneg ) , len ( epos ) )
+    
+    groot = ROOT.GetROOT()
+    
+    if   isinstance ( fcolor , string_types  ) and fcolor in C.colors : fcolor = C.colors [ fcolor ]
+    elif isinstance ( fcolor , integer_types ) and 0 <= fcolor :
+        assert groot and groot.GetColor ( fcolor ) , "Unknown `color` %s" % fcolor 
+        cols   = [ fcolor ]
+        icolor = fcolor + 1 
+        while len ( cols ) < nbands and icolor < ROOT.TColor.GetFreeColorInder () :
+            if root.GetColor ( icolor ) : cols.append ( icolor ) 
+            icolor += 1
+        icolor = fcolor - 1 
+        while len ( cols ) < nbands and 0 <= icolor  :
+            if root.GetColor ( icolor ) : cols.append ( icolor ) 
+            icolor -= 1
 
+    assert isinstance ( fcolor , sequence_types ) and \
+        all ( isinstance ( c , integer_types ) and 0 <= c and groot.GetColor ( c ) for c in fcolor ) , \
+        "Invalid `band_color`: %s/%s" % ( typename ( fcolor ) , str ( fcolor ) ) 
+    
     delta = max_value - min_value
     mnv   = min_value + 0.001 * delta
     mxv   = max_value - 0.001 * delta
     
-    from  itertools import count
-    for fc , ep , en in zip ( count ( fcolor , -1 ) , reversed ( epos ) ,  reversed ( eneg ) ) :
+    from  itertools import count, cycle 
+    ## for fc , ep , en in zip ( count ( fcolor , -1 ) , reversed ( epos ) ,  reversed ( eneg ) ) :
+    for fc , ep , en in zip ( cycle ( fcolor ) , reversed ( epos ) ,  reversed ( eneg ) ) :
         
         if not transpose :
+            
             box1 = ROOT.TBox ( value - en , mnv  , value + ep , mxv  )
             box2 = ROOT.TBox ( value - en , mnv  , value + ep , mxv  )
+            
         else         :
+            
             box1 = ROOT.TBox ( mnv  , value - en , mxv  , value + ep )
             box2 = ROOT.TBox ( mnv  , value - en , mxv  , value + ep )
             
@@ -171,11 +200,12 @@ def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
         
         ## adjust fill color for transparency
         
-        if 0 <= transparent <= 1 : box1.SetFillColorAlpha ( fc , transparent ) 
-        else                     : box1.SetFillColor      ( fc ) 
-        
-        box2.SetLineColor ( fc - 1 )
-        box2.SetFillStyle ( 0      )
+        if 0 <= transparent < 1 : box1.SetFillColorAlpha ( fc , transparent ) 
+        else                    : box1.SetFillColor      ( fc ) 
+
+        lc = ROOT.TColor.GetColorDark ( fc ) 
+        box2.SetLineColor ( lc )
+        box2.SetFillStyle ( 0  )
         
         boxes.append ( box1 )
         boxes.append ( box2 )
@@ -216,7 +246,7 @@ def error_band ( value , *errors , **kwargs ) :
 ##  @class DrawConfig
 #   Helper base class to keep the configuration of drawing attributes 
 class DrawConfig(object) :
-    """Helper base class to keep the configuration of drawingattributes 
+    """ Helper base class to keep the configuration of drawingattributes 
     """    
     def __init__ ( self , **config ) :
         self.__config = cidict ( transform = cidict_fun )
@@ -226,7 +256,11 @@ class DrawConfig(object) :
     def config ( self ) :
         """Configuration: line/fill/marker color/style/size/..."""
         return self.__config
-
+    ## 
+    def __str__ ( self ) :
+        title = typename ( self )
+        return map2table ( self.config , title = title )
+    
 # =============================================================================
 ## @class Label
 #  Helper base class to keep/create  the label
@@ -247,24 +281,21 @@ class Label(DrawConfig) :
     #  label = point.label ( 5 )
     #  @endcode 
     def label ( self , vpos ) :
-        """Create the label  <code>TLatex</code>
+        """ Create the label  <code>TLatex</code>
         >>> point = ...
         >>> label = point.label ( 5 )
         - see ROOT.TLatex
         """
-        
+        ## 
         text     = self.config.get ( 'label' , ''         )
         if not text : return None
-        
-        xpos = self.config.get ( 'label_position' , 0 )
-        
-        label = ROOT.TLatex ( xpos , vpos , text )
-        
+        ## 
+        xpos = self.config.get ( 'label_position' , 0 )        
+        label = ROOT.TLatex ( xpos , vpos , text )        
         label.set_text_attributes ( **self.config )
-        
+        ## 
         return label 
         
-
 # =============================================================================
 ## @class  Limit
 #  A graphical represenation of upper/lower limit as
@@ -273,11 +304,12 @@ class Label(DrawConfig) :
 #  l = Limit ( 0.25 , line_color = 3  , arrow_size = 0.15 , ,arrow_style = '->' )  
 #  @endcode 
 class Limit(Label) :
-    """A graphical represenation of upper/lower limit as
+    """ A graphical represenation of upper/lower limit as
     arrow from `limit`to `zero`
     >>> l = Limit ( 0.25 , line_color = 3  , arrow_size = 0.15 , ,arrow_style = '->' )  
     """
     def __init__  ( self , limit , zero = 0. , **config ) :
+        
         super(Limit,self).__init__  ( **config )
         
         self.__limit = 1.0 * float ( limit ) 
@@ -334,7 +366,7 @@ class Limit(Label) :
 #   p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
 #   @endcode
 class Record(Label) :
-    """Graphical representation of the data point/measurement with several
+    """ Graphical representation of the data point/measurement with several
     unceratinties, that can be asymmetric
     >>> p1 = Record ( 15 , 0.3 , 0.4 , (-0.1,0.2) , 0.46 , marker_style = 20 , marker_size = 4 )
     >>> p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
@@ -369,7 +401,7 @@ class Record(Label) :
             self.__errsn.append ( covn **0.5 )
             
         else :
-            raise TypeError( 'Invalid value %s/%s ' % ( value , type ( value ) ) ) 
+            raise TypeError( 'Invalid value %s/%s ' % ( value , typename ( value ) ) ) 
 
 
         for i, e in enumerate ( errors ) :
@@ -406,7 +438,7 @@ class Record(Label) :
             
     ## construct a graph object for this data point/measurement  at givel level 
     def point ( self , level ):
-        """Contruct a graph objejct for this data point/measurement  at givel level"""
+        """ Contruct a graph object for this data point/measurement  at givel level"""
 
         epos , eneg = self.positive_errors, self.negative_errors
 
@@ -444,7 +476,7 @@ class Record(Label) :
 #  p1 = Point ( 15 , marker_style = 20 , marker_size = 4 )
 #  @endcode
 class Point(Record) :
-    """Graphical representation of a single data point/measurement
+    """ Graphical representation of a single data point/measurement
     >>> p1 = Point ( 15 , marker_style = 20 , marker_size = 4 )
     """
     def __init__ ( self , value , **kwargs ) :
@@ -459,7 +491,7 @@ class Point(Record) :
 #  p1 = Interval ( 10 , 20 , line_color = 20 )
 #  @endcode
 class Interval(Record) :
-    """Graphical representation of an interval point/measurement
+    """ Graphical representation of an interval point/measurement
     >>> p1 = Interval ( 10 , 20 , line_color = 20 )
     """
     def __init__ ( self , low , high , **kwargs ) :
@@ -480,27 +512,31 @@ class Interval(Record) :
 #   p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
 #   @endcode
 class Average(Record) :
-    """Graphical representation of the data point/measurement with several
+    """ Graphical representation of the data point/measurement with several
     unceratinties, that can be asymmetric
     >>> p1 = Record ( 15 , 0.3 , 0.4 , (-0.1,0.2) , 0.46 , marker_style = 20 , marker_size = 4 )
     >>> p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
     """
     def  __init__ ( self  , value , *errors  , **config ) :
 
-        assert isinstance ( value , VE ) and 0 < value.cov2() , 'Invalid average %s/%s' % ( value , type(value) )
-        
+        assert isinstance ( value , VE ) and 0 < value.cov2() , 'Invalid average %s/%s' % ( value , typename ( value ) )
+
         ## initialize  the base  
         super(Average,self).__init__ ( value , *errors  , **config )
+
         
-        if not 'fill_style'    in self.config : self.config [ 'fill_style'    ] = 1001 
-        if not 'fill_color'    in self.config : self.config [ 'fill_color'    ] = ROOT.kOrange   
-        if not 'line_color'    in self.config : self.config [ 'line_color'    ] = ROOT.kOrange + len ( self.positive_errors )    
+        if not 'band_color'    in self.config : self.config [ 'band_color'  ] = "yellow"            
+        if not 'fill_style'    in self.config : self.config [ 'fill_style'  ] = 1001 
+        if not 'line_color'    in self.config : self.config [ 'line_color'  ] = C.OrangeRed
+        
+        ## if not 'fill_color'    in self.config : self.config [ 'fill_color'    ] = ROOT.kOrange   
+        
         if not 'average_width' in self.config : self.config [ 'average_width' ] = 3 
         if not 'transparent'   in self.config : self.config [ 'transparent'   ] = 0.35 
-    
-    ## construct colored bands for the ``average with errors"
+
+    ## construct colored bands for the `average with errors`
     def bands ( self , level ) :
-        """Construct a graph object for this ``average-with-errors'' at givel level
+        """ Construct a graph object for this `average-with-errors' at givel level
         """
         return error_band2 ( self.value           ,
                              self.positive_errors ,
@@ -512,9 +548,10 @@ class Average(Record) :
 
 # =============================================================================
 ## @class Separator
-#  the simplesy object - line, likely the separator 
+#  the simplest object - line, likely the separator 
 class Separator(Label) :
-    ""
+    """ The simplest object - line, likely the separator 
+    """
     def __init__  ( self , low = None , high = None , **config ) :
         
         super(Label,self).__init__  ( **config )
@@ -580,7 +617,7 @@ class Separator(Label) :
 #  - the colored bands for ``average''
 #  - the text(TLatex) labels
 class Summary(object) :
-    """The final graph for the ``summary plot''
+    """ The final graph for the ``summary plot''
     It is a container of
     - the histogram  *useful to define the range)
     - the graph points
@@ -610,7 +647,7 @@ class Summary(object) :
     #   summary .draw()
     #   @endcode
     def draw ( self  ) :
-        """Draw the summary plot
+        """ Draw the summary plot
         >>> summary = ...
         >>> summary .draw()
         """
@@ -636,37 +673,37 @@ class Summary(object) :
 
     @property
     def histo ( self  ) :
-        """``histo'' : histogram associated with graph"""
+        """`histo' : histogram associated with graph"""
         return self.__histo
     @histo.setter
     def histo ( self , h ) :
         assert h is None or ( h and isinstance ( h , ROOT.TH1 ) ) ,\
-               'Invalid histo type %s/%s' % ( h , type ( h ) )
+               'Invalid histo type %s/%s' % ( h , typename ( h ) )
         self.__histo = h
         
     @property
     def points ( self  ) :
-        """``points'' : graph with points/measurements"""
+        """`points' : graph with points/measurements"""
         return self.__points
     
     @property
     def limits ( self  ) :
-        """``limits'' : upper/lower limits"""
+        """`limits' : upper/lower limits"""
         return self.__limits
 
     @property
     def lines ( self  ) :
-        """``lines'' : lines/separators"""
+        """`lines' : lines/separators"""
         return self.__lines
 
     @property
     def bands ( self  ) :
-        """``bands'' : color bands associated with mean/averages"""
+        """`bands' : color bands associated with mean/averages"""
         return self.__bands
 
     @property
     def labels ( self  ) :
-        """``labels'' : (la)text labels"""
+        """`labels' : (la)text labels"""
         return self.__labels
 
     # =========================================================================
@@ -676,7 +713,7 @@ class Summary(object) :
     #  n = len ( summary )
     #  @endcode
     def __len__  ( self ) :
-        """Number of data points in the summary plot
+        """ Number of data points in the summary plot
         >>> summary = ...
         >>> n = len ( summary )
         """
@@ -688,7 +725,7 @@ class Summary(object) :
     #  xmin, xmax = summary.xminmax()
     #  @endcode  
     def xminmax ( self ) :
-        """Get xmin/xmax for this summary graph 
+        """ Get xmin/xmax for this summary graph 
         >>> summary = ...
         >>> xmin, xmax = summary.xminmax()
         """
@@ -721,7 +758,7 @@ class Summary(object) :
     #  ymin, ymax = summary.yminmax()
     #  @endcode  
     def yminmax ( self ) :
-        """Get ymin/ymax for this summary graph 
+        """ Get ymin/ymax for this summary graph 
         >>> summary = ...
         >>> ymin, ymax = summary.yminmax()
         """
@@ -776,7 +813,7 @@ def make_summary ( data               ,
                    offset    = 0.5    ,
                    vmin      = None   ,
                    vmax      = None   ) :  
-    """Prepare ``summary'' plot
+    """ Prepare `summary  plot'
     >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
     ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
     ...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
@@ -806,9 +843,7 @@ def make_summary ( data               ,
     points  = []
     lines   = [] 
 
-
     data = reversed ( data ) if not transpose else data 
-
 
     vv = offset + 0.0 
     for i , record in enumerate ( data ) :
@@ -849,11 +884,11 @@ def make_summary ( data               ,
             
         else :
             
-            raise TypeError ( 'Invalid record #%d %s/%s' % ( i , str ( record ) , type ( record ) ) )
+            raise TypeError ( 'Invalid record #%d %s/%s' % ( i , str ( record ) , typename ( record ) ) )
 
                 
     assert not average or isinstance ( average , ( VE , Average ) ) ,\
-           'Invalid average %s/%s'% ( average , type(average) )   
+           'Invalid average %s/%s'% ( average , typename ( average ) )   
 
     bands = () 
     if isinstance( average , VE ) : average  = Average ( average  )
@@ -929,7 +964,7 @@ def draw_summary ( data      = []     ,
                    vmin      = None   ,
                    vmax      = None   ,
                    offset    = 0.5    ) : 
-    """Prepare and draw the ``summary'' plot
+    """ Prepare and draw the `summary' plot
     >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
     ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
     ...          Limit  ( 2.5                    , label = 'BESIII'  ) ]

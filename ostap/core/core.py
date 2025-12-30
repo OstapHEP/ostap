@@ -80,7 +80,8 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
-from   ostap.utils.basic      import NoContext, loop_items         
+from   ostap.utils.basic      import NoContext, loop_items
+import ostap.plotting.color   
 import ROOT, cppyy, math, sys, os, re  
 # =============================================================================
 ## ROOT.ROOT.EnableThreadSafety()

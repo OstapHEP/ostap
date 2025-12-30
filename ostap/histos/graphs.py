@@ -47,6 +47,7 @@ from   ostap.math.integral            import Integral
 from   ostap.utils.valerrors          import ( AsymErrors         ,
                                                ValWithErrors      ,
                                                ValWithMultiErrors )
+
 import ROOT, ctypes, array 
 # =============================================================================
 # logging 
@@ -1653,6 +1654,10 @@ def _color_ ( self ,
         self.SetMarkerSize ( size )
     #
     return self
+
+
+# =============================================================================
+from   ostap.plotting.color import Red, Blue, Magenta, Cyan, Green, Yellow, Gold, OrangeRed   
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1662,17 +1667,17 @@ def _red_     ( self ,
                 size     = -1    ,
                 opacity  = -1    , 
                 fill     = False ) :
-    return _color_( self , color = 2 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+    return _color_( self , color = Red , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21
 def _blue_    ( self ,
-                marker   = 25     ,
+                marker   = 21     ,
                 size     = -1     ,
                 opacity  = -1     , 
                 fill     =  False ) :
-    return _color_( self , color = 4 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+    return _color_( self , color = Blue , marker = marker , size = size , opacity = opacity , fill = fill   )
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1682,7 +1687,7 @@ def _magenta_ ( self ,
                 size     = -1     ,
                 opacity  = -1     , 
                 fill     =  False ) :
-    return _color_( self , color = 6 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+    return _color_( self , color = Magenta , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1692,7 +1697,7 @@ def _cyan_    ( self ,
                 size     = -1     ,
                 opacity  = -1     , 
                 fill     =  False ) :
-    return _color_( self , color = 7 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+    return _color_( self , color = Cyan , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1702,18 +1707,40 @@ def _green_   ( self ,
                 size     = -1     ,
                 opacity  = -1     , 
                 fill     =  False ) :
-    return _color_( self , color = 8 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+    return _color_( self , color = Green , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
 def _yellow_  ( self              ,
-                marker   = 34     ,
+                marker   = 41     ,
                 size     = -1     ,
                 opacity  = -1     , 
                 fill     =  False ) :
-    return _color_( self , color = 92 , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+    return _color_( self , color = Yellow , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 
+# =============================================================================
+## set color attributes  
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-01-21 
+def _gold_  ( self              ,
+              marker   = 43     ,
+              size     = -1     ,
+              opacity  = -1     , 
+              fill     =  False ) :
+    return _color_( self , color = Gold , marker = marker , size = size , opacity = opacity , fill = fill   ) 
+
+# =============================================================================
+## set color attributes  
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-01-21 
+def _orange_  ( self              ,
+                marker   = 29     ,
+                size     = -1     ,
+                opacity  = -1     , 
+                fill     =  False ) :
+    return _color_( self , color = OrangeRed , marker = marker , size = size , opacity = opacity , fill = fill   ) 
 
 for _t in  ( ROOT.TH1D , ROOT.TH1F , ROOT.TGraph , ROOT.TGraphErrors ) :
     
@@ -1724,6 +1751,8 @@ for _t in  ( ROOT.TH1D , ROOT.TH1F , ROOT.TGraph , ROOT.TGraphErrors ) :
     _t . cyan    = _cyan_
     _t . green   = _green_
     _t . yellow  = _yellow_
+    _t . gold    = _gold_
+    _t . orange  = _orange_
 
 # =============================================================================
 ## min-value for the graph)

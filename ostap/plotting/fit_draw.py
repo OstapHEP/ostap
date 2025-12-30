@@ -169,7 +169,14 @@ from   ostap.core.ostap_types import integer_types, list_types
 from   ostap.utils.basic      import items_loop
 from   ostap.utils.cidict     import cidict
 from   ostap.utils.cidict     import cidict_fun as key_transform
-# 
+from   ostap.plotting.color   import ( Red       , Yellow       , Gold     , 
+                                       Green     , LightGreen   , SeaGreen , PaleGreen   , 
+                                       Magenta   , Purple       , Violet   , BlueViolet  , 
+                                       OrangeRed , Orange       , Coral    , DarkOrange  ,
+                                       Salmon    , LightSalmon  , Tomato   ,
+                                       Blue      , LightSkyBlue , DarkBlue , DeepSkyBlue , Navy  ,
+                                       Cyan      , 
+                                       Pink      ) 
 import ostap.plotting.style  
 import ostap.plotting.canvas
 import ostap.fitting.roocmdarg
@@ -422,7 +429,7 @@ class Area (Style) :
     >>> l = Area ( ROOT.kRed )
     >>> l = Area ( ROOT.kRed , fillstyle = 3315 ) 
     """
-    def __init__ ( self , color = ROOT.kRed , style = 1001 , **kwargs ) :
+    def __init__ ( self , color = Red , style = 1001 , **kwargs ) :
 
         kw = cidict ( transform = key_transform , **kwargs )
         
@@ -446,7 +453,7 @@ class Area (Style) :
 #  l = Line ( ROOT.kRed , linewidth = 3 ) 
 #  @endcode
 class Line (Style) :
-    """Define the line style:
+    """ Define the line style:
     >>> l = Line ( ROOT.kRed )
     >>> l = Line ( ROOT.kRed , linestyle = 2 ) 
     >>> l = Line ( ROOT.kRed , linewidth = 3 )     
@@ -633,8 +640,8 @@ default_background_options      = ROOT.RooFit.Precision ( precision ) ,
 default_component_options       = ROOT.RooFit.Precision ( precision ) , 
 
 ## default total fit curve : thick red orange line 
-default_total_fit_options       = ( lineWidth ( 3 )                     ,
-                                    lineColor ( ROOT.kOrange + 1 )      ,
+default_total_fit_options       = ( lineWidth ( 3    )      ,
+                                    lineColor ( Gold )      ,
                                     ROOT.RooFit.Precision ( precision ) )
 
 ## default curve : thick red orange line 
@@ -747,68 +754,66 @@ combined_component_options  = get_options (
 # =============================================================================
 
 default_signal_style  = (
-    Style ( linecolor = ROOT.kRed      , linewidth = 2 , fillcolor = ROOT.kRed     , fillstyle = 1001 ) ,
-    Style ( linecolor = ROOT.kBlue     , linewidth = 2 , fillcolor = ROOT.kBlue    , fillstyle = 1001 ) ,
-    Style ( linecolor =    8           , linewidth = 2 , fillcolor =    8          , fillstyle = 1001 ) ,    
-    Style ( linecolor = ROOT.kMagenta  , linewidth = 2 , fillcolor = ROOT.kMagenta , fillstyle = 1001 ) ,
-    Style ( linecolor = ROOT.kCyan     , linewidth = 2 , fillcolor = ROOT.kCyan    , fillstyle = 1001 ) ,
-    Style ( linecolor = ROOT.kYellow   , linewidth = 2 , fillcolor = ROOT.kYellow  , fillstyle = 1001 ) ,
-    Style ( linecolor = ROOT.kPink     , linewidth = 2 , fillcolor = ROOT.kPink    , fillstyle = 1001 ) ,
+    Style ( linecolor = Red     , linewidth = 2 , fillcolor = Red     , fillstyle = 1001 ) ,
+    Style ( linecolor = Blue    , linewidth = 2 , fillcolor = Blue    , fillstyle = 1001 ) ,
+    Style ( linecolor = Green   , linewidth = 2 , fillcolor = Green   , fillstyle = 1001 ) ,    
+    Style ( linecolor = Magenta , linewidth = 2 , fillcolor = Magenta , fillstyle = 1001 ) ,
+    Style ( linecolor = Cyan    , linewidth = 2 , fillcolor = Cyan    , fillstyle = 1001 ) ,
+    Style ( linecolor = Yellow  , linewidth = 2 , fillcolor = Yellow  , fillstyle = 1001 ) ,
+    Style ( linecolor = Pink    , linewidth = 2 , fillcolor = Pink    , fillstyle = 1001 ) ,
     ) 
 
 ## useful when 'draw_combined_signal' is activated 
 separate_signal_style  = (
-    Line  ( linecolor = ROOT.kBlue     , linewidth = 2 ) , 
-    Line  ( linecolor =    8           , linewidth = 2 ) ,
-    Line  ( linecolor = ROOT.kMagenta  , linewidth = 2 ) ,
-    Line  ( linecolor = ROOT.kCyan     , linewidth = 2 ) ,
-    Line  ( linecolor = ROOT.kYellow   , linewidth = 2 ) ,
-    Line  ( linecolor = ROOT.kPink     , linewidth = 2 ) ,
-    Line  ( linecolor = ROOT.kRed      , linewidth = 2 ) ,
+    Line  ( linecolor = Blue    , linewidth = 2 ) , 
+    Line  ( linecolor = Green   , linewidth = 2 ) ,
+    Line  ( linecolor = Magenta , linewidth = 2 ) ,
+    Line  ( linecolor = Cyan    , linewidth = 2 ) ,
+    Line  ( linecolor = Yellow  , linewidth = 2 ) ,
+    Line  ( linecolor = Pink    , linewidth = 2 ) ,
+    Line  ( linecolor = Red     , linewidth = 2 ) ,
     ) 
 
 default_background_style = (
-    Line  ( linecolor = ROOT.kBlue         , linestyle = 14 ) ,
-    Line  ( linecolor = ROOT.kBlue    -  9 , linestyle = 11 ) ,
-    Line  ( linecolor = ROOT.kBlue    +  3 , linestyle = 12 ) ,
-    Line  ( linecolor = ROOT.kBlue    -  2 , linestyle = 13 ) ,
-    Line  ( linecolor = ROOT.kBlue    - 10 , linestyle =  9 ) ,
+    Line  ( linecolor = Blue         , linestyle = 14 ) ,
+    Line  ( linecolor = LightSkyBlue , linestyle = 11 ) ,
+    Line  ( linecolor = DarkBlue     , linestyle = 12 ) ,
+    Line  ( linecolor = DeepSkyBlue  , linestyle = 13 ) ,
+    Line  ( linecolor = Navy         , linestyle =  9 ) ,
     )
 
 default_combined_signal_style     = (
-    Line  ( linecolor = ROOT.kMagenta , linestyle =  3 , linewidth = 2 ) ,
+    Line  ( linecolor = Magenta , linestyle =  3 , linewidth = 2 ) ,
     )
 default_combined_background_style = (
-    Line  ( linecolor = 8             , linestyle = 15 , linewidth = 2 ) ,
+    Line  ( linecolor = Green   , linestyle = 15 , linewidth = 2 ) ,
     )
 default_combined_component_style  = (
-    Line  ( linecolor = ROOT.kYellow  , linestyle =  5 , linewidth = 2 ) ,
+    Line  ( linecolor = Yellow  , linestyle =  5 , linewidth = 2 ) ,
     )
 
 default_component_style  = (
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3345 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3354 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3305 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3395 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3422 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3477 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3544 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3590 ) ,
-    Style ( linecolor = ROOT.kOrange , fillcolor = ROOT.kOrange , fillstyle = 3509 ) ,
+    Style ( linecolor = OrangeRed   , fillcolor = OrangeRed   , fillstyle = 3345 ) ,
+    Style ( linecolor = Orange      , fillcolor = Orange      , fillstyle = 3354 ) ,
+    Style ( linecolor = Coral       , fillcolor = Coral       , fillstyle = 3305 ) ,
+    Style ( linecolor = DarkOrange  , fillcolor = DarkOrange  , fillstyle = 3395 ) ,
+    Style ( linecolor = Salmon      , fillcolor = Salmon      , fillstyle = 3422 ) ,
+    Style ( linecolor = LightSalmon , fillcolor = LightSalmon , fillstyle = 3477 ) ,
+    Style ( linecolor = Tomato      , fillcolor = Tomato      , fillstyle = 3544 ) ,
     )
 
 default_crossterm1_style = (
-    Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 11 ) ,
-    Line  ( linecolor = ROOT.kMagenta - 10 , linestyle = 12 ) , 
-    Line  ( linecolor = ROOT.kMagenta +  3 , linestyle = 13 ) , 
-    Line  ( linecolor = ROOT.kMagenta -  3 , linestyle = 14 ) ,
+    Line  ( linecolor = Magenta    , linestyle = 11 ) ,
+    Line  ( linecolor = Purple     , linestyle = 12 ) , 
+    Line  ( linecolor = Violet     , linestyle = 13 ) , 
+    Line  ( linecolor = BlueViolet , linestyle = 14 ) ,
     )
 
 default_crossterm2_style = (
-    Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 14 ) ,
-    Line  ( linecolor = ROOT.kGreen   -  1 , linestyle = 13 ) ,
-    Line  ( linecolor = ROOT.kGreen   - 10 , linestyle = 12 ) ,
-    Line  ( linecolor = ROOT.kGreen   +  1 , linestyle = 11 ) ,
+    Line  ( linecolor = Green      , linestyle = 14 ) ,
+    Line  ( linecolor = LightGreen , linestyle = 13 ) ,
+    Line  ( linecolor = SeaGreen   , linestyle = 12 ) ,
+    Line  ( linecolor = PaleGreen  , linestyle = 11 ) ,
     ) 
 
 default_background2D_style = default_background_style 

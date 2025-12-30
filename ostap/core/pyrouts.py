@@ -8,7 +8,7 @@
 #  @date   2011-06-07
 #
 # =============================================================================
-"""Decoration of some ROOT objects for efficient use in python
+""" Decoration of some ROOT objects for efficient use in python
 
 Many native  root classes are equipped with new useful methods and operators,
 in particular TH1(x) , TH2(x) , TAxis, TGraph(Errors), etc...
@@ -68,7 +68,7 @@ logger = getLogger( __name__ )
 if '__main__' == __name__ : logger = getLogger ( 'ostap.core.pyrouts' )
 else                      : logger = getLogger ( __name__             )
 # =============================================================================
-logger.info ( 'Zillions of decorations for ROOT/RooFit objects')
+logger.debug ( 'Zillions of decorations for ROOT/RooFit objects')
 # =============================================================================
 from ostap.core.core import ( cpp      , std       , Ostap           , 
                               ROOTCWD  , rootID    , 
@@ -106,6 +106,7 @@ import ostap.utils.pdg_format
 
 import ostap.plotting.canvas
 import ostap.plotting.style 
+import ostap.plotting.color 
 
 import ostap.fitting.minuit 
 import ostap.fitting.roofit 
