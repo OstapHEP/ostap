@@ -162,7 +162,7 @@ def interpolation_3D ( interpolate ) :
     return Default, Default, Default 
 
 # =============================================================================
-## ensure that object/histogram is created in ROOT.gROOT
+## Ensure that object/histogram is created in ROOT.gROOT
 #  @attention clone is always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-14
@@ -180,12 +180,12 @@ def _h_new_init_ ( self , *args ) :
         return init 
 
 # =============================================================================
-## a bit modified 'Clone' function for histograms
+## A bit modified 'Clone' function for histograms
 #  - it automatically assign unique ID
 #  - it ensures that cloned histogram is not going to die with
 #    the accidentally opened file/directory
 #  - a title can be optionally redefined 
-#  @attention clone is always goes to ROOT main memory!
+#  @attention result always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _h_new_clone_ ( self , name = '' , title = '' , prefix = '' , suffix = '' ) :
@@ -194,8 +194,12 @@ def _h_new_clone_ ( self , name = '' , title = '' , prefix = '' , suffix = '' ) 
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
     - a title can be optionally redefined 
+    
+    Attention: result always goes to ROOT main memory!
     """
-    #
+    ## 
+    name = name.strip()
+    ## 
     if not name : name = hID ( prefix = prefix        , suffix = suffix )
     else        : name = hID ( prefix = prefix + name , suffix = suffix )
     #
