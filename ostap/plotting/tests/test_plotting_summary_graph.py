@@ -164,9 +164,9 @@ def test_summary4() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## test_summary1 ()
-    ## test_summary2 ()
-    ## test_summary3 ()
+    test_summary1 ()
+    test_summary2 ()
+    test_summary3 ()
     test_summary4 ()
     
 # =============================================================================
