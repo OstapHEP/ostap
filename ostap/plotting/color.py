@@ -68,7 +68,7 @@ def color_rgba ( c , as_int = False ) :
     - see ROOT.TColor.GetBlue
     - see ROOT.TColor.GetAlpha
     """
-    r , g, b = color_rgb ( as_int = as _int )
+    r , g, b = color_rgb ( as_int = as_int )
     return r , g , b , c.GetAlpha() 
 
 # =============================================================================
@@ -204,7 +204,7 @@ def create_color ( R , G , B , alpha = 1 , name = '' ) :
 def _color_str_ ( color ) :
     """ Print TColor Object
     """
-    r, g , b , alpha = color.rgba ()
+    r, g , b , alpha = color.rgba ( as_int = True )
     n = color.GetNumber() 
     name        = color.GetName() 
     if not name : name = 'Color_%d' % n
@@ -218,11 +218,8 @@ ROOT.TColor.__repr__ = _color_str_
 def _color_reduce_ ( color ) :
     """ Reduce the `ROOT.TColor` object 
     """
-    return create_color , ( int ( color.GetRed   () * 255 ) ,
-                            int ( color.GetGreen () * 255 ) ,
-                            int ( color.GetBlue  () * 255 ) ,
-                            color.GetAlpha () ,
-                            color.GetName  () )
+    r, g, b, a = color.rgba ( as_int = True )
+    return create_color , ( r , g , b , a , color.GetName() ) 
 
 ROOT.TColor.__reduce__ = _color_reduce_
 
@@ -244,7 +241,7 @@ def make_color ( R , G , B , * , name = '' , alpha = 1 ) :
 ## pink colors
 # =============================================================================
 MediumVioletRed	     = make_color ( 199,  21, 133 , name = "MediumVioletRed" )
-DeepPink	     = make_color (  55,  20, 147 , name = "DeepPink"        )
+DeepPink	         = make_color (  55,  20, 147 , name = "DeepPink"        )
 PaleVioletRed        = make_color ( 219, 112, 147 , name = "PaleVioletRed"   )
 HotPink	             = make_color ( 255, 105, 180 , name = "HotPink"         )
 LightPink            = make_color ( 255, 182, 193 , name = "LightPink"       ) 
@@ -254,14 +251,14 @@ Pink	             = make_color ( 255, 192, 203 , name = "Pink"            )
 # =============================================================================
 Indigo	             = make_color (  75,   0, 130 , name = "Indigo"          )
 Purple	             = make_color ( 128,   0, 128 , name = "Purple"          ) 
-DarkMagenta	     = make_color ( 139,   0, 139 , name = "DasrkMagenta"    ) 
-DarkViolet	     = make_color ( 148,   0, 211 , name = "DarkViolet"      ) 
+DarkMagenta	         = make_color ( 139,   0, 139 , name = "DasrkMagenta"    ) 
+DarkViolet	         = make_color ( 148,   0, 211 , name = "DarkViolet"      ) 
 DarkSlateBlue	     = make_color (  72,  61, 139 , name = "DarkSlateBlue"   ) 
-BlueViolet	     = make_color ( 138,  43, 226 , name = "BlueViolet"      ) 
+BlueViolet	         = make_color ( 138,  43, 226 , name = "BlueViolet"      ) 
 DarkOrchid           = make_color ( 153,  50, 204 , name = "DarkOrchid"      ) 
 Fuchsia	             = make_color ( 255,   0, 255 , name = "Fuchsia"         ) 
 Magenta	             = make_color ( 255,   0, 255 , name = "Magenta"         ) 
-SlateBlue	     = make_color ( 106,  90, 205 , name = "SlateBlue"       ) 
+SlateBlue	         = make_color ( 106,  90, 205 , name = "SlateBlue"       ) 
 MediumSlateBlue	     = make_color ( 123, 104, 238 , name = "MediumSlateBlue" ) 
 MediumOrchid	     = make_color ( 186,  85, 211 , name = "MediumOrchid"    )
 MediumPurple         = make_color ( 147, 112, 219 , name = "MediumPurple"    ) 
@@ -269,99 +266,99 @@ Orchid	             = make_color ( 218, 112, 214 , name = "Orhchid"         )
 Violet	             = make_color ( 238, 130, 238 , name = "Violet"          ) 
 Plum	             = make_color ( 221, 160, 221 , name = "Plum"            ) 
 Thistle	             = make_color ( 216, 191, 216 , name = "Thistle"         ) 
-Lavender	     = make_color ( 230, 230, 250 , name = "Lavender"        ) 
+Lavender	         = make_color ( 230, 230, 250 , name = "Lavender"        ) 
 # ===============================================================================
 ## Green colors
 # ===============================================================================
-DarkGreen	     = make_color (   0, 100,   0 , name = "DarkGreen"         )
+DarkGreen	         = make_color (   0, 100,   0 , name = "DarkGreen"         )
 Green	             = make_color (   0, 128,   0 , name = "Green"             ) 
 DarkOliveGreen	     = make_color (  85, 107,  47 , name = "DarkOliveGreen"    ) 
-ForestGreen	     = make_color (  34, 139,  34 , name = "ForestGreen"       ) 
-SeaGreen	     = make_color (  46, 139,  87 , name = "SeaGreen"          ) 
+ForestGreen	         = make_color (  34, 139,  34 , name = "ForestGreen"       ) 
+SeaGreen	         = make_color (  46, 139,  87 , name = "SeaGreen"          ) 
 Olive	             = make_color ( 128, 128,   0 , name = "Olive"             ) 
-OliveDrab	     = make_color ( 107, 142,  35 , name = "OliveDrab"         ) 
+OliveDrab	         = make_color ( 107, 142,  35 , name = "OliveDrab"         ) 
 MediumSeaGreen	     = make_color (  60, 179, 113 , name = "MediumSeaGreen"    )
-LimeGreen	     = make_color (  50, 205,  50 , name = "LimeGreen"         ) 
+LimeGreen	         = make_color (  50, 205,  50 , name = "LimeGreen"         ) 
 Lime	             = make_color (   0, 255,   0 , name = "Lime"              ) 
-SpringGreen	     = make_color (   0, 255, 127 , name = "SpringGreen"       ) 
+SpringGreen	         = make_color (   0, 255, 127 , name = "SpringGreen"       ) 
 MediumSpringGreen    = make_color (   0, 250, 154 , name = "MediumSpringGreen" ) 
 DarkSeaGreen	     = make_color ( 143, 188, 143 , name = "DarkSeeGreen"      )  
 MediumAquamarine     = make_color ( 102, 205, 170 , name = "MediumAquamarine"  ) 
-YellowGreen	     = make_color ( 154, 205,  50 , name = "YellowGreen"       ) 
-LawnGreen	     = make_color ( 124, 252,   0 , name = "LawnGreen"         )
-Chartreuse	     = make_color ( 127, 255,   0 , name = "Chartreuse"        ) 
-LightGreen	     = make_color ( 144, 238, 144 , name = "LightGreen"        ) 
-GreenYellow	     = make_color ( 173, 255,  47 , name = "GreenYellow"       ) 
-PaleGreen	     = make_color ( 152, 251, 152 , name = "PaleGreen"         )
+YellowGreen	         = make_color ( 154, 205,  50 , name = "YellowGreen"       ) 
+LawnGreen	         = make_color ( 124, 252,   0 , name = "LawnGreen"         )
+Chartreuse	         = make_color ( 127, 255,   0 , name = "Chartreuse"        ) 
+LightGreen	         = make_color ( 144, 238, 144 , name = "LightGreen"        ) 
+GreenYellow	         = make_color ( 173, 255,  47 , name = "GreenYellow"       ) 
+PaleGreen	         = make_color ( 152, 251, 152 , name = "PaleGreen"         )
 # ===============================================================================
 ## Red colors
 # ===============================================================================
 DarkRed	             = make_color ( 139,   0,   0 , name = "DarkRed"           )
-Red	             = make_color ( 255,   0,   0 , name = "Red"               ) 
-Firebrick	     = make_color ( 178,  34,  34 , name = "Firebrick"         ) 
+Red	                 = make_color ( 255,   0,   0 , name = "Red"               ) 
+Firebrick	         = make_color ( 178,  34,  34 , name = "Firebrick"         ) 
 Crimson	             = make_color ( 220,  20,  60 , name = "Crimson"           )
-IndianRed	     = make_color ( 205,  92,  92 , name = "IndianRed"         ) 
-LightCoral	     = make_color ( 240, 128, 128 , name = "LightCoral"        )
+IndianRed	         = make_color ( 205,  92,  92 , name = "IndianRed"         ) 
+LightCoral	         = make_color ( 240, 128, 128 , name = "LightCoral"        )
 Salmon	             = make_color ( 250, 128, 114 , name = "Salmon"            ) 
-DarkSalmon	     = make_color ( 233, 150, 122 , name = "DarkSalmon"        )
-LightSalmon	     = make_color ( 255, 160, 122 , name = "LightSalmon"       )
+DarkSalmon	         = make_color ( 233, 150, 122 , name = "DarkSalmon"        )
+LightSalmon	         = make_color ( 255, 160, 122 , name = "LightSalmon"       )
 # ============================================================================
 ## Orange colors
 # ============================================================================
-OrangeRed	     = make_color ( 255,  69,   0 , name = "OrangeRed"         ) 
+OrangeRed	         = make_color ( 255,  69,   0 , name = "OrangeRed"         ) 
 Tomato	             = make_color ( 255,  99,  71 , name = "Tomato"            ) 
-DarkOrange	     = make_color ( 255, 140,   0 , name = "DarkOrange"        )
+DarkOrange	         = make_color ( 255, 140,   0 , name = "DarkOrange"        )
 Coral	             = make_color ( 255, 127,  80 , name = "Coral"             ) 
 Orange	             = make_color ( 255, 165,   0 , name = "Orange"            ) 
 # ===========================================================================
 ## Yellow colors
 # ===========================================================================
-DarkKhaki	     = make_color ( 189, 183, 107 , name = "DarkKhaki"            ) 
+DarkKhaki	         = make_color ( 189, 183, 107 , name = "DarkKhaki"            ) 
 Gold	             = make_color ( 255, 215,   0 , name = "Gold"                 ) 
 Khaki	             = make_color ( 240, 230, 140 , name = "Khaki"                ) 
-PeachPuff	     = make_color ( 255, 218, 185 , name = "PeachPuff"            ) 
+PeachPuff	         = make_color ( 255, 218, 185 , name = "PeachPuff"            ) 
 Yellow	             = make_color ( 255, 255, 0   , name = "Yellow"               ) 
 PaleGoldenrod	     = make_color ( 238, 232, 170 , name = "PaleGoldenrod"        ) 
-Moccasin	     = make_color ( 255, 228, 181 , name = "Mocassin"             ) 
-PapayaWhip	     = make_color ( 255, 239, 213 , name = "PapayaWhip"           ) 
+Moccasin	         = make_color ( 255, 228, 181 , name = "Mocassin"             ) 
+PapayaWhip	         = make_color ( 255, 239, 213 , name = "PapayaWhip"           ) 
 LightGoldenrodYellow = make_color ( 250, 250, 210 , name = "LightGoldenrodYellow" ) 
 LemonChiffon         = make_color ( 255, 250, 205 , name = "LemonChiffon"         ) 
-LightYellow	     = make_color ( 255, 255, 224 , name = "LightYellow"          )
+LightYellow	         = make_color ( 255, 255, 224 , name = "LightYellow"          )
 # ===========================================================================
 ## Blue colors
 # ===========================================================================
 MidnightBlue	     = make_color (  25,  25, 112 , name = "MignightBlue"         ) 
 Navy	             = make_color (   0,   0, 128 , name = "Navy"                 )
-DarkBlue	     = make_color (   0,   0, 139 , name = "DarkBlue"             )  
-MediumBlue	     = make_color (   0,   0, 205 , name = "MediumBlue"           ) 
+DarkBlue	         = make_color (   0,   0, 139 , name = "DarkBlue"             )  
+MediumBlue	         = make_color (   0,   0, 205 , name = "MediumBlue"           ) 
 Blue	             = make_color (   0,   0, 255 , name = "Blue"                 ) 
-RoyalBlue	     = make_color (  65, 105, 225 , name = "RoyalBlue"            ) 
-SteelBlue	     = make_color (  70, 130, 180 , name = "SteelBlue"            ) 
-DodgerBlue	     = make_color (  30, 144, 255 , name = "DodgenBlue"           ) 
-DeepSkyBlue	     = make_color (   0, 191, 255 , name = "DeepSkyBlue"          ) 
+RoyalBlue	         = make_color (  65, 105, 225 , name = "RoyalBlue"            ) 
+SteelBlue	         = make_color (  70, 130, 180 , name = "SteelBlue"            ) 
+DodgerBlue	         = make_color (  30, 144, 255 , name = "DodgenBlue"           ) 
+DeepSkyBlue	         = make_color (   0, 191, 255 , name = "DeepSkyBlue"          ) 
 CornflowerBlue	     = make_color ( 100, 149, 237 , name = "CornflowerBlue"       ) 
 SkyBlue	             = make_color ( 135, 206, 235 , name = "SkyBlue"              ) 
 LightSkyBlue	     = make_color ( 135, 206, 250 , name = "LightSkyBlue"         ) 
 LightSteelBlue	     = make_color ( 176, 196, 222 , name = "LightSteelBlue"       ) 
-LightBlue	     = make_color ( 173, 216, 230 , name = "LightBlue"            ) 
-PowderBlue	     = make_color ( 176, 224, 230 , name = "PowdrBlue"            )
+LightBlue	         = make_color ( 173, 216, 230 , name = "LightBlue"            ) 
+PowderBlue	         = make_color ( 176, 224, 230 , name = "PowdrBlue"            )
 # ============================================================================
 ## White colors
 # ============================================================================
-MistyRose	     = make_color ( 255, 228, 225 , name = "MistyRose"     ) 
+MistyRose	         = make_color ( 255, 228, 225 , name = "MistyRose"     ) 
 AntiqueWhite	     = make_color ( 250, 235, 215 , name = "AntiqueWhite"  ) 
 Linen	             = make_color ( 250, 240, 230 , name = "Linen"         ) 
 Beige	             = make_color ( 245, 245, 220 , name = "Beige"         ) 
-WhiteSmoke	     = make_color ( 245, 245, 245 , name = "WhiteSmoke"    ) 
+WhiteSmoke	         = make_color ( 245, 245, 245 , name = "WhiteSmoke"    ) 
 LavenderBlush	     = make_color ( 255, 240, 245 , name = "LavenderBlush" ) 
 OldLace	             = make_color ( 253, 245, 230 , name = "OldLace"       ) 
-AliceBlue	     = make_color ( 240, 248, 255 , name = "AliceBlue"     ) 
-Seashell	     = make_color ( 255, 245, 238 , name = "Seashell"      )
-GhostWhite	     = make_color ( 248, 248, 255 , name = "GhostWhite"    ) 
-Honeydew	     = make_color ( 240, 255, 240 , name = "Honewdew"      ) 
-FloralWhite	     = make_color ( 255, 250, 240 , name = "FloralWhite"   ) 
+AliceBlue	         = make_color ( 240, 248, 255 , name = "AliceBlue"     ) 
+Seashell	         = make_color ( 255, 245, 238 , name = "Seashell"      )
+GhostWhite	         = make_color ( 248, 248, 255 , name = "GhostWhite"    ) 
+Honeydew	         = make_color ( 240, 255, 240 , name = "Honewdew"      ) 
+FloralWhite	         = make_color ( 255, 250, 240 , name = "FloralWhite"   ) 
 Azure	             = make_color ( 240, 255, 255 , name = "Azure"         ) 
-MintCream	     = make_color ( 245, 255, 250 , name = "MintCream"     ) 
+MintCream	         = make_color ( 245, 255, 250 , name = "MintCream"     ) 
 Snow	             = make_color ( 255, 250, 250 , name = "Snow"          ) 
 Ivory	             = make_color ( 255, 255, 240 , name = "Ivory"         ) 
 White	             = make_color ( 255, 255, 255 , name = "White"         )
@@ -370,84 +367,83 @@ White	             = make_color ( 255, 255, 255 , name = "White"         )
 # =============================================================================
 Maroon	             = make_color ( 128,   0,   0 , name = "Maroon"         )  
 Brown	             = make_color ( 165,  42,  42 , name = "Brown"          )
-SaddleBrown	     = make_color ( 139,  69,  19 , name = "SaddleBrown"    )
+SaddleBrown	         = make_color ( 139,  69,  19 , name = "SaddleBrown"    )
 Sienna	             = make_color ( 160,  82,  45 , name = "Sienna"         )  
-Chocolate	     = make_color ( 210, 105,  30 , name = "Chocolate"      ) 
+Chocolate	         = make_color ( 210, 105,  30 , name = "Chocolate"      ) 
 DarkGoldenrod	     = make_color ( 184, 134,  11 , name = "DarkGoldenrod"  ) 
 Peru	             = make_color ( 205, 133,  63 , name = "Peru"           )
-RosyBrown	     = make_color ( 188, 143, 143 , name = "RosyBrown"      ) 
-Goldenrod	     = make_color ( 218, 165,  32 , name = "GoldenRod"      ) 
-SandyBrown	     = make_color ( 244, 164,  96 , name = "SandyBrown"     )
-Tan	             = make_color ( 210, 180, 140 , name = "Tan"            )
-Burlywood	     = make_color ( 222, 184, 135 , name = "Burlywood"      )      
+RosyBrown	         = make_color ( 188, 143, 143 , name = "RosyBrown"      ) 
+Goldenrod	         = make_color ( 218, 165,  32 , name = "GoldenRod"      ) 
+SandyBrown	         = make_color ( 244, 164,  96 , name = "SandyBrown"     )
+Tan	                 = make_color ( 210, 180, 140 , name = "Tan"            )
+Burlywood	         = make_color ( 222, 184, 135 , name = "Burlywood"      )      
 Wheat	             = make_color ( 245, 222, 179 , name = "Wheat"          ) 
-NavajoWhite	     = make_color ( 255, 222, 173 , name = "NavajoWhite"    ) 
+NavajoWhite	         = make_color ( 255, 222, 173 , name = "NavajoWhite"    ) 
 Bisque	             = make_color ( 255, 228, 196 , name = "Binque"         )
 BlanchedAlmond	     = make_color ( 255, 235, 205 , name = "BlanchedAlmond" )
-Cornsilk	     = make_color ( 255, 248, 220 , name = "Cornsilk"       )
+Cornsilk	         = make_color ( 255, 248, 220 , name = "Cornsilk"       )
 # =============================================================================
 ## Cyan colors
 # =============================================================================
 Teal	             = make_color (   0, 128, 128 , name = "Teal"            )  
-DarkCyan	     = make_color (   0, 139, 139 , name = "DarkCyan"        )  
+DarkCyan	         = make_color (   0, 139, 139 , name = "DarkCyan"        )  
 LightSeaGreen	     = make_color (  32, 178, 170 , name = "LightSeaGreen"   )  
-CadetBlue	     = make_color (  95, 158, 160 , name = "CaderBlue"       )  
+CadetBlue	         = make_color (  95, 158, 160 , name = "CaderBlue"       )  
 DarkTurquoise	     = make_color (   0, 206, 209 , name = "DarkTurquoise"   ) 
 MediumTurquoise	     = make_color (  72, 209, 204 , name = "MediumRurquoise" ) 
-Turquoise	     = make_color (  64, 224, 208 , name = "Torquise"        )
+Turquoise	         = make_color (  64, 224, 208 , name = "Torquise"        )
 Aqua	             = make_color (   0, 255, 255 , name = "Aqua"            )
 Cyan	             = make_color (   0, 255, 255 , name = "Cyan"            )
-Aquamarine	     = make_color ( 127, 255, 212 , name = "Aquamarine"      )
+Aquamarine	         = make_color ( 127, 255, 212 , name = "Aquamarine"      )
 PaleTurquoise	     = make_color ( 175, 238, 238 , name = "PaleTurquoise"   ) 
-LightCyan	     = make_color ( 224, 255, 255 , name = "LightCyan"       ) 
+LightCyan	         = make_color ( 224, 255, 255 , name = "LightCyan"       ) 
 # =============================================================================
 ## Gray and black colors
 # =============================================================================
 Black	             = make_color (   0,   0,   0 , name = "Black"         ) 
 DarkSlateGray	     = make_color (  47,  79,  79 , name = "DarkSlateGrey" ) 
 DimGray	             = make_color ( 105, 105, 105 , name = "DimGrey"       ) 
-SlateGray	     = make_color ( 112, 128, 144 , name = "SlateGrey"     ) 
+SlateGray	         = make_color ( 112, 128, 144 , name = "SlateGrey"     ) 
 Gray	             = make_color ( 128, 128, 128 , name = "Gray"          ) 
 LightSlateGray	     = make_color ( 119, 136, 153 , name = "LightGray"     ) 
-DarkGray	     = make_color ( 169, 169, 169 , name = "DarkGrey"      ) 
+DarkGray	         = make_color ( 169, 169, 169 , name = "DarkGrey"      ) 
 Silver	             = make_color ( 192, 192, 192 , name = "Silver"        ) 
-LightGray	     = make_color ( 211, 211, 211 , name = "LightGray"     ) 
-Gainsboro	     = make_color ( 220, 220, 220 , name = "Gainsboro"     ) 
-
+LightGray	         = make_color ( 211, 211, 211 , name = "LightGray"     ) 
+Gainsboro	         = make_color ( 220, 220, 220 , name = "Gainsboro"     ) 
 # =============================================================================
 ##  color collections
 colors_pink    = ( MediumVioletRed      , 
-                   DeepPink	        , 
+                   DeepPink	            , 
                    PaleVioletRed        , 
-                   HotPink	        ,
+                   HotPink	            ,
                    LightPink            , 
                    Pink	                )
-colors_purple  = ( Indigo	        , 
-                   Purple	        ,
+colors_purple  = ( Indigo	            , 
+                   Purple	            ,
                    DarkMagenta	        , 
                    DarkViolet	        , 
                    DarkSlateBlue        , 
                    BlueViolet	        , 
                    DarkOrchid           , 
-                   Fuchsia	        , 
-                   Magenta	        , 
+                   Fuchsia	            , 
+                   Magenta	            , 
                    SlateBlue	        , 
                    MediumSlateBlue      , 
                    MediumOrchid	        , 
                    MediumPurple         , 
-                   Orchid	        , 
-                   Violet	        , 
+                   Orchid	            , 
+                   Violet	            , 
                    Plum	                , 
-                   Thistle	        , 
-                   Lavender	        )
+                   Thistle	            , 
+                   Lavender	            )
 colors_violet  = colors_purple
 colors_magenta = colors_purple
 colors_green   = ( DarkGreen	        , 
-                   Green	        , 
+                   Green	            , 
                    DarkOliveGreen       ,
                    ForestGreen	        ,
-                   SeaGreen	        ,
-                   Olive	        ,
+                   SeaGreen	            ,
+                   Olive	            ,
                    OliveDrab	        , 
                    MediumSeaGreen       , 
                    LimeGreen	        , 
@@ -462,102 +458,102 @@ colors_green   = ( DarkGreen	        ,
                    LightGreen	        ,
                    GreenYellow	        ,
                    PaleGreen	        )
-colors_red     = ( DarkRed	        , 
+colors_red     = ( DarkRed	            , 
                    Red	                , 
                    Firebrick	        , 
-                   Crimson	        , 
+                   Crimson	            , 
                    IndianRed	        , 
-                   LightCoral	        , 
-                   Salmon	        , 
+                   LightCoral	        ,  
+                   Salmon	            ,  
                    DarkSalmon	        , 
                    LightSalmon	        )
 colors_orange  = ( OrangeRed	        , 
-                   Tomato	        , 
+                   Tomato	            , 
                    DarkOrange	        , 
-                   Coral	        , 
-                   Orange	        )
+                   Coral	            , 
+                   Orange	            )
 colors_yellow  = ( DarkKhaki	        , 
                    Gold	                , 
-                   Khaki	        , 
+                   Khaki	            , 
                    PeachPuff	        , 
-                   Yellow	        , 
+                   Yellow	            , 
                    PaleGoldenrod        , 
-                   Moccasin	        , 
+                   Moccasin	            , 
                    PapayaWhip	        , 
                    LightGoldenrodYellow , 
                    LemonChiffon         , 
                    LightYellow	        )
 colors_blue    = ( MidnightBlue	        , 
                    Navy	                , 
-                   DarkBlue	        , 
+                   DarkBlue	           , 
                    MediumBlue	        , 
                    Blue	                , 
                    RoyalBlue	        ,
                    SteelBlue	        , 
                    DodgerBlue	        , 
                    DeepSkyBlue	        , 
-                   CornflowerBlue	, 
-                   SkyBlue	        , 
+                   CornflowerBlue	    , 
+                   SkyBlue	            , 
                    LightSkyBlue	        , 
-                   LightSteelBlue	, 
+                   LightSteelBlue	    , 
                    LightBlue	        , 
                    PowderBlue	        )
-colors_white  = ( MistyRose	        , 
+colors_white  = ( MistyRose	            , 
                   AntiqueWhite	        , 
                   Linen	                , 
                   Beige	                , 
                   WhiteSmoke	        , 
                   LavenderBlush	        , 
-                  OldLace	        , 
-                  AliceBlue	        , 
-                  Seashell	        , 
+                  OldLace	            , 
+                  AliceBlue	            , 
+                  Seashell	            , 
                   GhostWhite	        , 
-                  Honeydew	        , 
+                  Honeydew	            , 
                   FloralWhite	        , 
                   Azure	                , 
-                  MintCream	        , 
+                  MintCream	            , 
                   Snow	                , 
                   Ivory	                ,  
                   White	                )
-colors_brown  = ( Maroon	        , 
+colors_brown  = ( Maroon	            , 
                   Brown	                , 
                   SaddleBrown	        , 
-                  Sienna	        , 
-                  Chocolate	        , 
+                  Sienna	            , 
+                  Chocolate	            , 
                   DarkGoldenrod	        , 
                   Peru	                , 
-                  RosyBrown	        , 
-                  Goldenrod	        , 
+                  RosyBrown	            , 
+                  Goldenrod	            , 
                   SandyBrown	        , 
                   Tan	                , 
-                  Burlywood	        , 
+                  Burlywood	            , 
                   Wheat	                , 
                   NavajoWhite	        , 
-                  Bisque	        , 
-                  BlanchedAlmond	,
-                  Cornsilk	        )
+                  Bisque	            , 
+                  BlanchedAlmond	    ,
+                  Cornsilk	            )
 colors_cyan   = ( Teal	                , 
-                  DarkCyan	        , 
+                  DarkCyan	            , 
                   LightSeaGreen	        , 
-                  CadetBlue	        , 
+                  CadetBlue	            , 
                   DarkTurquoise	        , 
-                  MediumTurquoise	, 
-                  Turquoise	        , 
+                  MediumTurquoise	    , 
+                  Turquoise	            , 
                   Aqua	                , 
                   Cyan	                , 
                   Aquamarine	        , 
                   PaleTurquoise	        , 
-                  LightCyan	        )
+                  LightCyan	            )
 colors_gray   = ( Black	                , 
                   DarkSlateGray	        , 
-                  DimGray	        , 
-                  SlateGray	        , 
+                  DimGray	            , 
+                  SlateGray	            , 
                   Gray	                , 
-                  LightSlateGray	, 
-                  DarkGray	        , 
-                  Silver	        , 
-                  LightGray	        , 
-                  Gainsboro	        )
+                  LightSlateGray	    , 
+                  DarkGray	            , 
+                  Silver	            , 
+                  LightGray	            , 
+                  Gainsboro	            )
 colors_black = colors_gray
 # =============================================================================
 ## dictionatry with color lines 
