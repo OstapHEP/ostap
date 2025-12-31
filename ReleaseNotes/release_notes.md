@@ -1,3 +1,5 @@
+# v3.6.2.0 
+
 ## New features
 
     1. 'ostap/stats/moments.py` : suppress excessive warning messages from (scipy) xintegration  
@@ -19,7 +21,7 @@
 
 ## Bug fixes
 
-    1. `daatset.py`: fix `ds_slice`
+    1. `dataset.py`: fix `ds_slice`
 
 # v3.6.1.0 
 

@@ -34,7 +34,7 @@ import ROOT
 #  @see TColor::GetRed
 #  @see TColor::GetGreen
 #  @see TColor::GetBlue
-def color_rgb ( c ) :
+def color_rgb ( c , as_int = False ) :
     """ Get RGB for the color
     >>> color = ...
     >>> r, g, b = color.rgb() 
@@ -42,7 +42,12 @@ def color_rgb ( c ) :
     - see ROOT.TColor.GetGreen
     - see ROOT.TColor.GetBlue
     """
-    return c.GetRed() , c.GetGreen() , c.GetBlue()
+    r , g , b = c.GetRed() , c.GetGreen() , c.GetBlue() 
+    if as_int :
+        r = int ( r * 255 )
+        g = int ( g * 255 )
+        b = int ( b * 255 )
+    return r , g , b    
 
 # =============================================================================
 ## get RGBA for the color
@@ -54,7 +59,7 @@ def color_rgb ( c ) :
 #  @see TColor::GetGreen
 #  @see TColor::GetBlue
 #  @see TColor::GetAlpha
-def color_rgba ( c ) :
+def color_rgba ( c , as_int = False ) :
     """ Get RGBA fot the color
     >>> color = ...
     >>> r, g, b, a = color.rgba() 
@@ -63,7 +68,8 @@ def color_rgba ( c ) :
     - see ROOT.TColor.GetBlue
     - see ROOT.TColor.GetAlpha
     """
-    return c.GetRed() , c.GetGreen() , c.GetBlue(), c.GetAlpha() 
+    r , g, b = color_rgb ( as_int = as _int )
+    return r , g , b , c.GetAlpha() 
 
 # =============================================================================
 ## get HLS for the color
@@ -103,12 +109,8 @@ def color_cmyk ( c ) :
     - see ROOT.TColor.GetBlue
     - see https://www.rapidtables.com/convert/color/rgb-to-cmyk.html
     """
-    r , g , b = c.rgb ()
+    r , g , b = c.rgb ( as_int = False )
 
-    r    = int ( r * 255 ) / 255
-    g    = int ( g * 255 ) / 255
-    b    = int ( b * 255 ) / 255
-    
     cmax = max ( r , g , b )
     
     if not cmax : return 0 , 0 , 0 , 1   ## BLACK!
@@ -171,12 +173,12 @@ def create_color ( R , G , B , alpha = 1 , name = '' ) :
     
     else :
         
-        raise TypeError ( 'ceate_color: Invalid `RGB`=(%s,%s,%s)' %  ( R , G , B ) )
+        raise TypeError ( 'create_color: Invalid `RGB`=(%s,%s,%s)' %  ( R , G , B ) )
 
     ## valid alpha? 
     assert 0 <= alpha <= 1 , "create_color: Invalid `alpha`=%s" % alpha
     
-    ## color exist ? 
+    ## does the color exist ? 
     if ( 6 , 32 ) <= root_info : color = ROOT.TColor.GetColor ( R , G , B , alpha )
     else                       : color = ROOT.TColor.GetColor ( R , G , B )
     
@@ -185,12 +187,13 @@ def create_color ( R , G , B , alpha = 1 , name = '' ) :
         if groot : 
             color = groot.GetColor ( color )
             if color and name and color.GetName() != name : color.SetName ( name )
-            if color : return color 
+            if color : return color
+             
     ## create new color 
     color = ROOT.TColor.GetFirstFreeColorIndex()
     if color < 0 : color = ROOT.TColor.GetFreeColorIndex()
     if not name :
-        name = 'COLOR_%X%X%X'    % ( R , G , B )
+        name = 'COLOR_%02X%02X%02X'    % ( R , G , B )
         if 1 != alpha : name = '%s/%d%%' % ( name , int ( alpha * 100 ) )
     ## finally create the color 
     color = ROOT.TColor ( color , R , G , B , name , alpha ) 
