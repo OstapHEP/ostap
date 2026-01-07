@@ -26,6 +26,7 @@
 // ============================================================================
 #include "local_roofit.h"
 #include "local_gsl.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for namespace Ostap::Models
@@ -77,8 +78,11 @@ Double_t Ostap::Models::Shape1D::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                                      ,
+		  "Invalid integration code"                     ,
+		  "Ostap::Models::Shape1D::analyticalIntegral  " ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__ ) ;
   //
   static const Ostap::Math::Integrator s_integrator {} ;
   //
@@ -145,7 +149,11 @@ Double_t Ostap::Models::Shape2D::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 || code == 2 || code == 3 ) ;
+  //
+  Ostap::Assert ( 1 <= code  && code <= 3                        ,
+		  "Invalid integration code"                     ,
+		  "Ostap::Models::Shape2D::analyticalIntegral  " ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__ ) ;
   //
   static const Ostap::Math::Integrator s_integrator {} ;
   //
@@ -252,7 +260,11 @@ Double_t Ostap::Models::Shape3D::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( 1 <= code && code <= 7 ) ;
+  //
+  Ostap::Assert ( 1 <= code && code <= 7                         ,
+		  "Invalid integration code"                     ,
+		  "Ostap::Models::Shape3D::analyticalIntegral  " ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__ ) ;
   //
   static const Ostap::Math::Integrator s_integrator {} ;
   //
@@ -401,8 +413,11 @@ Double_t Ostap::Models::Histo1D::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                                      ,
+		  "Invalid integration code"                     ,
+		  "Ostap::Models::Histo1D::analyticalIntegral  " ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__ ) ;
   //
   return m_histo.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
@@ -455,7 +470,11 @@ Double_t Ostap::Models::Histo2D::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 || code == 2 || code == 3 ) ;
+  //
+  Ostap::Assert ( 1 <= code && code <= 3                         , 
+		  "Invalid integration code"                     ,
+		  "Ostap::Models::Histo2D::analyticalIntegral  " ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__ ) ;
   //
   const double xv = m_x ;
   const double yv = m_y ;
@@ -544,7 +563,11 @@ Double_t Ostap::Models::Histo3D::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( 1 <= code && code <= 7 ) ;
+  //
+  Ostap::Assert ( 1 <= code && code <= 7                         , 
+		  "Invalid integration code"                     ,
+		  "Ostap::Models::Histo3D::analyticalIntegral  " ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__ ) ;
   //
   if ( 1 == code ) 
   {
@@ -755,8 +778,11 @@ Double_t Ostap::Models::BreitWigner::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                                        , 
+		  "Invalid integration code"                       ,
+		  "Ostap::Models::BreitWigner::analyticalIntegral" ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__   ) ;
   //
   setPars() ;
   return m_bw->integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
@@ -953,7 +979,6 @@ Int_t Ostap::Models::BWI::getAnalyticalIntegral
   return 0 ;
 }
 // ============================================================================
-
   
 // ============================================================================
 // constructor from all parameters 
@@ -1072,17 +1097,6 @@ Ostap::Models::FlatteBugg::flatte_bugg    () const
 }
 // ============================================================================
 
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================================
 // constructor from all parameters
 // ===========================================================================
@@ -1097,9 +1111,9 @@ Ostap::Models::LASS::LASS
   RooAbsReal&                e      , 
   const Ostap::Math::LASS&   lass   ) 
   : BreitWigner ( name ,  title , x , m0 , g0 , lass ) 
-  , m_a      ( "a"     , "a-parameter" , this , a  ) 
-  , m_b      ( "b"     , "b-parameter" , this , b  ) 
-  , m_e      ( "e"     , "elasticity"  , this , e  ) 
+  , m_a      ( "!a"     , "a-parameter" , this , a  ) 
+  , m_b      ( "!b"     , "b-parameter" , this , b  ) 
+  , m_e      ( "!e"     , "elasticity"  , this , e  ) 
 {}
 // ============================================================================
 // "copy" constructor 
@@ -1109,9 +1123,9 @@ Ostap::Models::LASS::LASS
   const char*                     name  ) 
   : BreitWigner ( right  , name ) 
     //
-  , m_a  ( "a"  , this , right.m_a  ) 
-  , m_b  ( "b"  , this , right.m_b  ) 
-  , m_e  ( "e"  , this , right.m_e  ) 
+  , m_a  ( "!a"  , this , right.m_a  ) 
+  , m_b  ( "!b"  , this , right.m_b  ) 
+  , m_e  ( "!e"  , this , right.m_e  ) 
 {}
 // ============================================================================
 // destructor 
@@ -1146,8 +1160,6 @@ Ostap::Models::LASS::lass () const
 }
 // ============================================================================
 
-
-
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -1161,10 +1173,10 @@ Ostap::Models::BWPS::BWPS
   const Ostap::Math::BWPS& bwps  ) 
   : RooAbsPdf  (name ,title ) 
     //
-  , m_x      ( "x"    , "Observable" , this , x     ) 
-  , m_m0     ( "m0"   , "Peak"       , this , m0    ) 
-  , m_gamma  ( "g"    , "Width"      , this )
-  , m_phis   ( "phis" , "Phis"       , this )
+  , m_x      ( "!x"     , "Observable" , this , x     ) 
+  , m_m0     ( "!m0"    , "Peak"       , this , m0    ) 
+  , m_gamma  ( "!gamma" , "Width(s)"   , this )
+  , m_phis   ( "!phis"  , "Phis"       , this )
     //
   , m_bwps   ( bwps ) 
 {
@@ -1179,7 +1191,6 @@ Ostap::Models::BWPS::BWPS
                   "#channels mismatch"      , 
                   "Ostap::Models::BWPS" ) ;
 }
-
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -1193,10 +1204,10 @@ Ostap::Models::BWPS::BWPS
   const Ostap::Math::BWPS& bwps  ) 
   : RooAbsPdf  (name ,title ) 
     //
-  , m_x      ( "x"    , "Observable" , this , x  ) 
-  , m_m0     ( "m0"   , "Peak"       , this , m0 ) 
-  , m_gamma  ( "g"    , "Width"      , this )
-  , m_phis   ( "phis" , "Phis"       , this )
+  , m_x      ( "!x"     , "Observable" , this , x  ) 
+  , m_m0     ( "!m0"    , "Peak"       , this , m0 ) 
+  , m_gamma  ( "!gamma" , "Width(s)"   , this )
+  , m_phis   ( "!phis"  , "Phis"       , this )
     //
   , m_bwps   ( bwps ) 
 {
@@ -1218,10 +1229,10 @@ Ostap::Models::BWPS::BWPS
   const char*                name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "x"    , this , right.m_x      ) 
-  , m_m0     ( "m0"   , this , right.m_m0     ) 
-  , m_gamma  ( "g"    , this , right.m_gamma  )
-  , m_phis   ( "phis" , this , right.m_phis   )
+  , m_x      ( "!x"     , this , right.m_x      ) 
+  , m_m0     ( "!m0"    , this , right.m_m0     ) 
+  , m_gamma  ( "!gamma" , this , right.m_gamma  )
+  , m_phis   ( "!phis"  , this , right.m_phis   )
     //
   , m_bwps   ( right.m_bwps )   
 {}
@@ -1269,8 +1280,11 @@ Double_t Ostap::Models::BWPS::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                                        , 
+		  "Invalid integration code"                       ,
+		  "Ostap::Models::BWPS::analyticalIntegral"        ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__   ) ;
   //
   setPars() ;
   return m_bwps.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
@@ -1282,9 +1296,6 @@ std::complex<double>
 Ostap::Models::BWPS::amplitude () const
 { setPars () ; return m_bwps.amplitude ( m_x ) ; }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -1298,9 +1309,9 @@ Ostap::Models::BW3L::BW3L
   const Ostap::Math::BW3L& bw3l  ) 
   : RooAbsPdf  (name ,title ) 
     //
-  , m_x      ( "x"    , "Observable" , this , x     ) 
-  , m_m0     ( "m0"   , "Peak"       , this , m0    ) 
-  , m_gamma  ( "g"    , "Width"      , this )
+  , m_x      ( "!x"     , "Observable" , this , x     ) 
+  , m_m0     ( "!m0"    , "Peak"       , this , m0    ) 
+  , m_gamma  ( "!gamma" , "Width(s)"   , this )
     //
   , m_bw3l   ( bw3l ) 
 {
@@ -1322,9 +1333,9 @@ Ostap::Models::BW3L::BW3L
   const Ostap::Math::BW3L& bw3l  ) 
   : RooAbsPdf  (name ,title ) 
     //
-  , m_x      ( "x"    , "Observable" , this , x  ) 
-  , m_m0     ( "m0"   , "Peak"       , this , m0 ) 
-  , m_gamma  ( "g"    , "Width"      , this )
+  , m_x      ( "!x"     , "Observable" , this , x  ) 
+  , m_m0     ( "!m0"    , "Peak"       , this , m0 ) 
+  , m_gamma  ( "!gamma" , "Width(s)"   , this )
     //
   , m_bw3l   ( bw3l ) 
 {
@@ -1341,9 +1352,9 @@ Ostap::Models::BW3L::BW3L
   const char*                name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "x"    , this , right.m_x      ) 
-  , m_m0     ( "m0"   , this , right.m_m0     ) 
-  , m_gamma  ( "g"    , this , right.m_gamma  )
+  , m_x      ( "!x"     , this , right.m_x      ) 
+  , m_m0     ( "!m0"    , this , right.m_m0     ) 
+  , m_gamma  ( "!gamma" , this , right.m_gamma  )
     //
   , m_bw3l   ( right.m_bw3l )   
 {}
@@ -1393,8 +1404,11 @@ Double_t Ostap::Models::BW3L::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                                        , 
+		  "Invalid integration code"                       ,
+		  "Ostap::Models::BW3L::analyticalIntegral"        ,		  
+		  INVALID_INTEGRATION_CODE , __FILE__ , __LINE__   ) ;
   //
   setPars() ;
   return m_bw3l.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
@@ -1415,10 +1429,10 @@ Ostap::Models::Voigt::Voigt
   RooAbsReal&          sigma     )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"       , "Observable" , this , x      ) 
-  , m_m0      ( "m0"      , "m0"         , this , m0     ) 
-  , m_gamma   ( "gamma"   , "gamma"      , this , gamma  )
-  , m_sigma   ( "sigma"   , "sigma"      , this , sigma  )
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_m0      ( "!m0"      , "m0"         , this , m0     ) 
+  , m_gamma   ( "!gamma"   , "gamma"      , this , gamma  )
+  , m_sigma   ( "!sigma"   , "sigma"      , this , sigma  )
 //
   , m_voigt   ( 10 , 1 , 1 ) 
 {
@@ -1434,10 +1448,10 @@ Ostap::Models::Voigt::Voigt
   const char*                    name   ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_m0     ( "m0"     , this , right.m_m0     ) 
-  , m_gamma  ( "gamma"  , this , right.m_gamma  ) 
-  , m_sigma  ( "sigma"  , this , right.m_sigma  ) 
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_m0     ( "!m0"     , this , right.m_m0     ) 
+  , m_gamma  ( "!gamma"  , this , right.m_gamma  ) 
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  ) 
 //
   , m_voigt  ( right.m_voigt ) 
 {
@@ -1486,6 +1500,7 @@ Double_t Ostap::Models::Voigt::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                  ,
                   "Invalid Integration code" ,
                   "Ostap::Models::Voigt"     ,
@@ -1504,6 +1519,7 @@ Int_t  Ostap::Models::Voigt::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::Voigt::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code               ,
                   "Invalid MaxVal code"   ,
                   "Ostap::Models::Voigt"  ,
@@ -1512,8 +1528,6 @@ double Ostap::Models::Voigt::maxVal  ( Int_t      code ) const
   return 1.01 * m_voigt ( m_m0 ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 //         PseudoVoigt
@@ -1529,10 +1543,10 @@ Ostap::Models::PseudoVoigt::PseudoVoigt
   RooAbsReal&          sigma     )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"       , "Observable" , this , x      ) 
-  , m_m0      ( "m0"      , "m0"         , this , m0     ) 
-  , m_gamma   ( "gamma"   , "gamma"      , this , gamma  )
-  , m_sigma   ( "sigma"   , "sigma"      , this , sigma  )
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_m0      ( "!m0"      , "m0"         , this , m0     ) 
+  , m_gamma   ( "!gamma"   , "gamma"      , this , gamma  )
+  , m_sigma   ( "!sigma"   , "sigma"      , this , sigma  )
 //
   , m_voigt   ( 10 , 1 , 1 ) 
 {
@@ -1548,10 +1562,10 @@ Ostap::Models::PseudoVoigt::PseudoVoigt
   const char*                    name   ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_m0     ( "m0"     , this , right.m_m0     ) 
-  , m_gamma  ( "gamma"  , this , right.m_gamma  ) 
-  , m_sigma  ( "sigma"  , this , right.m_sigma  ) 
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_m0     ( "!m0"     , this , right.m_m0     ) 
+  , m_gamma  ( "!gamma"  , this , right.m_gamma  ) 
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  ) 
 //
   , m_voigt  ( right.m_voigt ) 
 {
@@ -1600,6 +1614,7 @@ Double_t Ostap::Models::PseudoVoigt::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                    ,
                   "Invalid Integration code"   ,
                   "Ostap::Models::PseudoVoigt" ,
@@ -1618,6 +1633,7 @@ Int_t  Ostap::Models::PseudoVoigt::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::PseudoVoigt::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code                     ,
                   "Invalid MaxVal code"         ,
                   "Ostap::Models::PseudoVoigt"  ,
@@ -1626,8 +1642,6 @@ double Ostap::Models::PseudoVoigt::maxVal  ( Int_t      code ) const
   return 1.01 * m_voigt ( m_m0 ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor form all parameters 
@@ -1642,12 +1656,12 @@ Ostap::Models::CrystalBall::CrystalBall
   RooAbsReal&          n         ) 
   : RooAbsPdf ( name , title )
 //
-  , m_x       ( "x"       , "Observable"   , this , x      ) 
-  , m_m0      ( "m0"      , "CB/mass"      , this , m0     ) 
-  , m_sigma   ( "sigma"   , "CB/sigma"     , this , sigma  )
+  , m_x       ( "!x"       , "Observable"   , this , x      ) 
+  , m_m0      ( "!m0"      , "CB/mass"      , this , m0     ) 
+  , m_sigma   ( "!sigma"   , "CB/sigma"     , this , sigma  )
 //
-  , m_alpha   ( "alpha"   , "CB/alpha"     , this , alpha  ) 
-  , m_n       ( "n"       , "CB/n"         , this , n      ) 
+  , m_alpha   ( "!alpha"   , "CB/alpha"     , this , alpha  ) 
+  , m_n       ( "!n"       , "CB/n"         , this , n      ) 
 //
   , m_cb      ( 100 , 1 , 1 , 10 ) 
 {
@@ -1663,12 +1677,12 @@ Ostap::Models::CrystalBall::CrystalBall
   const char*                          name  ) 
   : RooAbsPdf ( right , name )
 //
-  , m_x       ( "x"       , this , right.m_x      ) 
-  , m_m0      ( "m0"      , this , right.m_m0     ) 
-  , m_sigma   ( "sigma"   , this , right.m_sigma  )
+  , m_x       ( "!x"       , this , right.m_x      ) 
+  , m_m0      ( "!m0"      , this , right.m_m0     ) 
+  , m_sigma   ( "!sigma"   , this , right.m_sigma  )
 //
-  , m_alpha   ( "alpha"   , this , right.m_alpha  ) 
-  , m_n       ( "n"       , this , right.m_n      ) 
+  , m_alpha   ( "!alpha"   , this , right.m_alpha  ) 
+  , m_n       ( "!n"       , this , right.m_n      ) 
 //
   , m_cb      ( 100 , 1 , 1 , 10 ) 
 {
@@ -1716,9 +1730,10 @@ Double_t Ostap::Models::CrystalBall::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  Ostap::Assert ( 1 == code                    ,
-                  "Invalid Integration code"   ,
-                  "Ostap::Models::CrystalBall" ,
+  //
+  Ostap::Assert ( 1 == code                                           ,
+                  "Invalid Integration code"                          ,
+                  "Ostap::Models::CrystalBall::analyticalIntegral"    ,
                   INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -1734,9 +1749,9 @@ Int_t  Ostap::Models::CrystalBall::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::CrystalBall::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                     ,
-                  "Invalid MaxVal code"         ,
-                  "Ostap::Models::CrystalBall"  ,
+  Ostap::Assert ( 1 == code                             ,
+                  "Invalid MaxVal code"                ,
+                  "Ostap::Models::CrystalBall::maxVal" ,
                   INVALID_MAXVAL_CODE           , __FILE__ , __LINE__  ) ;
   setPars() ;
   return 1.01 * m_cb ( m_cb.mode ()  ) ;
@@ -1756,12 +1771,12 @@ Ostap::Models::CrystalBallRS::CrystalBallRS
   RooAbsReal&          n         ) 
   : RooAbsPdf ( name , title )
 //
-  , m_x       ( "x"       , "Observable"   , this , x      ) 
-  , m_m0      ( "m0"      , "CB/mass"      , this , m0     ) 
-  , m_sigma   ( "sigma"   , "CB/sigma"     , this , sigma  )
+  , m_x       ( "!x"       , "Observable"   , this , x      ) 
+  , m_m0      ( "!m0"      , "CB/mass"      , this , m0     ) 
+  , m_sigma   ( "!sigma"   , "CB/sigma"     , this , sigma  )
 //
-  , m_alpha   ( "alpha"   , "CB/alpha"     , this , alpha  ) 
-  , m_n       ( "n"       , "CB/n"         , this , n      ) 
+  , m_alpha   ( "!alpha"   , "CB/alpha"     , this , alpha  ) 
+  , m_n       ( "!n"       , "CB/n"         , this , n      ) 
 //
   , m_cb      ( 100 , 1 , 1 , 10 ) 
 {
@@ -1777,12 +1792,12 @@ Ostap::Models::CrystalBallRS::CrystalBallRS
   const char*                          name  ) 
   : RooAbsPdf ( right , name )
 //
-  , m_x       ( "x"       , this , right.m_x      ) 
-  , m_m0      ( "m0"      , this , right.m_m0     ) 
-  , m_sigma   ( "sigma"   , this , right.m_sigma  )
+  , m_x       ( "!x"       , this , right.m_x      ) 
+  , m_m0      ( "!m0"      , this , right.m_m0     ) 
+  , m_sigma   ( "!sigma"   , this , right.m_sigma  )
 //
-  , m_alpha   ( "alpha"   , this , right.m_alpha  ) 
-  , m_n       ( "n"       , this , right.m_n      ) 
+  , m_alpha   ( "!alpha"   , this , right.m_alpha  ) 
+  , m_n       ( "!n"       , this , right.m_n      ) 
 //
   , m_cb      ( 100 , 1 , 1 , 10 ) 
 {
@@ -1830,9 +1845,10 @@ Double_t Ostap::Models::CrystalBallRS::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  Ostap::Assert ( 1 == code                      ,
-                  "Invalid Integration code"     ,
-                  "Ostap::Models::CrystalBallRS" ,
+  //
+  Ostap::Assert ( 1 == code                                             ,
+                  "Invalid Integration code"                            ,
+                  "Ostap::Models::CrystalBallRS::analyticalIntegral"    ,
                   INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -1848,15 +1864,14 @@ Int_t  Ostap::Models::CrystalBallRS::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::CrystalBallRS::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                       ,
-                  "Invalid MaxVal code"           ,
-                  "Ostap::Models::CrystalBallRS"  ,
+  Ostap::Assert ( 1 == code                               ,
+                  "Invalid MaxVal code"                   ,
+                  "Ostap::Models::CrystalBallRS::maxVal"  ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   setPars() ;
   return 1.01 * m_cb ( m_cb.mode () ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // Double-sided CrystalBall
@@ -1949,9 +1964,10 @@ Double_t Ostap::Models::CrystalBallDS::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  Ostap::Assert ( 1 == code                      ,
-                  "Invalid Integration code"     ,
-                  "Ostap::Models::CrystalBallDS" ,
+  //
+  Ostap::Assert ( 1 == code                                             ,
+                  "Invalid Integration code"                            ,
+                  "Ostap::Models::CrystalBallDS::analyticalIntegral"    ,
                   INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -1967,9 +1983,9 @@ Int_t  Ostap::Models::CrystalBallDS::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::CrystalBallDS::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                       ,
-                  "Invalid MaxVal code"           ,
-                  "Ostap::Models::CrystalBallDS"  ,
+  Ostap::Assert ( 1 == code                              ,
+                  "Invalid MaxVal code"                  ,
+                  "Ostap::Models::CrystalBallDS::maxVal" ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   setPars() ;
   return 1.01 * m_cb2 ( m_cb2.mode () ) ;
@@ -2119,9 +2135,10 @@ Double_t Ostap::Models::Needham::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  Ostap::Assert ( 1 == code                      ,
-                  "Invalid Integration code"     ,
-                  "Ostap::Models::Neeedham"      ,
+  //
+  Ostap::Assert ( 1 == code                                             ,
+                  "Invalid Integration code"                            ,
+                  "Ostap::Models::Neeedham::analyticalIntegral"         ,
                   INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2137,9 +2154,10 @@ Int_t  Ostap::Models::Needham::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::Needham::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                 ,
-                  "Invalid MaxVal code"     ,
-                  "Ostap::Models::Needham"  ,
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid MaxVal code"             ,
+                  "Ostap::Models::Needham::maxVal"  ,
                   INVALID_MAXVAL_CODE       , __FILE__ , __LINE__  ) ;
   setPars() ;
   return 1.01 * m_needham ( m_needham.mode ( ) ) ;
@@ -2244,9 +2262,10 @@ Double_t Ostap::Models::CrystalBallA::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  Ostap::Assert ( 1 == code                     ,
-                  "Invalid Integration code"    ,
-                  "Ostap::Models::CrystalBallA" ,
+  //
+  Ostap::Assert ( 1 == code                                            ,
+                  "Invalid Integration code"                           ,
+                  "Ostap::Models::CrystalBallA::analyticalIntegral"    ,
                   INVALID_INTEGRATION_CODE      , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2262,16 +2281,15 @@ Int_t  Ostap::Models::CrystalBallA::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::CrystalBallA::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                      ,
-                  "Invalid MaxVal code"          ,
-                  "Ostap::Models::CrystalBallA"  ,
+  //
+  Ostap::Assert ( 1 == code                              ,
+                  "Invalid MaxVal code"                  ,
+                  "Ostap::Models::CrystalBallA::maxVal"  ,
                   INVALID_MAXVAL_CODE            , __FILE__ , __LINE__  ) ;
   setPars() ;
   return 1.01 * m_cb ( m_cb.mode ()  ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // Double-sided CrystalBall
@@ -2366,9 +2384,10 @@ Double_t Ostap::Models::CrystalBallDSA::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  Ostap::Assert ( 1 == code                       ,
-                  "Invalid Integration code"      ,
-                  "Ostap::Models::CrystalBallDSA" ,
+  //
+  Ostap::Assert ( 1 == code                                              ,
+                  "Invalid Integration code"                             ,
+                  "Ostap::Models::CrystalBallDSA::analyticalIntegral"    ,
                   INVALID_INTEGRATION_CODE        , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2384,15 +2403,15 @@ Int_t  Ostap::Models::CrystalBallDSA::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::CrystalBallDSA::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                        ,
-                  "Invalid MaxVal code"            ,
-                  "Ostap::Models::CrystalBallDSA"  ,
+  //
+  Ostap::Assert ( 1 == code                                ,
+                  "Invalid MaxVal code"                    ,
+                  "Ostap::Models::CrystalBallDSA::maxVal"  ,
                   INVALID_MAXVAL_CODE              , __FILE__ , __LINE__  ) ;
   setPars() ;
   return 1.01 * m_cb2 ( m_cb2.mode () ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // Double-sided CrystalBall
@@ -2484,9 +2503,10 @@ Double_t Ostap::Models::CrystalBallDSE::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                       ,
                   "Invalid Integration code"      ,
-                  "Ostap::Models::CrystalBallDSE" ,
+                  "Ostap::Models::CrystalBallDSE::analyticalIntegral"    ,
                   INVALID_INTEGRATION_CODE        , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2502,9 +2522,10 @@ Int_t  Ostap::Models::CrystalBallDSE::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::CrystalBallDSE::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                        ,
-                  "Invalid MaxVal code"            ,
-                  "Ostap::Models::CrystalBallDSE"  ,
+  //
+  Ostap::Assert ( 1 == code                                ,
+                  "Invalid MaxVal code"                    ,
+                  "Ostap::Models::CrystalBallDSE::maxVal"  ,
                   INVALID_MAXVAL_CODE              , __FILE__ , __LINE__  ) ;
   setPars() ;
   return 1.01 * m_cb2 ( m_cb2.mode () ) ;
@@ -2595,9 +2616,10 @@ Double_t Ostap::Models::Apollonios::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                      ,
                   "Invalid Integration code"     ,
-                  "Ostap::Models::Apollonios"    ,
+                  "Ostap::Models::Apollonios::analyticalIntegral"       ,
                   INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2613,10 +2635,12 @@ Int_t  Ostap::Models::Apollonios::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::Apollonios::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                       ,
-                  "Invalid MaxVal code"           ,
-                  "Ostap::Models::Apollonios"     ,
+  //
+  Ostap::Assert ( 1 == code                           ,
+                  "Invalid MaxVal code"               ,
+                  "Ostap::Models::Apollonios::maxVal" ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
   setPars() ;
   return 1.01 * m_apo ( m_apo.mode ()  ) ;
 }
@@ -2735,9 +2759,10 @@ Double_t Ostap::Models::ApolloniosL::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                      ,
                   "Invalid Integration code"     ,
-                  "Ostap::Models::ApolloniosL"   ,
+                  "Ostap::Models::ApolloniosL::analyticalIntergal"   ,
                   INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2753,15 +2778,16 @@ Int_t  Ostap::Models::ApolloniosL::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::ApolloniosL::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code                       ,
                   "Invalid MaxVal code"           ,
-                  "Ostap::Models::ApolloniosL"    ,
+                  "Ostap::Models::ApolloniosL::maxVal"    ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
   setPars() ;
   return 1.01 * m_apoL ( m_apoL.mode() ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // Bifurcated Gauss 
@@ -2846,9 +2872,10 @@ Double_t Ostap::Models::BifurcatedGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                         ,
                   "Invalid Integration code"        ,
-                  "Ostap::Models::BifurcatedGauss"  ,
+                  "Ostap::Models::BifurcatedGauss::analyticalIntegral"  ,
                   INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2864,15 +2891,16 @@ Int_t  Ostap::Models::BifurcatedGauss::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::BifurcatedGauss::maxVal  ( Int_t      code ) const
 {
-  Ostap::Assert ( 1 == code                        ,
-                  "Invalid MaxVal code"            ,
-                  "Ostap::Models::BifurcatedGauss" ,
+  //
+  Ostap::Assert ( 1 == code                                ,
+                  "Invalid MaxVal code"                    ,
+                  "Ostap::Models::BifurcatedGauss::maxVal" ,
                   INVALID_MAXVAL_CODE              , __FILE__ , __LINE__  ) ;
+  //
   setPars() ;
   return 1.01 * m_bg ( m_bg.mode()  ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 //         GenGaussV1 
@@ -2888,10 +2916,10 @@ Ostap::Models::GenGaussV1::GenGaussV1
   RooAbsReal&          beta      )  
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"       , "Observable" , this , x      ) 
-  , m_mu      ( "mu"      , "mu"         , this , mu     ) 
-  , m_alpha   ( "alpha"   , "alpha"      , this , alpha  ) 
-  , m_beta    ( "beta"    , "beta"       , this , beta   ) 
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_mu      ( "!mu"      , "mu"         , this , mu     ) 
+  , m_alpha   ( "!alpha"   , "alpha"      , this , alpha  ) 
+  , m_beta    ( "!beta"    , "beta"       , this , beta   ) 
 //
   , m_ggv1    ( 0 , 1 , 2 ) 
 {
@@ -2906,11 +2934,11 @@ Ostap::Models::GenGaussV1::GenGaussV1
 ( const Ostap::Models::GenGaussV1& right , 
   const char*                         name   ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_mu     ( "mu"     , this , right.m_mu     ) 
-  , m_alpha  ( "alpha"  , this , right.m_alpha  ) 
-  , m_beta   ( "beta"   , this , right.m_beta   ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  ) 
+  , m_beta   ( "!beta"   , this , right.m_beta   ) 
 //
   , m_ggv1   ( right.m_ggv1 ) 
 {
@@ -2959,9 +2987,10 @@ Double_t Ostap::Models::GenGaussV1::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                         ,
                   "Invalid Integration code"        ,
-                  "Ostap::Models:GenGaussV1"        ,
+                  "Ostap::Models:GenGaussV1::analyticalIntegral" ,
                   INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -2977,16 +3006,16 @@ Int_t  Ostap::Models::GenGaussV1::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::GenGaussV1::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code                       ,
                   "Invalid MaxVal code"           ,
-                  "Ostap::Models::GenGaussV1"     ,
+                  "Ostap::Models::GenGaussV1::maxVal"     ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
   setPars() ;
   return 1.01 * m_ggv1 ( m_mu ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 //         GenGaussV2
@@ -3002,10 +3031,10 @@ Ostap::Models::GenGaussV2::GenGaussV2
   RooAbsReal&          kappa     )  
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"       , "Observable" , this , x      ) 
-  , m_xi      ( "xi"      , "xi"         , this , xi     ) 
-  , m_alpha   ( "alpha"   , "alpha"      , this , alpha  ) 
-  , m_kappa   ( "kappa"   , "kappa"      , this , kappa  ) 
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_xi      ( "!xi"      , "xi"         , this , xi     ) 
+  , m_alpha   ( "!alpha"   , "alpha"      , this , alpha  ) 
+  , m_kappa   ( "!kappa"   , "kappa"      , this , kappa  ) 
 //
   , m_ggv2    ( 0 , 1 , 0 ) 
 {
@@ -3021,10 +3050,10 @@ Ostap::Models::GenGaussV2::GenGaussV2
   const char*                         name   ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_xi     ( "xi"     , this , right.m_xi     ) 
-  , m_alpha  ( "alpha"  , this , right.m_alpha  ) 
-  , m_kappa  ( "kappa"  , this , right.m_kappa  ) 
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_xi     ( "!xi"     , this , right.m_xi     ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  ) 
+  , m_kappa  ( "!kappa"  , this , right.m_kappa  ) 
 //
   , m_ggv2   ( right.m_ggv2 ) 
 {
@@ -3073,9 +3102,10 @@ Double_t Ostap::Models::GenGaussV2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                         ,
                   "Invalid Integration code"        ,
-                  "Ostap::Models:GenGaussV2"        ,
+                  "Ostap::Models:GenGaussV2::analyticalIntegral"        ,
                   INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars ();
@@ -3097,12 +3127,12 @@ Ostap::Models::SkewGauss::SkewGauss
   RooAbsReal&          alpha     )  
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"       , "Observable" , this , x      ) 
-  , m_xi      ( "xi"      , "xi"         , this , xi     ) 
-  , m_omega   ( "omega"   , "omega"      , this , omega  ) 
-  , m_alpha   ( "alpha"   , "alpha"      , this , alpha  ) 
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_xi      ( "!xi"      , "xi"         , this , xi     ) 
+  , m_omega   ( "!omega"   , "omega"      , this , omega  ) 
+  , m_alpha   ( "!alpha"   , "alpha"      , this , alpha  ) 
 //
-  , m_sg    ( 0 , 1 , 0 ) 
+  , m_sg      ( 0 , 1 , 0 ) 
 {
   //
   setPars () ;
@@ -3116,10 +3146,10 @@ Ostap::Models::SkewGauss::SkewGauss
   const char*                        name   ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_xi     ( "xi"     , this , right.m_xi     ) 
-  , m_omega  ( "omega"  , this , right.m_omega  ) 
-  , m_alpha  ( "alpha"  , this , right.m_alpha  ) 
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_xi     ( "!xi"     , this , right.m_xi     ) 
+  , m_omega  ( "!omega"  , this , right.m_omega  ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  ) 
 //
   , m_sg     ( right.m_sg ) 
 {
@@ -3168,17 +3198,55 @@ Double_t Ostap::Models::SkewGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                         ,
                   "Invalid Integration code"        ,
-                  "Ostap::Models:SkewGauss"         ,
+                  "Ostap::Models:SkewGauss::analyticalIntegral"         ,
                   INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars ();
   return m_sg.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
+Int_t  Ostap::Models::SkewGauss::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::SkewGauss::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::SkewGauss::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  //
+  const double appm  = m_sg.approximate_mode () ;
+  const double sigma = m_sg.sigma            () ;
+  const double mean  = m_sg.mean             () ;
+  //
+  double m1 = std::max ( m_sg ( appm ) , m_sg ( mean ) ) ;
+  const unsigned int N     = 20 ;
+  const double       delta = 3 * sigma / N ;
+  for ( unsigned j = 0 ; j < N ; ++j )
+    {
+      const double x1 = appm + j * delta ;
+      const double x2 = appm - j * delta ;
+      const double x3 = mean + j * delta ;
+      const double x4 = mean - j * delta ;
+      m1 = std::max ( m1 , m_sg ( x1 ) ) ;
+      m1 = std::max ( m1 , m_sg ( x2 ) ) ;
+      m1 = std::max ( m1 , m_sg ( x3 ) ) ;
+      m1 = std::max ( m1 , m_sg ( x4 ) ) ;	
+    }
+  //
+  return 1.25 * m1 ;
+}
+// ============================================================================
 
 // ============================================================================
 //         ExGauss
@@ -3259,6 +3327,7 @@ Double_t Ostap::Models::ExGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                         ,
                   "Invalid Integration code"        ,
                   "Ostap::Models:ExGauss"           ,
@@ -3277,6 +3346,7 @@ Int_t  Ostap::Models::ExGauss::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::ExGauss::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code                       ,
                   "Invalid MaxVal code"           ,
                   "Ostap::Models::ExGauss"        ,
@@ -3285,9 +3355,6 @@ double Ostap::Models::ExGauss::maxVal  ( Int_t      code ) const
   return 1.05 * m_eg ( m_eg.mode() ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 //         ExGauss2
@@ -3368,6 +3435,7 @@ Double_t Ostap::Models::ExGauss2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                         ,
                   "Invalid Integration code"        ,
                   "Ostap::Models:ExGauss2"          ,
@@ -3386,6 +3454,7 @@ Int_t  Ostap::Models::ExGauss2::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::ExGauss2::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code                       ,
                   "Invalid MaxVal code"           ,
                   "Ostap::Models::ExGauss2"       ,
@@ -3394,10 +3463,6 @@ double Ostap::Models::ExGauss2::maxVal  ( Int_t      code ) const
   return 1.05 * m_eg ( m_eg.mode() ) ;
 }
 // ============================================================================
-
-
-
-
 
 // ============================================================================
 //         Bukin2
@@ -3490,6 +3555,7 @@ Double_t Ostap::Models::Bukin2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
+  //
   Ostap::Assert ( 1 == code                         ,
                   "Invalid Integration code"        ,
                   "Ostap::Models:Bukin2"            ,
@@ -3508,19 +3574,16 @@ Int_t  Ostap::Models::Bukin2::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::Bukin2::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code                       ,
                   "Invalid MaxVal code"           ,
                   "Ostap::Models::Bukin2"         ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
   setPars() ;
   return 1.05 * m_b2 ( m_b2.mode() ) ;
 }
 // ============================================================================
-
-
-
-
-
 
 // ============================================================================
 //        NormalLaplace 
@@ -3606,8 +3669,11 @@ Double_t Ostap::Models::NormalLaplace::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid integration code"     ,
+                  "Ostap::Models::NormalLaplace" ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_nl.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
@@ -3630,12 +3696,12 @@ Ostap::Models::Bukin::Bukin
   RooAbsReal&          rhoR      )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"       , "Observable" , this , x      ) 
-  , m_peak    ( "peak"    , "peak"       , this , peak   ) 
-  , m_sigma   ( "sigma"   , "sigma"      , this , sigma  )
-  , m_xi      ( "xi"      , "xi"         , this , xi     )
-  , m_rhoL    ( "rhoL"    , "rhoL"       , this , rhoL   )
-  , m_rhoR    ( "rhoR"    , "rhoR"       , this , rhoR   )
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_peak    ( "!peak"    , "peak"       , this , peak   ) 
+  , m_sigma   ( "!sigma"   , "sigma"      , this , sigma  )
+  , m_xi      ( "!xi"      , "xi"         , this , xi     )
+  , m_rhoL    ( "!rhoL"    , "rhoL"       , this , rhoL   )
+  , m_rhoR    ( "!rhoR"    , "rhoR"       , this , rhoR   )
 //
   , m_bukin   ( 10 , 1 , 0 , 0 , 0 ) 
 {
@@ -3651,12 +3717,12 @@ Ostap::Models::Bukin::Bukin
   const char*                    name   ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_peak   ( "peak"   , this , right.m_peak   ) 
-  , m_sigma  ( "sigma"  , this , right.m_sigma  ) 
-  , m_xi     ( "xi"     , this , right.m_xi     ) 
-  , m_rhoL   ( "rhoL"   , this , right.m_rhoL   ) 
-  , m_rhoR   ( "rhoR"   , this , right.m_rhoR   ) 
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_peak   ( "!peak"   , this , right.m_peak   ) 
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  ) 
+  , m_xi     ( "!xi"     , this , right.m_xi     ) 
+  , m_rhoL   ( "!rhoL"   , this , right.m_rhoL   ) 
+  , m_rhoR   ( "!rhoR"   , this , right.m_rhoR   ) 
 //
   , m_bukin  ( right.m_bukin ) 
 {
@@ -3707,10 +3773,11 @@ Double_t Ostap::Models::Bukin::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  Ostap::Assert ( 1 == code                         ,
-                  "Invalid Integration code"        ,
-                  "Ostap::Models:Bukin"             ,
-                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
+  //
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid integration code"     ,
+                  "Ostap::Models::Bukin"         ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars ();
   return m_bukin.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
@@ -3725,6 +3792,7 @@ Int_t  Ostap::Models::Bukin::getMaxVal ( const RooArgSet& vars ) const
 // ============================================================================
 double Ostap::Models::Bukin::maxVal  ( Int_t      code ) const
 {
+  //
   Ostap::Assert ( 1 == code                       ,
                   "Invalid MaxVal code"           ,
                   "Ostap::Models::Bukin"          ,
@@ -3733,12 +3801,6 @@ double Ostap::Models::Bukin::maxVal  ( Int_t      code ) const
   return 1.10 * m_bukin ( m_bukin.peak() ) ;
 }
 // ============================================================================
-
-
-
-
-
-
 
 // ============================================================================
 //         Novosibirsk
@@ -3821,14 +3883,17 @@ Double_t Ostap::Models::Novosibirsk::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid integration code"     ,
+                  "Ostap::Models::Novosibirsk"   ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
+  //
   setPars() ;
   return m_novosibirsk.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
 
-  
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -3841,10 +3906,10 @@ Ostap::Models::StudentT::StudentT
   RooAbsReal&          n     )
   : RooAbsPdf  (name ,title ) 
 //
-  , m_x     ( "x"     , "Observable" , this , x     ) 
-  , m_mu    ( "mu"    , "Peak"       , this , mu    ) 
-  , m_sigma ( "sigma" , "Width"      , this , sigma )
-  , m_n     ( "n"     , "N"          , this , n     )
+  , m_x     ( "!x"     , "Observable" , this , x     ) 
+  , m_mu    ( "!mu"    , "Peak"       , this , mu    ) 
+  , m_sigma ( "!sigma" , "Width"      , this , sigma )
+  , m_n     ( "!n"     , "N"          , this , n     )
 //
   , m_stt   ( 0 , 1 , 1 ) 
 {
@@ -3858,10 +3923,10 @@ Ostap::Models::StudentT::StudentT
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x     ( "x"     , this , right.m_x     ) 
-  , m_mu    ( "mu"    , this , right.m_mu    ) 
-  , m_sigma ( "sigma" , this , right.m_sigma )
-  , m_n     ( "n"     , this , right.m_n     )
+  , m_x     ( "!x"     , this , right.m_x     ) 
+  , m_mu    ( "!mu"    , this , right.m_mu    ) 
+  , m_sigma ( "!sigma" , this , right.m_sigma )
+  , m_n     ( "!n"     , this , right.m_n     )
 //
   , m_stt   (               right.m_stt    ) 
 {
@@ -3937,10 +4002,6 @@ double Ostap::Models::StudentT::maxVal  ( Int_t      code ) const
 }
 // ============================================================================
 
-
-
-
-
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -3955,12 +4016,12 @@ Ostap::Models::BifurcatedStudentT::BifurcatedStudentT
   RooAbsReal&          nR     )
   : RooAbsPdf  (name ,title ) 
 //
-  , m_x      ( "x"     , "Observable" , this , x      ) 
-  , m_mu     ( "mu"    , "Peak"       , this , mu     ) 
-  , m_sigmaL ( "sigmaL" , "Width(L)"  , this , sigmaL )
-  , m_sigmaR ( "sigmaR" , "Width(R)"  , this , sigmaR )
-  , m_nL     ( "nL"     , "N(L)"      , this , nL     )
-  , m_nR     ( "nR"     , "N(R)"      , this , nR     )
+  , m_x      ( "!x"     , "Observable" , this , x      ) 
+  , m_mu     ( "!mu"    , "Peak"       , this , mu     ) 
+  , m_sigmaL ( "!sigmaL" , "Width(L)"  , this , sigmaL )
+  , m_sigmaR ( "!sigmaR" , "Width(R)"  , this , sigmaR )
+  , m_nL     ( "!nL"     , "N(L)"      , this , nL     )
+  , m_nR     ( "!nR"     , "N(R)"      , this , nR     )
 //
   , m_stt   ( 0 , 1 , 1 , 2 , 2 ) 
 {
@@ -3974,12 +4035,12 @@ Ostap::Models::BifurcatedStudentT::BifurcatedStudentT
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_mu     ( "mu"     , this , right.m_mu     ) 
-  , m_sigmaL ( "sigmaL" , this , right.m_sigmaL )
-  , m_sigmaR ( "sigmaR" , this , right.m_sigmaR )
-  , m_nL     ( "nL"     , this , right.m_nL     )
-  , m_nR     ( "nR"     , this , right.m_nR     )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     ) 
+  , m_sigmaL ( "!sigmaL" , this , right.m_sigmaL )
+  , m_sigmaR ( "!sigmaR" , this , right.m_sigmaR )
+  , m_nL     ( "!nL"     , this , right.m_nL     )
+  , m_nR     ( "!nR"     , this , right.m_nR     )
     //
   , m_stt   (               right.m_stt    ) 
 {
@@ -4056,11 +4117,6 @@ double Ostap::Models::BifurcatedStudentT::maxVal  ( Int_t      code ) const
   return 1.05 * m_stt ( m_stt.m0() ) ;
 }
 // ============================================================================
-
-
-
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -4174,10 +4230,6 @@ double Ostap::Models::PearsonIV::maxVal  ( Int_t      code ) const
 }
 // ============================================================================
 
-
-
-
-
 // ============================================================================
 //         Gram-Charlier type A 
 // ============================================================================
@@ -4193,11 +4245,11 @@ Ostap::Models::GramCharlierA::GramCharlierA
   RooAbsReal&          kappa4    )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"       , "Observable" , this , x      ) 
-  , m_m0      ( "m0"      , "m0"         , this , m0     ) 
-  , m_sigma   ( "sigma"   , "sigma"      , this , sigma  )
-  , m_kappa3  ( "kappa3"  , "kappa3"     , this , kappa3 )
-  , m_kappa4  ( "kappa4"  , "kappa4"     , this , kappa4 )
+  , m_x       ( "!x"       , "Observable" , this , x      ) 
+  , m_m0      ( "!m0"      , "m0"         , this , m0     ) 
+  , m_sigma   ( "!sigma"   , "sigma"      , this , sigma  )
+  , m_kappa3  ( "!kappa3"  , "kappa3"     , this , kappa3 )
+  , m_kappa4  ( "!kappa4"  , "kappa4"     , this , kappa4 )
 //
   , m_gca         ( 10 , 1 , 0 , 0 ) 
 {
@@ -4213,11 +4265,11 @@ Ostap::Models::GramCharlierA::GramCharlierA
   const char*                            name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_m0     ( "m0"     , this , right.m_m0     ) 
-  , m_sigma  ( "sigma"  , this , right.m_sigma  ) 
-  , m_kappa3 ( "kappa3" , this , right.m_kappa3 ) 
-  , m_kappa4 ( "kappa4" , this , right.m_kappa4 ) 
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_m0     ( "!m0"     , this , right.m_m0     ) 
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  ) 
+  , m_kappa3 ( "!kappa3" , this , right.m_kappa3 ) 
+  , m_kappa4 ( "!kappa4" , this , right.m_kappa4 ) 
 //
   , m_gca    ( right.m_gca ) 
 {
@@ -4267,16 +4319,16 @@ Double_t Ostap::Models::GramCharlierA::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid integration code"     ,
+                  "Ostap::Models::GramCharlierA" ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   return m_gca.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // Two-body phase space 
@@ -4289,7 +4341,7 @@ Ostap::Models::PhaseSpace2::PhaseSpace2
   const double         m2        ) 
   : RooAbsPdf ( name , title ) 
 //
-  , m_x   ( "x" , "Observable" , this , x ) 
+  , m_x   ( "!x" , "Observable" , this , x ) 
 //  
   , m_ps2 ( m1 , m2 ) 
 {}
@@ -4300,7 +4352,7 @@ Ostap::Models::PhaseSpace2::PhaseSpace2
 ( const Ostap::Models::PhaseSpace2& right , const char* name )  
   : RooAbsPdf ( right , name )
 //
-  , m_x       ( "x"       , this , right.m_x      ) 
+  , m_x       ( "!x"       , this , right.m_x      ) 
 //
   , m_ps2     ( right.m_ps2 ) 
 //
@@ -4334,8 +4386,11 @@ Double_t Ostap::Models::PhaseSpace2::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                      ,
+                  "Invalid integration code"     ,
+                  "Ostap::Models::PhaseSpace2"   ,
+                  INVALID_INTEGRATION_CODE       , __FILE__ , __LINE__  ) ;
   //
   return m_ps2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
@@ -4353,9 +4408,9 @@ Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
   const Ostap::Math::PhaseSpaceLeft& left ) 
   : RooAbsPdf ( name , title ) 
     //
-  , m_x         ( "x"     , "Observable" , this , x          ) 
-  , m_threshold ( "th"    , "Threshold"  , this , threshold  ) 
-  , m_scale     ( "scale" , "Scale"      , this , scale      ) 
+  , m_x         ( "!x"     , "Observable" , this , x          ) 
+  , m_threshold ( "!th"    , "Threshold"  , this , threshold  ) 
+  , m_scale     ( "!scale" , "Scale"      , this , scale      ) 
     //  
   , m_left ( left ) 
 {
@@ -4471,9 +4526,9 @@ Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
 ( const Ostap::Models::PhaseSpaceLeft& right , const char* name )  
   : RooAbsPdf ( right , name )
     //
-  , m_x         ( "x"     , this , right.m_x         ) 
-  , m_threshold ( "tr"    , this , right.m_threshold ) 
-  , m_scale     ( "scale" , this , right.m_scale     ) 
+  , m_x         ( "!x"     , this , right.m_x         ) 
+  , m_threshold ( "!tr"    , this , right.m_threshold ) 
+  , m_scale     ( "!scale" , this , right.m_scale     ) 
     //
   , m_left      ( right.m_left ) 
     //
@@ -4522,16 +4577,16 @@ Double_t Ostap::Models::PhaseSpaceLeft::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid integration code"      ,
+                  "Ostap::Models::PhaseSpaceLEft" ,
+                  INVALID_INTEGRATION_CODE        , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_left.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // Right-edge of L-body phase space in N-body decays  
@@ -4545,8 +4600,8 @@ Ostap::Models::PhaseSpaceRight::PhaseSpaceRight
   const unsigned short N         ) 
   : RooAbsPdf ( name , title ) 
 //
-  , m_x         ( "x"  , "Observable" , this , x         ) 
-  , m_threshold ( "th" , "Threshold"  , this , threshold  ) 
+  , m_x         ( "!x"  , "Observable" , this , x         ) 
+  , m_threshold ( "!th" , "Threshold"  , this , threshold  ) 
 //  
   , m_right ( 10 , L , N ) 
 {
@@ -4559,8 +4614,8 @@ Ostap::Models::PhaseSpaceRight::PhaseSpaceRight
 ( const Ostap::Models::PhaseSpaceRight& right , const char* name )  
   : RooAbsPdf ( right , name )
 //
-  , m_x         ( "x"  , this , right.m_x         ) 
-  , m_threshold ( "tr" , this , right.m_threshold ) 
+  , m_x         ( "!x"  , this , right.m_x         ) 
+  , m_threshold ( "!tr" , this , right.m_threshold ) 
 //
   , m_right     ( right.m_right ) 
 //
@@ -4608,15 +4663,16 @@ Double_t Ostap::Models::PhaseSpaceRight::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                        ,
+                  "Invalid integration code"       ,
+                  "Ostap::Models::PhaseSpaceRight" ,
+                  INVALID_INTEGRATION_CODE         , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_right.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -4631,9 +4687,9 @@ Ostap::Models::PhaseSpaceNL::PhaseSpaceNL
   const unsigned short L         ) 
   : RooAbsPdf ( name  , title )
 //
-  , m_x     ( "x"     , "Observable" , this , x     ) 
-  , m_low   ( "low"   , "m(low)"     , this , low   ) 
-  , m_high  ( "high"  , "m(high)"    , this , high  ) 
+  , m_x     ( "!x"     , "Observable" , this , x     ) 
+  , m_low   ( "!low"   , "m(low)"     , this , low   ) 
+  , m_high  ( "!high"  , "m(high)"    , this , high  ) 
 //
   , m_ps    ( 1 , 2 , N , L ) 
 {
@@ -4646,9 +4702,9 @@ Ostap::Models::PhaseSpaceNL::PhaseSpaceNL
 ( const Ostap::Models::PhaseSpaceNL& right , const char* name ) 
   : RooAbsPdf ( right  , name )
 //
-  , m_x     ( "x"     , this , right.m_x     ) 
-  , m_low   ( "low"   , this , right.m_low   ) 
-  , m_high  ( "low"   , this , right.m_high  ) 
+  , m_x     ( "!x"     , this , right.m_x     ) 
+  , m_low   ( "!low"   , this , right.m_low   ) 
+  , m_high  ( "!high"  , this , right.m_high  ) 
 //
   , m_ps    (                  right.m_ps    ) 
 {
@@ -4695,14 +4751,16 @@ Double_t Ostap::Models::PhaseSpaceNL::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                        ,
+                  "Invalid integration code"       ,
+                  "Ostap::Models::PhaseSpaceNL"    ,
+                  INVALID_INTEGRATION_CODE         , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // Two-body phase space from 3-body decays 
@@ -4715,7 +4773,7 @@ Ostap::Models::PhaseSpace23L::PhaseSpace23L
   const unsigned short              L         , 
   const unsigned short              l         ) 
   : RooAbsPdf ( name , title ) 
-  , m_x       ( "x" , "Observable" , this , x ) 
+  , m_x       ( "!x" , "Observable" , this , x ) 
   , m_ps23L   ( dalitz , L , l ) 
 {}
 // ============================================================================
@@ -4724,7 +4782,7 @@ Ostap::Models::PhaseSpace23L::PhaseSpace23L
 Ostap::Models::PhaseSpace23L::PhaseSpace23L
 ( const Ostap::Models::PhaseSpace23L& right , const char* name )  
   : RooAbsPdf ( right , name )
-  , m_x       ( "x"       , this , right.m_x      ) 
+  , m_x       ( "!x"       , this , right.m_x      ) 
   , m_ps23L   ( right.m_ps23L ) 
 {}
 // ============================================================================
@@ -4756,14 +4814,15 @@ Double_t Ostap::Models::PhaseSpace23L::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                        ,
+                  "Invalid integration code"       ,
+                  "Ostap::Models::PhaseSpace23L"   ,
+                  INVALID_INTEGRATION_CODE         , __FILE__ , __LINE__  ) ;
   //
   return m_ps23L.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 //  PhaseSpace x poly
@@ -4779,8 +4838,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooAbsReal&          phi1      ) 
   : RooAbsPdf ( name , title ) 
 //
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x   ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this )
     //
   , m_ps       ( low , high , L , N , 1 ) 
 {
@@ -4811,8 +4870,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooAbsReal&          phi2      ) 
   : RooAbsPdf ( name , title ) 
 //
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x   ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this )
 //
   , m_ps       (     low , high , L , N , 2 ) 
 {
@@ -4845,8 +4904,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooAbsReal&          phi3      ) 
   : RooAbsPdf ( name , title ) 
 //
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x   ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this )
 //
   , m_ps       (     low , high , L , N , 3 ) 
 {
@@ -4878,8 +4937,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooArgList&          phis      )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x        ( "x"       , "Observable"   , this , x    ) 
-  , m_phis     ( "phi"     , "Coefficients" , this ) 
+  , m_x        ( "!x"       , "Observable"   , this , x    ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this ) 
     //
   , m_ps       ( low , high , L , N , phis.getSize() ) 
 {
@@ -4909,8 +4968,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooAbsReal&                      phi1      )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x   ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this )
 //
   , m_ps       ( ps , 1 ) 
 {
@@ -4938,8 +4997,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooAbsReal&                      phi2      )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x   ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this )
 //
   , m_ps       ( ps , 2 ) 
 {
@@ -4969,8 +5028,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooAbsReal&                      phi3      )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x   ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this )
 //
   , m_ps       ( ps , 3 ) 
 {
@@ -4999,8 +5058,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   RooArgList&                      phis      )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x        ( "x"       , "Observable"   , this , x    ) 
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x    ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this )
     //
   , m_ps       ( ps , phis.getSize() ) 
 {
@@ -5031,8 +5090,8 @@ Ostap::Models::PhaseSpacePol::PhaseSpacePol
   const char*                            name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x        ( "x"      , this , right.m_x    ) 
-  , m_phis     ( "phis"   , this , right.m_phis ) 
+  , m_x        ( "!x"      , this , right.m_x    ) 
+  , m_phis     ( "!phis"   , this , right.m_phis ) 
 //
   , m_ps       ( right.m_ps       ) 
 {
@@ -5076,15 +5135,16 @@ Double_t Ostap::Models::PhaseSpacePol::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                        ,
+                  "Invalid integration code"       ,
+                  "Ostap::Models::PhaseSpacePol"   ,
+                  INVALID_INTEGRATION_CODE         , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_ps.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 //  PhaseSpaceLeft x expo x pol 
@@ -5099,10 +5159,10 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   RooArgList&                        phis      )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x        ( "x"       , "Observable"   , this , x     ) 
-  , m_tau      ( "tau"     , "Exponent"     , this , tau   )
-  , m_scale    ( "scale"   , "Scale-factor" , this , scale )
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x     ) 
+  , m_tau      ( "!tau"     , "Exponent"     , this , tau   )
+  , m_scale    ( "!scale"   , "Scale-factor" , this , scale )
+  , m_phis     ( "!phi"     , "Coefficients" , this )
     //
   , m_ps       ( ps , phis.getSize() , 0.0 , x.getMin() , x.getMax() ) 
 {
@@ -5202,10 +5262,10 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   const char*                                 name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_tau      ( "tau"    , this , right.m_tau   )
-  , m_scale    ( "scale"  , this , right.m_scale )
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_tau      ( "!tau"    , this , right.m_tau   )
+  , m_scale    ( "!scale"  , this , right.m_scale )
+  , m_phis     ( "!phis"   , this , right.m_phis  ) 
     //
   , m_ps       ( right.m_ps       ) 
 {
@@ -5257,8 +5317,6 @@ Double_t Ostap::Models::PhaseSpaceLeftExpoPol::analyticalIntegral
 }
 // ============================================================================
 
-
-
 // ============================================================================
 // generic polinomial
 // ============================================================================
@@ -5270,8 +5328,8 @@ Ostap::Models::PolyPositive::PolyPositive
   const double         xmin      , 
   const double         xmax      ) 
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
     //
   , m_positive ( phis.getSize() , xmin , xmax ) 
 {
@@ -5292,8 +5350,8 @@ Ostap::Models::PolyPositive::PolyPositive
   const char*                            name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_phis     ( "!phis"   , this , right.m_phis  ) 
     //
   , m_positive ( right.m_positive ) 
 {
@@ -5339,15 +5397,16 @@ Double_t Ostap::Models::PolyPositive::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                        ,
+                  "Invalid integration code"       ,
+                  "Ostap::Models::PolyPositive"    ,
+                  INVALID_INTEGRATION_CODE         , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // generic even polinomial 
@@ -5360,8 +5419,8 @@ Ostap::Models::PolyPositiveEven::PolyPositiveEven
   const double         xmin      , 
   const double         xmax      ) 
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
     //
   , m_even     ( phis.getSize() , xmin , xmax ) 
 {
@@ -5382,8 +5441,8 @@ Ostap::Models::PolyPositiveEven::PolyPositiveEven
   const char*                                name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_phis     ( "!phis"   , this , right.m_phis  ) 
     //
   , m_even     ( right.m_even ) 
 {
@@ -5427,14 +5486,16 @@ Double_t Ostap::Models::PolyPositiveEven::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::PolyPositiveEven" ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_even.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // monotonic polinomial
@@ -5448,8 +5509,8 @@ Ostap::Models::PolyMonotonic::PolyMonotonic
   const double         xmax       , 
   const bool           increasing ) 
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
 //
   , m_monotonic ( phis.getSize() , xmin , xmax , increasing ) 
 {
@@ -5467,8 +5528,8 @@ Ostap::Models::PolyMonotonic::PolyMonotonic
   const char*                              name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x          ( "x"      , this , right.m_x     ) 
-  , m_phis       ( "phis"   , this , right.m_phis  ) 
+  , m_x          ( "!x"      , this , right.m_x     ) 
+  , m_phis       ( "!phis"   , this , right.m_phis  ) 
     //
   , m_monotonic ( right.m_monotonic ) 
 {
@@ -5512,16 +5573,16 @@ Double_t Ostap::Models::PolyMonotonic::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::PolyMonotonic"    ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_monotonic.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // convex polinomial
@@ -5536,8 +5597,8 @@ Ostap::Models::PolyConvex::PolyConvex
   const bool           increasing ,
   const bool           convex     ) 
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
     //
   , m_convex ( phis.getSize() , xmin , xmax , increasing , convex ) 
 {
@@ -5553,9 +5614,9 @@ Ostap::Models::PolyConvex::PolyConvex
 ( const Ostap::Models::PolyConvex&  right ,      
   const char*                          name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x          ( "x"      , this , right.m_x     ) 
-  , m_phis       ( "phis"   , this , right.m_phis  ) 
+    //
+  , m_x          ( "!x"      , this , right.m_x     ) 
+  , m_phis       ( "!phis"   , this , right.m_phis  ) 
     //
   , m_convex ( right.m_convex ) 
 {
@@ -5598,16 +5659,16 @@ Double_t Ostap::Models::PolyConvex::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::PolyConvex"       ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // convex polinomial
@@ -5621,13 +5682,13 @@ Ostap::Models::PolyConvexOnly::PolyConvexOnly
   const double         xmax       , 
   const bool           convex     ) 
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
 //
   , m_convex ( phis.getSize() , xmin , xmax , convex ) 
 {
   //
-  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PolyConvexOnly" ) ;
+  ::copy_real  ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PolyConvexOnly" ) ;
   //
   setPars () ;
 }
@@ -5639,8 +5700,8 @@ Ostap::Models::PolyConvexOnly::PolyConvexOnly
   const char*                              name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x          ( "x"      , this , right.m_x     ) 
-  , m_phis       ( "phis"   , this , right.m_phis  ) 
+  , m_x          ( "!x"      , this , right.m_x     ) 
+  , m_phis       ( "!phis"   , this , right.m_phis  ) 
     //
   , m_convex ( right.m_convex ) 
 {
@@ -5683,15 +5744,16 @@ Double_t Ostap::Models::PolyConvexOnly::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::PolyConvexOnly"   ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // sigmoid polinomial
@@ -5706,10 +5768,10 @@ Ostap::Models::PolySigmoid::PolySigmoid
   RooAbsReal&          alpha      ,
   RooAbsReal&          x0         )
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x      ) 
-  , m_phis     ( "phi"     , "Coefficients" , this          )
-  , m_alpha    ( "alpha"   , "Alpha"        , this , alpha  )
-  , m_x0       ( "x0"      , "X0"           , this , x0     )
+  , m_x        ( "!x"       , "Observable"   , this , x      ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this          )
+  , m_alpha    ( "!alpha"   , "Alpha"        , this , alpha  )
+  , m_x0       ( "!x0"      , "X0"           , this , x0     )
     //
   , m_sigmoid  ( phis.getSize() , xmin , xmax , m_alpha , m_x0 ) 
 {
@@ -5726,10 +5788,10 @@ Ostap::Models::PolySigmoid::PolySigmoid
   const char*                           name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x          ( "x"      , this , right.m_x     ) 
-  , m_phis       ( "phis"   , this , right.m_phis  ) 
-  , m_alpha      ( "alpha"  , this , right.m_alpha ) 
-  , m_x0         ( "x0"     , this , right.m_x0    ) 
+  , m_x          ( "!x"      , this , right.m_x     ) 
+  , m_phis       ( "!phis"   , this , right.m_phis  ) 
+  , m_alpha      ( "!alpha"  , this , right.m_alpha ) 
+  , m_x0         ( "!x0"     , this , right.m_x0    ) 
     //
   , m_sigmoid ( right.m_sigmoid ) 
 {
@@ -5778,14 +5840,16 @@ Double_t Ostap::Models::PolySigmoid::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::PolySigmoid"      ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_sigmoid.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // positive spline 
@@ -5805,13 +5869,13 @@ Ostap::Models::PositiveSpline::PositiveSpline
   const Ostap::Math::PositiveSpline& spline    ,   // the spline 
   RooArgList&                        phis      )   // parameters
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
     //
   , m_spline   ( spline ) 
 {
   //
-  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PositiveSpline" ) ;
+  ::copy_real  ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PositiveSpline" ) ;
   //
   setPars () ;
 }
@@ -5823,14 +5887,13 @@ Ostap::Models::PositiveSpline::PositiveSpline
   const char*                            name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_phis     ( "!phis"   , this , right.m_phis  ) 
     //
   , m_spline ( right.m_spline ) 
 {
   setPars () ;
 }
-
 // ============================================================================
 // destructor 
 // ============================================================================
@@ -5868,17 +5931,16 @@ Double_t Ostap::Models::PositiveSpline::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::PositiveSpline"   ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
-
 
 // ============================================================================
 // monotonic spline 
@@ -5898,13 +5960,13 @@ Ostap::Models::MonotonicSpline::MonotonicSpline
   const Ostap::Math::MonotonicSpline& spline    ,   // the spline 
   RooArgList&                          phis      )   // parameters
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
     //
   , m_spline   ( spline ) 
 {
   //
-  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::MonotonicSpline" ) ;
+  ::copy_real  ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::MonotonicSpline" ) ;
   //
   setPars () ;
 }
@@ -5916,8 +5978,8 @@ Ostap::Models::MonotonicSpline::MonotonicSpline
   const char*                                name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_phis   ( "!phis"   , this , right.m_phis  ) 
     //
   , m_spline ( right.m_spline ) 
 {
@@ -5960,14 +6022,16 @@ Double_t Ostap::Models::MonotonicSpline::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::MonotonicSpline"  ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // convex spline 
@@ -5987,13 +6051,13 @@ Ostap::Models::ConvexSpline::ConvexSpline
   const Ostap::Math::ConvexSpline& spline    ,   // the spline 
   RooArgList&                          phis      )   // parameters
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
     //
   , m_spline   ( spline ) 
 {
   //
-  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::ConvexSpline" ) ;
+  ::copy_real  ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::ConvexSpline" ) ;
   //
   setPars () ;
 }
@@ -6005,8 +6069,8 @@ Ostap::Models::ConvexSpline::ConvexSpline
   const char*                                name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_phis     ( "!phis"   , this , right.m_phis  ) 
     //
   , m_spline ( right.m_spline ) 
 {
@@ -6049,8 +6113,11 @@ Double_t Ostap::Models::ConvexSpline::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::ConvexSpline"     ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   //
@@ -6076,13 +6143,13 @@ Ostap::Models::ConvexOnlySpline::ConvexOnlySpline
   const Ostap::Math::ConvexOnlySpline& spline    ,   // the spline 
   RooArgList&                          phis      )   // parameters
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x ) 
-  , m_phis     ( "phi"     , "Coefficients" , this     )
+  , m_x        ( "!x"       , "Observable"   , this , x ) 
+  , m_phis     ( "!phi"     , "Coefficients" , this     )
     //
   , m_spline   ( spline ) 
 {
   //
-  ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::ConvexOnlySpline" ) ;
+  ::copy_real  ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::ConvexOnlySpline" ) ;
   //
   setPars () ;
 }
@@ -6094,8 +6161,8 @@ Ostap::Models::ConvexOnlySpline::ConvexOnlySpline
   const char*                                name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_phis     ( "!phis"   , this , right.m_phis  ) 
     //
   , m_spline ( right.m_spline ) 
 {
@@ -6138,15 +6205,16 @@ Double_t Ostap::Models::ConvexOnlySpline::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::ConvexOnlySpline" ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_spline.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // generic polinomial times exponent 
@@ -6160,9 +6228,9 @@ Ostap::Models::ExpoPositive::ExpoPositive
   const double         xmin      , 
   const double         xmax      ) 
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x   ) 
-  , m_tau      ( "tau"     , "Exponential"  , this , tau )
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x   ) 
+  , m_tau      ( "!tau"     , "Exponential"  , this , tau )
+  , m_phis     ( "!phi"     , "Coefficients" , this )
 //
   , m_positive ( phis.getSize() , 0 , xmin , xmax ) 
 {
@@ -6181,9 +6249,9 @@ Ostap::Models::ExpoPositive::ExpoPositive
   const char*                            name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x        ( "x"      , this , right.m_x    ) 
-  , m_tau      ( "tau"    , this , right.m_tau  )
-  , m_phis     ( "phis"   , this , right.m_phis ) 
+  , m_x        ( "!x"      , this , right.m_x    ) 
+  , m_tau      ( "!tau"    , this , right.m_tau  )
+  , m_phis     ( "!phis"   , this , right.m_phis ) 
 //
   , m_positive ( right.m_positive ) 
 {
@@ -6231,14 +6299,16 @@ Double_t Ostap::Models::ExpoPositive::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::ExpoPositive"     ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // generic polinomial times exponent 
@@ -6254,11 +6324,11 @@ Ostap::Models::TwoExpoPositive::TwoExpoPositive
   const double         xmin      , 
   const double         xmax      ) 
   : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"       , "Observable"   , this , x     ) 
-  , m_alpha    ( "alpha"   , "slope 1"      , this , alpha )
-  , m_delta    ( "delta"   , "delta slope"  , this , delta )
-  , m_x0       ( "x0"      , "threshold"    , this , x0    )
-  , m_phis     ( "phi"     , "Coefficients" , this )
+  , m_x        ( "!x"       , "Observable"   , this , x     ) 
+  , m_alpha    ( "!alpha"   , "slope 1"      , this , alpha )
+  , m_delta    ( "!delta"   , "delta slope"  , this , delta )
+  , m_x0       ( "!x0"      , "threshold"    , this , x0    )
+  , m_phis     ( "!phi"     , "Coefficients" , this )
     //
   , m_2expopos ( phis.getSize() , 1 , 2 , 1 , xmin , xmax ) 
 {
@@ -6276,11 +6346,11 @@ Ostap::Models::TwoExpoPositive::TwoExpoPositive
   const char*                               name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x        ( "x"      , this , right.m_x     ) 
-  , m_alpha    ( "alpha"  , this , right.m_alpha )
-  , m_delta    ( "delta"  , this , right.m_delta )
-  , m_x0       ( "x0"     , this , right.m_x0    )
-  , m_phis     ( "phis"   , this , right.m_phis  ) 
+  , m_x        ( "!x"      , this , right.m_x     ) 
+  , m_alpha    ( "!alpha"  , this , right.m_alpha )
+  , m_delta    ( "!delta"  , this , right.m_delta )
+  , m_x0       ( "!x0"     , this , right.m_x0    )
+  , m_phis     ( "!phis"   , this , right.m_phis  ) 
 //
   , m_2expopos ( right.m_2expopos ) 
 {
@@ -6330,14 +6400,16 @@ Double_t Ostap::Models::TwoExpoPositive::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::TwoExpoPositive"  ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_2expopos.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -6350,9 +6422,9 @@ Ostap::Models::GammaDist::GammaDist
   RooAbsReal&          theta )
   : RooAbsPdf  (name ,title ) 
 //
-  , m_x       ( "x"     , "Observable" , this , x     ) 
-  , m_k       ( "k"     , "Shape"      , this , k     ) 
-  , m_theta   ( "theta" , "Scale"      , this , theta )
+  , m_x       ( "!x"     , "Observable" , this , x     ) 
+  , m_k       ( "!k"     , "Shape"      , this , k     ) 
+  , m_theta   ( "!theta" , "Scale"      , this , theta )
 //
   , m_gamma   ( 1 , 1 ) 
 {
@@ -6366,9 +6438,9 @@ Ostap::Models::GammaDist::GammaDist
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x     ( "x"     , this , right.m_x     ) 
-  , m_k     ( "k"     , this , right.m_k     ) 
-  , m_theta ( "theta" , this , right.m_theta )
+  , m_x     ( "!x"     , this , right.m_x     ) 
+  , m_k     ( "!k"     , this , right.m_k     ) 
+  , m_theta ( "!theta" , this , right.m_theta )
 //
   , m_gamma (                  right.m_gamma ) 
 {
@@ -6416,14 +6488,16 @@ Double_t Ostap::Models::GammaDist::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GammaDist"        ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -6438,11 +6512,11 @@ Ostap::Models::GenGammaDist::GenGammaDist
   RooAbsReal&          low   )
   : RooAbsPdf  (name ,title ) 
 //
-  , m_x       ( "x"     , "Observable" , this , x     ) 
-  , m_k       ( "k"     , "Shape"      , this , k     ) 
-  , m_theta   ( "theta" , "Scale"      , this , theta )
-  , m_p       ( "p"     , "P"          , this , p     )
-  , m_low     ( "low"   , "Low"        , this , low   )
+  , m_x       ( "!x"     , "Observable" , this , x     ) 
+  , m_k       ( "!k"     , "Shape"      , this , k     ) 
+  , m_theta   ( "!theta" , "Scale"      , this , theta )
+  , m_p       ( "!p"     , "P"          , this , p     )
+  , m_low     ( "!low"   , "Low"        , this , low   )
 //
   , m_ggamma   ( 2 , 1 , 1 , 0 ) 
 {
@@ -6456,11 +6530,11 @@ Ostap::Models::GenGammaDist::GenGammaDist
   const char*                           name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"     , this , right.m_x      ) 
-  , m_k      ( "k"     , this , right.m_k      ) 
-  , m_theta  ( "theta" , this , right.m_theta  )
-  , m_p      ( "p"     , this , right.m_p      )
-  , m_low    ( "low"   , this , right.m_low    )
+  , m_x      ( "!x"     , this , right.m_x      ) 
+  , m_k      ( "!k"     , this , right.m_k      ) 
+  , m_theta  ( "!theta" , this , right.m_theta  )
+  , m_p      ( "!p"     , this , right.m_p      )
+  , m_low    ( "!low"   , this , right.m_low    )
 //
   , m_ggamma (                  right.m_ggamma ) 
 {
@@ -6510,15 +6584,16 @@ Double_t Ostap::Models::GenGammaDist::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GenGammaDist"     ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_ggamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 //    Amoroso
@@ -6535,11 +6610,11 @@ Ostap::Models::Amoroso::Amoroso
   RooAbsReal&          a         ) 
   : RooAbsPdf ( name ,title ) 
 //
-  , m_x       ( "x"     , "Observable" , this , x     ) 
-  , m_theta   ( "theta" , "theta"      , this , theta )
-  , m_alpha   ( "alpha" , "alpha"      , this , alpha )
-  , m_beta    ( "beta"  , "beta"       , this , beta  )
-  , m_a       ( "a"     , "a"          , this , a     )
+  , m_x       ( "!x"     , "Observable" , this , x     ) 
+  , m_theta   ( "!theta" , "theta"      , this , theta )
+  , m_alpha   ( "!alpha" , "alpha"      , this , alpha )
+  , m_beta    ( "!beta"  , "beta"       , this , beta  )
+  , m_a       ( "!a"     , "a"          , this , a     )
 //
   , m_amoroso   ( 1 , 1 , 1 , 0 ) 
 {
@@ -6553,11 +6628,11 @@ Ostap::Models::Amoroso::Amoroso
   const char*                      name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x       ( "x"     , this , right.m_x     ) 
-  , m_theta   ( "theta" , this , right.m_theta )
-  , m_alpha   ( "alpha" , this , right.m_alpha )
-  , m_beta    ( "beta"  , this , right.m_beta  )
-  , m_a       ( "a"     , this , right.m_a     )
+  , m_x       ( "!x"     , this , right.m_x     ) 
+  , m_theta   ( "!theta" , this , right.m_theta )
+  , m_alpha   ( "!alpha" , this , right.m_alpha )
+  , m_beta    ( "!beta"  , this , right.m_beta  )
+  , m_a       ( "!a"     , this , right.m_a     )
 //
   , m_amoroso ( right.m_amoroso ) 
 {
@@ -6607,19 +6682,16 @@ Double_t Ostap::Models::Amoroso::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Amoroso"          ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_amoroso.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
-
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -6632,9 +6704,9 @@ Ostap::Models::LogGammaDist::LogGammaDist
   RooAbsReal&          theta )
   : RooAbsPdf  (name ,title ) 
 //
-  , m_x       ( "x"     , "Observable" , this , x     ) 
-  , m_k       ( "k"     , "Shape"      , this , k     ) 
-  , m_theta   ( "theta" , "Scale"      , this , theta )
+  , m_x       ( "!x"     , "Observable" , this , x     ) 
+  , m_k       ( "!k"     , "Shape"      , this , k     ) 
+  , m_theta   ( "!theta" , "Scale"      , this , theta )
 //
   , m_gamma   ( 1 , 1 ) 
 {
@@ -6648,9 +6720,9 @@ Ostap::Models::LogGammaDist::LogGammaDist
   const char*                           name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x     ( "x"     , this , right.m_x     ) 
-  , m_k     ( "k"     , this , right.m_k     ) 
-  , m_theta ( "theta" , this , right.m_theta )
+  , m_x     ( "!x"     , this , right.m_x     ) 
+  , m_k     ( "!k"     , this , right.m_k     ) 
+  , m_theta ( "!theta" , this , right.m_theta )
 //
   , m_gamma (                  right.m_gamma ) 
 {
@@ -6698,15 +6770,16 @@ Double_t Ostap::Models::LogGammaDist::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::LogGammaDist"     ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -6719,9 +6792,9 @@ Ostap::Models::Log10GammaDist::Log10GammaDist
   RooAbsReal&          theta )
   : RooAbsPdf  (name ,title ) 
 //
-  , m_x       ( "x"     , "Observable" , this , x     ) 
-  , m_k       ( "k"     , "Shape"      , this , k     ) 
-  , m_theta   ( "theta" , "Scale"      , this , theta )
+  , m_x       ( "!x"     , "Observable" , this , x     ) 
+  , m_k       ( "!k"     , "Shape"      , this , k     ) 
+  , m_theta   ( "!theta" , "Scale"      , this , theta )
 //
   , m_gamma   ( 1 , 1 ) 
 {
@@ -6735,9 +6808,9 @@ Ostap::Models::Log10GammaDist::Log10GammaDist
   const char*                           name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x     ( "x"     , this , right.m_x     ) 
-  , m_k     ( "k"     , this , right.m_k     ) 
-  , m_theta ( "theta" , this , right.m_theta )
+  , m_x     ( "!x"     , this , right.m_x     ) 
+  , m_k     ( "!k"     , this , right.m_k     ) 
+  , m_theta ( "!theta" , this , right.m_theta )
 //
   , m_gamma (                  right.m_gamma ) 
 {
@@ -6785,14 +6858,16 @@ Double_t Ostap::Models::Log10GammaDist::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Log10GammaDist"   ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -6806,10 +6881,10 @@ Ostap::Models::LogGamma::LogGamma
   RooAbsReal&          alpha  )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"      , "Observable" , this , x      ) 
-  , m_nu      ( "nu"     , "nu"         , this , nu     ) 
-  , m_lambda  ( "lambda" , "lambda"     , this , lambda ) 
-  , m_alpha   ( "alpha"  , "alpha"      , this , alpha  )
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_nu      ( "!nu"     , "nu"         , this , nu     ) 
+  , m_lambda  ( "!lambda" , "lambda"     , this , lambda ) 
+  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  )
 //
   , m_lgamma   ( 0 , 1 , 1 ) 
 {
@@ -6823,10 +6898,10 @@ Ostap::Models::LogGamma::LogGamma
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_nu     ( "nu"     , this , right.m_nu     ) 
-  , m_lambda ( "lambda" , this , right.m_lambda )
-  , m_alpha  ( "alpha"  , this , right.m_alpha  )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_nu     ( "!nu"     , this , right.m_nu     ) 
+  , m_lambda ( "!lambda" , this , right.m_lambda )
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
 //
   , m_lgamma (                   right.m_lgamma ) 
 {
@@ -6875,14 +6950,16 @@ Double_t Ostap::Models::LogGamma::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::LogGamma"         ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   return m_lgamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -6969,8 +7046,11 @@ Double_t Ostap::Models::Beta::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Beta"             ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_bfun.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
@@ -6990,11 +7070,11 @@ Ostap::Models::BetaPrime::BetaPrime
   RooAbsReal&          shift  )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"      , "Observable" , this , x      ) 
-  , m_alpha   ( "alpha"  , "alpha"      , this , alpha  ) 
-  , m_beta    ( "beta"   , "beta"       , this , beta   ) 
-  , m_scale   ( "scale"  , "scale"      , this , scale  ) 
-  , m_shift   ( "shift"  , "shift"      , this , shift  ) 
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  ) 
+  , m_beta    ( "!beta"   , "beta"       , this , beta   ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
   , m_betap   ( 3 , 3 , 1 , 0 ) 
 {
@@ -7008,11 +7088,11 @@ Ostap::Models::BetaPrime::BetaPrime
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_alpha  ( "alpha"  , this , right.m_alpha  )
-  , m_beta   ( "beta"   , this , right.m_beta   )
-  , m_scale  ( "scale"  , this , right.m_scale  )
-  , m_shift  ( "shift"  , this , right.m_shift  )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
+  , m_beta   ( "!beta"   , this , right.m_beta   )
+  , m_scale  ( "!scale"  , this , right.m_scale  )
+  , m_shift  ( "!shift"  , this , right.m_shift  )
 //
   , m_betap  (                   right.m_betap  ) 
 {
@@ -7062,14 +7142,16 @@ Double_t Ostap::Models::BetaPrime::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::BetaPrime"        ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_betap.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7086,13 +7168,13 @@ Ostap::Models::GenBetaPrime::GenBetaPrime
   RooAbsReal&          shift  )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"      , "Observable" , this , x      ) 
-  , m_alpha   ( "alpha"  , "alpha"      , this , alpha  ) 
-  , m_beta    ( "beta"   , "beta"       , this , beta   ) 
-  , m_p       ( "p"      , "p"          , this , p      ) 
-  , m_q       ( "q"      , "q"          , this , q      ) 
-  , m_scale   ( "scale"  , "scale"      , this , scale  ) 
-  , m_shift   ( "shift"  , "shift"      , this , shift  ) 
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  ) 
+  , m_beta    ( "!beta"   , "beta"       , this , beta   ) 
+  , m_p       ( "!p"      , "p"          , this , p      ) 
+  , m_q       ( "!q"      , "q"          , this , q      ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
   , m_betap   ( 1 , 5 , 1 , 1 , 1 , 0 ) 
 {
@@ -7106,13 +7188,13 @@ Ostap::Models::GenBetaPrime::GenBetaPrime
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_alpha  ( "alpha"  , this , right.m_alpha  )
-  , m_beta   ( "beta"   , this , right.m_beta   )
-  , m_p      ( "p"      , this , right.m_p      )
-  , m_q      ( "q"      , this , right.m_q      )
-  , m_scale  ( "scale"  , this , right.m_scale  )
-  , m_shift  ( "shift"  , this , right.m_shift  )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
+  , m_beta   ( "!beta"   , this , right.m_beta   )
+  , m_p      ( "!p"      , this , right.m_p      )
+  , m_q      ( "!q"      , this , right.m_q      )
+  , m_scale  ( "!scale"  , this , right.m_scale  )
+  , m_shift  ( "!shift"  , this , right.m_shift  )
 //
   , m_betap  (                   right.m_betap  ) 
 {
@@ -7165,16 +7247,16 @@ Double_t Ostap::Models::GenBetaPrime::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GenBetaPrime"     ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_betap.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7189,11 +7271,11 @@ Ostap::Models::SinhAsinh::SinhAsinh
   RooAbsReal&          delta   )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "x"       , "Observable"    , this , x       ) 
-  , m_mu      ( "mu"      , "mu/location"   , this , mu      ) 
-  , m_sigma   ( "sigma"   , "sigma/scale"   , this , sigma   ) 
-  , m_epsilon ( "epsilon" , "epsilon/skew"  , this , epsilon ) 
-  , m_delta   ( "delta"   , "delta/tail"    , this , delta   ) 
+  , m_x       ( "!x"       , "Observable"    , this , x       ) 
+  , m_mu      ( "!mu"      , "mu/location"   , this , mu      ) 
+  , m_sigma   ( "!sigma"   , "sigma/scale"   , this , sigma   ) 
+  , m_epsilon ( "!epsilon" , "epsilon/skew"  , this , epsilon ) 
+  , m_delta   ( "!delta"   , "delta/tail"    , this , delta   ) 
     //
   , m_sinhasinh  ( 1 , 1 , 0 , 1 )  
 {
@@ -7206,12 +7288,12 @@ Ostap::Models::SinhAsinh::SinhAsinh
 ( const Ostap::Models::SinhAsinh& right , 
   const char*                         name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x       ( "x"       , this , right.m_x       ) 
-  , m_mu      ( "mu"      , this , right.m_mu      )
-  , m_sigma   ( "sigma"   , this , right.m_sigma   )
-  , m_epsilon ( "epsilon" , this , right.m_epsilon )
-  , m_delta   ( "delta"   , this , right.m_delta   )
+    //
+  , m_x       ( "!x"       , this , right.m_x       ) 
+  , m_mu      ( "!mu"      , this , right.m_mu      )
+  , m_sigma   ( "!sigma"   , this , right.m_sigma   )
+  , m_epsilon ( "!epsilon" , this , right.m_epsilon )
+  , m_delta   ( "!delta"   , this , right.m_delta   )
     //
   , m_sinhasinh ( right.m_sinhasinh ) 
 {
@@ -7261,14 +7343,16 @@ Double_t Ostap::Models::SinhAsinh::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::SinhAsinh"        ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_sinhasinh.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7283,11 +7367,11 @@ Ostap::Models::JohnsonSU::JohnsonSU
   RooAbsReal&          gamma   )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "x"       , "Observable"    , this , x       ) 
-  , m_xi      ( "xi"      , "mu/location"   , this , xi      ) 
-  , m_lambda  ( "lambda"  , "lambda/scale"  , this , lam     ) 
-  , m_delta   ( "delta"   , "delta/shape"   , this , delta   ) 
-  , m_gamma   ( "gamma"   , "gamma/shape"   , this , gamma   ) 
+  , m_x       ( "!x"       , "Observable"    , this , x       ) 
+  , m_xi      ( "!xi"      , "mu/location"   , this , xi      ) 
+  , m_lambda  ( "!lambda"  , "lambda/scale"  , this , lam     ) 
+  , m_delta   ( "!delta"   , "delta/shape"   , this , delta   ) 
+  , m_gamma   ( "!gamma"   , "gamma/shape"   , this , gamma   ) 
     //
   , m_johnsonSU  ( 0 , 1 , 1 , 0 )  
 {
@@ -7300,12 +7384,12 @@ Ostap::Models::JohnsonSU::JohnsonSU
 ( const Ostap::Models::JohnsonSU&  right , 
   const char*                         name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x       ( "x"       , this , right.m_x       ) 
-  , m_xi      ( "xi"      , this , right.m_xi      )
-  , m_lambda  ( "sigma"   , this , right.m_lambda  )
-  , m_delta   ( "delta"   , this , right.m_delta   )
-  , m_gamma   ( "gamma"   , this , right.m_gamma   )
+    //
+  , m_x       ( "!x"       , this , right.m_x       ) 
+  , m_xi      ( "!xi"      , this , right.m_xi      )
+  , m_lambda  ( "!sigma"   , this , right.m_lambda  )
+  , m_delta   ( "!delta"   , this , right.m_delta   )
+  , m_gamma   ( "!gamma"   , this , right.m_gamma   )
     //
   , m_johnsonSU ( right.m_johnsonSU ) 
 {
@@ -7355,14 +7439,16 @@ Double_t Ostap::Models::JohnsonSU::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::JohnsonSU"        ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_johnsonSU.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7375,9 +7461,9 @@ Ostap::Models::Landau::Landau
   RooAbsReal&          shift  )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"      , "Observable" , this , x      ) 
-  , m_scale   ( "scale"  , "scale"      , this , scale  ) 
-  , m_shift   ( "shift"  , "shift"      , this , shift  ) 
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
   , m_landau  ( 1 , 0 ) 
 {
@@ -7390,11 +7476,11 @@ Ostap::Models::Landau::Landau
 ( const Ostap::Models::Landau& right ,
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_scale  ( "scale"  , this , right.m_scale  )
-  , m_shift  ( "shift"  , this , right.m_shift  )
-//
+    //
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_scale  ( "!scale"  , this , right.m_scale  )
+  , m_shift  ( "!shift"  , this , right.m_shift  )
+    //
   , m_landau (                   right.m_landau ) 
 {
   setPars () ;
@@ -7441,14 +7527,16 @@ Double_t Ostap::Models::Landau::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Landau"           ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_landau.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7461,9 +7549,9 @@ Ostap::Models::Atlas::Atlas
   RooAbsReal&          sigma  )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x      ( "x"      , "Observable" , this , x      ) 
-  , m_mu     ( "mu"     , "location"   , this , mu     ) 
-  , m_sigma  ( "sigma"  , "sigma"      , this , sigma  ) 
+  , m_x      ( "!x"      , "Observable" , this , x      ) 
+  , m_mu     ( "!mu"     , "location"   , this , mu     ) 
+  , m_sigma  ( "!sigma"  , "sigma"      , this , sigma  ) 
     //
   , m_atlas  ( 0 , 1 ) 
 {
@@ -7476,11 +7564,11 @@ Ostap::Models::Atlas::Atlas
 ( const Ostap::Models::Atlas&  right ,
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_mu     ( "mu"     , this , right.m_mu     )
-  , m_sigma  ( "sigma"  , this , right.m_sigma  )
-//
+    //
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  )
+    //
   , m_atlas  (                   right.m_atlas  ) 
 {
   setPars () ;
@@ -7527,15 +7615,16 @@ Double_t Ostap::Models::Atlas::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Atlas"            ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_atlas.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7548,9 +7637,9 @@ Ostap::Models::Sech::Sech
   RooAbsReal&          sigma  )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x      ( "x"      , "Observable" , this , x      ) 
-  , m_mu     ( "mu"     , "location"   , this , mu     ) 
-  , m_sigma  ( "sigma"  , "sigma"      , this , sigma  ) 
+  , m_x      ( "!x"      , "Observable" , this , x      ) 
+  , m_mu     ( "!mu"     , "location"   , this , mu     ) 
+  , m_sigma  ( "!sigma"  , "sigma"      , this , sigma  ) 
     //
   , m_sech  ( 0 , 1 ) 
 {
@@ -7564,9 +7653,9 @@ Ostap::Models::Sech::Sech
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_mu     ( "mu"     , this , right.m_mu     )
-  , m_sigma  ( "sigma"  , this , right.m_sigma  )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  )
     //
   , m_sech  (                   right.m_sech    ) 
 {
@@ -7614,14 +7703,16 @@ Double_t Ostap::Models::Sech::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Sech"             ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_sech.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7635,10 +7726,10 @@ Ostap::Models::Losev::Losev
   RooAbsReal&          beta   )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x      ( "x"      , "Observable"  , this , x      ) 
-  , m_mu     ( "mu"     , "location"    , this , mu     ) 
-  , m_alpha  ( "alpha"  , "left-slope"  , this , alpha  ) 
-  , m_beta   ( "beta"   , "right-slope" , this , beta   ) 
+  , m_x      ( "!x"      , "Observable"  , this , x      ) 
+  , m_mu     ( "!mu"     , "location"    , this , mu     ) 
+  , m_alpha  ( "!alpha"  , "left-slope"  , this , alpha  ) 
+  , m_beta   ( "!beta"   , "right-slope" , this , beta   ) 
     //
   , m_losev  ( 0 , 1 , 1 ) 
 {
@@ -7652,10 +7743,10 @@ Ostap::Models::Losev::Losev
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_mu     ( "mu"     , this , right.m_mu     )
-  , m_alpha  ( "alpha"  , this , right.m_alpha  )
-  , m_beta   ( "beta"   , this , right.m_beta   )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
+  , m_beta   ( "!beta"   , this , right.m_beta   )
     //
   , m_losev  (                   right.m_losev  ) 
 {
@@ -7704,14 +7795,16 @@ Double_t Ostap::Models::Losev::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Losev"            ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_losev.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7724,9 +7817,9 @@ Ostap::Models::Logistic::Logistic
   RooAbsReal&          sigma  )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "x"      , "Observable" , this , x      ) 
-  , m_mu      ( "mu"     , "location"   , this , mu     ) 
-  , m_sigma   ( "sigma"  , "sigma"      , this , sigma  ) 
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_mu      ( "!mu"     , "location"   , this , mu     ) 
+  , m_sigma   ( "!sigma"  , "sigma"      , this , sigma  ) 
     //
   , m_logistic ( 0 , 1 ) 
 {
@@ -7740,9 +7833,9 @@ Ostap::Models::Logistic::Logistic
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_mu     ( "mu"     , this , right.m_mu     )
-  , m_sigma  ( "sigma"  , this , right.m_sigma  )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_sigma  ( "!sigma"  , this , right.m_sigma  )
     //
   , m_logistic  ( right.m_logistic ) 
 {
@@ -7790,15 +7883,16 @@ Double_t Ostap::Models::Logistic::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Logistic"         ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_logistic.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7885,15 +7979,16 @@ Double_t Ostap::Models::GenLogisticIV::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GenLogisticIV"    ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_gl4.integral ( m_x.min( rangeName ) , m_x.max( rangeName ) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -7987,15 +8082,16 @@ Double_t Ostap::Models::Argus::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Argus"            ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_argus.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8094,14 +8190,16 @@ Double_t Ostap::Models::GenArgus::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GenArgus"         ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_argus.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8114,9 +8212,9 @@ Ostap::Models::Slash::Slash
   RooAbsReal&          scale  ) 
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "x"      , "Observable" , this , x      ) 
-  , m_mu      ( "mu"     , "location"   , this , mu     ) 
-  , m_scale   ( "scale"  , "scale"      , this , scale  ) 
+  , m_x       ( "!x"      , "Observable" , this , x      ) 
+  , m_mu      ( "!mu"     , "location"   , this , mu     ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
     //
   , m_slash   ( 0 , 1 ) 
 {
@@ -8130,9 +8228,9 @@ Ostap::Models::Slash::Slash
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x      ( "x"      , this , right.m_x      ) 
-  , m_mu     ( "mu"     , this , right.m_mu     )
-  , m_scale  ( "scale"  , this , right.m_scale  )
+  , m_x      ( "!x"      , this , right.m_x      ) 
+  , m_mu     ( "!mu"     , this , right.m_mu     )
+  , m_scale  ( "!scale"  , this , right.m_scale  )
 //
   , m_slash  (                   right.m_slash  ) 
 {
@@ -8176,15 +8274,16 @@ Double_t Ostap::Models::Slash::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Slash"            ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_slash.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8198,10 +8297,10 @@ Ostap::Models::AsymmetricLaplace::AsymmetricLaplace
   RooAbsReal&          lambdaR )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "x"       , "Observable"                  , this , x       ) 
-  , m_mu      ( "mu"      , "location"                    , this , mu      ) 
-  , m_lambdaL ( "lambdaL" , "``left'' exponential slope"  , this , lambdaL ) 
-  , m_lambdaR ( "lambdaR" , "``right'' exponential slope" , this , lambdaR ) 
+  , m_x       ( "!x"       , "Observable"                  , this , x       ) 
+  , m_mu      ( "!mu"      , "location"                    , this , mu      ) 
+  , m_lambdaL ( "!lambdaL" , "``left'' exponential slope"  , this , lambdaL ) 
+  , m_lambdaR ( "!lambdaR" , "``right'' exponential slope" , this , lambdaR ) 
     //
   , m_laplace ( 0 , 1 , 1 ) 
 {
@@ -8215,10 +8314,10 @@ Ostap::Models::AsymmetricLaplace::AsymmetricLaplace
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x        ( "x"       , this , right.m_x       ) 
-  , m_mu       ( "mu"      , this , right.m_mu      )
-  , m_lambdaL  ( "lambdaL" , this , right.m_lambdaL )
-  , m_lambdaR  ( "lambdaR" , this , right.m_lambdaR )
+  , m_x        ( "!x"       , this , right.m_x       ) 
+  , m_mu       ( "!mu"      , this , right.m_mu      )
+  , m_lambdaL  ( "!lambdaL" , this , right.m_lambdaL )
+  , m_lambdaR  ( "!lambdaR" , this , right.m_lambdaR )
     //
   , m_laplace  ( right.m_laplace ) 
 {
@@ -8263,15 +8362,16 @@ Double_t Ostap::Models::AsymmetricLaplace::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::AsymmetricLaplace" ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_laplace.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 
 // ============================================================================
@@ -8348,14 +8448,16 @@ Double_t Ostap::Models::BatesShape::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::BatesShape"        ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_bs.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8430,14 +8532,16 @@ Double_t Ostap::Models::Hat::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Hat"               ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_hat.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8512,14 +8616,16 @@ Double_t Ostap::Models::Up::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Up"                ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_up.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8595,15 +8701,16 @@ Double_t Ostap::Models::FupN::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::FupN"              ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_fupN.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8617,10 +8724,10 @@ Ostap::Models::Tsallis::Tsallis
   RooAbsReal&           mass      )   // particle mass (fixed)
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "x"      , "Observable"  , this , x      ) 
-  , m_n       ( "n"      , "shape"       , this , n      ) 
-  , m_T       ( "T"      , "temperature" , this , T      ) 
-  , m_mass    ( "m"      , "mass"        , this , mass   ) 
+  , m_x       ( "!x"      , "Observable"  , this , x      ) 
+  , m_n       ( "!n"      , "shape"       , this , n      ) 
+  , m_T       ( "!T"      , "temperature" , this , T      ) 
+  , m_mass    ( "!m"      , "mass"        , this , mass   ) 
     //
   , m_tsallis  ( 0 , 10 , 1 ) 
 {
@@ -8634,10 +8741,10 @@ Ostap::Models::Tsallis::Tsallis
   const char*                      name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x       ( "x"  , this , right.m_x       ) 
-  , m_n       ( "n"  , this , right.m_n       )
-  , m_T       ( "T"  , this , right.m_T       )
-  , m_mass    ( "m"  , this , right.m_mass    )
+  , m_x       ( "!x"  , this , right.m_x       ) 
+  , m_n       ( "!n"  , this , right.m_n       )
+  , m_T       ( "!T"  , this , right.m_T       )
+  , m_mass    ( "!m"  , this , right.m_mass    )
     //
   , m_tsallis (               right.m_tsallis ) 
 {
@@ -8686,15 +8793,16 @@ Double_t Ostap::Models::Tsallis::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Tsallis"           ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_tsallis.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8707,9 +8815,9 @@ Ostap::Models::QGSM::QGSM
   RooAbsReal&           mass      )   // particle mass (fixed)
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "x"      , "Observable"  , this , x      ) 
-  , m_b       ( "b"      , "slope"       , this , b      ) 
-  , m_mass    ( "m"      , "mass"        , this , mass   ) 
+  , m_x       ( "!x"      , "Observable"  , this , x      ) 
+  , m_b       ( "!b"      , "slope"       , this , b      ) 
+  , m_mass    ( "!m"      , "mass"        , this , mass   ) 
     //
   , m_qgsm  ( 0 , 1 ) 
 {
@@ -8723,9 +8831,9 @@ Ostap::Models::QGSM::QGSM
   const char*                      name  ) 
   : RooAbsPdf ( right , name ) 
 //
-  , m_x    ( "x"  , this , right.m_x    ) 
-  , m_b    ( "b"  , this , right.m_b    )
-  , m_mass ( "m"  , this , right.m_mass )
+  , m_x    ( "!x"  , this , right.m_x    ) 
+  , m_b    ( "!b"  , this , right.m_b    )
+  , m_mass ( "!m"  , this , right.m_mass )
     //
   , m_qgsm (               right.m_qgsm ) 
 {
@@ -8773,17 +8881,16 @@ Double_t Ostap::Models::QGSM::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::QGSM"              ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_qgsm.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
-
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8862,8 +8969,11 @@ Double_t Ostap::Models::Hagedorn::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Hagedorn"          ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_hagedorn.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
@@ -8882,10 +8992,10 @@ Ostap::Models::TwoExpos::TwoExpos
   RooAbsReal&          x0     )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "x"      , "Observable" , this , x     ) 
-  , m_alpha   ( "alpha"  , "alpha"      , this , alpha ) 
-  , m_delta   ( "delta"  , "delta"      , this , delta ) 
-  , m_x0      ( "x0"     , "x0"         , this , x0    ) 
+  , m_x       ( "!x"      , "Observable" , this , x     ) 
+  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha ) 
+  , m_delta   ( "!delta"  , "delta"      , this , delta ) 
+  , m_x0      ( "!x0"     , "x0"         , this , x0    ) 
     //
   , m_2expos  ( 1 , 1 , 0 )
 {
@@ -8899,10 +9009,10 @@ Ostap::Models::TwoExpos::TwoExpos
   const char*                     name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "x"      , this , right.m_x     ) 
-  , m_alpha  ( "alpha"  , this , right.m_alpha ) 
-  , m_delta  ( "delta"  , this , right.m_delta ) 
-  , m_x0     ( "x0"      , this , right.m_x0    ) 
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_alpha  ( "!alpha"  , this , right.m_alpha ) 
+  , m_delta  ( "!delta"  , this , right.m_delta ) 
+  , m_x0     ( "!x0"      , this , right.m_x0    ) 
     //
   , m_2expos (                   right.m_2expos ) 
 {
@@ -8951,14 +9061,16 @@ Double_t Ostap::Models::TwoExpos::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::TwoExpos"          ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_2expos.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -8973,11 +9085,11 @@ Ostap::Models::DoubleGauss::DoubleGauss
   RooAbsReal&          mean      )  // mean, presumably  fixed at 0
   //
   : RooAbsPdf( name , title ) 
-  , m_x        ( "x"         , "Observable"          , this , x        ) 
-  , m_sigma    ( "sigma"     , "Narrow sigma"        , this , sigma    ) 
-  , m_fraction ( "fraction"  , "Fraction"            , this , fraction ) 
-  , m_scale    ( "scale"     , "Scale"               , this , scale    ) 
-  , m_mean     ( "mean"      , "Mean"                , this , mean     ) 
+  , m_x        ( "!x"         , "Observable"          , this , x        ) 
+  , m_sigma    ( "!sigma"     , "Narrow sigma"        , this , sigma    ) 
+  , m_fraction ( "!fraction"  , "Fraction"            , this , fraction ) 
+  , m_scale    ( "!scale"     , "Scale"               , this , scale    ) 
+  , m_mean     ( "!mean"      , "Mean"                , this , mean     ) 
   , m_2gauss  () 
 {
   setPars() ;
@@ -8990,11 +9102,11 @@ Ostap::Models::DoubleGauss::DoubleGauss
   const char*                          name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x        ( "x"        , this , right.m_x        ) 
-  , m_sigma    ( "sigma"    , this , right.m_sigma    )
-  , m_fraction ( "fraction" , this , right.m_fraction )
-  , m_scale    ( "scale"    , this , right.m_scale    )
-  , m_mean     ( "mean"     , this , right.m_mean    )
+  , m_x        ( "!x"        , this , right.m_x        ) 
+  , m_sigma    ( "!sigma"    , this , right.m_sigma    )
+  , m_fraction ( "!fraction" , this , right.m_fraction )
+  , m_scale    ( "!scale"    , this , right.m_scale    )
+  , m_mean     ( "!mean"     , this , right.m_mean    )
   , m_2gauss   ( right.m_2gauss ) 
 {
   setPars() ;
@@ -9036,8 +9148,11 @@ Double_t Ostap::Models::DoubleGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::DoubleGauss"       ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double  xmax = m_x.max ( rangeName )  ;
   const double  xmin = m_x.min ( rangeName )  ;
@@ -9046,7 +9161,6 @@ Double_t Ostap::Models::DoubleGauss::analyticalIntegral
   return m_2gauss.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  constructor from all parameters
@@ -9063,9 +9177,9 @@ Ostap::Models::Gumbel::Gumbel
   RooAbsReal&          mu        , 
   RooAbsReal&          beta      )
   : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"     , "Observable"           , this , x    ) 
-  , m_mu       ( "mu"    , "Shift parameter/mode" , this , mu   ) 
-  , m_beta     ( "beta"  , "Scale parameter"      , this , beta ) 
+  , m_x        ( "!x"     , "Observable"           , this , x    ) 
+  , m_mu       ( "!mu"    , "Shift parameter/mode" , this , mu   ) 
+  , m_beta     ( "!beta"  , "Scale parameter"      , this , beta ) 
   , m_gumbel   () 
 {
   setPars() ;
@@ -9077,9 +9191,9 @@ Ostap::Models::Gumbel::Gumbel
 ( const Ostap::Models::Gumbel& right ,
   const char*                     name  ) 
   : RooAbsPdf  ( right , name ) 
-  , m_x        ( "x"    , this , right.m_x    ) 
-  , m_mu       ( "mu"   , this , right.m_mu   ) 
-  , m_beta     ( "beta" , this , right.m_beta ) 
+  , m_x        ( "!x"    , this , right.m_x    ) 
+  , m_mu       ( "!mu"   , this , right.m_mu   ) 
+  , m_beta     ( "!beta" , this , right.m_beta ) 
   , m_gumbel   ( right.m_gumbel ) 
 {
   setPars() ;
@@ -9119,8 +9233,11 @@ Double_t Ostap::Models::Gumbel::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Gumbel"            ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9129,7 +9246,6 @@ Double_t Ostap::Models::Gumbel::analyticalIntegral
   return m_gumbel.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /* constructor from all parameters
@@ -9147,10 +9263,10 @@ Ostap::Models::Weibull::Weibull
   RooAbsReal&          shape     , // shape/k 
   RooAbsReal&          shift     ) // shift/x0 
   : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"      , "Observable"             , this , x     ) 
-  , m_scale    ( "scale"  , "Scale parameter/lambda" , this , scale ) 
-  , m_shape    ( "shape"  , "Shape parameter/k"      , this , shape ) 
-  , m_shift    ( "shift"  , "Shift parameter/x0"     , this , shift ) 
+  , m_x        ( "!x"      , "Observable"             , this , x     ) 
+  , m_scale    ( "!scale"  , "Scale parameter/lambda" , this , scale ) 
+  , m_shape    ( "!shape"  , "Shape parameter/k"      , this , shape ) 
+  , m_shift    ( "!shift"  , "Shift parameter/x0"     , this , shift ) 
   , m_weibull  ()  
 {
   setPars () ;  
@@ -9163,10 +9279,10 @@ Ostap::Models::Weibull::Weibull
   const char*                     name  ) 
   : RooAbsPdf  ( right , name ) 
     //
-  , m_x        ( "x"     , this , right.m_x     ) 
-  , m_scale    ( "scale" , this , right.m_scale ) 
-  , m_shape    ( "shape" , this , right.m_shape ) 
-  , m_shift    ( "shift" , this , right.m_shift ) 
+  , m_x        ( "!x"     , this , right.m_x     ) 
+  , m_scale    ( "!scale" , this , right.m_scale ) 
+  , m_shape    ( "!shape" , this , right.m_shape ) 
+  , m_shift    ( "!shift" , this , right.m_shift ) 
   , m_weibull  ( right.m_weibull ) 
 {
   setPars () ;  
@@ -9206,8 +9322,11 @@ Double_t Ostap::Models::Weibull::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Weibull"           ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9216,7 +9335,6 @@ Double_t Ostap::Models::Weibull::analyticalIntegral
   return m_weibull.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  constructor from all parameters
@@ -9232,9 +9350,9 @@ Ostap::Models::RaisingCosine::RaisingCosine
   RooAbsReal&          mean      , // mean
   RooAbsReal&          scale     ) // scale
   : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"      , "Observable"               , this , x    ) 
-  , m_mean     ( "mean"   , "Mean/location parameter"  , this , mean ) 
-  , m_scale    ( "scale"  , "Scale parameter"          , this , scale ) 
+  , m_x        ( "!x"      , "Observable"               , this , x    ) 
+  , m_mean     ( "!mean"   , "Mean/location parameter"  , this , mean ) 
+  , m_scale    ( "!scale"  , "Scale parameter"          , this , scale ) 
   , m_rcos  ()  
 {
   setPars () ;  
@@ -9247,9 +9365,9 @@ Ostap::Models::RaisingCosine::RaisingCosine
   const char*                     name  ) 
   : RooAbsPdf  ( right , name ) 
     //
-  , m_x        ( "x"     , this , right.m_x     ) 
-  , m_mean     ( "mean"  , this , right.m_mean  ) 
-  , m_scale    ( "scale" , this , right.m_scale ) 
+  , m_x        ( "!x"     , this , right.m_x     ) 
+  , m_mean     ( "!mean"  , this , right.m_mean  ) 
+  , m_scale    ( "!scale" , this , right.m_scale ) 
   , m_rcos     ( right.m_rcos ) 
 {
   setPars () ;  
@@ -9288,8 +9406,11 @@ Double_t Ostap::Models::RaisingCosine::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::RaisoingCosine"    ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9298,7 +9419,6 @@ Double_t Ostap::Models::RaisingCosine::analyticalIntegral
   return m_rcos.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  constructor from all parameters
@@ -9316,10 +9436,10 @@ Ostap::Models::QGaussian::QGaussian
   RooAbsReal&          scale     , // scale
   RooAbsReal&          q         ) // q
   : RooAbsPdf  ( name , title ) 
-  , m_x        ( "x"      , "Observable"               , this , x     ) 
-  , m_mean     ( "mean"   , "Mean/location parameter"  , this , mean  ) 
-  , m_scale    ( "scale"  , "Scale parameter"          , this , scale ) 
-  , m_q        ( "q"      , "Q-parameter"              , this , q     ) 
+  , m_x        ( "!x"      , "Observable"               , this , x     ) 
+  , m_mean     ( "!mean"   , "Mean/location parameter"  , this , mean  ) 
+  , m_scale    ( "!scale"  , "Scale parameter"          , this , scale ) 
+  , m_q        ( "!q"      , "Q-parameter"              , this , q     ) 
   , m_qgauss   ()  
 {
   setPars () ;  
@@ -9375,8 +9495,11 @@ Double_t Ostap::Models::QGaussian::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::QGaussian"         ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9462,8 +9585,11 @@ Double_t Ostap::Models::KGaussian::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::KGaussian"         ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9493,11 +9619,11 @@ Ostap::Models::Hyperbolic::Hyperbolic
   RooAbsReal&          zeta      ,   // 
   RooAbsReal&          kappa     )   // related to width 
   : RooAbsPdf    ( name , title ) 
-  , m_x          ( "x"      , "Observable"            , this , x     ) 
-  , m_mu         ( "mu"     , "Location parameter"    , this , mu    ) 
-  , m_sigma      ( "sigma"  , "Sigma    parameter"    , this , sigma ) 
-  , m_zeta       ( "zeta"   , "Zeta     parameter"    , this , zeta  ) 
-  , m_kappa      ( "kappa"  , "Kappa    parameter"    , this , kappa ) 
+  , m_x          ( "!x"      , "Observable"            , this , x     ) 
+  , m_mu         ( "!mu"     , "Location parameter"    , this , mu    ) 
+  , m_sigma      ( "!sigma"  , "Sigma    parameter"    , this , sigma ) 
+  , m_zeta       ( "!zeta"   , "Zeta     parameter"    , this , zeta  ) 
+  , m_kappa      ( "!kappa"  , "Kappa    parameter"    , this , kappa ) 
   , m_hyperbolic ()  
 {
   setPars () ;  
@@ -9510,11 +9636,11 @@ Ostap::Models::Hyperbolic::Hyperbolic
   const char*                      name  ) 
   : RooAbsPdf    ( right , name ) 
     //
-  , m_x          ( "x"     , this , right.m_x     ) 
-  , m_mu         ( "mu"    , this , right.m_mu    )  
-  , m_sigma      ( "sigma" , this , right.m_sigma ) 
-  , m_zeta       ( "zeta"  , this , right.m_zeta  ) 
-  , m_kappa      ( "kappa" , this , right.m_kappa ) 
+  , m_x          ( "!x"     , this , right.m_x     ) 
+  , m_mu         ( "!mu"    , this , right.m_mu    )  
+  , m_sigma      ( "!sigma" , this , right.m_sigma ) 
+  , m_zeta       ( "!zeta"  , this , right.m_zeta  ) 
+  , m_kappa      ( "!kappa" , this , right.m_kappa ) 
   , m_hyperbolic ( right.m_hyperbolic ) 
 {
   setPars () ;  
@@ -9555,8 +9681,11 @@ Double_t Ostap::Models::Hyperbolic::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Hyperbolic"        ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9599,12 +9728,12 @@ Ostap::Models::GenHyperbolic::GenHyperbolic
   RooAbsReal&          kappa     ,   // related to asymmetry 
   RooAbsReal&          lambda    )   // related to shapoe 
   : RooAbsPdf    ( name , title ) 
-  , m_x          ( "x"      , "Observable"            , this , x      ) 
-  , m_mu         ( "mu"     , "Location parameter"    , this , mu     ) 
-  , m_sigma      ( "sigma"  , "Sigma    parameter"    , this , sigma  ) 
-  , m_zeta       ( "zeta"   , "Zeta     parameter"    , this , zeta   ) 
-  , m_kappa      ( "kappa"  , "Kappa    parameter"    , this , kappa  ) 
-  , m_lambda     ( "lambda" , "Lambda   parameter"    , this , lambda ) 
+  , m_x          ( "!x"      , "Observable"            , this , x      ) 
+  , m_mu         ( "!mu"     , "Location parameter"    , this , mu     ) 
+  , m_sigma      ( "!sigma"  , "Sigma    parameter"    , this , sigma  ) 
+  , m_zeta       ( "!zeta"   , "Zeta     parameter"    , this , zeta   ) 
+  , m_kappa      ( "!kappa"  , "Kappa    parameter"    , this , kappa  ) 
+  , m_lambda     ( "!lambda" , "Lambda   parameter"    , this , lambda ) 
   , m_hyperbolic ()  
 {
   setPars () ;  
@@ -9617,12 +9746,12 @@ Ostap::Models::GenHyperbolic::GenHyperbolic
   const char*                      name  ) 
   : RooAbsPdf    ( right , name ) 
     //
-  , m_x          ( "x"      , this , right.m_x      ) 
-  , m_mu         ( "mu"     , this , right.m_mu     )  
-  , m_sigma      ( "sigma"  , this , right.m_sigma  ) 
-  , m_zeta       ( "zeta"   , this , right.m_zeta   ) 
-  , m_kappa      ( "kappa"  , this , right.m_kappa  ) 
-  , m_lambda     ( "lambda" , this , right.m_lambda ) 
+  , m_x          ( "!x"      , this , right.m_x      ) 
+  , m_mu         ( "!mu"     , this , right.m_mu     )  
+  , m_sigma      ( "!sigma"  , this , right.m_sigma  ) 
+  , m_zeta       ( "!zeta"   , this , right.m_zeta   ) 
+  , m_kappa      ( "!kappa"  , this , right.m_kappa  ) 
+  , m_lambda     ( "!lambda" , this , right.m_lambda ) 
   , m_hyperbolic ( right.m_hyperbolic ) 
 {
   setPars () ;  
@@ -9664,8 +9793,11 @@ Double_t Ostap::Models::GenHyperbolic::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::GenHyperbolic"     ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9788,8 +9920,11 @@ Double_t Ostap::Models::Das::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Das"               ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9902,8 +10037,11 @@ Double_t Ostap::Models::ADas::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::ADas"              ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -9912,12 +10050,6 @@ Double_t Ostap::Models::ADas::analyticalIntegral
   return m_adas.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
-
-
-
-
-
 
 // ============================================================================
 Ostap::Models::CutOffGauss::CutOffGauss 
@@ -10004,8 +10136,11 @@ Double_t Ostap::Models::CutOffGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::CutOffGauss"       ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -10014,8 +10149,6 @@ Double_t Ostap::Models::CutOffGauss::analyticalIntegral
   return m_cutoff.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 Ostap::Models::CutOffStudent::CutOffStudent
@@ -10108,8 +10241,11 @@ Double_t Ostap::Models::CutOffStudent::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::CutOffStudent"     ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -10342,8 +10478,11 @@ Double_t Ostap::Models::Rice::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Rice"              ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -10352,10 +10491,6 @@ Double_t Ostap::Models::Rice::analyticalIntegral
   return m_rice.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
-
-
-
 
 // ============================================================================
 // GIG distrbution
@@ -10441,8 +10576,11 @@ Double_t Ostap::Models::GenInvGauss::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::GenInvGauss"       ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   const double xmin =  m_x.min ( rangeName ) ;
   const double xmax =  m_x.max ( rangeName ) ;
@@ -10451,8 +10589,6 @@ Double_t Ostap::Models::GenInvGauss::analyticalIntegral
   return m_gig.integral ( xmin , xmax ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // SkewGenT 
@@ -10537,15 +10673,17 @@ Double_t Ostap::Models::SkewGenT::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::SkewGenT"          ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   //
   return m_sgt.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // SkewGenError
@@ -10556,15 +10694,15 @@ Ostap::Models::SkewGenError::SkewGenError
   RooAbsReal&  x     ,
   RooAbsReal&  mu    ,   // location/mean  
   RooAbsReal&  sigma ,   // scale/rms 
-  RooAbsReal&  xi    ,   // related to asymmetry 
-  RooAbsReal&  p     )   // shape parameter 
+  RooAbsReal&  psi   ,   // related to asymmetry 
+  RooAbsReal&  r     )   // shape parameter 
   : RooAbsPdf ( name , title )
     //
   , m_x       ( "!x"     , "x-observable"  , this , x     )
   , m_mu      ( "!mu"    , "location/mean" , this , mu    )
   , m_sigma   ( "!sigma" , "sigma/rms"     , this , sigma )
-  , m_xi      ( "!xi"    , "asymmetry"     , this , xi    )
-  , m_p       ( "!p"     , "p-shape"       , this , p     )
+  , m_psi     ( "!psi"   , "asymmetry"     , this , psi   )
+  , m_r       ( "!r"     , "r-shape"       , this , r     )
     //
   , m_sge     ( 0.1222 , 0.1222 , 0.1222 , 0.1222 ) 
 {
@@ -10581,8 +10719,8 @@ Ostap::Models::SkewGenError::SkewGenError
   , m_x        ( "!x"      , this , right.m_x     ) 
   , m_mu       ( "!mu"     , this , right.m_mu    ) 
   , m_sigma    ( "!sigma"  , this , right.m_sigma ) 
-  , m_xi       ( "!xi"     , this , right.m_xi    ) 
-  , m_p        ( "!p"      , this , right.m_p     ) 
+  , m_psi      ( "!psi"    , this , right.m_psi   ) 
+  , m_r        ( "!r"      , this , right.m_r     ) 
     //
   , m_sge      ( right.m_sge )
 {
@@ -10601,8 +10739,8 @@ void Ostap::Models::SkewGenError::setPars () const
 {
   m_sge.setMu     ( m_mu    ) ;
   m_sge.setSigma  ( m_sigma ) ;
-  m_sge.setXi     ( m_xi    ) ;
-  m_sge.setP      ( m_p     ) ;
+  m_sge.setPsi    ( m_psi   ) ;
+  m_sge.setR      ( m_r     ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -10626,15 +10764,17 @@ Double_t Ostap::Models::SkewGenError::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::SkewGenError"      ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   //
   return m_sge.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // HORNSdini 
@@ -10706,16 +10846,17 @@ Double_t Ostap::Models::HORNSdini::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::HORNSdini"         ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   //
   return m_horns.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // HILLdini 
@@ -10787,15 +10928,17 @@ Double_t Ostap::Models::HILLdini::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ){}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::HILLdini"          ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   //
   return m_hill.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // generic positive polinomial
@@ -10901,15 +11044,16 @@ Double_t Ostap::Models::KarlinShapley::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::KarlinShapley"     ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // generic positive polinomial
@@ -11017,15 +11161,16 @@ Double_t Ostap::Models::KarlinStudden::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::KarlinStudden"     ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // generalised Pareto Distorbution
@@ -11104,15 +11249,16 @@ Double_t Ostap::Models::GenPareto::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::GenPareto"         ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_gpd.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // exponentiated generalised Pareto Distorbution
@@ -11190,15 +11336,16 @@ Double_t Ostap::Models::ExGenPareto::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::ExGenPareto"       ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_egpd.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // Modified Benini
@@ -11336,14 +11483,16 @@ Double_t Ostap::Models::Benini::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Benini"            ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_benini.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 Ostap::Models::GEV::GEV
@@ -11419,8 +11568,11 @@ Double_t Ostap::Models::GEV::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::GEV"               ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_gev.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
@@ -11524,14 +11676,16 @@ Double_t Ostap::Models::MPERT::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::MPERT"             ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_mpert.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 Ostap::Models::FisherZ::FisherZ
@@ -11623,15 +11777,16 @@ Double_t Ostap::Models::FisherZ::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::FisherZ"           ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_fz.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 Ostap::Models::BirnbaumSaunders::BirnbaumSaunders
@@ -11706,14 +11861,16 @@ Double_t Ostap::Models::BirnbaumSaunders::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::BirnbaumSaunders"  ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_bs.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 Ostap::Models::Rational::Rational
@@ -11812,18 +11969,16 @@ Double_t Ostap::Models::Rational::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Rational"          ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   return m_rational.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
-
-
-
-
 
 // ============================================================================
 Ostap::Models::Meixner::Meixner
@@ -11913,8 +12068,11 @@ Double_t Ostap::Models::Meixner::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::Meixner"           ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
   return m_meixner.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;

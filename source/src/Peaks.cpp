@@ -1012,6 +1012,22 @@ double Ostap::Math::SkewGauss::kurtosis () const
 double Ostap::Math::SkewGauss::sigma  () const 
 { return std::sqrt ( variance () ) ; }
 // ============================================================================
+// approximate mode 
+// ============================================================================
+double Ostap::Math::SkewGauss::approximate_mode () const
+{
+  if ( s_zero ( m_omega ) )  { return m_xi ; }
+  //
+  const double delta = m_alpha / std::hypot ( 1.0 , m_alpha ) ;
+  const double d1    = std::sqrt ( 2 / M_PI ) * delta ;
+  //
+  double ma = d1 ;
+  ma -= ( 1 - M_PI / 4 ) * std::pow ( d1 , 3 ) / ( 1 - d1 * delta ) ;
+  ma -= 0.5 * Ostap::Math::signum ( m_alpha ) * std::exp ( -2 * M_PI / std::abs ( m_alpha ) ) ;
+  //
+  return m_xi + m_omega * ma ;
+}
+// ======================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SkewGauss::tag () const 
@@ -6866,28 +6882,29 @@ std::size_t Ostap::Math::SkewGenT::tag () const
 /*  constructor with full parameters 
  *  @param mu    related to location 
  *  @param sigma related to RSM/scale/width 
- *  @param xi    related to asymmetry/skewness
+ *  @param psi   related to asymmetry/skewness
  *  @param p     shape parameter 
  */
 // ============================================================================
 Ostap::Math::SkewGenError::SkewGenError  
 ( const double mu     ,    // location parameter 
   const double sigma  ,    // width parameter 
-  const double xi     ,    // asymmetry/skewness parameter 
-  const double p      )    // shape parameter 
+  const double psi    ,    // asymmetry
+  const double r      )    // shape parameter 
   : m_mu     ( mu    ) 
   , m_sigma  ( sigma ) 
-  , m_xi     ( xi    ) 
-  , m_p      ( std::abs ( p    ) ) 
-  , m_lambda ( -100  ) 
-  , m_b0     ( -100  ) 
-  , m_b1     ( -100  ) 
-  , m_b2     ( -100  ) 
+  , m_psi    ( psi   ) 
+  , m_r      ( -1000 ) 
+  , m_p      ( -1000 ) 
+  , m_lambda ( -1000 ) 
+  , m_b0     ( -1000 ) 
+  , m_b1     ( -1000 ) 
+  , m_b2     ( -1000 ) 
 {
   setMu      ( mu    ) ;
   setSigma   ( sigma ) ;
-  setXi      ( xi    ) ;
-  setP       ( p     ) ;
+  setPsi     ( psi   ) ;
+  setR       ( r     ) ;
 }
 // ======================================================================
 // set mu-parameter
@@ -6919,15 +6936,15 @@ bool Ostap::Math::SkewGenError::setSigma
 // ======================================================================
 // set xi-parameter
 // ======================================================================
-bool Ostap::Math::SkewGenError::setXi
+bool Ostap::Math::SkewGenError::setPsi 
 ( const double value ) 
 {
-  if ( s_equal ( value , m_xi )
+  if ( s_equal ( value , m_psi )
        && -1<= m_lambda 
        &&      m_lambda <= 1 ) { return false ; }
   //
-  m_xi     = value ;
-  m_lambda = std::tanh ( value ) ; 
+  m_psi    = value ;
+  m_lambda = value ? std::tanh ( m_psi ) : 0.0 ; 
   //
   return true ;
 }
@@ -6949,7 +6966,7 @@ void Ostap::Math::SkewGenError::calc_b
   double& b2 )    // 2^{2/p} Gamma(1/2+1/p)/Gamma(1/p)
 {
   //
-  const long double ip  = 1.0L / m_p ;
+  const long double ip  = m_r ; // 1/p 
   const long double lg1 = std::lgamma ( ip ) ;
   //
   m_b0 = Ostap::Math::igamma ( ip ) ;
@@ -6958,18 +6975,22 @@ void Ostap::Math::SkewGenError::calc_b
   //
 }
 // ============================================================================
-// set p-parameter
+// set R-parameter
 // ============================================================================
-bool Ostap::Math::SkewGenError::setP
+bool Ostap::Math::SkewGenError::setR 
 ( const double value ) 
 {
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_p ) 
-       && -100 != m_b0  
-       && -100 != m_b1  
-       && -100 != m_b2 ) { return false ; }
   //
-  m_p = avalue  ;
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_r ) && 0 < m_r && 0 < m_p ) { return false ; } 
+  //
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'r' must be non-zero"         ,
+		  "Ostap::Math::SkewGenError::setR"        ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //  
+  m_r = avalue  ; 
+  m_p = 1 / m_r ;
   //
   calc_b ( m_b0 , m_b1 , m_b2 ) ;
   //
@@ -7122,17 +7143,14 @@ std::size_t Ostap::Math::SkewGenError::tag () const
   return Ostap::Utils::hash_combiner ( s_name   , 
                                        m_mu     , 
                                        m_sigma  , 
-                                       m_xi     , 
-                                       m_p      ) ;
+                                       m_psi    , 
+                                       m_r      ) ;
 }
 // ============================================================================
 
 
-
-
-
 // ===========================================================================
-// constructor with location and scale parmaeters 
+// constructor with location and scale parameters  
 // ===========================================================================
 Ostap::Math::Hat::Hat
 ( const double mu       , 

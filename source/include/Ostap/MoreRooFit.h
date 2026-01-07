@@ -3984,7 +3984,45 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-  
+    /** @class StudentTNu
+     *  \f$ n \rigtharrow nu \f$ transformation for StudnetT & frinets 
+     *  @see Ostap::Math::StudentT
+     *  @see Ostap::Math::StudentT::nu
+     */
+    class StudentTNu final : public OneVar
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::StudentTNu , 1 ) ;  
+      // ========================================================================
+    public:
+      // =======================================================================
+      /// constructor with three arguments variables 
+      StudentTNu  
+      ( const std::string&  name  , 
+        const std::string&  title , 
+        RooAbsReal&         n     ) ;
+      /// constructor with two arguments 
+      StudentTNu  
+      ( const std::string&  name  , 
+        RooAbsReal&         n     ) ;
+      /// copy 
+      StudentTNu  
+      ( const StudentTNu&   right       ,        
+        const char*         newname = 0 ) ;
+      /// clone 
+      StudentTNu* clone ( const char* newname ) const override ;
+      /// fake default constructor (needed for serisalization)
+      StudentTNu () = default ;
+      // virtual destructor 
+      virtual ~StudentTNu () ;
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ; 
+      // ======================================================================
+    } ;
+    // ========================================================================    
     class NeedhamAlpha : public RooAbsReal 
     {
       // ========================================================================

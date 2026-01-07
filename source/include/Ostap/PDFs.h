@@ -783,7 +783,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Voigt& function() const { return m_voigt ; }
+      const Ostap::Math::Voigt& function() const { setPars() ; return m_voigt ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -869,7 +869,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PseudoVoigt& function() const { return m_voigt ; }
+      const Ostap::Math::PseudoVoigt& function() const { setPars() ; return m_voigt ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1044,7 +1044,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::CrystalBall& function() const { return m_cb ; }
+      const Ostap::Math::CrystalBall& function() const { setPars() ; return m_cb ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1133,7 +1133,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::CrystalBallRightSide& function() const { return m_cb ; }
+      const Ostap::Math::CrystalBallRightSide& function() const
+      { setPars() ; return m_cb ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1225,7 +1226,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::CrystalBallDoubleSided& function() const
-      { return m_cb2 ; }
+      { setPars() ; return m_cb2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1345,7 +1346,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Needham& function() const { return m_needham ; }
+      const Ostap::Math::Needham& function() const { setPars() ; return m_needham ; }
       /// get current alpha
       double                      alpha   () const ;
       // ======================================================================
@@ -1442,7 +1443,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::CrystalBallA& function() const { return m_cb ; }
+      const Ostap::Math::CrystalBallA& function() const { setPars () ; return m_cb ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1537,7 +1538,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::CrystalBallDoubleSidedA& function() const
-      { return m_cb2 ; }
+      { setPars() ; return m_cb2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1637,7 +1638,7 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::CrystalBallDoubleSidedE& function() const
-      { return m_cb2 ; }
+      { setPars () ; return m_cb2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1664,9 +1665,7 @@ namespace Ostap
       /// the actual function
       mutable Ostap::Math::CrystalBallDoubleSidedE m_cb2 ;       // the function
       // ======================================================================
-    } ;
-
-    
+    } ;    
     // ========================================================================
     /** @class Apollonios
      *  An asymetric Apollonious function 
@@ -1737,7 +1736,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Apollonios& function() const { return m_apo ; }
+      const Ostap::Math::Apollonios& function() const { setPars() ; return m_apo ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1838,7 +1837,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ApolloniosL& function() const { return m_apoL ; }
+      const Ostap::Math::ApolloniosL& function() const { setPars() ; return m_apoL ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1866,7 +1865,6 @@ namespace Ostap
       mutable Ostap::Math::ApolloniosL m_apoL ;                // the function
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class BifurcatedGauss
      *  @see Ostap::Math::BifurkatedGauss
@@ -1931,7 +1929,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BifurcatedGauss& function() const { return m_bg ; }
+      const Ostap::Math::BifurcatedGauss& function() const
+      { setPars() ; return m_bg ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2019,7 +2018,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenGaussV1& function() const { return m_ggv1 ; }
+      const Ostap::Math::GenGaussV1& function() const { setPars() ; return m_ggv1 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2102,7 +2101,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenGaussV2& function() const { return m_ggv2 ; }
+      const Ostap::Math::GenGaussV2& function() const { setPars() ; return m_ggv2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2177,6 +2176,11 @@ namespace Ostap
         ( Int_t          code         ,
           const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -2185,7 +2189,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::SkewGauss& function() const { return m_sg ; }
+      const Ostap::Math::SkewGauss& function() const { setPars() ; return m_sg ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2292,8 +2296,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ExGauss& function () const { return m_eg ; }
-      const Ostap::Math::ExGauss& exgauss  () const { return m_eg ; }
+      const Ostap::Math::ExGauss& function () const { setPars() ; return m_eg ; }
+      const Ostap::Math::ExGauss& exgauss  () const { setPars() ; return m_eg ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2382,8 +2386,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ExGauss2& function () const { return m_eg ; }
-      const Ostap::Math::ExGauss2& exgauss2 () const { return m_eg ; }
+      const Ostap::Math::ExGauss2& function () const { setPars() ; return m_eg ; }
+      const Ostap::Math::ExGauss2& exgauss2 () const { setPars() ; return m_eg ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2474,8 +2478,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Bukin2& function () const { return m_b2 ; }
-      const Ostap::Math::Bukin2& bukin2   () const { return m_b2 ; }
+      const Ostap::Math::Bukin2& function () const { setPars() ; return m_b2 ; }
+      const Ostap::Math::Bukin2& bukin2   () const { setPars() ; return m_b2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2581,8 +2585,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::NormalLaplace& function       () const { return m_nl ; }
-      const Ostap::Math::NormalLaplace& normallaplace  () const { return m_nl ; }
+      const Ostap::Math::NormalLaplace& function       () const { setPars() ; return m_nl ; }
+      const Ostap::Math::NormalLaplace& normallaplace  () const { setPars() ; return m_nl ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2677,8 +2681,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Novosibirsk& function    () const { return m_novosibirsk ; }
-      const Ostap::Math::Novosibirsk& novosibirsk () const { return m_novosibirsk ; }
+      const Ostap::Math::Novosibirsk& function    () const { setPars() ; return m_novosibirsk ; }
+      const Ostap::Math::Novosibirsk& novosibirsk () const { setPars() ; return m_novosibirsk ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2768,8 +2772,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Bukin& function () const { return m_bukin ; }
-      const Ostap::Math::Bukin& bukin    () const { return m_bukin ; }
+      const Ostap::Math::Bukin& function () const { setPars() ; return m_bukin ; }
+      const Ostap::Math::Bukin& bukin    () const { setPars() ; return m_bukin ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3072,9 +3076,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PearsonIV& function  () const { return m_p4 ; }
+      const Ostap::Math::PearsonIV& function  () const { setPars () ; return m_p4 ; }
       /// access to underlying function
-      const Ostap::Math::PearsonIV& pearsonIV () const { return m_p4 ; }
+      const Ostap::Math::PearsonIV& pearsonIV () const { setPars () ; return m_p4 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3159,7 +3163,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GramCharlierA& function() const { return m_gca ; }
+      const Ostap::Math::GramCharlierA& function() const { setPars() ; return m_gca ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3228,20 +3232,25 @@ namespace Ostap
       // the actual evaluation of function
       Double_t evaluate() const override;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters (empoty function)!
+      void setPars () const {} ; // set all parameters (empty function!)
+      // ======================================================================
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
       /// access to underlying function       /// access to underlying function
-      const Ostap::Math::PhaseSpace2& function() const { return m_ps2 ; }
+      const Ostap::Math::PhaseSpace2& function() const { setPars() ; return m_ps2 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3384,8 +3393,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PhaseSpaceLeft& function() const { return m_left ; }
-      const Ostap::Math::PhaseSpaceLeft& left    () const { return m_left ; }
+      const Ostap::Math::PhaseSpaceLeft& function() const { setPars() ; return m_left ; }
+      const Ostap::Math::PhaseSpaceLeft& left    () const { setPars() ; return m_left ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3464,7 +3473,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PhaseSpaceRight& function() const { return m_right ; }
+      const Ostap::Math::PhaseSpaceRight& function() const { setPars() ; return m_right ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3545,7 +3554,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PhaseSpaceNL& function() const { return m_ps ; }
+      const Ostap::Math::PhaseSpaceNL& function() const { setPars() ; return m_ps ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3691,9 +3700,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::PhaseSpacePol& function() const { return m_ps ; }
-      const Ostap::Math::PhaseSpacePol& pspol   () const { return m_ps ; }
-      const Ostap::Math::PhaseSpaceNL&  psNL    () const { return m_ps.phasespace ()  ; }
+      const Ostap::Math::PhaseSpacePol& function() const { setPars() ; return m_ps ; }
+      const Ostap::Math::PhaseSpacePol& pspol   () const { setPars() ; return m_ps ; }
+      const Ostap::Math::PhaseSpaceNL&  psNL    () const { setPars() ; return m_ps.phasespace ()  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3821,8 +3830,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::PhaseSpaceLeftExpoPol& function () const { return m_ps              ; }
-      const Ostap::Math::PhaseSpaceLeft&        psleft   () const { return m_ps.phasespace() ; }
+      const Ostap::Math::PhaseSpaceLeftExpoPol& function () const { setPars() ; return m_ps              ; }
+      const Ostap::Math::PhaseSpaceLeft&        psleft   () const { setPars() ; return m_ps.phasespace() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3993,7 +4002,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Positive& function() const { return m_positive ; }
+      const Ostap::Math::Positive& function() const { setPars () ; return m_positive ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4074,8 +4083,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PositiveEven& function () const { return m_even ; }
-      const Ostap::Math::PositiveEven& polynom  () const { return m_even ; }
+      const Ostap::Math::PositiveEven& function () const { setPars() ; return m_even ; }
+      const Ostap::Math::PositiveEven& polynom  () const { setPars() ; return m_even ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4157,7 +4166,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Monotonic& function() const { return m_monotonic ; }
+      const Ostap::Math::Monotonic& function() const { setPars() ; return m_monotonic ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4241,14 +4250,16 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Convex& function() const { return m_convex ; }
+      const Ostap::Math::Convex& function() const { setPars() ; return m_convex ; }
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x    () const { return m_x    .arg() ; }
-      const RooArgList& phis () const { return m_phis        ; }
-      double            xmin () const { return m_convex.xmin () ; }
-      double            xmax () const { return m_convex.xmax () ; }    
+      const RooAbsReal& x    () const { return m_x    .arg()          ; }
+      const RooArgList& phis () const { return m_phis                 ; }
+      //
+      double            xmin () const { return m_convex.xmin       () ; }
+      double            xmax () const { return m_convex.xmax       () ; }
+      //
       bool        increasing () const { return m_convex.increasing () ; }
       bool        convex     () const { return m_convex.convex     () ; }
       // ======================================================================
@@ -4325,7 +4336,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ConvexOnly& function() const { return m_convex ; }
+      const Ostap::Math::ConvexOnly& function() const { setPars() ; return m_convex ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4408,8 +4419,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ExpoPositive& function() const { return m_positive ; }
-      const Ostap::Math::ExpoPositive& expopol () const { return m_positive ; }
+      const Ostap::Math::ExpoPositive& function() const { setPars() ; return m_positive ; }
+      const Ostap::Math::ExpoPositive& expopol () const { setPars() ; return m_positive ; }
+      /// min/max limits 
       double xmin () const { return m_positive.xmin () ; }
       double xmax () const { return m_positive.xmax () ; }
       // ======================================================================
@@ -4494,7 +4506,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Sigmoid& sigmoid () const { return m_sigmoid    ; }
+      const Ostap::Math::Sigmoid& sigmoid () const { setPars() ; return m_sigmoid    ; }
       /// access to underlying function
       const Ostap::Math::Sigmoid& function() const { return   sigmoid () ; }
       // ======================================================================
@@ -4589,7 +4601,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::TwoExpoPositive& function() const { return m_2expopos ; }
+      const Ostap::Math::TwoExpoPositive& function() const
+      { setPars () ; return m_2expopos ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4681,7 +4694,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GammaDist& function() const { return m_gamma ; }
+      const Ostap::Math::GammaDist& function() const { setPars() ; return m_gamma ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4769,7 +4782,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenGammaDist& function() const { return m_ggamma ; }
+      const Ostap::Math::GenGammaDist& function() const { setPars() ; return m_ggamma ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4854,7 +4867,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Amoroso& function() const { return m_amoroso ; }
+      const Ostap::Math::Amoroso& function() const { setPars() ; return m_amoroso ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4939,7 +4952,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::LogGammaDist& function() const { return m_gamma ; }
+      const Ostap::Math::LogGammaDist& function() const
+      { setPars() ; return m_gamma ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5020,7 +5034,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Log10GammaDist& function() const { return m_gamma ; }
+      const Ostap::Math::Log10GammaDist& function() const
+      { setPars() ; return m_gamma ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5109,7 +5124,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::LogGamma& function() const { return m_lgamma ; }
+      const Ostap::Math::LogGamma& function() const
+      { setPars() ; return m_lgamma ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5193,7 +5209,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Beta& function() const { return m_bfun ; }
+      const Ostap::Math::Beta& function() const { setPars() ; return m_bfun ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5217,8 +5233,6 @@ namespace Ostap
       mutable Ostap::Math::Beta m_bfun ; // the actual function
       // ======================================================================
     } ;
-
-
     // ========================================================================
     /** @class BetaPrime
      *  http://en.wikipedia.org/wiki/Beta_prime_distribution
@@ -5281,7 +5295,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BetaPrime& function() const { return m_betap ; }
+      const Ostap::Math::BetaPrime& function() const { setPars () ; return m_betap ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5305,7 +5319,6 @@ namespace Ostap
       mutable Ostap::Math::BetaPrime m_betap ; // the actual function
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class GenBetaPrime
      *  Generalized beta-prime distribution 
@@ -5371,7 +5384,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenBetaPrime& function() const { return m_betap ; }
+      const Ostap::Math::GenBetaPrime& function() const
+      { setPars() ; return m_betap ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5398,9 +5412,7 @@ namespace Ostap
       /// the actual function
       mutable Ostap::Math::GenBetaPrime m_betap ; // the actual function
       // ======================================================================
-    } ;
-
-    
+    } ;    
     // ========================================================================
     /** @class Landau
      *  http://en.wikipedia.org/wiki/Landau_distribution
@@ -5461,7 +5473,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Landau& function() const { return m_landau ; }
+      const Ostap::Math::Landau& function() const { setPars () ; return m_landau ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5558,7 +5570,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::SinhAsinh& function() const { return m_sinhasinh ; }
+      const Ostap::Math::SinhAsinh& function() const
+      { setPars () ; return m_sinhasinh ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5663,7 +5676,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::JohnsonSU& function() const { return m_johnsonSU ; }
+      const Ostap::Math::JohnsonSU& function() const
+      { setPars () ; return m_johnsonSU ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5750,7 +5764,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Atlas& function() const { return m_atlas ; }
+      const Ostap::Math::Atlas& function() const
+      { setPars () ; return m_atlas ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5847,7 +5862,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Sech& function() const { return m_sech ; }
+      const Ostap::Math::Sech& function() const
+      { setPars () ; return m_sech ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5938,7 +5954,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Losev& function() const { return m_losev ; }
+      const Ostap::Math::Losev& function() const
+      { setPars () ; return m_losev ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6024,7 +6041,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Logistic& function() const { return m_logistic ; }
+      const Ostap::Math::Logistic& function() const
+      { setPars() ; return m_logistic ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6108,7 +6126,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenLogisticIV& function() const { return m_gl4 ; }
+      const Ostap::Math::GenLogisticIV& function() const
+      { setPars () ; return m_gl4 ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6200,8 +6219,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Argus& function () const { return m_argus ; }
-      const Ostap::Math::Argus& argus    () const { return m_argus ; }
+      const Ostap::Math::Argus& function () const { setPars() ; return m_argus ; }
+      const Ostap::Math::Argus& argus    () const { setPars() ; return m_argus ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6296,8 +6315,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenArgus& function () const { return m_argus ; }
-      const Ostap::Math::GenArgus& argus    () const { return m_argus ; }
+      const Ostap::Math::GenArgus& function () const { setPars () ; return m_argus ; }
+      const Ostap::Math::GenArgus& argus    () const { setPars () ; return m_argus ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6380,7 +6399,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Slash& function () const { return m_slash ; }
+      const Ostap::Math::Slash& function () const { setPars() ; return m_slash ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6458,7 +6477,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::AsymmetricLaplace& function () const { return m_laplace ; }
+      const Ostap::Math::AsymmetricLaplace& function () const
+      { setPars() ;  return m_laplace ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6544,8 +6564,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BatesShape& function   () const { return m_bs ; }
-      const Ostap::Math::BatesShape& batesshape () const { return m_bs ; }
+      const Ostap::Math::BatesShape& function   () const { setPars() ; return m_bs ; }
+      const Ostap::Math::BatesShape& batesshape () const { setPars() ; return m_bs ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6627,8 +6647,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Hat& function () const { return m_hat ; }
-      const Ostap::Math::Hat& hat      () const { return m_hat ; }
+      const Ostap::Math::Hat& function () const { setPars() ; return m_hat ; }
+      const Ostap::Math::Hat& hat      () const { setPars() ; return m_hat ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6710,8 +6730,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Up& function () const { return m_up ; }
-      const Ostap::Math::Up& up       () const { return m_up ; }
+      const Ostap::Math::Up& function () const { setPars () ; return m_up ; }
+      const Ostap::Math::Up& up       () const { setPars () ; return m_up ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6791,8 +6811,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::FupN& function () const { return m_fupN ; }
-      const Ostap::Math::FupN& fupN     () const { return m_fupN ; }
+      const Ostap::Math::FupN& function () const { setPars () ; return m_fupN ; }
+      const Ostap::Math::FupN& fupN     () const { setPars () ; return m_fupN ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6886,8 +6906,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Tsallis& function () const { return m_tsallis ; }
-      const Ostap::Math::Tsallis& tsallis  () const { return m_tsallis ; }
+      const Ostap::Math::Tsallis& function () const { setPars() ; return m_tsallis ; }
+      const Ostap::Math::Tsallis& tsallis  () const { setPars() ; return m_tsallis ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6982,8 +7002,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::QGSM& function() const { return m_qgsm ; }
-      const Ostap::Math::QGSM& qgsm    () const { return m_qgsm ; }
+      const Ostap::Math::QGSM& function() const { setPars() ; return m_qgsm ; }
+      const Ostap::Math::QGSM& qgsm    () const { setPars() ; return m_qgsm ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7077,8 +7097,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Hagedorn& function () const { return m_hagedorn ; }
-      const Ostap::Math::Hagedorn& hagedorn () const { return m_hagedorn ; }
+      const Ostap::Math::Hagedorn& function () const
+      { setPars () ; return m_hagedorn ; }
+      const Ostap::Math::Hagedorn& hagedorn () const
+      { setPars () ; return m_hagedorn ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7161,8 +7183,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::TwoExpos& function() const { return m_2expos ; }
-      const Ostap::Math::TwoExpos& twoexpos() const { return m_2expos ; }
+      const Ostap::Math::TwoExpos& function() const { setPars() ; return m_2expos ; }
+      const Ostap::Math::TwoExpos& twoexpos() const { setPars() ; return m_2expos ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7241,7 +7263,7 @@ namespace Ostap
     public:
       // =====================================================================
       /// access to underlying function
-      const Ostap::Math::DoubleGauss& function () const { return m_2gauss ; }
+      const Ostap::Math::DoubleGauss& function () const { setPars() ; return m_2gauss ; }
       // =====================================================================
     public:
       // ======================================================================
@@ -7332,8 +7354,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Gumbel& function () const { return m_gumbel ; }
-      const Ostap::Math::Gumbel& gumbel   () const { return m_gumbel ; }
+      const Ostap::Math::Gumbel& function () const { setPars() ; return m_gumbel ; }
+      const Ostap::Math::Gumbel& gumbel   () const { setPars() ; return m_gumbel ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7415,8 +7437,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Weibull& function () const { return m_weibull ; }
-      const Ostap::Math::Weibull& weibull  () const { return m_weibull ; }
+      const Ostap::Math::Weibull& function () const { setPars () ; return m_weibull ; }
+      const Ostap::Math::Weibull& weibull  () const { setPars () ; return m_weibull ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7498,7 +7520,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::RaisingCosine& function () const { return m_rcos ; }
+      const Ostap::Math::RaisingCosine& function () const
+      { setPars () ; return m_rcos ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7586,8 +7609,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::QGaussian& function () const { return m_qgauss ; }
-      const Ostap::Math::QGaussian& qgauss   () const { return m_qgauss ; }
+      const Ostap::Math::QGaussian& function () const { setPars() ; return m_qgauss ; }
+      const Ostap::Math::QGaussian& qgauss   () const { setPars() ; return m_qgauss ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7608,10 +7631,6 @@ namespace Ostap
       mutable Ostap::Math::QGaussian m_qgauss ;
       // =====================================================================
     } ;
-    // ========================================================================
-
-
-
     // ========================================================================
     /** @class KGaussian
      *  k-Gaussian distribution:
@@ -7673,8 +7692,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::KGaussian& function () const { return m_kgauss ; }
-      const Ostap::Math::KGaussian& kgauss   () const { return m_kgauss ; }
+      const Ostap::Math::KGaussian& function () const { setPars() ; return m_kgauss ; }
+      const Ostap::Math::KGaussian& kgauss   () const { setPars() ; return m_kgauss ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7695,8 +7714,6 @@ namespace Ostap
       mutable Ostap::Math::KGaussian m_kgauss ;
       // =====================================================================
     } ;
-    // ========================================================================
-
     // ========================================================================
     /** @class Hyperbolic 
      *  Hyperbolic disribtion
@@ -7818,7 +7835,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Hyperbolic& function () const { return m_hyperbolic ; }
+      const Ostap::Math::Hyperbolic& function () const
+      { setPars() ; return m_hyperbolic ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7848,8 +7866,6 @@ namespace Ostap
       mutable Ostap::Math::Hyperbolic m_hyperbolic ;
       // =====================================================================
     } ;
-    // ========================================================================
-
     // ========================================================================
     /** @class GenHyperbolic 
      *  Generalized Hyperboilic distribution
@@ -7961,7 +7977,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenHyperbolic& function () const { return m_hyperbolic ; }
+      const Ostap::Math::GenHyperbolic& function () const
+      { setPars() ; return m_hyperbolic ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -7993,8 +8010,6 @@ namespace Ostap
       mutable Ostap::Math::GenHyperbolic m_hyperbolic ;
       // =====================================================================
     } ;
-    // ========================================================================
-    
     // ========================================================================
     /** @class Das
      *  Simple gaussian function with exponential tails.
@@ -8100,7 +8115,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Das& function () const { return m_das ; }
+      const Ostap::Math::Das& function () const { setPars () ; return m_das ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8230,7 +8245,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ADas& function () const { return m_adas ; }
+      const Ostap::Math::ADas& function () const { setPars() ; return m_adas ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8255,8 +8270,6 @@ namespace Ostap
       mutable Ostap::Math::ADas m_adas ;
       // =====================================================================
     };
-
-
 
     // ========================================================================
     // 1D-splines
@@ -8332,8 +8345,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::PositiveSpline& function() const { return m_spline ; }
-      const Ostap::Math::PositiveSpline& spline  () const { return m_spline ; }
+      const Ostap::Math::PositiveSpline& function() const { setPars () ; return m_spline ; }
+      const Ostap::Math::PositiveSpline& spline  () const { setPars () ; return m_spline ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8418,8 +8431,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::MonotonicSpline& function() const { return m_spline ; }
-      const Ostap::Math::MonotonicSpline& spline  () const { return m_spline ; }
+      const Ostap::Math::MonotonicSpline& function() const { setPars() ; return m_spline ; }
+      const Ostap::Math::MonotonicSpline& spline  () const { setPars() ; return m_spline ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8502,8 +8515,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ConvexOnlySpline& function() const { return m_spline ; }
-      const Ostap::Math::ConvexOnlySpline& spline  () const { return m_spline ; }
+      const Ostap::Math::ConvexOnlySpline& function() const { setPars () ; return m_spline ; }
+      const Ostap::Math::ConvexOnlySpline& spline  () const { setPars () ; return m_spline ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8586,8 +8599,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ConvexSpline& function() const { return m_spline ; }
-      const Ostap::Math::ConvexSpline& spline  () const { return m_spline ; }
+      const Ostap::Math::ConvexSpline& function() const { setPars () ; return m_spline ; }
+      const Ostap::Math::ConvexSpline& spline  () const { setPars () ; return m_spline ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8675,8 +8688,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::CutOffGauss& function() const { return m_cutoff ; }
-      const Ostap::Math::CutOffGauss& cutoff  () const { return m_cutoff ; }
+      const Ostap::Math::CutOffGauss& function() const { setPars() ; return m_cutoff ; }
+      const Ostap::Math::CutOffGauss& cutoff  () const { setPars() ; return m_cutoff ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8768,8 +8781,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::CutOffStudent& function() const { return m_cutoff ; }
-      const Ostap::Math::CutOffStudent& cutoff  () const { return m_cutoff ; }
+      const Ostap::Math::CutOffStudent& function() const { setPars () ; return m_cutoff ; }
+      const Ostap::Math::CutOffStudent& cutoff  () const { setPars () ; return m_cutoff ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -8937,8 +8950,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Rice& function() const { return m_rice ; }
-      const Ostap::Math::Rice& rice    () const { return m_rice ; }
+      const Ostap::Math::Rice& function() const { setPars () ; return m_rice ; }
+      const Ostap::Math::Rice& rice    () const { setPars () ; return m_rice ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9027,8 +9040,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenInvGauss& function() const { return m_gig ; }
-      const Ostap::Math::GenInvGauss& gig     () const { return m_gig ; }
+      const Ostap::Math::GenInvGauss& function() const { setPars () ; return m_gig ; }
+      const Ostap::Math::GenInvGauss& gig     () const { setPars () ; return m_gig ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9156,7 +9169,7 @@ namespace Ostap
       const RooAbsReal& r       () const { return m_r     .arg() ; }
       const RooAbsReal& zeta    () const { return m_zeta  .arg() ; }
       // ======================================================================
-    public : // more accessors 
+    public : // more accessors (original parameterisation)
       // ======================================================================
       inline double lambd   () const { setPars () ; return m_sgt.lambda () ; } 
       inline double lambda  () const { setPars () ; return m_sgt.lambda () ; } 
@@ -9204,11 +9217,12 @@ namespace Ostap
      *   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
      *
      *  Here we adopt sligth reparameterisation in terms of 
-     *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+     *  - \f$ -\infty < \psi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+     *  - r = 1/p 
      * 
      *  special cases: 
-     *  - \f$ \xi=0 (\lambda=0), p=2\$ corresponds to Gaussian function 
-     *  - \f$ \xi=0 (\lambda=0), p=1\$ corresponds to Laplace case 
+     *  - \f$ \psi=0 (\lambda=0), r=1/2\$ corresponds to Gaussian function 
+     *  - \f$ \psi=0 (\lambda=0), r=1\$ corresponds to Laplace case 
      *
      *  @see Ostap::Math::SkewGenError
      *  @see Ostap::Math::SkewGenT 
@@ -9219,7 +9233,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::SkewGenError, 1) ;
+      ClassDefOverride(Ostap::Models::SkewGenError, 2) ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -9229,8 +9243,8 @@ namespace Ostap
        RooAbsReal&  x     ,
        RooAbsReal&  mu    ,   // location/mean  
        RooAbsReal&  sigma ,   // scale/rms 
-       RooAbsReal&  xi    ,   // related to asymmetry 
-       RooAbsReal&  p     ) ; // shape parameter 
+       RooAbsReal&  psi   ,   // related to asymmetry 
+       RooAbsReal&  r     ) ; // shape parameter 
       /// copy constructor 
       SkewGenError  ( const SkewGenError& right , const char* name = nullptr ) ;
       /// clone method
@@ -9274,20 +9288,23 @@ namespace Ostap
       const RooAbsReal& x       () const { return m_x     .arg() ; }
       const RooAbsReal& mu      () const { return m_mu    .arg() ; }
       const RooAbsReal& sigma   () const { return m_sigma .arg() ; }
-      const RooAbsReal& xi      () const { return m_xi    .arg() ; }
-      const RooAbsReal& p       () const { return m_p     .arg() ; }
+      const RooAbsReal& psi     () const { return m_psi   .arg() ; }
+      const RooAbsReal& r       () const { return m_r     .arg() ; }
       // ======================================================================
+      // original parameterisation 
+      // ======================================================================      
       inline double lambd   () const { setPars () ; return m_sge.lambda () ; } 
       inline double lambda  () const { setPars () ; return m_sge.lambda () ; } 
       inline double lambda_ () const { setPars () ; return m_sge.lambda () ; } 
+      inline double p       () const { setPars () ; return m_sge.p      () ; } 
       // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy   m_x      {} ;
       RooRealProxy   m_mu     {} ;
       RooRealProxy   m_sigma  {} ;
-      RooRealProxy   m_xi     {} ;
-      RooRealProxy   m_p      {} ;
+      RooRealProxy   m_psi    {} ;
+      RooRealProxy   m_r      {} ;
       // ======================================================================
     private:
       // ======================================================================
@@ -9361,8 +9378,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::HORNSdini& function () const { return m_horns ; }
-      const Ostap::Math::HORNSdini& horns    () const { return m_horns ; }
+      const Ostap::Math::HORNSdini& function () const { setPars () ; return m_horns ; }
+      const Ostap::Math::HORNSdini& horns    () const { setPars () ; return m_horns ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9450,8 +9467,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::HILLdini& function () const { return m_hill ; }
-      const Ostap::Math::HILLdini& hill     () const { return m_hill ; }
+      const Ostap::Math::HILLdini& function () const { setPars () ; return m_hill ; }
+      const Ostap::Math::HILLdini& hill     () const { setPars () ; return m_hill ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9543,9 +9560,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::KarlinShapley& function       () const { return m_positive ; }
-      const Ostap::Math::KarlinShapley& positive       () const { return m_positive ; }
-      const Ostap::Math::KarlinShapley& karlin_shapley () const { return m_positive ; }
+      const Ostap::Math::KarlinShapley& function       () const { setPars() ; return m_positive ; }
+      const Ostap::Math::KarlinShapley& positive       () const { setPars() ; return m_positive ; }
+      const Ostap::Math::KarlinShapley& karlin_shapley () const { setPars() ; return m_positive ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9636,9 +9653,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::KarlinStudden& function       () const { return m_positive ; }
-      const Ostap::Math::KarlinStudden& positive       () const { return m_positive ; }
-      const Ostap::Math::KarlinStudden& karlin_studden () const { return m_positive ; }
+      const Ostap::Math::KarlinStudden& function       () const { setPars () ; return m_positive ; }
+      const Ostap::Math::KarlinStudden& positive       () const { setPars () ; return m_positive ; }
+      const Ostap::Math::KarlinStudden& karlin_studden () const { setPars () ; return m_positive ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9718,7 +9735,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenPareto& function () const { return m_gpd ; }
+      const Ostap::Math::GenPareto& function () const { setPars () ; return m_gpd ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9800,7 +9817,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::ExGenPareto& function () const { return m_egpd ; }
+      const Ostap::Math::ExGenPareto& function () const
+      { setPars () ; return m_egpd ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9901,7 +9919,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Benini& function () const { return m_benini ; }
+      const Ostap::Math::Benini& function () const { setPars () ; return m_benini ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9983,7 +10001,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GEV& function () const { return m_gev ; }
+      const Ostap::Math::GEV& function () const { setPars () ; return m_gev ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -10075,7 +10093,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::FisherZ& function () const { return m_fz ; }
+      const Ostap::Math::FisherZ& function () const { setPars () ; return m_fz ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -10164,7 +10182,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BirnbaumSaunders& function () const { return m_bs ; }
+      const Ostap::Math::BirnbaumSaunders& function () const
+      { setPars () ; return m_bs ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -10255,7 +10274,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::MPERT& function () const { return m_mpert ; }
+      const Ostap::Math::MPERT& function () const { setPars () ; return m_mpert ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -10350,7 +10369,7 @@ namespace Ostap
       { setPars () ; return m_rational ; } 
       /// access to numerator of underlying   rational function
       inline const Ostap::Math::Positive&         numerator   () const
-      { setPars () ; return m_rational.numerator() ; } 	
+      { setPars () ; return m_rational.numerator  () ; } 	
       /// access to denomerator of underlying rational function
       inline const Ostap::Math::Positive&         denominator () const 
       { setPars () ; return m_rational.denominator() ; } 	
@@ -10968,7 +10987,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Meixner& function () const { return m_meixner; }
+      const Ostap::Math::Meixner& function () const { setPars () ; return m_meixner; }
       // ======================================================================
     public:
       // ======================================================================

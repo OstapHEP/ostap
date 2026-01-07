@@ -1022,13 +1022,16 @@ class ResoStudentT(ResoGauss) :
                                      'nL_%s'     % self.name ,
                                      'n_{L}(%s)' % self.name ,
                                      None      , 1 , -2.0 , 100 )
-        
         ## parameter nR : nuR=nuR(nR)        
         self.__nR  = self.make_var ( self.nL if nR is None else nR ,   
                                      'nR_%s'     % self.name ,
                                      'n_{R}(%s)' % self.name ,
                                      None      , 1 , -2.0 , 100 )
-    
+        
+        ## get nuL/nuR  
+        self.__nuL = Ostap.MoreRooFit.StudentTNu ( self.roo_name ( name = "nuL" ) , self.nL )
+        self.__nuR = Ostap.MoreRooFit.StudentTNu ( self.roo_name ( name = "nuR" ) , self.nR )
+        
         ## symmetic case:  
         if ( psi is None or self.psi is ZERO ) and ( self.nL is self.nR ) : 
             
@@ -1078,16 +1081,16 @@ class ResoStudentT(ResoGauss) :
         return self.__nR
     @nR.setter
     def nR ( self, value ) :   
-        self.set_value ( self.__nL , value )        
+        self.set_value ( self.__nR , value )        
 
     @property
     def nuL ( self ) :
-        """'nuL' :  nuL-parameter for Student't function: nuL=nuL(nL)"""
-        return self.pdf.nuL ()    
+        """'nuL' :  nuL(nL)-parameter for Student't function: nuL=nuL(nL)"""
+        return self.__nuL 
     @property
     def nuR ( self ) :
-        """'nuR' :  nuR-parameter for Student't function: nuR=nuR(nR)"""
-        return self.pdf.nuR () 
+        """'nuR' :  nuR(nR)-parameter for Student't function: nuR=nuR(nR)"""
+        return self.__nuR
  
 models.add ( ResoStudentT )
 

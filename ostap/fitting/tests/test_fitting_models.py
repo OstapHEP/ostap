@@ -1021,8 +1021,8 @@ def test_SkewGenError  () :
                                            xvar      = mass                   ,
                                            mu        = signal_gauss.mean      ,
                                            sigma     = signal_gauss.sigma     ,
-                                           xi        = ( 0   ,  -1    , 1   ) ,  
-                                           p         = ( 2.0 ,  1.e-2 , 100 ) ) ,
+                                           psi       = ( 0   ,  -1    , 1   ) ,  
+                                           r         = ( 0.5 ,  1.e-5 , 100 ) ) ,
         background = background   ,
         S = S , B = B ,
         )
@@ -1031,9 +1031,9 @@ def test_SkewGenError  () :
     model.S = NS 
     model.B = NB
 
-    model.signal.xi.fix   ( 0   )
-    model.signal.p .fix   ( 2   )
-    model.signal.mu.fix   ( 3.1 )
+    model.signal.psi.fix   ( 0   )
+    model.signal.r  .fix   ( 0.5 )
+    model.signal.mu .fix   ( 3.1 )
     
     with rooSilent() :
         result, frame = model. fitTo ( dataset0 , silent = True )
@@ -1041,8 +1041,8 @@ def test_SkewGenError  () :
         signal.mu    .release ()
         signal.sigma .release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
-        signal.xi    .release ()
-        signal.p     .release ()
+        signal.psi   .release ()
+        signal.r     .release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
         result, frame = model. fitTo ( dataset0 , silent = True )
         

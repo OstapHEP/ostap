@@ -1730,8 +1730,8 @@ def _rsge_reduce_ ( pdf ):
                                   pdf.x        () , 
                                   pdf.mu       () ,
                                   pdf.sigma    () ,                            
-                                  pdf.xi       () ,                            
-                                  pdf.p        () )
+                                  pdf.psi      () ,                            
+                                  pdf.r        () )
 
 Ostap.Models.SkewGenError.__reduce__ = _rsge_reduce_ 
 

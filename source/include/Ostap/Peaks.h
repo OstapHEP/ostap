@@ -580,6 +580,7 @@ namespace Ostap
       // ======================================================================
       /// get pdf
       inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
       double        pdf        ( const double x ) const ;
       // ======================================================================
     public: // primary getters
@@ -612,6 +613,9 @@ namespace Ostap
       double sigma       () const ;
       double skewness    () const ;
       double kurtosis    () const ;
+      // ======================================================================
+      /// approximate mode 
+      double approximate_mode () const ;
       // ======================================================================
     public:  // integrals
       // ======================================================================
@@ -4441,7 +4445,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const ;
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -4990,12 +4994,12 @@ namespace Ostap
      *  - \f$ 0< \zeta \f$, such as \f$ pq = \zeta + 4 \f$
      *  - \f$ -\infty < \psi < +\infty \f$, such as \f$ \lambda  = \tanh \psi \f$   
      *
-     *  Usage of \f$ \zeta\f$ ensures the existance of the  mean, RMS, sewness & kurtosis
+     *  Usage of \f$ \zeta\f$ ensures the existance of the  mean, RMS, skewness & kurtosis
      * 
-     *  Special limitnig cases:
+     *  Special limiting cases:
      *  - \f$ q\rigtharrow +\infty (\zeta \rightarrow +\infty) \f$ 
      *     Generalized Error Distribution 
-     *  - \f$ \lambda=0 (\xi = 0)  \f$ Generalized t-distribution 
+     *  - \f$ \lambda=0 (\psi = 0)  \f$ Generalized t-distribution 
      *  - \f$ p=2(r=\frac{1}{2}) \f$  Skewed t-distribution 
      *  - \f$ p=1(r=1), q\rigtharrow +\infty (\zeta\rightarrow+\infty) \f$
      *     Skewed Laplace distribution 
@@ -5028,7 +5032,7 @@ namespace Ostap
       SkewGenT  
       ( const double mu     = 0   ,    // location parameter 
         const double sigma  = 1   ,    // width parameter 
-        const double psi    = 0   ,    // asymmetry/skewness parameter 
+        const double psi    = 0   ,    // related to asymmetry/skewness 
         const double r      = 0.5 ,    // shape parameter 
         const double zeta   = 1   ) ;  // shape parameter 
       // ======================================================================
@@ -5201,11 +5205,12 @@ namespace Ostap
      *   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
      *
      *  Here we adopt sligth reparameterisation in terms of 
-     *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
+     *  - \f$ -\infty < \psi < +\infty \f$, such as \f$ \lambda  = \tanh \psi \f$   
+     *  - r = 1/p 
      * 
      *  special cases: 
-     *  - \f$ \xi=0 (\lambda=0), p=2)$ corresponds to Gaussian function 
-     *  - \f$ \xi=0 (\lambda=0), p=1)$ corresponds to Laplace case 
+     *  - \f$ \psi=0 (\lambda=0), r=1/2)$ corresponds to Gaussian function 
+     *  - \f$ \psi=0 (\lambda=0), e=1)$ corresponds to Laplace case 
      *
      *  @see Ostap::Math::SkewGenT 
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
@@ -5218,15 +5223,15 @@ namespace Ostap
       /** constructor with full parameters 
        *  @param mu    related to location 
        *  @param sigma related to RSM/scale/width 
-       *  @param xi     related to asymmetry/skewness
+       *  @param psi     related to asymmetry/skewness : lambda = tanh(psi)
        *  @param r      shape parameter 
        *  @param alpha  shape parameter    
        */
       SkewGenError  
       ( const double mu     = 0 ,   // location parameter 
         const double sigma  = 1 ,   // width parameter 
-        const double xi     = 0 ,   // asymmetry/skewness parameter 
-        const double p      = 2 ) ; // shape parameter 
+        const double psi    = 0 ,   // asymmetry/skewness parameter 
+        const double r      = 2 ) ; // shape parameter 
       // ======================================================================
       public:
       // ======================================================================
@@ -5244,20 +5249,22 @@ namespace Ostap
       /// width/scale parameter 
       inline double sigma () const { return m_sigma ; }
       /// asymmetry/skewness  parameter      
-      inline double xi    () const { return m_xi    ; }
+      inline double psi   () const { return m_psi   ; }
       /// shape parameter 
-      inline double p     () const { return m_p     ; }
+      inline double r     () const { return m_r     ; }
       // ======================================================================
-      // other parameters      
+      // other/originam  parameters      
       // ======================================================================
       /// original lambda parametter 
-      inline double lambda  () const { return m_lambda  ; }
+      inline double lambda  () const { return m_lambda ; }
       /// original lambda parametter 
-      inline double Lambda  () const { return m_lambda  ; }
+      inline double Lambda  () const { return m_lambda ; }
       /// original lambda parametter 
-      inline double lambda_ () const { return m_lambda  ; }
+      inline double lambda_ () const { return m_lambda ; }
       /// original lambda parametter 
-      inline double lambd   () const { return m_lambda  ; }
+      inline double lambd   () const { return m_lambda ; }
+      /// original p-parameter 
+      inline double p       () const { return m_p      ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -5275,8 +5282,8 @@ namespace Ostap
       // ======================================================================
       bool setMu    ( const double value ) ;
       bool setSigma ( const double value ) ;
-      bool setXi    ( const double value ) ;
-      bool setP     ( const double value ) ;
+      bool setPsi   ( const double value ) ;
+      bool setR     ( const double value ) ;
       // ======================================================================
     public: // some stat quantities 
       // ======================================================================
@@ -5340,14 +5347,16 @@ namespace Ostap
       /// width/scale 
       double m_sigma  { 1   } ; // width/scale parameter
       /// asymmetry/skewness parameter 
-      double m_xi     { 0   } ;
+      double m_psi    { 0   } ;
       /// shape parametyer 
-      double m_p      { 2   } ;
+      double m_r      { 0.5 } ;
       // ======================================================================
     private: // helper parameters 
       // ======================================================================
       /// original lambda parameter 
       double m_lambda { -100 } ;
+      /// origfinal p-parameter
+      double m_p      { 2    } ;   
       /// =====================================================================
     private: // helper math constants 
       /// =====================================================================

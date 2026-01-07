@@ -3,6 +3,7 @@
   1. improve `Ostap::Math::StudentT` and `Ostap::Math::BifurcatedStudentT`
   1. tiny tweaks for `Ostap::Models::StudentT` and `Ostap::Models::BifurcatedStudentT`
   1. improve  `StudentT_pdf`, `BifurcatedStudentT_pdf` and `RsoStudentT`
+  1. more tweaks for StudentT family of functions
   
 ## Bug fixes
 

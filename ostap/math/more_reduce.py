@@ -640,8 +640,8 @@ def _omsge_reduce_ ( peak ) :
     - see `Ostap.Math.SkewGenErorr`
     """
     return root_factory , ( type ( peak )   , peak.mu   () ,
-                            peak. sigma ()  , peak.xi   () ,
-                            peak.p      ()  )
+                            peak. sigma ()  , peak.psi  () ,
+                            peak. r     ()  )
 
 Ostap.Math.SkewGenError. __reduce__ = _omsge_reduce_
 

@@ -1693,7 +1693,9 @@ class StudentT_pdf(Gauss_pdf) :
                                     'n_%s'  % self.name ,
                                     'n(%s)' % self.name ,
                                     None    , 1 , -2.0 , 100 )
-        #
+        ## get nu 
+        self.__nu = Ostap.MoreRooFit.StudentTNu ( self.roo_name ( name = "nu" ) , self.n )
+        
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.StudentT (
@@ -1723,10 +1725,9 @@ class StudentT_pdf(Gauss_pdf) :
 
     @property
     def nu ( self ) :
-        """'nu' :  nu-parameter for Student't function: nu=nu(n)"""
-        return self.pdf.nu() 
+        """'nu' :  nu(n)-parameter for Student't function: nu=nu(n)"""
+        return self.__nu 
         
-                
 models.append ( StudentT_pdf )
 
 # =============================================================================
@@ -1785,6 +1786,9 @@ class BifurcatedStudentT_pdf(BifurcatedGauss_pdf) :
                                      'n_{R}(%s)' % self.name ,
                                      None      , 1 , -2.0 , 100 )
         
+        ## get nuL/nuR 
+        self.__nuL = Ostap.MoreRooFit.StudentTNu ( self.roo_name ( name = "nuL" ) , self.nL )
+        self.__nuR = Ostap.MoreRooFit.StudentTNu ( self.roo_name ( name = "nuR" ) , self.nR )
         #
         ## finally build pdf
         # 
@@ -1826,13 +1830,13 @@ class BifurcatedStudentT_pdf(BifurcatedGauss_pdf) :
 
     @property
     def nuL ( self ) :
-        """'nuL' :  nuL-parameter for Student't function: nuL=nuL(nL)"""
-        return self.pdf.nuL ()    
+        """'nuL' :  nuL(nL)-parameter for Student't function: nuL=nuL(nL)"""
+        return self.__nuL 
     @property
     def nuR ( self ) :
-        """'nuR' :  nuR-parameter for Student't function: nuR=nuR(nR)"""
-        return self.pdf.nuR () 
-        
+        """'nuR' :  nuR(nR)-parameter for Student't function: nuR=nuR(nR)"""
+        return self.__nuR
+            
 models.append ( BifurcatedStudentT_pdf )      
 
 # =============================================================================
@@ -1950,6 +1954,147 @@ class PearsonIV_pdf(PEAK) :
 
 models.append ( PearsonIV_pdf )      
 
+
+# =============================================================================
+## @class SkewGenError_pdf
+#  Skewed gheneralised error distribution 
+#  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+#
+#  The Special  case of Skewed Generaliaed T-distribution 
+#  @see Ostap::Math::SkewGenT 
+# 
+#  Original function is parameterised in terms of parameters 
+#  - \f$ \mu \$ related to location  
+#  - \f$ \sigma \$ related to width/scale 
+#  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
+#  - \f$ 0<p \f$ shape parameters 
+#
+#  \f[ f(x;\mu,\sigma,\lambda,p) = 
+#    \frac{p}{2v\sigma\Gamma(1/p)} \mathrm{e}^{ - \Delta^{p}},  
+#   \f]
+#  where 
+#   - \f$ v = \sqrt{ \frac{ \pi \Gamma(1/p)}{  \pi(1+3\lambda^2)\Gamma(3/p) 
+#            -16^{1/p} \lambda^2 \Gamma(1/2+1/p)^2\Gamma(1/p) }  }\f$,
+#   - \f$ \Delta = \frac{\left| \delta x \right|}{v\sigma ( 1+ \lambda \sign \delta x )} \f$
+#   - \f$ \delta x = x - \mu + m \f$
+#   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
+#
+#  Here we adopt slight reparameterisation in terms of 
+#  - \f$ -\infty < \psi < +\infty \f$, such as \f$ \lambda  = \tanh \psi \f$   
+#  - r = 1/p
+# 
+#  special cases: 
+#  - \f$ \psi=0 (\lambda=0), r=1/2\$ corresponds to Gaussian function 
+#  - \f$ \psi=0 (\lambda=0), r=1\$ corresponds to Laplace case 
+#
+#  @see Ostap::Math::SkewGenError
+#  @see Ostap::Math::SkewGenT 
+#  @see Ostap::Models::SkewGenT 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2022-12-01
+class SkewGenError_pdf(PEAK) :
+    """ Skewed Generalised Error distribution:
+    - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
+    - see Ostap.Models.SkewGenError
+    - see Ostap.Math.SkewGenError
+    - see Ostap.Models.SkewGenT
+    - see Ostap.Math.SkewGenT
+    """
+    def __init__ ( self           ,
+                   name           ,
+                   xvar           ,
+                   mu             , 
+                   sigma    = 1   ,
+                   psi      = 0   ,
+                   r        = 0.5 ) :
+        #
+        ## initialize the base
+        # 
+        PEAK.__init__  ( self                                 ,
+                         name        = name                   ,
+                         xvar        = xvar                   ,
+                         mean        = mu                     ,
+                         sigma       = sigma                  ,                          
+                         mean_name   = 'mu_%s'         % name ,
+                         mean_title  = '#mu_{SGE}(%s)' % name )
+        
+        ## location parameter 
+        self.__mu       = self.mean
+        
+        ## psi parameter (asymmetry) 
+        self.__psi      = self.make_var ( psi                     ,
+                                          'psi_%s'         % name ,
+                                          '#psi_{SGE}(%s)' % name ,
+                                          False , 0 , -15 , 15  ) 
+        
+        ## r parameter (shape)
+        self.__r      = self.make_var ( r                      ,
+                                        'r_%s'         % name  ,
+                                        'r_{SGE}(%s)' % name   ,
+                                        False , 0.5 , 1.e-6    , 100 )
+        
+        #  make the final PDF 
+        self.pdf = Ostap.Models.SkewGenError (
+            self.roo_name ( 'sge_' ) , 
+            "Skewed Generalized Error %s" % self.name ,
+            self.xvar   ,
+            self.mu     ,
+            self.sigma  ,
+            self.psi    ,
+            self.r      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name     ,
+            'xvar'      : self.xvar     ,
+            'mu'        : self.mu       ,
+            'sigma'     : self.sigma    ,
+            'psi'       : self.psi      ,
+            'r'         : self.r        ,
+        }
+        
+    @property     
+    def mu ( self ) :
+        """'mu'-parameter (location) for SkewGenError distribution (same as 'mean')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self, value ) :
+        self.set_value ( self.__mu , value ) 
+
+    @property
+    def psi ( self ) :
+        """'psi'-parameter for SkewGenError distribution (related to asymmetry: lambda = tanh(psi))"""
+        return self.__psi
+    @psi.setter
+    def psi ( self, value ) :
+        self.set_value ( self.__psi , value ) 
+        
+    @property     
+    def r ( self ) :
+        """'r'-parameter (shape) for SkewGenError distribution: r = 1/p """
+        return self.__r
+    @r.setter
+    def p  ( self, value ) :
+        self.set_value ( self.__r , value )
+        
+    @property
+    def lambd   ( self ) :
+        """`lambd` : the original `lambda`-parameter"""
+        return self.pdf.lambd ()
+    @property
+    def lambda_ ( self ) :
+        """`lambda_` : the original `lambda`-parameter"""
+        return self.pdf.lambd ()
+
+    @property
+    def p ( self ) :
+        """`p` : original p-parameter of: p = 1/r 
+        """
+        return self.pdf.p()
+    
+models.append ( SkewGenError_pdf )      
+
+
 # =============================================================================
 ## @class SkewGenT_pdf
 #  Skewed generalised t-distribution
@@ -1991,47 +2136,60 @@ models.append ( PearsonIV_pdf )
 #  @see Ostap::Models::SkewGenT 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2022-12-01
-class SkewGenT_pdf(PEAK) :
+class SkewGenT_pdf(SkewGenError_pdf) :
     """ Skewed Generalised t-distribution:
+
+    Skewed Generalised t-distribution is desribed here 
+    - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
+
+    Ogifinal parameters 
+    - mu              : related to location 
+    -  0 < sigma      : scale/width 
+    - -1 < lambda < 1 : related to asymmetry 
+    -  0 < p,q        : related to the shape 
+
+    We use reparameterizatio in terms of parameters: r, zeta & psi:
+
+    - 0 < r    : such as  r = 1/p 
+    - 0 < zeta : such as pq = zeta + 4 
+    - psi      : such as lambda = tanh( psi ) 
+
+    The choice of zeta guarantees the existence of mean, RMS, skewness & kurtosis 
     
-    -  see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution
+    Special cases:
+    
+    - Skewed Generalized Error Distribution : zeta -> +infinity 
+    - Generalized t-distribution            : psi = 0 
+    - Skewed      t-distribution            : r = 1/2 
+    - Skewed Laplace distribution           : r = 1   , zeta -> +infinity 
+    - Generalized Error distribution        : psi = 0 , zeta -> +infinity 
+    - Skewed Normal distribution            : r= 1/2  , zeta -> +infinity 
+    - Student' t-distribution (with nu>4)   : psi = 0 , r = 1/2 , zeta = nu - 4 
+    - Laplace distribution                  : psi = 0 , r = 1   , zeta->+infinity 
+    - Normal  distribution                  : psi = 0 , r = 2   , zeta->+infinity 
+    - Uniform distribution                  : r -> 0 
     
     - see Ostap.Models.SkewGenT
     - see Ostap.Math.SkewGenT
     """
-    def __init__ ( self         ,
-                   name         ,
-                   xvar         ,
-                   mu           , 
-                   sigma    = 1 ,
-                   psi      = 0 ,
-                   r        = 0 ,
-                   zeta     = 1 ) :
-        #
+    def __init__ ( self           ,
+                   name           ,
+                   xvar           ,
+                   mu             , 
+                   sigma    = 1   ,
+                   psi      = 0   ,
+                   r        = 0.5 ,
+                   zeta     = 1   ) :
+
         ## initialize the base
-        # 
-        PEAK.__init__  ( self                                 ,
-                         name        = name                   ,
-                         xvar        = xvar                   ,
-                         mean        = mu                     ,
-                         sigma       = sigma                  ,                          
-                         mean_name   = 'mu_%s'         % name ,
-                         mean_title  = '#mu_{SGT}(%s)' % name )
-        
-        ## location parameter 
-        self.__mu       = self.mean
-        
-        ## psi parameter (asymmetry) 
-        self.__psi = self.make_var ( psi                    ,
-                                    'psi_%s'         % name ,
-                                    '#psi_{SGT}(%s)' % name ,
-                                    False , 0 , -15 , 15  ) 
-        
-        ## r parameter (shape)
-        self.__r      = self.make_var ( r                     ,
-                                        'r_%s'         % name ,
-                                        'r_{SGT}(%s)' % name ,
-                                        False , 1 , 0.0001 , 1000 ) 
+        SkewGenError_pdf. __init__ ( self ,
+                                     name = name   ,
+                                     xvar  = xvar  ,
+                                     mu    = mu    ,
+                                     sigma = sigma ,
+                                     psi   = psi   ,
+                                     r     = r     )
+    
         ## zeta parameter (shape)
         self.__zeta   = self.make_var ( zeta                     ,
                                         'zeta_%s'         % name ,
@@ -2061,30 +2219,6 @@ class SkewGenT_pdf(PEAK) :
             }
         
     @property     
-    def mu ( self ) :
-        """'mu'-parameter (location) for SkewGenT distribution (same as 'mean')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self, value ) :
-        self.set_value ( self.__mu , value ) 
-
-    @property
-    def psi ( self ) :
-        """'psi'-parameter for SkewGenT distribution (related to asymmetry)"""
-        return self.__psi
-    @psi.setter
-    def psi ( self, value ) :
-        self.set_value ( self.__psi , value ) 
-
-    @property     
-    def r ( self ) :
-        """'r'-parameter (shape) for SkewGenT distribution"""
-        return self.__r
-    @r.setter
-    def r  ( self, value ) :
-        self.set_value ( self.__r , value )
-        
-    @property     
     def zeta ( self ) :
         """'zeta'-parameter (shape) for SkewGenT distribution"""
         return self.__zeta
@@ -2093,156 +2227,11 @@ class SkewGenT_pdf(PEAK) :
         self.set_value ( self.__zeta , value ) 
 
     @property
-    def lambd   ( self ) :
-        """`lambd` : the original `lambda`-parameter"""
-        return self.pdf.lambd ()
-    @property
-    def lambda_ ( self ) :
-        """`lambda_` : the original `lambda`-parameter"""
-        return self.pdf.lambd ()
-    
-    @property
-    def p ( self ) :
-        """`p` : the original `p`-parameter"""
-        return self.pdf.p ()
-    @property
     def q ( self ) :
         """`q` : the original `q`-parameter"""
         return self.pdf.q ()
 
 models.append ( SkewGenT_pdf )      
-
-# =============================================================================
-## @class SkewGenTError_pdf
-#  Skewed gheneralised error distribution 
-#  @see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
-#
-#  The Special  case of Skewed Generaliaed T-distribution 
-#  @see Ostap::Math::SkewGenT 
-# 
-#  Original function is parameterised in terms of parameters 
-#  - \f$ \mu \$ related to location  
-#  - \f$ \sigma \$ related to width/scale 
-#  - \f$ -1 < \lambda < 1 \f$ related to asymmetry/skewness  
-#  - \f$ 0<p \f$ shape parameters 
-#
-#  \f[ f(x;\mu,\sigma,\lambda,p) = 
-#    \frac{p}{2v\sigma\Gamma(1/p)} \mathrm{e}^{ - \Delta^{p}},  
-#   \f]
-#  where 
-#   - \f$ v = \sqrt{ \frac{ \pi \Gamma(1/p)}{  \pi(1+3\lambda^2)\Gamma(3/p) 
-#            -16^{1/p} \lambda^2 \Gamma(1/2+1/p)^2\Gamma(1/p) }  }\f$,
-#   - \f$ \Delta = \frac{\left| \delta x \right|}{v\sigma ( 1+ \lambda \sign \delta x )} \f$
-#   - \f$ \delta x = x - \mu + m \f$
-#   - \f$ m =  2^{2/p} v \sigma \Gamma( 1/2+ 1/p)/\sqrt{\pi}\f$ 
-#
-#  Here we adopt sligth reparameterisation in terms of 
-#  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
-# 
-#  special cases: 
-#  - \f$ \xi=0 (\lambda=0), p=2\$ corresponds to Gaussian function 
-#  - \f$ \xi=0 (\lambda=0), p=1\$ corresponds to Laplace case 
-#
-#  @see Ostap::Math::SkewGenError
-#  @see Ostap::Math::SkewGenT 
-#  @see Ostap::Models::SkewGenT 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2022-12-01
-class SkewGenError_pdf(PEAK) :
-    """ Skewed Generalised Error distribution:
-    - see https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#Skewed_generalized_error_distribution
-    - see Ostap.Models.SkewGenError
-    - see Ostap.Math.SkewGenError
-    - see Ostap.Models.SkewGenT
-    - see Ostap.Math.SkewGenT
-    """
-    def __init__ ( self         ,
-                   name         ,
-                   xvar         ,
-                   mu           , 
-                   sigma    = 1 ,
-                   xi       = 0 ,
-                   p        = 2 ) :
-        #
-        ## initialize the base
-        # 
-        PEAK.__init__  ( self                                 ,
-                         name        = name                   ,
-                         xvar        = xvar                   ,
-                         mean        = mu                     ,
-                         sigma       = sigma                  ,                          
-                         mean_name   = 'mu_%s'         % name ,
-                         mean_title  = '#mu_{SGE}(%s)' % name )
-        
-        ## location parameter 
-        self.__mu       = self.mean
-        
-        ## xi parameter (asymmetry) 
-        self.__xi     = self.make_var ( xi                     ,
-                                        'xi_%s'         % name ,
-                                        '#xi_{SGE}(%s)' % name ,
-                                        False , 0 , -5 , 5  ) 
-        
-        ## p parameter (shape)
-        self.__p      = self.make_var ( p                      ,
-                                        'p_%s'         % name  ,
-                                        'p_{SGE}(%s)' % name   ,
-                                        False , 2 , 0.01 , 100 ) 
-
-        #  make the final PDF 
-        self.pdf = Ostap.Models.SkewGenError (
-            self.roo_name ( 'sge_' ) , 
-            "Skewed Generalized Error %s" % self.name ,
-            self.xvar   ,
-            self.mu     ,
-            self.sigma  ,
-            self.xi     ,
-            self.p      )
-        
-        ## save the configuration
-        self.config = {
-            'name'      : self.name     ,
-            'xvar'      : self.xvar     ,
-            'mu'        : self.mu       ,
-            'sigma'     : self.sigma    ,
-            'xi'        : self.xi       ,
-            'p'         : self.p        ,
-            }
-        
-    @property     
-    def mu ( self ) :
-        """'mu'-parameter (location) for SkewGenError distribution (same as 'mean')"""
-        return self.__mu
-    @mu.setter
-    def mu ( self, value ) :
-        self.set_value ( self.__mu , value ) 
-
-    @property
-    def xi ( self ) :
-        """'xi'-parameter for SkewGenError distribution (related to asymmetry)"""
-        return self.__xi
-    @xi.setter
-    def xi ( self, value ) :
-        self.set_value ( self.__xi , value ) 
-
-    @property     
-    def p ( self ) :
-        """'p'-parameter (shape) for SkewGenError distribution"""
-        return self.__p
-    @p.setter
-    def p  ( self, value ) :
-        self.set_value ( self.__p , value )
-        
-    @property
-    def lambd   ( self ) :
-        """`lambd` : the original `lambda`-parameter"""
-        return self.pdf.lambd ()
-    @property
-    def lambda_ ( self ) :
-        """`lambda_` : the original `lambda`-parameter"""
-        return self.pdf.lambd ()
-        
-models.append ( SkewGenError_pdf )      
 
 # =============================================================================
 ## @class SinhAsinh_pdf
@@ -3729,7 +3718,7 @@ class GenHyperbolic_pdf(Hyperbolic_pdf) :
                                         '#lambda(%s)' % name ,
                                         False , -2 , -100 , 100 ) 
         #
-        ## finally build pdf
+        ## finally build the pdf
         # 
         self.pdf = Ostap.Models.GenHyperbolic (
             self.roo_name ( 'genhyperbolic_' ) , 
@@ -3759,7 +3748,6 @@ class GenHyperbolic_pdf(Hyperbolic_pdf) :
     def lambd ( self , value ) :    
         self.set_value ( self.__lambd , value )
 
-        
 models.append ( GenHyperbolic_pdf )      
 
 # =============================================================================

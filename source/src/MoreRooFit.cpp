@@ -110,6 +110,7 @@ ClassImp(Ostap::MoreRooFit::Rank          )
 ClassImp(Ostap::MoreRooFit::ABC           )
 ClassImp(Ostap::MoreRooFit::Clamp         )
 ClassImp(Ostap::MoreRooFit::TailN         )
+ClassImp(Ostap::MoreRooFit::StudentTNu    )
 ClassImp(Ostap::MoreRooFit::NeedhamAlpha  )     
 // ============================================================================
 #endif 
@@ -2078,7 +2079,7 @@ Ostap::MoreRooFit::TailN::TailN
 Ostap::MoreRooFit::TailN::TailN
 ( const std::string& name  , 
   RooAbsReal&        n     )
-  : TailN ( name , "N-parameter: n -> N transformation" , n )
+  : TailN ( name , "N(n)-parameter: n -> N transformation" , n )
 {}
 // ============================================================================
 // "copy" constructor 
@@ -2107,6 +2108,47 @@ Double_t Ostap::MoreRooFit::TailN::evaluate () const
 
 
 
+// ============================================================================
+// constructor with one variables 
+// ============================================================================
+Ostap::MoreRooFit::StudentTNu::StudentTNu
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        n     )
+  : OneVar ( name , title , n )
+{}
+// ============================================================================
+// constructor with one variables 
+// ============================================================================
+Ostap::MoreRooFit::StudentTNu::StudentTNu
+( const std::string& name  , 
+  RooAbsReal&        n     )
+  : StudentTNu ( name , "nu(n)-parameter: n -> nu transformation" , n )
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::StudentTNu::StudentTNu
+( const Ostap::MoreRooFit::StudentTNu& right ,
+  const char*                          name  ) 
+  : OneVar ( right , name )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::StudentTNu::~StudentTNu(){}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::MoreRooFit::StudentTNu*
+Ostap::MoreRooFit::StudentTNu::clone ( const char* newname ) const
+{ return new Ostap::MoreRooFit::StudentTNu ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::StudentTNu::evaluate () const
+{ return Ostap::Math::StudentT::nu ( m_x ) ; }
+// ============================================================================
 
 // ============================================================================
 // constructor with variable
