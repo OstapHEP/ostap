@@ -23,7 +23,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-13
 # =============================================================================
-"""Set of useful resolution models:
+""" Set of useful resolution models:
 - single Gaussian                     (gaussian    tails)
 - double Gaussian                     (gaussian    tails)
 - Apollonios                          (exponential tails)
@@ -176,7 +176,7 @@ class ResoGauss(RESOLUTION,SigmaLR) :
     
     @property
     def symmetric_core ( self ) :
-        """`symmetric_core` : symmtric Core/Gaussian component?
+        """`symmetric_core` : symmetric Core/Gaussian component?
         """
         return self.psi is None or self.psi is ZERO or self.sigmaL is self.sigmaR 
 
@@ -988,7 +988,7 @@ models.add ( ResoNeedham )
 #  @see Ostap::Models::StudentT
 #  @see Ostap::Math::StudentT
 #  @see http://en.wikipedia.org/wiki/Student%27s_t-distribution
-class ResoStudentT(RESOLUTION) :
+class ResoStudentT(ResoGauss) :
     """ Student-T model for the resolution
     - power-law tails 
     - see http://en.wikipedia.org/wiki/Student%27s_t-distribution
@@ -1002,50 +1002,35 @@ class ResoStudentT(RESOLUTION) :
                    name           ,   ## the name 
                    xvar           ,   ## the variable
                    sigma          ,   ## the sigma
-                   n              ,   ## N-parameter
+                   nL     = None  ,   ## nL-parameter: nuL = nuL ( nL ) 
+                   nR     = None  ,   ## nR-parameter: nuR = nuR ( nR ) 
                    fudge  = 1     ,   ## fudge parameter 
-                   mean   = None  ,   ## mean 
-                   kappaS = None  ,   ## asymmetry for sigma 
-                   kappaN = None  ) : ## asymmetry for N 
+                   mean   = None  ,   ## mean
+                   psi    = None  ) : ## asymmetry for sigmas, kappa = tanh(psi) 
         
-        ## initialize the base 
-        super(ResoStudentT,self).__init__ ( name  = name  ,
-                                            xvar  = xvar  ,
-                                            sigma = sigma ,
-                                            mean  = mean  ,
-                                            fudge = fudge )
+        ##  initlialize the base 
+        ResoGauss.__init__ ( self          ,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             sigma = sigma ,
+                             mean  = mean  ,
+                             psi   = psi   , 
+                             fudge = fudge ) 
+    
+        ## parameter nL : nuL=nuL(nL)        
+        self.__nL  = self.make_var ( nL         ,
+                                     'nL_%s'     % self.name ,
+                                     'n_{L}(%s)' % self.name ,
+                                     None      , 1 , -2.0 , 100 )
         
-        self.__n      = self.make_var ( n                      ,
-                                        'ResoN_'        + name ,
-                                        'ResoN(%s)'     % name ,
-                                        None , 1 , 1.e-6 , 200 )
-        
-        self.__kappaN = self.make_var ( ZERO if kappaN is None else kappaN ,
-                                        "kappaN_%s"      % name ,
-                                        "#kappa_{n}(%s)" % name ,
-                                        None , 0 , -1.0 + 1.e-9 , +1.0 - 1.e-9 )
-        
-        self.__kappaS = self.make_var ( ZERO if kappaS is None else kappaS ,
-                                        "kappaS_%s"           % name ,
-                                        "#kappa_{#sigma}(%s)" % name ,
-                                        None , 0 , -1.0+1.e-9 , 1.0-1.e-9 )
-        
-        ## n,nL,nR    
-        if kappaN is None or self.__kappaN is ZERO :            
-            self.__AV_N = self.asymmetry_vars ( 'n'  , var1    = self.__n , var2  = self.__n  )
-        else :            
-            self.__AV_N = self.asymmetry_vars ( 'n'  , halfsum = self.__n , kappa = self.__kappaN )
-
-        if kappaS is None or self.__kappaS is ZERO :
-            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' , var1    = self.sigma_corr , var2  = self.sigma_corr )
-        else :            
-            self.__AV_SIGMA = self.asymmetry_vars ( 'sigma' , halfsum = self.sigma_corr , kappa = self.__kappaS   )
-                 
-        # 
-        ## finally build pdf
-        #
-        if ( kappaN is None or self.__kappaN is ZERO ) and \
-           ( kappaS is None or self.__kappaS is ZERO ) : 
+        ## parameter nR : nuR=nuR(nR)        
+        self.__nR  = self.make_var ( self.nL if nR is None else nR ,   
+                                     'nR_%s'     % self.name ,
+                                     'n_{R}(%s)' % self.name ,
+                                     None      , 1 , -2.0 , 100 )
+    
+        ## symmetic case:  
+        if ( psi is None or self.psi is ZERO ) and ( self.nL is self.nR ) : 
             
             self.pdf = Ostap.Models.StudentT (
                 self.roo_name ( 'rstt_' )       ,
@@ -1053,75 +1038,57 @@ class ResoStudentT(RESOLUTION) :
                 self.xvar       , 
                 self.mean       ,
                 self.sigma_corr , ## ATTENTION!
-                self.n          )
+                self.nL         )
             
         else :
             
             self.pdf = Ostap.Models.BifurcatedStudentT (
                 self.roo_name ( 'rbfstt_' )       ,
                 "Resolution Bifurcated Student's t %s" % self.name ,
-                self.xvar       , 
-                self.mean       ,
-                self.sigmaL     , 
-                self.sigmaR     , 
-                self.nL         ,
-                self.nR         )
-
-        
+                self.xvar        , 
+                self.mean        ,
+                self.sigmaL_corr , ## CORRECTED! 
+                self.sigmaR_corr , ## CORRECTED!
+                self.nL          ,
+                self.nR          )
+            
         ##  save   the configuration
         self.config = {
             'name'     : self.name  ,
             'xvar'     : self.xvar  ,
             'sigma'    : self.sigma ,
-            'n'        : self.n     ,
+            'nL'       : self.nL    ,
+            'nR'       : none if nR is None else self.nR ,
             'mean'     : self.mean  ,
             'fudge'    : self.fudge ,
-            'kappaS'   : None if kappaS is None else self.kappaS ,  
-            'kappaN'   : None if kappaN is None else self.kappaN ,
+            'psi'      : self.psi   ,
             }
         
     @property
-    def n ( self  ) :
-        """'n' parameter for symmetric Student-T resolution function"""
-        return self.__AV_N.halfsum 
-    @n.setter
-    def n ( self , value ) :
-        self.__AV_N.halfsum = value 
-
-    @property
-    def kappaN ( self  ):
-        """'kappaN' : asymmetry for 'n'-parameter"""
-        return self.__kappaN
-    @kappaN.setter
-    def kappaN ( self , value ) :
-        self.set_value ( self.__kappaN , value )
-
-    @property
-    def kappaS ( self  ):
-        """'kappaS' : asymmetry for 'sigma'-parameter"""
-        return self.__kappaS
-    @kappaS.setter
-    def kappaS ( self , value ) :
-        self.set_value ( self.__kappaS , value )
-
-    @property
     def nL ( self ) :
-        """'nL' : 'n'-parameter for left  part"""
-        return self.__AV_N.var1 
+        """'nL' :  nL-parameter for Student't function: nuL=nuL(nL)"""
+        return self.__nL
+    @nL.setter
+    def nL ( self, value ) :   
+        self.set_value ( self.__nL , value )
+        
     @property
     def nR ( self ) :
-        """'nR' : 'n'-parameter for right part"""
-        return self.__AV_N_var2
+        """'nR' :  nL-parameter for Student't function: nuL=nuL(nL)"""
+        return self.__nR
+    @nR.setter
+    def nR ( self, value ) :   
+        self.set_value ( self.__nL , value )        
 
     @property
-    def sigmaL ( self ) :
-        """'sigmaL' : 'sigma'-parameter for left  part"""
-        return self.__AV_SIGMA.var1      
+    def nuL ( self ) :
+        """'nuL' :  nuL-parameter for Student't function: nuL=nuL(nL)"""
+        return self.pdf.nuL ()    
     @property
-    def sigmaR ( self ) :
-        """'sigmaR' : 'sigma'-parameter for right part"""
-        return self.__AV_SIGMA.var2    
-        
+    def nuR ( self ) :
+        """'nuR' :  nuR-parameter for Student't function: nuR=nuR(nR)"""
+        return self.pdf.nuR () 
+ 
 models.add ( ResoStudentT )
 
 # =============================================================================

@@ -317,14 +317,20 @@ bool Ostap::Math::BifurcatedGauss::setSigma
 {
   const double valueL_ = std::abs ( valueL ) ;
   const double valueR_ = std::abs ( valueR ) ;
+  //
   if ( s_equal ( m_sigmaL , valueL_ ) && 
        s_equal ( m_sigmaR , valueR_ ) ) { return false ; }
+  //
+  Ostap::Assert ( valueL_ && valueR_ ,
+		  "Parameters 'sigmaL/R' must be non-zero"    ,
+		  "Ostap::Math::BifurcatedGauss::setSigma" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
   //
   m_sigmaL = valueL_ ;
   m_sigmaR = valueR_ ;
   //
   m_kappa  = ( m_sigmaL - m_sigmaR ) / ( m_sigmaL + m_sigmaR ) ;
-  m_psi    = std::atanh ( m_kappa ) ;
+  m_psi    = m_kappa ? std::atanh ( m_kappa ) : 0.0 ;
   //
   return true ;
 }
@@ -369,7 +375,7 @@ bool Ostap::Math::BifurcatedGauss::setKappa
   const double s = sigma () ; 
   //
   m_kappa  = value ;
-  m_psi    = std::atanh  ( m_kappa ) ; 
+  m_psi    = m_kappa ? std::atanh  ( m_kappa ) : 0.0 ; 
   // 
   m_sigmaL = s * ( 1 + m_kappa ) ;
   m_sigmaR = s * ( 1 - m_kappa ) ;
@@ -389,7 +395,7 @@ bool Ostap::Math::BifurcatedGauss::setPsi
   const double s = sigma () ; 
   //
   m_psi   = value                ;
-  m_kappa = std::tanh ( m_psi )  ;
+  m_kappa = m_psi ? std::tanh ( m_psi ) : 0.0  ;
   //
   m_sigmaL = s * ( 1 + m_kappa ) ;
   m_sigmaR = s * ( 1 - m_kappa ) ; 
@@ -426,6 +432,12 @@ bool Ostap::Math::DoubleGauss::setSigma ( const double value )
 {
   const double value_ =  std::abs (value ) ;
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::DoubleGauss::setSigma"     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
   m_sigma = value_ ;
   return true ;
 }
@@ -442,6 +454,12 @@ bool Ostap::Math::DoubleGauss::setScale ( const double value )
 {
   const double value_ =  std::abs (value ) ;
   if ( s_equal ( value_ , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'scale' must be non-zero"     ,
+		  "Ostap::Math::DoubleGauss::setScale"     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
   m_scale = value_ ;
   return true ;
 }
@@ -587,6 +605,12 @@ bool Ostap::Math::Gauss::setSigma ( const double value )
 {
   const double value_ = std::abs ( value ) ;
   if ( s_equal ( m_sigma , value_ ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Gauss::setSigma"           ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //      
   m_sigma = value_ ;
   return true ;
 }
@@ -1527,6 +1551,11 @@ bool Ostap::Math::Bukin::setSigma ( const double value )
   const double value_ = std::abs ( value ) ;
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
   //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Bukin::setSigma"           ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //        
   m_sigma  = value_ ;
   //
   const double xi_ = m_xi/std::sqrt ( 1 + m_xi * m_xi ) ;
@@ -1777,6 +1806,12 @@ bool Ostap::Math::Novosibirsk::setSigma ( const double value )
 {
   const double avalue = std::fabs ( value ) ;
   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Novosibirsk::setSigma"     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //        
   m_sigma    = value ;
   return true ;
 }
@@ -3047,6 +3082,12 @@ bool Ostap::Math::Apollonios::setSigmaL ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigmaL ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigmaL' must be non-zero"    ,
+		  "Ostap::Math::Aplollonious::setSigmaL"   ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //        
   m_sigmaL    = value_ ;
   return true ;
 }
@@ -3055,6 +3096,12 @@ bool Ostap::Math::Apollonios::setSigmaR ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigmaR ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigmaR' must be non-zero"    ,
+		  "Ostap::Math::Aplollonious::setSigmaR"   ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //          
   m_sigmaR    = value_ ;
   return true ;
 }
@@ -3305,6 +3352,12 @@ bool Ostap::Math::Atlas::setSigma ( const double value )
 {
   const double value_ = std::abs ( value ) ;
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Atlas::setSigma"           ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //          
   m_sigma = value_ ;
   return true ;
 }
@@ -3441,6 +3494,12 @@ bool Ostap::Math::Sech::setSigma ( const double value )
 {
   const double value_ = std::abs ( value ) ;
   if ( s_equal ( value_ , m_sigma  ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Sech::setSigma"            ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //            
   m_sigma  = value_ ;
   return true ;
 }
@@ -3665,6 +3724,12 @@ bool Ostap::Math::Logistic::setSigma ( const double value )
 {
   const double value_ = std::abs ( value ) ;
   if ( s_equal ( value_ , m_sigma  ) ) { return false ; }
+  //  
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Logistic::setSigma"        ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //          
   m_sigma  = value_ ;
   return true ;
 }
@@ -3778,6 +3843,12 @@ bool Ostap::Math::GenLogisticIV::setSigma ( const double value )
 {
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  //  
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::GenLogisticIV::setSigma"   ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //            
   m_sigma = avalue ;
   return true ;  
 }
@@ -3993,18 +4064,19 @@ std::size_t Ostap::Math::GenLogisticIV::tag () const
 /*  constructor from mass, resolution and "n"-parameter 
  *  @param M     mass 
  *  @param sigma width parameter
- *  @param N     n-parameter  ( actually  n=1+|N| ) 
+ *  @param n     n-parameter  ( actually  N=N(n) ) 
  */
 // ============================================================================
 Ostap::Math::StudentT::StudentT 
 ( const double mass  , 
-  const double sigma ,
+  const double scale ,
   const double n     ) 
-//
-  : m_M    (      std::abs ( mass  ) )
-  , m_s    (      std::abs ( sigma ) )
-  , m_n    ( -1 )
-  , m_norm ( -1 ) 
+  //
+  : m_M     (      std::abs ( mass  ) )
+  , m_scale (      std::abs ( scale ) )
+  , m_n     ( -1 )
+  , m_nu    ( -1 )    
+  , m_norm  ( -1 ) 
 {
   setN ( n ) ;  
 }
@@ -4013,71 +4085,74 @@ Ostap::Math::StudentT::StudentT
 // ============================================================================
 bool Ostap::Math::StudentT::setM ( const double x )
 {
-  //
   const double v = std::abs ( x ) ;
   if ( s_equal ( v , m_M ) ) { return false ; }
-  //
   m_M = v ;
-  //
   return true ;
 }
 // ============================================================================
 // set the proper parameters
 // ============================================================================
-bool Ostap::Math::StudentT::setSigma ( const double x )
+bool Ostap::Math::StudentT::setScale ( const double value )
 {
+  const double avalue = std::abs ( value ) ;
   //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_s ) ) { return false ; }
+  Ostap::Assert ( avalue  ,
+		  "Parameter 'scale/sigma' must be non-zero" ,
+		  "Ostap::Math::StudentT::setScale"          ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__    ) ;
   //
-  m_s = v ;
-  //
+  if ( s_equal ( avalue , m_scale ) ) { return false ; }
+  m_scale = avalue ;
   return true ;
 }
 // ============================================================================
 // set the proper parameters
 // ============================================================================
-bool Ostap::Math::StudentT::setN ( const double x )
+bool Ostap::Math::StudentT::setN ( const double value )
 {
   //
-  const double v = 1 + std::abs ( x ) ;
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_n ) && 0 < m_nu && 0 < m_norm ) { return false ; }
   //
-  if ( m_norm < 0 ) 
-  {
-    m_norm  = gsl_sf_gamma ( 0.5 * ( v + 1 ) ) / gsl_sf_gamma ( 0.5 * v ) ;  
-    m_norm /= std::sqrt    ( M_PI * v ) ;
-  }
+  m_n    = avalue ;
   //
-  if ( s_equal ( v , m_n ) ) { return false ; }
+  // ATTENTION HERE!
+  m_nu   = nu ( m_n ) ; // ATTENTION!! nu=nu(n)! 
   //
-  m_n = v ;
-  //
-  m_norm  = gsl_sf_gamma ( 0.5 * ( v + 1 ) ) / gsl_sf_gamma ( 0.5 * v ) ;  
-  m_norm /= std::sqrt    ( M_PI * v ) ;
+  m_norm = 1 / ( Ostap::Math::beta ( 0.5 , 0.5 * m_nu ) * std::sqrt ( m_nu ) )  ;
   //
   return true ;
+}
+// =========================================================================
+// get the expression nu=nu(n) 
+// =========================================================================
+double Ostap::Math::StudentT::nu ( const double n )
+{
+  /// ATTENTION:  nu=nu(n)!
+  return std::hypot ( 2 , n ) ;
 }
 // ==========================================================================
 double Ostap::Math::StudentT::pdf ( const double x ) const
 {
-  //
-  const double y = ( x - M () ) / sigma () ;
-  //
-  const double f = std::pow (  1 + y * y / nu () ,  -0.5 * ( nu () + 1 ) ) ;
-  //
-  return m_norm * f / sigma () ; // sigma comes from dx = dy * sigma 
+  const double y = ( x - m_M  ) / m_scale ;
+  const double f = std::pow ( 1 + y * y / m_nu , -0.5 * ( m_nu + 1 ) ) ;
+  return m_norm * f / m_scale  ; 
 }
 // ============================================================================
 double Ostap::Math::StudentT::cdf ( const double y ) const
 {
-  //
-  const double  t    = ( y - M () ) / sigma () ;
-  return Ostap::Math::student_cdf ( t , nu() ) ;
+  const double  t    = ( y - m_M ) / m_scale ;
+  return Ostap::Math::student_cdf ( t , m_M ) ;
 }
 // ============================================================================
 // get the integral 
 // ============================================================================
-double Ostap::Math::StudentT::integral() const { return 1 ; }
+double Ostap::Math::StudentT::integral() const
+{
+  if ( m_nu <= 1 || s_equal ( m_nu , 1 ) ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  return 1 ;
+}
 // ============================================================================
 // get the integral 
 // ============================================================================
@@ -4085,9 +4160,7 @@ double Ostap::Math::StudentT::integral
 ( const double low  , 
   const double high ) const 
 {
-  //
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  //
+  if ( s_equal ( low , high ) ) { return 0.0 ; } // RETURN
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
@@ -4096,10 +4169,41 @@ double Ostap::Math::StudentT::integral
 std::size_t Ostap::Math::StudentT::tag () const 
 { 
   static const std::string s_name = "StudentT" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_M , m_s , m_n ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , m_M , m_scale , m_n ) ; 
 }
 // ============================================================================
-
+// variance
+// ============================================================================
+double Ostap::Math::StudentT::variance   () const
+{
+  if      ( m_nu <= 1 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  else if ( m_nu <= 2 || s_equal ( m_nu , 2 ) )
+    { return std::numeric_limits<double>::infinity () ;}
+  //
+  return m_scale * m_scale * m_nu / ( m_nu - 2 ) ;
+}
+// ============================================================================
+// RMS 
+// ============================================================================
+double Ostap::Math::StudentT::rms         () const
+{
+  if      ( m_nu <= 1 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  else if ( m_nu <= 2 || s_equal ( m_nu , 2 ) )
+    { return std::numeric_limits<double>::infinity () ;}
+  //
+  return m_scale * std::sqrt ( m_nu / ( m_nu - 2 ) ) ;
+}
+// ============================================================================
+//  get (excess) kurtosis 
+// ============================================================================
+double Ostap::Math::StudentT::kurtosis   () const 
+{
+  if      ( m_nu <= 2 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  else if ( m_nu <= 4 || s_equal ( m_nu , 4 ) )
+    { return std::numeric_limits<double>::infinity () ;}
+  //
+  return 6 / ( m_nu - 4 ) ;
+}
 // ============================================================================
 // Bifurcated Student-T 
 // ============================================================================
@@ -4121,6 +4225,8 @@ Ostap::Math::BifurcatedStudentT::BifurcatedStudentT
   , m_sR    (      std::abs ( sigmaR ) )
   , m_nL    ( -1 )
   , m_nR    ( -1 )
+  , m_nuL   ( -1 )
+  , m_nuR   ( -1 )
   , m_normL ( -1 ) 
   , m_normR ( -1 ) 
 {
@@ -4132,12 +4238,9 @@ Ostap::Math::BifurcatedStudentT::BifurcatedStudentT
 // ============================================================================
 bool Ostap::Math::BifurcatedStudentT::setM ( const double x )
 {
-  //
   const double v = std::abs ( x ) ;
   if ( s_equal ( v , m_M ) ) { return false ; }
-  //
   m_M = v ;
-  //
   return true ;
 }
 // ============================================================================
@@ -4145,12 +4248,15 @@ bool Ostap::Math::BifurcatedStudentT::setM ( const double x )
 // ============================================================================
 bool Ostap::Math::BifurcatedStudentT::setSigmaL ( const double x )
 {
-  //
   const double v = std::abs ( x ) ;
+  //
+  Ostap::Assert ( v  ,
+		  "Parameter 'sigmaL' must be non-zero"        ,
+		  "Ostap::Math::BifurcatedStudentT::setSigmaL" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__      ) ;
+  //
   if ( s_equal ( v , m_sL ) ) { return false ; }
-  //
   m_sL = v ;
-  //
   return true ;
 }
 // ============================================================================
@@ -4158,57 +4264,48 @@ bool Ostap::Math::BifurcatedStudentT::setSigmaL ( const double x )
 // ============================================================================
 bool Ostap::Math::BifurcatedStudentT::setSigmaR ( const double x )
 {
-  //
   const double v = std::abs ( x ) ;
+  //
+  Ostap::Assert ( v  ,
+		  "Parameter 'sigmaR' must be non-zero"        ,
+		  "Ostap::Math::BifurcatedStudentT::setSigmaR" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__      ) ;
+  //
   if ( s_equal ( v , m_sR ) ) { return false ; }
-  //
   m_sR = v ;
-  //
   return true ;
 }
 // ============================================================================
 // set the proper parameters
 // ============================================================================
-bool Ostap::Math::BifurcatedStudentT::setNL ( const double x )
+bool Ostap::Math::BifurcatedStudentT::setNL ( const double value )
 {
   //
-  const double v = 1 + std::abs ( x ) ;
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_nL ) && 0 < m_nuL && 0 < m_normL ) { return false ; }
   //
-  if ( m_normL < 0 ) 
-  {
-    m_normL = gsl_sf_gamma  ( 0.5 * ( v + 1 ) ) / gsl_sf_gamma ( 0.5 * v ) ;  
-    m_normL /= std::sqrt    ( M_PI * v ) ;
-  }
+  m_nL    = avalue ;
   //
-  if ( s_equal ( v , m_nL ) ) { return false ; }
+  // ATTENTION HERE!
+  m_nuL   = Ostap::Math::StudentT::nu ( m_nL ) ; // ATTENTION!! nu=nu(n)! 
   //
-  m_nL =  v ;
-  //
-  m_normL = gsl_sf_gamma  ( 0.5 * ( v + 1 ) ) / gsl_sf_gamma ( 0.5 * v ) ;  
-  m_normL /= std::sqrt    ( M_PI * v ) ;
+  m_normL  = 1 / ( Ostap::Math::beta ( 0.5 , 0.5 * m_nuL ) * std::sqrt ( m_nuL ) )  ;
   //
   return true ;
 }
 // ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::BifurcatedStudentT::setNR ( const double x )
+bool Ostap::Math::BifurcatedStudentT::setNR ( const double value )
 {
   //
-  const double v = 1 + std::abs ( x ) ;
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_nR ) && 0 < m_nuR && 0 < m_normR ) { return false ; }
   //
-  if ( m_normR < 0 ) 
-  {
-    m_normR  = std::tgamma ( 0.5 * ( v + 1 ) ) / std::tgamma ( 0.5 * v ) ;  
-    m_normR /= std::sqrt   ( M_PI * v ) ;
-  }
+  m_nR    = avalue ;
   //
-  if ( s_equal ( v , m_nR ) ) { return false ; }
+  // ATTENTION HERE!
+  m_nuR   = Ostap::Math::StudentT::nu ( m_nR ) ; // ATTENTION!! nu=nu(n)! 
   //
-  m_nR = v ;
-  //
-  m_normR  = std::tgamma ( 0.5 * ( v + 1 ) ) / std::tgamma ( 0.5 * v ) ;  
-  m_normR /= std::sqrt   ( M_PI * v ) ;
+  m_normR = 1 / ( Ostap::Math::beta ( 0.5 , 0.5 * m_nuR ) * std::sqrt ( m_nuR ) )  ;
   //
   return true ;
 }
@@ -4216,15 +4313,14 @@ bool Ostap::Math::BifurcatedStudentT::setNR ( const double x )
 double Ostap::Math::BifurcatedStudentT::pdf ( const double x ) const
 {
   //
-  const double y = ( x <= M() ) ? 
-    ( x - M () ) / sigmaL () : ( x - M () ) / sigmaR () ;
+  const double y = ( x <= m_M ) ? ( x - m_M ) / m_sL : ( x - m_M ) / m_sR  ;
   //
-  const double f = ( x <= M() ) ? 
-    std::pow (  1 + y * y / nuL () ,  -0.5 * ( nuL () + 1 ) ) :
-    std::pow (  1 + y * y / nuR () ,  -0.5 * ( nuR () + 1 ) ) ;
+  const double f = ( x <= m_M ) ? 
+    std::pow ( 1 + y * y / m_nuL ,  -0.5 * ( m_nuL + 1 ) ) :
+    std::pow ( 1 + y * y / m_nuR ,  -0.5 * ( m_nuR + 1 ) ) ;
   //
-  const double n_1 = m_normL       / sigmaL () ;
-  const double n_2 = m_normR       / sigmaR () ;
+  const double n_1 = m_normL       / m_sL ;
+  const double n_2 = m_normR       / m_sR ;
   const double n_t = 2 * n_1 * n_2 / ( n_1 + n_2 ) ;
   //
   return n_t * f ; 
@@ -4233,22 +4329,27 @@ double Ostap::Math::BifurcatedStudentT::pdf ( const double x ) const
 double Ostap::Math::BifurcatedStudentT::cdf ( const double y ) const
 {
   //
-  const double n_1 = m_normL / sigmaL () ;
-  const double n_2 = m_normR / sigmaR () ;
+  const double n_1 = m_normL / m_sL ;
+  const double n_2 = m_normR / m_sR ;
   //
-  if ( y <= M() ) 
+  if ( y <= m_M ) 
   {
-    const double  t    = ( y - M () ) / sigmaL () ;
-    return     2 * n_2 / ( n_1 + n_2 ) * Ostap::Math::student_cdf (  t , nuL () ) ;  
+    const double  t    = ( y - m_M ) / m_sL ;
+    return     2 * n_2 / ( n_1 + n_2 ) * Ostap::Math::student_cdf (  t , m_nuL ) ;  
   }
   //
-  const   double  t    = ( y - M () ) / sigmaR () ;
-  return   1 - 2 * n_1 / ( n_1 + n_2 ) * Ostap::Math::student_cdf ( -t , nuR () ) ;  
+  const   double  t    = ( y - m_M ) / m_sR ;
+  return   1 - 2 * n_1 / ( n_1 + n_2 ) * Ostap::Math::student_cdf ( -t , m_nuR ) ;  
 }
 // ============================================================================
 // get the integral 
 // ============================================================================
-double Ostap::Math::BifurcatedStudentT::integral() const { return 1 ; }
+double Ostap::Math::BifurcatedStudentT::integral() const 
+{
+  if ( m_nuL <= 1 || s_equal ( m_nuL , 1 ) ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if ( m_nuR <= 1 || s_equal ( m_nuR , 1 ) ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  return 1 ;
+}
 // ============================================================================
 // get the integral 
 // ============================================================================
@@ -4256,9 +4357,7 @@ double Ostap::Math::BifurcatedStudentT::integral
 ( const double low  , 
   const double high ) const 
 {
-  //
   if ( s_equal ( low , high ) ) { return 0.0 ; } // RETURN
-  //
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
@@ -4270,8 +4369,6 @@ std::size_t Ostap::Math::BifurcatedStudentT::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_M , m_sL , m_sR  , m_nL , m_nR ) ; 
 }
 // ============================================================================
-
-
 
 // ============================================================================
 /*  constructor from all parameters 
@@ -4615,6 +4712,12 @@ bool Ostap::Math::SinhAsinh::setSigma      ( const double value )
 {
   const double value_ = std::abs ( value ) ;
   if ( s_equal ( value_ , m_sigma  ) ) { return false ; }
+  //
+  Ostap::Assert ( value_                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::SinhAsinh::setSigma"       ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //              
   m_sigma  = value_ ;
   return true ;
 }
@@ -4932,6 +5035,12 @@ bool Ostap::Math::Slash::setScale ( const double value )
 {
   const double v = std::abs ( value ) ;
   if ( s_equal ( v , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( v                                        ,
+		  "Parameter 'scale' must be non-zero"     ,
+		  "Ostap::Math::Slash::setSigma"           ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
   m_scale = v;
   return true ;
 }
@@ -5367,6 +5476,12 @@ bool Ostap::Math::QGaussian::setScale ( const double value )
 {
   const double v = std::abs ( value ) ;
   if ( s_equal ( v , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( v                                        ,
+		  "Parameter 'scale' must be non-zero"     ,
+		  "Ostap::Math::QGaussian::setScale"       ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
   m_scale = v ;
   return true ;
 }
@@ -5529,6 +5644,12 @@ bool Ostap::Math::KGaussian::setScale ( const double value )
 {
   const double v = std::abs ( value ) ;
   if ( s_equal ( v , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( v                                        ,
+		  "Parameter 'scale' must be non-zero"     ,
+		  "Ostap::Math::KGaussian::setScale"       ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
   m_scale = v ;
   return true ;
 }
@@ -5814,6 +5935,12 @@ bool Ostap::Math::Hyperbolic::setSigma ( const double value )
 {
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Hyperbolic::setSigma"      ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //              
   m_sigma = avalue ;
   return true ;
 }
@@ -6044,6 +6171,12 @@ bool Ostap::Math::GenHyperbolic::setSigma ( const double value )
 {
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::GenHyperbolic::setSigma"   ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //              
   m_sigma = avalue ;
   return true ;
 }
@@ -6465,6 +6598,12 @@ bool Ostap::Math::SkewGenT::setSigma
 {
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::SkewGenT::setSigma"        ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //              
   m_sigma = avalue ;
   return true ;
 }
@@ -6768,6 +6907,12 @@ bool Ostap::Math::SkewGenError::setSigma
 {
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::SkewGenError::setSigma"    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //  
   m_sigma = avalue ;
   return true ;
 }
@@ -7474,6 +7619,12 @@ bool Ostap::Math::Meixner::setSigma
 {
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue                                   ,
+		  "Parameter 'sigma' must be non-zero"     ,
+		  "Ostap::Math::Meixner::setSigma"         ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //             
   m_sigma = avalue ;
   //
   m_a  = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;

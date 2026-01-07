@@ -1010,8 +1010,6 @@ double Ostap::Math::psi
 }
 // ===========================================================================  
   
-  
-
 // ============================================================================
 // Beta function
 // ============================================================================
@@ -1039,23 +1037,27 @@ double Ostap::Math::beta
   else if (     x_int ) { return beta ( (unsigned short) round ( x ) , y ) ; }
   else if (     y_int ) { return beta ( x , (unsigned short) round ( y ) ) ; }
   //
-  // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
   //
-  gsl_sf_result result ;
-  const int ierror = gsl_sf_beta_e ( x , y , &result ) ;
-  if ( ierror ) 
-  {
-    // 
-    if ( GSL_EUNDRFLW == ierror ) { return 0 ; }
-    // 
-    gsl_error ( "Error from gsl_sf_beta_e" , __FILE__ , __LINE__ , ierror ) ;
-    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-    { return std::numeric_limits<double>::quiet_NaN(); }
-    //
-  }
-  //
-  return result.val ;
+  // use STD
+  return std::beta ( x , y ) ;
+  // 
+  // // use GSL: 
+  // Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
+  // //
+  // gsl_sf_result result ;
+  // const int ierror = gsl_sf_beta_e ( x , y , &result ) ;
+  // if ( ierror ) 
+  // {
+  //   // 
+  //   if ( GSL_EUNDRFLW == ierror ) { return 0 ; }
+  //   // 
+  //   gsl_error ( "Error from gsl_sf_beta_e" , __FILE__ , __LINE__ , ierror ) ;
+  //   if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+  //   { return std::numeric_limits<double>::quiet_NaN(); }
+  //   //
+  // }
+  // //
+  // return result.val ;
 }
 // ============================================================================
 /*  beta function for 

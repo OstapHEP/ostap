@@ -1,5 +1,9 @@
 ## New features 
 
+  1. improve `Ostap::Math::StudentT` and `Ostap::Math::BifurcatedStudentT`
+  1. tiny tweaks for `Ostap::Models::StudentT` and `Ostap::Models::BifurcatedStudentT`
+  1. improve  `StudentT_pdf`, `BifurcatedStudentT_pdf` and `RsoStudentT`
+  
 ## Bug fixes
 
 ## Backward incompatible 

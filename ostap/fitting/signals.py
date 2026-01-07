@@ -1646,12 +1646,14 @@ class Bukin_pdf(Gauss_pdf) :
 
 
 models.append ( Bukin_pdf )      
+
 # =============================================================================
 ## @class StudentT_pdf
 #  Student-T distribution
 #  @see http://en.wikipedia.org/wiki/Student%27s_t-distribution
 #
-#  \f[  f(y) = \dfrac{1}{\sqrt{\pi n}} \dfrac { \Gamma( \dfrac{n+1}{2}) } { \Gamma( \dfrac{n}{2}  ) }
+#  \f[  f(y) = \dfrac{1}{\sqrt{\pi \nu}} \dfrac { \Gamma( \dfrac{\nu+1}{2}) }
+#   { \Gamma( \dfrac{\nu}{2}  ) }
 #  \left( 1 + \dfrac{y^2}{n} \right)^{ -\dfrac{n+1}{2}} \f], 
 #  where 
 #  - \f$ y = \dfrac{x - \mu}{\sigma} \f$ 
@@ -1661,19 +1663,19 @@ models.append ( Bukin_pdf )
 #  @see Ostap::Math::StudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class StudentT_pdf(Gauss_pdf,TailN) :
+class StudentT_pdf(Gauss_pdf) :
     """ Student-T distribution:
     http://en.wikipedia.org/wiki/Student%27s_t-distribution
     
-    f(dx) ~ (1 + dx^2/n)^{-(N+1)/2 }
+    f(dx) ~ (1 + dx^2/nu)^{-(nu+1)/2 }
     with
     dx = ( x - mu )  / sigma
-    and N = N ( n ) 
+    and nu = nu ( n ) 
     
     Parameters 
     - mean    : location 
     - sigma   : scale 
-    - n       : n-parameter, |n|+1 is used 
+    - n       : n-parameter: nu = nu(n) 
     """
     def __init__ ( self             ,
                    name             ,
@@ -1685,7 +1687,12 @@ class StudentT_pdf(Gauss_pdf,TailN) :
         ## initialize the base
         # 
         Gauss_pdf.__init__  ( self , name , xvar , mean , sigma ) 
-        TailN    .__init__  ( self , n = n )
+        
+        ## parameter n : nu=nu(n)        
+        self.__n  = self.make_var ( n       ,
+                                    'n_%s'  % self.name ,
+                                    'n(%s)' % self.name ,
+                                    None    , 1 , -2.0 , 100 )
         #
         ## finally build pdf
         # 
@@ -1705,7 +1712,21 @@ class StudentT_pdf(Gauss_pdf,TailN) :
             'sigma'     : self.sigma ,
             'n'         : self.n     ,
             }
+        
+    @property
+    def n ( self ) :
+        """'n' :  n-parameter for Student't function: nu=nu(n)"""
+        return self.__n
+    @n.setter
+    def n ( self, value ) :   
+        self.set_value ( self.__n , value )        
 
+    @property
+    def nu ( self ) :
+        """'nu' :  nu-parameter for Student't function: nu=nu(n)"""
+        return self.pdf.nu() 
+        
+                
 models.append ( StudentT_pdf )
 
 # =============================================================================
@@ -1716,16 +1737,16 @@ models.append ( StudentT_pdf )
 #  @see Ostap::Math::BifurcatedStudentT
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class BifurcatedStudentT_pdf(BifurcatedGauss_pdf,SigmaLR,TailNL,TailNR) :
+class BifurcatedStudentT_pdf(BifurcatedGauss_pdf) :
     """ Bifurcated Student-T distribution:
 
-    f(dx) ~ (1 + dx^2/n)^{-(n+1)/2 }
+    f(dx) ~ (1 + dx^2/nu)^{-(nu+1)/2 }
     where
     for x < mu   n=n_l and dx = ( x - mu )  / sigma_l
     for x > mu   n=n_l and dx = ( x - mu )  / sigma_r
     with 
     sigma_{l,r} = sigma * ( 1 +/- kappa)
-    with asymmetry parameter kappa = tang(psi)
+    with (sigma) asymmetry parameter kappa = tanh(psi)
 
     Parameters:
     - mean
@@ -1751,8 +1772,19 @@ class BifurcatedStudentT_pdf(BifurcatedGauss_pdf,SigmaLR,TailNL,TailNR) :
                                         mean  = mean  ,
                                         sigma = sigma ,
                                         psi   = psi   )
-        TailNL  .__init__  ( self , n = nL )
-        TailNR  .__init__  ( self , n = nR )
+        
+        ## parameter nL : nuL=nuL(nL)        
+        self.__nL  = self.make_var ( nL         ,
+                                     'nL_%s'     % self.name ,
+                                     'n_{L}(%s)' % self.name ,
+                                     None      , 1 , -2.0 , 100 )
+        
+        ## parameter nR : nuR=nuR(nR)        
+        self.__nR  = self.make_var ( self.nL if nR is None else nR ,   
+                                     'nR_%s'     % self.name ,
+                                     'n_{R}(%s)' % self.name ,
+                                     None      , 1 , -2.0 , 100 )
+        
         #
         ## finally build pdf
         # 
@@ -1774,9 +1806,33 @@ class BifurcatedStudentT_pdf(BifurcatedGauss_pdf,SigmaLR,TailNL,TailNR) :
             'sigma'     : self.sigma ,
             'psi'       : self.psi   ,
             'nL'        : self.nL    ,
-            'nR'        : self.nR    ,
-            }
+            'nR'        : None if nR is None else self.nR }
+        
+    @property
+    def nL ( self ) :
+        """'nL' :  nL-parameter for Student't function: nuL=nuL(nL)"""
+        return self.__nL
+    @nL.setter
+    def nL ( self, value ) :   
+        self.set_value ( self.__nL , value )
+        
+    @property
+    def nR ( self ) :
+        """'nR' :  nL-parameter for Student't function: nuL=nuL(nL)"""
+        return self.__nR
+    @nR.setter
+    def nR ( self, value ) :   
+        self.set_value ( self.__nL , value )        
 
+    @property
+    def nuL ( self ) :
+        """'nuL' :  nuL-parameter for Student't function: nuL=nuL(nL)"""
+        return self.pdf.nuL ()    
+    @property
+    def nuR ( self ) :
+        """'nuR' :  nuR-parameter for Student't function: nuR=nuR(nR)"""
+        return self.pdf.nuR () 
+        
 models.append ( BifurcatedStudentT_pdf )      
 
 # =============================================================================
@@ -1787,7 +1843,7 @@ models.append ( BifurcatedStudentT_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2022-07-10
 class PearsonIV_pdf(PEAK) :
-    """Pearson Type IV distribution:
+    """ Pearson Type IV distribution:
 
     - see Ostap.Models.PearsonIV
     - see Ostap.Math.PearsonIV
@@ -2036,6 +2092,24 @@ class SkewGenT_pdf(PEAK) :
     def zeta ( self, value ) :
         self.set_value ( self.__zeta , value ) 
 
+    @property
+    def lambd   ( self ) :
+        """`lambd` : the original `lambda`-parameter"""
+        return self.pdf.lambd ()
+    @property
+    def lambda_ ( self ) :
+        """`lambda_` : the original `lambda`-parameter"""
+        return self.pdf.lambd ()
+    
+    @property
+    def p ( self ) :
+        """`p` : the original `p`-parameter"""
+        return self.pdf.p ()
+    @property
+    def q ( self ) :
+        """`q` : the original `q`-parameter"""
+        return self.pdf.q ()
+
 models.append ( SkewGenT_pdf )      
 
 # =============================================================================
@@ -2158,6 +2232,15 @@ class SkewGenError_pdf(PEAK) :
     @p.setter
     def p  ( self, value ) :
         self.set_value ( self.__p , value )
+        
+    @property
+    def lambd   ( self ) :
+        """`lambd` : the original `lambda`-parameter"""
+        return self.pdf.lambd ()
+    @property
+    def lambda_ ( self ) :
+        """`lambda_` : the original `lambda`-parameter"""
+        return self.pdf.lambd ()
         
 models.append ( SkewGenError_pdf )      
 

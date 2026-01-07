@@ -2866,7 +2866,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::StudentT& function() const { return m_stt ; }
+      const Ostap::Math::StudentT& function() const { setPars() ; return m_stt ; }
+      /// get the current nu-parameter
+      inline double nu  () const { setPars() ; return m_stt.nu () ; }  
+      /// get the current nu-parameter: ditto 
+      inline double nuL () const { return nu ()  ; }  
+      /// get the current nu-parameter: ditto 
+      inline double nuR () const { return nu () ; }  
       // ======================================================================
     public:
       // ======================================================================
@@ -2875,6 +2881,13 @@ namespace Ostap
       const RooAbsReal& sigma    () const { return m_sigma .arg() ; }
       const RooAbsReal& n        () const { return m_n     .arg() ; }
       // ======================================================================
+      /// some duplication 
+      // ======================================================================
+      const RooAbsReal& nL       () const { return n     () ; }
+      const RooAbsReal& nR       () const { return n     () ; }
+      const RooAbsReal& sigmaL   () const { return sigma () ; }
+      const RooAbsReal& sigmaR   () const { return sigma () ; }
+      // ======================================================================      
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -2955,8 +2968,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BifurcatedStudentT& function() const { return m_stt ; }
+      const Ostap::Math::BifurcatedStudentT& function() const { setPars() ; return m_stt ; }
       // ======================================================================
+      /// get the current nuL-parameter
+      inline double nuL () const { setPars() ; return m_stt.nuL () ; }
+      /// get the current nuR-parameter
+      inline double nuR () const { setPars() ; return m_stt.nuR () ; }
+      // ======================================================================      
     public:
       // ======================================================================
       const RooAbsReal& x        () const { return m_x      .arg() ; }
@@ -9126,8 +9144,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::SkewGenT& function () const { return m_sgt ; }
-      const Ostap::Math::SkewGenT& sgt      () const { return m_sgt ; }
+      const Ostap::Math::SkewGenT& function () const { setPars () ; return m_sgt ; }
+      const Ostap::Math::SkewGenT& sgt      () const { setPars () ; return m_sgt ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9137,6 +9155,14 @@ namespace Ostap
       const RooAbsReal& psi     () const { return m_psi   .arg() ; }
       const RooAbsReal& r       () const { return m_r     .arg() ; }
       const RooAbsReal& zeta    () const { return m_zeta  .arg() ; }
+      // ======================================================================
+    public : // more accessors 
+      // ======================================================================
+      inline double lambd   () const { setPars () ; return m_sgt.lambda () ; } 
+      inline double lambda  () const { setPars () ; return m_sgt.lambda () ; } 
+      inline double lambda_ () const { setPars () ; return m_sgt.lambda () ; } 
+      inline double p       () const { setPars () ; return m_sgt.p      () ; } 
+      inline double q       () const { setPars () ; return m_sgt.q      () ; } 
       // ======================================================================
     protected :
       // ======================================================================
@@ -9240,8 +9266,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::SkewGenError& function () const { return m_sge ; }
-      const Ostap::Math::SkewGenError& sge      () const { return m_sge ; }
+      const Ostap::Math::SkewGenError& function () const { setPars() ; return m_sge ; }
+      const Ostap::Math::SkewGenError& sge      () const { setPars() ; return m_sge ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -9250,6 +9276,10 @@ namespace Ostap
       const RooAbsReal& sigma   () const { return m_sigma .arg() ; }
       const RooAbsReal& xi      () const { return m_xi    .arg() ; }
       const RooAbsReal& p       () const { return m_p     .arg() ; }
+      // ======================================================================
+      inline double lambd   () const { setPars () ; return m_sge.lambda () ; } 
+      inline double lambda  () const { setPars () ; return m_sge.lambda () ; } 
+      inline double lambda_ () const { setPars () ; return m_sge.lambda () ; } 
       // ======================================================================
     protected :
       // ======================================================================

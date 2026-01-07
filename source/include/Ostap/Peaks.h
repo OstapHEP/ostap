@@ -202,9 +202,9 @@ namespace Ostap
       // ======================================================================
       /// peak position 
       bool setPeak    ( const double value ) ;
-      /// left sigma 
+      /// set left  sigma (& keep right sigma)
       bool setSigmaL  ( const double value ) ;
-      /// right sigma 
+      /// set right sigma (&keep left   sigma) 
       bool setSigmaR  ( const double value ) ;
       /// set both sigmas simultaneously (main method)
       bool setSigma   
@@ -233,14 +233,14 @@ namespace Ostap
     public: // logarithmic derivative 
       // ======================================================================
       /** log-derivative \f$ \frac{ f^\prime}{f}  \f$
-       *  Useful to attach the radiative tail to ensure 
+       *  - Useful to attach the tail to ensure 
        *  the continuity of the function and the 1st derivatibve 
        */
       double dFoF ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      /// get the tag 
+      /// get the unique tag 
       std::size_t tag () const ;
       // ======================================================================
     private: // parameters
@@ -1897,8 +1897,8 @@ namespace Ostap
        */
       CrystalBallA 
       ( const Ostap::Math::BifurcatedGauss& core      , 
-	      const double                        alpha = 2 , 
-	      const double                        n     = 1 ) ;
+	const double                        alpha = 2 , 
+	const double                        n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core bifurcated Gaussian function 
@@ -1906,7 +1906,7 @@ namespace Ostap
        */
       CrystalBallA 
       ( const Ostap::Math::BifurcatedGauss& core ,
-	      const Ostap::Math::Tail&            tail ) ;
+	const Ostap::Math::Tail&            tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2105,31 +2105,35 @@ namespace Ostap
       // ======================================================================      
       inline bool setN
       ( const double valueL , 
-	      const double valueR ) 
+	const double valueR ) 
       {
-	      const bool updatedL = m_left .setN ( valueL ) ;
-	      const bool updatedR = m_right.setN ( valueR ) ;
-	      return updatedL || updatedR ;
+	const bool updatedL = m_left .setN ( valueL ) ;
+	const bool updatedR = m_right.setN ( valueR ) ;
+	return updatedL || updatedR ;
       }
       // ======================================================================      
       inline bool setAlpha
       ( const double valueL , 
-	      const double valueR ) 
+	const double valueR ) 
       {
-	      const bool updatedL = m_left .setAlpha ( valueL ) ;
-	      const bool updatedR = m_right.setAlpha ( valueR ) ;
-	      return updatedL || updatedR ;
+	const bool updatedL = m_left .setAlpha ( valueL ) ;
+	const bool updatedR = m_right.setAlpha ( valueR ) ;
+	return updatedL || updatedR ;
       }      
       /// set both alpha-parameters 
-      inline bool setAlpha ( const double value ) { return setAlpha ( value , value ) ; } 
+      inline bool setAlpha ( const double value )
+      { return setAlpha ( value , value ) ; } 
       /// set both n-parameters 
-      inline bool setN     ( const double value ) { return setN     ( value , value ) ; }
-      // ======================================================================
+      inline bool setN     ( const double value )
+      { return setN     ( value , value ) ; }
+      /// set both sigmas 
       inline bool setSigma
       ( const double valueL ,
-	      const double valueR ) { return m_core  .setSigma ( valueL , valueR ) ; }
-      //
-      inline bool setSigma  ( const double value  ) { return m_core  .setSigma ( value ) ; }
+	const double valueR )
+      { return m_core  .setSigma ( valueL , valueR ) ; }
+      /// set both sigmas
+      inline bool setSigma  ( const double value  )
+      { return m_core  .setSigma ( value ) ; }
       // ======================================================================
     public: //
       // ======================================================================
@@ -2162,7 +2166,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const ;
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2229,7 +2233,7 @@ namespace Ostap
       CrystalBallDoubleSidedE
       ( const Ostap::Math::BifurcatedGauss& core  ,
         const Ostap::Math::LeftTail&        left  ,
-	      const Ostap::Math::RightExpTail&    right ) ;
+	const Ostap::Math::RightExpTail&    right ) ;
       // ========================================================================
     public:
       // ======================================================================
@@ -2279,9 +2283,9 @@ namespace Ostap
       inline bool setPeak   ( const double value ) { return setM0 ( value ) ; }
       inline bool setMode   ( const double value ) { return setM0 ( value ) ; }
       inline bool setMass   ( const double value ) { return setM0 ( value ) ; }
-      // ======================================================================      
+      /// set n
       inline bool setN      ( const double value ) { return m_left.setN ( value ) ; } 
-      // ======================================================================      
+      /// set both alphas 
       inline bool setAlpha
       ( const double valueL , 
 	const double valueR ) 
@@ -2291,13 +2295,16 @@ namespace Ostap
 	return updatedL || updatedR ;
       }      
       /// set both alpha-parameters 
-      inline bool setAlpha ( const double value ) { return setAlpha ( value , value ) ; } 
-      // ======================================================================
+      inline bool setAlpha ( const double value )
+      { return setAlpha ( value , value ) ; } 
+      /// set both sigmas 
       inline bool setSigma
       ( const double valueL ,
-	const double valueR ) { return m_core  .setSigma ( valueL , valueR ) ; }
-      //
-      inline bool setSigma  ( const double value  ) { return m_core  .setSigma ( value ) ; }
+	const double valueR )
+      { return m_core  .setSigma ( valueL , valueR ) ; }
+      /// set both sigmas 
+      inline bool setSigma  ( const double value  )
+      { return m_core  .setSigma ( value ) ; }
       // ======================================================================
     public: //
       // ======================================================================
@@ -2347,8 +2354,6 @@ namespace Ostap
       Ostap::Math::RightExpTail    m_right {} ;
       // =======================================================================
     } ;
-
-
     // ========================================================================
     /** @class Apollonios
      *  "Bifurcated Apollonios"
@@ -2581,13 +2586,19 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class StudentT
-     *  simple function to parameterize the symmetric peak using
-     *  Student's ditribution
+     *  Simple function to parameterize the symmetric peak using
+     *  scale-location version of Student' t-distribution
      *
-     *  \f[  f(y) = \frac{1}{\sqrt{\pi n}} \frac { \Gamma( \frac{n+1}{2}) } { \Gamma( \frac{n}{2}  ) }
-     *  \left( 1 + \frac{y^2}{n} \right)^{ -\frac{n+1}{2}} \f],
+     *  \f[  f(y|\nu,\mu,\sigma) = 
+     *   \frac{1}{\sqrt{\pi \nu}} \frac { \Gamma( \frac{\nu+1}{2}) } { \Gamma( \frac{\nu}{2}  ) }
+     *  \left( 1 + \frac{y^2}{\nu} \right)^{ -\frac{\nu+1}{2}} \f],
+     *
      *  where \f$ y = \frac{x - \mu}{\sigma} \f$
      *
+     *  - since we want to have the finite integral and finite variance,
+     *    we use n-parameter, such that \f$ \nu = \nu(n) \ge 2 \f$
+     *
+     *  @see https://en.wikipedia.org/wiki/Student%27s_t-distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2013-01-05
      */
@@ -2595,61 +2606,79 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      /** constructor from mass, resolution and "n"-parameter
-       *  @param mass  mass
-       *  @param sigma width parameter
-       *  @param n     n-parameter  ( actually  n=1+|N| )
+      /** constructor from mass, scale and "n"-parameter
+       *  @param mass  mass/location 
+       *  @param scale scale parameter
+       *  @param n     n-parameter  ( actually nu=nu(n) )
        */
       StudentT 
       ( const double mass  = 0 ,
-        const double sigma = 1 ,
+        const double scale = 1 ,
         const double n     = 2 ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// calculate StudentT's shape
-      inline double operator() ( const double x ) const{ return pdf ( x )  ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      /// calculate StudentT's shape
+      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: // variables
+      // ======================================================================
+      inline double M        () const  { return m_M      ; }
+      inline double m0       () const  { return m_M      ; }
+      inline double mu       () const  { return m_M      ; }
+      inline double mass     () const  { return m_M      ; }
+      inline double peak     () const  { return m_M      ; }
+      inline double mode     () const  { return m_M      ; }
+      inline double location () const  { return m_M      ; }
+      // ======================================================================
+      inline double scale    () const  { return m_scale  ; }
+      inline double sigma    () const  { return m_scale  ; }
+      inline double tau      () const  { return m_scale  ; }
+      inline double gamma    () const  { return m_scale  ; }
+      inline double width    () const  { return m_scale  ; }
+      // ======================================================================
+      inline double n        () const  { return m_n      ; }
+      // ======================================================================
+      inline double nu       () const  { return m_nu     ; }
       // ======================================================================
     public:
       // ======================================================================
-      // variables
+      bool        setM        ( const double value  ) ; // setter for location 
+      bool        setScale    ( const double value  ) ; // setter for scale/width 
+      bool        setN        ( const double value  ) ; // setter for n
       // ======================================================================
-      inline double M      () const  { return m_M      ; }
-      inline double m0     () const  { return m_M      ; }
-      inline double mu     () const  { return m_M      ; }
-      inline double mass   () const  { return m_M      ; }
-      inline double peak   () const  { return m_M      ; }
-      inline double mode   () const  { return m_M      ; }
+      inline bool setM0       ( const double value  ) { return setM     ( value ) ; }
+      inline bool setMu       ( const double value  ) { return setM     ( value ) ; }
+      inline bool setMass     ( const double value  ) { return setM     ( value ) ; }
+      inline bool setPeak     ( const double value  ) { return setM     ( value ) ; }
+      inline bool setMode     ( const double value  ) { return setM     ( value ) ; }
+      inline bool setLocation ( const double value  ) { return setM     ( value ) ; }
       // ======================================================================
-      inline double sigma  () const  { return m_s      ; }
-      inline double s      () const  { return m_s      ; }
-      inline double gamma  () const  { return m_s      ; }
-      inline double width  () const  { return m_s      ; }
+      inline bool setSigma    ( const double value  ) { return setScale ( value ) ; }
+      inline bool setTau      ( const double value  ) { return setScale ( value ) ; }      
+      inline bool setGamma    ( const double value  ) { return setGamma ( value ) ; }
+      inline bool setWidth    ( const double value  ) { return setWidth ( value ) ; }
       // ======================================================================
-      inline double nu     () const  { return m_n      ; }
-      inline double n      () const  { return m_n      ; }
-      /// actual n-parameter 
-      inline double N      () const  { return Ostap::Math::Tail::N ( m_n ) ; }
+    public: // some statistics 
       // ======================================================================
-    public:
-      // ======================================================================
-      bool        setM     ( const double value  ) ;
-      bool        setSigma ( const double value  ) ;
-      bool        setN     ( const double value  ) ; // setter for n! 
-      // ======================================================================
-      inline bool setS     ( const double value  ) { return setSigma ( value ) ; }
-      inline bool setGamma ( const double value  ) { return setSigma ( value ) ; }
-      inline bool setWidth ( const double value  ) { return setSigma ( value ) ; }
-      // ======================================================================
-      inline bool setM0    ( const double value  ) { return setM  ( value ) ; }
-      inline bool setMu    ( const double value  ) { return setM  ( value ) ; }
-      inline bool setMass  ( const double value  ) { return setM  ( value ) ; }
-      inline bool setPeak  ( const double value  ) { return setM  ( value ) ; }
-      inline bool setMode  ( const double value  ) { return setM  ( value ) ; }
+      /// the mean value 
+      inline double mean       () const { return m_M ; }
+      /// skewness 
+      inline double skewness   () const { return 0   ; } 
+      /// variance
+      double        variance   () const ;
+      /// (excess) kurtosis 
+      double        kurtosis   () const ;
+      /// RMS
+      double        rms        () const ;
       // ======================================================================
     public:
       // ======================================================================
+      /// get the PDF 
       double pdf    ( const double x ) const ;
+      /// get the PDF 
       double cdf    ( const double x ) const ;
       // ======================================================================
     public:
@@ -2666,18 +2695,25 @@ namespace Ostap
       /// get the tag 
       std::size_t tag () const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// get the expression nu=nu(n) 
+      static double nu ( const double n ) ;
+      // ======================================================================
     private:
       // ======================================================================
       /// mass
-      double m_M  ; //
+      double m_M     { 0  } ; //
       /// width parameter
-      double m_s ; // width parameter
+      double m_scale { 1  } ; // width parameter
       /// n-parameter
-      double m_n ; // n-parameter
+      double m_n     { 0  } ; // n-parameter
+      /// nu-parameter
+      double m_nu    { 2  } ; // nu-parameter
       // ======================================================================
     private: // normalization
       // ======================================================================
-      double m_norm  ;
+      double m_norm  { -1 } ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -2693,10 +2729,10 @@ namespace Ostap
       // ======================================================================
       /** constructor from mass, resolution and "n"-parameter
        *  @param mass   mass
-       *  @param sigmaL left width parameter
-       *  @param sigmaR right width parameter
-       *  @param nL     left n-parameter  ( actually  n=1+|N| )
-       *  @param nR     right n-parameter  ( actually  n=1+|N| )
+       *  @param sigmaL left scale/width parameter
+       *  @param sigmaR right scale/width parameter
+       *  @param nL     left n-parameter  ( actually  nuL = nu(nL) )
+       *  @param nR     right n-parameter  ( actually nuR = nu(nR) )
        */
       BifurcatedStudentT
       ( const double mass   = 0 ,
@@ -2709,6 +2745,8 @@ namespace Ostap
       // ======================================================================
       /// calculate bifurcated StudentT's shape
       inline double operator() ( const double x ) const { return pdf ( x )  ; }
+      /// calculate bifurcated StudentT's shape
+      inline double evaluate   ( const double x ) const { return pdf ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2731,13 +2769,11 @@ namespace Ostap
       inline double gammaR  () const  { return sigmaR () ; }
       inline double widthR  () const  { return sigmaR () ; }
       // ======================================================================
-      inline double nuL     () const  { return m_nL      ; }
       inline double nL      () const  { return m_nL      ; }
-      inline double NL      () const  { return Ostap::Math::Tail::N ( m_nL ) ; } 
-      // =========== ===========================================================
-      inline double nuR     () const  { return m_nR      ; }
       inline double nR      () const  { return m_nR      ; }
-      inline double NR      () const  { return Ostap::Math::Tail::N ( m_nR ) ; } 
+      // ======================================================================
+      inline double nuL     () const  { return m_nuL     ; }
+      inline double nuR     () const  { return m_nuR     ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -2785,20 +2821,25 @@ namespace Ostap
     private:
       // ======================================================================
       /// mass
-      double m_M  ; //
+      double m_M     { 0 } ; //
       /// width parameter
-      double m_sL ; // width parameter
+      double m_sL    { 1 } ; // width parameter
       /// width parameter
-      double m_sR ; // width parameter
+      double m_sR    { 1 } ; // width parameter
       /// nL-parameter
-      double m_nL ; // n-parameter
+      double m_nL    { 0 } ; // nL-parameter
       /// nR-parameter
-      double m_nR ; // n-parameter
+      double m_nR    { 0 } ; // nR-parameter
+      // ======================================================================
+      /// nuL parameter 
+      double m_nuL   { 2 } ;  // nuL parameter 
+      /// nuR parameter 
+      double m_nuR   { 2 } ; // nuR parameter  
       // ======================================================================
     private: // normalization
       // ======================================================================
-      double m_normL  ;
-      double m_normR  ;
+      double m_normL { -1 } ;
+      double m_normR { -1 } ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -4931,7 +4972,6 @@ namespace Ostap
       Ostap::Math::RightExpTail    m_right {} ;   
       // ======================================================================
     };
-
     // ========================================================================
     /** @class SkewGenT
      *  Skewed Generalised t-distribution
@@ -4943,9 +4983,9 @@ namespace Ostap
      *  - \f$ 0<p, 0<q \f$ related to kutsosis
      *
      *  Mean value is defined if \f$ 1 < pq \f$ 
-     *  RMS si defined for \f$ 2 < pq \f$
+     *  RMS is defined for \f$ 2 < pq \f$
      * 
-     *  In this view here we adopt sligth reparameterisation in terms of 
+     *  In this view here we adopt minor reparameterisation in terms of 
      *  - \f$ 0 < r \f$, such as  \f$  r = \frac{1}{p} 
      *  - \f$ 0< \zeta \f$, such as \f$ pq = \zeta + 4 \f$
      *  - \f$ -\infty < \psi < +\infty \f$, such as \f$ \lambda  = \tanh \psi \f$   
@@ -5003,7 +5043,7 @@ namespace Ostap
       // ======================================================================
     public: // getters 
       // ======================================================================
-      /// locaton parameter 
+      /// location parameter 
       inline double mu    () const { return m_mu    ; }
       /// width/scale parameter 
       inline double sigma () const { return m_sigma ; }
@@ -5016,14 +5056,19 @@ namespace Ostap
       // ======================================================================
       // other parameters 
       // ======================================================================
-      /// original lambda parametter 
+      /// original lambda parameters 
       inline double lambda  () const { return m_lambda  ; }
+      /// original lambda parameters 
+      inline double lambda_ () const { return m_lambda  ; }
       /// original lambda parametter 
       inline double lambd   () const { return m_lambda  ; }
       /// original p-parameter 
       inline double p       () const { return 1.0 / m_r ; }
       /// original q-parameter 
       inline double q       () const { return ( m_zeta + 4 ) * m_r ; }
+      // ======================================================================
+    public : // helper parameters 
+      // ======================================================================
       /** helper scale parameter 
        *  \f$ v^{\prime} = \frac{1}{ \sqrt{  (2\lambda^2+1) b_3 - 4 \lambda^2 b_2^2 } } \f$
        */
@@ -5048,11 +5093,11 @@ namespace Ostap
       /// RMS 
       inline double rms        () const { return m_sigma ; }
       /// variance 
-      inline double variance   () const { return m_sigma  * m_sigma ; }
+      inline double variance   () const { return m_sigma * m_sigma ; }
       /// dispersion 
       inline double dispersion () const { return variance () ; }
       /// skewness 
-      double skewness   () const ;      
+      double        skewness   () const ;      
       // ======================================================================
     public: // integrals 
       // ======================================================================
@@ -5074,7 +5119,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const ;
+	const double xhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5159,8 +5204,8 @@ namespace Ostap
      *  - \f$ -\infty < \xi < +\infty \f$, such as \f$ \lambda  = \tanh \xi \f$   
      * 
      *  special cases: 
-     *  - \f$ \xi=0 (\lambda=0), p=2\$ corresponds to Gaussian function 
-     *  - \f$ \xi=0 (\lambda=0), p=1\$ corresponds to Laplace case 
+     *  - \f$ \xi=0 (\lambda=0), p=2)$ corresponds to Gaussian function 
+     *  - \f$ \xi=0 (\lambda=0), p=1)$ corresponds to Laplace case 
      *
      *  @see Ostap::Math::SkewGenT 
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
@@ -5203,12 +5248,14 @@ namespace Ostap
       /// shape parameter 
       inline double p     () const { return m_p     ; }
       // ======================================================================
-      // other parameters 
+      // other parameters      
       // ======================================================================
+      /// original lambda parametter 
+      inline double lambda  () const { return m_lambda  ; }
       /// original lambda parametter 
       inline double Lambda  () const { return m_lambda  ; }
       /// original lambda parametter 
-      inline double lambda  () const { return m_lambda  ; }
+      inline double lambda_ () const { return m_lambda  ; }
       /// original lambda parametter 
       inline double lambd   () const { return m_lambda  ; }
       // ======================================================================
@@ -5474,9 +5521,7 @@ namespace Ostap
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
       // ======================================================================            
-    };
-
-    
+    };    
     // ========================================================================
     /// some finite functions 
     // ========================================================================
