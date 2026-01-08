@@ -4452,6 +4452,11 @@ namespace Ostap
       ( Int_t          code         ,
 	const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -4502,18 +4507,18 @@ namespace Ostap
       // ======================================================================
       /// general
       PolySigmoid
-        ( const char*          name       ,
-          const char*          title      ,
-          RooAbsReal&          x          ,
-          const RooArgList&    coeffs     ,
-          const double         xmin       ,
-          const double         xmax       ,
-          RooAbsReal&          alpha      ,
-          RooAbsReal&          x0         ) ;
+      ( const char*          name       ,
+	const char*          title      ,
+	RooAbsReal&          x          ,
+	const RooArgList&    coeffs     ,
+	const double         xmin       ,
+	const double         xmax       ,
+	RooAbsReal&          alpha      ,
+	RooAbsReal&          x0         ) ;
       /// copy
       PolySigmoid
-        ( const PolySigmoid&   right     ,
-          const char*          name = 0  ) ;
+      ( const PolySigmoid&   right     ,
+	const char*          name = 0  ) ;
       /// destructor
       virtual ~PolySigmoid() ;
       /// clone
@@ -4538,6 +4543,11 @@ namespace Ostap
       Double_t analyticalIntegral
       ( Int_t          code         ,
         const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5147,8 +5157,9 @@ namespace Ostap
         RooAbsReal&          lambda    ,
         RooAbsReal&          alpha     ) ;
       /// "copy constructor"
-      LogGamma ( const LogGamma&      right     ,
-                 const char*          name  = 0 )  ;
+      LogGamma
+      ( const LogGamma&      right     ,
+	const char*          name  = 0 )  ;
       /// destructor
       virtual ~LogGamma () ;
       /// clone
@@ -5343,12 +5354,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -9105,6 +9116,11 @@ namespace Ostap
       ( Int_t          code         ,
         const char*    rangeName    ) const override;
       // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
@@ -9221,6 +9237,11 @@ namespace Ostap
       Double_t analyticalIntegral
       ( Int_t          code         ,
         const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -9344,6 +9365,11 @@ namespace Ostap
       Double_t analyticalIntegral
       ( Int_t          code         ,
         const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
       // ======================================================================
     public:
       // ======================================================================

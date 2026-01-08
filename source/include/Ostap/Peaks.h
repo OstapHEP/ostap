@@ -5114,9 +5114,11 @@ namespace Ostap
       inline double dispersion () const { return variance () ; }
       /// skewness 
       double        skewness   () const ;      
-      // ======================================================================
+      /// mode 
+      double        mode       () const ;
+      // =======================================================================      
     public: // integrals 
-      // ======================================================================
+      // =======================================================================
       /// integral 
       double integral () const ;
       /// integral from low to high 
@@ -5307,6 +5309,8 @@ namespace Ostap
       inline double variance   () const { return m_sigma  * m_sigma ; }
       /// dispersion 
       inline double dispersion () const { return variance () ; }
+      /// get the mode 
+      double mode () const ;
       // ======================================================================
     public: // integrals 
       // ======================================================================

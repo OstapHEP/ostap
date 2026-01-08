@@ -376,7 +376,7 @@ namespace Ostap
       inline unsigned short npars () const { return m_bernstein.degree () ; }
       // =======================================================================
       /// get the parameter value
-      double  par       ( const unsigned short k ) const
+      inline double  par       ( const unsigned short k ) const
       { 
         const unsigned short nA = m_sphereA.npars () ;
         const unsigned short nR = m_sphereR.npars () ;
@@ -386,12 +386,12 @@ namespace Ostap
       }
       // ======================================================================
       /// get the paramete  values 
-      double parameter ( const unsigned short k ) const { return par ( k ) ; }
+      inline double parameter ( const unsigned short k ) const { return par ( k ) ; }
       /// get all parameters (phases on sphere) BY VALUE!
       std::vector<double> pars  () const ;
       // ======================================================================
       /// set k-parameter
-      bool setPar     
+      inline bool setPar     
       ( const unsigned short k     , 
         const double         value ) 
       {
@@ -404,7 +404,7 @@ namespace Ostap
       }
       // ======================================================================
       /// set k-parameter
-      bool setParameter ( const unsigned short k , const double value )
+      inline bool setParameter ( const unsigned short k , const double value )
       { return setPar   ( k , value ) ; }
       // ======================================================================
       /** set several/all parameters at once 
@@ -436,29 +436,29 @@ namespace Ostap
     public:
       // ======================================================================
       /// get bernstein coefficients
-      const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
+      inline const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
       /// dimension
-      unsigned short dim     () const { return 1 ; }
+      inline unsigned short dim     () const { return 1 ; }
       /// degree
-      unsigned short degree  () const { return m_bernstein.degree() ; }
+      inline unsigned short degree  () const { return m_bernstein.degree() ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get lower edge
-      double xmin () const { return m_bernstein.xmin () ; }
+      inline double xmin () const { return m_bernstein.xmin () ; }
       /// get upper edge
-      double xmax () const { return m_bernstein.xmax () ; }
+      inline double xmax () const { return m_bernstein.xmax () ; }
       /// transform variables
-      double x ( const double t ) const { return m_bernstein. x ( t )  ; }
-      double t ( const double x ) const { return m_bernstein. t ( x )  ; }
+      inline double x ( const double t ) const { return m_bernstein. x ( t )  ; }
+      inline double t ( const double x ) const { return m_bernstein. t ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
       /// constant ?
-      bool constant    () const { return m_bernstein.constant   () ; }
+      inline bool constant    () const { return m_bernstein.constant   () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -514,7 +514,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
-      inline double min_value () const { return m_bernstein.min_value () ; }
+      inline double min_value () const
+      { return std::max ( m_bernstein.min_value () , 0.0 )  ; }      
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
       inline double max_value () const { return m_bernstein.max_value () ; }
       // ======================================================================
@@ -553,17 +554,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap two objects 
-      void swap ( Positive& right ) 
-      {
-        Ostap::Math::swap ( m_bernstein , right.m_bernstein ) ;
-        Ostap::Math::swap ( m_sphereA   , right.m_sphereA   ) ;
-        Ostap::Math::swap ( m_sphereR   , right.m_sphereR   ) ;
-        //
-        std::swap ( m_rs  , right.m_rs  ) ;
-        std::swap ( m_v1  , right.m_v1  ) ;
-        std::swap ( m_v2  , right.m_v2  ) ;
-        std::swap ( m_aux , right.m_aux ) ;
-      } 
+      void swap ( Positive& right ) ; 
       // ======================================================================
     private : 
       // ======================================================================
@@ -713,7 +704,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
-      inline double min_value () const { return m_even.min_value () ; }
+      inline double min_value () const
+      { return std::max ( m_even.min_value () , 0.0 ) ; }
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
       inline double max_value () const { return m_even.max_value () ; }
       // ======================================================================
@@ -768,11 +760,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap two objects 
-      void swap ( PositiveEven& right ) 
-      {
-        Ostap::Math::swap ( m_positive , right.m_positive ) ;
-        Ostap::Math::swap ( m_even     , right.m_even     ) ;
-      } 
+      void swap ( PositiveEven& right ) ;
       // ======================================================================
     private: 
       // ======================================================================
@@ -995,7 +983,7 @@ namespace Ostap
       // ======================================================================
       /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
       inline double min_value () const
-      { return m_increasing ? m_bernstein.pars().front () : m_bernstein.pars(). back  () ; }	
+      { return std::max ( 0.0 , m_increasing ? m_bernstein.pars().front () : m_bernstein.pars(). back  () ) ; }	
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
       inline double max_value () const
       { return m_increasing ? m_bernstein.pars().back  () : m_bernstein.pars(). front () ; }      
@@ -1062,14 +1050,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap two objects 
-      inline void swap ( Monotonic& right ) 
-      {
-        Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
-        Ostap::Math::swap ( m_positive   , right.m_positive   ) ;
-        Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
-        std::swap         ( m_increasing , right.m_increasing ) ;
-        std::swap         ( m_aux        , right.m_aux        ) ;
-      } 
+      void swap ( Monotonic& right ) ;
       // ======================================================================
     private : 
       // ======================================================================
@@ -1313,7 +1294,7 @@ namespace Ostap
       // ======================================================================
       /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
       inline double min_value () const
-      { return m_increasing ? m_bernstein.pars().front () : m_bernstein.pars(). back  () ; }	
+      { return std::max ( 0.0 , m_increasing ? m_bernstein.pars().front () : m_bernstein.pars(). back  () ) ; }	
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
       inline double max_value () const
       { return m_increasing ? m_bernstein.pars().back  () : m_bernstein.pars(). front () ; }      
@@ -1372,16 +1353,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap two objects 
-      inline void swap ( Convex& right ) 
-      {
-        Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
-        Ostap::Math::swap ( m_positive   , right.m_positive   ) ;
-        Ostap::Math::swap ( m_sphereA    , right.m_sphereA    ) ;
-        Ostap::Math::swap ( m_sphereI    , right.m_sphereI    ) ;
-        std::swap         ( m_increasing , right.m_increasing ) ;
-        std::swap         ( m_convex     , right.m_convex     ) ;
-        std::swap         ( m_aux        , right.m_aux        ) ;
-      } 
+      void swap ( Convex& right ) ;
       // ======================================================================
     private :
       // ======================================================================
@@ -1536,7 +1508,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
-      inline double min_value () const { return m_bernstein.min_value ()  ; }	
+      inline double min_value () const
+      { return std::max ( 0.0 , m_bernstein.min_value () ) ; }	
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
       inline double max_value () const { return m_bernstein.max_value ()  ; }	
       /// get the minimal value of function
@@ -1589,15 +1562,10 @@ namespace Ostap
       /// get the tag
       std::size_t tag () const ; 
       // ======================================================================
-     public:
+    public:
       // ======================================================================
       /// swap two objects 
-      inline void swap ( ConvexOnly& right ) 
-      {
-        Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
-        Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
-        std::swap         ( m_convex     , right.m_convex     ) ;
-      } 
+      void swap ( ConvexOnly& right ) ;
       // ======================================================================
    private :
       // ======================================================================

@@ -574,16 +574,21 @@ double Ostap::Math::Positive::quantile
 // ============================================================================
 double Ostap::Math::Positive::median () const 
 { return quantile ( 0.5 ) ; }
-
-
-
-
+// ============================================================================
+// swap two objects 
+// ============================================================================
+void Ostap::Math::Positive::swap ( Ostap::Math::Positive& right ) 
+{
+  Ostap::Math::swap ( m_bernstein , right.m_bernstein ) ;
+  Ostap::Math::swap ( m_sphereA   , right.m_sphereA   ) ;
+  Ostap::Math::swap ( m_sphereR   , right.m_sphereR   ) ;
+  //
+  std::swap ( m_rs  , right.m_rs  ) ;
+  std::swap ( m_v1  , right.m_v1  ) ;
+  std::swap ( m_v2  , right.m_v2  ) ;
+  std::swap ( m_aux , right.m_aux ) ;
+} 
  
- 
- 
-
-
-
 // ============================================================================
 // POSITIVE EVEN
 // ============================================================================
@@ -622,7 +627,14 @@ bool Ostap::Math::PositiveEven::updateBernstein ()
   return m_even.setPars ( p.begin() , p.end() ) ;
 }
 // ============================================================================
-
+// swap two objects 
+// ============================================================================
+void Ostap::Math::PositiveEven::swap
+( Ostap::Math::PositiveEven& right ) 
+{
+  Ostap::Math::swap ( m_positive , right.m_positive ) ;
+  Ostap::Math::swap ( m_even     , right.m_even     ) ;
+} 
 
 // ============================================================================
 // constructor from the order
@@ -719,6 +731,18 @@ std::vector<double> Ostap::Math::Monotonic::pars  () const
   r.insert ( r.begin() , pa.begin() , pa.end() ) ;
   return r  ;  
 }
+// ============================================================================
+// swap two objects
+// ============================================================================
+inline void Ostap::Math::Monotonic::swap
+( Ostap::Math::Monotonic& right ) 
+{
+  Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
+  Ostap::Math::swap ( m_positive   , right.m_positive   ) ;
+  Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
+  std::swap         ( m_increasing , right.m_increasing ) ;
+  std::swap         ( m_aux        , right.m_aux        ) ;
+} 
 
 // ============================================================================
 // constructor from the order
@@ -841,6 +865,20 @@ std::vector<double> Ostap::Math::Convex::pars  () const
   r.insert ( r.begin() , pa.begin() , pa.end() ) ;
   return r  ;  
 }
+// ============================================================================
+// swap two objetcs 
+// ============================================================================
+void Ostap::Math::Convex::swap
+( Ostap::Math::Convex& right ) 
+{
+  Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
+  Ostap::Math::swap ( m_positive   , right.m_positive   ) ;
+  Ostap::Math::swap ( m_sphereA    , right.m_sphereA    ) ;
+  Ostap::Math::swap ( m_sphereI    , right.m_sphereI    ) ;
+  std::swap         ( m_increasing , right.m_increasing ) ;
+  std::swap         ( m_convex     , right.m_convex     ) ;
+  std::swap         ( m_aux        , right.m_aux        ) ;
+} 
 
 
 
@@ -991,13 +1029,15 @@ double Ostap::Math::ConvexOnly::integral
     s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
     m_bernstein.integral ( low , high )  ; 
 }
-
-
-
-
-
-
-
+// =============================================================================
+// swap two objects
+// =============================================================================
+void Ostap::Math::ConvexOnly::swap ( ConvexOnly& right ) 
+{
+  Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
+  Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
+  std::swap         ( m_convex     , right.m_convex     ) ;
+} 
 
 // ============================================================================
 // get the tag

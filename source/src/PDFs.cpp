@@ -5987,6 +5987,24 @@ Double_t Ostap::Models::PolySigmoid::analyticalIntegral
   return m_sigmoid.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::PolySigmoid::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PolySigmoid::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code               ,
+                  "Invalid MaxVal code"   ,
+                  "Ostap::Models::PolySigmoid"  ,
+                  INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_sigmoid.max_value () ;
+}
+// ============================================================================
 
 // ============================================================================
 // positive spline 
@@ -6446,6 +6464,25 @@ Double_t Ostap::Models::ExpoPositive::analyticalIntegral
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::ExpoPositive::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::ExpoPositive::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code               ,
+                  "Invalid MaxVal code"   ,
+                  "Ostap::Models::ExpoPositive"  ,
+                  INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_positive.max_value () ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // generic polinomial times exponent 
@@ -10842,6 +10879,24 @@ Double_t Ostap::Models::GenInvGauss::analyticalIntegral
   return m_gig.integral ( xmin , xmax ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::GenInvGauss::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::GenInvGauss::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                   ,
+                  "Invalid MaxVal code"        ,
+                  "Ostap::Models:GenInvGauss"  ,
+                  INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_gig ( m_gig.mode () ) ;
+}
+// ============================================================================
 
 // ============================================================================
 // SkewGenT 
@@ -10937,6 +10992,24 @@ Double_t Ostap::Models::SkewGenT::analyticalIntegral
   return m_sgt.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::SkewGenT::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::SkewGenT::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                ,
+                  "Invalid MaxVal code"    ,
+                  "Ostap::Models:SkewGenT" ,
+                  INVALID_MAXVAL_CODE      , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_sgt ( m_sgt.mode () ) ;
+}
+// ============================================================================
 
 // ============================================================================
 // SkewGenError
@@ -11026,6 +11099,24 @@ Double_t Ostap::Models::SkewGenError::analyticalIntegral
   setPars() ;
   //
   return m_sge.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::SkewGenError::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::SkewGenError::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                    ,
+                  "Invalid MaxVal code"        ,
+                  "Ostap::Models:SkewGenError" ,
+                  INVALID_MAXVAL_CODE      , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_sge ( m_sge.mode () ) ;
 }
 // ============================================================================
 

@@ -689,11 +689,6 @@ std::size_t Ostap::Math::PhaseSpaceLeftExpoPol::tag () const
 }
 // ============================================================================
 
-
-
-
-
-
 // ============================================================================
 // constructor from the order
 // ============================================================================
@@ -758,10 +753,30 @@ std::size_t Ostap::Math::ExpoPositive::tag () const
   static const std::string s_name = "ExpoPositive" ;
   return Ostap::Utils::hash_combiner ( s_name , m_positive.tag () , m_tau ) ; 
 }
-// ============================================================================
-
-
-
+// ================-===========================================================
+// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+// ================-===========================================================
+double Ostap::Math::ExpoPositive::min_value () const
+{
+  //
+  const double pmin = m_positive.min_value () ;
+  const double exp1 = my_exp ( m_tau * xmin () ) ; 
+  const double exp2 = my_exp ( m_tau * xmax () ) ;
+  //
+  return pmin * std::min ( exp1 , exp2 ) ;
+}
+// ================-===========================================================
+// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+// ================-===========================================================
+double Ostap::Math::ExpoPositive::max_value () const
+{
+  //
+  const double pmax = m_positive.max_value () ;
+  const double exp1 = my_exp ( m_tau * xmin () ) ; 
+  const double exp2 = my_exp ( m_tau * xmax () ) ;
+  //
+  return pmax * std::max ( exp1 , exp2 ) ;
+}
 // ============================================================================
 /* constructor form scale & shape parameters
  *  param k      \f$k\f$ parameter (shape)
@@ -1162,8 +1177,6 @@ std::size_t Ostap::Math::Amoroso::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_a , m_theta , m_alpha , m_beta ) ; 
 }
 // ============================================================================
-
-
 
 
 // ============================================================================
@@ -2507,11 +2520,35 @@ bool Ostap::Math::Sigmoid::setX0 ( const double value )
 double Ostap::Math::Sigmoid::operator () ( const double x ) const
 {
   return 
-    x < xmin () ? 0               :
-    x > xmax () ? 0               :
+    x < xmin () ? 0        :
+    x > xmax () ? 0        :
     s_zero  ( m_alpha )    ? 
     0.5 * m_positive ( x ) :
     0.5 * m_positive ( x ) * ( 1 + std::tanh ( m_alpha * ( x - m_x0 ) ) ) ;
+}
+// ================-===========================================================
+// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+// ================-===========================================================
+double Ostap::Math::Sigmoid::min_value () const
+{
+  //
+  const double pmin = m_positive.min_value () ;
+  const double exp1 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmin ()  - m_x0 ) ) ) ;
+  const double exp2 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmax ()  - m_x0 ) ) ) ;
+  //
+  return pmin * std::min ( exp1 , exp2 ) ;
+}
+// ================-===========================================================
+// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+// ================-===========================================================
+double Ostap::Math::Sigmoid::max_value () const
+{
+  //
+  const double pmax = m_positive.max_value () ;
+  const double exp1 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmin ()  - m_x0 ) ) ) ;
+  const double exp2 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmax ()  - m_x0 ) ) ) ;
+  //
+  return pmax * std::max ( exp1 , exp2 ) ;
 }
 // ============================================================================
 // get the integral between xmin and xmax 

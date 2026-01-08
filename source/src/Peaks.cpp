@@ -7021,6 +7021,48 @@ double Ostap::Math::SkewGenT::skewness   () const
                                        2 * (     l2 + 1 ) * b4 ) ;  
 }
 // ============================================================================
+// get the mode   of distribution 
+// ============================================================================
+double Ostap::Math::SkewGenT::mode () const
+{
+  // // symmetric case:
+  if ( s_zero ( m_lambda ) ) { return m_mu ; }
+  //
+  const double the_mean   = mean   () ; 
+  const double the_sigma  = rms    () ;
+  //
+  // get the interval & guess for the mode
+  const double low   = the_mean  - 3 * the_sigma  ;
+  const double high  = the_mean  + 3 * the_sigma  ;
+  const double guess = the_mean ;
+  //
+  static const Ostap::Math::GSL::Extremum1D<SkewGenT> s_mode {} ;
+  static char s_message[] = "Mode(SkewGenT)" ;
+  //
+  const auto F    = s_mode.make_function_max ( this ) ;
+  //
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  //
+  const double aprecision = the_sigma * 1.e-6 ;
+  const double rprecision =             1.e-6 ;
+  //
+  std::tie ( ierror , result , error ) = s_mode.optimize_quad_golden 
+    ( &F                  , // the function 
+      low                 , // low_value 
+      high                , // high edge
+      guess               , // initial guess 
+      aprecision          , // absolute precision
+      rprecision          , // relative precision
+      100                 , // limit on number of iterations
+      s_message           ,  
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SkewGenT::tag () const 
@@ -7034,11 +7076,6 @@ std::size_t Ostap::Math::SkewGenT::tag () const
                              m_zeta   ) ;
 }
 // ============================================================================
-
-
-
-
-
 
 // ============================================================================
 /*  constructor with full parameters 
@@ -7295,6 +7332,48 @@ double Ostap::Math::SkewGenError::non_gaussian
     Ostap::Math::gauss_cdf ( xlow  , m , s ) ;
   //
   return 1 - I_G / I_CB ;
+}
+// ============================================================================
+// get the mode   of distribution 
+// ============================================================================
+double Ostap::Math::SkewGenError::mode () const
+{
+  // // symmetric case:
+  if ( s_zero ( m_lambda ) || s_zero ( m_psi ) ) { return m_mu ; }
+  //
+  const double the_mean   = mean () ; 
+  const double the_sigma  = rms  () ;
+  //
+  // get the interval & guess for the mode
+  const double low   = the_mean - 3 * the_sigma  ;
+  const double high  = the_mean + 3 * the_sigma  ;
+  const double guess = the_mean ;
+  //
+  static const Ostap::Math::GSL::Extremum1D<SkewGenError> s_mode {} ;
+  static char s_message[] = "Mode(SkewGenError)" ;
+  //
+  const auto F    = s_mode.make_function_max ( this ) ;
+  //
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  //
+  const double aprecision = the_sigma * 1.e-6 ;
+  const double rprecision =             1.e-6 ;
+  //
+  std::tie ( ierror , result , error ) = s_mode.optimize_quad_golden 
+    ( &F                  , // the function 
+      low                 , // low_value 
+      high                , // high edge
+      guess               , // initial guess 
+      aprecision          , // absolute precision
+      rprecision          , // relative precision
+      100                 , // limit on number of iterations
+      s_message           ,  
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
 }
 // ============================================================================
 // get the tag 
