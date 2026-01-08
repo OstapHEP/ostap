@@ -336,9 +336,6 @@ std::size_t Ostap::Math::GramCharlierA::tag () const
 }
 // ============================================================================
 
-
-
-
 // ======================================================================
 /*  constructor from thresholds and number of particles
  *  @param threshold_L the low-mass  threshold
@@ -782,10 +779,6 @@ Ostap::Math::GammaDist::GammaDist
   m_aux = - m_k * std::log ( m_theta ) - std::lgamma ( m_k ) ;
 }
 // ============================================================================
-// destrructor
-// ============================================================================
-Ostap::Math::GammaDist::~GammaDist (){}
-// ============================================================================
 // set the proper parameters
 // ============================================================================
 bool Ostap::Math::GammaDist::setK ( const double x )
@@ -846,8 +839,9 @@ double Ostap::Math::GammaDist::integral () const { return 1 ; }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
-double Ostap::Math::GammaDist::integral ( const double low  ,
-                                          const double high ) const 
+double Ostap::Math::GammaDist::integral
+( const double low  ,
+  const double high ) const 
 {
   //
   if      ( s_equal ( low  , high ) ) { return 0 ; }
@@ -858,6 +852,14 @@ double Ostap::Math::GammaDist::integral ( const double low  ,
   return 
     gsl_sf_gamma_inc_P ( m_k , high / m_theta ) - 
     gsl_sf_gamma_inc_P ( m_k , low  / m_theta ) ;
+}
+// ============================================================================
+// calculate the mode
+// ============================================================================
+double Ostap::Math::GammaDist::mode () const
+{
+  const double a = alpha () ;
+  return 1 <= a ? ( a - 1 ) * theta() : 0.0 ;
 }
 // ============================================================================
 // calculatye the quantile   (0<p<1) 
@@ -900,10 +902,6 @@ Ostap::Math::GenGammaDist::GenGammaDist
   , m_p     ( std::abs ( p     ) ) 
   , m_low   ( low ) 
 {}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::GenGammaDist::~GenGammaDist(){}
 // ============================================================================
 bool Ostap::Math::GenGammaDist::setK     ( const double value ) 
 {
@@ -964,11 +962,19 @@ double Ostap::Math::GenGammaDist::cdf ( const double x ) const
 // ============================================================================
 double Ostap::Math::GenGammaDist::integral () const { return 1 ; }
 // ============================================================================
-double Ostap::Math::GenGammaDist::integral ( const double low  , 
-                                             const double high ) const 
+double Ostap::Math::GenGammaDist::integral
+( const double low  , 
+  const double high ) const 
 {
   if ( s_equal ( low , high ) ) { return 0 ; }
   return cdf ( high ) - cdf ( low ) ;  
+}
+// ============================================================================
+double Ostap::Math::GenGammaDist::mode () const
+{
+  const double d_ = d () ;
+  const double a_ = a () ;
+  return 1 < d_ ? a_ * std::pow ( ( d_ - 1 ) / m_p , 1 / m_p ) : 0.0 ;
 }
 // ============================================================================
 // get the tag

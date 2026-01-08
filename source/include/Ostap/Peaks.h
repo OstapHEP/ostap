@@ -518,8 +518,12 @@ namespace Ostap
       // ======================================================================
     public: // derived getters
       // ======================================================================
+      /// get the mean   of distribution s
       double mean        () const ;
+      /// get the median of distribution s
       double median      () const { return   xi    () ; }
+      /// get the mode   of distribution s
+      double mode        () const ;
       //
       double variance    () const ;
       double dispersion  () const { return variance () ; }
@@ -528,6 +532,7 @@ namespace Ostap
       //
       double skewness    () const ;
       double kurtosis    () const ;
+      // ======================================================================
       // ======================================================================
     public:  // integrals
       // ======================================================================
@@ -554,6 +559,7 @@ namespace Ostap
       double m_xi      ;  // location
       double m_alpha   ;  // scale
       double m_kappa   ;  // shape
+      // ======================================================================
     } ;
     // ========================================================================
     /** @class SkewGauss
@@ -607,6 +613,7 @@ namespace Ostap
     public: // derived getters
       // ======================================================================
       double mean        () const ;
+      double mode        () const ;
       double variance    () const ;
       double dispersion  () const { return variance () ; }
       double sigma2      () const { return variance () ; }
@@ -1009,6 +1016,8 @@ namespace Ostap
       // ======================================================================
       /// mean value 
       double mean        () const ;
+      /// mode value 
+      double mode        () const ;
       /// variance 
       double variance    () const ;
       /// RMS 
@@ -1170,7 +1179,7 @@ namespace Ostap
     public :
       // ======================================================================
       /** constructor from all parameters
-       *  @param m0    the peak posiion
+       *  @param m0    the peak position
        *  @param sigma the effective sigma
        *  @param tau   the tail paramter
        */
@@ -1184,7 +1193,8 @@ namespace Ostap
       /// evaluate Novosibirsk's function
       double pdf        ( const double x ) const ;
       /// evaluate Novosibirsk's function
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public:
       // ====================================================================== 
@@ -1194,6 +1204,8 @@ namespace Ostap
       inline double mass  () const { return m_m0       ; }
       inline double sigma () const { return m_sigma    ; }
       inline double tau   () const { return m_tau      ; }
+      // ======================================================================
+      double        mode  () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1304,8 +1316,8 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core      , 
-	      const double              alpha = 2 , 
-	      const double              n     = 1 ) ;
+	const double              alpha = 2 , 
+	const double              n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core Gaussian function 
@@ -1313,7 +1325,7 @@ namespace Ostap
        */
       CrystalBall 
       ( const Ostap::Math::Gauss& core ,
-	      const Ostap::Math::Tail&  tail ) ;
+	const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1392,7 +1404,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const ;
+	const double xhigh ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1524,7 +1536,7 @@ namespace Ostap
        */
       inline double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const
+	const double xhigh ) const
       { return m_cb.non_gaussian ( xlow , xhigh ) ; } 
       // ======================================================================
     public: // components 
@@ -1583,8 +1595,8 @@ namespace Ostap
        */
       CrystalBallRightSide
       ( const Ostap::Math::Gauss& core      , 
-	      const double              alpha = 2 , 
-	      const double              n     = 1 ) ;
+	const double              alpha = 2 , 
+	const double              n     = 1 ) ;
       // ======================================================================
       /** constructor from gaussian and tail 
        *  @parameter core Gaussian function 
@@ -1592,7 +1604,7 @@ namespace Ostap
        */
       CrystalBallRightSide  
       ( const Ostap::Math::Gauss& core ,
-	      const Ostap::Math::Tail&  tail ) ;
+	const Ostap::Math::Tail&  tail ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1671,7 +1683,7 @@ namespace Ostap
        */
       double non_gaussian 
       ( const double xlow  ,
-	      const double xhigh ) const ;
+	const double xhigh ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -5454,6 +5466,8 @@ namespace Ostap
       // =======================================================================
       /// mean value
       double mean     () const ;
+      /// mode value
+      double mode     () const ;
       /// variance/dispersion 
       inline double variance () const { return m_sigma * m_sigma ; }
       /// RMS 

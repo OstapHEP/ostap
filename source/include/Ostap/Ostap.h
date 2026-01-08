@@ -45,6 +45,7 @@
 #include "Ostap/EigenSystem.icpp"
 #include "Ostap/Error2Exception.h"
 #include "Ostap/Exception.h"
+#include "Ostap/Extrema.h"
 #include "Ostap/FitResult.h"
 #include "Ostap/Formula.h"
 #include "Ostap/FormulaVar.h"

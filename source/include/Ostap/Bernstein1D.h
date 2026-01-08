@@ -209,6 +209,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      inline double min_value () const { return m_bernstein.min_value () ; }
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      inline double max_value () const { return m_bernstein.max_value () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the unique tag 
       std::size_t tag () const ; 
       // ======================================================================
@@ -361,12 +368,12 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x ) const { return m_bernstein ( x ) ; }
+      inline double operator () ( const double x ) const { return m_bernstein ( x ) ; }
       // ======================================================================
     public: // PAR-interface 
       // ======================================================================
       /// get number of parameters (==degree)
-      unsigned short npars () const { return m_bernstein.degree () ; }
+      inline unsigned short npars () const { return m_bernstein.degree () ; }
       // =======================================================================
       /// get the parameter value
       double  par       ( const unsigned short k ) const
@@ -503,6 +510,13 @@ namespace Ostap
       /// get the derivative at point x 
       double derivative             ( const double x ) const
       { return m_bernstein.derivative ( x  ) ; }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      inline double min_value () const { return m_bernstein.min_value () ; }
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      inline double max_value () const { return m_bernstein.max_value () ; }
       // ======================================================================
     public:  /// basic operations  for python
       // ======================================================================
@@ -642,26 +656,26 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x ) const { return m_even           ( x ) ; }
+      inline double operator () ( const double x ) const { return m_even           ( x ) ; }
       /// get the value
-      double evaluate    ( const double x ) const { return m_even.evaluate  ( x ) ; }
+      inline double evaluate    ( const double x ) const { return m_even.evaluate  ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
+      inline std::size_t npars () const { return m_positive.npars () ; }
       /// get the parameter value
-      double  par       ( const unsigned short k ) const
+      inline double  par       ( const unsigned short k ) const
       { return m_positive.par ( k ) ; }
-      double  parameter ( const unsigned short k ) const { return par ( k )  ; }
+      inline double  parameter ( const unsigned short k ) const { return par ( k )  ; }
       /// set k-parameter
-      bool setPar       ( const unsigned short k , const double value )        
+      inline bool setPar       ( const unsigned short k , const double value )        
       { return m_positive.setPar ( k , value ) ? updateBernstein() : false ; }
       /// set k-parameter
-      bool setParameter ( const unsigned short k , const double value )
+      inline bool setParameter ( const unsigned short k , const double value )
       { return setPar   ( k , value ) ; }
       /// get all parameters (copy by value) 
-      std::vector<double> pars  () const { return m_positive.pars () ; }
+      inline std::vector<double> pars  () const { return m_positive.pars () ; }
       // ======================================================================
       template<typename ITERATOR,
                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
@@ -674,27 +688,34 @@ namespace Ostap
     public:  // some characteristics
       // ======================================================================
       /// dimension
-      unsigned short dim     () const { return 1 ; }
+      inline unsigned short dim     () const { return 1 ; }
       /// degree
-      unsigned short degree  () const { return m_even.degree() ; }
+      inline unsigned short degree  () const { return m_even.degree() ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get lower edge
-      double xmin () const { return m_even.xmin () ; }
+      inline double xmin () const { return m_even.xmin () ; }
       /// get upper edge
-      double xmax () const { return m_even.xmax () ; }
+      inline double xmax () const { return m_even.xmax () ; }
       /// transform variables
-      double x ( const double t ) const { return m_even. x ( t )  ; }
-      double t ( const double x ) const { return m_even. t ( x )  ; }
+      inline double x ( const double t ) const { return m_even. x ( t )  ; }
+      inline double t ( const double x ) const { return m_even. t ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
-      double integral   () const { return 1 ; }
+      inline double integral   () const { return 1 ; }
       /// get the integral between low and high
-      double integral   ( const double low , const double high ) const 
+      inline double integral   ( const double low , const double high ) const 
       { return m_even.integral ( low , high ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      inline double min_value () const { return m_even.min_value () ; }
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      inline double max_value () const { return m_even.max_value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -879,14 +900,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x ) const { return m_bernstein ( x ) ; }
+      inline double operator () ( const double x ) const { return m_bernstein ( x ) ; }
+      inline double evaluate    ( const double x ) const { return m_bernstein ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_bernstein.degree() ; }
+      inline std::size_t npars () const { return m_bernstein.degree() ; }
       /// set k-parameter
-      bool setPar       ( const unsigned short k , const double value ) 
+      inline bool setPar       ( const unsigned short k , const double value ) 
       { 
         const unsigned short nA = m_sphere  .npars () ;
         const unsigned short nP = m_positive.npars () ;
@@ -896,10 +918,10 @@ namespace Ostap
         return update ? updateBernstein () : false ;
       }
       /// set k-parameter
-      bool setParameter ( const unsigned short k , const double value )
+      inline  bool setParameter ( const unsigned short k , const double value )
       { return setPar   ( k , value ) ; }
       /// get the parameter value
-      double  par       ( const unsigned short k ) const
+      inline double  par       ( const unsigned short k ) const
       { 
         const unsigned short nA = m_sphere  .npars () ;
         const unsigned short nP = m_positive.npars () ;
@@ -909,9 +931,9 @@ namespace Ostap
       }
       // ======================================================================
       /// get all parameters (phases on sphere)
-      std::vector<double>        pars  () const ;
+      inline std::vector<double>        pars  () const ;
       /// get bernstein coefficients
-      const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
+      inline const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
       // ======================================================================
       /** set several/all parameters at once 
        *  @param begin  start itertaor for the sequence of coefficients 
@@ -961,20 +983,26 @@ namespace Ostap
     public:
       // ======================================================================
       /// increasing ?
-      bool increasing () const { return degree() < 1 ||  m_increasing ; }
+      inline bool increasing () const { return degree() < 1 ||  m_increasing ; }
       /// decreasing ?
-      bool decreasing () const { return degree() < 1 || !m_increasing ; }
-      /// monotonic
-      bool monotonic  () const { return true  ; }
+      inline bool decreasing () const { return degree() < 1 || !m_increasing ; }
       //// constant 
-      bool constant   () const { return m_bernstein.constant () ; }
+      inline bool constant   () const { return m_bernstein.constant () ; }
+      /// monotonic
+      inline bool monotonic  () const { return true  ; }
       // ======================================================================
     public:
       // ======================================================================
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      inline double min_value () const
+      { return m_increasing ? m_bernstein.pars().front () : m_bernstein.pars(). back  () ; }	
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      inline double max_value () const
+      { return m_increasing ? m_bernstein.pars().back  () : m_bernstein.pars(). front () ; }      
       /// get the minimal value of function
-      double fun_min () const ; // get the minimal value of function
+      inline double fun_min () const { return min_value () ; }
       /// get the maximal value of function
-      double fun_max () const ; // get the maximal value of function
+      inline double fun_max () const { return max_value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -983,7 +1011,7 @@ namespace Ostap
       /// get the integral between low and high
       double integral   ( const double low , const double high ) const ;
       /// get the derivative
-      double derivative ( const double x ) const
+      inline double derivative ( const double x ) const
       { return m_bernstein.derivative ( x ) ; }
       // ======================================================================
     public:
@@ -1034,7 +1062,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap two objects 
-      void swap ( Monotonic& right ) 
+      inline void swap ( Monotonic& right ) 
       {
         Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
         Ostap::Math::swap ( m_positive   , right.m_positive   ) ;
@@ -1165,9 +1193,9 @@ namespace Ostap
                const double xmax       = 1    , 
                const bool   increasing = true ,
                const bool   convex     = true )
-        : Convex ( std::distance (  begin , end ) , xmin , xmax , increasing , convex ) 
+      : Convex ( std::distance (  begin , end ) , xmin , xmax , increasing , convex ) 
       { setPars  ( begin , end ) ; }
-    // ======================================================================
+      // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -1176,9 +1204,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_bernstein.degree() ; }
+      inline std::size_t npars () const { return m_bernstein.degree() ; }
       /// set k-parameter
-      bool setPar       ( const unsigned short k , const double value ) 
+      inline bool setPar       ( const unsigned short k , const double value ) 
       {
         const unsigned short nA = m_sphereA .npars () ;
         const unsigned short nI = m_sphereI .npars () ;
@@ -1190,10 +1218,10 @@ namespace Ostap
         return update ? updateBernstein () : false ;
       }
       /// set k-parameter
-      bool setParameter ( const unsigned short k , const double value )
+      inline bool setParameter ( const unsigned short k , const double value )
       { return setPar   ( k , value ) ; }
       /// get the parameter value
-      double  par       ( const unsigned short k ) const
+      inline double  par       ( const unsigned short k ) const
       {
         const unsigned short nA = m_sphereA .npars () ;
         const unsigned short nI = m_sphereI .npars () ;
@@ -1233,50 +1261,43 @@ namespace Ostap
       { return setPars ( pars.begin() , pars.end() ) ; }
       // ======================================================================
       /// get all parameters (by value) 
-      std::vector<double>        pars  () const ;
+      inline std::vector<double>        pars  () const ;
       /// get bernstein coefficients
-      const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
+      inline const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
       /// dimension
-      unsigned short dim         () const { return 1 ; }
+      inline unsigned short dim         () const { return 1 ; }
       /// degree
-      unsigned short degree      () const { return m_bernstein.degree() ; }
+      inline unsigned short degree      () const { return m_bernstein.degree() ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the parameter value
-      double  parameter ( const unsigned short k ) const { return par ( k ) ; }
+      inline double  parameter ( const unsigned short k ) const { return par ( k ) ; }
       /// get lower edge
-      double xmin () const { return m_bernstein.xmin () ; }
+      inline double xmin () const { return m_bernstein.xmin () ; }
       /// get upper edge
-      double xmax () const { return m_bernstein.xmax () ; }
+      inline double xmax () const { return m_bernstein.xmax () ; }
       /// transform variables
-      double x ( const double t ) const { return m_bernstein. x ( t )  ; }
-      double t ( const double x ) const { return m_bernstein. t ( x )  ; }
+      inline double x ( const double t ) const { return m_bernstein. x ( t )  ; }
+      inline double t ( const double x ) const { return m_bernstein. t ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
       /// convex     ?
-      bool convex     () const { return degree () < 2 ||  m_convex     ; }
+      inline bool convex     () const { return degree () < 2 ||  m_convex     ; }
       /// convex     ?
-      bool concave    () const { return degree () < 2 || !m_convex     ; }
+      inline bool concave    () const { return degree () < 2 || !m_convex     ; }
       /// increasing ?
-      bool increasing () const { return degree () < 1 ||  m_increasing ; }
+      inline bool increasing () const { return degree () < 1 ||  m_increasing ; }
       /// decreasing ?
-      bool decreasing () const { return degree () < 1 || !m_increasing ; }
+      inline bool decreasing () const { return degree () < 1 || !m_increasing ; }
       /// monotonic
-      bool monotonic  () const { return  true  ; }
+      inline  bool monotonic  () const { return  true  ; }
       //// constant 
-      bool constant   () const { return m_bernstein.constant () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the minimal value of function
-      double fun_min () const ; // get the minimal value of function
-      /// get the maximal value of function
-      double fun_max () const ; // get the maximal value of function
+      inline bool constant   () const { return m_bernstein.constant () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1285,8 +1306,21 @@ namespace Ostap
       /// get the integral between low and high
       double integral   ( const double low , const double high ) const ;
       /// get the derivative
-      double derivative ( const double x ) const
+      inline double derivative ( const double x ) const
       { return m_bernstein.derivative ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      inline double min_value () const
+      { return m_increasing ? m_bernstein.pars().front () : m_bernstein.pars(). back  () ; }	
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      inline double max_value () const
+      { return m_increasing ? m_bernstein.pars().back  () : m_bernstein.pars(). front () ; }      
+      /// get the minimal value of function
+      inline double fun_min () const { return min_value () ; }
+      /// get the maximal value of function
+      inline double fun_max () const { return max_value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1338,7 +1372,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// swap two objects 
-      void swap ( Convex& right ) 
+      inline void swap ( Convex& right ) 
       {
         Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
         Ostap::Math::swap ( m_positive   , right.m_positive   ) ;
@@ -1435,66 +1469,80 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x ) const { return m_bernstein ( x ) ; }
+      inline double operator () ( const double x ) const { return m_bernstein ( x ) ; }
+      inline double evaluate    ( const double x ) const { return m_bernstein ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_sphere.nPhi () ; }
+      inline std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
-      bool setPar       ( const unsigned short k , const double value ) 
+      inline bool setPar       ( const unsigned short k , const double value ) 
       { 
         const bool update = m_sphere.setPhase ( k , value ) ;
         return update ? updateBernstein () : false ;
       }
       /// set k-parameter
-      bool setParameter ( const unsigned short k , const double value )
+      inline bool setParameter ( const unsigned short k , const double value )
       { return setPar   ( k , value ) ; }
       /// get the parameter value
-      double  par       ( const unsigned short k ) const
+      inline double  par       ( const unsigned short k ) const
       { return m_sphere.par ( k ) ; }
       /// get all parameters (phases on sphere)
-      const std::vector<double>& pars  () const { return m_sphere   .pars () ; }
+      inline const std::vector<double>& pars  () const { return m_sphere   .pars () ; }
       /// get bernstein coefficients
-      const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
+      inline const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
       // ======================================================================
     public:  // some characteristics
       // ======================================================================
       /// dimension
-      unsigned short dim         () const { return 1 ; }
+      inline unsigned short dim         () const { return 1 ; }
       /// degree
-      unsigned short degree      () const { return m_bernstein.degree() ; }
+      inline unsigned short degree      () const { return m_bernstein.degree() ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the parameter value
-      double  parameter ( const unsigned short k ) const { return par ( k ) ; }
+      inline double  parameter ( const unsigned short k ) const { return par ( k ) ; }
       /// get lower edge
-      double xmin () const { return m_bernstein.xmin () ; }
+      inline double xmin () const { return m_bernstein.xmin () ; }
       /// get upper edge
-      double xmax () const { return m_bernstein.xmax () ; }
+      inline double xmax () const { return m_bernstein.xmax () ; }
       /// transform variables
-      double x ( const double t ) const { return m_bernstein. x ( t )  ; }
-      double t ( const double x ) const { return m_bernstein. t ( x )  ; }
+      inline double x ( const double t ) const { return m_bernstein. x ( t )  ; }
+      inline double t ( const double x ) const { return m_bernstein. t ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
       /// convex     ?
-      bool convex     () const { return degree () < 2 ||  m_convex     ; }
+      inline bool convex     () const { return degree () < 2 ||  m_convex     ; }
       /// convex     ?
-      bool concave    () const { return degree () < 2 || !m_convex     ; }
+      inline bool concave    () const { return degree () < 2 || !m_convex     ; }
       //// constant 
-      bool constant   () const { return m_bernstein.constant   () ; }
+      inline bool constant   () const { return m_bernstein.constant   () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
-      double integral   () const { return 1 ; }
+      inline double integral   () const { return 1 ; }
       /// get the integral between low and high
-      double integral   ( const double low , const double high ) const ;
+      double integral
+      ( const double low ,
+	const double high ) const ;
       /// get the derivative
-      double derivative ( const double x ) const
+      inline double derivative ( const double x ) const
       { return m_bernstein.derivative ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      inline double min_value () const { return m_bernstein.min_value ()  ; }	
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      inline double max_value () const { return m_bernstein.max_value ()  ; }	
+      /// get the minimal value of function
+      inline double fun_min   () const { return min_value () ; }
+      /// get the maximal value of function
+      inline double fun_max   () const { return max_value () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1544,7 +1592,7 @@ namespace Ostap
      public:
       // ======================================================================
       /// swap two objects 
-      void swap ( ConvexOnly& right ) 
+      inline void swap ( ConvexOnly& right ) 
       {
         Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
         Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;

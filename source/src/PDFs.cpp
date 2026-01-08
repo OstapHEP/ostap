@@ -3013,7 +3013,7 @@ double Ostap::Models::GenGaussV1::maxVal  ( Int_t      code ) const
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   //
   setPars() ;
-  return 1.01 * m_ggv1 ( m_mu ) ;
+  return 1.01 * m_ggv1 ( m_ggv1.mode() ) ;
 }
 // ============================================================================
 
@@ -3110,6 +3110,25 @@ Double_t Ostap::Models::GenGaussV2::analyticalIntegral
   //
   setPars ();
   return m_ggv2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::GenGaussV2::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::GenGaussV2::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::GenGaussV2::maxVal"     ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_ggv2 ( m_ggv2.mode() ) ;
 }
 // ============================================================================
 
@@ -3223,28 +3242,9 @@ double Ostap::Models::SkewGauss::maxVal  ( Int_t      code ) const
                   "Ostap::Models::SkewGauss::maxVal" ,
                   INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
   //
+  //
   setPars() ;
-  //
-  const double appm  = m_sg.approximate_mode () ;
-  const double sigma = m_sg.sigma            () ;
-  const double mean  = m_sg.mean             () ;
-  //
-  double m1 = std::max ( m_sg ( appm ) , m_sg ( mean ) ) ;
-  const unsigned int N     = 20 ;
-  const double       delta = 3 * sigma / N ;
-  for ( unsigned j = 0 ; j < N ; ++j )
-    {
-      const double x1 = appm + j * delta ;
-      const double x2 = appm - j * delta ;
-      const double x3 = mean + j * delta ;
-      const double x4 = mean - j * delta ;
-      m1 = std::max ( m1 , m_sg ( x1 ) ) ;
-      m1 = std::max ( m1 , m_sg ( x2 ) ) ;
-      m1 = std::max ( m1 , m_sg ( x3 ) ) ;
-      m1 = std::max ( m1 , m_sg ( x4 ) ) ;	
-    }
-  //
-  return 1.25 * m1 ;
+  return 1.01 * m_sg ( m_sg.mode() ) ;
 }
 // ============================================================================
 
@@ -3679,6 +3679,27 @@ Double_t Ostap::Models::NormalLaplace::analyticalIntegral
   return m_nl.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::NormalLaplace::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::NormalLaplace::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::NormalLaplace::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  //
+  setPars() ;
+  return 1.01 * m_nl ( m_nl.mode() ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 //         Bukin
@@ -3891,6 +3912,26 @@ Double_t Ostap::Models::Novosibirsk::analyticalIntegral
   //
   setPars() ;
   return m_novosibirsk.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::Novosibirsk::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Novosibirsk::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Novosibirsk::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  //
+  setPars() ;
+  return 1.01 * m_novosibirsk ( m_novosibirsk.mode() ) ;
 }
 // ============================================================================
 
@@ -5407,6 +5448,26 @@ Double_t Ostap::Models::PolyPositive::analyticalIntegral
   return m_positive.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::PolyPositive::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PolyPositive::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                             ,
+                  "Invalid MaxVal code"                 ,
+                  "Ostap::Models::PolyPositive::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_positive.max_value() ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // generic even polinomial 
@@ -5496,6 +5557,25 @@ Double_t Ostap::Models::PolyPositiveEven::analyticalIntegral
   return m_even.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::PolyPositiveEven::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PolyPositiveEven::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                             ,
+                  "Invalid MaxVal code"                 ,
+                  "Ostap::Models::PolyPositiveEven::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_even.max_value() ;
+}
+// ============================================================================
 
 // ============================================================================
 // monotonic polinomial
@@ -5581,6 +5661,25 @@ Double_t Ostap::Models::PolyMonotonic::analyticalIntegral
   //
   setPars () ;
   return m_monotonic.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::PolyMonotonic::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PolyMonotonic::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                              ,
+                  "Invalid MaxVal code"                  ,
+                  "Ostap::Models::PolyMonotonic::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_monotonic.max_value() ;
 }
 // ============================================================================
 
@@ -5669,6 +5768,25 @@ Double_t Ostap::Models::PolyConvex::analyticalIntegral
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::PolyConvex::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PolyConvex::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                              ,
+                  "Invalid MaxVal code"                  ,
+                  "Ostap::Models::PolyConvex::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_convex.max_value() ;
+}
+// ============================================================================
 
 // ============================================================================
 // convex polinomial
@@ -5752,6 +5870,25 @@ Double_t Ostap::Models::PolyConvexOnly::analyticalIntegral
   //
   setPars () ;
   return m_convex.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::PolyConvexOnly::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::PolyConvexOnly::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                              ,
+                  "Invalid MaxVal code"                  ,
+                  "Ostap::Models::PolyConvexOnly::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_convex.max_value() ;
 }
 // ============================================================================
 
@@ -6498,6 +6635,25 @@ Double_t Ostap::Models::GammaDist::analyticalIntegral
   return m_gamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::GammaDist::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::GammaDist::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::GammaDist::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_gamma ( m_gamma.mode() ) ;
+}
+// ============================================================================
 
 // ============================================================================
 // constructor from all parameters 
@@ -6592,6 +6748,25 @@ Double_t Ostap::Models::GenGammaDist::analyticalIntegral
   //
   setPars () ;
   return m_ggamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::GenGammaDist::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::GenGammaDist::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::GenGammaDist::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_ggamma ( m_ggamma.mode() ) ;
 }
 // ============================================================================
 
@@ -6690,6 +6865,25 @@ Double_t Ostap::Models::Amoroso::analyticalIntegral
   //
   setPars () ;
   return m_amoroso.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::Amoroso::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Amoroso::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Amoroso::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_amoroso ( m_amoroso.mode() ) ;
 }
 // ============================================================================
 
@@ -6960,6 +7154,26 @@ Double_t Ostap::Models::LogGamma::analyticalIntegral
   return m_lgamma.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::LogGamma::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::LogGamma::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::LogGamma::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_lgamma ( m_lgamma.mode() ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -9161,6 +9375,26 @@ Double_t Ostap::Models::DoubleGauss::analyticalIntegral
   return m_2gauss.integral ( xmin , xmax ) ;
 }
 // ============================================================================
+Int_t  Ostap::Models::DoubleGauss::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::DoubleGauss::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::DoubleGauss::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  //
+  setPars() ;
+  return 1.01 * m_2gauss ( m_2gauss.mode() ) ;
+}
+// ============================================================================
 
 // ============================================================================
 /*  constructor from all parameters
@@ -9244,6 +9478,25 @@ Double_t Ostap::Models::Gumbel::analyticalIntegral
   //
   setPars() ;
   return m_gumbel.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::Gumbel::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Gumbel::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Gumbel::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  setPars() ;
+  return 1.01 * m_gumbel ( m_gumbel.mode() ) ;
 }
 // ============================================================================
 
@@ -12078,7 +12331,26 @@ Double_t Ostap::Models::Meixner::analyticalIntegral
   return m_meixner.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
+Int_t  Ostap::Models::Meixner::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Meixner::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::Meixner::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  //
+  setPars() ;
+  return 1.01 * m_meixner ( m_meixner.mode() ) ;
+}
+// ============================================================================
 
 // ============================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)

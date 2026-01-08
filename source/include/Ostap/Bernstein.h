@@ -571,6 +571,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      double min_value () const ;
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      double max_value () const ;
+      // =====================================================================
+    public:
+      // ======================================================================
       /** update  the Bernstein expansion by addition of one "event" with 
        *  the given weight
        *  @code

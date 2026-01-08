@@ -32,6 +32,8 @@ add_library(ostap SHARED src/format.cpp
                          src/EPDF.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
+                         src/Extrema.cpp   
+                         src/Extremum1D.cpp   
                          src/Exception.cpp
                          src/Faddeeva.cpp 
                          src/FitResult.cpp 
@@ -73,11 +75,11 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-            		     src/Names.cpp 
+            		 src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp
                          src/Ostap.cpp
-			             src/Quantile.cpp
+			 src/Quantile.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
                          src/Peaks.cpp
@@ -93,7 +95,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Primitives.cpp
                          src/Printable.cpp
                          src/ProgressBar.cpp
-			             src/Project.cpp
+			 src/Project.cpp
                          src/PyBLOB.cpp
                          src/PyCallable.cpp 
                          src/PyFuncs.cpp 

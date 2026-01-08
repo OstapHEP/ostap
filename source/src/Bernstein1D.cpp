@@ -700,22 +700,6 @@ bool Ostap::Math::Monotonic::updateBernstein ()
   return update ;
 }
 // ============================================================================
-// get the minimal value of function 
-// ============================================================================
-double Ostap::Math::Monotonic::fun_min () const
-{
-  const std::vector<double>& ps = m_bernstein.pars() ;
-  return  std::min ( ps.front() , ps.back() ) ;
-}
-// ============================================================================
-// get the maximal value of function 
-// ============================================================================
-double Ostap::Math::Monotonic::fun_max () const
-{
-  const std::vector<double>& ps = m_bernstein.pars() ;
-  return  std::max( ps.front() , ps.back() ) ;
-}
-// ============================================================================
 // get the integral between low and high 
 // =============================================================================
 double Ostap::Math::Monotonic::integral
@@ -834,22 +818,6 @@ bool Ostap::Math::Convex::updateBernstein ()
   }
   //
   return update ;
-}
-// ============================================================================
-// get the minimal value of function 
-// ============================================================================
-double Ostap::Math::Convex::fun_min () const
-{
-  const std::vector<double>& ps = m_bernstein.pars() ;
-  return  std::min ( ps.front() , ps.back() ) ;
-}
-// ============================================================================
-// get the maximal value of function 
-// ============================================================================
-double Ostap::Math::Convex::fun_max () const
-{
-  const std::vector<double>& ps = m_bernstein.pars() ;
-  return  std::max( ps.front() , ps.back() ) ;
 }
 // ============================================================================
 // get the integral between low and high 

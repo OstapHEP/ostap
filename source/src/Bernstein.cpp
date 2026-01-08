@@ -426,6 +426,16 @@ Ostap::Math::Bernstein::derivative
     ( npars () - 1 ) / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
+// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+// ============================================================================
+double Ostap::Math::Bernstein::min_value () const
+{ return *std::min_element ( m_pars.begin () , m_pars.end () ) ; }
+// ============================================================================
+// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+// ============================================================================
+double Ostap::Math::Bernstein::max_value () const 
+{ return *std::max_element ( m_pars.begin () , m_pars.end () ) ; }
+// ============================================================================
 // get the value
 // ============================================================================
 double Ostap::Math::Bernstein::evaluate ( const double x ) const

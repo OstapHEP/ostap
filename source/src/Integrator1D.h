@@ -35,11 +35,6 @@ namespace Ostap
     namespace GSL 
     { 
       // ======================================================================
-      /** @typedef    Result 
-       *  the  type for  result of numerica integration routines 
-       */
-      typedef std::tuple<int,double,double> Result ;
-      // ======================================================================
       /** @class Integrator1D  Integrator1D.h 
        *  Helper class to simplify operations 
        *  with GSL numerical integration functions 
@@ -66,7 +61,7 @@ namespace Ostap
       {
       public :
         //  ===================================================================
-        /// make a function for integration 
+        /// make a function for numerical integration 
         gsl_function 
         make_function 
         ( const FUNCTION* f ) const 
@@ -75,7 +70,7 @@ namespace Ostap
           F.params   = const_cast<FUNCTION*>( f )  ;
           F.function = &adapter ;
           return F ; 
-       }
+	}
         // ====================================================================
       public :
         //  ===================================================================
@@ -893,7 +888,7 @@ namespace Ostap
           // ==================================================================
         }
         // ====================================================================
-      public:
+      private :
         // ====================================================================
         /// the actual adapter for GSL 
         static double adapter ( double x , void* params ) 
@@ -1065,7 +1060,7 @@ namespace Ostap
   // ==========================================================================
 } //                                                 The end of namespace Ostap 
 // ============================================================================
-//                                                                      The END 
-// ============================================================================
 #endif // OSTAP_INTEGRATOR1D_H
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

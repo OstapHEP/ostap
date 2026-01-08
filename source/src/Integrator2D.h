@@ -140,7 +140,7 @@ namespace Ostap
           // ==================================================================
         }
         // ====================================================================
-      public:
+      private :
         // ====================================================================
         /// the actual adapter for cubature 
         static int adapter2d 
@@ -158,7 +158,7 @@ namespace Ostap
           const FUNCTION* f = (FUNCTION*) fdata  ; 
           fval [ 0 ] = (*f) ( x [ 0 ] , x [ 1 ] ) ;
           return 0 ;
-        }
+        }      
         // ====================================================================
       private:
         // ====================================================================
@@ -168,7 +168,7 @@ namespace Ostap
         static CACHE              s_cache     ; // integration cache 
         static const unsigned int s_CACHESIZE ; // cache size 
         // ====================================================================
-      };  
+      };
       // ======================================================================
       template <class FUNCTION>
       typename Integrator2D<FUNCTION>::CACHE 

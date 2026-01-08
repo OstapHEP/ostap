@@ -32,6 +32,7 @@
 #include "local_hash.h"
 #include "gauss.h"      
 #include "Integrator1D.h"      
+#include "Extremum1D.h"      
 #include "syncedcache.h"  // the cache 
 #include "status_codes.h" // the cache 
 // ============================================================================
@@ -907,6 +908,47 @@ double Ostap::Math::GenGaussV2::kurtosis () const
     + 3 * Ostap::Math::POW ( ek2 , 2 ) - 6 ;
 }
 // ============================================================================
+// get the mode   of distribution 
+// ============================================================================
+double Ostap::Math::GenGaussV2::mode () const
+{
+  //
+  const double the_mean   = mean   () ; 
+  const double the_median = median () ;
+  const double the_sigma  = sigma  () ;
+  //
+  // get the interval & guess for the mode
+  const double low   = the_median - 1.8 * the_sigma  ; // sqrt(3) is corrent value 
+  const double high  = the_median + 1.8 * the_sigma  ; // sqrt(3) is corrent value 
+  const double guess = 3 * the_median - 2 * the_mean ;
+  //
+  static const Ostap::Math::GSL::Extremum1D<GenGaussV2> s_mode {} ;
+  static char s_message[] = "Mode(GenGaussV2)" ;
+  //
+  const auto F    = s_mode.make_function_max ( this ) ;
+  //
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  //
+  const double aprecision = the_sigma * 1.e-6 ;
+  const double rprecision =             1.e-6 ;
+  //
+  std::tie ( ierror , result , error ) = s_mode.optimize_quad_golden 
+    ( &F                  , // the function 
+      low                 , // low_value 
+      high                , // high edge
+      guess               , // initial guess 
+      aprecision          , // absolute precision
+      rprecision          , // relative precision
+      100                 , // limit on number of iterations
+      s_message           ,  
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenGaussV2::tag () const 
@@ -1026,6 +1068,47 @@ double Ostap::Math::SkewGauss::approximate_mode () const
   ma -= 0.5 * Ostap::Math::signum ( m_alpha ) * std::exp ( -2 * M_PI / std::abs ( m_alpha ) ) ;
   //
   return m_xi + m_omega * ma ;
+}
+// ============================================================================
+// get the mode   of distribution 
+// ============================================================================
+double Ostap::Math::SkewGauss::mode () const
+{
+  //
+  const double the_mean   = mean   () ; 
+  const double the_sigma  = sigma  () ;
+  const double app_mode   = approximate_mode () ;
+  //
+  // get the interval & guess for the mode
+  const double low   = std::min ( the_mean - 2 * the_sigma , app_mode - 2 * the_sigma ) ;
+  const double high  = std::max ( the_mean + 2 * the_sigma , app_mode + 2 * the_sigma ) ;
+  const double guess = app_mode ; 
+  //
+  static const Ostap::Math::GSL::Extremum1D<SkewGauss> s_mode {} ;
+  static char s_message[] = "Mode(SkewGauss)" ;
+  //
+  const auto F    = s_mode.make_function_max ( this ) ;
+  //
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  //
+  const double aprecision = the_sigma * 1.e-6 ;
+  const double rprecision =             1.e-6 ;
+  //
+  std::tie ( ierror , result , error ) = s_mode.optimize_quad_golden 
+    ( &F                  , // the function 
+      low                 , // low_value 
+      high                , // high edge
+      guess               , // initial guess 
+      aprecision          , // absolute precision
+      rprecision          , // relative precision
+      100                 , // limit on number of iterations
+      s_message           ,  
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
 }
 // ======================================================================
 // get the tag 
@@ -1495,6 +1578,46 @@ double Ostap::Math::NormalLaplace::kurtosis    () const
   const double s2 = variance ()  ;
   //
   return ( k4 + 3 * k2 * k2 ) / ( s2 * s2 ) - 3 ;
+}
+// ============================================================================
+// get the mode   of distribution 
+// ============================================================================
+double Ostap::Math::NormalLaplace::mode () const
+{
+  //
+  const double the_mean   = mean () ; 
+  const double the_sigma  = rms  () ;
+  //
+  // get the interval & guess for the mode
+  const double low   = std::min ( the_mean - 2 * the_sigma , m_mu - 2 * the_sigma ) ;
+  const double high  = std::min ( the_mean + 2 * the_sigma , m_mu + 2 * the_sigma ) ;
+  const double guess = 0.5 * ( the_mean + m_mu ) ;
+  //
+  static const Ostap::Math::GSL::Extremum1D<NormalLaplace> s_mode {} ;
+  static char s_message[] = "Mode(NormalLaplace)" ;
+  //
+  const auto F    = s_mode.make_function_max ( this ) ;
+  //
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  //
+  const double aprecision = the_sigma * 1.e-6 ;
+  const double rprecision =             1.e-6 ;
+  //
+  std::tie ( ierror , result , error ) = s_mode.optimize_quad_golden 
+    ( &F                  , // the function 
+      low                 , // low_value 
+      high                , // high edge
+      guess               , // initial guess 
+      aprecision          , // absolute precision
+      rprecision          , // relative precision
+      100                 , // limit on number of iterations
+      s_message           ,  
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
 }
 // ============================================================================
 // get the tag 
@@ -1980,6 +2103,45 @@ double Ostap::Math::Novosibirsk::integral () const
   //
   return result1 + result2 + integral ( x_low ,  x_high ) ;
   //  
+}
+// ============================================================================
+// get the mode   of distribution 
+// ============================================================================
+double Ostap::Math::Novosibirsk::mode () const
+{
+  //
+  const double the_sigma  = m_sigma ;
+  //
+  // get the interval & guess for the mode
+  const double low   = m_m0 - 4 * m_sigma ;
+  const double high  = m_m0 + 4 * m_sigma ;
+  const double guess = m_m0 ;
+  //
+  static const Ostap::Math::GSL::Extremum1D<Novosibirsk> s_mode {} ;
+  static char s_message[] = "Mode(Novisibirsk)" ;
+  //
+  const auto F    = s_mode.make_function_max ( this ) ;
+  //
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  //
+  const double aprecision = the_sigma * 1.e-6 ;
+  const double rprecision =             1.e-6 ;
+  //
+  std::tie ( ierror , result , error ) = s_mode.optimize_quad_golden 
+    ( &F                  , // the function 
+      low                 , // low_value 
+      high                , // high edge
+      guess               , // initial guess 
+      aprecision          , // absolute precision
+      rprecision          , // relative precision
+      100                 , // limit on number of iterations
+      s_message           ,  
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
 }
 // ============================================================================
 // get the tag 
@@ -7794,6 +7956,49 @@ double Ostap::Math::Meixner::non_gaussian
   //
   return 1 - I_G / I_CB ;
 }
+// ============================================================================
+// get the mode   of distribution 
+// ============================================================================
+double Ostap::Math::Meixner::mode () const
+{
+  //
+  const double the_mean   = mean   () ; 
+  const double the_sigma  = rms    () ;
+  //
+  // get the interval & guess for the mode
+  const double low   = std::min ( the_mean - 3 * the_sigma , m_mu - 3 * the_sigma ) ;
+  const double high  = std::max ( the_mean + 3 * the_sigma , m_mu + 3 * the_sigma ) ;  
+  const double guess = 0.5 * ( the_mean + m_mu ) ;
+  //
+  static const Ostap::Math::GSL::Extremum1D<Meixner> s_mode {} ;
+  static char s_message[] = "Mode(Meixner)" ;
+  //
+  const auto F    = s_mode.make_function_max ( this ) ;
+  //
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  //
+  const double aprecision = the_sigma * 1.e-6 ;
+  const double rprecision =             1.e-6 ;
+  //
+  std::tie ( ierror , result , error ) = s_mode.optimize_quad_golden 
+    ( &F                  , // the function 
+      low                 , // low_value 
+      high                , // high edge
+      guess               , // initial guess 
+      aprecision          , // absolute precision
+      rprecision          , // relative precision
+      100                 , // limit on number of iterations
+      s_message           ,  
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+
+
+
 // ============================================================================
 // get the tag 
 // ============================================================================

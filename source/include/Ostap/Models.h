@@ -79,7 +79,7 @@ namespace Ostap
       // ======================================================================
       double mean        () const ;
       double median      () const ;
-      double mode        () const { return mu() ; }
+      double mode        () const { return mu () ; }
       double variance    () const ;
       double dispersion  () const { return variance () ; }
       double sigma2      () const { return variance () ; }
@@ -100,8 +100,9 @@ namespace Ostap
       /// get the integral
       double integral () const { return 1 ; }
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -173,8 +174,9 @@ namespace Ostap
       /// get (possibly truncated) integral
       double integral () const ;
       /// get integral between low and high
-      double integral ( const double low ,
-                        const double high ) const ;
+      double integral
+      ( const double low ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -227,34 +229,34 @@ namespace Ostap
        *  @param N           degree of polynomial
        */
       PhaseSpacePol
-        ( const double         threshold_L =  0 ,
-          const double         threshold_H = 10 ,
-          const unsigned short l           =  2 ,
-          const unsigned short n           =  3 ,
-          const unsigned short N           =  1 ) ; // degree of polynomial
+      ( const double         threshold_L =  0 ,
+	const double         threshold_H = 10 ,
+	const unsigned short l           =  2 ,
+	const unsigned short n           =  3 ,
+	const unsigned short N           =  1 ) ; // degree of polynomial
       // =====================================================================
       /** constructor from phase space and polynomial degree
        *  @param ps          phase space factor
        *  @param N           degree of polynomial
        */
       PhaseSpacePol 
-        ( const PhaseSpaceNL&  ps      ,
-          const unsigned short N  =  1 ) ; // degree of polynomial
+      ( const PhaseSpaceNL&  ps      ,
+	const unsigned short N  =  1 ) ; // degree of polynomial
       // ======================================================================
       /** constructor from phase space and polynomial degree
        *  @param ps          phase space factor
        *  @param N           degree of polynomial
        */
       PhaseSpacePol 
-        ( const PhaseSpaceNL&  ps      ,
-          const unsigned short N       ,
-          const double         xlow    ,
-          const double         xhigh   ) ;
+      ( const PhaseSpaceNL&  ps      ,
+	const unsigned short N       ,
+	const double         xlow    ,
+	const double         xhigh   ) ;
       // ======================================================================
       /// constructor from phase space and polynomial
       PhaseSpacePol 
-        ( const PhaseSpaceNL&          ps  ,
-          const Ostap::Math::Positive& pol ) ;
+      ( const PhaseSpaceNL&          ps  ,
+	const Ostap::Math::Positive& pol ) ;
       // ======================================================================
       /// destructor 
       ~PhaseSpacePol() ;
@@ -303,8 +305,8 @@ namespace Ostap
       double integral () const ;
       /// get the integral between low and high limits
       double integral 
-        ( const double low  ,
-          const double high ) const ;
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -359,11 +361,11 @@ namespace Ostap
        *  @param xhigh       the high edge 
        */
       PhaseSpaceLeftExpoPol 
-        ( const double         threshold_L =  0 ,   // low threshold 
-          const unsigned short l           =  2 ,   // number of particles 
-          const unsigned short N           =  1 ,   // degree of polynomial
-          const double         tau         =  0 ,   // the exponent 
-          const double         xhigh       =  1 ) ; // high edge 
+      ( const double         threshold_L =  0 ,   // low threshold 
+	const unsigned short l           =  2 ,   // number of particles 
+	const unsigned short N           =  1 ,   // degree of polynomial
+	const double         tau         =  0 ,   // the exponent 
+	const double         xhigh       =  1 ) ; // high edge 
       // =====================================================================
       /** constructor from threshold and number of particles
        *  @param threshold_L the low-mass  threshold
@@ -374,12 +376,12 @@ namespace Ostap
        *  @param xhigh       the high edge 
        */
       PhaseSpaceLeftExpoPol
-        ( const double         threshold_L ,   // low threshold 
-          const unsigned short l           ,   // number of particles 
-          const unsigned short N           ,   // degree of polynomial
-          const double         tau         ,   // the exponent 
-          const double         xlow        ,   // low edge 
-          const double         xhigh       ) ; // high edge 
+      ( const double         threshold_L ,   // low threshold 
+	const unsigned short l           ,   // number of particles 
+	const unsigned short N           ,   // degree of polynomial
+	const double         tau         ,   // the exponent 
+	const double         xlow        ,   // low edge 
+	const double         xhigh       ) ; // high edge 
       // =====================================================================
       /** constructor from the phase space and polynomial degree
        *  @param ps          phase space factor
@@ -388,10 +390,10 @@ namespace Ostap
        *  @param xhigh       the high edge 
        */
       PhaseSpaceLeftExpoPol
-        ( const PhaseSpaceLeft& ps        ,
-          const unsigned short  N     = 1 ,   // degree of polynomial
-          const double          tau   = 0 ,   // the exponent 
-          const double          xhigh = 1 ) ; // high edge 
+      ( const PhaseSpaceLeft& ps        ,
+	const unsigned short  N     = 1 ,   // degree of polynomial
+	const double          tau   = 0 ,   // the exponent 
+	const double          xhigh = 1 ) ; // high edge 
       // =========================================================================
       /** constructor from the phase space and polynomial degree
        *  @param ps          phase space factor
@@ -401,11 +403,11 @@ namespace Ostap
        *  @param xhigh       the high edge 
        */
       PhaseSpaceLeftExpoPol
-        ( const PhaseSpaceLeft& ps    ,
-          const unsigned short  N     ,   // degree of polynomial
-          const double          tau   ,   // the exponent 
-          const double          xlow  ,   // low edge 
-          const double          xhigh ) ; // high edge
+      ( const PhaseSpaceLeft& ps    ,
+	const unsigned short  N     ,   // degree of polynomial
+	const double          tau   ,   // the exponent 
+	const double          xlow  ,   // low edge 
+	const double          xhigh ) ; // high edge
       // ======================================================================
       /** constructor from the phase space and polynomial degree
        *  @param ps          phase space factor
@@ -415,9 +417,9 @@ namespace Ostap
        *  @param xhigh       the high edge 
        */
       PhaseSpaceLeftExpoPol
-        ( const PhaseSpaceLeft&        ps  ,   // pjase space 
-          const Ostap::Math::Positive& pol ,   // polynomial 
-          const double                 tau ) ; // the exponent 
+      ( const PhaseSpaceLeft&        ps  ,   // pjase space 
+	const Ostap::Math::Positive& pol ,   // polynomial 
+	const double                 tau ) ; // the exponent 
       // ======================================================================
       /// destructor 
       ~PhaseSpaceLeftExpoPol() ;
@@ -476,8 +478,8 @@ namespace Ostap
       // ======================================================================
       /// get the integral between low and high limits
       double integral
-        ( const double low  ,
-          const double high ) const ;
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -522,32 +524,32 @@ namespace Ostap
       GammaDist 
       ( const double k     = 2 ,   // shape parameter
         const double theta = 1 ) ; // scale parameter
-      /// desctructor
-      ~GammaDist() ;  // destructor
       // ======================================================================
     public:
       // ======================================================================
       double pdf        ( const double x ) const ;
       /// calculate gamma distribution shape
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       // variables
       // ======================================================================
-      double k          () const  { return m_k       ; }
-      double theta      () const  { return m_theta   ; }
+      inline double k          () const  { return m_k       ; }
+      inline double theta      () const  { return m_theta   ; }
       // ======================================================================
-      double alpha      () const  { return m_k       ; }
-      double beta       () const  { return 1/m_theta ; }
+      inline double alpha      () const  { return m_k       ; }
+      inline double beta       () const  { return 1/m_theta ; }
       // ======================================================================
     public:
       // ======================================================================
-      double mean       () const  { return m_k * m_theta                ; }
-      double dispersion () const  { return m_k * m_theta * m_theta      ; }
-      double variance   () const  { return dispersion ()                ; }
+      inline double mean       () const  { return m_k * m_theta                ; }
+      inline double dispersion () const  { return m_k * m_theta * m_theta      ; }
+      inline double variance   () const  { return dispersion ()                ; }
       double sigma      () const  ;
       double skewness   () const  ;
+      double mode       () const  ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -555,8 +557,8 @@ namespace Ostap
        *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
        *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
        */
-      double nu () const { return 2   * k     () ; }
-      double c  () const { return 0.5 * theta () ; }
+      inline double nu () const { return 2   * k     () ; }
+      inline double c  () const { return 0.5 * theta () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -625,15 +627,15 @@ namespace Ostap
       // ======================================================================
       // variables
       // ======================================================================
-      double k          () const  { return m_gamma.k     () ; }
-      double theta      () const  { return m_gamma.theta () ; }
+      inline double k          () const  { return m_gamma.k     () ; }
+      inline double theta      () const  { return m_gamma.theta () ; }
       // ======================================================================
     public:
       // ======================================================================
-      double mean       () const  { return m_gamma.mean       () ; }
-      double dispersion () const  { return m_gamma.dispersion () ; }
-      double sigma      () const  { return m_gamma.sigma      () ; }
-      double skewness   () const  { return m_gamma.skewness   () ; }
+      inline double mean       () const  { return m_gamma.mean       () ; }
+      inline double dispersion () const  { return m_gamma.dispersion () ; }
+      inline double sigma      () const  { return m_gamma.sigma      () ; }
+      inline double skewness   () const  { return m_gamma.skewness   () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -641,8 +643,8 @@ namespace Ostap
        *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
        *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
        */
-      double nu () const { return m_gamma.nu () ; }
-      double c  () const { return m_gamma.c  () ; }
+      inline double nu () const { return m_gamma.nu () ; }
+      inline double c  () const { return m_gamma.c  () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -659,8 +661,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      virtual double integral ( const double low  ,
-                                const double high ) const ;
+      virtual double integral
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public: // quantiles
       // ======================================================================
@@ -709,8 +712,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral   ( const double low  ,
-                          const double high ) const override;
+      double integral
+      ( const double low  ,
+	const double high ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -750,36 +754,38 @@ namespace Ostap
         const double theta = 1 ,
         const double p     = 1 , // 1 corresponds to gamma distribution
         const double low   = 0 ) ;
-      /// desctructor
-      ~GenGammaDist() ;  // desctructor
       // ======================================================================
     public:
       // ======================================================================
       /// calculate gamma distribution shape
       double pdf        ( const double x ) const ;
       /// calculate gamma distribution shape
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // getters
       // ======================================================================
-      double k          () const  { return m_k                          ; }
-      double theta      () const  { return m_theta                      ; }
-      double p          () const  { return m_p                          ; }
-      double low        () const  { return m_low                        ; }
+      inline double k          () const  { return m_k                          ; }
+      inline double theta      () const  { return m_theta                      ; }
+      inline double p          () const  { return m_p                          ; }
+      inline double low        () const  { return m_low                        ; }
       // ======================================================================
     public:
       // ======================================================================
       /// Wikipedia notations
-      double a          () const { return theta () ; }
-      double d          () const { return k     () ; }
+      inline double a          () const { return theta () ; }
+      inline double d          () const { return k     () ; }
       // ======================================================================
     public: // derived getters
       // ======================================================================
-      double mean       () const  { return m_k * m_theta +   low ()     ; }
-      double dispersion () const  { return m_k * m_theta * m_theta      ; }
-      double variance   () const  { return dispersion ()                ; }
-      double sigma      () const  { return std::sqrt ( dispersion ()  ) ; }
-      double skewness   () const  { return 2.0 / std::sqrt ( m_k )      ; }
+      inline double mean       () const  { return m_k * m_theta +   low ()     ; }
+      inline double dispersion () const  { return m_k * m_theta * m_theta      ; }
+      inline double variance   () const  { return dispersion ()                ; }
+      inline double sigma      () const  { return std::sqrt ( dispersion ()  ) ; }
+      inline double skewness   () const  { return 2.0 / std::sqrt ( m_k )      ; }
+      // ======================================================================
+      // get the mode 
+      double mode   () const ; 
       // ======================================================================
     public:  // setters
       // ======================================================================

@@ -4,7 +4,11 @@
   1. tiny tweaks for `Ostap::Models::StudentT` and `Ostap::Models::BifurcatedStudentT`
   1. improve  `StudentT_pdf`, `BifurcatedStudentT_pdf` and `RsoStudentT`
   1. more tweaks for StudentT family of functions
-  
+  1. add `getMaxV/maxVal` methods  for many PDF, it speeds up the generation
+  1. add `Extremum1D<FUNCTION>` : simple wrapper for GSL minimizaiton machinery 
+  1. add `Extrema.h` with few functions to get extrema of function using GSL machinery 
+  1. add `mode` method for numerical evaluation of the mode for many functions,where analytical expresions for _mode_ are unknown 
+
 ## Bug fixes
 
 ## Backward incompatible 
