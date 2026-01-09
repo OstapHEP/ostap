@@ -1934,15 +1934,17 @@ Ostap.Models.ExpoPositive.__reduce__ = _rexppos_reduce_
 ## reduce PolySigmoid
 def _rpolsigm_reduce_ ( pdf ):
     """ Reduce PoLySigmoid"""
-    return root_store_factory , ( type ( pdf )      ,
-                                  pdf.name          ,
-                                  pdf.title         ,
-                                  pdf.x          () , 
-                                  pdf.phis       () ,
-                                  pdf.xmin       () ,
-                                  pdf.xmax       () ,
-                                  pdf.alpha      () ,
-                                  pdf.x0         () )
+    return root_store_factory , ( type ( pdf )        ,
+                                  pdf.name            ,
+                                  pdf.title           ,
+                                  pdf.x            () , 
+                                  pdf.phis         () ,
+                                  pdf.xmin         () ,
+                                  pdf.xmax         () ,
+                                  pdf.scale        () ,
+                                  pdf.x0           () , 
+                                  pdf.delta        () , 
+                                  pdf.sigmoid_type () )  
 
 Ostap.Models.PolySigmoid.__reduce__ = _rpolsigm_reduce_ 
 

@@ -1095,11 +1095,42 @@ std::size_t Ostap::Math::ConvexOnly::tag () const
 }
 // ============================================================================
 
-  
-  
 
-
-
+// ============================================================================
+// constructor from the positive polynomial
+// ============================================================================
+Ostap::Math::PolyFactor1D::PolyFactor1D
+( const Ostap::Math::Positive& positive )
+  : m_positive ( positive )
+{}
+// ============================================================================
+// constructor from degree & edges 
+// ============================================================================
+Ostap::Math::PolyFactor1D::PolyFactor1D
+( const unsigned short        N    ,
+  const double                xmin ,
+  const double                xmax ) 
+  : m_positive ( N , xmin , xmax )
+{}
+// ============================================================================
+/* constructor from N parameters/phases 
+ *  @param phases  list of parameters/phase 
+ *  @param xmin low-edge 
+ *  @param xmax high-edge 
+ */
+// ============================================================================
+Ostap::Math::PolyFactor1D::PolyFactor1D
+( const std::vector<double>&  phases ,
+  const double                xmin   ,
+  const double                xmax   ) 
+  : m_positive ( phases , xmin , xmax )
+{}
+// ============================================================================
+// swap two poly-factors
+// ============================================================================
+void Ostap::Math::PolyFactor1D::swap
+( Ostap::Math::PolyFactor1D& other )
+{ Ostap::Math::swap ( m_positive , other.m_positive ) ; }
 
 // ============================================================================
 //                                                                      The END 

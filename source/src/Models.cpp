@@ -351,10 +351,10 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
   const unsigned short l           ,
   const unsigned short n           , 
   const unsigned short N           )  // degree of polynomial
-  : m_phasespace ( threshold1 , threshold2 , l , n ) 
-  , m_positive   ( N , 
-                   std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) , 
-                   std::max ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) ) 
+  : Ostap::Math::PolyFactor1D ( N , 
+				std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) , 
+				std::max ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )     
+  , m_phasespace ( threshold1 , threshold2 , l , n ) 
   , m_workspace  ()
 {}
 // =====================================================================
@@ -366,8 +366,8 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
 Ostap::Math::PhaseSpacePol::PhaseSpacePol 
 ( const Ostap::Math::PhaseSpaceNL& ps ,
   const unsigned short             N  )  // degree of polynomial
-  : m_phasespace ( ps ) 
-  , m_positive   ( N  , ps.lowEdge() , ps.highEdge() ) 
+  : Ostap::Math::PolyFactor1D ( N  , ps.lowEdge() , ps.highEdge() )     
+  , m_phasespace ( ps ) 
   , m_workspace  ()
 {}
 // ======================================================================
@@ -381,10 +381,10 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
   const unsigned short             N     , 
   const double                     xlow  , 
   const double                     xhigh ) 
-  : m_phasespace ( ps ) 
-  , m_positive   ( N  , 
-                   std::max ( ps. lowEdge() , std::min ( xlow , xhigh ) ) ,
-                   std::min ( ps.highEdge() , std::max ( xlow , xhigh ) ) )
+  : Ostap::Math::PolyFactor1D ( N  , 
+				std::max ( ps. lowEdge() , std::min ( xlow , xhigh ) ) ,
+				std::min ( ps.highEdge() , std::max ( xlow , xhigh ) ) )
+  , m_phasespace ( ps ) 
   , m_workspace  ()
 {}
 // ======================================================================
@@ -393,16 +393,18 @@ Ostap::Math::PhaseSpacePol::PhaseSpacePol
 Ostap::Math::PhaseSpacePol::PhaseSpacePol 
 ( const PhaseSpaceNL&          ps  ,
   const Ostap::Math::Positive& pol ) 
-  : m_phasespace ( ps  ) 
-  , m_positive   ( pol ) 
+  : Ostap::Math::PolyFactor1D ( pol ) 
+  , m_phasespace ( ps  ) 
   , m_workspace  () 
 {
   Ostap::Assert ( m_phasespace.lowEdge () < m_positive.xmax      () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PhaseSpacePol" ) ;
+                  "Ostap::Math::PhaseSpacePol"                      ,
+		  INVALID_PARAMETERS , __FILE__ , __LINE__          ) ;
   Ostap::Assert ( m_positive.xmin      () < m_phasespace.highEdge() , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PhaseSpacePol" ) ;                 
+                  "Ostap::Math::PhaseSpacePol"                      , 
+		  INVALID_PARAMETERS , __FILE__ , __LINE__          ) ;
 }
 // =====================================================================
 // evaluate N/L-body modulated phase space
@@ -457,7 +459,6 @@ double  Ostap::Math::PhaseSpacePol::integral
   const double xlow  = std::max ( low  , mn ) ;
   const double xhigh = std::min ( high , mx ) ;
   //
-  //
   // use GSL to evaluate the integral
   //
   static const Ostap::Math::GSL::Integrator1D<PhaseSpacePol> s_integrator {} ;
@@ -489,7 +490,6 @@ std::size_t Ostap::Math::PhaseSpacePol::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_phasespace.tag () , m_positive.tag () ) ; 
 }
 // ============================================================================
-
 
 // ============================================================================
 /* constructor from threshold and number of particles
@@ -558,16 +558,19 @@ Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   const double          tau   ,   // the exponent 
   const double          xlow  ,   // low edge 
   const double          xhigh )  // high edge
-  : m_phasespace  ( ps ) 
-  , m_positive    ( N  ,
-                    std::max ( ps.threshold () , std::min ( xlow , xhigh ) ) , 
-                    std::max ( xlow , xhigh ) ) 
+  : Ostap::Math::PolyFactor1D ( N  ,
+				std::max ( ps.threshold () , std::min ( xlow , xhigh ) ) , 
+				std::max ( xlow , xhigh ) ) 
+  , m_phasespace  ( ps ) 
   , m_tau         ( std::abs ( tau ) ) 
   , m_workspace   ( ) 
 {
+  //
   Ostap::Assert ( m_phasespace.threshold() <= m_positive.xmin () , 
                   "Invalid setting of threshold/xmin/xmax" ,
-                  "Ostap::Math::PhaseSpaceLeftPol" ) ;  
+                  "Ostap::Math::PhaseSpaceLeftPol"         ,
+		  INVALID_PARAMETERS , __FILE__ , __LINE__ ) ; 
+  //
 }
 // ============================================================================
 /*  constructor from the phase space and polynomial
@@ -580,19 +583,19 @@ Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
 ( const PhaseSpaceLeft&        ps  ,   // pjase space 
   const Ostap::Math::Positive& pol ,   // polynomial 
   const double                 tau )  // the exponent 
-  : m_phasespace  ( ps  ) 
-  , m_positive    ( pol ) 
+  : Ostap::Math::PolyFactor1D ( pol ) 
+  , m_phasespace  ( ps  ) 
   , m_tau         ( std::abs ( tau ) )
   , m_workspace   ( ) 
 {
+  //
   Ostap::Assert ( m_phasespace.threshold() < m_positive.xmax () , 
                   "Invalid setting of threshold/xmin/xmax" ,
-                  "Ostap::Math::PhaseSpaceLeftPol" ) ;  
+                  "Ostap::Math::PhaseSpaceLeftPol"         , 
+		  INVALID_PARAMETERS , __FILE__ , __LINE__ ) ;
+  //
 }
 // ======================================================================
-
-
-
 
 // ============================================================================
 // destructor 
@@ -697,7 +700,7 @@ Ostap::Math::ExpoPositive::ExpoPositive
   const double              tau  ,   
   const double              xmin ,
   const double              xmax )
-  : m_positive  ( N , xmin , xmax )
+  : Ostap::Math::PolyFactor1D ( N , xmin , xmax )
   , m_tau       ( tau ) 
 {}
 // ============================================================================
@@ -708,7 +711,7 @@ Ostap::Math::ExpoPositive::ExpoPositive
   const double               tau  ,
   const double               xmin ,
   const double               xmax )
-  : m_positive  ( pars , xmin , xmax )
+  : Ostap::Math::PolyFactor1D ( pars , xmin , xmax )
   , m_tau       ( tau ) 
 {}
 // ======================================================================
@@ -717,8 +720,8 @@ Ostap::Math::ExpoPositive::ExpoPositive
 Ostap::Math::ExpoPositive::ExpoPositive
 ( const Ostap::Math::Positive& pol , 
   const double                 tau ) 
-  : m_positive  ( pol )
-  , m_tau       ( tau ) 
+  : Ostap::Math::PolyFactor1D ( pol )
+  , m_tau ( tau ) 
 {}
 // ============================================================================
 // set tau-parameter
@@ -740,11 +743,13 @@ double Ostap::Math::ExpoPositive::operator () ( const double x ) const
   return my_exp ( m_tau * x ) * m_positive ( x ) ;
 }
 // ============================================================================
-double Ostap::Math::ExpoPositive::integral ( const double low  , 
-                                             const double high ) const 
-{
-  return Ostap::Math::integrate ( m_positive.bernstein() , m_tau , low ,high ) ;
-}
+double Ostap::Math::ExpoPositive::integral () const 
+{ return integral ( xmin () , xmax() )  ; }
+// ============================================================================
+double Ostap::Math::ExpoPositive::integral
+( const double low  , 
+  const double high ) const 
+{ return Ostap::Math::integrate ( m_positive.bernstein() , m_tau , low , high ) ; }
 // ============================================================================
 // get the tag
 // ============================================================================
@@ -2457,55 +2462,108 @@ std::size_t Ostap::Math::Weibull::tag () const
 // ============================================================================
 // constructor from polynom and parameters "alpha" and "x0"
 // ============================================================================
-Ostap::Math::Sigmoid::Sigmoid 
-( const Ostap::Math::Positive& poly  , 
-  const double                 alpha ,
-  const double                 x0    ) 
-  : m_positive ( poly  )
-  , m_alpha    ( alpha )
+Ostap::Math::Sigmoid::Sigmoid
+( const Ostap::Math::Positive&            poly  , 
+  const double                            scale ,
+  const double                            x0    , 
+  const double                            delta , 
+  const Ostap::Math::Sigmoid::SigmoidType st    ) 
+  : Ostap::Math::PolyFactor1D ( poly  )
+  , m_scale    ( scale )
   , m_x0       ( x0    )
+  , m_delta    ( std::abs ( delta ) ) 
+  , m_type     ( st    )
   , m_workspace() 
-{}
-// ============================================================================
-// constructor from polynom and parameters "alpha" and "x0"
-// ============================================================================
-Ostap::Math::Sigmoid::Sigmoid 
-( const unsigned short             N , 
-  const double                 xmin  , 
-  const double                 xmax  , 
-  const double                 alpha , 
-  const double                 x0    ) 
-  : m_positive ( N , xmin , xmax )
-  , m_alpha    ( alpha )
-  , m_x0       ( x0    )
-  , m_workspace() 
-{}
-// ============================================================================
-// constructor from polynom and parameters "alpha" and "x0"
-// ============================================================================
-Ostap::Math::Sigmoid::Sigmoid 
-( const std::vector<double>&   pars  ,
-  const double                 xmin  , 
-  const double                 xmax  , 
-  const double                 alpha , 
-  const double                 x0    ) 
-  : m_positive ( pars , xmin , xmax )
-  , m_alpha    ( alpha )
-  , m_x0       ( x0    )
-  , m_workspace() 
-{}
-// ============================================================================
-// set new valeu for alpha 
-// ============================================================================
-bool Ostap::Math::Sigmoid::setAlpha( const double value )
 {
-  if ( s_equal ( m_alpha, value ) ) { return false ; }
-  m_alpha = value ;
+  //
+  Ostap::Assert ( !s_zero ( m_scale )                     ,
+		  "Parameter `scale` must be non-zero!"   ,
+		  "Ostap::Math::Sigmoid"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( First <= st && st <= Last   ,
+		  "Invalid SigmoidType!"  ,
+		  "Ostap::Math::Sigmoid"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+}
+// ============================================================================
+// constructor from polynom and parameters "alpha" and "x0"
+// ============================================================================
+Ostap::Math::Sigmoid::Sigmoid 
+( const unsigned short                    N     , 
+  const double                            xmin  , 
+  const double                            xmax  , 
+  const double                            scale , 
+  const double                            x0    , 
+  const double                            delta , 
+  const Ostap::Math::Sigmoid::SigmoidType st    )   
+  : Ostap::Math::PolyFactor1D ( N , xmin , xmax )
+  , m_scale    ( scale )
+  , m_x0       ( x0    )
+  , m_delta    ( std::abs ( delta ) ) 
+  , m_type     ( st    )
+  , m_workspace() 
+{
+  //
+  Ostap::Assert ( m_scale                                 ,
+		  "Parameter `scale` nust be non-zero!"   ,
+		  "Ostap::Math::Sigmoid"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( First <= st && st <= Last   ,
+		  "Invalid SigmoidType!"  ,
+		  "Ostap::Math::Sigmoid"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+}
+// ============================================================================
+// constructor from polynom and parameters "alpha" and "x0"
+// ============================================================================
+Ostap::Math::Sigmoid::Sigmoid
+( const std::vector<double>&              pars  ,
+  const double                            xmin  , 
+  const double                            xmax  , 
+  const double                            scale , 
+  const double                            x0    ,  
+  const double                            delta , 
+  const Ostap::Math::Sigmoid::SigmoidType st    )   
+  : Ostap::Math::PolyFactor1D ( pars , xmin , xmax )
+  , m_scale    ( scale )
+  , m_x0       ( x0    )
+  , m_delta    ( std::abs ( delta ) ) 
+  , m_workspace() 
+{
+  //
+  Ostap::Assert ( !s_zero ( m_scale )                     ,
+		  "Parameter `scale` must be non-zero!"   ,
+		  "Ostap::Math::Sigmoid"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( First <= st && st <= Last   ,
+		  "Invalid SigmoidType!"  ,
+		  "Ostap::Math::Sigmoid"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+}
+// ============================================================================
+// set new value for alpha 
+// ============================================================================
+bool Ostap::Math::Sigmoid::setScale ( const double value )
+{
+  if ( s_equal ( m_scale , value ) ) { return false ; }
+  //
+  Ostap::Assert ( !s_zero ( m_scale )                     ,
+		  "Parameter `scale` must be non-zero!"   ,
+		  "Ostap::Math::Sigmoid:setScale"         ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_scale = value ;
   //
   return true ;
 }
 // ============================================================================
-// set new valeu for x0
+// set new value for x0
 // ============================================================================
 bool Ostap::Math::Sigmoid::setX0 ( const double value )
 {
@@ -2515,28 +2573,49 @@ bool Ostap::Math::Sigmoid::setX0 ( const double value )
   return true ;
 }
 // ============================================================================
-// get the value
+// set new value for delta 
 // ============================================================================
-double Ostap::Math::Sigmoid::operator () ( const double x ) const
+bool Ostap::Math::Sigmoid::setDelta ( const double value )
 {
-  return 
-    x < xmin () ? 0        :
-    x > xmax () ? 0        :
-    s_zero  ( m_alpha )    ? 
-    0.5 * m_positive ( x ) :
-    0.5 * m_positive ( x ) * ( 1 + std::tanh ( m_alpha * ( x - m_x0 ) ) ) ;
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_delta , avalue ) ) { return false ; }
+  m_delta = avalue ;
+  //
+  return true ;
 }
-// ================-===========================================================
+// ============================================================================
+// get the actual sigmoid
+// ============================================================================
+double Ostap::Math::Sigmoid::sigmoid ( const double x ) const
+{
+  //
+  static const double s_bias  = M_PI / 2.0  ;
+  static const double s_scale = 1.0  / M_PI ;
+  //
+  const double z = ( x - m_x0 ) / m_scale ;
+  switch ( m_type )
+    {
+    case Logistic : 
+      return z < 0  ? 1 - 1 / ( 1.0 + std::exp ( z ) ) : 1 / ( 1.0 + std::exp ( -z ) ) ;      
+    case Hyperbolic    : return 0.5     * ( 1      + std::tanh  (  z ) ) ; 
+    case Trigonometric : return s_scale * ( s_bias + std::atan  (  z ) ) ;
+    case Error         : return 0.5     * ( 1      + std::erf   (  z ) ) ;
+    case Gudermannian  : return s_scale * ( s_bias + Ostap::Math::gd ( z ) ) ;      
+    } ;
+  //
+  return 0 ;
+}
+// ============================================================================
 // get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
 // ================-===========================================================
 double Ostap::Math::Sigmoid::min_value () const
 {
   //
   const double pmin = m_positive.min_value () ;
-  const double exp1 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmin ()  - m_x0 ) ) ) ;
-  const double exp2 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmax ()  - m_x0 ) ) ) ;
+  const double sig1 = sigmoid ( xmin () ) + m_delta ;
+  const double sig2 = sigmoid ( xmax () ) + m_delta ;
   //
-  return pmin * std::min ( exp1 , exp2 ) ;
+  return pmin * std::min ( sig1 , sig2 ) ;
 }
 // ================-===========================================================
 // get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
@@ -2544,11 +2623,11 @@ double Ostap::Math::Sigmoid::min_value () const
 double Ostap::Math::Sigmoid::max_value () const
 {
   //
-  const double pmax = m_positive.max_value () ;
-  const double exp1 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmin ()  - m_x0 ) ) ) ;
-  const double exp2 = 0.5 * ( 1 + std::tanh ( m_alpha * ( xmax ()  - m_x0 ) ) ) ;
+  const double pmax = m_positive.max_value () ; 
+  const double sig1 = sigmoid ( xmin () ) + m_delta ;
+  const double sig2 = sigmoid ( xmax () ) + m_delta ;
   //
-  return pmax * std::max ( exp1 , exp2 ) ;
+  return pmax * std::max ( sig1 , sig2 ) ;
 }
 // ============================================================================
 // get the integral between xmin and xmax 
@@ -2568,16 +2647,14 @@ double Ostap::Math::Sigmoid::integral
   else if ( high < xmin ()            ) { return 0 ; }
   else if ( low  > xmax ()            ) { return 0 ; }
   //
-  else if ( s_zero ( m_alpha ) ) { return m_positive.integral ( low , high ) ; }
-  //
   // split it, if needed 
   if ( low < m_x0 && m_x0 < high ) 
-  { return integral ( low , m_x0 ) + integral ( m_x0 , high ) ; }
+    { return integral ( low , m_x0 ) + integral ( m_x0 , high ) ; }
   // split further, if needed 
-  const double a1 = m_x0 + 3 / m_alpha ;
+  const double a1 = m_x0 + 3 * m_scale ;
   if ( low < a1 && a1 < high ) { return integral ( low , a1 ) + integral ( a1 , high ) ; }
   // split further, if needed  
-  const double a2 = m_x0 - 3 / m_alpha ;
+  const double a2 = m_x0 - 3 * m_scale ;
   if ( low < a2 && a2 < high ) { return integral ( low , a2 ) + integral ( a2 , high ) ; }
   //
   //
@@ -2607,16 +2684,13 @@ double Ostap::Math::Sigmoid::integral
 std::size_t Ostap::Math::Sigmoid::tag () const 
 {
   static const std::string s_name = "Sigmoid" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_positive.tag () , m_alpha , m_x0 ) ; 
+  return Ostap::Utils::hash_combiner ( s_name            , 
+				       m_positive.tag () ,
+				       m_scale ,
+				       m_x0    ,
+				       m_type  ) ; 
 }
 // ============================================================================
-
-
-
-
-
-
-
 
 // ============================================================================
 Ostap::Math::TwoExpos::TwoExpos
@@ -2662,7 +2736,7 @@ bool Ostap::Math::TwoExpos::setDelta ( const double value )
 // ============================================================================
 // get the value 
 // ============================================================================
-double Ostap::Math::TwoExpos::operator() ( const double x ) const 
+double Ostap::Math::TwoExpos::evaluate ( const double x ) const 
 { return x < m_x0 ? 0 : derivative ( x , 0 ) ; }
 // ============================================================================
 // get the integral between -inf and +inf
@@ -2786,6 +2860,11 @@ double Ostap::Math::TwoExpos::derivative
       Ostap::Math::POW ( b , N ) *  std::exp ( b * dx ) ) / n0 ;
 }
 // ============================================================================
+// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+// ============================================================================
+double Ostap::Math::TwoExpos::max_value () const
+{ return evaluate ( mode() ) ; }
+// ============================================================================
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::TwoExpos::tag () const 
@@ -2804,7 +2883,7 @@ Ostap::Math::TwoExpoPositive::TwoExpoPositive
   const double         x0    ,
   const double         xmin  , 
   const double         xmax  ) 
-  : m_positive ( N , xmin , xmax    )
+  : Ostap::Math::PolyFactor1D ( N , xmin , xmax    )
   , m_2exp     ( alpha , delta , x0 )
 {}
 // ============================================================================
@@ -2815,7 +2894,7 @@ Ostap::Math::TwoExpoPositive::TwoExpoPositive
   const double               x0    ,
   const double               xmin  , 
   const double               xmax  ) 
-  : m_positive ( pars  , xmin  , xmax )
+  : Ostap::Math::PolyFactor1D ( pars  , xmin  , xmax )
   , m_2exp     ( alpha , delta , x0   )
 {}
 // ============================================================================
@@ -2824,21 +2903,21 @@ Ostap::Math::TwoExpoPositive::TwoExpoPositive
   const double                 alpha , 
   const double                 delta , 
   const double                 x0    ) 
-  : m_positive ( poly                 )
+  : Ostap::Math::PolyFactor1D ( poly                 )
   , m_2exp     ( alpha , delta , x0   )
 {}
 // ============================================================================
 Ostap::Math::TwoExpoPositive::TwoExpoPositive  
 ( const Ostap::Math::Positive& poly   , 
   const Ostap::Math::TwoExpos& expos  ) 
-  : m_positive ( poly  )
+  : Ostap::Math::PolyFactor1D ( poly                 )
   , m_2exp     ( expos )
 {}
 // ============================================================================
 Ostap::Math::TwoExpoPositive::TwoExpoPositive  
 ( const Ostap::Math::TwoExpos& expos  , 
   const Ostap::Math::Positive& poly   )
-  : m_positive ( poly  )
+  : Ostap::Math::PolyFactor1D ( poly                 )
   , m_2exp     ( expos )
 {}
 // ============================================================================
@@ -2886,10 +2965,29 @@ std::size_t Ostap::Math::TwoExpoPositive::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_positive.tag () , m_2exp.tag () ) ; 
 }
 // ============================================================================
-
-
-
-
+// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+// ============================================================================
+double Ostap::Math::TwoExpoPositive::min_value () const 
+{
+  if ( xmin() < x0 ()   ) { return 0 ; } 
+  const double p1 = m_positive.min_value () ;
+  const double p2 = std::min ( m_2exp ( xmin () ) , m_2exp ( xmax() ) ) ;
+  return p1 * p2 ;
+}
+// ============================================================================
+// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+// ============================================================================
+double Ostap::Math::TwoExpoPositive::max_value () const
+{
+  const double p1 = m_positive.max_value () ;
+  //
+  const double emode = m_2exp.mode() ;
+  const double p2    =
+    xmin () <= emode && emode <= xmax () ? m_2exp.mode() :
+    std::max ( m_2exp ( xmin () ) , m_2exp ( xmax () ) ) ;
+  //
+  return p1 * p2 ;
+}
 
 // ============================================================================
 // Tsallis function 

@@ -1657,6 +1657,109 @@ namespace Ostap
       // ======================================================================
     }
     // ========================================================================
+    /** @class PolyFactor1D 
+     *  Helper base class to represent the (positive) polynomial factor
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch 
+     */
+    class PolyFactor1D
+    {
+    public :
+      // ======================================================================
+      /// constructor from the positive polynomial
+      PolyFactor1D ( const Ostap::Math::Positive& positive) ;
+      /// constructor from degree & edges 
+      PolyFactor1D
+      ( const unsigned short        N     =  1 ,
+        const double                xmin  =  0 ,
+        const double                xmax  =  1 ) ;
+      /** constructor from N parameters/phases 
+       *  @param phases  list of parameters/phase 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
+      PolyFactor1D
+      ( const std::vector<double>&  phases     ,
+        const double                xmin  =  0 ,
+        const double                xmax  =  1 ) ;
+      // =======================================================================
+      /** constructor from the sequence of   parameters 
+       *  @param begin  start-iterator for sequence of coefficients 
+       *  @param end     start-iterator for sequence of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
+      template<typename ITERATOR,
+               typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+               typename std::enable_if<std::is_convertible<value_type,long double>::value,bool>::type = true >
+      PolyFactor1D
+      ( ITERATOR     begin    , 
+        ITERATOR     end      , 
+        const double xmin = 0 ,
+        const double xmax = 1 ) 
+	: m_positive ( begin , end , xmin , xmax )
+      {} ;
+      // ======================================================================
+    public: // basic accessors to polynomial 
+      // ======================================================================
+      /// lower edge 
+      inline double xmin () const { return m_positive.xmin() ; }
+      /// uppper edge 
+      inline double xmax () const { return m_positive.xmax() ; }
+      /// dimension
+      inline unsigned short dim     () const { return m_positive.dim    () ; }
+      /// degree
+      inline unsigned short degree  () const { return m_positive.degree () ; }
+      /// get number of polinomial parameters
+      inline std::size_t    npars   () const { return m_positive.npars() ; }
+      /// set k-parameter
+      inline bool           setPar
+      ( const unsigned short k     ,
+	const double         value )
+      { return m_positive.setPar ( k , value ) ; }
+      /// set k-parameter
+      inline bool   setParameter
+      ( const unsigned short k     ,
+	const double         value )
+      { return setPar   ( k , value ) ; }
+      /// get the parameter value
+      inline double par
+      ( const unsigned short k ) const
+      { return m_positive.par ( k ) ; }
+      /// get the parameter value
+      inline double parameter
+      ( const unsigned short k ) const { return par ( k ) ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// transform variables: t -> x 
+      inline double x ( const double t ) const { return m_positive. x ( t )  ; }
+      /// transform variables: x -> t 
+      inline double t ( const double x ) const { return m_positive. t ( x )  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the underlyong positive polynomial 
+      const Ostap::Math::Positive& positive   () const { return m_positive ; }
+      /// get the underlyong positive polynomial 
+      const Ostap::Math::Positive& polynomial () const { return m_positive ; }
+      /// get the underlyong positive polynomial 
+      const Ostap::Math::Positive& polynom    () const { return m_positive ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// swap two poly-factors
+      void swap ( PolyFactor1D& other ) ;
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// the positive polynomial 
+      Ostap::Math::Positive m_positive {} ; //          the positive polynomial 
+      // ======================================================================
+    }; //                              The end of class Ostap::Math::PolyFactor 
+    // ========================================================================
+    /// Swapping poly-factors 
+    inline void swap ( PolyFactor1D&  a , PolyFactor1D&b ) { a.swap ( b ) ; }
+    // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
 } //                                                 The end of namespace Ostap

@@ -34,6 +34,7 @@
 #include "local_hash.h"
 #include "Integrator1D.h"
 #include "Integrator2D.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes  from  file Ostap/Models2D.h
@@ -138,9 +139,9 @@ Ostap::Math::PS2DPol::PS2DPol
   const Ostap::Math::PhaseSpaceNL&   psy  , 
   const unsigned short               Nx   ,
   const unsigned short               Ny   )
-  : m_positive ( Nx, Ny , 
-                 psx.lowEdge() , psx.highEdge() , 
-                 psy.lowEdge() , psy.highEdge() )
+  : Ostap::Math::PolyFactor2D ( Nx, Ny , 
+				psx.lowEdge() , psx.highEdge() , 
+				psy.lowEdge() , psy.highEdge() )
   , m_psx  ( psx   ) 
   , m_psy  ( psy   )
 {}
@@ -156,12 +157,11 @@ Ostap::Math::PS2DPol::PS2DPol
   const double                       xmax , 
   const double                       ymin , 
   const double                       ymax )
-  : m_positive ( Nx , 
-                 Ny , 
-                 std::max ( psx. lowEdge () , std::min ( xmin , xmax ) ) , 
-                 std::min ( psx.highEdge () , std::max ( xmin , xmax ) ) , 
-                 std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
-                 std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) ) 
+  : Ostap::Math::PolyFactor2D ( Nx, Ny , 
+				std::max ( psx. lowEdge () , std::min ( xmin , xmax ) ) , 
+				std::min ( psx.highEdge () , std::max ( xmin , xmax ) ) , 
+				std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
+				std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) ) 
   , m_psx  ( psx   ) 
   , m_psy  ( psy   )
 {}
@@ -170,29 +170,33 @@ Ostap::Math::PS2DPol::PS2DPol
 ( const Ostap::Math::Positive2D& pol ,
   const PhaseSpaceNL&            psx ,
   const PhaseSpaceNL&            psy ) 
-  : m_positive ( pol ) 
+  : Ostap::Math::PolyFactor2D ( pol ) 
   , m_psx  ( psx   ) 
   , m_psy  ( psy   )
 {
   Ostap::Assert ( m_psx.lowEdge   () < m_positive.xmax () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPol" ) ;
+                  "Ostap::Math::PS2DPol" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
   Ostap::Assert ( m_positive.xmin () < m_psx.highEdge() , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPol" ) ;
+                  "Ostap::Math::PS2DPol" , 
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   Ostap::Assert ( m_psy.lowEdge   () < m_positive.ymax () , 
                   "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
-                  "Ostap::Math::PS2DPol" ) ;
+                  "Ostap::Math::PS2DPol" , 
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   Ostap::Assert ( m_positive.ymin () < m_psy.highEdge() , 
                   "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
-                  "Ostap::Math::PS2DPol" ) ;
+                  "Ostap::Math::PS2DPol" , 
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
 }
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::PS2DPol::operator () 
-  ( const double x , 
-    const double y ) const 
+double Ostap::Math::PS2DPol::evaluate 
+( const double x , 
+  const double y ) const 
 {
   //
   if      ( x < m_psx. lowEdge() || x < m_positive.xmin () ) { return 0 ; }
@@ -336,20 +340,13 @@ std::size_t Ostap::Math::PS2DPol::tag () const
 // ============================================================================
 
 
-
-
-
-
-
-
-
 // ===========================================================================
 // constructor from the order
 // ===========================================================================
 Ostap::Math::PS2DPolSym::PS2DPolSym
 ( const Ostap::Math::PhaseSpaceNL&   ps   , 
-  const unsigned short               N    ) 
-  : m_positive ( N, ps.lowEdge() , ps.highEdge() )
+  const unsigned short               N    )
+  : Ostap::Math::PolyFactor2DSym ( N, ps.lowEdge() , ps.highEdge() )
   , m_ps ( ps ) 
 {}
 // ===========================================================================
@@ -360,31 +357,34 @@ Ostap::Math::PS2DPolSym::PS2DPolSym
   const unsigned short               N    ,
   const double                       xmin , 
   const double                       xmax )
-  : m_positive ( N  , 
-                 std::max ( ps. lowEdge () , std::min ( xmin , xmax ) ) , 
-                 std::min ( ps.highEdge () , std::max ( xmin , xmax ) ) ) 
+  : Ostap::Math::PolyFactor2DSym
+    ( N  , 
+      std::max ( ps. lowEdge () , std::min ( xmin , xmax ) ) , 
+      std::min ( ps.highEdge () , std::max ( xmin , xmax ) ) ) 
   , m_ps   ( ps   ) 
 {}
 // ===========================================================================
 Ostap::Math::PS2DPolSym::PS2DPolSym
 ( const Ostap::Math::Positive2DSym& pol ,
   const PhaseSpaceNL&               ps  ) 
-  : m_positive ( pol ) 
+  : Ostap::Math::PolyFactor2DSym ( pol ) 
   , m_ps       ( ps   ) 
 {
   Ostap::Assert ( m_ps.lowEdge    () < m_positive.xmax () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPolSym" ) ;
+                  "Ostap::Math::PS2DPolSym"    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   Ostap::Assert ( m_positive.xmin () < m_ps.highEdge   () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPolSym" ) ;
+                  "Ostap::Math::PS2DPolSym"    , 
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
 }
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::PS2DPolSym::operator () 
-  ( const double x , 
-    const double y ) const 
+double Ostap::Math::PS2DPolSym::evaluate 
+( const double x , 
+  const double y ) const 
 {
   //
   if      ( x < m_ps. lowEdge() || x < m_positive.xmin () ) { return 0 ; }
@@ -507,9 +507,9 @@ Ostap::Math::PS2DPol2::PS2DPol2
   const double                       mmax ,
   const unsigned short               Nx   ,
   const unsigned short               Ny   )
-  : m_positive ( Nx, Ny , 
-                 psx.lowEdge () , psx.highEdge () , 
-                 psy.lowEdge () , psy.highEdge () )
+  : Ostap::Math::PolyFactor2D ( Nx, Ny , 
+				psx.lowEdge () , psx.highEdge () , 
+				psy.lowEdge () , psy.highEdge () )
   , m_psx     ( psx                                        )
   , m_psy     ( psy                                        )
   , m_mmax    ( psx.lowEdge  () + psy.lowEdge  () < mmax ? 
@@ -531,12 +531,12 @@ Ostap::Math::PS2DPol2::PS2DPol2
   const double                       xmax , 
   const double                       ymin , 
   const double                       ymax )
-  : m_positive ( Nx , 
-                 Ny , 
-                 std::max ( psx. lowEdge () , std::min ( xmin , xmax ) ) , 
-                 std::min ( psx.highEdge () , std::max ( xmin , xmax ) ) , 
-                 std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
-                 std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) ) 
+  : Ostap::Math::PolyFactor2D ( Nx , 
+				Ny , 
+				std::max ( psx. lowEdge () , std::min ( xmin , xmax ) ) , 
+				std::min ( psx.highEdge () , std::max ( xmin , xmax ) ) , 
+				std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
+				std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) ) 
   , m_psx  ( psx   ) 
   , m_psy  ( psy   )
   , m_mmax ( psx.lowEdge() + psy.lowEdge() < mmax ? mmax : psx.highEdge() + psy.highEdge() )
@@ -548,8 +548,8 @@ Ostap::Math::PS2DPol2::PS2DPol2
 ( const Ostap::Math::Positive2D& pol  ,
   const PhaseSpaceNL&            psx  ,
   const PhaseSpaceNL&            psy  , 
-  const double                   mmax ) 
-  : m_positive ( pol ) 
+  const double                   mmax )
+  : Ostap::Math::PolyFactor2D ( pol ) 
   , m_psx  ( psx   ) 
   , m_psy  ( psy   )
   , m_mmax ( psx.lowEdge() + psy.lowEdge() < mmax ? mmax : psx.highEdge() + psy.highEdge() )
@@ -558,23 +558,27 @@ Ostap::Math::PS2DPol2::PS2DPol2
 {
   Ostap::Assert ( m_psx.lowEdge   () < m_positive.xmax () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPol2" ) ;
+                  "Ostap::Math::PS2DPol2" , 
+  		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
   Ostap::Assert ( m_positive.xmin () < m_psx.highEdge() , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPol2" ) ;
+                  "Ostap::Math::PS2DPol2" , 
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
   Ostap::Assert ( m_psy.lowEdge   () < m_positive.ymax () , 
                   "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
-                  "Ostap::Math::PS2DPol2" ) ;
+                  "Ostap::Math::PS2DPol2" , 
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
   Ostap::Assert ( m_positive.ymin () < m_psy.highEdge() , 
                   "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
-                  "Ostap::Math::PS2DPol2" ) ;
+                  "Ostap::Math::PS2DPol2" , 
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
 }
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::PS2DPol2::operator () 
-  ( const double x , 
-    const double y ) const 
+double Ostap::Math::PS2DPol2::evaluate 
+( const double x , 
+  const double y ) const 
 {
   //
   if      ( x < m_psx. lowEdge() || x < m_positive.xmin () ) { return 0 ; }
@@ -727,7 +731,7 @@ Ostap::Math::PS2DPol2Sym::PS2DPol2Sym
 ( const Ostap::Math::PhaseSpaceNL&   ps   , 
   const double                       mmax ,  
   const unsigned short               N    ) 
-  : m_positive ( N, ps.lowEdge() , ps.highEdge() )
+  : Ostap::Math::PolyFactor2DSym ( N, ps.lowEdge() , ps.highEdge() )
   , m_ps      ( ps ) 
   , m_mmax    ( 2 * ps.lowEdge() < mmax ? mmax : 2 * ps.highEdge()   )
   , m_psx_aux ( ps.lowEdge() , ps.highEdge() , ps.L () , ps.N () - 1 ) 
@@ -742,9 +746,9 @@ Ostap::Math::PS2DPol2Sym::PS2DPol2Sym
   const unsigned short               N    ,
   const double                       xmin , 
   const double                       xmax )
-  : m_positive ( N  , 
-                 std::max ( ps. lowEdge () , std::min ( xmin , xmax ) ) , 
-                 std::min ( ps.highEdge () , std::max ( xmin , xmax ) ) ) 
+  : Ostap::Math::PolyFactor2DSym ( N ,
+				   std::max ( ps. lowEdge () , std::min ( xmin , xmax ) ) , 
+				   std::min ( ps.highEdge () , std::max ( xmin , xmax ) ) ) 
   , m_ps      ( ps   ) 
   , m_mmax    ( 2 * ps.lowEdge() < mmax ? mmax : 2 * ps.highEdge()   )
   , m_psx_aux ( ps.lowEdge() , ps.highEdge() , ps.L () , ps.N () - 1 ) 
@@ -755,7 +759,7 @@ Ostap::Math::PS2DPol2Sym::PS2DPol2Sym
 ( const Ostap::Math::Positive2DSym& pol ,
   const PhaseSpaceNL&               ps  , 
   const double                      mmax )
-  : m_positive ( pol ) 
+  : Ostap::Math::PolyFactor2DSym ( pol ) 
   , m_ps       ( ps   ) 
   , m_mmax    ( 2 * ps.lowEdge() < mmax ? mmax : 2 * ps.highEdge()   )
   , m_psx_aux ( ps.lowEdge() , ps.highEdge() , ps.L () , ps.N () - 1 ) 
@@ -763,17 +767,19 @@ Ostap::Math::PS2DPol2Sym::PS2DPol2Sym
 {
   Ostap::Assert ( m_ps.lowEdge    () < m_positive.xmax () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPol2Sym" ) ;
+                  "Ostap::Math::PS2DPol2Sym"   , 
+  		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
   Ostap::Assert ( m_positive.xmin () < m_ps.highEdge   () , 
                   "Invalid setting of lowEdge/highEdge/xmin/xmax"   ,
-                  "Ostap::Math::PS2DPol2Sym" ) ;
+                  "Ostap::Math::PS2DPol2Sym"   , 
+  		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
 }
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::PS2DPol2Sym::operator () 
-  ( const double x , 
-    const double y ) const 
+double Ostap::Math::PS2DPol2Sym::evaluate 
+( const double x , 
+  const double y ) const 
 {
   //
   if      ( x < m_ps. lowEdge() || x < m_positive.xmin () ) { return 0 ; }
@@ -883,12 +889,6 @@ std::size_t Ostap::Math::PS2DPol2Sym::tag () const
 
 
 
-
-
-
-
-
-
 // ===========================================================================
 // constructor from the order
 // ===========================================================================
@@ -969,9 +969,9 @@ std::vector<double> Ostap::Math::PS2DPol3::pars() const
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::PS2DPol3::operator () 
-  ( const double x , 
-    const double y ) const 
+double Ostap::Math::PS2DPol3::evaluate 
+( const double x , 
+  const double y ) const 
 {
   //
   if      ( x < xmin () || x > xmax() ) {  return 0 ; }
@@ -1145,9 +1145,9 @@ Ostap::Math::PS2DPol3Sym::PS2DPol3Sym
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::PS2DPol3Sym::operator () 
-  ( const double x , 
-    const double y ) const 
+double Ostap::Math::PS2DPol3Sym::evaluate 
+( const double x , 
+  const double y ) const 
 {
   //
   if      ( x < xmin () || x > xmax () ) { return 0 ; }
@@ -1264,10 +1264,11 @@ Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
   const unsigned short               Nx   ,
   const unsigned short               Ny   ,
   const double                       tau  )      
-  : m_positive ( Nx , 
-                 Ny , 
-                 std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
-                 psy.lowEdge()            , psy.highEdge()           )
+  : Ostap::Math::PolyFactor2D
+    ( Nx , 
+      Ny , 
+      std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
+      psy.lowEdge()            , psy.highEdge()           )
   , m_psy ( psy )
   , m_tau ( tau ) 
 {}
@@ -1283,11 +1284,12 @@ Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
   const double                       ymin , 
   const double                       ymax ,
   const double                       tau  )      
-  : m_positive ( Nx , 
-                 Ny , 
-                 std::min ( xmin , xmax )   , std::max ( xmin , xmax ) ,
-                 std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
-                 std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) )
+  : Ostap::Math::PolyFactor2D 
+    ( Nx , 
+      Ny , 
+      std::min ( xmin , xmax )   , std::max ( xmin , xmax ) ,
+      std::max ( psy. lowEdge () , std::min ( ymin , ymax ) ) , 
+      std::min ( psy.highEdge () , std::max ( ymin , ymax ) ) )
   , m_psy ( psy )
   , m_tau ( tau ) 
 {}
@@ -1298,16 +1300,18 @@ Ostap::Math::ExpoPS2DPol::ExpoPS2DPol
 ( const Ostap::Math::Positive2D&   pol , 
   const Ostap::Math::PhaseSpaceNL& psy ,        
   const double                     tau ) 
-  : m_positive ( pol ) 
+  : Ostap::Math::PolyFactor2D ( pol ) 
   , m_psy ( psy )
   , m_tau ( tau ) 
 {
   Ostap::Assert ( m_psy.lowEdge   () < m_positive.ymax () , 
                   "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
-                  "Ostap::Math::ExpoPS2DPol" ) ;
+                  "Ostap::Math::ExpoPS2DPol"   , 
+    		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
   Ostap::Assert ( m_positive.ymin () < m_psy.highEdge() , 
                   "Invalid setting of lowEdge/highEdge/ymin/ymax"   ,
-                  "Ostap::Math::ExpoPS2DPol" ) ;
+                  "Ostap::Math::ExpoPS2DPol"   , 
+  		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
 }
 // ============================================================================
 // set tau-parameter
@@ -1324,9 +1328,9 @@ bool Ostap::Math::ExpoPS2DPol::setTau ( const double value )
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::ExpoPS2DPol::operator () 
-  ( const double x , 
-    const double y ) const 
+double Ostap::Math::ExpoPS2DPol::evaluate 
+( const double x , 
+  const double y ) const 
 {
   //
   if      ( x < m_positive.xmin () || x > m_positive.xmax () ) { return 0 ; }
@@ -1481,9 +1485,10 @@ Ostap::Math::Expo2DPol::Expo2DPol
   const unsigned short               Ny   ,
   const double                       taux ,
   const double                       tauy )
-  : m_positive ( Nx , Ny , 
-                 std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
-                 std::min ( ymin , ymax ) , std::max ( ymin , ymax ) ) 
+  : Ostap::Math::PolyFactor2D
+    ( Nx , Ny , 
+      std::min ( xmin , xmax ) , std::max ( xmin , xmax ) ,
+      std::min ( ymin , ymax ) , std::max ( ymin , ymax ) ) 
   , m_tauX ( taux ) 
   , m_tauY ( tauy )
 {}
@@ -1494,7 +1499,7 @@ Ostap::Math::Expo2DPol::Expo2DPol
 ( const Ostap::Math::Positive2D& pol  , 
   const double                   taux ,
   const double                   tauy ) 
-  : m_positive ( pol  ) 
+  : Ostap::Math::PolyFactor2D ( pol ) 
   , m_tauX     ( taux ) 
   , m_tauY     ( tauy )
 {}
@@ -1525,8 +1530,9 @@ bool Ostap::Math::Expo2DPol::setTauY ( const double value )
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::Expo2DPol::operator () 
-  ( const double x , const double y ) const 
+double Ostap::Math::Expo2DPol::evaluate  
+( const double x ,
+  const double y ) const 
 {
   //
   if      ( x < m_positive.xmin () || x > m_positive.xmax () ) { return 0 ; }
@@ -1674,7 +1680,8 @@ Ostap::Math::Expo2DPolSym::Expo2DPolSym
   const double                       xmax , 
   const unsigned short               N    ,
   const double                       tau  )      
-  : m_positive ( N , std::min ( xmin , xmax ) , std::max ( xmin , xmax ) )
+  : Ostap::Math::PolyFactor2DSym
+    ( N , std::min ( xmin , xmax ) , std::max ( xmin , xmax ) )
   , m_tau ( tau ) 
 {}
 // ===========================================================================
@@ -1683,7 +1690,7 @@ Ostap::Math::Expo2DPolSym::Expo2DPolSym
 Ostap::Math::Expo2DPolSym::Expo2DPolSym
 ( const Ostap::Math::Positive2DSym& pol , 
   const double                      tau ) 
-  : m_positive ( pol ) 
+  : Ostap::Math::PolyFactor2DSym ( pol ) 
   , m_tau      ( tau )
 {}
 // ===========================================================================
@@ -1701,8 +1708,9 @@ bool Ostap::Math::Expo2DPolSym::setTau ( const double value )
 // ===========================================================================
 // get the value
 // ===========================================================================
-double Ostap::Math::Expo2DPolSym::operator () 
-  ( const double x , const double y ) const 
+double Ostap::Math::Expo2DPolSym::evaluate 
+( const double x ,
+  const double y ) const 
 {
   //
   if      ( x < m_positive.xmin () || x > m_positive.xmax () ) { return 0 ; }

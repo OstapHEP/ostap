@@ -45,7 +45,7 @@ namespace Ostap
      *  @see Ostap::Math::PhaseSpaceNL 
      *  @see Ostap::Math::Positive2D
      */
-    class  PS2DPol
+    class  PS2DPol : public Ostap::Math::PolyFactor2D 
     {
       // ======================================================================
     public:
@@ -54,8 +54,8 @@ namespace Ostap
       PS2DPol
       ( const PhaseSpaceNL&   psx  = PhaseSpaceNL () ,
         const PhaseSpaceNL&   psy  = PhaseSpaceNL () ,
-        const unsigned short  Nx   =   1 ,
-        const unsigned short  Ny   =   1 ) ;
+        const unsigned short  Nx   = 1               ,
+        const unsigned short  Ny   = 1               ) ;
       /// constructor from the order
       PS2DPol
       ( const PhaseSpaceNL&   psx        ,
@@ -76,35 +76,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get parameters/phases 
-      const std::vector<double>& pars() const { return m_positive.pars() ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double xmin () const { return m_positive.xmin () ; }
-      double xmax () const { return m_positive.xmax () ; }
-      double ymin () const { return m_positive.ymin () ; }
-      double ymax () const { return m_positive.ymax () ; }
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; } 
+      /// get the value      
+      double evaluate
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -149,8 +127,6 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL& psY         () const { return m_psy      ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceX () const { return psX ()     ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY ()     ; }
-      const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
     public:
       // ====================================== ===============================
@@ -160,14 +136,13 @@ namespace Ostap
     private: // helper function to make the calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate
+      ( const std::vector<double>& fx , 
+	const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2D   m_positive ; // the actual bernstein polynomial
-      /// Phase space
+      /// Phase space factors 
       Ostap::Math::PhaseSpaceNL m_psx      ;
       Ostap::Math::PhaseSpaceNL m_psy      ;
       // ====================================================================== 
@@ -199,7 +174,7 @@ namespace Ostap
      *  @see Ostap::Math::Positive2DSym
      *  @see Ostap::Math::PS2DPol
      */
-    class  PS2DPolSym
+    class  PS2DPolSym : public Ostap::Math::PolyFactor2DSym
     {
       // ======================================================================
     public:
@@ -214,7 +189,6 @@ namespace Ostap
         const unsigned short  N          ,
         const double          xmin       ,
         const double          xmax       ) ;
-      // ======================================================================
       /// constructor from the polynomial and phase spaces
       PS2DPolSym 
       ( const Ostap::Math::Positive2DSym& pol ,
@@ -223,35 +197,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get parameters/phases 
-      const std::vector<double>& pars() const { return m_positive.pars() ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double xmin () const { return m_positive.xmin () ; }
-      double xmax () const { return m_positive.xmax () ; }
-      double ymin () const { return m_positive.ymin () ; }
-      double ymax () const { return m_positive.ymax () ; }
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; }
+      /// get the value
+      double evaluate 
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -296,8 +248,6 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL&  psY         () const { return m_ps       ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceX () const { return psX()      ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY()      ; }
-      const Ostap::Math::Positive2DSym& positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2DSym& polynom     () const { return m_positive ; }
       // ====================================== ===============================
     public:
       // ====================================== ===============================
@@ -307,15 +257,14 @@ namespace Ostap
     private: // helper functions to make the calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate
+      ( const std::vector<double>& fx , 
+	const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2DSym m_positive ; // the actual bernstein polynomial
-      /// Phase space
-      Ostap::Math::PhaseSpaceNL m_ps        ;
+      /// Phase space factor 
+      Ostap::Math::PhaseSpaceNL m_ps        ;  // Phase space factor 
       // ======================================================================
     private:
       // ======================================================================
@@ -345,7 +294,7 @@ namespace Ostap
      *  @see Ostap::Math::PhaseSpaceNL 
      *  @see Ostap::Math::Positive2D
      */
-    class  PS2DPol2
+    class  PS2DPol2 : public Ostap::Math::PolyFactor2D
     {
       // ======================================================================
     public:
@@ -379,37 +328,19 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; } 
+      /// get the value
+      double evaluate
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
-    public:
+    public :
       // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get parameters/phases 
-      const std::vector<double>& pars() const { return m_positive.pars() ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double xmin () const { return m_positive.xmin () ; }
-      double xmax () const { return m_positive.xmax () ; }
-      double ymin () const { return m_positive.ymin () ; }
-      double ymax () const { return m_positive.ymax () ; }
-      double mmax () const { return m_mmax             ; }
-      // ======================================================================
+      /// gett the maximal value for m(x) + m(y) 
+      inline double mmax () const { return m_mmax ; }  
+      // ====================================== ===============================      
     public:
       // ======================================================================
       /** get the integral over 2D-region
@@ -453,8 +384,6 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL& psY         () const { return m_psy      ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceX () const { return psX ()     ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY ()     ; }
-      const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
     public:
       // ====================================== ===============================
@@ -463,9 +392,7 @@ namespace Ostap
       // ====================================== ===============================
     private:
       // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2D   m_positive ; // the actual bernstein polynomial
-      /// Phase space
+      /// Phase space factors 
       Ostap::Math::PhaseSpaceNL m_psx      ;
       Ostap::Math::PhaseSpaceNL m_psy      ;
       /// Max-mass 
@@ -508,7 +435,7 @@ namespace Ostap
      *  @see Ostap::Math::Positive2DSym
      *  @see Ostap::Math::PS2DPol2
      */
-    class  PS2DPol2Sym
+    class  PS2DPol2Sym : public Ostap::Math::PolyFactor2DSym
     {
       // ======================================================================
     public:
@@ -535,37 +462,19 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; }
+      /// get the value
+      double evaluate
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
-    public:
+    public :
       // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get parameters/phases 
-      const std::vector<double>& pars() const { return m_positive.pars() ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double xmin () const { return m_positive.xmin () ; }
-      double xmax () const { return m_positive.xmax () ; }
-      double ymin () const { return m_positive.ymin () ; }
-      double ymax () const { return m_positive.ymax () ; }
-      double mmax () const { return m_mmax             ; }
-      // ======================================================================
+      /// gett the maximal value for m(x) + m(y) 
+      inline double mmax () const { return m_mmax ; }  
+      // ====================================== ===============================      
     public:
       // ======================================================================
       /** get the integral over 2D-region
@@ -609,8 +518,6 @@ namespace Ostap
       const Ostap::Math::PhaseSpaceNL&  psY         () const { return m_ps       ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceX () const { return psX()      ; }
       const Ostap::Math::PhaseSpaceNL&  phasespaceY () const { return psY()      ; }
-      const Ostap::Math::Positive2DSym& positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2DSym& polynom     () const { return m_positive ; }
       // ====================================== ===============================
     public:
       // ====================================== ===============================
@@ -619,8 +526,6 @@ namespace Ostap
       // ====================================== ===============================
     private:
       // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2DSym m_positive ; // the actual bernstein polynomial
       /// Phase space
       Ostap::Math::PhaseSpaceNL m_ps        ;
       // ======================================================================
@@ -658,7 +563,7 @@ namespace Ostap
      *    for mass of \f$i\f$-particles from \f$j\f$-body decays
      *  - \f$\Phi^{(N)}_{i,j}(z;z_{low},z_{high}\f$ are normalized phase space functions
      *    for mass of \f$i\f$-particles from \f$j\f$-body decays, modulated by
-     *    1D positive benrstein polynomial of degree \f$N\f$
+     *    1D positive bernstein polynomial of degree \f$N\f$
      *  - \f$m_{max}\f$ is a maximal allowed mass for \f$x+y\f$
      *  
      *  @see Ostap::Math::PhaseSpacePol
@@ -666,7 +571,7 @@ namespace Ostap
      *  @see Ostap::Math::Positive1D
      *  @see Ostap::Math::PS2DPol2
      */
-    class  PS2DPol3
+    class  PS2DPol3 
     {
       // ======================================================================
     public:
@@ -698,14 +603,20 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; } 
+      /// get the value
+      double evaluate
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_psx.npars () + m_psy.npars() ; }
+      inline std::size_t npars () const { return m_psx.npars () + m_psy.npars() ; }
       /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
+      inline bool setPar       ( const unsigned int k , const double value )
       { 
         const unsigned int npx = m_psx.npars() ;
         return 
@@ -714,10 +625,10 @@ namespace Ostap
           m_psy.setPar ( k - npx , value ) ;
       }
       /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
+      inline bool setParameter ( const unsigned int k , const double value )
       { return setPar   ( k , value ) ; }
       /// get the parameter value
-      double  par       ( const unsigned int k ) const
+      inline double  par       ( const unsigned int k ) const
       {
         const unsigned int npx = m_psx.npars() ;
         return 
@@ -726,7 +637,7 @@ namespace Ostap
           m_psy.par ( k - npx ) ;
       }
       /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      inline double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get parameters/phases 
       std::vector<double> pars() const ;
       /// x-parameters 
@@ -734,16 +645,16 @@ namespace Ostap
       /// y-parameters 
       // const std::vector<double>& ypars() const { return m_psy.pars() ; }      
       /// get nX & nY
-      unsigned short nX () const { return m_psx.n () ; }
-      unsigned short nY () const { return m_psy.n () ; }
+      inline unsigned short nX () const { return m_psx.degree () ; }
+      inline unsigned short nY () const { return m_psy.degree () ; }
       // ======================================================================
     public:
       // ======================================================================
-      double xmin () const { return m_psx.xmin () ; }
-      double xmax () const { return m_psx.xmax () ; }
-      double ymin () const { return m_psy.xmin () ; }
-      double ymax () const { return m_psy.xmax () ; }
-      double mmax () const { return m_mmax        ; }
+      inline double xmin () const { return m_psx.xmin () ; }
+      inline double xmax () const { return m_psx.xmax () ; }
+      inline double ymin () const { return m_psy.xmin () ; }
+      inline double ymax () const { return m_psy.xmax () ; }
+      inline double mmax () const { return m_mmax        ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -865,43 +776,49 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; }
+      /// get the value
+      double evaluate
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_ps.npars ()  ; }
+      inline std::size_t npars () const { return m_ps.npars ()  ; }
       /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
+      inline bool setPar       ( const unsigned int k , const double value )
       { 
         const unsigned int np = m_ps.npars() ;
         return k < np ? m_ps.setPar ( k , value ) : m_ps.setPar ( k - np , value ) ;
       }
       /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
+      inline bool setParameter ( const unsigned int k , const double value )
       { return setPar   ( k , value ) ; }
       /// get the parameter value
-      double  par       ( const unsigned int k ) const
+      inline double  par       ( const unsigned int k ) const
       {
         const unsigned int np = m_ps.npars() ;
         return k < np ? m_ps.par ( k  ) : m_ps.par ( k - np ) ;
       }
       /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      inline double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get parameters/phases 
       // const std::vector<double>& pars () const { return m_ps.pars() ; }
       /// get nX & nY
-      unsigned short n  () const { return m_ps.n () ; }
-      unsigned short nX () const { return m_ps.n () ; }
-      unsigned short nY () const { return m_ps.n () ; }
+      inline unsigned short n  () const { return m_ps.degree () ; }
+      inline unsigned short nX () const { return m_ps.degree () ; }
+      inline unsigned short nY () const { return m_ps.degree () ; }
       // ======================================================================
     public:
       // ======================================================================
-      double xmin () const { return m_ps.xmin () ; }
-      double xmax () const { return m_ps.xmax () ; }
-      double ymin () const { return m_ps.xmin () ; }
-      double ymax () const { return m_ps.xmax () ; }
-      double mmax () const { return m_mmax       ; }
+      inline double xmin () const { return m_ps.xmin () ; }
+      inline double xmax () const { return m_ps.xmax () ; }
+      inline double ymin () const { return m_ps.xmin () ; }
+      inline double ymax () const { return m_ps.xmax () ; }
+      inline double mmax () const { return m_mmax       ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -978,7 +895,7 @@ namespace Ostap
      *  \f$Ps\f$ denotes phase-space function and
      * \f$P_{pos}\f$ denotes the positive polynomial
      */
-    class  ExpoPS2DPol
+    class  ExpoPS2DPol : public Ostap::Math::PolyFactor2D 
     {
       // ======================================================================
     public:
@@ -1010,38 +927,44 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; } 
+      /// get the value
+      double evaluate 
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
+      inline std::size_t npars () const { return m_positive.npars () ; }
       /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
+      inline  bool setPar       ( const unsigned int k , const double value )
       { return m_positive.setPar ( k , value ) ;}
       /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
+      inline bool setParameter ( const unsigned int k , const double value )
       { return setPar   ( k , value ) ; }
       /// get the parameter value
-      double  par       ( const unsigned int k ) const
+      inline double  par       ( const unsigned int k ) const
       { return m_positive.par ( k ) ; }
       /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      inline double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
+      inline unsigned short nX () const { return m_positive.nX () ; }
+      inline unsigned short nY () const { return m_positive.nY () ; }
       // ======================================================================
     public:
       // ======================================================================
-      double xmin () const { return m_positive.xmin () ; }
-      double xmax () const { return m_positive.xmax () ; }
-      double ymin () const { return m_positive.ymin () ; }
-      double ymax () const { return m_positive.ymax () ; }
+      inline double xmin () const { return m_positive.xmin () ; }
+      inline double xmax () const { return m_positive.xmax () ; }
+      inline double ymin () const { return m_positive.ymin () ; }
+      inline double ymax () const { return m_positive.ymax () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get tau
-      double         tau () const { return m_tau ;}
+      inline double  tau () const { return m_tau ;}
       /// set tau
       bool           setTau ( const double val ) ;
       // ======================================================================
@@ -1086,8 +1009,6 @@ namespace Ostap
       // ======================================================================
       const Ostap::Math::PhaseSpaceNL& psY         () const { return m_psy      ; }
       const Ostap::Math::PhaseSpaceNL& phasespaceY () const { return psY ()     ; }
-      const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
       // ====================================== ===============================
     public:
       // ====================================== ===============================
@@ -1097,13 +1018,12 @@ namespace Ostap
     private: // helper function to make the calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate
+      ( const std::vector<double>& fx , 
+	const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2D   m_positive ; // the actual bernstein polynomial
       /// Phase space
       Ostap::Math::PhaseSpaceNL m_psy      ;
       /// exponential
@@ -1121,7 +1041,7 @@ namespace Ostap
      *  \f$ f(x,y) = exp(x)*expo(y)*P_{pos}(x,y) \f$, where
      * \f$P_{pos}\f$ denotes the positive polynomial
      */
-    class  Expo2DPol
+    class  Expo2DPol : public Ostap::Math::PolyFactor2D 
     {
       // ======================================================================
     public:
@@ -1145,39 +1065,19 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get nX & nY
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double xmin () const { return m_positive.xmin () ; }
-      double xmax () const { return m_positive.xmax () ; }
-      double ymin () const { return m_positive.ymin () ; }
-      double ymax () const { return m_positive.ymax () ; }
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; }
+      /// get the value
+      double evaluate
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get tau
-      double         tauX    () const { return m_tauX ;}
-      double         tauY    () const { return m_tauY ;}
+      inline double  tauX    () const { return m_tauX ;}
+      inline double  tauY    () const { return m_tauY ;}
       /// set tau
       bool           setTauX ( const double val ) ;
       bool           setTauY ( const double val ) ;
@@ -1220,11 +1120,6 @@ namespace Ostap
         const double yhigh ) const ;
       // ======================================================================
     public:
-      // ======================================================================
-      const Ostap::Math::Positive2D&   positive    () const { return m_positive ; }
-      const Ostap::Math::Positive2D&   polynom     () const { return m_positive ; }
-      // ====================================== ===============================
-    public:
       // ====================================== ===============================
       /// get the tag 
       std::size_t tag () const ;
@@ -1232,14 +1127,13 @@ namespace Ostap
     private: // helper function to make the calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate
+      ( const std::vector<double>& fx , 
+	const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2D   m_positive ; // the actual bernstein polynomial
-      /// exponential
+      /// exponential factors  
       double                    m_tauX     ;
       double                    m_tauY     ;
       // ======================================================================
@@ -1250,7 +1144,7 @@ namespace Ostap
      *  \f$ f(x,y) = exp(x)*expo(y)*P_{sym}(x,y) \f$, where
      * \f$P_{pos}\f$ denotes the symmetric positive polynomial
      */
-    class  Expo2DPolSym
+    class  Expo2DPolSym : public Ostap::Math::PolyFactor2DSym 
     {
       // ======================================================================
     public:
@@ -1270,39 +1164,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator () ( const double x , const double y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned int k , const double value )
-      { return m_positive.setPar ( k , value ) ;}
-      /// set k-parameter
-      bool setParameter ( const unsigned int k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned int k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
-      /// get nX & nY
-      unsigned short n  () const { return m_positive.nX () ; }
-      unsigned short nX () const { return m_positive.nX () ; }
-      unsigned short nY () const { return m_positive.nY () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      double xmin () const { return m_positive.xmin () ; }
-      double xmax () const { return m_positive.xmax () ; }
-      double ymin () const { return m_positive.ymin () ; }
-      double ymax () const { return m_positive.ymax () ; }
+      inline double operator ()
+      ( const double x ,
+	const double y ) const { return evaluate ( x , y ) ; }
+      /// get the value
+      double evaluate
+      ( const double x ,
+	const double y ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get tau
-      double         tau     () const { return m_tau  ;}
+      inline double  tau     () const { return m_tau  ;}
       /// set tau
       bool           setTau  ( const double val ) ;
       // ======================================================================
@@ -1339,11 +1212,6 @@ namespace Ostap
       ( const double x    ,
         const double ylow , const double yhigh ) const ;
       // ======================================================================
-    public:  // expose some internmals
-      // ======================================================================
-      const Ostap::Math::Positive2DSym& positive () const { return m_positive ; }
-      const Ostap::Math::Positive2DSym& polynom  () const { return m_positive ; }
-      // ====================================== ===============================
     public:
       // ====================================== ===============================
       /// get the tag 
@@ -1358,22 +1226,20 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// the actual (positive) bernstein polynomial in 2D
-      Ostap::Math::Positive2DSym m_positive ; // the actual bernstein polynomial
       /// exponential
       double                     m_tau      ;
       // ======================================================================
     }; 
     // ========================================================================
     /** @class Gauss2D 
-     *  Simple 2D rotated Gaussian fnuction 
+     *  Simple 2D rotated Gaussian function 
      *  \f[ f(x,y) = \frac{1}{2\pi\sqrt{\sigma_x}\sqrt{\sigma_y}}
      *   \mathrm{e}^{\left( -\frac{1}{2} \delta x^{\prime2}}{\sigma_x^2} 
      *   -\frac{1}{2} \delta y^{\prime2}}{\sigma_y^2} 
      *   \right) }\f]
      * - where 
      *   \f[ \left( \begin{array}{c} \delta x^prime \\ \delta y^\prime \end{array} \right) = 
-     *    \left( \begin{array}{cc} \cos \theta & \sin\theta \\
+     *    \left( \begin{array}{cc} \cos \theta & \sin\theta \		\
      *                             -\sin\theta & \cos\theta \end{array} \right) \times   
      *     \left( \begin{array}{c} x - \mu_x \\ y - \mu_y\end{array} \right)\f] 
      * 
@@ -1399,16 +1265,16 @@ namespace Ostap
       // ======================================================================
     public:  // getters 
       // ======================================================================      
-      // mux                                    
-      double muX    () const { return m_muX    ; }
-      // mux                                   
-      double muY    () const { return m_muY    ; }
-      // sigmax                                    
-      double sigmaX () const { return m_sigmaX ; }
-      // sigmay                                   
-      double sigmaY () const { return m_sigmaY ; }
-      // theta 
-      double theta  () const { return m_theta  ; }
+      /// mux                                    
+      inline double muX    () const { return m_muX    ; }
+      /// mux                                   
+      inline double muY    () const { return m_muY    ; }
+      /// sigmax                                    
+      inline double sigmaX () const { return m_sigmaX ; }
+      /// sigmay                                   
+      inline double sigmaY () const { return m_sigmaY ; }
+      /// theta 
+      inline double theta  () const { return m_theta  ; }
       // ======================================================================
     public:  // setters 
       // ======================================================================      
@@ -1601,7 +1467,7 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace {} ; // workspace
       // ======================================================================
     } ;
-    // ========================================================================
+    // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

@@ -5698,9 +5698,9 @@ namespace Ostap
     public: // getters 
       // ======================================================================
       /// get mu 
-      double mu       () const { return m_mu       ; }
+      inline double mu       () const { return m_mu       ; }
       /// get varsigma 
-      double varsigma () const { return m_varsigma ; } 
+      inline double varsigma () const { return m_varsigma ; } 
       // ======================================================================
     public: // setters 
       // ======================================================================
@@ -5712,13 +5712,13 @@ namespace Ostap
     public: // some properteis 
       // ======================================================================
       /// get the mean     of the distribution 
-      double mean     () const { return m_mu; }      
+      inline double mean     () const { return m_mu; }      
       /// get the mode     of the distribution 
-      double mode     () const { return m_mu; }      
+      inline double mode     () const { return m_mu; }      
       /// get the median   of the distribution 
-      double median   () const { return m_mu; }      
+      inline double median   () const { return m_mu; }      
       /// get the variance of the distribution 
-      double variance () const ;
+      inline double variance () const ;
       /// get the RMS  of the distribution 
       double rms      () const ;
       /// get the skewness 
@@ -5729,9 +5729,9 @@ namespace Ostap
     public: // support 
       // ======================================================================
       /// x-min
-      double xmin () const { return m_mu - m_varsigma ; }
+      inline double xmin () const { return m_mu - m_varsigma ; }
       /// x-max
-      double xmax () const { return m_mu + m_varsigma ; }
+      inline double xmax () const { return m_mu + m_varsigma ; }
       // ======================================================================
     public: // integrals 
       // ======================================================================

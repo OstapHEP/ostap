@@ -88,9 +88,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x , const double y ) const ;
+      double        evaluate    ( const double x , const double y ) const ;
       /// get the value
-      double operator () ( const double x , const double y ) const 
+      inline double operator () ( const double x , const double y ) const 
       { return evaluate ( x , y ) ; }
       // ======================================================================
     public: // getters & setters 
@@ -283,7 +283,7 @@ namespace Ostap
 	const double y          ,
 	const double weight = 1 ) override
       { this -> fill ( x , y , weight ) ; }
-      /// reet parameters to zeros 
+      /// reset parameters to zeros 
       void reset  () override { Parameters::reset () ; } 
       // ======================================================================
     public:
@@ -466,16 +466,16 @@ namespace Ostap
     public:
       // ======================================================================
       ///  get the  value 
-      double evaluate    ( const double x , const double y ) const 
+      inline double evaluate    ( const double x , const double y ) const 
       { return m_bernstein ( x , y ) ; }        
       /// get the value
-      double operator () ( const double x , const double y ) const
+      inline double operator () ( const double x , const double y ) const
       { return evaluate    ( x , y ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_sphere.nPhi () ; }
+      inline std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
       bool setPar
       ( const unsigned int k             ,
@@ -498,13 +498,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// get lower/upper edges
-      double         xmin () const { return m_bernstein.xmin () ; }
-      double         xmax () const { return m_bernstein.xmax () ; }
-      double         ymin () const { return m_bernstein.ymin () ; }
-      double         ymax () const { return m_bernstein.ymax () ; }
+      inline double         xmin () const { return m_bernstein.xmin () ; }
+      inline double         xmax () const { return m_bernstein.xmax () ; }
+      inline double         ymin () const { return m_bernstein.ymin () ; }
+      inline double         ymax () const { return m_bernstein.ymax () ; }
       // polynom order
-      unsigned short nX   () const { return m_bernstein.nX   () ; }
-      unsigned short nY   () const { return m_bernstein.nY   () ; }
+      inline unsigned short nX   () const { return m_bernstein.nX   () ; }
+      inline unsigned short nY   () const { return m_bernstein.nY   () ; }
       // ======================================================================
     public :
       // ======================================================================
@@ -514,10 +514,10 @@ namespace Ostap
     public:
       // ======================================================================
       // transform variables
-      double tx ( const double  x ) const { return m_bernstein.tx (  x ) ; }
-      double ty ( const double  y ) const { return m_bernstein.ty (  y ) ; }
-      double  x ( const double tx ) const { return m_bernstein. x ( tx ) ; }
-      double  y ( const double ty ) const { return m_bernstein. y ( ty ) ; }
+      inline double tx ( const double  x ) const { return m_bernstein.tx (  x ) ; }
+      inline double ty ( const double  y ) const { return m_bernstein.ty (  y ) ; }
+      inline double  x ( const double tx ) const { return m_bernstein. x ( tx ) ; }
+      inline double  y ( const double ty ) const { return m_bernstein. y ( ty ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -702,7 +702,7 @@ namespace Ostap
     public:
       // ======================================================================
       ///  convert (l,m)-index into single k-index
-      std::size_t index 
+      inline std::size_t index 
       ( const unsigned short l , 
         const unsigned short m ) const 
       {
@@ -715,32 +715,32 @@ namespace Ostap
     public:
       // ======================================================================
       /// get lower edge
-      double xmin () const { return m_xmin    ; }
+      inline double xmin () const { return m_xmin    ; }
       /// get upper edge
-      double xmax () const { return m_xmax    ; }
+      inline double xmax () const { return m_xmax    ; }
       /// get lower edge
-      double ymin () const { return   xmin () ; }
+      inline double ymin () const { return   xmin () ; }
       /// get upper edge
-      double ymax () const { return   xmax () ; }
+      inline double ymax () const { return   xmax () ; }
       // ======================================================================
-      unsigned short n  () const { return m_n  ; }
-      unsigned short nX () const { return n () ; }
-      unsigned short nY () const { return n () ; }
+      inline unsigned short n  () const { return m_n  ; }
+      inline unsigned short nX () const { return n () ; }
+      inline unsigned short nY () const { return n () ; }
       // ======================================================================
     public :
       // ======================================================================
       /// dimension
-      unsigned short  dim   () const { return 2 ; }
+      inline unsigned short  dim   () const { return 2 ; }
       // ======================================================================
     public:
       // ======================================================================
-      double x  ( const double tx ) const
+      inline double x  ( const double tx ) const
       { return xmin ()  + ( xmax () - xmin () ) * tx ; }
-      double y  ( const double ty ) const
+      inline double y  ( const double ty ) const
       { return ymin ()  + ( ymax () - ymin () ) * ty ; }
-      double tx ( const double x ) const
+      inline double tx ( const double x ) const
       { return  ( x - xmin () ) / ( xmax () - xmin () ) ; }
-      double ty ( const double y ) const
+      inline double ty ( const double y ) const
       { return  ( y - ymin () ) / ( ymax () - ymin () ) ; }
       // ======================================================================
     public: // generic integrals
@@ -836,7 +836,7 @@ namespace Ostap
     public: // few helper functions to expose internals
       // ======================================================================
       /// evaluate the basic polynomials
-      double basic  ( const unsigned short i , const double         x ) const
+      inline double basic  ( const unsigned short i , const double         x ) const
       { return ( i > m_n || x < m_xmin || x < m_xmax ) ? 0.0 : m_b[i](x) ; }
       /// expose some internals
       const Bernstein& basic ( const unsigned short i ) const { return m_b[i] ; }
@@ -942,23 +942,23 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x , const double y ) const 
+      inline double evaluate    ( const double x , const double y ) const 
       { return m_bernstein ( x ,  y ) ; }
       /// get the value
-      double operator () ( const double x , const double y ) const 
+      inline double operator () ( const double x , const double y ) const 
       { return evaluate ( x , y ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_sphere.nPhi () ; }
+      inline std::size_t npars () const { return m_sphere.nPhi () ; }
       /// set k-parameter
       bool setPar
       ( const unsigned int k             ,
         const double       value         ,
         const bool         force = false ) ;
       /// set k-parameter
-      bool setParameter
+      inline bool setParameter
       ( const unsigned int k             ,
         const double       value         ,
         const bool         force = false ) 
@@ -966,30 +966,30 @@ namespace Ostap
       /// get the parameter value
       double  par       ( const unsigned int k ) const ;
       /// get the parameter value
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      inline double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get all parameters/phases 
-      const std::vector<double>& pars() const { return m_sphere.phases() ; }
+      inline const std::vector<double>& pars() const { return m_sphere.phases() ; }
       /// get lower/upper edges
-      double         xmin () const { return m_bernstein.xmin () ; }
-      double         xmax () const { return m_bernstein.xmax () ; }
-      double         ymin () const { return m_bernstein.ymin () ; }
-      double         ymax () const { return m_bernstein.ymax () ; }
+      inline double         xmin () const { return m_bernstein.xmin () ; }
+      inline double         xmax () const { return m_bernstein.xmax () ; }
+      inline double         ymin () const { return m_bernstein.ymin () ; }
+      inline double         ymax () const { return m_bernstein.ymax () ; }
       // polynom order
-      unsigned short n    () const { return m_bernstein.n    () ; }
-      unsigned short nX   () const { return m_bernstein.nX   () ; }
-      unsigned short nY   () const { return m_bernstein.nY   () ; }
+      inline unsigned short n    () const { return m_bernstein.n    () ; }
+      inline unsigned short nX   () const { return m_bernstein.nX   () ; }
+      inline unsigned short nY   () const { return m_bernstein.nY   () ; }
       // ======================================================================
     public :
       // ======================================================================
       /// dimension
-      unsigned short  dim   () const { return 2 ; }
+      inline unsigned short  dim   () const { return 2 ; }
       // ======================================================================
     public:
       // ======================================================================
-      double tx ( const double  x ) const { return m_bernstein.tx (  x ) ; }
-      double ty ( const double  y ) const { return m_bernstein.ty (  y ) ; }
-      double  x ( const double tx ) const { return m_bernstein. x ( tx ) ; }
-      double  y ( const double ty ) const { return m_bernstein. y ( ty ) ; }
+      inline double tx ( const double  x ) const { return m_bernstein.tx (  x ) ; }
+      inline double ty ( const double  y ) const { return m_bernstein.ty (  y ) ; }
+      inline double  x ( const double tx ) const { return m_bernstein. x ( tx ) ; }
+      inline double  y ( const double ty ) const { return m_bernstein. y ( ty ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1081,6 +1081,205 @@ namespace Ostap
     /// swap  two 2D-polynomials 
     inline void  swap ( Positive2DSym& a  , Positive2DSym& b ) { a.swap ( b ) ; }
     // ========================================================================
+    /** @class PolyFactor2D 
+     *  Hleper class to implementaiton of 2D-models
+     */
+    class PolyFactor2D
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from the order
+      PolyFactor2D 
+      ( const unsigned short       Nx    =  1 ,
+        const unsigned short       Ny    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ) ;
+      /// constructor from the phases 
+      PolyFactor2D 
+      ( const std::vector<double>& phases     ,
+        const unsigned short       Nx         ,
+        const unsigned short       Ny         ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ) ;
+      /// constructor from the phases 
+      PolyFactor2D 
+      ( const Ostap::Math::Positive2D& poly ) ;
+      // ======================================================================
+    public: // accessors to polsitive polynomials 
+      // ======================================================================
+      /// get number of parameters
+      inline std::size_t npars () const
+      { return m_positive.npars () ; }
+      /// set k-parameter
+      inline bool setPar
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false )
+      { return m_positive.setPar       ( k , value , force ) ; }      
+      /// set k-parameter
+      inline bool setParameter
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false )
+      { return m_positive.setParameter ( k , value , force ) ; }      
+      /// get the parameter value
+      inline double par       ( const unsigned int k ) const
+      { return m_positive.par       ( k ) ; } 
+      /// get the parameter value
+      inline double parameter ( const unsigned int k ) const
+      { return m_positive.parameter ( k ) ; } 
+      /// get all parameters/phases 
+      inline const std::vector<double>& pars() const 
+      { return m_positive.pars ()         ; } 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get lower/upper edges
+      inline double         xmin () const { return m_positive.xmin () ; }
+      inline double         xmax () const { return m_positive.xmax () ; }
+      inline double         ymin () const { return m_positive.ymin () ; }
+      inline double         ymax () const { return m_positive.ymax () ; }
+      // polynom order
+      inline unsigned short nX   () const { return m_positive.nX   () ; }
+      inline unsigned short nY   () const { return m_positive.nY   () ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      inline unsigned short  dim   () const { return m_positive.dim () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      // transform variables
+      inline double tx ( const double  x ) const { return m_positive.tx (  x ) ; }
+      inline double ty ( const double  y ) const { return m_positive.ty (  y ) ; }
+      inline double  x ( const double tx ) const { return m_positive. x ( tx ) ; }
+      inline double  y ( const double ty ) const { return m_positive. y ( ty ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================      
+      const Ostap::Math::Positive2D& positive    () const { return m_positive ; }
+      const Ostap::Math::Positive2D& polynom     () const { return m_positive ; }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// swap two obkects
+      void swap ( PolyFactor2D& ) ;
+      // ======================================================================      
+    protected:
+      // ======================================================================
+      /// the actual positive polynomil
+      Ostap::Math::Positive2D m_positive ; // the actual positive polynomil
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// swap two objects
+    inline void swap
+    ( PolyFactor2D& a ,
+      PolyFactor2D& b ) { a.swap ( b ) ; }
+    // ========================================================================    
+    /** @class PolyFactor2D 
+     *  Hleper class to implementaiton of 2D-models
+     */
+    class PolyFactor2DSym
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from the order
+      PolyFactor2DSym 
+      ( const unsigned short       Nx    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
+      /// constructor from the phases 
+      PolyFactor2DSym
+      ( const std::vector<double>& phases     ,
+	const unsigned short       Nx         ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
+      /// constructor from the phases 
+      PolyFactor2DSym 
+      ( const Ostap::Math::Positive2DSym& poly ) ;
+      // ======================================================================
+    public: // accessors to polsitive polynomials 
+      // ======================================================================
+      /// get number of parameters
+      inline std::size_t npars () const
+      { return m_positive.npars () ; }
+      /// set k-parameter
+      inline bool setPar
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false )
+      { return m_positive.setPar       ( k , value , force ) ; }      
+      /// set k-parameter
+      inline bool setParameter
+      ( const unsigned int k             ,
+        const double       value         ,
+        const bool         force = false )
+      { return m_positive.setParameter ( k , value , force ) ; }      
+      /// get the parameter value
+      inline double par       ( const unsigned int k ) const
+      { return m_positive.par       ( k ) ; } 
+      /// get the parameter value
+      inline double parameter ( const unsigned int k ) const
+      { return m_positive.parameter ( k ) ; } 
+      /// get all parameters/phases 
+      inline const std::vector<double>& pars() const 
+      { return m_positive.pars ()         ; } 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get lower/upper edges
+      inline double         xmin () const { return m_positive.xmin () ; }
+      inline double         xmax () const { return m_positive.xmax () ; }
+      inline double         ymin () const { return m_positive.ymin () ; }
+      inline double         ymax () const { return m_positive.ymax () ; }
+      // polynom order
+      inline unsigned short n    () const { return m_positive.n    () ; }
+      inline unsigned short nX   () const { return m_positive.nX   () ; }
+      inline unsigned short nY   () const { return m_positive.nY   () ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// dimension
+      inline unsigned short  dim   () const { return m_positive.dim () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      // transform variables
+      inline double tx ( const double  x ) const { return m_positive.tx (  x ) ; }
+      inline double ty ( const double  y ) const { return m_positive.ty (  y ) ; }
+      inline double  x ( const double tx ) const { return m_positive. x ( tx ) ; }
+      inline double  y ( const double ty ) const { return m_positive. y ( ty ) ; }
+      // ======================================================================      
+    public:
+      // ======================================================================      
+      const Ostap::Math::Positive2DSym& positive    () const { return m_positive ; }
+      const Ostap::Math::Positive2DSym& polynom     () const { return m_positive ; }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// swap two obkects
+      void swap ( PolyFactor2DSym& ) ;
+      // ======================================================================      
+    protected:
+      // ======================================================================
+      /// the actual positive polynomil
+      Ostap::Math::Positive2DSym m_positive ; // the actual positive polynomil
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /// swap two objects
+    inline void swap
+    ( PolyFactor2DSym& a ,
+      PolyFactor2DSym& b ) { a.swap ( b ) ; }
+    // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

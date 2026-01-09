@@ -1029,7 +1029,12 @@ def _omsigm_reduce_ ( s ) :
     """Reduce `Ostap.Math.Sigmoid`
     - see `Ostap.Math.Sigmoid`
     """
-    return root_factory , ( type ( s ) , s.positive () , s.alpha() , s.x0() )
+    return root_factory , ( type ( s )        ,
+                            s.positive     () ,
+                            s.scale        () ,
+                            s.x0           () ,
+                            s.delta        () ,                            
+                            s.sigmoid_type () )
 
 Ostap.Math.Sigmoid. __reduce__ = _omsigm_reduce_
 

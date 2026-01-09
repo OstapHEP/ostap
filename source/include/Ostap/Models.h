@@ -218,7 +218,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
-    class PhaseSpacePol final
+    class PhaseSpacePol final : public Ostap::Math::PolyFactor1D
     {
       // ======================================================================
     public:
@@ -272,33 +272,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the phase space 
       const Ostap::Math::PhaseSpaceNL& phasespace () const { return m_phasespace ; }
-      const Ostap::Math::Positive&     polynom    () const { return m_positive   ; }
-      const Ostap::Math::Positive&     positive   () const { return m_positive   ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      inline std::size_t npars () const { return m_positive.npars () ; }
-      /// set k-parameter
-      inline bool setPar       ( const unsigned short k , const double value )
-      { return m_positive.setPar ( k , value ) ; }
-      /// set k-parameter
-      inline bool setParameter ( const unsigned short k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      inline double  par       ( const unsigned short k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      inline double  parameter ( const unsigned short k ) const
-      { return m_positive.par ( k ) ; }
-      ///  get all parameters 
-      // const  std::vector<double>& pars() const { return m_positive.pars() ; }
-      // get the order of polynomial 
-      inline unsigned short n () const { return m_positive.degree() ; }
-      // ======================================================================
-      inline double xmin () const { return m_positive.xmin() ; }
-      inline double xmax () const { return m_positive.xmax() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -323,7 +298,6 @@ namespace Ostap
       // ======================================================================
       /// the phase space
       Ostap::Math::PhaseSpaceNL   m_phasespace ; // the phase space
-      Ostap::Math::Positive       m_positive   ; // the positive polynom
       // ======================================================================
     private:
       // ======================================================================
@@ -349,7 +323,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2018-10-21
      */
-    class PhaseSpaceLeftExpoPol final
+    class PhaseSpaceLeftExpoPol final : public Ostap::Math::PolyFactor1D 
     {
       // ======================================================================
     public:
@@ -434,37 +408,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const Ostap::Math::PhaseSpaceLeft& phasespace () const { return m_phasespace ; }
-      const Ostap::Math::Positive&       polynom    () const { return m_positive   ; }
-      const Ostap::Math::Positive&       positive   () const { return m_positive   ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      inline std::size_t npars   () const { return m_positive.npars () ; }
-      /// set k-parameter
-      inline bool setPar         ( const unsigned short k , const double value )
-      { return m_positive.setPar ( k , value ) ; }
-      /// set k-parameter
-      inline bool setParameter   ( const unsigned short k , const double value )
-      { return setPar     ( k , value ) ; }
-      /// get the parameter value
-      inline double  par         ( const unsigned short k ) const
-      { return m_positive.par ( k ) ; }
-      /// get the parameter value
-      inline double  parameter   ( const unsigned short k ) const
-      { return m_positive.par ( k ) ; }
-      ///  get all parameters 
-      // const  std::vector<double>& pars() const { return m_positive.pars() ; }
-      // get the order of polynomial 
-      inline unsigned short n   () const { return m_positive.degree() ; }
-      /// get the exponent 
-      inline double   tau       () const { return m_tau ; }
+      /// get the phase space 
+      inline const Ostap::Math::PhaseSpaceLeft& phasespace () const
+      { return m_phasespace ; }
       /// get the threshold  
       inline double   threshold () const { return m_phasespace.threshold() ; }
-      // ======================================================================
-      inline double xmin () const { return m_positive.xmin() ; }
-      inline double xmax () const { return m_positive.xmax() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -495,7 +443,6 @@ namespace Ostap
       // ======================================================================
       /// the phase space
       Ostap::Math::PhaseSpaceLeft m_phasespace ; // the phase space
-      Ostap::Math::Positive       m_positive   ; // the positive polynom
       double                      m_tau        ; // the exponent
       // ======================================================================
     private:
@@ -1507,7 +1454,7 @@ namespace Ostap
      *  product of the exponential and positive polinonmial
      *  @see Ostap::Math::Positive
      */
-    class  ExpoPositive 
+    class  ExpoPositive  : public Ostap::Math::PolyFactor1D
     {
     public:
       // ======================================================================
@@ -1541,36 +1488,6 @@ namespace Ostap
       inline double tau    () const { return m_tau ;}
       /// set new value for the exponent
       bool   setTau ( const  double value ) ;
-      /// get number of polinomial parameters
-      inline std::size_t npars () const { return 1 + m_positive.npars() ; }
-      /// set k-parameter
-      inline bool setPar       ( const unsigned short k , const double value )
-      { return
-          m_positive.npars() == k ?
-          setTau            (     value ) :
-          m_positive.setPar ( k , value ) ; }
-      /// set k-parameter
-      inline bool setParameter ( const unsigned short k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      inline double  par       ( const unsigned short k ) const
-      {
-        return
-          m_positive.npars() == k ?
-          tau            (   )    :
-          m_positive.par ( k )    ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the parameter value
-      inline double  parameter ( const unsigned short k ) const { return par ( k ) ; }
-      /// get lower edge
-      inline double xmin () const { return m_positive.xmin () ; }
-      /// get upper edge
-      inline double xmax () const { return m_positive.xmax () ; }
-      /// transform variables
-      inline double x ( const double t ) const { return m_positive. x ( t )  ; }
-      inline double t ( const double x ) const { return m_positive. t ( x )  ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1579,14 +1496,9 @@ namespace Ostap
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
       double max_value () const ;
       // =====================================================================
-    public:      
-      // ======================================================================
-      /// get the underlying positive function
-      inline const Ostap::Math::Positive&  positive  () const { return m_positive  ; }
-      // ======================================================================
     public:
       // ======================================================================
-      double integral () const { return integral ( xmin() , xmax() ) ; }
+      double integral () const ;
       double integral
       ( const double low , 
 	const double high ) const ;
@@ -1598,80 +1510,91 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      Ostap::Math::Positive m_positive  ;
-      double                m_tau       ;
+      /// exponential slope 
+      double      m_tau { 0 } ; // exponential slope 
       // ======================================================================
     };
     // ========================================================================
     /** @class Sigmoid
-     *  Sigmoid function, modulated by the positive polynomial
-     *  \f$ f(x) = ( 1 + tanh( \alpha ( x  - x_0) ) \times P_{pos} (x) \f$
-     *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
+     *  (shifted) Sigmoid function, modulated by the positive polynomial
+     *  \f$ f(x) = ( f_{\sigma} (z) + \updelta ) \times P_{pos} (x) \f$, where 
+     *   - \f$ z = \frac{x-x_0}{\sigma} \f$ 
+     *   - \f$ f_{\sigma}(x)   \ge 0 }\f$ is Sigmoid function 
+     *   - \f$ P_{pos}(x)      \ge 0 }\f$ is Positive polynomial
+     *   - shift \f$ \updelta \ge 0  \f$ 
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
-    class  Sigmoid 
+    class  Sigmoid : public Ostap::Math::PolyFactor1D 
     {
     public:
       // ============================================================
-      /// constructor from polynom and parameters "alpha" and "x0"
+      /// the sigmoid type 
+      enum SigmoidType
+	{
+	  Logistic             , // based on logistic 
+	  Hyperbolic           , // based on tanh 
+	  Trigonometric        , // based on atan 
+	  Error                , // Based on error function 
+	  Gudermannian         , // Based on Gudermannian function
+	  First = Logistic     , 
+	  Last  = Gudermannian               
+	} ;      	
+      // ============================================================
+    public:
+      // ============================================================
+      /// constructor from polynomial and parameters "alpha" and "x0"
       Sigmoid
-      ( const Ostap::Math::Positive& poly      ,
-	const double                 alpha = 0 ,
-	const double                 x0    = 0 ) ;
-      /// constructor from polynom and parameter "alpha"
+      ( const Ostap::Math::Positive& poly               ,
+	const double                 scale = 1          ,
+	const double                 x0    = 0          ,
+	const double                 delta = 0          , 
+	const SigmoidType            st    = Hyperbolic ) ;
+      /// constructor from polynomial and parameter "alpha"
       Sigmoid
-      ( const unsigned short             N = 0 ,
-	const double                 xmin  = 0 ,
-	const double                 xmax  = 1 ,
-	const double                 alpha = 0 ,
-	const double                 x0    = 0 ) ;
-      /// constructor from polynom and parameter "alpha"
+      ( const unsigned short         N     = 0          ,
+	const double                 xmin  = 0          ,
+	const double                 xmax  = 1          ,
+	const double                 scale = 1          ,
+	const double                 x0    = 0          , 
+	const double                 delta = 0          , 
+	const SigmoidType            st    = Hyperbolic ) ;
+      /// constructor from polynomial and parameter "alpha"
       Sigmoid
-      ( const std::vector<double>&   pars       ,
-	const double                 xmin  =  0 ,
-	const double                 xmax  =  1 ,
-	const double                 alpha =  0 ,
-	const double                 x0    =  0 ) ;
+      ( const std::vector<double>&   pars               ,
+	const double                 xmin  = 0          ,
+	const double                 xmax  = 1          ,
+	const double                 scale = 1          ,
+	const double                 x0    = 0          ,
+	const double                 delta = 0          , 	
+	const SigmoidType            st    = Hyperbolic ) ;
       // ======================================================================
     public:
       // ======================================================================
-      /// get the value
-      double operator () ( const double x ) const ;
+      /// get the value of the function: 
+      inline double operator () ( const double x ) const
+      { return xmin () <= x && x <= xmax() ? m_positive ( x ) * ( sigmoid ( x ) + m_delta ) : 0.0 ; }
       // ======================================================================
     public:
       // ======================================================================
-      inline double alpha      () const { return m_alpha ; }
-      inline  double x0        () const { return m_x0    ; }
-      // set new value of alpha
-      bool setAlpha     ( const double value ) ;
+      /// get the actual sigmoid value 
+      double sigmoid ( const double x ) const ;
+      // ======================================================================
+    public: // sigmoid getters 
+      // ======================================================================
+      inline double      scale        () const { return m_scale ; }
+      inline double      x0           () const { return m_x0    ; }
+      inline double      delta        () const { return m_delta ; } 
+      inline SigmoidType sigmoid_type () const { return m_type  ; }
+      // ======================================================================
+    public: // sigmoid setters  
+      // ======================================================================      
+      // set new value of scale 
+      bool setScale       ( const double value ) ;
+      // set new value of delta 
+      bool setDelta       ( const double value ) ;
       // set new value of x0 
-      bool setX0        ( const double value ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      inline double xmin () const { return m_positive.xmin () ; }
-      inline double xmax () const { return m_positive.xmax () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of parameters
-      inline std::size_t npars () const { return 2 + m_positive.npars () ; }
-      /// set k-parameter
-      inline bool setPar       ( const unsigned short k , const double value )
-      { return
-          m_positive.npars()     == k ? setAlpha ( value ) :
-          m_positive.npars() + 1 == k ? setX0    ( value ) :
-          m_positive.setPar (  k  , value ) ; }
-      /// set k-parameter
-      inline bool setParameter ( const unsigned short k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      inline double  par       ( const unsigned short k ) const
-      { return
-          m_positive.npars()     == k ? alpha () :
-          m_positive.npars() + 1 == k ? x0    () : m_positive.par ( k ) ; }
-      /// get the parameter value
-      inline double  parameter ( const unsigned short k ) const { return par ( k ) ; }
+      bool setX0          ( const double value ) ;
       // ======================================================================
     public: 
       // ======================================================================
@@ -1680,10 +1603,6 @@ namespace Ostap
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
       double max_value () const ;
       // =====================================================================
-    public:
-      // ======================================================================
-      const Ostap::Math::Positive& positive() const { return m_positive ; }
-      // ======================================================================
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
@@ -1700,9 +1619,14 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      Ostap::Math::Positive  m_positive ;
-      double                 m_alpha    ;
-      double                 m_x0       ;
+      /// sigmoid scale 
+      double                m_scale    ; // sigmoid scale 
+      /// sigmoid location 
+      double                m_x0       ; // sigmoid location 
+      /// sigmoid delta  
+      double                m_delta    ; // sigmoid delta 
+      /// sigmoid type 
+      SigmoidType           m_type     ; // sigmoid type 
       // ======================================================================
     private:
       // ======================================================================
@@ -1711,12 +1635,14 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+
+    // ========================================================================
     /** @class TwoExpos
      *  simple difference of two exponents
      *  \f$ f \propto
      *        \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} =
      *        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f$
-     *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
     class  TwoExpos 
@@ -1731,23 +1657,24 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double operator() ( const double x ) const ;
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; } 
+      double        evaluate   ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
       /// get alpha
-      double alpha () const { return m_alpha ; }
+      inline double alpha () const { return m_alpha ; }
       /// get delta
-      double delta () const { return m_delta ; }
+      inline double delta () const { return m_delta ; }
       /// get x0
-      double x0    () const { return m_x0    ; }
+      inline double x0    () const { return m_x0    ; }
       // ======================================================================
     public:
       // ======================================================================
       /// slope for the first  exponent
-      double a1         () const { return m_alpha           ; }
+      inline double a1         () const { return m_alpha           ; }
       /// slope for the second exponent
-      double a2         () const { return m_alpha + m_delta ; }
+      inline double a2         () const { return m_alpha + m_delta ; }
       /// mean-value (for -inf,+inf) interval
       double mean       () const ;
       /// mode
@@ -1764,9 +1691,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// slope for the first  exponent
-      double tau1       () const { return -a1() ; }
+      inline double tau1       () const { return -a1() ; }
       /// slope for the second exponent
-      double tau2       () const { return -a2() ; }
+      inline double tau2       () const { return -a2() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1794,6 +1721,11 @@ namespace Ostap
       ( const double   x  ,
         const unsigned N  ) const ;
       // ======================================================================
+    public: 
+      // ======================================================================
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      double max_value () const ;
+      // =====================================================================
     public:
       // ======================================================================
       // get the tag
@@ -1820,7 +1752,7 @@ namespace Ostap
      *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
      *  @date 2015-03-28
      */
-    class  TwoExpoPositive 
+    class  TwoExpoPositive : public Ostap::Math::PolyFactor1D
     {
     public:
       // ======================================================================
@@ -1861,75 +1793,48 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get number of polinomial parameters
-      std::size_t npars () const { return 3 + m_positive.npars() ; }
-      /// set k-parameter
-      bool setPar       ( const unsigned short k , const double value )
-      { return
-          m_positive.npars()     == k ? setAlpha ( value ) :
-          m_positive.npars() + 1 == k ? setDelta ( value ) :
-          m_positive.npars() + 2 == k ? setX0    ( value ) :
-          m_positive.setPar ( k , value ) ; }
-      /// set k-parameter
-      bool setParameter ( const unsigned short k , const double value )
-      { return setPar   ( k , value ) ; }
-      /// get the parameter value
-      double  par       ( const unsigned short k ) const
-      { return
-          m_positive.npars()     == k ? alpha () :
-          m_positive.npars() + 1 == k ? delta () :
-          m_positive.npars() + 2 == k ? x0    () : m_positive.par ( k ) ; }
-      /// get the parameter value
-      double  parameter ( const unsigned short k ) const { return par ( k ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get lower edge
-      double xmin () const { return m_positive.xmin () ; }
-      /// get upper edge
-      double xmax () const { return m_positive.xmax () ; }
-      /// transform variables
-      double x ( const double t ) const { return m_positive. x ( t )  ; }
-      double t ( const double x ) const { return m_positive. t ( x )  ; }
-      // ======================================================================
-    public:
-      // ======================================================================
       /// get alpha
-      double alpha () const { return m_2exp.alpha () ; }
+      inline double alpha () const { return m_2exp.alpha () ; }
       /// get delta
-      double delta () const { return m_2exp.delta () ; }
+      inline double delta () const { return m_2exp.delta () ; }
       /// get x0
-      double x0    () const { return m_2exp.x0    () ; }
+      inline double x0    () const { return m_2exp.x0    () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// slope for the first  exponent
-      double a1         () const { return m_2exp.a1   () ; }
+      inline double a1         () const { return m_2exp.a1   () ; }
       /// slope for the second exponent
-      double a2         () const { return m_2exp.a2   () ; }
+      inline double a2         () const { return m_2exp.a2   () ; }
       /// slope for the first  exponent
-      double tau1       () const { return m_2exp.tau1 () ; }
+      inline double tau1       () const { return m_2exp.tau1 () ; }
       /// slope for the second exponent
-      double tau2       () const { return m_2exp.tau2 () ; }
+      inline double tau2       () const { return m_2exp.tau2 () ; }
       // ======================================================================
     public:
       // ======================================================================
-      bool setAlpha ( const double value ) { return m_2exp.setAlpha ( value ) ; }
-      bool setDelta ( const double value ) { return m_2exp.setDelta ( value ) ; }
-      bool setX0    ( const double value ) { return m_2exp.setX0    ( value ) ; }
+      inline bool setAlpha ( const double value ) { return m_2exp.setAlpha ( value ) ; }
+      inline bool setDelta ( const double value ) { return m_2exp.setDelta ( value ) ; }
+      inline bool setX0    ( const double value ) { return m_2exp.setX0    ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the integral between xmin and xmax
       double integral    () const ;
       /// get the integral between low and high
-      double integral    ( const double low  ,
-                           const double high ) const ;
+      double integral
+      ( const double low  ,
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      /// get the underlying positive function
-      const Ostap::Math::Positive&  positive  () const { return m_positive  ; }
+      /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
+      double min_value () const ;
+      /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
+      double max_value () const ;
+      // =====================================================================
+    public:
+      // ======================================================================
       /// get the underlying exponents
       const Ostap::Math::TwoExpos&  twoexpos  () const { return m_2exp      ; }
       // ======================================================================
@@ -1940,7 +1845,6 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      Ostap::Math::Positive m_positive ;
       Ostap::Math::TwoExpos m_2exp     ;
       // ======================================================================
     } ;

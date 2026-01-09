@@ -55,10 +55,11 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core          import Ostap
-from   ostap.core.ostap_types   import integer_types , num_types 
+from   ostap.core.ostap_types   import integer_types , num_types , string_types  
 from   ostap.math.base          import iszero
-from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf, Flat1D,  Sum1D
+from   ostap.fitting.pdfbasic   import PDF1, Generic1D_pdf, Flat1D, Sum1D
 from   ostap.fitting.fithelpers import Phases, ParamsPoly
+from   ostap.fitting.fit1d      import PEAK 
 from   ostap.utils.ranges       import vrange
 from   ostap.utils.basic        import typename 
 from   ostap.logger.utils       import print_args 
@@ -69,10 +70,14 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 ## list of "left" phase space functions 
-PSL = ( Ostap.Math.PhaseSpaceLeft , Ostap.Math.PhaseSpaceNL ,
-        Ostap.Math.PhaseSpace2    , Ostap.Math.PhaseSpace3  , Ostap.Math.PhaseSpace3s )
+PSL = ( Ostap.Math.PhaseSpaceLeft ,
+        Ostap.Math.PhaseSpaceNL   ,
+        Ostap.Math.PhaseSpace2    ,
+        Ostap.Math.PhaseSpace3    ,
+        Ostap.Math.PhaseSpace3s   )
 # =============================================================================
 models  = []
+
 # =============================================================================
 ##  @class PolyBase
 #   helper base class to implement various polynomial-like shapes
@@ -83,8 +88,7 @@ class PolyBase(PDF1,Phases) :
         ## check  the arguments 
         PDF1  .__init__ ( self , name  , xvar = xvar )
         Phases.__init__ ( self , power , the_phis    )
-
-
+        
 # =============================================================================        
 ## @class  Bkg_pdf
 #  The exponential modified with the positive polynomial 
@@ -1273,104 +1277,146 @@ class TwoExpoPoly_pdf(PolyBase) :
  
 models.append ( TwoExpoPoly_pdf ) 
 
-
 # =============================================================================
 ## @class  Sigmoid_pdf
-#  Sigmoid function modulated with positive polynomial
+#  (shifted) Sigmoid function, modulated by the positive polynomial
+#  \f$ f(x) = ( f_{\sigma} (x) + \updelta ) \times P_{pos} (x) \f$, where 
+#   - \f$ f_{\sigma}(x)   \ge 0 }\f$ is Sigmoid function 
+#   - \f$ P_{pos}(x)      \ge 0 }\f$ is Positive polynomial
+#   - shift \f$ \updelta \ge 0  \f$ 
 #  @see Ostap::Models::PolySigmoid
 #  @see Ostap::Math::Sigmoid
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Sigmoid_pdf(PolyBase) :
-    """ Sigmoid function modulated by the positive (Bernstein) polynomial 
-    f(x) = 0.5*(1+tahn(alpha*(x-x0))*Pol_n(x)
+class Sigmoid_pdf(PolyBase,PEAK) :
+    """ (Shifted) Sigmoid function modulated by the positive (Bernstein) polynomial 
+
+    f(x) = ( f_sigmoid ( z ) + delta ) * positive_pol ( x ) 
+    
+    where :  
+
+    - z = ( x - x_0 ) / scale 
+    - f_sigmoid  >= 0 : sigmoid function
+    - delta      >= 0 : vertical shift  
+    - positive   >= 0 : positive polynomial 
+    
+    - see Ostap::Models::PolySigmoid
+    - see Ostap::Math::Sigmoid
     """
     ## constructor
-    def __init__ ( self             ,
-                   name             ,  ## the name 
-                   xvar             ,  ## the variable
-                   power    = 2     ,  ## degree of the polynomial
-                   alpha    = None  ,  ## 
-                   x0       = None  ,  ## x0
-                   xmin     = None  ,  ## optional x-min
-                   xmax     = None  ,  ## optional x-max 
-                   the_phis = None  ) :
-        #
-        #
+    def __init__ ( self                 ,
+                   name                 ,  ## the name 
+                   xvar                 ,  ## the variable
+                   power        = 1     ,  ## degree of the polynomial
+                   scale        = None  ,  ## 
+                   x0           = None  ,  ## x0
+                   delta        = None  ,  ## delta
+                   sigmoid_type = 'Hyperbolic' , 
+                   xmin         = None  ,  ## optional x-min
+                   xmax         = None  ,  ## optional x-max 
+                   the_phis     = None  ) :
+        #                               
         PolyBase.__init__ ( self , name , power , xvar , the_phis = the_phis )
-        #
-        self.__power      = power
-        #
-        ## xmin/xmax
-        xmin , xmax = self.xmnmx ( xmin , xmax )
-        ## 
-        mn, mx       = xmin , xmax 
-        dx           = mx - mn 
-        alpmx        = 20
-        limits_alpha = -1000./dx, +1000./dx
-        limits_x0    = 0.5 * ( mn + mx ) , mn - 0.2 *  dx , mx + 0.2 * dx
-
-        ## alpha 
-        self.__alpha  = self.make_var ( alpha               ,
-                                        'alpha_%s'  % name  ,
-                                        'alpha(%s)' % name  ,
-                                        None , *limits_alpha )
+        PEAK    .__init__ ( self                    ,
+                            name        = self.name ,
+                            xvar        = xvar      ,
+                            mean        = x0        ,
+                            sigma       = scale     ,
+                            mean_name   = 'x0_%s'     % self.name ,
+                            mean_title  = 'x_{0}(%s)' % self.name ,
+                            sigma_name  = 'scale_%s'  % self.name ,
+                            sigma_title = 'scale(%s)' % self.name ) 
         
-        ## x0 
-        self.__x0    = self.make_var  ( x0                  ,
-                                        'x0_%s'     % name  ,
-                                        'x0(%s)'    % name  ,
-                                        None , *limits_x0    )
+        ## delta : vertical shift 
+        self.__delta = self.make_var ( delta                  , 
+                                       'delta_%s'  % name     ,
+                                       'delta(%s)' % name     ,
+                                       None , 0.1 , 0 , 1.e+3 )
+        
+        if isinstance ( sigmoid_type , string_types ) :
+            stl = str ( sigmoid_type ).lower() 
+            if   stl in ( 'logistic'      ,        ) : sigmoid_type = Ostap.Math.Sigmoid.Logistic
+            elif stl in ( 'hyperbolic'    , 'tanh' ) : sigmoid_type = Ostap.Math.Sigmoid.Hyperbolic 
+            elif stl in ( 'trigonometric' , 'atan' ) : sigmoid_type = Ostap.Math.Sigmoid.Trigonometric
+            elif stl in ( 'error'         , 'erf'  ) : sigmoid_type = Ostap.Math.Sigmoid.Error 
+            elif stl in ( 'gudermannian'  , 'gd'   ) : sigmoid_type = Ostap.Math.Sigmoid.Gudermannian
+            else : raise TypeError ( "Invalid Sigmoid type %s" % sigmoid_type )
+            
+        sigmoid_type = int ( sigmoid_type  )
+        assert Ostap.Math.Sigmoid.First <= sigmoid_type  <= Ostap.Math.Sigmoid.Last , \
+            'Invalid Sigmoid type: %s' % sigmoid_type
 
-        xmin,xmax = self.xminmax() 
+        no_xmin = xmin is None
+        no_xmax = xmax is None
+        
+        if   no_xmin and no_xmax and self.xminmax () : 
+            xmin , xmax = self.xminmax ()
+        elif no_xmin and  self.xminmax () : 
+            xmin , _  =   self.xminmax ()
+        elif no_xmax and  self.xminmax () : 
+            _ , xmax  =   self.xminmax ()
+                    
         self.pdf  = Ostap.Models.PolySigmoid (
             self.roo_name ( "sigmoid_"  ) ,
             "Sigmoid modulated by polynomial %s" % self.name  , 
-            self.xvar            ,
-            self.phi_list        ,
-            xmin                 ,
-            xmax                 ,
-            self.alpha           ,
-            self.x0              )
+            self.xvar     ,
+            self.phi_list ,
+            xmin          ,
+            xmax          ,
+            self.scale    ,
+            self.x0       , 
+            self.delta    ,
+            sigmoid_type  )
         
         ## save configuration 
         self.config = {
-            'name'       : self.name  ,
-            'xvar'       : self.xvar  ,
-            'power'      : self.power ,            
-            'alpha'      : self.alpha , 
-            'x0'         : self.x0    , 
-            'the_phis'   : self.phis  ,
-            'xmin'       : xmin       ,
-            'xmax'       : xmax       ,                        
+            'name'         : self.name         ,
+            'xvar'         : self.xvar         ,
+            'power'        : self.power        ,            
+            'scale'        : self.scale        , 
+            'x0'           : self.x0           , 
+            'delta'        : self.delta        ,
+            'sigmoid_type' : self.sigmoid_type , 
+            'the_phis'     : self.phis  ,
+            'xmin'         : xmin       ,
+            'xmax'         : xmax       ,                        
             }
 
     @property
     def power ( self ) :
-        """``power''-parameter (polynomial order) for Sigmoid function"""
-        return self.__power
+        """`power'-parameter (polynomial order) for Sigmoid function"""
+        return len ( self.phis ) 
 
     @property
-    def alpha ( self ) :
-        """``alpha''-parameter for Sigmoid function"""
-        return self.__alpha
-    @alpha.setter
-    def alpha ( self , value ) :
-        value = float ( value )
-        self.alpha.setVal ( value ) 
-        return self.__alpha.getVal()
-    
+    def scale( self ) :
+        """`scale'-parameter for Sigmoid function (same as `sigma')"""
+        return self.sigma 
+    @scale.setter
+    def scale ( self , value ) :
+        self.sigma = value 
+
     @property
     def x0 ( self ) :
-        """``x0''-parameter for Sigmoid fuction"""
-        return self.__x0
+        """`x0'-parameter for Sigmoid fuction (same as `mean`) """
+        return self.mean 
     @x0.setter
     def x0 ( self , value ) :
-        value = float ( value )
-        self.x0.setVal ( value ) 
-        return self.__x0.getVal()
-      
+        self.mean = value
         
+    @property
+    def delta ( self ) :
+        """`delta'-parameter for Sigmoid function: vertical shift/bias"""
+        return self.__delta 
+    @delta.setter
+    def delta ( self , value ) :
+        self.set_value ( self.__delta , value ) 
+
+    @property
+    def sigmoid_type ( self ) :
+        """`sigmoid_type` : the actual sigmois type, see `Ostap.Math.Sigmoid.SigmoidType`"""
+        return self.pdf.sigmoid_type()
+
+    
 models.append ( Sigmoid_pdf ) 
 # =============================================================================
 ## @class  PSpline_pdf

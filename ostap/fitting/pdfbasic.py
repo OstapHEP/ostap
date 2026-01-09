@@ -52,7 +52,7 @@ __all__     = (
     'Sum1D'            , ## helper pdf: a non-extensive sum of 1D PDFs 
     'Sum2D'            , ## helper pdf: a non-extensive sum of 2D PDFs 
     'Sum3D'            , ## helper pdf: a non-extensive sum of 3D PDFs 
-    ## 
+    ##
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info, python_info 
@@ -63,7 +63,6 @@ from   ostap.math.base          import ( iszero , isfinite , isequal , frexp10 ,
                                          vct1_call_method ,
                                          vct2_call_method ,
                                          vct3_call_method ) 
-
 from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
                                          valid_pointer , 
                                          rootException , 
@@ -71,8 +70,8 @@ from   ostap.core.core          import ( Ostap , VE , hID , dsID , rootID   ,
 from   ostap.fitting.utils      import ( RangeVar   , numcpu     ,
                                          make_name  , fit_status ,
                                          cov_qual   , get_i      )
-from   ostap.fitting.fithelpers import ( H1D_dset, H2D_dset, H3D_dset ,
-                                         SETPARS , Fractions          )
+from   ostap.fitting.fithelpers import ( H1D_dset, H2D_dset  , H3D_dset ,
+                                         SETPARS , Fractions , Phases   )
 from   ostap.fitting.funbasic   import FUN1, FUN2, FUN3, Fun1D , Fun2D , Fun3D 
 from   ostap.fitting.variables  import SETVAR
 from   ostap.utils.cidict       import select_keys
@@ -6931,7 +6930,8 @@ class Sum3D (PDF3,Fractions) :
         """
         pars = self.pdf.getCoefNormalization()
         return True if pars else False 
-        
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

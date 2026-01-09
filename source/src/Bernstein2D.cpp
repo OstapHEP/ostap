@@ -1256,6 +1256,80 @@ double Ostap::Math::Positive2DSym::integrateY ( const double x ) const
 // ======================================================================
 
 
-// ============================================================================
-// The END 
-// ============================================================================
+// ======================================================================
+// constructor from the order
+// ======================================================================
+Ostap::Math::PolyFactor2D::PolyFactor2D 
+( const unsigned short       Nx    ,
+  const unsigned short       Ny    ,
+  const double               xmin  ,
+  const double               xmax  ,
+  const double               ymin  ,
+  const double               ymax  )
+  : m_positive ( Nx , Ny , xmin , xmax , ymin , ymax )
+{}
+// ======================================================================
+// constructor from the order
+// ======================================================================
+Ostap::Math::PolyFactor2D::PolyFactor2D 
+( const std::vector<double>& phases ,
+  const unsigned short       Nx     ,
+  const unsigned short       Ny     ,
+  const double               xmin   ,
+  const double               xmax   ,
+  const double               ymin   ,
+  const double               ymax   )
+  : m_positive ( phases , Nx , Ny , xmin , xmax , ymin , ymax )
+{}
+// ======================================================================
+// constructor from the order
+// ======================================================================
+Ostap::Math::PolyFactor2D::PolyFactor2D 
+( const Ostap::Math::Positive2D& poly )
+  : m_positive ( poly )
+{}
+// ======================================================================
+// swap two objects 
+// ======================================================================
+void Ostap::Math::PolyFactor2D::swap 
+( Ostap::Math::PolyFactor2D& other )
+{ Ostap::Math::swap ( m_positive , other.m_positive ) ; }
+
+
+// ======================================================================
+// constructor from the order
+// ======================================================================
+Ostap::Math::PolyFactor2DSym::PolyFactor2DSym
+( const unsigned short       Nx    ,
+  const double               xmin  ,
+  const double               xmax  )
+  : m_positive ( Nx , xmin , xmax  )
+{}
+// ======================================================================
+// constructor from the order
+// ======================================================================
+Ostap::Math::PolyFactor2DSym::PolyFactor2DSym
+( const std::vector<double>& phases ,
+  const unsigned short       Nx     ,
+  const double               xmin   ,
+  const double               xmax   ) 
+  : m_positive ( phases , Nx , xmin , xmax )
+{}
+// ======================================================================
+// constructor from the order
+// ======================================================================
+Ostap::Math::PolyFactor2DSym::PolyFactor2DSym
+( const Ostap::Math::Positive2DSym& poly )
+  : m_positive ( poly )
+{}
+// ======================================================================
+// swap two objects 
+// ======================================================================
+void Ostap::Math::PolyFactor2DSym::swap 
+( Ostap::Math::PolyFactor2DSym& other )
+{ Ostap::Math::swap ( m_positive , other.m_positive ) ; }
+
+
+// ======================================================================
+//                                                                The END 
+// ======================================================================

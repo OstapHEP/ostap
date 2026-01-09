@@ -4496,25 +4496,38 @@ namespace Ostap
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
-    class  PolySigmoid: public RooAbsPdf
+    class  PolySigmoid : public RooAbsPdf
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::PolySigmoid, 1) ;
+      ClassDefOverride(Ostap::Models::PolySigmoid, 2) ;
       // ======================================================================
     public:
       // ======================================================================
       /// general
-      PolySigmoid
+      PolySigmoid 
       ( const char*          name       ,
 	const char*          title      ,
 	RooAbsReal&          x          ,
 	const RooArgList&    coeffs     ,
 	const double         xmin       ,
 	const double         xmax       ,
-	RooAbsReal&          alpha      ,
-	RooAbsReal&          x0         ) ;
+	RooAbsReal&          scale      ,
+	RooAbsReal&          x0         ,
+	RooAbsReal&          delta      ,
+	const Ostap::Math::Sigmoid::SigmoidType st = Ostap::Math::Sigmoid::Hyperbolic ) ;	
+      /// delta = 0 
+      PolySigmoid 
+      ( const char*          name       ,
+	const char*          title      ,
+	RooAbsReal&          x          ,
+	const RooArgList&    coeffs     ,
+	const double         xmin       ,
+	const double         xmax       ,
+	RooAbsReal&          scale      ,
+	RooAbsReal&          x0         ,
+	const Ostap::Math::Sigmoid::SigmoidType st = Ostap::Math::Sigmoid::Hyperbolic ) ;	
       /// copy
       PolySigmoid
       ( const PolySigmoid&   right     ,
@@ -4557,7 +4570,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Sigmoid& sigmoid () const { setPars() ; return m_sigmoid    ; }
+      const Ostap::Math::Sigmoid& sigmoid () const { setPars() ; return m_sigmoid ; }
       /// access to underlying function
       const Ostap::Math::Sigmoid& function() const { return   sigmoid () ; }
       // ======================================================================
@@ -4565,17 +4578,22 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x     () const { return m_x      .arg() ; }
       const RooArgList& phis  () const { return m_phis          ; }
-      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
+      const RooAbsReal& scale () const { return m_scale  .arg() ; }
       const RooAbsReal& x0    () const { return m_x0     .arg() ; }
-      double            xmin  () const { return m_sigmoid.xmin () ; }
-      double            xmax  () const { return m_sigmoid.xmax () ; }
+      const RooAbsReal& delta () const { return m_delta  .arg() ; }
+      // ======================================================================
+      inline double            xmin  () const { return m_sigmoid.xmin () ; }
+      inline double            xmax  () const { return m_sigmoid.xmax () ; }
+      inline Ostap::Math::Sigmoid::SigmoidType sigmoid_type () const
+      { return m_sigmoid.sigmoid_type () ; }
       // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x     ;
       RooListProxy m_phis  ;
-      RooRealProxy m_alpha ;
+      RooRealProxy m_scale ;
       RooRealProxy m_x0    ;
+      RooRealProxy m_delta ;
       // ======================================================================
     private:
       // ======================================================================

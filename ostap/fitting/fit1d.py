@@ -455,7 +455,6 @@ class RESOLUTION(PEAK) :
     
     __rmatmult__ = __rmod__     
     
-    
 # =============================================================================
 ## @class Fit1D
 #  The actual model for 1D-mass fits
