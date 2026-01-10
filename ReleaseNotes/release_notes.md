@@ -1,3 +1,12 @@
+## New features 
+
+## New features 
+
+## Bug fixes
+
+## Backward incompatible 
+
+
 # v3.6.3.0 
 
 ## New features 
@@ -12,6 +21,7 @@
   1. add `mode` method for numerical evaluation of the mode for many functions, where analytical expresions for _mode_ are unknown 
   1. improve (re-write) all `Sigmoid`-related stuff: allow different types of sigmoid-fuctions: logistic, hyperbolic, trigonometric, Gudermannian; add `delta` parameter for the (vertical) shift/bias  
   1. re-visit all 1D&2D models with polynomials: introdce the elper base classes, causing the drastic removal of repeated code
+
 ## Bug fixes
 
 ## Backward incompatible 
