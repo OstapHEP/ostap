@@ -1576,6 +1576,36 @@ namespace Ostap
       return std::make_pair ( x - N * L , N )   ;
     }
     // ========================================================================
+    template <class T>
+    inline const T& min ( const T& a ) { return a ; }
+    template <class T>
+    inline const T& min ( const T& a , const T& b ) { return std::min ( a, b ) ; }
+    template <class T, typename... Ts>
+    inline const T& min ( const T& a , const T& b , const Ts&... ts ) 
+    { return min ( min ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
+    
+    template <class T>
+    inline const T& max ( const T& a ) { return a ; }
+    template <class T>
+    inline const T& max ( const T& a , const T& b ) { return std::max ( a , b ) ; }
+    template <class T, typename... Ts>
+    inline const T& max ( const T& a , const T& b , const Ts&... ts ) 
+    { return max ( max ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
+    
+    template <class T>
+    inline std::pair<const T&,const T&> minmax ( const T& a ) 
+    { return std::pair<const T&,const T&> ( a , a ) ; }
+    template <class T>
+    inline std::pair<const T&,const T&> minmax ( const T& a , const T&b) 
+    { return a <= b ? std::pair<const T&,const T&> ( a , b ) : std::pair<const T&,const T&> ( b , a ) ; }
+    template <class T, typename... Ts>
+    inline std::pair<const T&,const T&> minmax ( const T& a , const T&b, const Ts&... ts) 
+    { 
+      std::pair<const T&,const T&> m { minmax ( b , std::forward<Ts>(ts)... ) } ;
+      return std::pair<const T&,const T&> ( min ( a , m.first ) , max ( a , m.second ) ) ;
+    }
+
+    // ========================================================================
     /// Nolume of N-ball 
     template <unsigned short>
     class NBallVolume_ ;

@@ -125,6 +125,7 @@ namespace
     NUM_CALLS_LIMIT_REACHED    = 610 , 
     INVALID_BRACKET            = 611 ,  
     INVALID_FUNCTION           = 612 ,
+    INVALID_MINIMIZER          = 613 , 
     // =========================================================================
     ERROR_ROOT                 = 1000000 ,
     ERROR_GSL                  = 2000000 ,    

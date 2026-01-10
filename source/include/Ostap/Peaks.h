@@ -519,20 +519,21 @@ namespace Ostap
     public: // derived getters
       // ======================================================================
       /// get the mean   of distribution s
-      double mean        () const ;
+      double mean           () const ;
       /// get the median of distribution s
-      double median      () const { return   xi    () ; }
+      inline double median  () const { return   xi    () ; }
       /// get the mode   of distribution s
-      double mode        () const ;
+      double mode           () const ;
       //
-      double variance    () const ;
-      double dispersion  () const { return variance () ; }
-      double sigma2      () const { return variance () ; }
-      double sigma       () const ;
+      double variance       () const ;
+      double sigma          () const ;
+      //
+      inline double dispersion  () const { return variance () ; }
+      inline double sigma2      () const { return variance () ; }
+      inline double rms         () const { return sigma    () ; }
       //
       double skewness    () const ;
       double kurtosis    () const ;
-      // ======================================================================
       // ======================================================================
     public:  // integrals
       // ======================================================================
@@ -615,11 +616,14 @@ namespace Ostap
       double mean        () const ;
       double mode        () const ;
       double variance    () const ;
-      double dispersion  () const { return variance () ; }
-      double sigma2      () const { return variance () ; }
       double sigma       () const ;
       double skewness    () const ;
       double kurtosis    () const ;
+      inline double dispersion  () const { return variance () ; }
+      inline double sigma2      () const { return variance () ; }
+      inline double rms         () const { return sigma    () ; }
+      // ======================================================================
+    private: 
       // ======================================================================
       /// approximate mode 
       double approximate_mode () const ;

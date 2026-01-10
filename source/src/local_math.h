@@ -262,7 +262,13 @@ namespace
   */
   const double s_Novosibirsk = std::sqrt ( std::log ( 4.0 ) ) ;
   // ==========================================================================
-  const     double s_INFINITY_LOG     = s_INFINITY_LOG_POS ;
+  /** @var s_WMODE 
+   *  width of the window between mean and mode:
+   * |mean -mode|< sqrt(3) * sigma
+   */
+  const double s_WMODE            = std::sqrt ( 3 ) * 1.05 ;
+  // ===========================================================================
+  const double s_INFINITY_LOG     = s_INFINITY_LOG_POS ;
   // ==========================================================================
   /** the protected exponent
    *  @author Vanya BELYAEV
