@@ -4645,11 +4645,6 @@ double Ostap::Math::der_bessel_Knu
               Ostap::Math::bessel_Knu ( nu + 1 , x ) ) ; 
 }
 
-
-
-
-
-
 // ============================================================================
 /*  Laguerre polynomila of non-integher order 
  *  \f$ L_{q}(x) = {}_1F_1(-q; 1; x ) \f$, where 
@@ -4944,7 +4939,6 @@ double Ostap::Math::fupN_F
   return result ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  get Arithmetic-geometric mean 
@@ -5253,7 +5247,6 @@ double Ostap::Math::gd_inv ( const double x )
     std::numeric_limits<double>::quiet_NaN() ;
 }                     
 // ============================================================================
-
 
 // ============================================================================
 /*  Airy function Ai 
@@ -6172,6 +6165,44 @@ double Ostap::Math::hyperg_2F1_renorm
   return result.val ; 
 }
 // 
+
+// ===========================================================================
+/* softplus function
+ *  \f[ f(x) = \frac{ 1 + \mathrm{e}^{kx} } { k } \f]
+ *  @see https://en.wikipedia.org/wiki/Softplus
+ *  @param x  the function argument 
+ *  @param k  the sharpness parameter 
+ */
+// ===========================================================================
+double Ostap::Math::softplus 
+( const double x ,
+  const double k ) 
+  {
+    const double z = x * k ;
+    //
+    if      ( z < -5 )
+    {
+      const double kappa = std::exp ( z ) ;
+      return Ostap::Math::log1p_x ( kappa ) * kappa / k ; 
+    } 
+    else if ( z <  5 )  { return std::log ( 1 + std::exp ( z ) ) / k ;  }
+    //
+    const double kappa = std::exp ( -z ) ;
+    return x + kappa * Ostap::Math::log1p_x ( kappa ) / k ;
+  }
+
+// ========================================================================
+/** logistic function
+ *  \f[ f(x) = \frac{1}{ 1 + \mathrm{e}^{-x}} \f]
+ */
+// =========================================================================
+double Ostap::Math::logistic  ( const double x ) 
+{
+  if ( 0 <= x ) { return 1 / ( 1 + std::exp ( -x ) ) ; }
+  const double z = std::exp ( x ) ; 
+  return z / ( 1 + z ) ; 
+}  
+  
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

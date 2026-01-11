@@ -268,7 +268,7 @@ namespace Ostap
         ( const gsl_function*        func                 ,           // the  function
           const double               xlow                 ,           // low  integration edge 
           const double               xhigh                ,           // high integration edge 
-          const std::vector<double>& pnts                 ,           // knowns singular points 
+          const std::vector<double>& pnts                 ,           // known singular points 
           gsl_integration_workspace* workspace            ,           // workspace
           const double               aprecision = s_APRECISION_QAGP , // absolute precision
           const double               rprecision = s_RPRECISION_QAGP , // relative precision
@@ -300,7 +300,8 @@ namespace Ostap
           if      ( limit <= 0                ) { limit =  workspace->limit ; }
           else if ( limit >  workspace->limit ) { limit =  workspace->limit ; }
           //
-          std::vector<double> pts ( 1 , xlow ) ; pts.reserve ( pnts.size() + 2 ) ;
+          std::vector<double> pts {} ; pts.reserve ( pnts.size() + 2 ) ;
+          pts.push_back ( xlow  ) ; 
           for ( auto p : pnts ) { if ( xlow < p && p < xhigh ) { pts.push_back ( p ) ; } }
           pts.push_back ( xhigh ) ;
           //

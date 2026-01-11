@@ -2137,6 +2137,22 @@ namespace Ostap
       const double x ) ;
     
     // ========================================================================
+    /** softplus function
+     *  \f[ f(x) = \frac{ 1 + \mathrm{e}^{kx} } { k } \f]
+     *  @see https://en.wikipedia.org/wiki/Softplus
+     *  @param x  the function argument 
+     *  @param k  the sharpness parameter 
+     */
+    double softplus 
+    ( const double x     ,
+      const double k = 1 ) ;
+
+    // ========================================================================
+    /** logistic function
+     *  \f[ f(x) = \frac{1}{ 1 + \mathrm{e}^{-x}} \f]
+     */
+    double logistic  ( const double x ) ;  
+    // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================
     
