@@ -262,7 +262,20 @@ Ostap::Math::Integrator::integrate_
   const int                          rule       )
 {
   //
-  if ( s_equal ( xmin , xmax ) ) { return result ( 0 , 0 )  ; }
+  if      ( s_equal ( xmin , xmax ) ) { return result ( 0 , 0 )  ; }
+  else if ( xmax < xmin )
+  { 
+    result r = integrate_ ( std::cref ( f1 ) , 
+                            xmax       , 
+                            xmin       , 
+                            ws         , 
+                            tag        , 
+                            rescale    , 
+                            aprecision , 
+                            rprecision , 
+                            rule       ) ; 
+    return result ( -r.first , r.second ) ; 
+  } 
   //
   if ( 0 < rescale ) 
   {
@@ -279,6 +292,16 @@ Ostap::Math::Integrator::integrate_
       return result ( scale * r.first , scale * r.second ) ;  
     }
   }
+   //
+  const bool infmin = s_NEGINF == xmin || xmin < s_NEGHUGE ; 
+  const bool infmax = s_POSINF == xmax || xmax > s_POSHUGE ;
+  // 
+  if      ( infmin && infmax )
+  { return integrate_infinity_      ( std::cref ( f1 ) ,        ws , tag , aprecision, rprecision ) ; }
+  else if ( infmin )
+  { return integrate_from_infinity_ ( std::cref ( f1 ) , xmax , ws , tag , aprecision, rprecision ) ; }
+  else if ( infmax )
+  { return integrate_to_infinity_   ( std::cref ( f1 ) , xmin , ws , tag , aprecision, rprecision ) ; }
   //
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -361,6 +384,10 @@ Ostap::Math::Integrator::integrate_to_infinity_
   const double                       aprecision ,
   const double                       rprecision )
 {
+  //
+  if ( s_NEGINF == xmin || xmin < s_NEGHUGE ) 
+  { return integrate_infinity_ ( std::cref ( f1 ) , ws, tag , aprecision , rprecision ) ; }
+  //
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
   //
@@ -401,6 +428,10 @@ Ostap::Math::Integrator::integrate_from_infinity_
   const double                       aprecision ,
   const double                       rprecision )
 {
+  //
+  if ( s_POSINF == xmax || xmax > s_POSHUGE ) 
+  { return integrate_infinity_ ( std::cref ( f1 ) , ws, tag , aprecision, rprecision ) ; }
+  //
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
   //
@@ -447,15 +478,24 @@ Ostap::Math::Integrator::cauchy_pv_
   const double                       rprecision )
 {
   if      ( s_equal ( xmax , xmin ) ) { return result ( 0 , 0 ) ; }
-  //
-  if (           xmax < xmin   ) 
+  else if ( xmax < xmin   ) 
   { 
     result r = cauchy_pv_ ( std::cref ( f1 ) , c , xmax , xmin , ws , tag , rescale , aprecision , rprecision ) ; 
     return result ( -r.first , r.second ) ;
   }
   //
-  const double       scale = fun_scale ( f1 , xmin , xmax , rescale ) ;
-  const double      iscale = s_zero    ( scale ) ? 1.0 : 1.0 / scale ;
+  const bool infmin = s_NEGINF == xmin || xmin < s_NEGHUGE ; 
+  const bool infmax = s_POSINF == xmax || xmax > s_POSHUGE ;
+  // 
+  if      ( infmin && infmax )
+  { return cauchy_pv_infinity_      ( std::cref ( f1 ) , c        , ws , tag , rescale , aprecision, rprecision ) ; }
+  else if ( infmin )
+  { return cauchy_pv_from_infinity_ ( std::cref ( f1 ) , c , xmax , ws , tag , rescale , aprecision, rprecision ) ; }
+  else if ( infmax )
+  { return cauchy_pv_to_infinity_   ( std::cref ( f1 ) , c , xmin , ws , tag , rescale , aprecision, rprecision ) ; }
+  //
+  const double      scale = fun_scale ( f1 , xmin , xmax , rescale ) ;
+  const double      iscale = s_zero   ( scale ) ? 1.0 : 1.0 / scale ;
   const std::size_t ntag   = 0 == tag ? tag : Ostap::Utils::hash_combiner ( tag , rescale , scale , iscale ) ;
   //
   auto  f2 = std::cref ( f1 ) ;
@@ -559,6 +599,9 @@ Ostap::Math::Integrator::cauchy_pv_to_infinity_
   const double                       rprecision ,
   const double                       width      )
 {
+  if ( s_NEGINF == xmin  || xmin < s_NEGHUGE )
+  { return cauchy_pv_infinity_ ( std::cref ( f1 ) , c , ws , tag , rescale , aprecision, rprecision ) ; }
+  // 
   const double xmax  = std::max ( xmin , cauchy_pv_b ( c , width ) ) ;
   //
   auto f2 = std::cref ( f1 ) ;
@@ -595,6 +638,9 @@ Ostap::Math::Integrator::cauchy_pv_from_infinity_
   const double                       width      ) 
 {
   //
+  if ( s_POSINF == xmax  || xmax > s_POSHUGE )
+  { return cauchy_pv_infinity_ ( std::cref ( f1 ) , c , ws , tag , rescale , aprecision, rprecision ) ; }
+  // 
   const double xmin  = std::min ( xmax , cauchy_pv_a ( c , width ) ) ;
   //
   auto f2 = std::cref ( f1 ) ;
@@ -726,6 +772,40 @@ Ostap::Math::Integrator::integrate_singular_
   const double                  aprecision ,
   const double                  rprecision )
 { 
+  // 
+  if ( xmax < xmin ) 
+  {
+    result r = integrate_singular_ ( std::cref ( f1 ) , xmax , xmin , points , ws , tag , aprecision , rprecision ) ;
+    return result ( -r.first , r.second ) ;
+  }
+  //
+  const bool infmin = s_NEGINF == xmin || xmin < s_NEGHUGE ; 
+  const bool infmax = s_POSINF == xmax || xmax > s_POSHUGE ;
+  // 
+  if      ( infmin && infmax )
+  {  
+    const auto f2 = std::cref ( f1 ) ; 
+    if ( points.empty () ) { return integrate_infinity_ ( f2 , tag , aprecision , rprecision ) ; } 
+    //
+    const auto [ pmn , pmx ] = std::minmax_element ( points.begin() , points.end() ) ;
+    //
+    const double pmin = *pmn ;
+    const double pmax = *pmx ;
+    //
+    double delta = pmn == pmx ? 0.0 : 0.1 * ( pmax - pmin ) ; 
+    if ( !delta ) { delta = 0.1 * Ostap::Math::absmax ( pmin , pmax , 1.e-3 ) ; }
+    //
+    const double zmin  = pmin - delta ; 
+    const double zmax  = pmax + delta ; 
+    //
+    result r1 = integrate_singular_      ( f2 , zmin , zmax , points , ws , tag , aprecision/3 , rprecision/2 ) ;
+    result r2 = integrate_from_infinity_ ( f2 , zmin ,                 ws , tag , aprecision/3 , rprecision/2 ) ;
+    result r3 = integrate_to_infinity_   ( f2 , zmax ,                 ws , tag , aprecision/3 , rprecision/2 ) ;
+    //
+    return result ( r1.first + r2.first  + r3.first , r1.second + r2.second + r3.second ) ;
+  }
+  //
+
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
   //

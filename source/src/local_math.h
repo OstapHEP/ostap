@@ -65,7 +65,9 @@ namespace
   /** @var s_INFINITY
    *  representation of the almost maximal double 
    */
-  constexpr double s_INFINITY  = 0.9 * std::numeric_limits<double>::max ()  ;
+  constexpr double s_INFINITY  =  0.95 * std::numeric_limits<double>::max ()  ;
+  constexpr double s_POSHUGE   =  0.95 * std::numeric_limits<double>::max ()  ;
+  constexpr double s_NEGHUGE   = -0.95 * std::numeric_limits<double>::max ()  ;
   // ==========================================================================
   /** @var s_SMALL
    *  representation of positive "small"

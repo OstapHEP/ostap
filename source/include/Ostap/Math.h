@@ -1605,6 +1605,22 @@ namespace Ostap
       return std::pair<const T&,const T&> ( min ( a , m.first ) , max ( a , m.second ) ) ;
     }
 
+    template <class T>
+    inline T absmin ( const T& a ) { return std::abs ( a ) ; }
+    template <class T>
+    inline T absmin ( const T& a , const T& b ) { return std::min ( std::abs ( a ) , std::abs ( b ) ) ; }
+    template <class T, typename... Ts>
+    inline T absmin ( const T& a , const T& b , Ts&&... ts ) 
+    { return absmin ( absmin ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
+   
+    template <class T>
+    inline T absmax ( const T& a ) { return std::abs ( a ) ; }
+    template <class T>
+    inline T absmax ( const T& a , const T& b ) { return std::max ( std::abs ( a ) , std::abs ( b ) ) ; }
+    template <class T, typename... Ts>
+    inline T absmax ( const T& a , const T& b , Ts&&... ts ) 
+    { return absmax ( absmax ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
+
     // ========================================================================
     /// Nolume of N-ball 
     template <unsigned short>
