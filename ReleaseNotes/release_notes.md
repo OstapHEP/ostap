@@ -1,11 +1,10 @@
-## New features 
+## New features
 
-## New features 
-
+   1. `Ostap::Math::Sigmoid` : add more sigmoid types; normalize all sigmoids to have the same slope at the x0
+      
 ## Bug fixes
 
 ## Backward incompatible 
-
 
 # v3.6.3.0 
 
@@ -20,7 +19,7 @@
   1. add `Ostap/Extrema.h` with few functions to get extrema of functions using GSL machinery 
   1. add `mode` method for numerical evaluation of the mode for many functions, where analytical expresions for _mode_ are unknown 
   1. improve (re-write) all `Sigmoid`-related stuff: allow different types of sigmoid-fuctions: logistic, hyperbolic, trigonometric, Gudermannian; add `delta` parameter for the (vertical) shift/bias  
-  1. re-visit all 1D&2D models with polynomials: introdce the elper base classes, causing the drastic removal of repeated code
+  1. re-visit all 1D&2D models with polynomials: introduce the helper base classes, causing the drastic removal of repeated code
 
 ## Bug fixes
 

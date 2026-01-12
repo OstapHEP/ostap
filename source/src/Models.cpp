@@ -2584,7 +2584,9 @@ bool Ostap::Math::Sigmoid::setDelta ( const double value )
   return true ;
 }
 // ============================================================================
-// get the actual sigmoid
+/* Get the actual sigmoid/kink value
+ *  All sigmoids are normalized to have the same slope at the x=x0
+ */
 // ============================================================================
 double Ostap::Math::Sigmoid::sigmoid ( const double x ) const
 {
@@ -2592,15 +2594,32 @@ double Ostap::Math::Sigmoid::sigmoid ( const double x ) const
   static const double s_bias  = M_PI / 2.0  ;
   static const double s_scale = 1.0  / M_PI ;
   //
+  static const double s_erf   = std::sqrt ( M_PI ) ;
+  static const double s_p0    = 1.0                ;
+  static const double s_p1    = 1.0 / 1.5          ;
+  static const double s_p2    = 1.0 / 1.875        ; 
+  static const double s_p3    = 1.0 / 2.1875       ; 
+  static const double s_p4    = 1.0 / 2.4609375    ;
+  static const double s_p5    = 1.0 / 2.70703125   ; 
+  static const double s_p6    = 1.0 / 2.9326171875 ;  
+  //
   const double z = ( x - m_x0 ) / m_scale ;
   switch ( m_type )
     {
-    case Logistic : 
-      return z < 0  ? 1 - 1 / ( 1.0 + std::exp ( z ) ) : 1 / ( 1.0 + std::exp ( -z ) ) ;      
-    case Hyperbolic    : return 0.5     * ( 1      + std::tanh  (  z ) ) ; 
-    case Trigonometric : return s_scale * ( s_bias + std::atan  (  z ) ) ;
-    case Error         : return 0.5     * ( 1      + std::erf   (  z ) ) ;
-    case Gudermannian  : return s_scale * ( s_bias + Ostap::Math::gd ( z ) ) ;      
+    case Logistic         : return Ostap::Math::logistic ( z / 0.25 ) ; 
+    case Hyperbolic       : return 0.5     * ( 1      + std::tanh       ( z * 2         ) ) ; 
+    case Trigonometric    : return s_scale * ( s_bias + std::atan       ( z / s_scale   ) ) ;
+    case Error            : return 0.5     * ( 1      + std::erf        ( z * s_erf     ) ) ;
+    case Gudermannian     : return s_scale * ( s_bias + Ostap::Math::gd ( z / s_scale   ) ) ;      
+    case Algebraic        : return 0.5     * ( 1 + ( 2 * z ) / std::hypot ( 1.0 , 2 * z ) ) ; 
+    case SmoothTransition : return Ostap::Math::smooth_transition ( z , -1 , 1 ) ;
+    case Polynomial_n0    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p0  ,  0 ) ;
+    case Polynomial_n1    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p1  ,  1 ) ;
+    case Polynomial_n2    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p2  ,  2 ) ;
+    case Polynomial_n3    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p3  ,  3 ) ;
+    case Polynomial_n4    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p4  ,  4 ) ;
+    case Polynomial_n5    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p5  ,  5 ) ;
+    case Polynomial_n6    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p6  ,  6 ) ;
     } ;
   //
   return 0 ;

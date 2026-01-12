@@ -6024,13 +6024,13 @@ namespace
 /*  smooth transition function 
  *   \f[ \phix() = left\{ 
  *   \begin{array}{ll}
- *     0 &  x\le b \                            \
+ *     0 &  x\le a \\
  *     1 &  x\ge b \\ 
  *    smooth & 
- *    \end{array} \rigth. \f] 
+ *    \end{array} \right. \f] 
  */
 // ========================================================================
-double Ostap::Math::smooth_transtion 
+double Ostap::Math::smooth_transition 
 ( const double x , 
   const double a ,
   const double b ) 

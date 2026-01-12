@@ -1516,12 +1516,23 @@ namespace Ostap
     };
     // ========================================================================
     /** @class Sigmoid
-     *  (shifted) Sigmoid function, modulated by the positive polynomial
+     *  (shifted&scaled) Sigmoid/kink function, modulated by the positive polynomial
      *  \f$ f(x) = ( f_{\sigma} (z) + \updelta ) \times P_{pos} (x) \f$, where 
      *   - \f$ z = \frac{x-x_0}{\sigma} \f$ 
      *   - \f$ f_{\sigma}(x)   \ge 0 }\f$ is Sigmoid function 
      *   - \f$ P_{pos}(x)      \ge 0 }\f$ is Positive polynomial
      *   - shift \f$ \updelta \ge 0  \f$ 
+     * 
+     *  All sigmoid fuctions \f$ \sigma(z) \f$ are normalized & scaled such
+     *  - \f$ \sigma(-\infty) =0\f$ 
+     *  - \f$ \sigma(+\infty) =1\f$ 
+     *  - \f$ \sigma^\prime(0)=1\f$ 
+     *
+     *  @see Ostap::Math::logistic 
+     *  @see Ostap::Math::gd  
+     *  @see Ostap::Math::smooth_transition 
+     *  @see Ostap::Math::smooth_step 
+     *
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
@@ -1532,13 +1543,25 @@ namespace Ostap
       /// the sigmoid type 
       enum SigmoidType
 	{
-	  Logistic             , // based on logistic 
-	  Hyperbolic           , // based on tanh 
-	  Trigonometric        , // based on atan 
-	  Error                , // Based on error function 
-	  Gudermannian         , // Based on Gudermannian function
-	  First = Logistic     , 
-	  Last  = Gudermannian               
+	  //
+	  Logistic              , // based on logistic function 
+	  Hyperbolic            , // based on tanh 
+	  Trigonometric         , // based on atan 
+	  Error                 , // Based on error function 
+	  Gudermannian          , // Based on Gudermannian function
+	  Algebraic             , // 0.5 * ( 1 + 2*x / hypot ( 1 , 2*x ) )
+	  SmoothTransition      , // Based on "smooth transition" function
+	  //
+	  Polynomial_n0         , // Based on "smooth step" with n=0
+	  Polynomial_n1         , // Based on "smooth step" with n=1
+	  Polynomial_n2         , // Based on "smooth step" with n=2
+	  Polynomial_n3         , // Based on "smooth step" with n=3
+	  Polynomial_n4         , // Based on "smooth step" with n=4
+	  Polynomial_n5         , // Based on "smooth step" with n=5
+	  Polynomial_n6         , // Based on "smooth step" with  n=6
+	  //
+	  First = Logistic      , 
+	  Last  = Polynomial_n6 
 	} ;      	
       // ============================================================
     public:
@@ -1577,7 +1600,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the actual sigmoid value 
+      /** Get the actual sigmoid/kink value
+       *  All sigmoids are normalized to have the same slope at the x=x0
+       */
       double sigmoid ( const double x ) const ;
       // ======================================================================
     public: // sigmoid getters 
