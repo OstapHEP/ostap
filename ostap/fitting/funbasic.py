@@ -356,7 +356,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             v    = float ( p ) 
             v , expo = pretty_float ( v , precision = 5 , width = 7 )
             if expo : row = '%d' % i , name , v , '10^%+d' % expo , cc , ''  
-            else    : row = '%d' % i name , v , ''              , cc , '' 
+            else    : row = '%d' % i , name , v , ''              , cc , '' 
             rows.append ( row )
             
         fixed_pars  = self.pars_fixed  ( dataset )
