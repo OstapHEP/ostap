@@ -360,7 +360,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             rows.append ( row )
             
         fixed_pars  = self.pars_fixed  ( dataset )
-        for i , p in enumerate ( params2 , start = len ( float_pars )  ) :
+        for i , p in enumerate ( fixed_pars , start = len ( float_pars ) + 1 ) :
             name = p.name 
             cc   = checked_yes if p in constrained or name in constrained else '' 
             v    = float ( p ) 
