@@ -50,7 +50,7 @@ from   ostap.utils.cidict            import cidict
 from   ostap.utils.basic             import typename 
 from   ostap.plotting.fit_draw       import key_transform, draw_options
 from   ostap.logger.pretty           import pretty_float, fmt_pretty_values
-from   ostap.logger.symbols          import times 
+from   ostap.logger.symbols          import times, checked_yes
 # 
 import ostap.fitting.roocollections
 import ROOT, numpy, math, sys, abc  
@@ -315,9 +315,10 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         - see `ROOT.RooAbsReal.getParameters`
         - see `ROOT.RooAbsArg.isConstant`   
         """
-        pars = self.params ( dataset )
-        return tuple ( p for p in pars if p.isConstant () )
-    
+        pars = [ p for p in self.params ( dataset ) if p.isConstant() ]
+        pars.sort ( key = lambda p : p.GetName()  )        
+        return tuple ( pars )
+
     # =========================================================================
     ## Get parameters that are NOT constant , allowed to vary 
     #  @code
@@ -333,9 +334,46 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         - see `ROOT.RooAbsReal.getParameters`
         - see `ROOT.RooAbsArg.isConstant`   
         """
-        pars = self.params ( dataset )
-        return tuple ( p for p in pars if not p.isConstant () )
+        pars = [ p for p in self.params ( dataset ) if not p.isConstant() ]
+        pars.sort ( key = lambda p : p.GetName()  )        
+        return tuple ( pars )
     
+    # =========================================================================
+    ## Show all parameters as the table 
+    def pars_table ( self               ,
+                     dataset     = None ,
+                     constrained = ()   ,
+                     title       = ''   ,
+                     prefix      = ''   ) :
+        """ Show all parameters as table 
+        """
+        ## the header 
+        rows     = [  ( '#' , 'Name' , 'Value' , 'Factor' , 'Constrained?' , 'Constant?' ) ] 
+        float_pars = self.pars_float  ( dataset )
+        for i , p in enumerate ( float_pars , start = 1 ) :
+            name = p.name 
+            cc   = checked_yes if p in constrained or name in constrained else '' 
+            v    = float ( p ) 
+            v , expo = pretty_float ( v , precision = 5 , width = 7 )
+            if expo : row = '%d' % i , name , v , '10^%+d' % expo , cc , ''  
+            else    : row = '%d' % i name , v , ''              , cc , '' 
+            rows.append ( row )
+            
+        fixed_pars  = self.pars_fixed  ( dataset )
+        for i , p in enumerate ( params2 , start = len ( float_pars )  ) :
+            name = p.name 
+            cc   = checked_yes if p in constrained or name in constrained else '' 
+            v    = float ( p ) 
+            v , expo = pretty_float ( v , precision = 5 , width = 7 )
+            if expo : row = '%d' % i , name , v , '10^%+d' % expo , cc , checked_yes 
+            else    : row = '%d' % i , name , v , ''              , cc , checked_yes
+            rows.append ( row )
+            
+        import ostap.logger.table as T
+        rows  = T.remove_empty_columns ( rows ) 
+        title = title if title else 'Parameters'
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'rlccc' )
+        
     # =========================================================================
     ## get the parameter value by name
     #  @code

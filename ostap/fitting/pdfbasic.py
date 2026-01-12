@@ -579,21 +579,33 @@ class APDF1 ( Components ) :
                     self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
         if not silent and not 'quiet' in kwargs  :
-            params = self.params ( dataset )
-            rows = [  ( 'Parameter' , 'Value' , 'Factor' ) ]
-            for p in params :
-                name = p.name 
-                v    = float ( p * 1 )
-                v , expo = pretty_float ( v , precision = 4 , width = 6 )
-                if expo : row = name , v , '10^%+d' % expo  
-                else    : row = name , v , '' 
-                rows.append ( row )
-            import ostap.logger.table as T
-            rows  = T.remove_empty_columns ( rows ) 
-            title = 'Before fit'
-            table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rl' )            
-            self.info ( '%s:\n%s' % ( title , table ) ) 
+
+            constraints = [] 
+            constrained = set ()
             
+            for o in opts :
+                if 'ExternalConstraints' != o.GetName() : continue
+                argset = o.getSet( 0 )
+                if not argset : continue 
+                for c in argset :
+                    if c and isinstance ( c , ROOT.RooAbsPdf ) : constraints.append ( c )
+                        
+            if constraints :
+                rows = [ ( 'Name' , 'Title' , 'Type' , 'Floating variables' ) ] 
+                for c in constraints :
+                    ps  = c.getParameters ( dataset ) 
+                    for p in ps :
+                        if not p.isConstant() : constrained.add ( p.name ) 
+                    row = c.GetName() , c.GetTitle() , typename ( c ) , ', '.join ( p.name for p in ps )
+                    rows.append ( row )
+                title = '(External) Constraints  #%d' % len ( constraints ) 
+                table = T.table ( rows , title = title , prefix = '# ' , alignment = 'llww' )
+                self.info ( '%s:\n%s' % ( title , table ) ) 
+                
+            title = 'Parameters before the fit'
+            table = self.pars_table ( title = title , prefix = '# ' , constrained = constrained  )
+            self.info ( '%s:\n%s' % ( title , table ) ) 
+
         ## define silent context
         with roo_silent ( silent ) :            
             if self.fit_result : self.fit_result = None

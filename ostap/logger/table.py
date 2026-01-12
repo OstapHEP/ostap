@@ -389,6 +389,7 @@ def table ( rows                          ,
 
     if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
 
+    if not rows : return ''                               ## RETURN 
     rows = [ list ( row ) for row in preprocess_table ( rows ) ]
     if not rows : return ''                               ## RETURN 
     
