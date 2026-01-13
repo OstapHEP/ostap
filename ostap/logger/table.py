@@ -632,6 +632,7 @@ def preprocess_table ( rows ) :
         if   plain_string ( row )                          : yield          row ,  
         elif all ( plain_string ( item ) for item in row ) : yield  tuple ( row )
         else :
+            print ( 'else...' , i , row )
             generators = tuple ( get_item ( item ) for item in row )
             for nrow in zip_longest ( *generators ) :
                 yield tuple ( make_item ( i ) for i in nrow )
