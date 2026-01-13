@@ -166,11 +166,14 @@ def test_scan_limit1 () :
         bplot.plot  .draw ( 'a' )
         bplot.legend.draw (     )
 
-        title = '90% Upper limits'
-        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
-        logger.info ( '%s:\n%s' % ( title , table ) )
+    title = '90% Upper limits'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
+    ogger.info ( '%s:\n%s' % ( title , table ) )
         
-        graphs.append ( bplot ) 
+    graphs.append ( bplot ) 
+        
+    print ( 'LIMIT1-END' ) 
+    
 # ============================================================================-
 ## Scan the position of the peak and get the limit for each peak posiiton peak
 #  - mass-dependent resolution is known with some finite precision
