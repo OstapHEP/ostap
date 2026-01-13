@@ -613,7 +613,8 @@ def shorten_title ( title , size ) :
 # =============================================================================
 plain_string = lambda s : isinstance ( s , string_types ) and not '\n' in s
 def get_item ( item ) :
-    if   plain_string ( item )                : yield item
+    if   item is None                         : yield ''
+    elif plain_string ( item )                : yield item
     elif isinstance   ( item , string_types ) :
         ## spliting can hav ebad interference with colorization
         dcitem = decolorize ( item ) 
