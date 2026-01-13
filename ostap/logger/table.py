@@ -220,8 +220,8 @@ def the_table ( rows                          ,
     if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
     
     ## take care on "wrapped&wrapped-like" columns 
+    if not rows : return ''
     rows = [ list ( row ) for row in preprocess_table ( rows ) ]
-    
     if not rows : return ''                                  ## RETURN 
 
     # =================================================================
