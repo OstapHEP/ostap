@@ -450,9 +450,9 @@ if '__main__' == __name__ :
     
         ## test_scan_limit1    ()
         
-        test_scan_limit2    ()
+        ## test_scan_limit2    ()
         
-        ## test_scan_p0_1      ()
+        test_scan_p0_1      ()
 
 # =============================================================================
 ##                                                                      The END 
