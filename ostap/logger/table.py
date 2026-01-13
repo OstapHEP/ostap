@@ -627,7 +627,8 @@ def preprocess_table ( rows ) :
     """ Preprocess table
     """
     make_item  = lambda s : s if s else '' 
-    for row in rows :
+    for i,row in enumerate ( rows ) :
+        print ( 'processing row ' , i , row )
         if   plain_string ( row )                          : yield          row ,  
         elif all ( plain_string ( item ) for item in row ) : yield  tuple ( row )
         else :

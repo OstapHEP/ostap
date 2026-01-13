@@ -58,6 +58,7 @@ from   ostap.fitting.roocmdarg import check_arg
 from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.utils.utils       import make_iterable
 from   ostap.utils.basic       import typename , items_loop
+from   ostap.utils.valerrors   import VAE 
 from   ostap.logger.symbols    import times
 import ostap.logger.table      as     T 
 import ROOT, sys, random, math
@@ -1899,8 +1900,17 @@ class FitHelper(VarMaker) :
         """
         
         assert isinstance ( var   , ROOT.RooAbsReal ) ,\
-               "Invalid 'v': %s/%s"  % ( var , type ( var ) )
-
+               "Invalid 'v': %s/%s"  % ( var , typename ( var ) )
+    
+        if isinstance ( value , VAE ) and error is None : 
+            return self.soft_constraint2 ( var , 
+                                          value     = value.value , 
+                                          neg_error = value.neg_error , 
+                                          pos_error = value.pos_error , 
+                                          name      = name , 
+                                          title    = title ) 
+                                          
+            
         if isinstance ( value , ROOT.RooConstVar ) : value = float ( value ) 
         if isinstance ( error , ROOT.RooConstVar ) : error = float ( error ) 
         
@@ -1909,12 +1919,12 @@ class FitHelper(VarMaker) :
             value        = value.value ()
 
         assert isinstance ( value , ROOT.RooAbsReal ) or   isinstance ( value , num_types ) , \
-               "Invalid 'value': %s/%s"  % ( value , type ( value ) )
+               "Invalid 'value': %s/%s"  % ( value , typename ( value ) )
                
         assert isinstance ( error , ROOT.RooAbsReal ) or ( isinstance ( error , num_types ) and 0 < error ) , \
-               "Invalid 'error': %s/%s"  % ( error , type ( error ) )
+               "Invalid 'error': %s/%s"  % ( error , typename ( error ) )
             
-        name  = name  if name  else self.roo_name ( prefox = 'Gaussian' , name = var.GetName() ) 
+        name  = name  if name  else self.roo_name ( prefix = 'Gaussian' , name = var.GetName() ) 
 
         var_name = var.GetName() 
         if   isinstance ( value , ROOT.RooAbsReal ) and isinstance ( error , ROOT.RooAbsReal ) :
@@ -1944,7 +1954,7 @@ class FitHelper(VarMaker) :
 
         v = float ( value )
         e = float ( error ) 
-        self.debug  ("Constraint is created '%s' : %s" % ( var.name , VE ( v , e * e ) ) ) 
+        self.debug  ("Gaussian constraint is created '%s' : %s" % ( var.name , VE ( v , e * e ) ) ) 
         return  gauss 
 
     # =========================================================================
@@ -1962,25 +1972,25 @@ class FitHelper(VarMaker) :
                            name  = '' ,
                            title = '' ) :
         """ Prepare 'soft' asymetric Gaussian constraint for the variable
-        -  consraint is prepared but not applied!
+        -  constraint is prepared but not applied!
         >>> sigma      = ...
         >>> constraint = pdf.make_constraint2 ( sigma , 0.15 , -0.01 , +0.05 ) 
         """
         
         assert isinstance ( var   , ROOT.RooAbsReal ) ,\
-               "Invalid 'v': %s/%s"  % ( var , type ( var ) )        
+               "Invalid 'v': %s/%s"  % ( var , typename ( var ) )        
         assert isinstance ( value     , num_types ) ,\
-               "Invalid 'value': %s/%s"  % ( value , type ( value ) )
+               "Invalid 'value': %s/%s"  % ( value , typename ( value ) )
         assert isinstance ( neg_error , num_types ) ,\
-               "Invalid 'neg_error': %s/%s"  % ( neg_error , type ( neg_error ) )        
+               "Invalid 'neg_error': %s/%s"  % ( neg_error , typename ( neg_error ) )        
         assert isinstance ( pos_error , num_types ) and 0 < pos_error ,\
-               "Invalid 'pos_error': %s/%s"  % ( pos_error , type ( pos_error ) )
+               "Invalid 'pos_error': %s/%s"  % ( pos_error , typename ( pos_error ) )
         
         if abs ( neg_error ) == pos_error :
             return self.soft_constraint ( var , VE ( value , pos_error * pos_error ) ,
                                           name = name , title = title )
             
-        name  = name  if name  else self.roo_name ( prefox = 'BifurcatedGaussian' , name = var.GetName() ) 
+        name  = name  if name  else self.roo_name ( prefix = 'BifurcatedGaussian' , name = var.GetName() ) 
         title = title if title else 'Bifurcated Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
         
         # value & error as RooFit objects: 
@@ -1998,7 +2008,7 @@ class FitHelper(VarMaker) :
         self.aux_keep.append ( negerr )
         self.aux_keep.append ( agauss )
         
-        self.debug ("Constraint is created '%s': %+.g+%-.g-%-.g" % ( var.name , value , pos_error , neg_error ) )        
+        self.debug ("Bifurcated Gaussian constraint is created '%s': %+.g+%-.g-%-.g" % ( var.name , value , pos_error , neg_error ) )        
         return agauss 
 
     # ==========================================================================
