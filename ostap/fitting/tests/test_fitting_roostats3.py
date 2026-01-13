@@ -168,7 +168,7 @@ def test_scan_limit1 () :
 
     title = '90% Upper limits'
     table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
-    ogger.info ( '%s:\n%s' % ( title , table ) )
+    logger.info ( '%s:\n%s' % ( title , table ) )
         
     graphs.append ( bplot ) 
         
