@@ -1914,7 +1914,7 @@ class FitHelper(VarMaker) :
         assert isinstance ( error , ROOT.RooAbsReal ) or ( isinstance ( error , num_types ) and 0 < error ) , \
                "Invalid 'error': %s/%s"  % ( error , type ( error ) )
             
-        name  = name  if name  else self.generate_name ( name = 'Gauss_%s_%s' % ( var.GetName() , self.name ) )
+        name  = name  if name  else self.roo_name ( prefox = 'Gaussian' , name = var.GetName() ) 
 
         var_name = var.GetName() 
         if   isinstance ( value , ROOT.RooAbsReal ) and isinstance ( error , ROOT.RooAbsReal ) :
@@ -1925,7 +1925,7 @@ class FitHelper(VarMaker) :
             title = title if title else 'Gaussian Constraint[%s,%s] '     % ( var_name , sv )
         elif isinstance ( value , ROOT.RooAbsReal ) :
             title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value.name , error )
-        elif isinstance ( error , ROOT.RooabsReal ) :
+        elif isinstance ( error , ROOT.RooAbsReal ) :
             title = title if title else 'Gaussian Constraint[%s,%s+/-%s]' % ( var_name , value , error.name )
         else :
             title = title if title else 'Gaussian Constraint[%s]'         %   var_name 
@@ -1979,9 +1979,9 @@ class FitHelper(VarMaker) :
         if abs ( neg_error ) == pos_error :
             return self.soft_constraint ( var , VE ( value , pos_error * pos_error ) ,
                                           name = name , title = title )
-        
-        name  = name  if name  else 'Gauss_%s_%s'                      % ( var.GetName() , self.name ) 
-        title = title if title else 'Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
+            
+        name  = name  if name  else self.roo_name ( prefox = 'BifurcatedGaussian' , name = var.GetName() ) 
+        title = title if title else 'Bifurcated Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
         
         # value & error as RooFit objects: 
         val    = ROOT.RooFit.RooConst (       float ( value     )   )
