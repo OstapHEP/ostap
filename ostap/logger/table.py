@@ -390,7 +390,6 @@ def table ( rows                          ,
     if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
 
     if not rows : return ''                               ## RETURN 
-    print ( 'ROWS HERE:', rows )
     rows = [ list ( row ) for row in preprocess_table ( rows ) ]
     if not rows : return ''                               ## RETURN 
     
@@ -628,12 +627,10 @@ def preprocess_table ( rows ) :
     """ Preprocess table
     """
     make_item  = lambda s : s if s else '' 
-    for i,row in enumerate ( rows ) :
-        print ( 'processing row ' , i , row )
+    for row in rows :
         if   plain_string ( row )                          : yield          row ,  
         elif all ( plain_string ( item ) for item in row ) : yield  tuple ( row )
         else :
-            print ( 'else...' , i , row )
             generators = tuple ( get_item ( item ) for item in row )
             for nrow in zip_longest ( *generators ) :
                 yield tuple ( make_item ( i ) for i in nrow )
