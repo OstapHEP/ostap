@@ -476,8 +476,8 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
-        ## with timing ( 'test_scal_limit1' , logger = logger ) : 
-        ##    test_scan_limit1    ()  
+        with timing ( 'test_scal_limit1' , logger = logger ) : 
+            test_scan_limit1    ()  
         with timing ( 'test_scan_limit2' , logger = logger ) : 
             test_scan_limit2    ()
         ##with timing ( 'test_scan_p0_1'   , logger = logger ) :
