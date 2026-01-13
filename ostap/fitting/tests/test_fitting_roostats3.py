@@ -188,9 +188,9 @@ def test_scan_limit2 () :
     logger.info ( "Scan limits with RooStats (constrained mass-dependent resolution&efficiency)" )
 
     logger.info ( 'LIMIT2-0')
- 
-    if ( 6 , 28 , 0 ) <= root_info < ( 6 , 28 , 10 ) :
-        logger.warning ( "Test is disabled foe this version of ROOT" )
+    
+    if ( 6 , 28 ,  0 ) <= root_info <   ( 6 , 28 , 10 ) or ( 6 , 32 , 10 ) <= root_info <=  ( 6 , 34 , 4 ) : 
+        logger.warning ( "Test is disabled for this version of ROOT" )
         return
     
     logger.info ( 'LIMIT2-1')
@@ -216,7 +216,7 @@ def test_scan_limit2 () :
     logger.info ( 'LIMIT2-3')
      
     with use_canvas ( 'test_scan_limit2: Resolution depends on the peak position' ) : sigma_fun.draw ()
-    with use_canvas ( 'test_scan_limit2: Efficiency depends on the peak position' ) : eff_fun  .draw ()
+    with use_canvas ( 'test_scan_limit2: Efficiency depends on the peak position'    ) : eff_fun  .draw ()
 
     logger.info ( 'LIMIT2-4')
      
@@ -476,12 +476,14 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
+        pass 
+    
         with timing ( 'test_scal_limit1' , logger = logger ) : 
             test_scan_limit1    ()  
         with timing ( 'test_scan_limit2' , logger = logger ) : 
             test_scan_limit2    ()
-        ##with timing ( 'test_scan_p0_1'   , logger = logger ) :
-        ##    test_scan_p0_1      ()
+        with timing ( 'test_scan_p0_1'   , logger = logger ) :
+            test_scan_p0_1      ()
 
 # =============================================================================
 ##                                                                      The END 
