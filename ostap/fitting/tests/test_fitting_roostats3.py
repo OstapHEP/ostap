@@ -261,7 +261,7 @@ def test_scan_limit2 () :
     ## collect constraints 
     constraints = sigma_constraint, eff_constraint 
 
-     print ( 'LIMIT2-12' ) 
+    print ( 'LIMIT2-12' ) 
     ## fit with "S+B" model 
     with use_canvas ( 'test_scan_limit2: S+B'    ) : 
         r_sb , frame = the_model.fitTo    ( data3 , draw = True , nbins = 50 , constraints = constraints )
@@ -273,7 +273,7 @@ def test_scan_limit2 () :
             NS.setVal(0) 
             r_b , frame = the_model.fitTo ( data3 , draw = True , nbins = 50 , constraints = constraints )
 
-     rint ( 'LIMIT2-14' ) 
+    print ( 'LIMIT2-14' ) 
     ## Create ModelConfig for "S+B" model 
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = NS               , ## parameter of interest 

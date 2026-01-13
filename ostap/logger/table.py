@@ -613,15 +613,15 @@ def shorten_title ( title , size ) :
 # =============================================================================
 plain_string = lambda s : isinstance ( s , string_types ) and not '\n' in s
 def get_item ( item ) :
-    if   item is None                         : yield ''
-    elif plain_string ( item )                : yield item
+    if   not item                             : yield ''
+    elif plain_string ( item )                : yield str(item)
     elif isinstance   ( item , string_types ) :
         ## spliting can hav ebad interference with colorization
         dcitem = decolorize ( item ) 
-        for line in dcitem.split ( '\n' )       : yield line 
+        for line in dcitem.split ( '\n' )      : yield str(line) 
     ## sequence ? 
     else :
-        for line in item : yield line 
+        for line in item : yield str(line) 
 # =============================================================================
 ## Preprcess table
 def preprocess_table ( rows ) :
