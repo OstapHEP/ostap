@@ -187,13 +187,13 @@ def test_scan_limit2 () :
 
     logger.info ( "Scan limits with RooStats (constrained mass-dependent resolution&efficiency)" )
 
-    print ( 'LIMIT2-0')
+    logger.info ( 'LIMIT2-0')
  
     if ( 6 , 28 , 0 ) <= root_info < ( 6 , 28 , 10 ) :
         logger.warning ( "Test is disabled foe this version of ROOT" )
         return
     
-    print ( 'LIMIT2-1')
+    logger.info ( 'LIMIT2-1')
     
     from ostap.fitting.roofuncs import BernsteinPoly as BP 
 
@@ -206,37 +206,37 @@ def test_scan_limit2 () :
         p.setVal ( float ( p ) * 0.3 / vn )
         p.fix()
     
-    print ( 'LIMIT2-2')
+    logger.info ( 'LIMIT2-2')
      
     ## efficiency depends on the peak position
     eff_fun   = BP ( 'EffFun' , signal.mean , power = 1 , pars = ( 0.95 , 0.35 ) )
     eff_err   = 0.03 
     for p in eff_fun.pars : p.fix()
     
-    print ( 'LIMIT2-3')
+    logger.info ( 'LIMIT2-3')
      
     with use_canvas ( 'test_scan_limit2: Resolution depends on the peak position' ) : sigma_fun.draw ()
     with use_canvas ( 'test_scan_limit2: Efficiency depends on the peak position' ) : eff_fun  .draw ()
 
-    print ( 'LIMIT2-4')
+    logger.info ( 'LIMIT2-4')
      
     from   ostap.fitting.roostats   import ( ModelConfig          ,
                                              AsymptoticCalculator ,
                                              HypoTestInverter     , 
                                              BrasilBand           )
     
-    print ( 'LIMIT2-5' ) 
+    logger.info ( 'LIMIT2-5' ) 
     ## resolution 
     sigma      = ROOT.RooRealVar( 'sigma', 'sigma of Gaussian' , 0.3 , 0.1 , 2 )
 
-    print ( 'LIMIT2-6' ) 
+    logger.info ( 'LIMIT2-6' ) 
     ## signal 
     the_signal = signal.clone ( sigma = sigma , name = 'S4' )
 
     ## create "soft" constraint for sigma: (0.30+/-0.01)  
     sigma_constraint = the_signal.soft_constraint ( sigma , value = sigma_fun.fun , error = sigma_err ) 
 
-    print ( 'LIMIT2-7' ) 
+    logger.info ( 'LIMIT2-7' ) 
      
     ## efficiency 
     eff = ROOT.RooRealVar( 'eff', 'efficiency'                        , 0.9 , 0 , 1)
@@ -244,39 +244,39 @@ def test_scan_limit2 () :
     ## true (efficiency corrected) signal yield 
     NS  = ROOT.RooRealVar( 'NS' , 'efficiency corrected signal yield' , 0 , 200 )
 
-    print ( 'LIMIT2-8' ) 
+    logger.info ( 'LIMIT2-8' ) 
      
     ## create "soft" constraint for efficiency: (90+/-3)%  
     eff_constraint = the_signal.soft_constraint ( eff , value = eff_fun.fun , error = eff_err ) 
 
-    print ( 'LIMIT2-9' ) 
+    logger.info ( 'LIMIT2-9' ) 
      
     ## raw/visible signal yield 
     raw_S = the_signal.vars_multiply ( NS , eff , 'raw_S' , 'raw/observed signal yeild' )
 
-    print ( 'LIMIT2-10' ) 
+    logger.info ( 'LIMIT2-10' ) 
      
     ## fit models 
     the_model = model.clone ( name = 'M8' , signal = the_signal , signals = () , S = raw_S )
 
-    print ( 'LIMIT2-11' ) 
+    logger.info ( 'LIMIT2-11' ) 
     
     ## collect constraints 
     constraints = sigma_constraint, eff_constraint 
 
-    print ( 'LIMIT2-12' ) 
+    logger.info ( 'LIMIT2-12' ) 
     ## fit with "S+B" model 
     with use_canvas ( 'test_scan_limit2: S+B'    ) : 
         r_sb , frame = the_model.fitTo    ( data3 , draw = True , nbins = 50 , constraints = constraints )
 
-    print ( 'LIMIT2-13' ) 
+    logger.info ( 'LIMIT2-13' ) 
     ## fit with "B-only" model
     with use_canvas ( 'test_scan_limit2: B-only' ) :
         with FIXVAR ( NS ) :
             NS.setVal(0) 
             r_b , frame = the_model.fitTo ( data3 , draw = True , nbins = 50 , constraints = constraints )
 
-    print ( 'LIMIT2-14' ) 
+    logger.info ( 'LIMIT2-14' ) 
     ## Create ModelConfig for "S+B" model 
     model_sb = ModelConfig ( pdf         = the_model        ,
                              poi         = NS               , ## parameter of interest 
@@ -285,7 +285,7 @@ def test_scan_limit2 () :
                              name        = 'S+B'            ,
                              snapshot    = r_sb             ) ## ATTENTION HERE!
     
-    print ( 'LIMIT2-15' ) 
+    logger.info ( 'LIMIT2-15' ) 
     ## Create ModelConfig for "B-only" model 
     model_b  = ModelConfig ( pdf         = the_model          ,
                              poi         = NS                 , ## parameter of interest 
@@ -346,11 +346,11 @@ def test_scan_limit2 () :
         bplot.plot  .draw ( 'a' )
         bplot.legend.draw (     )
 
-        title = '90% Upper limit'
-        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
-        logger.info ( '%s:\n%s' % ( title , table ) )
+    title = '90% Upper limit'
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lr' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
 
-        graphs.append ( bplot ) 
+    graphs.append ( bplot ) 
 
 # ============================================================================-
 ## Scan the position of the peak and get the p0 
@@ -476,12 +476,12 @@ if '__main__' == __name__ :
     
     with rooSilent ( ) : 
     
-        with timing ( 'test_scal_limit1' , logger = logger ) : 
-            test_scan_limit1    ()  
+        ## with timing ( 'test_scal_limit1' , logger = logger ) : 
+        ##    test_scan_limit1    ()  
         with timing ( 'test_scan_limit2' , logger = logger ) : 
             test_scan_limit2    ()
-        with timing ( 'test_scan_p0_1'   , logger = logger ) :
-            test_scan_p0_1      ()
+        ##with timing ( 'test_scan_p0_1'   , logger = logger ) :
+        ##    test_scan_p0_1      ()
 
 # =============================================================================
 ##                                                                      The END 
