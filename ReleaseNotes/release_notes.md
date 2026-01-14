@@ -1,7 +1,8 @@
 ## New features
 
    1. `Ostap::Math::Sigmoid` : add more sigmoid types; normalize all sigmoids to have the same slope at the x0
-      
+   1. add methods to add (constant) `ROOT.RooCategory` to dataset &extend the test
+
 ## Bug fixes
 
 ## Backward incompatible 

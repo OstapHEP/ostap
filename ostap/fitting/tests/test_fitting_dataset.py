@@ -36,20 +36,22 @@ else :
 batch_env ( logger )
 # =============================================================================
 
-evt     = ROOT.RooRealVar ( 'Evt'    , '#event'        , 0 , 1000000 )
-run     = ROOT.RooRealVar ( 'Run'    , '#run'          , 0 , 1000000 )
-mass    = ROOT.RooRealVar ( 'Mass'   , 'mass-variable' , 0 , 100     )
-pt1     = ROOT.RooRealVar ( 'Pt1'    , 'pt1-variable'  , 0 )
-pt2     = ROOT.RooRealVar ( 'Pt2'    , 'pt2-variable'  , 0 )
-weight  = ROOT.RooRealVar ( 'Weight' , 'some weight'   , -10 , 10 )
+evt      = ROOT.RooRealVar ( 'Evt'    , '#event'        , 0 , 1000000 )
+run      = ROOT.RooRealVar ( 'Run'    , '#run'          , 0 , 1000000 )
+mass     = ROOT.RooRealVar ( 'Mass'   , 'mass-variable' , 0 , 100     )
+pt1      = ROOT.RooRealVar ( 'Pt1'    , 'pt1-variable'  , 0 )
+pt2      = ROOT.RooRealVar ( 'Pt2'    , 'pt2-variable'  , 0 )
+weight   = ROOT.RooRealVar ( 'Weight' , 'some weight'   , -10 , 10 )
 
-varset  = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
-dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
-
+varset   = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
+dataset  = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
+ 
+NR = 100  
+NE = 500
 for r in range ( 100 ) :
     
     run.setVal ( r )
-    for e in range ( 100 ) :
+    for e in range ( NE ) :
         
         evt .setVal   ( e )
         mass.setVal   ( random.uniform      ( 0  , 10  ) )
@@ -370,6 +372,27 @@ rw , rww = ws.slice ( vars , structured = False , transpose = True )
 logger.info ( 'Using `slice(structured=False,transpose=True)` method/function' ) 
 logger.info ( 'slice   unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
 logger.info ( 'slice     weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
+
+
+# =============================================================================
+## (27) add category item 
+# =============================================================================
+category = ROOT.RooCategory ( 'Category'      , 
+                              'Sample category' , 
+                              { 'Plus': +1 , 'Minus' : -1 } )
+
+
+ds  = dataset  [:1000]
+dsw = weighted [:1000]
+
+ds .add_var ( category , 'Plus'  , report = True , progress = True )
+dsw.add_var ( category , 'Minus' , report = True , progress = True )
+
+ds  = dataset  [:1000]
+dsw = weighted [:1000]
+
+ds .add_var ( category , +1 , report = True , progress = True )
+dsw.add_var ( category , -1 , report = True , progress = True )
 
 
 # =============================================================================

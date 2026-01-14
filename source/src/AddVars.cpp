@@ -14,6 +14,7 @@
 #include "RooRealVar.h"
 #include "RooArgSet.h"
 #include "RooDataSet.h"
+#include "RooCategory.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -76,7 +77,7 @@ Ostap::AddVars::add_var
   const RooArgSet*  vars = dataset.get(0) ;
   if ( nullptr == vars ) { return nullptr ; }
   //
-  const RooAbsArg*  nvar = vars->find ( name.c_str() );
+  const RooAbsArg*  nvar = vars->find ( var );
   if  ( nullptr == nvar ) { return nullptr ; }
   //
   return dynamic_cast<const RooAbsReal*> ( nvar ) ;   
@@ -161,7 +162,7 @@ Ostap::AddVars::add_var
   const RooArgSet*  vars = dataset.get( 0 ) ;
   if ( nullptr == vars ) { return nullptr ; }
   //
-  const RooAbsArg*  nvar = vars->find ( name.c_str() );
+  const RooAbsArg*  nvar = vars->find ( var );
   if  ( nullptr == nvar ) { return nullptr ; }
   //
   return dynamic_cast<const RooAbsReal*> ( nvar ) ;   
@@ -222,7 +223,7 @@ Ostap::AddVars::add_var
   const RooArgSet*  vars = dataset.get( 0 ) ;
   if ( nullptr == vars ) { return nullptr ; }
   //
-  const RooAbsArg*  nvar = vars->find ( namey.c_str() );
+  const RooAbsArg*  nvar = vars->find ( vary );
   if  ( nullptr == nvar ) { return nullptr ; }
   //
   return dynamic_cast<const RooAbsReal*> ( nvar ) ;   
@@ -286,7 +287,7 @@ Ostap::AddVars::add_var
   const RooArgSet*  vars = dataset.get( 0 ) ;
   if ( nullptr == vars ) { return nullptr ; }
   //
-  const RooAbsArg*  nvar = vars->find ( namez.c_str() );
+  const RooAbsArg*  nvar = vars->find ( varz );
   if  ( nullptr == nvar ) { return nullptr ; }
   //
   return dynamic_cast<const RooAbsReal*> ( nvar ) ;   
@@ -362,6 +363,37 @@ Ostap::AddVars::add_var
   // create thje function 
   const Ostap::Functions::FuncRoo3D func { std::cref ( fun ) , xname , yname , zname , &dataset } ;
   return add_var ( dataset , vname , func ) ;
+}
+// ===========================================================================
+/* add new variable in dataset 
+ *  @param dataset (UPDATE) dataset 
+ *  @param category (INPUT) category to be added 
+ */
+// ============================================================================
+const RooAbsCategory* Ostap::AddVars::add_var 
+( RooDataSet&        dataset  , 
+  const RooCategory& category ) 
+{
+  //
+  RooArgSet  varset      { category  } ;
+  RooDataSet new_dataset { "" , ""   , varset } ;
+  //
+  // loop over events in the input data set 
+  const unsigned long nEntries = dataset.numEntries() ;
+  Ostap::Utils::ProgressBar bar ( nEntries , m_progress  ) ;
+  for ( unsigned long entry = 0 ; entry < nEntries ; ++entry , ++bar )   
+  { new_dataset.add ( varset ) ; }
+  // 
+  // merge  two  datasets 
+  dataset.merge ( &new_dataset ) ;
+  //
+  const RooArgSet*  vars = dataset.get(0) ;
+  if ( nullptr == vars ) { return nullptr ; }
+  //
+  const RooAbsArg*  nvar = vars->find ( category );
+  if  ( nullptr == nvar ) { return nullptr ; }
+  //
+  return dynamic_cast<const RooAbsCategory*> ( nvar ) ;   
 }
 // ============================================================================
 //                                                                      The END 

@@ -17,12 +17,14 @@
 // ============================================================================
 // ROOT 
 // ============================================================================
-class TTree      ; // from ROOT 
-class TH1        ; // from ROOT 
-class TH2        ; // from ROOT  
-class TH3        ; // from ROOT 
-class RooDataSet ; // from RooFit 
-class RooAbsReal ; // from RooFit 
+class TTree          ; // from ROOT 
+class TH1            ; // from ROOT 
+class TH2            ; // from ROOT  
+class TH3            ; // from ROOT 
+class RooDataSet     ; // from RooFit 
+class RooAbsReal     ; // from RooFit 
+class RooAbsCategory ; // from RooFit 
+class RooCategory    ; // from Roofit 
 // ============================================================================
 // Ostap 
 // ============================================================================
@@ -205,6 +207,16 @@ namespace Ostap
       const std::string&            yname   ,
       const std::string&            zname   ) const
     { return add_var ( dataset , vname , xname , yname , zname , std::cref ( fun ) ) ; }
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** add new variable in dataset 
+     *  @param dataset (UPDATE) dataset 
+     *  @param category (INPUT) category to be added 
+     */
+    const RooAbsCategory* add_var 
+    ( RooDataSet&        dataset  , 
+      const RooCategory& category ) ;
     // ========================================================================
   public: 
     // ========================================================================

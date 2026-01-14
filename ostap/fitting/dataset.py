@@ -24,33 +24,29 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
-from   collections               import defaultdict
-from   ostap.core.meta_info      import root_info
-from   ostap.core.core           import ( Ostap         ,
-                                          VE , SE , hID , dsID ,
-                                          strings       , 
-                                          valid_pointer ,
-                                          ROOTCWD       )
-from   ostap.core.ostap_types    import ( integer_types , string_types   ,
-                                          num_types     , dictlike_types , 
-                                          list_types    , sequence_types )
-from   ostap.utils.strings       import ( split_string         , 
-                                          split_string_respect ,
-                                          var_separators       )
-from   ostap.utils.basic         import loop_items  , typename            
-from   ostap.math.base           import islong, evt_range, FIRST_ENTRY, LAST_ENTRY 
-from   ostap.utils.random_seed   import random_seed
-from   ostap.fitting.variables   import valid_formula, make_formula 
-from   ostap.trees.cuts          import expression_types, vars_and_cuts, order_warning
-from   ostap.stats.statvars      import data_decorate, data_range 
-from   ostap.utils.valerrors     import VAE
-from   ostap.logger.symbols      import cabinet, weight_lifter 
-from   ostap.utils.progress_conf import progress_conf
-from   ostap.utils.progress_bar  import progress_bar 
+from   collections                  import defaultdict
+from   ostap.core.meta_info         import root_info
+from   ostap.core.core              import ( Ostap          ,
+                                             VE , SE , dsID , 
+                                             valid_pointer  ,
+                                             ROOTCWD        )
+from   ostap.core.ostap_types       import ( integer_types , string_types   ,
+                                             num_types     , sequence_types )
+from   ostap.utils.basic            import loop_items  , typename            
+from   ostap.math.base              import evt_range, FIRST_ENTRY, LAST_ENTRY 
+from   ostap.utils.random_seed      import random_seed
+from   ostap.fitting.variables      import valid_formula, make_formula 
+from   ostap.trees.cuts             import expression_types, vars_and_cuts, order_warning
+from   ostap.stats.statvars         import data_decorate, data_range 
+from   ostap.utils.valerrors        import VAE
+from   ostap.logger.symbols         import cabinet, weight_lifter 
+from   ostap.utils.progress_conf    import progress_conf
+from   ostap.utils.progress_bar     import progress_bar 
 import ostap.fitting.roocollections
+import ostap.fitting.variables  
 import ostap.fitting.printable
 import ostap.io.root_file
-import ROOT, random, math, os, sys, ctypes  
+import ROOT, random, math, sys, ctypes  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1811,7 +1807,11 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 #  dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-def add_new_var ( dataset , varname , what , *args , progress = False , report = False ) : 
+def add_new_var ( dataset  , 
+                  varname  , 
+                  what     = None  , *args , 
+                  progress = False , 
+                  report   = False ) : 
     """ Add/calculate/sample variable to RooDataSet
 
     >>> dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
@@ -1829,7 +1829,10 @@ def add_new_var ( dataset , varname , what , *args , progress = False , report =
     >>> dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
     
     """
-
+    if varname in dataset : 
+        logger.error ( 'Variable %s already in dataset, skip'% varname )
+        return 
+    
     branches =  set ( dataset.branches() ) if report else set()
     
     if isinstance ( varname , string_types ) :
@@ -1855,10 +1858,52 @@ def add_new_var ( dataset , varname , what , *args , progress = False , report =
             del vvar 
             raise TypeError("Invalid type/length of 'what' argument")
 
+    wargs = varname, what, *args 
+    
+    if isinstance ( varname , ROOT.RooCategory ) : 
+        
+        assert not args , 'Extra arguments for category case: %s' % str ( args )
+     
+        category = varname 
+        label    = str ( category.getCurrentLabel() )  
+        
+        if   what is None : 
+            
+            wargs = category, 
+        
+        elif isinstance ( what , string_types ) and category.hasLabel ( what ) :
+            
+            category.setLabel ( str ( what ) ) 
+            result = add_new_var ( dataset  ,
+                                   category , 
+                                   what     = None     , 
+                                   progress = progress , 
+                                   report   = report   )
+            
+            category.setLabel ( label )
+            return result  
+        
+        elif isinstance ( what , integer_types ) and category.hasIndex  ( what ) :
+        
+            category.setIndex ( what, False )
+            result = add_new_var ( dataset , 
+                                  category , 
+                                  what     = None     , 
+                                  progress = progress , 
+                                  report   = report   )
+            
+            category.setLabel ( label )
+            return result  
+        
+        else : 
+            
+            raise TypeError ( "Invalid category `what` %s/%s" % ( typename ( what ) , what )) 
+            
     progress = progress_conf ( progress )
     adder    = Ostap.AddVars ( progress ) 
     
-    vv = adder.add_var ( dataset , varname , what , *args )
+    ## vv = adder.add_var ( dataset , varname , what , *args )
+    vv = adder.add_var ( dataset , *wargs ) 
     if not  vv : logger.error('add_new_var: NULLPTR from Ostap.AddVars.add_var')
     #
     if report :
