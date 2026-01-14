@@ -2,11 +2,11 @@
 
    1. `Ostap::Math::Sigmoid` : add more sigmoid types; normalize all sigmoids to have the same slope at the x0
    1. add methods to add (constant) `ROOT.RooCategory` to dataset &extend the test
+   1. remove the upper limit of nunmber of used cpus 
 
 ## Bug fixes
 
 ## Backward incompatible 
-
 
 # v3.6.3.0 
 

@@ -123,9 +123,9 @@ def fit_status ( status ) :
     return _fit_status_.get( status ,"%s" % status )
                   
 # =============================================================================
-_nemax = 1000 ## number of events per CPU-core 
-_ncmax =   16 ## maximal number of CPUs: there are some problems with >= 7
-              ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
+_nemax =   100 ## minmal number of events per CPU-core 
+_ncmax = 10000 ## maximal number of CPUs: there are some problems with >= 7
+               ## @see https://sft.its.cern.ch/jira/browse/ROOT-4897
 # ==============================================================================
 _ncpus = []
 
