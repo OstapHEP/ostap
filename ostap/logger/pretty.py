@@ -77,9 +77,11 @@ def fmt_pretty_values ( *values             ,
     >>> fmtv , expo = fmt_pretty_values ( e1 , e2 , e3 ) 
     """
     if not values : values = (  0, )  
-    assert isinstance ( width  , integer_types ) and \
-        isinstance ( precision , integer_types ) and 2 <= precision < width, \
+    assert isinstance ( precision , integer_types ) and 0 <= precision and \
+        isinstance ( width  , integer_types ) ,   \
         "Invalid width/precision parameters: %s/%s" % ( width , precision ) 
+
+    width = max ( width , precision + 2 )
 
     assert values and all ( isinstance ( v , num_types ) for v in values ) , "Invalid type of `values'"
     
@@ -87,10 +89,11 @@ def fmt_pretty_values ( *values             ,
 
     from ostap.math.base import iszero, frexp10
     the_format =  '%%+%d.%df' if with_sign else '%%%d.%df'
-    if   100 <= av < 1000 : return the_format % ( width , precision - 2 ) , 0 
-    elif 10  <= av < 100  : return the_format % ( width , precision - 1 ) , 0 
-    elif 0.1 <= av < 10   : return the_format % ( width , precision     ) , 0 
-    elif iszero ( av )    : return the_format % ( width , precision     ) , 0 
+    
+    if   100 <= av < 1000 and 2 <= precision : return the_format % ( width , precision - 2 ) , 0 
+    elif 10  <= av < 100  and 1 <= precision : return the_format % ( width , precision - 1 ) , 0 
+    elif 0.1 <= av < 10  : return the_format % ( width , precision     ) , 0 
+    elif iszero ( av )   : return the_format % ( width , precision     ) , 0 
 
     ## here we scale input data and try to get formats for scaled data
     
@@ -126,10 +129,11 @@ def fmt_pretty_errors ( value               ,
     """ Formats for nice printout of the object with errors  ( strings + exponent)
     >>> fmtv , fmte , expo = fmt_pretty_errors ( number , ( e1 , e2 , e3 )  ) 
     """
-    assert isinstance ( width  , integer_types ) and \
-        isinstance ( precision , integer_types ) and 2 <= precision < width, \
+    assert isinstance ( width  , integer_types ) and 0 <= precision and \
+        isinstance ( precision , integer_types ) , \
         "Invalid width/precision parameters: %s/%s" % ( width , precision ) 
-
+    width = max ( width , 2 + precision )
+    
     assert isinstance ( value , num_types ) and errors and \
         all ( isinstance ( e , num_types ) for e in errors ) , "Invalid value/errors!"
     
@@ -144,13 +148,13 @@ def fmt_pretty_errors ( value               ,
     vformat = '%%+%d.%df' if with_sign else '%%%d.%df'
     eformat = '%%-%d.%df'
     
-    if   100 <= av < 1000 :
+    if   100 <= av < 1000 and 2 <= precision :
         
         fmtv  = vformat %  ( width , precision - 2 )
         fmte  = eformat %  ( width , precision - 2 )        
         return fmtv, fmte , 0
     
-    elif 10  <= av < 100  :
+    elif 10  <= av < 100  and 1 <= precision :
         
         fmtv  = vformat  %  ( width , precision - 1 )
         fmte  = eformat  %  ( width , precision - 1 )
@@ -163,6 +167,7 @@ def fmt_pretty_errors ( value               ,
         return fmtv , fmte , 0
 
     if iszero ( av ) :
+        
         fmtv  = vformat %  ( width , precision     )
         fmte  = eformat %  ( width , precision     )
         return fmtv , fmte , 0 

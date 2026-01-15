@@ -26,7 +26,7 @@
 # result = draw_summary ( data + [ average ]  , average  = average , vmax = 5 )
 # @endcode
 # =============================================================================
-"""Prepare ``summary'' plot
+""" Prepare ``summary'' plot
 >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
 ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
 ...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
@@ -40,7 +40,7 @@ Also one can add colored bands for ``average'':
 >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
 >>> result = draw_summary ( data  , average  = average , vmax = 5 )
 
-``Average'' data  can be also added into list of data points:
+`Average' data  can be also added into list of data points:
 
 >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
 ... Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -66,15 +66,19 @@ __all__     = (
     'error_band'    , ## prepare drawing for the error band(s)
     )
 # =============================================================================
-from   ostap.core.ostap_types import num_types, string_types, integer_types, sequence_types    
+from   ostap.core.ostap_types import ( num_types     , string_types   , 
+                                      integer_types  , sequence_types , 
+                                      dictlike_types )    
 from   ostap.core.core        import VE , hID 
 from   ostap.utils.basic      import typename 
 from   ostap.utils.cidict     import cidict , cidict_fun 
-from   ostap.utils.ranges     import vrange
+from   ostap.utils.valerrors  import VAE 
 from   ostap.math.base        import pos_infinity, neg_infinity
 from   ostap.logger.utils     import map2table 
 import ostap.histos.graphs  
 import ROOT
+# =============================================================================
+value_types = num_types + ( VE , VAE )
 # =============================================================================
 ## Helper function to decode/pack/unpack/transform  errors and value
 #  From sequence of values, get value, and sequece of positive
@@ -230,7 +234,7 @@ def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
 #  objects = error_band ( VE(1,0.5**2) , (0.1,-0.3) , min_value = 0 , max_value = 10 , transpose = False )
 #  @endcode
 def error_band ( value , *errors , **kwargs ) :
-    """Helper function to prepare drawing the error band(s)
+    """ Helper function to prepare drawing the error band(s)
     >>> objects = error_band ( 1 , 0.2 , (-0.1,0.4) , (0.1,-0.3) , min_value = 0 , max_value = 10 , transpose = False )
     >>> for o in objects  : o.draw()
     """
@@ -390,19 +394,32 @@ class Record(Label) :
         
         if   isinstance ( value , num_types  ) :
             
-            self.__value = 1.0 * value
+            self.__value = 1.0 * float (  value ) 
             
-        elif isinstance ( value , VE ) and 0 <= value.cov2() :
+        elif isinstance ( value , VE ) :
             
             self.__value = value.value()
-            covp += value.cov2()
-            covn += value.cov2()
-            self.__errsp.append ( covp **0.5 ) 
-            self.__errsn.append ( covn **0.5 )
+            
+            if 0 < value.cov2() : 
+                
+                covp += value.cov2()
+                covn += value.cov2()
+                self.__errsp.append ( covp ** 0.5 ) 
+                self.__errsn.append ( covn ** 0.5 )
+            
+        elif isinstance ( value , VAE ) :
+            
+            self.__value = value.value 
+            
+            covp += value.pos_error ** 2 
+            covn += value.neg_error ** 2 
+            
+            self.__errsp.append ( covp ** 0.5 ) 
+            self.__errsn.append ( covn ** 0.5 )
             
         else :
+            
             raise TypeError( 'Invalid value %s/%s ' % ( value , typename ( value ) ) ) 
-
 
         for i, e in enumerate ( errors ) :
             
@@ -646,13 +663,13 @@ class Summary(object) :
     #   summary = ...
     #   summary .draw()
     #   @endcode
-    def draw ( self  ) :
+    def draw ( self  , transpose = False ) :
         """ Draw the summary plot
         >>> summary = ...
         >>> summary .draw()
         """
         
-        if   self.histo    :
+        if   self.histo  :
             
             self.histo.draw ()            
             for b in self.bands  : b.draw()
@@ -919,6 +936,7 @@ def make_summary ( data               ,
                      labels = labels )  
         
         for p in g.points : 
+            
             p.GetXaxis().SetNdivisions(0)
             p.SetMinimum ( xmin )
             p.SetMaximum ( xmax )
@@ -927,11 +945,11 @@ def make_summary ( data               ,
                 
         
         for p in points : 
+            
             p.GetYaxis().SetNdivisions(0)
             p.SetMinimum ( 0  )
             p.SetMaximum ( np )        
             
-
     return g
 
 # =============================================================================================
@@ -978,7 +996,7 @@ def draw_summary ( data      = []     ,
     >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
     >>> result = draw_summary ( data  , average  = average , vmax = 5 )
     
-    ``Averag'' data  can be also added into list of data points:
+    `Average' data  can be also added into list of data points:
     
     >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
     ... Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -1013,7 +1031,7 @@ def draw_summary ( data      = []     ,
         if vmin is None : vmin = xmin
         if vmax is None : vmax = xmax
             
-        histo = ROOT.TH1F ( hID() , '', 10, vmin , vmax )
+        histo = ROOT.TH1F ( hID() , '', 10 , vmin , vmax )
 
         histo.GetYaxis().SetNdivisions(0)
         histo.SetMinimum ( 0  )
@@ -1025,7 +1043,25 @@ def draw_summary ( data      = []     ,
     return summary
     
 
-#  ============================================================================
+# ============================================================================
+## Convert/visualze  map { label : value } as "summary graph"
+def dict_as_graph ( map = {} , line = None, **kwargs ) :
+    
+    assert isinstance ( map , dictlike_types ) and \
+        all ( isinstance ( k , string_types  ) and \ 
+              isinstance ( v , value_types   ) for k,v in map.items () ) , \
+                  "Invalid `map` type : %s/%s"% ( typename ( map ) , map )
+    
+    assert line is None or isistance ( line , value_types ) , \
+        "Invalid `line` type : %s" % typename ( line )
+        
+    ## convert to list  of data points               
+    data    = [ Point ( v , label = k , **kwargs ) for k,v in map.items() ]
+    average = Average( line , **kwargs ) if not line is None else None 
+        
+    return make_summary ( data , average = average , **kwargs ) 
+        
+# ============================================================================
 if '__main__' == __name__ :
     
     from   ostap.logger.logger import getLogger
