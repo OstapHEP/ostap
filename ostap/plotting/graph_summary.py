@@ -159,7 +159,7 @@ def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
     ## fill color(s) 
     fcolor = config.get ( 'band_color' , 'yellow' )
 
-    ## number of bangs 
+    ## number of bands 
     nbands = min ( len ( eneg ) , len ( epos ) )
     
     groot = ROOT.GetROOT()
@@ -328,11 +328,11 @@ class Limit(Label) :
             
     @property
     def limit ( self ) :
-        """The upper/lower limit"""
+        """ The upper/lower limit"""
         return self.__limit
     @property
     def zero  ( self ) :
-        """Zero value"""
+        """ Zero value"""
         return self.__zero
 
     # =========================================================================
@@ -536,12 +536,11 @@ class Average(Record) :
     """
     def  __init__ ( self  , value , *errors  , **config ) :
 
-        assert isinstance ( value , VE ) and 0 < value.cov2() , 'Invalid average %s/%s' % ( value , typename ( value ) )
+        ## assert isinstance ( value , VE ) and 0 < value.cov2() , 'Invalid average %s/%s' % ( value , typename ( value ) )
 
         ## initialize  the base  
         super(Average,self).__init__ ( value , *errors  , **config )
 
-        
         if not 'band_color'    in self.config : self.config [ 'band_color'  ] = "yellow"            
         if not 'fill_style'    in self.config : self.config [ 'fill_style'  ] = 1001 
         if not 'line_color'    in self.config : self.config [ 'line_color'  ] = C.OrangeRed
@@ -624,7 +623,6 @@ class Separator(Label) :
                "Invalid 'high' type!"
         self.__high = value
 
-        
 # ==============================================================================================
 ## @class Summary
 #   The final graph for the ``summary plot''. It is a container of
@@ -642,33 +640,72 @@ class Summary(object) :
     - the colored bands for ``average''
     - the text(TLatex) labels
     """
-    def __init__ ( self          ,
-                   histo  = None ,
-                   points = ()   ,
-                   limits = ()   ,
-                   bands  = ()   ,
-                   labels = ()   ,
-                   lines  = [] ) :
+    def __init__ ( self               ,
+                   histo      = None  ,
+                   points     = ()    ,
+                   limits     = ()    ,
+                   bands      = ()    ,
+                   labels     = ()    ,
+                   lines      = []    , 
+                   transposed = False ) :
 
-        self.__histo  = histo
-        self.__points = tuple ( p for p in points ) 
-        self.__limits = tuple ( l for l in limits )
-        self.__bands  = tuple ( b for b in bands  )
-        self.__labels = tuple ( l for l in labels )
-        self.__lines  = tuple ( l for l in lines  ) 
-        
+        self.__histo      = histo
+        self.__points     = tuple ( p for p in points ) 
+        self.__limits     = tuple ( l for l in limits )
+        self.__bands      = tuple ( b for b in bands  )
+        self.__labels     = tuple ( l for l in labels )
+        self.__lines      = tuple ( l for l in lines  ) 
+        self.__transposed = True if transposed else False 
     # ======================================================================================
     ##  draw the summary plot
     #   @code
     #   summary = ...
     #   summary .draw()
     #   @endcode
-    def draw ( self  , transpose = False ) :
+    def draw ( self    , *    , 
+               vmin    = None ,
+               vmax    = None ,
+               offset  = 0.5  ) :
         """ Draw the summary plot
         >>> summary = ...
         >>> summary .draw()
         """
         
+        xmin, xmax = self.xminmax()
+        ymin, ymax = self.yminmax()
+    
+        print ( 'XMINMAX', xmin, xmax )
+        print ( 'YMINMAX', ymin, ymax )
+        print ( 'VMINMAX', vmin, vmax )
+          
+        if self.transposed :
+                   
+            if vmin is None : vmin = ymin
+            if vmax is None : vmax = ymax
+    
+            histo = ROOT.TH1F ( hID() , '' , 10 , 0 , len ( self ) - 1 + 2 * offset )
+
+            histo.GetXaxis().SetNdivisions(0)
+            histo.SetMinimum ( vmin  )
+            histo.SetMaximum ( vmax  )
+
+        else :
+         
+            print ( 'here-v' , vmin , vmax ) 
+            
+            if vmin is None : vmin = xmin
+            if vmax is None : vmax = xmax
+            
+            histo = ROOT.TH1F ( hID() , '', 10 , vmin , vmax )
+
+            histo.GetYaxis().SetNdivisions(0)
+            histo.SetMinimum ( 0  )
+            histo.SetMaximum ( len ( self ) - 1 + 2 * offset  )
+
+        print ( 'HMINMAX' , histo.minmax() , histo.xminmax() , histo.yminmax() )
+
+        self.histo = histo
+
         if   self.histo  :
             
             self.histo.draw ()            
@@ -679,8 +716,7 @@ class Summary(object) :
 
             if self.points :
                 self.points[0].draw('ape1')                
-                for p in self.points[1:] :
-                    p.draw('pe1')
+                for p in self.points[1:] : p.draw('pe1')
                 
             for b in self.bands  : b.draw()
         
@@ -688,6 +724,8 @@ class Summary(object) :
         for l in self.limits     : l.draw()
         for l in self.labels     : l.draw()
 
+        return self 
+    
     @property
     def histo ( self  ) :
         """`histo' : histogram associated with graph"""
@@ -722,7 +760,12 @@ class Summary(object) :
     def labels ( self  ) :
         """`labels' : (la)text labels"""
         return self.__labels
-
+    
+    @property 
+    def transposed ( self ) : 
+        """`transposed` : transposed sumamry ? """
+        return self.__transposed 
+    
     # =========================================================================
     ## number of data points in the summary plot
     #  @code
@@ -914,11 +957,12 @@ def make_summary ( data               ,
 
     labels = tuple ( labels )  
     
-    g = Summary ( points = points ,
-                  limits = limits ,
-                  bands  = bands  ,
-                  labels = labels ,
-                  lines  = lines  )  
+    g = Summary ( points     = points    ,
+                  limits     = limits    ,
+                  bands      = bands     ,
+                  labels     = labels    ,
+                  lines      = lines     , 
+                  transposed = transpose )  
     
     xmin, xmax  = g.xminmax()
     ymin, ymax  = g.yminmax()
@@ -930,10 +974,10 @@ def make_summary ( data               ,
         points = tuple ( [ p.T()  for p in g.points  ] ) 
         labels = tuple ( [ l.T()  for l in g.labels  ] ) 
 
-        g = Summary( points = points ,
-                     limits = limits ,
-                     bands  = bands  ,
-                     labels = labels )  
+        g = Summary ( points = points ,
+                      limits = limits ,
+                      bands  = bands  ,
+                      labels = labels )  
         
         for p in g.points : 
             
@@ -1012,55 +1056,43 @@ def draw_summary ( data      = []     ,
                              vmin      = vmin      ,
                              vmax      = vmax      ) 
 
-    xmin, xmax = summary.xminmax()
-    ymin, ymax = summary.xminmax()
-    
-    if transpose :
-        
-        if vmin is None : vmin = ymin
-        if vmax is None : vmax = ymax
-
-        histo = ROOT.TH1F ( hID() , '' , 10 , 0 , len ( summary ) - 1 + 2 * offset )
-
-        histo.GetXaxis().SetNdivisions(0)
-        histo.SetMinimum ( vmin  )
-        histo.SetMaximum ( vmax  )
-
-    else :
-        
-        if vmin is None : vmin = xmin
-        if vmax is None : vmax = xmax
-            
-        histo = ROOT.TH1F ( hID() , '', 10 , vmin , vmax )
-
-        histo.GetYaxis().SetNdivisions(0)
-        histo.SetMinimum ( 0  )
-        histo.SetMaximum ( len ( summary ) - 1 + 2 * offset  )
-
-    summary.histo = histo
-    summary.draw()
-
-    return summary
-    
+    return summary.draw ( vmin = vmin , vmax = vmax , offset = offset )
 
 # ============================================================================
 ## Convert/visualze  map { label : value } as "summary graph"
-def dict_as_graph ( map = {} , line = None, **kwargs ) :
+def dict_as_graph ( map       = {}    , 
+                    line      = None  ,
+                    transpose = False , 
+                    vmin      = None  , 
+                    vmax      = None  , 
+                    offset    = 0.5   , **kwargs ) :
     
     assert isinstance ( map , dictlike_types ) and \
-        all ( isinstance ( k , string_types  ) and \ 
-              isinstance ( v , value_types   ) for k,v in map.items () ) , \
-                  "Invalid `map` type : %s/%s"% ( typename ( map ) , map )
+        all ( isinstance ( k , string_types  ) and \
+            isinstance ( v , value_types   ) for k,v in map.items () ) , \
+                "Invalid `map` type : %s/%s"% ( typename ( map ) , map )
     
-    assert line is None or isistance ( line , value_types ) , \
+    assert line is None or isinstance ( line , value_types ) , \
         "Invalid `line` type : %s" % typename ( line )
         
+    if not 'line_color'    in kwargs : kwargs [ 'line_color'    ] = 1 
+    if not 'band_color'    in kwargs : kwargs [ 'band_color'    ] = 'black'
+    if not 'average_width' in kwargs : kwargs [ 'average_width' ] = 1 
+    if not 'transparent'   in kwargs : kwargs [ 'transparent'   ] = 0  
+
     ## convert to list  of data points               
-    data    = [ Point ( v , label = k , **kwargs ) for k,v in map.items() ]
+    data    = [ Record ( v  , label = k , **kwargs ) for k,v in map.items() ]
+    
+    
     average = Average( line , **kwargs ) if not line is None else None 
         
-    return make_summary ( data , average = average , **kwargs ) 
-        
+    return make_summary ( data                  , 
+                          average   = average   , 
+                          transpose = transpose , 
+                          vmin      = vmin      , 
+                          vmax      = vmax      , 
+                          offset    = offset    )  
+     
 # ============================================================================
 if '__main__' == __name__ :
     

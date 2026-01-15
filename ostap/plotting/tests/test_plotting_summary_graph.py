@@ -155,6 +155,7 @@ def test_summary4() :
         result1 = draw_summary ( data , average = ave  , vmax = 6 )
         if ROOT.gPad : ROOT.gPad.RedrawAxis()
         
+    print ( 'HERE' )
     with use_canvas ( 'Test_summmary4.2' ) : 
         result2 = draw_summary ( data , average = ave  , transpose = True , vmax = 6 )        
         if ROOT.gPad : ROOT.gPad.RedrawAxis()
