@@ -3,10 +3,14 @@
    1. `Ostap::Math::Sigmoid` : add more sigmoid types; normalize all sigmoids to have the same slope at the x0
    1. add methods to add (constant) `ROOT.RooCategory` to dataset &extend the test
    1. remove the upper limit of nunmber of used cpus 
-
+   1. re-write `summary_graph`, make it more robust& more intuitive
+   
 ## Bug fixes
 
 ## Backward incompatible 
+
+   1. `graph_summary.py` : rename `Summary` to `SummaryGraph`
+   1. `graph_summary.py` : remove `make_sumamry` & `draw_summary`, use `SummaryGraph` instead`
 
 # v3.6.3.0 
 

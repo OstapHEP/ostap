@@ -17,7 +17,7 @@ from   ostap.core.pyrouts           import VE
 from   ostap.utils.root_utils       import batch_env
 from   ostap.plotting.canvas        import use_canvas 
 from   ostap.plotting.graph_summary import ( Average  , Record , Point        ,
-                                             Interval , Limit  , draw_summary )
+                                             Interval , Limit  , SummaryGraph )
 import ROOT, time
 # =============================================================================
 # logging
@@ -31,6 +31,7 @@ else :
 batch_env ( logger ) 
 # =============================================================================
 
+plots = set() 
 # =============================================================================
 def test_summary1 () :
     
@@ -58,10 +59,10 @@ def test_summary1 () :
         ROOT.gStyle.SetEndErrorSize (5    )
         ROOT.gStyle.SetTickLength   (0.008)
 
-        with use_canvas ( 'Test_summmary1' ) : 
-            result = draw_summary ( data  , average  = ave , vmin = 3860 , vmax = 3877 , offset = 1.0 )              
-            if ROOT.gPad : ROOT.gPad.RedrawAxis()
-
+    with use_canvas ( 'Test_summmary1' ) :            
+        summary = SummaryGraph ( data  , average  = ave , vmin = 3860 , vmax = 3877 , offset = 1.0 )
+        summary.draw()
+        
 # =============================================================================
 def test_summary2 ( ) :
 
@@ -80,8 +81,8 @@ def test_summary2 ( ) :
         ROOT.gStyle.SetTickLength   (0.008)
         
     with use_canvas ( 'Test_summmary2' ) : 
-        result  = draw_summary ( data , vmin = 0 , vmax = 8 )        
-        if ROOT.gPad : ROOT.gPad.RedrawAxis()
+        summary = SummaryGraph ( data , vmin = 0 , vmax = 8 )        
+        summary.draw()
         
 # =============================================================================
 def test_summary3 ( ) :
@@ -130,8 +131,8 @@ def test_summary3 ( ) :
         ROOT.gStyle.SetTickLength   (0.008)
         
     with use_canvas ( 'Test_summmary3' ) : 
-        result  = draw_summary ( data , vmin = -300 , vmax = 300 )
-        if ROOT.gPad : ROOT.gPad.RedrawAxis()
+        summary = SummaryGraph ( data , vmin = -300 , vmax = 300 )
+        summary.draw() 
 
 # ==============================================================================
 def test_summary4() :
@@ -152,15 +153,12 @@ def test_summary4() :
     data.append ( ave  )
     
     with use_canvas ( 'Test_summmary4.1' ) : 
-        result1 = draw_summary ( data , average = ave  , vmax = 6 )
-        if ROOT.gPad : ROOT.gPad.RedrawAxis()
+        summary1 = SummaryGraph ( data , average = ave  , vmax = 6 )
+        summary1.draw() 
         
-    print ( 'HERE' )
     with use_canvas ( 'Test_summmary4.2' ) : 
-        result2 = draw_summary ( data , average = ave  , transpose = True , vmax = 6 )        
-        if ROOT.gPad : ROOT.gPad.RedrawAxis()
-
-    print ( ave )
+        summary2 = SummaryGraph ( data , average = ave  , transpose = True , vmax = 6 )        
+        summary2.draw ()
     
 # =============================================================================
 if '__main__' == __name__ :

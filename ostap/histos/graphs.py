@@ -1214,7 +1214,7 @@ def _gr_ymax_ ( graph ) :
 def _gr_xminmax_ ( graph ) :
     """ Get minimal and maximal x for the points
     >>> graph = ...
-    >>> xmin,xmax = graph.xminmax() 
+    >>> xmin , xmax = graph.xminmax() 
     """
     xmin , xmax ,  _ , _ = graph.bb()
     return xmin , xmax
@@ -1230,7 +1230,7 @@ def _gr_xminmax_ ( graph ) :
 def _gr_yminmax_ ( graph ) :
     """ Get minimal and maximal  for the points
     >>> graph = ...
-    >>> mn,mx = graph.yminmax() 
+    >>> mn , mx = graph.yminmax() 
     """
     _ , _ , ymin , ymax = graph.bb()
     return ymin , ymax
@@ -1241,7 +1241,7 @@ def _gr_yminmax_ ( graph ) :
 #  xmin, xmax , ymin , ymax = graph.bb() 
 #  @endcode 
 def _gr_bb_ ( graph , more = 0.0 ) :
-    """ Get a ``bounding box'' for the graph
+    """ Get a `bounding box' for the graph
     >>> xmin, xmax , ymin , ymax = graph.bb() 
     """
     xmin = pos_infinity
@@ -1274,7 +1274,7 @@ def _gr_bb_ ( graph , more = 0.0 ) :
 #  xmin, xmax , ymin , ymax = graph.bb() 
 #  @endcode 
 def _gre_bb_ ( graph , more = 0.0 ) :
-    """ Get a ``bounding box'' for the graph
+    """ Get a `bounding box' for the graph
     >>> xmin, xmax , ymin , ymax = graph.bb() 
     """
     xmin = pos_infinity
@@ -1314,7 +1314,7 @@ def _gre_bb_ ( graph , more = 0.0 ) :
 #  xmin, xmax , ymin , ymax = graph.bb() 
 #  @endcode 
 def _grae_bb_ ( graph , more = 0.0 ) :
-    """ Get a ``bounding box'' for the graph
+    """ Get a `bounding box' for the graph
     >>> xmin, xmax , ymin , ymax = graph.bb() 
     """
     xmin = pos_infinity
@@ -1364,8 +1364,9 @@ def _mg_bb_ ( graph , more = 0.0 ) :
     ymin = pos_infinity
     ymax = neg_infinity
 
-    _gs = graph.GetListOfGraps()
-    for gr in _gs :
+    glist = graph.GetListOfGraps()
+    
+    for gr in glist :
         
         xmn , xmx , ymn , ymx = gr.bb ( more )
         
