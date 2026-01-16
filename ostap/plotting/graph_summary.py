@@ -69,7 +69,8 @@ __all__     = (
     'Interval'      , ## graphical representation of an interval
     'Average'       , ## graphical representation of average  (box)
     'Separator'     , ## separator line for data blocks  
-    'SummaryGraph'  , ## the  final summary graph 
+    'SummaryGraph'  , ## the  final summary graph
+    'dct_graph'     , ## convert map { 'label' : value } to `summary-graph`
 )
 # =============================================================================
 from   ostap.core.ostap_types import ( num_types      , string_types   , 
@@ -1022,8 +1023,8 @@ def dct_graph ( map       = {}    ,
 
     ## convert to list  of data points               
     data    = [ Record ( v  , label = k , **kwargs ) for k,v in map.items() ]
-    
-    
+
+    ## 
     average = Average( line , **kwargs ) if not line is None else None 
         
     return SummaryGraph ( data      = data      , 
