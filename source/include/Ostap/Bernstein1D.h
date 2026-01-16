@@ -1644,7 +1644,7 @@ namespace Ostap
        *  \f$ r_1, r_1, r_3, r_3, ...\f$
        * 
        *  - The positivity is calculated for \f$ 0 \le x \le 1\f$ interval 
-       *  - All  pseudo-rootsbelons to this interval 
+       *  - All  pseudo-roots belong to this interval 
        *  - \f$ B_{1,2}(s)\f$ are normalized as \f$ \int_0^1 B_i dx = 1 \f$
        *
        *  @param N  (NIPUT) polynomial degree 
@@ -1702,15 +1702,15 @@ namespace Ostap
     public: // basic accessors to polynomial 
       // ======================================================================
       /// lower edge 
-      inline double xmin () const { return m_positive.xmin() ; }
+      inline double         xmin   () const { return m_positive.xmin() ; }
       /// uppper edge 
-      inline double xmax () const { return m_positive.xmax() ; }
+      inline double         xmax   () const { return m_positive.xmax() ; }
       /// dimension
-      inline unsigned short dim     () const { return m_positive.dim    () ; }
+      inline unsigned short dim    () const { return m_positive.dim    () ; }
       /// degree
-      inline unsigned short degree  () const { return m_positive.degree () ; }
+      inline unsigned short degree () const { return m_positive.degree () ; }
       /// get number of polinomial parameters
-      inline std::size_t    npars   () const { return m_positive.npars() ; }
+      inline std::size_t    npars  () const { return m_positive.npars() ; }
       /// set k-parameter
       inline bool           setPar
       ( const unsigned short k     ,
@@ -1728,6 +1728,10 @@ namespace Ostap
       /// get the parameter value
       inline double parameter
       ( const unsigned short k ) const { return par ( k ) ; }
+      /// get all parameters (phases on sphere) BY VALUE!
+      inline std::vector<double> pars  () const { return m_positive.pars() ; }
+      /// get the bernstein coefficients 
+      inline const std::vector<double>& bpars () const { return m_positive.bpars () ; }
       // ======================================================================
     public: 
       // ======================================================================
@@ -1738,12 +1742,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the underlyong positive polynomial 
-      const Ostap::Math::Positive& positive   () const { return m_positive ; }
-      /// get the underlyong positive polynomial 
-      const Ostap::Math::Positive& polynomial () const { return m_positive ; }
-      /// get the underlyong positive polynomial 
-      const Ostap::Math::Positive& polynom    () const { return m_positive ; }
+      /// get the underlying positive polynomial 
+      inline const Ostap::Math::Positive&  positive   () const { return m_positive ; }
+      /// get the underlyingpositive polynomial 
+      inline const Ostap::Math::Positive&  polynomial () const { return m_positive ; }
+      /// get the underlying positive polynomial 
+      inline const Ostap::Math::Positive&  polynom    () const { return m_positive ; }
+      /// get the underlying Bernstein polynomial
+      inline const Ostap::Math::Bernstein& bernstein  () const { return m_positive.bernstein() ; }
       // ======================================================================
     public:
       // ======================================================================
