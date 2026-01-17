@@ -1838,7 +1838,7 @@ Ostap::StatEntity Ostap::StatVar::statVar_cut
                                           xmax       ) ;
   // check status code 
   Ostap::Assert ( sc.isSuccess ()  ,
-                  "Error from Ostap::StatVar::get_stat " ,
+                  "Error from Ostap::StatVar::get_stat( " + expression + " , " + selection + " )" ,
                   "Ostap::StatVar::statVar_cut" , sc , __FILE__ , __LINE__ ) ;
   //
   return result ;
@@ -1881,7 +1881,7 @@ Ostap::WStatEntity Ostap::StatVar::statVar
                                           xmax       ) ;
   // check status code 
   Ostap::Assert ( sc.isSuccess ()  ,
-                  "Error from Ostap::StatVar::get_stat " ,
+                  "Error from Ostap::StatVar::get_stat( " + expression + " , "+ selection + " )" ,
                   "Ostap::StatVar::statVar" , sc , __FILE__ , __LINE__ ) ;
   //
   return result ;
@@ -1927,7 +1927,7 @@ Ostap::WStatEntity Ostap::StatVar::statVar
 					  xmax       ) ;
   // check status code 
   Ostap::Assert ( sc.isSuccess ()  ,
-		  "Error from Ostap::StatVar::get_stat " ,
+		  "Error from Ostap::StatVar::get_stat( " + expression + " , " + selection + " ) " ,
 		  "Ostap::StatVar::statVar" , sc , __FILE__ , __LINE__ ) ;
   //
   return result ;

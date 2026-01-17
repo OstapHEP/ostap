@@ -28,7 +28,7 @@ namespace
   /** Any of from these symbols implies that the variable name 
    *  is NOT a primitive one
    */
-  const std::string s_FORMULA { " ~`!@#$%^&*/()-+={}[]\\;:\"\'<>?,./\n\t\v\r" } ; 
+  const std::string s_FORMULA { " ~`!@#$%^&*/()-+={}[]|\\;:\"\'<>?,./\n\t\v\r" } ; 
   // ==========================================================================
   /// Good (non-whitespace symbol) 
   static const auto s_GOOD_SYMBOL =
@@ -107,7 +107,7 @@ bool Ostap::trivial ( const std::string& selection )
 {
   return
     /// empty string 
-    selection.empty ()                                                        ? true :
+    selection.empty ()                                      ? true :
     /// only whitespaces 
     selection.end   () == std::find_if ( selection.begin () ,
 					 selection.end   () , s_GOOD_SYMBOL ) ? true :

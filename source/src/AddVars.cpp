@@ -394,7 +394,22 @@ const RooAbsCategory* Ostap::AddVars::add_var
   if  ( nullptr == nvar ) { return nullptr ; }
   //
   return dynamic_cast<const RooAbsCategory*> ( nvar ) ;   
-}
+} 
+// ============================================================================
+/* add new variable/column in dataset 
+ *  @param dataset (UPDATE) dataset 
+ *  @param category (INPUT) category to be added 
+ *  @see RooDataSet::addColumn 
+ */
+// ============================================================================
+const RooAbsReal* add_var 
+( RooDataSet&        dataset  , 
+  const RooAbsReal&  variable ) 
+  {
+    RooAbsReal& var    = const_cast<RooAbsReal&>( variable ) ;
+    RooAbsArg*  result = dataset.addColumn ( var ) ; 
+    return result ? dynamic_cast<RooAbsReal*> ( result ) : nullptr ;
+  }
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

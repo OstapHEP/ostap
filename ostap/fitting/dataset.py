@@ -1830,12 +1830,16 @@ def add_new_var ( dataset  ,
     
     """
     if varname in dataset : 
-        logger.error ( 'Variable %s already in dataset, skip'% varname )
+        logger.error ( 'Variable %s already in dataset, skip' % varname )
         return 
     
+    if isinstance ( varname , string_types ) and not Ostap.trivial ( varname ) :
+        logger.warning ( "The name `%s` is not a trivial name for the variable" % varname )
+   
     branches =  set ( dataset.branches() ) if report else set()
     
     if isinstance ( varname , string_types ) :
+        
         if    isinstance ( what , string_types    ) : pass
         elif  isinstance ( what , sequence_types  )   and \
                  len ( what ) == len ( dataset    )   and \
@@ -1860,8 +1864,21 @@ def add_new_var ( dataset  ,
 
     wargs = varname, what, *args 
     
+    if isinstance ( varname , ROOT.RooAbsReal  )  :
+        
+        if not Ostap.trivial ( varname.GetName() ) :
+            logger.warning ( "The name   `%s` is not a trivial name for variable" % varname.GetName () )
+            
+        assert not what , "Extra `wgat` argument for RooAbsReal case: %s/%s" % ( what , typename ( what ) )   
+        assert not args , 'Extra arguments for category case: %s' % str ( args )
+        
+        wargs = varname, 
+        
     if isinstance ( varname , ROOT.RooCategory ) : 
         
+        if not Ostap.trivial ( varname.GetName() ) :
+            logger.warning ( "The name   `%s` is not a trivial name for variable" % varname.GetName () )
+    
         assert not args , 'Extra arguments for category case: %s' % str ( args )
      
         category = varname 
@@ -1899,6 +1916,7 @@ def add_new_var ( dataset  ,
             
             raise TypeError ( "Invalid category `what` %s/%s" % ( typename ( what ) , what )) 
             
+      
     progress = progress_conf ( progress )
     adder    = Ostap.AddVars ( progress ) 
     

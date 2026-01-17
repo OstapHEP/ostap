@@ -15,7 +15,7 @@ class TNamed ; // ROOT
 namespace  Ostap
 {
   // ==========================================================================
-  /** Genrate some valid (ranodm) name
+  /** Generate some valid (ranodm) name
    *  @param prefix (INPUT) prefix 
    *  @param name   (INPUT) the base name 
    *  @param named  (INPUT) the TNNamed object 
@@ -28,10 +28,10 @@ namespace  Ostap
   ( const std::string& prefix        , 
     const std::string& name          ,
     const TNamed*      named         ,
-    const std::string& suffix = ""  , 
+    const std::string& suffix = ""   , 
     const bool         random = true ) ;
   // ==========================================================================
-  /** Genrate some valid (ranodm) name
+  /** Generate some valid (ranodm) name
    *  @param prefix (INPUT) prefix 
    *  @param name   (INPUT) the base name 
    *  @param name   (INPUT) the nase name 
@@ -61,7 +61,7 @@ namespace  Ostap
    *  - "1.0"
    *  - "true" , "True" , 'TRUE'
    *  - "yes"  . "Yes"  , "YES"
-   *  - omly whitespaces 
+   *  - only whitespaces 
    */
   bool trivial ( const std::string& selection ) ;
   // ==========================================================================

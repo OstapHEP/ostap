@@ -210,13 +210,22 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
-    /** add new variable in dataset 
+    /** add new variable/column in dataset 
      *  @param dataset (UPDATE) dataset 
      *  @param category (INPUT) category to be added 
      */
     const RooAbsCategory* add_var 
     ( RooDataSet&        dataset  , 
       const RooCategory& category ) ;
+    // ========================================================================
+    /** add new variable/column in dataset 
+     *  @param dataset (UPDATE) dataset 
+     *  @param category (INPUT) category to be added 
+     *  @see RooDataSet::addColumn 
+     */
+    const RooAbsReal* add_var 
+    ( RooDataSet&        dataset  , 
+      const RooAbsReal&  variable ) ;
     // ========================================================================
   public: 
     // ========================================================================
