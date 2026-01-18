@@ -21,13 +21,12 @@ from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.basic        import typename, numcpu 
 from   ostap.math.math_ve       import significance
 from   ostap.fitting.simfit     import combined_data 
-from   ostap.stats.gof_simfit   import ( GoFSimFit   , GoFSimFitToys ,
-                                         PPDSimFit   ,
-                                         DNNSimFit   ,
-                                         USTATSimFit )  
-from   ostap.stats.gof_utils    import clip_pvalue  
-from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
-from   ostap.logger.pretty      import pretty_float
+from   ostap.stats.gof_simfit   import ( GoFSimFit     , GoFSimFit2 , 
+                                         GoFSimFitToys ,
+                                         PPDSimFit     ,
+                                         DNNSimFit     ,
+                                         USTATSimFit   )  
+from   ostap.stats.gof1d        import GoF1D_ 
 import ostap.logger.table       as     T 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
@@ -190,7 +189,6 @@ def test_simfit1 () :
     ## GOF machinery
     # =============================================================================
 
-    """
     gof = GoFSimFit ( model_sim      ,
                       dataset        ,
                       parameters = r )
@@ -213,30 +211,27 @@ def test_simfit1 () :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
                 toys .draw ( sample , k )
     
-    """
-    
     if numcpu() < 10 : logger.info ( 'tests for CPU-expensive PPD,DNN & USTAT methods are disabled' )
     else :
     
         nToys    = 20 ## realistic values should be well in excess of 100
         mcFactor =  5 ## realistic values should be well in excess of 10  
         
-        gof_ppd   = PPDSimFit   ( model_sim             , 
-                                  dataset               ,
-                                  parameters = r        ,                          
-                                  mcFactor   = mcFactor , 
-                                  nToys      = nToys    ,
-                                  sigma      = 0.5      , ## can be (and should be!) varied between 0.1 and 1.0 
-                                  parallel   = True     , 
-                                  silent     = False    )
+        gof_ppd  = PPDSimFit   ( model_sim             , 
+                                 dataset               ,
+                                 parameters = r        ,                          
+                                 mcFactor   = mcFactor , 
+                                 nToys      = nToys    ,
+                                 sigma      = 0.5      , ## can be (and should be!) varied between 0.1 and 1.0 
+                                 parallel   = True     , 
+                                 silent     = False    )
         
-        gof_dnn   = DNNSimFit   ( model_sim             , 
-                                  dataset               ,
-                                  parameters = r        ,                          
-                                  nToys      = 1000     ,
-                                  parallel   = True     , 
-                                  silent     = False    )
-
+        gof_dnn  = DNNSimFit   ( model_sim             , 
+                                 dataset               ,
+                                 parameters = r        ,                          
+                                 nToys      = 1000     ,
+                                 parallel   = True     , 
+                                 silent     = False    )
         """
         gof_ustat = USTATSimFit ( model_sim             , 
                                   dataset               ,
@@ -259,6 +254,19 @@ def test_simfit1 () :
             for sample  in gof.gofs :
                 with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) , wait = 1 ) :
                     gof.draw ( sample  )
+
+    # =========================================================================
+    ## GoF-2
+    # =========================================================================
+    estimators = { 'A'  : GoF1D_  ( 'KS') , 'B' : GoF1D_ ('KS') } 
+    
+    gof        = GoFSimFit2 ( model_sim                ,
+                              dataset                  ,
+                              estimators  = estimators ,  
+                              parameters  = r          ) 
+    gof.run ( 100 , silent = False )
+    print ( gof.table() ) 
+    
 
 # =============================================================================
 ## check that everything is serializable

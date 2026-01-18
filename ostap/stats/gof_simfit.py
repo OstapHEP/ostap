@@ -17,9 +17,9 @@ __all__     = (
     'GoFSimFitToys'  , ## helper utility for GoF estimate with toys 
 )
 # =============================================================================
-from   ostap.fitting.pdfbasic   import PDF1
+from   ostap.fitting.pdfbasic   import PDF1, APDF1
 from   ostap.core.core          import VE, Ostap
-from   ostap.math.base          import axis_range, np2raw    
+from   ostap.math.base          import axis_range
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.basic        import loop_items, typename   
 from   ostap.stats.counters     import SE, EffCounter 
@@ -30,11 +30,11 @@ from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
 from   ostap.logger.colorized   import infostr
 from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue
 from   ostap.fitting.simfit     import SimFit 
-from   ostap.stats.gof1d        import ( GoF1D , vct_clip     ,
-                                         kolmogorov_smirnov   ,
-                                         anderson_darling     ,
-                                         cramer_von_mises     ,
-                                         kuiper , ZK , ZA, ZC )
+from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
+                                         kolmogorov_smirnov    ,
+                                         anderson_darling      ,
+                                         cramer_von_mises      ,
+                                         kuiper , ZK , ZA , ZC )
 from   collections              import defaultdict, namedtuple
 import ostap.stats.gofnd        as     GoFnD 
 import ostap.logger.table       as     T
@@ -79,13 +79,13 @@ class GoFSimFitBase(object) :
     
     @property
     def sample ( self ) :
-        """sample`: sample/category  variable for simultaneous fit
+        """`sample`: sample/category  variable for simultaneous fit
         """
         return self.pdf.sample 
 
     @property
     def parameters ( self ) :
-        """`parameters' : fit parameters, e.g. fit-resutl or dictinoary or ...
+        """`parameters' : fit parameters, e.g. fit-result or dictionary or ...
         """
         return self.__parameters 
         
@@ -115,8 +115,8 @@ class GoFSimFitBase(object) :
         """ De-serialize the object """         
         self.__pdf        = state.pop ( 'pdf'  )
         self.__parameters = state.pop ( 'parameters' , {} ) 
-        self.__gofs       = state.pop ( 'gofs' )
-        self.__N          = state.pop ( 'N'    )
+        self.__gofs       = state.pop ( 'gofs'       , {} )
+        self.__N          = state.pop ( 'N'          , {} )
         self.__pdf.load_params ( self.__parameters , silent = True )
     
 # =============================================================================
@@ -145,8 +145,10 @@ class GoFSimFit(GoFSimFitBase) :
             
             assert isinstance ( cmp , PDF1 ) , "Component `%s` is not PDF1` %s" % ( key , typename ( cmp ) )
             obs      = cmp.pdf.getObservables ( dataset )
-            category = '%s==%s::%s' % ( name , name , key ) 
-            ds       = dataset.subset ( variables = obs ,cuts = category )
+            category = '%s==%s::%s' % ( name , name , key )
+             
+            ds       = dataset.subset ( variables = obs , cuts = category )
+            
             gof      = GoF1D ( cmp , ds )
             
             self.gofs [ key ] = gof 
@@ -328,7 +330,7 @@ class GoFSimFitToys(GoFSimFit) :
               nSplit   = 0     ) :
         """ Run toys 
         """
-        assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
+        assert isinstance ( nToys , int ) and 1 <= nToys , "Invalid `nToys` argument!"
 
         if parallel :
             
@@ -345,7 +347,6 @@ class GoFSimFitToys(GoFSimFit) :
         counters = self.counters 
 
         from ostap.utils.progress_bar import progress_bar
-
         for i in progress_bar ( nToys , silent = silent , description = 'Toys:') :
 
             self.pdf.load_params ( self.parameters , silent = True )            
@@ -588,7 +589,7 @@ class GoFSimFitToys(GoFSimFit) :
                  sample ,
                  fmtv   % vs ,
                  fmt    % ( vm.value() , vm.error() ) ,
-                 fmtv   % vr                          ,
+                 fmte   % vr                          ,
                  fmt2   %  ( vmn , vmx )              ,
                  ( '%s10^%+d' %  ( times , expo )  if expo else '' )   ,                  
                  pvalue , sigma )
@@ -844,13 +845,13 @@ class GoFSimFitType(GoFSimFitBase) :
         """ Draw ECDF for toys & statistical estgimator 
         """
         gof = self.gofs.get ( sample , None ) 
-        if not gof : raise KeyError ( 'Unknown sample "%s"!' % sample )
+        if not gof : raise KeyError ( 'Unknown sample "%s"' % sample )
         ## draw it
         t = self.tvalues()[sample]
         return gof.draw ( tvalue = t , opts = opts , *args , **kwargs )
     
     # =========================================================================
-    def table ( self             , * , 
+    def table ( self      , *    , 
                 title     = ''   ,
                 prefix    = ''   ,
                 precision = 4    , 
@@ -938,6 +939,12 @@ class GoFSimFitType(GoFSimFitBase) :
                          prefix    = '# '     ,
                          alignment = 'llcccc' ) 
         
+    @property
+    def cmp ( self ) :
+        """`cmp` : helper dictionary { category : pdf, data}
+        """
+        return self.__cmp 
+    
 # =============================================================================
 ## Goodness-of-fit estimator for SimFit using PPD method
 class PPDSimFit(GoFSimFitType) :
@@ -977,7 +984,7 @@ class DNNSimFit(GoFSimFitType) :
         """
         uvalues = {}
         ## evaluate t&p-values for each component 
-        for key , value in self.__cmp.items()  :
+        for key , value in self.cmp.items()  :
             cmp, data = value
             gof = self.gofs [ key ]
             uvalues [ key ] = gof.histo 
@@ -1006,12 +1013,224 @@ class USTATSimFit(GoFSimFitType) :
         """
         uvalues = {}
         ## evaluate t&p-values for each component 
-        for key , value in self.__cmp.items()  :
+        for key , value in self.cmp.items()  :
             cmp, data = value
             gof = self.gofs [ key ]
             uvalues [ key ] = gof.histo 
         return uvalues
+   
+# =============================================================================
+## @class GoFSimFit2
+#  Goodness-of-fit for simultaneous fits
+#  - It is a bit more  gneria and (a bit less efficient)  GoG estimator for 
+#    simulataneous fits
+class GoFSimFit2(GoFSimFitBase) :
+    """ Generic Goodness-of-fit for simultaneous fits
+    - It is a bit more generic and (a bit less CPU efficient) GoF estimator for 
+    simultaneous fits
+    """
+    def __init__ ( self               ,
+                   pdf                ,
+                   dataset            ,
+                   estimators  = {}   , 
+                   parameters  = None ) :
+        
+        ## initialize the base class 
+        GoFSimFitBase.__init__ ( self                    ,
+                                 pdf        = pdf        ,
+                                 dataset    = dataset    ,
+                                 parameters = parameters )
+
+        assert isinstance ( estimators , dictlike_types ) , \
+            "Invalid type for `estimators`: %s" % ( typename ( estimators ) ) 
+        assert estimators and all ( k in self.sample for k in estimators ) , \
+            "Invalid keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
+        assert all ( l in estimators for l in self.sample.labels() ) , \
+            "Missing keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
+                
+        self.__dataset = dataset 
+        self.__tvalues = {} 
+        
+        name = self.sample.name
+        for key , cmp in self.pdf.categories.items ()  :
+            
+            assert isinstance ( cmp , APDF1 ) , "Component `%s` is not APDF1` %s" % ( key , typename ( cmp ) )
+            obs      = cmp.pdf.getObservables ( dataset )
+            category = '%s==%s::%s' % ( name , name , key )
+            ds       = dataset.subset ( variables = obs , cuts = category )
+            
+            gof = estimators [ key ] 
+            if isinstance ( gof , string_types ) : pass 
+            
+            ## get t-value 
+            tval = None 
+            
+            ## 1D case ? 
+            tval  = gof.tvalue ( cmp , ds )
+                                                                
+            self.gofs  [ key  ] = gof 
+            self.N     [ key  ] = len ( ds ) 
+            
+            ## get t-0value for the component 
+            self.tvalues [ key ] = tv  
     
+
+        self.__ecdfs    = {} 
+        self.__counters = defautdict(SE) 
+        self.__cnt      = EffCounter ()
+        self.__nToys    = 0 
+        
+    ## get all t-values for fit-components
+    def tvalues ( self ) : 
+        """`tvalues` : dictionary { component : t-value }
+        """
+        return self.__tvalues
+    
+    ## run toys to get p-value
+    def run ( self , nToys = 500 , silent = False  ) :
+        """ Run toys to get p=value
+        """
+        
+        from ostap.utils.progress_bar import progress_bar
+        for t in progress_bar ( nToys , silent = silent , Description = 'Toys:' ) : 
+              
+            name = self.sample.name
+            new_dataset = self.pdf.generate ( self.N , sample = True )
+
+            ttv       = self.tvalues()
+            all_above = True 
+         
+            for key , gof in self.gofs.items ()  : 
+
+                cmp = self.pdf [ key ]
+                obs = cmp.pdf.getObservables ( new_dataset )
+                category = '%s==%s::%s' % ( name , name , key )
+                ds       = new_dataset.subset ( variables = obs , cuts = category )
+            
+                tv = gof.tvalue ( cmp , ds )
+                
+                if not key in self.__ecdfs : self.__ecdfs [ key ] = Ostap.Math.ECDF ( tv , True )
+                else                       : self.__ecdfs [ key ].add ( tv ) 
+              
+                self.__counters [ key ] += tv 
+                
+                all_above = all_above and ttv [ key ] <= tv 
+                ds.clear ()
+                del ds 
+                
+            ## the global counter       
+            self.__cnt   += all_above 
+                    
+            self.__nToys += 1 
+     
+            new_dataset.clear() 
+            del new_dataset 
+    
+    ## get dictionary of t-values & dictionary of p-values
+    def pvalues  ( self ) :
+        """ Get dictionaries of t and p-values 
+        """
+        
+        tvs = self.tvalues ()
+        pvs = {}  
+        for key, ecdf in self.__ecdf.items() : 
+            tv = tvs.get ( key , None )
+            if not tv is None : 
+                pvs [ key ] = ecdf.estimate ( tv )
+            
+        ## global  p-value 
+        pvs [ '' ] = self.__counter.eff
+            
+        return tvs, pvs 
+           
+    ## output as table      
+    def table  ( self             , 
+                 title     = ''   , 
+                 prefix    = ''   , 
+                 precision = 4    , 
+                 width     = 6    , 
+                 style     = None ) :
+        """ The table 
+        """ 
+        
+        keys = tuple ( k for k in self.sample.labels () ) 
+        
+        ## no toys, no p-values, ...
+        if not self.__ecdfs or not self.__counters : 
+            rows = [ ('Component' , 't-value' , 'Factor' ) ] 
+            for  key, tv in self.tvalues.items() :
+                tt , expo = pretty_value ( tv , precision = precision , width = width ) 
+                row = key, tt , '10^{%d}' % expo if expo else ''
+                rows.append ( row )
+            rows  = T.remove_empty_columns ( rows )
+            title = title if title else 'GoF T-values'
+            return T.table  ( rows , title  = title , prefix = prefix , alignment = 'lcc' )
+        
+        for key, tv in self.tvalues :
+            
+            cnt  = self.counters.get ( key , None )
+            ecdf = self.__ecdfs .get ( key , None  ) 
+      
+            if ecdf is None or cnt is None : continue 
+          
+            pvalue = ecdf.estimate ( tv )
+            pv     = clip_pvalue   ( pvalue , 0.5 )
+            nsigma = significance  ( pv ) ## convert  it to significace
+
+            mean       = cnt.mean ()
+            rms        = cnt.rms    () 
+            vmin, vmax = cnt.minmax () 
+
+            mxv = max ( abs ( tv   ) , abs ( mean.value() ) ,
+                        abs ( vmin ) , abs ( vmax         ) )
+            mxe = max ( rms , mean.error() )
+
+            fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv , mxe * mxe )  ,
+                                                      width       = width     ,
+                                                      precision   = precision ,
+                                                      parentheses = False     )
+            
+            if expo : scale = 10 ** expo
+            else    : scale = 1 
+             
+            smean = mean / scale 
+            spv   = pv * 100 
+            
+            spv   = '%.2f' % spv 
+            nsig  = '%.1f' % nsigma
+            
+            row = ( key ,
+                    fmtv % ( tv   / scale )  , 
+                    fmt  % ( sm   . value () , sm . error () ) ,
+                    fmte % ( rms  / scale )  , 
+                    fmtv % ( vmin / scale )  , 
+                    fmtv % ( vmax / scale )  ,
+                    '10^{%d}' % expo if expo else '' , 
+                    pvs  , 
+                    nsig )  
+            
+            rows.append ( row )
+        
+        ## global statistics
+        pvalue = self.__counter.eff
+        pv     = clip_pvalue   ( pvalue , 0.5 )
+        nsigma = significance  ( pv ) ## convert  it to significace
+        spv    = pv * 100 
+        spv    = '%.2f' % spv 
+        nsig   = '%.1f' % nsigma
+        row    = 'COMBINED'  , '' , '' , '' , '', '' , ''  , spv , nsig  
+        rows.append ( row )
+        
+        header = ( 'Component' , 't-value' , 't-mean' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
+        rows   = [ header ] + rows 
+        rows   = T.remove_empty_columns ( row ) 
+        title = title if title else 'GoF statistics'
+        return T.table ( rows , title = title , prefix = prefix )     
+
+    __str__  = table 
+    __repr__ = table 
+    # =========================================================================
+ 
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -1021,5 +1240,3 @@ if '__main__' == __name__ :
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
-
-

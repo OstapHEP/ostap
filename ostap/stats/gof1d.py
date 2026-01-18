@@ -38,8 +38,8 @@ from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
 from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
-from   ostap.logger.colorized   import infostr
 from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, data2vct  
+from   ostap.stats.gof          import AGoF 
 from   collections              import defaultdict, namedtuple
 import ostap.logger.table       as     T
 import ostap.fitting.ds2numpy 
@@ -53,6 +53,15 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof1d' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-1D-fit studies' )
+# =============================================================================
+## implemented methods
+GoF_methods = ( "KS" ,  ## Kolmogorov-Smirnov 
+                "K"  ,  ## Kuiper
+                "AD" ,  ## Anderson-Darling 
+                "CM" ,  ## Cramer-von-Mises 
+                "ZK" ,  ## Zhang's Z_K-estimator 
+                "ZA" ,  ## Zhang's Z_A-estimatoe 
+                "ZC" )  ## Zhang's Z_C-estimator 
 # =============================================================================
 ## @var NL
 #  use C++ if length of data exceeds NL, otherwise Python is OK 
@@ -995,6 +1004,94 @@ class GoF1DToys(GoF1D) :
         ##
         return result, line1, line2   
 
+# =============================================================================
+## @class GoF1D_ 
+#  Implementation of 1D GoF estimator (AGoF innterface) 
+#  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+class Gof1D_(AGoF) :
+    """ Implementation of 1D GoF estimator (AGoF innterface) 
+    """ 
+    def __init__ ( self , what , **kwargs ) :
+        
+        assert isinstance ( what , string_types ) and what.upper() in GoF_methods , \
+            "Invalid `what`: %s/%s"% ( what , typename ( what ) ) 
+            
+        self.__what     = what.upper()     
+        self.__gof      = None 
+        self.__gof_toys = None 
+        self.__nToys    = kwargs.pop ( 'nToys' , 1000 )
+        self.__kwargs   = kwargs  
+
+    @property
+    def what  ( self ) : 
+        """`what`: the actual GoF method"""
+        return self.__what
+    @property
+    def kwargs ( self ) : 
+        """`kwargs` L arguments for `GoF1DToys.run`"""
+        return self.__kwargs 
+       
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Git
+    #  @code
+    #  gof    = ...
+    #  pdf    = ...
+    #  data   = ...
+    #  tvalue = gof.tvalue ( pdf , data )
+    #  @endcode
+    def tvalue ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof    = ...
+        >>> pdf    = ...
+        >>> data   = ...
+        >>> tvalue = gof.tvalue ( pdf , data )
+        """
+        gof = GoF1D ( pdf , data )
+        return gof.estimators [ self.__what ]
+    
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Fit test
+    #  @code
+    #  gof   = ...
+    #  pdf   = ...  
+    #  data  = ... 
+    #  t_value = gof ( pdf , data ) 
+    #  @endcode
+    def __call__ ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof   = ...
+        >>> pdf   = ... 
+        >>> data  = ... 
+        >>> t_value = gof ( pdf , data ) 
+        """ 
+        return self.tvalue ( pdf , data )
+    
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  gof  = ...
+    #  pdf  = ...
+    #  data = ... 
+    #  t_value , p_value = gof.pvalue ( pdf , data )
+    #  @endcode
+    def pvalue ( self , pdf , data ) :
+        """ Calculate the t & p-values
+        >>> gof  = ...
+        >>> pdf  = ... 
+        >>> data = ... 
+        >>> t_value , p_value = gof.pvalue ( pdf , data ) 
+        """    
+        gof      = GoF1D     ( pdf , data )
+        tval     = gof.etimators [ self.__what ]
+        
+        gof_toys = GoF1DToys ( gof )
+        gof_toys.run         ( self.__nToys , **self.__kwargs )
+            
+        pval = gof_toys.result ( self.__what ).pvalue 
+        
+        return tval , pval 
+     
+    
 # =============================================================================
 if '__main__' == __name__ :
     

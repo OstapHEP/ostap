@@ -51,6 +51,12 @@ namespace Ostap
       ( const Data&  data                  ,
         const bool   complementary = false ) ;
       // =======================================================================
+      /** Constructor from the idngle entry 
+       */ 
+      ECDF
+      ( const double data                  ,
+        const bool   complementary = false ) ;
+      // =======================================================================
       /** Constructor from data
        *  data must be non-empty!
        */ 

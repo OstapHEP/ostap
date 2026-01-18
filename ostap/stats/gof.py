@@ -75,6 +75,24 @@ class AGoF(object) :
         return NotImplemented
     
     # =========================================================================
+    ## Calculate T-value for Goodness-of-Git
+    #  @code
+    #  gof    = ...
+    #  pdf    = ...
+    #  data   = ...
+    #  tvalue = gof.tvalue ( pdf , data )
+    #  @endcode
+    @abc.abstractmethod
+    def tvalue ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof    = ...
+        >>> pdf    = ...
+        >>> data   = ...
+        >>> tvalue = gof.tvalue ( pdf , data )
+        """
+        return NotImplemented
+    
+    # =========================================================================
     ## Calculate the t & p-values
     #  @code
     #  gof  = ...

@@ -119,6 +119,14 @@ Ostap::Math::ECDF::ECDF
   : Ostap::Math::ECDF::ECDF ( data.begin() , data.end() , complementary )
 {}
 // ============================================================================
+// Standard constructor from  data
+// ============================================================================
+Ostap::Math::ECDF::ECDF
+( const double  data          ,
+  const bool    complementary )
+  : Ostap::Math::ECDF::ECDF ( std::vector<double>( 1 , data ) , complementary )
+{}
+// ============================================================================
 // constructor to create complementary/oridnary ECDF
 // ============================================================================
 Ostap::Math::ECDF::ECDF
