@@ -38,7 +38,7 @@ namespace Ostap
      *  where \f$z= \frac{x-\mu}{\beta}\f$
      *  
      *  Very useful important case:
-     *  If  x is distributed accroding  to \f$ f(x) \propto e^{-\tau x} \f$, 
+     *  If  x is distributed accoring  to \f$ f(x) \propto e^{-\tau x} \f$, 
      *  then z, \f$ z  =   log(x) \f$, is distributed accoring to 
      *  \f$ F(z) = G(x, -\log(\tau), 1 ) \f$ 
      * 
@@ -1388,20 +1388,20 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate Weibull-distributions
-      double pdf        ( const double x ) const ;
+      double         pdf        ( const double x ) const ;
       /// evaluate Weibull-distributions
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline  double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: //  direct & derived getters 
       // ======================================================================
-      double scale () const { return m_scale ; }
-      double shape () const { return m_shape ; }
-      double shift () const { return m_shift ; }
+      inline double scale () const { return m_scale ; }
+      inline double shape () const { return m_shape ; }
+      inline double shift () const { return m_shift ; }
       // ======================================================================
-      double lambd () const { return scale () ; }
-      double k     () const { return shape () ; }
-      double x0    () const { return shift () ; }
-      double xmin  () const { return x0    () ; }      
+      inline double lambd () const { return scale () ; }
+      inline double k     () const { return shape () ; }
+      inline double x0    () const { return shift () ; }
+      inline double xmin  () const { return x0    () ; }      
       // ======================================================================
     public: //  setters  
       // ======================================================================
@@ -1409,9 +1409,9 @@ namespace Ostap
       bool setShape  ( const double value ) ;
       bool setShift  ( const double value ) ;
       // ======================================================================
-      bool setLambda ( const double value ) { return setScale ( value ) ; }
-      bool setK      ( const double value ) { return setShape ( value ) ; }
-      bool setX0     ( const double value ) { return setShift ( value ) ; }
+      inline bool setLambda ( const double value ) { return setScale ( value ) ; }
+      inline bool setK      ( const double value ) { return setShape ( value ) ; }
+      inline bool setX0     ( const double value ) { return setShift ( value ) ; }
       // ======================================================================
     public: // various derived  quantities 
       // ======================================================================
@@ -1501,7 +1501,7 @@ namespace Ostap
       double integral () const ;
       double integral
       ( const double low , 
-	const double high ) const ;
+	      const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1517,11 +1517,11 @@ namespace Ostap
     // ========================================================================
     /** @class Sigmoid
      *  (shifted&scaled) Sigmoid/kink function, modulated by the positive polynomial
-     *  \f$ f(x) = ( f_{\sigma} (z) + \updelta ) \times P_{pos} (x) \f$, where 
+     *  \f$ f(x) = ( ( 1 - f ) + f_{\sigma} (z) + f  ) \times P_{pos} (x) \f$, where 
      *   - \f$ z = \frac{x-x_0}{\sigma} \f$ 
      *   - \f$ f_{\sigma}(x)   \ge 0 }\f$ is Sigmoid function 
      *   - \f$ P_{pos}(x)      \ge 0 }\f$ is Positive polynomial
-     *   - shift \f$ \updelta \ge 0  \f$ 
+     *   - shift \f$ \f = \sin^2 \updelta 0  \f$ 
      * 
      *  All sigmoid fuctions \f$ \sigma(z) \f$ are normalized & scaled such
      *  - \f$ \sigma(-\infty) =0\f$ 
@@ -1569,34 +1569,39 @@ namespace Ostap
       /// constructor from polynomial and parameters "alpha" and "x0"
       Sigmoid
       ( const Ostap::Math::Positive& poly               ,
-	const double                 scale = 1          ,
-	const double                 x0    = 0          ,
-	const double                 delta = 0          , 
-	const SigmoidType            st    = Hyperbolic ) ;
+	      const double                 scale = 1          ,
+	      const double                 x0    = 0          ,
+	      const double                 delta = 0          , 
+	      const SigmoidType            st    = Hyperbolic ) ;
       /// constructor from polynomial and parameter "alpha"
       Sigmoid
       ( const unsigned short         N     = 0          ,
-	const double                 xmin  = 0          ,
-	const double                 xmax  = 1          ,
-	const double                 scale = 1          ,
-	const double                 x0    = 0          , 
-	const double                 delta = 0          , 
-	const SigmoidType            st    = Hyperbolic ) ;
+	      const double                 xmin  = 0          ,
+	      const double                 xmax  = 1          ,
+	      const double                 scale = 1          ,
+	      const double                 x0    = 0          , 
+	      const double                 delta = 0          , 
+	      const SigmoidType            st    = Hyperbolic ) ;
       /// constructor from polynomial and parameter "alpha"
       Sigmoid
       ( const std::vector<double>&   pars               ,
-	const double                 xmin  = 0          ,
-	const double                 xmax  = 1          ,
-	const double                 scale = 1          ,
-	const double                 x0    = 0          ,
-	const double                 delta = 0          , 	
-	const SigmoidType            st    = Hyperbolic ) ;
+	     const double                 xmin  = 0          ,
+	     const double                 xmax  = 1          ,
+	     const double                 scale = 1          ,
+	     const double                 x0    = 0          ,
+	     const double                 delta = 0          , 	
+	     const SigmoidType            st    = Hyperbolic ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the value of the function: 
       inline double operator () ( const double x ) const
-      { return xmin () <= x && x <= xmax() ? m_positive ( x ) * ( sigmoid ( x ) + m_delta ) : 0.0 ; }
+      { 
+        const double s2 = m_sin2delta ;
+        const double c2 = 1 - s2      ;
+        return xmin () <= x && x <= xmax() ?
+               m_positive ( x ) * ( c2 * sigmoid ( x ) + s2 ) : 0.0 ; 
+      }
       // ======================================================================
     public:
       // ======================================================================
@@ -1607,10 +1612,12 @@ namespace Ostap
       // ======================================================================
     public: // sigmoid getters 
       // ======================================================================
-      inline double      scale        () const { return m_scale ; }
-      inline double      x0           () const { return m_x0    ; }
-      inline double      delta        () const { return m_delta ; } 
-      inline SigmoidType sigmoid_type () const { return m_type  ; }
+      inline double      scale        () const { return     m_scale     ; }
+      inline double      x0           () const { return     m_x0        ; }
+      inline double      delta        () const { return     m_delta     ; } 
+      inline SigmoidType sigmoid_type () const { return     m_type      ; }
+      inline double      sin2delta    () const { return     m_sin2delta ; }
+      inline double      cos2delta    () const { return 1 - m_sin2delta ; } 
       // ======================================================================
     public: // sigmoid setters  
       // ======================================================================      
@@ -1645,13 +1652,15 @@ namespace Ostap
     private:
       // ======================================================================
       /// sigmoid scale 
-      double                m_scale    ; // sigmoid scale 
+      double                m_scale     { 1          } ; // sigmoid scale 
       /// sigmoid location 
-      double                m_x0       ; // sigmoid location 
+      double                m_x0        { 0          } ; // sigmoid location 
       /// sigmoid delta  
-      double                m_delta    ; // sigmoid delta 
+      double                m_delta     { 0          } ; // sigmoid delta 
       /// sigmoid type 
-      SigmoidType           m_type     ; // sigmoid type 
+      SigmoidType           m_type      { Hyperbolic } ; // sigmoid type 
+      /// constant fraction f = sin^2 delta 
+      double                m_sin2delta { 0          } ; // sin^2 delta 
       // ======================================================================
     private:
       // ======================================================================
@@ -2026,8 +2035,9 @@ namespace Ostap
       /// get the integral 
       double integral   () const ;
       /// get the integral between low and high
-      double integral   ( const double low  ,
-                          const double high ) const ;
+      double integral  
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -2224,7 +2234,7 @@ namespace Ostap
       /// get the integral between low and high
       double integral
       ( const double low  ,
-	const double high ) const ;
+	      const double high ) const ;
       /// get CDF 
       double cdf        ( const double x ) const ;
       // ======================================================================

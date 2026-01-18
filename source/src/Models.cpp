@@ -2458,7 +2458,6 @@ std::size_t Ostap::Math::Weibull::tag () const
 // }
 // ============================================================================
 
-
 // ============================================================================
 // constructor from polynom and parameters "alpha" and "x0"
 // ============================================================================
@@ -2469,12 +2468,14 @@ Ostap::Math::Sigmoid::Sigmoid
   const double                            delta , 
   const Ostap::Math::Sigmoid::SigmoidType st    ) 
   : Ostap::Math::PolyFactor1D ( poly  )
-  , m_scale    ( scale )
-  , m_x0       ( x0    )
-  , m_delta    ( std::abs ( delta ) ) 
-  , m_type     ( st    )
-  , m_workspace() 
+  , m_scale     ( scale )
+  , m_x0        ( x0    )
+  , m_delta     ( 0     ) 
+  , m_type      ( st    )
+  , m_sin2delta ( 0     )
+  , m_workspace () 
 {
+  setDelta ( delta ) ; 
   //
   Ostap::Assert ( !s_zero ( m_scale )                     ,
 		  "Parameter `scale` must be non-zero!"   ,
@@ -2499,12 +2500,15 @@ Ostap::Math::Sigmoid::Sigmoid
   const double                            delta , 
   const Ostap::Math::Sigmoid::SigmoidType st    )   
   : Ostap::Math::PolyFactor1D ( N , xmin , xmax )
-  , m_scale    ( scale )
-  , m_x0       ( x0    )
-  , m_delta    ( std::abs ( delta ) ) 
-  , m_type     ( st    )
+  , m_scale     ( scale )
+  , m_x0        ( x0    )
+  , m_delta     ( 0     ) 
+  , m_type      ( st    )
+  , m_sin2delta ( 0     ) 
   , m_workspace() 
 {
+  //
+  setDelta ( delta );
   //
   Ostap::Assert ( m_scale                                 ,
 		  "Parameter `scale` nust be non-zero!"   ,
@@ -2529,11 +2533,15 @@ Ostap::Math::Sigmoid::Sigmoid
   const double                            delta , 
   const Ostap::Math::Sigmoid::SigmoidType st    )   
   : Ostap::Math::PolyFactor1D ( pars , xmin , xmax )
-  , m_scale    ( scale )
-  , m_x0       ( x0    )
-  , m_delta    ( std::abs ( delta ) ) 
-  , m_workspace() 
+  , m_scale     ( scale )
+  , m_x0        ( x0    )
+  , m_delta     ( 0     ) 
+  , m_type      ( st    )
+  , m_sin2delta ( 0     ) 
+  , m_workspace () 
 {
+  //
+  setDelta ( delta ) ;
   //
   Ostap::Assert ( !s_zero ( m_scale )                     ,
 		  "Parameter `scale` must be non-zero!"   ,
@@ -2577,9 +2585,10 @@ bool Ostap::Math::Sigmoid::setX0 ( const double value )
 // ============================================================================
 bool Ostap::Math::Sigmoid::setDelta ( const double value )
 {
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( m_delta , avalue ) ) { return false ; }
-  m_delta = avalue ;
+  if ( s_equal ( m_delta , value ) ) { return false ; }
+  m_delta     = value ;
+  m_sin2delta = std::pow ( std::sin ( m_delta ) , 2 ) ;
+  m_sin2delta = std::min ( m_sin2delta , 1.0 ) ; 
   //
   return true ;
 }
@@ -2630,9 +2639,12 @@ double Ostap::Math::Sigmoid::sigmoid ( const double x ) const
 double Ostap::Math::Sigmoid::min_value () const
 {
   //
+  const double c2 = cos2delta () ;
+  const double s2 = sin2delta () ; 
+  //
   const double pmin = m_positive.min_value () ;
-  const double sig1 = sigmoid ( xmin () ) + m_delta ;
-  const double sig2 = sigmoid ( xmax () ) + m_delta ;
+  const double sig1 = c2 * sigmoid ( xmin () ) + s2 ;
+  const double sig2 = c2 * sigmoid ( xmax () ) + s2 ;
   //
   return pmin * std::min ( sig1 , sig2 ) ;
 }
@@ -2642,9 +2654,12 @@ double Ostap::Math::Sigmoid::min_value () const
 double Ostap::Math::Sigmoid::max_value () const
 {
   //
+  const double c2 = cos2delta () ;
+  const double s2 = sin2delta () ; 
+  //
   const double pmax = m_positive.max_value () ; 
-  const double sig1 = sigmoid ( xmin () ) + m_delta ;
-  const double sig2 = sigmoid ( xmax () ) + m_delta ;
+  const double sig1 = c2 * sigmoid ( xmin () ) + s2 ;
+  const double sig2 = c2 * sigmoid ( xmax () ) + s2 ;
   //
   return pmax * std::max ( sig1 , sig2 ) ;
 }
@@ -2670,12 +2685,11 @@ double Ostap::Math::Sigmoid::integral
   if ( low < m_x0 && m_x0 < high ) 
     { return integral ( low , m_x0 ) + integral ( m_x0 , high ) ; }
   // split further, if needed 
-  const double a1 = m_x0 + 3 * m_scale ;
-  if ( low < a1 && a1 < high ) { return integral ( low , a1 ) + integral ( a1 , high ) ; }
+  const double a3 = m_x0 + 3 * m_scale ;
+  if ( low < a3 && a3 < high ) { return integral ( low , a3 ) + integral ( a3 , high ) ; }
   // split further, if needed  
-  const double a2 = m_x0 - 3 * m_scale ;
-  if ( low < a2 && a2 < high ) { return integral ( low , a2 ) + integral ( a2 , high ) ; }
-  //
+  const double a4 = m_x0 - 3 * m_scale ;
+  if ( low < a4 && a4 < high ) { return integral ( low , a4 ) + integral ( a4 , high ) ; }
   //
   static const Ostap::Math::GSL::Integrator1D<Sigmoid> s_integrator {} ;
   static char s_message[] = "Integral(Sigmoid)" ;
@@ -2691,9 +2705,9 @@ double Ostap::Math::Sigmoid::integral
       workspace ( m_workspace ) ,    // workspace
       s_APRECISION         ,          // absolute precision
       s_RPRECISION         ,          // relative precision
-      m_workspace.size()              ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
+      m_workspace.size()   ,          // size of workspace
+      s_message            , 
+      __FILE__ , __LINE__  ) ;
   //
   return result ;
 }
@@ -2707,7 +2721,8 @@ std::size_t Ostap::Math::Sigmoid::tag () const
 				       m_positive.tag () ,
 				       m_scale ,
 				       m_x0    ,
-				       m_type  ) ; 
+				       m_type  , 
+               m_delta ) ; 
 }
 // ============================================================================
 

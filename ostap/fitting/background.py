@@ -1280,10 +1280,10 @@ models.append ( TwoExpoPoly_pdf )
 # =============================================================================
 ## @class  Sigmoid_pdf
 #  (shifted) Sigmoid function, modulated by the positive polynomial
-#  \f$ f(x) = ( f_{\sigma} (x) + \updelta ) \times P_{pos} (x) \f$, where 
+#  \f$ f(x) = ( (1-f) f_{\sigma} (x) + f ) \times P_{pos} (x) \f$, where 
 #   - \f$ f_{\sigma}(x)   \ge 0 }\f$ is Sigmoid function 
 #   - \f$ P_{pos}(x)      \ge 0 }\f$ is Positive polynomial
-#   - shift \f$ \updelta \ge 0  \f$ 
+#   - shift \f$ f = \sin^2\updelta  \f$ 
 #  @see Ostap::Models::PolySigmoid
 #  @see Ostap::Math::Sigmoid
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1291,7 +1291,7 @@ models.append ( TwoExpoPoly_pdf )
 class Sigmoid_pdf(PolyBase,PEAK) :
     """ (Shifted) Sigmoid function modulated by the positive (Bernstein) polynomial 
 
-    f(x) = ( f_sigmoid ( z ) + delta ) * positive_pol ( x ) 
+    f(x) = ( (1-f) f_sigmoid ( z ) + f ) * positive_pol ( x ) 
     
     where :  
 
@@ -1299,6 +1299,7 @@ class Sigmoid_pdf(PolyBase,PEAK) :
     - f_sigmoid  >= 0 : sigmoid function
     - delta      >= 0 : vertical shift  
     - positive   >= 0 : positive polynomial 
+    - f = sin^2 delta 
     
     - see Ostap::Models::PolySigmoid
     - see Ostap::Math::Sigmoid
@@ -1327,11 +1328,11 @@ class Sigmoid_pdf(PolyBase,PEAK) :
                             sigma_name  = 'scale_%s'  % self.name ,
                             sigma_title = 'scale(%s)' % self.name ) 
         
-        ## delta : vertical shift 
+        ## delta :  f = sin^2 delta 
         self.__delta = self.make_var ( delta                  , 
                                        'delta_%s'  % name     ,
                                        'delta(%s)' % name     ,
-                                       None , 0.1 , 0 , 1.e+3 )
+                                        None , 0 , -4 * math.pi , +4 * math.pi )
         
         if isinstance ( sigmoid_type , string_types ) :
             stl = str ( sigmoid_type ).lower() 
@@ -1405,7 +1406,7 @@ class Sigmoid_pdf(PolyBase,PEAK) :
         
     @property
     def delta ( self ) :
-        """`delta'-parameter for Sigmoid function: vertical shift/bias"""
+        """`delta'-parameter for Sigmoid function: f = sin^2 delta """
         return self.__delta 
     @delta.setter
     def delta ( self , value ) :

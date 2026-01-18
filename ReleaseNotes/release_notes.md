@@ -1,6 +1,8 @@
 
 ## New features
 
+ 1. minor tweak for the treatment of `delta` for `Ostap::Math::Sigmoid`. It shoud improve the fits.
+
 ## Bug fixes
 
 ## Backward incompatible 
