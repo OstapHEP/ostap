@@ -122,7 +122,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
-from   ostap.core.ostap_types  import sequence_types, sized_types 
+from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types  
 from   collections.abc         import Sized
 import ROOT, cppyy, sys, math, ctypes, array   
 # =============================================================================
@@ -854,7 +854,7 @@ def num_range ( value , N = 1 ) :
     
     if   iszero ( value ) : return ( -0.5 , 0.5 )
     
-    assert isinstance ( N , int ) and 1 <= N , \
+    assert isinstance ( N , int ) and 1 <= N < 200 , \
         "Inavalid `N' parameter:%s" % N
     
     a , b = frexp10 ( value )         
@@ -862,7 +862,7 @@ def num_range ( value , N = 1 ) :
 
     NN = 10 ** N
     
-    if not isfinite ( a * 2* NN ):
+    if not isfinite ( a * 2 * NN ):
         logger.error ( "num_range: not finite: %s %s %s %s %s" % ( value , N , a , b , NN ) )
         
     af = math.floor ( a * 2 * NN )
@@ -878,14 +878,14 @@ def num_range ( value , N = 1 ) :
     
 # =============================================================================
 ## Find suitable range for histogram axis 
-def axis_range ( xmin , xmax , delta = 0.02 , log_margin = 0.45 , log = False ) :
+def axis_range ( xmin , xmax , delta = 0.02 , log_margin = 0.45 , log = False , N = None  ) :
     """ Find suitable range for histogram axis
     """
     xmn = min ( xmin , xmax )
     xmx = max ( xmin , xmax )
-    
+
     if log : 
-        assert 0 < log_margin < 1 , "axis_range log-gargin must be between 0 and 1: %s"%  log_margin
+        assert 0 < log_margin < 1 , "axis_range log-margin must be between 0 and 1: %s"%  log_margin
         assert 0 < xmn < xmx , "axis_range: xmin/xmax must be positive for log-scale %+g/%+g" % ( xmn , xmx ) 
         xmn *= ( 1 - log_margin )
         xmx *= ( 1 + log_margin )
@@ -937,9 +937,18 @@ def axis_range ( xmin , xmax , delta = 0.02 , log_margin = 0.45 , log = False ) 
     
         xmin = xmn - delta * d        
         xmax = xmx + delta * d
+
+
+    if isinstance ( N , integer_types ) and 1 <= N : pass
+    else :
+        dd = xmax - xmin
+        dd = dd / ( abs ( xmax ) + abs ( xmin ) )
+        dd = - math.log10 ( dd ) 
+        dd =   math.ceil  ( dd ) 
+        N  = max ( 1 , dd ) 
         
-    xmin , _     = num_range ( xmin , N = 2 )
-    _    , xmax  = num_range ( xmax , N = 2 )
+    xmin , _     = num_range ( xmin , N = N )
+    _    , xmax  = num_range ( xmax , N = N )
      
     return xmin, xmax 
 

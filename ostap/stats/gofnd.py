@@ -36,7 +36,8 @@ from   ostap.stats.counters     import EffCounter
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import random_name
 from   ostap.stats.gof_utils    import TOYS
-from   ostap.stats.ustat        import USTAT 
+from   ostap.stats.ustat        import USTAT
+from   ostap.plotting.color     import Navy, DarkGreen  
 import ostap.stats.gof_np       as     GNP
 import ROOT
 # =============================================================================
@@ -153,7 +154,7 @@ class GoF(AGoF) :
         ecdf = self.ecdf 
         if not ecdf : return ecdf
 
-        xmin , xmax  = ecdf.xmin () , ecdf.xmax ()
+        xmin , xmax = ecdf.xmin () , ecdf.xmax ()
         xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
         xmin , xmax = kwargs.pop ( 'xmin' , xmin ) , kwargs.pop ( 'xmax' , xmax ) ,
     
@@ -173,18 +174,18 @@ class GoF(AGoF) :
         line1     = ROOT.TLine ( tvalue , 1e-3 , tvalue , 1 - 1e-3 )
         ##
         line2.SetLineWidth ( 2 ) 
-        line2.SetLineColor ( 4 ) 
+        line2.SetLineColor ( Navy  ) 
         line2.SetLineStyle ( 9 ) 
         ##
-        line1.SetLineWidth  ( 4 ) 
-        line1.SetLineColor  ( 8 )
+        line1.SetLineWidth ( 4 ) 
+        line1.SetLineColor ( DarkGreen )
         ##
         line2.draw ( 'same' ) 
         line1.draw ( 'same' )
         ## 
         self._line1 = line1
         self._line2 = line2
-        ## 
+        ##
         return result, line1, line2   
                                                           
 # =============================================================================

@@ -24,7 +24,7 @@ __all__     = (
     'ZC'                 , ## ZC                GoF estimator
     'GoF1D'              , ## helper utility for GoF estimate 
     'GoF1DToys'          , ## helper utility for GoF estimate with toys
-    'GoF1D_'             , ## using AGoF interface ...
+    'GoF_1D'             , ## using AGoF interface ...
     )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types 
@@ -1012,10 +1012,10 @@ class GoF1DToys(GoF1D) :
         return result, line1, line2   
 
 # =============================================================================
-## @class GoF1D_ 
+## @class GoF1D
 #  Implementation of 1D GoF estimator (AGoF innterface) 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-class GoF1D_(AGoF) :
+class GoF_1D(AGoF) :
     """ Implementation of 1D GoF estimator (AGoF interface) 
     """ 
     def __init__ ( self , what , **kwargs ) :

@@ -26,7 +26,7 @@ from   ostap.stats.gof_simfit   import ( GoFSimFit     , GoFSimFit2 ,
                                          PPDSimFit     ,
                                          DNNSimFit     ,
                                          USTATSimFit   )  
-from   ostap.stats.gof1d        import GoF1D_ 
+from   ostap.stats.gof1d        import GoF_1D
 import ostap.logger.table       as     T 
 import ostap.io.zipshelve       as     DBASE
 import ostap.fitting.models     as     Models 
@@ -63,8 +63,8 @@ dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )
 
 mean1  = 2.0
 sigma1 = 0.50
-NS1    = 10000
-NB1    = 1000
+NS1    = 5000
+NB1    =  100
 
 for i in range ( NS1 )  :    
     v1 = random.gauss ( mean1 , sigma1 )
@@ -81,8 +81,8 @@ for i in range ( NB1 ) :
 # ============================================================================
 ## low statistic, high-background "signal channel"
 # ============================================================================
-NS2     =    500
-NB2     =  10000     
+NS2     =    400
+NB2     =   3000     
 mean2   = mean1  + 1.0
 sigma2  = sigma1 * 0.5
 
@@ -205,9 +205,7 @@ def test_gof_simfit1 () :
         for k in g.estimators :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
                 toys .draw ( sample , k )
-    
 
-    return
 
     if numcpu() < 10 : logger.info ( 'tests for CPU-expensive PPD,DNN & USTAT methods are disabled' )
     else :
@@ -227,14 +225,14 @@ def test_gof_simfit1 () :
         gof_dnn  = DNNSimFit   ( model_sim             , 
                                  dataset               ,
                                  parameters = r        ,                          
-                                 nToys      = 1000     ,
+                                 nToys      = nToys    ,
                                  parallel   = True     , 
                                  silent     = False    )
         """
         gof_ustat = USTATSimFit ( model_sim             , 
                                   dataset               ,
                                   parameters = r        ,                          
-                                  nToys      = 10       ,
+                                  nToys      = nToys    ,
                                   parallel   = False    , 
                                   silent     = False    )
         """
@@ -256,16 +254,17 @@ def test_gof_simfit1 () :
     # =========================================================================
     ## GoF-2
     # =========================================================================
-    estimators = { 'A'  : GoF1D_  ( 'KS') , 'B' : GoF1D_ ('KS') } 
+    estimators = { 'A'  : GoF_1D ( 'KS') , 'B' : GoF_1D( 'KS' ) } 
     
-    gof        = GoFSimFit2 ( model_sim                ,
+    gof2       = GoFSimFit2 ( model_sim                ,
                               dataset                  ,
                               estimators  = estimators ,  
                               parameters  = r          ) 
-    gof.run ( 100 , silent = False )
-    print ( gof.table() ) 
+    gof2.run ( 100 , silent = False )
     
-
+    title = 'GoF for SimFit' 
+    logger.info ( '%s:\n%s' % ( title , gof2.table( title = title , prefix = '# ' ) ) ) 
+    
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
@@ -295,7 +294,6 @@ if '__main__' == __name__ :
 
     with timing( "simfit-1" ,   logger ) :  
         test_gof_simfit1 ()
-
         
     ## check finally that everything is serializeable:
     with timing ('Save to DB:'     , logger ) :

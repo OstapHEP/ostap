@@ -17,6 +17,7 @@ __all__     = (
     'GoFSimFitToys'  , ## helper utility for GoF estimate with toys 
 )
 # =============================================================================
+from   ostap.core.ostap_types   import string_types, dictlike_types 
 from   ostap.fitting.pdfbasic   import PDF1, APDF1
 from   ostap.core.core          import VE, Ostap
 from   ostap.math.base          import axis_range
@@ -35,6 +36,7 @@ from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
                                          anderson_darling      ,
                                          cramer_von_mises      ,
                                          kuiper , ZK , ZA , ZC )
+from   ostap.plotting.color     import Navy, DarkGreen  
 from   collections              import defaultdict, namedtuple
 import ostap.stats.gofnd        as     GoFnD 
 import ostap.logger.table       as     T
@@ -685,32 +687,32 @@ class GoFSimFitToys(GoFSimFit) :
             ## logger.info ( 'Toy results for %s/Zhang/ZC estimate'           % sample ) 
         else :
             raise KeyError (  "draw: Invalid `sample/what`: %s/%s" % ( sample , what ) )
-            
+
         xmin , xmax = ecdf.xmin () , ecdf.xmax ()
         value       = result.statistics
         xmin        = min ( xmin , value )
         xmax        = max ( xmax , value )
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
-
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.10 )
+        ## 
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
-
+        ##
         result    = ecdf.draw  ( opts , *args , **kwargs ) 
         line1     = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
         
         ## horisontal line 
-        xmin      = kwargs['xmin']
-        xmax      = kwargs['xmax']
+        xmin      = kwargs [ 'xmin' ]
+        xmax      = kwargs [ 'xmax' ]
         dx        = ( xmax - xmin ) / 100 
         e         = ecdf ( value )
         line2     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
         ## 
         line2.SetLineWidth ( 2 ) 
-        line2.SetLineColor ( 4 ) 
+        line2.SetLineColor ( Navy       ) 
         line2.SetLineStyle ( 9 ) 
         ## 
         line1.SetLineWidth ( 4 ) 
-        line1.SetLineColor ( 8 )
+        line1.SetLineColor ( DarkGreen  )
         ##
         line2.draw ( 'same' )
         line1.draw ( 'same' )
@@ -923,9 +925,9 @@ class GoFSimFitType(GoFSimFitBase) :
             pv     = clip_pvalue ( pvalue , 0.5 ) 
             nsigma = significance ( pv ) ## convert  it to significace
             
-            p = pvalue * 100 
+            p      = pvalue * 100 
             pvalue = '% 5.2f %s %-.2f' % ( p.value() , plus_minus , p.error () )
-            n = nsigma 
+            n      = nsigma 
             nsigma = '%.2f %s %-.2f'   % ( n.value() , plus_minus , n.error () ) if float ( nsigma ) < 1000 else '+inf'
             
             row +=  pvalue , nsigma
@@ -1062,29 +1064,35 @@ class GoFSimFit2(GoFSimFitBase) :
             gof = estimators [ key ] 
             if isinstance ( gof , string_types ) : pass 
             
-            ## get t-value 
-            tval = None 
-            
-            ## 1D case ? 
-            tval  = gof.tvalue ( cmp , ds )
+            ## get t-value for this component 
+            self.__tvalues [ key ] = gof.tvalue ( cmp , ds )
                                                                 
             self.gofs  [ key  ] = gof 
             self.N     [ key  ] = len ( ds ) 
-            
-            ## get t-0value for the component 
-            self.tvalues [ key ] = tv  
-    
 
         self.__ecdfs    = {} 
-        self.__counters = defautdict(SE) 
+        self.__counters = defaultdict(SE) 
         self.__cnt      = EffCounter ()
         self.__nToys    = 0 
-        
+
+    
     ## get all t-values for fit-components
     def tvalues ( self ) : 
         """`tvalues` : dictionary { component : t-value }
         """
         return self.__tvalues
+
+    ## dictionary of counters
+    @property 
+    def counters ( self ) :
+        """`counters` : dictionary of counters """
+        return self.__counters 
+
+    ## "Global" counter
+    @property 
+    def counter ( self ) :
+        """`counter` : global counter """
+        return self.__cnt  
     
     ## run toys to get p-value
     def run ( self , nToys = 500 , silent = False  ) :
@@ -1092,7 +1100,7 @@ class GoFSimFit2(GoFSimFitBase) :
         """
         
         from ostap.utils.progress_bar import progress_bar
-        for t in progress_bar ( nToys , silent = silent , Description = 'Toys:' ) : 
+        for t in progress_bar ( nToys , silent = silent , description = 'Toys:' ) : 
               
             name = self.sample.name
             new_dataset = self.pdf.generate ( self.N , sample = True )
@@ -1100,14 +1108,14 @@ class GoFSimFit2(GoFSimFitBase) :
             ttv       = self.tvalues()
             all_above = True 
          
-            for key , gof in self.gofs.items ()  : 
-
-                cmp = self.pdf [ key ]
+            for key , cmp in self.pdf.categories.items ()  :
+                
                 obs = cmp.pdf.getObservables ( new_dataset )
                 category = '%s==%s::%s' % ( name , name , key )
                 ds       = new_dataset.subset ( variables = obs , cuts = category )
-            
-                tv = gof.tvalue ( cmp , ds )
+                
+                gof = self.gofs [ key ]                
+                tv  = gof.tvalue ( cmp , ds )
                 
                 if not key in self.__ecdfs : self.__ecdfs [ key ] = Ostap.Math.ECDF ( tv , True )
                 else                       : self.__ecdfs [ key ].add ( tv ) 
@@ -1139,7 +1147,7 @@ class GoFSimFit2(GoFSimFitBase) :
                 pvs [ key ] = ecdf.estimate ( tv )
             
         ## global  p-value 
-        pvs [ '' ] = self.__counter.eff
+        pvs [ '*COMBINED*' ] = self.counter.eff
             
         return tvs, pvs 
            
@@ -1158,15 +1166,16 @@ class GoFSimFit2(GoFSimFitBase) :
         ## no toys, no p-values, ...
         if not self.__ecdfs or not self.__counters : 
             rows = [ ('Component' , 't-value' , 'Factor' ) ] 
-            for  key, tv in self.tvalues.items() :
+            for  key, tv in self.tvalues().items() :
                 tt , expo = pretty_value ( tv , precision = precision , width = width ) 
                 row = key, tt , '10^{%d}' % expo if expo else ''
                 rows.append ( row )
             rows  = T.remove_empty_columns ( rows )
             title = title if title else 'GoF T-values'
             return T.table  ( rows , title  = title , prefix = prefix , alignment = 'lcc' )
-        
-        for key, tv in self.tvalues :
+
+        rows = [] 
+        for key, tv in self.tvalues().items()  :
             
             cnt  = self.counters.get ( key , None )
             ecdf = self.__ecdfs .get ( key , None  ) 
@@ -1196,34 +1205,33 @@ class GoFSimFit2(GoFSimFitBase) :
             smean = mean / scale 
             spv   = pv * 100 
             
-            spv   = '%.2f' % spv 
-            nsig  = '%.1f' % nsigma
-            
+            spv   = str ( ( 100 * pv  ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+            nsig  = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
+
             row = ( key ,
-                    fmtv % ( tv   / scale )  , 
-                    fmt  % ( sm   . value () , sm . error () ) ,
-                    fmte % ( rms  / scale )  , 
-                    fmtv % ( vmin / scale )  , 
-                    fmtv % ( vmax / scale )  ,
+                    fmtv % ( tv    / scale )  , 
+                    fmt  % ( smean . value () , smean . error () ) ,
+                    fmte % ( rms   / scale )  , 
+                    fmtv % ( vmin  / scale )  , 
+                    fmtv % ( vmax  / scale )  ,
                     '10^{%d}' % expo if expo else '' , 
-                    pvs  , 
+                    spv  , 
                     nsig )  
-            
+
             rows.append ( row )
         
         ## global statistics
-        pvalue = self.__counter.eff
+        pvalue = self.counter.eff
         pv     = clip_pvalue   ( pvalue , 0.5 )
         nsigma = significance  ( pv ) ## convert  it to significace
-        spv    = pv * 100 
-        spv    = '%.2f' % spv 
-        nsig   = '%.1f' % nsigma
-        row    = 'COMBINED'  , '' , '' , '' , '', '' , ''  , spv , nsig  
+        spv    = str ( ( 100 * pv  ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
+        nsig   = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' )         
+        row    = '*COMBINED*' , '' , '' , '' , '', '' , ''  , spv , nsig  
         rows.append ( row )
-        
-        header = ( 'Component' , 't-value' , 't-mean' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
+
+        header = ( 'Component' , 't-value' , 't-mean' , 't-rms' , 't-min' , 't-max' , 'Factor' , 'p-value [%]' , '#%s' % greek_lower_sigma )
         rows   = [ header ] + rows 
-        rows   = T.remove_empty_columns ( row ) 
+        rows   = T.remove_empty_columns ( rows ) 
         title = title if title else 'GoF statistics'
         return T.table ( rows , title = title , prefix = prefix )     
 

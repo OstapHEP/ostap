@@ -55,7 +55,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""Default drawing options for Ostap/RooFit 
+""" Default drawing options for Ostap/RooFit 
 
 The module defines the drawing options for Ostap/RooFit.
 The options are split into two categories:
@@ -169,11 +169,11 @@ from   ostap.core.ostap_types import integer_types, list_types
 from   ostap.utils.basic      import items_loop
 from   ostap.utils.cidict     import cidict
 from   ostap.utils.cidict     import cidict_fun as key_transform
-from   ostap.plotting.color   import ( Red       , Yellow       , Gold     , 
+from   ostap.plotting.color   import ( Red       , Yellow       , Gold     , Orange      , 
                                        Green     , LightGreen   , SeaGreen , PaleGreen   , 
                                        Magenta   , Purple       , Violet   , BlueViolet  , 
                                        OrangeRed , Orange       , Coral    , DarkOrange  ,
-                                       Salmon    , LightSalmon  , Tomato   ,
+                                       Salmon    , LightSalmon  , Tomato   , OrangeRed   , 
                                        Blue      , LightSkyBlue , DarkBlue , DeepSkyBlue , Navy  ,
                                        Cyan      , 
                                        Pink      ) 
@@ -640,8 +640,8 @@ default_background_options      = ROOT.RooFit.Precision ( precision ) ,
 default_component_options       = ROOT.RooFit.Precision ( precision ) , 
 
 ## default total fit curve : thick red orange line 
-default_total_fit_options       = ( lineWidth ( 3    )      ,
-                                    lineColor ( Gold )      ,
+default_total_fit_options       = ( lineWidth ( 3         ) ,
+                                    lineColor ( Orange    ) ,
                                     ROOT.RooFit.Precision ( precision ) )
 
 ## default curve : thick red orange line 
