@@ -23,12 +23,14 @@ __all__     = (
     'ZA'                 , ## ZA                GoF estimator
     'ZC'                 , ## ZC                GoF estimator
     'GoF1D'              , ## helper utility for GoF estimate 
-    'GoF1DToys'          , ## helper utility for GoF estimate with toys 
+    'GoF1DToys'          , ## helper utility for GoF estimate with toys
+    'GoF1D_'             , ## using AGoF interface ...
     )
 # =============================================================================
+from   ostap.core.ostap_types   import string_types 
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
-from   ostap.core.core          import VE, Ostap
+from   ostap.core.core          import VE, Ostap, hID 
 from   ostap.math.base          import axis_range, np2raw    
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict_fun
@@ -39,7 +41,8 @@ from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
 from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
 from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, data2vct  
-from   ostap.stats.gof          import AGoF 
+from   ostap.stats.gof          import AGoF
+from   ostap.plotting.color     import OrangeRed, RoyalBlue , Navy, DarkGreen  
 from   collections              import defaultdict, namedtuple
 import ostap.logger.table       as     T
 import ostap.fitting.ds2numpy 
@@ -566,10 +569,10 @@ class GoF1D(object) :
             if hasattr ( cdf , 'xmin' ) : xmin = min ( xmin , cdf.xmin () )
             if hasattr ( cdf , 'xmax' ) : xmax = max ( xmax , cdf.xmax () )
 
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.30 )
         
-        xmin = kwargs.pop ( 'xmin' , xmin )
-        xmax = kwargs.pop ( 'xmax' , xmax )
+        xmin    = kwargs.pop ( 'xmin' , xmin )
+        xmax    = kwargs.pop ( 'xmax' , xmax )
 
         opts    = opts.strip() 
         optsame = 'same' if not opts else '%s %s' % ( 'same' , opts ) 
@@ -577,12 +580,15 @@ class GoF1D(object) :
         if isinstance ( cdf , AFUN1 ) :
             self.__frame = cdf.draw ()
             self.__frame.draw ( opts )
+            ## self.__histo = ROOT.TH1F ( hID() , '' , 1 , xmin , xmax ) 
+            ## self.__histo.draw ( min_value = 0 , max_value = 1.1 )             
+            ## self.__frame.draw ( 'same' + opts )
             r1 = self.__frame 
         else : 
             self.__draw_fun = lambda x : cdf ( x ) 
-            r1 = f1_draw   ( self.__draw_fun , opts , color = ROOT.kOrange + 1 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
+            r1 = f1_draw   ( self.__draw_fun , opts , color = OrangeRed , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
         
-        r2 = ecdf.draw ( optsame  , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        r2 = ecdf.draw ( optsame  , color = RoyalBlue , linewidth = 2 , xmin = xmin , xmax = xmax , **kwargs )
         return r1 , r2
     
 # =============================================================================
@@ -970,7 +976,8 @@ class GoF1DToys(GoF1D) :
         value       = result.statistics
         xmin        = min ( xmin , value )
         xmax        = max ( xmax , value )
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
+
+        xmin , xmax = axis_range ( xmin , xmax , delta = 0.05 )
 
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
@@ -989,12 +996,12 @@ class GoF1DToys(GoF1D) :
         e         = ecdf ( value )
         line2     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
         ## 
-        line2.SetLineWidth ( 2 ) 
-        line2.SetLineColor ( 4 ) 
-        line2.SetLineStyle ( 9 ) 
+        line2.SetLineWidth  ( 2    ) 
+        line2.SetLineColor  ( Navy ) 
+        line2.SetLineStyle  ( 9    ) 
         ##
         line1.SetLineWidth  ( 4 ) 
-        line1.SetLineColor  ( 8 )
+        line1.SetLineColor  ( DarkGreen )
         ##
         line2.draw ( 'same' )
         line1.draw ( 'same' )
@@ -1008,27 +1015,28 @@ class GoF1DToys(GoF1D) :
 ## @class GoF1D_ 
 #  Implementation of 1D GoF estimator (AGoF innterface) 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-class Gof1D_(AGoF) :
-    """ Implementation of 1D GoF estimator (AGoF innterface) 
+class GoF1D_(AGoF) :
+    """ Implementation of 1D GoF estimator (AGoF interface) 
     """ 
     def __init__ ( self , what , **kwargs ) :
         
         assert isinstance ( what , string_types ) and what.upper() in GoF_methods , \
             "Invalid `what`: %s/%s"% ( what , typename ( what ) ) 
             
-        self.__what     = what.upper()     
-        self.__gof      = None 
-        self.__gof_toys = None 
-        self.__nToys    = kwargs.pop ( 'nToys' , 1000 )
-        self.__kwargs   = kwargs  
-
+        self.__what       = what.upper()     
+        self.__gof        = None 
+        self.__gof_toys   = None
+        self.__cdf        = kwargs.pop ( 'cdf'        , {} ) 
+        self.__parameters = kwargs.pop ( 'parameters' , {} ) 
+        self.__kwargs     = kwargs  
+        
     @property
     def what  ( self ) : 
         """`what`: the actual GoF method"""
         return self.__what
     @property
     def kwargs ( self ) : 
-        """`kwargs` L arguments for `GoF1DToys.run`"""
+        """`kwargs` : arguments for `GoF1DToys.run`"""
         return self.__kwargs 
        
     # =========================================================================
@@ -1046,7 +1054,7 @@ class Gof1D_(AGoF) :
         >>> data   = ...
         >>> tvalue = gof.tvalue ( pdf , data )
         """
-        gof = GoF1D ( pdf , data )
+        gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
         return gof.estimators [ self.__what ]
     
     # =========================================================================
@@ -1081,11 +1089,11 @@ class Gof1D_(AGoF) :
         >>> data = ... 
         >>> t_value , p_value = gof.pvalue ( pdf , data ) 
         """    
-        gof      = GoF1D     ( pdf , data )
-        tval     = gof.etimators [ self.__what ]
-        
-        gof_toys = GoF1DToys ( gof )
-        gof_toys.run         ( self.__nToys , **self.__kwargs )
+        gof = GoF1D ( pdf , data , cdf = self.__cdf , parameters = self.__parameters )
+
+        tval     = gof.etimators [ self.__what ]        
+        gof_toys = GoF1DToys   ( gof )
+        gof_toys.run           ( **self.kwargs )
             
         pval = gof_toys.result ( self.__what ).pvalue 
         

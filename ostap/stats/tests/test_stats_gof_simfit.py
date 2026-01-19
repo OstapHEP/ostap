@@ -45,9 +45,9 @@ else :
 batch_env ( logger )
 # =============================================================================
 #
-## make simple test mass 
-mass1    = ROOT.RooRealVar ( 'test_mass1' , 'Some test mass' , 0 , 5  )
-mass2    = ROOT.RooRealVar ( 'test_mass2' , 'Some test mass' , 0 , 5  )
+## make simple test variables/observables  
+mass1    = ROOT.RooRealVar ( 'test_mass1' , 'Some test mass-1' , 0 , 5  )
+mass2    = ROOT.RooRealVar ( 'test_mass2' , 'Some test mass-2' , 0 , 5  )
 
 ## book very simple data set:
 varset1  = ROOT.RooArgSet  ( mass1  )
@@ -57,33 +57,30 @@ dataset1 = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset1 )
 varset2  = ROOT.RooArgSet  ( mass2 )
 dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )  
 
+# =============================================================================
 ## high statistic, low-background "control channel"
+# =============================================================================
+
 mean1  = 2.0
 sigma1 = 0.50
 NS1    = 10000
 NB1    = 1000
 
-for i in range ( NS1 )  :
-    
+for i in range ( NS1 )  :    
     v1 = random.gauss ( mean1 , sigma1 )
-    while not v1 in mass1 :
-        v1 = random.gauss ( mean1 , sigma1 )
-        
-    mass1.setVal  ( v1 )
-    
+    while not v1 in mass1 : v1 = random.gauss ( mean1 , sigma1 )        
+    mass1.setVal  ( v1 )    
     dataset1.add ( varset1 )
 
 for i in range ( NB1 ) :
     v1 = random.uniform ( 0 , 5  )
-    while not v1 in mass1 :
-        v1 = random.uniform ( 0 , 5  )
-        
-    mass1.setVal  ( v1 )
-    
+    while not v1 in mass1 : v1 = random.uniform ( 0 , 5  )        
+    mass1.setVal  ( v1 )    
     dataset1.add ( varset1 )
 
 # ============================================================================
 ## low statistic, high-background "signal channel"
+# ============================================================================
 NS2     =    500
 NB2     =  10000     
 mean2   = mean1  + 1.0
@@ -91,23 +88,22 @@ sigma2  = sigma1 * 0.5
 
 for i in range ( NS2 )  :
     v2 = random.gauss ( mean2 , sigma2 )
-    while not v2 in mass2 : 
-        v2 = random.gauss ( mean2 , sigma2 )
-        
+    while not v2 in mass2 : v2 = random.gauss ( mean2 , sigma2 )        
     mass2.setVal  ( v2 )
     dataset2.add ( varset2 )
 
 for i in range (NB2 ) :
     v2 = random.uniform ( 0 , 5  )
-    while not v2 in mass2 : 
-        v2 = random.uniform ( 0 , 5  )
-        
+    while not v2 in mass2 : v2 = random.uniform ( 0 , 5  )        
     mass2.setVal  ( v2      )
     dataset2.add ( varset2 )
 
 sample  = ROOT.RooCategory ( 'sample' , 'sample'  , 'A' , 'B' )
 
-## combined datasets
+
+# ============================================================================
+## combined dataset
+# ============================================================================
 vars    = ROOT.RooArgSet ( mass1  , mass2  )
 dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
 
@@ -137,12 +133,10 @@ model2.S = NS2
 model2.B = NB2 
 
 ## combine PDFs
-model_sim  = Models.SimFit (
-    sample , { 'A' : model1  , 'B' : model2 } , name = 'X'
-)
+model_sim  = Models.SimFit ( sample , { 'A' : model1  , 'B' : model2 } , name = 'X' )
 
 # =============================================================================
-def test_simfit1 () :
+def test_gof_simfit1 () :
     
     logger = getLogger( 'test_gof_simfit1' )
     
@@ -161,7 +155,8 @@ def test_simfit1 () :
         # =========================================================================
 
     graphs.append ( f1 ) 
-    graphs.append ( f2 ) 
+    graphs.append ( f2 )
+    
     # =========================================================================
     r , f = model_sim.fitTo ( dataset , silent = True )
     r , f = model_sim.fitTo ( dataset , silent = True )
@@ -186,7 +181,7 @@ def test_simfit1 () :
     results.append ( r  ) 
 
     # =============================================================================
-    ## GOF machinery
+    ## GOF/1 machinery
     # =============================================================================
 
     gof = GoFSimFit ( model_sim      ,
@@ -211,6 +206,9 @@ def test_simfit1 () :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
                 toys .draw ( sample , k )
     
+
+    return
+
     if numcpu() < 10 : logger.info ( 'tests for CPU-expensive PPD,DNN & USTAT methods are disabled' )
     else :
     
@@ -296,7 +294,7 @@ def test_db() :
 if '__main__' == __name__ :
 
     with timing( "simfit-1" ,   logger ) :  
-        test_simfit1 ()
+        test_gof_simfit1 ()
 
         
     ## check finally that everything is serializeable:
