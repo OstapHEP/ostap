@@ -13,8 +13,11 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-16"
 __all__     = (
-    'GoFSimFit'      , ## helper utility for GoF estimate 
-    'GoFSimFitToys'  , ## helper utility for GoF estimate with toys 
+    'GoFSimFit1D'      , ## helper utility for GoF estimate 
+    'GoFSimFit1DToys'  , ## helper utility for GoF estimate with toys
+    'PPDSimFit'        , ## use PPD for sll fit components 
+    'DNNSimFit'        , ## use DNN for sll fit components 
+    'GoFSimFit'        , ## helper utility for generic GoF estimate 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types, dictlike_types 
@@ -122,11 +125,11 @@ class GoFSimFitBase(object) :
         self.__pdf.load_params ( self.__parameters , silent = True )
     
 # =============================================================================
-## @class GoFSimFit
+## @class GoFSimFit1D 
 #  Goodness-of-fit for simultaneous 1D-fits
 #  - All components of the simultaneous fit must be 1D-components 
 #  - GoF is estimated for each 1D-component
-class GoFSimFit(GoFSimFitBase) :
+class GoFSimFit1D(GoFSimFitBase) :
     """ Goodness-of-fit for Simultaneous 1D-fits
     - All components of the Simultaneous fit must be 1D-components!
     - GoF is estimated for each 1D-component
@@ -265,11 +268,12 @@ class GoFSimFit(GoFSimFitBase) :
         gof = self.gofs.get ( sample , None )
         if gof is None : raise KeyError ( "Invalid sample `%s`" % sample )
         return gof.draw ( opts , *args , **kwargs )
+
     
 # =============================================================================
 ## @class GoFSimFitToys
 #  Check Goodness of 1D (Sim)Fits using toys 
-class GoFSimFitToys(GoFSimFit) :
+class GoFSimFit1DToys(GoFSimFit1D) :
     """ Check Goodness-of-Fit with toys (Simfit caase)
     """
     ## result of GoF-toys 
@@ -285,11 +289,12 @@ class GoFSimFitToys(GoFSimFit) :
         >>> gof  = GoFSimFit     ( ... ) 
         >>> toys = GoFSimFitToys ( gof ) 
         """
-        assert isinstance ( gof , GoFSimFit ) , "Invalid `gof`-parameter"
+        assert isinstance ( gof , GoFSimFit1D ) , \
+            "Invalid `gof`-parameter: %s" % typename ( gof ) 
 
         ## mimic the copy-constructor for the base class 
         state = GoFSimFit.__getstate__ ( gof ) 
-        GoFSimFit.__setstate__ ( self , state )
+        GoFSimFit1D.__setstate__ ( self , state )
 
         self.__counters = { k : defaultdict(SE) for k in self.gofs }
         self.__ecdfs    = { k : {}              for k in self.gofs }
@@ -302,7 +307,7 @@ class GoFSimFitToys(GoFSimFit) :
         """
         #
         ## (1) serialize the base 
-        state = GoFSimFit.__getstate__ ( self )
+        state = GoFSimFitBase.__getstate__ ( self )
         # 
         state [ 'counters' ] = self.__counters
         state [ 'ecdfs'    ] = self.__ecdfs 
@@ -316,7 +321,7 @@ class GoFSimFitToys(GoFSimFit) :
         """ De-serialize the object """
         
         ## (1) de-serialize the base 
-        GoFSimFit.__setstate__ ( self , state )
+        GoFSimFitBase.__setstate__ ( self , state )
         # 
         self.__counters   = state.pop ( 'counters'  )
         self.__ecdfs      = state.pop ( 'ecdfs'     )
@@ -336,7 +341,7 @@ class GoFSimFitToys(GoFSimFit) :
 
         if parallel :
             
-            from ostap.parallel.parallel_gof1d import parallel_gof1dtoys as parallel_toys 
+            from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
             self += parallel_toys ( gof      = self       ,
                                     nToys    = nToys      ,
                                     nSplit   = nSplit     ,
@@ -728,11 +733,12 @@ class GoFSimFitToys(GoFSimFit) :
         self += other
         return self
     
-    ## merge two objects:
+    ## merge two objects (needed for parallel execution):
     def __iadd__ ( self , other ) :
         """ Merge two GoF-toys objects
+        - needed for paralell execution 
         """        
-        if not isinstance ( other , GoFSimFitToys ) : return NotImplemented 
+        if not isinstance ( other , GoFSimFit1DToys ) : return NotImplemented 
 
         ## (1) merge ECDFs 
         for key, content in loop_items ( other.ecdfs   ) :
@@ -798,16 +804,22 @@ class GoFSimFitType(GoFSimFitBase) :
         
     ## serialize the object 
     def __getstate__ ( self ) :
-        """ Serialize the object"""
+        """ Serialize the object
+        """
         state = GoFSimFitBase.__getstate__ ()
         state [ 'components' ] = self.__cmp
+        state [ 'tvalues'    ] = self.__tvalues 
+        state [ 'pvalues'    ] = self.__pvalues 
         return state 
     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
-        """ De-serialize the object """
+        """ De-serialize the object 
+        """
         self.__cmp        = state.pop  ( 'components' )
-        GoFSimFitBase.__setstate__ ( state )
+        GoFSimFitBase.__setstate__ ( state )  
+        self.__tvalues  = state.get ( 'tvalues' , {} )
+        self.__pvalues  = state.get ( 'pvalues' , {} )
         
     # =========================================================================
     ## Get dictionary of t-values (for each SimFit component)
@@ -836,8 +848,7 @@ class GoFSimFitType(GoFSimFitBase) :
             for key , value in self.__cmp.items()  :
                 cmp, data = value
                 gof = self.gofs [ key ]
-                if not gof.silent :
-                    logger.info ( 'GoF.pvalues[%s]: processing sample "%s"' % ( typename ( gof ) , key ) )
+                if not gof.silent : logger.info ( 'GoF.pvalues[%s]: processing sample "%s"' % ( typename ( gof ) , key ) )
                 self.__pvalues [ key ] = gof.pvalue ( cmp , data )                
         return self.__pvalues
     
@@ -949,8 +960,10 @@ class GoFSimFitType(GoFSimFitBase) :
     
 # =============================================================================
 ## Goodness-of-fit estimator for SimFit using PPD method
+#  - use PPD method for all components 
 class PPDSimFit(GoFSimFitType) :
     """ Goodness-of-fit estimator for SimFit using PPD method
+    - use PPD method for all components 
     """
     def __init__ ( self               ,
                    pdf                ,
@@ -965,8 +978,10 @@ class PPDSimFit(GoFSimFitType) :
 
 # =============================================================================
 ## Goodness-of-fit estimator for SimFit using DNN method
+#  - use DNN method for all components 
 class DNNSimFit(GoFSimFitType) :
     """ Goodness-of-fit estimator for SimFit using DNN method
+    - use DNN method for all components 
     """    
     def __init__ ( self               ,
                    pdf                ,
@@ -985,11 +1000,7 @@ class DNNSimFit(GoFSimFitType) :
         """ Get dictionary of histograms with u-value distribution
         """
         uvalues = {}
-        ## evaluate t&p-values for each component 
-        for key , value in self.cmp.items()  :
-            cmp, data = value
-            gof = self.gofs [ key ]
-            uvalues [ key ] = gof.histo 
+        for key , gof  in self.gofs.items () : uvalues [ key ] = gof.histo 
         return uvalues
 
 # =============================================================================
@@ -1014,19 +1025,15 @@ class USTATSimFit(GoFSimFitType) :
         """ Get dictionary of histograms with u-value distribution
         """
         uvalues = {}
-        ## evaluate t&p-values for each component 
-        for key , value in self.cmp.items()  :
-            cmp, data = value
-            gof = self.gofs [ key ]
-            uvalues [ key ] = gof.histo 
+        for key , gof  in self.gofs.items () : uvalues [ key ] = gof.histo 
         return uvalues
    
 # =============================================================================
-## @class GoFSimFit2
+## @class GoFSimFit
 #  Goodness-of-fit for simultaneous fits
 #  - It is a bit more  gneria and (a bit less efficient)  GoG estimator for 
 #    simulataneous fits
-class GoFSimFit2(GoFSimFitBase) :
+class GoFSimFit(GoFSimFitBase) :
     """ Generic Goodness-of-fit for simultaneous fits
     - It is a bit more generic and (a bit less CPU efficient) GoF estimator for 
     simultaneous fits
@@ -1072,33 +1079,130 @@ class GoFSimFit2(GoFSimFitBase) :
 
         self.__ecdfs    = {} 
         self.__counters = defaultdict(SE) 
-        self.__cnt      = EffCounter ()
+        self.__total    = EffCounter ()
         self.__nToys    = 0 
 
+  ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object 
+        """
+        #
+        ## (1) serialize the base 
+        state = GoFSimFitBase.__getstate__ ( self )
+        # 
+        state [ 'counters' ] = self.__counters
+        state [ 'ecdfs'    ] = self.__ecdfs 
+        state [ 'total'    ] = self.__total 
+        state [ 'nToys'    ] = self.__nToys
+        ##
+        state [ 'tvalues'  ] = self.__tvalues 
+        # 
+        return state 
+    
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object """
+        
+        ## (1) de-serialize the base 
+        GoFSimFitBase.__setstate__ ( self , state )
+        # 
+        self.__counters   = state.pop ( 'counters'     )
+        self.__ecdfs      = state.pop ( 'ecdfs'        )
+        self.__total      = state.pop ( 'total'        )
+        self.__nToys      = state.pop ( 'nToys'   , 0  )
+        ## 
+        self.__tvalues    = state.pop ( 'tvalues' , {} )
+        
+    # =========================================================================
+    ## number of toys 
+    @property
+    def nToys ( self ) :
+        """`nToys` : number of toys"""
+        return self.__nToys
+    
+    # =========================================================================
+    ## ECDFs
+    @property 
+    def ecdfs ( self ) :
+        """`ecdfs` : toy results as empirical cumulative distribution functions"""
+        return self.__ecdfs
+    # =========================================================================
+    ## Counters  
+    @property 
+    def counters ( self ) :
+        """`counters` : toy results as counters"""
+        return self.__counters
+
+    # =========================================================================
+    ## Total/global counters
+    @property 
+    def total ( self ) :
+        """`total` : total/global counters
+        """
+        return self.__total
     
     ## get all t-values for fit-components
     def tvalues ( self ) : 
         """`tvalues` : dictionary { component : t-value }
         """
         return self.__tvalues
-
-    ## dictionary of counters
-    @property 
-    def counters ( self ) :
-        """`counters` : dictionary of counters """
-        return self.__counters 
-
-    ## "Global" counter
-    @property 
-    def counter ( self ) :
-        """`counter` : global counter """
-        return self.__cnt  
     
+    # =========================================================================
+    ## merge two objects (needed for apralell execution):
+    def merge ( self , other ) :
+        """ Merge two GoF-toys objects
+        - needed for paralell execution 
+        """        
+        self += other
+        return self
+
+    # =========================================================================
+    ## merge two objects (needed for apralell execution):
+    def __iadd__ ( self , other ) :
+        """ Merge two GoF-toys objects
+        - needed for paralell execution 
+        """        
+        if not isinstance ( other , GoFSimFit  ) : return NotImplemented 
+
+        ## (1) merge ECDFs 
+        for key, content in loop_items ( other.ecdfs   ) :
+            if not key in self.__ecdfs    : self.__ecdfs [ key ]  = content
+            else                          : self.__ecdfs [ key ] += content 
+                    
+        ## (2) merge counters 
+        for key, content in loop_items ( other.counters ) :
+            if not key in self.__counters : self.__counters [ key ] = content
+            else                          : self.__counters [ key ] += content 
+
+        ## (3) merge total
+        self.__total += other.total 
+        
+        ## (4) number of toys
+        self.__nToys += other.nToys
+                
+        return self 
+
+    # ===========================================================================
     ## run toys to get p-value
-    def run ( self , nToys = 500 , silent = False  ) :
-        """ Run toys to get p=value
+    def run ( self     ,
+              nToys    = 500    ,
+              parallel = False  ,    
+              silent   = False  ,
+              nSplit   = 0      ) :
+        """ Run toys to get the p-value
         """
         
+        if parallel :
+            
+            from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
+            self += parallel_toys ( gof      = self       ,
+                                    nToys    = nToys      ,
+                                    nSplit   = nSplit     ,
+                                    silent   = True       ,
+                                    progress = not silent )
+            return self 
+        
+    
         from ostap.utils.progress_bar import progress_bar
         for t in progress_bar ( nToys , silent = silent , description = 'Toys:' ) : 
               
@@ -1127,13 +1231,14 @@ class GoFSimFit2(GoFSimFitBase) :
                 del ds 
                 
             ## the global counter       
-            self.__cnt   += all_above 
+            self.__total += all_above 
                     
             self.__nToys += 1 
      
             new_dataset.clear() 
             del new_dataset 
-    
+
+    # ============================================================================
     ## get dictionary of t-values & dictionary of p-values
     def pvalues  ( self ) :
         """ Get dictionaries of t and p-values 
@@ -1150,7 +1255,8 @@ class GoFSimFit2(GoFSimFitBase) :
         pvs [ '*COMBINED*' ] = self.counter.eff
             
         return tvs, pvs 
-           
+
+    # ==================================================================================
     ## output as table      
     def table  ( self             , 
                  title     = ''   , 
@@ -1221,7 +1327,7 @@ class GoFSimFit2(GoFSimFitBase) :
             rows.append ( row )
         
         ## global statistics
-        pvalue = self.counter.eff
+        pvalue = self.total.eff
         pv     = clip_pvalue   ( pvalue , 0.5 )
         nsigma = significance  ( pv ) ## convert  it to significace
         spv    = str ( ( 100 * pv  ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )

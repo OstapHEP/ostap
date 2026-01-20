@@ -279,7 +279,7 @@ class USTAT(AGoF) :
         self.__bins     = histo
         self.__nToys    = nToys 
         self.__parallel = True if parallel else False
-        
+
         if self.__parallel and memory_enough () < numcpu ()  : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')            
             self.__parallel = False

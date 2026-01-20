@@ -1448,7 +1448,7 @@ def use_canvas ( name      = ''            ,
                     wait      = wait      , ## pause before exit
                     plot      = plot      , ## print the plot ? 
                     keep      = keep      , ## keep canvas open?
-                    invisible = invisible , ## invisble/batch 
+                    invisible = invisible , ## invisible/batch 
                     style     = style     , ## use this style 
                     **kwargs              ) ## Pad configuration
 

@@ -16,7 +16,8 @@ from   ostap.utils.root_utils import batch_env
 from   ostap.utils.timing     import timing 
 from   ostap.math.math_ve     import significance
 from   ostap.core.core        import VE
-from   ostap.stats.gof_utils  import clip_pvalue  
+from   ostap.stats.gof_utils  import clip_pvalue
+from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma  
 import ostap.fitting.models   as     M 
 import ostap.stats.gof1d      as     G1D 
 import ostap.stats.gofnd      as     GnD
@@ -53,11 +54,12 @@ keep = set()
 # ==============================================================================
 ## Run Point-to_pint dissimilatity Goodness-of-Fit test
 def run_PPD ( pdf , data, result , logger ) :
-    """ Run Point-to_point dissimilarity Goodness-of-Fit test"""
+    """ Run Point-to_point dissimilarity Goodness-of-Fit test
+    """
 
     # =========================================================================
     #  - Point to Point Dissimilarity test  with Gaussian distance using different "sigma"
-    rows  = [ ( 'PPD/sigma' , 't-value'  , 'x[..]', 'p-value [%]' , '#sigma') ]
+    rows  = [ ( 'PPD/sigma' , 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
     Ns    = 3 
     logger.info ( 'Run Point-to-Point Dissimilarity GoF-test for %d different values of sigma' % Ns  ) 
     for sigma in vrange ( 0.1 , 1.0 , Ns ) :
@@ -73,8 +75,8 @@ def run_PPD ( pdf , data, result , logger ) :
         
         tv , texpo = pretty_float ( tvalue )
         pvalue *= 100
-        pvalue  = '%4.1f +/- %.1f' % ( pvalue.value() , pvalue.error () )
-        nsigma  = '%.1f +/- %.1f'  % ( nsigma.value() , nsigma.error () )
+        pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
         row = '%.2f' % sigma , tv , '10^%+d' % texpo if texpo else '' , pvalue , nsigma 
         rows.append ( row ) 
         
@@ -90,7 +92,7 @@ def run_DNN  ( pdf , data, result , logger ) :
     """ Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
     """
 
-    rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
+    rows  =  [ ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
 
     with timing ( 'DNN-test' , logger = logger ) : 
         dnn = GnD.DNN ( nToys = 200 , histo = 50 )        
@@ -103,8 +105,8 @@ def run_DNN  ( pdf , data, result , logger ) :
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
-    pvalue  = '%4.1f +/- %.1f' %  ( pvalue.value() , pvalue.error() )
-    nsigma  = '%.1f +/- %.1f'  %  ( nsigma.value() , nsigma.error () )
+    pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
+    nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
     row     = tv , '10^%+d' % texpo if texpo else '' , pvalue , nsigma 
     rows.append ( row )
     
@@ -121,7 +123,7 @@ def run_USTAT  ( pdf , data, result , logger ) :
     """ Run USTAT Goodness-of-Fit test
     """
 
-    rows  =  [ ( 't-value'  , 'x[..]', 'p-value [%]' , '#sigma' ) ]
+    rows  =  [ ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
     
     ustat = USTAT ( nToys = 200 , histo = 100 )
     
@@ -136,8 +138,8 @@ def run_USTAT  ( pdf , data, result , logger ) :
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
-    pvalue  = '%4.1f +/- %.1f' %  ( pvalue.value() , pvalue.error () )
-    nsigma  = '%.1f +/- %.1f'  %  ( nsigma.value() , nsigma.error () )
+    pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
+    nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )    
     row     = tv , '10^%+d' % texpo if texpo else '' , pvalue, nsigma 
     rows.append ( row )
     

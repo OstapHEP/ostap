@@ -21,11 +21,12 @@ from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.basic        import typename, numcpu 
 from   ostap.math.math_ve       import significance
 from   ostap.fitting.simfit     import combined_data 
-from   ostap.stats.gof_simfit   import ( GoFSimFit     , GoFSimFit2 , 
-                                         GoFSimFitToys ,
-                                         PPDSimFit     ,
-                                         DNNSimFit     ,
-                                         USTATSimFit   )  
+from   ostap.stats.gof_simfit   import ( GoFSimFit       ,
+                                         GoFSimFit1D     , 
+                                         GoFSimFit1DToys ,
+                                         PPDSimFit       ,
+                                         DNNSimFit       ,
+                                         USTATSimFit     )  
 from   ostap.stats.gof1d        import GoF_1D
 import ostap.logger.table       as     T 
 import ostap.io.zipshelve       as     DBASE
@@ -145,13 +146,13 @@ def test_gof_simfit1 () :
         ## fit 1
         r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
         title = 'Results of fit to dataset1'
-        logger.info ( '%s\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
+        logger.info ( '%s:\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
         
     with use_canvas ( 'test_gof_simfit1: fit dataset2' , wait = 2 ) : 
         ## fit 2
         r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
         title = 'Results of fit to dataset2'
-        logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
+        logger.info ( '%s:\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
         # =========================================================================
 
     graphs.append ( f1 ) 
@@ -162,11 +163,11 @@ def test_gof_simfit1 () :
     r , f = model_sim.fitTo ( dataset , silent = True )
 
     title = 'Results of simultaneous fit'
-    logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
+    logger.info ( '%s:\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
     
-    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw A' , wait = 2 ) :        
+    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw A' ) :        
         fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw B' , wait = 2 ) :        
+    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw B' ) :        
         fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
         
     models.add ( model1        )
@@ -180,37 +181,40 @@ def test_gof_simfit1 () :
     results.append ( r2 ) 
     results.append ( r  ) 
 
+    """ 
     # =============================================================================
-    ## GOF/1 machinery
+    ## GOF/1D machinery
     # =============================================================================
 
-    gof = GoFSimFit ( model_sim      ,
-                      dataset        ,
-                      parameters = r )
+    gof = GoFSimFit1D ( model_sim      ,
+                        dataset        ,
+                        parameters = r )
 
-    with use_canvas ( 'test_gof_simfit1: GoF-A' , wait = 2 ) : gof.draw ( 'A' )
-    with use_canvas ( 'test_gof_simfit1: GoF-B' , wait = 2 ) : gof.draw ( 'B' )
+    with use_canvas ( 'test_gof_simfit1: GoF-A' ) : gof.draw ( 'A' )
+    with use_canvas ( 'test_gof_simfit1: GoF-B' ) : gof.draw ( 'B' )
         
     title = 'GoF for 1D SimFit' 
     logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )
 
-    toys = GoFSimFitToys ( gof )
+    toys = GoFSimFit1DToys ( gof )
     toys.run ( 500 , silent = False , parallel = True )
 
-    title = 'GoF for 1D SimFit %s toys)' % toys.nToys  
+    title = 'GoF for 1D SimFit (%d toys)' % toys.nToys  
     logger.info ( '%s:\n%s' % ( title , toys.table ( title = title , prefix = '# ' ) ) )
 
     ## 
     for sample, g in toys.gofs.items () : 
         for k in g.estimators :
-            with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) , wait = 1 ) :
+            with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) ) :
                 toys .draw ( sample , k )
 
+    """
 
+    
     if numcpu() < 10 : logger.info ( 'tests for CPU-expensive PPD,DNN & USTAT methods are disabled' )
     else :
     
-        nToys    = 20 ## realistic values should be well in excess of 100
+        nToys    = 50 ## realistic values should be well in excess of 100
         mcFactor =  5 ## realistic values should be well in excess of 10  
         
         gof_ppd  = PPDSimFit   ( model_sim             , 
@@ -228,43 +232,46 @@ def test_gof_simfit1 () :
                                  nToys      = nToys    ,
                                  parallel   = True     , 
                                  silent     = False    )
-        """
+        
         gof_ustat = USTATSimFit ( model_sim             , 
                                   dataset               ,
                                   parameters = r        ,                          
                                   nToys      = nToys    ,
                                   parallel   = False    , 
                                   silent     = False    )
-        """
         
         for gof in ( gof_ppd   ,
-                     gof_dnn   ) : 
+                     gof_dnn   ,
+                     gof_ustat ) : 
             
             gof_type = typename ( gof )
             
             with timing ( 'Processing %s' % gof_type , logger = logger ) :
 
                 title = 'GoF %s' % gof_type  
-                logger.info ( '%s\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) ) 
+                logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) ) 
 
             for sample  in gof.gofs :
-                with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) , wait = 1 ) :
+                with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) ) :
                     gof.draw ( sample  )
 
+    """
     # =========================================================================
     ## GoF-2
     # =========================================================================
-    estimators = { 'A'  : GoF_1D ( 'KS') , 'B' : GoF_1D( 'KS' ) } 
+    estimators = { 'A'  : GoF_1D ( 'KS' ) , 'B' : GoF_1D ( 'KS' ) } 
     
-    gof2       = GoFSimFit2 ( model_sim                ,
-                              dataset                  ,
-                              estimators  = estimators ,  
-                              parameters  = r          ) 
-    gof2.run ( 100 , silent = False )
+    gof2       = GoFSimFit ( model_sim                ,
+                             dataset                  ,
+                             estimators  = estimators ,  
+                             parameters  = r          )
+    
+    gof2.run ( 500 , silent = False , parallel = True )
     
     title = 'GoF for SimFit' 
     logger.info ( '%s:\n%s' % ( title , gof2.table( title = title , prefix = '# ' ) ) ) 
     
+    """
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================

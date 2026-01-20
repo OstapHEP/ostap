@@ -28,16 +28,19 @@ __all__     = (
     'USTAT' , ## Alternative implementation of DNN method 
 )
 # =============================================================================
+from   ostap.core.ostap_types   import num_types 
 from   ostap.stats.gof          import AGoF
-from   ostap.core.core          import Ostap
+from   ostap.core.core          import Ostap, VE 
 from   ostap.math.base          import axis_range
+from   ostap.math.math_ve       import significance
 from   ostap.fitting.ds2numpy   import ds2numpy
 from   ostap.stats.counters     import EffCounter 
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import random_name
 from   ostap.stats.gof_utils    import TOYS
 from   ostap.stats.ustat        import USTAT
-from   ostap.plotting.color     import Navy, DarkGreen  
+from   ostap.plotting.color     import Navy, DarkGreen
+from   ostap.stats.gof_utils    import clip_pvalue 
 import ostap.stats.gof_np       as     GNP
 import ROOT
 # =============================================================================
@@ -59,8 +62,7 @@ class GoF(AGoF) :
                    mcFactor = 20    ,
                    sample   = False ) : 
         
-        assert isinstance ( mcFactor, int ) and 1 <= mcFactor , \
-            "Invalid `mcFactor':%s" % mcFactor
+        assert isinstance ( mcFactor, int ) and 1 <= mcFactor , "Invalid `mcFactor':%s" % mcFactor
         self.__gof      = gof
         self.__mcFactor = mcFactor 
         self.__sample   = True if sample else False
@@ -147,15 +149,20 @@ class GoF(AGoF) :
         return ds1, ds2
     
     # =========================================================================
-    ## Draw empirical CDF from permutations 
+    ## Draw the empirical CDF from permutations or toys  
     def draw  ( self , tvalue = None , opts = '' , *args , **kwargs ) :
-        """ Draw empirical CDF from permutations
+        """ Draw empirical CDF from permutations or toys 
         """
         ecdf = self.ecdf 
         if not ecdf : return ecdf
 
         xmin , xmax = ecdf.xmin () , ecdf.xmax ()
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
+    
+        if isinstance ( tvalue , num_types ) :
+            xmin = min ( tvalue , xmin )
+            xmax = max ( tvalue , xmax )
+            
+        xmin , xmax = axis_range ( xmin   , xmax , delta = 0.20 )
         xmin , xmax = kwargs.pop ( 'xmin' , xmin ) , kwargs.pop ( 'xmax' , xmax ) ,
     
         kwargs [ 'xmin' ] = xmin
@@ -187,7 +194,51 @@ class GoF(AGoF) :
         self._line2 = line2
         ##
         return result, line1, line2   
-                                                          
+
+    # ==========================================================================
+    ## Get results in form of the table 
+    def the_table ( self          ,
+                    tvalue = None ,
+                    pvalue = None ,    
+                    title  = ''   ,
+                    prefix = ''   ) :
+        """ Get results in form of the table 
+        """
+
+        has_tvalue = not tvalue is None
+        has_pvalue = isinstance ( pvalue , VE ) 
+        
+        title = title if title else 'Goodness-Of-Fit %s' % typename ( self ) 
+            
+        if has_tvalue and has_pvalue :
+            
+            rows   =  [ ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
+
+            pv      = clip_pvalue  ( pvalue )
+            ns      = significance ( pv     )
+            tv , te = pretty_float ( tvalue , precision = 4 )
+            
+            pvalue *= 100
+            pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
+            nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
+            row     = tv , '10^%+d' % texpo if texpo else '' , pvalue , nsigma 
+            rows.append ( row )
+            
+            rows = T.remove_empty_colums ( rows ) 
+            return T.table ( rows , title = title , prefix = prefix , alignment = 'ccccc')
+
+        elif has_tvalue :
+
+            rows   =  [ ( 't-value'  , '%s[..]' % times ) ]
+
+            tv , te = pretty_float ( tvalue , precision = 4 )
+            row     = tv , '10^%+d' % texpo if texpo else ''            
+            rows.append ( row )
+            rows = T.remove_empty_colums ( rows ) 
+            return T.table ( rows , title = title , prefix = prefix , alignment = 'cc')
+
+        return T.table ( [ [''] ] , title = title , prefix = prefix )
+        
 # =============================================================================
 ## @class PPD
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
@@ -226,7 +277,7 @@ class PPD(GoF) :
                    mc2mc     = False      ,
                    nToys     = 1000       ,
                    psi       = 'gaussian' ,
-                   sigma     = 0.05       ,
+                   sigma     = 0.10       ,
                    silent    = False      ,
                    parallel  = False      , 
                    mcFactor  = 10         ) : 
@@ -250,7 +301,9 @@ class PPD(GoF) :
                                          silent   = silent   ) ,                          
                          mcFactor = mcFactor )
 
-        self.__ecdf = None
+        self.__ecdf   = None
+        self.__tvalue = None
+        self.__pvalue = None
         
     @property
     def ppd ( self ) :
@@ -273,9 +326,11 @@ class PPD(GoF) :
         >>> tvalue = ppd.tvalue ( pdf , data ) 
         """
         ds1, ds2 = self.transform ( pdf , data )         
-        ## estimate t-value 
+        ## estimate the t-value 
         t = self.ppd ( ds1 , ds2 , normalize = True )
-        return float ( t ) 
+        ## 
+        self.__tvalue = float ( t ) 
+        return self.__tvalue 
 
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
@@ -311,14 +366,27 @@ class PPD(GoF) :
         """
         ds1, ds2 = self.transform ( pdf , data )         
         ## estimate t&p-values 
-        return self.ppd.pvalue ( ds1 , ds2 , normalize = True )
+        self.__tvalue , self.__pvalue = self.ppd.pvalue ( ds1 , ds2 , normalize = True )        
+        return self.__tvalue , self.__pvalue
+
     # =========================================================================
     @property
     def ecdf ( self ) :
         """`ecdf` : empirical CDF for t-value distributon"""
         return self.ppd.ecdf
 
-            
+    # =========================================================================
+    ## Get results in a for of the table 
+    def table ( self , title = '' , prefix = '' ) :
+        """ Get resutls in a for of the table 
+        """
+        return self.the_table ( tvalue = self.__tvalue ,
+                                pvalue = self.__pvalue ,
+                                title  = title ,
+                                prefix = prefx ) 
+    __str__  = table
+    __repr__ = table
+    
 # =============================================================================
 class DNN(GoF) : 
     """ Implementation of concrete method "Distance-to-Nearest Neighbour" for probing of Goodness-Of-Fit
@@ -343,6 +411,8 @@ class DNN(GoF) :
                        sample   = sample )
         
         self.__histo  = None 
+        self.__tvalue = None
+        self.__pvalue = None
         
     @property
     def dnn ( self ) :
@@ -392,7 +462,8 @@ class DNN(GoF) :
         ds1 , vpdf = self.transform ( pdf , data ) 
         ## call underlying method 
         t  = self.dnn ( ds1 , vpdf , normalize = True )
-        return float ( t )
+        self.__tvalue = float ( t ) 
+        return self.__tvalue 
 
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
@@ -452,8 +523,12 @@ class DNN(GoF) :
         self.__ecdf = toys.ecdf
         
         p_value = 1 - counter.eff
-        return t_value, p_value 
 
+        self.__tvalue = t_value 
+        self.__pvalue = p_value 
+
+        return t_value, p_value
+    
     @property
     def histo ( self ) :
         """`histo` : histogram with U-value distribution"""
@@ -463,6 +538,18 @@ class DNN(GoF) :
     def ecdf ( self ) :
         """`ecdf` : empirical CDF for t-value distribution"""
         return self.__ecdf
+
+    # =========================================================================
+    ## Get results in a for of the table 
+    def table ( self , title = '' , prefix = '' ) :
+        """ Get resutls in a for of the table 
+        """
+        return self.the_table ( tvalue = self.__tvalue ,
+                                pvalue = self.__pvalue ,
+                                title  = title ,
+                                prefix = prefx ) 
+    __str__  = table
+    __repr__ = table
     
 # =============================================================================
 if '__main__' == __name__ :

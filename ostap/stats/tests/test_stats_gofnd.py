@@ -13,9 +13,12 @@ from   ostap.utils.timing     import timing
 from   ostap.logger.pretty    import pretty_float
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.math.math_ve     import significance
-from   ostap.utils.root_utils import batch_env 
+from   ostap.utils.root_utils import batch_env
+from ostap.utils.basic        import numcpu
+from   ostap.logger.symbols   import plus_minus , greek_lower_sigma 
 import ostap.fitting.models   as     M 
-import ostap.stats.gofnd      as     GnD 
+import ostap.stats.gofnd      as     GnD
+from   ostap.stats.gof_utils  import clip_pvalue 
 import ostap.logger.table     as     T 
 import ROOT, random   
 # ==============================================================================
@@ -30,12 +33,12 @@ xvar   = ROOT.RooRealVar ( 'x', '', 0, 10)
 yvar   = ROOT.RooRealVar ( 'y', '', 0, 10)
 varset = ROOT.RooArgSet  ( xvar , yvar   )
 
-xgauss = M.Gauss_pdf     ( 'GX' , xvar = xvar , mean = ( 5 , 4 , 6 ) , sigma = ( 1.0 , 0.5 , 2.5 ) )
-ygauss = M.Gauss_pdf     ( 'GY' , xvar = yvar , mean = ( 5 , 4 , 6 ) , sigma = ( 1.0 , 0.5 , 2.5 ) )
+xgauss = M.Gauss_pdf     ( 'GX' , xvar = xvar , mean = ( 5 , 4 , 6 ) , sigma = ( 0.5 , 0.1 , 2.5 ) )
+ygauss = M.Gauss_pdf     ( 'GY' , xvar = yvar , mean = ( 5 , 4 , 6 ) , sigma = ( 0.5 , 0.1 , 2.5 ) )
 gauss2 = xgauss*ygauss
 
-NG        = 100
-NG2       =  50
+NG        = 100 
+NG2       = 100
 data_good = gauss2.generate ( NG + NG2 , sample = False )
 data_bad  = gauss2.generate ( NG       , sample = False )
 for i in range ( NG2 ) :
@@ -45,56 +48,69 @@ for i in range ( NG2 ) :
     yvar.setVal ( y )
     data_bad.add ( varset )
 
-pdf = gauss2 
+xgauss.sigma.fix()
+ygauss.sigma.fix()
+    
+pdf       = gauss2 
 rgood , _ = pdf.fitTo  ( data_good , quiet = True , refit = 5 )
-with use_canvas ( 'Good fit x-projection' ) : pdf.draw1 ( data_good , nbins = 50 ) 
-with use_canvas ( 'Good fit y-projection' ) : pdf.draw2 ( data_good , nbins = 50 ) 
+## with use_canvas ( 'Good fit x-projection' ) : pdf.draw1 ( data_good , nbins = 50 ) 
+## with use_canvas ( 'Good fit y-projection' ) : pdf.draw2 ( data_good , nbins = 50 ) 
 rbad  , _ = pdf.fitTo  ( data_bad , quiet = True , refit = 5 )
-with use_canvas ( 'Bad  fit x-projection' ) : pdf.draw1 ( data_bad  , nbins = 50 ) 
-with use_canvas ( 'Bad  fit y-projection' ) : pdf.draw2 ( data_bad  , nbins = 50 ) 
+## with use_canvas ( 'Bad  fit x-projection' ) : pdf.draw1 ( data_bad  , nbins = 50 ) 
+## with use_canvas ( 'Bad  fit y-projection' ) : pdf.draw2 ( data_bad  , nbins = 50 ) 
 
 # ===============================================================================
 def test_PPD () :
     
     logger = getLogger ("test_PPD")
 
-    from ostap.math.base    import numpy, scipy 
-    if not numpy or not scipy :
-        logger.warning ('No numpy/scipy: skip the PPD estimate!')
-        return
-    from ostap.stats.gof_np import s2u,cdist
-    if not s2u or not cdist:
-        logger.warning ('No s4u/cdist: skip the PPD estimate!')
-        return
-
-    ## 't/good', 'x[..]' ,
-    ## 't/bad' , 'x[..]' ,
-    rows  = [ ( 'Distance' , 'sigma' , 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
+    rows  = [ ( 'Distance' , 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
     
-    sigma = '' 
-    for conf in ( { 'psi' : 'linear'      } ,
-                  { 'psi' : 'logarithm'   } ,
-                  { 'psi' : 'coulomb'     } ,   
+    sigma = ''
+
+    if 10 <= numcpu () : tconf = { 'nToys' : 1000 , 'parallel' : True }
+    else               : tconf = { 'nToys' :   50 }
+        
+    for conf in ( { 'psi' : 'linear'     } ,
+                  { 'psi' : 'logarithm'  } ,
+                  { 'psi' : 'chebyshev'  } ,   
+                  { 'psi' : 'coulomb'    } ,   
+                  ## { 'psi' : 'inverse2'   } ,   
+                  ## { 'psi' : 'squared'    } ,   
+                  ## { 'psi' : 'cosine'     } ,   
+                  ## { 'psi' : 'canberra'   } ,   
+                  { 'psi' : 'braycurtis' } ,   
+                  { 'psi' : 'cityblock'  } ,   
+                  { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.04 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.03 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.01 } ) : 
-        
-        ppd = GnD.PPD ( nToys = 200 , **conf )
+
+        conf.update ( tconf ) 
+        ppd = GnD.PPD ( **conf )
         
         ## presumably good fit
         with timing ( "Good fit PPD distance %s %s" % ( conf [ 'psi' ] , conf.get('sigma','') ) , logger = logger ) :
             pdf.load_params ( rgood , silent = True ) 
             tgood        = ppd        ( pdf , data_good )
             tgood, pgood = ppd.pvalue ( pdf , data_good )
-        
+
+        with use_canvas ( title = 'PPD  good %s' % conf  ) : ppd.draw( tvalue = tgood ) 
+            
         ## presumably bad fit 
         with timing ( "Bad  fit PPD distance %s %s" % ( conf [ 'psi' ] , conf.get('sigma','') ) , logger = logger ) : 
             pdf.load_params ( rbad  , silent = True ) 
             tbad        = ppd        ( pdf , data_bad )
             tbad, pbad  = ppd.pvalue ( pdf , data_bad )
+
+        with use_canvas ( title = 'PPD  bad %s ' % conf ) as cnv :
+            ppd.draw ( tvalue = tbad  )
             
         gp = pgood * 100 
         bp = pbad  * 100
@@ -103,20 +119,24 @@ def test_PPD () :
         bt , be = pretty_float ( tbad  )
 
         sigma  = conf.get ( 'sigma' , '' )
-        sigma  = '' if not sigma else '%.2f' % sigma
-        nsg    = significance ( pgood )
-        nsb    = significance ( pbad  )
-        nsg    = '%.1f +/- %.1f' % ( nsg.value() , nsg.error () )
-        nsb    = '%.1f +/- %.1f' % ( nsb.value() , nsb.error () )
+        sigma  = '' if not sigma else '/%.2f' % sigma
+        
+        pvg    = clip_pvalue  ( pgood )
+        pvb    = clip_pvalue  ( pbad  )        
+        nsg    = significance ( pvg   )
+        nsb    = significance ( pvb   )
+        
+        nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+        nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
             
-        row = conf ['psi'] , sigma ,\
-            '%4.1f +/- %.1f' % ( gp.value() , gp.error () ) , \
-            '%4.1f +/- %.1f' % ( bp.value() , bp.error () ) , nsg , nsb 
+        row = '%s%s' % ( conf ['psi'] , sigma ) ,\
+            '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+            '%5.2f %s %.2f' % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb        
         rows.append ( row )
-        
-        
-    title= 'Goodness-of-Fit PPD test'
-    table = T.table ( rows , title = title , prefix = '# ')
+                
+    title = 'Goodness-of-Fit PPD tests'
+    rows  = T.remove_empty_columns ( rows ) 
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 10*'c' )
     logger.info ( '%s:\n%s' % ( title , table ) )
 
 # ===============================================================================
@@ -124,18 +144,7 @@ def test_DNN () :
     
     logger = getLogger ("test_DNN")
 
-    from ostap.math.base    import numpy, scipy 
-    if not numpy or not scipy :
-        logger.warning ('No numpy/scipy: skip the PPD estimate!')
-        return
-    from ostap.stats.gof_np import s2u,cdist
-    if not s2u or not cdist:
-        logger.warning ('No s4u/cdist: skip the PPD estimate!')
-        return
-    
-    ## 't/good', 'x[..]' ,
-    ## 't/bad' , 'x[..]' ,
-    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#sigma/good' , '#sigma/bad') ]
+    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
     
     dnn = GnD.DNN ( nToys = 200 , histo = 50  )
     
@@ -157,16 +166,20 @@ def test_DNN () :
     gt , ge = pretty_float ( tgood )
     bt , be = pretty_float ( tbad  )
     
-    nsg    = significance ( pgood )
-    nsb    = significance ( pbad  )
-    nsg    = '%.1f +/- %.1f' % ( nsg.value() , nsg.error () )
-    nsb    = '%.1f +/- %.1f' % ( nsb.value() , nsb.error () )
+    pvg    = clip_pvalue  ( pgood )
+    pvb    = clip_pvalue  ( pbad  )        
+    nsg    = significance ( pvg   )
+    nsb    = significance ( pvb   )
     
-    row = '%4.1f +/- %.1f' % ( gp.value() , gp.error () ) , \
-        '%4.1f +/- %.1f' % ( bp.value() , bp.error () ) , nsg , nsb 
+    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
+    
+    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
     rows.append ( row )
             
     title= 'Goodness-of-Fit DNN test'
+    rows  = T.remove_empty_columns ( rows )     
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
 
@@ -198,17 +211,21 @@ def test_USTAT () :
     
     gt , ge = pretty_float ( tgood )
     bt , be = pretty_float ( tbad  )
+
+    pvg    = clip_pvalue  ( pgood )
+    pvb    = clip_pvalue  ( pbad  )        
+    nsg    = significance ( pvg   )
+    nsb    = significance ( pvb   )
+
+    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
     
-    nsg    = significance ( pgood )
-    nsb    = significance ( pbad  )
-    nsg    = '%.1f +/- %.1f' % ( nsg.value() , nsg.error () )
-    nsb    = '%.1f +/- %.1f' % ( nsb.value() , nsb.error () )
-    
-    row = '%4.1f +/- %.1f' % ( gp.value() , gp.error () ) , \
-        '%4.1f +/- %.1f' % ( bp.value() , bp.error () ) , nsg , nsb 
+    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
     rows.append ( row )
             
-    title= 'Goodness-of-Fit USTAT test'
+    title = 'Goodness-of-Fit USTAT test'
+    rows  = T.remove_empty_columns ( rows )     
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
     

@@ -13,9 +13,10 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2023-12-06"
 __all__     = (
-    'mean_var'   , ## mean and variance for (weighted) arrays
-    'nEff'       , ## get number of effective entries
-    'normalize'  , ## "normalize" variables in dataset/structured array
+    'mean_var'    , ## mean and variance for (weighted) arrays
+    'nEff'        , ## get number of effective entries
+    'normalize'   , ## "normalize" variables in dataset/structured array
+    'clip_pvalue' , ## clip-value 
 )
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
@@ -310,6 +311,7 @@ class PERMUTATOR(object) :
         """`ecdf` : empirical CDF for t-values from permutations 
         """
         return self.__ecdf
+    
     @ecdf.setter
     def ecdf ( self , value ) :
         self.__ecdf = value
@@ -378,7 +380,11 @@ if not jl : # =================================================================
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager : 
-            for result in manager.iexecute ( self.run_toys , lst , progress = not silent  , njobs = njobs , description = 'Permutations:') :
+            for result in manager.iexecute ( self.run_toys ,
+                                             lst           ,
+                                             progress    = not silent      ,
+                                             njobs       = njobs           ,
+                                             description = 'Permutations:' ) :
                 cnt , tvals = result 
                 counter += cnt
                 tvalues += tvals 
@@ -397,7 +403,7 @@ if not jl : # =================================================================
 ## @class TOYS
 #  Helper class to run toys for Goodness-of-Fit studies 
 class TOYS(object) :
-    """ Helper class that allow to run permutation test in parallel 
+    """ Helper class that allow to run toys in parallel 
     """
     def __init__ ( self    , 
                    gof     , * , 

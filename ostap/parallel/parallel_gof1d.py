@@ -4,17 +4,20 @@
 ## @file ostap/parallel/parallel_gof1d.py
 #  Make paralllel toys for Goodness-of-fit estimates 
 #  @see ostap.stats.gof1d 
+#  @see ostap.stats.gof_simfit 
 #  @date   2024-11-21
 #  @author Vanya  BELYAEV Ivan.Belyaev@cern.ch
 # =============================================================================
 """ Make paralllel toys for Goodness-of-fit estimates 
 - see ostap.stats.gof1d
+- see ostap.stats.gof_simfit 
 """
 # =============================================================================
 __author__  = 'Vanya BELYAEV  Ivan.Belyaev@itep.ru'
 __date__    = "2020-01-18"
 __version__ = '$Revision$'
 __all__     = (
+    'parallel_goftoys' , 
     )
 # =============================================================================
 from   ostap.parallel.parallel import Task, WorkManager
@@ -25,14 +28,14 @@ import ROOT
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.parallel.gof1d' )
-else                       : logger = getLogger ( __name__              )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.paralell.parallel_gof' )
+else                       : logger = getLogger ( __name__                      )
 # =============================================================================
-## @class GoF1DTask
+## @class GoFTask
 #  Simple task object 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2020-01-18 
-class GoF1DTask (Task) :
+class GoFTask (Task) :
     """ The GoF task object
     """
     ## 
@@ -78,12 +81,13 @@ class GoF1DTask (Task) :
         """
         ##
         from   ostap.stats.gof1d       import GoF1D     , GoF1DToys
-        from   ostap.stats.gof_simfit  import GoFSimFit , GoFSimFitToys
+        from   ostap.stats.gof_simfit  import GoFSimFit , GoFSimFit1D , GoFSimFit1DToys
         ## 
-        if   isinstance ( self.__gof , GoF1D     ) : toys = GoF1DToys     ( gof = self.__gof )
-        elif isinstance ( self.__gof , GoFSimFit ) : toys = GoFSimFitToys ( gof = self.__gof )
+        if   isinstance ( self.__gof , GoF1D       ) : toys = GoF1DToys       ( gof = self.__gof )
+        elif isinstance ( self.__gof , GoFSimFit1D ) : toys = GoFSimFit1DToys ( gof = self.__gof )
+        elif isinstance ( self.__gof , GoFSimFit   ) : toys = gof
         else :
-            raise TypeError ( 'Invalid "gof" type : %s' % typename ( self.__gof ) )
+            raise TypeError ( "Invalid `gof` type : %s" % typename ( self.__gof ) )
         
         toys.run ( nToys    = nToys ,
                    parallel = False ,
@@ -95,17 +99,17 @@ class GoF1DTask (Task) :
 
 # =============================================================================
 ## Run GoF1D/GoFSimFit toys in parallel 
-def parallel_gof1dtoys ( gof             ,
-                         nToys    = 1000 ,
-                         nSplit   = 0    ,
-                         silent   = True , 
-                         progress = True , **kwargs ) :
+def parallel_goftoys ( gof             ,
+                       nToys    = 1000 ,
+                       nSplit   = 0    ,
+                       silent   = True , 
+                       progress = True , **kwargs ) :
     """ Run GoF1D/GoFSimFit toys in parallel 
     """
     from   ostap.stats.gof1d       import GoF1D     , GoF1DToys
-    from   ostap.stats.gof_simfit  import GoFSimFit , GoFSimFitToys
+    from   ostap.stats.gof_simfit  import GoFSimFit , GoFSimFit1D , GoFSimFit1DToys
     
-    assert isinstance ( gof ,  ( GoF1D, GoFSimFit ) ) , \
+    assert isinstance ( gof ,  ( GoF1D, GoFSimFit , GoFSimFit1D ) ) , \
         'Invalid "gof" type : %s' % typename ( gof )
     
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
@@ -118,12 +122,14 @@ def parallel_gof1dtoys ( gof             ,
 
     if nSplit < 2 or numcpu ()  < 2 :
 
-        if   isinstance ( gof , GoF1D     ) : toys = GoF1DToys     ( gof )
-        elif isinstance ( gof , GoFSimFit ) : toys = GoFsimFitToys ( gof )
+        if   isinstance ( gof , GoF1D       ) : toys = GoF1DToys     ( gof )
+        elif isinstance ( gof , GoFSimFit1D ) : toys = GoFSimFitToys ( gof )
+        elif isinstance ( gof , GoFSimFit   ) : toys = gof 
         
         toys.run ( nToys    = nToys                  ,
                    parallel = False                  ,
-                   silent   = silent or not progress ) 
+                   silent   = silent or not progress )
+        
         return toys
 
     ## create work manager 
@@ -132,7 +138,7 @@ def parallel_gof1dtoys ( gof             ,
 
 
     ## create the task 
-    task  = GoF1DTask ( gof = gof )
+    task  = GoFTask ( gof = gof )
 
     ## create/split arguments
     

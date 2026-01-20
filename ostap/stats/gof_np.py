@@ -165,16 +165,18 @@ def psi_conf ( psi , scale = 1.0 ) :
     """ Define configuration for psi-function for PPD method
     """
 
-    if   psi in ( 'euclidean'  , 'linear'  ) :                       ## psi = x 
-        return 'euclidean'     , None                                , True 
-    elif psi in ( 'euclidean2' , 'sqeuclidean', 'squared' ) :        ## psi = x**2
-        return 'sqeuclidean'   , None                                , True  
-    elif psi in ( 'inverse'    , 'coulomb' ) :                       ## psi = 1/x 
-        return 'euclidean'     , lambda x : 1.0/x                    , False 
-    elif psi in ( 'log'        , 'logarithm'    ) :                  ## psi = -log(x)
-        return 'sqeuclidean'   , lambda x : -numpy.log ( x )         , False 
-    elif psi in ( 'gauss'      , 'gaussian'     ) :                  ## psi = exp (-x*x/0.5)
-        return 'sqeuclidean'   , lambda x :  numpy.exp ( scale * x ) , False 
+    if   psi in ( 'euclidean'   , 'linear'   ) :                            ## psi = x 
+        return 'euclidean'      , None                                   , True 
+    elif psi in ( 'sqeuclidean' , 'squared'  ) :                            ## psi = x**2 
+        return 'sqeuclidean'    , None                                   , True 
+    elif psi in ( 'inverse'     , 'coulomb'  ) :                           ## psi = 1/x 
+        return 'euclidean'      , lambda x : -1.0 / ( x [ 0 < x ] )      , True  
+    elif psi in ( 'inverse2'    , 'coulomb2' ) :                            ## psi = 1/x**2 
+        return 'sqeuclidean'    , lambda x : -1.0 / ( x [ 0 < x ] )      , True  
+    elif psi in ( 'log'         , 'logarithm'    ) :                       ## psi = log(x)
+        return 'sqeuclidean'    , lambda x :   numpy.log ( x [ 0 < x ] ) , True  
+    elif psi in ( 'gauss'       , 'gaussian'     ) :                       ## psi = exp (-x*x/0.5)
+        return 'sqeuclidean'    , lambda x :  -numpy.exp ( scale * x   ) , True
     elif isinstance ( psi , string_types ) :
         return psi , None , True         
 
@@ -200,7 +202,7 @@ class PPDnp(GoFnp) :
                    mc2mc     = False      ,
                    nToys     = 1000       ,
                    psi       = 'gaussian' ,
-                   sigma     = 0.05       ,
+                   sigma     = 0.10       ,
                    parallel  = False      , 
                    silent    = False      ,
                    maxsize   = 1000000    ) :
@@ -215,13 +217,13 @@ class PPDnp(GoFnp) :
         self.__transform = None
         self.__sigma     = sigma
         self.__psi       = psi
-        assert isinstance ( maxsize , int ) and 0 < maxsize , "Invalid ``maxsize'' : %s" % maxsize
+        assert isinstance ( maxsize , int ) and 0 < maxsize , "Invalid `maxsize' : %s" % maxsize
         
         self.__maxsize   = max ( maxsize , 100000  )
         
         ## check validity of `psi`
         scale = -0.5 / ( self.sigma ** 2 ) 
-        self.__distance_type , _ , self.__increasing = psi_conf ( psi , scale )
+        self.__distance_type , _ , _ = psi_conf ( psi , scale )
 
         self.__ecdf   = None 
 
@@ -265,13 +267,14 @@ class PPDnp(GoFnp) :
             return result 
         ##
         ## how to build distances?
-        scale = -0.5/(self.sigma**2) 
+        scale = -0.5 / ( self.sigma ** 2 ) 
         distance_type , transform , _ = psi_conf ( self.psi , scale )
         ##
         ## calculate all pair-wise distances
         distances = cdist ( data1 , data2 , distance_type ) .flatten () ## data <-> data
-        distances = distances [ distances > 0 ] 
-        if transform : distances = transform ( distances )
+        
+        ## distances = distances [ distances > 0 ]        
+        if transform : distances  = transform ( distances )        
         ## 
         return numpy.sum ( distances )         
     # =========================================================================
@@ -297,7 +300,7 @@ class PPDnp(GoFnp) :
             ## add the distances from the second dataset? 
             result += self.sum_distances ( ds2 , ds2 ) / ( n2 * ( n2 - 1 ) )
         ## 
-        return result            
+        return float ( result )
 
     # =========================================================================    
     ## Calculate T-value for two datasets 
@@ -365,15 +368,12 @@ class PPDnp(GoFnp) :
             counter = permutator.run ( self.nToys , silent = self.silent )            
         else :
             counter = permutator     ( self.nToys , silent = self.silent )
-
             
-        self.__ecdf  = permutator.ecdf
+        self.__ecdf = permutator.ecdf
         
         p_value = counter.eff
 
-        print ( 'PPD P-VALUE' , t_value , p_value , self.__increasing )
-        
-        if self.__increasing : p_value = 1 - p_value
+        ## if self.__increasing : p_value = 1 - p_value
 
         return t_value , p_value
     

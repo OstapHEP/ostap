@@ -588,7 +588,7 @@ class GoF1D(object) :
             self.__draw_fun = lambda x : cdf ( x ) 
             r1 = f1_draw   ( self.__draw_fun , opts , color = OrangeRed , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
         
-        r2 = ecdf.draw ( optsame  , color = RoyalBlue , linewidth = 2 , xmin = xmin , xmax = xmax , **kwargs )
+        r2 = ecdf.draw ( optsame  , color = RoyalBlue , linewidth = 2 , linestyle = 14 , xmin = xmin , xmax = xmax , **kwargs )
         return r1 , r2
     
 # =============================================================================
@@ -657,7 +657,7 @@ class GoF1DToys(GoF1D) :
         assert isinstance ( nToys , int ) and 0 < nToys , "Invalid `nToys` argument!"
 
         if parallel :
-            from ostap.parallel.parallel_gof1d import parallel_gof1dtoys as parallel_toys 
+            from ostap.parallel.parallel_gof import parallel_goftoys as parallel_toys 
             self += parallel_toys ( gof      = self       ,
                                     nToys    = nToys      ,
                                     nSplit   = nSplit     ,
