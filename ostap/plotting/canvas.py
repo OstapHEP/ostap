@@ -269,11 +269,11 @@ _keep     = []
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-10-19
-def getCanvas ( name   = 'glCanvas'    ,   ## canvas name 
-                title  = 'Ostap'       ,   ## canvas title
-                width  = canvas_width  ,   ## canvas width
-                height = canvas_height ,   ## canvas height 
-                **kwargs               ) : ## other properties 
+def getCanvas ( name   = 'glCanvas'     ,   ## canvas name 
+                title  = 'Ostap Canvas' ,   ## canvas title
+                width  = canvas_width   ,   ## canvas width
+                height = canvas_height  ,   ## canvas height 
+                **kwargs                ) : ## other properties 
     """ Get create canvas/create new canvas
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
@@ -1298,7 +1298,16 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
                    invisible = False         ,   ## invisible (==batch)?
                    style     = None          ,   ## use this style                    
                    **kwargs                  ) : ## Pad configuration
+
+        ## strip trailing/leading blanks
         
+        name  = name .strip()
+        title = title.strip()
+        
+        ## attention here:  SWAP! 
+        if name and not title and not self.existing_canvas ( name ) :
+            name , title = title , name 
+            
         self.__name   = name
         self.__title  = title 
         self.__width  = width
@@ -1327,6 +1336,23 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         UsePad    .__init__ ( self , **pad_conf       ) 
         Batch     .__init__ ( self , self.__invisible )
 
+    # ================================================================
+    ## Does the canvas with given name exists?
+    #  - Look up in the list of regustered canvas
+    #  @param name the name ot be tested
+    #  @return existing canvas with the given name, False otherwise
+    def existing_canvas ( self , name ) :
+        """ Does the canvas with given name exists?
+        Look up in the list of regustered canvas
+        - name : the name ot be tested
+        - return existing canvas with given name, `False` otherwise
+        """
+        groot  = ROOT.ROOT.GetROOT()
+        cnvlst = groot.GetListOfCanvases()
+        for c in cnvlst :
+            if   not isinstance ( c , ROOT.TCanvas ) : continue  ## CONTINUE 
+            elif c.GetName() == name                 : return c  ## RETURN
+        return False                                             ## RETURN 
         
     # =================================================================
     ## Context manager: ENTER
@@ -1349,17 +1375,16 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         KeepCanvas.__enter__ ( self )
         UseStyle  .__enter__ ( self ) 
         Batch     .__enter__ ( self )
-        
+
         if not self.__name :
-            groot  = ROOT.ROOT.GetROOT() 
-            cnvlst = groot.GetListOfCanvases() 
-            self.__name = 'gl_canvas#%d' % len ( cnvlst )
-            while self.__name in cnvlst : 
-                h = self.__name , title , width , height , len ( cnvlst ) 
-                self.__name = 'gl_canvas#%d' % hash ( h ) 
+            self.__name = 'gl_Ostap'
+            while self.existing_canvas ( self.__name ) :
+                index = self.__name , self.__title , self.__width , self.__height , id ( self ) 
+                index = hash ( index ) % 100000 
+                self.__name = 'gl_Ostap_#%05d' % index 
                 
         if not self.__title :
-            self.__title = self.__name.strip() 
+            self.__title = self.__name
 
         ## (2) create/use new canvas 
         self.__cnv = getCanvas ( name   = self.__name   ,

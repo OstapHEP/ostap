@@ -370,16 +370,16 @@ then
     return ${sc}
 fi
 
-## ( echo -e "${prefix1}"' [7/7] Last   pass of cmake&'${make_command}'&package'                  && 
-##      cd ${OSTAP_BUILD}                                                                        && 
-##      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_gtenerator} &&
-##      ${make_command} -j                                                                       && 
-##      ${make_command} -j package )
+( echo -e "${prefix1}"' [7/7] Last   pass of cmake&'${make_command}'&package'                  && 
+      cd ${OSTAP_BUILD}                                                                        && 
+      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_gtenerator} &&
+      ${make_command} -j$(nproc --all)                                                         && 
+      ${make_command} -j$(nproc --all)  package )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
 then
-    echo -e "${prefix1_error}"' [7/7] failure: last pass of cmake&'${make_command}'&install ' ${sc} ${OSTAP_BUILD} 
+    echo -e "${prefix1_error}"' [7/7] failure: last pass of cmake&'${make_command}'&package ' ${sc} ${OSTAP_BUILD} 
     unset  OSTAP_BUILD OSTAP_INSTALL		
     return ${sc}
 fi

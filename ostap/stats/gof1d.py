@@ -33,16 +33,17 @@ from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import VE, Ostap, hID 
 from   ostap.math.base          import axis_range, np2raw    
 from   ostap.math.models        import f1_draw
-from   ostap.utils.cidict       import cidict_fun
+from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.basic        import loop_items, typename   
 from   ostap.stats.counters     import SE, EffCounter 
 from   ostap.logger.pretty      import pretty_float
 from   ostap.math.ve            import fmt_pretty_ve
 from   ostap.math.math_ve       import significance
-from   ostap.logger.symbols     import plus_minus, times, greek_lower_sigma
-from   ostap.stats.gof_utils    import Labels, Keys, clip_pvalue, data2vct  
+from   ostap.stats.gof_utils    import ( Labels      , Keys      ,
+                                         clip_pvalue , data2vct  ,
+                                         format_row  , draw_ecdf )  
 from   ostap.stats.gof          import AGoF
-from   ostap.plotting.color     import OrangeRed, RoyalBlue , Navy, DarkGreen  
+from   ostap.plotting.color     import RoyalBlue, Gold   
 from   collections              import defaultdict, namedtuple
 import ostap.logger.table       as     T
 import ostap.fitting.ds2numpy 
@@ -529,23 +530,24 @@ class GoF1D(object) :
         """ Print the summary as Table
         """
         ##
-        header = ( 'Statistics' , 'Value' , '' ) 
+        
+        header = ()
         rows   = [] 
         
         for label , value  in loop_items ( self.estimators ) :
             
             the_label = Labels.get ( label , label )
 
-            result , expo = pretty_float ( value , width = width , precision = precision )
+            header, row = format_row ( tvalue = value )
 
-            if expo : row = the_label , result , '10^%+d' % expo
-            else    : row = the_label , result 
+            row = ( label , ) + row 
             rows.append ( row )
 
-        rows = [ header ] + sorted ( rows ) 
-        title = title if title else 'Goodness of 1D Fit' 
-        rows  = T.remove_empty_columns ( rows )
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcl' , style = style  )
+        header = ( 'Statistic' , ) + header 
+        rows   = [ header ] + sorted ( rows ) 
+        title  = title if title else 'Goodness of 1D Fit' 
+        rows   = T.remove_empty_columns ( rows )
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcc' , style = style  )
 
     ## print estimator as table 
     __repr__ = table
@@ -553,7 +555,7 @@ class GoF1D(object) :
 
     # =========================================================================
     ## Draw fit CDF & empirical ECDF 
-    def draw  ( self , opts = '' , *args , **kwargs ) :
+    def draw  ( self , option = '' , *args , **kwargs ) :
         """ Draw fit CDF & empirical CDF
         """
         cdf  = self.__cdf
@@ -571,24 +573,44 @@ class GoF1D(object) :
 
         xmin , xmax = axis_range ( xmin , xmax , delta = 0.30 )
         
-        xmin    = kwargs.pop ( 'xmin' , xmin )
-        xmax    = kwargs.pop ( 'xmax' , xmax )
+        option  = option.strip() 
+        optsame = 'same' if not option else '%s %s' % ( 'same' , option ) 
 
-        opts    = opts.strip() 
-        optsame = 'same' if not opts else '%s %s' % ( 'same' , opts ) 
-
+        kw = cidict ( transform = cidict_fun , **kwargs )
+        kw [ 'color'     ] = kw.pop ( 'color'     , Gold )
+        kw [ 'linewidth' ] = kw.pop ( 'linewidth' , 3    )
+        kw [ 'linestyle' ] = kw.pop ( 'linestyle' , 1    )
+        kw [ 'maxvalue'  ] = kw.pop ( 'maxvalue'  , 1.1  )
+        xmin = kw.pop ( 'xmin' , xmin )
+        xmax = kw.pop ( 'xmax' , xmax )
+        
+        # =======================================================================
+        ## (1) Draw CDF from the fit 
         if isinstance ( cdf , AFUN1 ) :
             self.__frame = cdf.draw ()
-            self.__frame.draw ( opts )
+            self.__frame.draw ( option = option  )
             ## self.__histo = ROOT.TH1F ( hID() , '' , 1 , xmin , xmax ) 
             ## self.__histo.draw ( min_value = 0 , max_value = 1.1 )             
             ## self.__frame.draw ( 'same' + opts )
             r1 = self.__frame 
         else : 
             self.__draw_fun = lambda x : cdf ( x ) 
-            r1 = f1_draw   ( self.__draw_fun , opts , color = OrangeRed , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs ) 
+            r1 = f1_draw   ( self.__draw_fun , option = option , xmin = xmin , xmax = xmax , **kw ) 
+
+        kw   = cidict ( transform = cidict_fun , **kwargs )
+        kw [ 'color'     ] = kw.pop ( 'color'     , RoyalBlue )
+        kw [ 'linewidth' ] = kw.pop ( 'linewidth' , 2         )
+        kw [ 'linestyle' ] = kw.pop ( 'linestyle' , 14        )
+        xmin = kw.pop ( 'xmin' , xmin )
+        xmax = kw.pop ( 'xmax' , xmax )        
+
+        # =======================================================================
+        ## (2) Draw empirical CDF form data 
+        r2 = draw_ecdf ( ecdf                  ,
+                         option    = optsame   ,
+                         xmin      = xmin      ,
+                         xmax      = xmax      , **kw )
         
-        r2 = ecdf.draw ( optsame  , color = RoyalBlue , linewidth = 2 , linestyle = 14 , xmin = xmin , xmax = xmax , **kwargs )
         return r1 , r2
     
 # =============================================================================
@@ -598,7 +620,7 @@ class GoF1DToys(GoF1D) :
     """ Check Goodness-of-fit with toys (1D-case) 
     """
     ## result of GoF-toys 
-    Result = namedtuple ( 'Result' , 'statistics counter pvalue nsigma' )
+    Result = namedtuple ( 'Result' , 'tvalue counter pvalue nsigma' )
     # =========================================================================
     ## Initialize GoF1D toys object :
     #  @code
@@ -841,95 +863,70 @@ class GoF1DToys(GoF1D) :
         if not label in self.ecdfs      : return None
         if not label in self.counters   : return None
         ##
-        value   = self.estimators   [ label ]
+        tvalue  = self.estimators   [ label ]
         ecdf    = self.ecdfs        [ label ] 
         counter = self.counters     [ label ] 
         ##
-        pvalue = ecdf. estimate ( value  ) ## estimate the p-value
+        pvalue = ecdf. estimate ( tvalue  ) ## estimate the p-value
         #
-        pv     = clip_pvalue ( pvalue , 0.5 ) 
-        nsigma = significance ( pv ) ## convert  it to significace
-        
-        return self.Result ( value   ,
+        pv     = clip_pvalue    ( pvalue , 0.5 ) 
+        nsigma = significance   ( pv ) ## convert  it to significace
+
+        return self.Result ( tvalue  ,
                              counter ,
                              pvalue  ,
                              nsigma  )
     
     # =========================================================================
     ## format a row in the summary table
-    def row  ( self , what , result , width = 6 , precision = 4 ) :
+    def row  ( self          ,
+               what          ,
+               result        ,
+               width     = 6 ,
+               precision = 4 ) :
         """ Format a row in the sumamry table
         """
-        value      = result.statistics
-        counter    = result.counter
-        pvalue     = result.pvalue
-        nsigma     = result.nsigma
         
-        mean       = counter.mean   ()
-        rms        = counter.rms    () 
-        vmin, vmax = counter.minmax () 
-        
-        mxv = max ( abs ( value        ) ,
-                    abs ( mean.value() ) ,
-                    mean.error()         , rms ,
-                    abs ( vmin )  , abs ( vmax ) ) 
-        
-        fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
-                                                  width       = width       ,
-                                                  precision   = precision   , 
-                                                  parentheses = False       )
-        
-        if expo : scale = 10**expo
-        else    : scale = 1
-        
-        fmt2 = '%s/%s' % ( fmtv , fmtv ) 
+        tvalue  = result.tvalue 
+        counter = result.counter 
+        pvalue  = result.pvalue
 
-        vs  = value / scale
-        vm  = mean  / scale
-        vr  = rms   / scale
-        vmn = vmin  / scale
-        vmx = vmax  / scale
+        header , row = format_row ( tvalue  = tvalue  , pvalue  = pvalue , counter = counter )
         
-        pvalue = str ( ( 100 * pvalue ) .toString ( '%% 5.2f %s %%-.2f' % plus_minus ) )
-        nsigma = str ( nsigma.toString ( '%%.2f %s %%-.2f' % plus_minus ) if float ( nsigma ) < 1000 else '+inf' ) 
-
-        return ( what  ,
-                 fmtv  % vs ,
-                 fmt   % ( vm.value() , vm.error() ) ,
-                 fmtv  % vr                          ,
-                 fmt2  %  ( vmn , vmx )              ,
-                 ( '%s10^%+d' %  ( times , expo )  if expo else '' ) , pvalue , nsigma )
+        row =  ( what , ) + row
+        
+        return header , row
 
     # =========================================================================
     ## Make a summary table
-    def table ( self , title = '' , prefix = '' , width = 6 , precision = 4 , style = None ) :
+    def table ( self             ,
+                title     = ''   ,
+                prefix    = ''   ,
+                width     = 6    ,
+                precision = 4    ,
+                style     = None ) :
         """ Make a summary table
         """
-        import ostap.logger.table  as     T                 
-        header = ( 'Statistics'        ,
-                   'value'             ,
-                   'mean'              , 
-                   'rms'               ,
-                   'min/max'           ,
-                   'factor'            ,
-                   'p-value [%]'       ,
-                   '#%s' % greek_lower_sigma )
-        rows   = [] 
-        
-        for label in self.ecdfs :
+
+        header = () 
+        rows   = []         
+        for label, ecdf  in self.ecdfs.items ()  :
             
             result  = self.result ( label )
             if not result : continue
-
+            
             the_label = Labels.get ( label , label )
-            row = self.row ( the_label , result , width = width , precision = precision )
+            
+            header , row = self.row ( the_label , result , precision = precision , width = width )
+            
             rows.append ( row ) 
-                    
+                
         if   not title and self.nToys : title = 'Goodness of 1D-fit with #%d toys' % self.nToys  
         elif not title                : title = 'Goodness of 1D-fit'
-
-        rows = [ header ] + sorted ( rows ) 
-        rows = T.remove_empty_columns ( rows ) 
+            
+        header = ( "Statistic" , ) + header 
+        rows   = [ header ] + sorted ( rows ) 
+        rows   = T.remove_empty_columns ( rows ) 
         return T.table ( rows , title = title , prefix = prefix , alignment = 'lccccccc' , style = style )
 
     __repr__ = table
@@ -937,7 +934,7 @@ class GoF1DToys(GoF1D) :
 
     # =========================================================================
     ## Draw ECDF for toys & statistical estimator 
-    def draw  ( self , what , opts = '' , *args , **kwargs ) :
+    def draw  ( self , what , option = '' , **kwargs ) :
         """ Draw ECDF for toys & statistical estimator 
         """
         key = cidict_fun ( what ) 
@@ -971,45 +968,18 @@ class GoF1DToys(GoF1D) :
             ## logger.info ( 'Toy results for Zhang/ZC estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
-            
-        xmin , xmax = ecdf.xmin () , ecdf.xmax ()
-        value       = result.statistics
-        xmin        = min ( xmin , value )
-        xmax        = max ( xmax , value )
 
-        xmin , xmax = axis_range ( xmin , xmax , delta = 0.05 )
-
-        kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
-        kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
-
-        ## draw ECDF 
-        result    = ecdf.draw  ( opts , *args , **kwargs )
-        
-        ## vertical line 
-        line1    = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        tvalue       = result.tvalue 
+    
+        ## draw ECDF
+        result , vline , hline = draw_ecdf ( ecdf            ,
+                                             tvalue          ,
+                                             option = option , **kwargs )
         ##
-
-        ## horisontal line 
-        xmin      = kwargs['xmin']
-        xmax      = kwargs['xmax']
-        dx        = ( xmax - xmin ) / 100 
-        e         = ecdf ( value )
-        line2     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
-        ## 
-        line2.SetLineWidth  ( 2    ) 
-        line2.SetLineColor  ( Navy ) 
-        line2.SetLineStyle  ( 9    ) 
+        self._vline = vline
+        self._hline = hline
         ##
-        line1.SetLineWidth  ( 4 ) 
-        line1.SetLineColor  ( DarkGreen )
-        ##
-        line2.draw ( 'same' )
-        line1.draw ( 'same' )
-        ##
-        self._line1 = line1
-        self._line2 = line2
-        ##
-        return result, line1, line2   
+        return result , vline , hline
 
 # =============================================================================
 ## @class GoF1D

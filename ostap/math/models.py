@@ -328,7 +328,7 @@ positives = ( Ostap.Math.Positive          ,
 
 # =============================================================================
 ## draw the function 
-def f1_draw ( self , opts ='' , **kwargs ) :
+def f1_draw ( self , option = '' , **kwargs ) :
     """ Drawing the function object through conversion to ROOT.TF1    
     >>> fun = ...
     >>> fun.draw()    
@@ -372,7 +372,7 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     npoints  = kw.pop ( 'npoints'  , 500  )
     callme   = kw.pop ( 'callable' , None ) 
     
-    self._plot = self._tf1.draw ( opts , **kw  )
+    self._plot = self._tf1.draw ( option = option  , **kw  )
     return self
 
 # =============================================================================

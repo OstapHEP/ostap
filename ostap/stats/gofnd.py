@@ -32,7 +32,6 @@ from   ostap.core.ostap_types   import num_types
 from   ostap.stats.gof          import AGoF
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.base          import axis_range
-from   ostap.math.math_ve       import significance
 from   ostap.fitting.ds2numpy   import ds2numpy
 from   ostap.stats.counters     import EffCounter 
 from   ostap.utils.progress_bar import progress_bar
@@ -40,8 +39,9 @@ from   ostap.utils.utils        import random_name
 from   ostap.stats.gof_utils    import TOYS
 from   ostap.stats.ustat        import USTAT
 from   ostap.plotting.color     import Navy, DarkGreen
-from   ostap.stats.gof_utils    import clip_pvalue 
+from   ostap.stats.gof_utils    import format_row 
 import ostap.stats.gof_np       as     GNP
+import ostap.logger.table       as     T 
 import ROOT
 # =============================================================================
 # logging 
@@ -199,46 +199,41 @@ class GoF(AGoF) :
     ## Get results in form of the table 
     def the_table ( self          ,
                     tvalue = None ,
-                    pvalue = None ,    
+                    pvalue = None ,
+                    ecdf   = None , 
                     title  = ''   ,
                     prefix = ''   ) :
         """ Get results in form of the table 
         """
+        print ( 'THE TaBLE' ,pvalue ) 
 
-        has_tvalue = not tvalue is None
-        has_pvalue = isinstance ( pvalue , VE ) 
-        
-        title = title if title else 'Goodness-Of-Fit %s' % typename ( self ) 
+        header , row = self.the_row ( tvalue = tvalue ,
+                                      pvalue = pvalue ,
+                                      ecdf   = ecdf   )
+        rows = [ header ]
+        rows.append ( row )
+        rows = T.remove_empty_columns ( rows ) 
+        return T.table ( rows , title = title , prefix = prefix , alignment = 10*'c' )
+
+    # ==========================================================================
+    ## Get results in form of the row in the table
+    #  @code
+    #  gof = ...
+    #  header , row = gof.the_row ( ... ) 
+    #  @endcode `
+    def the_row ( self          ,
+                  tvalue = None ,
+                  pvalue = None ,
+                  ecdf   = None ) :  
+        """ Get results in form of the table 
+        >>> gof = ...
+        >>> header , row = gof.the_row ( ... ) 
+        """
+        print ( 'THE ROW' , pvalue ) 
+        return format_row ( tvalue = tvalue ,
+                            pvalue = pvalue ,
+                            ecdf   = ecdf   )
             
-        if has_tvalue and has_pvalue :
-            
-            rows   =  [ ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
-
-            pv      = clip_pvalue  ( pvalue )
-            ns      = significance ( pv     )
-            tv , te = pretty_float ( tvalue , precision = 4 )
-            
-            pvalue *= 100
-            pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
-            nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
-            row     = tv , '10^%+d' % texpo if texpo else '' , pvalue , nsigma 
-            rows.append ( row )
-            
-            rows = T.remove_empty_colums ( rows ) 
-            return T.table ( rows , title = title , prefix = prefix , alignment = 'ccccc')
-
-        elif has_tvalue :
-
-            rows   =  [ ( 't-value'  , '%s[..]' % times ) ]
-
-            tv , te = pretty_float ( tvalue , precision = 4 )
-            row     = tv , '10^%+d' % texpo if texpo else ''            
-            rows.append ( row )
-            rows = T.remove_empty_colums ( rows ) 
-            return T.table ( rows , title = title , prefix = prefix , alignment = 'cc')
-
-        return T.table ( [ [''] ] , title = title , prefix = prefix )
-        
 # =============================================================================
 ## @class PPD
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
@@ -376,12 +371,13 @@ class PPD(GoF) :
         return self.ppd.ecdf
 
     # =========================================================================
-    ## Get results in a for of the table 
+    ## Get results in a form of the table 
     def table ( self , title = '' , prefix = '' ) :
         """ Get resutls in a for of the table 
         """
         return self.the_table ( tvalue = self.__tvalue ,
                                 pvalue = self.__pvalue ,
+                                ecdf   = self.__ecdf   , 
                                 title  = title ,
                                 prefix = prefx ) 
     __str__  = table
@@ -410,6 +406,7 @@ class DNN(GoF) :
                                               silent   = silent ) ,
                        sample   = sample )
         
+        self.__ecdf   = None 
         self.__histo  = None 
         self.__tvalue = None
         self.__pvalue = None
@@ -519,14 +516,16 @@ class DNN(GoF) :
         if self.parallel : counter = toys.run ( self.nToys , silent = self.silent )            
         else             : counter = toys     ( self.nToys , silent = self.silent )            
 
-        ## get ECDF from toys 
+        ## get ECDF from toys
         self.__ecdf = toys.ecdf
         
-        p_value = 1 - counter.eff
-
+        p_value       = 1 - counter.eff
+        
         self.__tvalue = t_value 
         self.__pvalue = p_value 
 
+        print ( 'DNN_HERE' , t_value , p_value , self.__ecdf ( t_value ) )
+        
         return t_value, p_value
     
     @property
@@ -542,12 +541,14 @@ class DNN(GoF) :
     # =========================================================================
     ## Get results in a for of the table 
     def table ( self , title = '' , prefix = '' ) :
-        """ Get resutls in a for of the table 
+        """ Get results in a for of the table 
         """
+        print ( 'TaBLE' , self.__pvalue ) 
         return self.the_table ( tvalue = self.__tvalue ,
                                 pvalue = self.__pvalue ,
-                                title  = title ,
-                                prefix = prefx ) 
+                                ecdf   = self.ecdf     , 
+                                title  = title  ,
+                                prefix = prefix ) 
     __str__  = table
     __repr__ = table
     

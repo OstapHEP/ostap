@@ -17,7 +17,8 @@ from   ostap.utils.timing     import timing
 from   ostap.math.math_ve     import significance
 from   ostap.core.core        import VE
 from   ostap.stats.gof_utils  import clip_pvalue
-from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma  
+from   ostap.logger.symbols   import plus_minus, times, greek_lower_sigma
+from   ostap.math.ve          import fmt_pretty_ve
 import ostap.fitting.models   as     M 
 import ostap.stats.gof1d      as     G1D 
 import ostap.stats.gofnd      as     GnD
@@ -31,22 +32,30 @@ else                       : logger = getLogger ( __name__            )
 batch_env ( logger ) 
 # =============================================================================
 
-xvar  = ROOT.RooRealVar ( 'x', '', 0, 10)
-gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 5 , sigma = 1 )
+xvar  = ROOT.RooRealVar ( 'x', '' ,  0 , 20 )
+gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 10 , sigma = 1 )
 model = M.Fit1D         ( signal = gauss , background = 'flat' , fix_norm = True )
 
-ND    = 100
+
+ND1   = 100
+ND2   = 100
 
 # =============================================================================
 ## data_g: pure gaussian
-gauss.mean  = 5
-gauss.sigma = 0.75
-data_g      = gauss.generate ( ND , sample = True )
+gauss.mean  = 10
+gauss.sigma.fix ( 1.0 )
+
+data_g1     = gauss.generate ( ND1 , sample = True )
+data_g2     = gauss.generate ( ND2 , sample = True )
+
 # =============================================================================
-## data_b:  95% gaussian + 4% flat background 
-model.S     = 0.90 * ND
-model.B     = 0.10 * ND
-data_b      = model.generate ( ND , sample = True )
+## data_b: 
+model.S     = 0.0 
+model.B     = ND2
+data_u      = model.generate ( ND2 , sample = True )
+
+data_g = data_g1 + data_g2
+data_b = data_g1 + data_u 
 
 fitconf = { 'draw' : True , 'nbins' : 25 , 'refit' : 5 , 'quiet' : True }
 
@@ -59,59 +68,63 @@ def run_PPD ( pdf , data, result , logger ) :
 
     # =========================================================================
     #  - Point to Point Dissimilarity test  with Gaussian distance using different "sigma"
-    rows  = [ ( 'PPD/sigma' , 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
-    Ns    = 3 
+    rows  = [ ( 'PPD(sigma)' ,
+                't-value'    ,
+                't-mean'     ,
+                't-rms'      ,
+                't-min/max'  ,                
+                '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
+    Ns    = 10 
     logger.info ( 'Run Point-to-Point Dissimilarity GoF-test for %d different values of sigma' % Ns  ) 
-    for sigma in vrange ( 0.1 , 1.0 , Ns ) :
 
-        with timing ( 'PPD-test' , logger = logger ) :             
-            ppd = GnD.PPD ( nToys = 200 , sigma = sigma )
+    header = ()
+    rows   = [] 
+    for sigma in vrange ( 0.01 , 1.5 , Ns ) :
+
+        with timing ( 'PPD-test' , logger = logger ) :
+            
+            ppd = GnD.PPD ( nToys = 500 , sigma = sigma )
             pdf.load_params ( result , silent = True ) 
             tvalue         = ppd          ( pdf , data )
             tvalue, pvalue = ppd.pvalue   ( pdf , data )
+            
+            ecdf           = ppd.ecdf
+            
+            header , row = ppd.the_row ( tvalue = tvalue ,
+                                         pvalue = pvalue ,
+                                         ecdf   = ecdf   )
 
-            pv     = clip_pvalue  ( pvalue ) 
-            nsigma = significance ( pv ) ## convert  it to significance
-        
-        tv , texpo = pretty_float ( tvalue )
-        pvalue *= 100
-        pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
-        nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
-        row = '%.2f' % sigma , tv , '10^%+d' % texpo if texpo else '' , pvalue , nsigma 
-        rows.append ( row ) 
-        
-    title= 'Goodness-of-fit PPD-test'
-    table = T.table ( rows , title = title , prefix = '# ')
+            row = ( '%.4f' % sigma , ) + tuple ( row ) 
+            rows.append ( row ) 
+
+    header = ( 'PPD(sigma)' , ) + header
+    rows   = [ header ] + rows 
+    rows   = T.remove_empty_columns ( rows ) 
+    title  = 'Goodness-of-fit PPD-test (Gaussian with various sigmas)'
+    table  = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccccccc' )
     logger.info ( '%s:\n%s' % ( title , table ) )
 
 import ostap.stats.ustat as U 
 
 # ==============================================================================
 ## Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
-def run_DNN  ( pdf , data, result , logger ) :
+def run_DNN  ( pdf , data , result , logger ) :
     """ Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
     """
 
-    rows  =  [ ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
 
-    with timing ( 'DNN-test' , logger = logger ) : 
+    with timing ( 'DNN-test' , logger = logger ) :
+        
         dnn = GnD.DNN ( nToys = 200 , histo = 50 )        
-        pdf.load_params ( result , silent = True )        
+        pdf.load_params ( result , silent = True )
+        
         tvalue         = dnn          ( pdf , data )
         tvalue, pvalue = dnn.pvalue   ( pdf , data )
 
-        pv     = clip_pvalue  ( pvalue ) 
-        nsigma = significance ( pv ) ## convert  it to significace
+    with use_canvas ( 'DNN-toys' ) : dnn.draw ( tvalue = tvalue ) 
 
-    tv , texpo = pretty_float ( tvalue )
-    pvalue *= 100
-    pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
-    nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
-    row     = tv , '10^%+d' % texpo if texpo else '' , pvalue , nsigma 
-    rows.append ( row )
-    
-    title= 'Goodness-of-fit DNN-test'
-    table = T.table ( rows , title = title , prefix = '# ')
+    title  = 'Goodness-of-fit DNN-test'    
+    table  = dnn.table ( title = title , prefix = '# ' )
     logger.info ( '%s:\n%s' % ( title , table ) )
 
     ## u-distribution
@@ -138,193 +151,93 @@ def run_USTAT  ( pdf , data, result , logger ) :
 
     tv , texpo = pretty_float ( tvalue )
     pvalue *= 100
-    pvalue  = '%5.2f%s%.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
-    nsigma  = '%.2f%s%.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )    
+    pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
+    nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )    
     row     = tv , '10^%+d' % texpo if texpo else '' , pvalue, nsigma 
     rows.append ( row )
     
-    title= 'Goodness-of-Fit USTAT-test'
-    table = T.table ( rows , title = title , prefix = '# ')
+    title = 'Goodness-of-Fit USTAT-test'
+    rows  = T.remove_empty_columns ( rows ) 
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccccccc' )
     logger.info ( '%s:\n%s' % ( title , table ) )
 
     return ustat.histo
 
+
 # ==============================================================================
-def test_good_fit_1 ( ) :
-    """ Make a test for presumably good fit: fit Gauss to Gauss
+def run_fit ( pdf , dataset , label  , logger = logger ) :
+    """ Make a test for presumably GOO/BAD fit: fit Gauss to Gauss
     """
     
-    logger = getLogger ( 'test_good_fit_1' )
-    logger.info ( 'Make a test for presumably good fit: fit Gauss to Gauss' )
+    logger.info ( 'Make a test for presumably %s fit' % label  )
 
-    with use_canvas ( 'test_good_fit_1: G -> G' ,      wait = 1 ) :
-        r , f = gauss.fitTo ( data_g , **fitconf ) 
+    with use_canvas ( '%s_fit_1' % label ) :
+        r , f = pdf.fitTo ( dataset, **fitconf ) 
 
-    with use_canvas ( 'test_good_fit_1: GoF' , wait = 1 ) :
+    """ 
+    with use_canvas ( '%s_fit_1: GoF' % label   ) :
         
         gauss.load_params ( r , silent = True ) 
-        gof = G1D.GoF1D     ( gauss , data_g )
-        logger.info ( 'Goodness-of-fit:\n%s' % gof )
-
+        gof = G1D.GoF1D   ( pdf , data_g )
+        logger.info ( 'Goodness-of-fit (%s):\n%s' %  ( label , gof ) )
+        
         gauss.load_params ( r , silent = True ) 
-        with timing ( 'GoF1D-toys' , logger = logger ) : 
+        with timing ( 'GoF1D-toys %s' % label  , logger = logger ) : 
             toys = G1D.GoF1DToys ( gof )
             toys = toys.run ( nToys = 500 , parallel = True )
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
+        logger.info ( 'Goodness-of-fit (%s) with %d toys:\n%s' % ( label , toys.nToys , toys ) ) 
 
-    del gof
-    del toys 
-
-    ## Try to use multidimensional methods
-    run_PPD ( gauss , data_g , r , logger )
+    with use_canvas ( '%s_fit_1: GoF/Kolmogorov-Smirnov' % label ) :
+        dks = toys.draw ( 'Kolmogorov-Smirnov')
+    with use_canvas ( '%s_fit_1: GoF/Anderson-Darling'   % label ) :
+        dad = toys.draw ( 'Anderson-Darling')
+    with use_canvas ( '%s_fit_1: GoF/Cramer-von Mises'   % label ) :
+        dcm = toys.draw ( 'Cramer-von Mises')
+    with use_canvas ( '%s_fit_1: GoF/Kuiper'             % label ) :
+        dcm = toys.draw ( 'Kuiper')
+    with use_canvas ( '%s_fit_1: GoF/ZK' % label ) :
+        dzk = toys.draw ( 'ZK')
+    with use_canvas ( '%s_fit_1: GoF/ZA' % label ) :
+        dza = toys.draw ( 'ZA')
+    with use_canvas ( '%s_fit_1: GoF/ZC' % label ) :
+        dzc = toys.draw ( 'ZC')
     
-    udist1 = run_DNN ( gauss , data_g , r , logger )
+    ## Try to use multidimensional methods
+    run_PPD ( pdf , dataset , r , logger )
+    
+    """
+    
+    udist1 = run_DNN    ( pdf , dataset , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
-        with use_canvas ( 'test_good_fit_1: DNN' , wait = 1 ) :
-            udist1.draw()
+        with use_canvas ( '%s_fit_1: DNN' % label ) : udist1.draw()
 
-    udist2 = run_USTAT ( gauss , data_g , r , logger )
+    udist2 = run_USTAT  ( pdf , dataset , r , logger )
     if udist2 :
         keep.add ( udist2 ) 
-        with use_canvas ( 'test_good_fit_1: USTAT' , wait = 1 ) :
-            udist2.draw()
+        with use_canvas ( '%s_fit_1: USTAT' % label ) : udist2.draw()
     
-# =============================================================================
+# =====================================================================================
+def test_good_fit_1 ( ) :
+    logger = getLogger ( 'test_GOOD_fit_1' )
+    return run_fit ( gauss , data_g , 'GOOD1' , logger )
+
+# =====================================================================================
 def test_good_fit_2 ( ) :
-    """ Make a test for presumably good fit: fit Gauss+Bkg to Gauss
-    """
-    
-    logger = getLogger ( 'test_good_fit_2' )
-    logger.info ( 'Make a test for presumably good fit: fit Gauss+Bkg to Gauss' )
+    logger = getLogger ( 'test_GOOD_fit_2' )
+    return run_fit ( model , data_b , 'GOOD2' , logger )
 
-    with use_canvas ( 'test_good_fit_2: G+B -> G' ,      wait = 1 ) :
-        r , f = model.fitTo ( data_g , **fitconf ) 
-        
-    with use_canvas ( 'test_good_fit_2: GoF' , wait = 1 ) :
-        model.load_params ( r , silent = True ) 
-        gof = G1D.GoF1D     ( model , data_g )
-        logger.info ( 'Goodness-of-fit:\n%s' % gof )
-
-        model.load_params ( r , silent = True ) 
-        with timing ( 'GoF1D-toys' , logger = logger ) : 
-            toys = G1D.GoF1DToys ( gof )
-            toys = toys.run ( nToys = 200 ) 
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
-
-    del gof
-    del toys
-        
-    ## Try to use multidimensional methods
-    run_PPD ( model , data_g , r , logger )
-    udist1 = run_DNN ( model , data_g , r , logger )
-    if udist1 :
-        keep.add ( udist1 ) 
-        with use_canvas ( 'test_good_fit_2: DNN' , wait = 1 ) :
-            udist1.draw()
+# =====================================================================================
+def test_bad_fit_1  ( ) :
+    logger = getLogger ( 'test_BAD_fit_1'  )
+    return run_fit ( gauss , data_b , 'BAD'  , logger  )
             
-    udist2 = run_USTAT ( model , data_g , r , logger )
-    if udist2 :
-        keep.add ( udist2 ) 
-        with use_canvas ( 'test_good_fit_2: USTAT' , wait = 1 ) :
-            udist2.draw()
-    
-# =============================================================================
-def test_good_fit_3 ( ) :
-    
-    logger = getLogger ( 'test_good_fit_3' )
-    logger.info ( 'Make a test for presumably good fit: fit Gauss+Bkg to Gauss+Bkg' )
-
-    with use_canvas ( 'test_good_fit_3: G+B -> G+G' ,      wait = 1 ) :
-        r , f = model.fitTo ( data_b , **fitconf ) 
-        
-    with use_canvas ( 'test_good_fit_2: GoF' , wait = 1 ) :
-        model.load_params ( r , silent = True ) 
-        gof = G1D.GoF1D     ( model , data_b )
-        logger.info ( 'Goodness-of-fit:\n%s' % gof )
-
-        model.load_params ( r , silent = True ) 
-        with timing ( 'GoF1D-toys' , logger = logger ) : 
-            toys = G1D.GoF1DToys ( gof  )
-            toys = toys.run ( 500 )
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
-
-    del gof
-    del toys
-    
-    ## Try to use multidimensional methods
-    run_PPD ( model , data_b , r , logger )
-    udist1 = run_DNN ( model , data_b , r , logger )
-    if udist1 :
-        keep.add ( udist1 ) 
-        with use_canvas ( 'test_good_fit_3: DNN' , wait = 1 ) :
-            udist1.draw()
-    udist2 = run_USTAT ( model , data_b , r , logger )
-    if udist2 :
-        keep.add ( udist2 ) 
-        with use_canvas ( 'test_good_fit_3: USTAT' , wait = 1 ) :
-            udist2.draw()
-            
-# =============================================================================
-def test_bad_fit_1 ( ) :
-    """ Make a test for presumably bad fit: fit Gauss to Gauss+Bkg
-    """
-    logger = getLogger ( 'test_bad_fit_1' )
-    logger.info ( 'Make a test for presumably bad fit: fit Gauss to Gauss+Bkg' )
-
-    with use_canvas ( 'test_bad_fit_1: G -> G+B' ,      wait = 1 ) :
-        r , f = gauss.fitTo ( data_b , **fitconf ) 
-
-    with use_canvas ( 'test_bad_fit_1: GoF' , wait = 1 ) :
-        
-        gauss.load_params ( r , silent = True ) 
-        gof = G1D.GoF1D     ( gauss , data_b )
-        logger.info ( 'Goodness-of-fit:\n%s' % gof )
-        gof.draw()
-        
-        gauss.load_params ( r , silent = True ) 
-        with timing ( 'GoF1D-toys' , logger = logger ) : 
-            toys = G1D.GoF1DToys ( gof )
-            toys = toys.run ( nToys = 1000 ) 
-        logger.info ( 'Goodness-of-fit with %d toys:\n%s' % ( toys.nToys , toys ) ) 
-    
-    with use_canvas ( 'test_bad_fit_1: GoF/Kolmogorov-Smirnov' , wait = 1 ) :
-        dks = toys.draw('Kolmogorov-Smirnov')
-    with use_canvas ( 'test_bad_fit_1: GoF/Anderson-Darling'   , wait = 1 ) :
-        dad = toys.draw('Anderson-Darling')
-    with use_canvas ( 'test_bad_fit_1: GoF/Cramer-von Mises'   , wait = 1 ) :
-        dcm = toys.draw('Cramer-von Mises')
-    with use_canvas ( 'test_bad_fit_1: GoF/Kuiper'             , wait = 1 ) :
-        dcm = toys.draw('Kuiper')
-    with use_canvas ( 'test_bad_fit_1: GoF/ZK' , wait = 1 ) :
-        dzk = toys.draw('ZK')
-    with use_canvas ( 'test_bad_fit_1: GoF/ZA' , wait = 1 ) :
-        dza = toys.draw('ZA')
-    with use_canvas ( 'test_bad_fit_1: GoF/ZC' , wait = 1 ) :
-        dzc = toys.draw('ZC')
-    
-    ## Try to use multidimensional methods
-    run_PPD ( gauss , data_b , r , logger )
-    udist1 = run_DNN ( gauss , data_b , r , logger )
-    if udist1 :
-        keep.add ( udist1 ) 
-        with use_canvas ( 'test_bad_fit_1: DNN' , wait = 1 ) : udist1.draw()
-        
-    udist2 = run_USTAT ( gauss , data_b , r , logger )
-    if udist2 :
-        keep.add ( udist2 ) 
-        with use_canvas ( 'test_bad_fit_3: USTAT' , wait = 1 ) : udist2.draw()
-            
-    del gof
-    del toys
-    
 # ===============================================================================
 if '__main__' == __name__ :
 
-    test_good_fit_1 ()  ## fit Gauss       to Gauss 
-    test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss 
-    test_good_fit_3 ()  ## fit Gauss+Bkg   to Gauss+Bkg
-    test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg
+    ## test_good_fit_1 ()  ## fit Gauss       to Gauss     data
+    test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss+Bkg data 
+    ## test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg daat 
 
 # ===============================================================================
 ##                                                                        The END 

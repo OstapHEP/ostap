@@ -21,14 +21,19 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import VE, Ostap
-from   ostap.utils.cidict       import cidict_fun
-from   ostap.core.ostap_types   import string_types
+from   ostap.utils.cidict       import cidict, cidict_fun
+from   ostap.core.ostap_types   import string_types, num_types 
 from   ostap.math.base          import doubles, axis_range
-from   ostap.stats.counters     import EffCounter
+from   ostap.math.math_ve       import significance
+from   ostap.math.ve            import fmt_pretty_ve 
+from   ostap.stats.counters     import SE, WSE, EffCounter
 from   ostap.utils.basic        import numcpu, loop_items 
 from   ostap.utils.utils        import splitter
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
+from   ostap.logger.symbols     import times, plus_minus, greek_lower_sigma
+from   ostap.logger.pretty      import pretty_float
+from   ostap.plotting.color     import Gold, Green, Blue 
 import ROOT, sys, math, numpy  
 # =============================================================================
 # logging 
@@ -245,8 +250,6 @@ Keys = {
 # =============================================================================
 assert Labels.keys() == Keys.keys() , "Mismatch between Labels & Keys structures!"
 # =============================================================================
-
-# =============================================================================
 ## clip p-value 
 def clip_pvalue ( pvalue , clip = 0.5 ) :
     """ Clip p-value
@@ -257,8 +260,8 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
     ##
     clip = min ( 0.5 , abs ( clip ) * pv.error () )
     ## 
-    if   1 <= pv : pv = VE ( 1 - clip , pv.cov2() )
-    elif 0 >= pv : pv = VE (     clip , pv.cov2() )
+    if   1 <= pv.value() : pv = VE ( 1 - clip , pv.cov2() )
+    elif 0 >= pv.value() : pv = VE (     clip , pv.cov2() )
     ## 
     return pv 
     
@@ -421,20 +424,15 @@ class TOYS(object) :
         
     # =========================================================================
     ## run N-toys 
-    def __call__ ( self , N , silent = True ) :
+    def __call__ ( self , nToys , silent = True ) :
         """ Run N-toys
         """
-        
-        counter, tvalues = self.run_toys ( N = N , silent = silent )
-
-        if not self.__ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues , True )
-        else               : self.__ecdf.add ( data2vct ( tvalues )  )
-                            
+        counter , ecdf = self.run_toys ( nToys = nToys , silent = silent )
         return counter 
-
+    
     # =========================================================================
     ## run N-toys 
-    def run_toys ( self, N , silent = True ) :
+    def run_toys ( self , nToys , silent = True ) :
         """ Run N-toys
         """
         ROOT.gRandom                     .SetSeed () 
@@ -442,56 +440,231 @@ class TOYS(object) :
         
         counter = EffCounter ()
         tvalues = [] 
-        for i in range ( N ) :
+        for i in range ( nToys ) :
             
             dset     = self.pdf.generate ( self.Ndata , sample = self.sample )
             tv       = self.gof ( self.pdf , dset )
-            counter += bool ( self.t_value < tv  )
+            counter += bool ( self.t_value < tv  ) ## NOTE SIGN HERE!
 
             tvalues.append ( tv ) 
             if isinstance  ( dset , ROOT.RooDataSet ) : dset.clear () 
             del dset
-                            
-        return counter, tuple ( tvalues ) 
+
+        tvalues = tuple ( tvalues ) 
+        if not self.ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues  , False ) ## ATTENTINON HERE! 
+        else             : self.ecdf.add ( data2vct ( tvalues )  )
+
+        print ( 'RUN_TOYS/1' , counter.eff , self.ecdf ( self.t_value ) )
+        
+        return counter, self.ecdf 
 
     # =========================================================================
     ## Run N-toys in parallel using WorkManager
-    def run ( self , NN , silent = False ) :
-        """ Run NN-toys in parallel using WorkManager
+    def run ( self , nToys  , silent = False ) :
+        """ Run N-toys in parallel using WorkManager
         """
         me    = math.ceil ( memory_enough() ) + 1 
         nj    = min ( 2 * numcpu () + 3 , me ) 
-        lst   = splitter ( NN , nj )
-        njobs = len ( [ k for k in splitter ( NN , nj ) ] )
+        lst   = splitter ( nToys , nj )
+        njobs = len ( lst )
         if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % njobs ) 
         ##
         counter = EffCounter()
         tvalues = ()
-        ## 
+        ##
+        
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
-        with WorkManager ( silent = silent ) as manager : 
+        with WorkManager ( silent = silent ) as manager :
+            
             for result in manager.iexecute ( self.run_toys , lst , progress = not silent , njobs = njobs , description = 'Toys:' ) :
-                cnt , tvals = result
+                
+                cnt , ecdf = result
+                
                 counter += cnt
-                tvalues += tvals  
-        #
+                if not self.ecdf : self.__ecdf =   ecdf 
+                else             : self.ecdf.add ( ecdf )                
         
-        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues, True  )
-        else             : self.ecdf.add ( data2vct ( tvalues )  )
+        print ( 'RUN_TOYS/2' , counter.eff , self.ecdf ( self.t_value ) )
         
-        return counter
+        return counter 
 
     @property 
     def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-values from toys
+        """`ecdf` : empirical CDF for t-values from toys/pseudoexperiments 
         """
         return self.__ecdf
-    @ecdf.setter
-    def ecdf ( self , value ) :
-        self.__ecdf = value
+
+# =============================================================================
+## Format the row for GoF tables
+#  @code
+#  tvalue = ...
+#  pvalue = ...
+#  ecdf   = ... 
+#  header , row = format_row ( tvalue = tvalue, pvalue = pvalue , ecdf = ecdf )
+#  @endcode
+def format_row ( tvalue    = None ,
+                 pvalue    = None ,
+                 ecdf      = None ,
+                 counter   = None , 
+                 precision = 4    ,
+                 width     = 6    ) :
+    """ Format the row for the GoF tables
+    >>> tvalue = ...
+    >>> pvalue = ...
+    >>> ecdf   = ...
+    >>> header , row = format_row ( tvalue = tvalue , pvalue = pvalue  , ecdf = ecdf )
+    """
+    
+    has_tvalue  = not tvalue  is None and isinstance ( tvalue  , num_types ) 
+    has_pvalue  = not pvalue  is None and isinstance ( pvalue  , VE        ) 
+    has_ecdf    = not ecdf    is None and isinstance ( ecdf    , Ostap.Math.ECDF ) 
+    has_counter = not counter is None and isinstance ( counter , ( SE , WSE )   )
+
+    print ( 'FORMAT' , pvalue ) 
+
+    if has_ecdf  and not has_counter  :
+        counter     = ecdf.counter ()
+        has_counter = True 
+        
+    if has_tvalue and has_pvalue and has_counter :
+        
+        header = ( 't-value'    ,
+                   't-mean'     ,
+                   't-rms'      ,
+                   't-min/max'  ,                
+                   '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
+        
+        pv         = clip_pvalue  ( pvalue ) 
+        nsigma     = significance ( pv ) ## convert  it to significance
+        
+        mean       = counter.mean   ()
+        rms        = counter.rms    () 
+        vmin, vmax = counter.minmax () 
+        
+        mxv        = max ( abs ( tvalue       ) ,
+                           abs ( mean.value() ) ,
+                           mean.error()         , rms ,
+                           abs ( vmin )  , abs ( vmax ) ) 
+        
+        fmt, fmtv , fmte , expo = fmt_pretty_ve ( VE ( mxv ,  mean.cov2() ) ,
+                                                  precision   = precision   ,
+                                                  width       = width       , 
+                                                  parentheses = False       )
+        
+        if expo : scale = 10**expo
+        else    : scale = 1
+    
+        vs  = tvalue / scale
+        vm  = mean   / scale
+        vr  = rms    / scale
+        vmn = vmin   / scale
+        vmx = vmax   / scale
+        
+        fmt2 = '%s/%s' % ( fmtv , fmtv ) 
+        
+        pvalue  = pvalue * 100
+        pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
+        
+        row = ( fmtv  % vs ,
+                fmt   % ( vm.value() , vm.error() ) ,
+                fmtv  % vr                          ,
+                fmt2  % ( vmn , vmx )               ,
+                ( '%s10^%+d' %  ( times , expo )  if expo else '' ) , pvalue , nsigma )
+        
+        return header , row
+
+    elif has_tvalue and has_pvalue :
+
+        
+        header = ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
+
+        pv        = clip_pvalue  ( pvalue )
+        nsigma    = significance ( pv     )
+        tv , expo = pretty_float ( tvalue , precision = precision , width = width )
+            
+        pvalue  = pvalue * 100
+        pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error() )        
+        nsigma  =  '%.2f %s %.2f' % ( nsigma.value() , plus_minus , nsigma.error () )        
+        row     = tv , '%s10^%+d' % ( times , expo ) if expo else '' , pvalue , nsigma
+
+        return header , row 
+
+    elif has_tvalue :
+        
+        header    = ( 't-value'  , '%s[..]' % times )          
+        tv , expo = pretty_float ( tvalue , precision = precision , width = width )
+        row       = tv , '%s10^%+d' % ( times , expo ) if expo else ''        
+        return header, row
+
+    ## no data for table 
+    return () , ()
+
+# =============================================================================
+## Draw ECDF + 2 lines when/if t-value specified
+#  @code
+#  ecdf   = ...
+#  tvalue = ...
+#  result = draw_ecdf ( ecdf , tvalue = tvalue ) 
+#  @endcode 
+def draw_ecdf ( ecdf , tvalue = None , option = '' , **kwargs ) :
+    """ Draw ECDF + 2 lines when/if t-value specified
+    >>> ecdf   = ...
+    >>> tvalue = ...
+    >>> result = draw_ecdf ( ecdf , tvalue = tvalue ) 
+    """
+
+    has_tvalue = not tvalue is None and isinstance ( tvalue , num_types )
+    
+    xmin , xmax = ecdf.xmin () , ecdf.xmax ()
+    
+    if has_tvalue :
+        tvalue  = float ( tvalue ) 
+        xmin    = min ( xmin , tvalue )
+        xmax    = max ( xmax , tvalue )
+
+    xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
 
     
+    ## some transformation  
+    kw = cidict ( transform = cidict_fun , **kwargs )
+
+    kw [ 'xmin'      ] = kw.pop ( 'xmin'       , xmin   ) 
+    kw [ 'xmax'      ] = kw.pop ( 'xmax'       , xmax   )
+    kw [ 'color'     ] = kw.pop ( 'linecolor'  , Gold   )
+    kw [ 'linewidth' ] = kw.pop ( 'linewidth'  , 2      )
+    kw [ 'maxvalue'  ] = kw.pop ( 'maxvalue'   , 1.1    )
+    
+    result = ecdf.draw  ( option = option , **kw )
+    
+    ## draw ECDF 
+    if not  has_tvalue : return result
+    
+    ## vertical line 
+    vline     = ROOT.TLine ( tvalue , 1e-3 , tvalue , 1 - 1e-3 )
+    
+    ## horisontal line 
+    xmin      = kw [ 'xmin' ]
+    xmax      = kw [ 'xmax' ]
+    dx        = ( xmax - xmin ) / 100 
+    e         = ecdf ( tvalue )
+    hline     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
+
+    ## 
+    vline.SetLineWidth  ( 4     ) 
+    vline.SetLineColor  ( Green )
+    ## 
+    hline.SetLineWidth  ( 2     ) 
+    hline.SetLineColor  ( Blue  )  
+    hline.SetLineStyle  ( 9     ) 
+    ##
+    vline.draw ( 'same' )
+    hline.draw ( 'same' )
+    ## 
+    return result, vline, hline 
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
