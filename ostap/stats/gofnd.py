@@ -205,8 +205,6 @@ class GoF(AGoF) :
                     prefix = ''   ) :
         """ Get results in form of the table 
         """
-        print ( 'THE TaBLE' ,pvalue ) 
-
         header , row = self.the_row ( tvalue = tvalue ,
                                       pvalue = pvalue ,
                                       ecdf   = ecdf   )
@@ -229,7 +227,6 @@ class GoF(AGoF) :
         >>> gof = ...
         >>> header , row = gof.the_row ( ... ) 
         """
-        print ( 'THE ROW' , pvalue ) 
         return format_row ( tvalue = tvalue ,
                             pvalue = pvalue ,
                             ecdf   = ecdf   )
@@ -524,8 +521,6 @@ class DNN(GoF) :
         self.__tvalue = t_value 
         self.__pvalue = p_value 
 
-        print ( 'DNN_HERE' , t_value , p_value , self.__ecdf ( t_value ) )
-        
         return t_value, p_value
     
     @property
@@ -543,7 +538,6 @@ class DNN(GoF) :
     def table ( self , title = '' , prefix = '' ) :
         """ Get results in a for of the table 
         """
-        print ( 'TaBLE' , self.__pvalue ) 
         return self.the_table ( tvalue = self.__tvalue ,
                                 pvalue = self.__pvalue ,
                                 ecdf   = self.ecdf     , 

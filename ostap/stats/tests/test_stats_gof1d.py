@@ -174,7 +174,6 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     with use_canvas ( '%s_fit_1' % label ) :
         r , f = pdf.fitTo ( dataset, **fitconf ) 
 
-    """ 
     with use_canvas ( '%s_fit_1: GoF' % label   ) :
         
         gauss.load_params ( r , silent = True ) 
@@ -205,8 +204,6 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     ## Try to use multidimensional methods
     run_PPD ( pdf , dataset , r , logger )
     
-    """
-    
     udist1 = run_DNN    ( pdf , dataset , r , logger )
     if udist1 :
         keep.add ( udist1 ) 
@@ -235,9 +232,9 @@ def test_bad_fit_1  ( ) :
 # ===============================================================================
 if '__main__' == __name__ :
 
-    ## test_good_fit_1 ()  ## fit Gauss       to Gauss     data
+    test_good_fit_1 ()  ## fit Gauss       to Gauss     data
     test_good_fit_2 ()  ## fit Gauss+Bkg   to Gauss+Bkg data 
-    ## test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg daat 
+    test_bad_fit_1  ()  ## fit Gauss       to Gauss+Bkg daat 
 
 # ===============================================================================
 ##                                                                        The END 

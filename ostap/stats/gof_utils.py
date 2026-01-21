@@ -454,8 +454,6 @@ class TOYS(object) :
         if not self.ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues  , False ) ## ATTENTINON HERE! 
         else             : self.ecdf.add ( data2vct ( tvalues )  )
 
-        print ( 'RUN_TOYS/1' , counter.eff , self.ecdf ( self.t_value ) )
-        
         return counter, self.ecdf 
 
     # =========================================================================
@@ -484,9 +482,7 @@ class TOYS(object) :
                 counter += cnt
                 if not self.ecdf : self.__ecdf =   ecdf 
                 else             : self.ecdf.add ( ecdf )                
-        
-        print ( 'RUN_TOYS/2' , counter.eff , self.ecdf ( self.t_value ) )
-        
+         
         return counter 
 
     @property 
@@ -520,8 +516,6 @@ def format_row ( tvalue    = None ,
     has_pvalue  = not pvalue  is None and isinstance ( pvalue  , VE        ) 
     has_ecdf    = not ecdf    is None and isinstance ( ecdf    , Ostap.Math.ECDF ) 
     has_counter = not counter is None and isinstance ( counter , ( SE , WSE )   )
-
-    print ( 'FORMAT' , pvalue ) 
 
     if has_ecdf  and not has_counter  :
         counter     = ecdf.counter ()
