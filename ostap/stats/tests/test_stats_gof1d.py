@@ -106,6 +106,7 @@ def run_PPD ( pdf , data, result , logger ) :
 
 import ostap.stats.ustat as U 
 
+plots = [] 
 # ==============================================================================
 ## Run Distance-to-Nearest-Neighbour Goodness-of-Fit test
 def run_DNN  ( pdf , data , result , logger ) :
@@ -115,7 +116,7 @@ def run_DNN  ( pdf , data , result , logger ) :
 
     with timing ( 'DNN-test' , logger = logger ) :
         
-        dnn = GnD.DNN ( nToys = 200 , histo = 50 )        
+        dnn = GnD.DNN   ( nToys = 200 , histo = 51 )        
         pdf.load_params ( result , silent = True )
         
         tvalue         = dnn          ( pdf , data )
@@ -136,37 +137,24 @@ def run_USTAT  ( pdf , data, result , logger ) :
     """ Run USTAT Goodness-of-Fit test
     """
 
-    rows  =  [ ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) ]
-    
-    ustat = USTAT ( nToys = 200 , histo = 100 )
-    
-    pdf.load_params ( result , silent = True )
-    
     with timing ( 'uStat-test' , logger = logger ) : 
+        ustat = USTAT   ( nToys = 200 , histo = 100 )        
+        pdf.load_params ( result , silent = True )
         tvalue         = ustat        ( pdf , data )    
         tvalue, pvalue = ustat.pvalue ( pdf , data )
         
-        pv     = clip_pvalue  ( pvalue ) 
-        nsigma = significance ( pv ) ## convert  it to significace
-
-    tv , texpo = pretty_float ( tvalue )
-    pvalue *= 100
-    pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error() )
-    nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )    
-    row     = tv , '10^%+d' % texpo if texpo else '' , pvalue, nsigma 
-    rows.append ( row )
-    
-    title = 'Goodness-of-Fit USTAT-test'
-    rows  = T.remove_empty_columns ( rows ) 
-    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lccccccc' )
+    with use_canvas ( 'USTAT-toys' ) : ustat.draw ( tvalue = tvalue ) 
+        
+    title  = 'Goodness-of-fit USTAT-test'    
+    table  = ustat.table ( title = title , prefix = '# ' )
     logger.info ( '%s:\n%s' % ( title , table ) )
 
-    return ustat.histo
-
+    ## u-distribution
+    return ustat.histo 
 
 # ==============================================================================
 def run_fit ( pdf , dataset , label  , logger = logger ) :
-    """ Make a test for presumably GOO/BAD fit: fit Gauss to Gauss
+    """ Make a test for presumably GOOD/BAD fits
     """
     
     logger.info ( 'Make a test for presumably %s fit' % label  )
@@ -174,6 +162,7 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     with use_canvas ( '%s_fit_1' % label ) :
         r , f = pdf.fitTo ( dataset, **fitconf ) 
 
+    """
     with use_canvas ( '%s_fit_1: GoF' % label   ) :
         
         gauss.load_params ( r , silent = True ) 
@@ -203,17 +192,22 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     
     ## Try to use multidimensional methods
     run_PPD ( pdf , dataset , r , logger )
-    
+    """
+
     udist1 = run_DNN    ( pdf , dataset , r , logger )
-    if udist1 :
-        keep.add ( udist1 ) 
-        with use_canvas ( '%s_fit_1: DNN' % label ) : udist1.draw()
+    ##if udist1 :
+    ##    keep.add ( udist1 ) 
+    ##    with use_canvas ( '%s_fit_1: DNN' % label ) as cnv1 :
+    ##        plots.append ( cnv1 ) 
+    ##        udist1.draw()
 
     udist2 = run_USTAT  ( pdf , dataset , r , logger )
-    if udist2 :
-        keep.add ( udist2 ) 
-        with use_canvas ( '%s_fit_1: USTAT' % label ) : udist2.draw()
-    
+    ##if udist2 :
+    ##    keep.add ( udist2 ) 
+    ##    with use_canvas ( '%s_fit_1: USTAT' % label ) as cnv2 :
+    ##        plots.append ( cnv2 ) 
+    ##        udist2.draw()
+
 # =====================================================================================
 def test_good_fit_1 ( ) :
     logger = getLogger ( 'test_GOOD_fit_1' )
@@ -228,7 +222,8 @@ def test_good_fit_2 ( ) :
 def test_bad_fit_1  ( ) :
     logger = getLogger ( 'test_BAD_fit_1'  )
     return run_fit ( gauss , data_b , 'BAD'  , logger  )
-            
+
+
 # ===============================================================================
 if '__main__' == __name__ :
 

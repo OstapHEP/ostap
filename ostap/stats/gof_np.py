@@ -106,7 +106,7 @@ class GoFnp (AGoFnp) :
         >>> ds1 = ... ## the 1st structured array 
         >>> ds2 = ... ## the 2nd structured array
         >>> gof = ... ##
-        >>> nd1, nd2 = god.normalize ( ds1 , ds2 ) 
+        >>> nd1, nd2 = gof.normalize ( ds1 , ds2 ) 
         """ 
         return ds_normalize  ( *datasets  , first = False ) 
     # =========================================================================
@@ -411,7 +411,7 @@ class DNNnp(GoFnp) :
         if   isinstance ( histo , ROOT.TH1 ) :
             self.__histo = histo
         elif isinstance ( histo , int  ) and 1 < histo :
-            self.__histo = ROOT.TH1D ( hID() , 'U-values' , histo , 0, 1 )
+            self.__histo = ROOT.TH1D ( hID() , 'U-values' , histo , -0.1 , 1.1 ) 
             
     # =========================================================================
     ## Calculate the t-value
@@ -444,34 +444,43 @@ class DNNnp(GoFnp) :
         uvalues *= C
         uvalues  = numpy.exp ( uvalues * vpdf ) 
         
-        ## fill the histogram if defined 
+        ## fill the histogram of u-values (if defined)
         if self.__histo : 
-            for u in uvalues : self.__histo.Fill ( float ( u ) ) 
+            for u in uvalues :
+                v = min ( max ( 0 , float ( u  ) ) , 0.999999 )
+                self.__histo.Fill ( v ) 
+
+        
+        ## convert u-values into t-values:
         
         uvalues  = numpy.sort ( uvalues )
-
+        
         n        = len ( uvalues )
         aux      = numpy.linspace ( 1 , n , n ) / n 
         uvalues -= aux
-
-        return   numpy.sum ( uvalues ** 2 ) 
         
+        return numpy.sum ( uvalues ** 2 ) 
+
     # ===========================================================================
     ## Calculate the t-value
     #  @see Eqs. (3.16) in M.Williams' paper
     #  @param data1 actual data (as structured array)
     #  @param vpdf  array of PDF values  
-    def __call__ ( self ,  data1 , vpdf , normalize = False ) :
+    def __call__ ( self ,  data1 , vpdf , normalize = True ) :
         """" Calculate the t-value
         - see Eqs. (3.16) in M.Williams' paper
         data1: actual data (as structured array)
         vpdf : array of PDF values  
         """
+        ## 
+        normalize = False ## NB!!! 
         
-        ds1 = data1
+        ## transform/normalize ? 
+        if normalize : ds1 = self.normalize ( data1 ) [ 0 ] 
+        else         : ds1 = data1
 
         ## convert to unstructured dataset 
-        uds1    = s2u ( ds1  , copy = False )
+        uds1     = s2u ( ds1 , copy = False )
         self.__D = uds1.shape[1] 
         
         ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
@@ -481,9 +490,19 @@ class DNNnp(GoFnp) :
 
     # ============================================================================
     ## p-value is not defined..
+    # 
     #  M.Williams writes:
-    #  ``
+    #  `Because of this I do not think p-value are worth calculating`
+    # 
+    #  - However, one always can run straightforward pseudoexperiments 
     def pvalue ( self , *args , **kwargs ) :
+        """ p-value is not defined..
+
+        M.Williams writes:
+        `Because of this I do not think p-value are worth calculating`
+        
+        - However, one always can run straightforward pseudoexperiments 
+        """        
         raise NotImplementedError( "p-value is not defined for DDDNP!" )
     
     @property

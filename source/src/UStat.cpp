@@ -35,6 +35,7 @@
 // Local
 // ============================================================================
 #include "local_roofit.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Analysis::UStat
@@ -50,22 +51,21 @@ namespace
   ( const RooArgSet* x , 
     const RooArgSet* y )
   {
-    if ( 0 == x || 0 == y ) { return -1 ; } // RETURN 
+    if ( !x || !y ) { return -1 ; } // RETURN 
     //
     double result = 0.;
     //
-    //
     for ( auto* xa : *x )
     {
-      if ( nullptr == xa ) { continue ; }
+      if ( !xa ) { continue ; } 
       const RooAbsArg*  ya   = y -> find ( *xa ) ;
-      if ( nullptr == ya ) { continue ; }
-      //
-      const RooRealVar* xv   = static_cast<const RooRealVar*> ( xa ) ;
-      const RooRealVar* yv   = static_cast<const RooRealVar*> ( ya ) ;
-      //
-      const double      val  = xv->getVal() - yv->getVal() ;
-      result                += val*val ;
+      if ( !ya ) { continue ; }       
+      const RooAbsReal* xv   = static_cast<const RooAbsReal*> ( xa ) ;
+      if ( !xv ) { continue ; }
+      const RooAbsReal* yv   = static_cast<const RooAbsReal*> ( ya ) ;
+      if ( !yv ) { continue ; }
+      const double      val  = xv -> getVal() - yv->getVal() ;
+      result                += val * val ;
       //
     }
     //
@@ -87,7 +87,7 @@ Ostap::StatusCode Ostap::UStat::calculate
   const RooDataSet& data  ,  
   double&           tStat ,
   TH1*              hist  ,
-  RooArgSet*        args  ) 
+  const RooArgSet*  args  ) 
 {
   /// make a fake progress bar 
   Ostap::Utils::ProgressConf progress { 0 } ;
@@ -113,24 +113,34 @@ Ostap::StatusCode Ostap::UStat::calculate
   const RooDataSet&                 data     ,  
   double&                           tStat    ,
   TH1*                              hist     ,
-  RooArgSet*                        args     ) 
+  const RooArgSet*                  args     ) 
 {
   //
-  if ( 0 == args ) { args = pdf.getObservables ( data ) ; }
-  if ( 0 == args ) { return Ostap::StatusCode( InvalidArgs ) ; }
+  if ( nullptr == args ) { args = pdf.getObservables ( data ) ; }
+  if ( nullptr == args ) { return INVALID_OBSERVABLES ; }
   //
-  const unsigned int dim    = args->getSize   () ;
-  if ( 1 > dim   ) { return Ostap::StatusCode( InvalidDims ) ; }
+  RooArgSet rargs {} ;
+  for ( auto *a : *args )
+  {
+    if ( !a ) { continue ; }
+    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( a ) ;
+    if ( !r ) { continue ; }
+    rargs.add ( *r , true ) ;
+  }
+  //
+  const unsigned int dim    = rargs.getSize   () ;
+  if ( 1 > dim   ) { return INVALID_ARGSET      ; }
+  /// volume of n-ball 
   const double volume = Ostap::Math::nball_volume ( dim ) ;
-  //
-  typedef std::vector<double> TStat ;
-  TStat tstat ;
   //
   // const RooDataSet*  cloned = (RooDataSet*)data.Clone() ;
   // std::unique_ptr<RooDataSet> cloned  { new RooDataSet ( data ) } ;
   std::unique_ptr<RooDataSet> cloned = std::make_unique<RooDataSet> ( data , nullptr ) ;
   //
   const unsigned int num    = data.numEntries () ;
+  //
+  typedef std::vector<double> StatU ;
+  StatU ustat ( num , 0.0 ) ; 
   //
   const RooArgSet* event_x = 0 ;
   const RooArgSet* event_y = 0 ;
@@ -140,64 +150,62 @@ Ostap::StatusCode Ostap::UStat::calculate
   //
   Ostap::Utils::ProgressBar bar ( num , progress ) ;
   for ( unsigned int i = 0 ; i < num ; ++i , ++bar ) 
-    {
+  {
     //
     // 1. Get "Event"
     event_x = data . get(i) ;      
-    if ( 0 == event_x || 0 == event_x->getSize() ) 
-    { return Ostap::StatusCode ( InvalidItem1 ) ; }             // RETURN 
+    if ( 0 == event_x || 0 == event_x->getSize() ) { return INVALID_ENTRY ; } // RETURN 
     //
-    std::unique_ptr<RooArgSet> event_i ( ( RooArgSet*)event_x->selectCommon ( *args ) ) ;
-    if ( !event_i || 0 == event_i->getSize() ) 
-    { return Ostap::StatusCode ( InvalidItem2 ) ; }             // RETURN 
+    std::unique_ptr<RooArgSet> event_i ( event_x -> selectCommon ( rargs ) ) ;
+    if ( !event_i || 0 == event_i->getSize() )     { return INVALID_ENTRY ; }             // RETURN 
     //
     // 2.Evaluate PDF 
     //
-	::assign( *observables, *event_x ) ;
-    const double pdfValue = pdf . getVal() ;
+    ::assign ( *observables, *event_x ) ;
+    const double pdfValue = pdf . getVal ( *observables ) ;
     //
-    double min_distance  = 1.e+100 ;
+    const Int_t xs = event_i -> getSize () ;
+    //
+    // minimal distance 
+    double min_distance  = std::numeric_limits<double>::max () ;
     for ( unsigned int j = 0 ; j < num ; ++j ) 
     {
       if ( i == j ) { continue ; }
       //
-      event_y = cloned->get ( j ) ;      
-      if ( 0 == event_y || 0 == event_y->getSize() ) 
-      { return Ostap::StatusCode ( InvalidItem1 ) ; }            // RETURN 
+      event_y = cloned -> get ( j ) ;      
+      if ( 0 == event_y || 0  == event_y->getSize() )  { return INVALID_ENTRY ; }            // RETURN 
       //
-      std::unique_ptr<RooArgSet> event_j ( ( RooArgSet*)event_y->selectCommon( *args ) ) ;
-      if ( !event_j || 0 == event_j->getSize() )  
-      { return Ostap::StatusCode ( InvalidItem2 ) ; }            // RETURN 
+      std::unique_ptr<RooArgSet> event_j ( event_y -> selectCommon ( rargs ) ) ;
+      if ( !event_j     || xs != event_j->getSize() )  { return INVALID_ENTRY ; }            // RETURN 
       //
       const double distance = getDistance ( event_i.get() , event_j.get() ) ;
-      if ( 0 > distance ) { return Ostap::StatusCode ( InvalidDist ) ; }  // RETURN 
+      if ( distance < 0                             )  { return INVALID_ENTRY ; }
       //
-      if ( 0 == j || distance < min_distance ) 
-      { min_distance = distance  ; }
+      if ( 0 == j || distance <= min_distance ) { min_distance = distance  ; }
       //
     }
     //
     // volume of n-ball: 
-    const double val1 = volume * Ostap::Math::POW ( min_distance , dim ) ;
+    const double vol   = volume * Ostap::Math::POW ( min_distance , dim ) ;
     //
-    const double value = std::exp ( -val1 * num * pdfValue ) ;
+    const double value = std::exp ( - vol * num * pdfValue ) ;
     //
     if ( hist ) { hist -> Fill ( value ) ; }
     //
-    tstat.push_back ( value ) ;
+    ustat [ i ] = value ; 
     //
-    }
+  }
   //
-  // calculate T-statistics
+  // calculate T-statistics from U-distribution
   //
-  std::stable_sort ( tstat.begin() , tstat.end() ) ;
+  std::stable_sort ( ustat.begin() , ustat.end() ) ;
   //
   double tS = 0 ;
-  double nD = tstat.size() ;
-  for ( TStat::const_iterator t = tstat.begin() ; tstat.end() != t  ; ++t ) 
+  double nD = ustat.size() ;
+  for ( StatU::const_iterator u = ustat.begin() ; ustat.end() != u  ; ++u ) 
   {
-    const double e = ( double ( t - tstat.begin() + 1 ) )  / nD ;
-    const double d = (*t) - e ;
+    const double e = ( double ( u - ustat.begin() + 1 ) )  / nD ;
+    const double d = (*u) - e ;
     //
     tS += d * d ;
   }

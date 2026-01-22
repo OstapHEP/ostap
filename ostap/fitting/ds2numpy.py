@@ -279,7 +279,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 entry , _ = item 
                 for vname , func , obsvars in funcs :
                     obsvars.assign ( entry )
-                    data [ vname ] [ i ] = func.getVal()   
+                    data [ vname ] [ i ] = func.getVal( obsvars )   
                     
         if delsource :
             source.reset()

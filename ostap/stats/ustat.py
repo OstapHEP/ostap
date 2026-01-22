@@ -64,11 +64,11 @@ __all__     = (
     "USTAT" ,  ## the same but using  a common GoF interface 
     )
 # ============================================================================
-from   ostap.core.ostap_types   import integer_types 
+from   ostap.core.ostap_types   import integer_types, num_types  
 from   ostap.core.core          import Ostap, hID
 from   ostap.stats.counters     import EffCounter
 from   ostap.stats.gof          import AGoF
-from   ostap.stats.gof_utils    import TOYS  
+from   ostap.stats.gof_utils    import TOYS, draw_ecdf   
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.basic        import numcpu, typename 
@@ -108,7 +108,6 @@ def uCalc ( pdf            ,
 
     ##
     tStat = ctypes.c_double ( -1 )
-    from ostap.utils.progress_conf import progress_conf
     if silent : 
         sc = Ostap.UStat.calculate ( pdf   ,
                                      data  ,
@@ -123,10 +122,9 @@ def uCalc ( pdf            ,
                                      tStat            ,
                                      histo            ,
                                      args             )
+    
         
-        
-    if sc.isFailure() :
-        logger.error ( "Error from Ostap::UStat::Calculate %s" % sc )
+    if sc.isFailure() : logger.error ( "Error from Ostap::UStat::calculate %s" % sc )
 
     if not histo : histo = None 
     
@@ -176,7 +174,7 @@ def uPlot ( pdf            ,
 
     if   isinstance ( histo , ROOT.TH1 )                    : pass
     elif isinstance ( histo , integer_types ) and 1 < histo :
-        histo = ROOT.TH1F ( hID () ,'U-statistics', histo , 0 , 1 )
+        histo = ROOT.TH1F ( hID () ,'U-statistics', histo , -0.1 , 1.1 )
         histo.Sumw2()         
     elif not histo :   
         nEntries = float ( len ( data ) )
@@ -190,10 +188,10 @@ def uPlot ( pdf            ,
             if nEntries / float ( nbins ) < 100 : continue  
             bins = nbins
             break
-        histo = ROOT.TH1F ( hID () ,'U-statistics', bins , 0 , 1 )
+        histo = ROOT.TH1F ( hID () ,'U-statistics', bins , -0.1 , 1.1 )
         histo.Sumw2()         
     else :
-        raise TypeError ( "Invalid type of ``histo'':%s" % typename ( histo )  )
+        raise TypeError ( "Invalid type of `histo' : %s" % typename ( histo )  )
     
     histo.SetMinimum ( 0 )
     tStat , hh = uCalc ( pdf       ,
@@ -210,7 +208,6 @@ def uPlot ( pdf            ,
         func.ResetBit     ( 1 << 9 )
         
     return float ( tStat ) , histo , res  
-
 
 # ===========================================================================
 ## get p-value for GoF using toys
@@ -283,7 +280,12 @@ class USTAT(AGoF) :
         if self.__parallel and memory_enough () < numcpu ()  : 
             logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')            
             self.__parallel = False
-        
+
+        self.__pvalue  = None
+        self.__tvalue  = None
+        self.__ecdf    = None
+        self.__counter = None
+
     # =========================================================================
     ## Calculate T-value for Goodness-of-Git 
     #  @code
@@ -340,14 +342,20 @@ class USTAT(AGoF) :
         silent = self.silent
         self.__silent = True
 
-        if self.parallel :
-            counter = toys.run ( self.nToys , silent = silent )
-        else :
-            counter = toys     ( self.nToys , silent = self.silent )            
-
+        if self.parallel : counter = toys.run ( self.nToys , silent = silent )
+        else             : counter = toys     ( self.nToys , silent = self.silent )            
+        
         self.__silent = silent 
-                
+
+       
+        ## get ECDF from toys
+        self.__ecdf = toys.ecdf
+        
         p_value = 1 - counter.eff
+
+        self.__tvalue = t_value 
+        self.__pvalue = p_value 
+        
         return t_value, p_value 
 
     @property
@@ -357,7 +365,7 @@ class USTAT(AGoF) :
 
     @property
     def nToys ( self )  :
-        """`nToys` : number of toys fro p-value evaluation"""
+        """`nToys` : number of toys for p-value evaluation"""
         return self.__nToys
     
     @property
@@ -374,8 +382,46 @@ class USTAT(AGoF) :
     def parallel ( self ) :
         """`parallel` : parallel processing where/when/if possible?"""
         return self.__parallel
-    
 
+    @property
+    def ecdf ( self ) :
+        """`ecdf` : empirical cumulatiove distirbtuo function (from toys)
+        """
+        return self.__ecdf
+    
+    # =========================================================================
+    ## Draw the empirical CDF from permutations or toys  
+    def draw  ( self , tvalue = None , option = '' , *args , **kwargs ) :
+        """ Draw empirical CDF from permutations or toys 
+        """
+        ## 
+        ecdf = self.ecdf 
+        if not ecdf : return ecdf 
+        ## 
+        has_tvalue = not tvalue is None and isinstance ( tvalue , num_types )
+        ## 
+        if not has_tvalue : return draw_ecdf ( ecdf , tvalue = None , option = option , **kwargs )
+        ## 
+        result, vline, hline = draw_ecdf ( ecdf , tvalue = tvalue , option = option , **kwargs )
+        ## 
+        self._vline = vline 
+        self._hline = hline 
+        ##
+        return result, vline, hline  
+
+    # =========================================================================
+    ## Get results in a for of the table 
+    def table ( self , title = '' , prefix = '' ) :
+        """ Get results in a for of the table 
+        """
+        return self.the_table ( tvalue = self.__tvalue ,
+                                pvalue = self.__pvalue ,
+                                ecdf   = self.__ecdf   , 
+                                title  = title  ,
+                                prefix = prefix ) 
+    __str__  = table
+    __repr__ = table
+    
 # ===========================================================================
 
 if '__main__' == __name__ :

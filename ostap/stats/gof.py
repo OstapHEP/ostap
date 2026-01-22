@@ -17,9 +17,7 @@ __all__     = (
     'AGoFnp'    , ## an abstract base cladd for Goodness-of-Fit estimators
     )
 # =============================================================================
-from   ostap.core.core        import VE, Ostap
-from   ostap.core.ostap_types import string_types
-import abc  
+import ROOT, abc  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -110,6 +108,57 @@ class AGoF(object) :
         """
         return NotImplemented
     
+    # ==========================================================================
+    ## Get results in form of the table 
+    def the_table ( self             ,
+                    tvalue    = None ,
+                    pvalue    = None ,
+                    ecdf      = None ,
+                    counter   = None ,
+                    precision = 4    ,
+                    width     = 6    , 
+                    title     = ''   ,
+                    prefix    = ''   ,
+                    style     = ''   ) :
+        """ Get results in form of the table 
+        """
+        from ostap.stats.gof_utils import format_table
+        return format_table  ( tvalue    = tvalue    ,
+                               pvalue    = pvalue    ,
+                               ecdf      = ecdf      ,
+                               counter   = counter   ,
+                               precision = precision ,
+                               width     = width     ,
+                               title     = title     ,
+                               prefix    = prefix    ,
+                               style     = style     )
+    
+    # ==========================================================================
+    ## Get results in form of the row in the table
+    #  @code
+    #  gof = ...
+    #  header , row = gof.the_row ( ... ) 
+    #  @endcode `
+    def the_row ( self             ,
+                  tvalue    = None ,
+                  pvalue    = None ,
+                  ecdf      = None ,
+                  counter   = None ,                  
+                  precision = 4    ,
+                  width     = 6    ) : 
+        
+        """ Get results in form of the table 
+        >>> gof = ...
+        >>> header , row = gof.the_row ( ... ) 
+        """
+        from ostap.stats.gof_utils import format_row 
+        return format_row ( tvalue    = tvalue    ,
+                            pvalue    = pvalue    ,
+                            ecdf      = ecdf      ,  
+                            counter   = counter   ,
+                            precision = precision ,
+                            width     = width     )
+
 # =============================================================================
 ## @class AGoFnp
 #  An absract base class for numpy-related family of methods to probe goodness-of fit
@@ -124,7 +173,7 @@ class AGoF(object) :
 #  t,p  = god.pvalue ( ds1 , ds2 , normalize = True )
 #  @endcode
 class AGoFnp(object) :
-    """ An absract base class for numpy-related family of methods to probe goodness-of fit
+    """ An abstract base class for numpy-related family of methods to probe goodness-of fit
     
     There are two abstract methods
     - `__call__` to evaluate t-value for two datasets 
@@ -170,7 +219,6 @@ class AGoFnp(object) :
         >>> t , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
         """
         return NotImplemented
-
 
 # =============================================================================
 if '__main__' == __name__ :

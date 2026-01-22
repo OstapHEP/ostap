@@ -54,8 +54,9 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.canvas' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-
-# =============================================================================
+## list of canvas to keep
+_keep_canvas          = [] 
+# ==============================================================================
 ## define WebDisplay
 #  @see TROOT::SetWebDisplay
 def setWebDisplay ( web ) :
@@ -151,7 +152,7 @@ if web : # ====================================================================
 class KeepCanvas(Wait) :
     """ Helper class to keep the current canvas
     >>> with KeepCanvas() :
-    ... do something here 
+    ...    do something here 
     """
     def __init__ ( self , wait = 0 ) :
         Wait.__init__ ( self , after = wait ) 
@@ -261,21 +262,15 @@ def invisibleCanvas() :
     return InvisibleCanvas() 
     
 # =============================================================================
-## list of all created canvases 
-_canvases = []
-## list of canvas to keep
-_keep     = [] 
-# =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-10-19
-def getCanvas ( name   = 'glCanvas'     ,   ## canvas name 
+def getCanvas ( name   = 'glOstap'      ,   ## canvas name 
                 title  = 'Ostap Canvas' ,   ## canvas title
                 width  = canvas_width   ,   ## canvas width
                 height = canvas_height  ,   ## canvas height 
                 **kwargs                ) : ## other properties 
-    """ Get create canvas/create new canvas
-    
+    """ Get create canvas/create new canvas    
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """
     name = name.strip ()
@@ -288,7 +283,6 @@ def getCanvas ( name   = 'glCanvas'     ,   ## canvas name
         if cnvlst : cnv = cnvlst.get ( name , None )
         
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
-        ## _canvases.append ( cnv ) 
         set_pad   ( cnv         , **kwargs )
         return cnv 
 
@@ -305,31 +299,26 @@ def getCanvas ( name   = 'glCanvas'     ,   ## canvas name
     cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
 
     ROOT.SetOwnership ( cnv , True )
+    ## ROOT.SetOwnership ( cnv , False  )
     
     ## adjust newly created canvas
     ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
     groot = ROOT.ROOT.GetROOT() 
-    if not groot.IsBatch() :
-        dw = width  - cnv.GetWw()
-        dh = height - cnv.GetWh()
+    if groot and not groot.IsBatch() :
+        dw = width  - cnv.GetWw ()
+        dh = height - cnv.GetWh ()
         cnv.SetWindowSize ( width + dw , height + dh )
 
     set_pad ( cnv , **kwargs )
     
-    _canvases.append ( cnv ) 
     return cnv
 
 # =============================================================================
 import atexit
 @atexit.register 
 def clean_canvases () :
-    ## open canvases 
-    while _keep     : _keep.pop()
-    ## all created canvases 
-    while _canvases :
-        ## c = _canvases.pop()
-        ## if c : c.Close ()
-        _canvases.pop()
+    ## global _keep_canvas
+    while _keep_canvas : _keep_canvas.pop()
 # =============================================================================
 all_extensions = (
     'pdf'  , 'png'  , 'gif' ,
@@ -1377,11 +1366,11 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         Batch     .__enter__ ( self )
 
         if not self.__name :
-            self.__name = 'gl_Ostap'
+            self.__name = 'glOstap'
             while self.existing_canvas ( self.__name ) :
                 index = self.__name , self.__title , self.__width , self.__height , id ( self ) 
                 index = hash ( index ) % 100000 
-                self.__name = 'gl_Ostap_#%05d' % index 
+                self.__name = 'glOstap_%05d' % index 
                 
         if not self.__title :
             self.__title = self.__name
@@ -1402,9 +1391,10 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         UsePad.__enter__ ( self )
         
         ## (5) keep it open ? 
-        if self.__keep : _keep.append ( self.__cnv ) 
+        if self.__keep and not self.__cnv in _keep_canvas :
+            _keep_canvas.append ( self.__cnv ) 
 
-        return self.__cnv  ## return current canvas 
+        return self.__cnv  ## return the current canvas 
 
     # =================================================================
     ## context manager: EXIT 
@@ -1445,7 +1435,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         KeepCanvas .__exit__ ( self , *_ )
         ## 
         self.__cnv = None 
-    
+
 # =============================================================================
 ## helper context manager to create and configure a canvas (and pad)
 #  @code

@@ -33,7 +33,8 @@ from   ostap.utils.memory       import memory_enough
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.logger.symbols     import times, plus_minus, greek_lower_sigma
 from   ostap.logger.pretty      import pretty_float
-from   ostap.plotting.color     import Gold, Green, Blue 
+from   ostap.plotting.color     import Orange, Green, Blue
+import ostap.logger.table       as     T 
 import ROOT, sys, math, numpy  
 # =============================================================================
 # logging 
@@ -444,14 +445,14 @@ class TOYS(object) :
             
             dset     = self.pdf.generate ( self.Ndata , sample = self.sample )
             tv       = self.gof ( self.pdf , dset )
-            counter += bool ( self.t_value < tv  ) ## NOTE SIGN HERE!
+            counter += bool ( self.t_value > tv   ) ## NOTE SIGN HERE!
 
             tvalues.append ( tv ) 
             if isinstance  ( dset , ROOT.RooDataSet ) : dset.clear () 
             del dset
 
         tvalues = tuple ( tvalues ) 
-        if not self.ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues  , False ) ## ATTENTINON HERE! 
+        if not self.ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues  , True ) 
         else             : self.ecdf.add ( data2vct ( tvalues )  )
 
         return counter, self.ecdf 
@@ -461,21 +462,24 @@ class TOYS(object) :
     def run ( self , nToys  , silent = False ) :
         """ Run N-toys in parallel using WorkManager
         """
-        me    = math.ceil ( memory_enough() ) + 1 
-        nj    = min ( 2 * numcpu () + 3 , me ) 
-        lst   = splitter ( nToys , nj )
-        njobs = len ( lst )
+        me       = math.ceil ( memory_enough() ) + 1 
+        nj       = min ( 2 * numcpu () + 3 , me ) 
+        the_list = [ j for j in splitter ( nToys , nj ) ] 
+        njobs    = len ( the_list )
         if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % njobs ) 
         ##
         counter = EffCounter()
         tvalues = ()
-        ##
-        
+        ##        
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager :
             
-            for result in manager.iexecute ( self.run_toys , lst , progress = not silent , njobs = njobs , description = 'Toys:' ) :
+            for result in manager.iexecute ( self.run_toys ,
+                                             the_list      ,
+                                             progress     = not silent ,
+                                             njobs        = njobs      ,
+                                             description  = 'Toys:'    ) :
                 
                 cnt , ecdf = result
                 
@@ -595,6 +599,35 @@ def format_row ( tvalue    = None ,
     ## no data for table 
     return () , ()
 
+# ==========================================================================
+## Get results in form of the table 
+def format_table ( tvalue    = None ,
+                   pvalue    = None ,
+                   ecdf      = None ,
+                   counter   = None ,
+                   precision = 4    ,
+                   width     = 6    , 
+                   title     = ''   ,
+                   prefix    = ''   ,
+                   style     = ''   ) :
+    """ Get results in form of the table 
+    """
+    
+    header , row = format_row ( tvalue    = tvalue    ,
+                                pvalue    = pvalue    ,
+                                ecdf      = ecdf      ,
+                                counter   = counter   , 
+                                precision = precision ,
+                                width     = width     ) 
+    rows = [ header ]
+    rows.append ( row )
+    rows = T.remove_empty_columns ( rows ) 
+    return T.table ( rows               ,
+                     title     = title  ,
+                     prefix    = prefix ,
+                     alignment = 10*'c' ,
+                     style     = style  )
+
 # =============================================================================
 ## Draw ECDF + 2 lines when/if t-value specified
 #  @code
@@ -620,13 +653,12 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , **kwargs ) :
 
     xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
 
-    
     ## some transformation  
     kw = cidict ( transform = cidict_fun , **kwargs )
 
     kw [ 'xmin'      ] = kw.pop ( 'xmin'       , xmin   ) 
     kw [ 'xmax'      ] = kw.pop ( 'xmax'       , xmax   )
-    kw [ 'color'     ] = kw.pop ( 'linecolor'  , Gold   )
+    kw [ 'color'     ] = kw.pop ( 'linecolor'  , Orange )
     kw [ 'linewidth' ] = kw.pop ( 'linewidth'  , 2      )
     kw [ 'maxvalue'  ] = kw.pop ( 'maxvalue'   , 1.1    )
     
@@ -657,7 +689,6 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , **kwargs ) :
     hline.draw ( 'same' )
     ## 
     return result, vline, hline 
-
 
 # =============================================================================
 if '__main__' == __name__ :

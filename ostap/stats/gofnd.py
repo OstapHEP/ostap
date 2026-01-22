@@ -39,7 +39,7 @@ from   ostap.utils.utils        import random_name
 from   ostap.stats.gof_utils    import TOYS
 from   ostap.stats.ustat        import USTAT
 from   ostap.plotting.color     import Navy, DarkGreen
-from   ostap.stats.gof_utils    import format_row 
+from   ostap.stats.gof_utils    import format_row, draw_ecdf  
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
 import ROOT
@@ -141,96 +141,31 @@ class GoF(AGoF) :
         ds2 = ds2numpy ( data2 , vlst )
         
         ## delete 
-        if isinstance ( data2  , ROOT.RooDataSet ) :
-            data2.clear()
-            
+        if isinstance ( data2  , ROOT.RooDataSet ) : data2.clear()            
         del data2 
             
         return ds1, ds2
     
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
-    def draw  ( self , tvalue = None , opts = '' , *args , **kwargs ) :
+    def draw  ( self , tvalue = None , option = '' , *args , **kwargs ) :
         """ Draw empirical CDF from permutations or toys 
         """
-        ecdf = self.ecdf 
-        if not ecdf : return ecdf
-
-        xmin , xmax = ecdf.xmin () , ecdf.xmax ()
-    
-        if isinstance ( tvalue , num_types ) :
-            xmin = min ( tvalue , xmin )
-            xmax = max ( tvalue , xmax )
-            
-        xmin , xmax = axis_range ( xmin   , xmax , delta = 0.20 )
-        xmin , xmax = kwargs.pop ( 'xmin' , xmin ) , kwargs.pop ( 'xmax' , xmax ) ,
-    
-        kwargs [ 'xmin' ] = xmin
-        kwargs [ 'xmax' ] = xmax 
-    
-        ## draw ECDF 
-        result = ecdf.draw  ( opts , *args , **kwargs ) 
-        
-        if tvalue is None : return result
-        
-        ## horisontal line 
-        dx        = ( xmax - xmin ) / 100 
-        e         = ecdf ( tvalue )
-        line2     = ROOT.TLine ( xmin + dx , e , xmax - dx , e )
-        ## vertical line 
-        line1     = ROOT.TLine ( tvalue , 1e-3 , tvalue , 1 - 1e-3 )
-        ##
-        line2.SetLineWidth ( 2 ) 
-        line2.SetLineColor ( Navy  ) 
-        line2.SetLineStyle ( 9 ) 
-        ##
-        line1.SetLineWidth ( 4 ) 
-        line1.SetLineColor ( DarkGreen )
-        ##
-        line2.draw ( 'same' ) 
-        line1.draw ( 'same' )
         ## 
-        self._line1 = line1
-        self._line2 = line2
+        ecdf = self.ecdf 
+        if not ecdf : return ecdf 
+        ## 
+        has_tvalue = not tvalue is None and isinstance ( tvalue , num_types )
+        ## 
+        if not has_tvalue : return draw_ecdf (  ecdf , tvalue = None  , option = option , **kwargs )
+        ## 
+        result, vline, hline = draw_ecdf (  ecdf , tvalue = tvalue , option = option , **kwargs )
+        ## 
+        self._vline = vline 
+        self._hline = hline 
         ##
-        return result, line1, line2   
+        return result, vline, hline   
 
-    # ==========================================================================
-    ## Get results in form of the table 
-    def the_table ( self          ,
-                    tvalue = None ,
-                    pvalue = None ,
-                    ecdf   = None , 
-                    title  = ''   ,
-                    prefix = ''   ) :
-        """ Get results in form of the table 
-        """
-        header , row = self.the_row ( tvalue = tvalue ,
-                                      pvalue = pvalue ,
-                                      ecdf   = ecdf   )
-        rows = [ header ]
-        rows.append ( row )
-        rows = T.remove_empty_columns ( rows ) 
-        return T.table ( rows , title = title , prefix = prefix , alignment = 10*'c' )
-
-    # ==========================================================================
-    ## Get results in form of the row in the table
-    #  @code
-    #  gof = ...
-    #  header , row = gof.the_row ( ... ) 
-    #  @endcode `
-    def the_row ( self          ,
-                  tvalue = None ,
-                  pvalue = None ,
-                  ecdf   = None ) :  
-        """ Get results in form of the table 
-        >>> gof = ...
-        >>> header , row = gof.the_row ( ... ) 
-        """
-        return format_row ( tvalue = tvalue ,
-                            pvalue = pvalue ,
-                            ecdf   = ecdf   )
-            
 # =============================================================================
 ## @class PPD
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
@@ -455,7 +390,7 @@ class DNN(GoF) :
         """
         ds1 , vpdf = self.transform ( pdf , data ) 
         ## call underlying method 
-        t  = self.dnn ( ds1 , vpdf , normalize = True )
+        t  = self.dnn ( ds1 , vpdf , normalize = False )
         self.__tvalue = float ( t ) 
         return self.__tvalue 
 
@@ -497,7 +432,7 @@ class DNN(GoF) :
         ## call underlying method 
         t_value = self.dnn ( ds1 , vpdf )
 
-        ## save the histogram
+        ## save the histogram (do not override it!)
         if   self.__histo   : pass
         elif self.dnn.histo :
             self.__histo = self.dnn.histo.clone() 
@@ -512,7 +447,7 @@ class DNN(GoF) :
         
         if self.parallel : counter = toys.run ( self.nToys , silent = self.silent )            
         else             : counter = toys     ( self.nToys , silent = self.silent )            
-
+        
         ## get ECDF from toys
         self.__ecdf = toys.ecdf
         

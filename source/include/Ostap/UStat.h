@@ -29,21 +29,12 @@ namespace Ostap
    */
   class UStat 
   {
-  public:
-    // ========================================================================
-    enum {
-      InvalidArgs = 450 ,
-      InvalidDims       ,
-      InvalidItem1      ,
-      InvalidItem2      , 
-      InvalidDist       
-    } ;  
     // ========================================================================
   public: 
     // ========================================================================
     /** calculate U-statistics 
-     *  @param pdf   (input) PDF
-     *  @param data  (input) data 
+     *  @param pdf   (input)  PDF
+     *  @param data  (input)  data 
      *  @param hist  (update) the histogram with U-statistics 
      *  @param tStat (update) value for T-statistics 
      *  @param args  (input)  the arguments
@@ -53,7 +44,7 @@ namespace Ostap
       const RooDataSet& data            ,  
       double&           tStat           ,
       TH1*              hist  = nullptr ,
-      RooArgSet*        args  = nullptr ) ;
+      const RooArgSet*  args  = nullptr ) ;
     // ========================================================================
     /** calculate U-statistics 
      *  @param pdf   (input) PDF
@@ -68,7 +59,7 @@ namespace Ostap
       const RooDataSet&                 data            ,  
       double&                           tStat           ,
       TH1*                              hist  = nullptr ,
-      RooArgSet*                        args  = nullptr ) ;
+      const RooArgSet*                  args  = nullptr ) ;
     // ========================================================================
   };
   // ==========================================================================
