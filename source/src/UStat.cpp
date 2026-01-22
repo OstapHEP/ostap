@@ -23,6 +23,7 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGlobalFunc.h"
+#include "RVersion.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -156,7 +157,13 @@ Ostap::StatusCode Ostap::UStat::calculate
     event_x = data . get(i) ;      
     if ( 0 == event_x || 0 == event_x->getSize() ) { return INVALID_ENTRY ; } // RETURN 
     //
+#if ROOT_VERSION ( 6 , 32 , 0 ) <= ROOT_VERSION_CODE 
     std::unique_ptr<RooArgSet> event_i ( event_x -> selectCommon ( rargs ) ) ;
+#else
+    RooAbsCollection* xcoll = event_x -> selectCommon ( rargs ) ;
+    std::unique_ptr<RooArgSet> event_i ( static_cast<RooArgSet*> ( xcoll )) ;
+#endif
+    //
     if ( !event_i || 0 == event_i->getSize() )     { return INVALID_ENTRY ; }             // RETURN 
     //
     // 2.Evaluate PDF 
@@ -175,7 +182,13 @@ Ostap::StatusCode Ostap::UStat::calculate
       event_y = cloned -> get ( j ) ;      
       if ( 0 == event_y || 0  == event_y->getSize() )  { return INVALID_ENTRY ; }            // RETURN 
       //
+#if ROOT_VERSION ( 6 , 32 , 0 ) <= ROOT_VERSION_CODE 
       std::unique_ptr<RooArgSet> event_j ( event_y -> selectCommon ( rargs ) ) ;
+#else
+      RooAbsCollection* ycoll = event_y -> selectCommon ( rargs ) ;
+      std::unique_ptr<RooArgSet> event_j ( static_cast<RooArgSet*> ( ycoll )) ;
+#endif
+      //
       if ( !event_j     || xs != event_j->getSize() )  { return INVALID_ENTRY ; }            // RETURN 
       //
       const double distance = getDistance ( event_i.get() , event_j.get() ) ;
