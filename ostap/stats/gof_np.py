@@ -29,7 +29,7 @@ from   ostap.stats.gof_utils    import PERMUTATOR, normalize as ds_normalize
 from   ostap.core.core          import SE, VE, Ostap, hID  
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
-from   ostap.utils.basic        import numcpu 
+from   ostap.utils.basic        import numcpu, typename  
 from   ostap.stats.gof          import AGoFnp
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.base          import scipy_version, numpy_version  
@@ -189,7 +189,17 @@ def psi_conf ( psi , scale = 1.0 ) :
 #  @see M.Williams, "How good are your fits?
 #       Unbinned multivariate goodness-of-fit tests in high energy physics"
 #  @see https://doi.org/10.1088/1748-0221/5/09/P09004
-#  @see http://arxiv.org/abs/arXiv:1003.1768 
+#  @see http://arxiv.org/abs/arXiv:1003.1768
+#
+#  M.Williams writes: 
+#    The method <...> has excellent rejection power for both large localized
+#    discrepancies and small omnipresent ones.  Determining the p-value
+#    requires re-sampling the data (using the permutation test) which uses
+#    a relatively large amount of processing time.
+#    The method is not as easy to understand conceptually as some of
+#    the other methods <..> .
+#    These downsides are not enough to out-way its excellent performance;
+#    this is a very powerful g.o.f. tool.
 class PPDnp(GoFnp) : 
     """ Implementation of concrete method "Point-To-Point Dissimilarity"
     for probing of Goodness-Of-Fit
@@ -197,6 +207,17 @@ class PPDnp(GoFnp) :
                        Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004    
     - see http://arxiv.org/abs/arXiv:1003.1768 
+
+    M.Williams writes: 
+    ... The method <...> has excellent rejection power for both large localized
+    ... discrepancies and small omnipresent ones.  Determining the p-value
+    ... requires re-sampling the data (using the permutation test) which uses
+    ... a relatively large amount of processing time.
+    ... The method is not as easy to understand conceptually as some of
+    ... the other methods <..> .
+    ... These downsides are not enough to out-way its excellent performance;
+    ... this is a very powerful g.o.f. tool.
+    
     """
     def __init__ ( self                   ,
                    mc2mc     = False      ,
@@ -387,14 +408,27 @@ class PPDnp(GoFnp) :
 #  Distance-to-Nearest-Neighour GoF-method 
 #  @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
 #  @see https://doi.org/10.1088/1748-0221/5/09/P09004
-#  @see http://arxiv.org/abs/arXiv:1003.1768 
+#  @see http://arxiv.org/abs/arXiv:1003.1768
+#
+#  M.Williams writes: 
+#    The method <..> is easy to use, requires very little processing time and is
+#    conceptually fairly easy to understand; however it is not very powerful.
+#    The U-statistic it defines does provide a useful easy-to-visualize diagnostic
+#    tool (especially for very high dimensional analyses), but its quantitative
+#    usefulness as a g.o.f. test is limited.  
 class DNNnp(GoFnp) : 
     """ Distance-to-Nearest-Neighour GoF-method 
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004    
     - see http://arxiv.org/abs/arXiv:1003.1768 
+
+    M.Williams writes: 
+    ... The method <..> is easy to use, requires very little processing time and is
+    ... conceptually fairly easy to understand; however it is not very powerful.
+    ... The U-statistic it defines does provide a useful easy-to-visualize diagnostic
+    ... tool (especially for very high dimensional analyses), but its quantitative
+    ... usefulness as a g.o.f. test is limited.  
     """
-    
     def __init__ ( self              ,
                    histo    = None   ,
                    nToys    = 1000   ,
@@ -466,30 +500,33 @@ class DNNnp(GoFnp) :
     #  @see Eqs. (3.16) in M.Williams' paper
     #  @param data1 actual data (as structured array)
     #  @param vpdf  array of PDF values  
-    def __call__ ( self ,  data1 , vpdf , normalize = True ) :
+    def __call__ ( self ,  data1 , vpdf , normalize = False ) :
         """" Calculate the t-value
         - see Eqs. (3.16) in M.Williams' paper
         data1: actual data (as structured array)
         vpdf : array of PDF values  
         """
-        ## 
-        normalize = False ## NB!!! 
-        
+        if normalize :
+            logger.warning ( "%s: `normalize` must be `False`!" % typename ( self ) )
+            normalize = False 
+            
         ## transform/normalize ? 
-        if normalize : ds1 = self.normalize ( data1 ) [ 0 ] 
-        else         : ds1 = data1
-
+        ## if normalize : ds1 = self.normalize ( data1 ) [ 0 ] 
+        ## else         : ds1 = data1
+        
+        ds1 = data1
+        
         ## convert to unstructured dataset 
         uds1     = s2u ( ds1 , copy = False )
         self.__D = uds1.shape[1] 
         
         ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
-        if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ]
+        if 1 == self.__D : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ]
         
         return self.t_value ( uds1 , vpdf  )
 
     # ============================================================================
-    ## p-value is not defined..
+    ## p-value is not really defined here 
     # 
     #  M.Williams writes:
     #  `Because of this I do not think p-value are worth calculating`
@@ -499,9 +536,9 @@ class DNNnp(GoFnp) :
         """ p-value is not defined..
 
         M.Williams writes:
-        `Because of this I do not think p-value are worth calculating`
+        ... `Because of this I do not think p-value are worth calculating`
         
-        - However, one always can run straightforward pseudoexperiments 
+        However, one always can run straightforward pseudoexperiments 
         """        
         raise NotImplementedError( "p-value is not defined for DDDNP!" )
     

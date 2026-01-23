@@ -109,21 +109,22 @@ class GoFSimFitBase(object) :
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object"""
-        self.__pdf.load_params ( self.parameters , silent = True )
-        return { 'pdf'        : self.pdf        ,
-                 'parameters' : self.parameters , 
-                 'gofs'       : self.gofs       ,
-                 'N'          : self.N          }
+        if self.parameters : self.pdf.load_params ( self.parameters , silent = True )
+        return { 'pdf'         : self.pdf        ,
+                 'parameters'  : self.parameters , 
+                 'gofs'        : self.gofs       ,
+                 'N'           : self.N          }
     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
         """ De-serialize the object """         
-        self.__pdf        = state.pop ( 'pdf'  )
-        self.__parameters = state.pop ( 'parameters' , {} ) 
-        self.__gofs       = state.pop ( 'gofs'       , {} )
-        self.__N          = state.pop ( 'N'          , {} )
-        self.__pdf.load_params ( self.__parameters , silent = True )
-    
+        self.__pdf         = state.pop ( 'pdf'  )
+        self.__parameters  = state.pop ( 'parameters' , {} ) 
+        self.__gofs        = state.pop ( 'gofs'       , {} )
+        self.__N           = state.pop ( 'N'          , {} )
+        ## 
+        if self.parameters : self.pdf.load_params ( self.parameters , silent = True )
+        
 # =============================================================================
 ## @class GoFSimFit1D 
 #  Goodness-of-fit for simultaneous 1D-fits
@@ -159,6 +160,19 @@ class GoFSimFit1D(GoFSimFitBase) :
             self.gofs [ key ] = gof 
             self.N    [ key ] = len ( ds ) 
             
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object 
+        """
+        ## (1) serialize the base 
+        return GoFSimFitBase.__getstate__ ( self )
+    
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object """        
+        ## (1) de-serialize the base 
+        return GoFSimFitBase.__setstate__ ( self , state )
+
     # =========================================================================
     ## all estimators togather
     @property 
@@ -262,12 +276,12 @@ class GoFSimFit1D(GoFSimFitBase) :
     __str__  = table
 
     ## Draw fit CDF & empirical ECDF 
-    def draw  ( self , sample , opts = '' , *args , **kwargs ) :
+    def draw  ( self , sample , option = '' , **kwargs ) :
         """ Draw fit CDF & empirical CDF
         """
         gof = self.gofs.get ( sample , None )
         if gof is None : raise KeyError ( "Invalid sample `%s`" % sample )
-        return gof.draw ( opts , *args , **kwargs )
+        return gof.draw ( option , **kwargs )
 
     
 # =============================================================================
@@ -293,7 +307,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
             "Invalid `gof`-parameter: %s" % typename ( gof ) 
 
         ## mimic the copy-constructor for the base class 
-        state = GoFSimFit.__getstate__ ( gof ) 
+        state = GoFSimFit1D.__getstate__ ( gof ) 
         GoFSimFit1D.__setstate__ ( self , state )
 
         self.__counters = { k : defaultdict(SE) for k in self.gofs }
@@ -305,9 +319,8 @@ class GoFSimFit1DToys(GoFSimFit1D) :
     def __getstate__ ( self ) :
         """ Serialize the object 
         """
-        #
         ## (1) serialize the base 
-        state = GoFSimFitBase.__getstate__ ( self )
+        state = GoFSimFit1D.__getstate__ ( self )
         # 
         state [ 'counters' ] = self.__counters
         state [ 'ecdfs'    ] = self.__ecdfs 
@@ -318,10 +331,10 @@ class GoFSimFit1DToys(GoFSimFit1D) :
     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
-        """ De-serialize the object """
-        
+        """ De-serialize the object 
+        """        
         ## (1) de-serialize the base 
-        GoFSimFitBase.__setstate__ ( self , state )
+        GoFSimFit1D.__setstate__ ( self , state )
         # 
         self.__counters   = state.pop ( 'counters'  )
         self.__ecdfs      = state.pop ( 'ecdfs'     )
@@ -653,7 +666,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
     
     # =========================================================================
     ## Draw ECDF for toys & statistical estimator 
-    def draw  ( self , sample , what , opts = '' , *args , **kwargs ) :
+    def draw  ( self , sample , what , option = '' , **kwargs ) :
         """ Draw ECDF for toys & statistical estgimator 
         """
         if not sample in self.ecdfs :
@@ -702,8 +715,8 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
         ##
-        result    = ecdf.draw  ( opts , *args , **kwargs ) 
-        line1     = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        result    = ecdf.draw  ( option , **kwargs ) 
+        line1     = ROOT.TLine ( value  , 1e-3 , value , 1 - 1e-3 )
         
         ## horisontal line 
         xmin      = kwargs [ 'xmin' ]
@@ -816,8 +829,8 @@ class GoFSimFitType(GoFSimFitBase) :
     def __setstate__ ( self , state ) :
         """ De-serialize the object 
         """
-        self.__cmp        = state.pop  ( 'components' )
         GoFSimFitBase.__setstate__ ( state )  
+        self.__cmp      = state.pop ( 'components'   )
         self.__tvalues  = state.get ( 'tvalues' , {} )
         self.__pvalues  = state.get ( 'pvalues' , {} )
         
@@ -848,20 +861,21 @@ class GoFSimFitType(GoFSimFitBase) :
             for key , value in self.__cmp.items()  :
                 cmp, data = value
                 gof = self.gofs [ key ]
-                if not gof.silent : logger.info ( 'GoF.pvalues[%s]: processing sample "%s"' % ( typename ( gof ) , key ) )
+                if not gof.silent :
+                    logger.info ( 'GoF.pvalues[ %s ]: processing sample "%s" #%d' % ( typename ( gof ) , key , len ( data ) ) )
                 self.__pvalues [ key ] = gof.pvalue ( cmp , data )                
         return self.__pvalues
     
     # =========================================================================
     ## Draw ECDF for toys & statistical estimator 
-    def draw  ( self , sample , opts = '' , *args , **kwargs ) :
+    def draw  ( self , sample , option = '' , **kwargs ) :
         """ Draw ECDF for toys & statistical estgimator 
         """
         gof = self.gofs.get ( sample , None ) 
         if not gof : raise KeyError ( 'Unknown sample "%s"' % sample )
         ## draw it
         t = self.tvalues()[sample]
-        return gof.draw ( tvalue = t , opts = opts , *args , **kwargs )
+        return gof.draw ( tvalue = t , option = option , **kwargs )
     
     # =========================================================================
     def table ( self      , *    , 
@@ -1056,9 +1070,15 @@ class GoFSimFit(GoFSimFitBase) :
             "Invalid keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
         assert all ( l in estimators for l in self.sample.labels() ) , \
             "Missing keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
-                
-        self.__dataset = dataset 
-        self.__tvalues = {} 
+
+        
+        ## self.__dataset  = dataset
+        
+        self.__tvalues  = {} 
+        self.__counters = defaultdict(SE) 
+        self.__ecdfs    = {} 
+        self.__total    = EffCounter ()
+        self.__nToys    = 0 
         
         name = self.sample.name
         for key , cmp in self.pdf.categories.items ()  :
@@ -1077,41 +1097,33 @@ class GoFSimFit(GoFSimFitBase) :
             self.gofs  [ key  ] = gof 
             self.N     [ key  ] = len ( ds ) 
 
-        self.__ecdfs    = {} 
-        self.__counters = defaultdict(SE) 
-        self.__total    = EffCounter ()
-        self.__nToys    = 0 
 
-  ## serialize the object 
+    ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object 
         """
-        #
         ## (1) serialize the base 
         state = GoFSimFitBase.__getstate__ ( self )
         # 
+        state [ 'tvalues'  ] = self.__tvalues 
         state [ 'counters' ] = self.__counters
         state [ 'ecdfs'    ] = self.__ecdfs 
         state [ 'total'    ] = self.__total 
         state [ 'nToys'    ] = self.__nToys
-        ##
-        state [ 'tvalues'  ] = self.__tvalues 
         # 
         return state 
     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
-        """ De-serialize the object """
-        
+        """ De-serialize the object """        
         ## (1) de-serialize the base 
         GoFSimFitBase.__setstate__ ( self , state )
         # 
+        self.__tvalues    = state.pop ( 'tvalues' , {} )
         self.__counters   = state.pop ( 'counters'     )
         self.__ecdfs      = state.pop ( 'ecdfs'        )
         self.__total      = state.pop ( 'total'        )
         self.__nToys      = state.pop ( 'nToys'   , 0  )
-        ## 
-        self.__tvalues    = state.pop ( 'tvalues' , {} )
         
     # =========================================================================
     ## number of toys 
@@ -1248,11 +1260,10 @@ class GoFSimFit(GoFSimFitBase) :
         pvs = {}  
         for key, ecdf in self.__ecdf.items() : 
             tv = tvs.get ( key , None )
-            if not tv is None : 
-                pvs [ key ] = ecdf.estimate ( tv )
+            if not tv is None : pvs [ key ] = ecdf.estimate ( tv )
             
         ## global  p-value 
-        pvs [ '*COMBINED*' ] = self.counter.eff
+        pvs [ '*SIMFIT*' ] = self.counter.eff
             
         return tvs, pvs 
 

@@ -577,7 +577,7 @@ class GoF1D(object) :
         optsame = 'same' if not option else '%s %s' % ( 'same' , option ) 
 
         kw = cidict ( transform = cidict_fun , **kwargs )
-        kw [ 'color'     ] = kw.pop ( 'color'     , Gold )
+        kw [ 'linecolor' ] = Gold   
         kw [ 'linewidth' ] = kw.pop ( 'linewidth' , 3    )
         kw [ 'linestyle' ] = kw.pop ( 'linestyle' , 1    )
         kw [ 'maxvalue'  ] = kw.pop ( 'maxvalue'  , 1.1  )
@@ -598,18 +598,18 @@ class GoF1D(object) :
             r1 = f1_draw   ( self.__draw_fun , option = option , xmin = xmin , xmax = xmax , **kw ) 
 
         kw   = cidict ( transform = cidict_fun , **kwargs )
-        kw [ 'color'     ] = kw.pop ( 'color'     , RoyalBlue )
-        kw [ 'linewidth' ] = kw.pop ( 'linewidth' , 2         )
-        kw [ 'linestyle' ] = kw.pop ( 'linestyle' , 14        )
+        kw [ 'linecolor' ] = RoyalBlue 
+        kw [ 'linewidth' ] = kw.pop ( 'linewidth' , 2 )
+        kw [ 'linestyle' ] = kw.pop ( 'linestyle' , 9 )
         xmin = kw.pop ( 'xmin' , xmin )
         xmax = kw.pop ( 'xmax' , xmax )        
 
         # =======================================================================
         ## (2) Draw empirical CDF form data 
-        r2 = draw_ecdf ( ecdf                  ,
-                         option    = optsame   ,
-                         xmin      = xmin      ,
-                         xmax      = xmax      , **kw )
+        r2 = draw_ecdf ( ecdf             ,
+                         option = optsame ,
+                         xmin   = xmin    ,
+                         xmax   = xmax    , **kw )
         
         return r1 , r2
     

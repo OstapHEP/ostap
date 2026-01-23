@@ -438,6 +438,7 @@ class TOYS(object) :
         """
         ROOT.gRandom                     .SetSeed () 
         ROOT.RooRandom.randomGenerator() .SetSeed ()
+
         
         counter = EffCounter ()
         tvalues = [] 
@@ -463,9 +464,9 @@ class TOYS(object) :
         """ Run N-toys in parallel using WorkManager
         """
         me       = math.ceil ( memory_enough() ) + 1 
-        nj       = min ( 2 * numcpu () + 3 , me ) 
-        the_list = [ j for j in splitter ( nToys , nj ) ] 
-        njobs    = len ( the_list )
+        nj       = min ( 2 * numcpu () + 3 , me , ( nToys // 5 ) + 1  )        
+        the_list = splitter ( nToys , nj ) 
+        njobs    = min ( nToys , nj ) 
         if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % njobs ) 
         ##
         counter = EffCounter()
@@ -474,13 +475,13 @@ class TOYS(object) :
         ## use the bare interface 
         from ostap.parallel.parallel import WorkManager
         with WorkManager ( silent = silent ) as manager :
-            
+
             for result in manager.iexecute ( self.run_toys ,
                                              the_list      ,
-                                             progress     = not silent ,
-                                             njobs        = njobs      ,
-                                             description  = 'Toys:'    ) :
-                
+                                             progress      = not silent ,
+                                             njobs         = njobs      ,
+                                             description   = 'Toys:'    ) :
+
                 cnt , ecdf = result
                 
                 counter += cnt

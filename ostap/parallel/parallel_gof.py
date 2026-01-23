@@ -85,7 +85,7 @@ class GoFTask (Task) :
         ## 
         if   isinstance ( self.__gof , GoF1D       ) : toys = GoF1DToys       ( gof = self.__gof )
         elif isinstance ( self.__gof , GoFSimFit1D ) : toys = GoFSimFit1DToys ( gof = self.__gof )
-        elif isinstance ( self.__gof , GoFSimFit   ) : toys = gof
+        elif isinstance ( self.__gof , GoFSimFit   ) : toys = self.__gof 
         else :
             raise TypeError ( "Invalid `gof` type : %s" % typename ( self.__gof ) )
         
@@ -93,8 +93,6 @@ class GoFTask (Task) :
                    parallel = False ,
                    silent   = True  )
         
-        ## del self.__gof        
-        #
         return toys 
 
 # =============================================================================

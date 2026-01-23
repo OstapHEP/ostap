@@ -181,7 +181,6 @@ def test_gof_simfit1 () :
     results.append ( r2 ) 
     results.append ( r  ) 
 
-    """ 
     # =============================================================================
     ## GOF/1D machinery
     # =============================================================================
@@ -208,54 +207,51 @@ def test_gof_simfit1 () :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) ) :
                 toys .draw ( sample , k )
 
-    """
-
-    
-    if numcpu() < 10 : logger.info ( 'tests for CPU-expensive PPD,DNN & USTAT methods are disabled' )
+            
+    if numcpu() < 10 :
+        nToys    =  5 ## realistic values should be well in excess of 100
+        mcFactor =  2 ## realistic values should be well in excess of 10
     else :
-    
-        nToys    = 50 ## realistic values should be well in excess of 100
+        nToys    = 20 ## realistic values should be well in excess of 100
         mcFactor =  5 ## realistic values should be well in excess of 10  
+    
+    gof_ppd  = PPDSimFit   ( model_sim             , 
+                             dataset               ,
+                             parameters = r        ,                          
+                             mcFactor   = mcFactor , 
+                             nToys      = nToys    ,
+                             sigma      = 0.5      , ## can be (and should be!) varied between 0.1 and 1.0 
+                             parallel   = True     , 
+                             silent     = False    )
+    
+    gof_dnn  = DNNSimFit   ( model_sim             , 
+                             dataset               ,
+                             parameters = r        ,                          
+                             nToys      = nToys    ,
+                             parallel   = True     , 
+                             silent     = False    )
+    
+    gof_ustat = USTATSimFit ( model_sim             , 
+                              dataset               ,
+                              parameters = r        ,                          
+                              nToys      = nToys    ,
+                              parallel   = True     , 
+                              silent     = False    )
+    
+    for gof in ( gof_ppd   ,
+                 gof_dnn   ,
+                 gof_ustat ) : 
         
-        gof_ppd  = PPDSimFit   ( model_sim             , 
-                                 dataset               ,
-                                 parameters = r        ,                          
-                                 mcFactor   = mcFactor , 
-                                 nToys      = nToys    ,
-                                 sigma      = 0.5      , ## can be (and should be!) varied between 0.1 and 1.0 
-                                 parallel   = True     , 
-                                 silent     = False    )
+        gof_type = typename ( gof )
         
-        gof_dnn  = DNNSimFit   ( model_sim             , 
-                                 dataset               ,
-                                 parameters = r        ,                          
-                                 nToys      = nToys    ,
-                                 parallel   = True     , 
-                                 silent     = False    )
-        
-        gof_ustat = USTATSimFit ( model_sim             , 
-                                  dataset               ,
-                                  parameters = r        ,                          
-                                  nToys      = nToys    ,
-                                  parallel   = False    , 
-                                  silent     = False    )
-        
-        for gof in ( gof_ppd   ,
-                     gof_dnn   ,
-                     gof_ustat ) : 
+        with timing ( 'Processing %s' % gof_type , logger = logger ) :
             
-            gof_type = typename ( gof )
-            
-            with timing ( 'Processing %s' % gof_type , logger = logger ) :
-
-                title = 'GoF %s' % gof_type  
-                logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) ) 
-
+            title = 'GoF %s' % gof_type  
+            logger.info ( '%s:\n%s' % ( title , gof.table ( title = title , prefix = '# ' ) ) )             
             for sample  in gof.gofs :
                 with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( gof_type , sample ) ) :
                     gof.draw ( sample  )
-
-    """
+                    
     # =========================================================================
     ## GoF-2
     # =========================================================================
@@ -266,12 +262,11 @@ def test_gof_simfit1 () :
                              estimators  = estimators ,  
                              parameters  = r          )
     
-    gof2.run ( 500 , silent = False , parallel = True )
+    gof2.run ( nToys , silent = False , parallel = True )
     
     title = 'GoF for SimFit' 
     logger.info ( '%s:\n%s' % ( title , gof2.table( title = title , prefix = '# ' ) ) ) 
     
-    """
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================

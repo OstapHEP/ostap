@@ -310,7 +310,7 @@ class USTAT(AGoF) :
 
         if histo and not self.__histo :
             self.__histo = histo.clone()
-            
+        
         return t_value
 
     # =========================================================================
@@ -329,6 +329,9 @@ class USTAT(AGoF) :
         >>> t , p = ustat.pvalue ( pdf , data ) 
         """
 
+        silent = self.silent
+        self.__silent = True
+        
         estimator = self 
         t_value   = estimator ( pdf , data )        
 
@@ -339,14 +342,11 @@ class USTAT(AGoF) :
                       Ndata   = len ( data ) ,
                       sample  = self.sample  )
         
-        silent = self.silent
-        self.__silent = True
 
-        if self.parallel : counter = toys.run ( self.nToys , silent = silent )
+        if self.parallel : counter = toys.run ( self.nToys , silent =      silent )
         else             : counter = toys     ( self.nToys , silent = self.silent )            
-        
-        self.__silent = silent 
 
+        self.__silent = silent 
        
         ## get ECDF from toys
         self.__ecdf = toys.ecdf

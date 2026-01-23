@@ -174,11 +174,21 @@ class GoF(AGoF) :
 #  @see https://doi.org/10.1088/1748-0221/5/09/P09004
 #  @see http://arxiv.org/abs/arXiv:1003.1768 
 #  Important parameters:
-#  - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data
+#  - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data
 #  - mc2mc    : (bool) should distances witng (large) mc-dataste be accounted? 
 #  - nToys    : (int)  number of permutations/toys 
 #  - psi      : type of psi/distance function 
 #  - sigma    : sigma scale (used for psi=`gaussian`)
+#
+#  M.Williams writes: 
+#    The method <...> has excellent rejection power for both large localized
+#    discrepancies and small omnipresent ones.  Determining the p-value
+#    requires re-sampling the data (using the permutation test) which uses
+#    a relatively large amount of processing time.
+#    The method is not as easy to understand conceptually as some of
+#    the other methods <..> .
+#    These downsides are not enough to out-way its excellent performance;
+#    this is a very powerful g.o.f. tool.
 class PPD(GoF) : 
     """ Implementation of concrete method "Point-To-Point Dissimilarity" for probing of Goodness-Of-Fit
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
@@ -192,11 +202,21 @@ class PPD(GoF) :
     - psi      : (str)   type of psi/distance function 
     - sigma    : (float) sigma scale (used for psi=`gaussian`) 
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+
+    M.Williams writes: 
+    ... The method <...> has excellent rejection power for both large localized
+    ... discrepancies and small omnipresent ones.  Determining the p-value
+    ... requires re-sampling the data (using the permutation test) which uses
+    ... a relatively large amount of processing time.
+    ... The method is not as easy to understand conceptually as some of
+    ... the other methods <..> .
+    ... These downsides are not enough to out-way its excellent performance;
+    ... this is a very powerful g.o.f. tool.
     """
     # =========================================================================
     ## create the estimator
     #  @param mc2mc    : (bool) should distances within (large) mc-dataset be accounted for? 
-    #  @param Ntoys    : (int)  number of permutations/toys 
+    #  @param nToys    : (int)  number of permutations/toys 
     #  @param psi      : type of psi/distance function 
     #  @param sigma    : sigma scale (used for psi=`gaussian`)
     #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
@@ -212,9 +232,9 @@ class PPD(GoF) :
         
         Parameters  
 
-        - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size od real data
+        - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data
         - mc2mc    : (bool) should distances within (large) mc-dataset be accounted for? 
-        - Ntoys    : (int)  number of permutations/toys 
+        - nToys    : (int)  number of permutations/toys 
         - psi      : type of psi/distance function 
         - sigma    : sigma scale (used for psi=`gaussian`)
         """
@@ -316,11 +336,30 @@ class PPD(GoF) :
     __repr__ = table
     
 # =============================================================================
+## @class DNN
+#  Distance-to-Nearest-Neighour GoF-method 
+#  @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
+#  @see https://doi.org/10.1088/1748-0221/5/09/P09004
+#  @see http://arxiv.org/abs/arXiv:1003.1768
+#
+#  - M.Williams writes: 
+#    The method <..> is easy to use, requires very little processing time and is
+#    conceptually fairly easy to understand; however it is not very powerful.
+#    The U-statistic it defines does provide a useful easy-to-visualize diagnostic
+#    tool (especially for very high dimensional analyses), but its quantitative
+#    usefulness as a g.o.f. test is limited.  
 class DNN(GoF) : 
     """ Implementation of concrete method "Distance-to-Nearest Neighbour" for probing of Goodness-Of-Fit
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004
     - see http://arxiv.org/abs/arXiv:1003.1768 
+
+    M.Williams writes: 
+    ... The method <..> is easy to use, requires very little processing time and is
+    ... conceptually fairly easy to understand; however it is not very powerful.
+    ... The U-statistic it defines does provide a useful easy-to-visualize diagnostic
+    ... tool (especially for very high dimensional analyses), but its quantitative
+    ... usefulness as a g.o.f. test is limited.  
     """
     def __init__ ( self             ,
                    histo    = 100   ,
@@ -345,7 +384,8 @@ class DNN(GoF) :
         
     @property
     def dnn ( self ) :
-        """`dnn` : Distance-to-Nearest-Neighbour calculator for numpy data"""
+        """`dnn` : Distance-to-Nearest-Neighbour calculator for numpy data
+        """
         return self.gof  
 
     # =========================================================================

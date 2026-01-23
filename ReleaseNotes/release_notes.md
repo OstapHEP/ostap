@@ -3,11 +3,11 @@
 
  1. minor tweak for the treatment of `delta` for `Ostap::Math::Sigmoid`. It should improve the fits.
  1. many fixes and tweaks  for `DNN` & `USTAT` Goodness of fit estimators 
-
+ 1. more fixes & tweaks for GoF methods
+ 
 ## Bug fixes
 
 ## Backward incompatible 
-
 
 # v3.6.4.0 
 
