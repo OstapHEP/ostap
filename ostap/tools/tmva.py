@@ -1531,7 +1531,7 @@ class Trainer(object):
         # =====================================================================
         ## Control plots for signal and background 
         # =====================================================================
-        local_canvas = [] 
+        local_canvas = []
         for i, item in enumerate ( self.control_plots_signal , start = 1 ) :
             histo , what = item
             how = self.signal_cuts * self.signal_weight if self.signal_weight else self.signal_cuts 
@@ -1547,7 +1547,9 @@ class Trainer(object):
                 
             style = 'Z' if 2 == histo.dim() else ''            
             with use_canvas ( '%s Control plot SIGNAL_%d' %  ( self.name , i ) ,
-                              invisible = not self.show_plots  , style = style ) as cnvs :
+                              invisible = not self.show_plots ,
+                              keep      =     self.show_plots ,
+                              style     = style               ) as cnvs :
                 if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
                 else                : histo.draw (          copy = True )
                 cnvs >> ( "%s/plots/CONTROL_PLOT_SIGNAL_%s" % ( self.dirname , i ) ) 
@@ -1567,7 +1569,9 @@ class Trainer(object):
 
             style = 'Z' if 2 == histo.dim() else ''            
             with use_canvas ( '%s Control plot BACKGROUND_%d' % ( self.name , i ),
-                              invisible = not self.show_plots , style = style ) as cnvb :
+                              invisible = not self.show_plots ,
+                              keep      =     self.show_plots ,
+                              style     = style               ) as cnvb :
                 if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
                 else                : histo.draw (          copy = True ) 
                 cnvb >> ( "%s/plots/CONTROL_PLOT_BACKGROUND_%d" % ( self.dirname , i ) )
@@ -1814,9 +1818,11 @@ class Trainer(object):
                 multigraph = factory.GetROCCurveAsMultiGraph ( self.name , 0 )
                 if not multigraph : self.logger.erorr ( 'Invalid ROC-curves multi-graph!' ) 
                 else : 
-                    
-                    with use_canvas ( '%s ROC curves' % self.name     ,
-                                      invisible = not self.show_plots ) as cnvroc :
+
+                    invisible = not self.show_plots 
+                    with use_canvas ( '%s ROC curves' % self.name ,
+                                      invisible = invisible       ,
+                                      keep      = self.show_plots ) as cnvroc :
                         
                         multigraph.draw( 'AL' , copy = True )
                         ax = multigraph.GetXaxis ()
@@ -1835,7 +1841,8 @@ class Trainer(object):
                         
                         cnvroc >> ( "%s/plots/ROC"   % self.dirname )
                         
-                        outFile [ '%s/ROC_CURVES' % self.name ] = multigraph
+                    del cnvroc                    
+                    outFile [ '%s/ROC_CURVES' % self.name ] = multigraph
                     
         # =====================================================================
         ## Calculate AUCs for ROC curves
@@ -2765,7 +2772,7 @@ def tmvaGUI ( filename , new_canvas = True ) :
         if not _c in _canvas : _canvas.append ( _c )
     #
     ## start GUI
-    return ROOT.TMVA.TMVAGui( filename )
+    return ROOT.TMVA.TMVAGui ( filename )
 
 # =============================================================================
 ## convert input structure to Ostap.TMVA.MAPS
@@ -3166,12 +3173,13 @@ def plot_variables ( name              ,
     cnvlist = [] 
     for i, chunk in enumerate ( chunks , start = 1 ) :
         cname =  '%s%s_VARIABLES_p%i' % ( prefix , name , i )
-        with use_canvas ( cname                 ,
-                          width     = width     ,
-                          height    = height    ,
-                          style     = style     ,
-                          invisible = invisible , 
-                          plot      = True      , **kwargs ) as cnv  :
+        with use_canvas ( cname                     ,
+                          width     = width         ,
+                          height    = height        ,
+                          style     = style         ,
+                          invisible = invisible     ,
+                          keep      = not invisible , 
+                          plot      = True          , **kwargs ) as cnv  :
 
             cnvlist.append ( cnv ) 
             cnv.Clear  () 
