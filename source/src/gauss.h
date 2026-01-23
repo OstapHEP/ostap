@@ -41,9 +41,10 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
        *  @date 2010-05-23
        */
-      double gaussian_int_R ( const double alpha ,
-                              const double beta  ,
-                              const double a     ) ; 
+      double gaussian_int_R
+      ( const double alpha ,
+	const double beta  ,
+	const double a     ) ; 
       // ======================================================================
       /** get the gaussian integral:
        *  \f[ f = \int_{-\inf}^{b} \exp { -\alpha x^2 + \beta x } \mathrm{d}x \f]
@@ -54,9 +55,11 @@ namespace Ostap
        *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
        *  @date 2010-05-23
        */
-      inline double gaussian_int_L ( const double alpha ,
-                                     const double beta  ,
-                                     const double b     ) 
+      inline double
+      gaussian_int_L
+	( const double alpha ,
+	  const double beta  ,
+	  const double b     ) 
       { return gaussian_int_R ( alpha , -beta , -b ) ; }        
       // ======================================================================
       /** get the gaussian integral:
