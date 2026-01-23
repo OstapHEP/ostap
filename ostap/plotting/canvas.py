@@ -1301,8 +1301,9 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         self.__title  = title 
         self.__width  = width
         self.__height = height
-        self.__keep   = True if keep else False 
         self.__cnv    = None
+        
+        self.__keep   = True if keep and not invisible else False 
 
         self.__plot   = plot
 
@@ -1312,6 +1313,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
             groot = ROOT.ROOT.GetROOT()
             if groot : self.__invisible = groot.IsBatch() 
             
+
         ##
         style_conf = {}
         pad_conf   = {}
@@ -1391,7 +1393,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         UsePad.__enter__ ( self )
         
         ## (5) keep it open ? 
-        if self.__keep and not self.__cnv in _keep_canvas :
+        if self.__keep : ## and not self.__cnv in _keep_canvas :
             _keep_canvas.append ( self.__cnv ) 
 
         return self.__cnv  ## return the current canvas 
