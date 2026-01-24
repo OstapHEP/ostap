@@ -1,5 +1,10 @@
 ## New features
 
+ 1. add `Ostap::Math::fermi_dirac` function for complete Fermi-Dirac integral (for non-negative integer order)
+ 1. add `Ostap::Math::dirichlet_beta` function
+ 1. add alias `Ostap::Math::hurwitz_zeta` for `Ostap::Math::hurwitz`
+ 1. add alias `Ostap::Math::Dirichlet_eta` for `Ostap::Math::eta`
+
 ## Bug fixes
 
 ## Backward incompatible 

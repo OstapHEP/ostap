@@ -1474,8 +1474,19 @@ namespace Ostap
      *  - \f$ 0 < q \f$
      */
     double hurwitz
-      ( const double s     ,
-        const double q = 1 ) ;
+    ( const double s     ,
+      const double q = 1 ) ;
+
+    // ========================================================================
+    /** Hurwitz Zeta function 
+     *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
+     *  - \f$ 1 < s \f$
+     *  - \f$ 0 < q \f$
+     */
+    inline  
+    double hurwitz_zeta
+    ( const double s     ,
+      const double q = 1 ) { return hurwitz ( s , q ) ; }
 
     // ========================================================================
     /** Dirichlet's Eta function 
@@ -1489,6 +1500,55 @@ namespace Ostap
     double eta ( const double s ) ;
     // ========================================================================
     
+    // ========================================================================
+    /** Dirichlet's Eta function 
+     *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+     */
+    inline 
+    double dirichlet_eta ( const int    n ) { return eta ( n ) ; }
+
+    /** Dirichlet's Eta function 
+     *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+     */
+    inline 
+    double dirichlet_eta ( const double s ) { return eta ( s ) ; }
+    // ========================================================================
+
+    // ========================================================================
+    /** Dirichet's beta funnction
+     *  \f[ \beta ( s ) 
+     *   \equiv \sum_{n=0}^{+\innfty}\frac{(-1)^n}{(2n+1)^s} \]
+     *    \f[ \beta ( s ) = \frac{1}{\Gamma(s)}
+     * \int_0^{+\infty}\frac{x^{s-1}\mathrm{e}^{-x}}{1+\mathrm{e}^{-2x}}dx \f]
+     *   \f[ \beta ( s ) = 4^{-1}\left( \zeta ( z , \frac{1}{4} - \zeta ( s , frac{3}{4} ) \right) \f] 
+     *  where \f$\zeta(a,b)\f$ is Hurwitz's zeta function
+     */
+    double dirichlet_beta
+    ( const int x ) ;
+
+    // ========================================================================
+    /** Dirichet's beta funnction
+     *  \f[ \beta ( s ) 
+     *   \equiv \sum_{n=0}^{+\innfty}\frac{(-1)^n}{(2n+1)^s} \]
+     *    \f[ \beta ( s ) = \frac{1}{\Gamma(s)}
+     * \int_0^{+\infty}\frac{x^{s-1}\mathrm{e}^{-x}}{1+\mathrm{e}^{-2x}}dx \f]
+     *   \f[ \beta ( s ) = 4^{-1}\left( \zeta ( z , \frac{1}{4} - \zeta ( s , frac{3}{4} ) \right) \f] 
+     *  where \f$\zeta(a,b)\f$ is Hurwitz's zeta function
+     */
+    double dirichlet_beta
+    ( const double x ) ;
+    
+    // ========================================================================
+    /** complete Fermi-Dirac integral 
+     *  \f[] F_j(x) = \frac{1}{\Gamma ( j + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}+1}\f]
+     * 
+     *  It is related to polylogarithm
+     *  \f$ F_j ( x ) = - Li_{j+1} ( -\mathrm{e}^{x} ) \f$
+     */
+    double fermi_dirac 
+    ( const unsigned int j , 
+      const double       x ) ;
+      
     // ========================================================================
     /** Harmonic number 
      *  \f$ H_n = \sum_{k=1}^{n}  \frac{1}{k} \f$ 

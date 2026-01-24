@@ -4040,7 +4040,6 @@ double Ostap::Math::hurwitz
 }
 // ============================================================================
 
-
 // ============================================================================
 /* Dirichlet's Eta function 
  *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
@@ -4081,8 +4080,93 @@ double Ostap::Math::eta ( const double s   )
     }
   return result.val ;
 }
-// ============================================================================
+// ===========================================================================
 
+// ===========================================================================
+/* Dirichet's beta funnction
+ *  \f[ \beta ( s ) 
+ *   \equiv \sum_{n=0}^{+\innfty}\frac{(-1)^n}{(2n+1)^s} \]
+ *    \f[ \beta ( s ) = \frac{1}{\Gamma(s)}
+ * \int_0^{+\infty}\frac{x^{s-1}\mathrm{e}^{-x}}{1+\mathrm{e}^{-2x}}dx \f]
+ *   \f[ \beta ( s ) = 4^{-1}\left( \zeta ( z , \frac{1}{4} - \zeta ( s , frac{3}{4} ) \right) \f] 
+ *  where \f$\zeta(a,b)\f$ is Hurwitz's zeta function
+ */
+// ==========================================================================   
+double Ostap::Math::dirichlet_beta
+( const double x ) 
+{ 
+  if ( x < 9.1 && Ostap::Math::isint ( x ) )
+  {
+    const int n = Ostap::Math::round ( x ) ; 
+    if      ( 0 <= n && n <= 9     ) { return dirichlet_beta ( n ) ; }
+    else if ( n <  0 && 1 == n % 2 ) { return 0 ; }
+  }
+  return std::pow ( 4.0 , -x ) * ( hurwitz_zeta ( x , 0.25 )  - hurwitz_zeta ( x , 0.75 ) ) ; 
+}
+// ========================================================================
+/** Dirichet's beta funnction
+ *  \f[ \beta ( s ) 
+ *   \equiv \sum_{n=0}^{+\innfty}\frac{(-1)^n}{(2n+1)^s} \]
+ *    \f[ \beta ( s ) = \frac{1}{\Gamma(s)}
+ * \int_0^{+\infty}\frac{x^{s-1}\mathrm{e}^{-x}}{1+\mathrm{e}^{-2x}}dx \f]
+ *   \f[ \beta ( s ) = 4^{-1}\left( \zeta ( z , \frac{1}{4} - \zeta ( s , frac{3}{4} ) \right) \f] 
+ *  where \f$\zeta(a,b)\f$ is Hurwitz's zeta function
+ */
+// ===========================================================================
+double Ostap::Math::dirichlet_beta
+( const int n ) 
+{ 
+  static const unsigned short NN = 10 ;
+  static const long double s_beta_d [NN] =  { 
+  0.5L ,  
+  0.7853981633974483096156608L ,
+  0.9159655941772190150546035L ,
+  0.9689461462593693804836348L ,
+  0.9889445517411053361084226L , 
+  0.9961578280770880640063194L , 
+  0.9986852222184381354416008L , 
+  0.9995545078905399094963465L ,
+  0.9998499902468296563380671L ,
+  0.9999496841872200898213589L } ;
+ //
+ if      ( 0 <= n && n < NN     ) { return s_beta_d [ n ] ;}
+ else if ( n < 0  && 1 == n % 2 ) { return 0 ; }
+ // 
+ return dirichlet_beta ( 1.0 * n ) ;
+}
+
+
+// ========================================================================
+/* complete Fermi-Dirac integral 
+ *  \f[] F_j(x) = \frac{1}{\Gamma ( j + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}+1}\f]
+ * 
+ *  It is related to polylogarithm
+ *  \f$ F_j ( x ) = - Li_{j+1} ( -\mathrm{e}^{x} ) \f$
+ */
+// =============================================================================
+double Ostap::Math::fermi_dirac 
+( const unsigned int j , 
+  const double       x ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  int ierror = GSL_SUCCESS ;
+  //
+  if      ( 0 == j ) { ierror = gsl_sf_fermi_dirac_0_e   (     x , &result ) ; }
+  else if ( 1 == j ) { ierror = gsl_sf_fermi_dirac_1_e   (     x , &result ) ; }
+  else if ( 2 == j ) { ierror = gsl_sf_fermi_dirac_2_e   (     x , &result ) ; }
+  else               { ierror = gsl_sf_fermi_dirac_int_e ( j , x , &result ) ; }
+  //
+  if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_fermi_dirac_[0,1,2,int]_e function" , __FILE__ , __LINE__ , ierror ) ;
+      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+    }
+  return result.val ;
+}
 // ============================================================================
 /* Harmonic number 
  *  \f$ H_n = \sum_{k=1}^{n}  \frac{1}{k} \f$ 
@@ -4092,10 +4176,10 @@ double Ostap::Math::harmonic ( const unsigned int n )
 {
   long double result = 0 ;
   if ( n <= 100 )
-    {
-      for ( unsigned int k = 1 ; k <= n ; ++k ) { result += 1.0L / k ; }
-      return result ; 
-    }
+  {
+    for ( unsigned int k = 1 ; k <= n ; ++k ) { result += 1.0L / k ; }
+    return result ; 
+  }
   return M_EULER + psi ( 1.0 + n )  ;
 }
 // ============================================================================
