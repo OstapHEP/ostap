@@ -2141,7 +2141,7 @@ namespace Ostap
     inline double M 
     ( const double a ,
       const double b ,
-      const double x ) { return hyperg_1F1 ( a, b, x ) ; } 
+      const double x ) { return hyperg_1F1 ( a , b , x ) ; } 
     // ======================================================================
     /** Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
      *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
@@ -2151,7 +2151,7 @@ namespace Ostap
     ( const int            a ,
       const unsigned short b ,
       const double         x ) { return hyperg_1F1 ( a, b, x ) ; } 
-    // ======================================================================    
+    // ======================================================================  
     /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
      *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
      *  @see gsl_sf_hyperg_1F1_e
@@ -2159,7 +2159,7 @@ namespace Ostap
     inline double kummer
     ( const double a ,
       const double b ,
-      const double x ) { return hyperg_1F1 ( a, b, x ) ; } 
+      const double x ) { return hyperg_1F1 ( a, b , x ) ; } 
     // ======================================================================
     /** Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
      *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
@@ -2170,7 +2170,55 @@ namespace Ostap
       const unsigned short b ,
       const double         x ) { return hyperg_1F1 ( a, b, x ) ; } 
     // ======================================================================
-    
+    /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_e
+     */
+    inline double hyperg_M 
+    ( const double a ,
+      const double b ,
+      const double x ) { return hyperg_1F1 ( a , b , x ) ; } 
+    // ======================================================================
+    /** Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_int_e
+     */
+    inline double hyperg_M
+    ( const int            a ,
+      const unsigned short b ,
+      const double         x ) { return hyperg_1F1 ( a, b, x ) ; } 
+    // ======================================================================
+    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    double hyperg_U
+    ( const int    a ,
+      const int    b , 
+      const double x ) ; 
+    // =======================================================================
+    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    double hyperg_U
+    ( const double a ,
+      const double b , 
+      const double x ) ; 
+    // ======================================================================
+    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    inline  double U
+    ( const int    a ,
+      const int    b , 
+      const double x ) { return hyperg_U ( a , b , x ) ; } 
+    // =======================================================================
+    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    inline  double U
+    ( const double a ,
+      const double b , 
+      const double x ) { return hyperg_U ( a , b , x ) ; }
     // ======================================================================
     /** Gauss's hypergeometric function 
      *  \f$ {}_2F_1 (a,b,c,x) = \sum \frac{a_nb_n}{c_n} \frac{x^n}{n!}\f$ 

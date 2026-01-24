@@ -1443,6 +1443,64 @@ namespace Ostap
      */
     ValueWithError lambert_W0 ( const ValueWithError& x ) ;
     // ========================================================================
+    /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_e
+     */
+    Ostap::Math::ValueWithError
+    hyperg_M 
+    ( const double a ,
+      const double b ,
+      const Ostap::Math::ValueWithError&x ) ; 
+    // ======================================================================
+    /** Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+     *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+     *  @see gsl_sf_hyperg_1F1_int_e
+     */
+    Ostap::Math::ValueWithError
+    hyperg_M
+    ( const int            a ,
+      const unsigned short b ,
+      const Ostap::Math::ValueWithError& x  ) ;
+    // ======================================================================
+    /** Tricomy confluent hypergeometruc funnction \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    Ostap::Math::ValueWithError
+    hyperg_U
+    ( const int    a ,
+      const int    b , 
+      const Ostap::Math::ValueWithError& x ) ; 
+    // =======================================================================
+    /** Tricomy confluent hypergeometruc funnction \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    Ostap::Math::ValueWithError
+    hyperg_U
+    ( const double a ,
+      const double b , 
+      const Ostap::Math::ValueWithError& x ) ; 
+    // ======================================================================
+    /** Gauss's hypergeometric function 
+     *  \f$ {}_2F_1 (a,b,c,x) = \sum \frac{a_nb_n}{c_n} \frac{x^n}{n!}\f$ 
+     *  for \f$ \left|x\right|<1\f$
+     */
+    Ostap::Math::ValueWithError hyperg_2F1
+    ( const double a ,
+      const double b ,
+      const double c ,
+      const Ostap::Math::ValueWithError& x ) ;
+    // ========================================================================
+    /** Regularized/renormalized  Gauss's hypergeometric function 
+     *  \f$   \frac{ {}_2F_1 (a,b,c,x)}{\Gamma(c)} \f$ 
+     *  for \f$ \left|x\right|<1\f$ 
+     */
+    Ostap::Math::ValueWithError hyperg_2F1_renorm
+    ( const double a ,
+      const double b ,
+      const double c ,
+      const Ostap::Math::ValueWithError&  x ) ;
+    // =======================================================================
     /// check for NaN
     inline bool isnan    ( const ValueWithError& v ) { return v.isnan    () ; }
     /// finite ?

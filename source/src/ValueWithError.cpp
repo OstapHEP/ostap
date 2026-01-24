@@ -3763,7 +3763,6 @@ Ostap::Math::bessel_Knu
   const Ostap::Math::ValueWithError& x  ) 
 {
   //
-  //
   if ( isint ( nu ) ) 
   {
     const int n = Ostap::Math::round ( nu ) ;
@@ -3777,6 +3776,144 @@ Ostap::Math::bessel_Knu
   //
   /// get derivative 
   const double derivative = Ostap::Math::der_bessel_Knu ( nu , x  ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+
+
+
+// ===========================================================================
+/* Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+ *  @see gsl_sf_hyperg_1F1_e
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::hyperg_M 
+( const double a ,
+  const double b ,
+  const Ostap::Math::ValueWithError& x ) 
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::hyperg_M ( a , b , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = ( a / b ) * Ostap::Math::hyperg_M ( a + 1 , b + 1 , xv ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+} 
+// ===========================================================================
+/*  Confluent Kummer's Hypergeometric  function  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
+ *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+ *  @see gsl_sf_hyperg_1F1_int_e
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::hyperg_M
+( const int            a ,
+  const unsigned short b ,
+  const Ostap::Math::ValueWithError& x ) 
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::hyperg_M ( a , b , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = ( a / b ) * Ostap::Math::hyperg_M ( a + 1 , b + 1 , xv ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ===========================================================================
+/*  Tricomy confluent hypergeometruc function \f$ (a,b,x\f$ 
+ *  for integer arguments 
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::hyperg_U
+( const int    a ,
+  const int    b , 
+  const Ostap::Math::ValueWithError& x ) 
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::hyperg_U ( a , b , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = ( a / b ) * Ostap::Math::hyperg_U ( a + 1 , b + 1 , xv ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+} 
+// ===========================================================================
+/* Tricomy confluent hypergeometruc funnction \f$ (a,b,x\f$ 
+ *  for integer arguments 
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::hyperg_U
+( const double a ,
+  const double b , 
+  const Ostap::Math::ValueWithError& x ) 
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::hyperg_U ( a , b , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = ( a / b ) * Ostap::Math::hyperg_U ( a + 1 , b + 1 , xv ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+} 
+// ===========================================================================
+ 
+// ===========================================================================
+/* Gauss's hypergeometric function 
+ *  \f$ {}_2F_1 (a,b,c,x) = \sum \frac{a_nb_n}{c_n} \frac{x^n}{n!}\f$ 
+ *  for \f$ \left|x\right|<1\f$
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::hyperg_2F1
+( const double a ,
+  const double b ,
+  const double c ,
+  const Ostap::Math::ValueWithError& x ) 
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::hyperg_2F1 ( a , b , c , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = ( a * b / c ) * 
+    Ostap::Math::hyperg_2F1 ( a + 1 , b + 1 , c + 1  , xv  ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
+}
+// ===========================================================================
+/* Regularized/renormalized  Gauss's hypergeometric function 
+ *  \f$   \frac{ {}_2F_1 (a,b,c,x)}{\Gamma(c)} \f$ 
+ *  for \f$ \left|x\right|<1\f$ 
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError hyperg_2F1_renorm
+( const double a ,
+  const double b ,
+  const double c ,
+  const Ostap::Math::ValueWithError&  x ) 
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::hyperg_2F1_renorm ( a , b , c , xv ) ;
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get derivative 
+  const double derivative = ( a * b / c ) * 
+    Ostap::Math::hyperg_2F1_renorm ( a + 1 , b + 1 , c + 1 , xv ) ;
   //
   return Ostap::Math::ValueWithError ( value  , derivative * derivative * x.cov2 () ) ;
 }

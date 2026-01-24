@@ -4,6 +4,9 @@
  1. add `Ostap::Math::dirichlet_beta` function
  1. add alias `Ostap::Math::hurwitz_zeta` for `Ostap::Math::hurwitz`
  1. add alias `Ostap::Math::Dirichlet_eta` for `Ostap::Math::eta`
+ 1. add alias `Ostap::Math::hyperg_M`      for `Ostap::Math::hyperg_1F1`
+ 1. add `Ostap::Math::hyperg_U`
+
 
 ## Bug fixes
 

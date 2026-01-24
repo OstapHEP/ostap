@@ -44,9 +44,10 @@ __all__     = (
     'sn'           , 'cn'         , 'sc'      , ## elliptic functions
     'elliptic_K'   , 'elliptic_K' ,             ## elliptic integrals
     'dilog'        ,
-    'zeta'         , 'zetam1'     , 'eta'     , 
+    'zeta'         , 'zetam1'     , 'eta'        , 
     'hurwitz'      , 'hzeta'      ,
-    'Cl'           , 'Sl'         , 'clausen' , 
+    'Cl'           , 'Sl'         , 'clausen'    , 
+    'hyperg_M'     , 'hyperg_U'   , 'hyperg_2F1' ,
     'significance' , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
@@ -1166,6 +1167,44 @@ def clausen ( x ) :
     fun = getattr ( x , '__clausen__' , None )
     if fun : return fun ()
     return _clausen_ ( x )
+
+
+_hyperg_M   = Ostap.Math.hyperg_M
+_hyperg_U   = Ostap.Math.hyperg_U 
+_hyperg_2F1 = Ostap.Math.hyperg_2F1 
+
+# ==============================================================================
+## Confluent (Kummer) hypergeometric function \f$ M(a,b,x) \f$ 
+#  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+def hyperg_M ( a , b , x ) :
+    """ Confluent (Kummer) hypergeometric function  M(a,b,x) 
+    - see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+    """
+    fun = getattr ( x , '__hyperg_M__' , None )
+    if fun : return fun ( a , b )
+    return _hyperg_M ( a , b , x )
+
+# ==============================================================================
+## Confluent (Tricomi) hypergeometric function \f$ U(a,b,x) \f$ 
+#  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+def hyperg_U ( a , b , x ) :
+    """ Confluent (Tricomi) hypergeometric function  U(a,b,x) 
+    - see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
+    """
+    fun = getattr ( x , '__hyperg_U__' , None )
+    if fun : return fun ( a , b )
+    return _hyperg_U ( a , b , x )
+
+# ==============================================================================
+## (Gauss) hypergeometric function \f$ 2F1(a,b, cx) \f$ 
+#  @see https://en.wikipedia.org/wiki/Hypergeometric_function
+def hyperg_2F1 ( a , b , c , x ) :
+    """ Gauss hypergeometric function  2F1(a,b,c,x) 
+    - see https://en.wikipedia.org/wiki/Hypergeometric_function
+    """
+    fun = getattr ( x , '__hyperg_2F1__' , None )
+    if fun : return fun ( a , b , c )
+    return _hyperg_2F1 ( a , b , c , x )
 
 # =============================================================================
 ## FIX

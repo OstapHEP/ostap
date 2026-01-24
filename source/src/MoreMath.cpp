@@ -6194,6 +6194,57 @@ double Ostap::Math::hyperg_1F1
     }
   return result.val ;  
 }
+// ===========================================================================
+/* Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+ *  for integer arguments 
+ */
+// ===========================================================================
+double Ostap::Math::hyperg_U
+( const int    a ,
+  const int    b , 
+  const double x ) 
+{
+ //
+  const int m = a ;
+  const int n = b ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hyperg_U_int_e ( m , n ,  x , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_hyperg_U_int_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	  { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;  
+}
+// ===========================================================================
+/* Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+ *  for integer arguments 
+ */
+// ===========================================================================
+double Ostap::Math::hyperg_U
+( const double a ,
+  const double b , 
+  const double x ) 
+  {
+    if ( Ostap::Math::isint ( a ) && Ostap::Math::isint  ( b ) )
+    { 
+      const int n = Ostap::Math::round ( a ) ;
+      const int m = Ostap::Math::round ( b ) ;
+      return hyperg_U  ( n , m , x ) ; 
+    } 
+    //
+    gsl_sf_result result ;
+    const int ierror = gsl_sf_hyperg_U_e ( a , b ,  x , &result ) ;
+    if ( ierror ) 
+    {
+      gsl_error ( "Error from gsl_sf_hyperg_U_e" , __FILE__ , __LINE__ , ierror ) ;
+      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+	    { return std::numeric_limits<double>::quiet_NaN(); }
+    }
+  return result.val ;  
+}
 // ============================================================================
 /*  Gauss's hypergeometric function 
  *  \f$ {}_2F_1 (a,b,c,x) = \sum \frac{a_nb_n}{c_n} \frac{x^n}{n!}\f$ 
