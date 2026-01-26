@@ -27,6 +27,7 @@ add_library(ostap SHARED src/format.cpp
                          src/DalitzIntegrator.cpp
                          src/DataFrameActions.cpp
                          src/DataFrameUtils.cpp
+                         src/Differences.cpp
                          src/ECDF.cpp
 			 src/EffEntity.cpp
                          src/EPDF.cpp

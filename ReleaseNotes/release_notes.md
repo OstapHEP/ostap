@@ -6,7 +6,7 @@
  1. add alias `Ostap::Math::Dirichlet_eta` for `Ostap::Math::eta`
  1. add alias `Ostap::Math::hyperg_M`      for `Ostap::Math::hyperg_1F1`
  1. add `Ostap::Math::hyperg_U`
-
+ 1. improve `Ostap::Math::Differences`
 
 ## Bug fixes
 
