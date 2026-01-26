@@ -36,7 +36,8 @@ from   ostap.core.ostap_types import num_types, sized_types, sequence_types
 from   ostap.core.core        import VE
 from   ostap.utils.basic      import typename
 from   ostap.math.base        import iszero, isequal
-import math, copy  
+from   ostap.logger.symbols   import times 
+import math, copy
 # =============================================================================
 # logging 
 # =============================================================================
@@ -263,9 +264,34 @@ class AsymErrors (object) :
                            precision   = precision   ,
                            parentheses = parentheses ,
                            latex       = latex       )
-    
-    def __str__  ( self ) : return self.toString () 
-    def __repr__ ( self ) : return self.__str__ () 
+
+    # =========================================================================
+    ## nice print
+    #  @code
+    #  errors = ...
+    #  result = value.nice_print () 
+    #  @endcode
+    def nice_print  ( self                ,
+                      width       = 6     ,
+                      precision   = 4     ,
+                      parentheses = True  ,
+                      latex       = False ) : 
+        """ Nice print
+        >>> errors = ...
+        >>> result = calue.nice_print () 
+        """
+        result , expo = self.pretty_print ( width       = width       ,
+                                            precision   = precision   ,
+                                            parentheses = parentheses ,
+                                            latex       = latex       )
+        ## 
+        if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
+        elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+        ##
+        return result.replace ( '  ' , ' ' ) 
+
+    def __str__   ( self ) : return self.nice_print ( precision = 3 , width = 4 )
+    def __repr__  ( self ) : return self.nice_print ( precision = 3 , width = 4 )
 
 # =============================================================================
 the_types = num_types + ( VE , ) 
@@ -672,8 +698,33 @@ class ValWithErrors(object) :
                             parentheses = parentheses ,
                             latex       = False       )
 
-    def __str__  ( self ) : return self.toString () 
-    def __repr__ ( self ) : return self.__str__  () 
+    # =========================================================================
+    ## nice print
+    #  @code
+    #  value  = ...
+    #  result = value.nice_print () 
+    #  @endcode
+    def nice_print  ( self                ,
+                      width       = 6     ,
+                      precision   = 4     ,
+                      parentheses = True  ,
+                      latex       = False ) : 
+        """ Nice print
+        >>> value  = ...
+        >>> result = value.nice_print () 
+        """
+        result , expo = self.pretty_print ( width       = width       ,
+                                            precision   = precision   ,
+                                            parentheses = parentheses ,
+                                            latex       = latex       )
+        ## 
+        if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
+        elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+        ##
+        return result.replace ( '  ' , ' ' ) 
+    
+    def __str__   ( self ) : return self.nice_print ( precision = 3 , width = 4 )
+    def __repr__  ( self ) : return self.nice_print ( precision = 3 , width = 4 )
 
 # ===========================================================================
 ## decode error data into the flat list of errors 
@@ -1014,8 +1065,33 @@ class ValWithMultiErrors(object) :
                             parentheses = parentheses ,
                             latex       = False       )
     
-    def __str__  ( self ) : return self.toString () 
-    def __repr__ ( self ) : return self.__str__  () 
+    # =========================================================================
+    ## nice print
+    #  @code
+    #  value  = ...
+    #  result = value.nice_print () 
+    #  @endcode
+    def nice_print  ( self                ,
+                      width       = 6     ,
+                      precision   = 4     ,
+                      parentheses = True  ,
+                      latex       = False ) : 
+        """ Nice print
+        >>> value  = ...
+        >>> result = value.nice_print () 
+        """
+        result , expo = self.pretty_print ( width       = width       ,
+                                            precision   = precision   ,
+                                            parentheses = parentheses ,
+                                            latex       = latex       )
+        ## 
+        if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
+        elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+        ##
+        return result.replace ( '  ' , ' ' ) 
+
+    def __str__   ( self ) : return self.nice_print ( precision = 3 , width = 4 )
+    def __repr__  ( self ) : return self.nice_print ( precision = 3 , width = 4 )
 
 # =============================================================================
 ## Pretty prints
@@ -1103,14 +1179,14 @@ def fmt_pretty_vme ( value               ,
                                              latex     = latex     )
     
     fmt = " %s" % fmtv
-    fe  = " {}_{%s}^{%s} " if latex else " {}_{%s}^{%s} " 
+    fe  = " {}_{%s}^{%s} " % ( fmte , fmte ) if latex else " -/%s +/%s " % ( fmte , fmte ) 
     for e in value.errors : fmt += fe 
 
     if latex or parentheses : fmt = '( ' + fmt + ' )'
     return fmt , fmtv , fmte , expo
 
 # =============================================================================
-## pretty print for asymemtric errors
+## pretty print for asymmetric errors
 #  @code
 #  ae = AsymErrors ( -5 , 10000 )
 #  s , expo = pretty_ae ( ae , width = 8, precision = 6 ) 
@@ -1175,7 +1251,7 @@ def pretty_vme ( value               ,
     >>> vme = ValWithMultiErrors ( ... )
     >>> s , expo = pretty_vme ( vme , width = 8, precision = 6 ) 
     """    
-    assert isinstance ( value , ValWithErrors ), "Invalid type of `value`: %s" % typename ( value)
+    assert isinstance ( value , ValWithMultiErrors ), "Invalid type of `value`: %s" % typename ( value)
 
     fmt, _ , _ , expo = fmt_pretty_vme ( value                     , 
                                          width       = width       ,
@@ -1183,9 +1259,9 @@ def pretty_vme ( value               ,
                                          parentheses = parentheses ,
                                          latex       = latex       ) 
     
-    values = [ vme.value ]
-    for e in mve.errors :
-        values += [ abs ( e.negative ) , e.possitive ]
+    values = [ value.value ]
+    for e in value.errors :
+        values += [ abs ( e.negative ) , e.positive ]
         
     values  = tuple ( values )
     if expo:

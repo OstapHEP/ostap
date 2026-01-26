@@ -480,7 +480,7 @@ def pretty_errors ( errlow              ,
     else     : fmt = ' -/%s +/%s' % ( fmte , fmte )
     if ( latex and expo ) or parentheses : fmt = '( ' + fmt + ' )' 
 
-    values = value , abs ( elow ) , ehigh    
+    values = abs ( elow ) , ehigh    
     if expo :
         scale = 10 ** expo 
         values = tuple ( v / scale for v in values ) 

@@ -10,6 +10,8 @@
 
 ## Bug fixes
 
+ 1. fix bugs in the printout of the `AsymErrors`,  'ValWithErrors` and `ValWithMultiErrors`
+
 ## Backward incompatible 
 
 # v3.6.5.0 
