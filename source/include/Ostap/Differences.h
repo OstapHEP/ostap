@@ -6,6 +6,7 @@
 // ============================================================================
 // STD&STL
 // ============================================================================
+#include <type_traits>
 #include <functional>
 #include <iterator>
 // ============================================================================
@@ -36,10 +37,11 @@ namespace Ostap
        *  @endcode
        *  @see https://en.wikipedia.org/wiki/Divided_differences 
        */ 
-      template <class FUNCTION>
+      template <class FUNCTION, 
+		typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 >      
       inline double divided 
-      ( FUNCTION     fun , 
-        const double x ) { return fun  ( x ) ; }
+      ( const FUNCTION& fun , 
+        const double    x ) { return fun  ( x ) ; }
       // ======================================================================
       /** Divided Forward differences of high order from the function 
        *  @code
@@ -52,23 +54,24 @@ namespace Ostap
        *  @endcode
        *  @see https://en.wikipedia.org/wiki/Divided_differences 
        */ 
-      template <class FUNCTION, typename... Args>
+      template <class FUNCTION,
+		typename... Args, 
+		typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 >
       inline double divided
-      ( FUNCTION       fun  , 
-        const double   x0   , 
-        const Args...  args , 
-        const double   xn   ) 
+      ( const FUNCTION& fun  , 
+        const double    x0   , 
+        const Args...   args , 
+        const double    xn   ) 
       {
-        const auto cfunr = std::cref ( fun ) ;
-        return ( divided ( cfunr , args... , xn ) - 
-                 divided ( cfunr , x0 , args... ) ) /  ( xn -  x0 ) ;
+        return ( divided ( fun , args... , xn ) - 
+                 divided ( fun , x0 , args... ) ) /  ( xn -  x0 ) ;
       }
       // ======================================================================
-      /** Divided forward differences from two sequnces
+      /** Divided forward differences from two sequences
        *  @param xbegin the start of sequence of abscissas 
        *  @param xend   the end   of sequence of abscissas 
        *  @param ybegin the start of sequence of function values 
-       *  @return divided  difference clacualetd from these sequences
+       *  @return divided  difference claculated from these sequences
        */
       template <class XITERATOR, 
                 class YITERATOR> 
@@ -96,7 +99,7 @@ namespace Ostap
        *  @param ybegin the start of sequence of function values 
        *  @param xvalue adapter to get x-value from dereferenced x-iterator 
        *  @param yvalue adapter to get y-value from dereferenced y-iterator 
-       *  @return divided  difference clacualetd from these sequences
+       *  @return divided  difference calculated from these sequences
        */
       template <class XITERATOR, 
                 class YITERATOR, 
