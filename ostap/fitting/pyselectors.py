@@ -296,6 +296,7 @@ class Variable(object) :
         assert accessor is None or callable ( accessor ) or isinstance ( accessor , str )  , \
                "Variable: illegal type for 'accessor' %s/%s"  % ( accessor    , type ( accessor    ) )
 
+        self.__original_accessor = accessor 
         if isinstance ( var , str ) :
 
             var = var.strip() 
@@ -311,7 +312,7 @@ class Variable(object) :
 
             if    description                   : pass
             elif  isinstance ( accessor , str ) : description = accessor
-            else                                : description = "'%s'-variable" % var
+            else                                : description = "The `%s' variable" % var
             
             description = description.replace('\n',' ')
 
@@ -407,9 +408,16 @@ class Variable(object) :
         """
         return self.__checked
 
+    @property
+    def original_accessor ( self ) :
+        """`original_accessor` : originalaccessor, as specified in constructor
+        """        
+        return self.__original_accessor
+    
     ## reduce the object
     def __reduce__ ( self ) :
-        """Reduce the object"""
+        """ Reduce the object
+        """
         return root_factory , ( type ( self )    ,
                                 self.var.name    ,
                                 self.description , 

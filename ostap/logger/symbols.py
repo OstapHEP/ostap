@@ -123,12 +123,13 @@ finish           = '\U0001f3c1' if show else ''
 arrow_left       = '\U00002190' if show else '<-'
 arrow_right      = '\U00002192' if show else '->'
 arrow_rightleft  = '\U00002194' if show else '<->'
+arrow_up         = '\U00002191' if show else '|'
+arrow_down       = '\U00002193' if show else '|'
 
-
-arrows_all       = ''.join ( ( '\U00002190' ,'\U00002196' ,
-                               '\U00002191' ,'\U00002197' ,
-                               '\U00002192' ,'\U00002198' ,
-                               '\U00002193' ,'\U00002199' ) ) \
+arrows_all       = ''.join ( ( '\U00002190' , '\U00002196' ,
+                               '\U00002191' , '\U00002197' ,
+                               '\U00002192' , '\U00002198' ,
+                               '\U00002193' , '\U00002199' ) ) \
                                if show else ( '<-' , '\\' , '|' , '/' , '->' , '\\' , '|' , '/' )
 
 langle           = '\U00003008' if show else '<'
