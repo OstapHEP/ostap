@@ -36,7 +36,8 @@ from   ostap.core.ostap_types import num_types, sized_types, sequence_types
 from   ostap.core.core        import VE
 from   ostap.utils.basic      import typename
 from   ostap.math.base        import iszero, isequal
-from   ostap.logger.symbols   import times 
+from   ostap.logger.symbols   import times, plus_minus  
+from   ostap.logger.pretty    import pretty_float 
 import math, copy
 # =============================================================================
 # logging 
@@ -98,11 +99,18 @@ class AsymErrors (object) :
     def positive ( self ) :
         """'positive' : get the positive (high) error"""
         return self.__positive
-
+    
+    @property
+    def symmetric ( self ) :
+        """`symmetric` : symmetric uncertanties? 
+        """
+        return isequal ( abs ( self.__negative ) , self.__positive  )
+    
     # =========================================================================
     ## make a copy 
     def __copy__ ( self ) :
-        """Make a copy"""
+        """Make a copy
+        """
         return AsymErrors ( negative = self.__negative , positive = self.__positive )
     
     # =========================================================================
@@ -172,7 +180,8 @@ class AsymErrors (object) :
         b = self.__positive * other
         self.__negative = min ( a , b )
         self.__positive = max ( a , b )        
-        return self 
+        return self
+    
     # =========================================================================
     ## self-scaling
     def __idiv__ ( self , other ) :
@@ -184,10 +193,12 @@ class AsymErrors (object) :
         b = self.__positive / other
         self.__negative = min ( a , b )
         self.__positive = max ( a , b )        
-        return self 
+        return self
+    
     # ==========================================================================
     ## Self-scaling
-    __itruediv__ = __idiv__    
+    __itruediv__ = __idiv__
+    
     # ==========================================================================
     ## Multiplication/scaling
     def __mul__ ( self , other ) :
@@ -196,7 +207,8 @@ class AsymErrors (object) :
         if not isinstance ( other , num_types ) : return NotImplemented
         r  = copy.copy ( self ) 
         r *= other
-        return r  
+        return r
+    
     # ==========================================================================
     ## division/scaling 
     def __div__ ( self , other ) :
@@ -205,11 +217,13 @@ class AsymErrors (object) :
         if not isinstance ( other , num_types ) : return NotImplemented
         r  = copy.copy ( self ) 
         r /= other
-        return r 
+        return r
+    
     # ==========================================================================
     ## right multuiplication 
     __rmul__    = __mul__
-    __truediv__ = __div__ 
+    __truediv__ = __div__
+    
     # =========================================================================
     ## equality 
     def __eq__  ( self , other ) :
@@ -222,9 +236,11 @@ class AsymErrors (object) :
     def __ne__  ( self , other ) :
         if not isinstance ( other , AsymErrors ) : return NotImplememnted
         return not ( self == other )
+    
     # =========================================================================
     ## tuple-like 
     def __len__ ( self ) : return 2
+    
     # =========================================================================
     ## get the error by index
     #  0 : negative error
@@ -259,6 +275,18 @@ class AsymErrors (object) :
         >>> errors = ...
         >>> result, expo = errors.pretty_print () 
         """
+        
+        ## special treatment of symmetric errors:
+        if self.symmetric :
+            s , expo = pretty_float ( self.positive         ,
+                                      width     = width     ,
+                                      precision = precision ,
+                                      with_sign = False     ,
+                                      latex     = latex     )
+            
+            s = '%s %s' % ( '\\pm' if latex else plus_minus , s )
+            return s , expo 
+            
         return pretty_ae ( self                      ,
                            width       = width       ,
                            precision   = precision   ,
@@ -400,6 +428,12 @@ class ValWithErrors(object) :
         """'pos_error' : the positive (high) error"""
         return self.__errors.positive
 
+    @property
+    def symmetric ( self ) :
+        """`symmetric` : symmetric uncertanties? 
+        """
+        return self.__errors.symmetric 
+    
     # =========================================================================
     ## make a copy 
     def __copy__ ( self ) :
@@ -696,7 +730,7 @@ class ValWithErrors(object) :
                             width       = width       ,
                             precision   = precision   ,
                             parentheses = parentheses ,
-                            latex       = False       )
+                            latex       = latex       )
 
     # =========================================================================
     ## nice print
@@ -1063,7 +1097,7 @@ class ValWithMultiErrors(object) :
                             width       = width       ,
                             precision   = precision   ,
                             parentheses = parentheses ,
-                            latex       = False       )
+                            latex       = latex       )
     
     # =========================================================================
     ## nice print
@@ -1120,8 +1154,8 @@ def fmt_pretty_ae ( errors              ,
                                              width     = width     ,
                                              precision = precision ) 
       
-    if latex : fmt = '{}_{%s}^{%s}' % ( fmte , fmte )
-    else     : fmt = '-/%s +/%s'    % ( fmte , fmte )    
+    if latex : fmt = '{}_{-%s}^{+%s}' % ( fmte , fmte )
+    else     : fmt = '-/%s +/%s'      % ( fmte , fmte )    
     if latex or parentheses : fmt = '( ' + fmt + ' )'    
     return fmt , fmte , expo 
 
@@ -1141,7 +1175,7 @@ def fmt_pretty_vae (  value               ,
     >>> fmt , fmtv , fmte , expo = fmt_pretty_vae ( vae , width = 8, precision = 6 ) 
     """
     assert isinstance ( value , ValWithErrors ), "Invalid type of `value`: %s" % typename ( value)
-    
+        
     from ostap.logger.pretty import fmt_pretty_error2
     return fmt_pretty_error2 ( value.value               ,
                                value.neg_error           ,
@@ -1227,6 +1261,15 @@ def pretty_vae ( value               ,
     """    
     assert isinstance ( value , ValWithErrors ), "Invalid type of `value`: %s" % typename ( value )
 
+    if value.symmetric :
+        from ostap.logger.pretty import pretty_error
+        return pretty_error ( value.value               , 
+                              value.pos_error           , 
+                              width       = width       ,
+                              precision   = precision   ,
+                              parentheses = parentheses ,
+                              latex       = latex       )
+        
     from ostap.logger.pretty import pretty_error2
     return pretty_error2 ( value.value               ,
                            value.neg_error           ,
@@ -1252,23 +1295,34 @@ def pretty_vme ( value               ,
     >>> s , expo = pretty_vme ( vme , width = 8, precision = 6 ) 
     """    
     assert isinstance ( value , ValWithMultiErrors ), "Invalid type of `value`: %s" % typename ( value)
-
-    fmt, _ , _ , expo = fmt_pretty_vme ( value                     , 
-                                         width       = width       ,
-                                         precision   = precision   ,
-                                         parentheses = parentheses ,
-                                         latex       = latex       ) 
     
-    values = [ value.value ]
-    for e in value.errors :
-        values += [ abs ( e.negative ) , e.positive ]
-        
-    values  = tuple ( values )
-    if expo:
-        scale  = 10 ** expo 
-        values = tuple ( v / scale for v in values )
+    errors  = tuple ( e.negative for e in value.errors ) 
+    errors += tuple ( e.positive for e in value.errors ) 
+    
+    from ostap.logger.pretty import fmt_pretty_errors
+    fmtv , fmte , expo = fmt_pretty_errors ( value.value           ,
+                                             *errors               , 
+                                             width     = width     ,
+                                             precision = precision ,
+                                             latex     = latex     )
 
-    return fmt % values , expo 
+    ## format asymmetric
+    fea  = " {}_{-%s}^{+%s}" % ( fmte , fmte ) if latex else " -/%s +/%s" % ( fmte       , fmte )
+    ## format symmetric 
+    fes  = " \\pm %s"        % ( fmte        ) if latex else " %s %s"     % ( plus_minus , fmte ) 
+    
+    if expo : scale = 10 ** expo
+    else    : scale = 1 
+
+    result = fmtv % ( value.value / scale ) 
+    for e in value.errors :
+        
+        if e.symmetric : result += fes % (                              e.positive / scale )
+        else           : result += fea % ( abs ( e.negative ) / scale , e.positive / scale )
+
+    if parentheses  : result = '( %s )' % result 
+
+    return result , expo 
 
 # =============================================================================
 ## shortcut 

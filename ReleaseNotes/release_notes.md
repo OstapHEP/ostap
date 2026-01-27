@@ -7,6 +7,8 @@
  1. add alias `Ostap::Math::hyperg_M`      for `Ostap::Math::hyperg_1F1`
  1. add `Ostap::Math::hyperg_U`
  1. improve `Ostap::Math::Differences`
+ 1. tiny tweaks for `graph_summary`
+ 1. tiny improvement for  `AsymErrors`, 'ValWithErrors` and `ValWithMultiErrors` prints 
 
 ## Bug fixes
 

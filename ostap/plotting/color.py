@@ -15,8 +15,9 @@ __date__    = "2014-10-19"
 __version__ = '$Revision$'
 __all__     = ()
 # =============================================================================
-from ostap.core.meta_info import root_info
-from ostap.utils.cidict   import cidict, cidict_fun 
+from ostap.core.ostap_types import integer_types, string_types 
+from ostap.core.meta_info   import root_info
+from ostap.utils.cidict     import cidict, cidict_fun 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -25,6 +26,75 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.color' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 import ROOT 
+# =============================================================================
+## Get the valid color number/index (or None)
+# 
+#  It returns the valid color index if:
+#  - <code>color</code> is a valid color index
+#  - <code>color</code> is a name  of a valid color (case-insensitive match)
+#  - <code>color</code> is a title of a valid color (case-insensitive match)
+# 
+#  Otherwise <code>None</code> is returned
+# 
+#  @code
+#  color = get_color ( 15        ) ## by index
+#  color = get_color ( 'MyColor' ) ## by name or title 
+#  @endcode
+#
+#  @see TROOT::GetColor
+#  @see TColor::GetColorByName
+#
+#  @param color (INOUT) color number index  or name, title
+#  @return valid color index or None
+def the_color ( color ) :
+    """ Get the valid color number/index (or None)
+
+    It returns the valid color index if:
+    - `color` is a valid color index
+    - `color` is a name  of a valid color (case-insensitive match)
+    - `color` is a title of a valid color (case-insensitive match)
+    
+    Otherwise `None` is returned
+
+    >>> color = get_color ( 15        ) ## by index
+    >>> color = get_color ( 'MyColor' ) ## by name or title 
+    
+    - see `ROOT.TROOT.GetColor`
+    - see `ROOT.TColor.GetColorByName`
+    """    
+    if isinstance ( color , integer_types ) and 0 <= color :
+        
+        groot = ROOT.GetROOT ()
+        if groot :
+            col = groot.GetColor ( color )
+            if col : return col.GetNumber()
+            
+        return None
+    
+    elif color and isinstance ( color , string_types ) :
+        
+        color = str ( color ).strip()
+        if not color : return None
+        
+        col   = ROOT.TColor.GetColorByName ( color ) 
+        if 0 <= col  : return col
+    
+        ## try to get by name but ignoring the case 
+        color = color.lower() 
+        groot = ROOT.GetROOT ()
+        for c in groot.GetListOfColors() :
+            if not c      : continue
+            cname  = c.GetName  ()
+            if cname  and cname.lower  () == color : return c.GetNumber()
+            ctitle = c.GetTitle () 
+            if ctitle and ctitle.lower () == color : return c.GetNumber()
+
+        return None
+
+    elif color and isinstance ( color , ROOT.TColor ) :
+        return color.GetNumber()
+
+    return None 
 # =============================================================================
 ## get RGB for the color
 #  @code

@@ -325,13 +325,13 @@ class Label(DrawConfig) :
         
 # =============================================================================
 ## @class  Limit
-#  A graphical represenation of upper/lower limit as
+#  A graphical representation of upper/lower limit as
 #  arrow from <code>limit</endcode> to <code>zero</endcode>
 #  @code
 #  l = Limit ( 0.25 , line_color = 3  , arrow_size = 0.15 , ,arrow_style = '->' )  
 #  @endcode 
 class Limit(Label) :
-    """ A graphical represenation of upper/lower limit as
+    """ A graphical representation of upper/lower limit as
     arrow from `limit`to `zero`
     >>> l = Limit ( 0.25 , line_color = 3  , arrow_size = 0.15 , arrow_style = '->' )  
     """
@@ -360,7 +360,8 @@ class Limit(Label) :
     # =========================================================================
     ## create an arrow for the upper limit at certain level 
     def arrow ( self , level ) :
-        """ Create the arrow at certain level """
+        """ Create the arrow at certain level 
+        """
         
         size  = self.config.get ( 'arrow_size'  , 0.05   )
         style = self.config.get ( 'arrow_style' , '|-|>' )
@@ -386,14 +387,14 @@ class Limit(Label) :
 # ==============================================================================
 ##  @class Record
 #   Graphical representation of the data point/measurement with several
-#   unceratinties, that can be asymmetric
+#   uncertainties, that can be asymmetric
 #   @code
 #   p1 = Record ( 15 , 0.3 , 0.4 , (-0.1,0.2) , 0.46 , marker_style = 20 , marker_size = 4 )
 #   p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
 #   @endcode
 class Record(Label) :
     """ Graphical representation of the data point/measurement with several
-    unceratinties, that can be asymmetric
+    uncertainties, that can be asymmetric
     >>> p1 = Record ( 15 , 0.3 , 0.4 , (-0.1,0.2) , 0.46 , marker_style = 20 , marker_size = 4 )
     >>> p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
     """
@@ -802,7 +803,7 @@ class SummaryGraph(object) :
 
         ## min/max axes
 
-        xmn , xmx = self.xminmax ()
+        xmn , xmx = self.get_xminmax ()
         xmn , xmx = axis_range ( xmn , xmx )
 
         vmin_ok  = not vmin is None and isinstance ( vmin , num_types ) 
@@ -930,12 +931,12 @@ class SummaryGraph(object) :
     ## get xmin/xmax for this summary graph
     #  @code
     #  summary = ...
-    #  xmin, xmax = summary.xminmax()
+    #  xmin, xmax = summary.get_xminmax()
     #  @endcode  
-    def xminmax ( self ) :
+    def get_xminmax ( self ) :
         """ Get xmin/xmax for this summary graph 
         >>> summary = ...
-        >>> xmin, xmax = summary.xminmax()
+        >>> xmin, xmax = summary.get_xminmax()
         """
         
         xmin = pos_infinity
@@ -963,12 +964,12 @@ class SummaryGraph(object) :
     ## get ymin/ymax for this summary graph
     #  @code
     #  summary  = ...
-    #  ymin, ymax = summary.yminmax()
+    #  ymin, ymax = summary.get_yminmax()
     #  @endcode  
-    def yminmax ( self ) :
+    def get_yminmax ( self ) :
         """ Get ymin/ymax for this summary graph 
         >>> summary = ...
-        >>> ymin, ymax = summary.yminmax()
+        >>> ymin, ymax = summary.get_yminmax()
         """
         ymin = pos_infinity
         ymax = neg_infinity
@@ -991,6 +992,79 @@ class SummaryGraph(object) :
             
         return ymin, ymax 
 
+    # =======================================================================
+    ## Get xminmax from underlying histogram 
+    def xminmax ( self ) : 
+        """ Get xminmax from underlying histogram 
+        """
+        return self.histo.xminmax()
+
+    # =======================================================================
+    ## Get yminmax from underlying histogram 
+    def yminmax ( self ) : 
+        """ Get yminmax from underlying histogram 
+        """
+        if 1 < self.histo.dim() :  return self.histo.yminmax() 
+        return self.histo.GetMinimum() , self.histo.GetMaximum ()
+
+    # ========================================================================
+    ## Add vertical line to the graph
+    #  @code
+    #  g = ...
+    #  g.add_vline ( 0.15 , line_width = 3 , line_color = Blue ) 
+    #  @endcode 
+    def add_vline ( self , value , delta = 1.e-3 , **kwargs ) :
+        """ Add vertical line to the graph
+        >>> = ...
+        >>> g.add_vline ( 0.15 , line_width = 3 , line_color = Blue ) 
+        """
+        assert isinstance ( value , num_types ) , "Invalid `value` type: %s" % typename ( value )
+        
+        xmn , xmx = self.xminmax()
+        if not xmn <= value <= xmx : return None 
+        
+        ymn , ymx = self.yminmax()
+        if delta and ( delta < 0 or abs ( delta ) < 1 ) :
+            d   = ymx - ymn
+            ymn = ymn + delta * d
+            ymx = ymx - delta * d
+
+        line = ROOT.TLine ( value , ymn , value , ymx )    
+        line.set_line_attributes ( **kwargs )
+
+        ## append to the list of known lines 
+        self.__lines = self.__lines + ( line , )
+        return line 
+
+    # ========================================================================
+    ## Add horisontal line to the graph
+    #  @code
+    #  g = ...
+    #  g.add_hline ( 0.15 , line_width = 3 , line_color = Blue ) 
+    #  @endcode 
+    def add_hline ( self , value , delta = 1.e-3 , **kwargs ) :
+        """ Add horisontal line to the graph
+        >>> = ...
+        >>> g.add_hline ( 0.15 , line_width = 3 , line_color = Blue ) 
+        """
+        assert isinstance ( value , num_types ) , "Invalid `value` type: %s" % typename ( value )
+        
+        ymn , ymx = self.yminmax()
+        if not ymn <= value <= ymx : return None 
+        
+        xmn , xmx = self.xminmax()
+        if delta and ( delta < 0 or abs ( delta ) < 1 ) :
+            d   = xmx - xmn
+            xmn = xmn + delta * d
+            xmx = xmx - delta * d
+
+        line = ROOT.TLine ( xmn , value , xmx , value )    
+        line.set_line_attributes ( **kwargs )
+
+        ## append to the list of known lines 
+        self.__lines = self.__lines + ( line , )
+        return line 
+    
 # ============================================================================
 ## Convert/visualze  map { label : value } as "summary graph"
 #  @code

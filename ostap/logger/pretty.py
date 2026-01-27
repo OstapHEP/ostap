@@ -297,8 +297,8 @@ def fmt_pretty_error2 ( value               ,
                                              with_sign = with_sign ,
                                              latex     = latex     ) 
 
-    if latex : fmt = '%s_{%s}^{%s}' % ( fmtv , fmte , fmte )
-    else     : fmt = '%s -/%s +/%s' % ( fmtv , fmte , fmte )
+    if latex : fmt = '%s_{-%s}^{+%s}' % ( fmtv , fmte , fmte )
+    else     : fmt = '%s -/%s +/%s'   % ( fmtv , fmte , fmte )
     
     if ( latex and expo ) or parentheses : fmt = '( ' + fmt + ' )' 
     
@@ -476,8 +476,8 @@ def pretty_errors ( errlow              ,
                                           latex     = latex     )
     
     ## construct format 
-    if latex : fmt = '_{%s}^{%s}' % ( fmte , fmte )
-    else     : fmt = ' -/%s +/%s' % ( fmte , fmte )
+    if latex : fmt = '_{-%s}^{+%s}' % ( fmte , fmte )
+    else     : fmt = ' -/%s +/%s'   % ( fmte , fmte )
     if ( latex and expo ) or parentheses : fmt = '( ' + fmt + ' )' 
 
     values = abs ( elow ) , ehigh    

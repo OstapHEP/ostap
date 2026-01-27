@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2020-04-11
 # =============================================================================
-"""Draw attrributes for line,fill, marker,... 
+""" Draw attrributes for line,fill, marker,... 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -22,7 +22,8 @@ __all__     = (
     'copy_draw_attributes'  ,  ## ditto 
   )  
 # =============================================================================
-from   ostap.utils.cidict import cidict
+from   ostap.utils.cidict   import cidict
+from   ostap.plotting.color import the_color 
 import ROOT 
 # =============================================================================
 ## set line attributes for the object
@@ -30,7 +31,7 @@ import ROOT
 #  set_line_attribute ( obj , line_color = 5 , LineStyle = 6 , ... ) 
 #  @endocode
 def set_line_attributes  ( obj , **kwargs ) :
-    """Set line attributes for the object
+    """ Set line attributes for the object
     >>> set_line_attribute ( obj , line_color = 5 , LineStyle = 6 , ... ) 
     """
     
@@ -47,13 +48,13 @@ def set_line_attributes  ( obj , **kwargs ) :
         if not l is None : obj.SetLineWidth ( l )  
 
     if hasattr ( obj , 'SetLineColor' ) :
-        l = keys.get ( 'color' , None )
-        if not l is None : obj.SetLineColor ( l )  
+        color = keys.get  ( 'color' , None )
+        color = the_color (  color  )  
+        if not color is None : obj.SetLineColor ( color )  
 
     if hasattr ( obj , 'SetLineColorAlpha' ) and hasattr ( obj , 'GetLineColor' ) :
         l = keys.get ( 'color_alpha' , None )
         if not l is None : obj.SetLineColorAlpha ( object.GetLineColor() , l )  
-
 
 # =============================================================================
 ## set fill attributes for the object
@@ -61,7 +62,7 @@ def set_line_attributes  ( obj , **kwargs ) :
 #  set_fill_attribute ( obj , fill_color = 5 , FillStyle = 6 , ... ) 
 #  @endocode
 def set_fill_attributes  ( obj , **kwargs ) :
-    """Set fill attributes for the object
+    """ Set fill attributes for the object
     >>> set_fill_attribute ( obj , fill_color = 5 , FillStyle = 6 , ... ) 
     """
     
@@ -74,8 +75,9 @@ def set_fill_attributes  ( obj , **kwargs ) :
         if not l is None : obj.SetFillStyle ( l )  
 
     if hasattr ( obj , 'SetFillColor' ) :
-        l = keys.get ( 'color' , None )
-        if not l is None : obj.SetFillColor ( l )  
+        color = keys.get  ( 'color' , None )
+        color = the_color (  color  )          
+        if not color is None : obj.SetFillColor ( color )  
 
     if hasattr ( obj , 'SetFillColorAlpha' ) and hasattr ( obj , 'GetFillColor' ) :
         l = keys.get ( 'color_alpha' , None )
@@ -88,7 +90,7 @@ def set_fill_attributes  ( obj , **kwargs ) :
 #  set_marker_attribute ( obj , marker_color = 5 , MarkerStyle = 6 , ... ) 
 #  @endocode
 def set_marker_attributes  ( obj , **kwargs ) :
-    """Set marker attributes for the object
+    """ Set marker attributes for the object
     >>> set_marker_attribute ( obj , marker_color = 5 , markerStyle = 6 , ... ) 
     """
     
@@ -101,11 +103,12 @@ def set_marker_attributes  ( obj , **kwargs ) :
         if not l is None : obj.SetMarkerStyle ( l )  
 
     if hasattr ( obj , 'SetMarkerColor' ) :
-        l = keys.get ( 'color' , None )
-        if not l is None : obj.SetMarkerColor ( l )  
+        color = keys.get  ( 'color' , None )
+        color = the_color (  color  )          
+        if not color is None : obj.SetMarkerColor ( color )  
 
     if hasattr ( obj , 'SetMarkerSize' ) :
-        l = keys.get ( 'size' , None )
+        l     = keys.get ( 'size' , None )
         if not l is None : obj.SetMarkerSize  ( l )  
 
     if hasattr ( obj , 'SetMarkerColorAlpha' ) and hasattr ( obj , 'GetMarkerColor' ) :
@@ -118,7 +121,7 @@ def set_marker_attributes  ( obj , **kwargs ) :
 #  set_text_attribute ( obj , marker_color = 5 , MarkerStyle , ... ) 
 #  @endocode
 def set_text_attributes  ( obj , **kwargs ) :
-    """Set text attributes for the object
+    """ Set text attributes for the object
     >>> set_text_attribute ( obj , marker_color = 5 , markerStyle = 6 , ... ) 
     """
     
@@ -143,9 +146,9 @@ def set_text_attributes  ( obj , **kwargs ) :
         if not l is None : obj.SetTextSize  ( l )  
 
     if hasattr ( obj , 'SetTextColor' ) :
-        l = keys.get ( 'color' , None )
-        if not l is None : obj.SetTextColor ( l )  
-
+        color = keys.get  ( 'color' , None )
+        color = the_color (  color  )                  
+        if not color is None : obj.SetTextColor ( color )  
 
     if hasattr ( obj , 'SetTextColorAlpha' ) and hasattr ( obj , 'GetTextColor' ) :
         l = keys.get ( 'color_alpha' , None )
@@ -222,9 +225,6 @@ def copy_graph_attributes ( o_from , o_to ) :
 # =============================================================================
 ##  ditto 
 copy_draw_attributes = copy_graph_attributes
-
-        
-        
 
 ROOT.TAttLine   .set_line_attributes   = set_line_attributes
 ROOT.TAttFill   .set_fill_attributes   = set_fill_attributes
