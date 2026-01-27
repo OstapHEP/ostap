@@ -60,12 +60,12 @@ namespace  Ostap
    *  - "1."
    *  - "1.0"
    *  - "true" , "True" , 'TRUE'
-   *  - "yes"  . "Yes"  , "YES"
+   *  - "yes"  , "Yes"  , "YES"
    *  - only whitespaces 
    */
   bool trivial ( const std::string& selection ) ;
   // ==========================================================================
-  /// remove all leading and yraling whotespaces
+  /// remove all leading and trailing whitespaces
   std::string strip   ( const std::string& name ) ;
   /// convert to lower case
   std::string tolower ( const std::string& name ) ;

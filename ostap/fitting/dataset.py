@@ -1833,8 +1833,8 @@ def add_new_var ( dataset  ,
         logger.error ( 'Variable %s already in dataset, skip' % varname )
         return 
     
-    if isinstance ( varname , string_types ) and not Ostap.trivial ( varname ) :
-        logger.warning ( "The name `%s` is not a trivial name for the variable" % varname )
+    if isinstance ( varname , string_types ) and not Ostap.primitive ( varname ) :
+        logger.warning ( "The name `%s` is not a primitive  name for the variable" % varname )
    
     branches =  set ( dataset.branches() ) if report else set()
     
@@ -1866,19 +1866,13 @@ def add_new_var ( dataset  ,
     
     if isinstance ( varname , ROOT.RooAbsReal  )  :
         
-        if not Ostap.trivial ( varname.GetName() ) :
-            logger.warning ( "The name   `%s` is not a trivial name for variable" % varname.GetName () )
-            
-        assert not what , "Extra `wgat` argument for RooAbsReal case: %s/%s" % ( what , typename ( what ) )   
+        assert not what , "Extra `what` argument for RooAbsReal case: %s/%s" % ( what , typename ( what ) )   
         assert not args , 'Extra arguments for category case: %s' % str ( args )
         
         wargs = varname, 
         
     if isinstance ( varname , ROOT.RooCategory ) : 
         
-        if not Ostap.trivial ( varname.GetName() ) :
-            logger.warning ( "The name   `%s` is not a trivial name for variable" % varname.GetName () )
-    
         assert not args , 'Extra arguments for category case: %s' % str ( args )
      
         category = varname 
