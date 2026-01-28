@@ -62,17 +62,17 @@ def parse_args ( args = [] ) :
         ...)
         >>> print(parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split()))
         """
-        def __init__(self            ,
-                     option_strings  ,
-                     dest            ,
-                     nargs    =None  ,
-                     const    =None  ,
-                     default  =None  , 
-                     type     =None  ,
-                     choices  =None  ,
-                     required =False ,
-                     help     =None  ,
-                     metavar  =None  ) :
+        def __init__(self             ,
+                     option_strings   ,
+                     dest             ,
+                     nargs    = None  ,
+                     const    = None  ,
+                     default  = None  , 
+                     type     = None  ,
+                     choices  = None  ,
+                     required = False ,
+                     help     = None  ,
+                     metavar  = None  ) :
             if nargs == 0:
                 raise ValueError('nargs for Collect actions must be > 0; if arg '
                                  'strings are not supplying the value to append, '
@@ -97,8 +97,8 @@ def parse_args ( args = [] ) :
             for v in values : items.append(v)
             setattr(namespace, self.dest, items)
             
-
-    import ostap.core.default_config as _cnf 
+    import ostap.core.config as config 
+    
     from argparse import ArgumentParser 
     parser = ArgumentParser ( prog = 'ostap' )
     #
@@ -110,19 +110,19 @@ def parse_args ( args = [] ) :
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
         help    = "Quite processing, same as --print-level=5 [default: %(default)s]" ,
-        default = _cnf.quiet  )
+        default = config.quiet  )
     egroup1.add_argument ( 
         "--silent"     ,
         dest    = 'Silent'    , 
         action  = 'store_true' ,
         help    = "Verbose processing, same as --print-level=4 [default: %(default)s]" ,
-        default = _cnf.verbose )
+        default = config.quiet )
     egroup1.add_argument ( 
         "--verbose"     ,
         dest    = 'Verbose'    , 
         action  = 'store_true' ,
         help    = "Verbose processing, same as --print-level=1 [default: %(default)s]" ,
-        default = _cnf.verbose )
+        default = config.verbose )
     egroup1.add_argument ( 
         "--debug"        ,
         dest    = 'Debug'    , 
@@ -135,7 +135,7 @@ def parse_args ( args = [] ) :
         choices = range ( -1 , 8 ) , 
         type    = int              , 
         help    =  "Printout level [default: %(default)s]" ,
-    default = -1       )    
+        default = -1       )    
     #
     parser.add_argument (
         "files" ,
@@ -155,7 +155,7 @@ def parse_args ( args = [] ) :
         dest    = 'Commands'      ,
         nargs   = '*'             ,
         action  = Collect         , 
-        help    = "The commands for ``exec'' [default: %(default)s]" , 
+        help    = "The commands for `exec' [default: %(default)s]" , 
         default = []              )
     #
     parser.add_argument ( 
@@ -185,40 +185,40 @@ def parse_args ( args = [] ) :
         '--profile'     ,
         dest    = 'Profile'         , 
         action  = 'store_true'      , 
-        help    = "Invoke profiler" , 
+        help    = "Invoke profiler [default: %(default)s]" , 
         default = False             )
     # 
-    parser.add_argument ( 
+    group2  = parser.add_argument_group ( 'CPU/processes/parallelism' , 'Options for parallel processing') 
+    group2.add_argument (
+        '-n' , '--ncpus'          , 
+        dest    = 'NCPUs'         ,
+        type    = int             ,
+        help    = 'Maximal number of CPUs [default: %(default)s]' , 
+        default = config.ncpus    )
+         
+    group2.add_argument (
+        '--parallel'         , 
+        dest    = 'Parallel' ,
+        help    = 'Machinery for parallel processing [default: %(default)s]' , 
+        default = config.parallel  ) 
+    group2.add_argument ( 
         '--no-mt'                     ,        
         dest    = 'NoImplicitMT'      , 
         action  = 'store_true'        , 
-        help    = "DisableImplicitMT" , 
+        help    = "DisableImplicitMT [default: %(default)s]" , 
         default = False               )
+    
     #
-    parser.add_argument (
-        '--config'          , 
-        dest    = 'Config'  ,
-        nargs   = '*'       ,
-        action  = Collect   ,
-        help    = "Config files to be parsed [default:  %(default)s]" ,
-        default = []        , 
-        )
-    parser.add_argument ( 
-        '--build-dir'                        ,        
-        dest    = 'build_dir'                , 
-        help    = "Build directory for ROOT" , 
-        default = ''                         )
-    #
-    ## 2nd exclusive group
-    group2  = parser.add_argument_group ( 'Web Display' , 'Use Web/ROOT display, see ROOT.TROOT.(Set/Get)WebDisplay') 
-    egroup2 = group2.add_mutually_exclusive_group()
-    egroup2.add_argument ( 
+    ## 3nd exclusive group
+    group3  = parser.add_argument_group ( 'Web Display' , 'Use Web/ROOT display, see ROOT.TROOT.(Set/Get)WebDisplay') 
+    egroup3 = group3.add_mutually_exclusive_group()
+    egroup3.add_argument ( 
         '-w' , '--web'          ,
         dest    = 'web'         , 
         help    = "Use WebDisplay, see ROOT.TROOT.(Get/Set)WebDisplay ", 
-        default = ''            ) 
+        default = config.webdisplay  )   
     #
-    egroup2.add_argument ( 
+    egroup3.add_argument ( 
         '--no-canvas'           ,
         dest    = 'canvas'      , 
         action  = 'store_false' , 
@@ -226,25 +226,43 @@ def parse_args ( args = [] ) :
         default = True          )
     #
     ## 3rd exclusive group
-    group3  = parser.add_argument_group ( 'Sesstion type' , 'General session type: interactive/embed/plain/batch...') 
-    egroup3 = group3.add_mutually_exclusive_group()
-    egroup3.add_argument ( '-i' ,  
+    group4  = parser.add_argument_group ( 'Session type' , 'General session type: interactive/embed/plain/batch...') 
+    egroup4 = group4.add_mutually_exclusive_group()
+    egroup4.add_argument ( '-i' ,  
                            '--interactive' , dest='batch', 
                            action = 'store_false' , default = False ,
                            help = "Interactive shell/start_ipython" )
-    egroup3.add_argument ( '-e' ,
+    egroup4.add_argument ( '-e' ,
                            '--embed' , 
                            action = 'store_true' ,
-                        help = "Interactive embedded shell" )
-    egroup3.add_argument ( '-s' ,
+                           help = "Interactive embedded shell" )
+    egroup4.add_argument ( '-s' ,
                            '--simple' ,
                            action = 'store_true' ,
                            help = "Simple python shell" )
-    egroup3.add_argument ( '-b' ,
+    egroup4.add_argument ( '-b' ,
                            '--batch' ,
-                           action = 'store_true' , default = False , 
+                           action = 'store_true' , default = config.batch , 
                            help = "Batch processing: execute files and exit" )
 
+    group5 = parser.add_argument_group ( 'Directries' , 'Various directories for Ostap') 
+    group5.add_argument ( 
+        '--build-dir'                             ,         
+        dest    = 'BuildDir'                      , 
+        help    = "Build directory for ROOT&Ostap [default: %(default)s]"     , 
+        default = config.build_dir                )
+    group5.add_argument ( 
+        '--cache-dir'                             ,         
+        dest    = 'CacheDir'                      , 
+        help    = "Cache directory for Ostap [default: %(default)s]"     , 
+        default = config.cache_dir                )
+    group5.add_argument ( 
+        '--tmp-dir'                               ,       
+        dest    = 'TmpDir'                        ,
+        help    = "Temporary directory for Ostap [default: %(default)s]" ,
+        default = config.tmp_dir                  )
+    
+    
     if not args :
         import sys 
         args = sys.argv[1:]
@@ -252,7 +270,35 @@ def parse_args ( args = [] ) :
     v = [ a for a in args ]
     if '--' in v : v.remove('--')
     
-    return parser.parse_args( v )
+    arguments = parser.parse_args( v )
+
+    # =============================================================================
+    
+    config.general ['Quiet'      ] = str ( arguments.Quiet    ) 
+    config.general ['Verbose'    ] = str ( arguments.Verbose  )
+    config.general ['WebDisplay' ] = str ( arguments.web      ) 
+    config.general ['Batch'      ] = str ( arguments.batch    )
+    config.general ['Parallel'   ] = str ( arguments.Parallel ) 
+    config.general ['NCPUs'      ] = str ( arguents.NCPUs     )
+    
+    config.general ['BuildDir'   ] = arguments.BuildDir
+    config.general ['CacheDir'   ] = arguments.CacheDir
+    config.general ['TmpDir'     ] = arguments.TmpDir 
+    
+    config.quiet      = arguments.Quiet
+    config.verbose    = arguments.Verbose
+    config.batch      = arguments.batch    
+    config.webdisplay = arguments.web
+    config.parallel   = arguments.Parallel
+    config.ncpus      = arguments.NCPUs
+    
+    config.build_dir  = arguments.BuildDir
+    config.cache_dir  = arguments.CacheDir
+    config.tmp_dir    = arguments.TmpDir 
+
+
+    return arguments
+
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -263,7 +309,6 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

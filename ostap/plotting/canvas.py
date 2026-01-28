@@ -129,12 +129,12 @@ def  useWeb( web  = 'default' ) :
     return UseWeb ( web )
         
 # =============================================================================
-from ostap.core.config import web
+from ostap.core.config import webdisplay 
 # =============================================================================
-if web : # ====================================================================
+if webdisplay : # ====================================================================
     # =========================================================================
-    logger.debug  ( 'Set WebDisplay to be `%s`' % web ) 
-    setWebDisplay ( web )
+    logger.debug  ( 'Set WebDisplay to be `%s`' % webdisplay  ) 
+    setWebDisplay ( webdisplay )
 
 # =============================================================================
 ## @class KeepCanvas

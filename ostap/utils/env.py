@@ -93,9 +93,8 @@ def get_env ( variable , default , silent = False ) :
     """
     new_var   = transform ( variable )
     found     = [] 
-    for key in os.environ :
+    for key, value in os.environ.items()  :
         if transform ( key ) == new_var  :
-            value = os.environ [ key ]
             item  = key, value
             found.append  ( item )
             
@@ -110,7 +109,7 @@ def get_env ( variable , default , silent = False ) :
         import ostap.logger.table as T 
         table = T.table ( rows,  title = title  , prefix = '# ' , alignment = 'll' )
         from ostap.logger.logger import getLogger
-        logger = getLogger ( 'ostap.get_env' ) 
+        logger = getLogger ( 'ostap.utils.env' ) 
         title2 = "Found %s matches for '%s', the last is taken" % ( len ( found ) , variable )  
         logger.warning ( '%s\n%s' %  ( title2 , table ) ) 
     
@@ -123,11 +122,9 @@ def show_env ( title = 'Environment' ) :
     """
     rows = [  ( '#' , 'Variable' , 'Value' ) ]
 
-    i = 0
     keys = sorted ( os.environ.keys() )
-    for key in keys :
+    for i , key in enumerate ( keys , start = 1 ) : 
         value = os.environ [ key ] 
-        i += 1
         if 'PATH' in key :
             vv  = value.split(':')
             vv  =  '\n'.join ( vv ) 
@@ -142,7 +139,7 @@ def show_env ( title = 'Environment' ) :
 if __name__ == '__main__' :
 
     from ostap.logger.logger import getLogger
-    logger = getLogger ( 'ostap.utils.basic' )
+    logger = getLogger ( 'ostap.utils.env' )
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )

@@ -14,7 +14,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-05-19
 # =============================================================================
-"""Default configuration of ostap
+""" Default configuration of ostap
 """
 # =============================================================================
 __version__  = "$Revision$"
@@ -26,12 +26,18 @@ __all__      = (
     'config_files' , ## configuration files to read 
     )
 # =============================================================================
+import os, sys 
+# =============================================================================
 quiet        =  False
 verbose      =  False
 web          = 'off'
 ncpus        = -1    
 show_unicode = False
 parallel     = 'PATHOS'
+batch        = False
+build_dir    = ''
+cache_dir    = '$HOME/.cache/ostap'
+tmp_dir      = ''
 
 ## configuration files to read 
 config_files = (

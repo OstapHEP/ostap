@@ -20,11 +20,9 @@ __all__     = (
     'TempFile' , ## Simple placeholder for temporary file  
     )
 # =============================================================================
-import os, tempfile, datetime, weakref, re    
-# =============================================================================
-from   ostap.core.ostap_types import string_types
 from   ostap.utils.basic      import make_dir, writeable, whoami, mtime 
-from   ostap.utils.env        import get_env, OSTAP_TMP_DIR  
+import ostap.core.config      as     config
+import os, tempfile, datetime, weakref, re    
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
@@ -39,40 +37,29 @@ time_delta  = datetime.timedelta ( days = 4 ) ## from Friday to Tuesday :-)
 user        = whoami ()
 # =============================================================================            
 ## temporary directory for <code>tempfile</code> module
-base_tmp_dir = None
+base_tmp_dir = config.tmp_dir
 for_cleanup  = False 
 # =============================================================================
-## 1) check the environment variable OSTAP_TMP_DIR
-# =============================================================================
-if not base_tmp_dir : # =======================================================
-    # =========================================================================
-    base_tmp_dir = get_env ( OSTAP_TMP_DIR , None )
-    if base_tmp_dir and not os.path.exists ( base_tmp_dir ) :
-        base_tmp_dir = make_dir  ( base_tmp_dir ) 
+if base_tmp_dir :   
+    base_tmp_dir = os.path.expandvars ( base_tmp_dir )
+    base_tmp_dir = os.path.expanduser ( base_tmp_dir )
+    base_tmp_dir = os.path.expandvars ( base_tmp_dir )
+    base_tmp_dir = os.path.expanduser ( base_tmp_dir )
+    
+    if not os.path.exist ( base_tmp_dir) : 
+        try :
+            base_tmp_dir = make_dir ( base_tmp_dir )
+        except OSError :
+            base_tmp_dir = None 
+            
     if base_tmp_dir and not writeable ( base_tmp_dir ) :
         logger.warning ("Directory `%s' is not writeable!" % base_tmp_dir )
         base_tmp_dir = None
-# =============================================================================
-## 2) get from configuration file
-# =============================================================================
-if not base_tmp_dir : # =======================================================
-    # =========================================================================
-    ## 2) check the configuration file 
-    import ostap.core.config as OCC 
-    base_tmp_dir = OCC.general.get ( 'TMP_DIR' , None )
-    del OCC
-
-
-# =============================================================================
-if base_tmp_dir and not os.path.exists ( base_tmp_dir ) : # ===================
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        base_tmp_dir = make_dir ( base_tmp_dir ) # ============================
-        # =====================================================================
-    except OSError : # ========================================================
-        # =====================================================================
-        base_tmp_dir = None
+        
+    if base_tmp_dir :
+        tempfile.tempdir = ttd 
+        
+        
 # =============================================================================
 if base_tmp_dir and not writeable ( base_tmp_dir ) :
     logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
@@ -110,7 +97,7 @@ def make_base_tmp_dir () :
 def tmp_dir ( pid = None ) :
     """ Get the process-dependent name of the temporary directory
     """
-    if base_tmp_dir : return base_tmp_dir 
+    ## if base_tmp_dir : return base_tmp_dir 
         
     if not pid : pid = os.getpid()
 
@@ -211,12 +198,12 @@ class  CleanUp(object) :
     
     @classmethod
     def _clean_trash_ ( cls , trash ) :
-        """Helper class method to clean the local trash"""
+        """ Helper class method to clean the local trash"""
         while trash : cls.remove ( trash.pop () )
         
     ## delete all local trash (files, directory)
     def __del__ ( self ) :
-        """Delete all local trash (files, directory)
+        """ Delete all local trash (files, directory)
         """
         if not self.__trash : return
         if ( not self.__cleaner ) or self.__cleaner.detach () :
@@ -225,8 +212,8 @@ class  CleanUp(object) :
     # =========================================================================
     @staticmethod
     def tempdir ( suffix = '' , prefix = 'ostap-tmp-dir-' , date = True ) :
-        """Get the name of the newly created temporary directory.
-        The directory will be cleaned-up and deleted at-exit
+        """ Get the name of the newly created temporary directory.
+        - The directory will be cleaned-up and deleted at-exit
         >>> dirname = CleanUp.tempdir() 
         """
         with UseTmpDir ( tmp_dir () ) :
@@ -359,9 +346,9 @@ class  CleanUp(object) :
             
 # ============================================================================
 ## @class CUBase
-#  A ligth version of the CleanUp to bve used as helper base class
+#  A ligth-weight version of the CleanUp to be used as helper base class
 class CUBase(object) :
-    """ A ligth version of the CleanUp to be used as helper base class
+    """ A ligth-weight version of the CleanUp to be used as helper base class
     """
     # ==========================================================================
     ## expand the (file/dir)name 

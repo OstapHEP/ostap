@@ -45,7 +45,6 @@ arguments = parse_args()
 # =============================================================================
 ## do we run IPython?
 from ostap.utils.basic import with_ipython
-
 # =============================================================================
 
 # =============================================================================
@@ -103,22 +102,11 @@ if level <= logging.INFO :
     del _keys,_vars,_k,level  
     
 # =============================================================================
-if arguments.Config :
-    from ostap.utils.env import get_env, OSTAP_CONFIG 
-    cc  = get_env ( OSTAP_CONFIG , '' ).split( os.pathsep )
-    cc += arguments.Config
-    cc  = os.pathsep.join ( cc )
-    os.environ [ OSTAP_CONFIG ] = cc
-
-import ostap.core.config     
+import ostap.core.config as config 
 
 # =============================================================================
-## Web Display
-# =============================================================================
-if arguments.web :
-    ostap.core.config.general['WebDisplay'] = arguments.web
-    ostap.core.config.general['WebDisplay'] = arguments.web
-
+## fill back config with the command-line arguments:
+    
 # =============================================================================
 ## use profiling ?
 if arguments.Profile :
@@ -151,26 +139,12 @@ groot = ROOT.ROOT.GetROOT()
 groot.SetBatch ( arguments.batch )
 if groot.IsBatch() : logger.info ('Batch processing is activated') 
 
-
 # =============================================================================
-# specify the build directory for ROOT 
+# specify the build/cache&tmp directory for ROOT&Ostap 
 # =============================================================================
 import ostap.core.build_dir
-if arguments.build_dir :
-    
-    from ostap.utils.basic   import make_dir
-    from ostap.utils.cleanup import writeable 
-    bdir = arguments.build_dir
-    
-    if   writeable ( bdir )                   : pass 
-    elif bdir and not os.path.exists ( bdir ) : make_dir ( bdir ) 
-
-    if writeable ( bdir ) :
-        ROOT.gSystem.SetBuildDir ( bdir )
-        logger.info ( 'Build directory for ROOT: %s' % ostap.core.build_dir.build_dir )
-        ostap.core.build_dir.build_dir = bdir 
-        
-    del bdir, writeable , make_dir
+import ostap.core.cache_dir
+import ostap.utils.cleanup
 
 # =============================================================================
 ## ostap startup: history, readlines, etc... 

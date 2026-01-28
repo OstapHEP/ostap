@@ -31,16 +31,26 @@ __all__     = (
     'config'    , ## the parsed configuration 
     )
 # =============================================================================
+print ( 'CONFIG/1 Loading ostap.core.config' )
+
 import configparser, os, sys  
 import ostap.core.default_config as     default_config 
 from   ostap.utils.env           import ( get_env            ,
                                           has_env            ,
                                           OSTAP_CONFIG       ,
+                                          OSTAP_BATCH        ,
                                           OSTAP_SILENT       ,
                                           OSTAP_NCPUS        ,
                                           OSTAP_WEB_DISPLAY  , 
-                                          OSTAP_SHOW_UNICODE )
+                                          OSTAP_SHOW_UNICODE , 
+                                          OSTAP_PARALLEL     ,
+                                          OSTAP_BUILD_DIR    ,
+                                          OSTAP_CACHE_DIR    ,
+                                          OSTAP_TMP_DIR      )
 # =============================================================================
+
+print ( 'CONFIG/2 Define configparser' ) 
+
 ## print for configparger 
 def _cp_str_ ( cp ) :
     """ Print for config-parger
@@ -54,17 +64,20 @@ config = configparser.ConfigParser()
 type(config).__str__  = _cp_str_
 type(config).__repr__ = _cp_str_
 
-cnf = { 
+## define the major section:
+config['General'] = { 
     'Quiet'       : str ( default_config.quiet        ) ,
     'Verbose'     : str ( default_config.verbose      ) ,
     'Parallel'    : str ( default_config.parallel     ) ,
-    'WebDisplay'  : str ( default_config.web          ) , ## ROOT.TROOT.Set/Get WebDisplay
-    'ShowUnicode' : str ( default_config.show_unicode ) ,   
+    'WebDisplay'  : str ( default_config.web          ) , 
+    'ShowUnicode' : str ( default_config.show_unicode ) , 
+    'Parallel'    : str ( default_config.parallel     ) ,  
+    'Batch'       : str ( default_config.batch        ) ,
+    'BuildDir'    : str ( default_config.build_dir    ) ,
+    'CacheDir'    : str ( default_config.cache_dir    ) ,
+    'TmpDir'      : str ( default_config.tmp_dir      ) ,
 }
 # ===========================================================================
-
-## Define the major sections
-config [ 'General'  ] = cnf
 
 ## generic TCanvas configuration
 config [ 'Canvas'      ] = { 'Width'       :  '1000' , 'Height'       :  '800' , 
@@ -78,8 +91,12 @@ config [ 'RooFit'      ] = {} ## RooFit configuration
 config [ 'Pathos'      ] = {} ## PATHOS configuration  
 config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
 
-## the list of processes config files
-config_files = default_config.config_files + tuple ( get_env ( OSTAP_CONFIG , '' , True ).split( os.pathsep ) )
+## the list of config files to be proessed
+config_files = default_config.config_files 
+if has_env ( OSTAP_CONFIG ) : 
+    config_files = get_env ( OSTAP_CONFIG , '' , silent = True )
+    config_files = tuple ( config_files.split ( os.pathsep ) ) 
+    
 the_files    = [] 
 for f in config_files :
     ff = f
@@ -101,45 +118,73 @@ files_read = config.read ( config_files )
 ## General section:
 general      = config [ 'General' ]
 
-# =============================================================================
-## Some explicit & important elements from the `General` section:
-quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
-verbose      = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
-show_unicode = general.getboolean ( 'ShowUnicode' , fallback = default_config.show_unicode )
-ncpus        = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
-web          = general.getboolean ( 'WebDisplay'  , fallback = default_config.web          )
-
-# =============================================================================
-## redefine from the environment variable 
 if get_env ( OSTAP_SILENT , '' , silent = True ) : 
-    quiet   = True
-    verbose = False
+    general [ 'Quiet'   ] = 'True'
+    general [ 'Verbose' ] = 'False'
     
+if get_env ( OSTAP_SHOW_UNICODE , '' , silent = True ) : 
+    general [ 'ShowUnicode' ] = 'True'
+   
 # ============================================================================
-## redefine from the environment variable 
+## redefine ncpus from the environment variable 
 if has_env ( OSTAP_NCPUS ) : # ===============================================
     # ========================================================================
-    ncpus_ = get_env ( OSTAP_NCPUS , ncpus , silent = True  )        
+    ncpus_ = get_env ( OSTAP_NCPUS , '' , silent = True  )        
     # ========================================================================
     try : # ==================================================================
         # ====================================================================
         ncpus_ = int ( ncpus_ )
-        if 1 <= ncpus_ : ncpus = ncpus_ 
+        if 1 <= ncpus_ : general [ 'NCPUs' ] = str ( ncpus_ ) 
         # ====================================================================
     except: # ================================================================
         # ====================================================================
         pass 
 
 # ============================================================================
-## redefine from the environment variable 
-if get_env ( OSTAP_SHOW_UNICODE , '' , silent = True ) : # ===================
-    show_unicode = True
+## redefine web display from the environment variable
+if has_env ( OSTAP_WEB_DISPLAY ) :
+    web_ = get_env ( OSTAP_WEB_DISPLAY , '' , silent = True  )        
+    if web_ : general [ 'WebDisplay' ] = str ( web_ ) 
 
 # ============================================================================
-## redefine from the environment variable 
-if has_env ( OSTAP_WEB_DISPLAY ) :
-    web = get_env ( OSTAP_WEB_DISPLAY , web , silent = True )
+## redefine parallel from the environment variable
+if has_env ( OSTAP_PARALLEL ) :
+    parallel_ = get_env ( OSTAP_PARALLEL , '' , silent = True  )        
+    if parallel_ : general [ 'Parallel' ] = str ( parallel_ )
     
+if not general.getboolean ( 'Batch' , fallback = False ) and has_env ( OSTAP_BATCH ) :
+    batch_ = get_env ( OSTAP_BATCH , '' , silent = True  )        
+    if batch_ : general [ 'Batch' ] = 'True'
+    
+if not general.getboolean ( 'Batch' , fallback = False ) :
+    batch_ = any ( a.lower() in ( '-b' , '--batch' , '--no-gui' ) for a in sys.argv )
+    if batch_ : general [ 'Batch' ] = 'True'
+      
+if has_env ( OSTAP_BUILD_DIR ) :
+    build_dir_ = get_env ( OSTAP_BUILD_DIR , '' , silent = True  )        
+    if build_dir_ : general [ 'BuildDir' ] = str ( build_dir_ )
+    
+if has_env ( OSTAP_CACHE_DIR ) :    
+    cache_dir_ = get_env ( OSTAP_CACHE_DIR , '' , silent = True  )        
+    if cache_dir_ : general [ 'CacheDir' ] = str ( cache_dir_ ) 
+    
+if  has_env ( OSTAP_TMP_DIR ) :
+    tmp_dir_ = get_env ( OSTAP_TMP_DIR , '' , silent = True  )        
+    if tmp_dir_ : general [ 'TmpDir' ] = str ( tmp_dir_ )   
+    
+# =============================================================================
+## Some explicit & important elements from the `General` section:
+quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
+verbose      = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
+show_unicode = general.getboolean ( 'ShowUnicode' , fallback = default_config.show_unicode )
+ncpus        = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
+webdisplay   = general.get        ( 'WebDisplay'  , fallback = default_config.web          )
+parallel     = general.get        ( 'Parallel'    , fallback = default_config.parallel     )
+batch        = general.getboolean ( 'Batch'       , fallback = False                       )
+build_dir    = general.get        ( 'BuildDir'    , fallback = default_config.build_dir    )
+cache_dir    = general.get        ( 'CacheDir'    , fallback = default_config.cache_dir    )
+tmp_dir      = general.get        ( 'TmpDir'      , fallback = default_config.tmp_dir      )
+
 # =============================================================================
 ## Section with canvas configuration
 canvas  = config [ 'Canvas'    ]
@@ -227,9 +272,13 @@ def config_goodby () :
     except :
         pass
     
+print ( 'CONFIG/3 Ostap configuration is loaded' )
+
 # =============================================================================
 if '__main__' == __name__ :
 
+    print   ( 'CONFIG/4 Running ostap.core.config as main' )    
+    
     def _cp_hash_ ( cp ) : return hash ( str ( cp ) )
     type(config).__hash__ = _cp_hash_
 
@@ -239,6 +288,8 @@ if '__main__' == __name__ :
     cnf = '\n' + str(config)
     cnf = cnf.replace ('\n','\n# ')
     logger.info ( 'Ostap configuration is:%s' % cnf )
+    
+    print  ( 'CONFIG/5 Done' )
     
 # =============================================================================
 ##                                                                      The END 
