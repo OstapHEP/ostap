@@ -555,7 +555,7 @@ class GoF1D(object) :
 
     # =========================================================================
     ## Draw fit CDF & empirical ECDF 
-    def draw  ( self , option = '' , *args , **kwargs ) :
+    def draw  ( self , option = '' , *options , **kwargs ) :
         """ Draw fit CDF & empirical CDF
         """
         cdf  = self.__cdf
@@ -588,14 +588,14 @@ class GoF1D(object) :
         ## (1) Draw CDF from the fit 
         if isinstance ( cdf , AFUN1 ) :
             self.__frame = cdf.draw ()
-            self.__frame.draw ( option = option  )
+            self.__frame.draw ( option  , *options )
             ## self.__histo = ROOT.TH1F ( hID() , '' , 1 , xmin , xmax ) 
             ## self.__histo.draw ( min_value = 0 , max_value = 1.1 )             
             ## self.__frame.draw ( 'same' + opts )
             r1 = self.__frame 
         else : 
             self.__draw_fun = lambda x : cdf ( x ) 
-            r1 = f1_draw   ( self.__draw_fun , option = option , xmin = xmin , xmax = xmax , **kw ) 
+            r1 = f1_draw   ( self.__draw_fun , option = option , xmin = xmin , xmax = xmax , *options , **kw ) 
 
         kw   = cidict ( transform = cidict_fun , **kwargs )
         kw [ 'linecolor' ] = RoyalBlue 
@@ -607,9 +607,10 @@ class GoF1D(object) :
         # =======================================================================
         ## (2) Draw empirical CDF form data 
         r2 = draw_ecdf ( ecdf             ,
+                         tvalue = None    , 
                          option = optsame ,
                          xmin   = xmin    ,
-                         xmax   = xmax    , **kw )
+                         xmax   = xmax    , *options , **kw )
         
         return r1 , r2
     

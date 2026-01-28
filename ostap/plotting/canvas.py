@@ -556,11 +556,13 @@ def auto_plots ( pattern   = 'ostap_%0.4d' ,
 ## decorate ROOT.TObject
 if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
         
-    def _TO_draw_with_auto_ ( obj  , option = '' , *args , **kwargs ) :
-        """ Draw an object     
+    def _TO_draw_with_auto_ ( obj  , option = '' , *options , **kwargs ) :
+        """ Draw the object & make a plot 
         """
-        result = obj.draw_ostap ( option, *args , **kwargs ) 
+        ## (1) draw the object 
+        result = obj.draw_ostap ( option, *options , **kwargs ) 
 
+        ## (2) make plot 
         if Ostap.Utils.get_pad ():
             plot = AutoPlots.plot()
             if plot :
@@ -574,12 +576,13 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
     ## add new method
     ROOT.TObject.draw_with_autoplot = _TO_draw_with_auto_ 
     
-    ROOT.TObject.draw = ROOT.TObject.draw_with_autoplot
+    ## ROOT.TObject.draw = ROOT.TObject.draw_with_autoplot
         
 # =============================================================================
 ## get all known canvases 
 def getCanvases () :
-    """ Get all known canvases """
+    """ Get all known canvases 
+    """
 
     groot = ROOT.ROOT.GetROOT()
     if not groot : return () 
@@ -777,9 +780,9 @@ def partition_draw ( canvas                        ,
     >>> objects = ...
     >>> pads    = canvas.partition_draw ( objects , 3 , 2 )
     """
-    pads = canvas_partition ( canvas  ,
-                              nx = nx ,
-                              ny = ny ,
+    pads = canvas_partition ( canvas        ,
+                              nx = nx       ,
+                              ny = ny       ,
                               left_margin   = left_margin   ,
                               right_margin  = right_margin  ,
                               bottom_margin = bottom_margin ,
@@ -1085,7 +1088,8 @@ pad_keys = tuple ( cidict_fun ( k ) for k in pad_keys )
 # =============================================================================
 ## change main parametes of TAttPad
 def set_pad ( pad , **config ) :
-    """ Change main parametes of `TAttPad`"""
+    """ Change main parametes of `TAttPad`
+    """
 
     conf = cidict ( transform = cidict_fun )
     conf.update ( config )
@@ -1217,7 +1221,7 @@ class UsePad(object) :
     ## Context manager: ENTER 
     def __enter__ ( self ) :
         """ Context manager: ENTER 
-        Apply modification to the TPad 
+        - Apply modification to the TPad 
         """
         
         if not self.__pad : self.__pad = Ostap.Utils.get_pad() 
@@ -1230,7 +1234,7 @@ class UsePad(object) :
     ## Context manager: EXIT 
     def __exit__ ( self , *_ ) :
         """ Context manager: EXIT 
-        Restore configuration of TPad 
+        - Restore configuration of TPad 
         """
         
         if self.pad and self.pad_changed :

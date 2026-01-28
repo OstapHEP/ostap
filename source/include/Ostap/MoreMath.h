@@ -140,18 +140,6 @@ namespace Ostap
      */
     double beta_N ( const unsigned short n , const double x ) ;
     // ========================================================================
-    /** confluent hypergeometrical function  1F1 aka Kummer's function
-     *  \f[ f(a,b,x) = \sum_i  \frac{(a,i)}{((b,i)}\frac{x^i}{i!} \f] 
-     *  @param a INPUT a-parameter 
-     *  @param b INPUT b-argument  (b>0)
-     *  @param x argument
-     *  @return value of Kummer function
-     */
-    double kummer 
-    ( const unsigned short a ,
-      const unsigned short b , 
-      const double         x ) ;
-    // ========================================================================
     /** get quantile function for standard normal distribution
      *  @param alpha argument    <code> 0<alpha<1</code>  
      *  @see http://en.wikipedia.org/wiki/Probit
@@ -2116,6 +2104,8 @@ namespace Ostap
     // ========================================================================
     // Hypergeometric functions 
     // ========================================================================
+
+    // ========================================================================
     /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
      *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
      *  @see gsl_sf_hyperg_1F1_e
@@ -2188,7 +2178,7 @@ namespace Ostap
       const unsigned short b ,
       const double         x ) { return hyperg_1F1 ( a, b, x ) ; } 
     // ======================================================================
-    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+    /** Tricomy's confluent hypergeometruc function \f$ (a,b,x\f$ 
      *  for integer arguments 
      */
     double hyperg_U
@@ -2196,7 +2186,7 @@ namespace Ostap
       const int    b , 
       const double x ) ; 
     // =======================================================================
-    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+    /** Tricomy's confluent hypergeometruc function \f$ (a,b,x\f$ 
      *  for integer arguments 
      */
     double hyperg_U
@@ -2204,7 +2194,7 @@ namespace Ostap
       const double b , 
       const double x ) ; 
     // ======================================================================
-    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+    /** Tricomy's confluent hypergeometruc function \f$ (a,b,x\f$ 
      *  for integer arguments 
      */
     inline  double U
@@ -2212,10 +2202,26 @@ namespace Ostap
       const int    b , 
       const double x ) { return hyperg_U ( a , b , x ) ; } 
     // =======================================================================
-    /** Tricomy confluent hypergeommetruc funnction \f$ (a,b,x\f$ 
+    /** Tricomy's confluent hypergeometruc function \f$ (a,b,x\f$ 
      *  for integer arguments 
      */
     inline  double U
+    ( const double a ,
+      const double b , 
+      const double x ) { return hyperg_U ( a , b , x ) ; }
+    // ======================================================================
+    /** Tricomy' confluent hypergeometruc function \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    inline  double tricomy
+    ( const int    a ,
+      const int    b , 
+      const double x ) { return hyperg_U ( a , b , x ) ; } 
+    // =======================================================================
+    /** Tricomy' confluent hypergeometruc function \f$ (a,b,x\f$ 
+     *  for integer arguments 
+     */
+    inline  double tricomy 
     ( const double a ,
       const double b , 
       const double x ) { return hyperg_U ( a , b , x ) ; }
@@ -2241,7 +2247,14 @@ namespace Ostap
       const double b ,
       const double c ,
       const double x ) ;
-    
+
+    // ========================================================================
+    /** logistic function
+     *  \f[ f(x) = \frac{1}{ 1 + \mathrm{e}^{-x}} \f]
+     */
+    double logistic  ( const double x ) ;  
+    // ========================================================================
+
     // ========================================================================
     /** softplus function
      *  \f[ f(x) = \frac{ 1 + \mathrm{e}^{kx} } { k } \f]
@@ -2252,13 +2265,81 @@ namespace Ostap
     double softplus 
     ( const double x     ,
       const double k = 1 ) ;
-
     // ========================================================================
-    /** logistic function
-     *  \f[ f(x) = \frac{1}{ 1 + \mathrm{e}^{-x}} \f]
+    /** Rectified linear unit:  \f$ f(x) = \max ( x , 0 ) \f$
+     *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit
      */
-    double logistic  ( const double x ) ;  
+    double ReLU
+    ( const double x ) ;
     // ========================================================================
+    /** Exponential linear unit:  
+     *  -  \f$ f(x) = x \f$ for \f$ 0 \le x \f$ 
+     *  -  \f$ f(x) = \alpha^2 ( \mathrm{e}^x - 1 ) \f$ 0 \le x \< 0  \f$ 
+     *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit#ELU
+     *  @attention  we use here alpha^2 
+     */    
+    double ELU
+    ( const double x         ,
+      const double alpha = 1 ) ;
+    // ========================================================================
+    /** Gaussian-error linear unit: \f$ f(x) = x \Phi(x) \f$
+     * @see https://en.wikipedia.org/wiki/Rectified_linear_unit#Gaussian-error_linear_unit_(GELU)
+     */
+    double GeLU
+    ( const double x ) ;      
+    // =========================================================================
+    /** Sigmoid linear unit, aka swish-function
+     *   \f[ f(x) = x \mathrm{sigmoid} ( \left| \beta \right| x ) \f] 
+     *  where sigmoid is logistic function 
+     *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit#SiLU
+     *  @see https://en.wikipedia.org/wiki/Swish_function
+     */
+    double SiLU
+    ( const double x        ,
+      const double beta = 1 ) ;
+    // ========================================================================
+    /** Swish-function: Sigmoid linear unit
+     *   \f[ f(x) = x \mathrm{sigmoid} ( \left| \beta \right| x ) \f] 
+     *  where sigmoid is logistic function 
+     *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit#SiLU
+     *  @see https://en.wikipedia.org/wiki/Swish_function
+     */
+    inline double swish 
+    ( const double x        ,
+      const double beta = 1 ) { return SiLU ( x , beta ) ; }
+    // =========================================================================
+    /** Mish function: 
+     *   \f[ f(x) = x \tanh {\mathrm{softplus}} ( x )  \f] 
+     *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit#Mish
+     */
+    double mish
+    ( const double x  ) ;
+    // ========================================================================
+    /** "Square plus" function
+     *   \f[ f(x) = \frac{ x + \sqrt{ x^2 + b^2 } }{ 2 }  \f] 
+     *   @see https://en.wikipedia.org/wiki/Rectified_linear_unit#Squareplus
+     *   @attention we use b^2 here!
+     */
+    double squareplus
+    ( const double x     ,
+      const double b = 1 ) ;
+    
+    // ========================================================================
+    /** "soft-max" function of two arguments 
+     *   \f[ f_i(x) = \frac{ \mathrm{e}^{z_i}} { \sum_i \mathrm{e}^{z_i}} \f] 
+     *  @see https://en.wikipedia.org/wiki/Softmax_function
+     *  The softmax function, also known as softargmax  or normalized 
+     *  exponential function, converts a tuple of K real numbers into a 
+     *  probability distribution over K possible outcomes. 
+     *  It is a generalization of the logistic function to multiple dimensions, 
+     *  and is used in multinomial logistic regression. 
+     *  The softmax function is often used as the last activation function of 
+     *  a neural network to normalize the output of a network to a 
+     *  probability distribution over predicted output classes.
+     */
+    std::pair<double,double> softmax
+    ( const double z1 ,
+      const double z2 ) ;
 
     // ========================================================================
     // clenshaw summation algorithms 

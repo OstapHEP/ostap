@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Core objects for ostap 
+""" Core objects for ostap 
 """
 # ============================================================================= 
 __version__ = "$Revision$"
@@ -80,7 +80,7 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
-from   ostap.utils.basic      import NoContext, loop_items
+from   ostap.utils.basic      import NoContext, loop_items, typename 
 import ostap.plotting.color   
 import ROOT, cppyy, math, sys, os, re  
 # =============================================================================
@@ -461,7 +461,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
     ## save old method
     ROOT.TObject._old_draw_ = ROOT.TObject.Draw
     ##  new draw method: silent draw
-    def _TO_draw_ ( obj , option = '', *args , **kwargs ) :
+    def _TO_draw_ ( obj , option = '' , *options , **kwargs ) :
         """ (silent) Draw of ROOT object, optionally setting the drawing attributes when applicable:
         
         - LineColor
@@ -502,9 +502,25 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         >>> obg.draw ( opacity = 0.45 ) 
         >>> obg.draw ( opaque  = 0.45 ) 
+        
+        `args` are treated as "additional" options if they are of string types 
+        otherwise are ignored and warning message is issued  
 
         """
+        if   isinstance ( option , string_types   ) : pass
+        elif isinstance ( option , sequence_types ) and all ( isinstance ( o , string_types ) for o in option ) :
+            option = ' '.join ( o for o in option )
+        else :
+            logger.warning ( "draw: Invalid type of `option`: %s " % typename ( option ) ) 
+            
+        ## treat positional arguments as addtional options :
+        if   options and all ( isinstance ( o , string_types ) for o in options ) :
+            option  = option + ( ' '.join ( o for o in options ) )
+            options = ()
+        elif options :
+            logger.warning ( "draw: Invalid type of `options` : (%s)" % ( ','.join ( typename ( o ) for o in options ) ) ) 
 
+            
         from   ostap.utils.cidict import cidict, cidict_fun
         import ostap.plotting.style 
         kw = cidict ( transform = cidict_fun , **kwargs )
@@ -630,8 +646,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             
             copy = kw.pop ( 'copy' , False ) and hasattr ( obj , 'DrawCopy' )
 
-            if copy : result = obj.DrawCopy ( option , *args )
-            else    : result = obj.Draw     ( option , *args )
+            if copy : result = obj.DrawCopy ( option ) ## *args )
+            else    : result = obj.Draw     ( option ) ## *args )
                 
             result = obj
 
@@ -663,16 +679,17 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         # =====================================================================
         # =====================================================================
-        if kw : # =============================================================
+        if kw or options : # =====================================================
             # =================================================================
-            import ostap.logger.table as T 
-            rows = [ ( 'Argument' , 'Value' ) ]
-            for k , v in loop_items ( kw ) :
-                row = k , str ( v )
-                rows.append ( row )
-            title = 'draw: %d unused arguments' % len ( kw ) 
-            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
+            from ostap.logger.utils import print_args
+            title  = kw.pop ( 'title'  , '' )
+            prefix = kw.pop ( 'prefix' , '' )
+            if   kw and options : title  = 'draw: Unused %d+%d arguments' % ( len ( options ) , len ( kw ) )
+            elif kw             : title  = 'draw: Unused %d arguments'    %   len ( kw      )
+            elif args           : title  = 'draw: Unused %d arguments'    %   len ( options )            
+            prefix = '# '
+            table  = print_args ( *options , title  = title , prefix = prefix , **kw )
+            logger.warning ( '%s:\n%s' % ( title , table ) )
             
         return result 
 

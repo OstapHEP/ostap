@@ -2181,15 +2181,13 @@ ROOT.TH2D.Transpone = _h2_transpose_
 ROOT.TH2F.transpose = _h2_transpose_
 ROOT.TH2D.transpone = _h2_transpose_
 
-
 # =============================================================================
 ## Draw 2D-histogram as 'colz'
-def _h2_colz_ ( h2 , opts = '' , *args , **kwargs ) :
+def _h2_colz_ ( h2 , option = '' , *options, **kwargs ) :
     """ Draw 2D-histogram as 'colz'    
     >>> h2.colz()    
     """
-    return h2.draw ( 'colz ' + opts , *args , **kwargs )
-
+    return h2.draw ( option , 'colz' , *options , **kwargs )
 
 ROOT.TH2F . colz = _h2_colz_
 ROOT.TH2D . colz = _h2_colz_
@@ -2201,24 +2199,24 @@ ROOT.TF2  . colz = _h2_colz_
 
 # =============================================================================
 ## Draw 2D-histogram as 'text'
-def _h2_text_ ( h2 , opts = '' , fmt = '' , *args , **kwargs ) :
+def _h2_text_ ( h2 , option = '' , fmt = '' , *options , **kwargs ) :
     """ Draw 2D-histogram as 'text'    
     >>> h2.text( fmt = '5.3f')    
     """
-    if fmt : ROOT.gStyle.SetPaintTextFormat ( fmt )        
-    return h2.draw ( 'text ' + opts , *args , **kwargs )
+    if fmt and ROOT.gStyle : ROOT.gStyle.SetPaintTextFormat ( fmt )        
+    return h2.draw ( option , 'text' , *options , **kwargs )
     
 ROOT.TH2F . text = _h2_text_
 ROOT.TH2D . text = _h2_text_
 
 # =============================================================================
 ## Draw 2D-histogram as 'text'
-def _h2_texte_ ( h2 , opts = '' , fmt = '' , *args , **kwargs ) :
+def _h2_texte_ ( h2 , option = '' , fmt = '' , *options , **kwargs ) :
     """ Draw 2D-histogram as 'texte'    
     >>> h2.texte( fmt = '5.2f')    
     """
-    if fmt : ROOT.gStyle.SetPaintTextFormat ( fmt )        
-    return h2.draw ( 'texte ' + opts , *args , **kwargs )
+    if fmt and ROOT.gStyle : ROOT.gStyle.SetPaintTextFormat ( fmt )        
+    return h2.draw ( option , 'texte' , *options , **kwargs )
     
 ROOT.TH2F . texte = _h2_texte_
 ROOT.TH2D . texte = _h2_texte_
@@ -4199,10 +4197,10 @@ def _h2_isub_ ( h1 , h2 ) :
     return _h2_ioper_ ( h1 , h2 , lambda x,y : x-y ) 
 # =============================================================================
 
-def _h2_box_   ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' box'   , **kwargs )
-def _h2_lego_  ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' lego'  , **kwargs )
-def _h2_surf_  ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' surf'  , **kwargs )
-def _h2_surf2_ ( self , opts = '' , **kwargs ) : return self.draw ( opts + ' surf2' , **kwargs )
+def _h2_box_   ( self , option = '' , *options , **kwargs ) : return self.draw ( option , 'box'   , *options , **kwargs )
+def _h2_lego_  ( self , option = '' , *options , **kwargs ) : return self.draw ( option , 'lego'  , *options , **kwargs )
+def _h2_surf_  ( self , option = '' , *options , **kwargs ) : return self.draw ( option , 'surf'  , *options , **kwargs )
+def _h2_surf2_ ( self , option = '' , *options , **kwargs ) : return self.draw ( option , 'surf2' , *options , **kwargs )
 
 # =============================================================================
 ## decorate 
@@ -9573,11 +9571,10 @@ ROOT.TH2D.__repr__ = _h2_table_
 ROOT.TH3F.__repr__ = _h3_table_
 ROOT.TH3D.__repr__ = _h3_table_
 
-
 # ============================================================================
 ## draw two sets of histograms with different Y-axes 
-#  - "left set"   with the scale on leftY -axis
-#  - 'right set"  with the scale on the right Y-axis
+#  - "left set"   with the scale on the left Y-axis
+#  - "right set"  with the scale on the right Y-axis
 #  @code
 #  left_histos  = hL1, hL2, hL3 ## three histograms of `left set'
 #  right_histos = hR1, hR2      ## two histogram of `right set`
@@ -9601,7 +9598,8 @@ ROOT.TH3D.__repr__ = _h3_table_
 #  @param yrmin     if not None use it as low-Y edge of drawing range for right set 
 #  @param ylmax     if not None use it as upper-Y edge of drawing range for left set 
 #  @param yrmax     if not None use it as upper-Y edge of drawing range for right set 
-def histos_overlay ( lefts     , rights , * , 
+def histos_overlay ( lefts     ,
+                     rights    , *      , 
                      right_log = False  ,
                      left_log  = False  ,  
                      clipx     = True   ,
@@ -9762,7 +9760,7 @@ def histos_overlay ( lefts     , rights , * ,
     ## Left objects
     
     fL.draw ( copy = True , logy = left_log )
-    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) : h.draw ('same' + opt , copy = copy , **kw )    
+    for h , opt , kw  in zip ( lefts , lopts  , lkwargs ) : h.draw ( 'same' , opt , copy = copy , **kw )    
     clear_pad.Draw()
     
     clear_pad.cd ( )
@@ -9770,7 +9768,7 @@ def histos_overlay ( lefts     , rights , * ,
     if right_log : clear_pad.SetLogy( right_log )
         
     fR.DrawCopy ('Y+') 
-    for h , opt , kw in zip ( rights , ropts , rkwargs ) : h.draw( 'same' + opt , copy = copy , **kw )    
+    for h , opt , kw in zip ( rights , ropts , rkwargs ) : h.draw ( 'same' , opt , copy = copy , **kw )    
     clear_pad.Draw()
     
     cnv.Update() 
@@ -9784,18 +9782,18 @@ def histos_overlay ( lefts     , rights , * ,
 #  h2, h3 = ... other histograms
 #  histo.overlay_left  ( h2 , h3 ) 
 #  @endcode 
-def _h1_overlay_left_ ( histo , *rights , 
-                        right_log = False  ,
-                        left_log  = False  ,  
-                        clipx     = True   ,
-                        lopts     = ""     , 
-                        ropts     = ()     , 
-                        lkwargs   = {}     , 
-                        rkwargs   = {}     , 
-                        copy      = True   , 
-                        xmin      = None   , xmax   = None , 
-                        ylmin     = None   , ylmax  = None ,
-                        yrmin     = None   , yrmax  = None ) :
+def _h1_overlay_left_ ( histo     , *rights , 
+                        right_log = False   ,
+                        left_log  = False   ,  
+                        clipx     = True    ,
+                        lopts     = ""      , 
+                        ropts     = ()      , 
+                        lkwargs   = {}      , 
+                        rkwargs   = {}      , 
+                        copy      = True    , 
+                        xmin      = None    , xmax   = None , 
+                        ylmin     = None    , ylmax  = None ,
+                        yrmin     = None    , yrmax  = None ) :
     """ Overlay this histogram with another group of hisogram with right Y-axis
     >>> histo = ...
     >>> h2, h3 = ... other histograms   
@@ -9826,7 +9824,7 @@ def _h1_overlay_left_ ( histo , *rights ,
 #  h2, h3 = ... other histograms
 #  histo.overlay_right  ( h2 , h3 ) 
 #  @endcode 
-def _h1_overlay_right_ ( histo , *lefts , 
+def _h1_overlay_right_ ( histo     , *lefts , 
                          right_log = False  ,
                          left_log  = False  ,  
                          clipx     = True   ,

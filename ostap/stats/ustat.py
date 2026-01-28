@@ -391,7 +391,7 @@ class USTAT(AGoF) :
     
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
-    def draw  ( self , tvalue = None , option = '' , *args , **kwargs ) :
+    def draw  ( self , tvalue = None , option = '' , *options , **kwargs ) :
         """ Draw empirical CDF from permutations or toys 
         """
         ## 
@@ -400,9 +400,9 @@ class USTAT(AGoF) :
         ## 
         has_tvalue = not tvalue is None and isinstance ( tvalue , num_types )
         ## 
-        if not has_tvalue : return draw_ecdf ( ecdf , tvalue = None , option = option , **kwargs )
+        if not has_tvalue : return draw_ecdf ( ecdf , tvalue = None , option = option , *options , **kwargs )
         ## 
-        result, vline, hline = draw_ecdf ( ecdf , tvalue = tvalue , option = option , **kwargs )
+        result, vline, hline = draw_ecdf ( ecdf , tvalue = tvalue , option = option , *options , **kwargs )
         ## 
         self._vline = vline 
         self._hline = hline 

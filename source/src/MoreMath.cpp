@@ -661,52 +661,6 @@ double Ostap::Math::continued_fraction
   return std::numeric_limits<double>::quiet_NaN();
 }
 // ============================================================================
-/*  confluent hypergeometrical function  1F1 aka Kummer's function
- *  \f$ f(a,b,x) = \sum_i  \frac{(a,i)}{((b,i)}\frac{x^i}{i!}\$f 
- *  @param a INPUT a-parameter 
- *  @param b INPUT b-argument  (b>0)
- *  @param x argument
- *  @retutrn value of Kummer function
- */
-// ============================================================================
-double Ostap::Math::kummer 
-( const unsigned short a ,
-  const unsigned short b , 
-  const double         x ) 
-{
-  //
-  // simple cases 
-  //
-  if      ( 0 == a || s_zero ( x ) ) { return 1 ; }
-  else if ( a == b ) 
-  {
-    const long double z = x ;
-    return std::abs ( x ) < 0.3 ? std::expm1 ( z ) + 1.0L : std::exp ( z ) ;
-  }
-  else if ( 1 == a && a < b        ) { return exp_rel_N  ( x , b - 1 ) ; }
-  else if ( a + 1 == b ) 
-  {
-    long double gs = gamma_star ( a , -x );
-    return gs * _factorial_d_ ( a ) ;
-  }
-  //
-  // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ;
-  //
-  gsl_sf_result result ;
-  const int ierror  = gsl_sf_hyperg_1F1_int_e ( a  , b , x, &result) ;
-  if ( ierror ) 
-  {
-    //
-    gsl_error ( "Error from hyperg_1F1_int_e function" , __FILE__ , __LINE__ , ierror ) ;
-    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-    { return std::numeric_limits<double>::quiet_NaN() ; }
-    //
-  }
-  //
-  return result.val ;
-}
-// ============================================================================
 /*  scaled complementary error function 
  *  \f$ 1 -  erf (x) = e^{-x^2} erfcx(x)  \f$ 
  *  @param x  the argument 
@@ -6299,8 +6253,20 @@ double Ostap::Math::hyperg_2F1_renorm
     }
   return result.val ; 
 }
-// 
+// ============================================================================
 
+
+// ============================================================================
+/*  logistic function
+ *  \f[ f(x) = \frac{1}{ 1 + \mathrm{e}^{-x}} \f]
+ */
+// ============================================================================
+double Ostap::Math::logistic  ( const double x ) 
+{
+  if ( 0 <= x ) { return 1 / ( 1 + std::exp ( -x ) ) ; }
+  const double z = std::exp ( x ) ; 
+  return z / ( 1 + z ) ; 
+}  
 // ===========================================================================
 /* softplus function
  *  \f[ f(x) = \frac{ 1 + \mathrm{e}^{kx} } { k } \f]
@@ -6312,32 +6278,101 @@ double Ostap::Math::hyperg_2F1_renorm
 double Ostap::Math::softplus 
 ( const double x ,
   const double k ) 
+{
+  const double z = x * k ;
+  //
+  if      ( z < -5 )
   {
-    const double z = x * k ;
-    //
-    if      ( z < -5 )
-    {
-      const double kappa = std::exp ( z ) ;
-      return Ostap::Math::log1p_x ( kappa ) * kappa / k ; 
-    } 
-    else if ( z <  5 )  { return std::log ( 1 + std::exp ( z ) ) / k ;  }
-    //
-    const double kappa = std::exp ( -z ) ;
-    return x + kappa * Ostap::Math::log1p_x ( kappa ) / k ;
-  }
+    const double kappa = std::exp ( z ) ;
+    return Ostap::Math::log1p_x ( kappa ) * kappa / k ; 
+  } 
+  else if ( z <  5 )  { return std::log ( 1 + std::exp ( z ) ) / k ;  }
+  //
+  const double kappa = std::exp ( -z ) ;
+  return x + kappa * Ostap::Math::log1p_x ( kappa ) / k ;
+}
+// ============================================================================
+/* Rectified linear unit:  \f$ f(x) = \max ( x , 0 ) \f$
+ *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit
+ */
+// ============================================================================
+double Ostap::Math::ReLU ( const double x ) { return x <= 0 ? 0.0 : x ;  }
+// ============================================================================
+/* Exponential linear unit:  
+ *  -  \f$ f(x) = x \f$ for \f$ 0 \le x \f$ 
+ *  -  \f$ f(x) = \alpha^2 ( \mathrm{e}^x - 1 ) \f$ for \f$  x < 0 \f$ 
+ *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit#ELU
+ *  @attention  we use here alpha^2 
+ */    
+// ============================================================================
+double Ostap::Math::ELU
+( const double x     ,
+  const double alpha )
+{ return ( 0 <= x ) ? x : alpha * alpha * ( std::exp ( x ) - 1.0 ) ; }
+// ============================================================================
+/* Gaussian-error linear unit: \f$ f(x) = x \Phi(x) \f$
+ * @see https://en.wikipedia.org/wiki/Rectified_linear_unit#Gaussian-error_linear_unit_(GELU)
+ */
+// ============================================================================
+double Ostap::Math::GeLU
+( const double x )
+{ return x * gauss_cdf ( x ) ; }
+// ============================================================================
+/*  Sigmoid linear unit: 
+ *   \f[ f(x) = x \mathrm{sigmoid} ( \left| \beta \right| x ) \f] 
+ *  where sigmoid is logistic function 
+ *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit#SiLU
+ *  @see https://en.wikipedia.org/wiki/Swish_function
+ */
+// ============================================================================
+double Ostap::Math::SiLU
+( const double x    ,
+  const double beta ) 
+{ return x * logistic ( std::abs ( beta ) * x ) ; }
+// ============================================================================
+/*  Mish function: 
+ *   \f[ f(x) = x \tanh {\mathrm{softplus}} ( x )  \f] 
+ *  @see https://en.wikipedia.org/wiki/Rectified_linear_unit#Mish
+ */
+// ============================================================================
+double Ostap::Math::mish
+( const double x  )
+{ return x * std::tanh ( softplus ( x ) ) ;  }
+// ============================================================================
+/* "Square plus" function
+ *   \f[ f(x) = \frac{ x + \sqrt{ x^2 + b^2 } }{ 2 }  \f] 
+ *   @see https://en.wikipedia.org/wiki/Rectified_linear_unit#Squareplus
+ *   @attention we use b^2 here!
+ */
+// ============================================================================
+double Ostap::Math::squareplus
+( const double x ,
+  const double b )
+{ return 0.5 * ( x + std::hypot ( x , b ) ) ; }
 
 // ========================================================================
-/** logistic function
- *  \f[ f(x) = \frac{1}{ 1 + \mathrm{e}^{-x}} \f]
+/* "soft-max" function of two arguments 
+ *   \f[ f_i(x) = \frac{ \mathrm{e}^{z_i}} { \sum_i \mathrm{e}^{z_i}} \f] 
+ *  @see https://en.wikipedia.org/wiki/Softmax_function
  */
-// =========================================================================
-double Ostap::Math::logistic  ( const double x ) 
+// ========================================================================
+std::pair<double,double>
+Ostap::Math::softmax
+( const double z1 ,
+  const double z2 )
 {
-  if ( 0 <= x ) { return 1 / ( 1 + std::exp ( -x ) ) ; }
-  const double z = std::exp ( x ) ; 
-  return z / ( 1 + z ) ; 
-}  
-  
+  const long double zmax  = std::max ( z1 , z2   ) ;
+  const long double expz1 = std::exp ( z1 - zmax ) ;
+  const long double expz2 = std::exp ( z2 - zmax ) ;
+  //
+  const double      sumz  = expz1 + expz2 ;
+  //
+  if ( !sumz  ) { return std::make_pair ( 0.5 , 0.5 ) ; } // ATTENTION!
+  //
+  return std::make_pair ( expz1 / sumz , expz2 / sumz ) ;  
+}
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

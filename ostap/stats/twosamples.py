@@ -548,7 +548,7 @@ class TSTest(object):
 
     # =========================================================================
     ## draw all involved empirical CDFS
-    def draw  ( self , opts = '' , *args , **kwargs ) :
+    def draw  ( self , option = '' , *options , **kwargs ) :
         """ Draw fit CDF & empirical CDF
         """
 
@@ -568,11 +568,11 @@ class TSTest(object):
         xmin = kwargs.pop ( 'xmin' , xmin )
         xmax = kwargs.pop ( 'xmax' , xmax )
         
-        opts    = opts.strip() 
-        optsame = 'same' if not opts else '%s %s' % ( 'same' , opts ) 
-        r  = ecdf .draw ( opts    , color = 8 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
-        r1 = ecdf1.draw ( optsame , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
-        r2 = ecdf2.draw ( optsame , color = 4 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        option  = option.strip() 
+        optsame = 'same' if not option else '%s %s' % ( 'same' , option ) 
+        r  = ecdf .draw ( option  , *options , color = 8 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        r1 = ecdf1.draw ( optsame , *options , color = 2 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
+        r2 = ecdf2.draw ( optsame , *options , color = 4 , linewidth = 3 , xmin = xmin , xmax = xmax , **kwargs )
         
         return r, r1, r2
 
@@ -829,7 +829,7 @@ class TSToys(TSTest):
 
     # =========================================================================
     ## Draw ECDF for toys & statistical estimator 
-    def draw  ( self , what , opts = '' , *args , **kwargs ) :
+    def draw  ( self , what , option = '' , *options , **kwargs ) :
         """ Draw ECDF for toys & statistical estgimator 
         """
         key = cidict_fun ( what ) 
@@ -873,8 +873,8 @@ class TSToys(TSTest):
         kwargs [ 'xmin' ] = kwargs.get ( 'xmin' , xmin ) 
         kwargs [ 'xmax' ] = kwargs.get ( 'xmax' , xmax )
 
-        result    = ecdf.draw  ( opts , *args , **kwargs ) 
-        line      = ROOT.TLine ( value , 1e-3 , value , 1 - 1e-3 )
+        result    = ecdf.draw  ( option , *options , **kwargs ) 
+        line      = ROOT.TLine ( value  , 1e-3 , value , 1 - 1e-3 )
         ## 
         line.SetLineWidth ( 4 ) 
         line.SetLineColor ( 8 ) 

@@ -636,7 +636,7 @@ def format_table ( tvalue    = None ,
 #  tvalue = ...
 #  result = draw_ecdf ( ecdf , tvalue = tvalue ) 
 #  @endcode 
-def draw_ecdf ( ecdf , tvalue = None , option = '' , **kwargs ) :
+def draw_ecdf ( ecdf , tvalue = None , option = '' , *options , **kwargs ) :
     """ Draw ECDF + 2 lines when/if t-value specified
     >>> ecdf   = ...
     >>> tvalue = ...
@@ -663,7 +663,7 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , **kwargs ) :
     kw [ 'linewidth' ] = kw.pop ( 'linewidth'  , 2      )
     kw [ 'maxvalue'  ] = kw.pop ( 'maxvalue'   , 1.1    )
     
-    result = ecdf.draw  ( option = option , **kw )
+    result = ecdf.draw  ( option = option , *options , **kw )
     
     ## draw ECDF 
     if not  has_tvalue : return result

@@ -128,18 +128,16 @@ def tf1  ( self , **kwargs  ) :
     ##
     if kwargs :
         from ostap.core.core import remove_draw_args
-        kw = remove_draw_args ( kwargs )
-        if kw : 
-            import ostap.logger.table as T 
-            rows = [ ( 'Argument' , 'Value' ) ]
-            for k, v  in loop_items ( kw ) :
-                c = kwargs [ k ]
-                row = k , str ( v )
-                rows.append ( row )
-            title = 'tf1: %d unused arguments' % len ( kwargs ) 
-            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
-    ## 
+        kw     = remove_draw_args ( kwargs )
+        kw.pop ( 'title'  , '' )
+        kw.pop ( 'prefix' , '' )
+        if kw :
+            from ostap.logger.utils import print_args
+            title  = 'tf1: Unused %d arguments' % len ( kw )
+            prefix = '# ' 
+            table  = print_args ( *args , title  = title , prefix = prefix , **kw )
+            logger.warning ( '%s:\n%s' % ( title , table ) )
+            
     return fun 
 
 # =============================================================================
@@ -211,15 +209,14 @@ def tf2 ( self , **kwargs ) :
     if kwargs :
         from ostap.core.core import remove_draw_args
         kw = remove_draw_args ( kwargs )
-        if kw : 
-            import ostap.logger.table as T 
-            rows = [ ( 'Argument' , 'Value' ) ]
-            for k , v in loop_items ( kw ) :
-                row = k , str ( v )
-                rows.append ( row )
-            title = 'tf2: %d unused arguments' % len ( kwargs ) 
-            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
+        kw.pop ( 'title'  , '' )
+        kw.pop ( 'prefix' , '' )
+        if kw :
+            from ostap.logger.utils import print_args
+            title  = 'tf2: Unused %d arguments' % len ( kw )
+            prefix = '# ' 
+            table  = print_args ( *args , title  = title , prefix = prefix , **kw )
+            logger.warning ( '%s:\n%s' % ( title , table ) )
     ## 
     return fun 
 
@@ -301,16 +298,15 @@ def tf3 ( self , **kwargs ) :
     #
     if kwargs :
         from ostap.core.core import remove_draw_args
-        kw = remove_draw_args ( kwargs )
-        if kw : 
-            import ostap.logger.table as T 
-            rows = [ ( 'Argument' , 'Value' ) ]
-            for k , v in loop_items ( kw ) :
-                row = k , str ( v )
-                rows.append ( row )
-            title = 'tf3: %d unused arguments' % len ( kwargs ) 
-            table = T.table ( rows , title = 'Unused arguments' , prefix = '# ' , alignment = 'll' )    
-            logger.warning ( '%s\n%s' % ( title , table ) )
+        kw = remove_draw_args ( kwargs )    
+        kw.pop ( 'title'  , '' )
+        kw.pop ( 'prefix' , '' )
+        if kw :
+            from ostap.logger.utils import print_args
+            title  = 'tf3: Unused %d arguments' % len ( kw )
+            prefix = '# ' 
+            table  = print_args ( *args , title  = title , prefix = prefix , **kw )
+            logger.warning ( '%s:\n%s' % ( title , table ) )
     ## 
     return fun 
 
@@ -328,7 +324,7 @@ positives = ( Ostap.Math.Positive          ,
 
 # =============================================================================
 ## draw the function 
-def f1_draw ( self , option = '' , **kwargs ) :
+def f1_draw ( self , option = '' , *options , **kwargs ) :
     """ Drawing the function object through conversion to ROOT.TF1    
     >>> fun = ...
     >>> fun.draw()    
@@ -372,12 +368,12 @@ def f1_draw ( self , option = '' , **kwargs ) :
     npoints  = kw.pop ( 'npoints'  , 500  )
     callme   = kw.pop ( 'callable' , None ) 
     
-    self._plot = self._tf1.draw ( option = option  , **kw  )
+    self._plot = self._tf1.draw ( option , *options  , **kw  )
     return self
 
 # =============================================================================
 ## draw the function 
-def f2_draw ( self , opts ='' , **kwargs ) :
+def f2_draw ( self , option = '' , *options , **kwargs ) :
     """ Drawing the function object through conversion to ROOT.TF2    
     >>> fun = ...
     >>> fun.draw()    
@@ -413,12 +409,12 @@ def f2_draw ( self , opts ='' , **kwargs ) :
     args   = kw.pop ( 'args'     , ()           )
     callme = kw.pop ( 'callable' , None ) 
     
-    self._plot = self._tf2.draw ( opts , **kw )
+    self._plot = self._tf2.draw ( option , *options , **kw )
     return self
 
 # =============================================================================
 ## draw the function 
-def f3_draw ( self , opts ='' , **kwargs ) :
+def f3_draw ( self , option = '' , *options , **kwargs ) :
     """ Drawing the function object through conversion to ROOT.TF3    
     >>> fun = ...
     >>> fun.draw()    
@@ -462,11 +458,11 @@ def f3_draw ( self , opts ='' , **kwargs ) :
     npx   = kw.pop ( 'npx'      , 30           )
     npy   = kw.pop ( 'npy'      , 30           )
     npz   = kw.pop ( 'npz'      , 30           )
-    npars = kw.pop ( 'npars'    , 0  ) 
-    args  = kw.pop ( 'args'     , () )
+    npars = kw.pop ( 'npars'    , 0    ) 
+    args  = kw.pop ( 'args'     , ()   )
     call  = kw.pop ( 'callable' , None ) 
     
-    self._plot = self._tf3.draw ( opts , **kw  )
+    self._plot = self._tf3.draw ( option , *options , **kw  )
     return self
 
 # =============================================================================

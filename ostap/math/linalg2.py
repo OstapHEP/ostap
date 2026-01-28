@@ -1603,14 +1603,14 @@ class LinAlg(object) :
     #  vct.draw() 
     #  @endcode 
     @staticmethod
-    def V_DRAW ( vct , opts = '' , *args , **kwargs ) :
+    def V_DRAW ( vct , option = '' , *options , **kwargs ) :
         """ Draw the vector via conversion into 1D-histogram
         >>> vct = ...
         >>> vct.draw()  
         """
-        h1 = vct.th1()
-        h1.draw ( opts , *args , **kwargs )
-        return vct 
+        h1 = vct.th1 ()
+        h1.draw ( option , *options , **kwargs )
+        return vct, h1  
     
     # =============================================================================
     ## self-printout of permutations 
@@ -2067,14 +2067,14 @@ class LinAlg(object) :
     #  mtrx.draw() 
     #  @endcode 
     @staticmethod
-    def M_DRAW ( mtrx , opts = '' , *args , **kwargs ) :
+    def M_DRAW ( mtrx , option = '' , *options , **kwargs ) :
         """ Draw the matrix via conversion into 2D-histogram
         >>> mtrx = ...
         >>> mtrx.draw()  
         """
         h2 = mtrx.th2()
-        h2.draw ( opts , *args , **kwargs )
-        return mtrx 
+        h2.draw ( option , *options , **kwargs )
+        return mtrx, h2  
  
     # =============================================================================
     ##  Self-printout of symmetric matrices

@@ -1431,7 +1431,7 @@ def ds_project  ( dataset                 ,
 def ds_draw ( dataset ,
               what                    , * , 
               cuts      = ''          ,
-              opts      = ''          ,
+              option    = ''          ,
               cut_range = ''          ,
               first     = FIRST_ENTRY ,
               last      = LAST_ENTRY  ,
@@ -1451,8 +1451,8 @@ def ds_draw ( dataset ,
     """
     first , last = evt_range ( dataset , first , last )
     
-    ## check type of opts 
-    assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts ) 
+    ## check type of option 
+    assert isinstance ( option , string_types ) , "Invalid type of `option' : %s" % typename ( option ) 
 
     ## decode variables/cuts 
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
@@ -1470,7 +1470,7 @@ def ds_draw ( dataset ,
         return tree_draw ( dataset               ,
                            what                  ,
                            cuts      = cuts      ,
-                           opts      = opts      ,
+                           option    = option    ,
                            first     = first     ,
                            last      = last      ,
                            delta     = delta     ,
@@ -1515,7 +1515,7 @@ def ds_draw ( dataset ,
     ## fill the histogram
     histo = ds_project ( dataset , histo , varlst , cuts = cuts , cut_range = cut_range , first = first , last = last )
     ## draw the histogram 
-    histo.draw ( opts , **kw )
+    histo.draw ( option , **kw )
     return histo
 
 # =============================================================================

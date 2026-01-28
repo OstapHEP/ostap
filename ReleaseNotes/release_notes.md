@@ -1,3 +1,5 @@
+# v3.6.6.0 
+
 ## New features
 
  1. add `Ostap::Math::fermi_dirac` function for complete Fermi-Dirac integral (for non-negative integer order)
@@ -9,6 +11,8 @@
  1. improve `Ostap::Math::Differences`
  1. tiny tweaks for `graph_summary`
  1. tiny improvement for  `AsymErrors`, 'ValWithErrors` and `ValWithMultiErrors` prints 
+ 1. for all `draw` methods rename `opts` to `option`
+ 1. for all `draw` methods: treat the additional positional arguments as additional components for the `option`-argument 
 
 ## Bug fixes
 
@@ -21,7 +25,7 @@
 ## New features
 
  1. minor tweak for the treatment of `delta` for `Ostap::Math::Sigmoid`. It should improve the fits.
- 1. many fixes and tweaks  for `DNN` & `USTAT` Goodness of fit estimators 
+ 1. many fixes and tweaks  for `DNN` & `USTAT` Goodness-of-fit estimators 
  1. more fixes & tweaks for GoF methods
  
 ## Bug fixes

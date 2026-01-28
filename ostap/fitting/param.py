@@ -70,7 +70,7 @@ class C1Fun(object) :
         return norm * fun ( xx ) 
     
     ## make fit 
-    def Fit ( self , histo , opts = 'S' , gopts = '' , *args ) :
+    def Fit ( self , histo , option = 'S' , goption = '' , *args ) :
         """ Make a fit
         >>> obj   = ...
         >>> histo = ... 
@@ -78,7 +78,7 @@ class C1Fun(object) :
         """
         assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , 'Invalid histo-type!'
         ## make a fit 
-        return histo.Fit ( self.__tf1 , opts , gopts , *args )
+        return histo.Fit ( self.__tf1 , option , goption , *args )
 
 
     ## fix parameter 
@@ -147,7 +147,7 @@ class C1Fun(object) :
     def Draw ( self , *args , **kwargs ) : return self.draw ( *args , **kwargs ) 
     def draw ( self , *args , **kwargs ) :
         t = self.__tf1
-        return t.draw( *args , **kwargs )
+        return t.draw ( *args , **kwargs )
 
 
 # =============================================================================
@@ -189,8 +189,8 @@ class HFIT(object) :
     
     def draw ( self , *args , **kwargs )           : return self.fun.draw ( *args , **kwargs ) 
     def Draw ( self , *args , **kwargs )           : return self.fun.draw ( *args , **kwargs )    
-    def fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
-    def Fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
+    def fit  ( self , histo , option = 'S' , goption = '' , *args ) : return h.Fit ( self.fun , option , goption , *args ) 
+    def Fit  ( self , histo , option = 'S' , goption = '' , *args ) : return h.Fit ( self.fun , option , goption , *args ) 
     
 # =============================================================================
 ## @class H_fit
@@ -385,13 +385,13 @@ def  _funobjN_ ( self ) :
 
 # ==============================================================================
 ## draw spline object
-def _sp_draw_   ( self , opts = '' ) :
+def _sp_draw_   ( self , option = '' , *options , **kwargs ) :
     """ Draw spline object
     >>> spline = ...
     >>> spline.draw() 
     """
     bf = self.funobj () 
-    return bf.fun.Draw( opts ) 
+    return bf.fun.Draw ( option , *options , **kwargs ) 
     
 
 for t in (  Ostap.Math.Bernstein        ,

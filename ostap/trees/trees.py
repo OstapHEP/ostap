@@ -562,7 +562,7 @@ ROOT.TChain.project = tree_project
 def tree_draw ( tree                     , 
                 what                     ,
                 cuts       = ''          ,
-                opts       = ''          , * , 
+                option     = ''          , * , 
                 first      = FIRST_ENTRY , 
                 last       = LAST_ENTRY  , 
                 use_frame  = False       , ## use DataFrame ? 
@@ -571,8 +571,8 @@ def tree_draw ( tree                     ,
                 delta      = 0.01        ,
                 progress   = False       , **kwargs ) :  
  
-    ## check type of opts 
-    assert isinstance ( opts , string_types ) , "Invalid type of `opts' : %s" % type ( opts )
+    ## check type of option 
+    assert isinstance ( option , string_types ) , "Invalid type of `option' : %s" % typename ( option )
     
     ## adjust first/last indices 
     first , last = evt_range ( tree , first , last )
@@ -581,7 +581,7 @@ def tree_draw ( tree                     ,
     varlst, cuts, input_string = vars_and_cuts  ( what , cuts )
     if input_string and 2 <= len ( varlst ) and order_warning :
         vv = ' ; '.join  ( varlst ) 
-        logger.attention ("draw: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv  )
+        logger.attention ( "draw: from v1.10.1.9 variables are in natural order [x;y;..]=[ %s ]" % vv )
     
     nvars = len ( varlst ) 
     assert 1 <= nvars <= 3 , "Invalid number of variables: %s" % str ( varlst )
@@ -594,7 +594,7 @@ def tree_draw ( tree                     ,
             groot.cd()            
             hname  = hID ()
             varexp = '(%s) >> %s' % ( varlst [ 0 ] , hname )
-            tree.Draw ( varexp , cuts , opts , last - first , first )
+            tree.Draw ( varexp , cuts , option , last - first , first )
             cdir   = ROOT.gDirectory()
             histo  = cdir.Get ( hname )
             assert histo and isinstance ( histo , ROOT.TH1 ) and histo.GetName() == hname , \
@@ -602,7 +602,7 @@ def tree_draw ( tree                     ,
             ## remove keys related to the booking 
             for k in histo_keys : kw.pop( k , None )
             ## draw the histogram 
-            histo.draw ( opts , **kw ) 
+            histo.draw ( option , **kw ) 
             return histo
             
     ## get the suitable ranges for the variables
@@ -639,7 +639,7 @@ def tree_draw ( tree                     ,
                            progress  = progress  )
     
     ## draw the histogram 
-    histo.draw ( opts , **kw )
+    histo.draw ( option , **kw )
     return histo
 
 ROOT.TTree .draw = tree_draw 

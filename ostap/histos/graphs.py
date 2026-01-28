@@ -706,7 +706,7 @@ ROOT.TGraph.    pointY = _gr_point_y_
 #  @see TGraph::Eval
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _gr_call_ ( graph , x , spline = None , opts = 'b1e1' , *args ) :
+def _gr_call_ ( graph , x , spline = None , option = 'b1e1' , *args ) :
     """ Use graph as a function
     >>> graph = ...
     >>> y     = graph ( 0.2 ) 
@@ -719,10 +719,10 @@ def _gr_call_ ( graph , x , spline = None , opts = 'b1e1' , *args ) :
     if not spline :
         spline = ROOT.nullptr
         if 3 < len( graph ) :
-            if 's' in opts or 'S' in opts :
-                spline = self.spline3  ( opts , *args )
+            if 's' in option or 'S' in option :
+                spline = self.spline3  ( option , *args )
             
-    return graph.Eval ( float ( x ) , spline , opts )
+    return graph.Eval ( float ( x ) , spline , option )
 
 # =============================================================================
 ## Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
@@ -2804,7 +2804,7 @@ ROOT.TGraph            .__hash__         = _gr_hash_
 #  spline = graph.spline3() 
 #  @endcode
 #  @see TSpline3 
-def _gr_spline3_ ( graph , opts = 'b1e1', *args ) :
+def _gr_spline3_ ( graph , option = 'b1e1', *args ) :
     """ Get 3-spline for the given graph
     >>> graph  = ...
     >>> spline = graph.spline3()
@@ -2818,12 +2818,12 @@ def _gr_spline3_ ( graph , opts = 'b1e1', *args ) :
     if hasattr ( graph , attr ) :
         prev_hash , spline3 = getattr ( graph , attr ) 
 
-    status    = hash ( graph   ) , opts.lower() , args
+    status    = hash ( graph   ) , option.lower() , args
 
     curr_hash = hash ( status  )
         
     if curr_hash != prev_hash or not spline3 :
-        spline3 = ROOT.TSpline3 ( 'spline' , graph , opts , *args )
+        spline3 = ROOT.TSpline3 ( 'spline' , graph , option , *args )
         
     setattr ( graph , attr , ( curr_hash , spline3 ) ) 
     
@@ -2841,7 +2841,7 @@ ROOT.TGraph            .spline3      =   _gr_spline3_
 #  e1   = graph.cond  ( 'e1' ) ## 1st derivative at start point 
 #  e2   = graph.cond  ( 'e2' ) ## 2nd derivative at the end 
 #  @endcode
-def _gr_bcond_  ( graph , opts )  :
+def _gr_bcond_  ( graph , option )  :
     """ Get possible boundary  conditions for  graphs
     >>> graph = ...
     >>> b1   = graph.bcond  ( 'b1' ) ## 1st derivative at start point
@@ -2851,35 +2851,34 @@ def _gr_bcond_  ( graph , opts )  :
     """
     assert  2<= len ( graph ), 'At least two points are required for get a boundary condditions!'
     
-    opts = opts.lower()
-    
-    assert opts in ( 'b1' , 'e1' , 'b2' , 'e2' ), 'Invalid boundary condition %s is requested' % opts
+    option = option.lower()    
+    assert option in ( 'b1' , 'e1' , 'b2' , 'e2' ), 'Invalid boundary condition %s is requested' % option
 
     gr = graph.sorted()
     
-    if   opts == 'b1' :
+    if   option == 'b1' :
         
         x0 , y0 = gr.point (  0 )
         x1 , y1 = gr.point (  1 )
         
         return ( y1 - y0 ) / ( x1 - x0 )
     
-    elif opts == 'e1' :
+    elif option == 'e1' :
         
         x0 , y0 = gr.point ( -2 )
         x1 , y1 = gr.point ( -1 )
         
         return ( y1 - y0 ) / ( x1 - x0 )
 
-    assert  3<= len ( graph ), 'At least three points are required for get a boundary condditions!'
+    assert  3 <= len ( graph ), 'At least three points are required for get a boundary condditions!'
 
-    if opts == 'b2' :
+    if option == 'b2' :
         
         x0 , y0 = gr.point (  0 )
         x1 , y1 = gr.point (  1 )
         x2 , y2 = gr.point (  2 )
         
-    elif opts == 'e2' : 
+    elif option == 'e2' : 
     
         x0 , y0 = gr.point ( -3 )
         x1 , y1 = gr.point ( -2 )

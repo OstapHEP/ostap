@@ -194,8 +194,8 @@ class DisplayTree ( object ) :
     
 # ============================================================================
 ## Print all arguments as table
-#  Two keyword argument are not considered as "arguments" and just ignored
-#  (used of only for formatting the output table)
+#  Two keyword argument are not considered as "arguments", just ignored
+#  and used only for formatting the output table
 #  - prefix 
 #  - title
 def print_args ( *args , title = '' , prefix = '' , **kwargs ) :
@@ -207,26 +207,21 @@ def print_args ( *args , title = '' , prefix = '' , **kwargs ) :
     """
     rows  = [  ( 'Argument' , 'type' , 'value' ) ]
 
-    for i , a in enumerate ( args ) : 
+    for i , a in enumerate ( args , start = 1 ) : 
         row  = '#%d' % i , typename ( a ) , prntrf ( a )
         rows.append ( row )
 
-    ## if 'prefix' in kwargs : kwargs [ '*prefix' ] = kwargs.pop ( 'prefix' )
-    ## if 'title'  in kwargs : kwargs [ '*title'  ] = kwargs.pop ( 'title'  ) 
-    
     for key in sorted ( kwargs ) :
         v    = kwargs [ key ] 
         row  = '%s' % key , typename ( v ) , prntrf  ( v )
         rows.append ( row  )
 
-    ## prefix = kwargs.pop ( '*prefix' , '' )
-    ## if not prefix or not isinstance ( prefix , string_types ) : prefix = ''
-    ## title  = kwargs.pop ( '*title' , 'Arguments' )
-    ## if not title  or not isinstance ( title  , string_types ) : title = 'Arguments'
+    ## the title 
+    title = title if title else '%d+%d Arguments' % ( len ( args ) , len ( kwargs ) )
     
     import ostap.logger.table as T
     return T.table ( rows      ,
-                     title     = title  if title else 'Arguments',
+                     title     = title  ,
                      prefix    = prefix ,
                      alignment = 'rww'  ) 
 
