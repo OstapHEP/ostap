@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file
-#  Module with some simple but useful utilities
-#   - suppression of stdout/stderr 
-#   - dumpting of stdout/stderr into file 
-#
+#  Module with some useful Unicode symbols
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
-#  
 # =============================================================================
-""" Module with some simple but useful utilities """
+""" Module with some useful unicode symbols
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -97,16 +94,18 @@ __all__     = (
     'labels'               
 )
 # ===========================================================================
-from   ostap.utils.basic import isatty, has_unicode 
+from   ostap.utils.basic import isatty, has_unicode
+from   ostap.core.config import show_unicode
 # =============================================================================
 # logging 
 # =============================================================================
 from   ostap.logger.logger    import getLogger, logColor, logNoColor 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.stmbols' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.symbols' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 
-show = isatty() and has_unicode()
+## show unicode symbols? 
+show = has_unicode() and ( show_unicode or isatty () ) 
 
 checked_yes      = '\u2705'      if show else "+"
 checked_no       = '\u274c'      if show else "-"
@@ -117,14 +116,14 @@ thumb_up         = '\U0001f44d'  if show else '+'
 thumb_down       = '\U0001f44e'  if show else '-'
 clock            = '\U0001f550'  if show else '' 
 ram              = '\U0001f40f'  if show else ''
-runner           = '\U0001f3c3' if show else ''
-finish           = '\U0001f3c1' if show else ''
+runner           = '\U0001f3c3'  if show else ''
+finish           = '\U0001f3c1'  if show else ''
 
-arrow_left       = '\U00002190' if show else '<-'
-arrow_right      = '\U00002192' if show else '->'
-arrow_rightleft  = '\U00002194' if show else '<->'
-arrow_up         = '\U00002191' if show else '|'
-arrow_down       = '\U00002193' if show else '|'
+arrow_left       = '\U00002190'  if show else '<-'
+arrow_right      = '\U00002192'  if show else '->'
+arrow_rightleft  = '\U00002194'  if show else '<->'
+arrow_up         = '\U00002191'  if show else '|'
+arrow_down       = '\U00002193'  if show else '|'
 
 arrows_all       = ''.join ( ( '\U00002190' , '\U00002196' ,
                                '\U00002191' , '\U00002197' ,
@@ -154,7 +153,7 @@ clock_ticks      = ''.join ( ( '\U0001f558' , '\U0001f567' ,
 times            = '\U00002a2f' if show else 'x'
 plus_minus       = '\U000000B1' if show else '+/-'
 minus_plus       = '\U00002213' if show else '-/+'
-ditto            = '\U00003003' if show else '//'
+ditto            = '\U00003003' if show else '-//-'
 
 tree             = '\U0001f334' if show else ''
 chain            = '\U000026d3' if show else '' 
@@ -231,7 +230,7 @@ chisq            = chi2
 ## chi2/ndf 
 chi2ndf          = '%s/ndf' % chi2 
 
-## lowercase Greek letters 
+## Lowercase Greek letters 
 greek_lower_alpha     = '\U000003B1'  if show else 'alpha'
 greek_lower_beta      = '\U000003B2'  if show else 'beta'
 greek_lower_gamma     = '\U000003B3'  if show else 'gamma'
@@ -257,7 +256,31 @@ greek_lower_chi       = '\U0001D6C7'  if show else 'chi'
 greek_lower_psi       = '\U0001D6C8'  if show else 'psi'
 greek_lower_omega     = '\U0001D6C9'  if show else 'omega'
 
-
+## Uppercase Greek letters 
+greek_upper_alpha     = '\U00000391'  if show else 'A'
+greek_upper_beta      = '\U00000392'  if show else 'B'
+greek_upper_gamma     = '\U00000393'  if show else 'Gamma'
+greek_upper_delta     = '\U00000394'  if show else 'Delta'
+greek_upper_epsilon   = '\U00000395'  if show else 'E'
+greek_upper_zeta      = '\U00000396'  if show else 'Z'
+greek_upper_eta       = '\U00000397'  if show else 'H'
+greek_upper_theta     = '\U00000398'  if show else 'Theta'
+greek_upper_iota      = '\U00000399'  if show else 'I'
+greek_upper_kappa     = '\U0000039A'  if show else 'K'
+greek_upper_lambda    = '\U0000039B'  if show else 'Lambda'
+greek_upper_mu        = '\U0000039C'  if show else 'M'
+greek_upper_nu        = '\U0000039D'  if show else 'N'
+greek_upper_xi        = '\U0000039E'  if show else 'Xi'
+greek_upper_omicron   = '\U0000039F'  if show else 'O'
+greek_upper_pi        = '\U000003A0'  if show else 'Pi'
+greek_upper_rho       = '\U000003A1'  if show else 'P'  ## rho! 
+greek_upper_sigma     = '\U000003A3'  if show else 'Sigma'
+greek_upper_tau       = '\U000003A4'  if show else 'T'
+greek_upper_ypsilon   = '\U000003A5'  if show else 'Y'  ## upsilon! 
+greek_upper_phi       = '\U000003A6'  if show else 'Phi'
+greek_upper_chi       = '\U000003A7'  if show else 'X'  
+greek_upper_psi       = '\U000003A8'  if show else 'Psi'
+greek_upper_omega     = '\U000003A9'  if show else 'Omega'
 
 ## toys = teddy bear 
 toys                  = '\U0000F9F8'  if show else 'toys'

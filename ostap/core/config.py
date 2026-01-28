@@ -33,11 +33,18 @@ __all__     = (
 # =============================================================================
 import configparser, os, sys  
 import ostap.core.default_config as     default_config 
-from   ostap.utils.env           import get_env, OSTAP_CONFIG, OSTAP_NCPUS 
+from   ostap.utils.env           import ( get_env            ,
+                                          has_env            ,
+                                          OSTAP_CONFIG       ,
+                                          OSTAP_SILENT       ,
+                                          OSTAP_NCPUS        ,
+                                          OSTAP_WEB_DISPLAY  , 
+                                          OSTAP_SHOW_UNICODE )
 # =============================================================================
 ## print for configparger 
 def _cp_str_ ( cp ) :
-    """ Print for configparger"""
+    """ Print for config-parger
+    """
     import io 
     with io.StringIO() as o :
         config.write( o )
@@ -48,21 +55,13 @@ type(config).__str__  = _cp_str_
 type(config).__repr__ = _cp_str_
 
 cnf = { 
-    'Quiet'              : str ( default_config.quiet   ) ,
-    'Verbose'            : str ( default_config.verbose ) ,
-    'Parallel'           : 'PATHOS'                       ,
-    'WebDisplay'         : default_config.web             , ## ROOT.TROOT.Set/Get WebDisplay
+    'Quiet'       : str ( default_config.quiet        ) ,
+    'Verbose'     : str ( default_config.verbose      ) ,
+    'Parallel'    : str ( default_config.parallel     ) ,
+    'WebDisplay'  : str ( default_config.web          ) , ## ROOT.TROOT.Set/Get WebDisplay
+    'ShowUnicode' : str ( default_config.show_unicode ) ,   
 }
 # ===========================================================================
-try : # =====================================================================
-    # =======================================================================
-    ncpu_ = get_env ( OSTAP_NCPUS , -1 )
-    ncpu_ = int ( ncpu_ )
-    if 1 <= ncpu_ : cnf ['Ncpus' ] = ncpu_
-    # ======================================================================
-except: # ==================================================================
-    # ======================================================================
-    pass
 
 ## Define the major sections
 config [ 'General'  ] = cnf
@@ -91,25 +90,62 @@ for f in config_files :
     if not os.path.isfile ( ff )                 : continue
     if [ fn for fn in the_files if fn[0] == ff ] : continue
     the_files.append ( ( ff , f ) )
-the_files = tuple ( the_files ) 
+    
+the_files    = tuple ( the_files ) 
 config_files = tuple ( f [ 0 ] for f in the_files ) 
 
 ## read the files 
 files_read = config.read ( config_files )
 
 # =============================================================================
-## sections
-general = config [ 'General' ]
-
-quiet      = general.getboolean ( 'Quiet'      , fallback = False )
-verbose    = general.getboolean ( 'Verbose'    , fallback = False )
+## General section:
+general      = config [ 'General' ]
 
 # =============================================================================
-## section with canvas configuration
+## Some explicit & important elements from the `General` section:
+quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
+verbose      = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
+show_unicode = general.getboolean ( 'ShowUnicode' , fallback = default_config.show_unicode )
+ncpus        = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
+web          = general.getboolean ( 'WebDisplay'  , fallback = default_config.web          )
+
+# =============================================================================
+## redefine from the environment variable 
+if get_env ( OSTAP_SILENT , '' , silent = True ) : 
+    quiet   = True
+    verbose = False
+    
+# ============================================================================
+## redefine from the environment variable 
+if has_env ( OSTAP_NCPUS ) : # ===============================================
+    # ========================================================================
+    ncpus_ = get_env ( OSTAP_NCPUS , ncpus , silent = True  )        
+    # ========================================================================
+    try : # ==================================================================
+        # ====================================================================
+        ncpus_ = int ( ncpus_ )
+        if 1 <= ncpus_ : ncpus = ncpus_ 
+        # ====================================================================
+    except: # ================================================================
+        # ====================================================================
+        pass 
+
+# ============================================================================
+## redefine from the environment variable 
+if get_env ( OSTAP_SHOW_UNICODE , '' , silent = True ) : # ===================
+    show_unicode = True
+
+# ============================================================================
+## redefine from the environment variable 
+if has_env ( OSTAP_WEB_DISPLAY ) :
+    web = get_env ( OSTAP_WEB_DISPLAY , web , silent = True )
+    
+# =============================================================================
+## Section with canvas configuration
 canvas  = config [ 'Canvas'    ]
 
 # =============================================================================
-## section for RooFit 
+## Section for RooFit 
 roofit   = config [ 'RooFit'   ]
 
 # =============================================================================
@@ -117,9 +153,15 @@ roofit   = config [ 'RooFit'   ]
 fit_draw = config [ 'Fit Draw' ]
 
 # =============================================================================
-## section for Tables  
+## Section for tables  
 tables   = config [ 'Tables'   ]
 # =============================================================================
+
+# =============================================================================
+## reconfigure logging according to configuration 
+import logging
+logging.disable ( ( logging.WARNING - 1 ) if quiet   else
+                  ( logging.DEBUG   - 5 ) if verbose else ( logging.INFO - 1 ) )
 
 # =============================================================================
 # logging 
@@ -128,12 +170,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.config' )
 else                       : logger = getLogger ( __name__  )
 # =============================================================================
-import logging
-logging.disable ( ( logging.WARNING - 1 ) if quiet   else
-                  ( logging.DEBUG   - 5 ) if verbose else ( logging.INFO - 1 ) )
-
-# =============================================================================
-## check (and remove) obsolete sections 
 
 # =============================================================================
 ## the final action...

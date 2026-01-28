@@ -29,6 +29,9 @@ __all__      = (
 quiet        =  False
 verbose      =  False
 web          = 'off'
+ncpus        = -1    
+show_unicode = False
+parallel     = 'PATHOS'
 
 ## configuration files to read 
 config_files = (

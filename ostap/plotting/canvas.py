@@ -129,14 +129,8 @@ def  useWeb( web  = 'default' ) :
     return UseWeb ( web )
         
 # =============================================================================
-from   ostap.utils.env import get_env, OSTAP_DISPLAY
-web  = get_env ( OSTAP_DISPLAY , None )
+from ostap.core.config import web
 # =============================================================================
-if web is None : # ============================================================
-    # =========================================================================
-    import ostap.core.config as cnf
-    web = cnf.general [ 'WebDisplay' ]
-    # =========================================================================
 if web : # ====================================================================
     # =========================================================================
     logger.debug  ( 'Set WebDisplay to be `%s`' % web ) 
@@ -579,11 +573,10 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
     ## ROOT.TObject.draw = ROOT.TObject.draw_with_autoplot
         
 # =============================================================================
-## get all known canvases 
+## Get list of names for all known canvases 
 def getCanvases () :
-    """ Get all known canvases 
+    """ Get list of names for all known canvases 
     """
-
     groot = ROOT.ROOT.GetROOT()
     if not groot : return () 
     return tuple ( ( c.GetName() for c in groot.GetListOfCanvases() if ( c and isinstance ( c , ROOT.TCanvas ) ) ) ) 

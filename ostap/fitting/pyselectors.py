@@ -355,11 +355,13 @@ class Variable(object) :
         return self.__var
     @property
     def name        ( self ) :
-        """'name' : the name of the variable"""
+        """'name' : the actual name of the variable
+        """
         return self.__var.GetName() 
     @property
     def description ( self ) :
-        """'description' : the variable description/title"""
+        """'description' : the variable description/title
+        """
         return self.__var.GetTitle()
     @property
     def minmax      (  self ) :
@@ -367,21 +369,24 @@ class Variable(object) :
         return self.__minmax    
     @property
     def vmin ( self ) :
-        """'vmin' : minimal value (if set) """
+        """'vmin' : minimal value (if set) 
+        """
         if not self.__vmin is None : return self.__vmin
         mnmx = self.minmax
         if mnmx : return mnmx  [0]
         return None    
     @property
     def vmax ( self ) :
-        """'vmax' : maximal value (if set) """
+        """'vmax' : maximal value (if set) 
+        """
         if not self.__vmax is None : return self.__vmax
         mnmx = self.minmax
         if mnmx : return mnmx [1]
         return None    
     @property
     def accessor    ( self ) :
-        """'accessor' - the actual callable to get the value from TTree/TChain"""
+        """'accessor' - the actual callable to get the value from TTree/TChain
+        """
         return self.__accessor
     @property
     def formula ( self ) :
@@ -393,12 +398,14 @@ class Variable(object) :
         return self.__identity
     @property
     def trivial ( self ) :
-        """'trivial' - is this variable 'trivial'?"""
+        """'trivial' - is this variable 'trivial'?
+        """
         return self.__formula ## and self.__formula == self.name
 
     @property
     def really_trivial ( self ) :
-        """'really_trivial' - is it really trivial enough for RooFit?"""
+        """'really_trivial' - is it really trivial enough for RooFit?
+        """
         triv = self.trivial 
         return triv and  ( not '[' in triv ) and ( not ']' in triv )
     
@@ -410,7 +417,7 @@ class Variable(object) :
 
     @property
     def original_accessor ( self ) :
-        """`original_accessor` : originalaccessor, as specified in constructor
+        """`original_accessor` : original accessor, as specified in constructor
         """        
         return self.__original_accessor
     

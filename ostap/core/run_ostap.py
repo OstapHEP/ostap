@@ -117,6 +117,7 @@ import ostap.core.config
 # =============================================================================
 if arguments.web :
     ostap.core.config.general['WebDisplay'] = arguments.web
+    ostap.core.config.general['WebDisplay'] = arguments.web
 
 # =============================================================================
 ## use profiling ?

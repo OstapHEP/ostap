@@ -1463,7 +1463,7 @@ namespace Ostap
       const unsigned short b ,
       const Ostap::Math::ValueWithError& x  ) ;
     // ======================================================================
-    /** Tricomy confluent hypergeometruc funnction \f$ (a,b,x\f$ 
+    /** Tricomy confluent hypergeometruc function \f$ (a,b,x\f$ 
      *  for integer arguments 
      */
     Ostap::Math::ValueWithError
@@ -1472,7 +1472,7 @@ namespace Ostap
       const int    b , 
       const Ostap::Math::ValueWithError& x ) ; 
     // =======================================================================
-    /** Tricomy confluent hypergeometruc funnction \f$ (a,b,x\f$ 
+    /** Tricomy confluent hypergeometruc function \f$ (a,b,x\f$ 
      *  for integer arguments 
      */
     Ostap::Math::ValueWithError
