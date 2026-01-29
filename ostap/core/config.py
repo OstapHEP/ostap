@@ -145,6 +145,13 @@ general      = config [ 'General' ]
 if has_env ( OSTAP_BATCH ) :
     value_ = get_env ( OSTAP_BATCH , '' , silent = True  )        
     if value_ : general [ 'Batch' ] = 'True'
+    
+elif not general.getboolean ( 'Batch' , fallback = default_config.batch ) :
+    
+    value_ = any ( a.lower() in ( '-b' , '--batch' , '--no-gui' ) for a in sys.argv )
+    if value_ : general [ 'Batch' ] = 'True'
+    
+# ============================================================================
 
 if get_env ( OSTAP_SILENT , '' , silent = True ) : 
 
@@ -222,10 +229,7 @@ if has_env ( OSTAP_WEB_DISPLAY ) :
     value_ = get_env ( OSTAP_WEB_DISPLAY , '' , silent = True  )        
     if value_ : general [ 'WebDisplay' ] = value_
     
-if not general.getboolean ( 'Batch' , fallback = False ) :
-    batch_ = any ( a.lower() in ( '-b' , '--batch' , '--no-gui' ) for a in sys.argv )
-    if batch_ : general [ 'Batch' ] = 'True'
-      
+
 if has_env ( OSTAP_BUILD_DIR ) :
     build_dir_ = get_env ( OSTAP_BUILD_DIR , '' , silent = True  )        
     if build_dir_ : general [ 'BuildDir' ] = str ( build_dir_ )
@@ -276,7 +280,6 @@ startup_files = general.get       ( 'StartUp' , fallback = str ( default_config.
 if startup_files : startup_files = ast.literal_eval ( startup_files )
 else             : startup_files = () 
 
-
 # =============================================================================
 ## Section with canvas configuration
 canvas  = config [ 'Canvas'    ]
@@ -297,7 +300,6 @@ tables   = config [ 'Tables'   ]
 if has_env ( OSTAP_TABLE ) :
     value_ = get_env ( OSTAP_TABLE , '' , silent = True  )        
     if value_ : tables [ 'Style' ] = value_
-
     
 # =============================================================================
 ## The final action "at-exit"
@@ -622,7 +624,7 @@ def __parse_args ( args  = [] ) :
         dest    = 'batch'       , 
         action  = 'store_false' ,
         help    = "Interactive shell/start_ipython" ,        
-        default = False         )
+        default =  batch         )
     
     egroup5.add_argument (
         '-e'      , '--embed'   , 

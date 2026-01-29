@@ -1986,7 +1986,7 @@ class Trainer(object):
         plots = [
             ##
             ## ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
-            ( show_variables     , ( name , output     ) , style ) ,  
+            ## ( show_variables     , ( name , output     ) , style ) ,  
             ( show_correlations  , ( name , output     ) , style ) ,  
             ##
             ( show_mvas          , ( name , output , 0 ) , style ) ,  

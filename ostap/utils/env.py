@@ -25,7 +25,7 @@ __all__     = (
     'OSTAP_DEBUG'        , ## debug   processing?
     'OSTAP_VERBOSE'      , ## verbose processing?
     'OSTAP_LEVEL'        , ## print   level
-    'OSTAP_COLORS'       , ## use colors?
+    'OSTAP_COLOR'        , ## use colors?
     'OSTAP_UNICODE'      , ## show unicode in log-files? 
     #
     'OSTAP_DUMP_CONFIG'  , ## dump file for configuration

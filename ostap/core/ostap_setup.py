@@ -52,10 +52,10 @@ elif not implicitMT and     ROOT.ROOT.IsImplicitMTEnabled() :
 groot = ROOT.ROOT.GetROOT() 
 if   groot and     config.batch and not groot.IsBatch () :
     groot.SetBatch ( True  )
-    if     groot.IsBatch() : logger.attention ( "BATCH propcessig is activated!"   )
+    if     groot.IsBatch() : logger.attention ( "BATCH processig is activated!"   )
 elif groot and not config.batch and     groot.IsBatch () :
     groot.SetBatch ( False )
-    if not groot.IsBatch() : logger.info      ( "BATCH propcessig is deactivated!" )
+    if not groot.IsBatch() : logger.info      ( "BATCH processig is deactivated!" )
 
 # =============================================================================
 ## Profile ?
@@ -76,10 +76,10 @@ if config.general.getboolean ( 'Profile' , fallback = False ) :
         sortby = 'cumulative'
         _pstat = pstats.Stats( prof , stream=_sio).sort_stats('cumulative')
         _pstat.print_stats()
-        print(_sio.getvalue())
+        logger.info ('Profiler report:\n%s' % _sio.getvalue())
             
     import atexit 
-    atexit.register ( _profile_at_exit_ , _pr ) 
+    atexit.register ( _profile_atexit_ , _pr ) 
     _pr.enable()
     del _pr 
     logger.attention ( 'Profiling is activated!' )

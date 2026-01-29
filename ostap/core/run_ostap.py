@@ -95,7 +95,7 @@ else : # ======================================================================
 # =============================================================================
 ## create default canvas
 # =============================================================================
-if arguments.canvas :
+if arguments.Canvas :
     import ostap.plotting.canvas 
     logger.debug ( "Create default Ostap canvas" )
     canvas    = ostap.plotting.canvas.getCanvas ()
@@ -351,7 +351,7 @@ for pattern in arguments.files :
 del treat_file
     
 # =============================================================================
-for command in argument.Commands :
+for command in arguments.Commands :
         logger.debug  ("Try  to execute command '%s'" % command  )
         try :
             exec ( command )
