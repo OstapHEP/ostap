@@ -45,8 +45,6 @@ __all__ = (
 # =============================================================================
 import logging, os, sys  
 # =============================================================================
-print ( 'LOGGER1 .logger.logger' )
-
 ## BASIC   colorization
 # =============================================================================
 from   ostap.logger.colorized import ( isatty         ,
@@ -72,10 +70,10 @@ FATAL     = 7
 ALWAYS    = 8
 # =============================================================================
 ## some manipulations with logging module
-if not hasattr ( logging , 'VERBOSE'   ) : logging.VERBOSE   = 5
+if not hasattr ( logging , 'VERBOSE'   ) : logging.VERBOSE   = logging.DEBUG    - 5 
 if not hasattr ( logging , 'ATTENTION' ) : logging.ATTENTION = logging.INFO     + 2 
 if not hasattr ( logging , 'FATAL'     ) : logging.FATAL     = logging.CRITICAL + 1 
-if not hasattr ( logging , 'ALWAYS'    ) : logging.ALWAYS    = logging.FATAL + 1000 
+if not hasattr ( logging , 'ALWAYS'    ) : logging.ALWAYS    = logging.FATAL    + 1000 
 # =============================================================================
 ## Log message with severity 'VERBOSE'
 def _verbose1_(self, msg, *args, **kwargs):
@@ -120,12 +118,17 @@ logging.Logger.attention = _attention1_
 ## add method 'attention' to root logger 
 logging.attention        = _attention2_
 # =============================================================================
+## Logger with support for soem rudimentaty markup 
 def log_with_markup ( method ) :
+    """ Logger with support for soem rudimentaty markup"""
+    ## Logger with support for soem rudimentaty markup     
     def _log_with_markup_ ( ll  , level , message , args , **kwargs ) :
+        """ Logger with support for soem rudimentaty markup"""        
         use_markup = kwargs.pop ( 'markup' , False ) and with_colors () 
         if use_markup : message = markup ( message ) 
         return method ( ll , level , message , args , **kwargs )
-    return _log_with_markup_ 
+    return _log_with_markup_
+# =============================================================================
 logging.Logger._log =  log_with_markup ( logging.Logger._log )
 # =============================================================================
 
@@ -157,12 +160,13 @@ logging.always         = _always2_
 def setLogging ( output_level ) :
     """ Convert MSG::Level into logging level 
     """
-    if   FATAL   <= output_level : logging.disable ( logging.CRITICAL - 1 )
-    elif ERROR   <= output_level : logging.disable ( logging.ERROR    - 1 )
-    elif WARNING <= output_level : logging.disable ( logging.WARNING  - 1 )
-    elif INFO    <= output_level : logging.disable ( logging.INFO     - 1 )
-    elif DEBUG   <= output_level : logging.disable ( logging.DEBUG    - 1 )
-    elif VERBOSE <= output_level : logging.disable ( logging.VERBOSE  - 1 )
+    if   FATAL     <= output_level : logging.disable ( logging.CRITICAL - 2 )
+    elif ERROR     <= output_level : logging.disable ( logging.ERROR    - 2 )
+    elif WARNING   <= output_level : logging.disable ( logging.WARNING  - 2 )
+    elif INFO      <= output_level : logging.disable ( logging.INFO     - 2 )
+    elif ATTENTION <= output_level : logging.disable ( logging.INFO         )
+    elif DEBUG     <= output_level : logging.disable ( logging.DEBUG    - 2 )
+    elif VERBOSE   <= output_level : logging.disable ( logging.VERBOSE  - 2 )
 
 # =============================================================================
 ## define standard logging names
@@ -207,7 +211,7 @@ def threshold()  :
 def enabled  ( level ) :
     """ Are prints at the givel level enabled?
     """
-    return threshold() < level
+    return threshold () < level
 
 # =============================================================================
 ## Are VERBOSE  prints  enabled? 
@@ -289,7 +293,6 @@ def getLogger ( name   = 'ostap'        ,
         logger.setLevel ( level  )
     #
     return logger
-
 
 # =============================================================================
 ## @class KeepLevel
@@ -537,8 +540,7 @@ class ColorLogging(object) :
 #      ... do something ... 
 #  @endcode 
 def logColor ( color = True ) :
-    """ Simple context manager to switch on coloring
-    
+    """ Simple context manager to switch on coloring    
     >>> with logColor () :
     ...     do something ... 
     """
@@ -551,8 +553,7 @@ def logColor ( color = True ) :
 #      ... do something ... 
 #  @endcode 
 def logNoColor () :
-    """ Simple context manager to switch on coloring
-    
+    """ Simple context manager to switch on coloring    
     >>> with logNoColor () :
     ...     do something ... 
     """
@@ -565,8 +566,7 @@ def logNoColor () :
 #      ... do something ... 
 #  @endcode 
 def noColor () :
-    """ Simple context manager to switch on coloring
-    
+    """ Simple context manager to switch on coloring    
     >>> with noColor () :
     ...     do something ... 
     """
@@ -581,8 +581,7 @@ def noColor () :
 #      ... do something ... 
 #  @endcode 
 class KeepColorLogging(object) :
-    """ Simple context manager to preserve coloring
-    
+    """ Simple context manager to preserve coloring    
     >>> with KeepColorLogging() :
     ...     do something ... 
     """
@@ -601,8 +600,7 @@ class KeepColorLogging(object) :
 #      ... do something ... 
 #  @endcode 
 def keepColor () :
-    """ Simple context manager to preserve color logging 
-    
+    """ Simple context manager to preserve color logging     
     >>> with keepColor () :
     ...     do something ... 
     """
@@ -611,62 +609,19 @@ def keepColor () :
 # =============================================================================
 # Actions!
 # =============================================================================
+import ostap.core.config as config
 
-## reset colors
-if isatty  () : make_colors()
+## (1) logging threshold 
 
-## define the default logging thresholds as 'INFO'
-setLogging ( 3 )
+if   config.silent                 : setLogging ( ERROR        )  
+elif config.quiet                  : setLogging ( WARNING      ) 
+elif config.debug                  : setLogging ( DEBUG        ) 
+elif config.verbose                : setLogging ( VERBOSE      )
+elif ALL <= config.level <= ALWAYS : setLogging ( config.level )
+else                               : setLogging ( INFO         )
 
-## # =============================================================================
-## # Log file?
-## # =============================================================================
-## log_file = os.getenv ( 'OSTAP_LOGFILE' , '' )
-## if log_file : 
-
-##     ## set buffering to be 1-line and decolorize the output   
-##     class LogHandler(logging.FileHandler) :
-##         def __init__(self, filename, mode='w', encoding=None, delay=0):
-##             logging.FileHandler.__init__ ( self , filename , mode , encoding, delay ) 
-##         def _open(self):
-##             """
-##             Open the current base file with the (original) mode and encoding.
-##             Return the resulting stream.
-##             """
-##             stream = open(self.baseFilename, self.mode, buffering = 1 )
-##             return stream
-        
-##         def emit(self, record):
-##             """Emit an ddecolorize the record
-##             """
-##             lname = logging_levels.get ( record.levelno , '' )
-##             if not lname : lname = '%s' % record.levelno
-##             record.levelname = lname
-##             if with_colors () : record.msg = decolorize ( record.msg ) 
-##             return logging.FileHandler.emit ( self , record ) 
-    
-##     loglev = os.getenv ( 'OSTAP_LOGLEVEL' , '%s' % logging.INFO )
-##     try :
-##         loglev = int ( loglev )
-##         if not loglev in logging_levels : loglev = logging.INFO 
-##     except :
-##         loglev = logging.INFO
-##     log_handler = LogHandler ( log_file , mode = 'w' )
-##     log_handler.setLevel ( loglev ) 
-##     formatter   = logging.Formatter ( logging_file_format , logging_date_format )
-##     log_handler.setFormatter ( formatter   ) 
-##     logging.root.addHandler  ( log_handler )
-
-## if log_file :
-
-##     logger = getLogger('ostap.logger.logger')
-##     func   = lambda : logger.info ( 'Log-file is %s' %  log_file )
-##     func () 
-##     import atexit    
-##     atexit.register ( func )
-
-logging.disable ( logging.INFO - 1 )  
-
+## (2) reset colors
+if config.color and isatty ()      : make_colors()
 
 # =============================================================================
 if __name__ == '__main__' :

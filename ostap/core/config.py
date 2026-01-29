@@ -31,67 +31,90 @@ __all__     = (
     'config'    , ## the parsed configuration 
     )
 # =============================================================================
-print ( 'CONFIG/1 Loading ostap.core.config' )
-
-import configparser, os, sys  
-import ostap.core.default_config as     default_config 
+from   ostap                     import __version__ 
 from   ostap.utils.env           import ( get_env            ,
                                           has_env            ,
+                                          ##
                                           OSTAP_CONFIG       ,
                                           OSTAP_BATCH        ,
+                                          ## 
                                           OSTAP_SILENT       ,
-                                          OSTAP_NCPUS        ,
-                                          OSTAP_WEB_DISPLAY  , 
-                                          OSTAP_SHOW_UNICODE , 
-                                          OSTAP_PARALLEL     ,
+                                          OSTAP_QUIET        ,
+                                          OSTAP_DEBUG        ,
+                                          OSTAP_VERBOSE      ,
+                                          OSTAP_LEVEL        ,
+                                          OSTAP_COLOR        ,
+                                          OSTAP_UNICODE      ,
+                                          ## 
+                                          OSTAP_DUMP_CONFIG  ,
+                                          ##
                                           OSTAP_BUILD_DIR    ,
-                                          OSTAP_CACHE_DIR    ,
-                                          OSTAP_TMP_DIR      )
+                                          OSTAP_CACHE_DIR    ,                                          
+                                          OSTAP_TMP_DIR      ,
+                                          ## 
+                                          OSTAP_WEB_DISPLAY  ,
+                                          ##
+                                          OSTAP_PARALLEL      ,                                          
+                                          OSTAP_NCPUS         ,
+                                          OSTAP_IMPLICITMT    ,                                          
+                                          OSTAP_PROFILE       ,                                          
+                                          ##
+                                          OSTAP_TABLE         ,
+                                          ## 
+                                          OSTAP_STARTUP       )
+
+# =============================================================================
+import ostap.core.default_config      as     default_config 
+import configparser, os, sys, logging, argparse, ast, copy      
+# =============================================================================
+## config-parser itself 
+config = configparser.ConfigParser()
 # =============================================================================
 
-print ( 'CONFIG/2 Define configparser' ) 
-
-## print for configparger 
-def _cp_str_ ( cp ) :
-    """ Print for config-parger
-    """
-    import io 
-    with io.StringIO() as o :
-        config.write( o )
-        return o.getvalue()
-
-config = configparser.ConfigParser()
-type(config).__str__  = _cp_str_
-type(config).__repr__ = _cp_str_
-
 ## define the major section:
-config['General'] = { 
-    'Quiet'       : str ( default_config.quiet        ) ,
-    'Verbose'     : str ( default_config.verbose      ) ,
-    'Parallel'    : str ( default_config.parallel     ) ,
-    'WebDisplay'  : str ( default_config.web          ) , 
-    'ShowUnicode' : str ( default_config.show_unicode ) , 
-    'Parallel'    : str ( default_config.parallel     ) ,  
+config [ 'General' ] = {
+    ##
     'Batch'       : str ( default_config.batch        ) ,
-    'BuildDir'    : str ( default_config.build_dir    ) ,
-    'CacheDir'    : str ( default_config.cache_dir    ) ,
-    'TmpDir'      : str ( default_config.tmp_dir      ) ,
+    ##
+    'Silent'      : str ( default_config.silent        ) ,
+    'Quiet'       : str ( default_config.quiet         ) ,
+    'Debug'       : str ( default_config.debug         ) ,
+    'Verbose'     : str ( default_config.verbose       ) ,
+    'Level'       : str ( default_config.level         ) ,
+    ##
+    'Color'       : str ( default_config.color         ) , 
+    'Unicode'     : str ( default_config.show_unicode  ) , 
+    ##
+    'DumpConfig'  : str ( default_config.dump_config   ) ,
+    ##
+    'BuildDir'    : str ( default_config.build_dir     ) ,
+    'CacheDir'    : str ( default_config.cache_dir     ) ,
+    'TmpDir'      : str ( default_config.tmp_dir       ) ,
+    ##
+    'WebDisplay'  : str ( default_config.webdisplay    ) , 
+    ## 
+    'Parallel'    : str ( default_config.parallel      ) ,
+    'NCPus'       : str ( default_config.ncpus         ) ,
+    'ImplicitMT'  : str ( default_config.implicitMT    ) ,
+    'Profile'     : str ( default_config.profile       ) ,
+    ##
+    'Startup'     : str ( default_config.startup_files ) ,
 }
 # ===========================================================================
-
 ## generic TCanvas configuration
 config [ 'Canvas'      ] = { 'Width'       :  '1000' , 'Height'       :  '800' , 
                              'MarginTop'   : '0.05'  , 'MarginBottom' : '0.12' ,
                              'MarginRight' : '0.07'  , 'MarginLeft'   : '0.12' }
 
 config [ 'Fit Draw'    ] = {} ## RooFit plotting configuration
-config [ 'Tables'      ] = {} ## configuration for Tables 
+config [ 'Tables'      ] = { 'Style' : default_config.table_style } ## configuration for Tables 
 config [ 'RooFit'      ] = {} ## RooFit configuration
 
 config [ 'Pathos'      ] = {} ## PATHOS configuration  
 config [ 'IPyparallel' ] = {} ## ipyparallel configuration 
 
-## the list of config files to be proessed
+# ============================================================================
+## the list of config files to be processed
 config_files = default_config.config_files 
 if has_env ( OSTAP_CONFIG ) : 
     config_files = get_env ( OSTAP_CONFIG , '' , silent = True )
@@ -111,50 +134,93 @@ for f in config_files :
 the_files    = tuple ( the_files ) 
 config_files = tuple ( f [ 0 ] for f in the_files ) 
 
+# =============================================================================
 ## read the files 
-files_read = config.read ( config_files )
+files_read = tuple ( config.read ( config_files ) ) 
 
 # =============================================================================
 ## General section:
 general      = config [ 'General' ]
 
+if has_env ( OSTAP_BATCH ) :
+    value_ = get_env ( OSTAP_BATCH , '' , silent = True  )        
+    if value_ : general [ 'Batch' ] = 'True'
+
 if get_env ( OSTAP_SILENT , '' , silent = True ) : 
-    general [ 'Quiet'   ] = 'True'
+
+    general [ 'Silent'  ] = 'True'
+    general [ 'Quiet'   ] = 'False'
+    general [ 'Debug'   ] = 'False'
     general [ 'Verbose' ] = 'False'
+    general [ 'Level'   ] = '%d'    % 4    
+
+elif get_env ( OSTAP_QUIET , '' , silent = True ) :
+
+    general [ 'Silent'  ] = 'False'
+    general [ 'Quiet'   ] = 'True'
+    general [ 'Debug'   ] = 'False'
+    general [ 'Verbose' ] = 'False'
+    general [ 'Level'   ] = '%d'    % 4    
+
+elif get_env ( OSTAP_DEBUG , '' , silent = True ) :
+
+    general [ 'Silent'  ] = 'False'
+    general [ 'Quiet'   ] = 'False'
+    general [ 'Debug'   ] = 'True'
+    general [ 'Verbose' ] = 'False'
+    general [ 'Level'   ] = '%d'    % 2 
     
-if get_env ( OSTAP_SHOW_UNICODE , '' , silent = True ) : 
-    general [ 'ShowUnicode' ] = 'True'
-   
+elif get_env ( OSTAP_VERBOSE , '' , silent = True ) :
+
+    general [ 'Silent'  ] = 'False'
+    general [ 'Quiet'   ] = 'False'
+    general [ 'Debug'   ] = 'False'
+    general [ 'Verbose' ] = 'True'
+    general [ 'Level'   ] = '%d'    % 1 
+
+elif has_env ( OSTAP_LEVEL ) :
+    
+    value_ = get_env ( OSTAP_LEVEL ,  '' , silent = True )
+    if value_ : general [ 'Level'   ] = value_
+
+if has_env ( OSTAP_COLOR ) :
+    value_ = get_env ( OSTAP_COLOR , '' , silent = True  )        
+    if value_ : general [ 'Color'   ] = value_
+
+if has_env ( OSTAP_UNICODE ) :
+    value_ = get_env ( OSTAP_UNICODE , '' , silent = True  )        
+    if value_ : general [ 'Unicode' ] = value_
+
 # ============================================================================
 ## redefine ncpus from the environment variable 
 if has_env ( OSTAP_NCPUS ) : # ===============================================
     # ========================================================================
-    ncpus_ = get_env ( OSTAP_NCPUS , '' , silent = True  )        
+    value_ = get_env ( OSTAP_NCPUS , '' , silent = True  )        
     # ========================================================================
     try : # ==================================================================
         # ====================================================================
-        ncpus_ = int ( ncpus_ )
-        if 1 <= ncpus_ : general [ 'NCPUs' ] = str ( ncpus_ ) 
+        value_ = int ( value_ )
+        if 1 <= value_ : general [ 'NCPUs' ] = str ( value_ ) 
         # ====================================================================
     except: # ================================================================
         # ====================================================================
-        pass 
-
-# ============================================================================
-## redefine web display from the environment variable
-if has_env ( OSTAP_WEB_DISPLAY ) :
-    web_ = get_env ( OSTAP_WEB_DISPLAY , '' , silent = True  )        
-    if web_ : general [ 'WebDisplay' ] = str ( web_ ) 
-
+        pass
+    
 # ============================================================================
 ## redefine parallel from the environment variable
 if has_env ( OSTAP_PARALLEL ) :
-    parallel_ = get_env ( OSTAP_PARALLEL , '' , silent = True  )        
-    if parallel_ : general [ 'Parallel' ] = str ( parallel_ )
+    value_ = get_env ( OSTAP_PARALLEL , '' , silent = True  )        
+    if value_ : general [ 'Parallel' ] = value_
+
+if has_env ( OSTAP_PROFILE ) :
+    value_ = get_env ( OSTAP_PROFILE , '' , silent = True  )        
+    if value_ : general [ 'Profile' ] = value_
     
-if not general.getboolean ( 'Batch' , fallback = False ) and has_env ( OSTAP_BATCH ) :
-    batch_ = get_env ( OSTAP_BATCH , '' , silent = True  )        
-    if batch_ : general [ 'Batch' ] = 'True'
+# ============================================================================
+## redefine web display from the environment variable
+if has_env ( OSTAP_WEB_DISPLAY ) :
+    value_ = get_env ( OSTAP_WEB_DISPLAY , '' , silent = True  )        
+    if value_ : general [ 'WebDisplay' ] = value_
     
 if not general.getboolean ( 'Batch' , fallback = False ) :
     batch_ = any ( a.lower() in ( '-b' , '--batch' , '--no-gui' ) for a in sys.argv )
@@ -171,19 +237,45 @@ if has_env ( OSTAP_CACHE_DIR ) :
 if  has_env ( OSTAP_TMP_DIR ) :
     tmp_dir_ = get_env ( OSTAP_TMP_DIR , '' , silent = True  )        
     if tmp_dir_ : general [ 'TmpDir' ] = str ( tmp_dir_ )   
+
+if  has_env ( OSTAP_DUMP_CONFIG ) :
+    dump_ = get_env ( OSTAP_DUMP_CONFIG , '' , silent = True  )        
+    if dump_ : general [ 'DumpConfig' ] = str ( dump_ )   
+
+
+if has_env ( OSTAP_STARTUP ) : 
+    value_    = get_env ( OSTAP_CONFIG , '' , silent = True )
+    if value_ : general [ 'StartUp' ] = str ( tuple ( value_.split ( os.pathsep ) ) ) 
     
 # =============================================================================
 ## Some explicit & important elements from the `General` section:
-quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
-verbose      = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
-show_unicode = general.getboolean ( 'ShowUnicode' , fallback = default_config.show_unicode )
-ncpus        = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
-webdisplay   = general.get        ( 'WebDisplay'  , fallback = default_config.web          )
-parallel     = general.get        ( 'Parallel'    , fallback = default_config.parallel     )
 batch        = general.getboolean ( 'Batch'       , fallback = False                       )
+##
+silent       = general.getboolean ( 'Silent'      , fallback = default_config.silent       )
+quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
+debug        = general.getboolean ( 'Debug'       , fallback = default_config.debug        )
+verbose      = general.getboolean ( 'Verbose'     , fallback = default_config.verbose      )
+level        = general.getint     ( 'Level'       , fallback = default_config.level        )
+color        = general.getboolean ( 'Color'       , fallback = default_config.color        )
+show_unicode = general.getboolean ( 'Unicode'     , fallback = default_config.show_unicode )
+##
+dump_config  = general.get        ( 'DumpConfig'  , fallback = default_config.dump_config  )
+##
 build_dir    = general.get        ( 'BuildDir'    , fallback = default_config.build_dir    )
 cache_dir    = general.get        ( 'CacheDir'    , fallback = default_config.cache_dir    )
 tmp_dir      = general.get        ( 'TmpDir'      , fallback = default_config.tmp_dir      )
+##
+webdisplay   = general.get        ( 'WebDisplay'  , fallback = default_config.webdisplay   )
+##
+ncpus        = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
+parallel     = general.get        ( 'Parallel'    , fallback = default_config.parallel     )
+implicitMT   = general.getboolean ( 'ImplicitMT'  , fallback = default_config.implicitMT   )
+profile      = general.getboolean ( 'Profile '    , fallback = default_config.profile      )
+
+startup_files = general.get       ( 'StartUp' , fallback = str ( default_config.startup_files ) )
+if startup_files : startup_files = ast.literal_eval ( startup_files )
+else             : startup_files = () 
+
 
 # =============================================================================
 ## Section with canvas configuration
@@ -202,95 +294,472 @@ fit_draw = config [ 'Fit Draw' ]
 tables   = config [ 'Tables'   ]
 # =============================================================================
 
-# =============================================================================
-## reconfigure logging according to configuration 
-import logging
-logging.disable ( ( logging.WARNING - 1 ) if quiet   else
-                  ( logging.DEBUG   - 5 ) if verbose else ( logging.INFO - 1 ) )
+if has_env ( OSTAP_TABLE ) :
+    value_ = get_env ( OSTAP_TABLE , '' , silent = True  )        
+    if value_ : tables [ 'Style' ] = value_
 
+    
 # =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.config' )
-else                       : logger = getLogger ( __name__  )
-# =============================================================================
-
-# =============================================================================
-## the final action...
-import atexit
-@atexit.register
-def config_goodby () :
+## The final action "at-exit"
+#  - print the list/table of read files  
+#  - dump configuration into the output file 
+def config_atexit ( config , files ) :
+    """ The final `at-exit' action:
+    - print the list/table of read files  
+    - dump configuration into the output file 
+    """
     import  datetime, sys
-    if not hasattr ( sys , 'ps1' ) : return 
-    now = datetime.datetime.now() 
-    if files_read :
-        n = len ( files_read )
-        if 1 == n :
-            f = files_read[0]
-            for fn in the_files :
-                if f == fn[0] :
-                    f = fn[1]
-                    break                
-            logger.info  ( 'The configuration of Ostap was read from %s' % f )
-        else :
-            import ostap.logger.table as T
-            rows = [ ( '', 'file' ) ]
-            for i, ff in enumerate ( files_read , start = 1 ) :
-                f = ff 
-                for fn in the_files :
-                    if f == fn[0] :
-                        f = fn[1]
-                        break    
-                row = '%d' % i , f 
-                rows.append ( row )
-            title = 'Configuration'
-            table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rl' )
-            logger.info ( 'Configuration is read from\n%s' % table ) 
-            
+    if not hasattr ( sys , 'ps1' ) : return
+    ##
+    from ostap.logger.logger import getLogger
+    logger = getLogger ( 'ostap.core.config' )
+    ## 
+    now = datetime.datetime.now()
+    ##
+    # ===========================================================================
+    ## (1) print lift/table of read input config files 
+    # ===========================================================================
+    if 1 == len ( files ) : logger.info ( 'Ostap configuration is read from: %s' % files [ 0 ] )         
+    elif files : 
+        import ostap.logger.table as T
+        rows = [ ( '', 'file' ) ]
+        for i, f in enumerate ( files , start = 1 ) :
+            row = '%d' % i , f 
+            rows.append ( row )            
+        title = 'Ostap configuration files'
+        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rl' )
+        logger.info ( 'Ostap configuration is read from\n%s' % table ) 
+
+    # ===========================================================================
+    ## (2) print lift/table of read input config files 
+    # ===========================================================================
     import io 
     with io.StringIO() as o : 
         config.write( o )
         logger.verbose ( 'Ostap configuration:\n%s' % o.getvalue() )
-    try :
-        dump = '.ostap_config.txt'
-        if os.path.exists ( dump ) : os.remove ( dump )
-        with open ( dump , 'w' ) as ff :
-            ff.write('# ' + 78*'*' + '\n')
-            if files_read : 
-                ff.write('# Ostap configuration read from:\n' )
-                for i,f in enumerate ( files_read , start = 1 ) : ff.write('#  %2d. %s\n' % ( i , f ) ) 
-            else :
-                ff.write('# Ostap configuration:\n' )                
-            ff.write('# ' + 78*'*' + '\n')    
-            config.write( ff )            
-            ff.write('# ' + 78*'*' + '\n')
-            ff.write('# Configuration saved at %s\n' % now.strftime('%c') )
-            ff.write('# ' + 78*'*' + '\n')            
+
+    # ===========================================================================
+    ## get the dumpfile
+    import ostap.core.default_config as dc 
+    dump = config [ 'General' ].get ( 'DumpConfig' , fallback = dc.dump_config )
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        if os.path.exists ( dump ) : os.remove ( dump ) # =======================
+        the_line = '# ' + 78 * '*' + '\n'
+        # =======================================================================
+        with open ( dump , 'wt' ) as fdump : # ==================================
+            # ===================================================================
+            fdump.write( the_line )
+            if files : 
+                fdump.write('# Ostap configuration read from:\n' )
+                for i,f in enumerate ( files , start = 1 ) : fdump.write( '# %-3d %s\n' % ( i , f ) ) 
+            fdump .write ('# Ostap configuration:\n' )                
+            fdump .write ( the_line )    
+            config.write ( fdump )            
+            fdump .write ( the_line )
+            fdump .write ( '# Configuration saved at %s\n' % now.strftime ( '%c' ) )
+            fdump .write ( the_line )
+        # ========================================================================
         if os.path.exists ( dump ) and os.path.isfile ( dump ) :
-            logger.info ( 'Ostap  configuration saved: %s' %  dump )
+            logger.info ( 'Ostap  configuration saved to %s' %  dump )
+        # ========================================================================
     except :
         pass
-    
-print ( 'CONFIG/3 Ostap configuration is loaded' )
 
-# =============================================================================
+# ================================================================================
+## register the final action
+import atexit 
+atexit.register ( config_atexit , config = config , files = files_read ) 
+
+# ================================================================================
+## Print config parser as table
+def _cp_table_ ( parser , files = files_read , title = '' , prefix = '' ) :
+    """ Print config parser as table
+    """
+    if not files and files_read : files = files_read 
+
+    rows = [ ( 'Section' , 'Option' , 'Value' ) ]
+    if files : 
+        row  = 'Config files' , '' , '\n'.join ( f for f in files )
+        rows.append ( row ) 
+    for section in parser :
+        row = '[%s]' % section , '' , '' 
+        rows.append ( row )
+        the_section = config [ section ] 
+        options = sorted ( the_section ) 
+        for option in options : 
+            row = '' , option , the_section [ option ] 
+            rows.append ( row )
+            
+    title = title if title else 'Ostap configuration'
+    import ostap.logger.table as T
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'llw' )
+
+# ==============================================================================
+type ( config ).table    = _cp_table_
+type ( config ).__str__  = _cp_table_
+type ( config ).__repr__ = _cp_table_
+
+# ==============================================================================
+## Parse comand line arguments
+def __parse_args ( args  = [] ) :
+    """ Parse command line arguments
+    """
+    # =========================================================================
+    ## @class Collect
+    #  simple parsing action to collect multiple arguments
+    #  @code
+    #  parser =...
+    #  parser.add_argument('--foo',
+    #  ... action  = Collect ,
+    #  ... nargs   = '*'     ,
+    #  ... default = []      ,
+    #  ...)
+    #  print(parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split()))
+    #  @endcode
+    class Collect(argparse.Action):
+        """ Simple parsing action to collect multiple arguments
+        >>> parser =...
+        >>> parser.add_argument('--foo',
+        ... action  = Collect ,
+        ... nargs   = '*'     ,
+        ... default = []      ,
+        ...)
+        >>> print(parser.parse_args('a.txt b.txt --foo 1 2 3 --foo 4 -foo 5 '.split()))
+        """
+        def __init__(self             ,
+                     option_strings   ,
+                     dest             ,
+                     nargs    = None  ,
+                     const    = None  ,
+                     default  = None  , 
+                     type     = None  ,
+                     choices  = None  ,
+                     required = False ,
+                     help     = None  ,
+                     metavar  = None  ) :
+            if nargs == 0:
+                raise ValueError('nargs for Collect actions must be > 0; if arg '
+                                 'strings are not supplying the value to append, '
+                                 'the append const action may be more appropriate')
+            if const is not None and nargs != argparse.OPTIONAL:
+                raise ValueError('nargs must be %r to supply const' % argparse.OPTIONAL)
+            super(Collect, self).__init__(
+                option_strings = option_strings ,
+                dest           = dest           ,
+                nargs          = nargs          ,
+                const          = const          ,
+                default        = default        ,
+                type           = type           ,
+                choices        = choices        ,
+                required       = required       ,
+                help           = help           ,
+                metavar        = metavar        )
+            
+        def __call__(self, parser, namespace, values, option_string=None):
+            if None == getattr   ( namespace  , self.dest , None ) : setattr ( namespace , self.dest , []  )
+            items   =  getattr   ( namespace , self.dest ) 
+            items   =  copy.copy ( items ) 
+                
+            ## items = argparse._copy.copy(argparse._ensure_value(namespace, self.dest, []))
+            
+            ## the only one important line: 
+            for v in values : items.append ( v )
+            setattr( namespace, self.dest, items )
+            
+    from argparse import ArgumentParser 
+    parser = ArgumentParser ( prog = 'ostap' )
+    ## 
+    parser.add_argument ( 
+        '-v'    , '--version' ,
+        action  = 'version'   , 
+        version = 'Ostap %s' % __version__ )  
+    
+    ## 1st exclusive group
+    group1  = parser.add_argument_group ( 'Control verbosity' , 'Control the general level of verbosity') 
+    egroup1 = group1.add_mutually_exclusive_group()    
+    egroup1.add_argument ( 
+        "-q" , "--quiet"       ,
+        dest    = 'Quiet'      , 
+        action  = 'store_true' ,
+        help    = "Quite processing, same as --print-level=4 [default: %(default)s]" ,
+        default = quiet        )
+    
+    egroup1.add_argument ( 
+        "--silent"             ,
+        dest    = 'Silent'     , 
+        action  = 'store_true' ,
+        help    = "Verbose processing, same as --print-level=5 [default: %(default)s]" ,
+        default = silent       )
+    
+    egroup1.add_argument ( 
+        "--verbose"            ,
+        dest    = 'Verbose'    , 
+        action  = 'store_true' ,
+        help    = "Verbose processing, same as --print-level=1 [default: %(default)s]" ,
+        default = verbose      )
+    
+    egroup1.add_argument ( 
+        "--debug"              ,
+        dest    = 'Debug'      , 
+        action  = 'store_true' ,
+        help    = "Debug processing, same as --print-level=2 [default: %(default)s]" ,
+        default = debug        )
+    
+    egroup1.add_argument ( 
+        "-p" , "--print-level"     ,
+        dest    = 'Level'          ,
+        choices = range ( -1 , 9 ) , 
+        type    = int              , 
+        help    =  "Printout level [default: %(default)s]" ,
+        default = level if 0 <= level <= 8 else -1 )    
+    ##
+    group2  = parser.add_argument_group ( 'Files' , 'Various file collections and commands, used *ONLY* in ostap environment') 
+    group2.add_argument (
+        "files"           ,
+        metavar = "FILE"  ,
+        nargs   = '*'     , 
+        help    = "ROOT/python macros to be processed/processed [default: %(default)s]" ,
+        default = []      )
+    ###
+    group2.add_argument ( 
+        "-m"    , "--macros"      ,
+        metavar = "MACROS"        ,
+        dest    = 'Macros'        ,
+        nargs   = '*'             ,
+        action  = Collect         , 
+        help    = "(Only for ostap) ROOT macros to be loaded [default: %(default)s]",
+        default = []  )
+    ###
+    group2.add_argument ( 
+        '--startup'     ,
+        metavar = "STARTUP"       ,
+        dest    = 'StartUp'       ,
+        nargs   = '*'             ,
+        action  = Collect         , 
+        help    = "List of startup files to be (pre)executed [default: %(default)s]" , 
+        default = startup_files   )
+    ##
+    group2.add_argument ( 
+        '-c'    , '--command'     ,
+        metavar = "COMMANDS"      ,
+        dest    = 'Commands'      ,
+        nargs   = '*'             ,
+        action  = Collect         , 
+        help    = "The commands for `exec' [default: %(default)s]" , 
+        default = []              )
+    #
+    parser.add_argument ( 
+        '--no-color'              ,
+        dest    = 'Color'         , 
+        action  = 'store_false'   , 
+        help    = 'Use colorization? [default: %(default)s]', 
+        default = color           )    
+    #
+    parser.add_argument (
+        '--unicode'               ,
+        action  = "store_true"    ,
+        dest    = 'Unicode'       ,
+        help    = 'Use unicode in log-files? [default: %(default)s]',
+        default = show_unicode    )
+    #
+    parser.add_argument ( 
+        '--profile'               ,
+        dest    = 'Profile'       , 
+        action  = 'store_true'    , 
+        help    = "Invoke profiler [default: %(default)s]" , 
+        default = profile         )
+    #
+    parser.add_argument ( 
+        '--dump'                   ,
+        dest    = 'DumpConfig'     , 
+        help    = "Dump-file for configuration [default: %(default)s]" , 
+        default = dump_config      )
+    #    
+    group3  = parser.add_argument_group ( 'CPU/processes/parallelism' , 'Options for parallel processing') 
+    group3.add_argument (
+        '-n' , '--ncpus'          , 
+        dest    = 'NCPUs'         ,
+        type    = int             ,
+        help    = 'Maximal number of CPUs [default: %(default)s]' , 
+        default = ncpus           )
+         
+    group3.add_argument (
+        '--parallel'              , 
+        dest    = 'Parallel'      ,
+        help    = 'Machinery for parallel processing [default: %(default)s]' , 
+        default = parallel        )    
+    group3.add_argument ( 
+        '--no-mt'                ,        
+        dest    = 'NoImplicitMT' , 
+        action  = 'store_true'   , 
+        help    = "DisableImplicitMT [default: %(default)s]" , 
+        default = not implicitMT )
+    
+    ## 4nd exclusive group
+    group4  = parser.add_argument_group ( 'Web Display' , 'Use Web/ROOT display, see ROOT.TROOT.(Set/Get)WebDisplay') 
+    egroup4 = group4.add_mutually_exclusive_group()
+    egroup4.add_argument ( 
+        '-w' , '--web'        ,
+        dest    = 'web'       , 
+        help    = "Use WebDisplay, see ROOT.TROOT.(Get/Set)WebDisplay ", 
+        default = webdisplay  )   
+    #
+    egroup4.add_argument ( 
+        '--no-canvas'           ,
+        dest    = 'Canvas'      , 
+        action  = 'store_false' , 
+        help    = "Do not create canvas", 
+        default = True          )
+
+    ## 5rd exclusive group
+    group5  = parser.add_argument_group ( 'Session type' , 'General session type: interactive/embed/plain/batch...') 
+    egroup5 = group5.add_mutually_exclusive_group()
+    
+    egroup5.add_argument (
+        '-i' ,  '--interactive' ,
+        dest    = 'batch'       , 
+        action  = 'store_false' ,
+        help    = "Interactive shell/start_ipython" ,        
+        default = False         )
+    
+    egroup5.add_argument (
+        '-e'      , '--embed'   , 
+        action  = 'store_true'  ,
+        help    = "Interactive embedded shell [default: %(default)s]"  , 
+        default = False         )
+        
+    egroup5.add_argument  (
+        '-s' , '--simple'      ,
+        action = 'store_true'  ,
+        help   = "Simple/trivial python shell [default: %(default)s] " , 
+        default = False        )
+        
+    egroup5.add_argument (
+        '-b' , '--batch'       ,
+        action = 'store_true' ,
+        help   = "Batch processing: execute files and exit [default: %(default)s]" , 
+        default = batch       ) 
+    ## 
+    group6 = parser.add_argument_group ( 'Directories' ,
+                                         'Various directories for ROOT&Ostap') 
+    group6.add_argument ( 
+        '--build-dir'         ,         
+        dest    = 'BuildDir'  , 
+        help    = "Build directory for ROOT&Ostap [default: %(default)s]"     , 
+        default = build_dir   )        
+    group6.add_argument ( 
+        '--cache-dir'         ,         
+        dest    = 'CacheDir'  , 
+        help    = "Cache directory for Ostap [default: %(default)s]"     , 
+        default = cache_dir   )
+    group6.add_argument ( 
+        '--tmp-dir'           ,       
+        dest    = 'TmpDir'    ,
+        help    = "Temporary directory for Ostap [default: %(default)s]" ,
+        default = tmp_dir     )
+
+    # ===============================================================================
+    ## use the parser!!
+    # ===============================================================================
+    if not args :
+        import sys 
+        args = sys.argv[1:]
+    
+    v = [ a for a in args ]
+    if '--' in v : v.remove('--')
+
+    return parser.parse_args( v )
+
+        
+# ================================================================================
+## command-line arguments
+arguments = __parse_args ()
+        
+# ================================================================================
+## update the global configuration
+general [ 'Batch'      ] = str ( arguments.batch )
+## 
+general [ 'Silent'     ] = str ( arguments.Silent     ) 
+general [ 'Quiet'      ] = str ( arguments.Quiet      ) 
+general [ 'Verbose'    ] = str ( arguments.Verbose    )
+general [ 'Debug'      ] = str ( arguments.Debug      )
+general [ 'Level'      ] = str ( arguments.Level      )
+general [ 'Color'      ] = str ( arguments.Color      )
+general [ 'Unicode'    ] = str ( arguments.Unicode    )
+##
+general [ 'DumpConfig' ] = str ( arguments.DumpConfig )
+##
+general [ 'BuildDir'    ] = arguments.BuildDir
+general [ 'CacheDir'    ] = arguments.CacheDir
+general [ 'TmpDir'      ] = arguments.TmpDir 
+## 
+general [ 'WebDisplay'  ] = str ( arguments.web      )
+##
+general [ 'NCPUs'       ] = str (     arguments.NCPUs        )
+general [ 'Parallel'    ] = str (     arguments.Parallel     )
+general [ 'ImplicitMT'  ] = str ( not arguments.NoImplicitMT )
+general [ 'Profile'     ] = str (     arguments.Profile      )
+general [ 'StartUp'     ] = str (     arguments.StartUp      )
+        
+## 
+batch         = arguments.batch
+##
+silent        = arguments.Silent 
+quiet         = arguments.Quiet
+debug         = arguments.Debug
+verbose       = arguments.Verbose
+level         = arguments.Level
+color         = arguments.Color
+show_unicode  = arguments.Unicode
+##
+dump_config   = arguments.DumpConfig 
+##     
+build_dir     = arguments.BuildDir
+cache_dir     = arguments.CacheDir
+tmp_dir       = arguments.TmpDir
+##
+webdisplay    = arguments.web
+## 
+parallel      =     arguments.Parallel
+ncpus         =     arguments.NCPUs
+implicitMT    = not arguments.NoImplicitMT 
+profile       =     arguments.Profile 
+startup_files =     arguments.StartUp
+
+
+# ==============================================================================
 if '__main__' == __name__ :
 
-    print   ( 'CONFIG/4 Running ostap.core.config as main' )    
-    
+    # ==========================================================================
+    # logging 
+    # ==========================================================================
+    from ostap.logger.logger import getLogger 
+    logger = getLogger ( 'ostap.core.config' )
+
+    ## needed for docme
     def _cp_hash_ ( cp ) : return hash ( str ( cp ) )
-    type(config).__hash__ = _cp_hash_
+    type ( config ) .__hash__ = _cp_hash_
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    cnf = '\n' + str(config)
-    cnf = cnf.replace ('\n','\n# ')
-    logger.info ( 'Ostap configuration is:%s' % cnf )
+    table = config.table ( files_read , prefix = '# ') 
+    logger.info ( 'Ostap configuration is:\n%s' % table ) 
     
-    print  ( 'CONFIG/5 Done' )
-    
+    # ========================================================================
+    rows  = [ ( 'Argument' , 'Value' ) ]
+    vars_ = vars ( arguments )
+    for key in sorted (vars_.keys ()  ) :
+        row = key , str ( vars_ [ key ] ) 
+        rows.append ( row )
+        
+    title = 'Ostap command line arguments'
+    import ostap.logger.table as T
+    rows  = T.table ( rows , title = title , prefix = '# ' , alignment = 'rw' )
+    logger.info ( '%s:\n%s' % ( title , rows ) ) 
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

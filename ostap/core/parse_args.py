@@ -36,9 +36,10 @@ from   ostap     import __version__
 ## ROOT.PyConfig.IgnoreCommandLineOptions = True
 import argparse 
 # =============================================================================
-## parse arguments 
-def parse_args ( args = [] ) :
-    """ Parse arguments 
+## parse arguments & update the global configuration
+def parse_args ( args          = []   ,
+                 update_config = True ) :
+    """ Parse arguments & update the global configuration
     """
     # =========================================================================
     ## @class Collect
@@ -109,14 +110,14 @@ def parse_args ( args = [] ) :
         "-q" , "--quiet"       ,
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
-        help    = "Quite processing, same as --print-level=5 [default: %(default)s]" ,
+        help    = "Quite processing, same as --print-level=4 [default: %(default)s]" ,
         default = config.quiet  )
     egroup1.add_argument ( 
         "--silent"     ,
         dest    = 'Silent'    , 
         action  = 'store_true' ,
-        help    = "Verbose processing, same as --print-level=4 [default: %(default)s]" ,
-        default = config.quiet )
+        help    = "Verbose processing, same as --print-level=5 [default: %(default)s]" ,
+        default = config.silent )
     egroup1.add_argument ( 
         "--verbose"     ,
         dest    = 'Verbose'    , 
@@ -128,14 +129,14 @@ def parse_args ( args = [] ) :
         dest    = 'Debug'    , 
         action  = 'store_true' ,
         help    = "Debug processing, same as --print-level=2 [default: %(default)s]" ,
-        default = False )
+        default = config.debug )
     egroup1.add_argument ( 
-        "-p" , "--print-level"                  ,
-        dest    = 'Level'          ,
-        choices = range ( -1 , 8 ) , 
+        "-p" , "--print-level"      ,
+        dest    = 'Level'           ,
+        choices = range ( -1 , 9 )  , 
         type    = int              , 
         help    =  "Printout level [default: %(default)s]" ,
-        default = -1       )    
+        default = config.level if 0 <= config.level <= 8 else -1 )    
     #
     parser.add_argument (
         "files" ,
@@ -167,19 +168,19 @@ def parse_args ( args = [] ) :
         help    = "ROOT macros to be loaded [default: %(default)s]",
         default = []  )
     #
-    parser.add_argument (
-        '--no-context'           ,
-        action  = "store_false"  ,
-        dest    = 'WithContext'  ,
-        help    = "Do not use global Ostap context for the scripts",
-        default = True           )
-    #
     parser.add_argument ( 
-        '--no-color'     ,
-        dest    = 'Color'      , 
+        '--no-color'            ,
+        dest    = 'Color'       , 
         action  = 'store_false' , 
-        help    = "Do not use colorization", 
-        default = True          )    
+        help    = 'Use colorization? [default: %(default)s]', 
+        default = config.color  )    
+    #
+    parser.add_argument (
+        '--unicode'               ,
+        action  = "store_true"    ,
+        dest    = 'Unicode'       ,
+        help    = 'Use unicode in log-files? [default: %(default)s]',
+        default = config.show_unicode )
     #
     parser.add_argument ( 
         '--profile'     ,
@@ -187,7 +188,13 @@ def parse_args ( args = [] ) :
         action  = 'store_true'      , 
         help    = "Invoke profiler [default: %(default)s]" , 
         default = False             )
-    # 
+    #
+    parser.add_argument ( 
+        '--dump'     ,
+        dest    = 'DumpConfig'      , 
+        help    = "Dump-file for configuration [default: %(default)s]" , 
+        default = config.dump_config )
+    #    
     group2  = parser.add_argument_group ( 'CPU/processes/parallelism' , 'Options for parallel processing') 
     group2.add_argument (
         '-n' , '--ncpus'          , 
@@ -200,7 +207,8 @@ def parse_args ( args = [] ) :
         '--parallel'         , 
         dest    = 'Parallel' ,
         help    = 'Machinery for parallel processing [default: %(default)s]' , 
-        default = config.parallel  ) 
+        default = config.parallel  )
+    
     group2.add_argument ( 
         '--no-mt'                     ,        
         dest    = 'NoImplicitMT'      , 
@@ -232,7 +240,7 @@ def parse_args ( args = [] ) :
                            '--interactive' , dest='batch', 
                            action = 'store_false' , default = False ,
                            help = "Interactive shell/start_ipython" )
-    egroup4.add_argument ( '-e' ,
+    egroup4.add_argument ( '-e'      ,
                            '--embed' , 
                            action = 'store_true' ,
                            help = "Interactive embedded shell" )
@@ -247,7 +255,7 @@ def parse_args ( args = [] ) :
 
     group5 = parser.add_argument_group ( 'Directries' , 'Various directories for Ostap') 
     group5.add_argument ( 
-        '--build-dir'                             ,         
+        '--build-dir' ,         
         dest    = 'BuildDir'                      , 
         help    = "Build directory for ROOT&Ostap [default: %(default)s]"     , 
         default = config.build_dir                )
@@ -273,29 +281,52 @@ def parse_args ( args = [] ) :
     arguments = parser.parse_args( v )
 
     # =============================================================================
-    
-    config.general ['Quiet'      ] = str ( arguments.Quiet    ) 
-    config.general ['Verbose'    ] = str ( arguments.Verbose  )
-    config.general ['WebDisplay' ] = str ( arguments.web      ) 
-    config.general ['Batch'      ] = str ( arguments.batch    )
-    config.general ['Parallel'   ] = str ( arguments.Parallel ) 
-    config.general ['NCPUs'      ] = str ( arguents.NCPUs     )
-    
-    config.general ['BuildDir'   ] = arguments.BuildDir
-    config.general ['CacheDir'   ] = arguments.CacheDir
-    config.general ['TmpDir'     ] = arguments.TmpDir 
-    
-    config.quiet      = arguments.Quiet
-    config.verbose    = arguments.Verbose
-    config.batch      = arguments.batch    
-    config.webdisplay = arguments.web
-    config.parallel   = arguments.Parallel
-    config.ncpus      = arguments.NCPUs
-    
-    config.build_dir  = arguments.BuildDir
-    config.cache_dir  = arguments.CacheDir
-    config.tmp_dir    = arguments.TmpDir 
 
+    if update_config :
+
+        ## 
+        config.general [ 'Batch'      ] = str ( arguments.batch )
+        ## 
+        config.general [ 'Silent'     ] = str ( arguments.Silent     ) 
+        config.general [ 'Quiet'      ] = str ( arguments.Quiet      ) 
+        config.general [ 'Verbose'    ] = str ( arguments.Verbose    )
+        config.general [ 'Debug'      ] = str ( arguments.Debug      )
+        config.general [ 'Level'      ] = str ( arguments.Level      )
+        config.general [ 'Color'      ] = str ( arguments.Color      )
+        config.general [ 'Unicode'    ] = str ( arguments.Unicode    )
+        ##
+        config.general [ 'DumpConfig' ] = str ( arguments.DumpConfig )
+        ##
+        config.general [ 'BuildDir'    ] = arguments.BuildDir
+        config.general [ 'CacheDir'    ] = arguments.CacheDir
+        config.general [ 'TmpDir'      ] = arguments.TmpDir 
+        ## 
+        config.general [ 'WebDisplay'  ] = str ( arguments.web      )
+        ##
+        config.general [ 'NCPUs'       ] = str ( arguments.NCPUs    )
+        config.general [ 'Parallel'    ] = str ( arguments.Parallel ) 
+        ##    
+        config.batch        = arguments.batch    
+        ## 
+        config.silent       = arguments.Silent 
+        config.quiet        = arguments.Quiet
+        config.debug        = arguments.Debug
+        config.verbose      = arguments.Verbose
+        config.level        = arguments.Level
+        config.color        = arguments.Color
+        config.show_unicode = arguments.Unicode
+        ##
+        config.dump_config  = arguments.DumpConfig 
+        ##     
+        config.build_dir    = arguments.BuildDir
+        config.cache_dir    = arguments.CacheDir
+        config.tmp_dir      = arguments.TmpDir
+        ##
+        config.webdisplay   = arguments.web
+        ## 
+        config.parallel     = arguments.Parallel
+        config.ncpus        = arguments.NCPUs
+        ## 
 
     return arguments
 

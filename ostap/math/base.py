@@ -122,8 +122,8 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
-from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types  
-from   collections.abc         import Sized
+from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types
+import ostap.core.ostap_setup 
 import ROOT, cppyy, sys, math, ctypes, array   
 # =============================================================================
 # logging 
@@ -131,6 +131,7 @@ import ROOT, cppyy, sys, math, ctypes, array
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.base' )
 else                       : logger = getLogger ( __name__          )
+# =============================================================================
 # =============================================================================
 ## get global C++ namespace
 cpp   = cppyy.gbl
@@ -188,7 +189,7 @@ class ROOTIgnore( object ) :
             
 # =============================================================================
 from ostap.logger.mute  import mute
-logger.debug ("Suppress error/warnings from ROOT")
+logger.debug ( "Suppress error/warnings from ROOT" )
 with ROOTIgnore ( ROOT.kWarning + 1 ) : 
     with mute ( True  , True ) : _ = ROOT.RooRealVar() 
     iszero   = Ostap.Math.Zero     ('double')()
@@ -1014,7 +1015,7 @@ def evt_range ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     assert isinstance ( last  , int ) , "evt_range: Invalid `last' type!"
     ##
     size = sized
-    if isinstance ( sized , Sized ) : size  = len ( sized )
+    if isinstance ( sized , sized_types ) : size  = len ( sized )
     assert isinstance ( size , int ) and 0 <= size , 'Invalid size!'
     ##
     if not size : return 0 , 0   ## empty range
@@ -1043,7 +1044,7 @@ def all_entries ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     assert isinstance ( last  , int ) , "evt_entries: Invalid `last' type!"
     ##
     size = sized
-    if isinstance ( sized , Sized ) : size  = len ( sized )
+    if isinstance ( sized , sized_types ) : size  = len ( sized )
     assert isinstance ( size , int ) and 0 <= size , 'Invalid size!'
     ##
     if first < 0 : first += size

@@ -80,11 +80,10 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
-from   ostap.utils.basic      import NoContext, loop_items, typename 
+from   ostap.utils.basic      import NoContext, loop_items, typename
+import ostap.core.ostap_setup 
 import ostap.plotting.color   
 import ROOT, cppyy, math, sys, os, re  
-# =============================================================================
-## ROOT.ROOT.EnableThreadSafety()
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1208,35 +1207,8 @@ def rootException () :
     return RootError2Exception()
 
 # =============================================================================
-## define the build directory for ROOT 
-import ostap.core.build_dir
+## define the build/cache&tmp directories for ROOT&Ostap 
 
-# =============================================================================
-## come general configuration 
-import ostap.core.config as _OCC
-
-## if _OCC.general.getboolean ( 'ThreadSafety' , fallback = False )  :
-##     logger.debug ("Thread safety is enabled via 'ROOT::ROOT::EnableThreadSAfety' call") 
-##     ROOT.ROOT.EnableThreadSafety()
-
-if _OCC.general.getboolean ( 'ImplicitMT' , fallback = False )  :
-    if not ROOT.ROOT.IsImplicitMTEnabled() : 
-        logger.debug ("Implicit MT is enabled")
-        ROOT.ROOT.EnableImplicitMT  ()
-else :
-    if ROOT.ROOT.IsImplicitMTEnabled() : 
-        logger.debug ("Implicit MT is disabled")
-        ROOT.ROOT.DisableImplicitMT ()
-
-# =============================================================================
-## Use/Force BATCH processing ? 
-if not ROOT.ROOT.GetROOT().IsBatch() :
-    if any ( k.lower() in ( '-b' , '--batch' ) for k in sys.argv ) : 
-        ROOT.ROOT.GetROOT().SetBatch ( True )
-        logger.attention ( "BATCH processing is activated (command line) " )
-    else : 
-        from ostap.utils.root_utils import batch_env
-        batch_env ( logger )
 
 # ==============================================================================
 ## make the default style 

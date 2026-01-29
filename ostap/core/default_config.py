@@ -21,25 +21,44 @@ __version__  = "$Revision$"
 __author__   = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__     =  "2019-05-19"
 __all__      = (
-    'quiet'        , ## quiet   processing?
-    'verbose'      , ## verbose processing?
-    'config_files' , ## configuration files to read 
+    'verbose'       , ## verbose processing?
+    'config_files'  , ## configuration files to read 
+    'startup_files' , ## startup files 
     )
 # =============================================================================
-import os, sys 
-# =============================================================================
-quiet        =  False
-verbose      =  False
-web          = 'off'
-ncpus        = -1    
-show_unicode = False
-parallel     = 'PATHOS'
-batch        = False
-build_dir    = ''
-cache_dir    = '$HOME/.cache/ostap'
-tmp_dir      = ''
 
-## configuration files to read 
+# =============================================================================
+batch        = False
+
+silent       = False   ## silent pprocesisng ?
+quiet        = False   ## quiet   processing ?
+debug        = False   ## debug   processing ?
+verbose      = False   ## verbose processing ?
+level        = -1      ## print level 
+color        = True    ## use colors ? 
+show_unicode = False   ## show unicode in logfiles?
+#
+dump_config  = '.ostap_config.dump'
+
+build_dir    = ''                    ## ROOT/Ostap build directory 
+cache_dir    = '$HOME/.cache/ostap'  ## Cache directory 
+tmp_dir      = ''                    ## TMP directory 
+
+webdisplay   = 'off'                 ## Use web-display? 
+
+parallel     = 'PATHOS'              ## parallel engine 
+ncpus        = -1                    ## use all CPUs 
+implicitMT   = True                  ## implicit multithreading 
+profile      = False                 ## profile the execution? 
+
+table_style  = 'default'             ## Table style
+
+
+protocol     = ''                    ## pickling protocol 
+
+# =============================================================================
+## configuration files to read
+# =============================================================================
 config_files = (
     u'$OSTAPDIR/.ostaprc'           , ## .ostaprc from central directory 
     u'$HOME/.ostaprc'               , ## .ostaprc from home directory 
@@ -49,6 +68,11 @@ config_files = (
     u'.ostaprc'                       ## .ostaprc from local directory 
     )
 
+# =============================================================================
+## startup/logon files to be executed:
+startup_files = ( '$HOME/.ostap.py' ,
+                  '~/.ostap.py'     ,        
+                  './.ostap.py'     )
 # =============================================================================
 if '__main__' == __name__ :
     

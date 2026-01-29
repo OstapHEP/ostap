@@ -146,17 +146,8 @@ except ImportError : # ========================================================
 ## default style
 default_style = 'default'
 # =============================================================================
-from ostap.utils.env import has_env, get_env, OSTAP_TABLE 
-# =============================================================================
-if  has_env ( OSTAP_TABLE ) :
-    # =========================================================================
-    default_style = get_env ( OSTAP_TABLE , default_style )
-    # =========================================================================
-else : # ======================================================================
-    # =========================================================================
-    ## get the preferred table style from the configuration file(s)
-    import ostap.core.config as OCC
-    if 'STYLE' in OCC.tables : default_style = OCC.tables.get ( 'STYLE' , fallback = default_style )
+import ostap.core.config as config
+default_style = config.tables.get ( 'STYPE' , fallback = default_style )
     
 # =============================================================================
 default_style = default_style.lower().strip()

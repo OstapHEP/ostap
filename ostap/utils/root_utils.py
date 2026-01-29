@@ -31,7 +31,8 @@ __all__     = (
     )
 
 # =============================================================================
-from   ostap.utils.basic  import typename 
+from   ostap.utils.basic  import typename
+import ostap.core.config  as     config 
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -113,28 +114,26 @@ class Batch(object) :
             groot.SetBatch( self.__old_state ) 
             
 # =============================================================================
-## check batch from environment variable, set it and issue the message
+## check the batch from configuraiton, set it and issue the message
 def batch_env  ( logger = logger ) :
-    """ Check&set the batch from environment 
-    - Check batch environment variable
+    """ Check&set the batch from configuration 
+    - Check configuration 
     - set ROOT.TROOT.SetBatch(True) 
     - issue the message 
-    """
+    """    
     groot = ROOT.ROOT.GetROOT()
-    if not groot.IsBatch () :
-        from   ostap.utils.env import get_env , OSTAP_BATCH
-        if get_env ( OSTAP_BATCH , '' ).strip() : 
-            groot.SetBatch ( True )
-            logger.attention ( "BATCH processing is activated via OSTAP_BATCH environment" )                    
-    return groot.IsBatch() 
-        
+    if config.batch and not groot.IsBatch () :
+        groot.SetBatch ( True )
+        if groot.IsBatch () : logger.attention ( "BATCH processing is activated!" )            
+    return groot.IsBatch()
+
 # =============================================================================
 ## context manager to keep ROOT ``batch'' state
 #  @code
 #  with batch() :
 #  ... do something here 
 #  @endcode 
-def batch( batch = True ) :
+def batch ( batch = True ) :
     """ Context manager to keep ROOT ``batch'' state
     >>> with batch() :
     ... do something here 

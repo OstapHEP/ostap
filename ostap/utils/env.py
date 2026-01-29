@@ -17,35 +17,71 @@ __all__     = (
     'has_env'            , ## case-insensitive check for environment variable   
     'get_env'            , ## case-insensitive access to environment variable
     ##
-    'OSTAP_BATCH'        , ## environment varianle for batch processing
+    'OSTAP_CONFIG'       , ## config files 
+    'OSTAP_BATCH'        , ## batch   processing?
+    ##
+    'OSTAP_SILENT'       , ## silent  processing?
+    'OSTAP_QUIET'        , ## quiet   processing?
+    'OSTAP_DEBUG'        , ## debug   processing?
+    'OSTAP_VERBOSE'      , ## verbose processing?
+    'OSTAP_LEVEL'        , ## print   level
+    'OSTAP_COLORS'       , ## use colors?
+    'OSTAP_UNICODE'      , ## show unicode in log-files? 
+    #
+    'OSTAP_DUMP_CONFIG'  , ## dump file for configuration
+    ##
     'OSTAP_BUILD_DIR'    , ## environment varianle for build-dir
-    'OSTAP_WEB_DISPLAY'  , ## Ostap display 
-    'OSTAP_CONFIG'       , ## Ostap config 
     'OSTAP_CACHE_DIR'    , ## Ostap cache directory
     'OSTAP_TMP_DIR'      , ## ostap TMP dir 
-    'OSTAP_PROTOCOL'     , ## Ostap pickling protocol     
-    'OSTAP_TABLE'        , ## Ostap table style
+    ## 
+    'OSTAP_WEB_DISPLAY'  , ## Ostap display 
+    ## 
     'OSTAP_PARALLEL'     , ## Ostap parallel worker 
     'OSTAP_NCPUS'        , ## max number of paralell workers 
-    'OSTAP_SHOW_UNICODE' , ## show unicode useful
+    'OSTAP_IMPLICITMT'   , ## Enable Implicit MT?
+    'OSTAP_PROFILE'      , ## Profiel the processing? 
     ## 
+    'OSTAP_TABLE'        , ## Ostap table style
+    ##
+    'OSTAP_STARTUP'      , ## startup files to be (pre)execucted
+    ## 
+    'OSTAP_PROTOCOL'     , ## Ostap pickling protocol
 )
 # =============================================================================
 import os
 # =============================================================================
-OSTAP_BATCH         = 'OSTAP_BATCH'
-OSTAP_BUILD_DIR     = 'OSTAP_BUILD_DIR'
-OSTAP_WEB_DISPLAY   = 'OSTAP_WEB_DISPLAY'
 OSTAP_CONFIG        = 'OSTAP_CONFIG'
-OSTAP_DIR           = 'OSTAP_DIR'
-OSTAP_CACHE_DIR     = 'OSTAP_CACHE_DIR'    ## Ostap cache dir 
+OSTAP_BATCH         = 'OSTAP_BATCH'
+##
+OSTAP_SILENT        = 'OSTAP_SILENT'       ## silent  processing ? 
+OSTAP_QUIET         = 'OSTAP_QUIET'        ## quiet   processing ? 
+OSTAP_DEBUG         = 'OSTAP_DEBUG'        ## debug   processing ? 
+OSTAP_VERBOSE       = 'OSTAP_VERBOSE'      ## verbose processing ? 
+OSTAP_LEVEL         = 'OSTAP_LEVEL'        ## print   level 
+OSTAP_COLOR         = 'OSTAP_COLOR'        ## use colors ? 
+OSTAP_UNICODE       = 'OSTAP_UNICODE'      ## show unicode in log-files?
+#
+OSTAP_DUMP_CONFIG   = 'OSTAP_DUMP_CONFIG'
+#
+OSTAP_BUILD_DIR     = 'OSTAP_BUILD_DIR'
+OSTAP_CACHE_DIR     = 'OSTAP_CACHE_DIR'    ## Ostap cache dir
 OSTAP_TMP_DIR       = 'OSTAP_TMP_DIR'      ## Ostap TMP   dir 
-OSTAP_PROTOCOL      = 'OSTAP_PROTOCOL'     ## pickling protocol 
-OSTAP_TABLE         = 'OSTAP_TABLE'        ## table style
-OSTAP_SILENT        = 'OSTAP_SILENT'       ## silent ? 
+##
+OSTAP_WEB_DISPLAY   = 'OSTAP_WEB_DISPLAY'
+#
 OSTAP_PARALLEL      = 'OSTAP_PARALLEL'     ## Ostap parallel worker 
 OSTAP_NCPUS         = 'OSTAP_NCPUS'        ## Max number of parallel workers
-OSTAP_SHOW_UNICODE  = 'OSTAP_SHOW_UNICODE' ## show unicode
+OSTAP_IMPLICITMT    = 'OSTAP_IMPLICITMT'   ## Enable  ImplicitMT ?
+OSTAP_PROFILE       = 'OSTAP_PROFILE'      ## Profile the execution ? 
+##
+OSTAP_TABLE         = 'OSTAP_TABLE'        ## table style
+##
+OSTAP_STARTUP       = 'OSTAP_STARTUP'      ## list of startup files to be (pre)execucted
+## 
+OSTAP_PROTOCOL      = 'OSTAP_PROTOCOL'     ## pickling protocol 
+##
+OSTAP_DIR           = 'OSTAP_DIR'
+
 # =============================================================================
 ## transformation:  no blanks, no understores, no dashes 
 #  - case-insensitive
