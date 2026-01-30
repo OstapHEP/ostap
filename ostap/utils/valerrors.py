@@ -313,7 +313,7 @@ class AsymErrors (object) :
         """
         result , expo = self.pretty_print ( width       = width       ,
                                             precision   = precision   ,
-                                            withg_sign  = with_sign   ,
+                                            with_sign   = with_sign   ,
                                             parentheses = parentheses ,
                                             latex       = latex       )
         ## 

@@ -14,12 +14,13 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-from   ostap.plotting.canvas import use_canvas
+from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
+from   ostap.math.integral    import Integral   
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-import ROOT, random, time
+import ROOT, random
 # =============================================================================
 # logging 
 # =============================================================================
@@ -99,15 +100,15 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
     _fun2_  = lambda x : float(fun2(x))**2 
     _fund_  = lambda x : (float(fun1(x))-float(fun2(x)))**2 
                               
-    from ostap.math.integral import integral as _integral 
-
-    d1 = _integral ( _fun1_ , xmin , xmax , silent = True )
-    d2 = _integral ( _fun2_ , xmin , xmax , silent = True )
-    dd = _integral ( _fund_ , xmin , xmax , silent = True )
+    conf = { 'epsrel' : 1.e-5 , 'epsabs' : 1.e-6 , 'integrator' : 'boole' }
+    
+    d1 = Integral ( _fun1_ , **conf ).integral ( xmin , xmax )
+    d2 = Integral ( _fun2_ , **conf ).integral ( xmin , xmax )    
+    dd = Integral ( _fund_ , **conf ).integral ( xmin , xmax )   
         
     import math
-    return "%.4e" % math.sqrt(dd/math.sqrt(d1*d2)) 
-
+    return "%.4e" % ( dd / math.sqrt ( d1 * d2 ) ) 
+ 
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
 

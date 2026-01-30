@@ -16,6 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
+from   ostap.math.integral    import Integral   
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
@@ -84,21 +85,27 @@ for i in range ( 0 , entries ) :
 ## all histograms 
 histos = h1 , h2 , h3 , h4 , h5 , h6
 
+
 ## make a quadratic difference between two functions 
 def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
 
-    _fun1_  = lambda x : float(fun1(x))**2 
-    _fun2_  = lambda x : float(fun2(x))**2 
-    _fund_  = lambda x : (float(fun1(x))-float(fun2(x)))**2 
+    _fun1_  = lambda x :  float ( fun1 ( x ) )**2 
+    _fun2_  = lambda x :  float ( fun2 ( x ) )**2 
+    _fund_  = lambda x : (float ( fun1 ( x ) ) - float ( fun2 ( x ) ) ) **2 
                               
-    from ostap.math.integral import integral as _integral 
-
-    d1 = _integral ( _fun1_ , xmin , xmax )
-    d2 = _integral ( _fun2_ , xmin , xmax )
-    dd = _integral ( _fund_ , xmin , xmax )
+    ## from ostap.math.integral import integral as _integral 
+    ## d1 = _integral ( _fun1_ , xmin , xmax )
+    ## d2 = _integral ( _fun2_ , xmin , xmax )
+    ## dd = _integral ( _fund_ , xmin , xmax )
+       
+    conf = { 'epsrel' : 1.e-5 , 'epsabs' : 1.e-6 , 'integrator' : 'boole' }
+    
+    d1 = Integral ( _fun1_ , **conf ).integral ( xmin , xmax )
+    d2 = Integral ( _fun2_ , **conf ).integral ( xmin , xmax )    
+    dd = Integral ( _fund_ , **conf ).integral ( xmin , xmax )        
         
     import math
-    return "%.4e" % math.sqrt(dd/math.sqrt(d1*d2))
+    return "%.4e" % ( dd / math.sqrt ( d1 * d2 ) ) 
 
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
@@ -167,8 +174,8 @@ def diff_3 ( fun1 , fun2 , xmin , xmax , ymin , ymax , zmin , zmax , N = 1000000
 def test_generic_spline () :
     
     logger =   getLogger("test_generic_spline")
-    with timing ('B-spline [1,4]' , logger ) :
-        params = [ h.bSpline ( degree = 1 , knots = 4 ) for h in  histos ]
+    with timing ('B-spline [2,2]' , logger ) :
+        params = [ h.bSpline ( degree = 2 , knots = 2 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
         with use_canvas ( 'test_generic_spline %s' % h.GetTitle() , wait = 1 ) : 

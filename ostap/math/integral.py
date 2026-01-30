@@ -76,15 +76,15 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info   import python_info 
-from   ostap.core.ostap_types import num_types 
+from   ostap.core.ostap_types import num_types, string_types 
 from   ostap.math.ve          import VE
-from   ostap.math.base        import isequal, iszero, isfinite, Ostap  
+from   ostap.math.base        import isequal, isfinite
 from   ostap.utils.basic      import items_loop, memoize, typename, wm_print 
 from   ostap.math.integrator  import ( integral_ostap  ,
                                        integral2_ostap , 
                                        integral3_ostap ) 
 from   sortedcontainers       import SortedKeyList  
-import ROOT, math, array, scipy, warnings   
+import math, array , warnings   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -1268,6 +1268,63 @@ def integral3 ( fun    ,
                                  zmin , zmax ) 
     
 # =============================================================================
+## get 1D integrator by name
+#  - quad from scipy
+#  - romberg
+#  - clenshaw-curtis
+#  - composite-boole
+#  - C++ ostap         
+def integrator_1D ( name ) :
+    """ Get 1D integrator by name
+    - quad from scipy
+    - romberg
+    - clenshaw-curtis
+    - composite-boole
+    - C++ ostap      
+    """
+    name = name . lower() 
+    if   name in ( 'integral_quad'    , 'quad' , 'scipy' , 'scipy_quad' ) : return integral_quad
+    elif name in ( 'integral_romberg' , 'romberg' )                       : return romberg 
+    elif name in ( 'clenshaw_curtis'  , 'clenshaw-curtis' )               : return clenshaw_curtis
+    elif name in ( 'composite_boole'  , 'composite-boole' , 'boole')      : return composite_boole
+    elif name in ( 'integral_ostap'   , 'ostap' )                         : return integral_ostap
+    ##
+    return None 
+# =============================================================================
+# get 2D integrator by name
+#  - dblquad from scipy
+#  - genzmalik2
+#  - C++ ostap         
+def integrator_2D ( name ) :
+    """ Get 2D integrator by name
+    - dblquad from scipy
+    - genzmalik2
+    - C++ ostap      
+    """
+    name = name . lower() 
+    if   name in ( 'integral_dblquad' , 'dblquad'   , 'scipy' , 'scipy_dblquad' ) : return integral_dblquad
+    elif name in ( 'genz-malik'       , 'genzmalik' , 'genzmalik2' )              : return genzmalik2 
+    elif name in ( 'integral2_ostap'  , 'ostap'     )                             : return integral2_ostap
+    ##
+    return None 
+# =============================================================================
+# get 3D integrator by name
+#  - tplquad from scipy
+#  - genzmalik3
+#  - C++ ostap         
+def integrator_3D ( name ) :
+    """ Get 3D integrator by name
+    - tplquad from scipy
+    - genzmalik3
+    - C++ ostap      
+    """
+    name = name . lower() 
+    if   name in ( 'integral_tplquad' , 'tplquad'   , 'scipy' , 'scipy_tplquad' ) : return integral_tplquad
+    elif name in ( 'genz-malik'       , 'genzmalik' , 'genzmalik3' )              : return genzmalik3 
+    elif name in ( 'integral3_ostap'  , 'ostap'     )                             : return integral3_ostap
+    ##
+    return None 
+# =============================================================================
 ## @class IntegralBase
 #  Helper class to implement numerical integration 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1294,7 +1351,7 @@ class IntegralBase(object) :
         self.__args   = args
         self.__kwargs = kwargs
 
-        assert integrator and callable ( integrator ) , "Invalid `integrator'!"
+        assert integrator and callable ( integrator ) , "Invalid `integrator' %s " % integrator
         
         self.__integrator   = integrator
         
@@ -1529,6 +1586,9 @@ class Integral(IntegralBase) :
         >>> value  = func_
         """        
         integrator = other.pop ( 'integrator' , integral_quad )
+        if isinstance ( integrator , string_types ) :
+            integrator = integrator_1D ( integrator )
+        
         super(Integral,self).__init__( func       = func       ,
                                        args       = args       ,
                                        kwargs     = kwargs     , 
@@ -1695,6 +1755,9 @@ class Integral2(Integral) :
         """
         ## scipy as default integrator,  genzmalik2 can be viable alternative
         integrator = other.pop ('integrator' , integral_dblquad ) 
+        if isinstance ( integrator , string_types ) :
+            integrator = integrator_2D ( integrator)
+        
         Integral.__init__ ( self ,
                             func ,
                             xlow       = xlow       ,
@@ -1784,6 +1847,9 @@ class Integral3(Integral2) :
         """        
         ## scipy as default integrator, genzmalik3 can be viable alternative
         integrator = other.pop ( 'integrator' , integral_tplquad ) 
+        if isinstance ( integrator , string_types ) :
+            integrator = integrator_3D ( integrator )
+            
         Integral2.__init__ ( self                    ,
                              func                    ,
                              xlow       = 0          ,
