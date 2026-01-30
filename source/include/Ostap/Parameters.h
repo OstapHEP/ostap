@@ -8,6 +8,7 @@
 // ============================================================================
 #include <initializer_list>
 #include <vector>
+#include <algorithm>
 // ============================================================================
 namespace Ostap
 {
@@ -15,7 +16,7 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
-    /** @class Parameters Ostap/Parameneters.h
+    /** @class Parameters Ostap/Parameters.h
      *  Holder for parameters 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -155,6 +156,66 @@ namespace Ostap
     ( const std::size_t k             , 
       const double      value         ,
       const bool        force = false ) ;
+      // ======================================================================
+    public : // few helper static fuctions 
+      // ======================================================================
+      /// join two vectors togather 
+      static std::vector<double>
+      join
+      ( const std::vector<double>& a ,
+	const std::vector<double>& b ) ;
+      /// join scalar & vector together 
+      static std::vector<double>
+      join
+      ( const double               a ,
+	const std::vector<double>& b ) ;
+      /// join 2 scalars & vector together 
+      static std::vector<double>
+      join
+      ( const double               a1 ,
+	const double               a2 ,
+	const std::vector<double>& b  ) ;
+      /// join 3 scalars & vector together 
+      static std::vector<double>
+      join
+      ( const double               a1 ,
+	const double               a2 ,
+	const double               a3 ,
+	const std::vector<double>& b  ) ;
+      /// join 4 scalars & vector together 
+      static std::vector<double>
+      join
+      ( const double               a1 ,
+	const double               a2 ,
+	const double               a3 ,
+	const double               a4 ,
+	const std::vector<double>& b  ) ;
+      /// join vector & scalar together 
+      static std::vector<double>
+      join
+      ( const std::vector<double>& a , 
+	const double               b ) ;
+      /// join vector & 2 scalars together 
+      static std::vector<double>
+      join
+      ( const std::vector<double>& a  , 
+	const double               b1 , 
+	const double               b2 ) ;
+      /// join vector & 3 scalars together 
+      static std::vector<double>
+      join
+      ( const std::vector<double>& a  , 
+	const double               b1 , 
+	const double               b2 , 
+	const double               b3 ) ;
+      /// join vector & 4 scalars together 
+      static std::vector<double>
+      join
+      ( const std::vector<double>& a  , 
+	const double               b1 , 
+	const double               b2 , 
+	const double               b3 , 
+	const double               b4 ) ;
       // ======================================================================
     protected :
       // ======================================================================

@@ -406,18 +406,42 @@ namespace Ostap
       /// evaluate modulated phase space
       inline double operator () ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
+    public: 
+      // ======================================================================
+      /// exponential slope 
+      inline double tau       () const { return m_tau ; } 
+      /// phase space scale 
+      inline double scale     () const { return m_phasespace.scale     () ; }
+      /// get the threshold  
+      inline double threshold () const { return m_phasespace.threshold () ; }
+      // ======================================================================
+    public: // own parameters: tau & scale  
+      // ======================================================================
+      /// own parameters: tau, scale
+      inline std::size_t         npars_own () const { return 2 ; }
+      inline std::vector<double> own_pars  () const { return { tau() , scale () } ;  }
+      inline double own_par   ( const unsigned short k ) const
+      {	return 0 == k ? tau () : 1 == k ? scale () : 0.0 ; }
+      inline bool   setOwnPar
+      ( const unsigned short k     , 
+	const double         value ) 
+      { return
+	  0 == k ? setTau   ( value ) :
+	  1 == k ? setScale ( value ) : false ; }
+      /// all parameters 
+      inline std::vector<double> all_pars () const
+      { return Ostap::Math::Parameters::join ( tau () , scale () , pars () ) ; }      
+      // ======================================================================
     public:
       // ======================================================================
       /// get the phase space 
       inline const Ostap::Math::PhaseSpaceLeft& phasespace () const
       { return m_phasespace ; }
-      /// get the threshold  
-      inline double   threshold () const { return m_phasespace.threshold() ; }
       // ======================================================================
     public:
       // ======================================================================
       /// set the new exponent 
-      bool setTau   ( const double value ) ;
+      bool        setTau   ( const double value ) ;
       /// set the   scale  
       inline bool setScale ( const double value ) 
       { return m_phasespace.setScale ( value ) ; }
@@ -1454,7 +1478,7 @@ namespace Ostap
      *  product of the exponential and positive polinonmial
      *  @see Ostap::Math::Positive
      */
-    class  ExpoPositive  : public Ostap::Math::PolyFactor1D
+    class  ExpoPositive  final : public Ostap::Math::PolyFactor1D
     {
     public:
       // ======================================================================
@@ -1487,10 +1511,25 @@ namespace Ostap
       /// get exponential
       inline double tau    () const { return m_tau ;}
       /// set new value for the exponent
-      bool   setTau ( const  double value ) ;
+      bool          setTau ( const  double value ) ;
+      // ======================================================================
+    public: // own parameters: tau
+      // ======================================================================
+      /// own parameters: tau
+      inline std::size_t         npars_own () const { return 1 ; }
+      inline std::vector<double> own_pars  () const { return { tau() } ;  }
+      inline double own_par   ( const unsigned short k ) const
+      {	return 0 == k ? tau () : 0.0 ; }
+      inline bool   setOwnPar
+      ( const unsigned short k     , 
+	const double         value ) 
+      { return 0 == k ? setTau ( value ) : false ; }
+      /// all parameters 
+      inline std::vector<double> all_pars () const
+      { return Ostap::Math::Parameters::join ( tau () , pars () ) ;  }      
       // ======================================================================
     public:
-      // ======================================================================
+      // ======================================================================      
       /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
       double min_value () const ;
       /// get the value \f$ x_{max}\$ such that  \f$ x_{max} \ge p(x) \f$ 
@@ -1501,7 +1540,7 @@ namespace Ostap
       double integral () const ;
       double integral
       ( const double low , 
-	      const double high ) const ;
+	const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1536,7 +1575,7 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2015-02-07
      */
-    class  Sigmoid : public Ostap::Math::PolyFactor1D 
+    class  Sigmoid  final :  public Ostap::Math::PolyFactor1D 
     {
     public:
       // ============================================================
@@ -1612,8 +1651,8 @@ namespace Ostap
       // ======================================================================
     public: // sigmoid getters 
       // ======================================================================
-      inline double      scale        () const { return     m_scale     ; }
       inline double      x0           () const { return     m_x0        ; }
+      inline double      scale        () const { return     m_scale     ; }
       inline double      delta        () const { return     m_delta     ; } 
       inline SigmoidType sigmoid_type () const { return     m_type      ; }
       inline double      sin2delta    () const { return     m_sin2delta ; }
@@ -1621,14 +1660,35 @@ namespace Ostap
       // ======================================================================
     public: // sigmoid setters  
       // ======================================================================      
+      // set new value of x0 
+      bool setX0          ( const double value ) ;
       // set new value of scale 
       bool setScale       ( const double value ) ;
       // set new value of delta 
       bool setDelta       ( const double value ) ;
-      // set new value of x0 
-      bool setX0          ( const double value ) ;
       // ======================================================================
-    public: 
+    public: // own parameters: x0 , scale & delta 
+      // ======================================================================
+      /// own parameters: x0, scale , delta
+      inline std::size_t         npars_own () const { return 3 ; }
+      inline std::vector<double> own_pars  () const { return { m_x0 , m_scale , m_delta } ; }
+      inline double own_par   ( const unsigned short k ) const
+      {	return
+	  0 == k ? x0    () :
+	  1 == k ? scale () :
+	  2 == k ? delta () : 0.0 ; }
+      inline bool   setOwnPar
+      ( const unsigned short k     , 
+	const double         value ) 
+      { return
+	  0 == k ? setX0    ( value ) :
+	  1 == k ? setScale ( value ) :
+	  2 == k ? setDelta ( value ) : false ; }
+      /// all parameters 
+      inline std::vector<double> all_pars () const
+      { return Ostap::Math::Parameters::join ( x0 () , scale () , delta () , pars () ) ;  }      
+      // ======================================================================
+    public:       
       // ======================================================================
       /// get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 
       double min_value () const ;
@@ -1651,10 +1711,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// sigmoid scale 
-      double                m_scale     { 1          } ; // sigmoid scale 
       /// sigmoid location 
       double                m_x0        { 0          } ; // sigmoid location 
+      /// sigmoid scale 
+      double                m_scale     { 1          } ; // sigmoid scale 
       /// sigmoid delta  
       double                m_delta     { 0          } ; // sigmoid delta 
       /// sigmoid type 
@@ -1783,10 +1843,10 @@ namespace Ostap
      *        \mathrm{e}^{-a_1    x}       -\mathrm{e}^{-a_2 x} =
      *        \mathrm{e}^{-\alpha x}\left(1-\mathrm{e}^{-\delta x}\right) \f$
      *  and $p_2(s)$ is positive polynomial function
-     *  @author Vanya BElyaev Ivan.Belyaev@itep.ru
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2015-03-28
      */
-    class  TwoExpoPositive : public Ostap::Math::PolyFactor1D
+    class  TwoExpoPositive final : public Ostap::Math::PolyFactor1D
     {
     public:
       // ======================================================================
@@ -1850,6 +1910,27 @@ namespace Ostap
       inline bool setAlpha ( const double value ) { return m_2exp.setAlpha ( value ) ; }
       inline bool setDelta ( const double value ) { return m_2exp.setDelta ( value ) ; }
       inline bool setX0    ( const double value ) { return m_2exp.setX0    ( value ) ; }
+      // ======================================================================
+    public: // own parameters: alpga, delta , x0
+      // ======================================================================
+      /// own parameters: tau, scale
+      inline std::size_t         npars_own () const { return 3 ; }
+      inline std::vector<double> own_pars  () const { return { alpha () , delta () , x0 () } ;  }
+      inline double own_par   ( const unsigned short k ) const
+      {	return
+	  0 == k ? alpha () :
+	  1 == k ? delta () :
+	  2 == k ? x0    () : 0.0 ; }
+      inline bool   setOwnPar
+      ( const unsigned short k     , 
+	const double         value )
+      { return
+	  0 == k ? setAlpha ( value ) :
+	  1 == k ? setDelta ( value ) :
+	  2 == k ? setX0    ( value ) : false ; }
+      /// all parameters       
+      inline std::vector<double> all_pars () const
+      { return Ostap::Math::Parameters::join ( alpha () , delta () , x0 () , pars () ) ; }      
       // ======================================================================
     public:
       // ======================================================================

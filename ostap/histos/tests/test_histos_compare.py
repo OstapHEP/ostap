@@ -18,7 +18,7 @@ from   ostap.math.ve          import VE
 from   ostap.core.core        import hID 
 from   ostap.histos.histos    import h1_axis
 from   ostap.plotting.canvas  import use_canvas 
-from   ostap.utils.root_utils import batch_env 
+from   ostap.utils.root_utils import batch_env, implicitMT 
 import ostap.histos.compare
 import ostap.histos.graphs 
 import ROOT, random
@@ -39,8 +39,6 @@ batch_env ( logger )
 #
 ## histos for gaussian distributions
 # 
-print ( 'HERE-1' )
-
 
 h1g   = ROOT.TH1D ( hID() , '' ,  40 , -5 , 5 ) ; h1g.Sumw2() 
 h2g   = ROOT.TH1D ( hID() , '' ,  40 , -5 , 5 ) ; h2g.Sumw2() 
@@ -72,8 +70,6 @@ h4e = h4g.clone()
 
 ## get the value 
 v   = VE(1,1.75**2)
-
-print ( 'HERE-2' )
 
 random.seed(10) 
 for i in range ( 0, 10000 ) :
@@ -133,26 +129,23 @@ def compare ( h1 , h2 , title = '' , density = False ) :
     """ Compare two histograms 
     """
     
-    
-
     ## with use_canvas ( 'COMPARE!' , wait = 5 ) :
-    
-    logger.warning ( "COMPARE: temporarily disable1")
-    
-    ##  r1  = h1.cmp_fit       (  h2 , opts = '0Q' , density = density )
-    ## if r1 : logger.info    ( 'h1 vs h2 : fit probability is  %.5f%%, scale %s' % ( r1.Prob()*100 , r1[0].toString ('%.3f +/- %.3f' ) ) )
-    ## else  : logger.warning ( 'h1 vs h2 : fit problems ')
+
+    with implicitMT ( False ) : 
+        r1  = h1.cmp_fit       (  h2 , opts = '0Q' , density = density )
+        if r1 : logger.info    ( 'h1 vs h2 : fit probability is  %.5f%%, scale %s' % ( r1.Prob()*100 , r1[0].toString ('%.3f +/- %.3f' ) ) )
+        else  : logger.warning ( 'h1 vs h2 : fit problems ')
         
     ##  ## h1.blue  () 
     ##  ## h2.green () 
     ##  ## h1.draw('same')
     ##  ## h2.draw('same')
      
-    ##  r2  = h2.cmp_fit       ( h1 , opts = '0Q' , density = density )
-    ##  if r2 : logger.info    ( 'h2 vs h1 : fit probability is  %.5f%%, scale %s' % ( r2.Prob()*100 , r2[0].toString ( '%.3f +/- %.3f' ) ) )
-    ##  else  : logger.warning ( 'h2 vs h1 : fit problems ')
-    
-         
+    with implicitMT ( False ) : 
+        r2  = h2.cmp_fit       ( h1 , opts = '0Q' , density = density )
+        if r2 : logger.info    ( 'h2 vs h1 : fit probability is  %.5f%%, scale %s' % ( r2.Prob()*100 , r2[0].toString ( '%.3f +/- %.3f' ) ) )
+        else  : logger.warning ( 'h2 vs h1 : fit problems ')
+             
     ct  = h1.cmp_cos      ( h2 , density = density ) 
     logger.info           ( 'h1 vs h2 : cos(theta)      is %+.5f ' % ct  ) 
     

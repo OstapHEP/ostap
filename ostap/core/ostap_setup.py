@@ -41,10 +41,10 @@ else                       : logger = getLogger( __name__                )
 implicitMT = config.general.getboolean ( 'ImplicitMT' , fallback = False )
 if       implicitMT and not ROOT.ROOT.IsImplicitMTEnabled() :
     ROOT.ROOT.EnableImplicitMT  ()
-    if     ROOT.ROOT.IsImplicitMTEnabled() : logger.info      ( 'ImplicitMT is enabled'  )
+    if     ROOT.ROOT.IsImplicitMTEnabled() : logger.debug ( 'ImplicitMT is enabled'  )
 elif not implicitMT and     ROOT.ROOT.IsImplicitMTEnabled() :
     ROOT.ROOT.DisableImplicitMT  ()
-    if not ROOT.ROOT.IsImplicitMTEnabled() : logger.attention ( 'ImplicitMT is disabled' )
+    if not ROOT.ROOT.IsImplicitMTEnabled() : logger.debug ( 'ImplicitMT is disabled' )
     
 # =============================================================================
 ## Batch processing ?
@@ -59,31 +59,45 @@ elif groot and not config.batch and     groot.IsBatch () :
 
 # =============================================================================
 ## Profile ?
-if config.general.getboolean ( 'Profile' , fallback = False ) :
-    
-    import cProfile as _profile
-    _pr = _profile.Profile()
-    
-    # ========================================================================
-    def _profile_atexit_ ( prof ) : 
+# =============================================================================
+if config.general.getboolean ( 'Profile' , fallback = config.profile ) :
 
+    ## dedicated logger 
+    plogger  = getLogger ( 'ostap.core.profiler' )
+
+    ## profiler itself
+    import cProfile as profile
+    profiler = profile.Profile()
+    profiler.enable()
+    plogger .attention ( 'Profiling is activated!' )
+    
+    # =========================================================================
+    ## "AtExit" action:
+    #  - end profiling
+    #  - print statistics     
+    def _profile_atexit_ ( prof , logger ) :
+        """ `At-Exit` action: 
+        - end profiling 
+        - print statistics 
+        """
+       
         import io, pstats 
         
-        logger.debug ( 'End of profiling, generate profiling report' )
         prof.disable()
+        logger.info  ( 'End of profiling, generate profiling report' )
         
-        _sio   = io.StringIO()
-        sortby = 'cumulative'
-        _pstat = pstats.Stats( prof , stream=_sio).sort_stats('cumulative')
-        _pstat.print_stats()
-        logger.info ('Profiler report:\n%s' % _sio.getvalue())
-            
-    import atexit 
-    atexit.register ( _profile_atexit_ , _pr ) 
-    _pr.enable()
-    del _pr 
-    logger.attention ( 'Profiling is activated!' )
+        sio    = io.StringIO ()
+        sortby = pstats.SortKey.CUMULATIVE 
+        stat   = pstats.Stats ( prof , stream= sio ).sort_stats ( sortby )
+        stat.print_stats()
 
+        report = sio.getvalue()
+        logger.info ( 'Profiler report:\n\n%s' % report  )
+        logger.info ( 'The end of profiler report' ) 
+        
+    import atexit 
+    atexit.register ( _profile_atexit_ , profiler , plogger ) 
+    
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -64,6 +64,25 @@ namespace
    */
   const double s_sqrt2  = s_SQRT2 ;
   // ==========================================================================
+  /// join two vectors together
+  template <class SCALAR>
+  inline
+  std::vector<SCALAR>
+  join
+  ( const std::vector<SCALAR>& a ,
+    const std::vector<SCALAR>& b )
+  {
+    // destination 
+    std::vector<double> ab ( a.size() + b.size() ) ;
+    std::copy ( a.begin () , a.end () , ab.begin ()            ) ;
+    std::copy ( b.begin () , b.end () , ab.begin () + a.size() ) ;
+    return ab ;    
+  }
+  // ==========================================================================
+  
+
+  // ==========================================================================
+  // ==========================================================================
 } //                                                 end of anonymous namespace
 // ============================================================================
 
@@ -596,6 +615,7 @@ Ostap::Math::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   //
 }
 // ======================================================================
+
 
 // ============================================================================
 // destructor 
@@ -2907,7 +2927,6 @@ std::size_t Ostap::Math::TwoExpos::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_delta , m_x0 ) ; 
 }
 // ============================================================================
-
 
 // ============================================================================
 Ostap::Math::TwoExpoPositive::TwoExpoPositive  

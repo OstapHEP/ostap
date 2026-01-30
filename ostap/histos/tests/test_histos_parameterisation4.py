@@ -19,7 +19,7 @@ from   ostap.utils.root_utils import batch_env
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-import ROOT, random, time
+import ROOT, random, time, scipy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -34,13 +34,6 @@ logger.info ( 'Test for histogram parameterisation')
 ## set batch form environment 
 batch_env ( logger )
 # =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import scipy
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    scipy = None 
     
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum

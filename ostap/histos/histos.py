@@ -8105,12 +8105,14 @@ def _f_minmax_ ( self ) :
     """
     return self.GetMinimum(),self.GetMaximum()
 
-ROOT.TF1 .  minv    =  lambda s : s.GetMinimum()
-ROOT.TF1 .  maxv    =  lambda s : s.GetMaximum()
-ROOT.TF1 .  minmax  = _f_minmax_
-ROOT.TF1 . xminmax  = _f_xminmax_
+
+if not hasattr ( ROOT.TF1 , 'minv'    ) : ROOT.TF1 .  minv    =  lambda s : s.GetMinimum()
+if not hasattr ( ROOT.TF1 , 'maxv'    ) : ROOT.TF1 .  maxv    =  lambda s : s.GetMaximum()
+if not hasattr ( ROOT.TF1 , 'minmax'  ) : ROOT.TF1 .  minmax  = _f_minmax_
+if not hasattr ( ROOT.TF1 , 'xminmax' ) : ROOT.TF1 . xminmax  = _f_xminmax_
 
 import ostap.stats.moments as moments
+
 _tf1 = ROOT.TF1
 if not hasattr ( _tf1 , 'mean'     ) : _tf1.mean     = moments.mean 
 if not hasattr ( _tf1 , 'variance' ) : _tf1.variance = moments.variance 

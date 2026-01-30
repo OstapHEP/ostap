@@ -269,6 +269,7 @@ class AsymErrors (object) :
     def pretty_print  ( self                ,
                         width       = 6     ,
                         precision   = 4     ,
+                        with_sign   = True  , 
                         parentheses = True  ,
                         latex       = False ) : 
         """ Pretty print
@@ -290,6 +291,7 @@ class AsymErrors (object) :
         return pretty_ae ( self                      ,
                            width       = width       ,
                            precision   = precision   ,
+                           with_sign   = with_sign   ,
                            parentheses = parentheses ,
                            latex       = latex       )
 
@@ -302,6 +304,7 @@ class AsymErrors (object) :
     def nice_print  ( self                ,
                       width       = 6     ,
                       precision   = 4     ,
+                      with_sign   = True  , 
                       parentheses = True  ,
                       latex       = False ) : 
         """ Nice print
@@ -310,6 +313,7 @@ class AsymErrors (object) :
         """
         result , expo = self.pretty_print ( width       = width       ,
                                             precision   = precision   ,
+                                            withg_sign  = with_sign   ,
                                             parentheses = parentheses ,
                                             latex       = latex       )
         ## 
@@ -720,6 +724,7 @@ class ValWithErrors(object) :
     def pretty_print ( self                ,
                        width       = 6     ,
                        precision   = 4     ,
+                       with_sign   = True  , 
                        parentheses = True  ,
                        latex       = False ) :
         """ Pretty print
@@ -729,6 +734,7 @@ class ValWithErrors(object) :
         return pretty_vae ( self                      ,
                             width       = width       ,
                             precision   = precision   ,
+                            with_sign   = with_sign   , 
                             parentheses = parentheses ,
                             latex       = latex       )
 
@@ -741,6 +747,7 @@ class ValWithErrors(object) :
     def nice_print  ( self                ,
                       width       = 6     ,
                       precision   = 4     ,
+                      with_sign   = True  , 
                       parentheses = True  ,
                       latex       = False ) : 
         """ Nice print
@@ -749,6 +756,7 @@ class ValWithErrors(object) :
         """
         result , expo = self.pretty_print ( width       = width       ,
                                             precision   = precision   ,
+                                            with_sign   = with_sign   , 
                                             parentheses = parentheses ,
                                             latex       = latex       )
         ## 
@@ -1087,6 +1095,7 @@ class ValWithMultiErrors(object) :
     def pretty_print   ( self                ,
                          width       = 6     ,
                          precision   = 4     ,
+                         with_sign   = True  , 
                          parentheses = True  ,
                          latex       = False ) :
         """ Pretty print
@@ -1096,6 +1105,7 @@ class ValWithMultiErrors(object) :
         return pretty_vme ( self                      ,
                             width       = width       ,
                             precision   = precision   ,
+                            with_sign   = with_sign   , 
                             parentheses = parentheses ,
                             latex       = latex       )
     
@@ -1108,6 +1118,7 @@ class ValWithMultiErrors(object) :
     def nice_print  ( self                ,
                       width       = 6     ,
                       precision   = 4     ,
+                      with_sign   = True  , 
                       parentheses = True  ,
                       latex       = False ) : 
         """ Nice print
@@ -1116,6 +1127,7 @@ class ValWithMultiErrors(object) :
         """
         result , expo = self.pretty_print ( width       = width       ,
                                             precision   = precision   ,
+                                            with_sign   = with_sign   , 
                                             parentheses = parentheses ,
                                             latex       = latex       )
         ## 
@@ -1138,6 +1150,7 @@ class ValWithMultiErrors(object) :
 def fmt_pretty_ae ( errors              ,
                     width       = 6     ,
                     precision   = 4     ,
+                    with_sign   = True  , 
                     parentheses = True  ,
                     latex       = False )  :
     """ Format for  pretty print of asymmetric errors
@@ -1152,6 +1165,7 @@ def fmt_pretty_ae ( errors              ,
                                              errors.positive       ,
                                              errors.negative       ,
                                              width     = width     ,
+                                             with_sign = with_sign ,
                                              precision = precision ) 
       
     if latex : fmt = '{}_{-%s}^{+%s}' % ( fmte , fmte )
@@ -1168,6 +1182,7 @@ def fmt_pretty_ae ( errors              ,
 def fmt_pretty_vae (  value               ,
                       width       = 6     ,
                       precision   = 4     ,
+                      with_sign   = True  , 
                       parentheses = True  ,
                       latex       = False ) :
     """ Formats for  pretty print of value with asymmetric errors
@@ -1182,6 +1197,7 @@ def fmt_pretty_vae (  value               ,
                                value.pos_error           ,
                                width       = width       ,
                                precision   = precision   ,
+                               with_sign   = with_sign   , 
                                parentheses = parentheses ,
                                latex       = latex       ) 
 
@@ -1194,6 +1210,7 @@ def fmt_pretty_vae (  value               ,
 def fmt_pretty_vme ( value               ,
                      width       = 6     ,
                      precision   = 4     ,
+                     with_sign   = True  ,
                      parentheses = True  ,
                      latex       = False )  :
     """ Formats for  pretty print of value with multipl asymmetric errors
@@ -1210,6 +1227,7 @@ def fmt_pretty_vme ( value               ,
                                              *errors               , 
                                              width     = width     ,
                                              precision = precision ,
+                                             with_sign = with_sign , 
                                              latex     = latex     )
     
     fmt = " %s" % fmtv
@@ -1228,6 +1246,7 @@ def fmt_pretty_vme ( value               ,
 def pretty_ae ( errors              ,
                 width       = 6     ,
                 precision   = 4     ,
+                with_sign   = True  , 
                 parentheses = True  ,
                 latex       = False )  :
     """ Pretty print for asymemtric errors
@@ -1241,6 +1260,7 @@ def pretty_ae ( errors              ,
                            errors.positive           ,
                            width       = width       , 
                            precision   = precision   ,
+                           with_sign   = with_sign   , 
                            parentheses = parentheses ,
                            latex       = latex       ) 
 
@@ -1253,6 +1273,7 @@ def pretty_ae ( errors              ,
 def pretty_vae ( value               ,
                  width       = 6     ,
                  precision   = 4     ,
+                 with_sign   = True  , 
                  parentheses = True  ,
                  latex       = False )  :
     """ Pretty print for value  with asymemtric errors
@@ -1267,6 +1288,7 @@ def pretty_vae ( value               ,
                               value.pos_error           , 
                               width       = width       ,
                               precision   = precision   ,
+                              with_sign   = with_sign   , 
                               parentheses = parentheses ,
                               latex       = latex       )
         
@@ -1276,6 +1298,7 @@ def pretty_vae ( value               ,
                            value.pos_error           ,
                            width       = width       , 
                            precision   = precision   ,
+                           with_sign   = with_sign   , 
                            parentheses = parentheses ,
                            latex       = latex       ) 
     
@@ -1288,6 +1311,7 @@ def pretty_vae ( value               ,
 def pretty_vme ( value               ,
                  width       = 6     ,
                  precision   = 4     ,
+                 with_sign   = True  , 
                  parentheses = True  ,
                  latex       = False )  :
     """ Pretty print for value  with multiple asymmetric errors
@@ -1303,6 +1327,7 @@ def pretty_vme ( value               ,
     fmtv , fmte , expo = fmt_pretty_errors ( value.value           ,
                                              *errors               , 
                                              width     = width     ,
+                                             with_sign = with_sign , 
                                              precision = precision ,
                                              latex     = latex     )
 

@@ -14,7 +14,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
-from   ostap.math.ve    import VE 
+from   ostap.math.ve          import VE 
 from   ostap.core.ostap_types import integer_types
 import ROOT
 # =============================================================================
@@ -54,15 +54,18 @@ def _fit_repr_ ( self ) :
 # ==============================================================================
 ## print <code>TFitResult</code> as a table 
 def _fit_table_ ( rfit , title = '' , prefix = '' ) :
-    """ Print <code>TFitResult</code> as a table
+    """ Print `TFitResult` as a table
     """
-    from  ostap.fitting.utils    import fit_status, cov_qual
+    from ostap.utils.basic       import typename
+    from ostap.math.ve           import fmt_pretty_ve 
+    from ostap.fitting.utils     import fit_status, cov_qual
     from ostap.logger.colorized  import attention, allright
     from ostap.logger.pretty     import pretty_float
+    from ostap.logger.symbols    import chi2, chi2ndf
     
-    header = ( '', 'Unit' , 'Value' )
+    header = ( '', 'Unit' , 'Value' , '(-) MINOS' , '(+) MINOS' , 'GCC [%]' )   
 
-    rows = []
+    rows   = []
 
     ##  0. minimized type
     row = "Minimizer Type" , '' , rfit.MinimizerType() 
@@ -70,8 +73,8 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
 
     ##  0. minimized type
     v = rfit.IsValid()
-    if v : row = "Valid"   , '' , 'True'
-    else : row = "Valid"   , '' , attention ( 'False') 
+    if v : row = "Valid"   , '' , allright  ( 'True'  ) 
+    else : row = "Valid"   , '' , attention ( 'False' ) 
     rows.append ( row )
     
     ##  1. fit status
@@ -80,7 +83,7 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
         row = attention ( 'Status' )  , '' , attention ( fit_status ( status ) ) 
         rows.append ( row )
     else :
-        row =             'Status' , '' , allright ( fit_status ( status ) )   
+        row =             'Status'    , '' , allright ( fit_status ( status ) )   
         rows.append ( row )
 
     ## 4. covariance status
@@ -90,111 +93,107 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
     elif 3 == cq              : cn = allright  ( cov_qual ( cq ) )
     elif cq in (  0 , 1 , 2 ) : cn = attention ( cov_qual ( cq ) )
     else                      : cn = cov_qual  ( cq )         
-    rows.append ( ( 'Covariance matrix quality'     , '' , '  ' + cn  ) )
-
+    rows.append ( ( 'Covariance matrix quality'     , '' , cn  ) )
 
     ## 3-6. chi2,nDoF,chi2/nDoF,minFCN
-    chi2 = rfit.Chi2 () 
-    s , n = pretty_float ( chi2 )
+    s , n = pretty_float ( rfit.Chi2 () , with_sign = False , precision = 3 , width = 5 )
     if n : n = '[10^%+d]' % n
     else : n = '' 
-    rows.append ( ( "Chi2"       , n , '  ' + s ) )
+    rows.append ( ( chi2        , n , s ) )
     ##
     ndf = rfit.Ndf()
-    rows.append ( ( "nDoF"       , '' , '  ' + '%d' % ndf   ) )
+    rows.append ( ( "ndf"       , '' , '%d' % ndf   ) )
     ##
-    c2ndf = rfit.Chi2 () /  ndf  
-    s , n = pretty_float ( c2ndf  )
+    s , n = pretty_float ( rfit.Chi2 () /  ndf , with_sign = False , precision = 3 , width = 5 )
     if n : n = '[10^%+d]' % n
     else : n = '' 
-    rows.append ( ( "Chi2/nDoF"  , n , '  ' + s   ) )
+    rows.append ( ( chi2ndf  , n , s   ) )
     ##
     minfcn = rfit.MinFcnValue() 
-    s , n = pretty_float ( minfcn  )
+    s , n = pretty_float ( minfcn )
     if n : n = '[10^%+d]' % n
     else : n = '' 
-    rows.append ( ( "Minimal FCN"  , n , '  ' + s   ) )
+    rows.append ( ( "Minimal FCN"  , n , s   ) )
 
-    ## 7.Probability in %[%]
+    ## 7.Probability in [%]
     prob = rfit.Prob() / 100
-    rows.append ( ( "Probability"  , '[%]' , '  %5.3e' % prob ) )
+    rows.append ( ( "Probability"  , '[%]' , '%5.3f' % prob ) )
 
-    ## 8. distrance to minimum 
+    ## 8. distance to minimum 
     edm  = rfit.Edm()
-    s , n = pretty_float ( edm  )
+    s , n = pretty_float ( edm  , precision = 3 , width = 5 )
     if n : n = '[10^%+d]' % n
     else : n = '' 
-    rows.append ( ( "Estimated distance to minimum" , n , '  ' + s ) )
+    rows.append ( ( "Estimated distance to minimum" , n ,  s ) )
 
     ncalls = rfit.NCalls()
-    rows.append ( ( "FCN calls" , '' , '  ' + '%d' % ncalls  ) )
+    rows.append ( ( "FCN calls" , '' , '%d' % ncalls  ) )
     ##
     
-    has_minos = False
-    for i in rfit :
-        if not rfit.HasMinosError( i ) : continue 
-        has_minos = True
-        break
-
-    if has_minos :
-        rows   = [ row + ('','','') for row in rows ]
-        header = header + ( 'neg-minos' , 'pos-minos' , 'Global corr.' )   
-    else         :
-        rows = [ row + ('',)      for row in rows ] 
-        header = header + ( 'Global corr.' , )   
-
+    p , w  = 4 , 6             
     for i in rfit :
         
         pname  = rfit.GetParameterName ( i )
-        value  = rfit.Value            ( i )  
-        
-        fixed  = rfit.IsParameterFixed ( i )
-        fmte = '' 
-        if fixed :
-            v = value
-            s  , n = pretty_float ( v )
-            s = s + '(fixed)'
-            nv = n
-        else :
-            error = rfit.Error ( i )
-            v     = VE ( value , error * error )
-            ##
-            s , n = v.pretty_print ( parentheses = False ) 
-            nv = n 
-        if n : n = '[10^%+d]' % n
-        else : n = '' 
-        pname = "%-2d: %s"% ( i , pname )
+        value  = rfit.Value            ( i )          
 
-        row = pname , n , '  ' + s             
-        if not fixed and rfit.HasMinosError( i ) :
-            if fmte : 
-                error_low  = fmte   % ( rfit.LowerError ( i ) / 10**nv ) 
-                error_up   = fmte   % ( rfit.UpperError ( i ) / 10**nv )
-            else : 
-                error_low  = "%+8g" % ( rfit.LowerError ( i ) / 10**nv ) 
-                error_up   = "%+8g" % ( rfit.UpperError ( i ) / 10**nv ) 
-        else :
-            error_low  = '' 
-            error_up   = '' 
+        head   = '%-3d : %s' % ( i , pname ) 
 
-        if has_minos  :
-            row  = row  + ( error_low , error_up )
+        ## FIXED parameter ? 
+        if   rfit.IsParameterFixed ( i ) : 
 
+            s   , expo = pretty_float ( value , precision = p , width = w , with_sign = True )
+            s   = s + '(fixed)'
             
-        gcc    = rfit.GlobalCC         ( i ) * 100 
-        gcc  = '%+5.1f%%' % gcc
-        row = row + ( gcc, )
-        
+            expo = '10^%+d' % expo if expo else '' 
+            row  = head , expo , s  
+            
+        ## FLOAT parameter with parabolic uncertanties 
+        elif not rfit.HasMinosError ( i ) : 
+            
+            error = rfit.Error ( i )
+            value = VE ( value , error * error )
+            ##
+            _ , _ , fmte , _ = fmt_pretty_ve  ( value , precision = p , width = w , with_sign = True ) 
+            s , expo = value.pretty_print ( parentheses = False , precision = p , width = w , with_sign = True ) 
+
+            gcc  = rfit.GlobalCC ( i ) * 100 
+            gcc  = '%+5.1f' % gcc
+
+            expo = '10^%+d' % expo if expo else '' 
+            row  = head , expo , s , '' , '' , gcc 
+
+        ## FLOAT parameter with MINOS uncertainties 
+        else :
+             
+            error     = rfit.Error      ( i )
+            error_low = rfit.LowerError ( i )
+            error_up  = rfit.UpperError ( i )
+            value     = VE  ( value , error * error )
+            
+            _ , _ , fmte , _ = fmt_pretty_ve  ( value , precision = p , width = w , with_sign = True )
+            s , expo = value.pretty_print ( parentheses = False , precision = p , width = w , with_sign = True ) 
+            
+            scale = 10 ** expo if expo else 1
+
+            if   '%+-' in fmte : pass
+            elif '%-+' in fmte : pass
+            elif '%+'  in fmte : pass
+            else               : fmte = fmte.replace ( '%' , '%+' )
+            
+            gcc  = rfit.GlobalCC ( i ) * 100 
+            gcc  = '%+5.1f' % gcc
+            
+            expo = '10^%+d' % expo if expo else '' 
+            row  = head , expo , s , fmte % ( error_low / scale ) ,  fmte % ( error_up / scale )  , gcc 
+
         rows.append ( row ) 
         
-    if not title :  title = rfit.GetTitle()
-    
     import ostap.logger.table as T
-
+    
     rows  = [ header ] + rows  
-
+    title = title if title else rfit.GetTitle ()
+    rows  = T.remove_empty_columns ( rows ) 
     return T.table ( rows , title = title , prefix = prefix )
-
 
 # =============================================================================
 ## get number of parameters
@@ -203,7 +202,7 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
 #  print len(fit_result)
 #  @endcode 
 def _fit_len_ ( r ) :
-    """Get number of parameters
+    """ Get number of parameters
     >>> fit_result = hiisto.Fit( func , 'S' , ... )
     >>> print len(fit_result)
     """
@@ -218,7 +217,7 @@ def _fit_len_ ( r ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def _fit_iter_ ( r ) :
-    """Iterator over fit-result object
+    """ Iterator over fit-result object
     >>> fit_result = hiisto.Fit( func , 'S' , ... )
     >>> for i in fit_results : print i,fit_results[i] 
     """
@@ -353,8 +352,8 @@ for klass in ( ROOT.TFitResult    ,
                ROOT.TFitResultPtr ) :  
     
     klass.__contains__ = _fit_contains_ 
-    klass.__repr__     = _fit_repr_ 
-    klass.__str__      = _fit_repr_ 
+    klass.__repr__     = _fit_table_ 
+    klass.__str__      = _fit_table_ 
     klass.__iter__     = _fit_iter_ 
     klass.__getitem__  = _fit_getitem_ 
     klass.__call__     = _fit_getitem_ 

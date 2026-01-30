@@ -13,12 +13,15 @@
  1. tiny improvement for  `AsymErrors`, 'ValWithErrors` and `ValWithMultiErrors` prints 
  1. for all `draw` methods rename `opts` to `option`
  1. for all `draw` methods: treat the additional positional arguments as additional components for the `option`-argument 
+ 1. reduce the mess with configuration: "join" congiguration from configuraiton files, environment variables and command line  
 
 ## Bug fixes
 
  1. fix bugs in the printout of the `AsymErrors`,  'ValWithErrors` and `ValWithMultiErrors`
 
-## Backward incompatible 
+## Backward incompatible
+
+ 1. remove comamd line argumetn fo th elist of configuration files 
 
 # v3.6.5.0 
 

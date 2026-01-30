@@ -1702,15 +1702,22 @@ namespace Ostap
     public: // basic accessors to polynomial 
       // ======================================================================
       /// lower edge 
-      inline double         xmin   () const { return m_positive.xmin() ; }
+      inline double                     xmin   () const { return m_positive.xmin() ; }
       /// uppper edge 
-      inline double         xmax   () const { return m_positive.xmax() ; }
+      inline double                     xmax   () const { return m_positive.xmax() ; }
       /// dimension
-      inline unsigned short dim    () const { return m_positive.dim    () ; }
+      inline unsigned short             dim    () const { return m_positive.dim    () ; }
       /// degree
-      inline unsigned short degree () const { return m_positive.degree () ; }
+      inline unsigned short             degree () const { return m_positive.degree () ; }
       /// get number of polinomial parameters
-      inline std::size_t    npars  () const { return m_positive.npars() ; }
+      inline std::size_t                npars  () const { return m_positive.npars() ; }
+      /// get all parameters (phases on sphere) BY VALUE!
+      inline std::vector<double>        pars   () const { return m_positive.pars() ; }
+      /// get the bernstein coefficients 
+      inline const std::vector<double>& bpars  () const { return m_positive.bpars () ; }
+      // ======================================================================
+    public: // set/get polynomial parameters 
+      // ======================================================================
       /// set k-parameter
       inline bool           setPar
       ( const unsigned short k     ,
@@ -1728,10 +1735,6 @@ namespace Ostap
       /// get the parameter value
       inline double parameter
       ( const unsigned short k ) const { return par ( k ) ; }
-      /// get all parameters (phases on sphere) BY VALUE!
-      inline std::vector<double> pars  () const { return m_positive.pars() ; }
-      /// get the bernstein coefficients 
-      inline const std::vector<double>& bpars () const { return m_positive.bpars () ; }
       // ======================================================================
     public: 
       // ======================================================================

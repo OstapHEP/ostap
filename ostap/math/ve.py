@@ -512,7 +512,7 @@ def fmt_pretty_ve ( value               , * ,
     """
     assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % typename ( value )
     ## decode object 
-    v , e =  value.value () , max ( 0 , value.error () )
+    v , e = value.value () , max ( 0 , value.error () )
     from ostap.logger.pretty import fmt_pretty_error 
     return fmt_pretty_error ( v , e ,
                               width       = width       ,
@@ -551,8 +551,6 @@ def fmt_pretty_ves ( *values   ,
                            with_sign   = with_sign   ,
                            latex       = latex       )
 # =============================================================================
-#
-
 
 # =============================================================================
 ## nice printout of the ValueWithError object  ( string + exponent)
@@ -563,6 +561,7 @@ def fmt_pretty_ves ( *values   ,
 def pretty_ve ( value               , * , 
                 width       = 7     ,
                 precision   = 5     ,
+                with_sign   = True  , 
                 parentheses = True  ,
                 latex       = False ) :
     """ Nice printout of the ValueWithError object  ( string + exponent)
@@ -577,6 +576,7 @@ def pretty_ve ( value               , * ,
     return pretty_error ( v , e ,
                           width       = width       ,
                           precision   = precision   ,
+                          with_sign   = True        , 
                           parentheses = parentheses ,
                           latex       = latex       )
 
@@ -589,6 +589,7 @@ def pretty_ve ( value               , * ,
 def nice_ve ( value               , * , 
               width       = 7     ,
               precision   = 5     ,
+              with_sign   = True  , 
               parentheses = True  ,
               latex       = False ) :
     """ Nice ready-to-use printout of the ValueWithError object  ( string + exponent)
@@ -597,6 +598,7 @@ def nice_ve ( value               , * ,
     result, expo = pretty_ve ( value                     ,
                                width       = width       ,
                                precision   = precision   ,
+                               with_sign   = with_sign   , 
                                parentheses = parentheses ,
                                latex       = latex       )
     

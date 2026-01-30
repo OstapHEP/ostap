@@ -136,6 +136,7 @@ __all__     = () ## nothing to import
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.core.core        import cpp, VE, funID, Ostap
+from   ostap.math.base        import pos_infinity, neg_infinity
 from   ostap.math.param       import ( legendre_sum      ,
                                        chebyshev_sum     ,
                                        bezier_sum        ,
@@ -145,6 +146,8 @@ from   ostap.math.param       import ( legendre_sum      ,
                                        rational_fun      ) 
 from   ostap.utils.ranges     import vrange 
 from   ostap.utils.basic      import typename
+from   ostap.utils.root_utils import implicitMT 
+from   ostap.fitting.param    import H_fit, H_Nfit
 from   collections            import namedtuple
 import ROOT, math 
 # =============================================================================
@@ -158,9 +161,6 @@ else                       : logger = getLogger( __name__             )
 logger.debug ( 'Some parameterization utilities for Histo objects')
 # =============================================================================
 _new_methods_ = []
-# =============================================================================
-inf_pos =  float('inf') ## positive infinity
-inf_neg = -float('inf') ## negative infinity
 # =============================================================================
 ## result of the histogram  parameterisation based on TH1::Fit 
 ParamFITInfo = namedtuple ( 'ParamFITInfo' , ( 'tf1'       ,   ## ROOT TF1 object 
@@ -183,15 +183,15 @@ def _h1_param_sum_ ( h1               ,
                      fun_obj          ,
                      fit_type         ,  
                      option = 'SQ0'   ,
-                     xmin   = inf_neg ,
-                     xmax   = inf_pos ,
+                     xmin   = neg_infinity ,
+                     xmax   = pos_infinity ,
                      fixes  = ()      ,   ## List [ (i1,value1) , .... , (i_n,value_n) ] 
                      params = ()      ,   ## List [ value1 ,value2 , ... , value_n     ]
                      limits = ()      ,   ## Triplets [ ( i , min , max ) , ... ]
                      refit  = False   ) : ## refit ? 
     """ Represent histo as polynomial-like  sum    
     """
-    
+
     import ostap.fitting.funcs 
 
     xmin  = max ( xmin , h1.xmin() )
@@ -207,7 +207,7 @@ def _h1_param_sum_ ( h1               ,
     bfit  = fit_type ( b , xmin = xmin , xmax = xmax )
     
     bfit.fun.SetNpx  ( max ( 100 , 3 * h1.bins() , bfit.fun.GetNpx() ) )   
-    
+
     bfit.histo     = h1
     
     fun = bfit.fun
@@ -236,7 +236,7 @@ def _h1_param_sum_ ( h1               ,
     if ( len ( h1 ) < 100 or h1.GetXaxis().IsVariableBinSize() ) and not 'I' in opion.upper() :
         logger.info ( "param_sum: add fitting option 'I'" ) 
         option += 'I'
-        
+
     ## fitting options:
     fopts = option , '' , xmin , xmax 
 
@@ -252,7 +252,7 @@ def _h1_param_sum_ ( h1               ,
         if i < np : 
             logger.verbose ( 'param_sum: set parameter %d at %s' % ( i , v ) ) 
             fun.SetParameter ( i , float ( v ) )
-        
+
     ## fix parameters (if specified) 
     for i , v in fixes :
         if i < np : 
@@ -261,16 +261,19 @@ def _h1_param_sum_ ( h1               ,
             
     if normalized :
         fun.FixParameter    ( 0 , _integral_ )
-        r  = fun.Fit ( h1 , option + '0Q' , '' , xmin , xmax )        
+        ## see ROOT issue #21080 https://github.com/root-project/root/issues/21080
+        with implicitMT ( False ) :             
+            r  = fun.Fit ( h1 , option + '0Q' , '' , xmin , xmax )        
         fun.ReleaseParameter ( 0 )
         
     import ostap.fitting.fitresult
     from   ostap.fitting.utils     import fit_status
     from   ostap.logger.colorized  import attention
 
-    ## the fit itself 
-    r = fun.Fit( h1 , *fopts )
-    
+    ## see ROOT issue #21080 https://github.com/root-project/root/issues/21080
+    with implicitMT ( False ) : 
+        r = fun.Fit ( h1 , *fopts )
+
     if isinstance ( refit , integer_types ) : refit = max ( 0 , refit )
     else                                    : refit = 1 if refit else 0 
 
@@ -328,8 +331,8 @@ def _h1_param_sum_ ( h1               ,
 def _h1_bernstein_ ( h1               ,
                      degree           ,
                      option = 'SQ0'   ,
-                     xmin   = inf_neg ,
-                     xmax   = inf_pos ,
+                     xmin   = neg_infinity ,
+                     xmax   = pos_infinity ,
                      fixes  = ()      ,
                      params = ()      ,
                      limits = ()      ,
@@ -355,7 +358,6 @@ def _h1_bernstein_ ( h1               ,
     func  = bezier_sum ( h1   , degree , xmin , xmax )
     ## make a fit 
     if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_fit           ,
@@ -386,8 +388,8 @@ def _h1_bernstein_ ( h1               ,
 def _h1_bernsteineven_ ( h1               ,
                          degree           ,
                          option = 'SQ0'   ,
-                         xmin   = inf_neg ,
-                         xmax   = inf_pos ,
+                         xmin   = neg_infinity ,
+                         xmax   = pos_infinity ,
                          fixes  = ()      ,
                          params = ()      ,
                          limits = ()      ,
@@ -410,11 +412,10 @@ def _h1_bernsteineven_ ( h1               ,
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     # make reasonable approximation
-    func  = beziereven_sum ( h1   , degree , xmin , xmax )
+    func = beziereven_sum ( h1   , degree , xmin , xmax )
     ## 
     ## make a fit 
     if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_fit           ,
@@ -446,8 +447,8 @@ def _h1_bernsteineven_ ( h1               ,
 def _h1_chebyshev_ ( h1               ,
                      degree           ,
                      option = 'SQ0'   ,
-                     xmin   = inf_neg ,
-                     xmax   = inf_pos ,
+                     xmin   = neg_infinity ,
+                     xmax   = pos_infinity ,
                      fixes  = ()      ,
                      params = ()      ,
                      limits = ()      ,
@@ -474,7 +475,6 @@ def _h1_chebyshev_ ( h1               ,
     func = chebyshev_sum ( h1 , degree ,  xmin , xmax )
     ## make a fit 
     if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_fit           ,
@@ -505,8 +505,8 @@ def _h1_chebyshev_ ( h1               ,
 def _h1_legendre_ ( h1               ,
                     degree           ,
                     option = 'SQ0'   ,
-                    xmin   = inf_neg ,
-                    xmax   = inf_pos ,
+                    xmin   = neg_infinity ,
+                    xmax   = pos_infinity ,
                     fixes  = ()      ,
                     params = ()      ,
                     limits = ()      ,
@@ -543,7 +543,6 @@ def _h1_legendre_ ( h1               ,
                              limit  = 3 * h1.bins() ) 
     ## make a fit 
     if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_fit           ,
@@ -564,7 +563,7 @@ def _h1_legendre_ ( h1               ,
 #  @endcode
 #  @see Ostap::LegendreSum
 #  @see Ostap::LegendreSum::fill 
-def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
+def _h1_legendre_fast_ ( h1 , degree , xmin = neg_infinity , xmax = pos_infinity ) :
     """ (relatively) fast parameterization of 1D histogram as sum of Legendre polynomials
     >>> histo = ...
     >>> func  = histo.legendre_fast ( 5 )
@@ -614,8 +613,8 @@ def _h1_rational_  ( h1               ,
                      p                , ## degree of numerator 
                      d                ,
                      option = 'SQ0'   ,
-                     xmin   = inf_neg ,
-                     xmax   = inf_pos ,
+                     xmin   = neg_infinity ,
+                     xmax   = pos_infinity ,
                      fixes  = ()      ,
                      params = ()      ,
                      limits = ()      ,
@@ -644,11 +643,10 @@ def _h1_rational_  ( h1               ,
     xmax = min ( xmax , h1.xmax() )
     ##
     # make reasonable approximation
-    func  = rational_fun ( h1 , p + d , d , xmin , xmax )
+    func = rational_fun ( h1 , p + d , d , xmin , xmax )
     ## make a fit 
     if not params : params = tuple ( [ v for v in func.pars() ] )
     ## 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_fit           ,
@@ -682,8 +680,8 @@ def _h1_brational_  ( h1               ,
                       n                , ## degree of numerator 
                       d                , ## degree of denominator 
                       option = 'SQ0'   ,
-                      xmin   = inf_neg ,
-                      xmax   = inf_pos ,
+                      xmin   = neg_infinity ,
+                      xmax   = pos_infinity ,
                       fixes  = ()      ,
                       params = ()      ,
                       limits = ()      ,
@@ -801,8 +799,8 @@ try : # ========================================================================
     def _h1_fourier_ ( h1 ,  
                        degree           ,
                        option = 'SQ0'   ,
-                       xmin   = inf_neg ,
-                       xmax   = inf_pos ,
+                       xmin   = neg_infinity ,
+                       xmax   = pos_infinity ,
                        fixes  = ()      ,
                        params = ()      ,
                        limits = ()      , 
@@ -832,7 +830,6 @@ try : # ========================================================================
     
         ## make a fit 
         if not params : params = tuple ( [ p for p in func.pars() ] ) 
-        from ostap.fitting.param import H_fit
         return _h1_param_sum_ ( h1              ,
                                 func            ,
                                 H_fit           ,
@@ -907,8 +904,8 @@ try : # ========================================================================
     def _h1_cosine_ ( h1 ,
                       degree           ,
                       option = 'SQ0'   ,
-                      xmin   = inf_neg ,
-                      xmax   = inf_pos ,
+                      xmin   = neg_infinity ,
+                      xmax   = pos_infinity ,
                       fixes  = ()      ,
                       params = ()      ,
                       limits = ()      ,
@@ -936,7 +933,6 @@ try : # ========================================================================
         
         ## make a fit 
         if not params : params = tuple ( [ p for p in func.pars() ] ) 
-        from ostap.fitting.param import H_fit
         return _h1_param_sum_ ( h1              ,
                                 func            ,
                                 H_fit           ,
@@ -982,8 +978,8 @@ except ImportError :     # =====================================================
 def _h1_polinomial_ ( h1               ,
                       degree           ,
                       option = 'SQ0'   ,
-                      xmin   = inf_neg ,
-                      xmax   = inf_pos ,
+                      xmin   = neg_infinity ,
+                      xmax   = pos_infinity ,
                       fixes  = ()      ,
                       params = ()      ,
                       limits = ()      ,
@@ -1011,7 +1007,6 @@ def _h1_polinomial_ ( h1               ,
     #
     ## make a fit 
     if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_fit           ,
@@ -1044,8 +1039,8 @@ def _h1_bspline_ ( h1               ,
                    degree = 3       ,
                    knots  = 3       ,
                    option = 'SQ0'   ,
-                   xmin   = inf_neg ,
-                   xmax   = inf_pos ,
+                   xmin   = neg_infinity ,
+                   xmax   = pos_infinity ,
                    fixes  = ()      ,
                    params = ()      ,
                    limits = ()      ,
@@ -1079,7 +1074,6 @@ def _h1_bspline_ ( h1               ,
         
     ## make a fit 
     if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_fit           ,
@@ -1110,8 +1104,8 @@ def _h1_bspline_ ( h1               ,
 def _h1_positive_ ( h1               ,
                     degree           ,
                     option = 'SQ0'   ,
-                    xmin   = inf_neg ,
-                    xmax   = inf_pos ,
+                    xmin   = neg_infinity ,
+                    xmax   = pos_infinity ,
                     fixes  = ()      ,
                     params = ()      ,
                     limits = ()      , 
@@ -1135,7 +1129,6 @@ def _h1_positive_ ( h1               ,
     func = Ostap.Math.Positive ( degree , xmin , xmax )
     #
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1166,8 +1159,8 @@ def _h1_positive_ ( h1               ,
 def _h1_positiveeven_ ( h1 ,
                         degree           ,
                         option = 'SQ0'   ,
-                        xmin   = inf_neg ,
-                        xmax   = inf_pos ,
+                        xmin   = neg_infinity ,
+                        xmax   = pos_infinity ,
                         fixes  = ()      ,
                         params = ()      ,
                         limits = ()      ,
@@ -1192,7 +1185,6 @@ def _h1_positiveeven_ ( h1 ,
     func = Ostap.Math.PositiveEven ( degree , xmin , xmax )
     # 
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1224,8 +1216,8 @@ def _h1_monotonic_ ( h1                   ,
                      degree               ,
                      increasing = True    , 
                      option     = 'SQ0'   ,
-                     xmin       = inf_neg ,
-                     xmax       = inf_pos ,
+                     xmin       = neg_infinity ,
+                     xmax       = pos_infinity ,
                      fixes      = ()      ,
                      params     = ()      ,
                      limits     = ()      ,
@@ -1250,7 +1242,6 @@ def _h1_monotonic_ ( h1                   ,
     func = Ostap.Math.Monotonic ( degree , xmin , xmax , increasing )
     # 
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1284,8 +1275,8 @@ def _h1_convex_ ( h1                   ,
                   increasing = True    ,
                   convex     = True    ,
                   option     = 'SQ0'   ,
-                  xmin       = inf_neg ,
-                  xmax       = inf_pos ,
+                  xmin       = neg_infinity ,
+                  xmax       = pos_infinity ,
                   fixes      = ()      ,
                   params     = ()      ,
                   limits     = ()      , 
@@ -1310,7 +1301,6 @@ def _h1_convex_ ( h1                   ,
     func = Ostap.Math.Convex ( degree , xmin , xmax , increasing , convex )
     # 
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1341,8 +1331,8 @@ def _h1_convex_ ( h1                   ,
 def _h1_convexpoly_ ( h1                   ,
                       degree               ,
                       option     = 'SQ0'   ,
-                      xmin       = inf_neg ,
-                      xmax       = inf_pos ,
+                      xmin       = neg_infinity ,
+                      xmax       = pos_infinity ,
                       fixes      = ()      ,
                       params     = ()      ,
                       limits     = ()      ,
@@ -1367,7 +1357,6 @@ def _h1_convexpoly_ ( h1                   ,
     func = Ostap.Math.ConvexOnly ( degree , xmin , xmax , True )
     # 
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1398,8 +1387,8 @@ def _h1_convexpoly_ ( h1                   ,
 def _h1_concavepoly_ ( h1                   ,
                        degree               ,
                        option     = 'SQ0'   ,
-                       xmin       = inf_neg ,
-                       xmax       = inf_pos ,
+                       xmin       = neg_infinity ,
+                       xmax       = pos_infinity ,
                        fixes      = ()      ,
                        params     = ()      ,
                        limits     = ()      ,
@@ -1425,7 +1414,6 @@ def _h1_concavepoly_ ( h1                   ,
     func = Ostap.Math.ConvexOnly ( degree , xmin , xmax , False )
     # 
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1458,8 +1446,8 @@ def _h1_pspline_ ( h1               ,
                    degree = 3       ,
                    knots  = 3       ,
                    option = 'SQ0'   ,
-                   xmin   = inf_neg ,
-                   xmax   = inf_pos , 
+                   xmin   = neg_infinity ,
+                   xmax   = pos_infinity , 
                    fixes  = ()      ,
                    params = ()      ,
                    limits = ()      ,
@@ -1492,7 +1480,6 @@ def _h1_pspline_ ( h1               ,
         func = Ostap.Math.PositiveSpline ( _knots , degree )
     #
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1527,8 +1514,8 @@ def _h1_mspline_ ( h1                   ,
                    knots      = 3       ,
                    increasing = True    ,                
                    option     = 'SQ0'   ,
-                   xmin       = inf_neg ,
-                   xmax       = inf_pos , 
+                   xmin       = neg_infinity ,
+                   xmax       = pos_infinity , 
                    fixes      = ()      ,
                    params     = ()      ,
                    limits     = ()      ,
@@ -1564,7 +1551,6 @@ def _h1_mspline_ ( h1                   ,
         func = Ostap.Math.MonotonicSpline ( knots , degree , increasing )
     #
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1599,8 +1585,8 @@ def _h1_cspline_ ( h1                   ,
                    increasing = True    ,                
                    convex     = True    , 
                    option     = 'SQ0'   ,
-                   xmin       = inf_neg ,
-                   xmax       = inf_pos , 
+                   xmin       = neg_infinity ,
+                   xmax       = pos_infinity , 
                    fixes      = ()      ,
                    params     = ()      ,
                    limits     = ()      ,
@@ -1633,7 +1619,6 @@ def _h1_cspline_ ( h1                   ,
         func   = Ostap.Math.ConvexSpline ( _knots , order , increasing , convex )
         
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1666,8 +1651,8 @@ def _h1_convexspline_ ( h1                   ,
                         degree     = 3       ,
                         knots      = 3       ,
                         option     = 'SQ0'   ,
-                        xmin       = inf_neg ,
-                        xmax       = inf_pos , 
+                        xmin       = neg_infinity ,
+                        xmax       = pos_infinity , 
                         fixes      = ()      ,
                         params     = ()      ,
                         limits     = ()      ,
@@ -1700,7 +1685,6 @@ def _h1_convexspline_ ( h1                   ,
         func   = Ostap.Math.ConvexOnlySpline ( _knots , order , True )
     ##
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1733,8 +1717,8 @@ def _h1_concavespline_ ( h1                   ,
                          degree     = 3       ,
                          knots      = 3       ,
                          option     = 'SQ0'   ,
-                         xmin       = inf_neg ,
-                         xmax       = inf_pos , 
+                         xmin       = neg_infinity ,
+                         xmax       = pos_infinity , 
                          fixes      = ()      ,
                          params     = ()      ,
                          limits     = ()      ,
@@ -1769,7 +1753,6 @@ def _h1_concavespline_ ( h1                   ,
         
     ##
     ## make a fit 
-    from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1              ,
                             func            ,
                             H_Nfit          ,
@@ -1802,8 +1785,8 @@ def _h1_concavespline_ ( h1                   ,
 def _h1_karlinshapley_ ( h1                   ,
                          degree     = 3       ,
                          option     = 'SQ0'   ,
-                         xmin       = inf_neg ,
-                         xmax       = inf_pos , 
+                         xmin       = neg_infinity ,
+                         xmax       = pos_infinity , 
                          fixes      = ()      ,
                          params     = ()      ,
                          limits     = ()      ,
@@ -1844,7 +1827,6 @@ def _h1_karlinshapley_ ( h1                   ,
         newlims = tuple ( newlims )
         
     ## make a fit 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1               ,
                             func             ,
                             H_fit            ,
@@ -1875,8 +1857,8 @@ def _h1_karlinshapley_ ( h1                   ,
 def _h1_karlinstudden_ ( h1                   ,
                          degree     = 3       ,
                          option     = 'SQ0'   ,
-                         xmin       = inf_neg ,
-                         xmax       = inf_pos ,
+                         xmin       = neg_infinity ,
+                         xmax       = pos_infinity ,
                          scale      = None    ,
                          fixes      = ()      ,
                          params     = ()      ,
@@ -1902,7 +1884,7 @@ def _h1_karlinstudden_ ( h1                   ,
     xmax = min ( xmax , h1.xmax() )  
     
     if scale is None : scale = xmax - xmin 
-    assert isinstance ( scale , num_types ) and 0 < scale < inf_pos , \
+    assert isinstance ( scale , num_types ) and 0 < scale < pos_infinity , \
            'Invalid scale parameter'
 
     #
@@ -1923,7 +1905,6 @@ def _h1_karlinstudden_ ( h1                   ,
         newlims = tuple ( newlims )
         
     ## make a fit 
-    from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1               ,
                             func             ,
                             H_fit            ,
@@ -3124,9 +3105,11 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 #  @endcode
 #  @see Ostap::LegendreSum2
 #  @see Ostap::LegendreSum2::fill 
-def _h2_legendre_fast_ ( h2  , NX , NY , 
-                         xmin = inf_neg , xmax = inf_pos , 
-                         ymin = inf_neg , ymax = inf_pos ) :
+def _h2_legendre_fast_ ( h2 , NX , NY , 
+                         xmin = neg_infinity ,
+                         xmax = pos_infinity , 
+                         ymin = neg_infinity ,
+                         ymax = pos_infinity ) :
     """ (relatively) fast parameterization of 2D histogram as sum of 2D-Legendre polynomials
     >>> histo = ...
     >>> func  = histo.legendre      ( 5 , 3  )
@@ -3180,8 +3163,8 @@ def _h2_legendre_fast_ ( h2  , NX , NY ,
 #  @see Ostap::Bernstein2D
 #  @see Ostap::Bernstein2D::fill 
 def _h2_bernstein_fast_ ( h2  , NX , NY , 
-                          xmin = inf_neg , xmax = inf_pos , 
-                          ymin = inf_neg , ymax = inf_pos ) :
+                          xmin = neg_infinity , xmax = pos_infinity , 
+                          ymin = neg_infinity , ymax = pos_infinity ) :
     """ (relatively) fast parameterization of 2D histogram as sum of 2D-Bernstein polynomials
     >>> histo = ...
     >>> func  = histo.bernstein      ( 5 , 3  )
@@ -3260,9 +3243,12 @@ for h in ( ROOT.TH2F , ROOT.TH2D ) :
 #  @see Ostap::LegendreSum3
 #  @see Ostap::LegendreSum3::fill 
 def _h3_legendre_fast_ ( h3 , NX , NY , NZ , 
-                         xmin = inf_neg , xmax = inf_pos  ,
-                         ymin = inf_neg , ymax = inf_pos  ,
-                         zmin = inf_neg , zmax = inf_pos  ) :
+                         xmin = neg_infinity ,
+                         xmax = pos_infinity ,
+                         ymin = neg_infinity ,
+                         ymax = pos_infinity ,
+                         zmin = neg_infinity ,
+                         zmax = pos_infinity ) :
     """(relatively) fast parameterization of 2D histogram as sum of 3D-Legendre polynomials
     >>> histo = ...
     >>> func  = histo.legendre      ( 5 , 3  )
@@ -3329,10 +3315,13 @@ def _h3_legendre_fast_ ( h3 , NX , NY , NZ ,
 #  @endcode
 #  @see Ostap::Bernstein3D
 #  @see Ostap::Bernstein3D::fill 
-def _h3_bernstein_fast_ ( h3 , NX , NY , NZ ,  
-                          xmin = inf_neg , xmax = inf_pos  ,
-                          ymin = inf_neg , ymax = inf_pos  ,
-                          zmin = inf_neg , zmax = inf_pos  ) :
+def _h3_bernstein_fast_ ( h3 , NX , NY , NZ   ,  
+                          xmin = neg_infinity ,
+                          xmax = pos_infinity ,
+                          ymin = neg_infinity ,
+                          ymax = pos_infinity ,
+                          zmin = neg_infinity ,
+                          zmax = pos_infinity ) :
     """(relatively) fast parameterization of 2D histogram as sum of 3D-Bernstein polynomials
     >>> histo = ...
     >>> func  = histo.bernstein      ( 5 , 3  )

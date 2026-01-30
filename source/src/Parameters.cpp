@@ -116,5 +116,199 @@ Ostap::Math::Parameters::remove_noise
 
 
 // ============================================================================
+// join two vectors togather 
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const std::vector<double>& a ,
+  const std::vector<double>& b )
+{
+  //
+  if      ( a.empty() ) { return b ; } 
+  else if ( b.empty() ) { return a ; } 
+  //
+  std::vector<double> ab ( a.size () + b.size() ) ;
+  //
+  std::copy ( a.begin () , a.end () , ab.begin()            ) ;
+  std::copy ( b.begin () , b.end () , ab.begin() + a.size() ) ;
+  //
+  return ab ;
+}
+// ============================================================================
+// join scalar and vector together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const double               a ,
+  const std::vector<double>& b )
+{
+  //
+  if ( b.empty() ) { return { a } ; }
+  //
+  std::vector<double> ab ( 1 + b.size() ) ;
+  //
+  ab[0] = a ;
+  std::copy ( b.begin () , b.end () , ab.begin() + 1 ) ;
+  //
+  return ab ;
+}
+// ============================================================================
+// join 2 scalars and vector together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const double               a1 ,
+  const double               a2 ,
+  const std::vector<double>& b  )
+{
+  //
+  if ( b.empty() ) { return { a1 , a2 } ; }
+  //
+  std::vector<double> ab ( 2 + b.size() ) ;
+  //
+  ab [ 0 ] = a1 ;
+  ab [ 1 ] = a2  ;
+  //
+  std::copy ( b.begin () , b.end () , ab.begin() + 2 ) ;
+  //
+  return ab ;
+}
+// ============================================================================
+// join 3 scalars and vector together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const double               a1 ,
+  const double               a2 ,
+  const double               a3 ,
+  const std::vector<double>& b  )
+{
+  //
+  if ( b.empty() ) { return { a1 , a2 , a3 } ; }
+  //
+  std::vector<double> ab ( 3 + b.size() ) ;
+  //
+  ab [ 0 ] = a1 ;
+  ab [ 1 ] = a2  ;
+  ab [ 2 ] = a3  ;
+  //
+  std::copy ( b.begin () , b.end () , ab.begin() + 3 ) ;
+  //
+  return ab ;
+}
+// ============================================================================
+// join 4 scalars and vector together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const double               a1 ,
+  const double               a2 ,
+  const double               a3 ,
+  const double               a4 ,
+  const std::vector<double>& b  )
+{
+  //
+  if ( b.empty() ) { return { a1 , a2 , a3 , a4 } ; }
+  //
+  std::vector<double> ab ( 4 + b.size() ) ;
+  //
+  ab [ 0 ] = a1 ;
+  ab [ 1 ] = a2  ;
+  ab [ 2 ] = a3  ;
+  ab [ 3 ] = a4  ;
+  //
+  std::copy ( b.begin () , b.end () , ab.begin() + 4 ) ;
+  //
+  return ab ;
+}
+// ============================================================================
+//  join vector & scalar together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const std::vector<double>& a , 
+  const double               b )
+{
+  //
+  if ( a.empty() ) { return { b } ; }
+  //
+  std::vector<double> ab ( a.size() + 1 ) ;
+  //
+  std::copy ( a.begin () , a.end () , ab.begin() ) ;
+  ab [ a.size() ] = b ;
+  //
+  return ab ;
+}
+// ============================================================================
+//  join vector & 2 scalars together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const std::vector<double>& a  , 
+  const double               b1 , 
+  const double               b2 ) 
+{
+  //
+  if ( a.empty() ) { return { b1 , b2 } ; }
+  //
+  std::vector<double> ab ( a.size() + 2 ) ;
+  //
+  std::copy ( a.begin () , a.end () , ab.begin() ) ;
+  ab [ a.size()     ] = b1 ;
+  ab [ a.size() + 1 ] = b2 ;
+  //
+  return ab ;
+}
+// ============================================================================
+//  join vector & 3 scalars together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const std::vector<double>& a  , 
+  const double               b1 , 
+  const double               b2 , 
+  const double               b3 ) 
+{
+  //
+  if ( a.empty() ) { return { b1 , b2 , b3 } ; }
+  //
+  std::vector<double> ab ( a.size() + 3 ) ;
+  //
+  std::copy ( a.begin () , a.end () , ab.begin() ) ;
+  ab [ a.size()     ] = b1 ;
+  ab [ a.size() + 1 ] = b2 ;
+  ab [ a.size() + 2 ] = b3 ;
+  //
+  return ab ;
+}
+// ============================================================================
+//  join vector & 4 scalars together
+// ============================================================================
+std::vector<double>
+Ostap::Math::Parameters::join
+( const std::vector<double>& a  , 
+  const double               b1 , 
+  const double               b2 , 
+  const double               b3 , 
+  const double               b4 ) 
+{
+  //
+  if ( a.empty() ) { return { b1 , b2 , b3 , b4 } ; }
+  // 
+  std::vector<double> ab ( a.size() + 4 ) ;
+  //
+  std::copy ( a.begin () , a.end () , ab.begin() ) ;
+  ab [ a.size()     ] = b1 ;
+  ab [ a.size() + 1 ] = b2 ;
+  ab [ a.size() + 2 ] = b3 ;
+  ab [ a.size() + 4 ] = b4 ;
+  //
+  return ab ;
+}
+
+
+
+
+// ============================================================================
 //                                                                      The END 
 // ============================================================================

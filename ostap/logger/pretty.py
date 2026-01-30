@@ -352,6 +352,7 @@ def pretty_error ( value               ,
                    error               , * , 
                    width       = 6     ,
                    precision   = 4     ,
+                   with_sign   = True  , 
                    parentheses = True  ,
                    latex       = False ) :
     """ Nice printout of the value with singuar, symmetric, error ( string + exponent)
@@ -388,6 +389,7 @@ def pretty_error ( value               ,
     fmt , _ , _ , expo = fmt_pretty_error ( v , e                     , 
                                             width       = width       ,
                                             precision   = precision   ,
+                                            with_sign   = with_sign   , 
                                             parentheses = parentheses ,
                                             latex       = latex       )
     values = v , e
@@ -408,6 +410,7 @@ def pretty_error2 ( value               ,
                     errhigh             , * , 
                     width       = 6     ,
                     precision   = 4     ,
+                    with_sign   = True  , 
                     parentheses = True  ,
                     latex       = False ) :
     """ Nice printout of the object with asymmetric  errors   ( string + exponent)
@@ -432,6 +435,7 @@ def pretty_error2 ( value               ,
     fmt , _ , _ , expo = fmt_pretty_error2 ( v , elow , ehigh ,
                                              width       = width       ,
                                              precision   = precision   ,
+                                             with_sign   = with_sign   , 
                                              parentheses = parentheses ,
                                              latex       = latex       )
     
@@ -452,6 +456,7 @@ def pretty_errors ( errlow              ,
                     errhigh             , * , 
                     width       = 6     ,
                     precision   = 4     ,
+                    with_sign   = True  , 
                     parentheses = True  ,
                     latex       = False ) :
     """ Nice printout of asymmetric  errors   ( string + exponent)
@@ -473,6 +478,7 @@ def pretty_errors ( errlow              ,
     _ , fmte , expo = fmt_pretty_errors ( 0.0 , elow , ehigh    ,
                                           width     = width     ,
                                           precision = precision ,
+                                          with_sign = with_sign , 
                                           latex     = latex     )
     
     ## construct format 
@@ -658,16 +664,18 @@ def nice_latex  ( what              , * ,
 def pretty_vme ( value               , * , 
                  width       = 6     ,
                  precision   = 4     ,
+                 with_sign   = True  , 
                  parentheses = True  ,
                  latex       = False ) :
     """ Nice printout of the ValueWithMultiError object  ( string + exponent)
-    - return nice stirng and the separate exponent 
+    - return nice string and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
     """
     from ostap.utils.valerrors  import pretty_vme as _pretty_vme_ 
     return _pretty_vme_ ( value       = value       ,
                           width       = width       ,
                           precision   = precision   ,
+                          with_sign   = True        , 
                           parentheses = parentehses ,
                           latex       = latex       ) 
 
