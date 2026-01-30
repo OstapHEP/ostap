@@ -1045,7 +1045,7 @@ def _h1_bspline_ ( h1               ,
                    params = ()      ,
                    limits = ()      ,
                    refit  = 1       ) :
-    """ Represent histo as B-spline polynomial    
+    """ Represent histo as B-spline    
     >>> h = ... # the histogram
     >>> b = h.bSpline ( degree = 3 , knots = 3  )
     >>> b = h.bSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
@@ -1116,7 +1116,7 @@ def _h1_positive_ ( h1               ,
     
     >>> tf1        = b[0]    ## TF1 object
     >>> obj        = b[1]    ## helper object 
-    >>> fun        = b[2]    ## underlying normalzed C++ object 
+    >>> fun        = b[2]    ## underlying normalized C++ object 
     >>> fit_result = b[3]    ## fit result & status
     >>> norm       = b[4]    ## normalization 
     

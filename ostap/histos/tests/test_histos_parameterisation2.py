@@ -96,9 +96,9 @@ histos = h1 , h2 , h3 , h4 , h5 , h6
 ## make a quadratic difference between two functions 
 def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
 
-    _fun1_  = lambda x : float(fun1(x))**2 
-    _fun2_  = lambda x : float(fun2(x))**2 
-    _fund_  = lambda x : (float(fun1(x))-float(fun2(x)))**2 
+    _fun1_  = lambda x :   float ( fun1 ( x ) ) ** 2 
+    _fun2_  = lambda x :   float ( fun2 ( x ) ) ** 2 
+    _fund_  = lambda x : ( float ( fun1 ( x ) ) - float ( fun2 ( x ) ) ) ** 2 
                               
     conf = { 'epsrel' : 1.e-5 , 'epsabs' : 1.e-6 , 'integrator' : 'boole' }
     
@@ -112,32 +112,22 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
 
-    _fun1  = lambda x : func(x)
-    _fun2  = lambda x : float(histo(x))
+    _fun1  = lambda x : float ( func  ( x ) ) 
+    _fun2  = lambda x : float ( histo ( x ) )
         
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
 ## make a quadratic difference between histogram and function 
 def diff2 ( func , histo ) :
 
-    _f     =  func[2]
-    _n     =  float(func[-1])
-
-    _fun1  = lambda x : _n*_f(x)
-    _fun2  = lambda x : float(histo(x))
+    funobj = func.funobject
+    norm   = func.norm 
+    
+    _fun1  = lambda x : float ( norm * funobj ( x ) ) 
+    _fun2  = lambda x : float (        histo  ( x ) )
         
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
-## make a quadratic difference between histogram and function 
-def diff3 ( func , histo ) :
-
-    _f     =  func[2]
-    _n     =  float(func[3])
-
-    _fun1  = lambda x : _n*_f(x)
-    _fun2  = lambda x : float(histo(x))
-        
-    return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
 # =============================================================================
 ## qudratic difference between 2D-functions 
