@@ -36,10 +36,6 @@ from   ostap     import version_info as ostap_info
 from   ostap     import version_int  as ostap_version_int 
 import os, sys, socket, ROOT 
 # =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.meta_info' )
-else                       : logger = getLogger( __name__     )
-# =============================================================================
 MetaInfo = namedtuple ( 'MetaInfo'  , ( 'User' , 'Ostap' , 'Python' , 'ROOT'  ) ) 
 RootInfo = namedtuple ( 'RootInfo'  , ( 'major' , 'minor' , 'patch'           ) ) 
 
@@ -99,7 +95,10 @@ assert ( 6 , 26 ) <= root_info  , "No support for ROOT %s "   %  ( '.'.join ( st
 if '__main__' == __name__ :
     
     # =========================================================================
-    
+    from ostap.logger.logger import getLogger 
+    logger = getLogger( 'ostap.core.meta_info' )
+    # =========================================================================
+
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

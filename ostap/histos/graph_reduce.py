@@ -18,16 +18,8 @@ __all__     = (
 from   ostap.math.reduce              import root_factory
 from   ostap.core.ostap_types         import num_types, integer_types, string_types 
 from   ostap.plotting.draw_attributes import copy_graph_attributes  
-import ROOT, array, itertools  
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.graph_redcue' )
-else                       : logger = getLogger( __name__                    )
-# =============================================================================
-logger.debug ( 'reduce (T)Graph-like classes')
-# ===============================================================================
+import ROOT, array
+## ============================================================================
 ## reconstruct/deserialize/unpickle <code>TGraph</code> object
 #  @see TGraph
 def graph_factory ( klass     ,
@@ -325,6 +317,10 @@ _new_methods_ = tuple ( _new_methods_ )
 # =============================================================================
 if '__main__' == __name__ :
     
+    # =========================================================================
+    from ostap.logger.logger import getLogger 
+    logger = getLogger( 'ostap.histos.graph_redcue' )
+
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 

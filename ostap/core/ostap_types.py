@@ -48,15 +48,7 @@ __all__     = (
 from   collections.abc              import  ( Collection, Sequence  ,
                                               Iterable  , Mapping   ,
                                               Sized     , Generator )   
-import cppyy, array, sys, os, math, numpy   
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
-else                       : logger = getLogger( __name__     )
-# =============================================================================
-logger.debug ( 'Core classes/types for Ostap')
+import cppyy, array, os, math, numpy   
 # =============================================================================
 long           = int
 string_types   = bytes , str 
@@ -152,9 +144,12 @@ def all_strings ( *args ) :
 # =============================================================================
 if '__main__' == __name__ :
 
+    # =============================================================================
+    from ostap.logger.logger import getLogger 
+    logger = getLogger( 'ostap.core.ostap_types' ) 
+
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
     
 # =============================================================================
 ##                                                                      The END 

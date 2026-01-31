@@ -28,14 +28,7 @@ from   ostap.core.core         import std, Ostap, valid_pointer
 from   ostap.utils.basic       import typename 
 from   ostap.core.ostap_types  import string_types , integer_types
 import ostap.fitting.variables
-import ROOT, sys, random
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.roocollections' )
-else                       : logger = getLogger( __name__ )
-# =============================================================================
+import ROOT
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -753,6 +746,10 @@ _new_methods_ = tuple ( _new_methods_ )
 # =============================================================================
 if '__main__' == __name__ :
     
+    # ========================================================================
+    from ostap.logger.logger import getLogger 
+    logger = getLogger( 'ostap.fitting.roocollections' )
+
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     

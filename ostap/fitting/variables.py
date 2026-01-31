@@ -78,8 +78,7 @@ from   ostap.core.ostap_types   import ( num_types      , list_types     ,
                                          integer_types  , string_types   ,
                                          dictlike_types , sequence_types )
 import ostap.math.math_ve       as       mve 
-import ostap.fitting.rooreduce 
-import ROOT, random, array, ctypes
+import ROOT, array
 # =============================================================================
 # logging 
 # =============================================================================

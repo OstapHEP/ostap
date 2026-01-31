@@ -13,17 +13,11 @@ __all__     = (
 # =============================================================================
 from    ostap.math.base        import Ostap, doubles, complexes  
 from    ostap.core.ostap_types import sequence_types 
-import  ROOT, array 
-# =============================================================================
-# logging 
-# =============================================================================
-from   ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.reduce' )
-else                       : logger = getLogger ( __name__            )
+import  array 
 # =============================================================================
 ## Trivial factory for deserialization of generic objects
 def root_factory ( klass , *params ) :
-    """Trivial factory for deserialization of generic bjects
+    """ Trivial factory for deserialization of generic bjects
     """
     return klass ( *params )
 
@@ -839,7 +833,11 @@ if not '__main__' == __name__ :
     
 # =============================================================================
 if '__main__' == __name__ :
-    
+
+    # =============================================================================
+    from   ostap.logger.logger import getLogger 
+    logger = getLogger ( 'ostap.math.reduce' )
+  
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 

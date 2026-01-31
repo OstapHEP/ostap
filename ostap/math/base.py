@@ -124,7 +124,7 @@ __all__     = (
 from   ostap.core.meta_info    import python_info
 from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types
 import ostap.core.ostap_setup 
-import ROOT, cppyy, sys, math, ctypes, array   
+import ROOT, cppyy, math, ctypes, array   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -189,7 +189,6 @@ class ROOTIgnore( object ) :
             
 # =============================================================================
 from ostap.logger.mute  import mute
-logger.debug ( "Suppress error/warnings from ROOT" )
 with ROOTIgnore ( ROOT.kWarning + 1 ) : 
     with mute ( True  , True ) : _ = ROOT.RooRealVar() 
     iszero   = Ostap.Math.Zero     ('double')()

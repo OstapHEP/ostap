@@ -19,6 +19,7 @@ __all__     = (
     ##
     'OSTAP_CONFIG'       , ## config files 
     'OSTAP_BATCH'        , ## batch   processing?
+    'OSTAP_NOPARSE'      , ## no-parse mode
     ##
     'OSTAP_SILENT'       , ## silent  processing?
     'OSTAP_QUIET'        , ## quiet   processing?
@@ -52,6 +53,7 @@ import os
 # =============================================================================
 OSTAP_CONFIG        = 'OSTAP_CONFIG'
 OSTAP_BATCH         = 'OSTAP_BATCH'
+OSTAP_NOPARSE       = 'OSTAP_NOPARSE' 
 ##
 OSTAP_SILENT        = 'OSTAP_SILENT'       ## silent  processing ? 
 OSTAP_QUIET         = 'OSTAP_QUIET'        ## quiet   processing ? 
@@ -83,12 +85,49 @@ OSTAP_PROTOCOL      = 'OSTAP_PROTOCOL'     ## pickling protocol
 OSTAP_DIR           = 'OSTAP_DIR'
 
 # =============================================================================
+## list of "boolean false" values 
+boolean_false_values = ( '0' , 'false' , 'no'  , 'not' , 'none' , 'nope' , 'off' , '' )
+## list of "boolean true"  values
+boolean_true_values  = ( '1' , 'true'  , 'yes' , 'sure' , 'yep' , 'on'  ) 
+# =============================================================================
 ## transformation:  no blanks, no understores, no dashes 
 #  - case-insensitive
 #  - space ignored
 #  - underline ignored
 #  - dashes ignored 
 transform = lambda v : v.replace(' ','').replace('_','').replace('-','').lower()
+# =============================================================================
+## Can the value be interprted as "boolean true"?
+#  - bool 
+#  - in lst  of "true"  values
+#  - not in lst of "false" values and True  
+def boolean_true ( value )  :
+    """ Can the value be interprted as "boolean true"?
+    - bool 
+    - in lst  of "true"  values
+    - not in lst of "false" values and True  
+    """
+    if isinstance ( value , bool )  : return True if value else False
+    value_ = transform ( value ) 
+    if   value_ in boolean_true_values  : return True 
+    elif value_ in boolean_false_values : return False
+    return True if value_ else False
+# =============================================================================
+## Can the value be interprted as "boolean false"?
+#  - bool
+#  - in lst  of "false" values
+#  - not in lst of "true" values or False
+def boolean_false ( value )  :
+    """ Can the value be interprted as "boolean false"?
+    - bool
+    - in lst  of "false" values
+    - not in lst of "true" values or False
+    """
+    if isinstance ( value , bool )   : return True if not value else False 
+    value_ = transform ( value )
+    if value_    in boolean_false_values : return True  
+    elif value_  in boolean_true_values  : return False 
+    return True if not value_ else False  
 # =============================================================================
 ## case-insensitive check for existence of the environment variable
 #  - case-insensitive

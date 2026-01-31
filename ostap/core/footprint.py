@@ -13,24 +13,20 @@ __date__    = "2014-03-10"
 __version__ = "$Revision$"
 __all__     = () 
 # =============================================================================
-import os, sys, datetime
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.footprint'  )
-else                       : logger = getLogger ( __name__                )
-# =============================================================================
-start_time = datetime.datetime.now()
-# =============================================================================
-## central file, if exists and writeables 
-
-# =============================================================================
-import atexit 
-@atexit.register 
-def add_footprint () :
+## add footprints into two files 
+#  - central: $OSTAPDIR/.footprints 
+#  - local    cachee_dir/.footprints  
+def add_footprint ( start ) :
+    """Add footprints into two files
+    - central: $OSTAPDIR/.footprints
+    - local    cachee_dir/.footprints  
+    """
     # =========================================================================
     from ostap.core.meta_info import python_info, root_info, ostap_info, user 
+    from ostap.logger.logger import getLogger
+    import os, sys
+    ##
+    logger = getLogger ( 'ostap.core.footprint' )
     ## list of footprint-files 
     files = []
     ## (1) central file. common for everybody (is exists and writeable) 
@@ -50,7 +46,7 @@ def add_footprint () :
         try : # ===============================================================
             # =================================================================
             end_time = datetime.datetime.now ()
-            ts       = start_time.strftime ( '%Y-%m-%d %H:%M:%S' )
+            ts       = start     .strftime ( '%Y-%m-%d %H:%M:%S' )
             te       = end_time  .strftime ( '%Y-%m-%d %H:%M:%S' )
             with open ( fp_file , 'at' ) as fp : # =========================
                 fp.write ( " + ostap session %s\n" % os.getpid () )
@@ -68,9 +64,19 @@ def add_footprint () :
         except : # ================================================================
             pass 
 
+import datetime
+start_time = datetime.datetime.now()
+
+import atexit
+atexit.register ( add_footprint , start_time )
+
 # =============================================================================
-if '__main__' == __name__ : 
+if '__main__' == __name__ : \
     
+    # ==========================================================================
+    from ostap.logger.logger import getLogger 
+    logger = getLogger ( 'ostap.core.footprint'  )
+
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 

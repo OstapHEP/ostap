@@ -25,7 +25,7 @@ from   pickle                       import PicklingError, UnpicklingError
 import ostap.fitting.variables
 import ostap.fitting.roocollections
 import ostap.histos.graph_reduce    as     GR 
-import ROOT, random, array, ctypes, math, itertools    
+import ROOT, array, ctypes, math  
 # =============================================================================
 # logging 
 # =============================================================================

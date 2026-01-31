@@ -9,16 +9,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
 __all__     = ()
 # =============================================================================
-from    ostap.math.base        import Ostap, doubles 
-from    ostap.math.reduce      import root_factory, poly_factory 
-from    ostap.core.ostap_types import sequence_types 
-import  ROOT, array 
-# =============================================================================
-# logging 
-# =============================================================================
-from   ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.more_reduce' )
-else                       : logger = getLogger ( __name__                 )
+from    ostap.math.base        import Ostap 
+from    ostap.math.reduce      import root_factory, poly_factory  
+import  array 
 # =============================================================================
 
 # =============================================================================
@@ -1728,6 +1721,11 @@ if not '__main__' == __name__ :
 # =============================================================================
 if '__main__' == __name__ :
     
+
+    from   ostap.logger.logger import getLogger 
+    logger = getLogger ( 'ostap.math.more_reduce' )
+    
+        
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
