@@ -109,7 +109,7 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
 
-    _fun1  = lambda x : float ( func  ( x   )
+    _fun1  = lambda x : float ( func  ( x ) )
     _fun2  = lambda x : float ( histo ( x ) )
         
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
