@@ -350,10 +350,9 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
 
     dirname = os.path.dirname ( fname )
     if dirname and not os.path.exists ( dirname ) :
-        from ostap.utils.basic import make_dirs
         dirname = os.path.abspath ( dirname ) 
         logger.debug ( "create directory %s" % os.path.abspath ( dirname ) ) 
-        make_dirs ( dirname ) 
+        os.makedirs ( dirname , exist_ok = True ) 
     
     n , e  = os.path.splitext ( fname )
 

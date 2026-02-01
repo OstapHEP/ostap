@@ -168,7 +168,7 @@ def writeable ( adir ) :
 commonpath = os.path.commonpath
 
 # =============================================================================
-## make directoreis  
+## make directories
 make_dirs = os.makedirs
 
 # =============================================================================
@@ -262,7 +262,7 @@ def copy_file ( source           ,
     if os.path.exists ( destination ) and os.path.isdir ( destination ) :
         destination = os.path.join ( destination , os.path.basename ( source ) )
         
-    make_dirs ( os.path.dirname ( destination ) , exist_ok = True )
+    os.makedirs ( os.path.dirname ( destination ) , exist_ok = True )
     
     if not progress : 
         import shutil 
@@ -295,7 +295,7 @@ def sync_file ( source              ,
     if os.path.exists ( destination ) and os.path.isdir ( destination ) :
         destination = os.path.join ( destination , os.path.basename ( source ) )
         
-    make_dirs ( os.path.dirname ( destination ) , exist_ok = True )
+    os.makedirs ( os.path.dirname ( destination ) , exist_ok = True )
 
     import subprocess, shlex
     

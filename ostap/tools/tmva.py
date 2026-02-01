@@ -603,9 +603,7 @@ class Trainer(object):
         self.__bookingoptions   = bookingoptions
                 
         if not workdir : workdir = os.getcwd()
-        if not os.path.exists ( workdir ) :
-            from ostap.utils.basic import make_dirs
-            make_dirs ( workdir )
+        if not os.path.exists ( workdir ) : os.makedirs ( workdir , exist_ok=True )
         assert workdir and os.path.exists ( workdir ) and os.path.isdir ( workdir ), \
                'No valid working directory!'
         
@@ -2162,11 +2160,10 @@ def make_Plots ( name , output , show_plots = True ) :
         
     workdir = CleanUp.tempdir ( prefix = 'ostap-tmva-%s-plots' % name  )
     from   ostap.utils.utils import keepCWD
-    from   ostap.utils.basic import make_dirs
     import glob 
     with keepCWD ( workdir ) :
 
-        make_dirs ( '%s/plots' % name )
+        os.makedirs ( '%s/plots' % name , exist_ok=True )
         
         logger.info ( "Use temporary working directory:'%s'" % os.getcwd() )
         

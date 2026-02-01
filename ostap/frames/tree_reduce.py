@@ -22,11 +22,9 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info import root_info 
-from   ostap.core.core      import cpp, Ostap 
 from   ostap.utils.cleanup  import CleanUp
-from   ostap.utils.basic    import make_dirs 
 import ostap.trees.trees
-import ROOT, os, sys 
+import ROOT, os, sys
 # =============================================================================
 # logging 
 # =============================================================================
@@ -161,7 +159,7 @@ class ReduceTree(CleanUp):
 
         dirname = os.path.dirname ( output )
         if dirname and not os.path.exists ( dirname ) :
-            make_dirs ( dirname )
+            os.makedirs ( dirname , exist_ok = True )
             
         if not save_vars : 
             snapshot = frame.Snapshot ( name , output )            

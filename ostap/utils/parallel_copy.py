@@ -96,8 +96,7 @@ def copy_files ( file_pairs      ,
             ddirs.add ( ddir )
 
     ## (2) recreate all required directories
-    from ostap.utils.basic import make_dirs 
-    while ddirs : make_dirs ( ddirs.pop() , exist_ok = True ) 
+    while ddirs : os.makedirs ( ddirs.pop() , exist_ok = True ) 
 
     if parallel : thecmd  = '%s %%s %%s\n' % copy_cmd
     else        : thecmd  = '%s %s\n' 

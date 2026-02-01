@@ -66,7 +66,7 @@ if base_tmp_dir : # ===========================================================
         # =====================================================================
         try : # ===============================================================
             # =================================================================
-            base_tmp_dir = os.make_dirs ( base_tmp_dir , exist_ok = True )
+            base_tmp_dir = os.makedirs ( base_tmp_dir , exist_ok = True )
             # =================================================================
         except OSError : # ====================================================
             base_tmp_dir = None # =============================================
@@ -96,7 +96,7 @@ def make_base_tmp_dir () :
         
         ## create:
         if not os.path.exists ( ttd ) :
-            try    : os.make_dirs ( ttd , exist_ok = True )
+            try    : os.makedirs ( ttd , exist_ok = True )
             except : pass
             
         ## redefine the base temp directory for tempfile module 
