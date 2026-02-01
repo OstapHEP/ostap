@@ -35,7 +35,7 @@ __all__     = (
     'executed_macros'  , ## list of successfully executed ROOT/C++ macros 
     'root_files'       , ## list of ROOT files  
     'parameters'       , ## list of extra comand-line arguments 
-    'reload'           , ## relod the module 
+    'reload'           , ## reloadxs the module 
 )
 # =============================================================================
 import ostap.core.config as config 
