@@ -718,8 +718,6 @@ def __parse_args ( args  = [] ) :
     ## ATTENTION !! 
     if not arg_parse : v = []  ## ATENTION! 
 
-    print ( 'PARSE:' , v ) 
-    
     return parser.parse_args( v )
 
 # ================================================================================
