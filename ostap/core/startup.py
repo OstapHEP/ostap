@@ -24,11 +24,9 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.core.startup' )
 else                      : logger = getLogger ( __name__ )
 # =============================================================================
-    
-# =============================================================================
 ## check if the file is actually "empty"
 def _empty_ ( fname ) :
-    """ Check if the file is actually ``empty''
+    """ Check if the file is actually `empty'
     """
     # =========================================================================
     try : # ===================================================================

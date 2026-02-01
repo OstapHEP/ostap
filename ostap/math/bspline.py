@@ -48,11 +48,10 @@ __all__     = (
 from    ostap.core.ostap_types import is_integer, integer_types
 from    ostap.core.core        import Ostap, funID
 from    ostap.math.base        import iszero, isequal, signum, doubles
-from    ostap.math.base        import numpy_version,  scipy 
 import  ostap.math.reduce 
 import  ostap.math.bernstein 
 import  ostap.math.polynomials
-import  ROOT, math
+import  ROOT, math, scipy 
 # =============================================================================
 # logging 
 # =============================================================================

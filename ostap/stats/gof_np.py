@@ -32,7 +32,7 @@ from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu, typename  
 from   ostap.stats.gof          import AGoFnp
 from   ostap.utils.memory       import memory, memory_enough
-from   ostap.math.base          import scipy_version, numpy_version  
+import ostap.math.base           
 import ROOT, os, abc, numpy, scipy 
 # =============================================================================
 # logging 
@@ -43,6 +43,9 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
+## scipy-version 
+scipy_version = tuple ( int ( i ) for i in scipy.__version__.split( '.' ) )
+# =============================================================================    
 s2u,cdist = None , None
 # =============================================================================
 try : # =======================================================================

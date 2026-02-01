@@ -35,7 +35,11 @@ from   ostap                     import __version__
 from   ostap.utils.env           import ( get_env            ,
                                           has_env            ,
                                           ##
-                                          OSTAP_CONFIG       ,
+                                          boolean_true       , 
+                                          boolean_false      , 
+                                          ##
+                                          OSTAP_CONFIG       , ## very special 
+                                          OSTAP_ARGPARSE     , ## very special 
                                           OSTAP_BATCH        ,
                                           ## 
                                           OSTAP_SILENT       ,
@@ -74,6 +78,7 @@ config = configparser.ConfigParser()
 ## define the major section:
 config [ 'General' ] = {
     ##
+    'ArgParse'    : str ( default_config.arg_parse    ) ,
     'Batch'       : str ( default_config.batch        ) ,
     ##
     'Silent'      : str ( default_config.silent        ) ,
@@ -99,6 +104,8 @@ config [ 'General' ] = {
     'Profile'     : str ( default_config.profile       ) ,
     ##
     'Startup'     : str ( default_config.startup_files ) ,
+    'Macros'      : str ( default_config.macros        ) ,
+    'Commands'    : str ( default_config.commands      ) ,
 }
 # ===========================================================================
 ## generic TCanvas configuration
@@ -119,7 +126,7 @@ config_files = default_config.config_files
 if has_env ( OSTAP_CONFIG ) : 
     config_files = get_env ( OSTAP_CONFIG , '' , silent = True )
     config_files = tuple ( config_files.split ( os.pathsep ) ) 
-    
+
 the_files    = [] 
 for f in config_files :
     ff = f
@@ -142,12 +149,20 @@ files_read = tuple ( config.read ( config_files ) )
 ## General section:
 general      = config [ 'General' ]
 
+# ==============================================================================
+## ATTENTION: Redefien configuratuin using environment variables 
+# ==============================================================================
+
+if has_env ( OSTAP_ARGPARSE ) :
+    value = get_env ( OSTAP_ARGPARSE , 'True' , silent = True  )
+    value = boolean_true ( value )
+    general['ArgParse' ] = 'True' if value else 'False'
+
 if has_env ( OSTAP_BATCH ) :
     value_ = get_env ( OSTAP_BATCH , '' , silent = True  )        
     if value_ : general [ 'Batch' ] = 'True'
     
 elif not general.getboolean ( 'Batch' , fallback = default_config.batch ) :
-    
     value_ = any ( a.lower() in ( '-b' , '--batch' , '--no-gui' ) for a in sys.argv )
     if value_ : general [ 'Batch' ] = 'True'
     
@@ -229,7 +244,6 @@ if has_env ( OSTAP_WEB_DISPLAY ) :
     value_ = get_env ( OSTAP_WEB_DISPLAY , '' , silent = True  )        
     if value_ : general [ 'WebDisplay' ] = value_
     
-
 if has_env ( OSTAP_BUILD_DIR ) :
     build_dir_ = get_env ( OSTAP_BUILD_DIR , '' , silent = True  )        
     if build_dir_ : general [ 'BuildDir' ] = str ( build_dir_ )
@@ -246,14 +260,14 @@ if  has_env ( OSTAP_DUMP_CONFIG ) :
     dump_ = get_env ( OSTAP_DUMP_CONFIG , '' , silent = True  )        
     if dump_ : general [ 'DumpConfig' ] = str ( dump_ )   
 
-
 if has_env ( OSTAP_STARTUP ) : 
     value_    = get_env ( OSTAP_CONFIG , '' , silent = True )
     if value_ : general [ 'StartUp' ] = str ( tuple ( value_.split ( os.pathsep ) ) ) 
     
 # =============================================================================
 ## Some explicit & important elements from the `General` section:
-batch        = general.getboolean ( 'Batch'       , fallback = False                       )
+arg_parse    = general.getboolean ( 'ArgParse'    , fallback = default_config.arg_parse    )
+batch        = general.getboolean ( 'Batch'       , fallback = default_config.batch        )
 ##
 silent       = general.getboolean ( 'Silent'      , fallback = default_config.silent       )
 quiet        = general.getboolean ( 'Quiet'       , fallback = default_config.quiet        )
@@ -278,7 +292,15 @@ profile      = general.getboolean ( 'Profile '    , fallback = default_config.pr
 
 startup_files = general.get       ( 'StartUp' , fallback = str ( default_config.startup_files ) )
 if startup_files : startup_files = ast.literal_eval ( startup_files )
-else             : startup_files = () 
+else             : startup_files = [] 
+
+macros        = general.get       ( 'Macros' , fallback = str ( default_config.macros ) )
+if macros        : macros = ast.literal_eval ( macros )
+else             : macros = []
+
+commands      = general.get       ( 'Commands'  , fallback = str ( default_config.commands ) )
+if commands      : commands = ast.literal_eval ( commands )
+else             : commands = [] 
 
 # =============================================================================
 ## Section with canvas configuration
@@ -404,6 +426,10 @@ type ( config ).__str__  = _cp_table_
 type ( config ).__repr__ = _cp_table_
 
 # ==============================================================================
+## Command-Line argumens
+# ==============================================================================
+
+# ==============================================================================
 ## Parse comand line arguments
 def __parse_args ( args  = [] ) :
     """ Parse command line arguments
@@ -477,7 +503,7 @@ def __parse_args ( args  = [] ) :
         '-v'    , '--version' ,
         action  = 'version'   , 
         version = 'Ostap %s' % __version__ )  
-    
+
     ## 1st exclusive group
     group1  = parser.add_argument_group ( 'Control verbosity' , 'Control the general level of verbosity') 
     egroup1 = group1.add_mutually_exclusive_group()    
@@ -511,32 +537,18 @@ def __parse_args ( args  = [] ) :
     
     egroup1.add_argument ( 
         "-p" , "--print-level"     ,
+        metavar = "LEVEL"          ,
         dest    = 'Level'          ,
         choices = range ( -1 , 9 ) , 
         type    = int              , 
         help    =  "Printout level [default: %(default)s]" ,
         default = level if 0 <= level <= 8 else -1 )    
     ##
-    group2  = parser.add_argument_group ( 'Files' , 'Various file collections and commands, used *ONLY* in ostap environment') 
-    group2.add_argument (
-        "files"           ,
-        metavar = "FILE"  ,
-        nargs   = '*'     , 
-        help    = "ROOT/python macros to be processed/processed [default: %(default)s]" ,
-        default = []      )
-    ###
-    group2.add_argument ( 
-        "-m"    , "--macros"      ,
-        metavar = "MACROS"        ,
-        dest    = 'Macros'        ,
-        nargs   = '*'             ,
-        action  = Collect         , 
-        help    = "(Only for ostap) ROOT macros to be loaded [default: %(default)s]",
-        default = []  )
+    group2  = parser.add_argument_group ( 'Files' , '(ROOT) files, ROOT/C++ macros, (Python) scripts and commands for processing') 
     ###
     group2.add_argument ( 
         '--startup'     ,
-        metavar = "STARTUP"       ,
+        metavar = "STARTUPS"      ,
         dest    = 'StartUp'       ,
         nargs   = '*'             ,
         action  = Collect         , 
@@ -544,75 +556,68 @@ def __parse_args ( args  = [] ) :
         default = startup_files   )
     ##
     group2.add_argument ( 
+        "-m"    , "--macros"      ,
+        metavar = "MACROS"        ,
+        dest    = 'Macros'        ,
+        nargs   = '*'             ,
+        action  = Collect         , 
+        help    = "ROOT/C++ macros to be processed [default: %(default)s]" ,
+        default = macros          )
+    ###
+    group2.add_argument ( 
         '-c'    , '--command'     ,
         metavar = "COMMANDS"      ,
         dest    = 'Commands'      ,
         nargs   = '*'             ,
         action  = Collect         , 
-        help    = "The commands for `exec' [default: %(default)s]" , 
-        default = []              )
-    #
-    parser.add_argument ( 
-        '--no-color'              ,
-        dest    = 'Color'         , 
-        action  = 'store_false'   , 
-        help    = 'Use colorization? [default: %(default)s]', 
-        default = color           )    
-    #
-    parser.add_argument (
-        '--unicode'               ,
-        action  = "store_true"    ,
-        dest    = 'Unicode'       ,
-        help    = 'Use unicode in log-files? [default: %(default)s]',
-        default = show_unicode    )
-    #
-    parser.add_argument ( 
-        '--profile'               ,
-        dest    = 'Profile'       , 
-        action  = 'store_true'    , 
-        help    = "Invoke profiler [default: %(default)s]" , 
-        default = profile         )
-    #
-    parser.add_argument ( 
-        '--dump'                   ,
-        dest    = 'DumpConfig'     , 
-        help    = "Dump-file for configuration [default: %(default)s]" , 
-        default = dump_config      )
-    #    
+        help    = "The commands to be executed [default: %(default)s]" , 
+        default = commands         )
+    ## 
+    group2.add_argument (
+        "files"           ,
+        metavar = "FILES" ,
+        nargs   = '*'     , 
+        help    = "ROOT files, python macros, python files to be processed one by one [default: %(default)s]" ,
+        default = []      )
+    ##
     group3  = parser.add_argument_group ( 'CPU/processes/parallelism' , 'Options for parallel processing') 
     group3.add_argument (
         '-n' , '--ncpus'          , 
+        metavar = "NCPUS"         ,
         dest    = 'NCPUs'         ,
         type    = int             ,
         help    = 'Maximal number of CPUs [default: %(default)s]' , 
         default = ncpus           )
-         
+    ## 
     group3.add_argument (
         '--parallel'              , 
+        metavar = "PARALELL"      ,
         dest    = 'Parallel'      ,
         help    = 'Machinery for parallel processing [default: %(default)s]' , 
-        default = parallel        )    
+        default = parallel        )
+    ##
     group3.add_argument ( 
         '--no-mt'                ,        
-        dest    = 'NoImplicitMT' , 
-        action  = 'store_true'   , 
-        help    = "DisableImplicitMT [default: %(default)s]" , 
-        default = not implicitMT )
-    
+        dest    = 'ImplicitMT'   , 
+        action  = 'store_false'  , 
+        help    = "EnableImplicitMT? [default: %(default)s" , 
+        default = implicitMT     )
+    ## 
     ## 4nd exclusive group
     group4  = parser.add_argument_group ( 'Web Display' , 'Use Web/ROOT display, see ROOT.TROOT.(Set/Get)WebDisplay') 
     egroup4 = group4.add_mutually_exclusive_group()
     egroup4.add_argument ( 
-        '-w' , '--web'        ,
-        dest    = 'web'       , 
+        '-w' , '--web'         ,
+        metavar = "WEBDISPLAY" ,        
+        dest    = 'WebDisplay' , 
         help    = "Use WebDisplay, see ROOT.TROOT.(Get/Set)WebDisplay ", 
-        default = webdisplay  )   
+        default = webdisplay   )   
     #
     egroup4.add_argument ( 
         '--no-canvas'           ,
         dest    = 'Canvas'      , 
         action  = 'store_false' , 
-        help    = "Do not create canvas", 
+        help    = "Create global canvas [default: %(default)s", 
         default = True          )
 
     ## 5rd exclusive group
@@ -627,7 +632,7 @@ def __parse_args ( args  = [] ) :
         default =  batch         )
     
     egroup5.add_argument (
-        '-e'      , '--embed'   , 
+        '-e'    , '--embed'     , 
         action  = 'store_true'  ,
         help    = "Interactive embedded shell [default: %(default)s]"  , 
         default = False         )
@@ -640,28 +645,66 @@ def __parse_args ( args  = [] ) :
         
     egroup5.add_argument (
         '-b' , '--batch'       ,
-        action = 'store_true' ,
-        help   = "Batch processing: execute files and exit [default: %(default)s]" , 
+        action  = 'store_true' ,
+        help    = "Batch processing: execute files and exit [default: %(default)s]" , 
         default = batch       ) 
     ## 
     group6 = parser.add_argument_group ( 'Directories' ,
                                          'Various directories for ROOT&Ostap') 
     group6.add_argument ( 
-        '--build-dir'         ,         
+        '--build-dir'         ,
+        metavar = "BUILD_DIR" ,        
         dest    = 'BuildDir'  , 
         help    = "Build directory for ROOT&Ostap [default: %(default)s]"     , 
-        default = build_dir   )        
+        default = build_dir   )
+    ##
     group6.add_argument ( 
         '--cache-dir'         ,         
+        metavar = "CACHE_DIR" ,        
         dest    = 'CacheDir'  , 
         help    = "Cache directory for Ostap [default: %(default)s]"     , 
         default = cache_dir   )
+    ##
     group6.add_argument ( 
         '--tmp-dir'           ,       
+        metavar = "TMP_DIR"   ,        
         dest    = 'TmpDir'    ,
-        help    = "Temporary directory for Ostap [default: %(default)s]" ,
+        help    = "Top-level temporary directory for Ostap [default: %(default)s]" ,
         default = tmp_dir     )
 
+    ## 
+    group7 = parser.add_argument_group ( 'Miscellaneous' ,
+                                         'Various miscelalneous options ROOT&Ostap') 
+    ## 
+    group7.add_argument ( 
+        '--no-color'              ,
+        dest    = 'Color'         , 
+        action  = 'store_false'   , 
+        help    = 'Use colorization? [default: %(default)s]', 
+        default = color           )    
+    #
+    group7.add_argument (
+        '--unicode'               ,
+        action  = "store_true"    ,
+        dest    = 'Unicode'       ,
+        help    = 'Use unicode in log-files? [default: %(default)s]',
+        default = show_unicode    )
+    #
+    group7.add_argument ( 
+        '--profile'               ,
+        dest    = 'Profile'       , 
+        action  = 'store_true'    , 
+        help    = "Invoke profiler? [default: %(default)s]" , 
+        default = profile         )
+    #
+    group7.add_argument ( 
+        '--dump'                   ,
+        metavar = "DUMP_FILE"      ,        
+        dest    = 'DumpConfig'     , 
+        help    = "Dump-file for configuration [default: %(default)s]" , 
+        default = dump_config      )
+    #
+    
     # ===============================================================================
     ## use the parser!!
     # ===============================================================================
@@ -672,9 +715,13 @@ def __parse_args ( args  = [] ) :
     v = [ a for a in args ]
     if '--' in v : v.remove('--')
 
+    ## ATTENTION !! 
+    if not arg_parse : v = []  ## ATENTION! 
+
+    print ( 'PARSE:' , v ) 
+    
     return parser.parse_args( v )
 
-        
 # ================================================================================
 ## command-line arguments
 arguments = __parse_args ()
@@ -697,14 +744,16 @@ general [ 'BuildDir'    ] = arguments.BuildDir
 general [ 'CacheDir'    ] = arguments.CacheDir
 general [ 'TmpDir'      ] = arguments.TmpDir 
 ## 
-general [ 'WebDisplay'  ] = str ( arguments.web      )
+general [ 'WebDisplay'  ] = str ( arguments.WebDisplay )
 ##
-general [ 'NCPUs'       ] = str (     arguments.NCPUs        )
-general [ 'Parallel'    ] = str (     arguments.Parallel     )
-general [ 'ImplicitMT'  ] = str ( not arguments.NoImplicitMT )
-general [ 'Profile'     ] = str (     arguments.Profile      )
-general [ 'StartUp'     ] = str (     arguments.StartUp      )
-        
+general [ 'NCPUs'       ] = str ( arguments.NCPUs      )
+general [ 'Parallel'    ] = str ( arguments.Parallel   )
+general [ 'ImplicitMT'  ] = str ( arguments.ImplicitMT )
+general [ 'Profile'     ] = str ( arguments.Profile    )
+general [ 'StartUp'     ] = str ( arguments.StartUp    )
+general [ 'Macros'      ] = str ( arguments.Macros     )
+general [ 'Commands'    ] = str ( arguments.Commands   )
+
 ## 
 batch         = arguments.batch
 ##
@@ -722,14 +771,16 @@ build_dir     = arguments.BuildDir
 cache_dir     = arguments.CacheDir
 tmp_dir       = arguments.TmpDir
 ##
-webdisplay    = arguments.web
+webdisplay    = arguments.WebDisplay
 ## 
-parallel      =     arguments.Parallel
-ncpus         =     arguments.NCPUs
-implicitMT    = not arguments.NoImplicitMT 
-profile       =     arguments.Profile 
-startup_files =     arguments.StartUp
-
+parallel      = arguments.Parallel
+ncpus         = arguments.NCPUs
+implicitMT    = arguments.ImplicitMT 
+profile       = arguments.Profile 
+startup_files = arguments.StartUp
+macros        = arguments.Macros 
+commands      = arguments.Commands
+input_files   = arguments.files 
 
 # ==============================================================================
 if '__main__' == __name__ :

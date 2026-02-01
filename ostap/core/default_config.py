@@ -28,6 +28,7 @@ __all__      = (
 # =============================================================================
 
 # =============================================================================
+arg_parse    = True    ## Parse command-line arguments? 
 batch        = False
 
 silent       = False   ## silent pprocesisng ?
@@ -59,20 +60,28 @@ protocol     = ''                    ## pickling protocol
 # =============================================================================
 ## configuration files to read
 # =============================================================================
-config_files = (
+config_files = [
     u'$OSTAPDIR/.ostaprc'           , ## .ostaprc from central directory 
     u'$HOME/.ostaprc'               , ## .ostaprc from home directory 
     u'~/.ostaprc'                   , ## .ostaprc from home directory 
     u'$HOME/.config/ostap/.ostaprc' , ## .ostaprc from config directory 
     u'~/.config/ostap/.ostaprc'     , ## .ostaprc from config directory 
     u'.ostaprc'                       ## .ostaprc from local directory 
-    )
+    ]
 
 # =============================================================================
 ## startup/logon files to be executed:
-startup_files = ( '$HOME/.ostap.py' ,
+startup_files = [ '$HOME/.ostap.py' ,
                   '~/.ostap.py'     ,        
-                  './.ostap.py'     )
+                  './.ostap.py'     ]
+
+# =============================================================================
+## C++ macros to load
+macros        = []
+
+# =============================================================================
+## Python commands to be executed 
+commands      = []
 # =============================================================================
 if '__main__' == __name__ :
     

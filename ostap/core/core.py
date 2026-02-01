@@ -76,7 +76,8 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
                                        inrange  , strings , 
                                        natural_number     ,
                                        natural_entry      ,
-                                       ROOTIgnore         )
+                                       ROOTIgnore         ,
+                                       RooSilent          )
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
@@ -1025,72 +1026,6 @@ def _rtc_iadd_ ( self , item ) :
 
 ROOT.TCollection. __iadd__ = _rtc_iadd_ 
     
-
-# =============================================================================
-## very simple context manager to suppress RooFit printout
-#
-#  @code
-#
-#  >>> with rooSilent( 4 , False ) :
-#  ...        some_RooFit_code_here()
-#
-#  @endcode
-#  @see RooMgsService
-#  @see RooMgsService::globalKillBelow
-#  @see RooMgsService::silentMode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-09
-class RooSilent(object) :
-    """ Very simple context manager to suppress RooFit printout
-    
-    >>> with rooSilent( 4 , False ) :
-    ...        some_RooFit_code_here ()
-    
-    """
-    ## constructor
-    #  @param level  (INPUT) print level 
-    #  @param silent (print level 
-    # 
-    def __init__ ( self , level = ROOT.RooFit.ERROR , silent = True ) :
-        """ Constructor
-        @param level  (INPUT) print level 
-        @param silent (print level 
-        
-        >>> with rooSilent( ROOT.RooFit.ERROR , True  ) :
-        ...        some_RooFit_code_here ()
-        
-        
-        >>> with rooSilent( ROOT.RooFit.INFO , False  ) :
-        ...        some_RooFit_code_here ()
-        
-        
-        """
-        #
-        import ROOT
-        #
-        if level > ROOT.RooFit.FATAL : level = ROOT.RooFit.FATAL 
-        if level < ROOT.RooFit.DEBUG : level = ROOT.RooFit.DEBUG 
-        #
-        self._level  = level 
-        self._silent = True if silent else False  
-        self._svc    = ROOT.RooMsgService.instance()
-        
-    ## context manager
-    def __enter__ ( self ) :
-
-        self._prev_level  = self._svc.globalKillBelow  () 
-        self._prev_silent = self._svc.silentMode       () 
-        
-        self._svc.setGlobalKillBelow  ( self._level      )
-        self._svc.setSilentMode       ( self._silent     )
-        
-        return self
-    
-    ## context manager 
-    def __exit__ ( self , *_ ) : 
-            
-        self._svc.setSilentMode      ( self._prev_silent )
-        self._svc.setGlobalKillBelow ( self._prev_level  )
 
 # =============================================================================
 ## very simple context manager to suppress ROOT printout

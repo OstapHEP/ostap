@@ -25,13 +25,31 @@ __all__     = (
     'use_build_dir'  , ## use  (temporary) build directory for ROOT    
     )
 # =============================================================================
-from   ostap.utils.basic import make_dirs, writeable 
 import ostap.core.config as     config
 import ROOT, os, glob  
 # =============================================================================
 build_dir  = config.build_dir
 prefix_dir = 'ostap-build-'
 # =============================================================================
+## create proper build directry for ROOT builds
+#  - existing directory with correct permissions ? use it
+#  - otherwise create the temporary 
+def make_build_dir ( build = None ) :
+    """ Create proper temporary directory for ROOT builds
+    - existing directory with correct permissions ? use it
+    - otherwise create the temporary 
+    """
+    
+    if build and \
+       os.path.exists ( build ) and \
+       os.path.isdir  ( build ) and \
+       os.access      ( build , os.W_OK ) : return build
+        
+    from ostap.utils.cleanup import CleanUp
+    return CleanUp.tempdir ( prefix = 'ostap-build-' )
+
+# =============================================================================
+## directory is specified? 
 if build_dir : # ==============================================================
     # =========================================================================
     build_dir = os.path.expandvars ( build_dir )
@@ -43,21 +61,18 @@ if build_dir : # ==============================================================
         # =====================================================================
         try : # ===============================================================
             # =================================================================
-            make_dirs ( build_dir , exist_ok = True ) 
+            os.make_dirs ( build_dir , exist_ok = True ) 
             # =================================================================
         except OSError : # ====================================================
             # =================================================================
             pass
-        
+
 # =============================================================================
-if not build_dir                    or \
-   not os.path.exists ( build_dir ) or \
-   not os.path.isdir  ( build_dir ) or \
-   not writeable      ( build_dir ) :
-    # =========================================================================
-    from ostap.utils.cleanup import CleanUp
-    build_dir = CleanUp.tempdir ( prefix = 'ostap-build-' ) 
- 
+##  final check
+#  - good directoy? use it!
+#  - create a temporary oherwise 
+build_dir = make_build_dir ( build_dir )
+
 # =============================================================================
 ## Context manager to use certain build build directory 
 #  (useful for multiprocessing environment)
@@ -74,22 +89,30 @@ class UseBuildDir ( object ) :
     def __init__ ( self , build = None ) :
         
         ##
-        if build and writeable ( build ) :
+        if build and \
+           os.path.exists ( build ) and \
+           os.path.isdir  ( build ) and \
+           os.access      ( build , os.W_OK ) :
+            
             self.__build   = build
-            self.__created = False 
-        else : 
-            self.__created = True             
+            self.__created = False
+            
+        else :
+            
             self.__build   = make_build_dir ()
+            self.__created = True             
             
         self.__prev   = ROOT.gSystem.SetBuildDir ( self.__build )
         
+    # =========================================================================
     ## context manager: ENTER 
     def __enter__ ( self ) :
 
         self.__prev   = ROOT.gSystem.GetBuildDir ()
         ROOT.gSystem.SetBuildDir ( self.__build )        
         return ROOT.gSystem.GetBuildDir ()
-    
+
+    # =========================================================================
     ## context manager: EXIT  
     def __exit__ ( self , *_ ) :
         # =====================================================================
@@ -113,29 +136,12 @@ def use_build_dir ( build = None ) :
     """
     return UseBuildDir ( build )
 
-# ==============================================================================
-## create proper temporary directry for ROOT builds 
-def make_build_dir ( build = None ) :
-    """ Create proper temporary directory for ROOT builds
-    """
-    if not build or not writeable  ( build ) : 
-        from ostap.utils.cleanup import CleanUp 
-        build = CleanUp.tempdir ( prefix = 'ostap-build-' )
-    
-    if not os.path.exists ( build ) :
-        make_dirs ( build , exits_ok = True )
-        
-    return build
-
 # =============================================================================
-# 3) use the temporary directory
-# =============================================================================
-if not build_dir : # ==========================================================
-    # =========================================================================
-    build_dir = make_build_dir()
-
-# =============================================================================
-if build_dir and os.path.isdir ( build_dir ) and writeable ( build_dir ) : 
+## rdefien the default build directory: 
+if build_dir and \
+   os.path.exists ( build_dir ) and \
+   os.path.isdir  ( build_dir ) and \
+   os.access      ( build_dir , os.W_OK ) : 
     ROOT.gSystem.SetBuildDir ( build_dir )
     
 # =============================================================================

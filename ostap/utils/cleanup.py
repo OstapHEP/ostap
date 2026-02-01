@@ -20,7 +20,7 @@ __all__     = (
     'TempFile' , ## Simple placeholder for temporary file  
     )
 # =============================================================================
-from   ostap.utils.basic      import make_dir, writeable, whoami, mtime 
+from   ostap.core.meta_info   import whoami  
 import ostap.core.config      as     config
 import os, tempfile, datetime, weakref, re    
 # =============================================================================
@@ -35,36 +35,48 @@ start       = datetime.datetime.now()
 time_delta  = datetime.timedelta ( days = 4 ) ## from Friday to Tuesday :-)
 # =============================================================================
 user        = whoami ()
-# =============================================================================            
-## temporary directory for <code>tempfile</code> module
+# =============================================================================
+## Good directory:
+#  - path exists
+#  - is directory
+#  - writeable 
+def good_dir ( path ) :
+    """ Good directory:
+    - path exists
+    - is directory
+    - writeable 
+    """
+    return path                 and \
+        os.path.exists ( path ) and \
+        os.path.isdir  ( path ) and \
+        os.access ( path , os.W_OK )
+# =============================================================================
+## temporary directory for `tempfile` module
 base_tmp_dir = config.tmp_dir
 for_cleanup  = False 
 # =============================================================================
-if base_tmp_dir :   
+if base_tmp_dir : # ===========================================================
+    # =========================================================================
     base_tmp_dir = os.path.expandvars ( base_tmp_dir )
     base_tmp_dir = os.path.expanduser ( base_tmp_dir )
     base_tmp_dir = os.path.expandvars ( base_tmp_dir )
     base_tmp_dir = os.path.expanduser ( base_tmp_dir )
-    
-    if not os.path.exist ( base_tmp_dir) : 
-        try :
-            base_tmp_dir = make_dir ( base_tmp_dir )
-        except OSError :
-            base_tmp_dir = None 
-            
-    if base_tmp_dir and not writeable ( base_tmp_dir ) :
-        logger.warning ("Directory `%s' is not writeable!" % base_tmp_dir )
-        base_tmp_dir = None
-        
-    if base_tmp_dir :
-        tempfile.tempdir = ttd 
-        
-        
-# =============================================================================
-if base_tmp_dir and not writeable ( base_tmp_dir ) :
-    logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
-    base_tmp_dir = None
+    # =========================================================================
+    if not os.path.exists ( base_tmp_dir) :
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            base_tmp_dir = os.make_dirs ( base_tmp_dir , exist_ok = True )
+            # =================================================================
+        except OSError : # ====================================================
+            base_tmp_dir = None # =============================================
 
+# =============================================================================
+base_tmp_dir = base_tmp_dir if good_dir ( base_tmp_dir ) else None 
+if base_tmp_dir :
+    ## redefine the directory for tempfile module 
+    tempfile.tempdir = bas_tmp_dir  
+                
 # =============================================================================
 ## local storage of temporary pid-dependent temporary directories 
 base_tmp_pid_dirs = {}
@@ -76,20 +88,25 @@ def make_base_tmp_dir () :
     """ Create the base temporary directory
     """    
     prefix = '%s' % dir_prefix     
-    td = tempfile.gettempdir()
-    if not user in td :
-        ttd = os.path.join ( td , user )
-        if not os.path.exists ( ttd ) :
-            try    : os.mkdir( ttd )
-            except : pass
-        if writeable ( ttd ) :
-            tempfile.tempdir = ttd 
-            td = tempfile.tempdir
-        
-    if user and not user in td : prefix = dir_user_prefix
+    td     = tempfile.gettempdir()
     
-    prefix  = "%s%s-%d-"   %  ( prefix , start.strftime ( date_format ) , os.getpid () )
+    if not user in td :
+        
+        ttd = os.path.join ( td , user )
+        
+        ## create:
+        if not os.path.exists ( ttd ) :
+            try    : os.make_dirs ( ttd , exist_ok = True )
+            except : pass
+            
+        ## redefine the base temp directory for tempfile module 
+        if good_dir ( ttd ) :
+            tempfile.tempdir = ttd 
+            td               = tempfile.tempdir
 
+    if user and not user in td : prefix = dir_user_prefix    
+    prefix  = "%s%s-%d-"   %  ( prefix , start.strftime ( date_format ) , os.getpid () )
+    
     return tempfile.mkdtemp ( prefix = prefix ) 
 
 # ===============================================================================
@@ -97,10 +114,9 @@ def make_base_tmp_dir () :
 def tmp_dir ( pid = None ) :
     """ Get the process-dependent name of the temporary directory
     """
-    ## if base_tmp_dir : return base_tmp_dir 
-        
+    ## 
     if not pid : pid = os.getpid()
-
+    ## 
     if not pid in base_tmp_pid_dirs :
         piddir = make_base_tmp_dir ()
         base_tmp_pid_dirs [ pid ] = piddir
@@ -115,13 +131,13 @@ class UseTmpDir ( object ) :
     """
     def __init__   ( self , temp_dir = None ) :
         
-        self.__tmp_dir = temp_dir if ( temp_dir is None or writeable ( temp_dir ) ) else tmp_dir ( os.getpid () )  
+        self.__tmp_dir = temp_dir if ( temp_dir is None or good_dir ( temp_dir ) ) else tmp_dir ( os.getpid () )  
         self.previous  = None
         
     def __enter__  ( self ) :
         
         self.previous    = tempfile.tempdir        
-        if  self.tmp_dir is None or writeable ( self.tmp_dir ) : 
+        if  self.tmp_dir is None or good_dir ( self.tmp_dir ) : 
             tempfile.tempdir = self.tmp_dir
             
         return self.__tmp_dir
@@ -428,6 +444,9 @@ if base_tmp_dir and for_cleanup :
 import atexit
 @atexit.register
 def _cleanup_ () :
+
+    ## mtime is needed here 
+    from ostap.utils.basic import mtime
     
     ## 1. clean up the files 
     tmp_files  = CleanUp._tmpfiles

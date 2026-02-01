@@ -69,11 +69,11 @@ __all__     = (
     'RootFiles'    , ## utility to collect an ddeal wth ROOT files 
     ) 
 # =============================================================================
-from   ostap.core.core        import ROOTCWD, valid_pointer, top_dir 
+from   ostap.core.core        import ROOTCWD, valid_pointer, top_dir
 from   ostap.utils.basic      import typename
-from   ostap.utils.root_utils import implicitMT  
 from   ostap.io.files         import Files
-import ROOT, sys, os   
+import ROOT, sys, os
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -119,6 +119,8 @@ def _rd_setitem_ ( rdir , name , tobj ) :
             dirname, sep , fname = fname.partition ('/') 
 
         rdir.cd()
+        
+        from ostap.utils.root_utils import implicitMT  
         with implicitMT ( False ) : 
             return rdir.WriteTObject( tobj , dirname , 'WriteDelete' )
         

@@ -28,15 +28,17 @@ import ostap.fixes.fixes
 import ostap.core.build_dir
 import ostap.core.cache_dir
 import ostap.utils.cleanup 
-import ROOT 
+import ROOT, math, os  
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_setup' )
 else                       : logger = getLogger( __name__                )
 # =============================================================================
+## setup sem imporant properties:
+# =============================================================================
 
 # =============================================================================
-## Implicit MT ?
+## (1) Implicit MT ?
 # =============================================================================
 implicitMT = config.general.getboolean ( 'ImplicitMT' , fallback = False )
 if       implicitMT and not ROOT.ROOT.IsImplicitMTEnabled() :
@@ -47,7 +49,7 @@ elif not implicitMT and     ROOT.ROOT.IsImplicitMTEnabled() :
     if not ROOT.ROOT.IsImplicitMTEnabled() : logger.debug ( 'ImplicitMT is disabled' )
     
 # =============================================================================
-## Batch processing ?
+## (2)  Batch processing ?
 # =============================================================================
 groot = ROOT.ROOT.GetROOT() 
 if   groot and     config.batch and not groot.IsBatch () :
@@ -58,7 +60,37 @@ elif groot and not config.batch and     groot.IsBatch () :
     if not groot.IsBatch() : logger.info      ( "BATCH processig is deactivated!" )
 
 # =============================================================================
-## Profile ?
+## (3) Root & Roofit print levels 
+# =============================================================================
+groot = ROOT.ROOT.GetROOT()
+msg   = ROOT.RooMsgService.instance()
+if config.silent :    
+    if groot : groot.ProcessLine ( "gErrorIgnoreLevel= %d ; " % ROOT.kError )     
+    msg.setGlobalKillBelow  ( ROOT.RooFit.ERROR )
+    msg.setSilentMode       ( True  )    
+elif config.quiet :    
+    if groot : groot.ProcessLine ( "gErrorIgnoreLevel= %d ; " % ROOT.kWarning )     
+    msg.setGlobalKillBelow  ( ROOT.RooFit.WARNING )
+    msg.setSilentMode       ( True  )    
+elif config.debug or config.verbose :    
+    if groot : groot.ProcessLine ( "gErrorIgnoreLevel= %d ; " % ROOT.kPrint )     
+    msg.setGlobalKillBelow  ( ROOT.RooFit.DEBUG )
+    msg.setSilentMode       ( False )    
+elif 0 <= config.level <= 8 :    
+    d1 = ROOT.kFatal - ROOT.Print
+    d2 = ROOT.RooFit.FATAL - ROOT.RooFit.DEBUG 
+    l1 = ROOT.kFatal       + math.floot ( ( d1 * level ) / 8 )
+    l2 = ROOT.RooFit.DEBUG + math.floor ( ( d2 * level ) / 8 )
+    if groot : groot.ProcessLine ( "gErrorIgnoreLevel= %d ; " % l1 )     
+    msg.setGlobalKillBelow  ( l2 )
+    msg.setSilentMode       ( ROOT.RooFit.INFO < l2 )
+
+# =============================================================================
+## RooFit topics..
+# =============================================================================
+
+# =============================================================================
+## (5) actiavate profiling ?
 # =============================================================================
 if config.general.getboolean ( 'Profile' , fallback = config.profile ) :
 
@@ -97,7 +129,191 @@ if config.general.getboolean ( 'Profile' , fallback = config.profile ) :
         
     import atexit 
     atexit.register ( _profile_atexit_ , profiler , plogger ) 
+
+# =============================================================================
+## (6) execute startup (python) files/scripts 
+# =============================================================================
+executed_scripts  =     []
+_scripts          = set () 
+for _su in config.startup_files :
+    ## 
+    _ss =  _su
+    _ss =  os.path.expandvars ( _ss )
+    _ss =  os.path.expandvars ( _ss )
+    _ss =  os.path.expandvars ( _ss )
+    _ss =  os.path.expanduser ( _ss )
+    _ss =  os.path.expandvars ( _ss )
+    if not os.path.exists     ( _ss ) : continue
+    if not os.path.isfile     ( _ss ) : continue
+    _ss =  os.path.abspath    ( _ss )
+    if _ss in _scripts                : continue 
+    ## 
+    # =========================================================================
+    ## execute it!
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        logger.debug ( "Execute the script: `%s` " % _su ) 
+        import runpy
+        globs = runpy.run_path ( _ss , globals() ) ## , run_name = '__main__' )
+        globs = dict ( ( ( k , v ) for k , v in globs.items() if  not k.startswith ( '__' ) and not k.endswith ( '__' ) ) )
+        logger.debug ( 'Symbols from %s: %s' % ( _su , globs.keys() ) )
+        globals().update( globs )
+        del globs
+        ##
+        _scripts.add ( _ss ) 
+        executed_scripts.append ( _su )
+        logger.info    ( "Script '%s' is executed"      % _su )
+        ## 
+        # =====================================================================
+    except: # =================================================================
+        # =====================================================================
+        if config.batch : raise 
+        logger.error  ( "Error in execution of script: '%s'" % _su , exc_info = True )
+
+# =============================================================================
+## (7) Load ROOT/C++ macros 
+# =============================================================================
+executed_macros =     []
+_macros         = set () 
+for _su in config.macros :
+    ## 
+    _ss = _su
+    _ss = os.path.expandvars ( _ss )
+    _ss = os.path.expandvars ( _ss )
+    _ss = os.path.expandvars ( _ss )
+    _ss = os.path.expanduser ( _ss )
+    _ss = os.path.expandvars ( _ss )
+    ##
+    if    _ss.endswith  ( '++' ) : _mm = _ss [ : 2 ]
+    elif  _ss.endswith  ( '+'  ) : _mm = _ss [ : 1 ]
+    else                         : _mm = _ss 
+    ##     
+    if not os.path.exists     ( _mm ) : continue
+    if not os.path.isfile     ( _mm ) : continue
+    _mm =  os.path.abspath    ( _mm )
+    ##
+    if   _ss.endswith ( '++' ) : _mm = '%s++' % _mm
+    elif _ss.endswith ( '+'  ) : _mm = '%s+'  % _mm
+    ##
+    if _mm in _macros : continue
+    ## 
+    logger.debug ( "Execute the macro: `%s` " % _su ) 
+    groot = ROOT.ROOT.GetROOT()
+    sc = groot.LoadMacro ( _mm )
+    ## 
+    if sc and config.batch : 
+        raise RuntimeError  ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
+    elif sc  : logger.error ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
+    ## 
+    _macros.add ( _mm )
+    executed_macros.append ( _su ) 
+    logger.info    ( "Macro '%s' is executed"      % _su )
     
+# =============================================================================
+## (8) Execute the commands 
+# =============================================================================
+executed_commands = []
+for _su in config.commands :
+    ##
+    if not _su : continue
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        logger.debug ( "Execute the command: `%s` " % _su ) 
+        ## 
+        exec ( _su , globals = globals() , locals = locals () )
+        ## 
+        logger.info  ( "Command '%s' is executed"      % _su )
+        executed_commands.append ( _su )
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        if config.batch : raise 
+        logger.error ( 'Failure to execute command: "%s"' % _su )
+        ##
+
+# =============================================================================
+## (10) Treat input files 
+# =============================================================================
+cpp_ext    = 'C' , 'CPP' , 'CXX' , 'C+'  , 'CPP+'  , 'CXX+' , 'C++' , 'CPP++' , 'CXX++'
+root_files = []
+parameters = [] 
+for _su in config.input_files :
+
+    _ss = _su
+    _ss = os.path.expandvars ( _ss )
+    _ss = os.path.expandvars ( _ss )
+    _ss = os.path.expandvars ( _ss )
+    _ss = os.path.expanduser ( _ss )
+    _ss = os.path.expandvars ( _ss )
+
+    fname = _ss 
+    fbase , dot , ext = fname.partition('.')
+    
+    if fbase and dot and ext in ( 'root' , 'ROOT' ) :
+        
+        import ostap.io.root_file 
+        if ROOT.Tile.Open ( fname , 'READ' , exception = False ) :            
+            root_files.append ( fname )
+            logger.info  ( "ROOT file '%s' checked " % _su )                
+
+    ## ROOT/cpp macro ?
+    elif fbase and dot and ext.upper() in cpp_ext :
+        
+        if   fname.endswith ( '++' ) : sname = fname [:-2] 
+        elif fname.endswith ( '+'  ) : sname = fname [:-1] 
+        else                         : sname = fname
+
+        if os.path.exists ( sname ) and os.path.isfile ( sname ) :
+            
+            logger.debug ( "Execute the macro: `%s` " % _su ) 
+            groot = ROOT.ROOT.GetROOT()
+            sc = groot.LoadMacro ( fname )
+            ## 
+            if sc and config.batch : 
+                raise RuntimeError  ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
+            elif sc  : logger.error ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
+
+            ## 
+            logger.info    ( "Macro '%s' is executed"      % _su )
+            _macros.add ( _mm )
+            executed_macros.append ( _su ) 
+
+    ## python/ostap script ?
+    elif fbase and dot and ext.upper() in ( 'PY' , 'OST' , 'OSTP' , 'OSTAP' , 'OPY' ) :
+
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            
+            import runpy
+            globs = runpy.run_path ( fname , globals() ) ## , run_name = '__main__')
+            globs = dict ( ( ( k , v ) for k,v in globs.items() if  not k.startswith('__') and not k.endswith('__')) )
+            logger.debug ( 'Symbols from %s: %s' % ( _su , globs.keys() ) ) 
+            globals().update ( globs )
+            del globs 
+            
+            executed_scripts.append ( _su )
+            logger.info  ( "Python script '%s' is executed"      % _su )
+            # ==================================================================
+        except : # =============================================================
+            # ==================================================================
+            if config.batch : raise
+            logger.error  ( "Error in execution of '%s' script" % _su , exc_info = True )
+
+    ## unknown arguments 
+    else :
+        
+        parameters.append ( _su ) 
+        logger.info  ( "Parameter '%s' is added at index %d" % ( _su , len ( parameters ) ) ) 
+        
+    
+executed_scripts  = tuple ( executed_scripts  )
+executed_macros   = tuple ( executed_macros   )
+executed_commands = tuple ( executed_commands )
+root_files        = tuple ( root_files        )
+parameters        = tuple ( parameters        ) 
 
 # =============================================================================
 if '__main__' == __name__ :

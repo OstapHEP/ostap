@@ -209,7 +209,7 @@ items_loop = loop_items
 #  @code
 #  path = ...
 #  mdate = mtime ( path ) ## check file/directory
-#  mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectoreis
+#  mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectories s
 #  @endcode
 #  @attention for <cpde>subdirs=True</code> it could be very slow!
 def mtime ( path , subdirs = False ) :

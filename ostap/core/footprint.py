@@ -2,10 +2,15 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file footprint.py
+#  Add Ostap footprints into two files
+#  - central/global: $OSTAPDIR/.footprints (if exists and writeable) 
+#  - local:          cache_dir/.footprints (create if not exists)
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-03-10
 # =============================================================================
-""" Ostap footproint 
+""" Add Ostap footprints into two files
+- central/global: $OSTAPDIR/.footprints (if exists and writeable) 
+- local:          cache_dir/.footprints (create if not exists)
 """ 
 # =============================================================================
 __author__  = "Vanya BELYAEV  Ivan.Belyaev@itep.ru"
@@ -13,23 +18,23 @@ __date__    = "2014-03-10"
 __version__ = "$Revision$"
 __all__     = () 
 # =============================================================================
-## add footprints into two files 
-#  - central: $OSTAPDIR/.footprints 
-#  - local    cachee_dir/.footprints  
+from ostap.core.cache_dir import cache_dir
+# =============================================================================    
+#  Add Ostap footprints into two files
+#  - central/global: $OSTAPDIR/.footprints (if exists and writeable) 
+#  - local:          cache_dir/.footprints (create if not exists)
 def add_footprint ( start ) :
-    """Add footprints into two files
-    - central: $OSTAPDIR/.footprints
-    - local    cachee_dir/.footprints  
-    """
+    """ Add Ostap footprints into two files
+    - central/global: $OSTAPDIR/.footprints (if exists and writeable) 
+    - local:          cache_dir/.footprints (create if not exists)
+    """ 
     # =========================================================================
     from ostap.core.meta_info import python_info, root_info, ostap_info, user 
-    from ostap.logger.logger import getLogger
     import os, sys
     ##
-    logger = getLogger ( 'ostap.core.footprint' )
     ## list of footprint-files 
     files = []
-    ## (1) central file. common for everybody (is exists and writeable) 
+    ## (1) central file. common for everybody (if exists and writeable) 
     footprints_file = os.path.join ( '$OSTAPDIR' , '.footprints' )
     footprints_file = os.path.expanduser ( os.path.expandvars ( footprints_file ) )
     if os.path.exists ( footprints_file ) and \
@@ -37,7 +42,6 @@ def add_footprint ( start ) :
        os.access      ( footprints_file , os.W_OK ) :
         files.append ( footprints_file )
     ## (2) user file in (writeable) cache directory
-    from   ostap.core.cache_dir import cache_dir
     if cache_dir : files . append ( os.path.join ( cache_dir , '.footprints' ) )
     ## 
     nfp = len ( files ) 
@@ -59,7 +63,7 @@ def add_footprint ( start ) :
                     fp.write ( "   - ostap  version : %s.%s.%s.%s\n"   % ostap_info  )
                     fp.write ( "   - ROOT   version : %s.%s/%s\n"      % root_info   )
                     fp.write ( "   - python version : %s.%s.%s.%s%s\n" % python_info )
-                logger.debug ( "Footprint is added to %s"          % fp_file ) 
+            ## logger.debug ( "Footprint is added to %s"          % fp_file ) 
             # =====================================================================
         except : # ================================================================
             pass 

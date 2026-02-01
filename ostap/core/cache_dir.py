@@ -13,17 +13,10 @@ __date__    = "2014-03-10"
 __version__ = "$Revision$"
 __all__     = (
     'cache_dir' , ## work/cache directory
-    )
+)
 # =============================================================================
-from   ostap.utils.basic import make_dirs, writeable 
 import ostap.core.config as     config
 import os
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.cache_dir'  )
-else                       : logger = getLogger ( __name__                )
 # =============================================================================
 cache_dir = config.cache_dir 
 # =============================================================================
@@ -38,26 +31,29 @@ if cache_dir : # ==============================================================
         # =====================================================================
         try : # ===============================================================
             # =================================================================
-            make_dirs ( cache_dir , exist_ok = True ) 
+            os.make_dirs ( cache_dir , exist_ok = True ) 
             # =================================================================
         except OSError : # ====================================================
             # =================================================================
             cache_dir = None 
-        
+
 # =============================================================================
 if not cache_dir                    or \
    not os.path.exists ( cache_dir ) or \
    not os.path.isdir  ( cache_dir ) or \
-   not writeable      ( cache_dir ) :
+   not os.access      ( cache_dir , os.W_OK ) : 
     # =========================================================================
     from ostap.utils.cleanup import CleanUp
     cache_dir = CleanUp.tempdir ( prefix = 'ostap-cache-' ) 
-    logger.warning ( 'Use temporary cache directory: %s' % cache_dir )
     
 # =============================================================================
 if '__main__' == __name__ : 
     
-    from ostap.utils.docme import docme
+    from ostap.logger.logger import getLogger 
+    logger = getLogger ( 'ostap.core.cache_dir'  )
+    
+    # =============================================================================
+    from ostap.utils.docme import docme    
     docme ( __name__ , logger = logger )
     
 # =============================================================================

@@ -17,9 +17,12 @@ __all__     = (
     'has_env'            , ## case-insensitive check for environment variable   
     'get_env'            , ## case-insensitive access to environment variable
     ##
+    'boolean_true'       , ## Helper function to check if the value rerpesents boolean true 
+    'boolean_false'      , ## Helper function to check if the value rerpesents boolean false 
+    ##
     'OSTAP_CONFIG'       , ## config files 
+    'OSTAP_ARGPARSE'     , ## parse command-ilne arguments?
     'OSTAP_BATCH'        , ## batch   processing?
-    'OSTAP_NOPARSE'      , ## no-parse mode
     ##
     'OSTAP_SILENT'       , ## silent  processing?
     'OSTAP_QUIET'        , ## quiet   processing?
@@ -53,7 +56,7 @@ import os
 # =============================================================================
 OSTAP_CONFIG        = 'OSTAP_CONFIG'
 OSTAP_BATCH         = 'OSTAP_BATCH'
-OSTAP_NOPARSE       = 'OSTAP_NOPARSE' 
+OSTAP_ARGPARSE      = 'OSTAP_ARGPARSE' 
 ##
 OSTAP_SILENT        = 'OSTAP_SILENT'       ## silent  processing ? 
 OSTAP_QUIET         = 'OSTAP_QUIET'        ## quiet   processing ? 

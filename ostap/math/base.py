@@ -116,22 +116,12 @@ __all__     = (
     'evt_range'      , ## get the actual range of entries
     'all_entries'    , ## Are all entreis required to process? 
     ##
-    'numpy'          , ## numpy or None
-    'scipy'          , ## scipy or None
     'np2raw'         , ## numpy array to raw C++ buffer 
     ) 
 # =============================================================================
 from   ostap.core.meta_info    import python_info
 from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types
-import ostap.core.ostap_setup 
-import ROOT, cppyy, math, ctypes, array   
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.base' )
-else                       : logger = getLogger ( __name__          )
-# =============================================================================
+import ROOT, cppyy, math, ctypes, array, numpy    
 # =============================================================================
 ## get global C++ namespace
 cpp   = cppyy.gbl
@@ -146,7 +136,84 @@ Ostap = cpp.Ostap
 ## positive and negative infinities 
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
+# =============================================================================
+## Simple contetx manager to control RooFit evrbosity
+# =============================================================================
+## very simple context manager to suppress RooFit printout
+#
+#  @code
+#
+#  >>> with rooSilent( 4 , False ) :
+#  ...        some_RooFit_code_here()
+#
+#  @endcode
+#  @see RooMgsService
+#  @see RooMgsService::globalKillBelow
+#  @see RooMgsService::silentMode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-07-09
+class RooSilent(object) :
+    """ Very simple context manager to suppress RooFit printout
+    
+    >>> with rooSilent( 4 , False ) :
+    ...        some_RooFit_code_here ()
+    
+    """
+    ## constructor
+    #  @param level  (INPUT) print level 
+    #  @param silent (print level 
+    # 
+    def __init__ ( self   ,
+                   level  = ROOT.RooFit.ERROR ,
+                   silent = True              ) :
+        """ Constructor
+        @param level  (INPUT) print level 
+        @param silent (print level 
+        
+        >>> with rooSilent( ROOT.RooFit.ERROR , True  ) :
+        ...        some_RooFit_code_here ()
+        
+        
+        >>> with rooSilent( ROOT.RooFit.INFO , False  ) :
+        ...        some_RooFit_code_here ()
+                
+        """
+        #
+        if level > ROOT.RooFit.FATAL : level = ROOT.RooFit.FATAL 
+        if level < ROOT.RooFit.DEBUG : level = ROOT.RooFit.DEBUG 
+        #
+        self.__roo_level   = level 
+        self.__roo_silent  = True if silent else False  
 
+        svc = ROOT.RooMsgService.instance()
+        self.__prev_level  = svc.globalKillBelow  () 
+        self.__prev_silent = svc.silentMode       () 
+
+    # =========================================================================
+    ## context manager : ENTER 
+    def __enter__ ( self ) :
+        """ Contex manager: ENTER 
+        """
+        svc = ROOT.RooMsgService.instance()
+        self.__prev_level  = svc.globalKillBelow  () 
+        self.__prev_silent = svc.silentMode       () 
+        ##
+        svc.saveState           ()
+        svc.setGlobalKillBelow  ( self.__roo_level  )
+        svc.setSilentMode       ( self.__roo_silent )
+        ## 
+        return self
+    
+    # =========================================================================
+    ## context manager: EXIT 
+    def __exit__ ( self , *_ ) : 
+        """ Contex manager: EXIT
+        """
+        svc = ROOT.RooMsgService.instance()
+        svc.setSilentMode      ( self.__prev_silent )
+        svc.setGlobalKillBelow ( self.__prev_level  )
+        svc.restoreState       ()
+        
 # =============================================================================
 ## Very simple context manager to suppress ROOT printout
 #  @code
@@ -154,7 +221,7 @@ neg_infinity = float('-inf')
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-30
-class ROOTIgnore( object ) :
+class ROOTIgnore ( RooSilent ) :
     """ Very simple context manager to suppress ROOT printout
     >>> with ROOTIgnore ( ROOT.kError + 1 ) : some_ROOT_code_here()
     """
@@ -168,29 +235,54 @@ class ROOTIgnore( object ) :
         >>> with rootWarning () : some_ROOT_code_here()
         """
         #
-        self._level = int ( level )
+        level = int ( level )
+        if   ROOT.kUnset == level : level = ROOT.kInfo 
+        elif level > ROOT.kFatal  : level = ROOT.kFatal 
+        elif level < ROOT.kPrint  : level = ROOT.kPrint 
+        #
+        level = max ( level , ROOT.kPrint )
+        level = min ( level , ROOT.kFatal )
+        ## 
+        self._level   = level 
         
+        if   ROOT.kBreak   <= level : rlevel = ROOT.RooFit.FATAL
+        elif ROOT.kError   <= level : rlevel = ROOT.RooFit.ERROR
+        elif ROOT.kWarning <= level : rlevel = ROOT.RooFit.WARNING
+        elif ROOT.kInfo    <= level : rlevel = ROOT.RooFit.INFO  
+        else                        : rlevel = ROOT.RooFit.DEBUG 
+
+        silent = ROOT.kWarning <= level
+        
+        RooSilent.__init__ ( self , rlevel , silent ) 
+        
+    # =========================================================================
     ## context manager: ENTER 
     def __enter__ ( self ) :
-        "The actual context manager: ENTER"
+        """ The actual context manager: ENTER
+        """
+        ## ROOT 
         self._old = int ( ROOT.gErrorIgnoreLevel ) 
         if self._old != self._level :
             groot = ROOT.ROOT.GetROOT()
-            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._level ) 
-            
-        return self
+            if groot : groot.ProcessLine ( "gErrorIgnoreLevel= %d ; " % self._level ) 
+        ## RooFit 
+        RooSilent.__enter__ ( self )
+        return self 
     
+    # =========================================================================
     ## context manager: EXIT 
     def __exit__ ( self , *_ ) : 
-        "The actual context manager: EXIT"
+        """ The actual context manager: EXIT
+        """
+        ## RooFit 
+        RooSilent.__exit__ ( self , *_ )
+        ## ROOT 
         if self._old != int ( ROOT.gErrorIgnoreLevel )  :
             groot = ROOT.ROOT.GetROOT()            
-            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._old ) 
+            if groot : groot.ProcessLine ( "gErrorIgnoreLevel= %d ; " % self._old ) 
             
 # =============================================================================
-from ostap.logger.mute  import mute
-with ROOTIgnore ( ROOT.kWarning + 1 ) : 
-    with mute ( True  , True ) : _ = ROOT.RooRealVar() 
+with ROOTIgnore ( ROOT.kError ) : 
     iszero   = Ostap.Math.Zero     ('double')()
     isequal  = Ostap.Math.Equal_To ('double')()
     isequalf = Ostap.Math.Equal_To ('float' )()
@@ -1053,29 +1145,6 @@ def all_entries ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     return 0 == first and size <= last 
 
 # =============================================================================
-## Numpy & scipy 
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy
-    numpy_version = tuple ( int ( i ) for i in numpy.__version__.split( '.' ) )
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    numpy = None
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import scipy
-    scipy_version = tuple ( int ( i ) for i in scipy.__version__.split( '.' ) )
-    # ========================================================================
-except ImportError :
-    # ========================================================================
-    scipy = None
-    scipy_version = () 
-# =============================================================================
-np2raw = None
-# =============================================================================
 ## Converrt numpy array into raw C++ buffer
 #  @code
 #  data = ...
@@ -1266,6 +1335,8 @@ if not '__main__' == __name__ : # =============================================
 # =============================================================================
 if '__main__' == __name__ :
 
+    from ostap.logger.logger import getLogger
+    logger = getLogger ( 'ostap.math.base' )
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
@@ -1280,9 +1351,6 @@ if '__main__' == __name__ :
     _v.sort()
     for v in _v : logger.info ( v )
 
-    if not numpy : logger.warning ( "Numpy module is not accesible!")
-    if not scipy : logger.warning ( "Scipy module is not accesible!")
-    
 # =============================================================================
 ##                                                                     The  END
 # =============================================================================

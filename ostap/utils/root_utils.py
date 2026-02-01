@@ -31,8 +31,8 @@ __all__     = (
     )
 
 # =============================================================================
-from   ostap.utils.basic  import typename
 import ostap.core.config  as     config 
+from   ostap.utils.basic  import typename
 import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger

@@ -87,11 +87,15 @@ class MuteC(object):
         os.close ( self.save_fds[0] )
 
 # =============================================================================
-with MuteC ( True , True ) : 
-    import ROOT
+## suprpess warnings..
+with MuteC ( True , True ) :
+    import ROOT, cppyy  
     ROOT.PyConfig.IgnoreCommandLineOptions = True
-    _ = ROOT.RooRealVar() 
+    _ = ROOT.RooRealVar()
 
+    ## cpp = cppyy.gbl 
+    ## _ = cpp.Ostap.Math.Zero('double')() 
+    
 # =============================================================================
 # Include path for ACLiC:
 # =============================================================================

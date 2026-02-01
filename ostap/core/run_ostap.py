@@ -30,13 +30,16 @@ to provide access to zillions useful decorators for ROOT
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision:$'
+__all__     = ( 
+    'executed_scripts' , ## list of successfully executed ascripts 
+    'executed_macros'  , ## list of successfully executed ROOT/C++ macros 
+    'root_files'       , ## list of ROOT files  
+    'parameters'       , ## list of extra comand-line arguments 
+    'reload'           , ## relod the module 
+)
 # =============================================================================
 import ostap.core.config as config 
 import os, sys
-# =============================================================================
-## ROOT.PyConfig.IgnoreCommandLineOptions = True
-# =============================================================================
-
 # =============================================================================
 # logging 
 # =============================================================================
@@ -69,14 +72,14 @@ if enabledInfo () : # =========================================================
     del rows, vars_, title,
 
 # =============================================================================
-## Basic setup for ROOT: Batch, Implicit MT, directories, profile 
-# =============================================================================
-import ostap.core.ostap_setup 
-
-# =============================================================================
 ## ostap startup: history, readlines, etc... 
 # =============================================================================
 import ostap.core.startup
+
+# =============================================================================
+## Basic setup for ROOT: Batch, Implicit MT, directories, profile 
+# =============================================================================
+import ostap.core.ostap_setup as ostap_setup 
 
 # =============================================================================
 ## import everything from ostap
@@ -98,43 +101,7 @@ else : # ======================================================================
 if arguments.Canvas :
     import ostap.plotting.canvas 
     logger.debug ( "Create default Ostap canvas" )
-    canvas    = ostap.plotting.canvas.getCanvas ()
-
-# =============================================================================
-## execute startup files 
-# =============================================================================
-_executed = set() 
-for sf in arguments.StartUp :
-    _ss =  sf
-    _ss =  os.path.expandvars ( _ss )
-    _ss =  os.path.expandvars ( _ss )
-    _ss =  os.path.expandvars ( _ss )
-    _ss =  os.path.expanduser ( _ss )
-    _ss =  os.path.expandvars ( _ss )
-    if not os.path.exists     ( _ss ) : continue
-    if not os.path.isfile     ( _ss ) : continue
-    _ss =  os.path.abspath    ( _ss )
-    if _ss in _executed           : continue
-    # ==========================================================================
-    ## execute it!
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        import runpy
-        globs = runpy.run_path ( _ss , globals() , run_name = '__main__' )
-        globs = dict ( ( ( k , v ) for k , v in globs.items() if  not k.startswith ( '__' ) and not k.endswith ( '__' ) ) )
-        logger.debug('Symbols from %s: %s' % ( sf , globs.keys() ) )
-        globals().update( globs )
-        del globs
-        ## 
-        _executed.add ( _ss )
-        logger.info   ( "Startup file '%s' is executed"      % sf )
-        ## 
-        # =====================================================================
-    except: # =================================================================
-        # =====================================================================
-        logger.error  ( "Error in execution of '%s' startup" % sf , exc_info = True )
-
+    canvas = ostap.plotting.canvas.getCanvas ()
 
 # =============================================================================
 ## suppress excessive (?) RooFit printout
@@ -151,242 +118,66 @@ if ( arguments.Quiet or arguments.Silent ) and not arguments.Verbose and 3 < arg
                       "ObjectHandling"     )
     
 # =============================================================================
-## execute the files, defined as arguments
+## Files, scritps, macros 
 # =============================================================================
-root_files     = {}
-root_macros    = []
-python_scripts = []
-PARAMETERS     = []
+executed_scripts = ostap_setup.executed_scripts 
+executed_macros  = ostap_setup.executed_macros 
+root_files       = ostap_setup.root_files 
+parameters       = ostap_setup.parameters 
 # =============================================================================
-## _Load roo macros
-def _load_macro_ ( macro , silent = True ) :
-    """ Load ROOT macro
-    """
-    logger.debug  ("Try to load macro '%s'" % macro )
-    groot = ROOT.ROOT.GetROOT()
-    from   ostap.core.core     import rootError
-    
-    if silent :
-        with rootError() : sc = groot.LoadMacro ( macro )
-    else :
-        sc = groot.LoadMacro ( macro )
-        
-    if sc :
-        # - Interactive mode: print traceback and continue
-        if arguments.batch :
-            raise RuntimeError ( 'Failure to load macro "%s" code:%d' % ( macro , sc ) )
-        else :
-            logger.error       ('Failure to load macro "%s" code:%d' % ( macro , sc ) )
-            return False
-        
-    logger.debug ("Loaded macro   '%s'" % macro )
-    del sc
-    return True
 
-# =========================================================================
-## Load root macro/pattern
-def load_macro ( pattern ) :
-    """ Load root macro/pattern
-    """
-    ## expand the actual file name 
-    pattern  = os.path.expandvars ( pattern )
-    pattern  = os.path.expanduser ( pattern )
-    pattern  = os.path.expandvars ( pattern )
-    patetrn  = os.path.expandvars ( pattern )
+
+# =============================================================================
+## list all executed ostap/python scripts 
+if executed_scripts :
+    rows = [  ( '#' , 'Script' ) ] 
+    for i, f in enumerate ( executed_files , start = 1 ) :
+        row = '%-2d' , f
+        rows.append ( row )
     ##
-    patterns = [ (pattern,'') ]
-    if   pattern.endswith ( '++' ) : patterns += [ ( pattern [:-2] , '++' ) ]
-    elif pattern.endswith ( '+'  ) : patterns += [ ( pattern [:-1] , '+'  ) ]
-
-    import glob
-    _glob   = False 
-    _loaded = 0
-    
-    for pat,ext in patterns :
-        
-        for m in glob.iglob ( pat ) :
-
-            _glob = True 
-            if m in root_macros  : continue
-
-            loaded = _load_macro_ ( m )
-            if loaded : root_macros.append ( m )
-            _loaded += loaded 
-            
-    if not _glob and not pattern in root_macros :
-        m = pattern
-        if _load_macro_ ( m ) : 
-            root_macros.append ( m )
-            _loaded += 1 
-        
-    return _loaded
-
-# =============================================================================    
-## perform treatment of the file 
-def treat_file ( f ) :
-    """ Perform treatment of the file 
-    """
-    fok = os.path.exists ( f ) and os.path.isfile ( f ) 
-    name , dot , ext  = f.rpartition('.')
-    
-    if  name and dot and ext in ('root', 'ROOT' ) :
-        
-        logger.debug  ("Try  to open ROOT file '%s'" % f )
-        try :
-            from  ostap.core.core      import ROOTCWD
-            import ostap.io.root_file 
-            with ROOTCWD() :
-                _f = ROOT.TFile.Open(  f , 'READ')
-                root_files [ name ] = _f 
-                logger.info ("Open ROOT file '%s'" % f )
-                _f.ls()
-        except :
-            
-            # - Batch mode:       just re-raise exception
-            if arguments.batch :  raise
-            
-            # - Interactive mode: print traceback and continue 
-            logger.error ( 'Failure to open ROOT file "%s"'  % f  , exc_info = True ) 
-            
-    ## execute python file 
-    elif fok and name and dot and 'py' == ext  :  
-        
-        logger.debug  ("Try    to execute '%s'" % f )
-        
-        try :
-
-            import runpy 
-            globs = runpy.run_path (
-                f , globals() if arguments.WithContext else {}  ,
-                run_name = '__main__' )
-            globs = dict ( ( (k,v) for k,v in globs.items() if  not k.startswith('__') and not k.endswith('__')) )
-            logger.debug('Symbols from %s: %s' % ( f , globs.keys() ) )
-            globals().update ( globs )
-            del globs 
-                
-            logger.info  ("Executed       '%s'" % f )
-            python_scripts.append ( f )
-            
-        except :
-            
-            # - Batch mode:       just re-raise exception
-            if arguments.batch :  raise
-            
-            # - Interactive mode: print traceback and continue 
-            logger.error ('Failure to execute "%s"'     % f  , exc_info = True ) 
-            
-    elif name and dot and ext.upper() in ( 'C'   ,   'C+' ,   'C++' ,
-                                           'CPP' , 'CPP+' , 'CPP++' ,
-                                           'CXX' , 'CXX+' , 'CXX++' ) :
-        
-        if not load_macro ( f )  :
-            if arguments.batch :
-                raise RuntimeError ( "No macros are loaded for '%s' pattern" % f )
-            else :
-                logger.error       ( "No macros are loaded for '%s' pattern" % f )
-
-    ## execute ostap-script 
-    elif fok and name and dot and ext in ( 'ost' , 'ostp' , 'ostap' , 'opy' ) :
-        
-        logger.debug  ("Try    to execute '%s'" % f )
-
-        # =====================================================================
-        try : # ===============================================================
-            # =================================================================
-            
-            ## this one is always executed with the context!!!
-            import runpy
-            globs = runpy.run_path ( f , globals() , run_name = '__main__')
-            globs = dict ( ( (k,v) for k,v in globs.items() if  not k.startswith('__') and not k.endswith('__')) )
-            logger.debug ( 'Symbols from %s: %s' % ( f , globs.keys() ) ) 
-            globals().update ( globs )
-            del globs 
-            
-            python_scripts.append ( f )
-            logger.info  ("Executed       '%s'" % f )
-
-            # =================================================================
-        except : # ============================================================
-            # =================================================================
-                
-            # - Batch mode:       just re-raise exception
-            if arguments.batch :  raise
-            
-            # - Interactive mode: print traceback and continue 
-            logger.error ( 'Failure to execute "%s"'     % f  , exc_info = True ) 
-
-        # =====================================================================
-    else : # ==================================================================
-        # =====================================================================
-                
-        ## collect the argument as parameters
-        PARAMETERS.append ( f )
-        logger.debug ( 'Add argument %s to PARAMETERS' % f )
-
-# =============================================================================
-## load ROOT macros 
-for pattern in arguments.Macros :
-    if not load_macro ( pattern )  :
-        if arguments.batch :
-            raise RuntimeError ( "No macros are loaded for '%s' pattern" % pattern )
-        else :
-            logger.error       ( "No macros are loaded for '%s' pattern" % pattern )
-
-# =============================================================================
-## treat all input arguments/files 
-for pattern in arguments.files :
-    import glob
-    _glob = False
-    ##
-    pattern  = os.path.expandvars ( pattern )
-    pattern  = os.path.expanduser ( pattern )
-    pattern  = os.path.expandvars ( pattern )
-    patetrn  = os.path.expandvars ( pattern )
-    ##
-    for _f in glob.iglob ( pattern ) :
-        _glob = True
-        treat_file ( _f      )
-    if not _glob :
-        treat_file ( pattern )
-del treat_file
+    title = "Executed scripts #%d " % len ( executed_scripts ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
     
 # =============================================================================
-for command in arguments.Commands :
-        logger.debug  ("Try  to execute command '%s'" % command  )
-        try :
-            exec ( command )
-        except :
-            if arguments.batch : raise
-            logger.error       ( "Failure ro execute command: '%s'" % command , exc_info = True  )
-
-            
+## list all executed ROOT/C++ macros 
+if executed_macros :
+    rows = [  ( '#' , 'Macro' ) ] 
+    for i, f in enumerate ( executed_macros , start = 1 ) :
+        row = '%-2d' , f
+        rows.append ( row )
+    ##  
+    title = "Executed macros #%d " % len ( executed_macros ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
 # =============================================================================
 ## list names of opened ROOT files 
 if root_files :
-    logger.info("ROOT FILES    : %d (with '.root' extension)" % len ( root_files ) )
-    keys = root_files.keys()
-    _n = 0  
-    for k in sorted ( keys ) :
-        _n +=  1
-        rfile = root_files [k]
-        okeys = list ( rfile.keys () )
-        okeys.sort()
-        logger.info('%2d: %s #keys: %d: %s' % ( _n , k , len(okeys) , okeys ) )
-
-# =============================================================================
-## list all loaded root macros
-if root_macros    : 
-    logger.info ('ROOT MACROS   : %s' % root_macros    )
+    rows = [  ( '#' , 'File' ) ] 
+    for i, f in enumerate ( root_files , start = 1 ) :
+        row = '%-2d' , f
+        rows.append ( row )
+    ## 
+    title = "ROOT files #%d " % len ( root_files ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
     
 # =============================================================================
-## list all executed ostap/python scripts 
-if python_scripts :
-    logger.info ('OSTAP SCRIPTS : %s' % python_scripts )
-    
-# =============================================================================
-## dump all loaded 'parameters'
-if PARAMETERS : 
-    logger.info ('PARAMETERS    : %s' % PARAMETERS )
+## dump all lo
+if parameters :
+    rows = [  ( '#' , 'Parameter' ) ] 
+    for i, f in enumerate ( parameters , start = 1 ) :
+        row = '%-2d' , f
+        rows.append ( row )
+    ## 
+    title = "Parameters #%d " % len ( parameters ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
 
 ## make `reload` command available 
 from importlib import reload 
