@@ -26,8 +26,10 @@ __all__     = (
     'Histo1DFun'      , ## 1D-histogram as function object 
     'Histo2DFun'      , ## 2D-histogram as function object 
     'Histo3DFun'      , ## 3D-histogram as function object
-    'profile_types'   , ## valid profile types 
-    #
+    'profile_types'   , ## valid profile types
+    ##
+    'histo_fit'       , ## helepr function to fit histogram
+    ## 
     )
 # =============================================================================
 from   ostap.core.meta_info           import root_info 
@@ -36,7 +38,7 @@ from   ostap.core.ostap_types         import ( integer_types  , num_types    ,
                                                sequence_types , string_types , 
                                                dictlike_types ) 
 from   ostap.core.core                import ( cpp      , Ostap     , 
-                                               ROOTCWD  , rootID    , 
+                                               rootID   , 
                                                funcID   , funID     , fID             ,
                                                histoID  , hID       , dsID            ,
                                                VE       , SE        , WSE             ,
@@ -62,7 +64,9 @@ from   ostap.logger.pretty            import pretty_float
 from   ostap.histos.axes              import h1_axis , make_axis, h2_axes, h3_axes
 from   ostap.stats.moments            import Quantile, Quantiles
 from   ostap.math.integral            import Integral, Integral2, Integral3 
-from   ostap.logger.symbols           import arrow_right
+from   ostap.logger.symbols           import arrow_right, not_equal 
+from   ostap.io.root_file             import ROOTCWD
+from   ostap.utils.root_utils         import implicitMT 
 import ostap.logger.table             as     T 
 import ostap.stats.moment 
 import ostap.plotting.draw_attributes 
@@ -9711,7 +9715,7 @@ def histos_overlay ( lefts     ,
             if lmin <= 0 :
                 yl     = min ( 0.2 , 1.e-6 * lmax ) 
                 if not ylmin is None  and 0 < ylmin : yl = ylmin  
-                logger.warning ( 'histos_overlay: adjust non-positive (left)  Y-min %+g %s %+.1e [log-scale]' % ( lmin , arrow_right , yl ) )
+                logger.warning ( 'histos_overlay: adjust non-positive (left)  Y-min %+g%s%+.1e [log-scale]' % ( lmin , arrow_right , yl ) )
                 lmin  = yl
                 
         lmin, lmax = axis_range ( lmin , lmax , delta = 0.05 , log_margin = 0.40 , log = left_log  ) 
@@ -9729,7 +9733,7 @@ def histos_overlay ( lefts     ,
             if rmin <= 0 :
                 yr     = min ( 0.2 , 1.e-6 * rmax ) 
                 if not ylmin is None  and 0 < ylmin : yl = ylmin  
-                logger.warning ( 'histos_overlay: adjust non-positive (right) Y-min %+g %s %+.1e [log-scale]' % ( rmin , arrow_right , yr ) )
+                logger.warning ( 'histos_overlay: adjust non-positive (right) Y-min %+g%s%+.1e [log-scale]' % ( rmin , arrow_right , yr ) )
                 rmin  = yr 
                 
         rmin, rmax = axis_range ( rmin , rmax , delta = 0.05 , log_margin = 0.40 , log = right_log )
@@ -9865,7 +9869,33 @@ def _h1_overlay_right_ ( histo     , *lefts ,
 for h in ( ROOT.TH1F  , ROOT.TH1D ) :
     h.overlay_left  = _h1_overlay_left_
     h.overlay_right = _h1_overlay_right_ 
-     
+
+
+# =============================================================================
+## Helper function to fit the histo with TF-function
+#  @code
+#  histo    = ...
+#  function = ...
+#  result   = histo_fit  ( histo , function , 'S' ) 
+#  @endcode 
+def histo_fit ( histo , fun , option = 'S' , goption = '' , *args ) :
+    """ Helper function to fit the histo with TF-function
+    >>> histo    = ...
+    >>> function = ...
+    >>> result   = histo_fit  ( histo , function , 'S' ) 
+    """
+    
+    assert isinstance ( histo , ROOT.TH1 ) , "Invaild `histo` type %s" % typename ( histo ) 
+    assert isinstance ( fun   , ROOT.TF1 ) , "Invaild `fun` type %s"   % typename ( fun   )
+    #
+    hd = histo.GetDimension ()
+    fd = fun.GetNdim        () 
+    assert hd == fd , "Invalid histo/fun dimensions: %d%s%d" % ( hd , not_equal , fd )
+    ##
+    ## see ROOT issue #21080 : https://github.com/root-project/root/issues/21080
+    with implicitMT ( False ) :
+        return histo.Fit ( fun , option , goption , *args )
+    
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1   ,

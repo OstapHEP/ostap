@@ -16,7 +16,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.core          import ROOTCWD,SE
+from   ostap.core.core          import SE
 from   ostap.stats.counters     import table_counters   
 from   ostap.utils.timing       import timing
 from   ostap.utils.progress_bar import progress_bar 

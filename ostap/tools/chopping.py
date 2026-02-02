@@ -2048,8 +2048,8 @@ def _add_response_tree_ ( tree , * ,
                                       progress   = progress   ) 
     
     
-    from   ostap.core.core           import Ostap, ROOTCWD
-    from   ostap.io.root_file        import REOPEN
+    from   ostap.core.core           import Ostap
+    from   ostap.io.root_file        import REOPEN, ROOTCWD 
     from   ostap.utils.root_utils    import implicitMT
     
     

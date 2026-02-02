@@ -24,9 +24,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.funcs' )
 else                       : logger = getLogger( __name__              )
 # =============================================================================
-logger.debug ( 'Tiny decoration for ROOT.TF objects')
-# =============================================================================
-
+logger.debug ( 'Tiny decoration for ROOT.TF(1,2,3) objects')
 # =============================================================================
 ## Generate random tuple according to TF2
 #  @code
@@ -60,13 +58,14 @@ _new_methods_ = [
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-09-28
-def _f_fit_ ( func , histo , *args ) :
+def _f_fit_ ( func , histo , option = 'S' , goption = '' , *args ) :
     """Fit histogram (Actually delegate to TH1::Fit method)
     >>> func  = ...
     >>> histo = ...
     >>> func.Fit ( histo , .... )
     """
-    return histo.Fit( func , *args )
+    from   ostap.histos.histos  import histo_fit 
+    return histo_fit ( histo , func , option, goption , *args ) 
 
 ROOT.TF1 . Fit      = _f_fit_ 
 ROOT.TF1 . fitHisto = _f_fit_ 

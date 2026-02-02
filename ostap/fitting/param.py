@@ -20,16 +20,15 @@ __all__     = (
 from   ostap.core.core        import Ostap, funID
 from   ostap.core.ostap_types import num_types, integer_types
 from   ostap.utils.basic      import typename
-from   ostap.utils.root_utils import implicitMT 
-import ostap.histos.histos 
+from   ostap.histos.histos    import histo_fit 
 import ostap.fitting.fitresult 
 import ROOT, abc 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.param' )
-else                       : logger = getLogger( __name__              )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.param' )
+else                       : logger = getLogger ( __name__              )
 # =============================================================================
 logger.debug ( 'Auxillary utilities for Histogram parameterisation')
 # =============================================================================
@@ -79,10 +78,8 @@ class C1Fun(object) :
         >>> histo = ... 
         >>> obj.Fit  ( histo , 'S0Q' )
         """
-        assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , 'Invalid histo-type!'
-        ## see ROOT issue #21080 : https://github.com/root-project/root/issues/21080
-        with implicitMT ( False ) :
-            return histo.Fit ( self.__tf1 , option , goption , *args )
+        assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , 'Invalid histo-type %s' % typename ( histo ) 
+        return histo_fit ( histo , self.__tf1 , option , goption , *args ) 
     
     ## fix parameter 
     def fix ( self , index , value ) :
@@ -197,12 +194,8 @@ class HFIT(object) :
     def fit  ( self , histo , option = 'S' , goption = '' , *args ) :
         return self.Fit ( histo , option , goption , *args ) 
     def Fit  ( self , histo , option = 'S' , goption = '' , *args ) :
-        print ( 'FIT:I AM HERE/1' ) 
-        assert isinstance ( histo , ROOT.TH1 ) and histo , "Fit: Invalid `histo` type: %s" % typename ( histo ) 
-        ## return histo.Fit ( self.fun , option , goption , *args )
-        result = histo.Fit ( self.fun , option , goption , *args )
-        print ( 'FIT:I AM HERE/2' ) 
-        return result
+        assert isinstance ( histo , ROOT.TH1 ) and histo , "Fit: Invalid `histo` type: %s" % typename ( histo )
+        return histo_fit ( histo , self.fun , option , goption , *args ) 
 
 # =============================================================================
 ## @class H_fit
@@ -218,9 +211,12 @@ class H_fit(HFIT) :
 
         if xmin is None and hasattr ( hfit , 'xmin' ) : xmin = hfit.xmin ()
         if xmax is None and hasattr ( hfit , 'xmax' ) : xmax = hfit.xmax ()
-        
-        ## create the function
-        tf1 = ROOT.TF1 ( funID() , self , xmin , xmax , ndim = 1 , npar = hfit.npars() )
+
+        ## create function
+        npar = hfit.npars ()     ## NB:  +1 HERE!
+        conf = { 'npar' : npar , 'ndim' : 1, 'addToGlobList' : ROOT.TF1.EAddToList.kNo }
+        tf1  = ROOT.TF1 ( funID() , self , xmin , xmax , **conf )
+        ROOT.SetOwnership ( tf1 , True ) 
         
         ## initialize the base 
         super ( H_fit , self ).__init__ ( hfit , tf1 ) 
@@ -241,8 +237,8 @@ class H_fit(HFIT) :
     
 # =============================================================================
 ## @class H_Nfit
-#  simple function to fit/represent the histogram with normalized
-#  functions, in particular:
+#  simple function to fit/represent the histogram with a sum of
+#  normailzed polynomial-like functions, in particular:
 #  - positive bernstein polynomial,
 #  - positive B-spline expansion 
 #  - positive monotonic B-spline expansion, etc...
@@ -250,16 +246,19 @@ class H_fit(HFIT) :
 #  @date 2014-05-09
 class H_Nfit (HFIT) :
     """ Simple helper function to fit/represent the histogram with
-    the sum of bernstein positive polynominals
+    the sum of normailzed polynomial-ilke functions 
     """
     def __init__ ( self , hfit , xmin = None , xmax = None ) :
 
         if xmin is None and hasattr ( hfit , 'xmin' ) : xmin = hfit.xmin ()
         if xmax is None and hasattr ( hfit , 'xmax' ) : xmax = hfit.xmax ()
         
-        ## create function 
-        tf1 = ROOT.TF1 ( funID() , self , xmin , xmax , ndim = 1 , npar = hfit.npars() + 1 )
-
+        ## create function
+        npar = hfit.npars () + 1  ## NB:  +1 HERE!
+        conf = { 'npar' : npar , 'ndim' : 1, 'addToGlobList' : ROOT.TF1.EAddToList.kNo }         
+        tf1  = ROOT.TF1 ( funID() , self , xmin , xmax , **conf )
+        ROOT.SetOwnership ( tf1 , True ) 
+        
         ## initialize the base 
         super(H_Nfit,self).__init__ ( hfit , tf1 )
 
@@ -268,8 +267,9 @@ class H_Nfit (HFIT) :
 
     def norm     ( self ) : return True  
     def npars    ( self ) : return self.hfit.npars () + 1  ## NB: normalization!  
-    
-    ## the major method 
+
+    # =========================================================================
+    ## The major method 
     def __call__ ( self , x , pars = [] ) :
 
         norm = 1.0
@@ -277,11 +277,10 @@ class H_Nfit (HFIT) :
         
         if pars :
 
-            norm = float ( pars [ 0 ] ) 
-            
+            norm = float ( pars [ 0 ] )             
             np   = self.hfit.npars() 
             for i in range ( 0 , np ) :    
-                self.hfit.setPar ( i , pars[i+1] )
+                self.hfit.setPar ( i , pars [ i + 1 ] )
                 
         return norm * self.hfit( x0 )
 

@@ -110,8 +110,8 @@ __all__ = (
     'read_root' , ## real all ROOT objects from the file 
     )
 # =============================================================================
-import ostap.io.root_file
 from   ostap.core.meta_info import root_version_int 
+import ostap.io.root_file
 import ROOT
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -126,10 +126,7 @@ def dump_root ( objects , rfile  = '' ) :
 
     if isinstance ( objects , ROOT.TObject ) : objects = [ objects ]
     
-    import ostap.io.root_file
-    
-    from   ostap.core.core import ROOTCWD
-    
+    from   ostap.io.root_file import ROOTCWD 
     with ROOTCWD(), ROOT.TFile ( rfile , 'RECREATE' ) as f :
         f.cd () 
         for o in objects :

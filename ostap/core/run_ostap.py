@@ -30,13 +30,6 @@ to provide access to zillions useful decorators for ROOT
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision:$'
-__all__     = ( 
-    'executed_scripts' , ## list of successfully executed ascripts 
-    'executed_macros'  , ## list of successfully executed ROOT/C++ macros 
-    'root_files'       , ## list of ROOT files  
-    'parameters'       , ## list of extra comand-line arguments 
-    'reload'           , ## reloadxs the module 
-)
 # =============================================================================
 import ostap.core.config as config 
 # =============================================================================
@@ -78,26 +71,26 @@ import ostap.core.startup
 # =============================================================================
 ## Basic setup for ROOT: Batch, Implicit MT, directories, profile 
 # =============================================================================
-import ostap.core.ostap_setup as ostap_setup 
+from ostap.core.ostap_setup import * 
 
 # =============================================================================
 ## import everything from ostap
 # =============================================================================
-if arguments.Quiet or arguments.Silent : # ====================================
+if config.quiet or config.silent : # ==========================================
     # =========================================================================
     from ostap.logger.utils import mute
     with mute () : # ==========================================================
-        import ostap.core.load_ostap
+        from ostap.core.load_ostap import * 
     del mute
     # =========================================================================
 else : # ======================================================================
-    # ========================================================================
-    import ostap.core.load_ostap
+    # =========================================================================
+    from ostap.core.load_ostap import * 
 
 # =============================================================================
 ## create default canvas
 # =============================================================================
-if arguments.Canvas :
+if config.arguments.Canvas :
     import ostap.plotting.canvas 
     logger.debug ( "Create default Ostap canvas" )
     canvas = ostap.plotting.canvas.getCanvas ()
@@ -105,7 +98,7 @@ if arguments.Canvas :
 # =============================================================================
 ## suppress excessive (?) RooFit printout
 # =============================================================================
-if ( arguments.Quiet or arguments.Silent ) and not arguments.Verbose and 3 < arguments.Level :
+if ( config.quiet or config.silent ) and not config.verbose and 3 < config.level :
     from ostap.fitting.utils import suppress_topics
     suppress_topics ( "Plotting"           ,
                       "Caching"            ,
@@ -117,67 +110,6 @@ if ( arguments.Quiet or arguments.Silent ) and not arguments.Verbose and 3 < arg
                       "ObjectHandling"     )
     
 # =============================================================================
-## Files, scritps, macros 
-# =============================================================================
-executed_scripts = ostap_setup.executed_scripts 
-executed_macros  = ostap_setup.executed_macros 
-root_files       = ostap_setup.root_files 
-parameters       = ostap_setup.parameters 
-# =============================================================================
-
-
-# =============================================================================
-## list all executed ostap/python scripts 
-if executed_scripts :
-    rows = [  ( '#' , 'Script' ) ] 
-    for i, f in enumerate ( executed_files , start = 1 ) :
-        row = '%-2d' , f
-        rows.append ( row )
-    ##
-    title = "Executed scripts #%d " % len ( executed_scripts ) 
-    import ostap.logger.table as T
-    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
-    logger.info ( '%s:\n%s' % ( title , table ) )
-    
-# =============================================================================
-## list all executed ROOT/C++ macros 
-if executed_macros :
-    rows = [  ( '#' , 'Macro' ) ] 
-    for i, f in enumerate ( executed_macros , start = 1 ) :
-        row = '%-2d' , f
-        rows.append ( row )
-    ##  
-    title = "Executed macros #%d " % len ( executed_macros ) 
-    import ostap.logger.table as T
-    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
-    logger.info ( '%s:\n%s' % ( title , table ) )
-    
-# =============================================================================
-## list names of opened ROOT files 
-if root_files :
-    rows = [  ( '#' , 'File' ) ] 
-    for i, f in enumerate ( root_files , start = 1 ) :
-        row = '%-2d' , f
-        rows.append ( row )
-    ## 
-    title = "ROOT files #%d " % len ( root_files ) 
-    import ostap.logger.table as T
-    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
-    logger.info ( '%s:\n%s' % ( title , table ) )
-    
-# =============================================================================
-## dump all lo
-if parameters :
-    rows = [  ( '#' , 'Parameter' ) ] 
-    for i, f in enumerate ( parameters , start = 1 ) :
-        row = '%-2d' , f
-        rows.append ( row )
-    ## 
-    title = "Parameters #%d " % len ( parameters ) 
-    import ostap.logger.table as T
-    table = T.table ( rows , title = title , ailgnment = 'cw' , prefix = '# ' )
-    logger.info ( '%s:\n%s' % ( title , table ) )
-
 ## make `reload` command available 
 from importlib import reload 
 

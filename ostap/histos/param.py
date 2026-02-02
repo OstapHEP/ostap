@@ -227,8 +227,7 @@ def _h1_param_sum_ ( h1               ,
             
     else :
         
-        for i in range ( 0, b.npars() ) :
-            fun.SetParameter ( i  , 0  )
+        for i in range ( 0, b.npars() ) : fun.SetParameter ( i  , 0  )
                 
     if not option                : option  = 'S'
     if not 'S' in option.upper() : option += 'S'
@@ -270,7 +269,7 @@ def _h1_param_sum_ ( h1               ,
     from   ostap.logger.colorized  import attention
 
     ## see ROOT issue #21080 https://github.com/root-project/root/issues/21080
-    with implicitMT ( False ) : r = fun.Fit ( h1 , *fopts )
+    r = fun.Fit ( h1 , *fopts )
 
     if isinstance ( refit , integer_types ) : refit = max ( 0 , refit )
     else                                    : refit = 1 if refit else 0 
@@ -287,11 +286,11 @@ def _h1_param_sum_ ( h1               ,
         if normalized : 
             fun.FixParameter ( 0 , _integral_ )
             ## see ROOT issue #21080 https://github.com/root-project/root/issues/21080
-            with implicitMT ( False ) : r  = fun.Fit ( h1 , option + '0Q' , '' , xmin , xmax )
+            r  = fun.Fit ( h1 , option + 'NQ' , '' , xmin , xmax )
             fun.ReleaseParameter ( 0 )
           
         ## see ROOT issue #21080 https://github.com/root-project/root/issues/21080
-        with implicitMT ( False ) : r = fun.Fit ( h1 , *fopts )    
+        r = fun.Fit ( h1 , *fopts )    
         refit -= 1 
         nfits += 1
         

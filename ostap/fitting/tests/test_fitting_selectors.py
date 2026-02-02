@@ -18,7 +18,7 @@ from   ostap.core.pyrouts           import dsID,   Ostap
 from   ostap.utils.timing           import timing
 from   ostap.trees.data             import Data
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.core.core              import ROOTCWD 
+from   ostap.io.rot_file            import ROOTCWD 
 from   ostap.core.meta_info         import root_version_int
 from   ostap.utils.timing           import timing
 from   ostap.utils.root_utils       import batch_env 

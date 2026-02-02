@@ -19,8 +19,8 @@ from   ostap.core.core        import hID , VE, Ostap
 from   ostap.logger.colorized import allright
 from   ostap.logger.symbols   import plus_minus 
 from   ostap.logger.pretty    import pretty_float
+from   ostap.histos.histos    import histo_fit 
 import ostap.math.math_ve     as     MVE 
-import ostap.histos.histos 
 import ostap.histos.param
 import ostap.fitting.param 
 import ROOT, math 
@@ -38,7 +38,7 @@ logger.debug ( "Specific comparison of histograms" )
 #  histo = ...
 #  print 'Is constant? %s ' % histo.is_constant( prob = 0.01 )
 #  @endcode 
-def _h1_constant_ ( h1 , prob = 0.10 , opts = '0Q' , density = False ) :
+def _h1_constant_ ( h1 , prob = 0.10 , option = 'SNQ' , goption = '' , density = False ) :
     """Can  1D-histogram be considered as constant ?
     >>> histo = ...
     >>> print 'Is constant? %s ' % histo.is_constant( prob = 0.01 ) 
@@ -46,16 +46,18 @@ def _h1_constant_ ( h1 , prob = 0.10 , opts = '0Q' , density = False ) :
     #
     if density :
         h1_ = h1.density() 
-        cmp = _h1_constant_ ( h1_ , prob , opts , density = False )
+        cmp = _h1_constant_ ( h1_ , prob , option , density = False )
         del h1_
         return cmp
     
     if not isinstance ( h1 , ( ROOT.TH1D , ROOT.TH1F ) ) : return False 
     #
-    r  = h1.Fit ( 'pol0', 'S' + opts )
+    option = option.upper()
+    option = option if 'S' in option else 'S'+option 
+    h1.Fit ( 'pol0', option , goption )
     if 0 != r.Status() : 
         logger.warning("Can't fit with constant function %s" % r.Status() )
-        r  = h1.Fit ( 'pol0', 'S' + opts )
+        r  = h1.Fit ( 'pol0', option , goption)
         if 0 != r.Status() : return False
     #
     return prob <= r.Prob()
@@ -69,7 +71,7 @@ __fun_cache = []
 def _h1_cmp_fit_ ( h1              ,
                    h2              ,
                    density = False ,  
-                   opts    = '0Q'  ) :
+                   option  = '0Q'  ) :
     """Compare histograms by refit of the first with functions,
     extracted from the second one
 
@@ -87,7 +89,7 @@ def _h1_cmp_fit_ ( h1              ,
     if density : 
         h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1 
         h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2
-        cmp = _h1_cmp_fit_ ( h1_ , h2_ ,  density = False , opts = opts )
+        cmp = _h1_cmp_fit_ ( h1_ , h2_ ,  density = False , option = option )
         return cmp
 
     from ostap.fitting.param import C1Fun 
@@ -108,9 +110,12 @@ def _h1_cmp_fit_ ( h1              ,
     ##     h1.draw ( copy = True )
     ##     h1.SetMinimum ( 0 ) 
     ##     f2.draw ('same' , copy = True )
-        
-    rf = f2.Fit ( h1 , 'S' + opts )
-    if 0 == rf.Status() and not '0' in opts :
+
+    option = option.upper() 
+    option = option if 'S' in option else option + 'S'
+    
+    rf = f2.Fit ( h1 , option )
+    if 0 == rf.Status() and not '0' in option and not 'N' in option :
         cnv = Ostap.Utils.get_canvas () 
         if cnv : cnv.Update()
         
@@ -121,7 +126,6 @@ def _h1_cmp_fit_ ( h1              ,
 
 ROOT.TH1D.cmp_fit = _h1_cmp_fit_
 ROOT.TH1F.cmp_fit = _h1_cmp_fit_ 
-
 
 # =============================================================================
 ## compare the 1D-histograms trying to fit one with another 
@@ -178,7 +182,7 @@ def _h1_cmp_chi2_ ( h1              ,
     """
     
     assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
-           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
+           "cmp_chi2: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
     
     if isinstance ( h2 , ROOT.TH1 ) :
         assert 1 == h2.dim () , "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
@@ -1342,7 +1346,7 @@ def _h1_cmp_prnt_ ( h1                  ,
     for v , item in zip ( values , numbers ) :
         v1 , v2 =  item 
         dv  = v1 - v2 
-        row = allright ( v ) , v1.toString ( fmt ) , v2.toString( fmt ) , dv.toString ( fmt )         
+        row = v , v1.toString ( fmt ) , v2.toString( fmt ) , dv.toString ( fmt )         
         table_data.append ( row ) 
 
     
@@ -1535,19 +1539,19 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
     if distance :
         value = h1.cmp_dist ( h2 , density = density )
         v , n = pretty_float ( value  )
-        row   = allright ( distance ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = distance  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
         
     if ddistance :
         value = VE ( h1.cmp_ddist ( h2 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if ddistance and histo2 :
         value = VE ( h2.cmp_ddist ( h1 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     def fmt (  v  ) :
@@ -1562,7 +1566,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                                   diff    = lambda a , b : 2 * a.asym ( b ) )        
         value = dmn [ -1 ] * 1 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( diffneg   ) , '[10^%+d]' % n if n else '' , v 
+        row   = diffneg   , '[10^%+d]' % n if n else '' , v 
         rows.append ( row  )
         
     if diffpos :        
@@ -1571,7 +1575,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                                    diff    = lambda a , b : 2 * a.asym ( b ) )         
         value = dmx [ -1 ]  * 1
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( diffpos  ) , '[10^%+d]' % n if n else '' , v 
+        row   = diffpos  , '[10^%+d]' % n if n else '' , v 
         rows.append ( row  )
 
     acos = lambda x : MVE.acos ( max ( min ( x , 1.0 ) , -1.0 ) )  
@@ -1580,28 +1584,28 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         value = VE ( h1.cmp_cos ( h2 , density = density ) ) 
         value = MVE.acos    ( value )
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( angle ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = angle , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle :
         value = VE ( h1.cmp_dcos ( h2 , density = density ) ) 
         value = MVE.acos  ( value )
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle and histo2 :
         value = VE ( h2.cmp_dcos ( h1 , density = density ) ) 
         value = MVE.acos ( value ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if chi2ndf :
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
         value = chi2
         v , n = pretty_float ( value )
-        row   = allright ( chi2ndf ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if chi2ndf and histo2 :
@@ -1610,7 +1614,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = chi2
         v , n = pretty_float ( value )
-        row   = allright ( chi2ndf ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )        
         
     val_prchi_1 = -1 
@@ -1619,7 +1623,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 
         value = prob
         v , n = pretty_float ( value )
-        row   = allright ( probchi2 ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = probchi2  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
         val_prchi_1 = prob  
 
@@ -1629,7 +1633,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         chi2, prob = h2.cmp_chi2 ( h1 , density = density )
         value = prob
         v , n = pretty_float ( value )
-        row   = allright ( probchi2 ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = probchi2 , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
         val_prchi_2 = prob  
 
@@ -1639,7 +1643,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         prob  = rf1.Prob()                    
         value = prob 
         v , n = pretty_float ( value )
-        row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = probfit , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )                
         
         rf2   = h2.cmp_fit ( h1 , density = density ) 
@@ -1647,7 +1651,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = prob 
         v , n = pretty_float ( value )
-        row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = probfit , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
         
     import ostap.logger.table as T
@@ -1719,13 +1723,13 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
     if ddistance :
         value = VE ( h1.cmp_ddist ( h2 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if ddistance and histo2 :
         value = VE ( h2.cmp_ddist ( h1 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( ddistance ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     def fmt (  v  ) :
@@ -1739,7 +1743,7 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
                                   density = density      ,
                                   diff    = lambda a , b : 2 * a.asym ( b ) )
         value = dmn [ -1 ] * 100        
-        row   = allright ( diffneg ) , '[%]' , value.toString( fmt ( value ) ) 
+        row   = diffneg  , '[%]' , value.toString( fmt ( value ) ) 
         rows.append ( row  )
         
     if diffpos :        
@@ -1747,7 +1751,7 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
                                    density = density      ,
                                    diff    = lambda a , b : 2 * a.asym ( b ) )         
         value = dmx [ -1 ]  * 100       
-        row   = allright ( diffpos ) , '[%]' , value.toString( fmt ( value ) ) 
+        row   = diffpos  , '[%]' , value.toString( fmt ( value ) ) 
         rows.append ( row  )
         
     ## if angle :
@@ -1761,14 +1765,14 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
         value = VE ( h1.cmp_dcos ( h2 , density = density ) ) 
         value = MVE.acos     ( value ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle and histo2 :
         value = VE ( h2.cmp_dcos ( h1 , density = density ) ) 
         value = MVE.acos     ( value ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if chi2ndf :
@@ -1776,7 +1780,7 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
 
         value = chi2
         v , n = pretty_float ( value )
-        row   = allright ( chi2ndf ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if chi2ndf and histo2 :
@@ -1785,7 +1789,7 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
         
         value = chi2
         v , n = pretty_float ( value )
-        row   = allright ( chi2ndf ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )        
             
     if probchi2 : 
@@ -1793,7 +1797,7 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
 
         value = prob
         v , n = pretty_float ( value )
-        row   = allright ( probchi2 ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = probchi2   , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if probchi2 and histo2 :
@@ -1802,7 +1806,7 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
 
         value = prob
         v , n = pretty_float ( value )
-        row   = allright ( probchi2 ) , '[10^%d]' %n if  n  else  '' , v 
+        row   = probchi2   , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     import ostap.logger.table as T

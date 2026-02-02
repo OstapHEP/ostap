@@ -28,8 +28,7 @@ from   collections                  import defaultdict
 from   ostap.core.meta_info         import root_info
 from   ostap.core.core              import ( Ostap          ,
                                              VE , SE , dsID , 
-                                             valid_pointer  ,
-                                             ROOTCWD        )
+                                             valid_pointer  )
 from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types )
 from   ostap.utils.basic            import loop_items  , typename            
@@ -3547,9 +3546,9 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
             dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
             del dsaux
         return result 
-                    
-    import ostap.io.root_file
-    from   ostap.trees.data_utils import Data
+    
+    from ostap.io.root_file     import ROOTCWD 
+    from ostap.trees.data_utils import Data
 
     store = dataset.store()
     dstmp = None 

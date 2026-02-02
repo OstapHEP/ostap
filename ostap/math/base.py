@@ -104,7 +104,11 @@ __all__     = (
     'gcd'            , ## gcd-function 
     'lcm'            , ## lcm-function
     ##
-    'ROOTIgnore'     , ## control ROOT verbosity, suppress ROOT errors
+    'ROOTIgnore'          , ## control ROOT   verbosity, suppress ROOT errors
+    'RooSilent'           , ## control RooFit verbosity, suppress ROOT errors
+    'rootException'       , ## context manager to perform ROOT Error -> C++/Python exception    
+    'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
+    ## 
     ##
     'complex_types'  , ## list of complex & complex-like types
     ##
@@ -116,6 +120,7 @@ __all__     = (
     'evt_range'      , ## get the actual range of entries
     'all_entries'    , ## Are all entreis required to process? 
     ##
+    'vaild_pointer'       , ## Valid C++ pointer? 
     'np2raw'         , ## numpy array to raw C++ buffer 
     ) 
 # =============================================================================
@@ -294,12 +299,75 @@ vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
 
+
+_valid_pointer_ = Ostap.Utils.valid_pointer
+# =============================================================================
+## Is it a valid C++ pointer?
+#  @code
+#  ptr = ...
+#  print 'Is the pointer valid? %s'  % valid_pointer ( prt ) 
+#  @endcode 
+#  @see Ostap::Utils::valid_pointer 
+def valid_pointer ( obj ) :
+    """ Is it a valid C++ pointer?
+    - see Ostap::Utils::valid_pointer 
+    >>> ptr = ...
+    >>> print 'Is the C++ pointer valid? %s'  % valid_pointer ( ptr ) 
+    """
+    r = _valid_pointer_ ( obj )
+    return True if r else False
+
+# =============================================================================
+## helper context manager to activate ROOT Error -> Python exception converter 
+#  @see Ostap::Utils::useErrorHandler
+#  @see Ostap::Utils::ErrorSentry
+#  @code
+#  with RootError2Exception() :
+#  .... do something here 
+#  @endcode 
+class RootError2Exception (object) :
+    """ Helper context manager to activate ROOT Error -> Python exception converter
+    #
+    with RootError2Exception() :
+    ... do something here 
+    """
+    def __init__ ( self ) :
+        self.e_handler  = Ostap.Utils.useErrorHandler 
+        self.m_previous = False 
+
+    ## context manager entry point  
+    def __enter__ ( self ) :    
+        self.m_previous = self.e_handler ( True ) 
+        return self
+    
+    ## context manager exit point
+    def __exit__ ( self , *_ ) :    
+        if self.m_previous : self.e_handler ( False ) 
+        self.m_previous = False 
+
+# =============================================================================
+## helper context manager to activate ROOT Error -> Python exception converter 
+#  @see Ostap::Utils::useErrorHandler
+#  @see Ostap::Utils::ErrorSentry
+#  @code
+#  with rootException () :
+#  .... do something here 
+#  @endcode
+def rootException () :
+    """ Helper context manager to activate ROOT Error -> Python exception converter
+    #
+    with rootException() :
+    ... do something here 
+    """
+    return RootError2Exception()
+
+
 # =============================================================================
 ## local version of <code>isfinite</code>
 isfinite = math.isfinite 
 ## local version of <code>isnana</code>
 isnan    = math.isnan
-    
+
 # =============================================================================
 ## local version of <code>isclose</code>
 isclose = math.isclose 

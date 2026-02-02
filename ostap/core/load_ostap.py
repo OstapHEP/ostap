@@ -38,8 +38,9 @@ if '.' not in sys.path :
     sys.path = ['.'] + sys.path 
     
 # =============================================================================
-from ostap.core.core import cpp, Ostap, VE, SE, WSE, hID, fID, dsID, funID 
-from ostap.math.base import doubles
+from ostap.core.core     import cpp, Ostap, VE, SE, WSE, hID, fID, dsID, funID 
+from ostap.math.base     import doubles
+from ostap.io.root_files import ROOTCWD 
 # =============================================================================
 if '__main__' == __name__ :
 

@@ -21,6 +21,10 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
+    'executed_scripts' , ## list of successfully executed ascripts 
+    'executed_macros'  , ## list of successfully executed ROOT/C++ macros 
+    'root_files'       , ## list of ROOT files  
+    'parameters'       , ## list of extra comand-line arguments 
 )
 # ============================================================================= 
 import ostap.core.config      as     config 
@@ -161,9 +165,12 @@ for _su in config.startup_files :
         globals().update( globs )
         del globs
         ##
-        _scripts.add ( _ss ) 
-        executed_scripts.append ( _su )
-        logger.info    ( "Script '%s' is executed"      % _su )
+        _scripts.add ( _ss )
+
+        if os.path.exists ( _ss ) and os.path.isfile ( _ss ) : _ss = os.path.abspath ( _ss ) 
+        executed_scripts.append ( ( _su , _ss ) )
+        
+        logger.debug ( "Script '%s' is executed"      % _su )
         ## 
         # =====================================================================
     except: # =================================================================
@@ -207,8 +214,9 @@ for _su in config.macros :
     elif sc  : logger.error ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
     ## 
     _macros.add ( _mm )
-    executed_macros.append ( _su ) 
-    logger.info    ( "Macro '%s' is executed"      % _su )
+    ##
+    executed_macros.append (  ( _su , _mm ) ) 
+    logger.debug ( "Macro '%s' is executed"      % _su )
     
 # =============================================================================
 ## (8) Execute the commands 
@@ -224,8 +232,8 @@ for _su in config.commands :
         ## 
         exec ( _su , globals = globals() , locals = locals () )
         ## 
-        logger.info  ( "Command '%s' is executed"      % _su )
         executed_commands.append ( _su )
+        logger.debug ( "Command '%s' is executed"      % _su )
         # =====================================================================
     except : # ================================================================
         # =====================================================================
@@ -251,13 +259,21 @@ for _su in config.input_files :
     fname = _ss 
     fbase , dot , ext = fname.partition('.')
     
-    if fbase and dot and ext in ( 'root' , 'ROOT' ) :
+    if fbase and dot and ext[:4] in ( 'root' , 'ROOT' ) :
         
         import ostap.io.root_file 
-        if ROOT.Tile.Open ( fname , 'READ' , exception = False ) :            
-            root_files.append ( fname )
-            logger.info  ( "ROOT file '%s' checked " % _su )                
-
+        ff = ROOT.TFile.Open ( fname , 'READ' , exception = False )
+        if ff :
+            
+            fn = fname
+            if os.path.exists ( fn ) and os.path.isfile ( fn ) : fn = os.path.abspath ( fn ) 
+            root_files.append ( ( _su , fn ) )
+            
+            logger.debug ( "ROOT file '%s' checked " % _su )
+            ff.Close() 
+        else :
+            logger.warning ( "ROOT file '%s' cannot be opened" % _su )
+            
     ## ROOT/cpp macro ?
     elif fbase and dot and ext.upper() in cpp_ext :
         
@@ -276,8 +292,12 @@ for _su in config.input_files :
             elif sc  : logger.error ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
 
             ## 
-            logger.info    ( "Macro '%s' is executed"      % _su )
-            _macros.add ( _mm )
+            logger.debug ( "Macro '%s' is executed"      % _su )
+            
+            fn = sname
+            if os.path.exists ( fn ) and os.path.isfile ( fn ) : fn = os.path.abspath ( fn )            
+            _macros.add ( ( _su , fn ) )
+            
             executed_macros.append ( _su ) 
 
     ## python/ostap script ?
@@ -295,7 +315,7 @@ for _su in config.input_files :
             del globs 
             
             executed_scripts.append ( _su )
-            logger.info  ( "Python script '%s' is executed"      % _su )
+            logger.debug  ( "Python script '%s' is executed"      % _su )
             # ==================================================================
         except : # =============================================================
             # ==================================================================
@@ -314,6 +334,61 @@ executed_macros   = tuple ( executed_macros   )
 executed_commands = tuple ( executed_commands )
 root_files        = tuple ( root_files        )
 parameters        = tuple ( parameters        ) 
+
+# =============================================================================
+## list all executed ostap/python scripts 
+if executed_scripts :
+    rows = [  ( '#' , 'Script' ,  'Expanded name' ) ] 
+    for i, ff in enumerate ( executed_scripts , start = 1 ) :
+        fn , fa = ff 
+        row = '%-2d' % i , fn , fa if fn != fa else '' 
+        rows.append ( row )
+    ##
+    title = "Executed scripts #%d " % len ( executed_scripts ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+# =============================================================================
+## list all executed ROOT/C++ macros 
+if executed_macros :
+    rows = [  ( '#' , 'Macro' , 'Expanded name' ) ] 
+    for i, fd in enumerate ( executed_macros , start = 1 ) :
+        fn , fa = ff 
+        row = '%-2d' % i , fn , fa if fn != fa else '' 
+        rows.append ( row )
+    ##  
+    title = "Executed macros #%d " % len ( executed_macros ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+# =============================================================================
+## list names of opened ROOT files 
+if root_files :
+    rows = [  ( '#' , 'File' , 'Actual file' ) ] 
+    for i, ff in enumerate ( root_files ) :
+        fn , fa = ff 
+        row = '%-2d' % i , fn , fa if fn != fa else '' 
+        rows.append ( row )
+    ## 
+    title = "ROOT files #%d " % len ( root_files ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+# =============================================================================
+## dump all lo
+if parameters :
+    rows = [  ( '#' , 'Parameter' ) ] 
+    for i, f in enumerate ( parameters ) :
+        row = '%-2d' % i , f
+        rows.append ( row )
+    ## 
+    title = "Parameters #%d " % len ( parameters ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
 
 # =============================================================================
 if '__main__' == __name__ :

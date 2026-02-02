@@ -16,7 +16,6 @@ __all__     = (
     'cpp'                 , ## global C++ namespace
     'std'                 , ## C++ namespace std
     'Ostap'               , ## C++ namespace Ostap
-    'ROOTCWD'             , ## context manager to keep/preserve ROOT current directory
     'rootID'              , ## global identifier for ROOT objects
     'funcID'              , ## global identifier for ROOT functions 
     'funID'               , ## global identifier for ROOT functions 
@@ -70,14 +69,16 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.meta_info   import root_info
-from   ostap.math.base        import ( Ostap    , std     , cpp ,  
-                                       iszero   , isequal ,
-                                       isint    , islong  ,
-                                       inrange  , strings , 
-                                       natural_number     ,
-                                       natural_entry      ,
-                                       ROOTIgnore         ,
-                                       RooSilent          )
+from   ostap.math.base        import ( Ostap    , std      , cpp , valid_pointer , 
+                                       iszero   , isequal  ,
+                                       isint    , islong   ,
+                                       inrange  , strings  , 
+                                       natural_number      ,
+                                       natural_entry       ,
+                                       ROOTIgnore          ,
+                                       RooSilent           ,
+                                       rootException       ,
+                                       RootError2Exception )
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
@@ -99,139 +100,6 @@ binomEff2       = Ostap.Math.binomEff2
 zechEff         = Ostap.Math.zechEff
 wilsonEff       = Ostap.Math.wilsonEff
 agrestiCoullEff = Ostap.Math.agrestiCoullEff
-# =============================================================================
-## @class ROOTCWD
-#  context manager to preserve current directory (rather confusing stuff in ROOT)
-#  @code
-#  groot = ROOT.ROOT.GetROOT()
-#  print groot.CurrentDirectory() 
-#  with ROOTCWD() :
-#     print groot.CurrentDirectory() 
-#     rfile = ROOT.TFile( 'test.root' , 'recreate' )
-#     print groot.CurrentDirectory() 
-#  print groot.CurrentDirectory() 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
-#  @date 2015-07-30
-if root_info < ( 6, 29 ) : # ==================================================
-    # =========================================================================
-    class ROOTCWD(object) :
-        """ Context manager to preserve current directory
-        (rather confusing stuff in ROOT) 
-        >>> print the_ROOT.CurrentDirectory() 
-        >>> with ROOTCWD() :
-        ...     print the_ROOT.CurrentDirectory() 
-        ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
-        ...     print the_ROOT.CurrentDirectory() 
-        ... print the_ROOT.CurrentDirectory() 
-        """
-        def __init__ ( self ) :
-            self._dir = None
-            
-        def __del__ ( self ) :
-            self._dir = None 
-            del self._dir
-            
-        ## context manager ENTER 
-        def __enter__ ( self ) :
-            "Save current working directory"
-            self._dir = None
-            
-            ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
-            groot     = ROOT.ROOT.GetROOT ()
-            if groot :
-                cwd = groot.CurrentDirectory()
-                cwd = cwd.load() ## resolve std::atomic 
-                if cwd : self._dir = cwd
-                
-            return self
-
-        ## context manager EXIT 
-        def __exit__  ( self , *_ ) :
-            "Make the previous directory current again"
-            
-            if self._dir :
-                
-                odir = self._dir
-                
-                self._dir = None
-                
-                fdir = odir.GetFile () if isinstance ( odir , ROOT.TDirectoryFile ) else None
-                
-                if fdir and not fdir.IsOpen () :
-                    
-                    groot = ROOT.ROOT.GetROOT ()
-                    groot.cd ()
-                    
-                else :
-                    
-                    odir.cd()
-
-            self._dir = None 
-            del self._dir
-    # ========================================================================
-elif root_info < ( 6 , 37 ) : # ==============================================
-    # ========================================================================
-    class ROOTCWD(object) :
-        """ Context manager to preserve current directory
-        (rather confusing stuff in ROOT) 
-        >>> print the_ROOT.CurrentDirectory() 
-        >>> with ROOTCWD() :
-        ...     print the_ROOT.CurrentDirectory() 
-        ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
-        ...     print the_ROOT.CurrentDirectory() 
-        ... print the_ROOT.CurrentDirectory() 
-        """
-
-        def __enter__ ( self ) :            
-            self._cntx = ROOT.TDirectory.TContext()
-            self._cntx.__enter__()
-
-        def __exit__ ( self , *_ ) :
-            result = self._cntx.__exit__ ( *_ )
-            groot     = ROOT.ROOT.GetROOT ()
-            if groot :
-                cwd = groot.CurrentDirectory().load()
-                if valid_pointer ( cwd ) :
-                    if isinstance ( cwd , ROOT.TDirectoryFile ) :
-                        fdir = cwd.GetFile ()
-                        if valid_pointer ( fdir ) and not fdir.IsOpen() :
-                            groot = ROOT.ROOT.GetROOT ()
-                            groot.cd ()
-                            
-            return result
-
-    # ========================================================================
-else : # =================================================
-    # ========================================================================
-    class ROOTCWD(object) :
-        """ Context manager to preserve current directory
-        (rather confusing stuff in ROOT) 
-        >>> print the_ROOT.CurrentDirectory() 
-        >>> with ROOTCWD() :
-        ...     print the_ROOT.CurrentDirectory() 
-        ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
-        ...     print the_ROOT.CurrentDirectory() 
-        ... print the_ROOT.CurrentDirectory() 
-        """
-
-        def __enter__ ( self ) :            
-            self._cntx = ROOT.TDirectory.TContext()
-            self._cntx.__enter__()
-
-        def __exit__ ( self , *_ ) :
-            result = self._cntx.__exit__ ( *_ )
-            ## recheck the current directory 
-            cwd = ROOT.TDirectory.CurrentDirectory().load()
-            if valid_pointer ( cwd ) and isinstance ( cwd , ROOT.TDirectoryFile ) :
-                fdir = cwd.GetFile ()
-                if valid_pointer ( fdir ) and not fdir.IsOpen() :
-                    groot = ROOT.ROOT.GetROOT ()
-                    groot.cd ()                            
-            return result
-    
-    # ========================================================================
-
 # =============================================================================
 ## global identifier for ROOT objects 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -319,23 +187,6 @@ StatusCode .__str__  = _sc_print_
 
 SUCCESS     = StatusCode ( Ostap.StatusCode.SUCCESS     )
 FAILURE     = StatusCode ( Ostap.StatusCode.FAILURE     )
-
-_valid_pointer_ = Ostap.Utils.valid_pointer
-# =============================================================================
-## Is it a valid C++ pointer?
-#  @code
-#  ptr = ...
-#  print 'Is the pointer valid? %s'  % valid_pointer ( prt ) 
-#  @endcode 
-#  @see Ostap::Utils::valid_pointer 
-def valid_pointer ( obj ) :
-    """ Is it a valid C++ pointer?
-    - see Ostap::Utils::valid_pointer 
-    >>> ptr = ...
-    >>> print 'Is the C++ pointer valid? %s'  % valid_pointer ( ptr ) 
-    """
-    r = _valid_pointer_ ( obj )
-    return True if r else False
 
 # =============================================================================
 ## Get value of enum form ROOT by name
@@ -746,76 +597,6 @@ ROOT.TNamed.fullpath  = property ( tnamed_path , None , None , tnamed_path.__doc
 ROOT.TNamed.full_path = property ( tnamed_path , None , None , tnamed_path.__doc__ ) 
 
 # =============================================================================
-## `topdir': get the top directory for the given directory
-#  @code
-#  rdir = ...
-#  tdir = tdir.top_dir 
-#  tdir = tdir.topdir 
-#  @endcode 
-def top_dir ( rdir ) :    
-    """`topdir': get the top directory for the given directory/object
-    >>> rdir = ...
-    >>> tdir = tdit.top_dir 
-    >>> tdir = tdit.topdir 
-    """
-    if not rdir : return None
-
-    if hasattr ( rdir , 'GetFile' ) :
-        rfile = rdir.GetFile () 
-        if rfile : rdir = rfile 
-    
-    with ROOTCWD()  :
-
-        top = rdir 
-        if   isinstance ( rdir , ROOT.TDirectory ) : top = rdir
-        elif hasattr    ( rdir , 'GetDirectory'  ) : top = rdir.GetDirectory()
-        else                                       : return None 
-            
-        while top : ## and hasattr ( top , 'GetMotherDir' ) : 
-            moth = top.GetMotherDir()
-            if not moth : return top  
-            top  = moth
-        else :
-            return None 
-
-# ROOT.TDirectory.top_dir = property ( top_dir , None , None , top_dir . __doc__ )
-# ROOT.TDirectory.topdir  = property ( top_dir , None , None , top_dir . __doc__ )
-ROOT.TNamed.top_dir = property ( top_dir , None , None , top_dir . __doc__ )
-ROOT.TNamed.topdir  = property ( top_dir , None , None , top_dir . __doc__ )
-
-# =============================================================================
-## valid TDirectory?
-#  - check valid C++ TDirectory pointer 
-#  - for file directories check validity of the file
-#  @code
-#  odir = ...
-#  if odir : ...
-#  @endcode
-def _rd_valid_ ( rdir ) :
-    """ Valid TDirectory ?
-    - check valid C++ TDirectory pointer 
-    - for file directories check validity of the file 
-    >>> odir = ...
-    >>> if odir : ...
-    """
-    # =========================================================================
-    ## check validity of C++ pointer 
-    if not valid_pointer ( rdir ) : return False
-
-    # ========================================================================
-    ## for the file directories check also the validity of the file
-    if isinstance ( rdir , ROOT.TDirectoryFile ) : # =========================
-        # ====================================================================
-        fdir = rdir.GetFile()
-        if not valid_pointer ( fdir ) or ( not fdir.IsOpen () ) or fdir.IsZombie () :
-            return False 
-        
-    return True 
-        
-ROOT.TDirectory.__bool__     = _rd_valid_
-ROOT.TDirectory.__nonzero__  = _rd_valid_
-
-# =============================================================================
 ## check that list is sorted 
 def is_sorted ( lst ) :
     """ Check that list is sorted
@@ -1096,50 +877,6 @@ def roo_silent ( silence , *args ) :
 
 # =============================================================================
 
-
-# =============================================================================
-## helper context manager to activate ROOT Error -> Python exception converter 
-#  @see Ostap::Utils::useErrorHandler
-#  @see Ostap::Utils::ErrorSentry
-#  @code
-#  with RootError2Exception() :
-#  .... do something here 
-#  @endcode 
-class RootError2Exception (object) :
-    """ Helper context manager to activate ROOT Error -> Python exception converter
-    #
-    with RootError2Exception() :
-    ... do something here 
-    """
-    def __init__ ( self ) :
-        self.e_handler  = Ostap.Utils.useErrorHandler 
-        self.m_previous = False 
-
-    ## context manager entry point  
-    def __enter__ ( self ) :    
-        self.m_previous = self.e_handler ( True ) 
-        return self
-    
-    ## context manager exit point
-    def __exit__ ( self , *_ ) :    
-        if self.m_previous : self.e_handler ( False ) 
-        self.m_previous = False 
-
-# =============================================================================
-## helper context manager to activate ROOT Error -> Python exception converter 
-#  @see Ostap::Utils::useErrorHandler
-#  @see Ostap::Utils::ErrorSentry
-#  @code
-#  with rootException () :
-#  .... do something here 
-#  @endcode
-def rootException () :
-    """ Helper context manager to activate ROOT Error -> Python exception converter
-    #
-    with rootException() :
-    ... do something here 
-    """
-    return RootError2Exception()
 
 # =============================================================================
 ## define the build/cache&tmp directories for ROOT&Ostap 

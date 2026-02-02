@@ -33,7 +33,6 @@ And it is based on the LoKi project: ``C++ ToolKit for Smart and Friendly Physic
 ## perform the actual start of ostap
 import ostap.fixes.fixes 
 from   ostap.core.run_ostap  import *
-from   ostap.core.load_ostap import *
 from   ostap.utils.basic     import with_ipython
 import ostap.core.config     as     config  
 # =============================================================================
@@ -52,25 +51,31 @@ if config.batch :
     logger.debug  ('Bye, bye...')
     exit () 
 
+# =============================================================================
+## start Ostap interactive shell 
 # ============================================================================= 
-if not config.arguments.simple : 
-    try :
-        import IPython
-    except ImportError :
-        logger.error ( "Can't use IPython, switch to ``simple'' interactive console" )
+if not config.arguments.simple : # ============================================
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        import IPython # ======================================================
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
+        logger.error ( "Can't use IPython, switch to `simple' interactive console" )
         arguments.simple = True
         arguments.embed  = False
         
 # =============================================================================
 if config.arguments.embed : ## the only one option up to Ostap v1r9
-
+    # =========================================================================
     logger.info ('Start embedded interactive shell')
     
     import IPython
     IPython.embed ()
-    
+    # =========================================================================
 elif config.arguments.simple : ## new from Ostap v1r10 
-        
+    # =========================================================================
     _vars = globals().copy()
     _vars.update( locals() )
     
@@ -81,9 +86,9 @@ elif config.arguments.simple : ## new from Ostap v1r10
     
     shell = code.InteractiveConsole( _vars )
     shell.interact()
-    
+    # ==========================================================================    
 else :                   ## new from Ostap v1r10 
-
+    # ==========================================================================
     _vars = globals().copy()
     _vars.update( locals() )
     
@@ -91,7 +96,8 @@ else :                   ## new from Ostap v1r10
     
     import IPython
     IPython.start_ipython ( argv = [] , user_ns = _vars )
-
+    # =========================================================================
+    
 # =============================================================================
 exit ()  ##  bye-bye 
 

@@ -12,6 +12,7 @@ from   ostap.utils.strings    import split_string
 from   ostap.logger.mute      import mute
 from   ostap.core.core        import *
 from   ostap.utils.root_utils import batch_env 
+from   ostap.io.root_file     import ROOTCWD 
 import ROOT, warnings 
 # =============================================================================
 # logging 

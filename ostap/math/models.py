@@ -22,7 +22,7 @@ __all__     = (
     )
 # =============================================================================
 from    ostap.core.core        import cpp, Ostap, funID
-from    ostap.utils.basic      import loop_items 
+from    ostap.utils.basic      import loop_items, typename 
 from    ostap.core.ostap_types import num_types, integer_types, sequence_types 
 from    ostap.math.base        import  ( pos_infinity     ,
                                          neg_infinity     ,
@@ -45,30 +45,39 @@ else                       : logger = getLogger ( __name__            )
 # =============================================================================
 # helper adapter for 1D-functions 
 class _WO1_ (object)  :
-    "Helper adapter for 1D-functions"
-    def __init__ ( self , o              ) :        self.__callme = o
-    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [0] )
+    """ Helper adapter for 1D-functions
+    """
+    def __init__ ( self , o ) :        
+        assert callable ( o ) , "WO1: `o` must be callable: %s" % typename ( o ) 
+        self.__callme = o
+    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [ 0 ] )
     @property
     def callme   ( self ) : return self.__callme 
 # =============================================================================
 # helper adapter for 2D-functions 
 class _WO2_ (object)  :
-    "Helper adapter for 2D-functions"
-    def __init__ ( self , o              ) :        self.__callme =  o 
-    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [0] , x[1] )
+    """ Helper adapter for 2D-functions
+    """
+    def __init__ ( self , o              ) :
+        assert callable ( o ) , "WO2: `o` must be callable: %s" % typename ( o )         
+        self.__callme =  o 
+    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [ 0 ] , x [ 1 ] )
     @property
     def callme   ( self ) : return self.__callme 
 # =============================================================================
 # helper adapter for 3D-functions 
 class _WO3_ (object)  :
-    "Helper adapter for 3D-functions"
-    def __init__ ( self , o              ) :        self.__callme =  o 
-    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [0] , x [1] , x [2] )
+    """ Helper adapter for 3D-functions
+    """
+    def __init__ ( self , o              ) :
+        assert callable ( o ) , "WO3: `o` must be callable: %s" % typename ( o )         
+        self.__callme =  o 
+    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [ 0 ] , x [ 1 ] , x [ 2 ] )
     @property
     def callme   ( self ) : return self.__callme 
 # =============================================================================
-tf1_keys  = ( 'npars' , 'args' , 'npoints' , 'callable' , 'title' ,
-              'npx' , 'xmin' , 'xmax' )
+tf1_keys  = ( 'npar'  , 'ndim' , 'callable' , 'title' , 'npoints' , 'addtogloblist' , 
+              'npx'   , 'xmin' , 'xmax' )
 tf2_keys  = tf1_keys + ( 'npy' , 'ymin' , 'ymax' )
 tf3_keys  = tf2_keys + ( 'npz' , 'zmin' , 'zmax' )
 # =============================================================================
@@ -80,48 +89,61 @@ def tf1  ( self , **kwargs  ) :
     >>> fun.Draw() 
     """
     ## 
-    kwargs   = cidict ( transform = cidict_fun , **kwargs )
+    kwargs = cidict ( transform = cidict_fun , **kwargs )
     ## 
-    npars    = kwargs.pop ( 'npars'    , 0     )
-    args     = kwargs.pop ( 'args'     , ()    )
+    ndim   = kwargs.pop ( 'ndim'     , 1     )
+    npar   = kwargs.pop ( 'npar'     , 0     )
+    callme = kwargs.pop ( 'callable' , self  ) 
+    title  = kwargs.pop ( 'title'    , None  )
+    ##
+    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kNo ) 
+    ##
+    if   ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
+    elif ROOT.TF1.EAddToList.kAdd     == addToGlobList : pass 
+    elif ROOT.TF1.EAddToList.kNo      == addToGlobList : pass 
+    else :
+        logger.warning ( "tf1: Unknown `addToGloList` %s, switch to %s" % ( addToGlobList , ROOT.TF1.EAddToList.kNo ) )
+        addToGlobList = ROOT.TF1.EAddToList.kNo
     ## 
-    npx      = kwargs.pop ( 'npx'      , 250   )
-    npoints  = kwargs.pop ( 'npoints'  , 250   )
-    callme   = kwargs.pop ( 'callable' , self  ) 
-    title    = kwargs.pop ( 'title'    , None  )
-    ## 
-    if hasattr ( self , '_wo1' ) and callme is not self._wo1.callme :
+    npx    = kwargs.pop ( 'npx'   , kwargs.pop   ( 'npoints'  , 250 ) )
+    xmin   = kwargs.pop ( 'xmin'  , neg_infinity )
+    xmax   = kwargs.pop ( 'xmax'  , pos_infinity )
+    #
+    if hasattr ( self , '_wo1' ) and self._wo1 and ( callme is not self._wo1.callme )  :
         del self._wo1 
-        
+    ## 
     if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( callme )
     if not self._wo1                 : self._wo1 = _WO1_ ( callme )
     #
-    xmin = kwargs.pop ( 'xmin' , neg_infinity )
-    xmax = kwargs.pop ( 'xmax' , pos_infinity )
-    #
+    ## adjust xmin/xmax 
     if hasattr ( self , 'xmin'  ) and not xmin > neg_infinity :
         xmn   = self.xmin
         xmin  = float ( xmn () ) if callable ( xmn ) else float ( xmn )
     if hasattr ( self , 'xmax'  ) and not xmax < pos_infinity :
         xmx   = self.xmax
         xmax  = float ( xmx () ) if callable ( xmx ) else float ( xmx )
+    ## npar 
+    if hasattr ( self , 'npar' ) :
+        nps   = self.npar
+        npar  = max ( npar  , nps () if callable ( nps ) else nps )        
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
-        npars = max ( npars , nps () if callable ( nps ) else nps )
-    #
-    assert xmin > neg_infinity, \
-        "`xmin`-parameter needs to be specified %s" % xmin
-    assert xmax < pos_infinity, \
-        "`xmax`-parameter needs to be specified %s" % xmax
-    assert xmin < xmax , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
-    
+        npar  = max ( npar  , nps () if callable ( nps ) else nps )        
+        #
+    assert xmin > neg_infinity, "`xmin`-parameter needs to be specified %s" % xmin
+    assert xmax < pos_infinity, "`xmax`-parameter needs to be specified %s" % xmax
+    assert xmin < xmax        , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
+    ##
+    ## create TF1 
+    _wo  = self._wo1
+    conf = { 'npar' : npar , 'ndim' : ndim , 'addToGlobList' : addToGlobList } 
+    fun  = ROOT.TF1 ( funID ()  , _wo , xmin , xmax , **conf )
+    ##
+    ## ATTENTION! 
+    ROOT.SetOwnership ( fun , ROOT.TF1.EAddToList.kNo == addToGlobList ) 
     ## 
-    _wo = self._wo1 
-    fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
-    ## ROOT.SetOwnership ( fun , False ) 
-    ## 
-    if   isinstance ( npx     , integer_types ) and 1 < npx     : fun.SetNpx ( npx     ) 
-    elif isinstance ( npoints , integer_types ) and 1 < npoints : fun.SetNpx ( npoints ) 
+    if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
+    else : logger.warning ( "tf1: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 
     ## 
     if title is None : title = str ( self )            
     fun.SetTitle ( title ) 
@@ -144,29 +166,37 @@ def tf1  ( self , **kwargs  ) :
 ## convert the model into TF2
 def tf2 ( self , **kwargs ) :
     """ Convert the function to TF2
-    >>> obj = ...    
+                         >>> obj = ...    
     >>> fun = obj.tf2 ( xmin = 3.0 , xmax = 3.2 , ymin = 3.0 , ymax = 3.2 )    
     >>> fun.Draw() 
     """
     ## 
     kwargs   = cidict ( transform = cidict_fun , **kwargs )
     ##
-    npars    = kwargs.pop ( 'npars'    , 0     )
-    args     = kwargs.pop ( 'args'     , ()    )
-    ## 
-    npx      = kwargs.pop ( 'npx'      , 50    )
-    npy      = kwargs.pop ( 'npy'      , 50    )
+    ndim     = kwargs.pop ( 'ndim'     , 1     )
+    npar     = kwargs.pop ( 'npar'     , 0     )
     callme   = kwargs.pop ( 'callable' , self  ) 
     title    = kwargs.pop ( 'title'    , None  )
     ##
-    if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
-    if not self._wo2                 : self._wo2 = _WO2_ ( callme )
+    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kNo ) 
     ##
+    if   ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
+    elif ROOT.TF1.EAddToList.kAdd     == addToGlobList : pass 
+    elif ROOT.TF1.EAddToList.kNo      == addToGlobList : pass 
+    else :
+        logger.warning ( "tf2: Unknown `addToGloList` %s, switch to %s" % ( addToGlobList , ROOT.TF1.EAddToList.kNo ) )
+        addToGlobList = ROOT.TF1.EAddToList.kNo
+    ## 
+    npx  = kwargs.pop ( 'npx'  , 50    )
+    npy  = kwargs.pop ( 'npy'  , 50    )
     xmin = kwargs.pop ( 'xmin' , neg_infinity )
     xmax = kwargs.pop ( 'xmax' , pos_infinity )
     ymin = kwargs.pop ( 'ymin' , neg_infinity )
     ymax = kwargs.pop ( 'ymax' , pos_infinity )
-    #
+    #    ##
+    if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
+    if not self._wo2                 : self._wo2 = _WO2_ ( callme )
+    ##
     if hasattr ( self , 'xmin'  ) and not xmin > neg_infinity : 
         xmn   = self.xmin
         xmin  = float ( xmn () ) if callable ( xmn ) else float ( xmn )
@@ -179,30 +209,34 @@ def tf2 ( self , **kwargs ) :
     if hasattr ( self , 'ymax'  ) and not xmax < pos_infinity : 
         ymx   = self.ymax
         ymax  = float ( ymx () ) if callable ( ymx ) else float ( ymx )
+        
+    ## npar 
+    if hasattr ( self , 'npar' ) :
+        nps   = self.npar
+        npar  = max ( npar  , nps () if callable ( nps ) else nps )        
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
-        npars = max ( npars , nps () if callable ( nps ) else nps )
-
+        npar  = max ( npar  , nps () if callable ( nps ) else nps )        
     ##
-    assert xmin > neg_infinity, \
-           "`xmin`-parameter needs to be specified %s" % xmin
-    assert xmax < pos_infinity, \
-           "`xmax`-parameter needs to be specified %s" % xmax
-    assert ymin > neg_infinity, \
-           "`ymin`-parameter needs to be specified %s" % ymin
-    assert ymax < pos_infinity, \
-           "`ymax`-parameter needs to be specified %s" % ymax
-    
-    assert xmin < xmax , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
-    assert ymin < ymax , "Invalid `ymin/ymax=%s/%s` setting!" % ( ymin , ymax ) 
-
+    assert xmin > neg_infinity , "`xmin`-parameter needs to be specified %s" % xmin
+    assert xmax < pos_infinity , "`xmax`-parameter needs to be specified %s" % xmax
+    assert ymin > neg_infinity , "`ymin`-parameter needs to be specified %s" % ymin
+    assert ymax < pos_infinity , "`ymax`-parameter needs to be specified %s" % ymax    
+    assert xmin < xmax         , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
+    assert ymin < ymax         , "Invalid `ymin/ymax=%s/%s` setting!" % ( ymin , ymax ) 
     ##
     _wo = self._wo2
-    fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
-    ## ROOT.SetOwnership ( fun , False ) 
-    fun.SetNpx ( npx ) 
-    fun.SetNpy ( npy ) 
-    #
+    conf = { 'npar' : npar , 'ndim' : ndim , 'addToGlobList' : addToGlobList } 
+    fun  = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , **conf )
+    ##
+    ## ATTENTION! 
+    ROOT.SetOwnership ( fun , ROOT.TF1.EAddToList.kNo == addToGlobList )
+    ##
+    if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
+    else : logger.warning ( "tf2: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 
+    if   isinstance ( npy   , integer_types ) and 1 < npy : fun.SetNpy ( npy     )
+    else : logger.warning ( "tf2: invalid `npy` : %s/%s" % ( npy , typename ( npy ) ) ) 
+    ## 
     if title is None : title = str ( self )
     fun.SetTitle ( title ) 
     #
@@ -231,17 +265,14 @@ def tf3 ( self , **kwargs ) :
     ##
     kwargs = cidict ( transform = cidict_fun , **kwargs )
     ## 
-    npars    = kwargs.pop ( 'npars'    , 0             )
-    args     = kwargs.pop ( 'args'     , ()            )
-    ## 
-    npx      = kwargs.pop ( 'npx'      , 25            )
-    npy      = kwargs.pop ( 'npy'      , 25            )
-    npz      = kwargs.pop ( 'npz'      , 25            )
+    ndim     = kwargs.pop ( 'ndim'     , 3             )
+    npar     = kwargs.pop ( 'npar '    , 0             )
     callme   = kwargs.pop ( 'callable' , self          ) 
     title    = kwargs.pop ( 'title'    , '3D-function' )
-    ##
-    if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( callme )
-    if not self._wo3                 : self._wo3 = _WO3_ ( callme )
+    ##  
+    npx      = kwargs.pop ( 'npx'   , kwargs.pop   ( 'npoints'  , 25 ) )
+    npy      = kwargs.pop ( 'npy'      , 25            )
+    npz      = kwargs.pop ( 'npz'      , 25            )
     ##
     xmin = kwargs.pop ( 'xmin' , neg_infinity )
     xmax = kwargs.pop ( 'xmax' , pos_infinity )
@@ -249,6 +280,12 @@ def tf3 ( self , **kwargs ) :
     ymax = kwargs.pop ( 'ymax' , pos_infinity )
     zmin = kwargs.pop ( 'zmin' , neg_infinity )
     zmax = kwargs.pop ( 'zmax' , pos_infinity )
+    ##
+    if hasattr ( self , '_wo3' ) and self._wo3 and ( callme is not self._wo3.callme )  :
+        del self._wo3 
+    ## 
+    if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( callme )
+    if not self._wo1                 : self._wo3 = _WO3_ ( callme )
     #
     if hasattr ( self , 'xmin'  ) and not xmin > neg_infinity : 
         xmn   = self.xmin
@@ -268,34 +305,40 @@ def tf3 ( self , **kwargs ) :
     if hasattr ( self , 'zmax'  ) and not zmax < pos_infinity : 
         zmx   = self.zmax
         zmax  = float ( zmx () ) if callable ( zmx ) else float ( zmx )        
+
+    ## npar 
+    if hasattr ( self , 'npar' ) :
+        nps   = self.npar
+        npar  = max ( npar  , nps () if callable ( nps ) else nps )        
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
-        npars = max ( npars , nps () if callable ( nps ) else nps )
-
+        npar  = max ( npar  , nps () if callable ( nps ) else nps )        
+    ##  
+    assert xmin > neg_infinity, "`xmin`-parameter needs to be specified %s" % xmin
+    assert xmax < pos_infinity, "`xmax`-parameter needs to be specified %s" % xmax
+    assert ymin > neg_infinity, "`ymin`-parameter needs to be specified %s" % ymin
+    assert ymax < pos_infinity, "`ymax`-parameter needs to be specified %s" % ymax
+    assert zmin > neg_infinity, "`zmin`-parameter needs to be specified %s" % zmin
+    assert zmax < pos_infinity, "`zmax`-parameter needs to be specified %s" % zmax
+    ##
     assert xmin < xmax , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
     assert ymin < ymax , "Invalid `ymin/ymax=%s/%s` setting!" % ( ymin , ymax ) 
     assert zmin < zmax , "Invalid `zmin/zmax=%s/%s` setting!" % ( zmin , zmax ) 
     #
-    assert xmin > neg_infinity, \
-           "`xmin`-parameter needs to be specified %s" % xmin
-    assert xmax < pos_infinity, \
-           "`xmax`-parameter needs to be specified %s" % xmax
-    assert ymin > neg_infinity, \
-           "`ymin`-parameter needs to be specified %s" % ymin
-    assert ymax < pos_infinity, \
-           "`ymax`-parameter needs to be specified %s" % ymax
-    assert zmin > neg_infinity, \
-           "`zmin`-parameter needs to be specified %s" % zmin
-    assert zmax < pos_infinity, \
-           "`zmax`-parameter needs to be specified %s" % zmax
-    #
     _wo = self._wo3
-    fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , npars , *args )
-    ## ROOT.SetOwnership ( fun , False ) 
-    fun.SetNpx ( npx ) 
-    fun.SetNpy ( npy ) 
-    fun.SetNpy ( npz ) 
-    #
+    conf = { 'npar' : npar , 'ndim' : ndim , 'addToGlobList' : addToGlobList }
+    fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , **conf  )
+    ## 
+    ## ATTENTION! 
+    ROOT.SetOwnership ( fun , ROOT.TF1.EAddToList.kNo == addToGlobList ) 
+    ## 
+    if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
+    else : logger.warning ( "tf3: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 
+    if   isinstance ( npy   , integer_types ) and 1 < npy : fun.SetNpy ( npy     )
+    else : logger.warning ( "tf3: invalid `npy` : %s/%s" % ( npy , typename ( npy ) ) ) 
+    if   isinstance ( npz   , integer_types ) and 1 < npz : fun.SetNpz ( npz     )
+    else : logger.warning ( "tf3: invalid `npz` : %s/%s" % ( npz , typename ( npz ) ) ) 
+    ## 
     if kwargs :
         from ostap.core.core import remove_draw_args
         kw = remove_draw_args ( kwargs )    
@@ -331,24 +374,20 @@ def f1_draw ( self , option = '' , *options , **kwargs ) :
     """
     
     kw = cidict ( transform = cidict_fun , **kwargs )
-    
+
     if hasattr ( self , '_tf1' ) and 'callable' in kw : del self._tf1
     
     if hasattr ( self , '_tf1' ) and 'xmin'     in kw :        
         xmin    = kw.get ( 'xmin'    , None )
-        if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf1.GetXmin () : del self._tf1 
-
+        if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf1.GetXmin () : del self._tf1
+        
     if hasattr ( self , '_tf1' ) and 'xmax'      in kw :        
         xmax    = kw.get ( 'xmax'    , None )
-        if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf1.GetXmax () : del self._tf1 
+        if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf1.GetXmax () : del self._tf1
         
-    if hasattr ( self , '_tf1' ) and 'npx'       in kw :        
-        npx    = kw.get ( 'npx'    , None )
-        if isinstance ( npx     , integer_types ) and 1 < npx and npx != self._tf1.GetNpx () : del self._tf1
-        
-    if hasattr ( self , '_tf1' ) and 'npoints'   in kw :        
-        npx    = kw.get ( 'npoints'    , None )
-        if isinstance ( npx     , integer_types ) and 1 < npx and npx != self._tf1.GetNpx () : del self._tf1 
+    if hasattr ( self , '_tf1' ) and  ( 'npx' in kw  or 'npoints' in kw ) : 
+        npx    = kw.get ( 'npx' , kw.get ( 'npoints'  , None ) ) 
+        if isinstance ( npx     , integer_types ) and 1 < npx : self._tf1.SetNpx ( npx ) 
                 
     if not hasattr ( self , '_tf1'  ) :        
         self._tf1        =  tf1 ( self , **kw )        
@@ -359,15 +398,8 @@ def f1_draw ( self , option = '' , *options , **kwargs ) :
                not 'minval'   in kw and \
                not 'minvalue' in kw :
                 self._tf1.SetMinimum ( 0 )
-
-    xmin     = kw.pop ( 'xmin'     , neg_infinity )
-    xmax     = kw.pop ( 'xmax'     , pos_infinity )
-    npars    = kw.pop ( 'npars'    , 0    ) 
-    args     = kw.pop ( 'args'     , ()   )
-    npx      = kw.pop ( 'npx'      , 500  )
-    npoints  = kw.pop ( 'npoints'  , 500  )
-    callme   = kw.pop ( 'callable' , None ) 
     
+    for k in tf1_keys : kw.pop ( k , None ) 
     self._plot = self._tf1.draw ( option , *options  , **kw  )
     return self
 
@@ -383,32 +415,28 @@ def f2_draw ( self , option = '' , *options , **kwargs ) :
     if hasattr ( self , '_tf2' ) and 'xmin'     in kw :        
         xmin    = kw.get ( 'xmin'    , None )
         if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf2.GetXmin () : del self._tf2 
-
     if hasattr ( self , '_tf2' ) and 'xmax'     in kw :        
         xmax    = kw.get ( 'xmax'    , None )
         if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf2.GetXmax () : del self._tf2 
-
     if hasattr ( self , '_tf2' ) and 'ymin'     in kw :        
         ymin    = kw.get ( 'ymin'    , None )
         if isinstance ( ymin    , num_types     ) and float ( ymin ) != self._tf2.GetYmin () : del self._tf2 
-
     if hasattr ( self , '_tf2' ) and 'ymax'     in kw :        
         ymax    = kw.get ( 'ymax'    , None )
-        if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf2.GetYmax () : del self._tf2 
+        if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf2.GetYmax () : del self._tf2
+
+    if hasattr ( self , '_tf2' ) and  ( 'npx' in kw  or 'npoints' in kw ) : 
+        npx    = kw.get ( 'npx' , kw.get ( 'npoints'  , 50 ) ) 
+        if isinstance ( npx     , integer_types ) and 1 < npx : self._tf2.SetNpx ( npx ) 
+                
+    if hasattr ( self , '_tf2' ) and 'npy'       in kw :        
+        npy    = kw.get ( 'npy' , 50 )
+        if isinstance ( npy     , integer_types ) and 1 < npy : self._tf2.SetNpy ( npy ) 
 
     if not hasattr ( self , '_tf2'  ) :
         self._tf2        =  tf2 ( self , **kw )
         
-    xmin   = kw.pop ( 'xmin'     , neg_infinity )
-    xmax   = kw.pop ( 'xmax'     , pos_infinity )
-    ymin   = kw.pop ( 'ymin'     , neg_infinity )
-    ymax   = kw.pop ( 'ymax'     , pos_infinity )
-    npars  = kw.pop ( 'npars'    , 0            ) 
-    npx    = kw.pop ( 'npx'      , 50           )
-    npy    = kw.pop ( 'npy'      , 50           )
-    args   = kw.pop ( 'args'     , ()           )
-    callme = kw.pop ( 'callable' , None ) 
-    
+    for k in tf2_keys : kw.pop ( k , None ) 
     self._plot = self._tf2.draw ( option , *options , **kw )
     return self
 
@@ -425,43 +453,38 @@ def f3_draw ( self , option = '' , *options , **kwargs ) :
     if hasattr ( self , '_tf3' ) and 'xmin'     in kw :        
         xmin    = kw.get ( 'xmin'    , None )
         if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf3.GetXmin () : del self._tf3 
-
     if hasattr ( self , '_tf3' ) and 'xmax'     in kw :        
         xmax    = kw.get ( 'xmax'    , None )
         if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf3.GetXmax () : del self._tf3 
-
     if hasattr ( self , '_tf3' ) and 'ymin'     in kw :        
         ymin    = kw.get ( 'ymin'    , None )
         if isinstance ( ymin    , num_types     ) and float ( ymin ) != self._tf3.GetYmin () : del self._tf3 
-
     if hasattr ( self , '_tf3' ) and 'ymax'     in kw :        
         ymax    = kw.get ( 'ymax'    , None )
         if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf3.GetYmax () : del self._tf3 
-
     if hasattr ( self , '_tf3' ) and 'zmin'     in kw :        
         zmin    = kw.get ( 'zmin'    , None )
         if isinstance ( zmin    , num_types     ) and float ( zmin ) != self._tf3.GetZmin () : del self._tf3 
-
-    if hasattr ( self , '_tf3' ) and 'ymax'     in kw :        
+    if hasattr ( self , '_tf3' ) and 'zmax'     in kw :        
         zmax    = kw.get ( 'zmax'    , None )
-        if isinstance ( zmax    , num_types     ) and float ( zmax ) != self._tf3.GetZmax () : del self._tf3 
+        if isinstance ( zmax    , num_types     ) and float ( zmax ) != self._tf3.GetZmax () : del self._tf3
 
+    if hasattr ( self , '_tf3' ) and  ( 'npx' in kw  or 'npoints' in kw ) : 
+        npx    = kw.get ( 'npx' , kw.get ( 'npoints'  , 25 ) ) 
+        if isinstance ( npx     , integer_types ) and 1 < npx : self._tf3.SetNpx ( npx ) 
+                
+    if hasattr ( self , '_tf3' ) and 'npy'       in kw :        
+        npy    = kw.get ( 'npy' , 25 )
+        if isinstance ( npy     , integer_types ) and 1 < npy : self._tf3.SetNpy ( npy ) 
+
+    if hasattr ( self , '_tf3' ) and 'npz'       in kw :        
+        npz    = kw.get ( 'npz' , 25 )
+        if isinstance ( npz     , integer_types ) and 1 < npz : self._tf3.SetNpz ( npz ) 
+                
     if not hasattr ( self , '_tf3'  ) :
         self._tf3        = tf3 ( self , **kw )
     
-    xmin  = kw.pop ( 'xmin'     , neg_infinity )
-    xmax  = kw.pop ( 'xmax'     , pos_infinity )
-    ymin  = kw.pop ( 'ymin'     , neg_infinity )
-    ymax  = kw.pop ( 'ymax'     , pos_infinity )
-    zmin  = kw.pop ( 'zmin'     , neg_infinity )
-    zmax  = kw.pop ( 'zmax'     , pos_infinity )
-    npx   = kw.pop ( 'npx'      , 30           )
-    npy   = kw.pop ( 'npy'      , 30           )
-    npz   = kw.pop ( 'npz'      , 30           )
-    npars = kw.pop ( 'npars'    , 0    ) 
-    args  = kw.pop ( 'args'     , ()   )
-    call  = kw.pop ( 'callable' , None ) 
-    
+    for k in tf3_keys : kw.pop ( k , None ) 
     self._plot = self._tf3.draw ( option , *options , **kw  )
     return self
 

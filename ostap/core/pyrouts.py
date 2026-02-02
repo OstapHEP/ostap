@@ -70,27 +70,22 @@ else                      : logger = getLogger ( __name__             )
 # =============================================================================
 logger.debug ( 'Zillions of decorations for ROOT/RooFit objects')
 # =============================================================================
-from ostap.core.core import ( cpp      , std       , Ostap           , 
-                              ROOTCWD  , rootID    , 
-                              funcID   , funID     , fID             ,
-                              histoID  , hID       , dsID            ,
-                              cwd      , pwd       ,
-                              VE       , SE        , WSE             ,
-                              binomEff , binomEff2 ,
-                              zechEff  , wilsonEff , agrestiCoullEff ,
-                              iszero   , isequal   ,
-                              isint    , islong    , natural_entry   )     
-# =============================================================================
-import ROOT
-# =============================================================================
-## decorate histograms 
-# =============================================================================    
-from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
-                                  h1_axis     , h2_axes     , h3_axes     ,
-                                  ve_adjust   , histoGuess  )
-# =============================================================================
-# Other decorations 
-# =============================================================================
+from   ostap.core.core     import ( cpp      , std       , Ostap           , 
+                                    rootID   , 
+                                    funcID   , funID     , fID             ,
+                                    histoID  , hID       , dsID            ,
+                                    cwd      , pwd       ,
+                                    VE       , SE        , WSE             ,
+                                    binomEff , binomEff2 ,
+                                    zechEff  , wilsonEff , agrestiCoullEff ,
+                                    iszero   , isequal   ,
+                                    isint    , islong    , natural_entry   )
+from   ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
+                                    h1_axis     , h2_axes     , h3_axes     ,
+                                    ve_adjust   , histoGuess  )
+#
+from   ostap.io.root_file   import ROOTCWD
+
 import ostap.trees.trees
 import ostap.trees.cuts
 

@@ -56,7 +56,7 @@ def create_tree ( fname , nentries = 1000 ) :
     var1 = array ( 'd', [ 0 ] )
     var2 = array ( 'd', [ 0 ] )
     
-    from ostap.core.core import ROOTCWD
+    from ostap.io.root_file import ROOTCWD
 
     with ROOTCWD() , ROOT.TFile.Open( fname , 'new' ) as root_file:
         root_file.cd () 

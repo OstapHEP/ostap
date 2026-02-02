@@ -21,7 +21,7 @@ __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 from   ostap.utils.timing       import timing
-from   ostap.core.core          import ROOTCWD, SE, hID 
+from   ostap.core.core          import SE, hID 
 from   ostap.stats.counters     import table_counters
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse

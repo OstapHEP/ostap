@@ -29,7 +29,7 @@ from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
 from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
                                           hID , fID   ,  
                                           rootException      , rootError  ,   
-                                          ROOTCWD , strings  , 
+                                          strings , 
                                           valid_pointer      , rootError  ) 
 from   ostap.logger.utils        import print_args  
 from   ostap.math.reduce         import root_factory
@@ -52,6 +52,7 @@ from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
 from   ostap.logger.symbols      import leaves         as leaves_symbol
 from   ostap.logger.symbols      import tape_cartridge as files_symbol
+from   ostap.io.root_file        import ROOTCWD 
 # 
 import ostap.trees.base 
 import ostap.trees.treereduce 

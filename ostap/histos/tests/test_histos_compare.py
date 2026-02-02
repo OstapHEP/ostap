@@ -122,30 +122,28 @@ h5g = h4g.rescale_bins(1)
 h5u = h4u.rescale_bins(1)
 h5e = h4e.rescale_bins(1)
 
-print ( 'HERE-3' )
-
 ## compare two histograms 
 def compare ( h1 , h2 , title = '' , density = False ) :
     """ Compare two histograms 
     """
     
     ## with use_canvas ( 'COMPARE!' , wait = 5 ) :
-
-    with implicitMT ( False ) : 
-        r1  = h1.cmp_fit       (  h2 , opts = '0Q' , density = density )
-        if r1 : logger.info    ( 'h1 vs h2 : fit probability is  %.5f%%, scale %s' % ( r1.Prob()*100 , r1[0].toString ('%.3f +/- %.3f' ) ) )
-        else  : logger.warning ( 'h1 vs h2 : fit problems ')
-        
+    
+    ## with implicitMT ( False ) : 
+    r1  = h1.cmp_fit       (  h2 , option = 'SNQ' , density = density )
+    if r1 : logger.info    ( 'h1 vs h2 : fit probability is  %.3f%%, scale %s' % ( r1.Prob()*100 , r1[0].toString ('%.3f +/- %.3f' ) ) )
+    else  : logger.warning ( 'h1 vs h2 : fit problems ')
+    
     ##  ## h1.blue  () 
     ##  ## h2.green () 
     ##  ## h1.draw('same')
     ##  ## h2.draw('same')
      
-    with implicitMT ( False ) : 
-        r2  = h2.cmp_fit       ( h1 , opts = '0Q' , density = density )
-        if r2 : logger.info    ( 'h2 vs h1 : fit probability is  %.5f%%, scale %s' % ( r2.Prob()*100 , r2[0].toString ( '%.3f +/- %.3f' ) ) )
-        else  : logger.warning ( 'h2 vs h1 : fit problems ')
-             
+    ## with implicitMT ( False ) : 
+    r2  = h2.cmp_fit       ( h1 , option = 'SNQ' , density = density )
+    if r2 : logger.info    ( 'h2 vs h1 : fit probability is  %.3f%%, scale %s' % ( r2.Prob()*100 , r2[0].toString ( '%.3f +/- %.3f' ) ) )
+    else  : logger.warning ( 'h2 vs h1 : fit problems ')
+    
     ct  = h1.cmp_cos      ( h2 , density = density ) 
     logger.info           ( 'h1 vs h2 : cos(theta)      is %+.5f ' % ct  ) 
     
@@ -153,7 +151,7 @@ def compare ( h1 , h2 , title = '' , density = False ) :
     logger.info           ( 'h1 vs h2 : distance        is %+.5f ' % dd1 )
     
     ## dd2 = h1.cmp_dist2    ( h2 , density = density ) 
-    ## logger.info           ( 'h1 vs h2 : distance2       is %s ' % dd2 )
+    ## logger.info           ( 'h1 vs h2 : distance2       is %s '    % dd2 )
     
     logger.info ( "%s\n%s" % (  title , h1.cmp_prnt       ( h2 , density = density , title = title , prefix = '# ' ) ) )
     logger.info ( "%s\n%s" % (  title , h1.cmp_diff_prnt  ( h2 , density = density , title = title , prefix = '# ' ) ) )
@@ -243,8 +241,6 @@ if '__main__' == __name__ :
     test_compare_gauss_vs_uniform    ()
     test_compare_gauss_vs_exponent   ()
     test_compare_uniform_vs_exponent ()
-    
-    pass
 
 # =============================================================================
 ##                                                                      The END 
