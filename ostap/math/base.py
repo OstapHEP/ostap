@@ -120,7 +120,7 @@ __all__     = (
     'evt_range'      , ## get the actual range of entries
     'all_entries'    , ## Are all entreis required to process? 
     ##
-    'vaild_pointer'       , ## Valid C++ pointer? 
+    'valid_pointer'  , ## Valid C++ pointer? 
     'np2raw'         , ## numpy array to raw C++ buffer 
     ) 
 # =============================================================================
