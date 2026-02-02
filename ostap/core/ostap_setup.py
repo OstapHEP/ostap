@@ -32,13 +32,18 @@ import ostap.fixes.fixes
 import ostap.core.build_dir
 import ostap.core.cache_dir
 import ostap.utils.cleanup 
-import ROOT, math, os  
+import ROOT, math, os, sys   
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_setup' )
 else                       : logger = getLogger( __name__                )
 # =============================================================================
-## setup sem imporant properties:
+if not '.' in sys.path :
+    logger.debug('Prepend sys.path with $PWD')
+    sys.path = ['.'] + sys.path
+    
+# =============================================================================
+## setup some most imporant properties:
 # =============================================================================
 
 # =============================================================================
@@ -64,7 +69,7 @@ elif groot and not config.batch and     groot.IsBatch () :
     if not groot.IsBatch() : logger.info      ( "BATCH processig is deactivated!" )
 
 # =============================================================================
-## (3) Root & Roofit print levels 
+## (3) Root & RooFit print levels 
 # =============================================================================
 groot = ROOT.ROOT.GetROOT()
 msg   = ROOT.RooMsgService.instance()
