@@ -5,11 +5,6 @@
 #  @date   2012-02-15
 #  @author Vanya BELYAEV Ivan.Belyaevitep.ru
 # =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger
-__logger = getLogger ( 'ostap.core.load_ostap' )
-# =============================================================================
 import ROOT, sys
 # =============================================================================
 ## 1) load Ostap-style file
@@ -32,10 +27,6 @@ from ostap.logger.utils       import *
 from ostap.utils.utils        import *
 from ostap.utils.progress_bar import progress_bar
 # ============================================================================= 
-## prepend the path 
-if '.' not in sys.path :
-    __logger.debug('Prepend sys.path with $PWD')
-    sys.path = ['.'] + sys.path 
     
 # =============================================================================
 from ostap.core.core     import cpp, Ostap, VE, SE, WSE, hID, fID, dsID, funID 
@@ -44,6 +35,10 @@ from ostap.io.root_files import ROOTCWD
 # =============================================================================
 if '__main__' == __name__ :
 
+    # =============================================================================
+    from ostap.logger.logger import getLogger
+    logger = getLogger ( 'ostap.core.load_ostap' )
+    
     from ostap.utils.docme import docme
     docme ( __name__ , logger = __logger )
 

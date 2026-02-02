@@ -773,7 +773,7 @@ webdisplay    = arguments.WebDisplay
 ## 
 parallel      = arguments.Parallel
 ncpus         = arguments.NCPUs
-implicitMT    = arguments.ImplicitMT 
+implicitMT    = arguments.ImplicitMT
 profile       = arguments.Profile 
 startup_files = arguments.StartUp
 macros        = arguments.Macros 

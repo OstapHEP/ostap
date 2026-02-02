@@ -196,7 +196,7 @@ class RangeVar(object) :
 # ==============================================================================
 ## Should one use "similar" component?
 def component_similar ( same ) :
-    """Should one use 'similar' component?
+    """ Should one use 'similar' component?
     """
     if   same is Ellipsis           : return True
     elif same is NotImplemented     : return True
@@ -207,14 +207,13 @@ def component_similar ( same ) :
 # =============================================================================
 ## Should one      "clone"  component?
 def component_clone  ( same ) :
-    """Should one use 'cloned' component?
+    """ Should one use 'cloned' component?
     """    
     if isinstance ( same , str ) \
        and same.strip().lower() in ( 'clone' , 'cloned' , 'same' ) : return True        
     return False 
 # =============================================================================
 
-    
 # =============================================================================
 ##  get <code>i</code>-th component from <code>what</code>
 def get_i ( what , i , default = None ) :

@@ -24,7 +24,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.parallel.task import Task, GenericTask
-from   ostap.utils.env     import has_env, get_env, OSTAP_PARALLEL  
+import ostap.core.config   as     config 
 import sys, os
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -32,26 +32,17 @@ if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
 # =============================================================================
 ## possible types of workers 
-workers = ( 'PATHOS'           , 
-            'FUTURES'          , 
-            'IPYPARALLEL'      , 
-            'GAUDIMP'          ,
-            'GAUDI'            ,
-            'MULTIPROCESS'     ,
-            'MULTIPRCCESSIONG' )
+workers = ( 'PATHOS'          , 
+            'FUTURES'         , 
+            'IPYPARALLEL'     , 
+            'GAUDIMP'         ,
+            'GAUDI'           ,
+            'MULTIPROCESS'    ,
+            'MULTIPRCCESSING' )
 # =============================================================================
-worker  = ''  
-if has_env ( OSTAP_PARALLEL ) :
-    # =========================================================================
-    worker = get_env ( OSTAP_PARALLEL, '' ) .upper()
-    if not worker in workers : worker = ''
-# =============================================================================
-if not worker : # =============================================================
-    # =========================================================================
-    import ostap.core.config as _CONFIG
-    if 'PARALLEL' in _CONFIG.general :
-        worker = _CONFIG.general.get( 'PARALLEL' , fallback = '' ).upper() 
-        if not worker in workers : worker = ''
+## get it from the configuration 
+worker  = config.parallel.upper()
+if not worker in workers : worker = ''
 
 # =============================================================================
 has_dill = True 
