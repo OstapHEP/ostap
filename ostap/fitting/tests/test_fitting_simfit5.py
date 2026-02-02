@@ -238,13 +238,18 @@ def test_simfit5() :
 
     logger.info ( 'Simultaneous fit result (unbinned reso):\n%s' % r_1.table ( prefix = "# " ) )
     
-    with use_canvas ( 'test_simfit5: unbinned resolutions' ) , wait ( 1 ) :
-        with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset1 , nbins = 100 )
-        with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset1 , nbins = 100 )
-        with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset1 , nbins = 100 )
-        with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset1 , nbins = 100 )
+    with use_canvas ( 'test_simfit5: unbinned resolutions: dm1' ) :    
+        fdm1 = model_sim.draw ( 'dm1'  , cdataset1 , nbins = 100 )
         
-
+    with use_canvas ( 'test_simfit5: unbinned resolutions: dm2' ) :  
+        fdm2 = model_sim.draw ( 'dm2'  , cdataset1 , nbins = 100 )
+        
+    with use_canvas ( 'test_simfit5: unbinned resolutions: dm3' ) :
+        fdm3 = model_sim.draw ( 'dm3'  , cdataset1 , nbins = 100 )
+        
+    with use_canvas ( 'test_simfit5: unbinned resolutions: data' ) :
+        fd   = model_sim.draw ( 'data' , cdataset1 , nbins = 100 )
+        
     # =========================================================================
     ## Simultanegous fit data with resolution samples)
     # =========================================================================
@@ -253,11 +258,17 @@ def test_simfit5() :
 
     logger.info ( 'Simultaneous fit result (binned reso):\n%s' % r_2.table ( prefix = "# " ) )
     
-    with use_canvas ( 'test_simfit5: binned resolutions' ) , wait ( 1 ) :
-        with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset2 , nbins = 100 )
-        with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset2 , nbins = 100 )
-        with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset2 , nbins = 100 )
-        with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset2 , nbins = 100 )
+    with use_canvas ( 'test_simfit5: binned resolutions: dm1' ) :
+        fdm1b = model_sim.draw ( 'dm1'  , cdataset2 , nbins = 100 )
+        
+    with use_canvas ( 'test_simfit5: binned resolutions: dm2' ) :
+        fdm2b = model_sim.draw ( 'dm2'  , cdataset2 , nbins = 100 )
+        
+    with use_canvas ( 'test_simfit5: binned resolutions: dm3' ) :
+        fdm3b = model_sim.draw ( 'dm3'  , cdataset2 , nbins = 100 )
+        
+    with use_canvas ( 'test_simfit5: binned resolutions: data' ) :
+        fdb   = model_sim.draw ( 'data' , cdataset2 , nbins = 100 )
 
     # =========================================================================
     ## test creation of dataset
@@ -308,6 +319,10 @@ def test_simfit5() :
         db ['fdm3']  = fdm3
         db ['fd']    = fd
 
+        db ['fdm1b']  = fdm1b
+        db ['fdm2b']  = fdm2b
+        db ['fdm3b']  = fdm3b
+        db ['fdb']    = fdb
 # =============================================================================
 if '__main__' == __name__ :
 
