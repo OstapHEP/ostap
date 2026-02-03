@@ -73,7 +73,7 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.basic         import isatty, loop_items, typename 
 from   ostap.frames.frame2histo  import ( DF_P2Model , DF_P1Model , 
                                           DF_H3Model , DF_H2Model , DF_H1Model ) 
-import ostap.core.config         as     OCC 
+import ostap.core.config         as     config 
 import ostap.stats.statvars      as     SV
 import ostap.logger.table        as     T
 import ROOT, math
@@ -228,7 +228,7 @@ def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
 
 # ==============================================================================
 ## Is implicit MC globally enabled? 
-mt_global = OCC.general.getboolean ( 'ImplicitMT' , fallback = True )    
+mt_global = config.implicitMT 
 
 # ==============================================================================
 ## Helper function that define expressions and cuts 

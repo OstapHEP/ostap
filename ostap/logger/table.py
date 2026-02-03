@@ -34,6 +34,7 @@ __all__     = (
 from   ostap.core.ostap_types import string_types 
 from   ostap.logger.colorized import infostr, allright, decolorize        
 from   ostap.utils.basic      import terminal_size, zip_longest 
+import ostap.core.config      as     config
 import textwrap, os, sys
 # =============================================================================
 # logging 
@@ -74,7 +75,7 @@ if terminaltables and not visible_width : # ===================================
         # =====================================================================
         visible_width = terminaltables.width_and_alignment.visible_width
         # =====================================================================
-    except ( AttributeError,NameError ) : # ===================================
+    except ( AttributeError, NameError ) : # ==================================
         # =====================================================================
         visible_width = None 
 
@@ -146,16 +147,16 @@ except ImportError : # ========================================================
 ## default style
 default_style = 'default'
 # =============================================================================
-import ostap.core.config as config
-default_style = config.tables.get ( 'STYPE' , fallback = default_style )
-    
+default_style = config.tables.get ( 'Style' , fallback = default_style )
+
 # =============================================================================
 default_style = default_style.lower().strip()
-if not default_style in table_styles : 
-    if   isatty () and terminaltables : default_style = 'double'
-    elif isatty () and tabulate       : default_style = 'fancy_grid'
-    elif               terminaltables : default_style = 'ascii' 
-    else                              : default_style = 'local' 
+if not default_style in table_styles :
+    _isatty = isatty() 
+    if   _isatty and terminaltables : default_style = 'double'
+    elif _isatty and tabulate       : default_style = 'fancy_grid'
+    elif             terminaltables : default_style = 'ascii' 
+    else                            : default_style = 'local' 
 # =============================================================================
 
 # =============================================================================
@@ -167,8 +168,8 @@ columns_left    = '<' , 'l' , 'left'
 columns_right   = '>' , 'r' , 'right' 
 columns_center  = '^' , 'c' , 'center' , '='
 columns_wrapped = 'w' , 'p' , 'wrap'   , 'wrapped'
-max_width   = 50
-wrap_indent = ' '
+max_width       = 50
+wrap_indent     = ' '
 # =============================================================================
 ## Format the list of rows as a  table (home-made primitive) 
 #  - Each row is a sequence of column cells.
@@ -837,7 +838,6 @@ def remove_empty_columns ( table ) :
         newtable.append ( tuple ( newrow ) )
         
     return tuple ( newtable )
-
     
 # =============================================================================
 if __name__ == '__main__' :

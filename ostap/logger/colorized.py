@@ -6,7 +6,8 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 # =============================================================================
-"""Simple colorization of strings"""
+""" Simple colorization of strings
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -146,7 +147,6 @@ def colored_string ( what               ,
 
 
 # =============================================================================
-import re 
 _decolor = re.compile ( r'\033\[\d{1,3}(;\d{1,3})*m' )
 # =============================================================================
 ## decolorize the string: eliminate all colorization stuff  
@@ -331,10 +331,8 @@ def markup ( what ) :
         
     return what
 
-
 # =============================================================================
 if __name__ == '__main__' :
-
 
     from ostap.logger.logger import getLogger 
     logger = getLogger ( 'ostap.logger.colorized')

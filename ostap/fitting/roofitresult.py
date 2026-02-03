@@ -1027,34 +1027,46 @@ def _rfr_kullback_ ( r1 , r2 ) :
     return result 
 
 # =============================================================================
-## Compare two fit-result objects 
-# =============================================================================
+## Compare two fit-result objects
+#  @code
+#  r1 = ...
+#  r2 = ...
+#  print ( r1.compare ( r2 ) ) 
+#  @endcode 
 def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
     """ Compare two fit-result objects
+    >>> r1 = ...
+    >>> r2 = ...
+    >>> print ( r1.compare ( r2 ) ) 
     """
     assert isinstance ( r1 , ROOT.RooFitResult ) , "`r1' is not RooFitResult!"
     assert isinstance ( r2 , ROOT.RooFitResult ) , "`r2' is not RooFitResult!"
     
     
-    float1        = set    ( p.name for p in r1.floatParsFinal() )
-    float2        = set    ( p.name for p in r2.floatParsFinal() )
-    common_floats = float1 | float2
+    float1        = set ( p.name for p in r1.floatParsFinal () )
+    float2        = set ( p.name for p in r2.floatParsFinal () )
+    fixed1        = set ( p.name for p in r1.constPars      () )
+    fixed2        = set ( p.name for p in r2.constPars      () )
+    
+    common_floats = float1 & float2
     float1        = float1 - common_floats 
     float2        = float2 - common_floats
+    
     common_floats = sorted ( common_floats )
     float1        = sorted ( float1 ) 
     float2        = sorted ( float2 ) 
 
-    fixed1       = set    ( p.name for p in r1.constPars() )
-    fixed2       = set    ( p.name for p in r2.constPars() )
     common_fixed = fixed1 & fixed2     
     fixed1       = fixed1 - common_fixed 
-    fixed2       = fixed2 - common_fixed 
-
+    fixed2       = fixed2 - common_fixed
+    
     common_fixed = sorted ( common_fixed )
     fixed1       = sorted ( fixed1 ) 
     fixed2       = sorted ( fixed2 ) 
 
+    print ( 'COMMON_FLOATS' , common_floats )
+    print ( 'COMMON_FIXED'  , common_fixed  )
+    
     if not common_floats and not common_fixed :
         logger.warning ( 'There are neither common float nor common fixed parametters!' ) 
     
@@ -1067,6 +1079,7 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
         row = '*Common FLOAT*' ,
         rows.append ( row ) 
         for p in common_floats :
+            print ( 'CHECKING parameter' , p )
             v1 = r1 [ p ] . asVE ()  
             v2 = r2 [ p ] . asVE () 
             fmt, _ , _  , expo = fmt_pretty_ves ( v1 , v2 ,

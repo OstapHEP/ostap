@@ -640,24 +640,22 @@ class SimFit (VarMaker,ConfigReducer) :
             except ValueError :
                 pass
 
-        assert category    in self.samples ,\
-               'Category %s is not in %s' % ( category , self.samples )
-        assert self.sample in dataset      ,\
-               'Category %s is not in dataset' % self.sample.GetName()
+        assert category    in self.samples , 'Category %s is not in %s' % ( category , self.samples )
+        assert self.sample in dataset      , 'Category %s is not in dataset' % self.sample.GetName()
 
         sname      = self.sample.GetName() 
         sample_cut = "%s==%s::%s"  % ( sname , sname , category )
 
-        
         dskeep = dataset
         
-        if ( 6 , 37 ) <= root_info < ( 6 , 39 ) :
-            from ostap.logger.colorized import markup
-            message      = 'SimFit.draw(%s): ' % category 
-            message     += "There is ROOT issue https://github.com/root-project/root/issues/20383 (from 27.08.2025). "
-            message     += "Temporary ``bypass'' is applied!"
-            message     += markup ( "Check the plot - it ***COULD*** be ***TERRIBLY*** wrong!" ) 
-            logger.warning ( message )
+        ## if ( 6 , 36 ) <= root_info : ## < ( 6 , 39 ) :
+        if ( 6 , 26 ) <= root_info : ## < ( 6 , 39 ) :
+            ## from ostap.logger.colorized import markup
+            ## message      = 'SimFit.draw(%s): ' % category 
+            ## message     += "There is ROOT issue https://github.com/root-project/root/issues/20383 (from 27.08.2025). "
+            ## message     += "Temporary ``bypass'' is applied!"
+            ## message     += markup ( "Check the plot - it ***COULD*** be ***TERRIBLY*** wrong!" ) 
+            ## logger.warning ( message )
             observables  = self.pdf.pdf.getObservables ( dataset )
             dataset      = dataset.subset ( observables , cuts = sample_cut )
 
@@ -668,8 +666,6 @@ class SimFit (VarMaker,ConfigReducer) :
         kwargs [ 'data_options' ] = self.draw_option ( 'data_options' , **kwargs ) +  ( data_cut , )
         
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
-
-
         
         ## for Update drawing options wi
         if False : 
@@ -703,17 +699,19 @@ class SimFit (VarMaker,ConfigReducer) :
         result = None
         
         if   isinstance ( draw_pdf , PDF3 ) :
-            
+            ## 
             if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) :    
                 result = draw_pdf.draw3 ( dataset = dataset ,
                                           nbins   = nbins   ,
                                           silent  = silent  ,
                                           args    = args    , **kwargs )
+            ##
             elif 2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) : 
                 result = draw_pdf.draw2 ( dataset = dataset ,
                                           nbins   = nbins   ,
                                           silent  = silent  ,
                                           args    = args    , **kwargs )
+            ## 
             elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
                 result = draw_pdf.draw1 ( dataset = dataset ,
                                           nbins   = nbins   ,
@@ -723,30 +721,32 @@ class SimFit (VarMaker,ConfigReducer) :
                 self.error ( "Unknown 'dvar' for 3D-draw pdf!" )
                 
         elif isinstance ( draw_pdf , PDF2 ) :
-            
+            ## 
             if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
                 result = draw_pdf.draw2 ( dataset = dataset ,
                                           nbins   = nbins   ,
                                           silent  = silent  ,
                                           args    = args    , **kwargs )
+            ## 
             elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
                 result = draw_pdf.draw1 ( dataset = dataset ,
                                           nbins   = nbins   ,
                                           silent  = silent  ,
                                           args    = args    , **kwargs )
+            ## 
             else :
                 self.error ( "Unknown 'dvar' for 2D-draw pdf! %s" %  dvar )
 
         elif isinstance ( draw_pdf , PDF1 ) :
+            ## 
             result = draw_pdf.draw ( dataset = dataset ,
                                      nbins   = nbins   ,
                                      silent  = silent  ,
                                      args    = args    , **kwargs )
         else :
-            
+            ## 
             self.error ("draw: inconsistent combination of draw_pdf '%s' and dvar '%s'" % (
                 typename  ( draw_pdf ) , dvar ) )
-
 
         ## temporarily, for fix 
         if not dskeep is dataset :

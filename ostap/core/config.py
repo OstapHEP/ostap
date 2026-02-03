@@ -4,7 +4,7 @@
 ## @file ostap/core/config.py
 #  The basic configuration of ostap.
 #  Ostap parses the following configuration files :
-#  - <code>$OSTAPDIR/.ostaprc</code>
+#  - <code>$OSTAP_DIR/.ostaprc</code>
 #  - <code>$HOME/.ostaprc</code>
 #  - <code>~/.ostaprc</code>
 #  - <code>- ~/.config/ostap/.ostaprc<.code>
@@ -16,7 +16,7 @@
 # =============================================================================
 """The basic configuration of ostap
 Ostap parses the following configuration files :
-- $OSTAPDIR/.ostaprc
+- $OSTAP_DIR/.ostaprc
 - $HOME/.ostaprc
 - ~/.ostaprc
 - ~/.config/ostap/.ostaprc
@@ -31,7 +31,7 @@ __all__     = (
     'config'    , ## the parsed configuration 
     )
 # =============================================================================
-from   ostap                     import __version__ 
+from   ostap                     import __version__  as ostap_version 
 from   ostap.utils.env           import ( get_env            ,
                                           has_env            ,
                                           ##
@@ -64,6 +64,7 @@ from   ostap.utils.env           import ( get_env            ,
                                           OSTAP_PROFILE       ,                                          
                                           ##
                                           OSTAP_TABLE         ,
+                                          OSTAP_PROTOCOL      ,
                                           ## 
                                           OSTAP_STARTUP       )
 
@@ -102,10 +103,12 @@ config [ 'General' ] = {
     'NCPus'       : str ( default_config.ncpus         ) ,
     'ImplicitMT'  : str ( default_config.implicitMT    ) ,
     'Profile'     : str ( default_config.profile       ) ,
+    'Protocol'    : str ( default_config.protocol      ) ,    
     ##
     'Startup'     : str ( default_config.startup_files ) ,
     'Macros'      : str ( default_config.macros        ) ,
     'Commands'    : str ( default_config.commands      ) ,
+    ## 
 }
 # ===========================================================================
 ## generic TCanvas configuration
@@ -122,35 +125,46 @@ config [ 'IPyparallel' ] = {} ## ipyparallel configuration
 
 # ============================================================================
 ## the list of config files to be processed
-config_files = default_config.config_files 
+config_files = default_config.config_files
+
 if has_env ( OSTAP_CONFIG ) : 
     config_files = get_env ( OSTAP_CONFIG , '' , silent = True )
     config_files = tuple ( config_files.split ( os.pathsep ) ) 
 
 the_files    = [] 
 for f in config_files :
+
     ff = f
+
     for i in range ( 5 ) :
         ff = os.path.expandvars ( ff )
         ff = os.path.expanduser ( ff )
+
     if not os.path.exists ( ff )                 : continue
     if not os.path.isfile ( ff )                 : continue
     if [ fn for fn in the_files if fn[0] == ff ] : continue
+    
     the_files.append ( ( ff , f ) )
     
 the_files    = tuple ( the_files ) 
-config_files = tuple ( f [ 0 ] for f in the_files ) 
+config_files = tuple ( f [ 1 ] for f in the_files ) 
 
 # =============================================================================
 ## read the files 
-files_read = tuple ( config.read ( config_files ) ) 
+files_read = tuple ( config.read ( [ f[0] for f in the_files ] ) )
+
+_files_read = []
+for f in files_read :
+    for ff in the_files :
+        if ff[0] == f : _files_read.append ( ff [1] )
+_filed_read = tuple ( _files_read ) 
 
 # =============================================================================
 ## General section:
 general      = config [ 'General' ]
 
 # ==============================================================================
-## ATTENTION: Redefien configuratuin using environment variables 
+## ATTENTION: Redefine configuratuin using the environment variables 
 # ==============================================================================
 
 if has_env ( OSTAP_ARGPARSE ) :
@@ -263,6 +277,14 @@ if  has_env ( OSTAP_DUMP_CONFIG ) :
 if has_env ( OSTAP_STARTUP ) : 
     value_    = get_env ( OSTAP_CONFIG , '' , silent = True )
     if value_ : general [ 'StartUp' ] = str ( tuple ( value_.split ( os.pathsep ) ) ) 
+
+if has_env ( OSTAP_PROTOCOL ) : 
+    value_    = get_env ( OSTAP_PROTOCOL , '5' , silent = True )
+    try :
+        value_ = int ( value_.strip()  )
+        if 0 <= value_ : general ['Protocol'] = str ( value_ ) 
+    except :
+        pass
     
 # =============================================================================
 ## Some explicit & important elements from the `General` section:
@@ -288,7 +310,9 @@ webdisplay   = general.get        ( 'WebDisplay'  , fallback = default_config.we
 ncpus        = general.getint     ( 'NCPUs'       , fallback = default_config.ncpus        )
 parallel     = general.get        ( 'Parallel'    , fallback = default_config.parallel     )
 implicitMT   = general.getboolean ( 'ImplicitMT'  , fallback = default_config.implicitMT   )
-profile      = general.getboolean ( 'Profile '    , fallback = default_config.profile      )
+profile      = general.getboolean ( 'Profile'     , fallback = default_config.profile      )
+
+protocol     = general.getint     ( 'Protocol'    , fallback = default_config.protocol     )
 
 startup_files = general.get       ( 'StartUp' , fallback = str ( default_config.startup_files ) )
 if startup_files : startup_files = ast.literal_eval ( startup_files )
@@ -323,79 +347,6 @@ if has_env ( OSTAP_TABLE ) :
     value_ = get_env ( OSTAP_TABLE , '' , silent = True  )        
     if value_ : tables [ 'Style' ] = value_
     
-# =============================================================================
-## The final action "at-exit"
-#  - print the list/table of read files  
-#  - dump configuration into the output file 
-def config_atexit ( config , files ) :
-    """ The final `at-exit' action:
-    - print the list/table of read files  
-    - dump configuration into the output file 
-    """
-    import  datetime, sys
-    if not hasattr ( sys , 'ps1' ) : return
-    ##
-    from ostap.logger.logger import getLogger
-    logger = getLogger ( 'ostap.core.config' )
-    ## 
-    now = datetime.datetime.now()
-    ##
-    # ===========================================================================
-    ## (1) print lift/table of read input config files 
-    # ===========================================================================
-    if 1 == len ( files ) : logger.info ( 'Ostap configuration is read from: %s' % files [ 0 ] )         
-    elif files : 
-        import ostap.logger.table as T
-        rows = [ ( '', 'file' ) ]
-        for i, f in enumerate ( files , start = 1 ) :
-            row = '%d' % i , f 
-            rows.append ( row )            
-        title = 'Ostap configuration files'
-        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rl' )
-        logger.info ( 'Ostap configuration is read from\n%s' % table ) 
-
-    # ===========================================================================
-    ## (2) print lift/table of read input config files 
-    # ===========================================================================
-    import io 
-    with io.StringIO() as o : 
-        config.write( o )
-        logger.verbose ( 'Ostap configuration:\n%s' % o.getvalue() )
-
-    # ===========================================================================
-    ## get the dumpfile
-    import ostap.core.default_config as dc 
-    dump = config [ 'General' ].get ( 'DumpConfig' , fallback = dc.dump_config )
-    # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
-        if os.path.exists ( dump ) : os.remove ( dump ) # =======================
-        the_line = '# ' + 78 * '*' + '\n'
-        # =======================================================================
-        with open ( dump , 'wt' ) as fdump : # ==================================
-            # ===================================================================
-            fdump.write( the_line )
-            if files : 
-                fdump.write('# Ostap configuration read from:\n' )
-                for i,f in enumerate ( files , start = 1 ) : fdump.write( '# %-3d %s\n' % ( i , f ) ) 
-            fdump .write ('# Ostap configuration:\n' )                
-            fdump .write ( the_line )    
-            config.write ( fdump )            
-            fdump .write ( the_line )
-            fdump .write ( '# Configuration saved at %s\n' % now.strftime ( '%c' ) )
-            fdump .write ( the_line )
-        # ========================================================================
-        if os.path.exists ( dump ) and os.path.isfile ( dump ) :
-            logger.info ( 'Ostap  configuration saved to %s' %  dump )
-        # ========================================================================
-    except :
-        pass
-
-# ================================================================================
-## register the final action
-import atexit 
-atexit.register ( config_atexit , config = config , files = files_read ) 
-
 # ================================================================================
 ## Print config parser as table
 def _cp_table_ ( parser , files = files_read , title = '' , prefix = '' ) :
@@ -421,9 +372,26 @@ def _cp_table_ ( parser , files = files_read , title = '' , prefix = '' ) :
     return T.table ( rows , title = title , prefix = prefix , alignment = 'llw' )
 
 # ==============================================================================
-type ( config ).table    = _cp_table_
-type ( config ).__str__  = _cp_table_
-type ( config ).__repr__ = _cp_table_
+## Print config section as table 
+def _sc_table_ ( section , title = '' , prefix = '' ) :
+    """ Print config section as table
+    """
+    title  = title if title else 'Ostap "%s" section config' % section.name 
+    from ostap.logger.utils import map2table
+    return map2table (  section            ,
+                        title     = title  ,
+                        alignment = 'rw'   ,
+                        prefix    = prefix ) 
+    
+# ==============================================================================
+type ( config  ).table    = _cp_table_
+type ( config  ).__str__  = _cp_table_
+type ( config  ).__repr__ = _cp_table_
+# ==============================================================================
+type ( general ).table    = _sc_table_
+type ( general ).__str__  = _sc_table_
+type ( general ).__repr__ = _sc_table_
+# ==============================================================================
 
 # ==============================================================================
 ## Command-Line argumens
@@ -502,7 +470,7 @@ def __parse_args ( args  = [] ) :
     parser.add_argument ( 
         '-v'    , '--version' ,
         action  = 'version'   , 
-        version = 'Ostap %s' % __version__ )  
+        version = 'Ostap %s' % ostap_version )  
 
     ## 1st exclusive group
     group1  = parser.add_argument_group ( 'Control verbosity' , 'Control the general level of verbosity') 
@@ -723,7 +691,7 @@ def __parse_args ( args  = [] ) :
 # ================================================================================
 ## command-line arguments
 arguments = __parse_args ()
-        
+
 # ================================================================================
 ## update the global configuration
 general [ 'Batch'      ] = str ( arguments.batch )
@@ -779,6 +747,69 @@ startup_files = arguments.StartUp
 macros        = arguments.Macros 
 commands      = arguments.Commands
 input_files   = arguments.files 
+
+# =============================================================================
+## The final action "at-exit"
+#  - print the list/table of read files  
+#  - dump configuration into the output file 
+def config_atexit ( config , files , dump ) :
+    """ The final `at-exit' action:
+    - print the list/table of read files  
+    - dump configuration into the output file 
+    """    
+    import sys
+    if not hasattr ( sys , 'ps1' ) : return
+    ##
+    from ostap.logger.logger import getLogger
+    logger = getLogger ( 'ostap.core.config' )
+    ## 
+    # ===========================================================================
+    ## (1) print lift/table of read input config files 
+    # ===========================================================================
+    if   1 == len ( files ) :  logger.info ( 'Ostap configuration is read from\n%s' % files [ 0 ]  ) 
+    elif 1 <  len ( files ) :
+        rows = [ ( '', 'file' ) ]
+        for i, f in enumerate ( files , start = 1 ) :
+            row = '%d' % i , f 
+            rows.append ( row )            
+        title = 'Ostap configuration files'
+        import ostap.logger.table as T
+        table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rl' )
+        logger.info ( 'Ostap configuration is read from\n%s' % table ) 
+        
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        if os.path.exists ( dump ) : os.remove ( dump ) # =======================
+        the_line = '# ' + 78 * '*' + '\n'
+        # =======================================================================
+        with open ( dump , 'wt' ) as fdump : # ==================================
+            # ===================================================================
+            fdump.write( the_line )
+            if files : 
+                fdump.write('# Ostap configuration read from:\n' )
+                for i,f in enumerate ( files , start = 1 ) : fdump.write( '# %-3d %s\n' % ( i , f ) )
+            fdump .write ('# Ostap configuration:\n' )                
+            fdump .write ( the_line )    
+            config.write ( fdump )            
+            fdump .write ( the_line )
+            fdump .write ( '# Configuration saved at %s\n' % now.strftime ( '%c' ) )
+            fdump .write ( the_line )
+        # ========================================================================
+        if os.path.exists ( dump ) and os.path.isfile ( dump ) :
+            logger.info ( 'Ostap  configuration saved to %s' %  dump )
+        # ========================================================================
+    except : # ===================================================================
+        # ========================================================================
+        pass
+
+# ================================================================================
+## register the final action
+import atexit 
+atexit.register ( config_atexit        ,
+                  config = config      ,
+                  files  = files_read  , 
+                  dump   = dump_config )
 
 # ==============================================================================
 if '__main__' == __name__ :

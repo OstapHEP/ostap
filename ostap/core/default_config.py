@@ -4,7 +4,7 @@
 ## @file ostap/core/default_config.py
 #  Default configuration of ostap
 #  Ostap parses the following configuration files :
-#  - <code>$OSTAPDIR/.ostaprc</code>
+#  - <code>$OSTAP_DIR/.ostaprc</code>
 #  - <code>$HOME/.ostaprc</code>
 #  - <code>~/.ostaprc</code>
 #  - <code>- ~/.config/ostap/.ostaprc<.code>
@@ -26,20 +26,18 @@ __all__      = (
     'startup_files' , ## startup files 
     )
 # =============================================================================
-
-# =============================================================================
 arg_parse    = True    ## Parse command-line arguments? 
-batch        = False
+batch        = False   ## Batch processing? 
 
-silent       = False   ## silent pprocesisng ?
+silent       = False   ## silent  procesisng ?
 quiet        = False   ## quiet   processing ?
 debug        = False   ## debug   processing ?
 verbose      = False   ## verbose processing ?
-level        = -1      ## print level 
+level        = 3       ## print level (3 == INFO) 
 color        = True    ## use colors ? 
 show_unicode = False   ## show unicode in logfiles?
 #
-dump_config  = '.ostap_config.dump'
+dump_config  = '.ostap_config.dump'  ## dump-file for configuraiton
 
 build_dir    = ''                    ## ROOT/Ostap build directory 
 cache_dir    = '$HOME/.cache/ostap'  ## Cache directory 
@@ -54,14 +52,13 @@ profile      = False                 ## profile the execution?
 
 table_style  = 'default'             ## Table style
 
-
-protocol     = ''                    ## pickling protocol 
+protocol     = 5                     ## pickling protocol 
 
 # =============================================================================
 ## configuration files to read
 # =============================================================================
 config_files = [
-    u'$OSTAPDIR/.ostaprc'           , ## .ostaprc from central directory 
+    u'$OSTAP_DIR/.ostaprc'          , ## .ostaprc from central directory 
     u'$HOME/.ostaprc'               , ## .ostaprc from home directory 
     u'~/.ostaprc'                   , ## .ostaprc from home directory 
     u'$HOME/.config/ostap/.ostaprc' , ## .ostaprc from config directory 
@@ -82,6 +79,7 @@ macros        = []
 # =============================================================================
 ## Python commands to be executed 
 commands      = []
+
 # =============================================================================
 if '__main__' == __name__ :
     

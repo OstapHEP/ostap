@@ -192,9 +192,7 @@ class ppServer(object) :
                 if enabledVerbose() :
                     copier = PS.Copier ( 'SSH-copier' )
                     import ostap.utils.cleanup as CU
-                    print ( 'BEFORE CREATION!')
                     tmpdir = CU.CleanUp.tempdir ()
-                    print ( 'AFTER CREATION!', tmpdir )
                     source = "%s:%s" %  ( self.__remote_host , self.__profile )
                     copier ( source = source , destination = tmpdir )
                     copier.launch()
@@ -414,57 +412,57 @@ class ppServer(object) :
     
     @property
     def pid  ( self ) :
-        """``pid''  : PID for remote ppserver process"""
+        """`pid'  : PID for remote ppserver process"""
         return self.__pid
     
     @property
     def script ( self ) :
-        """``script'' : the shell script to be sourced to get the correct  environment"""
+        """`script' : the shell script to be sourced to get the correct  environment"""
         return self.__script
 
     @property
     def environment ( self ) :
-        """``environment'' : the environment script to be sourced to get the correct environment"""
+        """`environment' : the environment script to be sourced to get the correct environment"""
         return self.__environment
     
     @property
     def remote_host      ( self ):
-        """``remote_host'' : remote host"""
+        """`remote_host' : remote host"""
         return self.__remote_host
 
     @property
     def local_port  ( self ) :
-        """``local_port'' : local port for SSH-tunnel"""
+        """`local_port' : local port for SSH-tunnel"""
         return self.__local_port
     
     @property
     def remote_port ( self ) :
-        """``remote_port'' : remote port for SSH-tunnel"""
+        """`remote_port' : remote port for SSH-tunnel"""
         return self.__remote_port
         
     @property
     def tunnel   ( self ) :
-        """``tunnel'' : SSH tunnel   local_port <---> remote_host:remote_port"""
+        """`tunnel' : SSH tunnel   local_port <---> remote_host:remote_port"""
         return self.__tunnel 
     
     @property
     def session ( self ) :
-        """``tunnel'' : SSH session"""
+        """`tunnel' : SSH session"""
         return self.__session 
     
     @property
     def local ( self ) :
-        """``local'' : local server/tunnel address"""
+        """`local' : local server/tunnel address"""
         return "localhost:%s" % self.__local_port
     
     @property
     def remote ( self ) :
-        """``remote'' : remote server/tunnel address"""
+        """`remote' : remote server/tunnel address"""
         return "%s:%s" % ( self.__remote_host , self.__remote_port )
 
     @property
     def  stamp  ( self ) :
-        """``stamp'' : (local,remote) pair for the tunnel"""
+        """`stamp' : (local,remote) pair for the tunnel"""
         return self.local, self.remote
 
     ## list of open tunnels 
@@ -486,7 +484,7 @@ class ppServer(object) :
 # =============================================================================
 ## show currently opened tunnels
 def show_tunnels ( tunnels = None ) :
-    """Show currently opened tunnels
+    """ Show currently opened tunnels
     """
     
     if tunnels is None : tunnels = ppServer.open_pptunnels

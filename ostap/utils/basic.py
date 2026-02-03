@@ -452,8 +452,8 @@ def numcpu () :
     nn = cpu_count () 
     # ========================================================================
     ## (2) Check the global Ostap configuration: 
-    import ostap.core.config as OCC
-    nc = OCC.ncpus
+    import ostap.core.config as config 
+    nc = config.ncpus
     if 1 <= nc : nn = min ( nn , nc )
     ## 
     return max ( 1 , nn  ) 

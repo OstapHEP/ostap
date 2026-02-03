@@ -89,11 +89,11 @@ constr_MC  = model_MC.soft_multivar_constraint ( ( 'alphaL_MC' ,
 # =============================================================================
 logger.info ( 'Make simultaneous DATA/MC fit to get scale-factor' ) 
 category = ROOT.RooCategory ( 'sample' , 'sample' , 'MC' , 'DATA' )
-vars     = ROOT.RooArgSet   ( mass  )
-cds      = combined_data ( category ,
-                           vars     ,  
-                           datasets = { 'MC'   : ds_MC   ,
-                                        'DATA' : ds_DATA } )
+vars     = ROOT.RooArgSet   ( mass     )
+cds      = combined_data    ( category ,
+                              vars     ,  
+                              datasets = { 'MC'   : ds_MC   ,
+                                           'DATA' : ds_DATA } )
 logger.info ( 'Combined dataset/1:\n%s' % cds.table ( prefix = '# ' ) )                            
 model_sim  = Models.SimFit (
     category , { 'DATA' : model_DATA ,
@@ -102,11 +102,11 @@ model_sim  = Models.SimFit (
 rSIM , _ = model_sim.fitTo ( cds , silent = True )
 rSIM , _ = model_sim.fitTo ( cds , silent = True )
 logger.info ( 'Simultaneous fit result:\n%s' % rSIM.table ( prefix = "# " ) )
+
 with use_canvas ( 'test_simfit7: simultaneous fit/DATA' ) :
     fDATA = model_sim.draw ( 'DATA'  , cds )
 with use_canvas ( 'test_simfit7: simultaneous fit/MC' ) :
     fMC   = model_sim.draw ( 'MC'    , cds )
-
 
 # =============================================================================
 ## (2) Perform DATA fit with MC constraints to get scale-factor
@@ -117,11 +117,9 @@ with use_canvas ( 'test_simfit7: constrained fit/DATA' ) :
     rDATA , fDATA = model_DATA.fitTo ( ds_DATA , silent = True , constraints = constr_MC ) 
     rDATA , fDATA = model_DATA.fitTo ( ds_DATA , silent = True , constraints = constr_MC , draw = True ) 
     logger.info ( 'Fit with constraits result:\n%s' % rDATA.table ( prefix = "# " ) )
-
     
 logger.info ( "Scale factor from 'simultaneous' fit: %s" % ( rSIM .sfactor * 1 ) )
 logger.info ( "Scale factor from 'constrained'  fit: %s" % ( rDATA.sfactor * 1 ) )
-
 
 # =========================================================================
 ## test creation of dataset
@@ -135,9 +133,6 @@ rg , f = model_sim.fitTo ( ds_gen , silent = True )
 
 title = 'Results of simultaneous fit to generated dataset'
 logger.info ( '%s\n%s' % ( title , rg.table ( title = title , prefix = '# ' ) ) )
-
-
-
     
 # =============================================================================
 ##                                                                      The END 

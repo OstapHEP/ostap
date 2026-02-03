@@ -93,9 +93,6 @@ with MuteC ( True , True ) :
     ROOT.PyConfig.IgnoreCommandLineOptions = True
     _ = ROOT.RooRealVar()
 
-    ## cpp = cppyy.gbl 
-    ## _ = cpp.Ostap.Math.Zero('double')() 
-    
 # =============================================================================
 # Include path for ACLiC:
 # =============================================================================
@@ -103,7 +100,7 @@ opath = ROOT.gSystem.GetIncludePath()
 ## logger.debug ( 'Old include ath: %s' % opath  )
 opath = opath.replace ( '-I' , ' ' ) . split ()
 ## add gsl ? 
-opath.append ( '$OSTAPDIR/include' ) 
+opath.append ( '$OSTAP_DIR/include' ) 
 
 npath  = []
 npath_ = []

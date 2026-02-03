@@ -7,11 +7,6 @@
 """ Helper utilities to deal with ROOT styles 
 """
 # =============================================================================
-from   ostap.utils.cidict import cidict, cidict_fun
-from   ostap.utils.utils  import classprop 
-import ostap.plotting.color
-import ROOT, ctypes 
-# =============================================================================
 __all__ = (
     'StyleStore'       , ## the storage/dictionary of created/known styles
     'dump_style'       , ## dump a style into dicitonary
@@ -23,8 +18,19 @@ __all__ = (
     'margin_top'       , ## (default) top margin 
     'margin_bottom'    , ## (default) top margin 
     'margin_left'      , ## (default) top margin 
-    'margin_right'     , ## (default) top margin 
+    'margin_right'     , ## (default) top margin
+    'ostap_font'       , ## (default)  text font 
+    'ostap_line_width' , ## (default)  line width
+    'ostap_latex'      , ## (default) Ostap LaTeX 
+    'ostap_label'      , ## (default) Ostap Label 
     )
+# =============================================================================
+from   ostap.utils.cidict import cidict, cidict_fun
+from   ostap.utils.utils  import classprop 
+import ostap.plotting.color
+import ROOT, ctypes 
+# =============================================================================
+import ostap.core.config as config 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -37,46 +43,28 @@ margin_top    = 0.05
 margin_bottom = 0.12
 margin_left   = 0.12
 margin_right  = 0.07
+canvas_width  = 1000
+canvas_height =  800 
 # ==============================================================================
-import ostap.core.config as OCC
-width_  = OCC.canvas.get ( 'Width'       , fallback = '1000' )
-try               : width_  = int  ( width_ ) 
-except ValueError : width_  = 1000
-canvas_width  = width_  if 20 <= width_  else 1000
-# 
-height_ = OCC.canvas.get ( 'Height'      , fallback =  '800' )
-try               : height_ = int  ( height_ ) 
-except ValueError : height_ = 800
-canvas_height = height_ if 20 <= height_ else  800
-##
-w2h  =  float ( canvas_width  ) / float ( canvas_height )
-h2w  =  float ( canvas_height ) / float ( canvas_width  )
+## get the stuff from configuration 
+# ==============================================================================
+value = config.canvas.getint   ( 'Width'        , fallback = canvas_width  )
+if 20 < value     : canvas_width = value
+value = config.canvas.getint   ( 'Height'       , fallback = canvas_height )
+if 20 < value     : canvas_height = value
+value = config.canvas.getfloat ( 'MarginTop'    , fallback = margin_top    )
+if 0 <= value < 1 : margin_top    = value
+value = config.canvas.getfloat ( 'MarginBottom' , fallback = margin_bottom )
+if 0 <= value < 1 : margin_bottom = value
+value = config.canvas.getfloat ( 'MarginLeft'   , fallback = margin_left   )
+if 0 <= value < 1 : margin_left   = value
+value = config.canvas.getfloat ( 'MarginRight'  , fallback = margin_right  )
+if 0 <= value < 1 : margin_right  = value
 
-tmp_    = OCC.canvas.get ( 'MarginRight'   , fallback = '%f'  % margin_right       )
-try               : tmp_  = float ( tmp_ ) 
-except ValueError : tmp_  = margin_right
-if   0 <      tmp_ < 1            : margin_right = tmp_
-elif 0 < -1 * tmp_ < canvas_width : margin_right = abs ( 1.0 * tmp_ / canvas_width )
-##
-tmp_    = OCC.canvas.get ( 'MarginBottom'   , fallback = '%f'  % margin_bottom ) 
-try               : tmp_  = float ( tmp_ ) 
-except ValueError : tmp_  = margin_bottom
-if   0 <      tmp_ < 1             : margin_bottom = tmp_
-elif 0 < -1 * tmp_ < canvas_height : margin_bottom = abs ( 1.0 * tmp_ / canvas_height )  
+assert 0 <= margin_top  + margin_bottom < 1 , "Invaild margin top+bottom: %s+%s" % ( margin_top  , margin_bottom ) 
+assert 0 <= margin_left + margin_right  < 1 , "Invaild margin left+right: %s+%s" % ( margin_left , margin_right  ) 
 
-tmp_    = OCC.canvas.get ( 'MarginLeft' , fallback = '%f' %  margin_left  )
-try               : tmp_  = float ( tmp_ ) 
-except ValueError : tmp_  = margin_left 
-if   0 <      tmp_ < 1            : margin_left = tmp_
-elif 0 < -1 * tmp_ < canvas_width : margin_left = abs ( 1.0 * tmp_ / canvas_width )  
-#
-
-tmp_    = OCC.canvas.get ( 'MarginTop'   , fallback = '%f'  % margin_top ) 
-try               : tmp_  = float ( tmp_ ) 
-except ValueError : tmp_  = margin_top 
-if   0 <      tmp_ < 1             : margin_top = tmp_
-elif 0 < -1 * tmp_ < canvas_height : margin_top = abs ( 1.0 * tmp_ / canvas_weight )  
-#
+# =============================================================================
 
 logger.verbose ( 'Default Canvas parameters: ')
 logger.verbose ( '  canvas_height : %s ' % canvas_height )
@@ -87,21 +75,10 @@ logger.verbose ( '  margin_left   : %s ' % margin_left   )
 logger.verbose ( '  margin_right  : %s ' % margin_right  )
 
 # =============================================================================
-## default font 
-ostap_font       = 132     ## Times-Roman 
-## line thickness
-ostap_line_width =   1
+## default ostap font 
+ostap_font       = config.canvas.getint ( 'TextFont'  , fallback = 132 )
+ostap_line_width = config.canvas.getint ( 'LineWidth' , fallback = 1   ) 
 # =============================================================================
-tmp_    = OCC.canvas.get ( 'TextFont'   , fallback = '%d'  % ostap_font ) 
-try               : tmp_  = int ( tmp_ ) 
-except ValueError : tmp_  = ostap_font
-ostap_font = tmp_
-# =============================================================================
-tmp_    = OCC.canvas.get ( 'LineWidth'   , fallback = '%d'  % ostap_line_width ) 
-try               : tmp_  = int ( tmp_ ) 
-except ValueError : tmp_  = ostap_line_width
-ostap_line_width = tmp_
-# ==============================================================================
 ## define style for text
 ostap_label = ROOT.TText    (             )
 ostap_label . SetTextFont   ( ostap_font  )
@@ -337,7 +314,7 @@ def get_right_margin ( colz , scale = 1.25 ) :
 #  style.set ( config ) ##   ditto 
 #  @endcode
 def set_style ( style , config , base_style = '' , **kwargs ) :
-    """ Set the style from the configurtaion dictionary
+    """ Set the style from the configuraion dictionary
     >>> config = ...
     >>> style  = ...
     >>> set_style ( style , config )

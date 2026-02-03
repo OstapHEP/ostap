@@ -4,11 +4,13 @@
 # ******************************************************************************
 
 [General]
+silent       = False
 quiet        = False
 verbose      = False
-## threadsafety = True 
-## implicitmt   = @OSTAP_NUMBER_OF_LOGICAL_CORES@ 
 parallel     = PATHOS
+color        = True
+show_unicode = False
+implicitMT   = True
 
 [Canvas]
 width        = 1000
@@ -17,19 +19,23 @@ margintop    = 0.05
 marginbottom = 0.12
 marginright  = 0.07
 marginleft   = 0.12
+textfont     = 132
 
-[RooFit] 
+[RooFit]
 RemoveTopics = Plotting            ,
                Caching             ,
+               Eval                , 
+               Minization          ,
                Integration         ,
+               Optimization        ,
                NumericIntegration  , 
                Fitting             ,
-               InputArguments      ,
-               ObjectHandling
+               InputArguments       
 
 [Fit Draw]
 
 [Tables]
+Style = default
 
 [Pathos]
 

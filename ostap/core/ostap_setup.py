@@ -86,13 +86,13 @@ elif config.debug or config.verbose :
     msg.setGlobalKillBelow  ( ROOT.RooFit.DEBUG )
     msg.setSilentMode       ( False )    
 elif 0 <= config.level <= 8 :    
-    d1 = ROOT.kFatal - ROOT.Print
+    d1 = ROOT.kFatal       - ROOT.kPrint
     d2 = ROOT.RooFit.FATAL - ROOT.RooFit.DEBUG 
-    l1 = ROOT.kFatal       + math.floot ( ( d1 * level ) / 8 )
-    l2 = ROOT.RooFit.DEBUG + math.floor ( ( d2 * level ) / 8 )
+    l1 = ROOT.kFatal       + math.floor ( ( d1 * config.level ) / 8 )
+    l2 = ROOT.RooFit.DEBUG + math.floor ( ( d2 * config.level ) / 8 )
     if groot : groot.ProcessLine ( "gErrorIgnoreLevel= %d ; " % l1 )     
-    msg.setGlobalKillBelow  ( l2 )
-    msg.setSilentMode       ( ROOT.RooFit.INFO < l2 )
+    msg.setGlobalKillBelow       ( l2 )
+    msg.setSilentMode            ( ROOT.RooFit.INFO < l2 )
 
 # =============================================================================
 ## RooFit topics..

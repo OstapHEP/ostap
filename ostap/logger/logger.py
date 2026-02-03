@@ -43,6 +43,7 @@ __all__ = (
     ##
     )
 # =============================================================================
+import ostap.core.config as config
 import logging, os, sys  
 # =============================================================================
 ## BASIC   colorization
@@ -607,9 +608,8 @@ def keepColor () :
     return KeepColorLogging ()
 
 # =============================================================================
-# Actions!
+## Actions!
 # =============================================================================
-import ostap.core.config as config
 
 ## (1) logging threshold 
 
@@ -622,6 +622,7 @@ else                               : setLogging ( INFO         )
 
 ## (2) reset colors
 if config.color and isatty ()      : make_colors()
+
 
 # =============================================================================
 if __name__ == '__main__' :
