@@ -22,19 +22,21 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-06-07"
 __all__     = (
     'executed_scripts' , ## list of successfully executed ascripts 
+    'loaded_macros'    , ## list of successfully loaded   ROOT/C++ macros 
     'executed_macros'  , ## list of successfully executed ROOT/C++ macros 
     'root_files'       , ## list of ROOT files  
-    'parameters'       , ## list of extra comand-line arguments 
+    'parameters'       , ## list of extra comand-line arguments
+    'run_py'           , ## function to run/import python scripts
 )
 # ============================================================================= 
 import ostap.core.config      as     config 
 import ostap.fixes.fixes
 import ostap.core.build_dir
 import ostap.core.cache_dir
-import ostap.utils.cleanup 
-import ROOT, math, os, sys   
+import ostap.utils.cleanup
+import ROOT, math, os, sys, ctypes, runpy     
 # =============================================================================
-from ostap.logger.logger import getLogger
+from ostap.logger.logger import getLogger, enabledInfo, enabledDebug  
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_setup' )
 else                       : logger = getLogger( __name__                )
 # =============================================================================
@@ -120,8 +122,7 @@ if config.general.getboolean ( 'Profile' , fallback = config.profile ) :
         """ `At-Exit` action: 
         - end profiling 
         - print statistics 
-        """
-       
+        """       
         import io, pstats 
         
         prof.disable()
@@ -139,6 +140,89 @@ if config.general.getboolean ( 'Profile' , fallback = config.profile ) :
     import atexit 
     atexit.register ( _profile_atexit_ , profiler , plogger ) 
 
+
+# =============================================================================
+## Run/execute python script
+#  The overall effect somehow similar to <code>from ... import *</code>
+#  @code
+#  path = ...
+#  globs = run_py ( path )
+#  globals().update ( globs )
+#  del globs
+#  @endcode
+def run_py ( path , run_name = '' , with_context = True , path_name = '' ) :
+    """ Run/execute python script
+    The overall effect somehow similar to `from ... import *`
+    
+    >>> path = ...
+    >>> globs = run_py ( path )
+    >>> globals().update ( globs )
+    """
+    if not path_name : path_name = path
+    if not run_name :
+        fbase , dot , ext = path.rpartition ( '.' )
+        run_name = os.path.basename ( fbase ) if fbase and dot and ext else path 
+        
+    ## get all the keys for the current globals 
+    _globals  = globals().copy() if with_context else {}
+    ## 
+    ## ATTENTION: we need to suppress __all__ 
+    _globals.pop ( '__all__' , None )
+    ##
+    _k_globs  = frozenset ( _globals.keys() )
+    _r_globs  = runpy.run_path ( path , None , run_name = run_name )
+
+    if '__all__' in _r_globs :
+        _r_all   = _r_globs.get ( '__all__' , () )
+        _r_globs = {  k : v for k , v in _r_globs.items () if k in _r_all }
+    else :
+        _r_globs = {  k : v for k , v in _r_globs.items () if not k.startswith ( '_' ) }
+
+    symbols_updated = frozenset ( k for k in _r_globs if     k in _k_globs )
+    symbols_new     = frozenset ( k for k in _r_globs if not k in _k_globs )
+
+    if enabledDebug () and ( symbols_updated or symbols_new ) : 
+    
+        from   ostap.utils.basic      import typename 
+        rows   =  [ ( 'Symbol' , 'Type' , '' ) ]
+    
+        title1 = 'Symbols from %s' % path
+        title2 = 'Symbols from %s' % path_name 
+        
+        if symbols_new and symbols_updated :
+            for k in symbols_updated :
+                row = k , typename ( _r_globs [ k ] ) , 'update'
+                rows.append ( row ) 
+            for k in symbols_new     :
+                row = k , typename ( _r_globs [ k ] ) , 'new'
+                rows.append ( row )            
+        elif symbols_new :
+            for k in symbols_new     :
+                row = k , typename ( _r_globs [ k ] )
+                rows.append ( row )                
+            title1 = 'Imported from %s' % path
+            title2 = 'Imported from %s' % path_name         
+        elif symbols_updated:
+            for k in symbols_updated :
+                row = k , typename ( _r_globs [ k ] ) 
+                rows.append ( row )                
+            title1 = 'Updated from %s' % path
+            title2 = 'Updated from %s' % path_name
+
+        import ostap.logger.table as T
+        rows = T.remove_empty_columns ( rows ) 
+        logger.info ('%s:\n%s' % ( title1 , T.table ( rows , title = title2 , prefix = '# ' ) ) )
+        
+    elif symbols_new or symbols_updated :
+        
+        logger.info ('run_py(%s): updated/new symbols %d/%d' % ( path ,
+                                                                 len ( symbols_updated ) ,
+                                                                 len ( symbols_new     ) ) ) 
+        
+    return _r_globs
+
+# =============================================================================
+    
 # =============================================================================
 ## (6) execute startup (python) files/scripts 
 # =============================================================================
@@ -157,24 +241,23 @@ for _su in config.startup_files :
     _ss =  os.path.abspath    ( _ss )
     if _ss in _scripts                : continue 
     ## 
+    fname = _ss 
+    fbase , dot , ext = fname.rpartition('.')
+    bname = os.path.basename ( fbase )
+    if not bname : bname = os.path.basename ( fname )
+    ## 
     # =========================================================================
     ## execute it!
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
         logger.debug ( "Execute the script: `%s` " % _su ) 
-        import runpy
-        globs = runpy.run_path ( _ss , globals() ) ## , run_name = '__main__' )
-        globs = dict ( ( ( k , v ) for k , v in globs.items() if  not k.startswith ( '__' ) and not k.endswith ( '__' ) ) )
-        logger.debug ( 'Symbols from %s: %s' % ( _su , globs.keys() ) )
-        globals().update( globs )
-        del globs
+        ## 
+        run_py ( fname , run_name = bname , path_name = _su , with_context = False )
         ##
-        _scripts.add ( _ss )
-
-        if os.path.exists ( _ss ) and os.path.isfile ( _ss ) : _ss = os.path.abspath ( _ss ) 
-        executed_scripts.append ( ( _su , _ss ) )
-        
+        _scripts.add ( fname )
+        executed_scripts.append ( ( _su , fname ) )
+        ## 
         logger.debug ( "Script '%s' is executed"      % _su )
         ## 
         # =====================================================================
@@ -186,40 +269,53 @@ for _su in config.startup_files :
 # =============================================================================
 ## (7) Load ROOT/C++ macros 
 # =============================================================================
-executed_macros =     []
-_macros         = set () 
-for _su in config.macros :
+loaded_macros =     []
+for m in config.load_macros :
     ## 
-    _ss = _su
-    _ss = os.path.expandvars ( _ss )
-    _ss = os.path.expandvars ( _ss )
-    _ss = os.path.expandvars ( _ss )
-    _ss = os.path.expanduser ( _ss )
-    _ss = os.path.expandvars ( _ss )
-    ##
-    if    _ss.endswith  ( '++' ) : _mm = _ss [ : 2 ]
-    elif  _ss.endswith  ( '+'  ) : _mm = _ss [ : 1 ]
-    else                         : _mm = _ss 
-    ##     
-    if not os.path.exists     ( _mm ) : continue
-    if not os.path.isfile     ( _mm ) : continue
-    _mm =  os.path.abspath    ( _mm )
-    ##
-    if   _ss.endswith ( '++' ) : _mm = '%s++' % _mm
-    elif _ss.endswith ( '+'  ) : _mm = '%s+'  % _mm
-    ##
-    if _mm in _macros : continue
-    ## 
-    logger.debug ( "Execute the macro: `%s` " % _su ) 
     groot = ROOT.ROOT.GetROOT()
-    sc = groot.LoadMacro ( _mm )
+    if not groot : continue
+    ##
+    ## (1) just check the macro exists and readable
+    cerr = ctypes.c_int( 0 ) 
+    sc   = groot.LoadMacro ( m , cerr , True )
+    cerr = cerr.value 
+    if sc and config.batch : raise RuntimeError  ( 'load_macro: macro `%s` is not found!' ) 
+    elif sc                :
+        logger.error                             ( "load_macro: macro `%s` is not found!" )
+        continue
+
+    ## (2) Load macro 
+    logger.debug ( "Load  macro: `%s`" % m  )
+    cerr = ctypes.c_int( 0 ) 
+    sc   = groot.LoadMacro ( m , cerr , False  )
     ## 
     if sc and config.batch : 
-        raise RuntimeError  ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
-    elif sc  : logger.error ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
+        raise RuntimeError  ( 'Failure to load macro "%s", code:%d' % ( m , sc ) )
+    elif sc  :
+        logger.error        ( 'Failure to load macro "%s", code:%d' % ( m , sc ) )
+        continue 
     ## 
-    _macros.add ( _mm )
-    ##
+    loaded_macros.append ( m ) 
+    logger.debug ( "Macro is loaded `%s`"      % m )
+
+# =============================================================================
+## (7) Execute ROOT/C++ macros 
+# =============================================================================
+executed_macros =     []
+for m in config.exec_macros :
+    ## 
+    logger.debug ( "Execute macro: `%s` " % m ) 
+    groot = ROOT.ROOT.GetROOT()
+    cerr  = ctypes.c_int( 0 )     
+    sc    = groot.Macro ( _mm , cerr , not config.batch )
+    cerr  = cerr.value 
+    ## 
+    if ( sc or cerr ) and config.batch : 
+        raise RuntimeError  ( 'Failure to execute macro "%s", code:%s/%s' % ( m , sc , cerr ) )
+    elif sc  or cerr :
+        logger.error ( 'Failure to execute macro "%s", code:%s/%s' % ( m , sc, cerr ) )
+        continue 
+    ## 
     executed_macros.append (  ( _su , _mm ) ) 
     logger.debug ( "Macro '%s' is executed"      % _su )
     
@@ -260,10 +356,13 @@ for _su in config.input_files :
     _ss = os.path.expandvars ( _ss )
     _ss = os.path.expanduser ( _ss )
     _ss = os.path.expandvars ( _ss )
+    _ss = os.path.abspath    ( _ss ) 
 
     fname = _ss 
-    fbase , dot , ext = fname.partition('.')
-    
+    fbase , dot , ext = fname.rpartition('.')
+    bname = os.path.basename ( fbase )
+    if not bname : bname = os.path.basename ( fname )
+
     if fbase and dot and ext[:4] in ( 'root' , 'ROOT' ) :
         
         import ostap.io.root_file 
@@ -279,48 +378,16 @@ for _su in config.input_files :
         else :
             logger.warning ( "ROOT file '%s' cannot be opened" % _su )
             
-    ## ROOT/cpp macro ?
-    elif fbase and dot and ext.upper() in cpp_ext :
-        
-        if   fname.endswith ( '++' ) : sname = fname [:-2] 
-        elif fname.endswith ( '+'  ) : sname = fname [:-1] 
-        else                         : sname = fname
-
-        if os.path.exists ( sname ) and os.path.isfile ( sname ) :
-            
-            logger.debug ( "Execute the macro: `%s` " % _su ) 
-            groot = ROOT.ROOT.GetROOT()
-            sc = groot.LoadMacro ( fname )
-            ## 
-            if sc and config.batch : 
-                raise RuntimeError  ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
-            elif sc  : logger.error ( 'Failure to execute macro "%s", code:%d' % ( _su , sc ) )
-
-            ## 
-            logger.debug ( "Macro '%s' is executed"      % _su )
-            
-            fn = sname
-            if os.path.exists ( fn ) and os.path.isfile ( fn ) : fn = os.path.abspath ( fn )            
-            _macros.add ( ( _su , fn ) )
-            
-            executed_macros.append ( _su ) 
-
     ## python/ostap script ?
     elif fbase and dot and ext.upper() in ( 'PY' , 'OST' , 'OSTP' , 'OSTAP' , 'OPY' ) :
 
         # =====================================================================
         try : # ===============================================================
             # =================================================================
-            
-            import runpy
-            globs = runpy.run_path ( fname , globals() ) ## , run_name = '__main__')
-            globs = dict ( ( ( k , v ) for k,v in globs.items() if  not k.startswith('__') and not k.endswith('__')) )
-            logger.debug ( 'Symbols from %s: %s' % ( _su , globs.keys() ) ) 
-            globals().update ( globs )
-            del globs 
-            
-            executed_scripts.append ( _su )
-            logger.debug  ( "Python script '%s' is executed"      % _su )
+            run_py ( fname , run_name = bname , with_context = False , path_name = _su )
+            ##
+            executed_scripts.append ( ( _su ,fname  ) ) 
+            logger.debug  ( "Python script '%s' is executed"      % _su  )
             # ==================================================================
         except : # =============================================================
             # ==================================================================
@@ -356,11 +423,23 @@ if executed_scripts :
     
 # =============================================================================
 ## list all executed ROOT/C++ macros 
+if loaded_macros :
+    rows = [  ( '#' , 'Macro' ) ] 
+    for i, f in enumerate ( loaded_macros , start = 1 ) :
+        row = '%-2d' % i , f 
+        rows.append ( row )
+    ##  
+    title = "Loaded macros #%d " % len ( executed_macros ) 
+    import ostap.logger.table as T
+    table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+# =============================================================================
+## list all executed ROOT/C++ macros 
 if executed_macros :
-    rows = [  ( '#' , 'Macro' , 'Expanded name' ) ] 
-    for i, fd in enumerate ( executed_macros , start = 1 ) :
-        fn , fa = ff 
-        row = '%-2d' % i , fn , fa if fn != fa else '' 
+    rows = [  ( '#' , 'Macro'  ) ] 
+    for i, f in enumerate ( executed_macros , start = 1 ) :
+        row = '%-2d' % i , f 
         rows.append ( row )
     ##  
     title = "Executed macros #%d " % len ( executed_macros ) 
@@ -368,6 +447,7 @@ if executed_macros :
     table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
     logger.info ( '%s:\n%s' % ( title , table ) )
     
+
 # =============================================================================
 ## list names of opened ROOT files 
 if root_files :

@@ -89,9 +89,9 @@ OSTAP_DIR           = 'OSTAP_DIR'
 
 # =============================================================================
 ## list of "boolean false" values 
-boolean_false_values = ( '0' , 'false' , 'no'  , 'not' , 'none' , 'nope' , 'off' , '' )
+boolean_false_values = ( '0' , 'false' , 'no'  , 'not' , 'none' , 'nope' , 'off' , '' , 'disable' , 'disabled' )
 ## list of "boolean true"  values
-boolean_true_values  = ( '1' , 'true'  , 'yes' , 'sure' , 'yep' , 'on'  ) 
+boolean_true_values  = ( '1' , 'true'  , 'yes' , 'sure' , 'yep' ,           'on' , 'enable' , 'enabled' ) 
 # =============================================================================
 ## transformation:  no blanks, no understores, no dashes 
 #  - case-insensitive

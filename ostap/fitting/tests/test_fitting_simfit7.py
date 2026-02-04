@@ -12,7 +12,7 @@
 """
 # ============================================================================= 
 __author__ = "Ostap developers"
-__all__    = () ## nothing to import
+## __all__    = () ## nothing to import
 # ============================================================================= 
 from   ostap.core.core          import dsID, rooSilent 
 from   ostap.utils.timing       import timing 

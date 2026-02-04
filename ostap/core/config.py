@@ -3,25 +3,41 @@
 # =============================================================================
 ## @file ostap/core/config.py
 #  The basic configuration of ostap.
-#  Ostap parses the following configuration files :
-#  - <code>$OSTAP_DIR/.ostaprc</code>
-#  - <code>$HOME/.ostaprc</code>
-#  - <code>~/.ostaprc</code>
-#  - <code>- ~/.config/ostap/.ostaprc<.code>
-#  - <code>- $HOME/.config/ostap/.ostaprc<.code>
-#  - <code>.ostaprc</code>
-#  - <code>$OSTAP_CONFIG</code>
+#
+# Ostap defines four levels of configuration.
+# For each step the configuration can be redefines/modified and updated.
+#
+# -  The default values of the most basic parameters are defined in
+#    the `ostap.core.default_config` module 
+# -  Parameters can be redefined/modified/updated via the set of configuration files.
+#    The configuraiton files iles parsed using `configparser` module. 
+#    The default set of configuration files is also defined in `ostap.core.default_config` module
+#    and it can be redefined using the `OSTAP_CONFIG` environment variable
+# -  The parameters can be further redefined via the set of environment variables
+# -  Finally, the configuration can be adjusted/modified using the command line
+#    arguments, parsed by `argparse`, unless `OSTAP_ARPARSE` variable explicitely 
+#    switiches parsing OFF
+# 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-05-19
 # =============================================================================
-"""The basic configuration of ostap
-Ostap parses the following configuration files :
-- $OSTAP_DIR/.ostaprc
-- $HOME/.ostaprc
-- ~/.ostaprc
-- ~/.config/ostap/.ostaprc
-- .ostaprc
-- $OSTAP_CONFIG
+""" The basic configuration of ostap.
+
+Ostap defines four levels of configuration.
+For each step the configuration can be redefines/modified and updated.
+
+-  The default of the most basic parameters are defined in 
+   the `ostap.core.default_config` module 
+-  Parameters can be redefined/modified/updated via the set of configuration files.
+   The configuraiton files iles parsed using `configparser` module. 
+   The default set of configuration files is also defined in
+   the `ostap.core.default_config` module
+   and it can be redefined using the `OSTAP_CONFIG` environment variable
+-  The parameters can be further redefined via the set of environment variables
+-  Finally, the configuration can be adjusted/modified using the command line
+   arguments, parsed by `argparse`, unless `OSTAP_ARPARSE` variable explicitely 
+   switiches parsing OFF
+
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -32,48 +48,71 @@ __all__     = (
     )
 # =============================================================================
 from   ostap                     import __version__  as ostap_version 
-from   ostap.utils.env           import ( get_env            ,
-                                          has_env            ,
+from   ostap.utils.env           import ( get_env              ,
+                                          has_env              ,
                                           ##
-                                          boolean_true       , 
-                                          boolean_false      , 
+                                          boolean_true         , 
+                                          boolean_false        , 
+                                          boolean_true_values  , 
+                                          boolean_false_values , 
                                           ##
-                                          OSTAP_CONFIG       , ## very special 
-                                          OSTAP_ARGPARSE     , ## very special 
-                                          OSTAP_BATCH        ,
+                                          OSTAP_CONFIG         , ## very special 
+                                          OSTAP_ARGPARSE       , ## very special
                                           ## 
-                                          OSTAP_SILENT       ,
-                                          OSTAP_QUIET        ,
-                                          OSTAP_DEBUG        ,
-                                          OSTAP_VERBOSE      ,
-                                          OSTAP_LEVEL        ,
-                                          OSTAP_COLOR        ,
-                                          OSTAP_UNICODE      ,
+                                          OSTAP_BATCH          ,
                                           ## 
-                                          OSTAP_DUMP_CONFIG  ,
-                                          ##
-                                          OSTAP_BUILD_DIR    ,
-                                          OSTAP_CACHE_DIR    ,                                          
-                                          OSTAP_TMP_DIR      ,
+                                          OSTAP_SILENT         ,
+                                          OSTAP_QUIET          ,
+                                          OSTAP_DEBUG          ,
+                                          OSTAP_VERBOSE        ,
+                                          OSTAP_LEVEL          ,
+                                          OSTAP_COLOR          ,
+                                          OSTAP_UNICODE        ,
                                           ## 
-                                          OSTAP_WEB_DISPLAY  ,
+                                          OSTAP_DUMP_CONFIG    ,
                                           ##
-                                          OSTAP_PARALLEL      ,                                          
-                                          OSTAP_NCPUS         ,
-                                          OSTAP_IMPLICITMT    ,                                          
-                                          OSTAP_PROFILE       ,                                          
-                                          ##
-                                          OSTAP_TABLE         ,
-                                          OSTAP_PROTOCOL      ,
+                                          OSTAP_BUILD_DIR      ,
+                                          OSTAP_CACHE_DIR      ,                                          
+                                          OSTAP_TMP_DIR        ,
                                           ## 
-                                          OSTAP_STARTUP       )
+                                          OSTAP_WEB_DISPLAY    ,
+                                          ##
+                                          OSTAP_PARALLEL       ,                                          
+                                          OSTAP_NCPUS          ,
+                                          OSTAP_IMPLICITMT     ,                                          
+                                          OSTAP_PROFILE        ,                                          
+                                          ##
+                                          OSTAP_TABLE          ,
+                                          OSTAP_PROTOCOL       ,
+                                          ## 
+                                          OSTAP_STARTUP        )
 
 # =============================================================================
 import ostap.core.default_config      as     default_config 
 import configparser, os, sys, logging, argparse, ast, copy      
 # =============================================================================
-## config-parser itself 
-config = configparser.ConfigParser()
+## converter for lists 
+# ==============================================================================
+## converter for lists: 
+def get_list ( expression ) :
+    """ (configparser) coverter for lists
+    """
+    if not expression or not expression.strip() : return []
+    ## 
+    ## for "Commands": 
+    if   ';\n' in expression : return [ item.strip() for item in expression.split ( ';\n' ) ]
+    elif '\n'  in expression : return [ item.strip() for item in expression.split ( '\n'  ) ]
+    elif ','   in expression : return [ item.strip() for item in expression.split ( ','   ) ]
+    ## 
+    ## other lists 
+    return [ item.strip() for item in expression.split () ]
+
+# ============================================================================
+## config-parser itself
+config = configparser.ConfigParser (
+    converters = { 'list' : get_list } , 
+    strict     = True    )
+
 # =============================================================================
 
 ## define the major section:
@@ -105,9 +144,10 @@ config [ 'General' ] = {
     'Profile'     : str ( default_config.profile       ) ,
     'Protocol'    : str ( default_config.protocol      ) ,    
     ##
-    'Startup'     : str ( default_config.startup_files ) ,
-    'Macros'      : str ( default_config.macros        ) ,
-    'Commands'    : str ( default_config.commands      ) ,
+    'Startup'     : ', ' .join ( v for v in default_config.startup_files ) ,
+    'LoadMacros'  : ', ' .join ( v for v in default_config.load_macros   ) ,
+    'ExecMacros'  : ', ' .join ( v for v in default_config.exec_macros   ) ,
+    'Commands'    : ';\n'.join ( v for v in default_config.commands      ) ,
     ## 
 }
 # ===========================================================================
@@ -314,17 +354,10 @@ profile      = general.getboolean ( 'Profile'     , fallback = default_config.pr
 
 protocol     = general.getint     ( 'Protocol'    , fallback = default_config.protocol     )
 
-startup_files = general.get       ( 'StartUp' , fallback = str ( default_config.startup_files ) )
-if startup_files : startup_files = ast.literal_eval ( startup_files )
-else             : startup_files = [] 
-
-macros        = general.get       ( 'Macros' , fallback = str ( default_config.macros ) )
-if macros        : macros = ast.literal_eval ( macros )
-else             : macros = []
-
-commands      = general.get       ( 'Commands'  , fallback = str ( default_config.commands ) )
-if commands      : commands = ast.literal_eval ( commands )
-else             : commands = [] 
+startup_files = general.getlist   ( 'StartUp'    , fallback = [ v for v in default_config.startup_files ] ) 
+load_macros   = general.getlist   ( 'LoadMacros' , fallback = [ v for v in default_config.load_macros   ] ) 
+exec_macros   = general.getlist   ( 'LoadMacros' , fallback = [ v for v in default_config.exec_macros   ] ) 
+commands      = general.getlist   ( 'Commands'   , fallback = [ v for v in default_config.commands      ] ) 
 
 # =============================================================================
 ## Section with canvas configuration
@@ -394,14 +427,11 @@ type ( general ).__repr__ = _sc_table_
 # ==============================================================================
 
 # ==============================================================================
-## Command-Line argumens
-# ==============================================================================
-
-# ==============================================================================
 ## Parse comand line arguments
 def __parse_args ( args  = [] ) :
     """ Parse command line arguments
     """
+
     # =========================================================================
     ## @class Collect
     #  simple parsing action to collect multiple arguments
@@ -463,10 +493,16 @@ def __parse_args ( args  = [] ) :
             ## the only one important line: 
             for v in values : items.append ( v )
             setattr( namespace, self.dest, items )
-            
+
     from argparse import ArgumentParser 
-    parser = ArgumentParser ( prog = 'ostap' )
-    ## 
+    parser = ArgumentParser  (
+        prog       = 'ostap' ,
+    )     
+    ## expand the list of vaild booleans 
+    bool_states      = {   v : True  for v in boolean_true_values  if v }
+    bool_states.update ( { v : False for v in boolean_false_values if v } ) 
+    parser.BOOLEAN_STATES = bool_states 
+    
     parser.add_argument ( 
         '-v'    , '--version' ,
         action  = 'version'   , 
@@ -476,14 +512,14 @@ def __parse_args ( args  = [] ) :
     group1  = parser.add_argument_group ( 'Control verbosity' , 'Control the general level of verbosity') 
     egroup1 = group1.add_mutually_exclusive_group()    
     egroup1.add_argument ( 
-        "-q" , "--quiet"       ,
+        "-q"    , "--quiet"    ,
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
         help    = "Quite processing, same as --print-level=4 [default: %(default)s]" ,
         default = quiet        )
     
     egroup1.add_argument ( 
-        "--silent"             ,
+        "-s"    , "--silent"             ,
         dest    = 'Silent'     , 
         action  = 'store_true' ,
         help    = "Verbose processing, same as --print-level=5 [default: %(default)s]" ,
@@ -497,7 +533,7 @@ def __parse_args ( args  = [] ) :
         default = verbose      )
     
     egroup1.add_argument ( 
-        "--debug"              ,
+        "-d"    , "--debug"    ,
         dest    = 'Debug'      , 
         action  = 'store_true' ,
         help    = "Debug processing, same as --print-level=2 [default: %(default)s]" ,
@@ -524,13 +560,22 @@ def __parse_args ( args  = [] ) :
         default = startup_files   )
     ##
     group2.add_argument ( 
-        "-m"    , "--macros"      ,
-        metavar = "MACROS"        ,
-        dest    = 'Macros'        ,
+        "-l"    , "--load-macros" ,
+        metavar = "LOAD-MACROS"   ,
+        dest    = 'LoadMacros'    ,
         nargs   = '*'             ,
         action  = Collect         , 
-        help    = "ROOT/C++ macros to be processed [default: %(default)s]" ,
-        default = macros          )
+        help    = "ROOT/C++ macros to be loaded using `ROOT.TROOT.LoadMacro` [default: %(default)s]" ,
+        default = load_macros     )
+    ###
+    group2.add_argument ( 
+        "-x"    , "--exec-macros" ,
+        metavar = "EXEC-MACROS"   ,
+        dest    = 'ExecMacros'    ,
+        nargs   = '*'             ,
+        action  = Collect         , 
+        help    = "ROOT/C++ macros to be executed  using  `ROOT.TROOT.Macro` [default: %(default)s]" ,
+        default = exec_macros     )
     ###
     group2.add_argument ( 
         '-c'    , '--command'     ,
@@ -545,7 +590,7 @@ def __parse_args ( args  = [] ) :
         "files"           ,
         metavar = "FILES" ,
         nargs   = '*'     , 
-        help    = "ROOT files, python macros, python files to be processed one by one [default: %(default)s]" ,
+        help    = "ROOT & python files to be processed one by one [default: %(default)s]" ,
         default = []      )
     ##
     group3  = parser.add_argument_group ( 'CPU/processes/parallelism' , 'Options for parallel processing') 
@@ -606,9 +651,9 @@ def __parse_args ( args  = [] ) :
         default = False         )
         
     egroup5.add_argument  (
-        '-s' , '--simple'      ,
-        action = 'store_true'  ,
-        help   = "Simple/trivial python shell [default: %(default)s] " , 
+        '--simple'      ,
+        action  = 'store_true'  ,
+        help    = "Simple/trivial python shell [default: %(default)s] " , 
         default = False        )
         
     egroup5.add_argument (
@@ -686,11 +731,11 @@ def __parse_args ( args  = [] ) :
     ## ATTENTION !! 
     if not arg_parse : v = []  ## ATENTION! 
 
-    return parser.parse_args( v )
+    return parser , parser.parse_args( v )
 
 # ================================================================================
 ## command-line arguments
-arguments = __parse_args ()
+parser, arguments = __parse_args ()
 
 # ================================================================================
 ## update the global configuration
@@ -716,9 +761,11 @@ general [ 'NCPUs'       ] = str ( arguments.NCPUs      )
 general [ 'Parallel'    ] = str ( arguments.Parallel   )
 general [ 'ImplicitMT'  ] = str ( arguments.ImplicitMT )
 general [ 'Profile'     ] = str ( arguments.Profile    )
-general [ 'StartUp'     ] = str ( arguments.StartUp    )
-general [ 'Macros'      ] = str ( arguments.Macros     )
-general [ 'Commands'    ] = str ( arguments.Commands   )
+
+general [ 'StartUp'     ] = ', ' .join ( arguments.StartUp    )
+general [ 'LoadMacros'  ] = ', ' .join ( arguments.LoadMacros )
+general [ 'ExecMacros'  ] = ', ' .join ( arguments.ExecMacros )
+general [ 'Commands'    ] = ';\n'.join ( arguments.Commands   )
 
 ## 
 batch         = arguments.batch
@@ -742,11 +789,13 @@ webdisplay    = arguments.WebDisplay
 parallel      = arguments.Parallel
 ncpus         = arguments.NCPUs
 implicitMT    = arguments.ImplicitMT
-profile       = arguments.Profile 
-startup_files = arguments.StartUp
-macros        = arguments.Macros 
-commands      = arguments.Commands
-input_files   = arguments.files 
+profile       = arguments.Profile
+
+startup_files = tuple ( arguments.StartUp     ) 
+load_macros   = tuple ( arguments.LoadMacros  ) 
+exec_macros   = tuple ( arguments.ExecMacros  ) 
+commands      = tuple ( arguments.Commands    ) 
+input_files   = tuple ( arguments.files       ) 
 
 # =============================================================================
 ## The final action "at-exit"
@@ -805,11 +854,12 @@ def config_atexit ( config , files , dump ) :
 
 # ================================================================================
 ## register the final action
-import atexit 
-atexit.register ( config_atexit        ,
-                  config = config      ,
-                  files  = files_read  , 
-                  dump   = dump_config )
+if not '__main__' == __name__ :
+    import atexit 
+    atexit.register ( config_atexit        ,
+                      config = config      ,
+                      files  = files_read  , 
+                      dump   = dump_config )
 
 # ==============================================================================
 if '__main__' == __name__ :
