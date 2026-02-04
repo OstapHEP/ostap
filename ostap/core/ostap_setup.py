@@ -26,6 +26,7 @@ __all__     = (
     'executed_macros'  , ## list of successfully executed ROOT/C++ macros 
     'root_files'       , ## list of ROOT files  
     'parameters'       , ## list of extra comand-line arguments
+    'imported'         , ## dictionary  of successfully imported python symbols
     'run_py'           , ## function to run/import python scripts
 )
 # ============================================================================= 
@@ -222,7 +223,9 @@ def run_py ( path , run_name = '' , with_context = True , path_name = '' ) :
     return _r_globs
 
 # =============================================================================
-    
+## dictionary of successfully imported python symbols
+imported = {}  ## dictionary of successfully imported python symbols
+
 # =============================================================================
 ## (6) execute startup (python) files/scripts 
 # =============================================================================
@@ -253,7 +256,8 @@ for _su in config.startup_files :
         # =====================================================================
         logger.debug ( "Execute the script: `%s` " % _su ) 
         ## 
-        run_py ( fname , run_name = bname , path_name = _su , with_context = False )
+        globs = run_py ( fname , run_name = bname , path_name = _su , with_context = False )
+        imported.update ( globs )
         ##
         _scripts.add ( fname )
         executed_scripts.append ( ( _su , fname ) )
@@ -384,7 +388,8 @@ for _su in config.input_files :
         # =====================================================================
         try : # ===============================================================
             # =================================================================
-            run_py ( fname , run_name = bname , with_context = False , path_name = _su )
+            globs = run_py ( fname , run_name = bname , with_context = False , path_name = _su )
+            imported.update ( globs )
             ##
             executed_scripts.append ( ( _su ,fname  ) ) 
             logger.debug  ( "Python script '%s' is executed"      % _su  )
@@ -474,6 +479,7 @@ if parameters :
     import ostap.logger.table as T
     table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
     logger.info ( '%s:\n%s' % ( title , table ) )
+
 
 # =============================================================================
 if '__main__' == __name__ :

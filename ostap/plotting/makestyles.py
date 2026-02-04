@@ -363,7 +363,7 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             if not old_value is None :
                 changed [ attr ] = old_value 
                     
-            logger.debug  ("Set (float) attribute `%s' to be %s " %  ( attr , value ) )
+            logger.verbose ("Set (float) attribute `%s' to be %s " %  ( attr , value ) )
             
         except :
             
@@ -392,7 +392,7 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             if not old_value is None :
                 changed [ attr ] = old_value 
             
-            logger.debug  ("Set (int)   attribute `%s' to %s " %  ( attr , value ) )
+            logger.verbose ("Set (int)   attribute `%s' to %s " %  ( attr , value ) )
             
         except:
             
@@ -424,7 +424,7 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             if not old_value is None :
                 changed [ attr ] = old_value 
                         
-            logger.debug  ("Set (str)   attribute `%s; to `%s'" %  ( attr , value ) )
+            logger.verbose ("Set (str)   attribute `%s; to `%s'" %  ( attr , value ) )
             
         except :
             

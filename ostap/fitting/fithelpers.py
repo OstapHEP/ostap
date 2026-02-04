@@ -564,7 +564,7 @@ class VarMaker (object) :
                 
             ## create the variable!
             var = ROOT.RooRealVar ( name , title , *params ) 
-            self.debug ( "New variable is created: name=`%s',title=`%s/, args=%s" % ( var.name , var.title , str ( params ) ) )
+            self.debug ( "New variable is created: name=`%s',title=`%s`, args=%s" % ( var.name , var.title , str ( params ) ) )
             
             if   fix is None                     : pass ## no actions 
             elif isinstance ( fix , bool       ) : var.setConstant ( fix )

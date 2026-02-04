@@ -32,9 +32,10 @@ And it is based on the LoKi project: ``C++ ToolKit for Smart and Friendly Physic
 # =============================================================================
 ## perform the actual start of ostap
 import ostap.fixes.fixes 
-from   ostap.core.run_ostap  import *
-from   ostap.utils.basic     import with_ipython
-import ostap.core.config     as     config  
+from   ostap.core.run_ostap   import *
+from   ostap.core.ostap_setup import imported
+from   ostap.utils.basic      import with_ipython, typename 
+import ostap.core.config      as     config  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -51,6 +52,17 @@ if config.batch :
     logger.debug  ('Bye, bye...')
     exit () 
 
+# =============================================================================
+## import imported symbols :-)
+if imported : 
+    globals().update ( imported )
+    from ostap.logger.utils import map2table 
+    ss = { k : typename  ( v ) for k,v in imported.items() }
+    title  = "Non-standard Symbols" 
+    header = ( 'Symbol', 'Type' )
+    logger.info ("%s:\n%s" % ( title , map2table ( ss , header = header , title = title , prefix = '# ' ) ) ) 
+    del map2table, title , ss 
+    
 # =============================================================================
 ## start Ostap interactive shell 
 # ============================================================================= 
