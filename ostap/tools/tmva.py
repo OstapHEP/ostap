@@ -39,7 +39,8 @@ from   ostap.core.meta_info      import python_info, root_info
 from   ostap.core.ostap_types    import ( num_types      , integer_types  ,
                                           dictlike_types , sized_types    , 
                                           string_types   , sequence_types ) 
-from   ostap.core.core           import Ostap, WSE, VE, rootWarning
+from   ostap.core.base           import rootWarning
+from   ostap.core.core           import Ostap, WSE, VE
 from   ostap.math.base           import strings 
 from   ostap.utils.cleanup       import CleanUp
 from   ostap.utils.root_utils    import ImplicitMT 

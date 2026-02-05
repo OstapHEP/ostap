@@ -30,8 +30,8 @@ __all__     = (
     'run_py'           , ## function to run/import python scripts
 )
 # ============================================================================= 
+from   ostap.core.base        import rootException 
 import ostap.core.config      as     config 
-import ostap.fixes.fixes
 import ostap.core.build_dir
 import ostap.core.cache_dir
 import ostap.utils.cleanup
@@ -216,7 +216,7 @@ def run_py ( path , run_name = '' , with_context = True , path_name = '' ) :
         
     elif symbols_new or symbols_updated :
         
-        logger.info ('run_py(%s): updated/new symbols %d/%d' % ( path ,
+        logger.info ('run_py(%s): Updated/New symbols %d/%d' % ( path ,
                                                                  len ( symbols_updated ) ,
                                                                  len ( symbols_new     ) ) ) 
         
@@ -273,56 +273,92 @@ for _su in config.startup_files :
 # =============================================================================
 ## (7) Load ROOT/C++ macros 
 # =============================================================================
-loaded_macros =     []
+loaded_macros = [] 
 for m in config.load_macros :
     ## 
     groot = ROOT.ROOT.GetROOT()
     if not groot : continue
     ##
     ## (1) just check the macro exists and readable
-    cerr = ctypes.c_int( 0 ) 
-    sc   = groot.LoadMacro ( m , cerr , True )
-    cerr = cerr.value 
-    if sc and config.batch : raise RuntimeError  ( 'load_macro: macro `%s` is not found!' ) 
-    elif sc                :
-        logger.error                             ( "load_macro: macro `%s` is not found!" )
+    cerror  = ctypes.c_int( 0 ) 
+    sc      = groot.LoadMacro ( m , cerror , True ) ## CHECK MACRO 
+    cerror  = cerror.value
+    if sc or cerror : 
+        msg = 'load_macro: macro `%s` is not found!' % m
+        if config.batch : raise RuntimeError ( msg )
+        else            : logger.error       ( msg )
         continue
-
+    ## 
     ## (2) Load macro 
     logger.debug ( "Load  macro: `%s`" % m  )
-    cerr = ctypes.c_int( 0 ) 
-    sc   = groot.LoadMacro ( m , cerr , False  )
-    ## 
-    if sc and config.batch : 
-        raise RuntimeError  ( 'Failure to load macro "%s", code:%d' % ( m , sc ) )
-    elif sc  :
-        logger.error        ( 'Failure to load macro "%s", code:%d' % ( m , sc ) )
-        continue 
-    ## 
-    loaded_macros.append ( m ) 
-    logger.debug ( "Macro is loaded `%s`"      % m )
-
+    ##
+    # ======================================================================
+    try : # ================================================================
+        # ==================================================================
+        with rootException() :             
+            cerror = ctypes.c_int( 0 )
+            sc     = groot.LoadMacro ( m , cerror , False  )
+            cerror = cerror.value 
+            ##
+        if sc or cerror :
+            msg = 'Failure to load macro "%s", code:%d/%d' % ( m , sc , cerror )
+            if config.batch : raise RuntimeError ( msg )
+            else            : logger.error       ( msg )
+            continue 
+            ##
+        loaded_macros.append ( m ) 
+        logger.debug ( "Macro is loaded `%s`"      % m )
+        # ==================================================================
+    except : # =============================================================
+        # ==================================================================
+        msg = 'Failure to load macro "%s"' % m
+        if config.batch : raise 
+        else            : logger.error ( msg , exc_info = True )
+                        
 # =============================================================================
 ## (7) Execute ROOT/C++ macros 
 # =============================================================================
-executed_macros =     []
+executed_macros = [] 
 for m in config.exec_macros :
     ## 
     logger.debug ( "Execute macro: `%s` " % m ) 
     groot = ROOT.ROOT.GetROOT()
-    cerr  = ctypes.c_int( 0 )     
-    sc    = groot.Macro ( _mm , cerr , not config.batch )
-    cerr  = cerr.value 
+    ##
+    ## (1) just check the macro exists and readable
     ## 
-    if ( sc or cerr ) and config.batch : 
-        raise RuntimeError  ( 'Failure to execute macro "%s", code:%s/%s' % ( m , sc , cerr ) )
-    elif sc  or cerr :
-        logger.error ( 'Failure to execute macro "%s", code:%s/%s' % ( m , sc, cerr ) )
-        continue 
+    cerror = ctypes.c_int( 0 )
+    sc     = groot.LoadMacro ( m , cerror , True )  ## CHECK MACRO 
+    cerror = cerror.value
+    if sc or cerror : 
+        msg = 'exec_macro: macro `%s` is not found!' % m
+        if config.batch : raise RuntimeError ( msg )
+        else            : logger.error       ( msg )
+        continue
     ## 
-    executed_macros.append (  ( _su , _mm ) ) 
-    logger.debug ( "Macro '%s' is executed"      % _su )
-    
+    ## (2) execute macro
+    ##
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with rootException () : 
+            cerror  = ctypes.c_int( 0 )     
+            sc      = groot.Macro ( m , cerror , not config.batch )
+            cerror  = cerror.value 
+        if sc or cerror :
+            msg = 'Failure to execute macro "%s", code:%d/%d' % ( m , sc , cerror )
+            if config.batch : raise RuntimeError ( msg )
+            else            : logger.error       ( msg )
+            continue 
+        ## 
+        executed_macros.append ( m ) 
+        logger.debug ( "Macro '%s' is executed"      % _su )
+        # =====================================================================
+    except : # ================================================================
+        # =====================================================================
+        msg = 'Failure to execute macro "%s"' % m 
+        if config.batch : raise 
+        else            : logger.error ( msg , exc_info = True )
+                
 # =============================================================================
 ## (8) Execute the commands 
 # =============================================================================
@@ -429,9 +465,9 @@ if executed_scripts :
 # =============================================================================
 ## list all executed ROOT/C++ macros 
 if loaded_macros :
-    rows = [  ( '#' , 'Macro' ) ] 
-    for i, f in enumerate ( loaded_macros , start = 1 ) :
-        row = '%-2d' % i , f 
+    rows = [  ( '#' , '' , ''  'Macro' ) ] 
+    for i , m in enumerate ( loaded_macros , start = 1 ) :
+        row = '%-2d' % i , m 
         rows.append ( row )
     ##  
     title = "Loaded macros #%d " % len ( executed_macros ) 
@@ -442,9 +478,9 @@ if loaded_macros :
 # =============================================================================
 ## list all executed ROOT/C++ macros 
 if executed_macros :
-    rows = [  ( '#' , 'Macro'  ) ] 
-    for i, f in enumerate ( executed_macros , start = 1 ) :
-        row = '%-2d' % i , f 
+    rows = [  ( '#' , '' , '' , 'Macro'  ) ] 
+    for i , m in enumerate ( executed_macros , start = 1 ) :
+        row = '%-2d' % i , m 
         rows.append ( row )
     ##  
     title = "Executed macros #%d " % len ( executed_macros ) 
@@ -452,7 +488,6 @@ if executed_macros :
     table = T.table ( rows , title = title , alignment = 'cw' , prefix = '# ' )
     logger.info ( '%s:\n%s' % ( title , table ) )
     
-
 # =============================================================================
 ## list names of opened ROOT files 
 if root_files :

@@ -66,19 +66,24 @@ __all__     = (
     'rootException'       , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception' , ## context manager to perform ROOT Error -> C++/Python exception
     ##
-    )
+)
 # =============================================================================
 from   ostap.core.meta_info   import root_info
-from   ostap.math.base        import ( Ostap    , std      , cpp , valid_pointer , 
+from   ostap.core.base        import ( ROOTIgnore          ,
+                                       RooSilent           ,
+                                       rootException       ,
+                                       RootError2Exception ,
+                                       valid_pointer       ,
+                                       rooSilent           ,
+                                       roo_silent          ,                                        
+                                       rootError           ,
+                                       rootWarning         ) 
+from   ostap.math.base        import ( Ostap    , std      , cpp ,
                                        iszero   , isequal  ,
                                        isint    , islong   ,
                                        inrange  , strings  , 
                                        natural_number      ,
-                                       natural_entry       ,
-                                       ROOTIgnore          ,
-                                       RooSilent           ,
-                                       rootException       ,
-                                       RootError2Exception )
+                                       natural_entry       )
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.ostap_types import integer_types, sequence_types, string_types
@@ -118,7 +123,7 @@ def rootID ( prefix = 'root_' , suffix = '' ) :
     return  Ostap.Utils.rootID ( prefix , suffix )
 
 # =================================================================================
-## use dby ROOT/RooFit ?  
+## used by ROOT/RooFit ?  
 usedRootID = Ostap.Utils.usedRootID 
 
 # =============================================================================
@@ -807,75 +812,6 @@ def _rtc_iadd_ ( self , item ) :
 
 ROOT.TCollection. __iadd__ = _rtc_iadd_ 
     
-
-# =============================================================================
-## very simple context manager to suppress ROOT printout
-#  @code
-#  >>> with rootError () : some_ROOT_code_here()
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-07-30
-def rootError   ( level = 1 ) :
-    """ Very simple context manager to suppress ROOT printout
-    >>> with rootError () : some_ROOT_code_here()
-    """
-    return ROOTIgnore ( ROOT.kError   + level )
-
-# =============================================================================
-## very simple context manager to suppress ROOT printout
-#  @code
-#  >>> with rootError () : some_ROOT_code_here()
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2015-07-30
-def rootWarning ( level = 1 ) :
-    """ Very simple context manager to suppress ROOT printout
-    >>> with rootWarning () : some_ROOT_code_here()
-    """
-    return ROOTIgnore ( ROOT.kWarning + level )
-
-
-# =============================================================================
-## very simple context manager to suppress RooFit printout
-#
-#  @code
-#
-#  >>> with rooSilent( 4 , False ) :
-#  ...        some_RooFit_code_here()
-#
-#  @endcode
-#  @see RooMgsService
-#  @see RooMgsService::globalKillBelow
-#  @see RooMgsService::silentMode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-09
-def rooSilent ( level = ROOT.RooFit.ERROR , silent = True ) :
-    """ Very simple context manager to suppress RooFit printout
-    >>> with rooSilent( 4 , False ) :
-    ...        some_RooFit_code_here()    
-    """
-    return RooSilent ( level , silent ) 
-
-# =============================================================================
-## helper context manager
-#  @code
-#
-#  >>> with roo_silent( True ) : 
-#  ...        some_RooFit_code_here()
-#
-#  @endcode
-#  @see rooSilent
-#  @see NoContex
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2013-07-09
-def roo_silent ( silence , *args ) :
-    """ Helper context manager#
-    >>> with roo_silent ( True ) : 
-    ...        some_RooFit_code_here()
-    """
-    return rooSilent ( *args ) if silence else NoContext() 
-
-# =============================================================================
 
 
 # =============================================================================

@@ -58,7 +58,7 @@ if imported :
     globals().update ( imported )
     from ostap.logger.utils import map2table 
     ss = { k : typename  ( v ) for k,v in imported.items() }
-    title  = "Non-standard Symbols" 
+    title  = "Imported symbols" 
     header = ( 'Symbol', 'Type' )
     logger.info ("%s:\n%s" % ( title , map2table ( ss , header = header , title = title , prefix = '# ' ) ) ) 
     del map2table, title , ss 
@@ -75,9 +75,9 @@ if not config.arguments.simple : # ============================================
     except ImportError : # ====================================================
         # =====================================================================
         logger.error ( "Can't use IPython, switch to `simple' interactive console" )
-        arguments.simple = True
-        arguments.embed  = False
-        
+        arguments.simple      = True
+        arguments.embed       = False
+
 # =============================================================================
 if config.arguments.embed : ## the only one option up to Ostap v1r9
     # =========================================================================
@@ -99,7 +99,7 @@ elif config.arguments.simple : ## new from Ostap v1r10
     shell = code.InteractiveConsole( _vars )
     shell.interact()
     # ==========================================================================    
-else :                   ## new from Ostap v1r10 
+else :                         ## new from Ostap v1r10 
     # ==========================================================================
     _vars = globals().copy()
     _vars.update( locals() )

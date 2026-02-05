@@ -4,8 +4,8 @@
 ## @file ostap/core/config.py
 #  The basic configuration of ostap.
 #
-# Ostap defines four levels of configuration.
-# For each step the configuration can be redefines/modified and updated.
+#  Ostap defines four levels of configuration.
+#  For each step the configuration can be redefines/modified and updated.
 #
 # -  The default values of the most basic parameters are defined in
 #    the `ostap.core.default_config` module 
@@ -16,15 +16,15 @@
 # -  The parameters can be further redefined via the set of environment variables
 # -  Finally, the configuration can be adjusted/modified using the command line
 #    arguments, parsed by `argparse`, unless `OSTAP_ARPARSE` variable explicitely 
-#    switiches parsing OFF
+#    switches off the parsing of command iilne arguments 
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-05-19
 # =============================================================================
 """ The basic configuration of ostap.
 
-Ostap defines four levels of configuration.
-For each step the configuration can be redefines/modified and updated.
+   Ostap defines four levels of configuration.
+   For each step the configuration can be redefines/modified and updated.
 
 -  The default of the most basic parameters are defined in 
    the `ostap.core.default_config` module 
@@ -36,7 +36,7 @@ For each step the configuration can be redefines/modified and updated.
 -  The parameters can be further redefined via the set of environment variables
 -  Finally, the configuration can be adjusted/modified using the command line
    arguments, parsed by `argparse`, unless `OSTAP_ARPARSE` variable explicitely 
-   switiches parsing OFF
+   switches off the parsing of command ilne arguments 
 
 """
 # =============================================================================
@@ -168,8 +168,9 @@ config [ 'IPyparallel' ] = {} ## ipyparallel configuration
 config_files = default_config.config_files
 
 if has_env ( OSTAP_CONFIG ) : 
-    config_files = get_env ( OSTAP_CONFIG , '' , silent = True )
-    config_files = tuple ( config_files.split ( os.pathsep ) ) 
+    value = get_env ( OSTAP_CONFIG , '' , silent = True )
+    if ',' in value : config_files = tuple ( i.strip() for i in value.split ( ','        ) ) 
+    else            : config_files = tuple ( i.strip() for i in value.split ( os.pathsep ) ) 
 
 the_files    = [] 
 for f in config_files :
@@ -204,22 +205,31 @@ _filed_read = tuple ( _files_read )
 general      = config [ 'General' ]
 
 # ==============================================================================
-## ATTENTION: Redefine configuratuin using the environment variables 
+## ATTENTION: Redefine configuration using the environment variables 
 # ==============================================================================
 
 if has_env ( OSTAP_ARGPARSE ) :
+    
     value = get_env ( OSTAP_ARGPARSE , 'True' , silent = True  )
-    value = boolean_true ( value )
-    general['ArgParse' ] = 'True' if value else 'False'
+    if   boolean_false ( value ) :  general [ 'ArgParse' ] = 'False'
+    elif boolean_true  ( value ) :  general [ 'ArgParse' ] = 'True'
+
+elif general.getboolean ( 'ArgParse' , fallback = default_config.arg_parse ) :
+    
+    if   '--no-parse'     in sys.argv : general [ 'ArgParse' ] = 'False'
+    elif '--no-argparse'  in sys.argv : general [ 'ArgParse' ] = 'False'
+    elif '--no-arg-parse' in sys.argv : general [ 'ArgParse' ] = 'False'
 
 if has_env ( OSTAP_BATCH ) :
-    value_ = get_env ( OSTAP_BATCH , '' , silent = True  )        
-    if value_ : general [ 'Batch' ] = 'True'
+    
+    value = get_env ( OSTAP_BATCH , '' , silent = True  )        
+    if   boolean_false ( value ) :  general [ 'Batch' ] = 'False'
+    elif boolean_true  ( value ) :  general [ 'Batch' ] = 'True'
     
 elif not general.getboolean ( 'Batch' , fallback = default_config.batch ) :
-    value_ = any ( a.lower() in ( '-b' , '--batch' , '--no-gui' ) for a in sys.argv )
-    if value_ : general [ 'Batch' ] = 'True'
-    
+    value = any ( a.lower() in ( '-b' , '--batch' , '--no-gui' ) for a in sys.argv )
+    if value : general [ 'Batch' ] = 'True'
+
 # ============================================================================
 
 if get_env ( OSTAP_SILENT , '' , silent = True ) : 
@@ -260,12 +270,16 @@ elif has_env ( OSTAP_LEVEL ) :
     if value_ : general [ 'Level'   ] = value_
 
 if has_env ( OSTAP_COLOR ) :
-    value_ = get_env ( OSTAP_COLOR , '' , silent = True  )        
-    if value_ : general [ 'Color'   ] = value_
+    
+    value = get_env ( OSTAP_COLOR , '' , silent = True  )
+    if    boolean_false ( value ) :  general [ 'Color' ] = 'False'
+    elif  boolean_true  ( value ) :  general [ 'Color' ] = 'True'
 
 if has_env ( OSTAP_UNICODE ) :
-    value_ = get_env ( OSTAP_UNICODE , '' , silent = True  )        
-    if value_ : general [ 'Unicode' ] = value_
+    
+    value = get_env ( OSTAP_UNICODE , '' , silent = True  )
+    if    boolean_false ( value ) :  general [ 'Unicode' ] = 'False'
+    elif  boolean_true  ( value ) :  general [ 'Unicode' ] = 'True'
 
 # ============================================================================
 ## redefine ncpus from the environment variable 
@@ -285,46 +299,65 @@ if has_env ( OSTAP_NCPUS ) : # ===============================================
 # ============================================================================
 ## redefine parallel from the environment variable
 if has_env ( OSTAP_PARALLEL ) :
-    value_ = get_env ( OSTAP_PARALLEL , '' , silent = True  )        
-    if value_ : general [ 'Parallel' ] = value_
+    value = get_env ( OSTAP_PARALLEL , '' , silent = True  )        
+    if value : general [ 'Parallel' ] = value
 
 if has_env ( OSTAP_PROFILE ) :
-    value_ = get_env ( OSTAP_PROFILE , '' , silent = True  )        
-    if value_ : general [ 'Profile' ] = value_
+    
+    value = get_env ( OSTAP_PROFILE , '' , silent = True  )
+    if    boolean_false ( value ) :  general [ 'Profile' ] = 'False'
+    elif  boolean_true  ( value ) :  general [ 'Profile' ] = 'True'
     
 # ============================================================================
 ## redefine web display from the environment variable
 if has_env ( OSTAP_WEB_DISPLAY ) :
-    value_ = get_env ( OSTAP_WEB_DISPLAY , '' , silent = True  )        
-    if value_ : general [ 'WebDisplay' ] = value_
+    value = get_env ( OSTAP_WEB_DISPLAY , '' , silent = True  )        
+    if value : general [ 'WebDisplay' ] = value
     
 if has_env ( OSTAP_BUILD_DIR ) :
-    build_dir_ = get_env ( OSTAP_BUILD_DIR , '' , silent = True  )        
-    if build_dir_ : general [ 'BuildDir' ] = str ( build_dir_ )
+
+    value = get_env ( OSTAP_BUILD_DIR , '' , silent = True  )        
+    if value: general [ 'BuildDir' ] = value 
     
-if has_env ( OSTAP_CACHE_DIR ) :    
-    cache_dir_ = get_env ( OSTAP_CACHE_DIR , '' , silent = True  )        
-    if cache_dir_ : general [ 'CacheDir' ] = str ( cache_dir_ ) 
+if has_env ( OSTAP_CACHE_DIR ) :
+    
+    value = get_env ( OSTAP_CACHE_DIR , '' , silent = True  )        
+    if value : general [ 'CacheDir' ] = value 
     
 if  has_env ( OSTAP_TMP_DIR ) :
-    tmp_dir_ = get_env ( OSTAP_TMP_DIR , '' , silent = True  )        
-    if tmp_dir_ : general [ 'TmpDir' ] = str ( tmp_dir_ )   
+    
+    value = get_env ( OSTAP_TMP_DIR , '' , silent = True  )        
+    if value : general [ 'TmpDir' ] = value   
 
 if  has_env ( OSTAP_DUMP_CONFIG ) :
-    dump_ = get_env ( OSTAP_DUMP_CONFIG , '' , silent = True  )        
-    if dump_ : general [ 'DumpConfig' ] = str ( dump_ )   
+    
+    value = get_env ( OSTAP_DUMP_CONFIG , '' , silent = True  )        
+    if value : general [ 'DumpConfig' ] = value 
 
-if has_env ( OSTAP_STARTUP ) : 
-    value_    = get_env ( OSTAP_CONFIG , '' , silent = True )
-    if value_ : general [ 'StartUp' ] = str ( tuple ( value_.split ( os.pathsep ) ) ) 
+if has_env ( OSTAP_STARTUP ) :
 
-if has_env ( OSTAP_PROTOCOL ) : 
-    value_    = get_env ( OSTAP_PROTOCOL , '5' , silent = True )
-    try :
-        value_ = int ( value_.strip()  )
-        if 0 <= value_ : general ['Protocol'] = str ( value_ ) 
-    except :
-        pass
+    value = get_env ( OSTAP_CONFIG , '' , silent = True )
+    if value  :
+        ## comma-separated list 
+        if ',' in value : general [ 'StartUp' ] = ', '.join ( i.strip() for i in value.split ( ','        ) )
+        ## os.pathsep-separated list 
+        else            : general [ 'StartUp' ] = ', '.join ( i.strip() for i in value.split ( os.pathsep ) )
+
+
+if has_env ( OSTAP_PROTOCOL ) :
+    
+    value    = get_env ( OSTAP_PROTOCOL , '5' , silent = True )
+    # ========================================================================== 
+    if value : # ===============================================================
+        # ======================================================================
+        try : # ================================================================
+            # ==================================================================
+            value = int ( value )
+            if 0 <= value : general ['Protocol'] = str ( value )
+            # ==================================================================
+        except : # =============================================================
+            # ==================================================================
+            pass
     
 # =============================================================================
 ## Some explicit & important elements from the `General` section:
@@ -642,7 +675,7 @@ def __parse_args ( args  = [] ) :
         dest    = 'batch'       , 
         action  = 'store_false' ,
         help    = "Interactive shell/start_ipython" ,        
-        default =  batch         )
+        default =  batch        )
     
     egroup5.add_argument (
         '-e'    , '--embed'     , 
@@ -815,11 +848,11 @@ def config_atexit ( config , files , dump ) :
     # ===========================================================================
     ## (1) print lift/table of read input config files 
     # ===========================================================================
-    if   1 == len ( files ) :  logger.info ( 'Ostap configuration is read from\n%s' % files [ 0 ]  ) 
+    if   1 == len ( files ) :  logger.info ( 'Ostap configuration is read from %s' % files [ 0 ]  ) 
     elif 1 <  len ( files ) :
         rows = [ ( '', 'file' ) ]
         for i, f in enumerate ( files , start = 1 ) :
-            row = '%d' % i , f 
+            row = '%2d' % i , f 
             rows.append ( row )            
         title = 'Ostap configuration files'
         import ostap.logger.table as T
@@ -838,9 +871,10 @@ def config_atexit ( config , files , dump ) :
             if files : 
                 fdump.write('# Ostap configuration read from:\n' )
                 for i,f in enumerate ( files , start = 1 ) : fdump.write( '# %-3d %s\n' % ( i , f ) )
+            fdump .write ( the_line )    
             fdump .write ('# Ostap configuration:\n' )                
             fdump .write ( the_line )    
-            config.write ( fdump )            
+            config.write ( fdump    )            
             fdump .write ( the_line )
             fdump .write ( '# Configuration saved at %s\n' % now.strftime ( '%c' ) )
             fdump .write ( the_line )

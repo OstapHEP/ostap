@@ -25,8 +25,8 @@ __all__     = (
     'tree_leaf'     , ## get the leaf by name 
 ) 
 # =============================================================================
-from   ostap.core.core        import valid_pointer
 from   ostap.core.ostap_types import string_types 
+from   ostap.core.base        import valid_pointer
 import ROOT 
 # =============================================================================
 # logging 

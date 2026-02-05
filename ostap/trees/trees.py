@@ -26,11 +26,12 @@ from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
                                           string_types       , sequence_types ,
                                           sized_types        , num_types      ,
                                           dictlike_types     , list_types     )
-from   ostap.core.core           import ( std , Ostap , VE   , WSE ,
-                                          hID , fID   ,  
-                                          rootException      , rootError  ,   
-                                          strings , 
-                                          valid_pointer      , rootError  ) 
+from   ostap.core.base           import ( std , Ostap   ,
+                                          valid_pointer , 
+                                          rootException , rootError ) 
+from   ostap.core.core           import ( VE  , WSE ,
+                                          hID , fID ,  
+                                          strings   ) 
 from   ostap.logger.utils        import print_args  
 from   ostap.math.reduce         import root_factory
 from   ostap.histos.histos       import histo_book2, histo_keys
