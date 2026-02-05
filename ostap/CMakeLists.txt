@@ -504,7 +504,7 @@ foreach(filename ${tests})
   if ( NOSE_EXECUTABLE AND TEST_PARALLEL LESS 0 )
     add_test (NAME ${tname}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary
-      COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=10000 )    
+      COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=6000 )    
   else   ()
     add_test (NAME ${tname}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary
@@ -512,9 +512,9 @@ foreach(filename ${tests})
   endif  ()
   
   if ( OSTAP_TEST_PYWARNINGS AND TEST_PARALLEL LESS 0 )
-    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
   else () 
-    set_tests_properties(${tname} PROPERTIES TIMEOUT 10000 )
+    set_tests_properties(${tname} PROPERTIES TIMEOUT 6000 )
   endif() 
   
 endforeach()
@@ -547,14 +547,16 @@ foreach(filename ${allfiles})
 
    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${filename} )
 
-   set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
+   set_tests_properties(${testname} PROPERTIES TIMEOUT 6000 ENVIRONMENT PYTHONWARNINGS=${OSTAP_TEST_PYWARNINGS} )
 
 endforeach() 
 
 add_test (NAME ostap.ostap        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ostap     -b )
 add_test (NAME ostap.dependencies WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND check-dependencies )
-add_test (NAME ostap.sync_dirs    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND sync-dirs -h )
- 
+add_test (NAME ostap.sync_dirs1   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND sync-dirs -h )
+add_test (NAME ostap.sync_dirs2   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND sync-dirs --progress --verbose ${CMAKE_BINARY_DIR}/Testing ${CMAKE_BINARY_DIR}/Testing2 )
+add_test (NAME ostap.pplaunch     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND pplaunch  -h )
+
 install ( DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}
           DESTINATION     ${CMAKE_INSTALL_PREFIX}${OSTAP_PYTHON_SITE_LOCAL}
           FILES_MATCHING  PATTERN "*.py" 

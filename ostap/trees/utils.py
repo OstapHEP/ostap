@@ -29,7 +29,7 @@ from   ostap.core.ostap_types import string_types, integer_types, path_types
 from   ostap.utils.cleanup    import CleanUp
 from   ostap.core.base        import valid_pointer, rootException
 from   ostap.math.base        import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
-from   ostap.utils.basic      import file_info
+from   ostap.io.utils         import file_info
 from   ostap.utils.utils      import split_range 
 import ostap.trees.base   
 import ROOT, os 

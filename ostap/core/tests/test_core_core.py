@@ -7,11 +7,12 @@
 """ Test module or soem core utils 
 """
 # =============================================================================
-from   ostap.utils.basic      import typename, num_fds
+from   ostap.utils.basic      import typename
 from   ostap.utils.strings    import split_string
 from   ostap.logger.mute      import mute
 from   ostap.core.core        import *
 from   ostap.utils.root_utils import batch_env 
+from   ostap.io.utils         import num_fds
 from   ostap.io.root_file     import ROOTCWD 
 import ROOT, warnings 
 # =============================================================================

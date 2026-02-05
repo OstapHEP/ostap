@@ -42,7 +42,7 @@ def copy_files ( file_pairs      ,
     - switch to multiprocess-based parallelisation when GNU parallel is not available 
     """
     if not copier :
-        from ostap.utils.basic import copy_file
+        from ostap.io.utils import copy_file
         copier = copy_file
         
     if not copy_cmd : copy_cmd = 'cp'

@@ -1265,7 +1265,7 @@ class Trainer(object) :
         
         if self.weights_files : 
             wfiles = flatten ( self.weights_files )
-            from ostap.utils.basic import commonpath
+            from ostap.io.utils import commonpath
             wd = commonpath ( wfiles ) if 1 < len ( wfiles  ) else ''
             if wd :
                 row = "Weights directory" , wd
@@ -1277,7 +1277,7 @@ class Trainer(object) :
 
         if self.class_files : 
             cfiles = flatten ( self.class_files )
-            from ostap.utils.basic import commonpath
+            from ostap.io.utils import commonpath
             wd = commonpath ( cfiles ) if 1 < len ( cfiles  ) else ''
             if wd :
                 row = "Class directory" , wd

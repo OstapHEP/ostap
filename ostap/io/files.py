@@ -845,7 +845,7 @@ def copy_files ( files_to_copy           ,
                                   
 
     if not copier :
-        from ostap.utils.basic  import copy_file
+        from ostap.io.utils  import copy_file
         copier = copy_file
 
     from   ostap.utils.basic      import numcpu
@@ -916,7 +916,7 @@ def sync_files ( files_to_copy          ,
 
     from   ostap.utils.utils  import which
     if not which ( 'rsync' ) :
-        from ostap.utils.basic import copy_file
+        from ostap.io.utils import copy_file
         return copy_files ( files_to_copy        ,
                             new_dir  = new_dir   ,
                             parallel = parallel  ,
@@ -926,7 +926,7 @@ def sync_files ( files_to_copy          ,
 
     if not copy_cmd : copy_cmd = 'rsync -a'
     if not copier : 
-        from ostap.utils.basic  import sync_file
+        from ostap.io.utils import sync_file
         copier = sync_file
         
     return copy_files ( files_to_copy        ,

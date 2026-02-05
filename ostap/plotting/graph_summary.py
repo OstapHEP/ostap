@@ -855,8 +855,14 @@ class SummaryGraph(object) :
         >>> summary .draw()
         """
 
+        axis = self.histo.GetXaxis() if self.transposed else self.histo.GetYaxis()
+        axis.SetNdivisions  ( 0  )
+
         ## master histogram 
         self.histo.draw ( option = option , copy = copy , **kwargs )
+
+        axis = self.histo.GetXaxis() if self.transposed else self.histo.GetYaxis()
+        axis.SetNdivisions  ( 0  )
 
         ## various elements 
         for b in self.bands      : b.draw (         copy = copy )

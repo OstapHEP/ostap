@@ -27,23 +27,26 @@ __date__    = "2013-02-10"
 # =============================================================================
 __all__     = ()
 # =============================================================================
-from   ostap.utils.basic  import numcpu, commonpath 
-from   ostap.utils.timing import timing
-from   ostap.io.files     import sync_dirs, fsize_unit
-import ostap.logger.table  as    T
-import sys, os, argparse
-# =============================================================================
-from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.sync-dirs' )
-else                       : logger = getLogger( __name__          )
-del getLogger
-# =============================================================================
-
-# =============================================================================
 if '__main__' == __name__ :
+
+    # =============================================================================
+    import os, sys 
+    os.environ['OSTAP_ARGPARSE'] = 'False'
+    
+    # =============================================================================
+    from   ostap.logger.logger import getLogger
+    logger = getLogger( 'ostap.sync-dirs' )
+    
+    from   ostap.utils.basic  import numcpu
+    from   ostap.utils.timing import timing
+    from   ostap.io.utils     import commonpath 
+    from   ostap.io.files     import sync_dirs, fsize_unit
+    import ostap.logger.table  as    T
+    import argparse
     
     parser = argparse.ArgumentParser  (
         prog       = "sync-dirs" )
+    
     parser.add_argument    (
         '--parallel' ,
         type    = int         , 
@@ -53,12 +56,14 @@ if '__main__' == __name__ :
     parser.add_argument    (
         '--progress'                  ,
         help    = "Show progress bar" ,
-        action  = "store_true"        )
+        action  = "store_true"        ,
+        default = False               ) 
     
     parser.add_argument    (
         '--verbose' ,
         help    = "Verbose processing [default: False]" ,
-        action  = "store_true" )
+        action  = "store_true"        , 
+        default = False               ) 
     
     parser.add_argument   (
         '-c' , '--command' ,
@@ -70,6 +75,7 @@ if '__main__' == __name__ :
         "source"      ,
         type    = str , 
         help    = "The source directory" )
+    
     parser.add_argument   (
         "target"      ,
         type    = str , 

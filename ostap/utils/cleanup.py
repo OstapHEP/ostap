@@ -446,7 +446,7 @@ import atexit
 def _cleanup_ () :
 
     ## mtime is needed here 
-    from ostap.utils.basic import mtime
+    from ostap.io.utils import mtime
     
     ## 1. clean up the files 
     tmp_files  = CleanUp._tmpfiles

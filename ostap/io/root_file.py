@@ -1405,7 +1405,7 @@ def copy_file ( source , destination , progress = True ) :
 
     ## (1) trivial copy as plain file 
     if os.path.exists ( source ) and os.path.isfile ( source ) : 
-        from ostap.utils.basic import copy_file as cpfile
+        from ostap.io.utils import copy_file as cpfile
         return cpfile ( source , destination , progress = progress )
 
     ## (2) check existance with ROOT 

@@ -1087,7 +1087,7 @@ class Trainer(object):
             row = "Workdir" , self.workdir 
             rows.append ( row )
             
-        from ostap.utils.basic import commonpath
+        from ostap.io.utils import commonpath
         if self.weights_files :
             ##
             if 1 == len ( self.weights_files ) :

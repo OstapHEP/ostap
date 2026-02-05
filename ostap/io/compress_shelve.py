@@ -60,7 +60,8 @@ from   ostap.io.pickling    import ( Pickler  , Unpickler, BytesIO,
                                      PROTOCOL ,
                                      HIGHEST_PROTOCOL, DEFAULT_PROTOCOL ) 
 from   ostap.utils.cleanup  import CUBase
-from   ostap.utils.basic    import file_size, writeable, typename  
+from   ostap.utils.basic    import typename  
+from   ostap.io.utils       import file_size, writeable
 import os, abc, shelve, glob, time, datetime, zipfile, tarfile 
 # =============================================================================
 from ostap.logger.logger import getLogger

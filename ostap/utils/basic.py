@@ -20,15 +20,15 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'with_ipython'         , ## do we run IPython ? 
+    ## 
+    'with_ipython'         , ## do we run IPython ?
+    'interactive'          , ## interactive processing?
+    ##
     'isatty'               , ## is the stream ``isatty'' ?
     'terminal_size'        , ## get the size of terminal cosole
-    'writeable'            , ## good writeable directory?
-    'whoami'               , ## who am I? 
-    'commonpath'           , ## common path(prefix) for list of files
-    'copy_file'            , ## copy fiel creating inetremadiet directorys if needed 
+    'whoami'               , ## who am I?
+    ##
     'NoContext'            , ## empty context manager
-    'mtime'                , ## last modication/creation time for the path (dir or file)
     'loop_items'           , ## loop over dictionary items 
     'items_loop'           , ## ditto
     ##
@@ -38,13 +38,6 @@ __all__     = (
     'prntrf'               , ## very specific printer of functions 
     ##
     'zip_longest'          , ## itertools.(i)zip.longest
-    ##
-    'file_size'            , ## get cumulative size of files/directories 
-    ##
-    'num_fds'              , ## get number of opened file descriptors 
-    'get_open_fds'         , ## get list of opened file descriptors
-    ##
-    'file_info'            , ## very simple infrmation for the file
     ##
     'isfunction'           , ## is it a function (or lambda) ?
     'islambda'             , ## is it a lambda?
@@ -58,7 +51,15 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info import python_info, whoami  
 from   itertools            import zip_longest
-import sys, os, datetime, shutil, functools  
+import sys, os, datetime, shutil, functools
+# =============================================================================
+## Interactive processing ?
+#  @see https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
+def interactive () :
+    """ Interactive processing ?
+    - see https://stackoverflow.com/questions/2356399/tell-if-python-is-in-interactive-mode
+    """
+    return hasattr ( sys , 'ps1' )
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
 #  @code
@@ -98,9 +99,13 @@ def has_unicode ( stream = None ) :
 ## helper function that allows to detect running ipython
 def with_ipython()  :
     """ Helper function that allows to detect running ipython"""
-    try :
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
         return __IPYTHON__
-    except NameError :
+        # =====================================================================
+    except NameError : # ======================================================
+        # =====================================================================
         return False
 
 # ============================================================================
@@ -111,32 +116,6 @@ def terminal_size ( fallback = fallback ) :
     >>> width, height = terminal_size () 
     """
     return shutil.get_terminal_size ( fallback ) 
-
-# ===============================================================================
-## make directory
-#  @code
-#  path = ...
-#  make_dir( path )
-#  @endcode 
-def make_dir ( bdir ) :
-    """ Make new directory 
-    >>> path = ...
-    >>> make_dir ( path )
-    """
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        if bdir : # ===========================================================
-            os.mkdir ( bdir )
-            # =================================================================
-            if os.path.exists ( bdir ) and os.path.isdir ( bdir ) :
-                return os.path.abspath ( bdir)
-        # =====================================================================
-    except OSError : # ========================================================
-        # =====================================================================
-        pass
-    
-    return ''
 
 # =============================================================================
 ## is this directory writeable?
@@ -192,7 +171,7 @@ class NoContext(object) :
     def __exit__  ( self , *args ) : pass  
 
 # =============================================================================
-## loop over dictoribnaty items
+## loop over dictionary items
 def loop_items ( dct ) :
     """ Iterate over the dictionary items
     >>> d = { 'a' : ...   , 'b' : ... , }
@@ -204,121 +183,15 @@ def loop_items ( dct ) :
 ## Iterate over the dictionary items
 items_loop = loop_items 
 
-# =============================================================================
-## Get the modification time for the path (including subdirectories)
-#  @code
-#  path = ...
-#  mdate = mtime ( path ) ## check file/directory
-#  mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectories s
-#  @endcode
-#  @attention for <cpde>subdirs=True</code> it could be very slow!
-def mtime ( path , subdirs = False ) :
-    """ Get the last modification time for the path (including subdirectories)
-    >>> path = ...
-    >>> mdate = mtime ( path ) ## check file/directory
-    >>> mdate = mtime ( path , subdirs = True ) ## check file/directory including all subdirectoreis
-    - attention: for `subdirs=True` it could be very slow! 
-    """
-    assert os.path.exists ( path ) , "mtime: the path `%s' does not exist!" % path
-
-    ## get the time of modification/creation 
-    _mtime_ = lambda p : max ( os.path.getmtime ( p ) , os.path.getctime ( p ) ) 
-
-    ## own/root  
-    tt = _mtime_ ( path ) 
-    
-    if subdirs and os.path.isdir ( path ) :
-        
-        for root, dirs, files in os.walk ( path , topdown = False ) :
-            
-            if os.path.exists ( root ) : tt  = max ( tt , _mtime_ ( root ) ) 
-
-            for d in dirs  :
-                entry = os.path.join ( root , d )
-                if os.path.exists ( entry ) : tt = max ( tt , _mtime_ ( entry ) )
-                
-            for f in files :
-                entry = os.path.join ( root , f )
-                if os.path.exists ( entry ) : tt = max ( tt , _mtime_ ( entry ) ) 
-
-    return datetime.datetime.fromtimestamp ( tt )
-
-# =========================================================================
-## copy source file into destination, creating intermediate directories
-#  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-def copy_file ( source           ,
-                destination      ,
-                progress = False ) :
-    """ Copy source file into destination, creating intermediate directories
-    - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-    """
-    assert os.path.exists ( source ) and os.path.isfile ( source ), \
-           "copy_file: `source' %s does not exist!" % source 
-    
-    destination = os.path.abspath  ( destination )    
-    destination = os.path.normpath ( destination )
-    destination = os.path.realpath ( destination )
-    
-    if os.path.exists ( destination ) and os.path.isdir ( destination ) :
-        destination = os.path.join ( destination , os.path.basename ( source ) )
-        
-    os.makedirs ( os.path.dirname ( destination ) , exist_ok = True )
-    
-    if not progress : 
-        import shutil 
-        return shutil.copy2 ( source , destination )
-    else :
-        from ostap.utils.utils import copy_with_progress
-        return copy_with_progress ( source , destination )
-
-# =========================================================================
-## Sync/copy source file into destination, creating intermediate directories, using 'rsync -a'
-#  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-def sync_file ( source              ,
-                destination         ,
-                progress    = False ) :
-    """ Sync/Copy source file into destination, creating intermediate directories
-    - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-    """
-    from   ostap.utils.utils import which
-    rsync = which ( 'rsync' )
-    if not rsync :
-        return copy_file ( source = source , destination = destination , progress = progress )
-    
-    assert os.path.exists ( source ) and os.path.isfile ( source ), \
-           "sync_file: `source' %s does not exist!" % source 
-    
-    destination = os.path.abspath  ( destination )    
-    destination = os.path.normpath ( destination )
-    destination = os.path.realpath ( destination )
-    
-    if os.path.exists ( destination ) and os.path.isdir ( destination ) :
-        destination = os.path.join ( destination , os.path.basename ( source ) )
-        
-    os.makedirs ( os.path.dirname ( destination ) , exist_ok = True )
-
-    import subprocess, shlex
-    
-    if progress : command = 'rsync --progress -a %s %s ' % ( source , destination ) 
-    else        : command = 'rsync            -a %s %s ' % ( source , destination )
-    
-    subprocess.check_call ( shlex.split ( command )  )
-    
-    if not os.path.exists ( destination ) :
-        logger.warning ( "copy_files: no expected output '%s'" % nf ) 
-        return ''
-    
-    return destination
-
 # ============================================================================
 def __the_function () : pass
 __fun_type = type ( __the_function )
 # =============================================================================
-## very specific printer of objhect
-#  - o defiend special print for fumnctins  
+## very specific printer of object
+#  - o defiend special print for functins  
 def prntrf ( o ) :
-    """ very specific printer of objhect
-      - o defiend special print for fumnctins  
+    """ very specific printer of object
+      - o defined special print for functins  
     """
     if callable ( o ) :
         func_doc = getattr ( o , 'func_doc' , '' )
@@ -353,89 +226,10 @@ def typename ( o ) :
                      getattr ( to , '__qualname__' ,\
                                getattr ( to , '__name__' ) ) )
     
-# ==============================================================================
-## get the total  size of files/directories
-#  @code
-#  size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
-#  @endfcode
-def file_size ( *files ) :
-    """ Get the total  size of files/directories
-    >>> size = file_size ( 'a.f' , 'b.f'  'c.dir' ) 
-    """
-    size = 0
-    for name in files :
-        if not os.path.exists ( name ) : continue 
-        elif   os.path.islink ( name ) : continue 
-        elif   os.path.isfile ( name ) : size += os.path.getsize ( name )
-        elif   os.path.isdir  ( name ) :
-            for dirpath , dirnames , filenames in os.walk ( name ) :
-                for f in filenames:
-                    fp = os.path.join ( dirpath , f )
-                    if not os.path.islink ( fp ):
-                        size += os.path.getsize ( fp )
-    return size
-
-# =============================================================================
-## get all open file descriptors
-#  The actual code is copied from http://stackoverflow.com/a/13624412
-def get_open_fds():
-    """ Get all open file descriptors    
-    The actual code is copied from http://stackoverflow.com/a/13624412
-    """
-    #
-    import resource
-    import fcntl
-    #
-    fds = []
-    soft , hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-    for fd in range ( 0 , soft ) :
-        # =====================================================================
-        try: # ================================================================
-            # =================================================================
-            flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-            # =================================================================
-        except IOError: # =====================================================
-            # =================================================================
-            continue
-        fds.append ( fd )
-    return tuple ( fds ) 
-
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import psutil
-    ## get number of opened file descriptors 
-    def num_fds () :
-        """ Get number of popened file descriptors """        
-        p = psutil.Process() 
-        return p.num_fds()
-    # =========================================================================
-except ImportError :
-    # =========================================================================
-    ## get number of opened file descriptors 
-    def num_fds () :
-        """ Get number of popened file descriptors"""        
-        return len ( get_open_fds () )
-    # =========================================================================
-    
-# =============================================================================
-## get the actual file name form file descriptor 
-#  The actual code is copied from http://stackoverflow.com/a/13624412
-#  @warning: it is likely to be "Linux-only" function
-def get_file_names_from_file_number ( fds ) :
-    """ Get the actual file name from file descriptor 
-    The actual code is copied from http://stackoverflow.com/a/13624412 
-    """
-    names = []
-    for fd in fds:
-        names.append(os.readlink('/proc/self/fd/%d' % fd))
-    return names
-
 # =============================================================================
 ## Get number of cores/CPUs
 if ( 3 , 13 ) <= python_info : from os import process_cpu_count as cpu_count 
 else                         : from os import         cpu_count 
-
 # =============================================================================
 ## Get number of CPUs     
 #  - it uses the function `cpu_count` from `%s` module  
@@ -457,26 +251,6 @@ def numcpu () :
     if 1 <= nc : nn = min ( nn , nc )
     ## 
     return max ( 1 , nn  ) 
-
-# =============================================================================
-## get some file info for the given path
-#  - used for multiprocessing of TTree/Tchain
-def file_info ( fname ) :
-    """ Get some file info for the given path
-    - used for multiprocessing of TTree/Tchain    
-    """
-    p , s , f = fname.partition ( '://' )
-    if p and s : return 'Protocol'
-    if os.path.exists ( fname ) and os.path.isfile ( fname ) and os.access ( fname , os.R_OK ) :
-        s = os.stat ( fname )
-        return ( s.st_mode  ,
-                 s.st_size  , 
-                 s.st_uid   ,
-                 s.st_gid   ,
-                 s.st_atime ,
-                 s.st_mtime ,
-                 s.st_ctime ) 
-    return 'Invalid'
 
 # =============================================================================
 from inspect import ismethod
