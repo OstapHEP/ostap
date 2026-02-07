@@ -66,10 +66,10 @@ elif not implicitMT and     ROOT.ROOT.IsImplicitMTEnabled() :
 groot = ROOT.ROOT.GetROOT() 
 if   groot and     config.batch and not groot.IsBatch () :
     groot.SetBatch ( True  )
-    if     groot.IsBatch() : logger.attention ( "BATCH processig is activated!"   )
+    if     groot.IsBatch() : logger.attention ( "BATCH processing is activated!"   )
 elif groot and not config.batch and     groot.IsBatch () :
     groot.SetBatch ( False )
-    if not groot.IsBatch() : logger.info      ( "BATCH processig is deactivated!" )
+    if not groot.IsBatch() : logger.info      ( "BATCH processing is deactivated!" )
 
 # =============================================================================
 ## (3) Root & RooFit print levels 

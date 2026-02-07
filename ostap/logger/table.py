@@ -206,8 +206,8 @@ def the_table ( rows                          ,
 
     title_bw = decolorize    ( title    ).strip ()
     title    = allright      ( title_bw )    
-    twidth   = visible_width ( title    ) ## visible lenght of the title 
-    pwidth   = visible_width ( prefix   ) ## visible lenght of the prefix 
+    twidth   = visible_width ( title    ) ## visible lengtt of the title 
+    pwidth   = visible_width ( prefix   ) ## visible length of the prefix 
 
     if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
     
@@ -376,8 +376,8 @@ def table ( rows                          ,
 
     title_bw = decolorize  ( title    ).strip ()
     title    = allright    ( title_bw )    
-    twidth   = visible_width ( title  ) ## visible lenght of the title 
-    pwidth   = visible_width ( prefix ) ## visible lenght of the prefix 
+    twidth   = visible_width ( title  ) ## visible length of the title 
+    pwidth   = visible_width ( prefix ) ## visible length of the prefix 
 
     if not maxwidth or maxwidth <= pwidth : maxwidth = terminal_size() [ 0 ]
 

@@ -247,7 +247,7 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
     exprs, cuts, input_string = SV.vars_and_cuts ( expressions , cuts ) 
     
     ## Frame/Tree ?
-    lenght = -1
+    length = -1
     
     if   isinstance ( frame , ROOT.TTree  ) : node , length = DataFrame ( frame ) , len ( frame ) 
     elif isinstance ( frame , frame_types ) : node = frame 
@@ -261,12 +261,12 @@ def _fr_helper_ ( frame , expressions , cuts = '' , progress = False ) :
 
     ## progress ? 
     if   progress is False               : pass
-    elif progress is True and 0 < lenght : 
+    elif progress is True and 0 < length : 
         current , cnt = frame_progress ( current , length ) 
     elif isinstance ( progress , integer_types ) and 1 < progress :
         current , cnt = frame_progress ( current , progress ) 
     elif progress :
-        current , cnt = frame_progress ( current , lenght   ) 
+        current , cnt = frame_progress ( current , length   ) 
 
     vnames   = ordered_dict ()
     added    = ordered_dict ()
@@ -375,14 +375,14 @@ def _fr_new_init_ ( self , *args , **kwargs ) :
     self._fr_old_init_ ( *args , **kwargs ) 
 
     if progress and args :
-        lenght = -1 
-        if   isinstance ( args [ 0 ] , integer_types ) and 1 < args [ 0 ] : lenght = args [ 0 ]
-        elif isinstance ( args [ 0 ] , ROOT.TTree    )                    : lenght = len ( args [ 0 ] )
-        elif isinstance ( progress   , integer_types ) and 1 < progress   : lenght = progress         
-        _ , _ = frame_progress ( self , lenght )
+        length = -1 
+        if   isinstance ( args [ 0 ] , integer_types ) and 1 < args [ 0 ] : length = args [ 0 ]
+        elif isinstance ( args [ 0 ] , ROOT.TTree    )                    : length = len ( args [ 0 ] )
+        elif isinstance ( progress   , integer_types ) and 1 < progress   : length = progress         
+        _ , _ = frame_progress ( self , length )
     elif progress and isinstance ( progress , integer_types ) and 1 < progress :
         length = progress 
-        _ , _ = frame_progress ( self , lenght )
+        _ , _ = frame_progress ( self , length )
 
 if not hasattr ( DataFrame , '_fr_old_init_' ) :
     DataFrame._fr_old_init_ = DataFrame.__init__

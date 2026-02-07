@@ -1068,7 +1068,7 @@ def _grae_setitem_ ( graph , ipoint , point ) :
     if ipoint < 0 : ipoint += len ( graph )
     
     n = len ( point)
-    assert 2 <= n <= 6 , "Invalid lenght of 'point' object"
+    assert 2 <= n <= 6 , "Invalid length of `point` object"
 
     pars = point
         

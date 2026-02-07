@@ -799,7 +799,7 @@ class RootResults ( object ):
             
             c = b - a 
             fc , ec  = pretty_float ( c , precision = precision , width = width , with_sign = True )
-            if ec : row = 'Lenght' , fc , '10^%+d' % ec 
+            if ec : row = 'Length' , fc , '10^%+d' % ec 
             else  : row = 'Length' , fc  
             rows.append ( row ) 
             
@@ -1261,7 +1261,7 @@ class RootFinder(object) :
 
         self.__roots = self.__roots [ -5 : ]
         
-        ## the lenght of the interval brackeing interval 
+        ## the length of the interval bracketing interval 
         the_len = b.x - a.x
 
         ## if guess is not specified or invalid 
