@@ -69,7 +69,9 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.meta_info   import root_info
-from   ostap.core.base        import ( ROOTIgnore          ,
+from   ostap.core.base        import ( rootID              ,
+                                       usedRootID          , 
+                                       ROOTIgnore          ,
                                        RooSilent           ,
                                        rootException       ,
                                        RootError2Exception ,
@@ -106,42 +108,23 @@ zechEff         = Ostap.Math.zechEff
 wilsonEff       = Ostap.Math.wilsonEff
 agrestiCoullEff = Ostap.Math.agrestiCoullEff
 # =============================================================================
-## global identifier for ROOT objects 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @see Ostap::Utils::rootID 
-#  @date   2011-06-07
-def rootID ( prefix = 'root_' , suffix = '' ) :
-    """ Construct the unique ROOT-id 
-    """
-    if prefix : prefix = prefix.replace ( ' ' , '_' )
-    else      : prefix = 'root_'
-    if suffix : suffix = suffix.replace ( ' ' , '_' )
-    ## 
-    if            not prefix.endswith   ( '_' ) : prefix = prefix + '_'
-    if suffix and not suffix.startswith ( '_' ) : suffix = '_' + suffix 
-    ## 
-    return  Ostap.Utils.rootID ( prefix , suffix )
-
-# =================================================================================
-## used by ROOT/RooFit ?  
-usedRootID = Ostap.Utils.usedRootID 
 
 # =============================================================================
-## global ROOT identified for function objects 
+## global ROOT identifier for function objects 
 def funcID  ( prefix = 'f_'  , suffix = '' ) : return rootID  ( prefix , suffix )
-## global ROOT identified for function objects 
+## global ROOT identifier for function objects 
 def funID   ( prefix = 'f_'  , suffix = '' ) : return funcID  ( prefix , suffix )
-## global ROOT identified for function objects 
+## global ROOT identifier for function objects 
 def fID     ( prefix = 'f_'  , suffix = '' ) : return funcID  ( prefix , suffix )
-## global ROOT identified for histogram objects 
+## global ROOT identifier for histogram objects 
 def histoID ( prefix = 'h_'  , suffix = '' ) : return rootID  ( prefix , suffix )
-## global ROOT identified for histogram objects 
+## global ROOT identifier for histogram objects 
 def histID  ( prefix = 'h_'  , suffix = '' ) : return histoID ( prefix , suffix )
-## global ROOT identified for histogram objects 
+## global ROOT identifier for histogram objects 
 def hID     ( prefix = 'h_'  , suffix = '' ) : return histoID ( prefix , suffix )
-## global ROOT identified for dataset objects 
+## global ROOT identifier for dataset objects 
 def dsID    ( prefix = 'ds_' , suffix = '' ) : return rootID  ( prefix , suffix )
-## global ROOT identified for graphs objects 
+## global ROOT identifier for graphs objects 
 def grID    ( prefix = 'gr_' , suffix = '' ) : return rootID  ( prefix , suffix )
 
 # ==================================================================================

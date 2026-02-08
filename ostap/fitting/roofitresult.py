@@ -1064,9 +1064,6 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
     fixed1       = sorted ( fixed1 ) 
     fixed2       = sorted ( fixed2 ) 
 
-    print ( 'COMMON_FLOATS' , common_floats )
-    print ( 'COMMON_FIXED'  , common_fixed  )
-    
     if not common_floats and not common_fixed :
         logger.warning ( 'There are neither common float nor common fixed parametters!' ) 
     
@@ -1079,7 +1076,6 @@ def _rfr_compare_ ( r1 , r2 , * , title = '' , prefix = '' , style = None ) :
         row = '*Common FLOAT*' ,
         rows.append ( row ) 
         for p in common_floats :
-            print ( 'CHECKING parameter' , p )
             v1 = r1 [ p ] . asVE ()  
             v2 = r2 [ p ] . asVE () 
             fmt, _ , _  , expo = fmt_pretty_ves ( v1 , v2 ,

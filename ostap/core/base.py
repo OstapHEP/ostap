@@ -26,7 +26,9 @@ __all__     = (
     'roo_silent'          , ## control RooFit verbosity 
     'rootError'           , ## control ROOT verbosity 
     'rootWarning'         , ## control ROOT verbosity
-    ## 
+    ##
+    'rootID'              , ## global unique ID for ROOT/RooFit objects 
+    'usedRootID'          , ## used by ROOT/RooFit ?  
     'valid_pointer'       , ## valid C++ pointer?
 )
 # =============================================================================
@@ -41,6 +43,7 @@ std   = cpp.std
 # =============================================================================
 ## C++ namespace Ostap
 Ostap = cpp.Ostap 
+
 # =============================================================================
 ## Simple context manager to control RooFit evrbosity
 # =============================================================================
@@ -304,8 +307,26 @@ def rootException () :
 with ROOTIgnore ( ROOT.kError ) :
     ## valid C++ pointer ? 
     _valid_pointer_ = Ostap.Utils.valid_pointer
+    _rootID_        = Ostap.Utils.rootID
     ## used by ROOT/RooFit ?  
     usedRootID = Ostap.Utils.usedRootID 
+
+# =============================================================================
+## global identifier for ROOT objects 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @see Ostap::Utils::rootID 
+#  @date   2011-06-07
+def rootID ( prefix = 'root_' , suffix = '' ) :
+    """ Construct the unique ROOT-id 
+    """
+    if prefix : prefix = prefix.replace ( ' ' , '_' ).replace ( '__' , '_' ) 
+    else      : prefix = 'root_'
+    if suffix : suffix = suffix.replace ( ' ' , '_' ).replace ( '__' , '_' ) 
+    ## 
+    if            not prefix.endswith   ( '_' ) : prefix = prefix + '_'
+    if suffix and not suffix.startswith ( '_' ) : suffix = '_' + suffix 
+    ## 
+    return  _rootID_ ( prefix , suffix )
 
 # =============================================================================
 ## Is it a valid C++ pointer?

@@ -730,7 +730,7 @@ class APDF1 ( Components ) :
 
         if ( 3 , 11 ) <= python_info : kw = { 'category' : RuntimeWarning }
         else                         : kw = {}
-        
+
         # ================================================================
         ## No need to restructure the options
         if  ( 6 , 32 ) <= root_info :            
@@ -744,7 +744,7 @@ class APDF1 ( Components ) :
                 # ========================================================                
             except Exception : # =========================================
                 # ========================================================
-                self.error ( "Exception from %s/%s fit_tp\n%s" % ( typename ( self  ) , 
+                self.error ( "Exception from %s/%s fit_to\n%s" % ( typename ( self  ) , 
                                                                    typename ( model ) , 
                                                                    self               ) , exc_info = True )
                 raise

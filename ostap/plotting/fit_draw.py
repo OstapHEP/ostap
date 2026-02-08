@@ -140,7 +140,7 @@ __all__     = (
     'combined_background_style'    , ## style for combined "background"    component(s)
     'combined_component_style'     , ## style for combined "other"         component(s)
     ##
-    'default_data_options'         , ## defautl data options
+    'default_data_options'         , ## default data options
     'default_signal_options'       , ## default options for the signal component
     'default_background_options'   , ## draw options for "background" component(s)
     'default_background2D_options' , ## draw options for "background" component(s)
@@ -692,7 +692,6 @@ draw_crossterm2        = True
 ## @var draw_order 
 #  Order of drawing components 
 draw_order             = 'SXCBTD' ## signal,crossterms,other,background,total,data 
-
 
 # =============================================================================
 ## Get the drawing option from the configuration parser 
