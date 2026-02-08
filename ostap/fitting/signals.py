@@ -518,7 +518,6 @@ class CB2_pdf(Gauss_pdf,LeftTail,RightTail) :
 
 models.append ( CB2_pdf )    
 
-
 # =============================================================================
 ## @class Needham_pdf
 # The special parametrization by Matthew NEEDHAM of
@@ -4434,8 +4433,8 @@ class Das_pdf(Gauss_pdf,TailAL,TailAR) :
     - see Ostap.Models.Das
     """
     def __init__ ( self          ,
-                   name          ,    ## the name of PDF
-                   xvar          ,    ## observable
+                   name          ,   ## the name of PDF
+                   xvar          ,   ## observable
                    mu     = None ,   ## location parameter
                    sigma  = None ,   ## width parameter
                    alphaL = None ,   ## left tail parameter
