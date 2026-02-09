@@ -410,7 +410,8 @@ def _rfr_getitem_ ( self , key  ) :
     >>> fit_result = ...
     >>> sigma = fit_result['sigma']
     """
-    
+    if isinstance ( key , ROOT.RooAbsReal ) :
+        return _rfr_getitem_ ( self , key.GetName() )
     ##
     pars = self.floatParsFinal()
     for p in pars :
@@ -420,7 +421,7 @@ def _rfr_getitem_ ( self , key  ) :
     for p in pars :
         if key == p.GetName() : return p
         
-    raise KeyError ( 'RooFitResult: invalid key %s ' % key  )
+    raise KeyError ( "RooFitResult: invalid key `%s`" % key  )
     
 # ===========================================================================
 ## get correct estimate of sum of two (or more) variables,

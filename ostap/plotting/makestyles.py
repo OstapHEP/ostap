@@ -25,8 +25,9 @@ __all__ = (
     'ostap_label'      , ## (default) Ostap Label 
     )
 # =============================================================================
-from   ostap.utils.cidict import cidict, cidict_fun
-from   ostap.utils.utils  import classprop 
+from   ostap.core.meta_info import root_info 
+from   ostap.utils.cidict   import cidict, cidict_fun
+from   ostap.utils.utils    import classprop 
 import ostap.plotting.color
 import ROOT, ctypes 
 # =============================================================================
@@ -61,8 +62,13 @@ if 0 <= value < 1 : margin_left   = value
 value = config.canvas.getfloat ( 'MarginRight'  , fallback = margin_right  )
 if 0 <= value < 1 : margin_right  = value
 
-assert 0 <= margin_top  + margin_bottom < 1 , "Invaild margin top+bottom: %s+%s" % ( margin_top  , margin_bottom ) 
-assert 0 <= margin_left + margin_right  < 1 , "Invaild margin left+right: %s+%s" % ( margin_left , margin_right  ) 
+assert 0 <= margin_top     < 1 , "Invalid margin top    : %s" % margin_top
+assert 0 <= margin_bottom  < 1 , "Invalid margin bottom : %s" % margin_bottom
+assert 0 <= margin_left    < 1 , "Invalid margin left   : %s" % margin_left 
+assert 0 <= margin_left    < 1 , "Invalid margin right  : %s" % margin_right 
+
+assert 0 <= margin_top  + margin_bottom < 1 , "Invalid margin top+bottom: %s+%s" % ( margin_top  , margin_bottom ) 
+assert 0 <= margin_left + margin_right  < 1 , "Invalid margin left+right: %s+%s" % ( margin_left , margin_right  ) 
 
 # =============================================================================
 
@@ -135,25 +141,26 @@ def style_methods () :
     """ Get the essential methods of class ROOT.TStyle
     >>> getters, setters, special = style_methods() 
     """
-    # The style getters 
+    #
+    ## The style getters 
     _getters  = set   ( [ i[3:] for i in dir ( ROOT.TStyle ) if i.startswith ( 'Get' ) ] ) 
     _getters_ = set   ( [ i[3:] for i in dir ( ROOT.TNamed ) if i.startswith ( 'Get' ) ] )
     _getters  = list  ( _getters - _getters_ )
     _getters  . sort  ( )
-    _getters  = tuple ( _getters ) 
-    
-    # The style setters  
+    _getters  = tuple ( _getters )
+    #
+    ## The style setters  
     _setters  = set   ( [ i[3:] for i in dir ( ROOT.TStyle ) if i.startswith ( 'Get' ) ] ) 
     _setters_ = set   ( [ i[3:] for i in dir ( ROOT.TNamed ) if i.startswith ( 'Set' ) ] )
     _setters  = list  ( _setters - _setters_ )
     _setters  . sort  ( )
     _setters  = tuple ( _setters )
-
-    # 
+    #
+    ##
     _setters_int   = set()
     _setters_float = set()
     _setters_str   = set()
-    
+    ##
     _style = ROOT.TStyle('tmp_style','Helper style')
     for s in _setters :
         
@@ -293,7 +300,7 @@ ROOT.TStyle.table = table_style
 ## extra attributes 
 extra = 'NumberOfColors' , 'showeditor', 'showeventstatus', 'showtoolbar', 'basestyle', 'ostaplike'
 # =============================================================================
-## Get rigth margin form 'COLZ' attribute 
+## Get right margin for 'COLZ' attribute 
 def get_right_margin ( colz , scale = 1.25 ) :
     """ Get the right margin from 'COLZ' attribute 
     """
@@ -345,17 +352,23 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
 
         if not attr in conf : continue
 
-        try :
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
             
             value     = float   ( conf.pop ( attr ) )
             setter    = getattr ( style , 'Set' + attr )
 
-            old_value = None 
-            try : 
+            old_value = None
+            # ================================================================
+            try : # ==========================================================
+                # ============================================================
                 if attr in style_getters :
                     getter    = getattr ( style , 'Get' + attr )
-                    old_value = getter () 
-            except :
+                    old_value = getter ()
+                # ============================================================
+            except : # =======================================================
+                # ============================================================
                 pass
             
             setter ( value )
@@ -364,27 +377,32 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
                 changed [ attr ] = old_value 
                     
             logger.verbose ("Set (float) attribute `%s' to be %s " %  ( attr , value ) )
-            
-        except :
-            
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning("Can't set (float) attribute %s, skip " %  attr  )
-            
 
     for attr in style_setters [ 1 ] :  
         
         if not attr in conf : continue
 
-        try  :
+        # ====================================================================
+        try  : # =============================================================
+            # ================================================================
             
             value  = int ( conf.pop ( attr )  )
             setter = getattr ( style , 'Set' + attr )
             
-            old_value = None 
-            try : 
+            old_value = None
+            # ================================================================
+            try : # ==========================================================
+                # ============================================================
                 if attr in style_getters :
                     getter    = getattr ( style , 'Get' + attr )
-                    old_value = getter () 
-            except :
+                    old_value = getter ()
+                # ============================================================
+            except : # =======================================================
+                # ============================================================
                 pass
 
             setter ( value )
@@ -393,30 +411,31 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
                 changed [ attr ] = old_value 
             
             logger.verbose ("Set (int)   attribute `%s' to %s " %  ( attr , value ) )
-            
-        except:
-            
+            # ================================================================
+        except: # ============================================================
+            # ================================================================
             logger.warning("Can't set (int)   attribute %s/%s, skip " %  attr )
         
     for attr in style_setters [ 2 ] :
         
         if not attr in conf : continue
 
-        # =================================================================================
-        try : # ===========================================================================
-            # =============================================================================
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             value  = conf.pop  ( attr ) 
             setter = getattr ( style , 'Set' + attr )
 
             old_value = None
-            # =============================================================================
-            try : # =======================================================================
-                # =========================================================================
+            # ================================================================
+            try : # ==========================================================
+                # ============================================================
                 if attr in style_getters :
                     getter    = getattr ( style , 'Get' + attr )
                     old_value = getter ()
-                # =========================================================================
-            except : # ====================================================================
+                # ============================================================
+            except : # =======================================================
+                # ============================================================
                 pass
 
             setter ( value )
@@ -425,11 +444,10 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
                 changed [ attr ] = old_value 
                         
             logger.verbose ("Set (str)   attribute `%s; to `%s'" %  ( attr , value ) )
-            
-        except :
-            
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning("Can't set (str)   attribute `%s', skip " % attr  ) 
-
 
     ## half-special attributes 
     for attr in ( 'AxisColor'   ,
@@ -458,98 +476,143 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
     for axis in ( 'X' , 'Y' , 'Z' ) :
 
         key = 'AxisColor_%s'     % axis
-        try :
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetAxisColor( axis )
                 style.SetAxisColor     ( int   ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
 
-        key = 'TickLength_%s'    % axis
-        try : 
+        key = 'TickLength_%s'    % axis        
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetTickLength ( axis )                
                 style.SetTickLength    ( float ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
 
         key = 'Ndivisions_%s'    % axis
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf  :
                 changed [ key ] = style.GetNdivisions ( axis )                                
                 style.SetNdivisions    ( int   ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'LabelColor_%s'    % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetLabelColor ( axis )                                                
                 style.SetLabelColor    ( int   ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
-
         
         key = 'LabelFont_%s'     % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetLabelFont ( axis )                                                
                 style.SetLabelFont     ( int   ( conf.pop ( key )  ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'LabelOffset_%s'   % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetLabelOffset ( axis )                                                
                 style.SetLabelOffset   ( float ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'LabelSize_%s'     % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetLabelSize ( axis )                                                
                 style.SetLabelSize     ( float ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleColor_%s'    % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetTitleColor ( axis )                                                
                 style.SetTitleColor    ( int   ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleFont_%s'     % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetTitleFont ( axis )                                                
                 style.SetTitleFont     ( int   ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleOffset_%s'   % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetTitleOffset ( axis )                                                
                 style.SetTitleOffset   ( float ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleSize_%s'     % axis 
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             if key in conf :
                 changed [ key ] = style.GetTitleSize ( axis )                                                
                 style.SetTitleSize     ( float ( conf.pop ( key ) ) , axis )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key ) 
 
     ## very special attribute 
     if 'PaperSize_X' in conf and 'PaperSize_Y' in conf :
         key = 'PaperSize/1'
-        try :
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             x = ctypes.c_float()
             y = ctypes.c_float()
             style.GetPaperSize ( x , y )
@@ -557,19 +620,25 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             changed [ 'PaperSize_Y' ] = y.value 
             style.SetPaperSize ( float ( conf.pop ( 'PaperSize_X' ) ) ,
                                  float ( conf.pop ( 'PaperSize_Y' ) ) )
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key )
             
     elif 'PaperSize' in conf :        
         key = 'PaperSize/2'
-        try :            
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             x = ctypes.c_float()
             y = ctypes.c_float()
             style.GetPaperSize ( x , y )
             changed [ 'PaperSize_X' ] = x.value 
             changed [ 'PaperSize_Y' ] = y.value 
             style.SetPaperSize ( int   ( conf.pop ( 'PaperSize' ) ) )            
-        except :
+            # ================================================================
+        except : # ===========================================================
+            # ================================================================
             logger.warning ( "Can't set attribute %s" % key )         
 
     ## one more very special attribute
@@ -580,8 +649,8 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
             style.SetLineStyleString ( i , conf.pop ( k ) .strip() ) 
 
     if   'Palette'      in conf :
-        style.SetPalette ( conf.pop ( 'Palette'      ) )
         changed [ 'Palette'      ] = ROOT.kDarkBodyRadiator
+        style.SetPalette ( conf.pop ( 'Palette'      ) )
     elif 'ColorPalette' in conf :
         changed [ 'ColorPalette' ] = ROOT.kDarkBodyRadiator
         style.SetPalette ( conf.pop ( 'ColorPalette' ) )
@@ -590,15 +659,21 @@ def set_style ( style , config , base_style = '' , **kwargs ) :
     for e in extra :
         if e in conf : conf.pop ( e ) 
 
-
     # ========================================================================
     ## for "old" root (<6.30) is it not a method of TStyle!!
-    if 'AxisMaxDigits' in conf :
+    if root_info < ( 6, 30 ) and 'AxisMaxDigits' in conf :
         changed [ 'AxisMaxDigits' ] = ROOT.TGaxis.GetMaxDigits()
         ROOT.TGaxis.SetMaxDigits ( conf.pop ( 'AxisMaxDigits' , 3 ) ) 
 
     if conf :
-        logger.warning ( "set_style: unprocessed parameters: %s" % list ( conf.keys() ) )
+        title  = conf.pop ( 'title'  , '' )
+        prefix = conf.pop ( 'prefix' , '' )
+        if   conf :
+            from ostap.logger.utils import print_args
+            title  = 'set_style: unprocessed %d arguments' % len ( conf )
+            prefix = '# '
+            table  = print_args ( title  = title , prefix = prefix , **conf  )
+            logger.warning ( '%s:\n%s' % ( title , table ) )
         
     return changed 
 
@@ -609,15 +684,36 @@ ROOT.TStyle.set  =  set_style
 
 # =============================================================================
 ## Parse the configuration and create
-#  all the styles according to configuration 
+#  all the styles according to configuration
+# 
+#  @code
+#  [Style:TheName]
+#
+#  description = 
+#  ostap_like  =      
+#  base_style  = ...
+#
+#  AxisColor_X = 1
+#  ...
+# 
+#  @endcode 
 def make_styles ( config = None ) :
     """ Parse the configuration and create
-    all the styles according to configuration 
+    all the styles according to configuration:
+
+    [Style:TheName]
+    description = 
+    ostap_like  =      
+    base_style  =
+    
+    AxisColor_X = 1
+    ...
+    
     """
     
     if config is None : 
-        import ostap.core.config as _CONFIG
-        config = _CONFIG.config
+        import ostap.core.config as config 
+        config = config.config 
 
     for key in config :
         
@@ -625,6 +721,7 @@ def make_styles ( config = None ) :
         section   = config [ key ]
         s , c , n = key.partition (':')
         if not c : continue
+        
         ## the style name 
         name        = n.strip ( )
         description = section.get        ( 'description' , fallback = 'The style %s' % name )
@@ -633,7 +730,8 @@ def make_styles ( config = None ) :
         ## create ostap-like style 
         if ok : style = make_ostap_style ( name , description , section )
         else  :
-            ## generic style
+            # ===================================================================
+            ## generic style # ==================================================
             style = root_style ( name )
             if not style : 
                 logger.debug ( 'Create new generic style  %s/%s' % ( name , description ) )             
@@ -656,7 +754,7 @@ def get_float ( config , name , default ) :
         if hasattr ( config , 'getfloat' ) :
             value = config.getfloat ( name , fallback = default )
         else : value = config.get   ( name , default ) 
-        return float ( value )
+        return float ( value )        
     except : # =================================================================
         # ======================================================================
         return default 
@@ -665,33 +763,37 @@ def get_float ( config , name , default ) :
 def get_int    ( config , name , default ) :
     # ==========================================================================
     try : # ====================================================================
+        # ======================================================================
         if hasattr ( config , 'getint') :         
             value = config.getint ( name , fallback = default )
         else : value = config.get ( name , default ) 
         return int ( value )
     except : # =================================================================
+        # ======================================================================
         return default 
 
 # ==============================================================================
 def get_bool    ( config , name , default ) :
     # ==========================================================================
     try : # ====================================================================
+        # ======================================================================
         if hasattr ( config , 'getboolean') :         
             value = config.getboolean ( name , fallback = default )
         else : value = config.get ( name , default ) 
         return bool ( value )
     except : # =================================================================
+        # ======================================================================
         return default 
 
 # ==============================================================================
 def get_str    ( config , name , default ) :
     # ==========================================================================
     try : # ====================================================================
-        if hasattr ( config , 'getint') :         
-            value = config.get ( name , fallback = default )
-        else : value = config.get ( name , default ) 
+        # ======================================================================
+        value = config.get ( name , fallback = default )
         return str ( value )
     except : # ================================================================
+        # =====================================================================
         return default 
 
 # =============================================================================
@@ -711,9 +813,18 @@ def make_ostap_style ( name                      ,
     scale      = kw.pop ( 'scale'       , get_float ( config , 'scale'      , 1.0              ) )
     font       = kw.pop ( 'font'        , get_int   ( config , 'font'       , ostap_font       ) )
     line_width = kw.pop ( 'line_width'  , get_int   ( config , 'line_width' , ostap_line_width ) )
-    
-    if kw : logger.warning ("make_ostap_style: unprocessed keys: %s" % kw ) 
-    
+
+    # =========================================================================
+    if kw : # =================================================================
+        title  = kw.pop ( 'title'  , '' )
+        prefix = kw.pop ( 'prefix' , '' )
+        if kw :
+            from ostap.logger.utils import print_args
+            title  = 'make_ostap_style: unprocessed %d arguments' % len ( kw )
+            prefix = '# '
+            table  = print_args ( title  = title , prefix = prefix , **kw )
+            logger.warning ( '%s:\n%s' % ( title , table ) )
+        
     description = config.get ( 'description' , description )
     
     conf  = {}
