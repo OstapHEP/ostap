@@ -666,41 +666,30 @@ class VarMaker (object) :
         >>> var3 =
         >>> var4 = xxx.add_variables ( var1 , var2 , var3 )
         """
-        ## the most trivial case 
-        if not variables : return ROOT.RooFit.RooConst ( 0 ) 
-
-        ## collect variables 
-        vvars = []
+        if not variables : return ROOT.RooFit.RooConst ( 0 )
+      
         vsum  = 0.0
-        for i , v in enumerate ( variables ) :
-            if    isinstance ( v , num_types        ) : vsum += float ( v )
-            elif  isinstance ( v , ROOT.RooConstVar ) : vsum += float ( v )
-            elif  isinstance ( v , ROOT.RooAbsReal  ) : vvars.append  ( v )
-            else :
-                raise TypeError ("add_variables: invalid variable[#%d] type %s" % ( i , typename ( v ) ) ) 
-
-        ## no variables?
-        if not vvars : return ROOT.RooFit.RooConst ( vsum  )
-
-        ## only one variable ? 
-        if 1 == len ( vvars ) : return self.vars_add ( vvars [ 0 ] , vsum , name = name , title = title ) 
+        vvars = [] 
+        for v in variables :
+            if   isinstance ( v , num_types        ) : vsum += float ( v )
+            elif isinstance ( v , ROOT.RooConstVar ) : vsum += float ( v )
+            else                                     : vvars.append  ( v ) 
+           
+        if  not vvars : return ROOT.RooFit.RooConst ( vsum )
+    
+        ## only one variable and no bias: 
+        if 1 == len ( vvars ) and not vsum : return vvars [ 0 ]
+    
+        lst = ROOT.RooArgList()
+        for v in vvars : lst.add ( v ) 
+        if vsum : lst.add ( ROOT.RooFit.RooConst ( vsum ) )
+    
+        name  = name  if name  else '_add_'.join ( v.GetName() for v in lst )
+        title = title if title else ' + '  .join ( v.GetName() for v in lst )
+       
+        self.aux_keep.append ( lst )
         
-        ## at least two variables
-        vlst = ROOT.RooArgList()
-        for v in vvars : vlst.add ( v )
-
-        ## if constant is not zero - add it! 
-        if vsum :
-            vsum = ROOT.RooFit.RooConst ( vsum )
-            vlst.add ( vsum ) 
-            
-        self.aux_keep.append ( vlst )
-        
-        name  = name  if name   else self.roo_name  ( "_add_" .join ( v.name for v in vlst ) )                        
-        title = title if title  else                (   "+"   .join ( v.name for v in vlst ) )
-
-        ## add variables 
-        result = Ostap.MoreRooFit.Addition  ( name , title , vlst ) 
+        result = Ostap.MoreRooFit.Addition ( name , title , lst ) 
         self.aux_keep.append ( result  )
                 
         return  result
@@ -727,9 +716,6 @@ class VarMaker (object) :
         >>> var3 = xxx.vars_product  ( var1 , var2   )
         >>> var4 = xxx.vars_product  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -773,7 +759,7 @@ class VarMaker (object) :
     #  var5 = xxx.vars_sum ( var1 , var2 )
     #  var6 = xxx.vars_sum ( var1 , 2.0  )    
     #  @endcode 
-    def vars_add ( self , var1 , var2 , c1 = 1 , c2 = 1 , name = '' , title = '' ) :
+    def vars_add ( self , var1 , var2 , * , c1 = 1 , c2 = 1 , name = '' , title = '' ) :
         """ Construct (on-flight) variable for var1*c1+var2*c2 
         >>> var1 = ...
         >>> var2 = ...
@@ -782,10 +768,6 @@ class VarMaker (object) :
         >>> var5 = xxx.vars_sum ( var1 , var2   )
         >>> var6 = xxx.vars_sum ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
-        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
         assert isinstance ( c1 , num_types ) and isinstance ( c2 , num_types ),\
                "vars_add: c1 and c2 must be numeric types!"
 
@@ -848,10 +830,6 @@ class VarMaker (object) :
         >>> var5 = xxx.vars_difference ( var1 , var2   )
         >>> var6 = xxx.vars_difference ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
-
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -901,10 +879,6 @@ class VarMaker (object) :
         >>> var5 = xxx.vars_ratio  ( var1 , var2   )
         >>> var6 = xxx.vars_ratio  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
-        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -943,11 +917,7 @@ class VarMaker (object) :
         >>> var2 = ...
         >>> var3 = xxx.vars_fraction ( var1 , var2   )
         >>> var4 = xxx.vars_fraction ( var1 , 2 , 'sigma2' , title = 'exression' )
-        """
-        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
+        """  
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -996,10 +966,6 @@ class VarMaker (object) :
         >>> var3 = xxx.vars_reldifference ( var1 , var2   )
         >>> var4 = xxx.vars_reldifference ( var1 , 2 , 'sigma2' , title = 'exression' )
         """
-        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -1046,10 +1012,6 @@ class VarMaker (object) :
         >>> var4 = xxx.vars_power        ( var1 , 2.0  )    
         >>> var4 = xxx.vars_power        ( 2.0  , var2 )    
         """
-        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -1095,11 +1057,7 @@ class VarMaker (object) :
         >>> var3 = xxx.vars_exp ( var1 , var2 )
         >>> var4 = xxx.vars_exp ( var1 , 2.0  )    
         >>> var4 = xxx.vars_exp ( 2.0  , var2 )    
-        """
-        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
+        """ 
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -1146,10 +1104,6 @@ class VarMaker (object) :
         >>> var4 = xxx.vars_abs ( var1 , 2.0  )    
         >>> var4 = xxx.vars_abs ( 2.0  , var2 )    
         """
-        
-        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
-        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
-        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
