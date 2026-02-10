@@ -2028,12 +2028,12 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_sigmoid( var ) 
 #  @endcode 
-def var_sigmoid ( a , b = 1 , sigmoid_type = Ostap.Math.Sigmoid.Hyperbolic , name = '' , title = '' ) :
+def var_sigmoid ( a , b = 1 , sigmoid_type = Ostap.Math.SigmoidType.Hyperbolic , name = '' , title = '' ) :
     """ Sigmoid: f(x) = sigmoid ( a * b ) 
     >>> var = ...
     >>> e   = var_sigmoid( var ) 
     """
-    assert Ostap.Math.Sigmoid.First <=  int ( sigmoid_type )  <=Ostap.Math.Sigmoid.Last , \
+    assert Ostap.Math.SigmoidType.First <=  int ( sigmoid_type )  <= Ostap.Math.SigmoidType.Last , \
         "Invalid sigmoid type: %s" % stype
     
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
