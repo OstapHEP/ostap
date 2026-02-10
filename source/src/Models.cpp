@@ -2482,11 +2482,11 @@ std::size_t Ostap::Math::Weibull::tag () const
 // constructor from polynom and parameters "alpha" and "x0"
 // ============================================================================
 Ostap::Math::Sigmoid::Sigmoid
-( const Ostap::Math::Positive&            poly  , 
-  const double                            scale ,
-  const double                            x0    , 
-  const double                            delta , 
-  const Ostap::Math::Sigmoid::SigmoidType st    ) 
+( const Ostap::Math::Positive&   poly  , 
+  const double                   scale ,
+  const double                   x0    , 
+  const double                   delta , 
+  const Ostap::Math::SigmoidType st    ) 
   : Ostap::Math::PolyFactor1D ( poly  )
   , m_scale     ( scale )
   , m_x0        ( x0    )
@@ -2501,10 +2501,11 @@ Ostap::Math::Sigmoid::Sigmoid
 		  "Parameter `scale` must be non-zero!"   ,
 		  "Ostap::Math::Sigmoid"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  Ostap::Assert ( First <= st && st <= Last   ,
-		  "Invalid SigmoidType!"  ,
-		  "Ostap::Math::Sigmoid"  ,
+  //	
+  Ostap::Assert ( Ostap::Math::SigmoidType::First <= st &&
+		  st <= Ostap::Math::SigmoidType::Last    ,
+		  "Invalid SigmoidType!"                  ,
+		  "Ostap::Math::Sigmoid"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
 }
@@ -2512,13 +2513,13 @@ Ostap::Math::Sigmoid::Sigmoid
 // constructor from polynom and parameters "alpha" and "x0"
 // ============================================================================
 Ostap::Math::Sigmoid::Sigmoid 
-( const unsigned short                    N     , 
-  const double                            xmin  , 
-  const double                            xmax  , 
-  const double                            scale , 
-  const double                            x0    , 
-  const double                            delta , 
-  const Ostap::Math::Sigmoid::SigmoidType st    )   
+( const unsigned short           N     , 
+  const double                   xmin  , 
+  const double                   xmax  , 
+  const double                   scale , 
+  const double                   x0    , 
+  const double                   delta , 
+  const Ostap::Math::SigmoidType st    )   
   : Ostap::Math::PolyFactor1D ( N , xmin , xmax )
   , m_scale     ( scale )
   , m_x0        ( x0    )
@@ -2535,7 +2536,8 @@ Ostap::Math::Sigmoid::Sigmoid
 		  "Ostap::Math::Sigmoid"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  Ostap::Assert ( First <= st && st <= Last   ,
+  Ostap::Assert ( Ostap::Math::SigmoidType::First <= st &&
+		  st <= Ostap::Math::SigmoidType::Last    ,
 		  "Invalid SigmoidType!"  ,
 		  "Ostap::Math::Sigmoid"  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
@@ -2545,13 +2547,13 @@ Ostap::Math::Sigmoid::Sigmoid
 // constructor from polynom and parameters "alpha" and "x0"
 // ============================================================================
 Ostap::Math::Sigmoid::Sigmoid
-( const std::vector<double>&              pars  ,
-  const double                            xmin  , 
-  const double                            xmax  , 
-  const double                            scale , 
-  const double                            x0    ,  
-  const double                            delta , 
-  const Ostap::Math::Sigmoid::SigmoidType st    )   
+( const std::vector<double>&     pars  ,
+  const double                   xmin  , 
+  const double                   xmax  , 
+  const double                   scale , 
+  const double                   x0    ,  
+  const double                   delta , 
+  const Ostap::Math::SigmoidType st    )   
   : Ostap::Math::PolyFactor1D ( pars , xmin , xmax )
   , m_scale     ( scale )
   , m_x0        ( x0    )
@@ -2568,7 +2570,8 @@ Ostap::Math::Sigmoid::Sigmoid
 		  "Ostap::Math::Sigmoid"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  Ostap::Assert ( First <= st && st <= Last   ,
+  Ostap::Assert ( Ostap::Math::SigmoidType::First <= st &&
+		  st <= Ostap::Math::SigmoidType::Last    ,
 		  "Invalid SigmoidType!"  ,
 		  "Ostap::Math::Sigmoid"  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
@@ -2611,47 +2614,6 @@ bool Ostap::Math::Sigmoid::setDelta ( const double value )
   m_sin2delta = std::min ( m_sin2delta , 1.0 ) ; 
   //
   return true ;
-}
-// ============================================================================
-/* Get the actual sigmoid/kink value
- *  All sigmoids are normalized to have the same slope at the x=x0
- */
-// ============================================================================
-double Ostap::Math::Sigmoid::sigmoid ( const double x ) const
-{
-  //
-  static const double s_bias  = M_PI / 2.0  ;
-  static const double s_scale = 1.0  / M_PI ;
-  //
-  static const double s_erf   = std::sqrt ( M_PI ) ;
-  static const double s_p0    = 1.0                ;
-  static const double s_p1    = 1.0 / 1.5          ;
-  static const double s_p2    = 1.0 / 1.875        ; 
-  static const double s_p3    = 1.0 / 2.1875       ; 
-  static const double s_p4    = 1.0 / 2.4609375    ;
-  static const double s_p5    = 1.0 / 2.70703125   ; 
-  static const double s_p6    = 1.0 / 2.9326171875 ;  
-  //
-  const double z = ( x - m_x0 ) / m_scale ;
-  switch ( m_type )
-    {
-    case Logistic         : return Ostap::Math::logistic ( z / 0.25 ) ; 
-    case Hyperbolic       : return 0.5     * ( 1      + std::tanh       ( z * 2         ) ) ; 
-    case Trigonometric    : return s_scale * ( s_bias + std::atan       ( z / s_scale   ) ) ;
-    case Error            : return 0.5     * ( 1      + std::erf        ( z * s_erf     ) ) ;
-    case Gudermannian     : return s_scale * ( s_bias + Ostap::Math::gd ( z / s_scale   ) ) ;      
-    case Algebraic        : return 0.5     * ( 1 + ( 2 * z ) / std::hypot ( 1.0 , 2 * z ) ) ; 
-    case SmoothTransition : return Ostap::Math::smooth_transition ( z , -1 , 1 ) ;
-    case Polynomial_n0    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p0  ,  0 ) ;
-    case Polynomial_n1    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p1  ,  1 ) ;
-    case Polynomial_n2    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p2  ,  2 ) ;
-    case Polynomial_n3    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p3  ,  3 ) ;
-    case Polynomial_n4    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p4  ,  4 ) ;
-    case Polynomial_n5    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p5  ,  5 ) ;
-    case Polynomial_n6    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p6  ,  6 ) ;
-    } ;
-  //
-  return 0 ;
 }
 // ============================================================================
 // get the value \f$ x_{min}\$ such that  \f$ x_{min} \le p(x) \f$ 

@@ -920,6 +920,22 @@ def _r2v_reduce ( var ) :
 
 Ostap.MoreRooFit.TwoVars.__reduce__  = _r2v_reduce
 
+# =============================================================================
+## Reduce <code>Ostap::MoreRooFit::Sigmoid</code> objects
+#  @see Ostap::MoreRooFit.Sigmoid
+def _r2vsigm_reduce ( var ) :
+    """ Reduce `Ostap.MoreRooFit.Sigmoid` objects
+    - see Ostap.MoreRooFit.Sigmouid
+    """
+    return root_store_factory , ( type ( var )        ,
+                                  var.name            ,
+                                  var.title           ,
+                                  var.x()             ,
+                                  var.y()             ,
+                                  var.sigmoid_type () )
+
+Ostap.MoreRooFit.Sigmoid.__reduce__  = _r2vsigm_reduce
+
 # ===================================================================
 ## Reduce <code>Ostap::MoreRooFit::Addition</code> objects
 #  @see Ostap::MoreRooFit.Addition

@@ -182,7 +182,7 @@ namespace Ostap
                          "_Digit: inappropriate type"                ) ;                         
         // ====================================================================
         static_assert ( N <= std::numeric_limits<TYPE>::digits10   , 
-                        "_Digit: invaild index"                      ) ;
+                        "_Digit: invalid index"                      ) ;
         // ====================================================================
         enum { value = Ostap::Math::IPower<unsigned long long,10,N>::value } ;
         // ====================================================================

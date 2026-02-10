@@ -25,6 +25,8 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/MoreMath.h"
+// ============================================================================
 // Forward declarations 
 // ============================================================================
 /// forward declarations 
@@ -114,9 +116,15 @@ namespace Ostap
         Args const&...     args  ) 	
         : Addition ( name , title , x , y ) { this->add ( args... ) ;  }
       /// several variables 
-      Addition ( const std::string& name  ,  
-                 const std::string& title ,
-		 const RooArgList&  vars  ) ;
+      Addition
+      ( const std::string& name  ,  
+	const std::string& title ,
+	const RooArgList&  vars  ) ;
+      /// several variables 
+      Addition
+      ( const std::string& name  ,  
+	const std::string& title ,
+	const RooArgSet&  vars  ) ;
       /// copy 
       Addition
       ( const Addition&    right       ,        
@@ -289,6 +297,10 @@ namespace Ostap
       Product ( const std::string& name  ,  
                 const std::string& title ,
                 const RooArgList&  vars  ) ;
+      /// several variables 
+      Product ( const std::string& name  ,  
+                const std::string& title ,
+                const RooArgSet&   vars  ) ;
       /// copy 
       Product
       ( const Product&    right       , 
@@ -2844,7 +2856,8 @@ namespace Ostap
     }; //
     // ========================================================================
     /** @class Sigmoid
-     *  Evaluate \f$ \frac{1+\tanh ab}{2}  \f$
+     *  Evaluate sigmoid function \f$ sigmoid(ab) \f$ 
+     *  @see Ostap::Math::sigmoid 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2024-07-208
      */
@@ -2860,56 +2873,71 @@ namespace Ostap
       ( const std::string& name  , 
         const std::string& title , 
         RooAbsReal&        a     , 
-        RooAbsReal&        b     ) ;
+        RooAbsReal&        b     , 
+	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic ) ;      
       /// constructor with two variables
       Sigmoid 
       ( RooAbsReal&         a           , 
         RooAbsReal&         b           ,
         const std::string&  name  = ""  , 
-        const std::string&  title = ""  ) 
-        : Sigmoid ( name , title , a , b )
+        const std::string&  title = ""  , 
+	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )
+      : Sigmoid ( name , title , a , b , st )
       {}
       /// constructor with two variables
       Sigmoid 
       ( RooAbsReal&         a           , 
         const double        b           ,
         const std::string&  name  = ""  , 
-        const std::string&  title = ""  ) 
-        : Sigmoid ( name , title , a , RooFit::RooConst ( b ) )
+        const std::string&  title = ""  , 
+	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )
+      : Sigmoid ( name , title , a , RooFit::RooConst ( b ) , st )
       {}
       /// constructor with two variables
       Sigmoid 
       ( const double        a           ,
         RooAbsReal&         b           , 
         const std::string&  name  = ""  , 
-        const std::string&  title = ""  ) 
-        : Sigmoid ( name , title , RooFit::RooConst ( a ) , b )
+        const std::string&  title = ""  , 
+	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )        
+      : Sigmoid ( name , title , RooFit::RooConst ( a ) , b , st )
       {}
       /// constructor with one variable
       Sigmoid 
       ( const std::string& name  , 
         const std::string& title , 
         RooAbsReal&        a     ,
-        const double       b = 1 ) 
-        : Sigmoid ( name , title , a , RooFit::RooConst ( b ) ) 
+        const double       b = 1 , 
+	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic )        
+      : Sigmoid ( name , title , a , RooFit::RooConst ( b ) , st ) 
       {}
       // ======================================================================
-      /// fake defautl constructor (needed for serisalization)
+      /// fake default constructor (needed for serialization)
       Sigmoid () = default ;
       // ======================================================================
       // copy 
       Sigmoid ( const Sigmoid& right , const char* newname = 0 ) 
-        : TwoVars ( right , newname ) 
+        : TwoVars ( right , newname )
+	, m_stype ( right.m_stype   ) 
       {}
       // ======================================================================
       Sigmoid* clone ( const char* newname ) const override 
       { return new Sigmoid ( *this , newname ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline Ostap::Math::SigmoidType sigmoid_type () const { return m_stype ; }
       // ======================================================================
     protected:
       // ======================================================================
       // the actual evaluation of the result 
       Double_t evaluate () const override ;
       // ======================================================================
+    private:
+      // ======================================================================
+      /// sigmoid type 
+      Ostap::Math::SigmoidType m_stype { Ostap::Math::SigmoidType::Hyperbolic } ;
+      // ======================================================================      
     }; //
     // ========================================================================
     /** @class Hypot

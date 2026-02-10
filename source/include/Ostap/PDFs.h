@@ -4516,7 +4516,7 @@ namespace Ostap
 	RooAbsReal&          scale      ,
 	RooAbsReal&          x0         ,
 	RooAbsReal&          delta      ,
-	const Ostap::Math::Sigmoid::SigmoidType st = Ostap::Math::Sigmoid::Hyperbolic ) ;	
+	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic ) ;	
       /// delta = 0 
       PolySigmoid 
       ( const char*          name       ,
@@ -4527,7 +4527,7 @@ namespace Ostap
 	const double         xmax       ,
 	RooAbsReal&          scale      ,
 	RooAbsReal&          x0         ,
-	const Ostap::Math::Sigmoid::SigmoidType st = Ostap::Math::Sigmoid::Hyperbolic ) ;	
+	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic ) ;	
       /// copy
       PolySigmoid
       ( const PolySigmoid&   right     ,
@@ -4584,7 +4584,7 @@ namespace Ostap
       // ======================================================================
       inline double            xmin  () const { return m_sigmoid.xmin () ; }
       inline double            xmax  () const { return m_sigmoid.xmax () ; }
-      inline Ostap::Math::Sigmoid::SigmoidType sigmoid_type () const
+      inline Ostap::Math::SigmoidType sigmoid_type () const
       { return m_sigmoid.sigmoid_type () ; }
       // ======================================================================
     protected :

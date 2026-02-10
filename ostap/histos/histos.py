@@ -9878,23 +9878,24 @@ for h in ( ROOT.TH1F  , ROOT.TH1D ) :
 #  function = ...
 #  result   = histo_fit  ( histo , function , 'S' ) 
 #  @endcode 
+#  @see ROOT issue #21080 : https://github.com/root-project/root/issues/21080
 def histo_fit ( histo , fun , option = 'S' , goption = '' , *args ) :
     """ Helper function to fit the histo with TF-function
     >>> histo    = ...
     >>> function = ...
     >>> result   = histo_fit  ( histo , function , 'S' ) 
+    - see ROOT issue #21080 : https://github.com/root-project/root/issues/21080
     """
-    
-    assert isinstance ( histo , ROOT.TH1 ) , "Invaild `histo` type %s" % typename ( histo ) 
-    assert isinstance ( fun   , ROOT.TF1 ) , "Invaild `fun` type %s"   % typename ( fun   )
+    assert isinstance ( histo , ROOT.TH1 ) , "Invalid `histo` type %s" % typename ( histo ) 
+    assert isinstance ( fun   , ROOT.TF1 ) , "Invalid `fun` type %s"   % typename ( fun   )
     #
     hd = histo.GetDimension ()
     fd = fun.GetNdim        () 
     assert hd == fd , "Invalid histo/fun dimensions: %d%s%d" % ( hd , not_equal , fd )
     ##
     ## see ROOT issue #21080 : https://github.com/root-project/root/issues/21080
-    with implicitMT ( False ) :
-        return histo.Fit ( fun , option , goption , *args )
+    ## if ( 6 , 39 ) <= root_info : return histo.Fit ( fun , option , goption , *args )
+    with implicitMT ( False )  : return histo.Fit ( fun , option , goption , *args )
     
 # =============================================================================
 _decorated_classes_ = (

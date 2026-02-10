@@ -1643,6 +1643,10 @@ def var_abs ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_abs ( var ) 
     """
+    
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+    
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1668,6 +1672,9 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_exp ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1693,6 +1700,9 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_log ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+    
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1716,6 +1726,9 @@ def var_log10 ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_log10 ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1740,6 +1753,9 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_erf ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1765,6 +1781,9 @@ def var_erfc ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_erfc ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1790,6 +1809,9 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_sin ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1815,6 +1837,9 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_cos ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1841,6 +1866,9 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_tan ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1867,6 +1895,9 @@ def var_sinh ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_sinh ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1893,6 +1924,9 @@ def var_cosh ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_cosh ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1918,6 +1952,9 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_tanh ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1943,6 +1980,9 @@ def var_sech ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_tanh ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1968,6 +2008,9 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_atan2 ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1980,16 +2023,22 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     return Ostap.MoreRooFit.Atan2 ( a, b , name , title )
 
 # ==============================================================================
-## Sigmoid \f$ f = \frac{1+ \tanh (ab)}{2}\f$
+## Sigmoid \f$ f = sigmoid ( a * b ) \f$
 #  @code
 #  var = ...
 #  e   = var_sigmoid( var ) 
 #  @endcode 
-def var_sigmoid ( a , b = 1 , name = '' , title = '' ) :
-    """ Sigmoid: f(x) = (1+tanh(ab))/2
+def var_sigmoid ( a , b = 1 , sigmoid_type = Ostap.Math.Sigmoid.Hyperbolic , name = '' , title = '' ) :
+    """ Sigmoid: f(x) = sigmoid ( a * b ) 
     >>> var = ...
     >>> e   = var_sigmoid( var ) 
     """
+    assert Ostap.Math.Sigmoid.First <=  int ( sigmoid_type )  <=Ostap.Math.Sigmoid.Last , \
+        "Invalid sigmoid type: %s" % stype
+    
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -1997,9 +2046,11 @@ def var_sigmoid ( a , b = 1 , name = '' , title = '' ) :
     if fb : b = float ( b )
     
     if fa and fb :
-        ab = 0.5 * ( 1 + math.tanh ( float ( a ) , float ( b ) ) )        
+        ab = float ( a ) * float ( b ) 
+        ab = Ostap.Math.sigmoid ( ab , sigmoid_type ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
-    return Ostap.MoreRooFit.Sigmoid ( a , b , name , title )
+    
+    return Ostap.MoreRooFit.Sigmoid ( a , b , name , title , sigmoid_type )
 
 
 # ==============================================================================
@@ -2013,6 +2064,9 @@ def var_hypot ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_hypot( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -2037,15 +2091,19 @@ def var_bessel_J ( x , nu = 0 , name = '' , title = '' ) :
     >>> nu = ... 
     >>> e  = var_bessel_J ( x , nu  ) 
     """
+    if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
+    if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
+
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
     
-    if fa : a = float ( a )
-    if fb : b = float ( b )
+    if fx  : x = float ( x  )
+    if fnu : b = float ( nu )
     
-    if fa and fb :
+    if fx and fnu :
         val = mve.bessel_J ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
+    
     return Ostap.MoreRooFit.BesselJ ( x , nu , name , title )
 
 # ==============================================================================
@@ -2061,6 +2119,9 @@ def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
     >>> nu = ... 
     >>> e  = var_bessel_Y ( x , nu  ) 
     """
+    if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
+    if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
+
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
     
@@ -2080,11 +2141,14 @@ def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
 #  e   = var_bessel_I ( x , nu ) 
 #  @endcode
 def var_bessel_I ( x , nu = 0 , name = '' , title = '' ) :
-    """Bessel function f(x) = I_{nu}(x)
+    """ Bessel function f(x) = I_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_I ( x , nu  ) 
     """
+    if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
+    if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
+
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
     ##
@@ -2104,11 +2168,14 @@ def var_bessel_I ( x , nu = 0 , name = '' , title = '' ) :
 #  e   = var_bessel_K ( x , nu ) 
 #  @endcode
 def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
-    """Bessel function f(x) = K_{nu}(x)
+    """ Bessel function f(x) = K_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_K ( x , nu  ) 
     """
+    if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
+    if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
+
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )    
     ##
@@ -2130,10 +2197,13 @@ def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
 #  var  = var_max ( var1 , var2 ) 
 #  @endcode 
 def var_max ( a , b = 1 , name = '' , title = '' ) :
-    """Maximal from two functions f(x) = max(a,b)
+    """ Maximal from two functions f(x) = max(a,b)
     >>> var = ...
     >>> e   = var_max ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -2153,10 +2223,13 @@ def var_max ( a , b = 1 , name = '' , title = '' ) :
 #  var  = var_min ( var1 , var2 ) 
 #  @endcode 
 def var_min ( a , b = 1 , name = '' , title = '' ) :
-    """Minimal from two functions f(x) = min(a,b)
+    """ Minimal from two functions f(x) = min(a,b)
     >>> var = ...
     >>> e   = var_min ( var ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -2166,19 +2239,23 @@ def var_min ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = min ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    
     return Ostap.MoreRooFit.MinV ( a, b , name , title )
 
 # ==============================================================================
-## Gamma function \f$ f =    \Gamma(ab) \f$
+## Gamma function \f$ f =    \Gamma ( a * b ) \f$
 #  @code
 #  a = ...
 #  e = var_gamma ( a ) 
 #  @endcode 
 def var_gamma ( a , b = 1 , name = '' , title = '' ) :
-    """Gamma function  f = Gamma(ab)
+    """ Gamma function  f = Gamma ( a * b )
     >>> a = ...
     >>> e = var_gamma ( a ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -2198,10 +2275,13 @@ def var_gamma ( a , b = 1 , name = '' , title = '' ) :
 #  e = var_lgamma ( a ) 
 #  @endcode 
 def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
-    """logarithm of Gamma function  f = log Gamma(ab)
+    """ Logarithm of Gamma function  f = log Gamma(ab)
     >>> a = ...
-    >>> e = var_lgamma ( a ) 
+    >>> e = var_lgamma ( a*b ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -2221,10 +2301,13 @@ def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
 #  e = var_igamma ( a ) 
 #  @endcode 
 def var_igamma ( a , b = 1 , name = '' , title = '' ) :
-    """1/Gamma  f = 1/Gamma(ab)
+    """ 1/Gamma  f = 1/Gamma(a*b)
     >>> a = ...
     >>> e = var_igamma ( a ) 
     """
+    if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
+    if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
+
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
@@ -2246,11 +2329,14 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
 #  v  = var_sum ( v1 ,  v2 )
 #  @endcode
 def var_sum ( v1 , v2 , name = '' , title = '' ) :
-    """Sum of two RooAbsReal objects
+    """ Sum of two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_sum ( v1 , v2 )
     """
+    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
+    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
+
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )
         
@@ -2265,7 +2351,6 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     #
     return Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
 
-
 # =============================================================================
 ## Subtraction of two RooAbsReal objects
 #  @code
@@ -2274,11 +2359,14 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
 #  v  = var_sub ( v1 , v2 )
 #  @endcode
 def var_sub ( v1 , v2 , name = '' , title = '' ) :
-    """Subraction of two RooAbsReal objects
+    """ Subraction of two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_sub ( v1 , v2 )  
     """
+    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
+    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
+
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
         
@@ -2293,7 +2381,6 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
     # 
     return Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
 
-
 # =============================================================================
 ## Product of two RooAbsReal objects
 #  @code
@@ -2302,11 +2389,14 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
 #  v  = var_mul ( v1 ,  v2 )
 #  @endcode
 def var_mul ( v1 , v2 , name = '' , title = '' ) :
-    """Product of two RooAbsReal objects
+    """ Product of two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_mul ( v1 ,  v2 )
     """
+    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
+    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
+
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
         
@@ -2331,11 +2421,14 @@ def var_mul ( v1 , v2 , name = '' , title = '' ) :
 #  v  = var_div ( v1 , v2 )
 #  @endcode
 def var_div ( v1 , v2 , name = '' , title = '' ) :
-    """Division of two RooAbsReal objects
+    """ Division of two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_div ( v1 , v2 )  
     """
+    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
+    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
+
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
         
@@ -2358,11 +2451,14 @@ def var_div ( v1 , v2 , name = '' , title = '' ) :
 #  v  = var_pow ( v1 , v2 )
 #  @endcode
 def var_pow ( v1 , v2 , name = '' , title = '' ) :
-    """pow for two RooAbsReal objects
+    """ pow for two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_pow ( v1 ,  v2 ) 
     """
+    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
+    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
+
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
         
@@ -2380,18 +2476,21 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
     return Ostap.MoreRooFit.Power ( v1 , v2 , name , title ) 
 
 # ==============================================================================
-## "Fraction" of two RooAbsReal objects: f = a/(a+b)
+## "Fraction" of two RooAbsReal objects: f = v1/(v1+v2)
 #  @code
 #  a = ...
 #  b = ...
 #  e   = var_fraction ( a , b ) 
 #  @endcode 
-def var_fraction ( a , b , name = '' , title = '' ) :
-    """'Fraction'  f(x) = a/(a+b)
+def var_fraction ( v1 , v2 , name = '' , title = '' ) :
+    """ 'Fraction'  f(x) = v1/(v1+v2)
     >>> a = ...
     >>> b = ...
     >>> e = var_fraction ( a , b  ) 
     """
+    if isinstance ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
+    if isinstance ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 ) 
+
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
         
@@ -2408,18 +2507,21 @@ def var_fraction ( a , b , name = '' , title = '' ) :
 
 
 # ==============================================================================
-## "Asymmetry" of two RooAbsReal objects: f = (a-b)/(a+b)
+## "Asymmetry" of two RooAbsReal objects: f = (v1-v2)/(v1+v2)
 #  @code
 #  a = ...
 #  b = ...
 #  e = var_asymmetry ( a , b ) 
 #  @endcode 
-def var_asymmetry ( a , b , name = '' , title = '' ) :
-    """'Asymmetry'  f(x) = (a-b)/(a+b)
+def var_asymmetry ( v1 , v2 , name = '' , title = '' ) :
+    """ 'Asymmetry'  f(x) = (a-b)/(a+b)
     >>> a = ...
     >>> b = ...
     >>> e = var_asymmetry ( a , b  ) 
     """
+    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
+    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 ) 
+
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )    
         
@@ -2467,7 +2569,7 @@ _new_methods_ = tuple ( _new_methods_ )
 #  @endcode
 #  @see Ostap::FormulaVar 
 def valid_formula ( formula , *variables ) :
-    """Valid formula expression and list of variables
+    """ Valid formula expression and list of variables
     >>> variables = ...
     >>> ok       = valid_formula ( 'a+b' , variables )
     """

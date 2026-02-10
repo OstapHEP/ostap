@@ -20,12 +20,13 @@ __all__ = (
     'isdbase'    , ## ditto 
     'dbopen'     , ## open database
     'Item'       , ## item: named tuple (time,payload)
-    'TmpDB'      , ## mixing for tempoirary database
+    'TmpDB'      , ## mixin for temporary database
     
     )
 # =============================================================================
 import sys, os, collections
 import ostap.io.shelve_ext
+# =============================================================================
 from   ostap.logger.logger  import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dbase' )
 else                      : logger = getLogger ( __name__         )
@@ -73,8 +74,7 @@ use_berkeleydb = False
 try : # =======================================================================
     # =========================================================================
     import berkeleydb
-    use_berkeleydb   = True
-    
+    use_berkeleydb       = True    
     berkeleydb_open_mode = {
         'r' : berkeleydb.db.DB_RDONLY ,
         'w' : 0                       ,
@@ -138,6 +138,7 @@ if sys.version_info < ( 3 , 10 ) :
 if ( 3 , 13 ) <= sys.version_info : # =========================================
     # =========================================================================
     try : # ===================================================================
+        # =====================================================================
         import dbm.sqlite3
         def sqlite3_open ( filename   ,
                            flag = 'c' ,
@@ -217,6 +218,7 @@ def whichdb ( filename  ) :
     if len ( s ) != 4:
         return ""
 
+    ## ROOT file 
     if s == b'root'  :
         return 'root'
 

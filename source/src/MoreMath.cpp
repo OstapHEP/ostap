@@ -6373,6 +6373,56 @@ Ostap::Math::softmax
 }
 
 
+
+// ============================================================================
+/*  Sigmoid function
+ *  All sigmoid fuctions \f$ \sigma(z) \f$ are normalized & scaled such
+ *  - \f$ \sigma(-\infty) =0\f$ 
+ *  - \f$ \sigma(+\infty) =1\f$ 
+ *  - \f$ \sigma^\prime(0)=1\f$ 
+ */
+// ============================================================================
+double Ostap::Math::sigmoid
+( const double                   z , 
+  const Ostap::Math::SigmoidType t )
+{
+  Ostap::Assert ( Ostap::Math::SigmoidType::First <= t && t <= Ostap::Math::SigmoidType::Last ,
+		  "Invaild sigmoid Type!" ,
+		  "Ostap::Math::sigmoid"  ,
+		  INVALID_PARAMETER       , __FILE__ , __LINE__ ) ;
+  //
+  static const double s_bias  = M_PI / 2.0  ;
+  static const double s_scale = 1.0  / M_PI ;
+  //
+  static const double s_erf   = std::sqrt ( M_PI ) ;
+  static const double s_p0    = 1.0                ;
+  static const double s_p1    = 1.0 / 1.5          ;
+  static const double s_p2    = 1.0 / 1.875        ; 
+  static const double s_p3    = 1.0 / 2.1875       ; 
+  static const double s_p4    = 1.0 / 2.4609375    ;
+  static const double s_p5    = 1.0 / 2.70703125   ; 
+  static const double s_p6    = 1.0 / 2.9326171875 ;  
+  //
+  switch ( t )
+    {
+    case Ostap::Math::SigmoidType::Logistic         : return Ostap::Math::logistic ( z / 0.25 ) ; 
+    case Ostap::Math::SigmoidType::Hyperbolic       : return 0.5     * ( 1      + std::tanh       ( z * 2         ) ) ; 
+    case Ostap::Math::SigmoidType::Trigonometric    : return s_scale * ( s_bias + std::atan       ( z / s_scale   ) ) ;
+    case Ostap::Math::SigmoidType::Error            : return 0.5     * ( 1      + std::erf        ( z * s_erf     ) ) ;
+    case Ostap::Math::SigmoidType::Gudermannian     : return s_scale * ( s_bias + Ostap::Math::gd ( z / s_scale   ) ) ;      
+    case Ostap::Math::SigmoidType::Algebraic        : return 0.5     * ( 1 + ( 2 * z ) / std::hypot ( 1.0 , 2 * z ) ) ; 
+    case Ostap::Math::SigmoidType::SmoothTransition : return Ostap::Math::smooth_transition ( z , -1 , 1 ) ;
+    case Ostap::Math::SigmoidType::Polynomial_n0    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p0  ,  0 ) ;
+    case Ostap::Math::SigmoidType::Polynomial_n1    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p1  ,  1 ) ;
+    case Ostap::Math::SigmoidType::Polynomial_n2    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p2  ,  2 ) ;
+    case Ostap::Math::SigmoidType::Polynomial_n3    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p3  ,  3 ) ;
+    case Ostap::Math::SigmoidType::Polynomial_n4    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p4  ,  4 ) ;
+    case Ostap::Math::SigmoidType::Polynomial_n5    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p5  ,  5 ) ;
+    case Ostap::Math::SigmoidType::Polynomial_n6    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p6  ,  6 ) ;
+    } ;
+  //
+  return 0 ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

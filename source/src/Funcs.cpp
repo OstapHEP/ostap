@@ -1528,7 +1528,7 @@ double Ostap::Functions::RooTreeFun::operator()
 {
   const Ostap::StatusCode sc = assign ( m_fun.observables()  , tree ) ;
   Ostap::Assert ( sc.isSuccess ()      ,
-                  "Invaild RooGetter!" ,
+                  "Invalid RooGetter!" ,
                   "Ostap::Functions::RooTreeFun:()" , sc , __FILE__ , __LINE__ ) ;
   //
   return m_fun.evaluate() ;

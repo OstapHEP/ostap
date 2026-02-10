@@ -5896,16 +5896,16 @@ double Ostap::Models::PolyConvexOnly::maxVal  ( Int_t      code ) const
 // sigmoid polinomial
 // ============================================================================
 Ostap::Models::PolySigmoid::PolySigmoid
-( const char*                             name  , 
-  const char*                             title ,
-  RooAbsReal&                             x     ,
-  const RooArgList&                       phis  , 
-  const double                            xmin  , 
-  const double                            xmax  , 
-  RooAbsReal&                             scale ,
-  RooAbsReal&                             x0    ,  
-  RooAbsReal&                             delta ,
-  const Ostap::Math::Sigmoid::SigmoidType st    )   
+( const char*                    name  , 
+  const char*                    title ,
+  RooAbsReal&                    x     ,
+  const RooArgList&              phis  , 
+  const double                   xmin  , 
+  const double                   xmax  , 
+  RooAbsReal&                    scale ,
+  RooAbsReal&                    x0    ,  
+  RooAbsReal&                    delta ,
+  const Ostap::Math::SigmoidType st    )   
   : RooAbsPdf ( name , title ) 
   , m_x        ( "!x"       , "Observable"   , this , x      ) 
   , m_phis     ( "!phi"     , "Coefficients" , this          )
@@ -5913,7 +5913,7 @@ Ostap::Models::PolySigmoid::PolySigmoid
   , m_x0       ( "!x0"      , "X0"           , this , x0     )
   , m_delta    ( "!delta"   , "delta"        , this , delta  )
     //
-  , m_sigmoid  ( phis.getSize() , xmin , xmax , m_scale , m_x0 , st ) 
+  , m_sigmoid  ( phis.getSize() , xmin , xmax , m_scale , m_x0 , m_delta , st ) 
 {
   //
   ::copy_real   ( phis , m_phis , "Invalid parameter!" , "Ostap::Models::PolySigmoid" ) ;
@@ -5924,15 +5924,15 @@ Ostap::Models::PolySigmoid::PolySigmoid
 // sigmoid polinomial
 // ============================================================================
 Ostap::Models::PolySigmoid::PolySigmoid
-( const char*                             name  , 
-  const char*                             title ,
-  RooAbsReal&                             x     ,
-  const RooArgList&                       phis  , 
-  const double                            xmin  , 
-  const double                            xmax  , 
-  RooAbsReal&                             scale ,
-  RooAbsReal&                             x0    ,  
-  const Ostap::Math::Sigmoid::SigmoidType st    )
+( const char*                    name  , 
+  const char*                    title ,
+  RooAbsReal&                    x     ,
+  const RooArgList&              phis  , 
+  const double                   xmin  , 
+  const double                   xmax  , 
+  RooAbsReal&                    scale ,
+  RooAbsReal&                    x0    ,  
+  const Ostap::Math::SigmoidType st    )
   : Ostap::Models::PolySigmoid ( name  ,
 				 title ,
 				 x     ,

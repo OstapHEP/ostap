@@ -32,16 +32,16 @@ __all__     = (
     'NameDuplicates'    , ## allow/disallow name duplicates
     'SETPARS'           , ## context manager to keep/preserve parameters
     ###
-    'TailN'             , ## helper mixing to define N-parameter for tail
-    'TailNL'            , ## helper mixing to define N-parameter for tail
-    'TailNR'            , ## helper mixing to define N-parameter for tail
+    'TailN'             , ## helper mixin to define N-parameter for tail
+    'TailNL'            , ## helper mixin to define N-parameter for tail
+    'TailNR'            , ## helper mixin to define N-parameter for tail
     ##
-    'Tail'              , ## helper mixing to define power-law tail 
-    'LeftTail'          , ## helper mixing to define power-law (left) tail
-    'RightTail'         , ## helper mixing to define power-law (right) tail
+    'Tail'              , ## helper mixin to define power-law tail 
+    'LeftTail'          , ## helper mixin to define power-law (left) tail
+    'RightTail'         , ## helper mixin to define power-law (right) tail
     ## 
-    'SigmaLR'           , ## helper mixing to treat L/R sigmas 
-    'TwoSigmas'         , ## helper mixing to treat two sigmas 
+    'SigmaLR'           , ## helper mixin to treat L/R sigmas 
+    'TwoSigmas'         , ## helper mixin to treat two sigmas 
 )
 # =============================================================================
 from   ostap.core.meta_info    import root_info 
@@ -650,6 +650,62 @@ class VarMaker (object) :
     # =========================================================================
     ## Create some expressions with variables
     # =========================================================================
+
+    # =============================================================================
+    ## construct (on-flight) variable for the sum  of many variables \f$ sum_i v_i \f$
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var2 = ...
+    #  var4 = xxx.add_variables ( var1 , var2 , var3 )
+    #  @endcode 
+    def add_variables ( self , *variables , name = '' , title = '' ) :
+        """ Construct (on-flight) variable for var1*c1+var2*c2 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 =
+        >>> var4 = xxx.add_variables ( var1 , var2 , var3 )
+        """
+        ## the most trivial case 
+        if not variables : return ROOT.RooFit.RooConst ( 0 ) 
+
+        ## collect variables 
+        vvars = []
+        vsum  = 0.0
+        for i , v in enumerate ( variables ) :
+            if    isinstance ( v , num_types        ) : vsum += float ( v )
+            elif  isinstance ( v , ROOT.RooConstVar ) : vsum += float ( v )
+            elif  isinstance ( v , ROOT.RooAbsReal  ) : vvars.append  ( v )
+            else :
+                raise TypeError ("add_variables: invalid variable[#%d] type %s" % ( i , typename ( v ) ) ) 
+
+        ## no variables?
+        if not vvars : return ROOT.RooFit.RooConst ( vsum  )
+
+        ## only one variable ? 
+        if 1 == len ( vvars ) : return self.vars_add ( vvars [ 0 ] , vsum , name = name , title = title ) 
+        
+        ## at least two variables
+        vlst = ROOT.RooArgList()
+        for v in vvars : vlst.add ( v )
+
+        ## if constant is not zero - add it! 
+        if vsum :
+            vsum = ROOT.RooFit.RooConst ( vsum )
+            vlst.add ( vsum ) 
+            
+        self.aux_keep.append ( vlst )
+        
+        name  = name  if name   else self.roo_name  ( "_add_" .join ( v.name for v in vlst ) )                        
+        title = title if title  else                (   "+"   .join ( v.name for v in vlst ) )
+
+        ## add variables 
+        result = Ostap.MoreRooFit.Addition  ( name , title , vlst ) 
+        self.aux_keep.append ( result  )
+                
+        return  result
+    
+    sum_variables = add_variables 
     
     # =========================================================================
     ## construct (on-flight) variable for the product of
@@ -670,7 +726,9 @@ class VarMaker (object) :
         >>> var4 = xxx.vars_multiply ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         >>> var3 = xxx.vars_product  ( var1 , var2   )
         >>> var4 = xxx.vars_product  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
-        """
+        """        
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
         
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
@@ -704,7 +762,6 @@ class VarMaker (object) :
         
         return result
 
-
     # =============================================================================
     ## construct (on-flight) variable for the sum  of
     #  <code>var1</code> and <code>var2</code> \f$ v\equiv  c_1v_1 + c_2v_2\f$ 
@@ -726,36 +783,34 @@ class VarMaker (object) :
         >>> var6 = xxx.vars_sum ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
         
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
+        
         assert isinstance ( c1 , num_types ) and isinstance ( c2 , num_types ),\
                "vars_add: c1 and c2 must be numeric types!"
 
         c1 = float ( c1 )
         c2 = float ( c2 )
         
-        if   0 == c1 and 0 == c2 :
-            return ROOT.RooFit.RooConst ( 0 )   ## shortcut 
-        elif 0 == c1 : 
-            return self.vars_multiply ( var2 , c2 , name = name , title = title )
-        elif 0 == c2 :
-            return self.vars_multiply ( var1 , c1 , name = name , title = title )
+        if   0 == c1 and 0 == c2 : return ROOT.RooFit.RooConst ( 0 )   ## shortcut 
+        elif 0 == c1             : return self.vars_multiply ( var2 , c2 , name = name , title = title )
+        elif 0 == c2             : return self.vars_multiply ( var1 , c1 , name = name , title = title )
         
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
             res  = float ( var1 ) * float ( c1 ) + float ( var2 ) * float ( c2 )
-            return ROOT.RooFit.RooConst ( res ) 
+            return ROOT.RooFit.RooConst ( res )           
         elif f1 :
             ## shortcut 
-            if 0 == var1 :
-                return self.var_multiply ( var2 , c2 , name = name , title = title )  ## SHORTCUT 
+            if 0 == var1 : return self.var_multiply ( var2 , c2 , name = name , title = title )  ## SHORTCUT 
             #
             var1 = ROOT.RooFit.RooConst ( float ( var1 ) * float ( c1 ) )                         
             return self.vars_add ( var1 , var2 , name = name , title = title )
         elif f2 :
             ## shortcut 
-            if 0 == var2 :
-                return self.var_multiply ( var1 , c1 , name = name , title = title )  ## SHORTCUT 
+            if 0 == var2 : return self.var_multiply ( var1 , c1 , name = name , title = title )  ## SHORTCUT 
             #
             var2 = ROOT.RooFit.RooConst ( float ( var2 ) * float ( c2 ) ) 
             return self.vars_add ( var1 , var2 , name =name , title = title  )
@@ -766,10 +821,8 @@ class VarMaker (object) :
         name  = name  if name   else self.roo_name  ( "add_%s_%s" % ( var1.name , var2.name ) )
         title = title if title  else                  "(%s)+(%s)" % ( var1.name , var2.name )
 
-        if c1 == 1 and c2 == 1 : 
-            result = Ostap.MoreRooFit.Addition  ( var1 , var2 , name , title )
-        else :
-            result = Ostap.MoreRooFit.Addition2 ( name , title , var1 , var2 , c1 , c2 )
+        if c1 == 1 and c2 == 1 : result = Ostap.MoreRooFit.Addition  ( var1 , var2  , name , title )
+        else                   : result = Ostap.MoreRooFit.Addition2 ( name , title , var1 , var2 , c1 , c2 )
                 
         self.aux_keep.append ( result  )
                 
@@ -796,6 +849,9 @@ class VarMaker (object) :
         >>> var6 = xxx.vars_difference ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
 
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
+        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -846,6 +902,9 @@ class VarMaker (object) :
         >>> var6 = xxx.vars_ratio  ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
         
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
+        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -885,6 +944,9 @@ class VarMaker (object) :
         >>> var3 = xxx.vars_fraction ( var1 , var2   )
         >>> var4 = xxx.vars_fraction ( var1 , 2 , 'sigma2' , title = 'exression' )
         """
+        
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
         
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
@@ -935,6 +997,9 @@ class VarMaker (object) :
         >>> var4 = xxx.vars_reldifference ( var1 , 2 , 'sigma2' , title = 'exression' )
         """
         
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
+        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -981,6 +1046,10 @@ class VarMaker (object) :
         >>> var4 = xxx.vars_power        ( var1 , 2.0  )    
         >>> var4 = xxx.vars_power        ( 2.0  , var2 )    
         """
+        
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
+        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -1009,7 +1078,7 @@ class VarMaker (object) :
         
         return result
 
-        # =============================================================================
+    # =============================================================================
     ## construct (on-flight) variable  for \f$ exp(ab) \f$ 
     #  <code>var1</code> and <code>var2</code>: 
     #  @code
@@ -1027,6 +1096,10 @@ class VarMaker (object) :
         >>> var4 = xxx.vars_exp ( var1 , 2.0  )    
         >>> var4 = xxx.vars_exp ( 2.0  , var2 )    
         """
+        
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
+        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -1073,6 +1146,10 @@ class VarMaker (object) :
         >>> var4 = xxx.vars_abs ( var1 , 2.0  )    
         >>> var4 = xxx.vars_abs ( 2.0  , var2 )    
         """
+        
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
+        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
@@ -1108,7 +1185,6 @@ class VarMaker (object) :
     vars_reldifference = vars_asymmetry
     vars_pow           = vars_power
     vars_expo          = vars_exp
-
 
     # =========================================================================
     ## helper function to create <code>RooFormulaVar</code>
@@ -1171,7 +1247,6 @@ class VarMaker (object) :
         
         return rfv 
     
-
     # =========================================================================
     ## make very specific combination of variables:  alpha*var1*(bets+gamma*var2)    
     #  \f$ r = \alpha v_1 ( \beta + \gamma * v_2 ) \    
@@ -1186,6 +1261,9 @@ class VarMaker (object) :
         """ Make very specific combination of variables:  alpha*var1*(beta+gamma*var2)    
         r = alpha * v_1 ( beta + gamma * v_2 ) 
         """
+        
+        if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
+        if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
         
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )

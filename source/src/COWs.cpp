@@ -87,7 +87,7 @@ Ostap::Utils::COWs::COWs
   for ( const RooAbsArg* cmp : *m_cmps )
     {
       Ostap::Assert ( nullptr != cmp ,
-                      "Invaild component!" , 
+                      "Invalid component!" , 
                       "Ostap::Utils::COWs" ,
                       INVALID_ABSARG  , __FILE__ , __LINE__ ) ;
       const RooAbsPdf*  a = dynamic_cast<const RooAbsPdf*> ( cmp ) ; 
@@ -233,7 +233,7 @@ Ostap::Utils::COWs::COWs
   for ( const RooAbsArg* cmp : *m_cmps )
     {
       Ostap::Assert ( nullptr != cmp ,
-		      "Invaild component!" , 
+		      "Invalid component!" , 
 		      "Ostap::Utils::COWs" ,
 		      INVALID_ABSARG  , __FILE__ , __LINE__ ) ;
       const RooAbsPdf*  a = dynamic_cast<const RooAbsPdf*> ( cmp ) ; 
@@ -276,7 +276,7 @@ Ostap::Utils::COWs::COWs
   for ( const RooAbsArg* cmp : *m_cmps )
     {
       Ostap::Assert ( nullptr != cmp ,
-                      "Invaild component!" , 
+                      "Invalid component!" , 
                       "Ostap::Utils::COWs" ,
                       INVALID_ABSARG  , __FILE__ , __LINE__ ) ;
       const RooAbsPdf*  a = dynamic_cast<const RooAbsPdf*> ( cmp ) ; 

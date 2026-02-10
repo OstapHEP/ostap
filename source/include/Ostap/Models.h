@@ -18,6 +18,7 @@
 #include "Ostap/Workspace.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/MoreMath.h"
 // ============================================================================
 /** @file Ostap/Models.h
  *  set of useful models
@@ -1579,57 +1580,31 @@ namespace Ostap
     {
     public:
       // ============================================================
-      /// the sigmoid type 
-      enum SigmoidType
-	{
-	  //
-	  Logistic              , // based on logistic function 
-	  Hyperbolic            , // based on tanh 
-	  Trigonometric         , // based on atan 
-	  Error                 , // Based on error function 
-	  Gudermannian          , // Based on Gudermannian function
-	  Algebraic             , // 0.5 * ( 1 + 2*x / hypot ( 1 , 2*x ) )
-	  SmoothTransition      , // Based on "smooth transition" function
-	  //
-	  Polynomial_n0         , // Based on "smooth step" with n=0
-	  Polynomial_n1         , // Based on "smooth step" with n=1
-	  Polynomial_n2         , // Based on "smooth step" with n=2
-	  Polynomial_n3         , // Based on "smooth step" with n=3
-	  Polynomial_n4         , // Based on "smooth step" with n=4
-	  Polynomial_n5         , // Based on "smooth step" with n=5
-	  Polynomial_n6         , // Based on "smooth step" with  n=6
-	  //
-	  First = Logistic      , 
-	  Last  = Polynomial_n6 
-	} ;      	
-      // ============================================================
-    public:
-      // ============================================================
       /// constructor from polynomial and parameters "alpha" and "x0"
       Sigmoid
-      ( const Ostap::Math::Positive& poly               ,
-	      const double                 scale = 1          ,
-	      const double                 x0    = 0          ,
-	      const double                 delta = 0          , 
-	      const SigmoidType            st    = Hyperbolic ) ;
+      ( const Ostap::Math::Positive&   poly               ,
+	const double                   scale = 1          ,
+	const double                   x0    = 0          ,
+	const double                   delta = 0          , 
+	const Ostap::Math::SigmoidType st    = Ostap::Math::SigmoidType::Hyperbolic ) ;
       /// constructor from polynomial and parameter "alpha"
       Sigmoid
-      ( const unsigned short         N     = 0          ,
-	      const double                 xmin  = 0          ,
-	      const double                 xmax  = 1          ,
-	      const double                 scale = 1          ,
-	      const double                 x0    = 0          , 
-	      const double                 delta = 0          , 
-	      const SigmoidType            st    = Hyperbolic ) ;
+      ( const unsigned short           N     = 0          ,
+	const double                   xmin  = 0          ,
+	const double                   xmax  = 1          ,
+	const double                   scale = 1          ,
+	const double                   x0    = 0          , 
+	const double                   delta = 0          , 
+	const Ostap::Math::SigmoidType st    = Ostap::Math::SigmoidType::Hyperbolic ) ;
       /// constructor from polynomial and parameter "alpha"
       Sigmoid
-      ( const std::vector<double>&   pars               ,
-	     const double                 xmin  = 0          ,
-	     const double                 xmax  = 1          ,
-	     const double                 scale = 1          ,
-	     const double                 x0    = 0          ,
-	     const double                 delta = 0          , 	
-	     const SigmoidType            st    = Hyperbolic ) ;
+      ( const std::vector<double>&     pars               ,
+	const double                   xmin  = 0          ,
+	const double                   xmax  = 1          ,
+	const double                   scale = 1          ,
+	const double                   x0    = 0          ,
+	const double                   delta = 0          , 	
+	const Ostap::Math::SigmoidType st    = Ostap::Math::SigmoidType::Hyperbolic ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1647,16 +1622,20 @@ namespace Ostap
       /** Get the actual sigmoid/kink value
        *  All sigmoids are normalized to have the same slope at the x=x0
        */
-      double sigmoid ( const double x ) const ;
+      inline double sigmoid ( const double x ) const
+      {
+	const double z = ( x - m_x0 ) / m_scale ;
+	return Ostap::Math::sigmoid ( z , m_type ) ;
+      }
       // ======================================================================
     public: // sigmoid getters 
       // ======================================================================
-      inline double      x0           () const { return     m_x0        ; }
-      inline double      scale        () const { return     m_scale     ; }
-      inline double      delta        () const { return     m_delta     ; } 
-      inline SigmoidType sigmoid_type () const { return     m_type      ; }
-      inline double      sin2delta    () const { return     m_sin2delta ; }
-      inline double      cos2delta    () const { return 1 - m_sin2delta ; } 
+      inline double                   x0           () const { return     m_x0        ; }
+      inline double                   scale        () const { return     m_scale     ; }
+      inline double                   delta        () const { return     m_delta     ; } 
+      inline Ostap::Math::SigmoidType sigmoid_type () const { return     m_type      ; }
+      inline double                   sin2delta    () const { return     m_sin2delta ; }
+      inline double                   cos2delta    () const { return 1 - m_sin2delta ; } 
       // ======================================================================
     public: // sigmoid setters  
       // ======================================================================      
@@ -1718,7 +1697,7 @@ namespace Ostap
       /// sigmoid delta  
       double                m_delta     { 0          } ; // sigmoid delta 
       /// sigmoid type 
-      SigmoidType           m_type      { Hyperbolic } ; // sigmoid type 
+      Ostap::Math::SigmoidType         m_type { Ostap::Math::SigmoidType::Hyperbolic } ;
       /// constant fraction f = sin^2 delta 
       double                m_sin2delta { 0          } ; // sin^2 delta 
       // ======================================================================
