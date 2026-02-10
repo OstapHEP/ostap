@@ -1660,7 +1660,7 @@ def var_abs ( a , b = 1 , name = '' , title = '' ) :
     elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Abs( a, b , name , title )
-    #
+    
 # ==============================================================================
 ## exponent  \f$ f = \mathrm{e}^{ab}\f$
 #  @code
@@ -1740,7 +1740,6 @@ def var_log10 ( a , b = 1 , name = '' , title = '' ) :
         return ROOT.RooFit.RooConst ( ab )
     #
     return Ostap.MoreRooFit.Log10 ( a, b , name , title ) 
-
 
 # ==============================================================================
 ## error function \f$ f = erf ( ab) \f$
@@ -1854,7 +1853,6 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     #
     return Ostap.MoreRooFit.Cos ( a, b , name , title )
 
-
 # ==============================================================================
 ## Tangent\f$ f = \tan ab\f$
 #  @code
@@ -1882,7 +1880,6 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 0 ) 
     #
     return Ostap.MoreRooFit.Tan ( a, b , name , title )
-
 
 # ==============================================================================
 ## Hyprbolic sine \f$ f = \sinh ab\f$
@@ -1912,7 +1909,6 @@ def var_sinh ( a , b = 1 , name = '' , title = '' ) :
     #
     return Ostap.MoreRooFit.Sinh ( a, b , name , title ) 
     
-
 # ==============================================================================
 ## Hyperbolic cosine \f$ f = \cosh ab\f$
 #  @code
@@ -2020,6 +2016,7 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.atan2 ( float ( a ) , float ( b ) ) 
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    
     return Ostap.MoreRooFit.Atan2 ( a, b , name , title )
 
 # ==============================================================================
@@ -2052,7 +2049,6 @@ def var_sigmoid ( a , b = 1 , sigmoid_type = Ostap.Math.SigmoidType.Hyperbolic ,
     
     return Ostap.MoreRooFit.Sigmoid ( a , b , name , title , sigmoid_type )
 
-
 # ==============================================================================
 ## Hypot \f$ f = \sqrt{a^2 + b^2} \f$
 #  @code
@@ -2076,6 +2072,7 @@ def var_hypot ( a , b = 1 , name = '' , title = '' ) :
     if fa and fb :
         ab = math.hypot ( float ( a ) , float ( b ) )         
         return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    
     return Ostap.MoreRooFit.Hypot ( a , b , name , title )
 
 # ==============================================================================
@@ -2086,7 +2083,7 @@ def var_hypot ( a , b = 1 , name = '' , title = '' ) :
 #  e   = var_bessel_J ( x , nu ) 
 #  @endcode
 def var_bessel_J ( x , nu = 0 , name = '' , title = '' ) :
-    """Bessel function f(x) = J_{nu}(x)
+    """ Bessel function f(x) = J_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_J ( x , nu  ) 
@@ -2114,7 +2111,7 @@ def var_bessel_J ( x , nu = 0 , name = '' , title = '' ) :
 #  e   = var_bessel_Y ( x , nu ) 
 #  @endcode
 def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
-    """Bessel function f(x) = Y_{nu}(x)
+    """ Bessel function f(x) = Y_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_Y ( x , nu  ) 
@@ -2131,6 +2128,7 @@ def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
     if fx and fnu :
         val = mve.bessel_Y ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
+    
     return Ostap.MoreRooFit.BesselY ( x , nu , name , title )
 
 # ==============================================================================
@@ -2158,6 +2156,7 @@ def var_bessel_I ( x , nu = 0 , name = '' , title = '' ) :
     if fx and fnu :
         val = mve.bessel_I ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
+    
     return Ostap.MoreRooFit.BesselI ( x , nu , name , title )
 
 # ==============================================================================
@@ -2185,9 +2184,8 @@ def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
     if fx and fnu :
         val = mve.bessel_K ( float ( fnu ) , float ( fx ) ) 
         return ROOT.RooFit.RooConst ( val )      ## RETURN
+    
     return Ostap.MoreRooFit.BesselK ( x , nu , name , title )
-
-
 
 # ==============================================================================
 ## maximal \f$ f = max (a,b)\f$
@@ -2320,7 +2318,6 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     #
     return Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
 
-
 # =============================================================================
 ## Sum of two RooAbsReal objects
 #  @code
@@ -2328,28 +2325,36 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
 #  v2 = ...
 #  v  = var_sum ( v1 ,  v2 )
 #  @endcode
-def var_sum ( v1 , v2 , name = '' , title = '' ) :
-    """ Sum of two RooAbsReal objects
+def var_sum ( *variables , name = '' , title = '' ) :
+    """ Sum of several RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_sum ( v1 , v2 )
     """
-    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
-    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
-
-    f1 = isinstance ( v1 , num_types )
-    f2 = isinstance ( v2 , num_types )
+    if not variables : return ROOT.RooFit.RooConst ( 0 )
+      
+    vsum  = 0.0
+    vvars = [] 
+    for v in variables :
         
-    if f1 : v1 = float ( v1 )
-    if f2 : v2 = float ( v2 )
+        if   isinstance ( v , num_types        ) : vsum += float ( v )
+        elif isinstance ( v , ROOT.RooConstVar ) : vsum += float ( v )
+        else                                     : vvars.append  ( v ) 
+           
+           
+    if  not vvars : return ROOT.RooFit.RooConst ( vsum )
     
-    if f1 and f2 :
-        r = float ( v1 ) + float ( v2 ) 
-        return ROOT.RooFit.RooConst ( r )                 ## RETURN    
-    elif f1 and iszero ( v1 ) : return v2
-    elif f2 and iszero ( v2 ) : return v1
+    ## only one variable and no bias: 
+    if 1 == len ( vvars ) and not vsum : return vvars [ 0 ]
+    
+    lst = ROOT.RooArgList()
+    for v in vvars : lst.add ( v ) 
+    if vsum : lst.add ( ROOT.RooFit.RooConst ( vsum ) )
+    
+    name  = name  if name  else '_add_'.join ( v.GetName() for v in lst )
+    title = title if title else ' + '  .join ( v.GetName() for v in lst )
     #
-    return Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
+    return Ostap.MoreRooFit.Addition ( name , title , lst ) 
 
 # =============================================================================
 ## Subtraction of two RooAbsReal objects
@@ -2388,30 +2393,37 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
 #  v2 = ...
 #  v  = var_mul ( v1 ,  v2 )
 #  @endcode
-def var_mul ( v1 , v2 , name = '' , title = '' ) :
+def var_mul ( *variables , name = '' , title = '' ) :
     """ Product of two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_mul ( v1 ,  v2 )
     """
-    if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
-    if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
-
-    f1 = isinstance ( v1 , num_types )
-    f2 = isinstance ( v2 , num_types )    
-        
-    if f1 : v1 = float ( v1 )
-    if f2 : v2 = float ( v2 )
     
-    if f1 and f2 :
-        r = float ( v1 ) * float ( v2 ) 
-        return ROOT.RooFit.RooConst ( r )                 ## RETURN
-    elif f1 and iszero ( v1 ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif f2 and iszero ( v2 ) : return ROOT.RooFit.RooConst ( 0 ) 
-    elif f1 and isone  ( v1 ) : return v2 
-    elif f2 and iseone ( v2 ) : return v1 
+    if not variables : return ROOT.RooFit.RooConst ( 1 )
+      
+    vmul  = 1.0
+    vvars = [] 
+    for v in variables :
+        
+        if   isinstance ( v , num_types        ) : vmul *= float ( v )
+        elif isinstance ( v , ROOT.RooConstVar ) : vmul *= float ( v )
+        else                                     : vvars.append  ( v ) 
+           
+    if not vmul  : return ROOT.RooFit.RooConst ( vmul )
+    if not vvars : return ROOT.RooFit.RooConst ( vmul )
+    
+    ## only one variable and no bias: 
+    if 1 == len ( vvars  ) and 1 == vmul : return vvars [ 0 ]
+    
+    lst = ROOT.RooArgList()
+    for v in vvars : lst.add ( v ) 
+    if 1 != vmul : lst.add ( ROOT.RooFit.RooConst ( vmum ) )
+    
+    name  = name  if name  else '_mul_'.join ( v.GetName() for v in lst )
+    title = title if title else ' * '  .join ( v.GetName() for v in lst )
     #
-    return Ostap.MoreRooFit.Product ( v1 , v2 , name , title ) 
+    return Ostap.MoreRooFit.Product ( name , title , lst ) 
 
 # =============================================================================
 ## Division of two RooAbsReal objects
@@ -2505,7 +2517,6 @@ def var_fraction ( v1 , v2 , name = '' , title = '' ) :
     #
     return Ostap.MoreRooFit.Fraction ( v1 , v2 , name , title ) 
 
-
 # ==============================================================================
 ## "Asymmetry" of two RooAbsReal objects: f = (v1-v2)/(v1+v2)
 #  @code
@@ -2559,7 +2570,6 @@ _decorated_classes_ = (
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 
-
 
 # =============================================================================
 ## Vali formula expression?
