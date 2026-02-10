@@ -18,7 +18,8 @@ from   ostap.math.ve          import VE
 from   ostap.core.core        import hID 
 from   ostap.histos.histos    import h1_axis
 from   ostap.plotting.canvas  import use_canvas 
-from   ostap.utils.root_utils import batch_env, implicitMT 
+from   ostap.utils.root_utils import batch_env, implicitMT
+from   ostap.logger.symbols   import greek_lower_theta as theta
 import ostap.histos.compare
 import ostap.histos.graphs 
 import ROOT, random
@@ -145,7 +146,7 @@ def compare ( h1 , h2 , title = '' , density = False ) :
     else  : logger.warning ( 'h2 vs h1 : fit problems ')
     
     ct  = h1.cmp_cos      ( h2 , density = density ) 
-    logger.info           ( 'h1 vs h2 : cos(theta)      is %+.5f ' % ct  ) 
+    logger.info           ( 'h1 vs h2 : cos(%s)      is %+.5f ' % ( theta , ct  ) )
     
     dd1 = h1.cmp_dist     ( h2 , density = density ) 
     logger.info           ( 'h1 vs h2 : distance        is %+.5f ' % dd1 )

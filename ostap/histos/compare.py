@@ -7,7 +7,7 @@
 #  Module with utilities for specific comparison of histograms/functions/shapes 
 #  @date   2014-05-10
 # =============================================================================
-"""Module with utilities for specific comparison of histograms/functions/shapes
+""" Module with utilities for specific comparison of histograms/functions/shapes
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -18,6 +18,12 @@ __all__     = ()
 from   ostap.core.core        import hID , VE, Ostap  
 from   ostap.logger.colorized import allright
 from   ostap.logger.symbols   import plus_minus 
+from   ostap.logger.symbols   import ( chi2              as s_chi2     ,
+                                       chi2ndf           as s_chi2ndf  ,
+                                       greek_upper_delta as s_Delta    ,
+                                       greek_lower_delta as s_delta    ,
+                                       greek_lower_theta as s_angle    ,
+                                       arrow_right       as rightarrow ) 
 from   ostap.logger.pretty    import pretty_float
 from   ostap.histos.histos    import histo_fit 
 import ostap.math.math_ve     as     MVE 
@@ -32,6 +38,8 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.compare' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( "Specific comparison of histograms" ) 
+# =============================================================================
+s_probchi2 = 'Prob(%s)' % s_chi2
 # =============================================================================
 ## Can 1D-histogram can be considered as `constant' ?
 #  @code
@@ -1489,16 +1497,15 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                          title           = ''           ,
                          density         = False        ,
                          ##
-                         distance        = 'distance'   ,
-                         ddistance       = 'distance/D' ,
-                         diffneg         = 'diff(neg)'  ,
-                         diffpos         = 'diff(pos)'  ,
-                         angle           = 'angle'      ,
-                         dangle          = 'angle/D'    ,
-                         chi2ndf         = 'chi2/ndf'   ,
-                         probchi2        = 'prob(chi2)' ,
-                         ## probfit         = 'prob(fit)'  ,
-                         probfit         = ''  ,
+                         distance        = s_Delta      ,
+                         ddistance       = s_Delta      ,
+                         diffneg         = '%s(-)'   % s_delta ,
+                         diffpos         = '%s(+)'   % s_delta ,
+                         angle           =  s_angle     ,
+                         dangle          =  s_angle     ,
+                         chi2ndf         =  s_chi2ndf   ,
+                         probchi2        =  s_probchi2  , 
+                         probfit         = 'Prob(fit)'  ,
                          prefix          = ''           ) : 
     """ Calculate and print some statistic information for two 1D-histos
     >>> h1 , h2 = ...
@@ -1545,13 +1552,13 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
     if ddistance :
         value = VE ( h1.cmp_ddist ( h2 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = ddistance , '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if ddistance and histo2 :
         value = VE ( h2.cmp_ddist ( h1 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = ddistance , '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance + ' [2 %s 1]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     def fmt (  v  ) :
@@ -1591,21 +1598,21 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         value = VE ( h1.cmp_dcos ( h2 , density = density ) ) 
         value = MVE.acos  ( value )
         v , n = value.pretty_print ( parentheses = False )
-        row   = dangle  , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle + ' [1 %s 2]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle and histo2 :
         value = VE ( h2.cmp_dcos ( h1 , density = density ) ) 
         value = MVE.acos ( value ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = dangle  , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle + ' [2 %s 1]' % rightarrow  , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if chi2ndf :
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
         value = chi2
         v , n = pretty_float ( value )
-        row   = chi2ndf , '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if chi2ndf and histo2 :
@@ -1614,36 +1621,37 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = chi2
         v , n = pretty_float ( value )
-        row   = chi2ndf , '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf+ ' [2 %s 1]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )        
         
     val_prchi_1 = -1 
     if probchi2 : 
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
 
-        value = prob
+        value = prob 
         v , n = pretty_float ( value )
-        row   = probchi2  , '[10^%d]' %n if  n  else  '' , v 
+        row   = probchi2 + ' [1 %s 2]' % rightarrow , '[10^%d]' % n if  n  else  '' , v 
         rows.append ( row  )
         val_prchi_1 = prob  
 
     val_prchi_2 = -1 
-    if probchi2 and histo2 :
-        
+    if probchi2 and histo2 :        
         chi2, prob = h2.cmp_chi2 ( h1 , density = density )
-        value = prob
+        
+        value = prob 
         v , n = pretty_float ( value )
-        row   = probchi2 , '[10^%d]' %n if  n  else  '' , v 
-        rows.append ( row  )
+        row   = probchi2 + ' [2 %s 1]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )        
         val_prchi_2 = prob  
 
     if probfit and histo2 :
 
         rf1   = h1.cmp_fit ( h2 , density = density ) 
-        prob  = rf1.Prob()                    
-        value = prob 
+        prob  = rf1.Prob()
+        
+        value = prob
         v , n = pretty_float ( value )
-        row   = probfit , '[10^%d]' %n if  n  else  '' , v 
+        row   = probfit + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )                
         
         rf2   = h2.cmp_fit ( h1 , density = density ) 
@@ -1651,7 +1659,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = prob 
         v , n = pretty_float ( value )
-        row   = probfit , '[10^%d]' %n if  n  else  '' , v 
+        row   = probfit + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
         
     import ostap.logger.table as T
@@ -1671,14 +1679,15 @@ def _h2_cmp_diff_prnt_ ( h1                             ,
                          title           = ''           ,
                          density         = False        ,
                          ##
-                         distance        = 'distance'   ,
-                         ddistance       = 'distance/D' ,
-                         diffneg         = 'diff(neg)'  ,
-                         diffpos         = 'diff(pos)'  ,
-                         angle           = 'angle'      ,
-                         dangle          = 'angle/D'    ,
-                         chi2ndf         = 'chi2/ndf'   ,
-                         probchi2        = 'prob(chi2)' ,
+                         distance        = s_Delta      ,
+                         ddistance       = s_Delta      ,
+                         diffneg         = '%s(-)'   % s_delta ,
+                         diffpos         = '%s(+)'   % s_delta ,
+                         angle           =  s_angle     ,
+                         dangle          =  s_angle     ,
+                         chi2ndf         =  s_chi2ndf   ,
+                         probchi2        =  s_probchi2  , 
+                         probfit         = 'Prob(fit)'  ,
                          prefix          = ''           ) : 
     """ Calculate and print some statistic information for two histos
     >>> h1 , h2 = ...
