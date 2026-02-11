@@ -33,8 +33,8 @@ namespace Ostap
      */
     std::complex<double>
     moebius
-    ( const Ostap::Matrix2x2&      m , 
-      const std::complex<double>&  x ) ;
+    ( const std::complex<double>&  x ,
+      const Ostap::Matrix2x2&      m ) ; 
     // ========================================================================
     /** Moebius transformation
      * \f[ f(x) = \frac{ax+b}{cx+d}\f]
@@ -42,8 +42,8 @@ namespace Ostap
      */
     Ostap::Math::ValueWithError 
     moebius
-    ( const Ostap::Matrix2x2 &            m , 
-      const Ostap::Math::ValueWithError&  x ) ;
+    ( const Ostap::Math::ValueWithError&  x , 
+      const Ostap::Matrix2x2 &            m ) ;
     // ========================================================================
     /** Moebius transformation
      * \f[ f(x) = \frac{ax+b}{cx+d}\f]
@@ -51,8 +51,8 @@ namespace Ostap
      */
     double
     moebius
-    ( const Ostap::Matrix2x2 &            m , 
-      const double                        x ) ;
+    ( const double                        x , 
+      const Ostap::Matrix2x2 &            m ) ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

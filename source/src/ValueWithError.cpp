@@ -3010,6 +3010,28 @@ Ostap::Math::ValueWithError Ostap::Math::probit
   //
   return Ostap::Math::ValueWithError ( v , e2 ) ;
 }
+// ========================================================================    
+/* \overload evaluate <code>ogit(b)</code> 
+ *  @param b (INPUT) the parameter 
+ *  @see https://en.wikipedia.org/wiki/Logit
+ *  @warning invalid and small covariances are ignored 
+ */
+Ostap::Math::ValueWithError 
+Ostap::Math::logit
+( const Ostap::Math::ValueWithError& b ) 
+{
+  if ( 0 >= b.cov2 () || _zero ( b.cov2() ) )
+  { return Ostap::Math::logit ( b.value() ) ; }
+  //
+  const double bv = b.value() ;
+  const double v  = Ostap::Math::logit ( bv ) ;
+  //
+  // derivative 
+  const double d  = 1.0 / bv + 1.0 / ( 1.0 - bv ) ; 
+  const double e2 = d * d  * b.cov2()   ;
+  //
+  return Ostap::Math::ValueWithError ( v , e2 ) ;
+}
 // ============================================================================
 /*  evaluate asin(b)
  *  @param b (INPUT) the parameter 

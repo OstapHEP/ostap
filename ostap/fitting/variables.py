@@ -2489,8 +2489,8 @@ def var_sum ( *variables , name = '' , title = '' ) :
     >>> v  = var_sum ( v1 , v2 )
     """
     if not variables : return ROOT.RooFit.RooConst ( 0 )
-    ## 
-    assert all ( isinstance ( v , var_types ) for c in variable ) , "var_sum: invalid type for `variable`"
+    ##     
+    assert all ( isinstance ( v , var_types ) for v in variables ) , "var_sum: invalid type for `variable`"
     ##
     vsum  = 0.0
     vvars = [] 
@@ -2563,7 +2563,7 @@ def var_mul ( *variables , name = '' , title = '' ) :
     ## Empty product?
     if not variables : return ROOT.RooFit.RooConst ( 1 )
     ##
-    assert all ( isinstance ( v , var_types ) for c in variables ) , "var_mul: invalid type for `variable`"
+    assert all ( isinstance ( v , var_types ) for v in variables ) , "var_mul: invalid type for `variable`"
     ## 
     vmul  = 1.0
     vvars = [] 

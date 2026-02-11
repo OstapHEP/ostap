@@ -14,7 +14,7 @@
 #include "Ostap/GenericMatrixTypes.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/ValueWithError.h"
-#include "Ostap/MatrixMath.h"
+#include "Ostap/Moebius.h"
 // ============================================================================
 /* Moebius transformation
  * \f[ f(x) = \frac{ax+b}{cx+d}\f]
@@ -23,8 +23,8 @@
 // ============================================================================
 std::complex<double>
 Ostap::Math::moebius
-( const Ostap::Matrix2x2 &     m , 
-  const std::complex<double>&  x )
+( const std::complex<double>&  x ,
+  const Ostap::Matrix2x2&      m ) 
 {
   static const std::complex<double> s_1 { 1 , 0 } ; 
   return moebius ( x                 ,
@@ -41,8 +41,8 @@ Ostap::Math::moebius
 // ========================================================================
 Ostap::Math::ValueWithError 
 Ostap::Math::moebius
-( const Ostap::Matrix2x2 &            m , 
-  const Ostap::Math::ValueWithError&  x )
+( const Ostap::Math::ValueWithError&  x , 
+  const Ostap::Matrix2x2 &            m ) 
 { return moebius ( x ,
 		   m ( 0 , 0 ) ,
 		   m ( 0 , 1 ) ,
@@ -56,8 +56,8 @@ Ostap::Math::moebius
 // ========================================================================
 double
 Ostap::Math::moebius
-( const Ostap::Matrix2x2 &            m , 
-  const double                        x ) 
+( const double                        x ,  
+  const Ostap::Matrix2x2 &            m ) 
 { return moebius ( x ,
 		   m ( 0 , 0 ) ,
 		   m ( 0 , 1 ) ,

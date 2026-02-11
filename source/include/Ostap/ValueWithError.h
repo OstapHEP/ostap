@@ -864,11 +864,18 @@ namespace Ostap
     // ========================================================================    
     /** \overload evaluate <code>probit(b)</code> 
      *  @param b (INPUT) the parameter 
-     *  @return  erfc(b)
      *  @see https://en.wikipedia.org/wiki/Probit
      *  @warning invalid and small covariances are ignored 
      */
     ValueWithError probit
+    ( const ValueWithError& b ) ;
+    // ========================================================================    
+    /** \overload evaluate <code>ogit(b)</code> 
+     *  @param b (INPUT) the parameter 
+     *  @see https://en.wikipedia.org/wiki/Logit
+     *  @warning invalid and small covariances are ignored 
+     */
+    ValueWithError logit
     ( const ValueWithError& b ) ;
     // ========================================================================    
     /** evaluate <code>asin(b)</code>: \f$ \asin  b \f$ 

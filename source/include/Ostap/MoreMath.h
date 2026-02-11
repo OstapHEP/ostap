@@ -146,6 +146,13 @@ namespace Ostap
      *  @return quantile value 
      */
     double  probit ( const double alpha  ) ;
+    // =========================================================================
+    /**inverse of standard logistic distribution
+     * \f[ logit p  = \log \frac{p}{1-p} \f]
+     * for \f$ 0 < p < 1 \f$
+     * @see https://en.wikipedia.org/wiki/Logit
+     */
+    double logit ( const double p ) ;
     // ========================================================================
     /** \overload complex error function (the error function of complex arguments)
      *  @param x  the argument 

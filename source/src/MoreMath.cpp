@@ -6099,7 +6099,22 @@ double Ostap::Math::probit
     gsl_cdf_ugaussian_Pinv ( alpha ) ; 
 }
 // ============================================================================
-
+/* Inverse of standard logistic distribution
+ * \f[ logit p  = \log \frac{p}{1-p} \f]
+ * for \f$ 0 < p < 1 \f$
+ * @see https://en.wikipedia.org/wiki/Logit
+ */
+// ============================================================================
+double Ostap::Math::logit
+( const double p ) 
+{
+  return
+    s_zero  ( p     ) ? -std::numeric_limits<double>::max () :
+    s_equal ( p , 1 ) ?  std::numeric_limits<double>::max () : 
+    p < 0             ?  std::numeric_limits<double>::quiet_NaN () :
+    p > 1             ?  std::numeric_limits<double>::quiet_NaN () :
+    std::log ( p * 1.0L / ( 1.0L - p ) ) ; 
+}
 // ============================================================================
 // Hypergeometric functions
 // ============================================================================

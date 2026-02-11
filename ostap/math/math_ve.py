@@ -23,7 +23,7 @@ __all__     = (
     'asinh'        , 'acosh'      , 'atanh'   ,
     'erf'          , 'erfc'       , 'erfi'    , 'erfcx'    ,
     'sinc'         , 
-    'probit'       , 'pochhammer' , 
+    'probit'       , 'logit'      , pochhammer' , 
     'gamma'        , 'tgamma'     , 'lgamma'  , 'igamma'   ,
     'psi'          , 'polygamma'  , 'digamma' , 'trigamma' ,
     'beta'         , 'lnbeta'     ,
@@ -552,6 +552,19 @@ def probit ( x ) :
     if fun : return fun()
     return _probit_ ( x )
 
+# =============================================================================
+_logit_ = Ostap.Math.logit  
+# =============================================================================
+## define `logit' function 
+#  @see https://en.wikipedia.org/wiki/Logit
+def logit ( x ) :
+    """ Logit function taking into account the uncertainties
+    - see https://en.wikipedia.org/wiki/Logit
+    """
+    fun = getattr ( x , '__logit__' , None )
+    if fun : return fun()
+    return _logit_ ( x )
+    
 # =============================================================================
 ## define `min' function \f$ \min (x,y) \f$ 
 def minv ( x , y ) :
@@ -1094,7 +1107,6 @@ def zetam1 ( x ) :
     if fun : return fun (   )
     return _zetam1_ ( x )
 
-
 # =============================================================================
 _hurwitz_ = Ostap.Math.hurwitz
 # =============================================================================
@@ -1214,19 +1226,15 @@ _moebius_   = Ostap.Math.moebius
 #  \f[ f(x) = \frac{ax+b}{cx+d}\f]
 #  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
 #  @see Ostap::Math::moebius 
-def moebius ( x       ,
-              a = 1.0 ,
-              b = 0.0 ,
-              c = 0.0 ,
-              d = 1.0 ) :
+def moebius ( x       , *pars ) :
     """ Moebius transform
     x -> (a*x+b)/(c*x+d)
     - see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
     - see `Ostap::Math::moebius` 
     """
     fun = getattr ( x , '__moebius__' , None )
-    if fun : return fun ( a , b , c , d )
-    return _moebius_ ( x , a , b , c , d ) 
+    if fun : return fun ( *pars )
+    return _moebius_ ( x , *pars ) 
     
 # =============================================================================
 ## FIX
@@ -1276,7 +1284,7 @@ if '__main__' == __name__ :
               asinh  , acosh   , atanh    ,
               erf    , erfc    , erfi     , erfcx  ,
               sinc   ,
-              probit ,
+              probit , logit   , 
               gd     , gd_inv  , 
               Ai     , Bi      , 
               gamma  , tgamma  , lgamma   , igamma ,
