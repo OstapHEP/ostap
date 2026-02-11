@@ -46,6 +46,7 @@ __all__     = (
     'dilog'        ,
     'zeta'         , 'zetam1'     , 'eta'        , 
     'hurwitz'      , 'hzeta'      ,
+    'moebius'      ,                               ## Moebius transform
     'Cl'           , 'Sl'         , 'clausen'    , 
     'hyperg_M'     , 'hyperg_U'   , 'hyperg_2F1' ,
     'significance' , 'nsigmas'    , 'nsigma'
@@ -1206,6 +1207,27 @@ def hyperg_2F1 ( a , b , c , x ) :
     if fun : return fun ( a , b , c )
     return _hyperg_2F1 ( a , b , c , x )
 
+
+_moebius_   = Ostap.Math.moebius
+# ==============================================================================
+## Moebius transform
+#  \f[ f(x) = \frac{ax+b}{cx+d}\f]
+#  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+#  @see Ostap::Math::moebius 
+def moebius ( x       ,
+              a = 1.0 ,
+              b = 0.0 ,
+              c = 0.0 ,
+              d = 1.0 ) :
+    """ Moebius transform
+    x -> (a*x+b)/(c*x+d)
+    - see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+    - see `Ostap::Math::moebius` 
+    """
+    fun = getattr ( x , '__moebius__' , None )
+    if fun : return fun ( a , b , c , d )
+    return _moebius_ ( x , a , b , c , d ) 
+    
 # =============================================================================
 ## FIX
 #  @see https://sft.its.cern.ch/jira/browse/ROOT-6627'

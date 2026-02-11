@@ -66,6 +66,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Lomont.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
+                         src/MatrixMath.cpp
                          src/MatrixUtils.cpp                         
                          src/Misc.cpp
                          src/Models.cpp
@@ -78,7 +79,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Mute.cpp
             		 src/Names.cpp 
                          src/NStatEntity.cpp
-                         src/Notifier.cpp
+                         src/Notifier.cpp			 
                          src/Ostap.cpp
 			 src/Quantile.cpp
                          src/Parameters.cpp
@@ -104,7 +105,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
-                         src/PyVar.cpp   
+                         src/PyVar.cpp			 
                          src/Quantile.cpp
                          src/Quantiles.cpp
                          src/Rational.cpp

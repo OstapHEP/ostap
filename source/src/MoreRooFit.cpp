@@ -109,6 +109,8 @@ ClassImp(Ostap::MoreRooFit::Maximal       )
 ClassImp(Ostap::MoreRooFit::Rank          )
 ClassImp(Ostap::MoreRooFit::ABC           )
 ClassImp(Ostap::MoreRooFit::Clamp         )
+ClassImp(Ostap::MoreRooFit::LocationScale )
+ClassImp(Ostap::MoreRooFit::Moebius       )
 ClassImp(Ostap::MoreRooFit::TailN         )
 ClassImp(Ostap::MoreRooFit::StudentTNu    )
 ClassImp(Ostap::MoreRooFit::NeedhamAlpha  )     
@@ -2106,6 +2108,129 @@ Double_t Ostap::MoreRooFit::Clamp::evaluate () const
     xx <= m_a || s_equal ( xx , m_a ) ? m_a : 
     xx >= m_b || s_equal ( xx , m_b ) ? m_b : xx ;
 }
+// ============================================================================
+
+// ============================================================================
+// variable location and scale 
+// ============================================================================
+Ostap::MoreRooFit::LocationScale::LocationScale
+( const std::string&   name  ,
+  const std::string&   title ,
+  RooAbsReal&          x     ,
+  RooAbsReal&          x0    ,
+  RooAbsReal&          scale )
+  : NVars ( name , title , x , x0 , scale )
+{}
+// ============================================================================
+// variable location and scale 
+// ============================================================================
+Ostap::MoreRooFit::LocationScale::LocationScale
+( const std::string&   name  ,
+  const std::string&   title ,
+  RooAbsReal&          x     ,
+  const double         x0    ,
+  const double         scale )
+  : NVars ( name , title , x , RooFit::RooConst ( x0 ) , scale )
+{}
+// ============================================================================
+// copy
+// ============================================================================
+Ostap::MoreRooFit::LocationScale::LocationScale
+( const Ostap::MoreRooFit::LocationScale& right   ,  
+  const char*                             newname )
+  : NVars ( right , newname )
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::MoreRooFit::LocationScale*
+Ostap::MoreRooFit::LocationScale::clone
+( const char* newname ) const
+{ return new LocationScale ( *this , newname ) ; }
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::MoreRooFit::LocationScale::~LocationScale(){}
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t  Ostap::MoreRooFit::LocationScale::evaluate () const
+{
+  const RooArgSet* nset = m_vars.nset() ;
+  //
+  const double _x       = x     () .getVal ( nset ) ;
+  const double _x0      = x0    () .getVal ( nset ) ;
+  const double _scale   = scale () .getVal ( nset ) ;
+  //
+  return ( _x - _x0 ) / _scale ;
+}
+// ============================================================================
+\
+
+
+// ============================================================================
+// variable location and scale 
+// ============================================================================
+Ostap::MoreRooFit::Moebius::Moebius
+( const std::string&   name  ,
+  const std::string&   title ,
+  RooAbsReal&          x     ,
+  RooAbsReal&          a     ,
+  RooAbsReal&          b     ,
+  RooAbsReal&          c     ,
+  RooAbsReal&          d     )
+  : NVars ( name , title , x , a , b , c , d  )
+{}
+// ============================================================================
+// variable location and scale 
+// ============================================================================
+Ostap::MoreRooFit::Moebius::Moebius
+( const std::string&   name  ,
+  const std::string&   title ,
+  RooAbsReal&          x     ,
+  const double         a     ,
+  const double         b     ,
+  const double         c     ,
+  const double         d     )
+  : NVars ( name , title , x , RooFit::RooConst ( a ) , b , c , d  ) 
+{}
+// ============================================================================
+// copy
+// ============================================================================
+Ostap::MoreRooFit::Moebius::Moebius
+( const Ostap::MoreRooFit::Moebius& right   ,  
+  const char*                       newname )
+  : NVars ( right , newname )
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::MoreRooFit::Moebius*
+Ostap::MoreRooFit::Moebius::clone
+( const char* newname ) const
+{ return new Moebius ( *this , newname ) ; }
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::MoreRooFit::Moebius::~Moebius(){}
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t  Ostap::MoreRooFit::Moebius::evaluate () const
+{
+  const RooArgSet* nset = m_vars.nset() ;
+  
+  const double _x       = x () .getVal ( nset ) ;
+  const double _a       = a () .getVal ( nset ) ;
+  const double _b       = b () .getVal ( nset ) ;
+  const double _c       = c () .getVal ( nset ) ;
+  const double _d       = d () .getVal ( nset ) ;
+  //
+  return ( _a * _x + _b ) / ( _c * _x + _d ) ;
+}
+// ============================================================================
+
+
 // ============================================================================
 // constructor with one variables 
 // ============================================================================

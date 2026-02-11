@@ -6372,8 +6372,6 @@ Ostap::Math::softmax
   return std::make_pair ( expz1 / sumz , expz2 / sumz ) ;  
 }
 
-
-
 // ============================================================================
 /*  Sigmoid function
  *  All sigmoid fuctions \f$ \sigma(z) \f$ are normalized & scaled such
@@ -6423,6 +6421,43 @@ double Ostap::Math::sigmoid
   //
   return 0 ;
 }
+// ============================================================================
+
+// ============================================================================
+/*  Moebius transformation
+ * \f[ f(x) = \frac{ax+b}{cx+d}\f]
+ *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+ */
+// ============================================================================
+double Ostap::Math::moebius
+( const double x ,
+  const double a , 
+  const double b , 
+  const double c , 
+  const double d )
+{
+  const double n2 = a * x + b ;
+  const double n1 = c * x + d ;
+  return n2 / n1 ;
+}
+// ============================================================================
+/* Moebius transformation
+ * \f[ f(x) = \frac{ax+b}{cx+d}\f]
+ *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+ */
+// ============================================================================
+std::complex<double> Ostap::Math::moebius
+( const std::complex<double>& x ,
+  const std::complex<double>& a , 
+  const std::complex<double>& b , 
+  const std::complex<double>& c , 
+  const std::complex<double>& d )
+{
+  const std::complex<double> n2 { a * x + b } ;
+  const std::complex<double> n1 { c * x + d } ;
+  return n2 / n1 ;
+}
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

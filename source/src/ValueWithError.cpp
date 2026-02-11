@@ -4169,7 +4169,30 @@ Ostap::Math::clausen
 ( const ValueWithError& x ) { return Cl ( 2 , x ) ; } 
 // ============================================================================
 
-
+// ============================================================================
+/* Moebius transformation
+ * \f[ f(x) = \frac{ax+b}{cx+d}\f]
+ *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::moebius
+( const Ostap::Math::ValueWithError& x , 
+  const double                       a , 
+  const double                       b , 
+  const double                       c , 
+  const double                       d )
+{
+  ///
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::moebius ( xv , a , b , c , d ) ; 
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  ///
+  /// get the derivative 
+  const double dd  = ( a - value * c ) / ( c * x + d ) ;
+  //
+  return Ostap::Math::ValueWithError ( value , dd * dd * x.cov2 () ) ;
+}
 // =============================================================================
 //                                                                       The END
 // =============================================================================

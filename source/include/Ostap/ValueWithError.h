@@ -1442,7 +1442,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Lambert_W_function
      */
     ValueWithError lambert_W0 ( const ValueWithError& x ) ;
-    // ========================================================================
+    // ========================================================================    
     /** Confluent Kummer's Hypergeometric function of  \f$ M(x) = {}_{1}F_{1}(a,b,x) \f$ 
      *  @see https://en.wikipedia.org/wiki/Confluent_hypergeometric_function
      *  @see gsl_sf_hyperg_1F1_e
@@ -1500,6 +1500,18 @@ namespace Ostap
       const double b ,
       const double c ,
       const Ostap::Math::ValueWithError&  x ) ;
+    // ============================================================================
+    /** Moebius transformation
+     * \f[ f(x) = \frac{ax+b}{cx+d}\f]
+     *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+     */
+    // ============================================================================
+    Ostap::Math::ValueWithError moebius
+    ( const Ostap::Math::ValueWithError& x , 
+      const double                       a = 1 , 
+      const double                       b = 0 , 
+      const double                       c = 0 , 
+      const double                       d = 1 ) ;
     // =======================================================================
     /// check for NaN
     inline bool isnan    ( const ValueWithError& v ) { return v.isnan    () ; }

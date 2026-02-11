@@ -2581,7 +2581,33 @@ namespace Ostap
     double sigmoid
     ( const double      x                           ,
       const SigmoidType t = SigmoidType::Hyperbolic ) ;
-    // ========================================================================      
+    // ========================================================================
+    
+    // ========================================================================
+    // Moebius ransformation
+    // ========================================================================
+    /** Moebius transformation
+     * \f[ f(x) = \frac{ax+b}{cx+d}\f]
+     *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+     */
+    double moebius
+    ( const double x     ,
+      const double a = 1 , 
+      const double b = 0 , 
+      const double c = 0 , 
+      const double d = 1 ) ;
+    // ========================================================================
+    /** Moebius transformation
+     * \f[ f(x) = \frac{ax+b}{cx+d}\f]
+     *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
+     */
+    std::complex<double> moebius
+    ( const std::complex<double>& x ,
+      const std::complex<double>& a = std::complex<double> ( 1 , 0 ) ,
+      const std::complex<double>& b = std::complex<double> ( 0 , 0 ) ,
+      const std::complex<double>& c = std::complex<double> ( 0 , 0 ) , 
+      const std::complex<double>& d = std::complex<double> ( 1 , 0 ) ) ;
+    // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================
 } //                                                     end of namespace Ostap 

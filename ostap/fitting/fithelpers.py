@@ -770,13 +770,21 @@ class VarMaker (object) :
         """
         assert isinstance ( c1 , num_types ) and isinstance ( c2 , num_types ),\
                "vars_add: c1 and c2 must be numeric types!"
-
+                   
         c1 = float ( c1 )
         c2 = float ( c2 )
         
-        if   0 == c1 and 0 == c2 : return ROOT.RooFit.RooConst ( 0 )   ## shortcut 
-        elif 0 == c1             : return self.vars_multiply ( var2 , c2 , name = name , title = title )
-        elif 0 == c2             : return self.vars_multiply ( var1 , c1 , name = name , title = title )
+        if isinstance ( var1 , ROOT.RooConstVar ) and 1 != c1 :
+            var1 = ROOT.RooFit.RooConst ( float ( c1 ) * float ( var1 ) )
+            c1   = 1
+
+        if isinstance ( var2 , ROOT.RooConstVar ) and 1 != c2 :
+            var2 = ROOT.RooFit.RooConst ( float ( c2 ) * float ( var2 ) )
+            c2   = 1
+
+        if   not c1 and not  c2 : return ROOT.RooFit.RooConst ( 0 )   ## shortcut 
+        elif not c1             : return self.vars_multiply ( var2 , c2 , name = name , title = title )
+        elif not c2             : return self.vars_multiply ( var1 , c1 , name = name , title = title )
         
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
@@ -786,16 +794,16 @@ class VarMaker (object) :
             return ROOT.RooFit.RooConst ( res )           
         elif f1 :
             ## shortcut 
-            if 0 == var1 : return self.var_multiply ( var2 , c2 , name = name , title = title )  ## SHORTCUT 
+            if not var1 : return self.var_multiply ( var2 , c2 , name = name , title = title )  ## SHORTCUT 
             #
             var1 = ROOT.RooFit.RooConst ( float ( var1 ) * float ( c1 ) )                         
-            return self.vars_add ( var1 , var2 , name = name , title = title )
+            return self.vars_add ( var1 , var2 , c2 = c2 , name = name , title = title )
         elif f2 :
             ## shortcut 
-            if 0 == var2 : return self.var_multiply ( var1 , c1 , name = name , title = title )  ## SHORTCUT 
+            if not var2 : return self.var_multiply ( var1 , c1 , name = name , title = title )  ## SHORTCUT 
             #
             var2 = ROOT.RooFit.RooConst ( float ( var2 ) * float ( c2 ) ) 
-            return self.vars_add ( var1 , var2 , name =name , title = title  )
+            return self.vars_add ( var1 , var2 , c1 = c1 , name =name , title = title  )
         
         self.aux_keep.append ( var1 )
         self.aux_keep.append ( var2 )
@@ -803,8 +811,8 @@ class VarMaker (object) :
         name  = name  if name   else self.roo_name  ( "add_%s_%s" % ( var1.name , var2.name ) )
         title = title if title  else                  "(%s)+(%s)" % ( var1.name , var2.name )
 
-        if c1 == 1 and c2 == 1 : result = Ostap.MoreRooFit.Addition  ( var1 , var2  , name , title )
-        else                   : result = Ostap.MoreRooFit.Addition2 ( name , title , var1 , var2 , c1 , c2 )
+        if   1 == c1 and 1 == c2 : result = Ostap.MoreRooFit.Addition  ( name , title , var1 , var2 )
+        else                     : result = Ostap.MoreRooFit.Addition2 ( name , title , var1 , var2 , c1 , c2 )
                 
         self.aux_keep.append ( result  )
                 
@@ -1202,59 +1210,62 @@ class VarMaker (object) :
         return rfv 
     
     # =========================================================================
-    ## make very specific combination of variables:  alpha*var1*(bets+gamma*var2)    
-    #  \f$ r = \alpha v_1 ( \beta + \gamma * v_2 ) \    
-    def vars_combination ( self ,
-                           var1 ,
-                           var2 ,
+    ## make very specific combination of variables: 
+    #  \f[ r = \alpha v_1 ( \beta + \gamma  v_2 ) \$]
+    def vars_combination ( self         ,
+                           var1         ,
+                           var2         ,
                            alpha  = 1   ,
                            beta   = 1   ,
                            gamma  = 1   ,
                            name   = ''  , 
                            title  = ''  ) :
-        """ Make very specific combination of variables:  alpha*var1*(beta+gamma*var2)    
+        """ Make very specific combination of variables:  
         r = alpha * v_1 ( beta + gamma * v_2 ) 
         """
         
         if isinstance ( var1 , ROOT.RooConstVar ) : var1 = float ( var1 ) 
         if isinstance ( var2 , ROOT.RooConstVar ) : var2 = float ( var2 ) 
         
-        f1 = isinstance ( var1 , num_types )
-        f2 = isinstance ( var2 , num_types )
+        f1 = isinstance   ( var1 , num_types )
+        f2 = isinstance   ( var2 , num_types )
 
         assert isinstance ( alpha , num_types ) , "vars_combination: 'alpha' must be numeric types!"
         assert isinstance ( beta  , num_types ) , "vars_combination: 'beta'  must be numeric types!"
         assert isinstance ( gamma , num_types ) , "vars_combination: 'gamma' must be numeric types!"
 
-        if   0 == alpha               : return ROOT.RooFit.RooConst ( 0 ) 
-        elif 0 == beta and 0 == gamma : return ROOT.RooFit.RooConst ( 0 ) 
+        alpha = float     ( alpha )
+        beta  = float     ( beta  )
+        gamma = float     ( gamma )        
 
-        alpha = float ( alpha )
-        beta  = float ( beta  )
-        gamma = float ( gamma )        
+        
+        if   not alpha              : return ROOT.RooFit.RooConst ( 0 ) 
+        elif not beta and not gamma : return ROOT.RooFit.RooConst ( 0 ) 
         
         if f1 and f2 :
 
-            res  = beta   + gamma * float ( var2 )
+            res  = beta   + gamma * float ( var2 ) 
             res *=          alpha * float ( var1 )
             
-            return ROOT.RooFit.RooConst ( 0 )
+            return ROOT.RooFit.RooConst ( res )           ## RESULT 
         
         elif f1 :
             
-            return self.sum_add      ( float ( var1 ) * alpha * beta        ,
-                                       var2                                 ,
-                                       c2    = alpha * gamma * float ( v1 ) , 
-                                       name  = name                         ,
-                                       title = title                        ) 
+            return self.vars_add ( float ( var1 ) * alpha * beta          ,
+                                   var2                                   ,
+                                   c1    = 1                              , 
+                                   c2    = alpha * gamma * float ( var1 ) , 
+                                   name  = name                           ,
+                                   title = title                          ) 
         elif f2 :
             
-            return self.sum_multiply ( var1 ,
-                                       alpha * ( beta + gamma * float ( v2 ) ) ,
-                                       name  = name  ,
-                                       title = title ) 
-        
-        
+            return self.vars_add ( var1  ,
+                                   0.0   , 
+                                   c1    = alpha * ( beta + gamma * float ( var2 ) ) ,
+                                   c2    = 0     , 
+                                   name  = name  ,
+                                   title = title ) 
+                
         self.aux_keep.append ( var1 )
         self.aux_keep.append ( var2 )
 

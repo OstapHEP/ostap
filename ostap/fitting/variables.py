@@ -8,7 +8,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Module with decoration of some RooFit variables for efficient usage in python
+""" Module with decoration of some RooFit variables for efficient usage in python
 - see RooAbsReal
 - see RooRealVar
 """
@@ -77,7 +77,8 @@ from   ostap.math.reduce        import root_factory
 from   ostap.core.ostap_types   import ( num_types      , list_types     ,
                                          integer_types  , string_types   ,
                                          dictlike_types , sequence_types )
-import ostap.math.math_ve       as       mve 
+from   ostap.utils.basic        import typename 
+import ostap.math.math_ve       as     mve 
 import ROOT, array
 # =============================================================================
 # logging 
@@ -102,7 +103,7 @@ def root_store_factory ( klass , *params ) :
     ## create the objects 
     obj = root_factory ( klass , *params )
     ## keep argumets with the newly created obnject  
-    obj.__store = params    ## Attention - keep argumetns with newly crfeated object!
+    obj.__store = params    ## Attention - keep arguments with newly created object!
     return obj 
 
 # =============================================================================
@@ -1040,7 +1041,7 @@ _new_methods_       += [
 #  total , ratio = total_ratio (  yield1 , yield2 ) 
 #  @endcode
 def  total_ratio ( var1 , var2 ) :
-    """Convert two yields into 'total yield' and 'ratio'
+    """ Convert two yields into 'total yield' and 'ratio'
     
     >>> yield1 = ROOT.RooRelaVar( ... )
     >>> yield2 = ROOT.RooRelaVar( ... )
@@ -1069,7 +1070,7 @@ def  total_ratio ( var1 , var2 ) :
 #  total , fraction = total_fraction (yield1 , yield2 ) 
 #  @endcode
 def total_fraction ( var1 , var2 ) :
-    """Convert two yields into 'total yield'' and 'fraction'
+    """ Convert two yields into 'total yield'' and 'fraction'
     >>> yield1 = ROOT.RooRelaVar( ... )
     >>> yield2 = ROOT.RooRelaVar( ... )
     >>> total , fraction = total_fraction (  yield1 , yield2 ) 
@@ -1097,7 +1098,7 @@ def total_fraction ( var1 , var2 ) :
 #  y1 , y2 = two_yields ( total , fraction )
 #  @endcode
 def two_yields ( total , fraction ) :
-    """Construct two yields from the total yield and fraction
+    """ Construct two yields from the total yield and fraction
     >>> total = ...
     >>> fraction = ...
     >>> y1 , y2 = two_yields ( total , fraction )
@@ -1123,8 +1124,6 @@ def two_yields ( total , fraction ) :
     
     return yield1 , yield2 
     
-
-
 
 # =============================================================================
 var1_types = ROOT.RooAbsRealLValue , ROOT.RooAbsCategoryLValue
@@ -1255,7 +1254,7 @@ FIXPAR = FIXVAR
 #     vars.setBins  ( 10 )
 #  @endcode
 class KeepBinning(object):
-    """Simple context manager to keep the binning scheme
+    """ Simple context manager to keep the binning scheme
     >>> var = ...
     >>> var.setBins   ( 100 )
     >>> with KeepBins ( var ) :
@@ -1281,12 +1280,14 @@ class KeepBinning(object):
 # =============================================================================
 ## set the binning scheme 
 def _rrv_setbins_ ( self , bins ) :
-    """Set the binnning scheme"""
+    """ Set the binnning scheme
+    """
 
     ## prepended/appended with name?
     name = None
     
     if bins and isinstance  ( bins , list_types ) :
+        
         if   2 == len ( bins ) and isinstance ( bins[-1] , string_types ) :
             bins, name = bins 
         elif 2 == len ( bins ) and isinstance ( bins[ 0] , string_types ) :
@@ -1299,19 +1300,24 @@ def _rrv_setbins_ ( self , bins ) :
             name = bins [0  ]
         
     if   bins and isinstance ( bins , ROOT.RooAbsBinning ) :
+        
         if name : self.setBinning ( bins , name )
         else    : self.setBinning ( bins )
         return
 
     elif isinstance  ( bins , integer_types ) and 0 < bins :
+        
         if name : self.setBins ( bins , name )
         else    : self.setBins ( bins )
         return
 
     if isinstance  ( bins , list_types ) :
+        
         if   4 == len ( bins ) and isinstance ( bins[-1] , string_types ) : bins = bins [:-1]
         elif 3 == len ( bins ) and isinstance ( bins[-1] , string_types ) : bins = bins [:-1]
+        
     else :
+        
         logger.error ('bins: invalid binning scheme/1 %s/%s' % ( bins , type ( bins  ) ) ) 
         return 
 
@@ -1426,7 +1432,8 @@ _new_methods_ += [
 # =============================================================================
 ## printout for RooUniformBinning
 def _rub_str_ ( bins ) :
-    """Printout for RooUniformBinning"""
+    """ Printout for RooUniformBinning
+    """
     l = bins. lowBound ()
     h = bins.highBound ()
     n = bins.numBoundaries () - 1
@@ -1444,7 +1451,8 @@ _new_methods_ += [
 # =============================================================================
 ## printout for RooRangeBinning
 def _rrb_str_ ( bins ) :
-    """Printout for RooRangeBinning"""
+    """ Printout for RooRangeBinning
+    """
     l = bins. lowBound ()
     h = bins.highBound ()
     return "RooRangeBinning(%s,%s,%d')" % ( l , h , bins.GetName() )
@@ -1527,7 +1535,7 @@ def binning ( edges , nbins = 0 , name = '' ) :
 #  expression = formular.expression()  
 #  @endcode
 def _rfv_expr_ ( var ) :
-    """Get the actual expression from `RooFormualVar`
+    """ Get the actual expression from `RooFormualVar`
     >>> fomular = ...
     >>> expression = formular.expression()  
     """
@@ -1536,14 +1544,14 @@ def _rfv_expr_ ( var ) :
 # ==============================================================================
 ## string representaion of the RooFormulaVar
 def _rfv_str_ ( var ) :
-    """String representaion of the RooFormulaVar
+    """ String representaion of the RooFormulaVar
     """
     return '%s : %s' % ( var.expression() , var.getVal() ) 
 
 # ==============================================================================
 ## string representaion of the RooFormulaVar
 def _rfv_repr_ ( var ) :
-    """String representation of the RooFormulaVar
+    """ String representation of the RooFormulaVar
     """
     return '%s : %s' % ( var.expression() , var.getVal() ) 
 
@@ -1568,7 +1576,7 @@ _new_methods_ += [
 #  @see Ostap::MoreRooFit::get_variable
 #  @see RooLinearVar
 def _rlinv_var_ ( var ) : 
-    """Get underlying variable from <code>RooLinearVar</code>
+    """ Get underlying variable from <code>RooLinearVar</code>
     >>> linvar = ...
     >>> var    = linvar.get_variable () 
     >>> var    = linvar.get_var      () ## ditto 
@@ -1594,7 +1602,7 @@ ROOT.RooLinearVar.var          = property ( _rlinv_var_ , None , None , _rlinv_v
 #  @see Ostap::MoreRooFit::get_slope
 #  @see RooLinearVar
 def _rlinv_slope_ ( var ) : 
-    """Get the slope variable from <code>RooLinearVar</code>
+    """ Get the slope variable from <code>RooLinearVar</code>
     >>> linvar = ...
     >>> slope  = linvar.get_slope  () 
     >>> slope  = linvar.slope         ## ditto
@@ -1631,18 +1639,21 @@ ROOT.RooLinearVar.offset     = property ( _rlinv_offset_ , None , None , _rlinv_
 # ==============================================================================
 # primitive functions for RooAbsReal objects 
 # ==============================================================================
-
+## vaild types for variables 
+var_types = ( ROOT.RooAbsReal , ) + num_types 
 # ==============================================================================
 ## absolute value   \f$ f = abs{ab} \f$
 #  @code
 #  var = ...
 #  e   = var_abs ( var ) 
 #  @endcode 
-def var_abs ( a , b = 1 , name = '' , title = '' ) :
+def var_abs ( a , b = 1 , * , name = '' , title = '' ) :
     """ Absolute value: f(x) = abs(ab)
     >>> var = ...
     >>> e   = var_abs ( var ) 
     """
+    assert isinstance ( a , var_types ) , "var_abs: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_abs: invalid type for `b` %s" % typename ( b )
     
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
@@ -1667,11 +1678,14 @@ def var_abs ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_exp ( var ) 
 #  @endcode 
-def var_exp ( a , b = 1 , name = '' , title = '' ) :
+def var_exp ( a , b = 1 , * , name = '' , title = '' ) :
     """ Exponent: f(x) = exp(ab)
     >>> var = ...
     >>> e   = var_exp ( var ) 
     """
+    assert isinstance ( a , var_types ) , "var_exp: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_exp: invalid type for `b` %s" % typename ( b )
+    ## 
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1681,9 +1695,9 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     if fa : a = float ( a )
     if fb : b = float ( b )
     
-    if fa and fb :
+    if fa and fb :        
         ab = math.exp ( float ( a ) * float ( b ) )
-        return ROOT.RooFit.RooConst ( ab )          ## RETURN
+        return ROOT.RooFit.RooConst ( ab )          ## RETURN    
     elif fa and iszero ( a ) : return ROOT.RooFit.RooConst ( 1 ) 
     elif fb and iszero ( b ) : return ROOT.RooFit.RooConst ( 1 ) 
     #
@@ -1695,11 +1709,14 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_log ( var ) 
 #  @endcode 
-def var_log ( a , b = 1 , name = '' , title = '' ) :
+def var_log ( a , b = 1 , * , name = '' , title = '' ) :
     """ Logarithm f(x) = log(ab)
     >>> var = ...
     >>> e   = var_log ( var ) 
     """
+    assert isinstance ( a , var_types ) , "var_log: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_log: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
     
@@ -1721,11 +1738,15 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_log10 ( var ) 
 #  @endcode 
-def var_log10 ( a , b = 1 , name = '' , title = '' ) :
+def var_log10 ( a , b = 1 , * , name = '' , title = '' ) :
     """ Logarithm f(x) = log10(ab)
     >>> var = ...
     >>> e   = var_log10 ( var ) 
     """
+    ##
+    assert isinstance ( a , var_types ) , "var_log10: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_log10: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1747,11 +1768,15 @@ def var_log10 ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_erf ( var ) 
 #  @endcode 
-def var_erf ( a , b = 1 , name = '' , title = '' ) :
+def var_erf ( a , b = 1 , * , name = '' , title = '' ) :
     """ Error function f(x) = erf(ab)
     >>> var = ...
     >>> e   = var_erf ( var ) 
     """
+    ##
+    assert isinstance ( a , var_types ) , "var_erf: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_erf: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1775,11 +1800,15 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_erfc ( var ) 
 #  @endcode 
-def var_erfc ( a , b = 1 , name = '' , title = '' ) :
+def var_erfc ( a , b = 1 , * , name = '' , title = '' ) :
     """ Complementary Error function f(x) = erfc(ab)
     >>> var = ...
     >>> e   = var_erfc ( var ) 
     """
+    ##
+    assert isinstance ( a , var_types ) , "var_erfc: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_erfc: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1803,11 +1832,15 @@ def var_erfc ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_sin ( var ) 
 #  @endcode 
-def var_sin ( a , b = 1 , name = '' , title = '' ) :
+def var_sin ( a , b = 1 , * , name = '' , title = '' ) :
     """ Sine  f(x) = sin(ab)
     >>> var = ...
     >>> e   = var_sin ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_sin: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_sin: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1831,11 +1864,15 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_cos ( var ) 
 #  @endcode 
-def var_cos ( a , b = 1 , name = '' , title = '' ) :
+def var_cos ( a , b = 1 , * , name = '' , title = '' ) :
     """ Cosine  f(x) = cos(ab)
     >>> var = ...
     >>> e   = var_cos ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_cos: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_cos: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1859,11 +1896,15 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_tan ( var ) 
 #  @endcode 
-def var_tan ( a , b = 1 , name = '' , title = '' ) :
+def var_tan ( a , b = 1 , * , name = '' , title = '' ) :
     """ Tangent  f(x) = tan(ab)
     >>> var = ...
     >>> e   = var_tan ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_tan: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_tan: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1887,11 +1928,15 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_sinh ( var ) 
 #  @endcode 
-def var_sinh ( a , b = 1 , name = '' , title = '' ) :
+def var_sinh ( a , b = 1 , * , name = '' , title = '' ) :
     """ Hyperbolic sine  f(x) = sinh(ab)
     >>> var = ...
     >>> e   = var_sinh ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_sinh: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_sinh: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1915,11 +1960,15 @@ def var_sinh ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_cosh ( var ) 
 #  @endcode 
-def var_cosh ( a , b = 1 , name = '' , title = '' ) :
+def var_cosh ( a , b = 1 , * , name = '' , title = '' ) :
     """ Hyperbolic cosine  f(x) = cos(ab)
     >>> var = ...
     >>> e   = var_cosh ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_cosh: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_cosh: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1943,11 +1992,15 @@ def var_cosh ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_tanh ( var ) 
 #  @endcode 
-def var_tanh ( a , b = 1 , name = '' , title = '' ) :
+def var_tanh ( a , b = 1 , * , name = '' , title = '' ) :
     """ Hyperbolic tangent  f(x) = tanh(ab)
     >>> var = ...
     >>> e   = var_tanh ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_tanh: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_tanh: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1971,11 +2024,15 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_sech ( var ) 
 #  @endcode 
-def var_sech ( a , b = 1 , name = '' , title = '' ) :
+def var_sech ( a , b = 1 , * , name = '' , title = '' ) :
     """ Hyperbolic secant   f(x) = tanh(ab)
     >>> var = ...
     >>> e   = var_tanh ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_sech: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_sech: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -1999,11 +2056,15 @@ def var_sech ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_atan2 ( var ) 
 #  @endcode 
-def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
+def var_atan2 ( a , b = 1 , * , name = '' , title = '' ) :
     """ Inverse tangent  f(x) = atan2(a,b)
     >>> var = ...
     >>> e   = var_atan2 ( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_atan2: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_atan2: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -2025,11 +2086,15 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
 #  var = ...
 #  e   = var_sigmoid( var ) 
 #  @endcode 
-def var_sigmoid ( a , b = 1 , sigmoid_type = Ostap.Math.SigmoidType.Hyperbolic , name = '' , title = '' ) :
+def var_sigmoid ( a , b = 1 , sigmoid_type = Ostap.Math.SigmoidType.Hyperbolic , * , name = '' , title = '' ) :
     """ Sigmoid: f(x) = sigmoid ( a * b ) 
     >>> var = ...
     >>> e   = var_sigmoid( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_sigmoid: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_sigmoid: invalid type for `b` %s" % typename ( b )
+    ##
     assert Ostap.Math.SigmoidType.First <=  int ( sigmoid_type )  <= Ostap.Math.SigmoidType.Last , \
         "Invalid sigmoid type: %s" % stype
     
@@ -2060,6 +2125,10 @@ def var_hypot ( a , b = 1 , name = '' , title = '' ) :
     >>> var = ...
     >>> e   = var_hypot( var ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_hypot: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_hypot: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -2082,14 +2151,18 @@ def var_hypot ( a , b = 1 , name = '' , title = '' ) :
 #  nu  = ... 
 #  e   = var_bessel_J ( x , nu ) 
 #  @endcode
-def var_bessel_J ( x , nu = 0 , name = '' , title = '' ) :
+def var_bessel_J ( x , nu = 0 , * , name = '' , title = '' ) :
     """ Bessel function f(x) = J_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_J ( x , nu  ) 
     """
-    if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
-    if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
+    ## 
+    assert isinstance ( x  , var_types ) , "var_bessel_J: invalid type for `x`  %s" % typename ( x  )
+    assert isinstance ( nu , var_types ) , "var_bessel_J: invalid type for `nu` %s" % typename ( nu )
+    ##
+    if isinstance     ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
+    if isinstance     ( nu , ROOT.RooConstVar ) : nu = float ( nu )
 
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
@@ -2110,12 +2183,16 @@ def var_bessel_J ( x , nu = 0 , name = '' , title = '' ) :
 #  nu  = ... 
 #  e   = var_bessel_Y ( x , nu ) 
 #  @endcode
-def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
+def var_bessel_Y ( x , nu = 0 , * , name = '' , title = '' ) :
     """ Bessel function f(x) = Y_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_Y ( x , nu  ) 
     """
+    ## 
+    assert isinstance ( x  , var_types ) , "var_bessel_Y: invalid type for `x`  %s" % typename ( x  )
+    assert isinstance ( nu , var_types ) , "var_bessel_Y: invalid type for `nu` %s" % typename ( nu )
+    ##
     if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
     if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
 
@@ -2138,15 +2215,19 @@ def var_bessel_Y ( x , nu = 0 , name = '' , title = '' ) :
 #  nu  = ... 
 #  e   = var_bessel_I ( x , nu ) 
 #  @endcode
-def var_bessel_I ( x , nu = 0 , name = '' , title = '' ) :
+def var_bessel_I ( x , nu = 0 , * , name = '' , title = '' ) :
     """ Bessel function f(x) = I_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_I ( x , nu  ) 
     """
+    ## 
+    assert isinstance ( x  , var_types ) , "var_bessel_I: invalid type for `x`  %s" % typename ( x  )
+    assert isinstance ( nu , var_types ) , "var_bessel_I: invalid type for `nu` %s" % typename ( nu )
+    ## 
     if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
     if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
-
+    ## 
     fx  = isinstance ( x  , num_types )
     fnu = isinstance ( nu , num_types )
     ##
@@ -2166,12 +2247,16 @@ def var_bessel_I ( x , nu = 0 , name = '' , title = '' ) :
 #  nu  = ... 
 #  e   = var_bessel_K ( x , nu ) 
 #  @endcode
-def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
+def var_bessel_K ( x , nu = 0 , * , name = '' , title = '' ) :
     """ Bessel function f(x) = K_{nu}(x)
     >>> x  = ...
     >>> nu = ... 
     >>> e  = var_bessel_K ( x , nu  ) 
     """
+    ## 
+    assert isinstance ( x  , var_types ) , "var_bessel_K: invalid type for `x`  %s" % typename ( x  )
+    assert isinstance ( nu , var_types ) , "var_bessel_K: invalid type for `nu` %s" % typename ( nu )
+    ## 
     if isinstance   ( x  , ROOT.RooConstVar ) : x  = float ( x  ) 
     if isinstance   ( nu , ROOT.RooConstVar ) : nu = float ( nu )
 
@@ -2188,57 +2273,117 @@ def var_bessel_K ( x , nu = 0 , name = '' , title = '' ) :
     return Ostap.MoreRooFit.BesselK ( x , nu , name , title )
 
 # ==============================================================================
-## maximal \f$ f = max (a,b)\f$
+## maximal of two (or more) functions \f$ f = max (a,b)\f$
 #  @code
 #  var1 = ...
 #  var2 = ...
 #  var  = var_max ( var1 , var2 ) 
 #  @endcode 
-def var_max ( a , b = 1 , name = '' , title = '' ) :
-    """ Maximal from two functions f(x) = max(a,b)
-    >>> var = ...
-    >>> e   = var_max ( var ) 
+def var_max ( a , b , *c , name = '' , title = '' ) :
+    """ Maximal from two (or more) functions f(x) = max(a,b)
+    >>> var1 = ...
+    >>> e   = var_max ( var , var2 ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_max: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_max: invalid type for `b` %s" % typename ( b )
+    assert all ( isinstance ( v , var_types ) for v in c ) , "var_max: invalid type for `c`"
+
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
-
+    
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
     if fa : a = float ( a )
     if fb : b = float ( b )
     
-    if fa and fb :
-        ab = max ( float ( a ) , float ( b ) ) 
-        return ROOT.RooFit.RooConst ( ab )      ## RETURN
-    return Ostap.MoreRooFit.MaxV ( a, b , name , title )
+    vvals = [] 
+    vvars = []
+    
+    if fa : vvals.append ( a )
+    else  : vvars.append ( a )
+    
+    if fb : vvals.append ( b )
+    else  : vvars.append ( b ) 
+    
+    if fb : vvals.append ( b ) 
+
+    for v in c :
+        
+        if   isinstance ( v , num_types        ) : vvals.append ( float ( v ) )
+        elif isinstance ( v , ROOT.RooConstVar ) : vvals.append ( float ( v ) )
+        else                                     : vvars.append (         v   ) 
+
+        
+    if vvals : vvars.append ( ROOT.RooFit.RooConst ( max ( vvals ) ) )
+
+    ## there is only one element 
+    if 1 == len ( vvars ) : return vvars [ 0 ]
+
+    name  = name  if name  else 'max_%s'  % ( '_'.join ( v.GetName() for v in vvars ) ) 
+    title = title if title else 'max(%s)' % ( ','.join ( v.GetName() for v in vvars ) )
+    
+    ## 
+    if 2 == len ( vvars ) : return Ostap.MoreRooFit.MaxV    ( name , title , *vvars )
+    ##
+    return Ostap.MoreRooFit.Maximal ( name , title , vvars ) 
 
 # ==============================================================================
-## minimal \f$ f = min (a,b)\f$
+## minimal from two or more \f$ f = min (a,b)\f$
 #  @code
 #  var1 = ...
 #  var2 = ...
 #  var  = var_min ( var1 , var2 ) 
 #  @endcode 
-def var_min ( a , b = 1 , name = '' , title = '' ) :
-    """ Minimal from two functions f(x) = min(a,b)
+def var_min ( a , b , *c , name = '' , title = '' ) :
+    """ Minimal from two (or more) functions f(x) = min(a,b)
     >>> var = ...
     >>> e   = var_min ( var ) 
     """
+    assert isinstance ( a , var_types ) , "var_min: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_min: invalid type for `b` %s" % typename ( b )
+    assert all ( isinstance ( v , var_types ) for v in c ) , "var_min: invalid type for `c`"
+
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
-
+    
     fa = isinstance ( a , num_types )
     fb = isinstance ( b , num_types )
     
     if fa : a = float ( a )
     if fb : b = float ( b )
     
-    if fa and fb :
-        ab = min ( float ( a ) , float ( b ) ) 
-        return ROOT.RooFit.RooConst ( ab )      ## RETURN
+    vvals = [] 
+    vvars = []
     
-    return Ostap.MoreRooFit.MinV ( a, b , name , title )
+    if fa : vvals.append ( a )
+    else  : vvars.append ( a )
+    
+    if fb : vvals.append ( b )
+    else  : vvars.append ( b ) 
+    
+    if fb : vvals.append ( b ) 
+
+    for v in c :
+        
+        if   isinstance ( v , num_types        ) : vvals.append ( float ( v ) )
+        elif isinstance ( v , ROOT.RooConstVar ) : vvals.append ( float ( v ) )
+        else                                     : vvars.append (         v   ) 
+
+        
+    if vvals : vvars.append ( ROOT.RooFit.RooConst ( min ( vvals ) ) )
+
+    ## there is only one element 
+    if 1 == len ( vvars ) : return vvars [ 0 ]
+
+    name  = name  if name  else 'min_%s'  % ( '_'.join ( v.GetName() for v in vvars ) ) 
+    title = title if title else 'min(%s)' % ( ','.join ( v.GetName() for v in vvars ) )
+    
+    ## 
+    if 2 == len ( vvars ) : return Ostap.MoreRooFit.MinV    ( name , title , *vvars )
+    ##
+    return Ostap.MoreRooFit.Minimal ( name , title , vvars ) 
 
 # ==============================================================================
 ## Gamma function \f$ f =    \Gamma ( a * b ) \f$
@@ -2246,11 +2391,15 @@ def var_min ( a , b = 1 , name = '' , title = '' ) :
 #  a = ...
 #  e = var_gamma ( a ) 
 #  @endcode 
-def var_gamma ( a , b = 1 , name = '' , title = '' ) :
+def var_gamma ( a , b = 1 , * , name = '' , title = '' ) :
     """ Gamma function  f = Gamma ( a * b )
     >>> a = ...
     >>> e = var_gamma ( a ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_gamma: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_gamma: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -2277,6 +2426,10 @@ def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
     >>> a = ...
     >>> e = var_lgamma ( a*b ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_lgamma: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_lgamma: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -2303,6 +2456,10 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     >>> a = ...
     >>> e = var_igamma ( a ) 
     """
+    ## 
+    assert isinstance ( a , var_types ) , "var_igamma: invalid type for `a` %s" % typename ( a )
+    assert isinstance ( b , var_types ) , "var_igamma: invalid type for `b` %s" % typename ( b )
+    ##
     if isinstance   ( a , ROOT.RooConstVar ) : a = float ( a ) 
     if isinstance   ( b , ROOT.RooConstVar ) : b = float ( b )
 
@@ -2319,7 +2476,7 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     return Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
 
 # =============================================================================
-## Sum of two RooAbsReal objects
+## Sum of several RooAbsReal objects
 #  @code
 #  v1 = ...
 #  v2 = ...
@@ -2332,7 +2489,9 @@ def var_sum ( *variables , name = '' , title = '' ) :
     >>> v  = var_sum ( v1 , v2 )
     """
     if not variables : return ROOT.RooFit.RooConst ( 0 )
-      
+    ## 
+    assert all ( isinstance ( v , var_types ) for c in variable ) , "var_sum: invalid type for `variable`"
+    ##
     vsum  = 0.0
     vvars = [] 
     for v in variables :
@@ -2341,20 +2500,18 @@ def var_sum ( *variables , name = '' , title = '' ) :
         elif isinstance ( v , ROOT.RooConstVar ) : vsum += float ( v )
         else                                     : vvars.append  ( v ) 
            
-           
-    if  not vvars : return ROOT.RooFit.RooConst ( vsum )
+    if  not vvars : return ROOT.RooFit.RooConst ( vsum ) ## trivial case 
     
     ## only one variable and no bias: 
     if 1 == len ( vvars ) and not vsum : return vvars [ 0 ]
     
-    lst = ROOT.RooArgList()
-    for v in vvars : lst.add ( v ) 
-    if vsum : lst.add ( ROOT.RooFit.RooConst ( vsum ) )
+    ## convert the bias into variable 
+    if vsum : vvars.add ( ROOT.RooFit.RooConst ( vsum ) )
     
-    name  = name  if name  else '_add_'.join ( v.GetName() for v in lst )
-    title = title if title else ' + '  .join ( v.GetName() for v in lst )
+    name  = name  if name  else 'sum_%s' % ( '_'.join ( v.GetName() for v in vvars ) )    
+    title = title if title else ' + '           .join ( v.GetName() for v in vvars )
     #
-    return Ostap.MoreRooFit.Addition ( name , title , lst ) 
+    return Ostap.MoreRooFit.Addition ( name , title , *vvars ) 
 
 # =============================================================================
 ## Subtraction of two RooAbsReal objects
@@ -2363,12 +2520,16 @@ def var_sum ( *variables , name = '' , title = '' ) :
 #  v2 = ...
 #  v  = var_sub ( v1 , v2 )
 #  @endcode
-def var_sub ( v1 , v2 , name = '' , title = '' ) :
+def var_sub ( v1 , v2 , * , name = '' , title = '' ) :
     """ Subraction of two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_sub ( v1 , v2 )  
     """
+    ## 
+    assert isinstance ( v1 , var_types ) , "var_sub: invalid type for `v1` %s" % typename ( v1 )
+    assert isinstance ( v1 , var_types ) , "var_sub: invalid type for `v1` %s" % typename ( v1 )
+    ##
     if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
     if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
 
@@ -2387,43 +2548,40 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
     return Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
 
 # =============================================================================
-## Product of two RooAbsReal objects
+## Product of several RooAbsReal objects
 #  @code
 #  v1 = ...
 #  v2 = ...
 #  v  = var_mul ( v1 ,  v2 )
 #  @endcode
 def var_mul ( *variables , name = '' , title = '' ) :
-    """ Product of two RooAbsReal objects
+    """ Product of several RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_mul ( v1 ,  v2 )
     """
-    
+    ## Empty product?
     if not variables : return ROOT.RooFit.RooConst ( 1 )
-      
+    ##
+    assert all ( isinstance ( v , var_types ) for c in variables ) , "var_mul: invalid type for `variable`"
+    ## 
     vmul  = 1.0
     vvars = [] 
-    for v in variables :
-        
+    for v in variables :        
         if   isinstance ( v , num_types        ) : vmul *= float ( v )
         elif isinstance ( v , ROOT.RooConstVar ) : vmul *= float ( v )
         else                                     : vvars.append  ( v ) 
            
-    if not vmul  : return ROOT.RooFit.RooConst ( vmul )
-    if not vvars : return ROOT.RooFit.RooConst ( vmul )
+    if not vmul  : return ROOT.RooFit.RooConst ( 0    ) ## trivial case 
+    if not vvars : return ROOT.RooFit.RooConst ( vmul ) ## trivial case 
     
-    ## only one variable and no bias: 
+    ## only one variable and no scale : 
     if 1 == len ( vvars  ) and 1 == vmul : return vvars [ 0 ]
     
-    lst = ROOT.RooArgList()
-    for v in vvars : lst.add ( v ) 
-    if 1 != vmul : lst.add ( ROOT.RooFit.RooConst ( vmum ) )
-    
-    name  = name  if name  else '_mul_'.join ( v.GetName() for v in lst )
-    title = title if title else ' * '  .join ( v.GetName() for v in lst )
+    name  = name  if name  else 'mult_%s' % ( '_'.join ( v.GetName() for v in vvars ) )    
+    title = title if title else ' * '            .join ( v.GetName() for v in vvars )
     #
-    return Ostap.MoreRooFit.Product ( name , title , lst ) 
+    return Ostap.MoreRooFit.Product ( name , title , *vvars ) 
 
 # =============================================================================
 ## Division of two RooAbsReal objects
@@ -2432,12 +2590,16 @@ def var_mul ( *variables , name = '' , title = '' ) :
 #  v2 = ...
 #  v  = var_div ( v1 , v2 )
 #  @endcode
-def var_div ( v1 , v2 , name = '' , title = '' ) :
+def var_div ( v1 , v2 , * , name = '' , title = '' ) :
     """ Division of two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_div ( v1 , v2 )  
     """
+    ## 
+    assert isinstance ( v1 , var_types ) , "var_sub: invalid type for `v1` %s" % typename ( v1 )
+    assert isinstance ( v1 , var_types ) , "var_sub: invalid type for `v1` %s" % typename ( v1 )
+    ##
     if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
     if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
 
@@ -2462,12 +2624,16 @@ def var_div ( v1 , v2 , name = '' , title = '' ) :
 #  v2 = ...
 #  v  = var_pow ( v1 , v2 )
 #  @endcode
-def var_pow ( v1 , v2 , name = '' , title = '' ) :
+def var_pow ( v1 , v2 , * , name = '' , title = '' ) :
     """ pow for two RooAbsReal objects
     >>> v1 = ...
     >>> v2 = ...
     >>> v  = var_pow ( v1 ,  v2 ) 
     """
+    ## 
+    assert isinstance ( v1 , var_types ) , "var_pow: invalid type for `v1` %s" % typename ( v1 )
+    assert isinstance ( v1 , var_types ) , "var_pow: invalid type for `v1` %s" % typename ( v1 )
+    ##
     if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
     if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 )
 
@@ -2494,12 +2660,16 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
 #  b = ...
 #  e   = var_fraction ( a , b ) 
 #  @endcode 
-def var_fraction ( v1 , v2 , name = '' , title = '' ) :
+def var_fraction ( v1 , v2 , * , name = '' , title = '' ) :
     """ 'Fraction'  f(x) = v1/(v1+v2)
     >>> a = ...
     >>> b = ...
     >>> e = var_fraction ( a , b  ) 
     """
+    ## 
+    assert isinstance ( v1 , var_types ) , "var_fraction: invalid type for `v1` %s" % typename ( v1 )
+    assert isinstance ( v1 , var_types ) , "var_fraction: invalid type for `v1` %s" % typename ( v1 )
+    ##
     if isinstance ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
     if isinstance ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 ) 
 
@@ -2530,6 +2700,10 @@ def var_asymmetry ( v1 , v2 , name = '' , title = '' ) :
     >>> b = ...
     >>> e = var_asymmetry ( a , b  ) 
     """
+    ## 
+    assert isinstance ( v1 , var_types ) , "var_asymmetry: invalid type for `v1` %s" % typename ( v1 )
+    assert isinstance ( v1 , var_types ) , "var_asymmetry: invalid type for `v1` %s" % typename ( v1 )
+    ##
     if isinstance   ( v1 , ROOT.RooConstVar ) : v1 = float ( v1 ) 
     if isinstance   ( v2 , ROOT.RooConstVar ) : v2 = float ( v2 ) 
 
