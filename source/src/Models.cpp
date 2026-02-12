@@ -1770,7 +1770,7 @@ double Ostap::Math::BetaPrime::integral () const { return 1 ; }
 double Ostap::Math::BetaPrime::mean () const 
 {
   if ( beta() <= 1 || s_equal ( beta() , 1 ) )
-    { return std::numeric_limits<double>::quiet_NaN(); } 
+  { return std::numeric_limits<double>::quiet_NaN(); } 
   //
   return m_shift + m_scale * alpha() / ( beta() - 1 ) ;
 }
@@ -5502,8 +5502,206 @@ std::size_t Ostap::Math::BirnbaumSaunders::tag () const
 }
 // ============================================================================
 
-
-
+// ============================================================================
+// Constructor
+// ============================================================================
+Ostap::Math::Frechet::Frechet
+( const double alpha , 
+  const double scale ,  
+  const double shift )
+  : m_alpha ( std::abs ( alpha ) )
+  , m_scale ( std::abs ( scale ) )
+  , m_shift  ( shift )
+{
+  Ostap::Assert ( m_alpha ,
+		  "Alpha parameter must be non-zero!"     ,
+		  "Ostap::Math::Frechet"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( m_scale                                 ,
+		  "Scale parameter must be non-zero!"     ,
+		  "Ostap::Math::Frechet"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+}
+// ============================================================================
+// evaluate Frechet distribution
+// ============================================================================
+double Ostap::Math::Frechet::evaluate
+( const double x ) const
+{
+  if ( x < m_shift ) { return  0 ; }
+  //
+  const double delta = ( x - m_shift ) / m_scale ;
+  return
+    m_alpha * std::pow ( delta , -1 - m_alpha ) *
+    std::exp ( - std::pow ( delta , -m_alpha ) ) / m_scale ;
+}
+// ============================================================================
+// Set parameter alpha
+// ============================================================================
+bool Ostap::Math::Frechet::setAlpha
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_alpha ) ) { return false ; }
+  Ostap::Assert ( avalue ,
+		  "alpha parameter must be non-zero!"     ,
+		  "Ostap::Math::Frechet"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_alpha = avalue ;
+  return true ;
+}
+// ============================================================================
+// Set scale 
+// ============================================================================
+bool Ostap::Math::Frechet::setScale
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue ,
+		  "Scale parameter must be non-zero!"     ,
+		  "Ostap::Math::Frechet"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_scale = avalue ;
+  return true ;
+}
+// ============================================================================
+// Set shift 
+// ============================================================================
+bool Ostap::Math::Frechet::setShift
+( const double value )
+{
+  if ( s_equal ( value , m_shift ) ) { return false ; }
+  m_shift = value ;
+  return true ;
+}
+// ============================================================================
+// mean value
+// ============================================================================
+double Ostap::Math::Frechet::mean () const
+{
+  return
+    m_alpha <= 1 || s_equal ( m_alpha , 1 ) ? s_INFINITY : 
+    m_shift + m_scale * Ostap::Math::gamma ( 1.0 - 1.0 / m_alpha ) ;
+}
+// ============================================================================
+// median value
+// ============================================================================
+double Ostap::Math::Frechet::median () const
+{
+  static const double s_ln2  { std::log ( 2.0 ) } ;
+  return m_shift + m_scale * std::pow ( s_ln2 , - 1 / m_alpha ) ;
+}
+// ============================================================================
+// mode value
+// ============================================================================
+double Ostap::Math::Frechet::mode  () const
+{ return m_shift + m_scale * std::pow ( m_alpha / ( 1 + m_alpha ) , 1/m_alpha ) ; }
+// ============================================================================
+// variance 
+// ============================================================================
+double Ostap::Math::Frechet::variance  () const
+{
+  if ( m_alpha <= 2 || s_equal ( m_alpha , 2 ) ) { return s_INFINITY ; }
+  //
+  const double g1 = Ostap::Math::gamma ( 1.0 - 1.0 / m_alpha ) ;
+  const double g2 = Ostap::Math::gamma ( 1.0 - 2.0 / m_alpha ) ;
+  //
+  return m_scale * m_scale  * ( g2  - g1 * g1 ) ;
+}
+// ============================================================================
+// rms 
+// ============================================================================
+double Ostap::Math::Frechet::rms  () const
+{
+  if ( m_alpha <= 2 || s_equal ( m_alpha , 2 ) ) { return s_INFINITY ; }
+  //
+  return std::sqrt ( variance () ) ;
+}
+// ============================================================================
+// skewnes 
+// ============================================================================
+double Ostap::Math::Frechet::skewness() const
+{
+  if ( m_alpha <= 3 || s_equal ( m_alpha , 3 ) ) { return s_INFINITY ; }
+  //
+  const double g1 = Ostap::Math::gamma ( 1.0 - 1.0 / m_alpha ) ;
+  const double g2 = Ostap::Math::gamma ( 1.0 - 2.0 / m_alpha ) ;
+  const double g3 = Ostap::Math::gamma ( 1.0 - 3.0 / m_alpha ) ;
+  //
+  const double A = g3 - 3 * g2 * g1 + 2 * g1 * g1 * g1 ;
+  const double B = g2 -     g1 * g1 ;
+  //
+  return A / std::sqrt ( B * B * B ) ;
+}
+// ============================================================================
+// (excess) kurtosis
+// ============================================================================
+double Ostap::Math::Frechet::kurtosis () const
+{
+  if ( m_alpha <= 4 || s_equal ( m_alpha , 4 ) ) { return s_INFINITY ; }
+  //
+  const double g1 = Ostap::Math::gamma ( 1.0 - 1.0 / m_alpha ) ;
+  const double g2 = Ostap::Math::gamma ( 1.0 - 2.0 / m_alpha ) ;
+  const double g3 = Ostap::Math::gamma ( 1.0 - 3.0 / m_alpha ) ;
+  const double g4 = Ostap::Math::gamma ( 1.0 - 4.0 / m_alpha ) ;
+  //
+  const double C = g4 - 4 * g3 * g1 + 3 * g2 * g2 ;
+  const double D = g2 -     g1 * g1 ;
+  //
+  return -6 + C / ( D * D ) ; 
+}
+// ============================================================================
+// evaluate Frechet CDF 
+// ============================================================================
+double Ostap::Math::Frechet::cdf 
+( const double x ) const
+{
+  if ( x <= m_shift ) { return  0 ; }
+  // 
+  const double delta = ( x - m_shift ) / m_scale ;
+  return std::exp ( - std::pow ( delta , -m_alpha ) ) ;
+  
+}
+// ============================================================================
+// evaluate Frechet integral 
+// ============================================================================
+double Ostap::Math::Frechet::integral () const { return 1 ; } 
+// ============================================================================
+// evaluate Frechet integral 
+// ============================================================================
+double Ostap::Math::Frechet::integral
+( const double a ,
+  const double b ) const
+{ return cdf ( b ) - cdf ( a ) ; }
+// ============================================================================
+/*  get quantile 
+ *  @param p probability \f$ 0 \le p < 1 \f$
+ */
+// ============================================================================
+double Ostap::Math::Frechet::quantile
+( const double p ) const
+{
+  return
+    s_zero  ( p     ) ?  m_shift                                   :              
+    s_equal ( p , 1 ) ?  std::numeric_limits<double>::max       () : 
+    p <= 0            ?  std::numeric_limits<double>::quiet_NaN () :
+    p >= 1            ?  std::numeric_limits<double>::quiet_NaN () :
+    //
+    m_shift + m_scale * std::pow ( -std::log ( p ) , -1 / m_alpha ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Frechet::tag () const 
+{ 
+  static const std::string s_name = "Frechet" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_scale , m_shift ) ;
+}
+// ============================================================================
 
 // ============================================================================
 // constructor from two parametersO

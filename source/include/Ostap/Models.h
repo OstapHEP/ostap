@@ -3758,6 +3758,97 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+    /** @class Freshet distribution
+     *  @see https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+     */
+    class Frechet
+    {
+    public :
+      // ======================================================================
+      Frechet
+      ( const double alpha = 1 ,   // shape
+	const double scale = 1 ,   // scale 
+	const double shift = 0 ) ; // shift 
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// evaluate Frechet distribution
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Frechet distribution
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Frechet distribution
+      double evaluate ( const double x ) const ;
+      // ======================================================================
+    public :
+      // ====================================================================== 
+      /// shape parameter 
+      inline double alpha () const { return m_alpha ; }
+      /// scale parameter 
+      inline double scale () const { return m_scale ; }
+      /// shift parameter 
+      inline double shift () const { return m_shift ; }
+      // ======================================================================
+      /// shape parameter 
+      inline double shape () const { return alpha () ; }
+      /// shift/bias 
+      inline double xmin  () const { return shift () ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      bool         setAlpha ( const double value ) ;
+      bool         setScale ( const double value ) ;
+      bool         setShift ( const double value ) ;
+      inline  bool setShape ( const double value ) { return setAlpha ( value ) ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// mean 
+      double mean     () const ;
+      /// median
+      double median   () const ;
+      /// mode 
+      double mode     () const ;
+      /// variance 
+      double variance () const ;
+      /// RMS 
+      double rms      () const ;
+      /// skewness 
+      double skewness () const ;
+      /// excess kurtotis 
+      double kurtosis () const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /** get quantile 
+       *  @param p probability \f$ 0 \le p < 1 \f$
+       */
+      double quantile ( const double p ) const  ;
+      /// integral 
+      double integral () const ;
+      /// integral 
+      double integral
+      ( const double a ,
+	const double b ) const ;
+      /// CDF
+      double cdf
+      ( const double x ) const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// uniqiue tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// shape parameter alpha 
+      double m_alpha { 1 } ; // shape parameter alpha 
+      /// scale parameter  
+      double m_scale { 1 } ; // scale parameter  
+      /// shift parameter  
+      double m_shift { 0 } ; // shift parameter  
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class CutOffGauss 
      *  Useful function for smooth Gaussian cut-off:
      *  \f[ f(x;x_0;\sigma) = \left\{ 
