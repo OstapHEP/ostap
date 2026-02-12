@@ -2578,6 +2578,52 @@ Ostap::Math::Sigmoid::Sigmoid
   //
 }
 // ============================================================================
+// constructor from polynomial and parameters "alpha" and "x0"
+// ============================================================================
+Ostap::Math::Sigmoid::Sigmoid
+( const std::string&             sigmoid_name , 
+  const Ostap::Math::Positive&   poly         ,
+  const double                   scale        ,
+  const double                   x0           ,
+  const double                   delta        )
+  : Sigmoid ( poly  ,
+	      scale ,
+	      x0    ,
+	      delta ,
+	      Ostap::Math::sigmoid_type ( sigmoid_name ) )
+{}
+// ============================================================================
+// constructor from polynomial and parameter "alpha"
+// ============================================================================
+Ostap::Math::Sigmoid::Sigmoid
+( const std::string&             sigmoid_name , 
+  const unsigned short           N            ,
+  const double                   xmin         ,
+  const double                   xmax         ,
+  const double                   scale        ,
+  const double                   x0           , 
+  const double                   delta        )
+  : Sigmoid ( N , xmin , xmax , scale , x0 , delta ,
+	      Ostap::Math::sigmoid_type ( sigmoid_name ) )
+{}
+// ============================================================================
+// constructor from polynomial and parameters "alpha" and "x0"
+// ============================================================================
+Ostap::Math::Sigmoid::Sigmoid
+( const std::string&             sigmoid_name , 
+  const std::vector<double>&     pars         ,
+  const double                   xmin         ,
+  const double                   xmax         ,
+  const double                   scale        ,
+  const double                   x0           ,
+  const double                   delta        )
+  : Sigmoid ( pars , xmin , xmax , scale , x0 , delta ,
+	      Ostap::Math::sigmoid_type ( sigmoid_name ) )
+{}
+// ============================================================================
+
+
+// ============================================================================
 // set new value for alpha 
 // ============================================================================
 bool Ostap::Math::Sigmoid::setScale ( const double value )
@@ -2704,9 +2750,13 @@ std::size_t Ostap::Math::Sigmoid::tag () const
 				       m_scale ,
 				       m_x0    ,
 				       m_type  , 
-               m_delta ) ; 
+				       m_delta ) ; 
 }
 // ============================================================================
+// the name of sigmoid function 
+// ============================================================================
+std::string Ostap::Math::Sigmoid::sigmoid_name () const
+{ return Ostap::Math::sigmoid_name ( m_type ) ; }
 
 // ============================================================================
 Ostap::Math::TwoExpos::TwoExpos

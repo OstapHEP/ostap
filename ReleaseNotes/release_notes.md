@@ -1,5 +1,7 @@
 ## New features
 
+  1. Sigmoid type can be also specified by the string/"sigmoid name" (not only by enum!)
+  
 ## Bug fixes
 
    1, Fix recently introduced bug (thanks to @DmitryYuGolubkov Dima Golubkov)  

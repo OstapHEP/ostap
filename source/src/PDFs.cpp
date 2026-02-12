@@ -5892,6 +5892,7 @@ double Ostap::Models::PolyConvexOnly::maxVal  ( Int_t      code ) const
 }
 // ============================================================================
 
+
 // ============================================================================
 // sigmoid polinomial
 // ============================================================================
@@ -5943,6 +5944,54 @@ Ostap::Models::PolySigmoid::PolySigmoid
 				 x0    ,
 				 RooFit::RooConst ( 0  ) ,
 				 st    )
+{}
+// ============================================================================
+// sigmoid polinomial
+// ============================================================================
+Ostap::Models::PolySigmoid::PolySigmoid
+( const char*                    name  , 
+  const char*                    title ,
+  RooAbsReal&                    x     ,
+  const RooArgList&              phis  , 
+  const double                   xmin  , 
+  const double                   xmax  , 
+  RooAbsReal&                    scale ,
+  RooAbsReal&                    x0    ,  
+  RooAbsReal&                    delta ,
+  const std::string&             sigmoid_name )
+  : PolySigmoid ( name  ,
+		  title ,
+		  x     ,
+		  phis  ,
+		  xmin  ,
+		  xmax  ,
+		  scale ,
+		  x0    ,
+		  delta ,
+		  Ostap::Math::sigmoid_type ( sigmoid_name ) )
+{}
+// ============================================================================
+// sigmoid polinomial
+// ============================================================================
+Ostap::Models::PolySigmoid::PolySigmoid
+( const char*          name         ,
+  const char*          title        ,
+  RooAbsReal&          x            ,
+  const RooArgList&    phis         ,
+  const double         xmin         ,
+  const double         xmax         ,
+  RooAbsReal&          scale        ,
+  RooAbsReal&          x0           ,
+  const std::string&   sigmoid_name )
+  : PolySigmoid ( name  ,
+		  title ,
+		  x     ,
+		  phis  ,
+		  xmin  ,
+		  xmax  ,
+		  scale ,
+		  x0    ,
+		  Ostap::Math::sigmoid_type ( sigmoid_name ) )
 {}
 // ============================================================================
 // copy constructor

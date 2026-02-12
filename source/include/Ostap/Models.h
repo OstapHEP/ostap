@@ -1605,6 +1605,32 @@ namespace Ostap
 	const double                   x0    = 0          ,
 	const double                   delta = 0          , 	
 	const Ostap::Math::SigmoidType st    = Ostap::Math::SigmoidType::Hyperbolic ) ;
+      // ========================================================================
+      /// constructor from polynomial and parameters "alpha" and "x0"
+      Sigmoid
+      ( const std::string&             sigmoid_name       ,
+	const Ostap::Math::Positive&   poly               ,
+	const double                   scale = 1          ,
+	const double                   x0    = 0          ,
+	const double                   delta = 0          ) ;
+      /// constructor from polynomial and parameter "alpha"
+      Sigmoid
+      ( const std::string&             sigmoid_name       , 
+	const unsigned short           N     = 0          ,
+	const double                   xmin  = 0          ,
+	const double                   xmax  = 1          ,
+	const double                   scale = 1          ,
+	const double                   x0    = 0          , 
+	const double                   delta = 0          ) ;
+      /// constructor from polynomial and parameters "alpha" and "x0"
+      Sigmoid
+      ( const std::string&             sigmoid_name       , 
+	const std::vector<double>&     pars               ,
+	const double                   xmin  = 0          ,
+	const double                   xmax  = 1          ,
+	const double                   scale = 1          ,
+	const double                   x0    = 0          ,
+	const double                   delta = 0          ) ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -1635,7 +1661,9 @@ namespace Ostap
       inline double                   delta        () const { return     m_delta     ; } 
       inline Ostap::Math::SigmoidType sigmoid_type () const { return     m_type      ; }
       inline double                   sin2delta    () const { return     m_sin2delta ; }
-      inline double                   cos2delta    () const { return 1 - m_sin2delta ; } 
+      inline double                   cos2delta    () const { return 1 - m_sin2delta ; }
+      /// the name of sigmoid function 
+      std::string                     sigmoid_name () const ;
       // ======================================================================
     public: // sigmoid setters  
       // ======================================================================      
@@ -1691,15 +1719,15 @@ namespace Ostap
     private:
       // ======================================================================
       /// sigmoid location 
-      double                m_x0        { 0          } ; // sigmoid location 
+      double                   m_x0        { 0          } ; // sigmoid location 
       /// sigmoid scale 
-      double                m_scale     { 1          } ; // sigmoid scale 
+      double                   m_scale     { 1          } ; // sigmoid scale 
       /// sigmoid delta  
-      double                m_delta     { 0          } ; // sigmoid delta 
+      double                   m_delta     { 0          } ; // sigmoid delta 
       /// sigmoid type 
-      Ostap::Math::SigmoidType         m_type { Ostap::Math::SigmoidType::Hyperbolic } ;
+      Ostap::Math::SigmoidType m_type      { Ostap::Math::SigmoidType::Hyperbolic } ;
       /// constant fraction f = sin^2 delta 
-      double                m_sin2delta { 0          } ; // sin^2 delta 
+      double                   m_sin2delta { 0          } ; // sin^2 delta 
       // ======================================================================
     private:
       // ======================================================================

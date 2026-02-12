@@ -2942,6 +2942,13 @@ namespace Ostap
         RooAbsReal&        a     , 
         RooAbsReal&        b     , 
 	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic ) ;      
+      /// constructor with two variables 
+      Sigmoid
+      ( const std::string& name         , 
+        const std::string& title        , 
+        RooAbsReal&        a            , 
+        RooAbsReal&        b            ,
+	const std::string& sigmoid_name ) ;
       /// constructor with two variables
       Sigmoid 
       ( RooAbsReal&         a           , 
@@ -2983,7 +2990,8 @@ namespace Ostap
       Sigmoid () = default ;
       // ======================================================================
       // copy 
-      Sigmoid ( const Sigmoid& right , const char* newname = 0 ) 
+      Sigmoid ( const Sigmoid& right ,
+		const char* newname = 0 ) 
         : TwoVars ( right , newname )
 	, m_stype ( right.m_stype   ) 
       {}
@@ -2993,7 +3001,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the sigmoid type 
       inline Ostap::Math::SigmoidType sigmoid_type () const { return m_stype ; }
+      /// get the sigmoid name 
+      std::string                     sigmoid_name () const ;
       // ======================================================================
     protected:
       // ======================================================================

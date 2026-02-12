@@ -33,6 +33,7 @@
 // ============================================================================
 // LHCbMath
 // ============================================================================
+#include "Ostap/Names.h"
 #include "Ostap/Math.h"
 #include "Ostap/MakeArray.h"
 #include "Ostap/MoreMath.h"
@@ -6053,21 +6054,46 @@ namespace
   ( const double x ) 
   {
     const double psi1 = _smooth_psi_ (     x ) ;
+    if ( psi1 <= 0 ) { return 0 ; }
     const double psi2 = _smooth_psi_ ( 1 - x ) ;
+    if ( psi2 <= 0 ) { return 1 ; } 
     return psi1 / ( psi1 + psi2 ) ;
   }
   // ==========================================================================
+  inline double _smooth_psi_derivative_
+  ( const double x )
+  {
+    if ( x <= 0 || s_zero ( x ) ) { return 0 ; }
+    const double e = std::exp ( - 1 / x ) ;
+    if ( e <= 0                 ) { return 0 ; }
+    return -e / ( x * x ) ;
+  }
+  // ==========================================================================
+  inline double _smooth_phi_derivative_
+  ( const double x )
+  {
+    const double p1 = _smooth_psi_            (     x ) ;
+    const double p2 = _smooth_psi_            ( 1 - x ) ;
+    const double d1 = _smooth_psi_derivative_ (     x ) ;
+    const double d2 = _smooth_psi_derivative_ ( 1 - x ) ;
+    //
+    const double dd  = p1 + p2 ;
+    const double phi = p1 / dd ; 
+    //
+    return  ( d1 - phi * ( d1 - d2 ) ) / dd ;
+  }
+  // ==========================================================================  
 }  
-// ========================================================================
+// ============================================================================
 /*  smooth transition function 
  *   \f[ \phix() = left\{ 
  *   \begin{array}{ll}
- *     0 &  x\le a \\
+ *     0 &  x\le a \				\
  *     1 &  x\ge b \\ 
  *    smooth & 
  *    \end{array} \right. \f] 
  */
-// ========================================================================
+// ============================================================================
 double Ostap::Math::smooth_transition 
 ( const double x , 
   const double a ,
@@ -6092,10 +6118,10 @@ double Ostap::Math::probit
 ( const double alpha  )
 {
   return
-    s_zero  ( alpha     ) ? -std::numeric_limits<double>::max () :
-    s_equal ( alpha , 1 ) ?  std::numeric_limits<double>::max () : 
-    alpha < 0             ?  std::numeric_limits<double>::quiet_NaN () :
-    alpha > 1             ?  std::numeric_limits<double>::quiet_NaN () :
+    s_zero  ( alpha     ) ? -std::numeric_limits<double>::max       () :
+    s_equal ( alpha , 1 ) ?  std::numeric_limits<double>::max       () : 
+    alpha <= 0            ?  std::numeric_limits<double>::quiet_NaN () :
+    alpha >= 1            ?  std::numeric_limits<double>::quiet_NaN () :
     gsl_cdf_ugaussian_Pinv ( alpha ) ; 
 }
 // ============================================================================
@@ -6109,10 +6135,10 @@ double Ostap::Math::logit
 ( const double p ) 
 {
   return
-    s_zero  ( p     ) ? -std::numeric_limits<double>::max () :
-    s_equal ( p , 1 ) ?  std::numeric_limits<double>::max () : 
-    p < 0             ?  std::numeric_limits<double>::quiet_NaN () :
-    p > 1             ?  std::numeric_limits<double>::quiet_NaN () :
+    s_zero  ( p     ) ? -std::numeric_limits<double>::max       () :
+    s_equal ( p , 1 ) ?  std::numeric_limits<double>::max       () : 
+    p <= 0            ?  std::numeric_limits<double>::quiet_NaN () :
+    p >= 1            ?  std::numeric_limits<double>::quiet_NaN () :
     std::log ( p * 1.0L / ( 1.0L - p ) ) ; 
 }
 // ============================================================================
@@ -6131,11 +6157,11 @@ double Ostap::Math::hyperg_1F1
   gsl_sf_result result ;
   const int ierror = gsl_sf_hyperg_1F1_e ( a , b , x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_hyperg_1F1_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	{ return std::numeric_limits<double>::quiet_NaN(); }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_hyperg_1F1_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
   return result.val ;
 }  
 // ============================================================================
@@ -6261,15 +6287,14 @@ double Ostap::Math::hyperg_2F1_renorm
   gsl_sf_result result ;
   const int ierror = gsl_sf_hyperg_2F1_renorm_e ( a , b , c ,  x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_hyperg_2F1_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	{ return std::numeric_limits<double>::quiet_NaN(); }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_hyperg_2F1_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
   return result.val ; 
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  logistic function
@@ -6387,6 +6412,117 @@ Ostap::Math::softmax
   return std::make_pair ( expz1 / sumz , expz2 / sumz ) ;  
 }
 
+// ============================================================================
+// Sigmoid functions
+// ============================================================================
+/*  sigmoid type
+ *  @param  name the case-insensitive name of of sigmoid function
+ *  @return ID   of sigmoid function
+ */
+// ============================================================================
+Ostap::Math::SigmoidType
+Ostap::Math::sigmoid_type
+( const std::string& name )
+{
+  if (  name.empty() ) { return SigmoidType::Hyperbolic ; }
+  //
+  const std::string _name { Ostap::tolower ( Ostap::strip ( name ) ) } ;
+  if ( _name.empty() ) { return SigmoidType::Hyperbolic ; }
+  //
+  static const std::map<std::string,SigmoidType> s_map1 {
+    { "logistic"         , SigmoidType::Logistic         } ,
+    { "hyperbolic"       , SigmoidType::Hyperbolic       } ,
+    { "trigonometric"    , SigmoidType::Trigonometric    } ,      
+    { "error"            , SigmoidType::Error            } ,      
+    { "gudermannian"     , SigmoidType::Gudermannian     } ,      
+    { "algebraic"        , SigmoidType::Algebraic        } ,      
+    { "smoothtransition" , SigmoidType::SmoothTransition } ,
+    //
+    { "polynomial_n0"    , SigmoidType::Polynomial_n0    } ,      
+    { "polynomial_n1"    , SigmoidType::Polynomial_n1    } ,      
+    { "polynomial_n2"    , SigmoidType::Polynomial_n2    } ,      
+    { "polynomial_n3"    , SigmoidType::Polynomial_n3    } ,      
+    { "polynomial_n4"    , SigmoidType::Polynomial_n4    } ,      
+    { "polynomial_n5"    , SigmoidType::Polynomial_n5    } ,      
+    { "polynomial_n6"    , SigmoidType::Polynomial_n6    } ,
+    //
+    { "tanh"             , SigmoidType::Hyperbolic       } ,
+    { "atan"             , SigmoidType::Trigonometric    } ,      
+    { "erf"              , SigmoidType::Error            } ,      
+    { "erfc"             , SigmoidType::Error            } ,      
+    { "smooth"           , SigmoidType::SmoothTransition } ,
+    //
+    { "poly0"            , SigmoidType::Polynomial_n0    } ,      
+    { "poly1"            , SigmoidType::Polynomial_n1    } ,      
+    { "poly2"            , SigmoidType::Polynomial_n2    } ,      
+    { "poly3"            , SigmoidType::Polynomial_n3    } ,      
+    { "poly4"            , SigmoidType::Polynomial_n4    } ,      
+    { "poly5"            , SigmoidType::Polynomial_n5    } ,      
+    { "poly6"            , SigmoidType::Polynomial_n6    } ,
+    //
+    { "p0"               , SigmoidType::Polynomial_n0    } ,      
+    { "p1"               , SigmoidType::Polynomial_n1    } ,      
+    { "p2"               , SigmoidType::Polynomial_n2    } ,      
+    { "p3"               , SigmoidType::Polynomial_n3    } ,      
+    { "p4"               , SigmoidType::Polynomial_n4    } ,      
+    { "p5"               , SigmoidType::Polynomial_n5    } ,      
+    { "p6"               , SigmoidType::Polynomial_n6    } ,
+    //
+  } ;
+  //
+  auto i = s_map1.find ( _name ) ;
+  Ostap::Assert ( s_map1.end() != i ,
+		  "Invalid Sigmoid Type:" + name ,
+		  "Ostap::Math::sigmoid_type"    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return i->second ;
+}
+// ========================================================================
+/*  sigmoid type
+ *  @param  sigmoid ID 
+ *  @return the name of of sigmoid function
+ */
+// ========================================================================
+std::string Ostap::Math::sigmoid_name
+( const Ostap::Math::SigmoidType stype )
+{
+  //
+  Ostap::Assert ( Ostap::Math::SigmoidType::First <= stype &&
+		  stype <= Ostap::Math::SigmoidType::Last    , 		  
+		  "Invalid Sigmoid Type"       ,
+		  "Ostap::Math::sigmoid_type"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  switch ( stype )
+    {
+    case Ostap::Math::SigmoidType::Logistic         : return "Logistic"         ;
+    case Ostap::Math::SigmoidType::Hyperbolic       : return "Hyperbolic"       ;
+    case Ostap::Math::SigmoidType::Trigonometric    : return "Trigonometric"    ;
+    case Ostap::Math::SigmoidType::Error            : return "Error"            ;
+    case Ostap::Math::SigmoidType::Gudermannian     : return "Gudermannian"     ;
+    case Ostap::Math::SigmoidType::Algebraic        : return "Algebraic"        ;      
+    case Ostap::Math::SigmoidType::SmoothTransition : return "SmoothTransition" ;
+      //
+    case Ostap::Math::SigmoidType::Polynomial_n0    : return "Polynomial_n0"    ;
+    case Ostap::Math::SigmoidType::Polynomial_n1    : return "Polynomial_n1"    ;
+    case Ostap::Math::SigmoidType::Polynomial_n2    : return "Polynomial_n2"    ;
+    case Ostap::Math::SigmoidType::Polynomial_n3    : return "Polynomial_n3"    ;
+    case Ostap::Math::SigmoidType::Polynomial_n4    : return "Polynomial_n4"    ;
+    case Ostap::Math::SigmoidType::Polynomial_n5    : return "Polynomial_n5"    ;
+    case Ostap::Math::SigmoidType::Polynomial_n6    : return "Polynomial_n6"    ;
+      //
+    default :
+      break ; 
+    } ;
+  //
+  Ostap::Assert ( false                        , 
+		  "Invalid Sigmoid Type"       ,
+		  "Ostap::Math::sigmoid_type"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return "" ;
+}  
 // ============================================================================
 /*  Sigmoid function
  *  All sigmoid fuctions \f$ \sigma(z) \f$ are normalized & scaled such

@@ -1335,22 +1335,7 @@ class Sigmoid_pdf(PolyBase,PEAK) :
                                         None , 0 , -4 * math.pi , +4 * math.pi )
         
         if isinstance ( sigmoid_type , string_types ) :
-            stl = str ( sigmoid_type ).lower() 
-            if   stl in ( 'logistic'      ,        ) : sigmoid_type = Ostap.Math.SigmoidType.Logistic
-            elif stl in ( 'hyperbolic'    , 'tanh' ) : sigmoid_type = Ostap.Math.SigmoidType.Hyperbolic 
-            elif stl in ( 'trigonometric' , 'atan' ) : sigmoid_type = Ostap.Math.SigmoidType.Trigonometric
-            elif stl in ( 'error'         , 'erf'  ) : sigmoid_type = Ostap.Math.SigmoidType.Error 
-            elif stl in ( 'gudermannian'  , 'gd'   ) : sigmoid_type = Ostap.Math.SigmoidType.Gudermannian
-            elif stl in ( 'algebraic'     ,        ) : sigmoid_type = Ostap.Math.SigmoidType.Algebdraic
-            elif stl in ( 'smooth'        ,        ) : sigmoid_type = Ostap.Math.SigmoidType.SmoothTransition
-            elif stl in ( 'poly0'         ,  'p0'  ) : sigmoid_type = Ostap.Math.SigmoidType.Polynomial_n0
-            elif stl in ( 'poly1'         ,  'p1'  ) : sigmoid_type = Ostap.Math.SigmoidType.Polynomial_n1
-            elif stl in ( 'poly2'         ,  'p2'  ) : sigmoid_type = Ostap.Math.SigmoidType.Polynomial_n2
-            elif stl in ( 'poly3'         ,  'p3'  ) : sigmoid_type = Ostap.Math.SigmoidType.Polynomial_n3
-            elif stl in ( 'poly4'         ,  'p4'  ) : sigmoid_type = Ostap.Math.SigmoidType.Polynomial_n4
-            elif stl in ( 'poly5'         ,  'p5'  ) : sigmoid_type = Ostap.Math.SigmoidType.Polynomial_n5
-            elif stl in ( 'poly6'         ,  'p6'  ) : sigmoid_type = Ostap.Math.SigmoidType.Polynomial_n6                        
-            else : raise TypeError ( "Invalid Sigmoid type %s" % sigmoid_type )
+            sigmoid_type = Ostap.Math.sigmoid_type ( sigmoid_type )
             
         sigmoid_type = int ( sigmoid_type  )
         assert Ostap.Math.Sigmoidtype.First <= sigmoid_type  <= Ostap.Math.SigmoidType.Last , \
@@ -1423,10 +1408,14 @@ class Sigmoid_pdf(PolyBase,PEAK) :
 
     @property
     def sigmoid_type ( self ) :
-        """`sigmoid_type` : the actual sigmois type, see `Ostap.Math.Sigmoid.SigmoidType`"""
+        """`sigmoid_type` : the actual sigmoid type, see `Ostap.Math.Sigmoid.SigmoidType`"""
         return self.pdf.sigmoid_type()
 
-    
+    @property
+    def sigmoid_name ( self ) :
+        """`sigmoid_name` : the name of the actual sigmoid type, see `Ostap.Math.Sigmoid.SigmoidType`"""
+        return self.pdf.sigmoid_name ()
+
 models.append ( Sigmoid_pdf ) 
 # =============================================================================
 ## @class  PSpline_pdf

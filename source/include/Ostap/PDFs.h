@@ -4501,7 +4501,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::PolySigmoid, 2) ;
+      ClassDefOverride(Ostap::Models::PolySigmoid, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -4528,6 +4528,29 @@ namespace Ostap
 	RooAbsReal&          scale      ,
 	RooAbsReal&          x0         ,
 	const Ostap::Math::SigmoidType st = Ostap::Math::SigmoidType::Hyperbolic ) ;	
+      /// general
+      PolySigmoid 
+      ( const char*          name         ,
+	const char*          title        ,
+	RooAbsReal&          x            ,
+	const RooArgList&    coeffs       ,
+	const double         xmin         ,
+	const double         xmax         ,
+	RooAbsReal&          scale        ,
+	RooAbsReal&          x0           ,
+	RooAbsReal&          delta        ,
+	const std::string&   sigmoid_name ) ;
+      /// delta = 0 
+      PolySigmoid 
+      ( const char*          name         ,
+	const char*          title        ,
+	RooAbsReal&          x            ,
+	const RooArgList&    coeffs       ,
+	const double         xmin         ,
+	const double         xmax         ,
+	RooAbsReal&          scale        ,
+	RooAbsReal&          x0           ,
+	const std::string&   sigmoid_name ) ;
       /// copy
       PolySigmoid
       ( const PolySigmoid&   right     ,
@@ -4584,8 +4607,12 @@ namespace Ostap
       // ======================================================================
       inline double            xmin  () const { return m_sigmoid.xmin () ; }
       inline double            xmax  () const { return m_sigmoid.xmax () ; }
+      /// he type of sigmoid function 
       inline Ostap::Math::SigmoidType sigmoid_type () const
       { return m_sigmoid.sigmoid_type () ; }
+      /// the name of signoif function 
+      inline std::string              sigmoid_name () const
+      { return m_sigmoid.sigmoid_name () ; }
       // ======================================================================
     protected :
       // ======================================================================
