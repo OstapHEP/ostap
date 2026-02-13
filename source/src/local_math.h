@@ -50,6 +50,17 @@ namespace
   static_assert ( std::numeric_limits<unsigned long>  ::is_specialized        ,
                   "std::numeric_limits<unsigned long> is not specialized"   ) ;
   // ==========================================================================
+  /** @var s_QUIETNAN
+   *  quite NaN
+   */
+  constexpr double s_QUIETNAN = std::numeric_limits<double>::quiet_NaN () ;
+  // ==========================================================================
+  /** @var s_EPSILON
+   *  epsilon 
+   */
+  constexpr double s_EPSILON = std::numeric_limits<double>::epsilon () ;
+  static_assert ( 0 < s_EPSILON , "s_EPSILON is not positive!"   ) ;
+  // ==========================================================================
   /** @var s_POSINF
    *  True positive infinity 
    */
@@ -82,9 +93,6 @@ namespace
                   "std::numeric_limits<usigned int> is not specialized" ) ;
   constexpr unsigned long s_UL_max = std::numeric_limits<unsigned int>::max () - 1 ;
   static_assert ( 1 < s_UL_max ,  "s_UL_max is not large enough!" ) ;
-  // ==========================================================================
-  /// epsilon 
-  const double s_EPSILON = std::numeric_limits<double>::epsilon() ;
   // ==========================================================================
   /// small value 
   const Ostap::Math::Small<long double> s_small

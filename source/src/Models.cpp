@@ -178,14 +178,28 @@ double Ostap::Math::Gumbel::integral ( const double low  ,
     std::exp ( -std::exp ( -zmin ) ) - std::exp ( -std::exp ( -zmax ) ) ;
 }
 // ============================================================================
+/*  quantile function
+ *  @parameter p  probability \f$ 0 < p < 1 \f$
+ */
+// ============================================================================
+double Ostap::Math::Gumbel::quantile
+( const double p ) const
+{
+  return
+    p < 0             ?  s_QUIETNAN :
+    p > 1             ?  s_QUIETNAN : 
+    s_zero  ( p     ) ?  s_NEGHUGE  : 
+    s_equal ( p , 1 ) ?  s_POSHUGE  :
+    m_mu - m_beta * std::log ( - std::log ( p ) ) ;
+}
+// ============================================================================
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Gumbel::tag () const 
 { 
   static const std::string s_name = "Gumbel" ;
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_beta ) ; 
-}
-// ============================================================================
+}// ============================================================================
  
 
 
@@ -1236,8 +1250,9 @@ double Ostap::Math::LogGammaDist::integral () const { return 1 ; }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
-double Ostap::Math::LogGammaDist::integral ( const double low  ,
-                                             const double high ) const 
+double Ostap::Math::LogGammaDist::integral
+( const double low  ,
+  const double high ) const 
 {
   //
   if      ( s_equal ( low  , high ) ) { return 0 ; }
@@ -1267,7 +1282,6 @@ std::size_t Ostap::Math::LogGammaDist::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_gamma.tag () ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /* constructor form scale & shape parameters
@@ -5702,6 +5716,568 @@ std::size_t Ostap::Math::Frechet::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_alpha , m_scale , m_shift ) ;
 }
 // ============================================================================
+
+// ============================================================================
+/*  constructor from all parameters
+ *  @param p shape parameter \f$ 0 < p \f$
+ *  @param a shape parameter \f$ 0 < a \f$
+ *  @param b scale parameter \f$ 0 < b \f$
+ *  @param shift shift parameter        
+ */
+// ============================================================================
+Ostap::Math::Dagum::Dagum
+( const double p     ,
+  const double a     ,
+  const double b     ,
+  const double shift )
+  : m_p     ( std::abs ( p ) )
+  , m_a     ( std::abs ( a ) )
+  , m_b     ( std::abs ( b ) )
+  , m_shift ( shift )
+{
+  Ostap::Assert ( 0 < m_p , 
+		  "p-parameter must be positive!"         ,
+		  "Ostap::Math::Dagum"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( 0 < m_a , 
+		  "a-parameter must be positive!"         ,
+		  "Ostap::Math::Dagum"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( 0 < m_b , 
+		  "b-parameter must be positive!"         ,
+		  "Ostap::Math::Dagum"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+}
+// ============================================================================
+// Set shape parameter p 
+// ============================================================================
+bool Ostap::Math::Dagum::setP
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_p ) ) { return false ; }
+  //
+  Ostap::Assert ( 0 < avalue ,
+		  "p-parameter must be positive!"         ,
+		  "Ostap::Math::Dagum"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_p = avalue ;
+  return true ;
+}
+// ============================================================================
+// Set shape parameter a 
+// ============================================================================
+bool Ostap::Math::Dagum::setA
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_a ) ) { return false ; }
+  //
+  Ostap::Assert ( 0 < avalue ,
+		  "a-parameter must be positive!"         ,
+		  "Ostap::Math::Dagum"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_a = avalue ;
+  return true ;
+}
+// ============================================================================
+// Set scale parameter b
+// ============================================================================
+bool Ostap::Math::Dagum::setB
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_b ) ) { return false ; }
+  //
+  Ostap::Assert ( 0 < avalue ,
+		  "b-parameter must be positive!"         ,
+		  "Ostap::Math::Dagum"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_b = avalue ;
+  return true ;
+}
+// ============================================================================
+// Set shift 
+// ============================================================================
+bool Ostap::Math::Dagum::setShift
+( const double value )
+{
+  if ( s_equal ( value , m_shift ) ) { return false ; }
+  m_shift = value ;
+  return true ;
+}
+// ============================================================================
+// evaluate Dagum distribution
+// ============================================================================
+double Ostap::Math::Dagum::evaluate
+( const double x ) const
+{
+  if ( x <= m_shift ) { return 0 ; } // RETURN 
+  //
+  const double d  = ( x - m_shift ) / m_b ;
+  if ( d <= 0     ) { return 0 ; } // RETURN
+  //
+  if ( 1 <= d && 1 <= m_a )
+  {
+    const double t1  = std::pow ( d , -m_a ) ;
+    return m_a * m_p * std::pow ( 1 / ( 1 + t1 ) , m_p ) * t1 / ( 1 + t1 ) / d ; 
+  }
+  //
+  const double t1  = std::pow ( d , m_a  ) ;
+  return m_a * m_p * std::pow ( t1 / ( 1 + t1 ) , m_p ) * 1 / ( 1 + t1 ) / d ; 
+}  
+// ============================================================================
+// evaluate Dagum CDF 
+// ============================================================================
+double Ostap::Math::Dagum::cdf
+( const double x    ) const
+{
+  if ( x <= m_shift ) { return 0 ; }
+  //
+  const double d = ( x - m_shift ) / m_b ;
+  if ( d <= 0      ) { return 0 ; } // RETURN
+  //
+  if ( 1 <= d && 1 <= m_a )
+  {
+    const double t1 = std::pow ( d , -m_a ) ;
+    return std::pow ( 1 / ( t1 + 1 ) , m_p ) ;
+  }
+  const double t1 = std::pow ( d , m_a ) ;
+  return std::pow ( t1 / ( 1 + t1 ) , m_p ) ;
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::Dagum::integral
+( const double low  ,
+  const double high ) const
+{
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high <  low            ) { return - integral ( high , low ) ; }
+  else if ( high <= m_shift        ) { return 0 ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// get quantile \f$ 0 < p < 1 \f$
+// ============================================================================
+double Ostap::Math::Dagum::quantile
+( const double u ) const
+{
+  return
+    u < 0             ?  s_QUIETNAN :
+    u > 1             ?  s_QUIETNAN : 
+    s_zero  ( u     ) ?  m_shift    : 
+    s_equal ( u , 1 ) ?  s_POSHUGE  :
+    m_shift + m_b * std::pow ( std::pow ( u , -1/m_p ) -1 , -1 / m_a ) ;
+ }
+// ============================================================================
+// mean 
+// ============================================================================
+double Ostap::Math::Dagum::mean() const
+{
+  if ( m_a <= 1 || s_equal ( m_a , 1 ) ) { return s_QUIETNAN ; }
+  //
+  const double lg1 = Ostap::Math::lgamma ( 1   - 1 / m_a ) ;
+  const double lg2 = Ostap::Math::lgamma ( m_p + 1 / m_a ) ;
+  const double lgp = Ostap::Math::lgamma ( m_p ) ;
+  //
+  return m_shift + m_b * std::exp ( lg1 + lg2 - lgp ) ;  
+}
+// ============================================================================
+// mode
+// ============================================================================
+double Ostap::Math::Dagum::mode () const
+{
+  const double ap = m_a * m_p ;
+  if ( ap <= 1 ) { return m_shift ; }
+  return m_shift + m_b * std::pow ( ( ap - 1 ) / ( m_a + 1 ) , 1/m_a ) ;
+}
+// ============================================================================
+// median
+// ============================================================================
+double Ostap::Math::Dagum::median () const
+{
+  const double q = 1 / m_p ;
+  if ( 1 < q )
+  {
+    const double q2 = std::pow ( 2.0 , -q ) ;
+    return m_shift + m_b * std::pow ( q2 / ( 1.0L - q2 ) , 1/m_a ) ;
+  }
+  const double q2 = std::pow ( 2.0 , q ) ;
+  return m_shift + m_b * std::pow ( 1 / ( q2 - 1.0L )  , 1/m_a ) ;
+}
+// ============================================================================
+// variance 
+// ============================================================================
+double Ostap::Math::Dagum::variance () const
+{
+  if ( m_a <= 2 || s_equal ( m_a , 2 ) ) { return s_QUIETNAN ; }
+  //
+  const double lg1 = Ostap::Math::lgamma ( 1   - 2 / m_a ) ;
+  const double lg2 = Ostap::Math::lgamma ( m_p + 2 / m_a ) ;
+  const double lg3 = Ostap::Math::lgamma ( 1   - 1 / m_a ) ;
+  const double lg4 = Ostap::Math::lgamma ( m_p + 1 / m_a ) ;
+  const double lgp = Ostap::Math::lgamma ( m_p ) ;
+  //
+  const double t1 = std::exp ( lg1 + lg2 - lgp ) ;
+  const double t2 = std::exp ( lg3 + lg4 - lgp ) ;
+  //
+  return m_b * m_b * ( t1 - t2 * t2 ) ;
+}
+// ============================================================================
+// rms 
+// ============================================================================
+double Ostap::Math::Dagum::rms  () const
+{
+  if ( m_a <= 2 || s_equal ( m_a , 2 ) ) { return s_QUIETNAN ; }
+  //
+  return std::sqrt ( variance () ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Dagum::tag () const 
+{ 
+  static const std::string s_name = "Dagum" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_p , m_a , m_b , m_shift ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Math::BenktanderI::BenktanderI
+( const double a     ,
+  const double delta , 
+  const double scale ,
+  const double shift )
+  : m_a         ( std::abs ( a )     )
+  , m_delta     ( -1.e+5 + delta     )
+  , m_scale     ( std::abs ( scale ) )
+  , m_shift     ( shift )
+  , m_p         ( -1 )
+  , m_b         ( -1 )    
+{
+  //
+  Ostap::Assert ( 0 < m_a ,
+		  "a-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( 0 < m_scale ,
+		  "scale-parameter must be positive!"     ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  setDelta ( delta ) ;
+  //
+  Ostap::Assert ( 0 < m_p && m_p <= 1 ,
+		  "p-parameter must be positive and <=1"  ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
+  //
+  Ostap::Assert ( 0 < m_b  ,
+		  "b-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+}
+// ============================================================================
+// Set p from delta
+// ============================================================================
+void Ostap::Math::BenktanderI::setP
+( const double delta )
+{
+  static const double s_10e = 10 * s_EPSILON ;
+  const double cd  = std::cos ( 1.0L * delta ) ;
+  m_p = s_10e + ( 1.0L - s_10e ) * cd * cd  ;
+  if ( 1 < m_p ) { m_p = 1 ; }
+}				    
+// ============================================================================
+// Set shape parameter a 
+// ============================================================================
+bool Ostap::Math::BenktanderI::setA
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_a ) && 0 < m_p && m_p <= 1 && 0 < m_b ) { return false ; }
+  //
+  Ostap::Assert ( 0 < avalue ,
+		  "a-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_a = avalue ;
+  setP ( m_delta ) ;
+  m_b = m_p * m_a * ( m_a + 1 ) / 2 ;
+  return true ;
+}    
+// ============================================================================
+// Set delta parameter  
+// ============================================================================
+bool Ostap::Math::BenktanderI::setDelta
+( const double value )
+{
+  if ( s_equal ( value , m_delta    ) && 0 < m_p && m_p <= 1 && 0 < m_b ) { return false ; }
+  m_delta = value ;
+  //
+  setP ( m_delta ) ;
+  m_b     = m_p * m_a * ( m_a + 1 ) / 2 ;
+  //
+  Ostap::Assert ( 0 < m_p && m_p <= 1 ,
+		  "p-parameter must be positive and <=1"  ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
+  //
+  Ostap::Assert ( 0 < m_b  ,
+		  "b-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return true ;
+}
+// ============================================================================
+// evaluate Benktander Type I distribution
+// ============================================================================
+double Ostap::Math::BenktanderI::evaluate
+( const double x ) const
+{
+  if ( x < m_shift ) { return 0 ; }
+  //
+  const double z  =  ( x - m_shift ) / m_scale + 1.0 ;
+  const double lz = std::log ( z ) ;
+  //
+  const double t1 = 1 +       2 * m_b * lz / m_a ;
+  const double t2 = 1 + m_a + 2 * m_b * lz       ;
+  const double t3 = 2 + m_a +     m_b * lz       ;
+  //
+  const double rpdf =  ( t1 * t2 - 2 * m_b / m_a ) * std::pow ( z , -t3 ) ;
+  //
+  return rpdf / m_scale ;
+}
+// ============================================================================
+// evaluate integral for Benktander Type I distribution
+// ============================================================================
+double Ostap::Math::BenktanderI::integral () const { return 1 ; }
+// ============================================================================
+// evaluate integral for Benktander Type I distribution
+// ============================================================================
+double Ostap::Math::BenktanderI::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high <  low            ) { return -integral ( high , low ) ; }
+  else if ( high <= m_shift        ) { return 0 ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// evaluate Benktander Type I CDF 
+// ============================================================================
+double Ostap::Math::BenktanderI::cdf 
+( const double x ) const
+{
+  if ( x < m_shift ) { return 0 ; }
+  //
+  const double z  =  ( x - m_shift ) / m_scale + 1.0 ;  
+  const double lz = std::log ( z ) ;
+  //
+  const double t1 = 1 +       2 * m_b * lz / m_a ;
+  const double t2 = 1 + m_a +     m_b * lz       ;
+  //
+  return 1 - t1 * std::pow ( x , -t2 ) ;
+}
+// ============================================================================
+// mean value 
+// ============================================================================
+double Ostap::Math::BenktanderI::mean     () const
+{
+  const double zmean = 1 + 1 / m_a ;
+  return m_shift + m_scale * ( zmean - 1 ) ;
+}
+// ============================================================================
+// variance value 
+// ============================================================================
+double Ostap::Math::BenktanderI::variance () const
+{
+  const double sqb = std::sqrt ( m_b ) ;
+  const double t1  = ( m_a - 1 ) / ( 2 * sqb ) ;
+  //
+  const double t2  = -sqb + m_a * s_SQRTPI * Ostap::Math::erfcx ( t1 ) ;
+  return m_scale * m_scale * t2 / ( m_a * m_a * sqb ) ;
+}
+// ============================================================================
+// RMS value 
+// ============================================================================
+double Ostap::Math::BenktanderI::rms () const
+{ return std::sqrt ( variance () ) ; }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BenktanderI::tag () const 
+{ 
+  static const std::string s_name = "BenktanderI" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_a     ,
+				       m_delta ,
+				       m_scale ,
+				       m_shift ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Math::BenktanderII::BenktanderII
+( const double a     ,
+  const double delta , 
+  const double scale ,
+  const double shift )
+  : m_a         ( std::abs ( a )     )
+  , m_delta     ( -1.e+5 + delta     )
+  , m_scale     ( std::abs ( scale ) )
+  , m_shift     ( shift )
+{
+  //
+  Ostap::Assert ( 0 < m_a ,
+		  "a-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderII"             ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( 0 < m_scale ,
+		  "scale-parameter must be positive!"     ,
+		  "Ostap::Math::BenktanderII"             ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  setDelta ( delta ) ;
+  //
+  Ostap::Assert ( 0 < m_b  && m_b <= 1 		          , 
+		  "b-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderII"             ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
+}
+// ============================================================================
+// Set B from delta
+// ============================================================================
+void Ostap::Math::BenktanderII::setB
+( const double delta )
+{
+  static const double s_10e = 10 * s_EPSILON ;
+  const long double cd  = std::cos ( 1.0L * delta ) ;
+  m_b = s_10e + ( 1.0L - s_10e ) * cd * cd  ;
+  if ( 1 < m_b ) { m_b = 1 ; }
+}				    
+// ============================================================================
+// Set shape parameter a 
+// ============================================================================
+bool Ostap::Math::BenktanderII::setA
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_a ) ) { return false ; }
+  //
+  Ostap::Assert ( 0 < m_a  ,
+		  "a-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderII"             ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_a = avalue ;
+  return true ;
+}    
+// ============================================================================
+// Set delta parameter  
+// ============================================================================
+bool Ostap::Math::BenktanderII::setDelta
+( const double value )
+{
+  if ( s_equal ( value , m_delta    ) && 0 < m_b && m_b <= 1 ) { return false ; }
+  m_delta = value ;
+  //
+  setB ( m_delta ) ;
+  //
+  Ostap::Assert ( 0 < m_b  && m_b <= 1 ,
+		  "b-parameter must be positive!"         ,
+		  "Ostap::Math::BenktanderII"             ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return true ;
+}
+// ============================================================================
+// evaluate Benktander Type II distribution
+// ============================================================================
+double Ostap::Math::BenktanderII::evaluate
+( const double x ) const
+{
+  if ( x < m_shift ) { return 0 ; }
+  //
+  const double z  =  ( x - m_shift ) / m_scale + 1.0 ;
+  const double zb = std::pow ( z , m_b ) ;
+  //
+  const double zpdf =
+    std::exp ( m_a * ( 1 - zb ) / m_b ) *
+    zb * ( m_a * zb - m_b + 1 ) / ( z * z ) ;
+  //
+  return zpdf / m_scale ;
+}
+// ============================================================================
+// evaluate integral for Benktander Type II distribution
+// ============================================================================
+double Ostap::Math::BenktanderII::integral () const { return 1 ; }
+// ============================================================================
+// evaluate integral for Benktander Type II distribution
+// ============================================================================
+double Ostap::Math::BenktanderII::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high <  low            ) { return -integral ( high , low ) ; }
+  else if ( high <= m_shift        ) { return 0 ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// evaluate Benktander Type II CDF 
+// ============================================================================
+double Ostap::Math::BenktanderII::cdf 
+( const double x ) const
+{
+  if ( x <= m_shift ) { return 0 ; }
+  //
+  const double z    =  ( x - m_shift ) / m_scale + 1.0 ;
+  //
+  const double zb   = std::pow ( z , m_b ) ;
+  const double zcdf = 1 - zb * std::exp ( m_a * ( 1 - zb ) / m_b ) / z ; 
+  //
+  return zcdf ;
+}
+// ============================================================================
+// mode 
+// ============================================================================
+double Ostap::Math::BenktanderII::mode     () const
+{ return m_shift ;  }
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BenktanderII::tag () const 
+{ 
+  static const std::string s_name = "BenktanderII" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_a     ,
+				       m_delta ,
+				       m_scale ,
+				       m_shift ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // constructor from two parametersO

@@ -21,7 +21,11 @@
 #include "Ostap/MoreMath.h"
 // ============================================================================
 /** @file Ostap/Models.h
- *  set of useful models
+ *  Set of useful continiod PDFs/models
+ *
+ *  Models defined for \f$\left[ +\infty, -\infty \right]\f$: 
+ *  @see Ostap::Math::Gumbel
+ * 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
@@ -40,7 +44,7 @@ namespace Ostap
      *  
      *  Very useful important case:
      *  If  x is distributed accoring  to \f$ f(x) \propto e^{-\tau x} \f$, 
-     *  then z, \f$ z  =   log(x) \f$, is distributed accoring to 
+     *  then z, \f$ z  =   log(x) \f$, is distributed according to 
      *  \f$ F(z) = G(x, -\log(\tau), 1 ) \f$ 
      * 
      *  As a   result, if    x is distributes as sum of exponential components 
@@ -80,13 +84,15 @@ namespace Ostap
       // ======================================================================
       double mean        () const ;
       double median      () const ;
-      double mode        () const { return mu () ; }
       double variance    () const ;
-      double dispersion  () const { return variance () ; }
-      double sigma2      () const { return variance () ; }
       double sigma       () const ;
       double skewness    () const ;
-      double kurtosis    () const { return  12.0 / 5 ; }
+      // ======================================================================
+      inline double mode        () const { return mu       () ; }
+      inline double rms         () const { return sigma    () ; }
+      inline double dispersion  () const { return variance () ; }
+      inline double sigma2      () const { return variance () ; }
+      inline double kurtosis    () const { return 12.0 / 5    ; }
       // ======================================================================
     public: // the main block 
       // ======================================================================
@@ -106,6 +112,11 @@ namespace Ostap
       ( const double low  ,
 	const double high ) const ;
       // ======================================================================
+      /** quantile function
+       *  @parameter p  probability \f$ 0 < p < 1 \f$
+       */
+      double quantile ( const double p ) const ;	
+      // ======================================================================
     public:
       // ======================================================================
       /// get the tag 
@@ -119,6 +130,104 @@ namespace Ostap
       double m_beta ; // scale parameter
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class GammaDist
+     *  Gamma-distribution shape/scale parameters
+     *  http://en.wikipedia.org/wiki/Gamma_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2013-05-11
+     */
+    class  GammaDist
+    {
+    public:
+      // ======================================================================
+      /** constructor from scale & shape parameters
+       *  param k       \f$k\f$      parameter (shape)
+       *  param theta   \f$\theta\f$ parameter (scale)
+       */
+      GammaDist 
+      ( const double k     = 2 ,   // shape parameter
+        const double delta = 0 ) ; // shift parameter
+      // ======================================================================
+    public:
+      // ======================================================================
+      double pdf        ( const double x ) const ;
+      /// calculate gamma distribution shape
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      // variables
+      // ======================================================================
+      inline double k          () const  { return m_k       ; }
+      inline double theta      () const  { return m_theta   ; }
+      // ======================================================================
+      inline double alpha      () const  { return m_k       ; }
+      inline double beta       () const  { return 1/m_theta ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline double mean       () const  { return m_k * m_theta            ; }
+      /// variance 
+      inline double variance   () const  { return dispersion ()            ; }
+      /// variance 
+      inline double dispersion () const  { return m_k * m_theta * m_theta  ; }
+      /// kurtosis 
+      inline double kurtosis   () const  { return 6 / alpha  ()            ; }
+      // 
+      double        sigma      () const  ;
+      double        skewness   () const  ;
+      double        mode       () const  ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** effective \f$ \chi^2 \f$-parameters
+       *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
+       *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
+       */
+      inline double nu () const { return 2   * k     () ; }
+      inline double c  () const { return 0.5 * theta () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setK     ( const double value  ) ;
+      bool setTheta ( const double value  ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral
+      double integral () const ;
+      /// get the integral between low and high limits
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+    public: // quantiles
+      // ======================================================================
+      /// calculate the quantile   (0<p<1)
+      double quantile ( const double p ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// shape
+      double m_k      ; // shape
+      /// scale
+      double m_theta  ; // scale
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// auxillary intermediate parameter
+      mutable double m_aux ; // auxillary intermediate parameter
+      // ======================================================================
+    } ;
+
     // ========================================================================
     /** @class GramCharlierA4
      *  Gram-Charlier type A approximation
@@ -479,97 +588,6 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    /** @class GammaDist
-     *  Gamma-distribution shape/scale parameters
-     *  http://en.wikipedia.org/wiki/Gamma_distribution
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date   2013-05-11
-     */
-    class  GammaDist
-    {
-    public:
-      // ======================================================================
-      /** constructor form scale & shape parameters
-       *  param k      \f$k\f$ parameter (shape)
-       *  param theta  \f$\theta\f$ parameter (scale)
-       */
-      GammaDist 
-      ( const double k     = 2 ,   // shape parameter
-        const double theta = 1 ) ; // scale parameter
-      // ======================================================================
-    public:
-      // ======================================================================
-      double pdf        ( const double x ) const ;
-      /// calculate gamma distribution shape
-      inline double operator() ( const double x ) const { return pdf ( x ) ; }
-      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      // variables
-      // ======================================================================
-      inline double k          () const  { return m_k       ; }
-      inline double theta      () const  { return m_theta   ; }
-      // ======================================================================
-      inline double alpha      () const  { return m_k       ; }
-      inline double beta       () const  { return 1/m_theta ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      inline double mean       () const  { return m_k * m_theta                ; }
-      inline double dispersion () const  { return m_k * m_theta * m_theta      ; }
-      inline double variance   () const  { return dispersion ()                ; }
-      double sigma      () const  ;
-      double skewness   () const  ;
-      double mode       () const  ; 
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** effective \f$ \chi^2 \f$-parameters
-       *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
-       *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
-       */
-      inline double nu () const { return 2   * k     () ; }
-      inline double c  () const { return 0.5 * theta () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      bool setK     ( const double value  ) ;
-      bool setTheta ( const double value  ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      double integral () const ;
-      /// get the integral between low and high limits
-      double integral 
-      ( const double low  ,
-        const double high ) const ;
-      // ======================================================================
-    public: // quantiles
-      // ======================================================================
-      /// calculate the quantile   (0<p<1)
-      double quantile ( const double p ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // get the tag
-      std::size_t tag () const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// shape
-      double m_k      ; // shape
-      /// scale
-      double m_theta  ; // scale
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// auxillary intermediate parameter
-      mutable double m_aux ; // auxillary intermediate parameter
-      // ======================================================================
-    } ;
-    // ========================================================================
     /** @class LogGammaDist
      *  Distribution for log(x) where x has gamma-distribution shape/scale parameters
      *  http://en.wikipedia.org/wiki/Gamma_distribution
@@ -604,10 +622,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      inline double gamma_mean       () const  { return m_gamma.mean       () ; }
-      inline double gamma_dispersion () const  { return m_gamma.dispersion () ; }
-      inline double gamma_sigma      () const  { return m_gamma.sigma      () ; }
-      inline double gamma_skewness   () const  { return m_gamma.skewness   () ; }
+      inline double gamma_mean       () const { return m_gamma.mean       () ; }
+      inline double gamma_dispersion () const { return m_gamma.dispersion () ; }
+      inline double gamma_sigma      () const { return m_gamma.sigma      () ; }
+      inline double gamma_skewness   () const { return m_gamma.skewness   () ; }
+      inline double gamma_kurtosis   () const { return m_gamma.kurtosis   () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -823,9 +842,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate Amoroso distribtion
-      double pdf        ( const double x ) const ;
+      double pdf               ( const double x ) const ;
       /// evaluate Amoroso distribtion
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public:  // direct getters
       // ======================================================================
@@ -893,7 +912,7 @@ namespace Ostap
      *                  variance-heterogeneity and the logarithmic transformation.
      *                 J. Roy. Statist. Soc. Suppl. 8, 1, 128.
      *
-     *  dot not mix with Ostap::Math::LogGammaDist
+     *  @attention Do not confuse with Ostap::Math::LogGammaDist
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-05-11
      */
@@ -918,14 +937,14 @@ namespace Ostap
       /// calculate log-gamma shape
       double pdf        ( const double x ) const ;
       /// calculate log-gamma shape
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getter s
       // ======================================================================
-      double nu         () const  { return m_nu     ; }
-      double lambda     () const  { return m_lambda ; }
-      double lambd      () const  { return m_lambda ; }
-      double alpha      () const  { return m_alpha  ; }
+      inline double nu         () const  { return m_nu     ; }
+      inline double lambda     () const  { return m_lambda ; }
+      inline double lambd      () const  { return m_lambda ; }
+      inline double alpha      () const  { return m_alpha  ; }
       // ======================================================================
     public: // general properties
       // ======================================================================
@@ -1329,10 +1348,7 @@ namespace Ostap
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
       // ======================================================================
-    } ;
-
-
-    
+    } ;    
     // ========================================================================
     /** @class Landau
      *  http://en.wikipedia.org/wiki/Landau_distribution
@@ -3265,8 +3281,8 @@ namespace Ostap
      *  - scale  \f$ s    \f$ 
      *  - shape parameters \f$ p_i \f$
      * 
-     * Cumulative distribution function is defined as
-     * \f[ F(x) = 1 - \mathem{e}^{ - \sum_i \left| p_i \right| \Delta^i } \f]
+     * Cumulative distribution function is defined for \f$x>\mu\f$ as 
+     * \f[ F(x) = 1 - \mathrm{e}^{ - \sum_i \left| p_i \right| \Delta^i } \f]
      * where \f$ \Delta = \log \frac{x-\mu}{s} \f$ 
      *
      *  For standard Benini one has only linear and quadratic terms 
@@ -3282,7 +3298,6 @@ namespace Ostap
         const double               scale = 1 ,               // scale parameter 
         const double               shift = 0 ) ;             // shift parameter 
       // ======================================================================
-      /// two shape parameters: alpha and beta 
       Benini
       ( const double               scale = 1 ,              // scale parameter 
         const double               shift = 0 ) ;            // shift parameter 
@@ -3835,7 +3850,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      /// uniqiue tag
+      /// uniquie tag
       std::size_t tag () const ;
       // ======================================================================
     private:
@@ -3848,6 +3863,299 @@ namespace Ostap
       double m_shift { 0 } ; // shift parameter  
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class Dagum
+     *  Dagum distribution (with bias parameter)
+     *  @see https://en.wikipedia.org/wiki/Dagum_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     */
+    class Dagum
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param p shape parameter \f$ 0 < p \f$
+       *  @param a shape parameter \f$ 0 < a \f$
+       *  @param b scale parameter \f$ 0 < b \f$
+       *  @param shift shift parameter        
+       */
+      Dagum
+      ( const double p     = 1 ,
+	const double a     = 1 ,
+	const double b     = 1 ,
+	const double shift = 0 ) ;       	
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate Dagum distribution 
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Dagum distribution 
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Dagum distribution 
+      double        evaluate   ( const double x ) const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// shape parameter p 
+      inline double  p     () const { return m_p      ; } 
+      /// shape parameter a 
+      inline double  a     () const { return m_a      ; } 
+      /// scale parameter b
+      inline double  b     () const { return m_b      ; } 
+      /// shift parameter 
+      inline double  shift () const { return m_shift  ; } 
+      /// shift parameter 
+      inline double  xmin  () const { return shift () ; } 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set shape parameter p 
+      bool setP     ( const double value ) ;
+      /// set shape parameter a
+      bool setA     ( const double value ) ;
+      /// set scale parameter b
+      bool setB     ( const double value ) ;
+      /// set shift parameter 
+      bool setShift ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value
+      double mean     () const ;
+      /// mode value
+      double mode     () const ;
+      /// median value
+      double median   () const ;
+      /// variance value
+      double variance () const ;
+      /// RMS value
+      double rms      () const ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral () const ;
+      /// get the integral 
+      double integral
+      ( const double low  ,
+	const double high ) const ;
+      /// get CDF
+      double cdf
+      ( const double x    ) const ;
+      /// get quantile \f$ 0 < p < 1 \f$
+      double quantile
+      ( const double u ) const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// uniquie tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// shape parameter p
+      double m_p     { 1 } ; // shape parameter p 
+      /// shape parameter a
+      double m_a     { 1 } ; // shape parameter a
+      /// scale parameter b
+      double m_b     { 1 } ; // scale parameter a
+      /// shift parameter 
+      double m_shift { 0 } ; // shift parameter a
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class BenktanderI
+     *  Variant of Benktander type 1 distribution
+     *  @see https://en.wikipedia.org/wiki/Benktander_type_I_distribution
+     *  - \f$ z = \frac{x-x_0}{\sigma} + 1 \f$ for \f$ 0\le x \f$
+     *  - \f$ b =  p \frac{a(a+1)}{2}\f$ , where \f$ 0 < p \le1 \f$
+     *  - \f$ p = \epsilon + ( 1 - \epsilon ) \cos^2 \delta \f$ 
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     */
+    class BenktanderI
+    {      
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      BenktanderI
+      ( const double a     = 1 ,
+	const double delta = 0 , 
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate Benktander Type I distribution
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Benktander Type I distribution
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Benktander Type I distribution
+      double        evaluate   ( const double x ) const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double a     () const { return m_a      ; } 
+      inline double delta () const { return m_delta  ; } 
+      inline double scale () const { return m_scale  ; } 
+      inline double shift () const { return m_shift  ; }
+      // =====================================================================
+      /// helper parameter "p"
+      inline double p     () const { return m_p      ; }
+      /// original parameter "b" 
+      inline double b     () const { return m_b      ; }
+      /// minimal x 
+      inline double xmin  () const { return shift () ; }
+      // =====================================================================
+    public :
+      // =====================================================================
+      bool setA     ( const double value ) ;
+      bool setDelta ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShift ( const double value ) ;
+      // =====================================================================
+    public: 
+      // =====================================================================
+      /// mean value 
+      double mean     () const ;
+      /// variance value 
+      double variance () const ;
+      /// RMS value 
+      double rms      () const ;
+      // =====================================================================
+    public : 
+      // =====================================================================
+      /// integral 
+      double integral () const ;
+      /// integral 
+      double integral
+      ( const double low  ,
+	const double high ) const ;
+      /// CDF  
+      double cdf 
+      ( const double x    ) const ;
+      // =====================================================================
+    public :
+      // ======================================================================
+      /// unique tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// set the p from delta 
+      void setP ( const double delta ) ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      ///  parameter a 
+      double m_a         { 1 } ; // parameter a
+      ///  parameter delta             
+      double m_delta     { 0 } ; // parameter delta
+      /// scale parameter 
+      double m_scale     { 1 }  ; // scale parameter 
+      /// shift parameter 
+      double m_shift     { 0 }  ; // shift parameter
+      /// parameter p 
+      double m_p         { -1 } ; // parameter p 
+      /// parameter b       
+      double m_b         { -1 } ; // parameter b
+      // ======================================================================
+    } ; 
+    // ========================================================================
+    /** @class BenktanderII
+     *  Variant of Benktander type II distribution
+     *  @see https://en.wikipedia.org/wiki/Benktander_type_II_distribution
+     *  - \f$ z = \frac{x-x_0}{\sigma} + 1 \f$ for \f$ 0\le x \f$
+     *  - \f$ b = \epsilon + ( 1 - \epsilon ) p \f$ , where \f$ 0 < p \le1 \f$
+     *  - \f$ p = \cos^2 \delta \f$ 
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     */
+    class BenktanderII
+    {      
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      BenktanderII
+      ( const double a     = 1 ,
+	const double delta = 0 , 
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate Benktander Type II distribution
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Benktander Type II distribution
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Benktander Type II distribution
+      double        evaluate   ( const double x ) const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double a     () const { return m_a     ; } 
+      inline double delta () const { return m_delta ; } 
+      inline double scale () const { return m_scale ; } 
+      inline double shift () const { return m_shift ; }
+      // =====================================================================
+      /// original parameter "b" 
+      inline double b     () const { return m_b      ; }
+      /// minimal x 
+      inline double xmin  () const { return shift () ; }
+      // =====================================================================
+    public :
+      // =====================================================================
+      bool setA     ( const double value ) ;
+      bool setDelta ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShift ( const double value ) ;
+      // =====================================================================
+    public: 
+      // =====================================================================
+      /// mode 
+      double mode     () const ;
+      // =====================================================================
+    public : 
+      // =====================================================================
+      /// integral 
+      double integral () const ;
+      /// integral 
+      double integral
+      ( const double low  ,
+	const double high ) const ;
+      /// CDF  
+      double cdf 
+      ( const double x    ) const ;
+      // =====================================================================
+    public :
+      // ======================================================================
+      /// unique tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// set the b from delta 
+      void setB ( const double delta ) ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      ///  parameter a 
+      double m_a         {  1 } ; // parameter a
+      ///  parameter delta             
+      double m_delta     {  0 } ; // parameter delta
+      /// scale parameter 
+      double m_scale     {  1 }  ; // scale parameter 
+      /// shift parameter 
+      double m_shift     {  0 }  ; // shift parameter
+      ///  parameter b       
+      double m_b         { -1 } ; // parameter b
+      // ======================================================================
+    } ; 
+    // ========================================================================
+
+
+
+    
     // ========================================================================
     /** @class CutOffGauss 
      *  Useful function for smooth Gaussian cut-off:
