@@ -1007,8 +1007,8 @@ namespace Ostap
       GenBetaPrime
       ( const double alpha = 1 ,
         const double beta  = 5 ,
-	const double p     = 1 ,
-	const double q     = 1 ,	
+	      const double p     = 1 ,
+	      const double q     = 1 ,	
         const double scale = 1 ,
         const double shift = 0 ) ;
       /// destructor
@@ -1087,12 +1087,11 @@ namespace Ostap
       /// the most general form
       GenBeta
       ( const double a     = 1 , // shape 
-	const double b     = 1 , // scale 
-	const double gamma = 0 , // c = sin^2 gamma
-	const double p     = 1 , // shape 
-	const double q     = 1 , // shape 
-	const double shift = 0 ) ;
-      // =======================================================================
+	      const double b     = 1 , // scale 
+	      const double gamma = 0 , // c = sin^2 gamma
+	      const double p     = 1 , // shape 
+	      const double q     = 1 , // shape 
+	      const double shift = 0 ) ;
     public :
       // =======================================================================
       /// evaluate generalized Beta distribution 
@@ -1110,6 +1109,9 @@ namespace Ostap
       inline double q            () const { return m_q     ; } 
       inline double shift        () const { return m_shift ; } 
       inline double scale        () const { return b ()    ; }
+      inline bool   finite_range () const { return 0 < m_a && !m_c1 ; }
+      double        xmin         () const ;
+      double        xmax         () const ;
       // =======================================================================
     public :
       // =======================================================================
@@ -1121,7 +1123,7 @@ namespace Ostap
       bool setShift  ( const double value  ) ;
       bool setPQ
       ( const double valuep ,
-	const double valueq ) ;		       
+	      const double valueq ) ;		       
       // =======================================================================
     public :
       // =======================================================================

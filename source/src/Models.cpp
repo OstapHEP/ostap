@@ -1840,6 +1840,25 @@ bool Ostap::Math::GenBeta::setGamma ( const double value )
   return true ; 
 }
 // ============================================================================
+// xmin
+// ============================================================================
+double Ostap::Math::GenBeta::xmin() const 
+{
+  if ( 0 < m_a || m_c1 ) { return m_shift ; } 
+  return m_shift + m_b * std::pow ( 1.0L - m_c , -1.0L/m_a ) ;
+}
+// ============================================================================
+// xmax
+// ============================================================================
+double Ostap::Math::GenBeta::xmax() const 
+{
+  if ( 0 < m_a && !m_c1 ) 
+  {
+     return m_shift + m_b * std::pow ( 1.0L - m_c , -1.0L/m_a ); 
+  } 
+ return s_POSINF ;
+}
+
 // evaluate GenBeta-distribution
 // ============================================================================
 double Ostap::Math::GenBeta::evaluate ( const double x ) const 
@@ -1848,6 +1867,23 @@ double Ostap::Math::GenBeta::evaluate ( const double x ) const
   const double z = ( x - m_shift ) / m_b ;
   if ( z <= 0  || s_zero ( z )  ) { return 0 ; }             // RETURN 
   //
+  if ( finite_range () ) 
+  {
+    const double zmax = std::pow ( 1.0L - m_c , -1/m_a ) ;
+    if ( zmax <= z ) { return 0.0 ; }  
+  }
+  else if ( m_a < 0 && !m_c1 )
+  {
+    const double zmax = std::pow ( 1.0L - m_c , -1/m_a ) ;
+    if ( z <= zmax ) { return 0.0 ; }  
+  }
+  //
+  if ( m_c1 ) 
+  {
+    const double r   = std::pow ( z , m_a ) ;
+    const double lnr = - m_p * std::log ( 1.0L + 1.0L / r ) - m_q * std::log ( 1.0L + 1.0 * r ) ;
+    return std::abs ( m_a ) / z *  std::exp ( lnr - m_logBpq ) ;
+  }
   return 0 ;
 }
 // ============================================================================
