@@ -1075,6 +1075,98 @@ namespace Ostap
       // ======================================================================
     } ;    
     // ========================================================================
+    /** @class GenBeta
+     *  Generalized Beta distribution (the most general form)
+     *  - \f$ c \equiv \sin^2 \gamma \f$ to ensure \f$ 0 \le c \le 1 \f$ 
+     * @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+     */
+    class GenBeta
+    {
+    public :
+      // =======================================================================
+      /// the most general form
+      GenBeta
+      ( const double a     = 1 , // shape 
+	const double b     = 1 , // scale 
+	const double gamma = 0 , // c = sin^2 gamma
+	const double p     = 1 , // shape 
+	const double q     = 1 , // shape 
+	const double shift = 0 ) ;
+      // =======================================================================
+    public :
+      // =======================================================================
+      /// evaluate generalized Beta distribution 
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate generalized Beta distribution 
+      double        evaluate   ( const double x ) const ;
+      // =======================================================================
+    public :
+      // =======================================================================
+      inline double a            () const { return m_a     ; } 
+      inline double b            () const { return m_b     ; } 
+      inline double c            () const { return m_c     ; } 
+      inline double gamma        () const { return m_gamma ; } 
+      inline double p            () const { return m_p     ; } 
+      inline double q            () const { return m_q     ; } 
+      inline double shift        () const { return m_shift ; } 
+      inline double scale        () const { return b ()    ; }
+      // =======================================================================
+    public :
+      // =======================================================================
+      bool setA      ( const double value  ) ;
+      bool setB      ( const double value  ) ;
+      bool setGamma  ( const double value  ) ;
+      bool setP      ( const double value  ) ;
+      bool setQ      ( const double value  ) ;
+      bool setShift  ( const double value  ) ;
+      bool setPQ
+      ( const double valuep ,
+	const double valueq ) ;		       
+      // =======================================================================
+    public :
+      // =======================================================================
+      /// get the integral 
+      double integral () const ;
+      /// get the integral 
+      double integral
+      ( const double low  ,
+	const double high ) const ; 
+      // =======================================================================
+    public :
+      // ======================================================================
+      /// unique tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      ///  parameter a 
+      double m_a         {  1 } ; // parameter a
+      ///  parameter b 
+      double m_b         {  1 } ; // parameter b
+      ///  parameter c
+      double m_c         { -1 } ; // parameter c
+      ///  parameter p
+      double m_p         {  1 } ; // parameter p
+      ///  parameter q
+      double m_q         {  1 } ; // parameter q
+      ///  shift/location parameter 
+      double m_shift     {  0 } ; // shift/location parameter q
+      /// parameter gamma
+      double m_gamma     {  0 } ; // parameter gamma
+      // ======================================================================
+    private: 
+      // ======================================================================
+      ///  \f$ \log \Beta Beta ( p , q ) 
+      double m_logBpq   { 0     } ; //  \f$ \log \Beta Beta ( p , q )
+      /// \f$ \log b \f$
+      double m_logb     { 0     } ;
+      /// \f$ c = 1 ?\f$
+      bool   m_c1       { false } ; 
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================      
+    } ;    
+    // ========================================================================
     /** @class Landau
      *  http://en.wikipedia.org/wiki/Landau_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

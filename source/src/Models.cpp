@@ -1695,6 +1695,196 @@ std::size_t Ostap::Math::GenBetaPrime::tag () const
 
 
 
+// ============================================================================
+// the most general form
+// ============================================================================
+Ostap::Math::GenBeta::GenBeta
+( const double a     , // shape 
+  const double b     , // scale 
+  const double gamma , // c = sin^2 gamma
+  const double p     , // shape 
+  const double q     , // shape 
+  const double shift )
+  : m_a      ( a  )
+  , m_b      ( std::abs ( b ) )
+  , m_c      ( -1 ) 
+  , m_p      ( std::abs ( p ) )
+  , m_q      ( std::abs ( q ) )
+  , m_gamma  ( gamma )
+  , m_logBpq ( 0     )
+  , m_logb   ( 0     ) 
+{
+  Ostap::Assert ( !s_zero ( m_a )  ,
+		  "a-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( !s_zero ( m_b ) ,  
+		  "b-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( !s_zero ( m_p ) , 
+		  "p-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
+  Ostap::Assert ( !s_zero ( m_q ) , 
+		  "q-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  setGamma ( gamma ) ;
+  setPQ    ( p , q ) ;
+  //
+  m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  m_logb   = std::log ( m_b ) ; 
+  //
+}
+// ============================================================================
+// set parameter A 
+// ============================================================================
+bool Ostap::Math::GenBeta::setA ( const double value ) 
+{
+  if ( s_equal ( value , m_a  ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( value ) ,
+		  "a-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  m_a = value ;
+  return true ;
+}
+// ============================================================================
+// set parameter B
+// ============================================================================
+bool Ostap::Math::GenBeta::setB ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_b  ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( avalue ) ,
+		  "b-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_b    = avalue ;
+  m_logb = std::log ( m_b ) ; 
+  return true ;
+}
+// ============================================================================
+// set parameter P
+// ============================================================================
+bool Ostap::Math::GenBeta::setP ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_p  ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( avalue ) ,
+		  "p-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  m_p      = avalue ;
+  m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  return true ;
+}
+// ============================================================================
+// set parameter Q
+// ============================================================================
+bool Ostap::Math::GenBeta::setQ ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_q  ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( avalue ) ,
+		  "q-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  m_q      = avalue ;
+  m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  return true ;
+}
+// ============================================================================
+// set parameters P&Q
+// ============================================================================
+bool Ostap::Math::GenBeta::setPQ
+( const double valuep ,
+  const double valueq )
+{
+  const double avaluep = std::abs ( valuep ) ;
+  const double avalueq = std::abs ( valueq ) ;
+  if ( s_equal ( avaluep , m_p ) && s_equal ( avalueq , m_q ) ) { return false ; }
+  //
+  Ostap::Assert ( !s_zero ( avaluep ) ,
+		  "p-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( !s_zero ( avalueq ) ,
+		  "q-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_p      = avaluep ;
+  m_q      = avalueq ;
+  //
+  m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  return true ;
+}
+// ============================================================================
+// set parameter Gamma/C
+// ============================================================================
+bool Ostap::Math::GenBeta::setGamma ( const double value )
+{
+  if ( s_equal ( m_gamma , value ) && 0 <= m_c && m_c <= 1 ) { return false ; }
+  //
+  m_gamma = value ;
+  const double sg = std::sin ( m_gamma ) ;
+  //
+  m_c  = sg * sg ;
+  m_c1 = s_equal ( m_c , 1  ) ;
+  //
+  return true ; 
+}
+// ============================================================================
+// evaluate GenBeta-distribution
+// ============================================================================
+double Ostap::Math::GenBeta::evaluate ( const double x ) const 
+{
+  //
+  const double z = ( x - m_shift ) / m_b ;
+  if ( z <= 0  || s_zero ( z )  ) { return 0 ; }             // RETURN 
+  //
+  return 0 ;
+}
+// ============================================================================
+// evaluate integral 
+// ============================================================================
+double Ostap::Math::GenBeta::integral () const { return 1 ; }
+// ============================================================================
+// evaluate integral 
+// ============================================================================
+double Ostap::Math::GenBeta::integral
+( const double low  ,
+  const double high ) const
+{
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high <  low            ) { return - integral ( high , low ) ; }
+  else if ( high <= m_shift        ) { return 0 ; }
+  /// 
+  return 1 ; 
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GenBeta::tag () const 
+{ 
+  static const std::string s_name = "GenBeta" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_a     ,
+				       m_b     ,
+				       m_gamma ,				       
+				       m_p     ,
+				       m_q     ,
+				       m_shift ) ; 
+}
+// ============================================================================
+
+
+
 
 
 // ============================================================================
@@ -2592,9 +2782,6 @@ std::size_t Ostap::Math::BatesShape::tag () const
   static const std::string s_name = "BatesShape" ;
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_sigma , n () ) ;
 }
-
-
-
 
 // ============================================================================
 // Generalized Pareto Distribution
