@@ -13,6 +13,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Models.h"
+#include "Ostap/PhaseSpacePol.h"
 #include "Ostap/Bernstein2D.h"
 #include "Ostap/Integrator.h"
 // ============================================================================

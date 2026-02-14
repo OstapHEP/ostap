@@ -489,10 +489,9 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace2 ;    // integration workspace
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class PhaseSpaceNL
-     *  Function epresenting the approximation for
+     *  Function representing the approximation for
      *  the mass distribution of \f$l\f$-particles from \f$n\f$-body
      *  phase space decay:
      *  for  \f$ 2\le l < n \$ it is defined as  
@@ -606,10 +605,13 @@ namespace Ostap
       /** @enum Case
        *  The actual case of the phase space 
        */
-      enum Case { Generic    , 
-                  TwoBody    , 
-                  ThreeBody  , 
-                  ThreeBodyS } ;
+      enum Case
+      {
+	Generic    , 
+	TwoBody    , 
+	ThreeBody  , 
+	ThreeBodyS
+      } ;
       // ======================================================================
     public:
       // ======================================================================

@@ -18,6 +18,8 @@
 #include "Ostap/Positive.h"
 #include "Ostap/Rational.h"
 #include "Ostap/HistoInterpolators.h"
+#include "Ostap/Spectra.h"
+#include "Ostap/AdHocShapes.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -10167,6 +10169,101 @@ namespace Ostap
       mutable Ostap::Math::GEV  m_gev {} ;  // the function
       // ======================================================================
     } ;
+
+
+    
+    // ========================================================================
+    /** @class MPERT
+     *  Modified PERT distribution 
+     *  @see https://en.wikipedia.org/wiki/PERT_distribution
+     *  @see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
+     *  @see Ostap::Math::MPERT
+     */
+    class MPERT: public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::MPERT, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// general
+      MPERT
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          xi        ,
+        RooAbsReal&          gamma     , 
+        const double         xmin      , 
+        const double         xmax      ) ;
+      /// get xmin/xmax from variable limits 
+      MPERT
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsRealLValue&    x         ,
+        RooAbsReal&          xi        ,
+        RooAbsReal&          gamma     ) ;
+      /// copy
+      MPERT
+      ( const MPERT&         right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~MPERT () ;
+      /// clone
+      MPERT* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      MPERT  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::MPERT& function () const { setPars () ; return m_mpert ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& xi     () const { return m_xi    .arg  () ; }
+      const RooAbsReal& gamma  () const { return m_gamma .arg  () ; }
+      double            xmin   () const { return m_mpert .xmin () ; }
+      double            xmax   () const { return m_mpert .xmax () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_xi    {} ;
+      RooRealProxy m_gamma {} ;
+      RooRealProxy m_shape {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::MPERT  m_mpert {} ;  // the function
+      // ======================================================================
+    } ;    
     // ========================================================================
     /** @class FisherZ
      *  Fisher's Z-distirbution with additional location-scale parameters 
@@ -10350,50 +10447,255 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class MPERT
-     *  Modified PERT distribution 
-     *  @see https://en.wikipedia.org/wiki/PERT_distribution
-     *  @see https://www.vosesoftware.com/riskwiki/ModifiedPERTdistribution.php
-     *  @see Ostap::Math::MPERT
+    
+    // ========================================================================
+    /** @class Freshet
+     *  @see https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
      */
-    class MPERT: public RooAbsPdf 
+    class Frechet : public RooAbsPdf 
     {
-      // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::MPERT, 1) ;
+      /// full constructor 
+      Frechet
+      ( const char* name ,
+	const char* title , 
+	RooAbsReal& x     ,
+	RooAbsReal& alpha ,
+	RooAbsReal& scale ,
+	RooAbsReal& shift ) ;
       // ======================================================================
-    public:
+      /// full constructor 
+      Frechet
+      ( const char*  name  ,
+	const char*  title , 
+	RooAbsReal&  x     ,
+	RooAbsReal&  alpha ,
+	const double scale = 1 ,
+	const double shift = 0 ) ;
       // ======================================================================
-      /// general
-      MPERT
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          xi        ,
-        RooAbsReal&          gamma     , 
-        const double         xmin      , 
-        const double         xmax      ) ;
-      /// get xmin/xmax from variable limits 
-      MPERT
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsRealLValue&    x         ,
-        RooAbsReal&          xi        ,
-        RooAbsReal&          gamma     ) ;
-      /// copy
-      MPERT
-      ( const MPERT&         right     ,
-        const char*          name = 0  ) ;
-      /// destructor
-      virtual ~MPERT () ;
-      /// clone
-      MPERT* clone ( const char* name ) const override;
+      /// copy constructor
+      Frechet
+      ( const Frechet& right             ,
+	const char*    newname = nullptr ) ;
+      /// virtual destructor
+      virtual ~Frechet() ;
+      /// clone/virtual constructor
+      Frechet* clone ( const char* name ) const override ;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default constructor, needed just for proper (de)serialization
-      MPERT  () {} ;
+      Frechet () {} ; // fake default constructor, needed just for proper (de)serialization      
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Frechet& frechet  () const { setPars () ; return m_frechet  ; }
+      /// access to underlying function
+      const Ostap::Math::Frechet& function () const {              return frechet () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& alpha  () const { return m_alpha .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_alpha {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shift {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Frechet  m_frechet {} ;  // the function
+      // ======================================================================
+    } ;
+
+    // ========================================================================
+    /** @class Dagum
+     *  Dagum distribution (with bias parameter)
+     *  @see https://en.wikipedia.org/wiki/Dagum_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     */
+    class Dagum : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param p shape parameter \f$ 0 < p \f$
+       *  @param a shape parameter \f$ 0 < a \f$
+       *  @param b scale parameter \f$ 0 < b \f$
+       *  @param shift shift parameter        
+       */
+      Dagum
+      ( const char*  name  ,
+        const char*  title ,
+	RooAbsReal&  x     ,
+	RooAbsReal&  p     ,
+	RooAbsReal&  a     ,
+	RooAbsReal&  b     ,
+	RooAbsReal&  shift ) ;
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param p shape parameter \f$ 0 < p \f$
+       *  @param a shape parameter \f$ 0 < a \f$
+       *  @param b scale parameter \f$ 0 < b \f$
+       *  @param shift shift parameter        
+       */
+      Dagum
+      ( const char*  name      ,
+        const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  p         ,
+	RooAbsReal&  a         ,
+	RooAbsReal&  b         ,
+	const double shift = 0 ) ; 
+      // ======================================================================
+      /// copy constructor
+      Dagum
+      ( const Dagum  & right             ,
+	const char*    newname = nullptr ) ;
+      /// virtual destructor
+      virtual ~Dagum() ;
+      /// clone/virtual constructor
+      Dagum * clone ( const char* name ) const override ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      Dagum  () {} ; // fake default constructor, needed just for proper (de)serialization      
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Dagum& dagum    () const { setPars () ; return m_dagum  ; }
+      /// access to underlying function
+      const Ostap::Math::Dagum& function () const {              return dagum () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& p      () const { return m_p     .arg  () ; }
+      const RooAbsReal& a      () const { return m_a     .arg  () ; }
+      const RooAbsReal& b      () const { return m_b     .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_p     {} ;
+      RooRealProxy m_a     {} ;
+      RooRealProxy m_b     {} ;
+      RooRealProxy m_shift {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Dagum  m_dagum {} ;  // the function
+      // ======================================================================
+    } ;    
+    // ========================================================================
+    /** @class BenktanderI
+     *  Variant of Benktander type 1 distribution
+     *  @see https://en.wikipedia.org/wiki/Benktander_type_I_distribution
+     *  - \f$ z = \frac{x-x_0}{\sigma} + 1 \f$ for \f$ 0\le x \f$
+     *  - \f$ b = p \frac{a(a+1)}{2}\f$ , where \f$ 0 < p \le 1 \f$
+     *  - \f$ p = 1 / \sqrt{ r^2 + 1 } \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     */
+    class BenktanderI : public RooAbsPdf 
+    {      
+      // ======================================================================
+    public :      
+      // ======================================================================
+      /// constructor from all parameters
+      BenktanderI
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  a      ,
+	RooAbsReal&  r      ,
+	RooAbsReal&  scale  ,
+	RooAbsReal& shift   ) ;
+      // ======================================================================
+      /// constructor from all parameters
+      BenktanderI
+      ( const char*  name      ,
+	const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  a         ,
+	RooAbsReal&  r         ,
+	const double scale = 1 , 
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy constructor
+      BenktanderI 
+      ( const BenktanderI& right             ,
+	const char*        newname = nullptr ) ;
+      /// virtual destructor
+      virtual ~BenktanderI() ;
+      /// clone/virtual constructor
+      BenktanderI* clone ( const char* name ) const override ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      BenktanderI() {} ; // fake default constructor, needed just for proper (de)serialization      
       // ======================================================================
     public:
       // ======================================================================
@@ -10418,27 +10720,125 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::MPERT& function () const { setPars () ; return m_mpert ; }
-      // ======================================================================
-    public:
-      // ======================================================================
+      const Ostap::Math::BenktanderI& benktanderI () const { setPars () ; return m_b1; }
+      /// access to underlying function
+      const Ostap::Math::BenktanderI& function    () const {              return benktanderI() ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
       const RooAbsReal& x      () const { return m_x     .arg  () ; }
-      const RooAbsReal& xi     () const { return m_xi    .arg  () ; }
-      const RooAbsReal& gamma  () const { return m_gamma .arg  () ; }
-      double            xmin   () const { return m_mpert .xmin () ; }
-      double            xmax   () const { return m_mpert .xmax () ; }
+      const RooAbsReal& a      () const { return m_a     .arg  () ; }
+      const RooAbsReal& r      () const { return m_r     .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
       // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x     {} ;
-      RooRealProxy m_xi    {} ;
-      RooRealProxy m_gamma {} ;
-      RooRealProxy m_shape {} ;
+      RooRealProxy m_a     {} ;
+      RooRealProxy m_r     {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shift {} ;
       // ======================================================================
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::MPERT  m_mpert {} ;  // the function
+      mutable Ostap::Math::BenktanderI m_b1 {} ;  // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BenktanderII
+     *  Variant of Benktander type II distribution
+     *  @see https://en.wikipedia.org/wiki/Benktander_type_II_distribution
+     *  - \f$ z = \frac{x-x_0}{\sigma} + 1 \f$ for \f$ 0\le x \f$
+     *  - \f$ b = 1 / \sqrt{ r^1 + 1 }  \f$ 
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+     */
+    class BenktanderII : public RooAbsPdf
+    {
+    public :      
+      // ======================================================================
+      /// constructor from all parameters
+      BenktanderII
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  a      ,
+	RooAbsReal&  r      ,
+	RooAbsReal&  scale  ,
+	RooAbsReal&  shift   ) ;
+      // ======================================================================
+      /// constructor from all parameters
+      BenktanderII
+      ( const char*  name      ,
+	const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  a         ,
+	RooAbsReal&  r         ,
+	const double scale = 1 , 
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy constructor
+      BenktanderII 
+      ( const BenktanderII& right             ,
+	const char*         newname = nullptr ) ;
+      /// virtual destructor
+      virtual ~BenktanderII () ;
+      /// clone/virtual constructor
+      BenktanderII* clone ( const char* name ) const override ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      BenktanderII () {} ; // fake default constructor, needed just for proper (de)serialization      
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::BenktanderII& benktanderII () const { setPars () ; return m_b2 ; }
+      /// access to underlying function
+      const Ostap::Math::BenktanderII& function     () const {              return benktanderII() ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& a      () const { return m_a     .arg  () ; }
+      const RooAbsReal& r      () const { return m_r     .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_a     {} ;
+      RooRealProxy m_r     {} ;
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shift {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::BenktanderII m_b2 {} ;  // the function
       // ======================================================================
     } ;
     // ========================================================================

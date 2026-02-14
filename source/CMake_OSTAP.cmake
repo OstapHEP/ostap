@@ -5,6 +5,7 @@ add_library(ostap SHARED src/format.cpp
                          src/AddBranch.cpp
                          src/AddBuffer.cpp
                          src/AddVars.cpp
+                         src/AdHocShapes.cpp
                          src/BLOB.cpp
                          src/BSpline.cpp
                          src/Bernstein.cpp
@@ -29,7 +30,7 @@ add_library(ostap SHARED src/format.cpp
                          src/DataFrameUtils.cpp
                          src/Differences.cpp
                          src/ECDF.cpp
-			             src/EffEntity.cpp
+			 src/EffEntity.cpp
                          src/EPDF.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
@@ -67,21 +68,21 @@ add_library(ostap SHARED src/format.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
                          src/MatrixUtils.cpp
-                         src/Moebius.cpp                         
                          src/Misc.cpp
                          src/Models.cpp
+                         src/Moebius.cpp                         			 
                          src/Models2D.cpp
                          src/Models3D.cpp
-                         src/Moments.cpp
+                         src/Moments.cpp			 
                          src/MoreMath.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-            		     src/Names.cpp 
+            		 src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp			 
                          src/Ostap.cpp
-			             src/Quantile.cpp
+			 src/Quantile.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
                          src/Peaks.cpp
@@ -89,6 +90,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PDFs2D.cpp
                          src/PDFs3D.cpp
                          src/PhaseSpace.cpp
+                         src/PhaseSpacePol.cpp
                          src/Piecewise.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
@@ -114,6 +116,7 @@ add_library(ostap SHARED src/format.cpp
                          src/RooFun.cpp
                          src/SFactor.cpp
                          src/SPLOT.cpp
+                         src/Spectra.cpp
                          src/StatEntity.cpp
                          src/Statistic.cpp
                          src/StatVar.cpp
@@ -137,7 +140,7 @@ add_library(ostap SHARED src/format.cpp
                          src/owens.cpp      
                          src/hcubature.cpp                         
                          src/pcubature.cpp
-			             src/hstats.cpp      
+			 src/hstats.cpp      
                         )
 
 target_compile_features ( ostap PUBLIC cxx_constexpr                      )

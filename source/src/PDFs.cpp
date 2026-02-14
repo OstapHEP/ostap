@@ -12294,6 +12294,460 @@ Double_t Ostap::Models::BirnbaumSaunders::analyticalIntegral
 }
 // ============================================================================
 
+
+
+// ============================================================================
+Ostap::Models::Frechet::Frechet
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_alpha   ( "!alpha" , "alpha-parameter"  , this , alpha )
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_frechet () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::Frechet::Frechet
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          alpha     ,
+  const double         scale     ,
+  const double         shift     )
+  : Frechet ( name  ,
+	      title ,
+	      x     ,
+	      alpha ,
+	      RooFit::RooConst ( scale ) ,
+	      RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Frechet::Frechet
+( const Ostap::Models::Frechet&  right ,      
+  const char*                    name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     ) 
+  , m_alpha ( "!alpha" , this , right.m_alpha ) 
+  , m_scale ( "!scale" , this , right.m_scale ) 
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_frechet ( right.m_frechet ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::Frechet::~Frechet() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Frechet*
+Ostap::Models::Frechet::clone( const char* name ) const 
+{ return new Ostap::Models::Frechet ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Frechet::setPars () const 
+{
+  m_frechet.setAlpha  ( m_alpha ) ;
+  m_frechet.setScale  ( m_scale ) ;
+  m_frechet.setShift  ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Frechet::evaluate() const 
+{
+  setPars () ;
+  return m_frechet ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Frechet::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Frechet::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                  ,
+                  "Invalid integration code" ,
+                  "Ostap::Models::Frechet"   ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_frechet.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::Frechet::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Frechet::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code               ,
+                  "Invalid MaxVal code"   ,
+                  "Ostap::Models::Frechet"  ,
+                  INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_frechet ( m_frechet.mode ()  ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+Ostap::Models::Dagum::Dagum
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          p         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          b         ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_p       ( "!p"     , "p-parameter"      , this , p     )
+  , m_a       ( "!a"     , "a-parameter"      , this , a     )
+  , m_b       ( "!b"     , "b-parameter"      , this , b     )    
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_dagum   () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::Dagum::Dagum
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          p         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          b         ,
+  const double         shift     )
+  : Dagum ( name  ,
+	    title ,
+	    x     ,
+	    p     ,
+	    a     ,
+	    b     , 
+	    RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Dagum::Dagum
+( const Ostap::Models::Dagum&  right ,      
+  const char*                    name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_p     ( "!p"     , this , right.m_p     )
+  , m_a     ( "!a"     , this , right.m_a     )
+  , m_b     ( "!b"     , this , right.m_b     )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_dagum ( right.m_dagum ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::Dagum::~Dagum() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Dagum*
+Ostap::Models::Dagum::clone( const char* name ) const 
+{ return new Ostap::Models::Dagum ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Dagum::setPars () const 
+{
+  m_dagum.setP     ( m_p ) ;
+  m_dagum.setA     ( m_a ) ;
+  m_dagum.setB     ( m_b  ) ;
+  m_dagum.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Dagum::evaluate() const 
+{
+  setPars () ;
+  return m_dagum ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Dagum::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Dagum::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                  ,
+                  "Invalid integration code" ,
+                  "Ostap::Models::Dagum"     ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_dagum.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::Dagum::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::Dagum::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code               ,
+                  "Invalid MaxVal code"   ,
+                  "Ostap::Models::Dagum"  ,
+                  INVALID_MAXVAL_CODE     , __FILE__ , __LINE__  ) ;
+  setPars() ;
+  return 1.01 * m_dagum ( m_dagum.mode ()  ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+Ostap::Models::BenktanderI::BenktanderI
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          r         ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_a       ( "!a"     , "a-parameter"      , this , a     )
+  , m_r       ( "!r"     , "r-parameter"      , this , r     )
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_b1   () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::BenktanderI::BenktanderI
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          r         ,
+  const double         scale     , 
+  const double         shift     )
+  : BenktanderI ( name  ,
+		  title ,
+		  x     ,
+		  a     ,
+		  r     ,
+		  RooFit::RooConst ( scale ) ,
+		  RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::BenktanderI::BenktanderI
+( const Ostap::Models::BenktanderI& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_a     ( "!a"     , this , right.m_a     )
+  , m_r     ( "!r"     , this , right.m_r     )
+  , m_scale ( "!scale" , this , right.m_scale )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_b1( right.m_b1 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::BenktanderI::~BenktanderI() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BenktanderI*
+Ostap::Models::BenktanderI::clone ( const char* name ) const 
+{ return new Ostap::Models::BenktanderI ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::BenktanderI::setPars () const 
+{
+  m_b1.setA     ( m_a     ) ;
+  m_b1.setR     ( m_r     ) ;
+  m_b1.setScale ( m_scale ) ;
+  m_b1.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::BenktanderI::evaluate() const 
+{
+  setPars () ;
+  return m_b1 ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::BenktanderI::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::BenktanderI::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                  ,
+                  "Invalid integration code" ,
+                  "Ostap::Models::BenktanderI" ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_b1.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+
+
+// ============================================================================
+Ostap::Models::BenktanderII::BenktanderII
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          r         ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_a       ( "!a"     , "a-parameter"      , this , a     )
+  , m_r       ( "!r"     , "r-parameter"      , this , r     )
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_b2   () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::BenktanderII::BenktanderII
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          r         ,
+  const double         scale     , 
+  const double         shift     )
+  : BenktanderII ( name  ,
+		   title ,
+		   x     ,
+		   a     ,
+		   r     ,
+		   RooFit::RooConst ( scale ) ,
+		   RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::BenktanderII::BenktanderII
+( const Ostap::Models::BenktanderII& right ,      
+  const char*                        name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_a     ( "!a"     , this , right.m_a     )
+  , m_r     ( "!r"     , this , right.m_r     )
+  , m_scale ( "!scale" , this , right.m_scale )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_b2 ( right.m_b2 ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::BenktanderII::~BenktanderII () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BenktanderII*
+Ostap::Models::BenktanderII::clone ( const char* name ) const 
+{ return new Ostap::Models::BenktanderII ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::BenktanderII::setPars () const 
+{
+  m_b2.setA     ( m_a     ) ;
+  m_b2.setR     ( m_r     ) ;
+  m_b2.setScale ( m_scale ) ;
+  m_b2.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::BenktanderII::evaluate() const 
+{
+  setPars () ;
+  return m_b2 ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::BenktanderII::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::BenktanderII::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                  ,
+                  "Invalid integration code" ,
+                  "Ostap::Models::BenktanderII" ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_b2.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+
+
 // ============================================================================
 Ostap::Models::Rational::Rational
 ( const char*          name      , 
@@ -12640,6 +13094,10 @@ ClassImp(Ostap::Models::GEV                )
 ClassImp(Ostap::Models::MPERT              )
 ClassImp(Ostap::Models::FisherZ            )
 ClassImp(Ostap::Models::BirnbaumSaunders   )
+ClassImp(Ostap::Models::Freshet            )
+ClassImp(Ostap::Models::Dagum              )
+ClassImp(Ostap::Models::BenktanderI        )
+ClassImp(Ostap::Models::BenktanderII       )
 ClassImp(Ostap::Models::Rational           )
 ClassImp(Ostap::Models::Meixner            )
 // ============================================================================

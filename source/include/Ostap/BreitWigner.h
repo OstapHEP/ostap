@@ -15,6 +15,7 @@
 // ============================================================================
 #include "Ostap/Workspace.h"
 #include "Ostap/PhaseSpace.h"
+#include "Ostap/PhaseSpacePol.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/Models.h"
 // ============================================================================

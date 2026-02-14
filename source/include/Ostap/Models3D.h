@@ -16,6 +16,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Models.h"
+#include "Ostap/PhaseSpacePol.h"
 #include "Ostap/Integrator.h"
 // ============================================================================
 /// forwards declarations 
