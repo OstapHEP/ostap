@@ -201,11 +201,6 @@ std::size_t Ostap::Math::Gumbel::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_beta ) ; 
 }// ============================================================================
  
-
-
-
-
-
 // ============================================================================
 // Gram-Charlier type A
 // ============================================================================
@@ -224,10 +219,6 @@ Ostap::Math::GramCharlierA::GramCharlierA
   , m_workspace ()
 //
 {}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::GramCharlierA::~GramCharlierA() {}
 // ============================================================================
 namespace 
 { 
@@ -614,12 +605,7 @@ Ostap::Math::Amoroso::Amoroso
   , m_theta ( theta              ) 
   , m_alpha ( std::abs ( alpha ) ) 
   , m_beta  (            beta    ) 
-{
-}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::Amoroso::~Amoroso(){}
+{}
 // ============================================================================
 bool Ostap::Math::Amoroso::setA      ( const double value ) 
 {
@@ -906,10 +892,6 @@ Ostap::Math::LogGamma::LogGamma
 {
 }
 // ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::LogGamma::~LogGamma(){}
-// ============================================================================
 bool Ostap::Math::LogGamma::setNu   ( const double value ) 
 {
   if ( s_equal ( value , m_nu ) ) { return false ; }
@@ -1008,9 +990,6 @@ std::size_t Ostap::Math::LogGamma::tag () const
 }
 // ============================================================================
 
-
-
-
 // ============================================================================
 // Beta
 // ============================================================================
@@ -1040,10 +1019,6 @@ Ostap::Math::Beta::Beta
                   "Ostap::Math::Beta"                         ,
                   INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
 }
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::Beta::~Beta (){}
 // ============================================================================
 bool Ostap::Math::Beta::setAlpha ( const double value ) 
 {
@@ -1219,8 +1194,6 @@ std::size_t Ostap::Math::Beta::tag () const
 }
 // ============================================================================
 
-
-
 // ============================================================================
 // Beta' 
 // ============================================================================
@@ -1253,10 +1226,6 @@ Ostap::Math::BetaPrime::BetaPrime
   // 
   m_aux = 1.0 / Ostap::Math::beta ( m_alpha , m_beta ) ;
 }
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::BetaPrime::~BetaPrime (){}
 // ============================================================================
 bool Ostap::Math::BetaPrime::setAlpha ( const double value ) 
 {
@@ -1545,10 +1514,6 @@ Ostap::Math::GenBetaPrime::GenBetaPrime
   m_aux = 1.0 / Ostap::Math::beta ( m_alpha , m_beta ) ;
 }
 // ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::GenBetaPrime::~GenBetaPrime (){}
-// ============================================================================
 bool Ostap::Math::GenBetaPrime::setAlpha ( const double value ) 
 {
   const double value_ = std::abs ( value ) ;
@@ -1705,14 +1670,16 @@ Ostap::Math::GenBeta::GenBeta
   const double p     , // shape 
   const double q     , // shape 
   const double shift )
-  : m_a      ( a  )
-  , m_b      ( std::abs ( b ) )
-  , m_c      ( -1 ) 
-  , m_p      ( std::abs ( p ) )
-  , m_q      ( std::abs ( q ) )
-  , m_gamma  ( gamma )
-  , m_logBpq ( 0     )
-  , m_logb   ( 0     ) 
+  : m_a      (  a  )
+  , m_b      (  std::abs ( b ) )
+  , m_c      (  -1 ) 
+  , m_p      (  std::abs ( p ) )
+  , m_q      (  std::abs ( q ) )
+  , m_gamma  (  gamma )
+  , m_logBpq (  0     )
+  , m_logb   (  0     ) 
+  , m_c1     (  false ) 
+  , m_ac     ( -1     ) 
 {
   Ostap::Assert ( !s_zero ( m_a )  ,
 		  "a-parameter must be non-zero!"     ,
@@ -1735,7 +1702,9 @@ Ostap::Math::GenBeta::GenBeta
   setPQ    ( p , q ) ;
   //
   m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
-  m_logb   = std::log ( m_b ) ; 
+  m_logb   = std::log ( m_b     ) ;
+  m_c1     = s_equal  ( m_c , 1 ) ;
+  m_ac     = m_c1 ? -1.0 : std::pow ( 1.0L - m_c , 1.0L / m_a ) ;
   //
 }
 // ============================================================================
@@ -1743,13 +1712,30 @@ Ostap::Math::GenBeta::GenBeta
 // ============================================================================
 bool Ostap::Math::GenBeta::setA ( const double value ) 
 {
-  if ( s_equal ( value , m_a  ) ) { return false ; }
+  if ( s_equal ( value , m_a ) ) { return false ; }
   Ostap::Assert ( !s_zero ( value ) ,
 		  "a-parameter must be non-zero!"     ,
 		  "Ostap::Math::GenBeta"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  m_a = value ;
+  m_a  = value ;
+  m_ac = m_c1 ? -1.0 : std::pow ( 1.0L - m_c , 1.0L / m_a ) ;
   return true ;
+}
+// ============================================================================
+// set parameter Gamma/C
+// ============================================================================
+bool Ostap::Math::GenBeta::setGamma ( const double value )
+{
+  if ( s_equal ( m_gamma , value ) && 0 <= m_c && m_c <= 1 ) { return false ; }
+  //
+  m_gamma = value ;
+  const double sin_g = std::sin ( 0.5 * M_PI * m_gamma ) ;
+  //
+  m_c  = sin_g * sin_g ;
+  m_c1 = s_equal ( m_c , 1.0 ) ;
+  m_ac = m_c1  ? -1.0 : std::pow ( 1.0L - m_c , 1 / m_a ) ;
+  //
+  return true ; 
 }
 // ============================================================================
 // set parameter B
@@ -1778,6 +1764,7 @@ bool Ostap::Math::GenBeta::setP ( const double value )
 		  "p-parameter must be non-zero!"     ,
 		  "Ostap::Math::GenBeta"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
   m_p      = avalue ;
   m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
   return true ;
@@ -1793,6 +1780,7 @@ bool Ostap::Math::GenBeta::setQ ( const double value )
 		  "q-parameter must be non-zero!"     ,
 		  "Ostap::Math::GenBeta"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
   m_q      = avalue ;
   m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
   return true ;
@@ -1820,24 +1808,8 @@ bool Ostap::Math::GenBeta::setPQ
   //
   m_p      = avaluep ;
   m_q      = avalueq ;
-  //
   m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
   return true ;
-}
-// ============================================================================
-// set parameter Gamma/C
-// ============================================================================
-bool Ostap::Math::GenBeta::setGamma ( const double value )
-{
-  if ( s_equal ( m_gamma , value ) && 0 <= m_c && m_c <= 1 ) { return false ; }
-  //
-  m_gamma = value ;
-  const double sg = std::sin ( m_gamma ) ;
-  //
-  m_c  = sg * sg ;
-  m_c1 = s_equal ( m_c , 1  ) ;
-  //
-  return true ; 
 }
 // ============================================================================
 // xmin
@@ -1845,20 +1817,17 @@ bool Ostap::Math::GenBeta::setGamma ( const double value )
 double Ostap::Math::GenBeta::xmin() const 
 {
   if ( 0 < m_a || m_c1 ) { return m_shift ; } 
-  return m_shift + m_b * std::pow ( 1.0L - m_c , -1.0L/m_a ) ;
+  return m_shift + m_b / m_ac ;
 }
 // ============================================================================
 // xmax
 // ============================================================================
 double Ostap::Math::GenBeta::xmax() const 
 {
-  if ( 0 < m_a && !m_c1 ) 
-  {
-     return m_shift + m_b * std::pow ( 1.0L - m_c , -1.0L/m_a ); 
-  } 
- return s_POSINF ;
+  if ( 0 < m_a && !m_c1 )  { return m_shift + m_b / m_ac ;  } 
+  return s_POSINF ;
 }
-
+// ============================================================================
 // evaluate GenBeta-distribution
 // ============================================================================
 double Ostap::Math::GenBeta::evaluate ( const double x ) const 
@@ -1867,24 +1836,25 @@ double Ostap::Math::GenBeta::evaluate ( const double x ) const
   const double z = ( x - m_shift ) / m_b ;
   if ( z <= 0  || s_zero ( z )  ) { return 0 ; }             // RETURN 
   //
-  if ( finite_range () ) 
-  {
-    const double zmax = std::pow ( 1.0L - m_c , -1/m_a ) ;
-    if ( zmax <= z ) { return 0.0 ; }  
-  }
-  else if ( m_a < 0 && !m_c1 )
-  {
-    const double zmax = std::pow ( 1.0L - m_c , -1/m_a ) ;
-    if ( z <= zmax ) { return 0.0 ; }  
-  }
+  if      (                   x <= xmin () ) { return 0 ; }
+  else if ( finite_range() && xmax() <= x  ) { return 0 ; }
   //
+  const long double za   = std::pow ( z * 1.0L , m_a * 1.0L ) ;
   if ( m_c1 ) 
   {
-    const double r   = std::pow ( z , m_a ) ;
-    const double lnr = - m_p * std::log ( 1.0L + 1.0L / r ) - m_q * std::log ( 1.0L + 1.0 * r ) ;
-    return std::abs ( m_a ) / z *  std::exp ( lnr - m_logBpq ) ;
+    const double lnR = - m_p * std::log ( 1.0L + 1.0L / za ) - m_q * std::log ( 1.0L + 1.0 * za ) ;
+    return std::abs ( m_a ) / m_b *  std::exp ( lnR - m_logBpq ) / z ;
   }
-  return 0 ;
+  //
+  const long double d = 1.0L - ( 1.0L - m_c ) * za ;
+  if ( d <= 0 || s_zero ( d ) ) { return 0 ; } 
+  //
+  const long double l1 =       std::log ( d              ) ;
+  const long double l2 =       std::log ( 1.0 + m_c * za ) ;
+  const long double l3 = m_a * std::log ( z * 1.0L       ) ;
+  //
+  const double lnR = -m_p * l3 + ( m_q - 1 ) *  l1 - ( m_q + m_p ) * l2 ;  
+  return std::abs ( m_a ) / m_b *  std::exp ( lnR - m_logBpq ) / z ;
 }
 // ============================================================================
 // evaluate integral 
@@ -1900,8 +1870,68 @@ double Ostap::Math::GenBeta::integral
   if      ( s_equal ( low , high ) ) { return 0 ; }
   else if ( high <  low            ) { return - integral ( high , low ) ; }
   else if ( high <= m_shift        ) { return 0 ; }
-  /// 
-  return 1 ; 
+  ///
+  const double xmn = xmin () ;
+  if       ( high <= xmn               ) { return 0 ; }
+  else if  ( low  <  xmn && xmn < high ) { return integral ( xmn , high ) ; }
+  //
+  const double d2 = high - low ;
+  if ( finite_range () )
+  {
+    const double xmx = xmax () ;
+    if      ( xmx <= low              ) { return 0 ; }
+    else if ( low < xmx && xmx < high ) { return integral ( low , xmx  ) ; }
+    //
+    const double d1 = xmx  - xmn ;
+    // split ...
+    if ( d1 < 10 * d2  )
+    {
+      const double mid = 0.5 * ( low + high ) ;
+      return integral ( low , mid ) + integral ( mid , high ) ;
+    }
+  }
+  else
+  {
+    // split 
+    if ( m_b < 10 * d2 )
+    {
+      const double mid = 0.5 * ( low + high ) ;
+      return integral ( low , mid ) + integral ( mid , high ) ;      
+    }
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<GenBeta> s_integrator ;
+  static const char s_message[] = "Integral(GenBeta)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag  () , 
+      &F      , 
+      low     , high ,            // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size()        , // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the CDF 
+// ============================================================================
+double Ostap::Math::GenBeta::cdf 
+( const double x    ) const
+{
+  const double xmn = xmin () ;
+  if      ( x <= xmn                       ) { return 0 ; }
+  else if ( finite_range() && xmax () <= x ) { return 0 ; }
+  return integral ( xmn , x ) ;
 }
 // ============================================================================
 // get the tag
@@ -1919,10 +1949,6 @@ std::size_t Ostap::Math::GenBeta::tag () const
 }
 // ============================================================================
 
-
-
-
-
 // ============================================================================
 // Landau
 // ============================================================================
@@ -1935,10 +1961,6 @@ Ostap::Math::Landau::Landau
   : m_scale ( scale )
   , m_shift ( shift )
 {}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::Math::Landau::~Landau (){}
 // ============================================================================
 bool Ostap::Math::Landau::setScale ( const double value ) 
 {
@@ -2335,7 +2357,7 @@ double Ostap::Math::Rice::variance   () const
 // ============================================================================
 /// evaluate the function
 // ============================================================================
-double Ostap::Math::Rice::operator() ( const double x ) const 
+double Ostap::Math::Rice::evaluate ( const double x ) const 
 {
   if ( x <= m_shift ) { return 0 ; }
   const double s2 = m_varsigma * m_varsigma ;
@@ -2345,7 +2367,6 @@ double Ostap::Math::Rice::operator() ( const double x ) const
     ( dx / s2 ) * std::exp ( -0.5 *  (dx * dx + n2 ) / s2 ) * 
     Ostap::Math::bessel_In ( 0 , dx * m_nu / s2 ) ; 
 }
-
 // ============================================================================
 // get the integral
 // ============================================================================
@@ -4633,6 +4654,524 @@ std::size_t Ostap::Math::MPERT::tag () const
 }
 // ============================================================================
 
+
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Math::LogNormal::LogNormal
+( const double shape ,
+  const double scale ,
+  const double shift )
+  : m_shape ( std::abs ( shape ) )
+  , m_scale ( std::abs ( scale ) )
+  , m_shift ( std::abs ( scale ) )
+{
+  Ostap::Assert ( m_shape , 
+                  "Shape parameter must be positive!"     ,
+                  "Ostap::Math::LogNormal"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //  
+  Ostap::Assert ( m_scale , 
+                  "Scale parameter must be positive!"     ,
+                  "Ostap::Math::LogNormal"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //  
+}
+// ============================================================================
+// set shape 
+// ============================================================================
+bool Ostap::Math::LogNormal::setShape ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_shape ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue , 
+                  "Shape parameter must be positive!"     ,
+                  "Ostap::Math::LogNormal"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_shape = avalue ; 
+  return true ;
+} 
+// ============================================================================
+// set scale 
+// ============================================================================
+bool Ostap::Math::LogNormal::setScale ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue , 
+                  "Scale parameter must be positive!"     ,
+                  "Ostap::Math::LogNormal"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_scale = avalue ; 
+  return true ;
+} 
+// ============================================================================
+// set shift 
+// ============================================================================
+bool Ostap::Math::LogNormal::setShift ( const double value ) 
+{
+  if ( s_equal ( value , m_shift  ) ) { return false ; }
+  //
+  m_shift = value ; 
+  return true ;
+} 
+// ============================================================================
+// evaluate log-normal function
+// ============================================================================
+double Ostap::Math::LogNormal::evaluate
+( const double x ) const
+{
+  if ( x <= m_shift || s_equal ( x , m_shift ) ) { return 0 ; }
+  const double dx = x - m_shift ; 
+  const double lz = std::log ( dx / m_scale ) / m_shape  ;   
+  return Ostap::Math::gauss_pdf ( lz ) / dx  ;
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::LogNormal::integral () const { return 1 ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::LogNormal::integral
+( const double low  ,
+  const double high ) const
+{
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high <  low            ) { return -integral ( high    , low ) ; } 
+  else if ( high <= m_shift        ) { return 0 ; }
+  else if ( low  <= m_shift        ) { return  integral ( m_shift , high ) ; }
+  //
+  const double dh = high - m_shift ; 
+  const double lh = std::log ( dh / m_scale ) / m_shape ;
+  //
+  const double dl = low  - m_shift ; 
+  const double ll = std::log ( dl / m_scale ) / m_shape ;
+  //  
+  return
+    Ostap::Math::gauss_cdf ( lh ) -
+    Ostap::Math::gauss_cdf ( ll ) ;
+}
+// ============================================================================
+// CDF  
+// ============================================================================
+double Ostap::Math::LogNormal::cdf 
+( const double x    ) const
+{ return x <= m_shift ? 0.0 : integral ( m_shift , x ) ; }
+// ============================================================================
+// quantile  function \f$ 0 < p < 1 \f$ 
+// ============================================================================
+double Ostap::Math::LogNormal::quantile 
+( const double p    ) const
+{
+  return
+    p < 0             ?  s_QUIETNAN :
+    p > 1             ?  s_QUIETNAN : 
+    s_zero  ( p     ) ?  m_shift    : 
+    s_equal ( p , 1 ) ?  s_POSHUGE  :
+    m_shift + m_scale * std::exp ( m_shape * Ostap::Math::probit ( p )  ) ;
+}
+// ============================================================================
+// canonical mu
+// ============================================================================
+double Ostap::Math::LogNormal::canonical_mu    () const
+{ return std::log ( m_scale ) ; }
+// ============================================================================
+// mean value 
+// ============================================================================
+double Ostap::Math::LogNormal::mean     () const
+{ return m_shift + m_scale * std::exp ( +0.5 * m_shape * m_shape ) ; }
+// ============================================================================
+// median 
+// ============================================================================
+double Ostap::Math::LogNormal::median   () const
+{ return m_shift + m_scale ; }
+// ============================================================================
+// mode value 
+// ============================================================================
+double Ostap::Math::LogNormal::mode      () const
+{ return m_shift + m_scale * std::exp ( -1.0 * m_shape * m_shape ) ; }
+// ============================================================================
+// variance  value 
+// ============================================================================
+double Ostap::Math::LogNormal::variance () const
+{
+  const double es2 = std::exp ( m_shape * m_shape ) ;
+  return ( es2 - 1 ) * m_scale * m_scale * es2 ;
+}
+// ============================================================================
+// variance  value 
+// ============================================================================
+double Ostap::Math::LogNormal::rms  () const { return std::sqrt ( variance () ) ; }
+// ============================================================================
+// skewness value 
+// ============================================================================
+double Ostap::Math::LogNormal::skewness () const
+{
+  const double es2 = std::exp ( m_shape * m_shape ) ;
+  return ( es2 + 1 ) * std::sqrt ( es2 - 1 ) ;
+}
+// ============================================================================
+// kurtosis value 
+// ============================================================================
+double Ostap::Math::LogNormal::kurtosis () const
+{
+  const double es2 = std::exp ( m_shape * m_shape ) ;  
+  return
+    std::pow ( es2 , 4 )     +
+    std::pow ( es2 , 3 ) * 2 +
+    std::pow ( es2 , 2 ) * 3 - 6 ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::LogNormal::tag () const 
+{ 
+  static const std::string s_name = "LogNormal" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_shape ,
+				       m_scale ,
+				       m_shift ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// ============================================================================
+Ostap::Math::ExpoLog::ExpoLog
+( const double beta  ,   // scale 
+  const double psi   ,   // related to p 
+  const double shift )   // shift
+  : m_beta  (  std::abs ( beta ) )
+  , m_psi   ( psi   )
+  , m_shift ( shift )
+{
+  Ostap::Assert ( m_beta , 
+                  "Beta parameter must be positive!"      ,
+                  "Ostap::Math::ExpoLog"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_p = 0.5 * ( 1.0L + std::tanh ( 1.0L * m_psi ) ) ;
+  if ( s_equal ( m_p , 1 ) ) { m_p    = 1 ; m_logp = 0   ; } 
+  else                       { m_logp = std::log ( m_p ) ; }
+  //
+  Ostap::Assert ( 0 <= m_p && m_p <= 1 , 
+                  "P-parameter must be netwen 0 and 1"    ,
+                  "Ostap::Math::ExpoLog"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( m_logp <= 0 , 
+                  "LogP parameter must be non-positive!"  ,
+                  "Ostap::Math::ExpoLog"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  
+}
+// ============================================================================
+// set beta 
+// ============================================================================
+bool Ostap::Math::ExpoLog::setBeta( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_beta ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue , 
+                  "Beta parameter must be positive!"      ,
+                  "Ostap::Math::ExpoLog"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_beta = avalue ; 
+  return true ;
+} 
+// ============================================================================
+// set psi
+// ============================================================================
+bool Ostap::Math::ExpoLog::setPsi ( const double value ) 
+{
+  if ( s_equal ( value , m_psi ) && 0 <= m_p && m_p <= 1 && m_logp <= 0 ) { return false ; }
+  //
+  m_psi  = value ;
+  m_p    = 0.5 * ( 1.0L + std::tanh ( 1.0L * m_psi ) ) ;
+  if ( s_equal ( m_p , 1 ) ) { m_p = 1 ; m_logp = 0      ; } 
+  else                       { m_logp = std::log ( m_p ) ; }
+  //
+  Ostap::Assert ( 0 <= m_p && m_p <= 1 , 
+                  "P-parameter must be netwen 0 and 1"    ,
+                  "Ostap::Math::ExpoLog"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( m_logp <= 0 , 
+                  "LogP parameter must be non-positive!"  ,
+                  "Ostap::Math::ExpoLog"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return true ;
+} 
+// ============================================================================
+// evaluate expo-log function
+// ============================================================================
+double Ostap::Math::ExpoLog::evaluate    ( const double x ) const
+{
+  if ( x < m_shift ) { return 0 ; }
+  const double z    = - m_beta * ( x - m_shift ) ;
+  const double expz = std::exp ( z ) ;
+  if ( s_equal ( m_p , 1 ) ) { return m_beta * expz ;  }
+  //
+  const long double dp = 1.0L - m_p ;
+  return -1 / m_logp * m_beta * dp * expz / ( 1.0L - dp * expz ) ; 
+}
+// ============================================================================
+// intergal 
+// ============================================================================
+double Ostap::Math::ExpoLog::integral () const { return 1 ; } 
+// ============================================================================
+// intergal 
+// ============================================================================
+double Ostap::Math::ExpoLog::integral
+( const double low  , 
+  const double high ) const
+{
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high  < low            ) { return - integral ( high , low ) ; }
+  else if ( high  <= m_shift       ) { return 0 ; }
+  else if ( low   <  m_shift       ) { return cdf ( high ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ; 
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::ExpoLog::cdf
+( const double x ) const
+{
+  if ( x <= m_shift ) { return 0 ; }
+  const double z    = - m_beta * ( x - m_shift ) ;
+  const double expz = std::exp ( z ) ;
+  //
+  if ( s_equal ( m_p , 1 ) ) { return 1.0 - expz ; }
+  //
+  return 1.0L - std::log ( 1.0 - ( 1.0 - m_p ) * expz ) / m_logp ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::ExpoLog::tag () const 
+{ 
+  static const std::string s_name = "ExpoLog" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_beta  ,
+				       m_psi   ,
+				       m_shift ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Math::Davis::Davis
+( const double b  ,
+  const double n  ,
+  const double mu )
+  : m_b  ( std::abs ( b ) )
+  , m_n  ( std::abs ( n ) )
+  , m_mu ( mu )
+  , m_C  ( -1 )
+{
+  Ostap::Assert ( 0 < m_b  , 
+                  "b-parameter must be positive!"         ,
+                  "Ostap::Math::Davis"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( 0 < m_n  , 
+                  "b-parameter must be positive!"         ,
+                  "Ostap::Math::Davis"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_z0 = s_equal ( m_n     , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n     ) * 1.0L ;
+  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
+  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
+  //
+  m_C  = Ostap::Math::igamma ( m_n     ) / m_z0  ;
+  //
+}
+// ============================================================================
+// set beta 
+// ============================================================================
+bool Ostap::Math::Davis::setB ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_b ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue , 
+                  "b-parameter must be positive!"         ,
+                  "Ostap::Math::Davis"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_b = avalue ; 
+  return true ;
+} 
+// ============================================================================
+// set n
+// ============================================================================
+bool Ostap::Math::Davis::setN ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_n ) && 0 < m_C ) { return false ; }
+  //
+  Ostap::Assert ( avalue , 
+                  "n-parameter must be positive!"         ,
+                  "Ostap::Math::Davis"                    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_n  = avalue ;
+  //
+  m_z0 = s_equal ( m_n     , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n     ) * 1.0L ;
+  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
+  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
+  //
+  m_C  = Ostap::Math::igamma ( m_n ) / m_z0 ;  
+  //
+  return true ;
+} 
+// ============================================================================
+// set mu
+// ============================================================================
+bool Ostap::Math::Davis::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  m_mu = value ; 
+  return true ;
+} 
+// ============================================================================
+// evaluate davis function
+// ============================================================================
+double Ostap::Math::Davis::evaluate  ( const double x ) const
+{
+  if ( x <= m_mu || s_equal ( x , m_mu ) ) { return 0 ; } 
+  const double z = m_b / ( x - m_mu ) ;
+  //
+  if ( z <= 1 ) { return m_C / m_b * std::pow ( z , m_n ) / Ostap::Math::expm1_x ( z ) ; }
+  //
+  const double e2 = std::exp ( -z )  ;
+  const double rr = ( m_n + 1 ) * std::log ( z ) + std::log ( e2 / ( 1.0L - e2 ) ) ;  
+  return m_C / m_b * std::exp ( rr ) ;
+}
+// ============================================================================
+// intergal 
+// ============================================================================
+double Ostap::Math::Davis::integral ()    const { return 1 ; }
+// ============================================================================
+// intergal 
+// ============================================================================
+double Ostap::Math::Davis::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low     ) { return -integral ( high , low )  ; }
+  else if ( high <= m_mu   ) { return  0 ; }
+  else if ( low  <  m_mu   ) { return  integral ( m_mu , high ) ; }
+  //
+  if ( 2 < m_n )
+  {
+    const double xmean = mean () ;
+    if ( low < xmean && xmean < high ) { return integral ( low , xmean ) + integral ( xmean , high ) ; }
+  }
+  //
+  if ( 3 < m_n )
+  {
+    const double xmean = mean () ;
+    const double xrms  = rms  () ;
+    const double x1    = xmean - 3 * xrms ;
+    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
+    const double x2    = xmean + 3 * xrms ;
+    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
+    const double x3    = xmean - 6 * xrms ;
+    if ( low < x3 && x3 < high ) { return integral ( low , x3 ) + integral ( x3 , high ) ; }
+    const double x4    = xmean + 6 * xrms ;
+    if ( low < x4 && x4 < high ) { return integral ( low , x4 ) + integral ( x4 , high ) ; }
+  }
+  //  
+  const double dx = high - low ;
+  // split 
+  if ( dx > 10 * m_b )
+  {
+    const double mid = 0.5 * ( low + high ) ;
+    return integral ( low , mid ) + integral ( mid , high ) ;
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Davis> s_integrator{}  ;
+  static const char s_message[] = "Integral(Davis)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag  () , 
+      &F      , 
+      low     , high ,            // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size()        , // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ; 
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::Davis::cdf 
+( const double x ) const
+{ return x <= m_mu ? 0.0 : integral ( m_mu , x ) ; }
+// ============================================================================
+// mean value 
+// ============================================================================
+double Ostap::Math::Davis::mean     () const
+{
+  if ( m_n <= 2 || s_equal ( m_n , 2 ) ) { return s_QUIETNAN ; }
+  return m_mu + m_b * m_z1 / ( ( m_n - 1 ) * m_z0 ) ;
+}
+// ============================================================================
+// variance   
+// ============================================================================
+double Ostap::Math::Davis::variance () const
+{
+  if ( m_n <= 3 || s_equal ( m_n , 3 ) ) { return s_QUIETNAN ; }
+  return
+    m_b * m_b * ( - ( m_n - 2 ) * m_z1 * m_z1  + ( m_n - 1 ) * m_z2 * m_z0 )
+    / ( ( m_n - 2 ) * ( m_n - 1 ) * ( m_n -1 ) * m_z0 * m_z0 ) ;
+}
+// ============================================================================
+// rms 
+// ============================================================================
+double Ostap::Math::Davis::rms () const
+{
+  if ( m_n <= 3 || s_equal ( m_n , 3 ) ) { return s_QUIETNAN ; }
+  //
+  return std::sqrt ( variance () ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Davis::tag () const 
+{ 
+  static const std::string s_name = "Davis" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_b     ,
+				       m_n     ,
+				       m_mu    ) ;
+}
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END

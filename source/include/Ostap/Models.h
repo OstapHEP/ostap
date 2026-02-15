@@ -250,8 +250,6 @@ namespace Ostap
         const double sigma  = 1 ,
         const double kappa3 = 1 ,
         const double kappa4 = 1 ) ;
-      /// destructor
-      ~GramCharlierA () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -561,8 +559,6 @@ namespace Ostap
         const double alpha = 1 ,
         const double beta  = 1 ,
         const double a     = 0 ) ;
-      /// destructor
-      ~Amoroso () ;  // desctructor
       // ======================================================================
     public:
       // ======================================================================
@@ -654,8 +650,6 @@ namespace Ostap
       ( const double nu     = 0 ,   // shape parameter
         const double lambda = 1 ,   // scale parameter
         const double alpha  = 1 ) ; // scale parameter
-      /// destructor
-      ~LogGamma () ;  // desctructor
       // ======================================================================
     public:
       // ======================================================================
@@ -731,8 +725,6 @@ namespace Ostap
         const double beta  = 1 ,
         const double scale = 1 ,
         const double shift = 0 ) ;
-      /// destructor
-      ~Beta () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -839,8 +831,6 @@ namespace Ostap
         const double beta  = 5 ,
         const double scale = 1 ,
         const double shift = 0 ) ;
-      /// destructor
-      ~BetaPrime () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -902,7 +892,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class FDistribution
-     *  Speficif re-parameterizaiton of Beta-prime distribution
+     *  Speficic re-parameterization of Beta-prime distribution
      *  @see https://en.wikipedia.org/wiki/F-distribution
      *  http://en.wikipedia.org/wiki/Beta_prime_distribution
      */
@@ -1007,12 +997,10 @@ namespace Ostap
       GenBetaPrime
       ( const double alpha = 1 ,
         const double beta  = 5 ,
-	      const double p     = 1 ,
-	      const double q     = 1 ,	
+	const double p     = 1 ,
+	const double q     = 1 ,	
         const double scale = 1 ,
         const double shift = 0 ) ;
-      /// destructor
-      ~GenBetaPrime () ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1077,7 +1065,7 @@ namespace Ostap
     // ========================================================================
     /** @class GenBeta
      *  Generalized Beta distribution (the most general form)
-     *  - \f$ c \equiv \sin^2 \gamma \f$ to ensure \f$ 0 \le c \le 1 \f$ 
+     *  - \f$ c \equiv \sin^2 \frac{\pi\gamma}{2} \f$ to ensure \f$ 0 \le c \le 1 \f$ 
      * @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
      */
     class GenBeta
@@ -1087,11 +1075,12 @@ namespace Ostap
       /// the most general form
       GenBeta
       ( const double a     = 1 , // shape 
-	      const double b     = 1 , // scale 
-	      const double gamma = 0 , // c = sin^2 gamma
-	      const double p     = 1 , // shape 
-	      const double q     = 1 , // shape 
-	      const double shift = 0 ) ;
+	const double b     = 1 , // scale 
+	const double gamma = 0 , // c = sin^2 gamma
+	const double p     = 1 , // shape 
+	const double q     = 1 , // shape 
+	const double shift = 0 ) ;
+      // =======================================================================
     public :
       // =======================================================================
       /// evaluate generalized Beta distribution 
@@ -1109,8 +1098,16 @@ namespace Ostap
       inline double q            () const { return m_q     ; } 
       inline double shift        () const { return m_shift ; } 
       inline double scale        () const { return b ()    ; }
+      // =======================================================================
+    public:
+      // =======================================================================
+      /// finite range ? (beta-like or beta'-like?)
       inline bool   finite_range () const { return 0 < m_a && !m_c1 ; }
+      /// minimal x 
       double        xmin         () const ;
+      /** maximal x
+       *  @attention it can be infinite!
+       */
       double        xmax         () const ;
       // =======================================================================
     public :
@@ -1123,7 +1120,7 @@ namespace Ostap
       bool setShift  ( const double value  ) ;
       bool setPQ
       ( const double valuep ,
-	      const double valueq ) ;		       
+	const double valueq ) ;		       
       // =======================================================================
     public :
       // =======================================================================
@@ -1133,6 +1130,9 @@ namespace Ostap
       double integral
       ( const double low  ,
 	const double high ) const ; 
+      /// get the CDF 
+      double cdf 
+      ( const double x    ) const ; 
       // =======================================================================
     public :
       // ======================================================================
@@ -1159,11 +1159,13 @@ namespace Ostap
     private: 
       // ======================================================================
       ///  \f$ \log \Beta Beta ( p , q ) 
-      double m_logBpq   { 0     } ; //  \f$ \log \Beta Beta ( p , q )
+      double m_logBpq    {  0    } ; //  \f$ \log \Beta Beta ( p , q )
       /// \f$ \log b \f$
-      double m_logb     { 0     } ;
+      double m_logb      {  0    } ;
       /// \f$ c = 1 ?\f$
-      bool   m_c1       { false } ; 
+      bool   m_c1        { false } ;
+      /// \f$ \f$
+      double m_ac        { -1    } ;  // (1-c)**(1/a) 
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
       // ======================================================================      
@@ -1185,20 +1187,18 @@ namespace Ostap
       Landau
       ( const double scale = 1 ,
         const double shift = 0 ) ;
-      /// destructor
-      ~Landau () ;
       // ======================================================================
     public:
       // ======================================================================
       /// evaluate beta'-distributions
-      double pdf        ( const double x ) const ;
+      double        pdf        ( const double x ) const ;
       /// evaluate beta'-distributions
-      double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double scale () const { return m_scale ; }
-      double shift () const { return m_shift ; }
+      inline double scale () const { return m_scale ; }
+      inline double shift () const { return m_shift ; }
       // ======================================================================
     public: // direct setters
       // ======================================================================
@@ -1207,7 +1207,8 @@ namespace Ostap
       // ======================================================================
     public: // integrals
       // ======================================================================
-      double cdf      ( const double x    ) const ;
+      double cdf
+      ( const double x    ) const ;
       double integral 
       ( const double low  ,
         const double high ) const ;
@@ -1308,7 +1309,6 @@ namespace Ostap
       double m_shift  ; // shift 
       // ======================================================================
     };    
-
     // ========================================================================
     /** @class Rice
      *  Rice distribution 
@@ -1334,7 +1334,11 @@ namespace Ostap
     public: // 
       // ======================================================================
       /// evaluate the function
-      double operator() ( const double x ) const ;
+      double        evaluate   ( const double x ) const ;
+      /// evaluate the function
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate the function
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
     public: // setters & getters 
       // ======================================================================
@@ -1411,8 +1415,11 @@ namespace Ostap
       // ======================================================================
       // evaluat the function 
       double evaluate ( const double x ) const ;
-      // evaluat the function 
+      // evaluate the function 
       inline double operator() ( const double x ) const 
+      { return evaluate ( x ) ; }
+      // evaluate the function 
+      inline double pdf        ( const double x ) const 
       { return evaluate ( x ) ; }
       // ======================================================================
     public: // getters 
@@ -1511,6 +1518,9 @@ namespace Ostap
       /// evaluate the function 
       inline double operator () ( const double x )  const 
       { return evaluate ( x ) ;  }
+      /// evaluate the function 
+      inline double pdf         ( const double x )  const 
+      { return evaluate ( x ) ;  }
       // ======================================================================
     public: // getters 
       // ======================================================================
@@ -1585,6 +1595,9 @@ namespace Ostap
       /// evaluate the function 
       inline double operator () ( const double x )  const 
       { return evaluate ( x ) ;  }
+      /// evaluate the function 
+      inline double pdf         ( const double x )  const 
+      { return evaluate ( x ) ;  }
       // ======================================================================
     public: // getters 
       // ======================================================================
@@ -1605,15 +1618,15 @@ namespace Ostap
       /// get median 
       inline double median     () const { return 0.5 ; }
       /// get variance 
-      double variance   () const ; 
-      /// get dispersion 
-      double dispersion () const { return variance () ; }
+      double        variance   () const ; 
       /// get rms 
-      double rms        () const ;
-      /// get skewness 
-      double skewness   () const { return 0           ; }
+      double        rms        () const ;
       /// get kurtosis 
-      double kurtosis   () const ; 
+      double        kurtosis   () const ; 
+      /// get dispersion 
+      inline double dispersion () const { return variance () ; }
+      /// get skewness 
+      inline double skewness   () const { return 0           ; }
       // ======================================================================
     public:
       // ====================================================================== 
@@ -1668,6 +1681,9 @@ namespace Ostap
       /// evaluate the function 
       inline double operator () ( const double x )  const 
       { return evaluate ( x ) ;  }
+      /// evaluate the function 
+      inline double pdf         ( const double x )  const 
+      { return evaluate ( x ) ;  }
       // ======================================================================
     public: // getters 
       // ======================================================================
@@ -1704,19 +1720,19 @@ namespace Ostap
     public: // some statistical properties 
       // ====================================================================== 
       /// get mode 
-      double mode       () const { return m_mu ; }
+      inline double mode       () const { return m_mu ; }
       /// get mean 
-      double mean       () const { return m_mu ; }
+      inline double mean       () const { return m_mu ; }
       /// get median 
-      double median     () const { return m_mu ; }
+      inline double median     () const { return m_mu ; }
       /// get variance 
-      double variance   () const { return m_sigma * m_sigma ; }
+      inline double variance   () const { return m_sigma * m_sigma ; }
       /// get dispersion 
-      double dispersion () const { return variance () ; }
+      inline double dispersion () const { return variance () ; }
       /// get rms 
-      double rms        () const { return m_sigma     ; }
+      inline double rms        () const { return m_sigma     ; }
       /// get skewness 
-      double skewness   () const { return 0           ; }
+      inline double skewness   () const { return 0           ; }
       /// get kurtosis 
       double kurtosis   () const ; 
       // ======================================================================
@@ -1983,7 +1999,7 @@ namespace Ostap
     public:
       // ======================================================================
       // evaluate function 
-      double evaluate   ( const double x ) const ;
+      double        evaluate   ( const double x ) const ;
       // evaluate function 
       inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
       // evaluate function 
@@ -2792,6 +2808,260 @@ namespace Ostap
       // ======================================================================
     } ; 
     // ========================================================================
+    /** @class LogNormal
+     *  Log-normal distribution
+     *  @see https://en.wikipedia.org/wiki/Log-normal_distribution
+     *  - We add here an shift parameter
+     *  - and use "mu = log(scale)"
+     *  - and we use "sigma" as shape parameter
+     */
+    class LogNormal
+    {
+    public:
+      // ======================================================================
+      /// constructor 
+      LogNormal
+      ( const double shape = 1 ,
+	const double scale = 1 ,
+	const double shift = 0 ) ; 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate log-normal function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate log-normal function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate log-normal function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      inline double shape () const { return m_shape ; }
+      inline double scale () const { return m_scale ; }
+      inline double shift () const { return m_shift ; }
+      // ======================================================================
+      inline double xmin  () const { return m_shift ; }
+      // ======================================================================
+    public :  // "canonical parameters"
+      // ======================================================================
+      /// canonical mu 
+      double        canonical_mu    () const ;
+      /// canonical sigma 
+      inline double canonical_sigma () const { return m_shape ; } 
+      // ======================================================================
+    public:
+      // =====================================================================
+      bool setShape ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShift ( const double value ) ;
+      // =====================================================================
+    public : 
+      // =====================================================================
+      /// integral 
+      double integral () const ;
+      /// integral 
+      double integral
+      ( const double low  ,
+	const double high ) const ;
+      /// CDF  
+      double cdf 
+      ( const double x    ) const ;
+      /// quantile  function \f$ 0 < p < 1 \f$ 
+      double quantile 
+      ( const double p    ) const ;
+      // =====================================================================
+    public :
+      // ======================================================================
+      /// unique tag
+      std::size_t tag () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      double mean     () const ;
+      /// the mode  
+      double mode     () const ;
+      /// median value 
+      double median   () const ;
+      /// variance 
+      double variance () const ;
+      /// rms  
+      double rms      () const ;
+      /// skewness       
+      double skewness () const ; 
+      /// (excess) kurtosis
+      double kurtosis () const ;      
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// shape parameter 
+      double m_shape { 1 } ; // shape parameter 
+      /// scale parameter 
+      double m_scale { 1 } ; // scale parameter 
+      // shift parameter
+      double m_shift { 0 } ; // shift parameter      
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class ExpoLog
+     *  Exponential-logarithmic distribution
+     *  @see https://en.wikipedia.org/wiki/Exponential-logarithmic_distribution
+     *  - We have added a shift parameter
+     *  - to ensure \f$ 0 < p < 1 \f$  we use
+     *    \f$ p = \frac{1}{2}\left[ 1 + \tanh \psi \right] \f$ 
+     */
+    class ExpoLog
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ExpoLog
+      ( const double beta  = 1 ,   // scale 
+	const double psi   = 0 ,   // related to p 
+	const double shift = 0 ) ; // shift
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate expo-log function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate expo-log function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate expo-log function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      inline double beta  () const { return m_beta  ; }
+      inline double psi   () const { return m_psi   ; }
+      inline double shift () const { return m_shift ; }
+      // ======================================================================
+      /// original p-parameter 0 < p < 1 
+      inline double p     () const { return m_p     ; } 
+      inline double xmin  () const { return m_shift ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setBeta  ( const double value ) ;
+      bool setPsi   ( const double value ) ;
+      bool setShift ( const double value ) ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()                    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// get CDF 
+      double cdf      ( const double x    ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// exponential parameter beta 
+      double m_beta  { 1   } ; // exponential parameter beta 
+      /// parameter psi 
+      double m_psi   { 0   } ; // parameter psi 
+      /// shift parameter
+      double m_shift { 0   } ; // shift parameter
+      /// parameter p
+      double m_p     { 0.5 } ; // parameter p 
+      /// parameter p
+      double m_logp  { 100 } ; // log ( p )
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Davis
+     * @see https://en.wikipedia.org/wiki/Davis_distribution
+     */
+    class Davis
+    {
+    public:
+      // ======================================================================
+      /// conastructor 
+      Davis
+      ( const double b  = 1 ,
+	const double n  = 5 ,
+	const double mu = 0 ) ;	
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate davis function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate davis function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate davis  function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      inline double b    () const { return m_b  ; }
+      inline double n    () const { return m_n  ; }
+      inline double mu   () const { return m_mu ; }
+      inline double xmin () const { return m_mu ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setB  ( const double value ) ;
+      bool setN  ( const double value ) ;
+      bool setMu ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean-value 
+      double mean     () const ;
+      /// variance 
+      double variance () const ;
+      /// rms 
+      double rms      () const ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// parameter b 
+      double m_b  { 1 } ; // parameter b
+      /// parameter n 
+      double m_n  { 5 } ; // parameter n
+      /// parameter mu 
+      double m_mu { 0 } ; // parameter mu
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// zeta ( n     ) 
+      double m_z0  { 0  } ; // zeta ( n     ) 
+      /// zeta ( n - 1 ) 
+      double m_z1  { 0  } ; // zeta ( n - 1 ) 
+      /// zeta ( n - 2  ) 
+      double m_z2  { 0  } ; // zeta ( n - 2 ) 
+      /// normailzation
+      double m_C   { -1 } ; // normalzation 
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+      // ======================================================================
+    } ;      
+    // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

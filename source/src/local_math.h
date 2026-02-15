@@ -7,7 +7,12 @@
 // STD & STL
 // ============================================================================
 #include <cmath>
+#include <numbers>
 #include <limits>
+// ============================================================================
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && 201907L <= __cpp_ilb_math_comstats
+#include <numbers>
+#endif 
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -244,6 +249,15 @@ namespace
   *  @date 2016-06-14
   */
   const double s_PIi = 1.0 /M_PI ;
+  // ==========================================================================
+  /** @var s_MASCHERONI 
+   * Euler-Mascheroni constant \f$ \gamma \f$
+   */
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && 201907L <= __cpp_ilb_math_comstats  
+  const long double s_MASCHERONI { std::numbers::egamma_v<long double> } ;
+#else
+  const long double s_MASCHERONI = 0.57721566490153286060651209008240243104215933593992L ;
+#endif 
   // ==========================================================================
   // Bukin & Co
   // ==========================================================================

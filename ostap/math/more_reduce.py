@@ -732,6 +732,95 @@ def _ombs_reduce_ ( peak ) :
 Ostap.Math.BirnbaumSaunders . __reduce__ = _ombs_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::Frechet
+#  @see Ostap::Math::Frechet
+def _omfrechet_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.Frechet`
+    - see `Ostap.Math.Frechet`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.alpha () ,
+                            peak.scale () ,
+                            peak.shift () )
+
+Ostap.Math.Frechet. __reduce__ = _omfrechet_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::Dagum
+#  @see Ostap::Math::Dagum
+def _omdagum_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.Dagum`
+    - see `Ostap.Math.Dagum`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.p () ,
+                            peak.a () ,
+                            peak.b () ,
+                            peak.shift () )
+
+Ostap.Math.Dagum. __reduce__ = _omdagum_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::BenktanderI & Ostap::Math::BenktanderII 
+#  @see Ostap::Math::BenktanderI
+#  @see Ostap::Math::BenktanderII
+def _om_benktander_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.BenktanderI` and `Ostap.Math.BenktanderII`
+    - see `Ostap.Math.BenktanderI`
+    - see `Ostap.Math.Benktander2`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.a     () ,
+                            peak.r     () ,
+                            peak.scale () ,
+                            peak.shift () )
+
+Ostap.Math.BenktanderI  . __reduce__ = _om_benktander_reduce_
+Ostap.Math.BenktanderII . __reduce__ = _om_benktander_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::LogNormal 
+#  @see Ostap::Math::LogNormal
+def _om_lognormal_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.LogNormal`
+    - see `Ostap.Math.LogNormal`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.shape () ,
+                            peak.scale () ,
+                            peak.shift () )
+
+Ostap.Math.LogNormal  . __reduce__ = _om_lognormal_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::ExpoLog
+#  @see Ostap::Math::ExpoLog
+def _om_expolog_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.ExpoLog`
+    - see `Ostap.Math.ExpoLog`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.beta  () ,
+                            peak.psi   () ,
+                            peak.shift () )
+
+Ostap.Math.ExpoLog  . __reduce__ = _om_expolog_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::Davis
+#  @see Ostap::Math::Davis
+def _om_davis_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.Davis`
+    - see `Ostap.Math.Davis`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.b     () ,
+                            peak.n     () ,
+                            peak.mu    () )
+
+Ostap.Math.Davis  . __reduce__ = _om_davis_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::Slash
 #  @see Ostap::Math::Slash
 def _omslash_reduce_ ( peak ) :
@@ -798,7 +887,7 @@ def _omhyp_reduce_ ( peak ) :
 
 Ostap.Math.Hyperbolic. __reduce__ = _omhyp_reduce_
 
-# =============================================================================
+# ============================================================================
 ## Reduce Ostap::Math::GenHyperbolic
 #  @see Ostap::Math::GenHyperbolic
 def _omghyp_reduce_ ( peak ) :
@@ -959,6 +1048,24 @@ def _ombprim_reduce_ ( s ) :
 
 Ostap.Math.BetaPrime. __reduce__ = _ombprim_reduce_
 Ostap.Math.Beta     . __reduce__ = _ombprim_reduce_
+
+
+# =============================================================================
+## Reduce Ostap::Math::GenBeta
+#  @see Ostap::Math::GenBeta
+def _om_genbeta_reduce_ ( s ) :
+    """Reduce `Ostap.Math.GenBeta` 
+    - see `Ostap.Math.GenBeta`
+    """
+    return root_factory , ( type ( s ) ,
+                            s.a     () ,
+                            s.b     () ,
+                            s.gamma () ,
+                            s.p     () ,
+                            s.q     () ,
+                            s.shift () )
+
+Ostap.Math.GenBeta     . __reduce__ = _om_genbeta_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::FDistribution
