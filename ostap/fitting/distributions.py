@@ -1561,7 +1561,7 @@ class Tsallis_pdf(PDF1) :
     def __init__ ( self                   ,
                    name                   , 
                    xvar                   ,   ## pT-variable (for fitting) 
-                   m0        = 0          ,   ## particle mass (may be fixed)
+                   m0                     ,   ## particle mass (may be fixed)
                    n         = None       ,   ## shape parameter
                    T         = None       ) : ## temperature parameter                   
 
@@ -1571,7 +1571,7 @@ class Tsallis_pdf(PDF1) :
         self.__m0   = self.make_var ( m0              ,
                                       'm0_%s'  % name , 
                                       'm0(%s)' % name ,
-                                      True , 0     , 1e+6 )
+                                      True , 1.e-10   , 1e+6 )
         
         self.__n    = self.make_var ( n               ,
                                       'n_%s'   % name , 

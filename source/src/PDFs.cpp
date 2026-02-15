@@ -9058,7 +9058,7 @@ Ostap::Models::Tsallis::Tsallis
   , m_T       ( "!T"      , "temperature" , this , T      ) 
   , m_mass    ( "!m"      , "mass"        , this , mass   ) 
     //
-  , m_tsallis  ( 0 , 10 , 1 ) 
+  , m_tsallis () 
 {
   setPars() ;
 }

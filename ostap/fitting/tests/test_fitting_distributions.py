@@ -30,8 +30,8 @@ else :
 batch_env ( logger )
 # =============================================================================
 
-x = ROOT.RooRealVar( 'x' , 'x-variable' , 0  , 10 ) 
-y = ROOT.RooRealVar( 'x' , 'y-variable' , -5 ,  5 ) 
+x = ROOT.RooRealVar( 'x' , 'x-variable' ,  0  , 10 ) 
+y = ROOT.RooRealVar( 'y' , 'y-variable' , -5 ,   5 ) 
 
 plots  = set ()
 models = set ()
@@ -250,10 +250,11 @@ def test_Tsallis () :
 
     logger = getLogger("test_Tsallis")
     
-    model  = Models.Tsallis_pdf ( 'Tsallis' , x ,
-                                  m0 = 1   ,
-                                  n  = 10  ,
-                                  T  = 0.2 )
+    model  = Models.Tsallis_pdf ( 'Tsallis' , 
+                                  x         ,
+                                  m0 = ROOT.RooFit.RooConst ( 0.135 ) ,
+                                  n  = 10   ,
+                                  T  = 0.2  )
     
     with use_canvas ( 'Tsallis_pdf' ) :
         plot = model.draw()
@@ -266,8 +267,9 @@ def test_QGSM () :
 
     logger = getLogger("test_QGSM")
     
-    model  = Models.QGSM_pdf ( 'QGSM' , x ,
-                               m0 = 1   ,
+    model  = Models.QGSM_pdf ( 'QGSM'   , 
+                               x        ,
+                               m0 = ROOT.RooFit.RooConst ( 0.135 ) ,
                                b  = 10  )
     
     with use_canvas ( 'QGSM_pdf' ) :
