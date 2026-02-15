@@ -9894,7 +9894,7 @@ def histo_fit ( histo , fun , option = 'S' , goption = '' , *args ) :
     assert hd == fd , "Invalid histo/fun dimensions: %d%s%d" % ( hd , not_equal , fd )
     ##
     ## see ROOT issue #21080 : https://github.com/root-project/root/issues/21080
-    ## if ( 6 , 39 ) <= root_info : return histo.Fit ( fun , option , goption , *args )
+    if ( 6 , 39 ) <= root_info : return histo.Fit ( fun , option , goption , *args )
     with implicitMT ( False )  : return histo.Fit ( fun , option , goption , *args )
     
 # =============================================================================
