@@ -583,7 +583,7 @@ class Landau_pdf(PDF1,ShiftAndScale) :
                    shift = 0 ) : ## shift-parameter 
         #
         PDF1          .__init__ ( self  , name , xvar )
-        ScaleAndShift .__init__ ( self  ,
+        ShiftAndScale .__init__ ( self  ,
                                   scale = scale ,
                                   shift = shift )
         
@@ -1772,7 +1772,7 @@ class GenPareto_pdf(PDF1,ShiftAndScale) :
                    shape        ) : ## shape parameter
         #
         PDF1         .__init__ ( self , name , xvar )
-        ShiftandScale.__init__ ( self ,
+        ShiftAndScale.__init__ ( self ,
                                  scale = scale ,
                                  shift = mu    , 
                                  shift_name  = 'mu_%s'        % self.name , 

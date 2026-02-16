@@ -3414,7 +3414,7 @@ class ShiftAndScale (Shift,Scale) :
                    shift_name  = '' , 
                    shift_title = '' ) :
         
-        Shift.__init__ ( self , shift = shift , shift_name = shift_name , shift_title = shifT_title )
+        Shift.__init__ ( self , shift = shift , shift_name = shift_name , shift_title = shift_title )
         Scale.__init__ ( self , scale = scale , scale_name = scale_name , scale_title = scale_title )
         
 # =============================================================================

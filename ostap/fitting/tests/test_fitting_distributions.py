@@ -129,7 +129,7 @@ def test_BetaPrime () :
 
     logger = getLogger("test_BetaPrime")
     
-    model  = Models.BetaPrime_pdf ( 'BetaPrime' , x , alpha = 1 , beta = 1 , scale = 1 , delta = 0 )
+    model  = Models.BetaPrime_pdf ( 'BetaPrime' , x , alpha = 1 , beta = 1 , scale = 1)
     
     with use_canvas ( 'BetaPrime_pdf' ) :
         plot = model.draw()
@@ -142,7 +142,7 @@ def test_Landau () :
 
     logger = getLogger("test_Landau")
     
-    model  = Models.Landau_pdf ( 'Landau' , x , scale = 1 , delta = 0 )
+    model  = Models.Landau_pdf ( 'Landau' , x , scale = 1 )
     
     with use_canvas ( 'BetaPrime_pdf' ) :
         plot = model.draw()
