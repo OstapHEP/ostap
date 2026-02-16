@@ -28,6 +28,10 @@ __all__     = (
     'Phases'            , ## helper class for Ostap polynomial/PDFs
     'ParamsPoly'        , ## helper class for RooFit polynomials
     'ShiftScalePoly'    , ## helper class for RooFit polynomials
+    ## 
+    'Shift'             , ## helper mixin to add shift-parameter
+    'Scale'             , ## helper mixin to add scale-parameter 
+    'ShiftAndScale'     , ## helper mixin to add shift&scale parameters 
     #
     'NameDuplicates'    , ## allow/disallow name duplicates
     'SETPARS'           , ## context manager to keep/preserve parameters
@@ -3333,6 +3337,88 @@ class Phases(object) :
         """'power'  : polynomial degree """
         return len ( self.__phis ) 
     
+# =============================================================================
+## @class Shift
+#  Helper MIXIN class to add `shift` parameter
+#  @author Vanya Belyaev Vanya.Belyaev@CERN.CH
+class Shift ( object ) :
+    """ Helper MIXIN class to add `shift` and `scale` parameters
+    """
+    def __init__ ( self  ,
+                   shift       = None ,
+                   shift_name  = ''   , 
+                   shift_title = ''   ) :
+        
+        if shift is None   : shift = ROOT.RooFit.RooConst ( 0 )
+        ##
+        name = self.name         
+        if not shift_name  : shift_name  = 'shift_%s' % name
+        if not shift_title : shift_title = 'shift(%s)' % name
+        ## shift parameter 
+        self.__shift  = self.make_var ( shift        ,
+                                        shift_name   ,  
+                                        shift_title  ,  
+                                        None , shift )
+        
+    @property
+    def shift ( self ) :
+        """`shift'-parameter"""
+        return self.__shift
+    @shift.setter 
+    def shift ( self , value ) :
+        self.set_value ( self.__shift , value )
+
+# =============================================================================
+## @class Scale 
+#  Helper MIXIN class to add `scale` parameter
+#  @author Vanya Belyaev Vanya.Belyaev@CERN.CH
+class Scale ( object ) :
+    """ Helper MIXIN class to add `shift` and `scale` parameters
+    """
+    def __init__ ( self  ,
+                   scale       = None , 
+                   scale_name  = ''   , 
+                   scale_title = ''   ) : 
+        
+        if scale is None   : scale = ROOT.RooFit.RooConst ( 1 )
+        ## 
+        name = self.name
+        if not scale_name  : scale_name  = 'scale_%s'  % name
+        if not scale_title : scale_title = 'scale(%s)' % name
+        ## scale parameter 
+        self.__scale  = self.make_var ( scale        ,
+                                        scale_name   ,
+                                        scale_title  ,
+                                        None , scale , 1.e-6  )    
+        
+    @property
+    def scale ( self ) :
+        """`scale'-parameter"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        self.set_value ( self.__scale , value )
+
+# =============================================================================
+## @class ShiftAndScale 
+#  Helper MIXIN class to add `shift` and `scale` parameters 
+#  @author Vanya Belyaev Vanya.Belyaev@CERN.CH
+class ShiftAndScale (Shift,Scale) :
+    """ Helper MIXIN class to add `shift` and `scale` parameters
+    """
+    def __init__ ( self  ,
+                   scale       =  ROOT.RooFit.RooConst ( 1 ) , 
+                   shift       =  ROOT.RooFit.RooConst ( 0 ) ,
+                   scale_name  = '' , 
+                   scale_title = '' , 
+                   shift_name  = '' , 
+                   shift_title = '' ) :
+        
+        Shift.__init__ ( self , shift = shift , shift_name = shift_name , shift_title = shifT_title )
+        Scale.__init__ ( self , scale = scale , scale_name = scale_name , scale_title = scale_title )
+        
+# =============================================================================
+
 
 # =============================================================================
 ## @class ShiftScalePoly
@@ -3428,6 +3514,9 @@ class ShiftScalePoly ( Phases ) :
         """'pars_lst' :  polynomial parameters as RooArgList"""
         return self.phis_lst
 
+
+
+    
 # =============================================================================
 ## @class Fractions
 #  Helper MIXIN class for implementatiorn of SumXD objects

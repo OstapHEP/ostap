@@ -2074,6 +2074,23 @@ def _rgenbetap_reduce_ ( pdf ):
 Ostap.Models.GenBetaPrime.__reduce__ = _rgenbetap_reduce_ 
 
 # =============================================================================
+## reduce GenBeta
+def _r_GenBeta_reduce_ ( pdf ):
+    """ Reduce GenBeta"""
+    return root_store_factory , ( type ( pdf )      ,
+                                  pdf.name          ,
+                                  pdf.title         ,
+                                  pdf.x          () ,                            
+                                  pdf.a          () ,
+                                  pdf.b          () ,
+                                  pdf.gamma      () ,
+                                  pdf.p          () ,
+                                  pdf.q          () ,
+                                  pdf.shift      () )
+
+Ostap.Models.GenBeta .__reduce__ = _r_GenBeta_reduce_ 
+
+# =============================================================================
 ## reduce Landau
 def _rlandau_reduce_ ( pdf ):
     """ Reduce Landau"""
@@ -2240,6 +2257,121 @@ def _rBS_reduce_ ( pdf ) :
 
 Ostap.Models.BirnbaumSaunders.__reduce__ = _rBS_reduce_ 
 
+# =============================================================================
+## reduce Frechet
+def _r_Frechet_reduce_ ( pdf ) :
+    """ Reduce Frechet"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.alpha  () ,                            
+                                  pdf.scale  () ,
+                                  pdf.shift  () )
+
+Ostap.Models.Frechet.__reduce__ = _r_Frechet_reduce_ 
+
+# =============================================================================
+## reduce Dagum
+def _r_Dagum_reduce_ ( pdf ) :
+    """ Reduce Dagum"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.p      () ,                            
+                                  pdf.a      () ,                            
+                                  pdf.b      () ,                            
+                                  pdf.shift  () )
+
+Ostap.Models.Dagum.__reduce__ = _r_Dagum_reduce_ 
+
+# =============================================================================
+## reduce BenktanderI&II
+def _r_Benktander_reduce_ ( pdf ) :
+    """ Reduce BenktanderI&II"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.a      () ,                            
+                                  pdf.r      () ,                            
+                                  pdf.scale  () , 
+                                  pdf.shift  () )
+
+Ostap.Models.BenktanderI  .__reduce__ = _r_Benktander_reduce_ 
+Ostap.Models.BenktanderII .__reduce__ = _r_Benktander_reduce_ 
+
+# =============================================================================
+## reduce LogNormal 
+def _r_LogNormal_reduce_ ( pdf ) :
+    """ Reduce LogNormal"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.shape  () ,                            
+                                  pdf.scale  () , 
+                                  pdf.shift  () )
+
+Ostap.Models.LogNormal  .__reduce__ = _r_LogNormal_reduce_ 
+
+# =============================================================================
+## reduce ExpoLog
+def _r_ExpoLog_reduce_ ( pdf ) :
+    """ Reduce ExpoLog"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.beta   () ,                            
+                                  pdf.psi    () , 
+                                  pdf.shift  () )
+
+Ostap.Models.ExpoLog  .__reduce__ = _r_ExpoLog_reduce_
+
+# =============================================================================
+## reduce Davis 
+def _r_Davis_reduce_ ( pdf ) :
+    """ Reduce Davis"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.b      () ,                            
+                                  pdf.n      () , 
+                                  pdf.mu     () )
+
+Ostap.Models.Davis .__reduce__ = _r_Davis_reduce_ 
+
+# =============================================================================
+## reduce Kumaraswami
+def _r_Kumaraswami_reduce_ ( pdf ) :
+    """ Reduce Kumaraswami"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.a      () ,                            
+                                  pdf.b      () ,                            
+                                  pdf.scale  () , 
+                                  pdf.shift  () )
+
+Ostap.Models.Kumaraswami.__reduce__ = _r_Kumaraswami_reduce_ 
+
+# =============================================================================
+## reduce InverseGamma
+def _r_InverseGamma_reduce_ ( pdf ) :
+    """ Reduce InverseGamma"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.alpha  () ,                            
+                                  pdf.beta   () ,                            
+                                  pdf.shift  () )
+
+Ostap.Models.InverseGamma.__reduce__ = _r_InverseGamma_reduce_ 
 
 
 # =============================================================================

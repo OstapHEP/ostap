@@ -43,7 +43,7 @@ namespace Ostap
      *  where \f$z= \frac{x-\mu}{\beta}\f$
      *  
      *  Very useful important case:
-     *  If  x is distributed accoring  to \f$ f(x) \propto e^{-\tau x} \f$, 
+     *  If  x is distributed according  to \f$ f(x) \propto e^{-\tau x} \f$, 
      *  then z, \f$ z  =   log(x) \f$, is distributed according to 
      *  \f$ F(z) = G(x, -\log(\tau), 1 ) \f$ 
      * 
@@ -3061,6 +3061,185 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;      
+    // ========================================================================
+    /** @class Kumaraswami
+     *  Kumaraswami distribution with scale and shift
+     *  @see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
+     */
+    class Kumaraswami
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      Kumaraswami
+      ( const double a     = 1 , // 0<a 
+	const double b     = 1 , // 0<b 
+	const double scale = 1 , // 0<scale
+	const double shift = 0 ) ;      	
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Kumaraswami function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Kumaraswami function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Kumaraswami function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      inline double a      () const { return m_a     ; }
+      inline double b      () const { return m_b     ; }
+      inline double scale  () const { return m_scale ; }
+      inline double shift  () const { return m_shift ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double xmin  () const { return m_shift           ; }
+      inline double xmax  () const { return m_shift + m_scale ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setA     ( const double value ) ;
+      bool setB     ( const double value ) ;
+      bool setScale ( const double value ) ;
+      bool setShift ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean-value 
+      double mean     () const ;
+      /// median-value 
+      double median   () const ;
+      /// mode-value 
+      double mode     () const ;
+      /// variance 
+      double variance () const ;
+      /// rms 
+      double rms      () const ;
+      /// skewness
+      double skewness () const ;
+      /// (excess) kurtosis
+      double kurtosis () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// raw moment for standartized Kumaraswami
+      double moment ( const unsigned int n ) const ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      /// quantile  function \f$ 0 < p < 1 \f$ 
+      double quantile 
+      ( const double p    ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// parameter a 
+      double m_a      { 1 } ; // parameter a 
+      /// parameter b
+      double m_b      { 1 } ; // parameter b 
+      /// scale parameter
+      double m_scale  { 1 } ; // scale parameter 
+      /// shift parameter
+      double m_shift  { 0 } ; // shift  parameter 
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class InverseGamma
+     *  Inverse Gamma distribution (with shift)
+     *  @see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
+     */
+    class InverseGamma
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// full constructot 
+      InverseGamma
+      ( const double alpha = 8 ,
+	const double beta  = 1 ,
+	const double shift = 0 ) ;	      
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Inverse-Gamma function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Inverse-Gamma function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Inverse-Gamma function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      inline double alpha  () const { return m_alpha ; }
+      inline double beta   () const { return m_beta  ; }
+      inline double shift  () const { return m_shift ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double xmin  () const { return m_shift ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setAlpha ( const double value ) ;
+      bool setBeta  ( const double value ) ;
+      bool setShift ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean
+      double mean     () const ;
+      /// variance 
+      double variance () const ;
+      /// RMS 
+      double rms      () const ;
+      /// skewness 
+      double skewness () const ;
+      /// (excess) kurtosis
+      double kurtosis () const ;      
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// parameter alpha (shape) 
+      double m_alpha { 8 } ; // parameter alpha
+      /// parameter beta  (scale) 
+      double m_beta  { 1 } ; // parameter b 
+      /// shift parameter
+      double m_shift { 0 } ; // shift  parameter 
+      // ======================================================================
+    };
     // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

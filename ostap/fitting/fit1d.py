@@ -454,6 +454,7 @@ class RESOLUTION(PEAK) :
         return pdf_convolution ( other , self )
     
     __rmatmult__ = __rmod__     
+
     
 # =============================================================================
 ## @class Fit1D

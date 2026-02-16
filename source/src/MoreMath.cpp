@@ -1401,10 +1401,10 @@ namespace
     //
     // (2) integer argument ? covers also the log-case
     if ( Ostap::Math::isint ( n ) )
-      {
-        const int nn = std::lround ( n ) ;
-        return _cavalieri_ ( nn , xlow , xhigh ) ;
-      }
+    {
+      const int nn = std::lround ( n ) ;
+      return _cavalieri_ ( nn , xlow , xhigh ) ;
+    }
     //
     if ( ( 0 > n + 1 ) && ( xlow <= 0 ) || ( xhigh <= 0 ) )
       { return std::numeric_limits<double>::quiet_NaN() ; }   // return NaN
@@ -3787,7 +3787,7 @@ double Ostap::Math::dn
   else if ( s_zero  ( 1 - m ) ) { return sech ( u ) ; }
   else if ( s_equal ( m , 1 ) ) { return sech ( u ) ; }
   else if ( u < 0             ) { return cn ( u , m ) ; }
-  else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
+  else if ( m < 0 || 1 < m    ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   const double snu = sn ( u , m ) ;
   return std::sqrt ( 1.0 - m * snu * snu ) ;
@@ -3811,14 +3811,14 @@ double Ostap::Math::sc
   //
   // reduce the argument
   if ( 0.5 * M_PI < u ) 
-    {
-      const long double KK = elliptic_Km ( m ) ;
-      if ( 4 * KK < u  ) 
-	{      
-	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
-	  return sn ( uk , m ) ;
-	}
-    } ;
+  {
+    const long double KK = elliptic_Km ( m ) ;
+    if ( 4 * KK < u  ) 
+    {      
+      const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
+      return sn ( uk , m ) ;
+    }
+  } ;
   //
   const double a = am ( u , m ) ;
   //
@@ -3839,13 +3839,13 @@ double Ostap::Math::dilog ( const double x )
   gsl_sf_result result ;
   const int ierror = gsl_sf_dilog_e ( x , &result) ;
   if ( ierror ) 
-    {
-      //
-      gsl_error ( "Error from gsl_sf_dilog_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-      //
-    }
+  {
+    //
+    gsl_error ( "Error from gsl_sf_dilog_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+    //
+  }
   return result.val ;
 }
 // ============================================================================
@@ -3866,17 +3866,17 @@ Ostap::Math::dilog ( const std::complex<double>& z )
                                               &result_re     ,
                                               &result_im     ) ;
   if ( ierror ) 
-    {
-      //
-      gsl_error ( "Error from gsl_sf_dilog_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-      //
-    }
+  {
+    //
+    gsl_error ( "Error from gsl_sf_complex_dilog_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+    //
+  }
+  //
   return std::complex<double>( result_re.val , result_im.val ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  Riemann's Zeta function \f$ n\ne 1\f$:
@@ -3885,18 +3885,46 @@ Ostap::Math::dilog ( const std::complex<double>& z )
 // ============================================================================
 double Ostap::Math::zeta ( const int n  )
 {
-  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  // if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  // use Cauchi principal value: 
+  if      (  1 == n ) { return s_MASCHERONI ; }
+  else if (  0 == n ) { return -0.5         ; }
+  else if ( -1 == n ) { return -1.0/12      ; }  
+  // trivial zeroes ?
+  else if (  n < -1 && 0 == n % 2 ) { return 0 ; }
+  //
+  typedef std::map<int,double>  MAP   ;
+  typedef SyncedCache<MAP>      CACHE ;
+  /// the cache
+  static CACHE                 s_CACHE {} ; // the cache
+  static const std::size_t s_MAX_CACHE { 10000 } ; 
+  //
+  // (1) check a value already calculated 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( n ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_zeta_int_e ( n , &result) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_zeta_int_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_zeta_int_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
+  //
+  // (2) add calculated value into the cache 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( n , result.val ) ) ;
+  }  
+  //
   return result.val ;
 }
 // ============================================================================
@@ -3906,19 +3934,24 @@ double Ostap::Math::zeta ( const int n  )
 // ============================================================================
 double Ostap::Math::zeta ( const double s   )
 {
-  if ( 1 == s || s_equal ( s , 1.0 ) )
-    { return std::numeric_limits<double>::quiet_NaN() ; }
+  /// integer argument ? 
+  if ( Ostap::Math::isint ( s ) )
+  {
+    const int nn = Ostap::Math::round ( s ) ;
+    return Ostap::Math::zeta ( nn ) ;
+  }
+  //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_zeta_e ( s , &result) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_zeta_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_zeta_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
   return result.val ;
 }
 // ============================================================================
@@ -3928,18 +3961,44 @@ double Ostap::Math::zeta ( const double s   )
 // ============================================================================
 double Ostap::Math::zetam1 ( const int n  )
 {
-  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  if      (  1 == n )  { return s_MASCHERONI -1 ; } // use Cauchi principal value: 
+  else if (  0 == n )  { return -0.5         -1 ; }
+  else if ( -1 == n )  { return -1.0/12      -1 ; }  
+  // trivial zeroes ?
+  else if (  n < -1 && 0 == n % 2 ) { return -1 ; }
+  //
+  typedef std::map<int,double>  MAP   ;
+  typedef SyncedCache<MAP>      CACHE ;
+  /// the cache
+  static CACHE                 s_CACHE {} ; // the cache
+  static const std::size_t s_MAX_CACHE { 10000 } ; 
+  //
+  // (1) check a value already calculated 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( n ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }  
+  //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_zetam1_int_e ( n , &result) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_zetam1_int_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_zetam1_int_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
+  //
+  // add calculated value into the cache 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( n , result.val ) ) ;
+  }  
+  //
   return result.val ;
 }
 // ============================================================================
@@ -3949,19 +4008,24 @@ double Ostap::Math::zetam1 ( const int n  )
 // ============================================================================
 double Ostap::Math::zetam1 ( const double s   )
 {
-  if ( 1 == s || s_equal ( s , 1.0 ) )
-    { return std::numeric_limits<double>::quiet_NaN() ; }
+  /// integer argument ? 
+  if ( Ostap::Math::isint ( s ) )
+  {
+    const int nn = Ostap::Math::round ( s ) ;
+    return Ostap::Math::zetam1 ( nn ) ;
+  }
+  //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_zetam1_e ( s , &result) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_zetam1_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_zetam1_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
   return result.val ;
 }
 // ============================================================================
@@ -3978,7 +4042,7 @@ double Ostap::Math::hurwitz
   const double q )
 {
   if ( s <= 1 || q <= 0 )
-    { return std::numeric_limits<double>::quiet_NaN() ; }
+  { return std::numeric_limits<double>::quiet_NaN() ; }
   //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -3986,33 +4050,57 @@ double Ostap::Math::hurwitz
   gsl_sf_result result ;
   const int ierror = gsl_sf_hzeta_e ( s , q , &result) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_hzeta_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_hzeta_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
   return result.val ;
 }
 // ============================================================================
 
 // ============================================================================
 /* Dirichlet's Eta function 
- *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+ *  \f$ \eta ( s ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
  */
 // ============================================================================
 double Ostap::Math::eta ( const int n  )
 {
+  /// trvial zeroes of zeta-function:
+  if ( n < -1 && 0 == n % 2 ) { return 0 ; }
+  //
+  typedef std::map<int,double>  MAP   ;
+  typedef SyncedCache<MAP>      CACHE ;
+  /// the cache
+  static CACHE                 s_CACHE {} ; // the cache
+  static const std::size_t s_MAX_CACHE { 10000 } ;
+  //
+  // (1) check a value already calculated 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( n ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //  
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_eta_int_e ( n , &result) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_eta_int_e function" , __FILE__ , __LINE__ , ierror ) ;
-      if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN() ; }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_eta_int_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
+  //
+  // (2) add calculated value into the cache 
+  { 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( n , result.val ) ) ;
+  }  
+  //
   return result.val ;
 }
 // ============================================================================
@@ -4022,6 +4110,12 @@ double Ostap::Math::eta ( const int n  )
 // ============================================================================
 double Ostap::Math::eta ( const double s   )
 {
+  /// integer argument ? 
+  if ( Ostap::Math::isint ( s ) )
+  {
+    const int nn = Ostap::Math::round ( s ) ;
+    return Ostap::Math::eta ( nn ) ;
+  }
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
@@ -4089,7 +4183,6 @@ double Ostap::Math::dirichlet_beta
  // 
  return dirichlet_beta ( 1.0 * n ) ;
 }
-
 
 // ========================================================================
 /* complete Fermi-Dirac integral 
@@ -4292,7 +4385,6 @@ double Ostap::Math::bessel_Yn
   //
   return result.val ;  
 }
-
 
 // ============================================================================
 /** Regular Bessel function 
@@ -4728,9 +4820,10 @@ double Ostap::Math::laguerre_q ( const double q , const double x )
  * @see https://arxiv.org/abs/1711.09304
  */
 // ============================================================================
-double Ostap::Math::H2 ( const double a  , 
-                         const double u1 , 
-                         const double u2 ) 
+double Ostap::Math::H2
+( const double a  , 
+  const double u1 , 
+  const double u2 ) 
 {
   if ( a  < 0 ) { return H2 ( std::abs ( a ) , u1 , u2 ) ; }
   return 0 ;
@@ -5027,11 +5120,8 @@ double Ostap::Math::ghm
   const double y )
 {
   //
-  if ( !std::isfinite ( x ) || x <= 0 ) 
-  { return std::numeric_limits<double>::quiet_NaN() ; }
-  //
-  if ( !std::isfinite ( y ) || y <= 0 ) 
-  { return std::numeric_limits<double>::quiet_NaN() ; }
+  if ( !std::isfinite ( x ) || x <= 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  if ( !std::isfinite ( y ) || y <= 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }
   //
   return x * y / agm ( x , y ) ;
 }
@@ -5261,8 +5351,6 @@ Ostap::Math::lehmer_mean
 }
 // ============================================================================
 
-
-
 // ============================================================================
 /*  Gudermannian function 
  *  @see https://en.wikipedia.org/wiki/Gudermannian_function
@@ -5282,7 +5370,7 @@ double Ostap::Math::gd     ( const double x )
 double Ostap::Math::gd_inv ( const double x ) 
 { return
     std::abs ( x ) < 0.5 * M_PI ? 
-                     2 * std::atanh ( std::tan ( 0.5L * x ) ) : 
+    2 * std::atanh ( std::tan ( 0.5L * x ) ) : 
     std::numeric_limits<double>::quiet_NaN() ;
 }                     
 // ============================================================================
@@ -5364,7 +5452,6 @@ double Ostap::Math::der_Bi ( const double x )
   return result.val ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /* Ramanudjan' sum
@@ -5476,11 +5563,12 @@ double Ostap::Math::Shi ( const double x )
   gsl_sf_result result ;
   const int ierror = gsl_sf_Shi_e ( x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_Shi_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	{ return std::numeric_limits<double>::quiet_NaN(); }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_Shi_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
   return result.val ;
 }
 // =============================================================================
@@ -5498,13 +5586,13 @@ double Ostap::Math::Chi ( const double x )
   gsl_sf_result result ;
   const int ierror = gsl_sf_Chi_e ( x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_Chi_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	{ return std::numeric_limits<double>::quiet_NaN(); }
-    }
-  return result.val ;
-  
+  {
+    gsl_error ( "Error from gsl_sf_Chi_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
+  return result.val ;  
 }
 // =========================================================================
 namespace
@@ -5672,12 +5760,12 @@ double Ostap::Math::clausen ( const double x )
   gsl_sf_result result ;
   const int ierror = gsl_sf_clausen_e ( x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_clausen_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN(); }
-    }
-  
+  {
+    gsl_error ( "Error from gsl_sf_clausen_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
   return result.val ;      
 }
 // ======================================================================
@@ -5729,15 +5817,14 @@ double Ostap::Math::lambert_Wm1 ( const double x )
   gsl_sf_result result ;
   const int ierror = gsl_sf_lambert_Wm1_e ( x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_lambert_Wm1_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN(); }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_lambert_Wm1_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
   return result.val ;
 }
-
-
 // ========================================================================
 namespace
 {
@@ -5977,9 +6064,6 @@ std::complex<double> Ostap::Math::bring   ( const std::complex<double>& x )
 }
 // ============================================================================
 
-
-
-
 // ============================================================================
 /*  complete Fermi-Dirac integral 
  *  \f$ F_j(x) = \frac{1}{\Gamma(j+1)}\int^{+\infty}_{0} 
@@ -6118,10 +6202,10 @@ double Ostap::Math::probit
 ( const double alpha  )
 {
   return
+    alpha <  0            ?  std::numeric_limits<double>::quiet_NaN () :
+    alpha >  1            ?  std::numeric_limits<double>::quiet_NaN () :
     s_zero  ( alpha     ) ? -std::numeric_limits<double>::max       () :
     s_equal ( alpha , 1 ) ?  std::numeric_limits<double>::max       () : 
-    alpha <= 0            ?  std::numeric_limits<double>::quiet_NaN () :
-    alpha >= 1            ?  std::numeric_limits<double>::quiet_NaN () :
     gsl_cdf_ugaussian_Pinv ( alpha ) ; 
 }
 // ============================================================================
@@ -6135,10 +6219,10 @@ double Ostap::Math::logit
 ( const double p ) 
 {
   return
+    p <  0            ?  std::numeric_limits<double>::quiet_NaN () :
+    p >  1            ?  std::numeric_limits<double>::quiet_NaN () :
     s_zero  ( p     ) ? -std::numeric_limits<double>::max       () :
     s_equal ( p , 1 ) ?  std::numeric_limits<double>::max       () : 
-    p <= 0            ?  std::numeric_limits<double>::quiet_NaN () :
-    p >= 1            ?  std::numeric_limits<double>::quiet_NaN () :
     std::log ( p * 1.0L / ( 1.0L - p ) ) ; 
 }
 // ============================================================================
@@ -6153,7 +6237,8 @@ double Ostap::Math::hyperg_1F1
 ( const double a ,
   const double b ,
   const double x )
-{ 
+{
+  //
   gsl_sf_result result ;
   const int ierror = gsl_sf_hyperg_1F1_e ( a , b , x , &result ) ;
   if ( ierror ) 
@@ -6162,6 +6247,7 @@ double Ostap::Math::hyperg_1F1
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
       { return std::numeric_limits<double>::quiet_NaN(); }
   }
+  //
   return result.val ;
 }  
 // ============================================================================
@@ -6222,22 +6308,23 @@ double Ostap::Math::hyperg_U
 ( const double a ,
   const double b , 
   const double x ) 
+{
+  if ( Ostap::Math::isint ( a ) && Ostap::Math::isint  ( b ) )
+  { 
+    const int n = Ostap::Math::round ( a ) ;
+    const int m = Ostap::Math::round ( b ) ;
+    return hyperg_U  ( n , m , x ) ; 
+  } 
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hyperg_U_e ( a , b ,  x , &result ) ;
+  if ( ierror ) 
   {
-    if ( Ostap::Math::isint ( a ) && Ostap::Math::isint  ( b ) )
-    { 
-      const int n = Ostap::Math::round ( a ) ;
-      const int m = Ostap::Math::round ( b ) ;
-      return hyperg_U  ( n , m , x ) ; 
-    } 
-    //
-    gsl_sf_result result ;
-    const int ierror = gsl_sf_hyperg_U_e ( a , b ,  x , &result ) ;
-    if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_hyperg_U_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	    { return std::numeric_limits<double>::quiet_NaN(); }
-    }
+    gsl_error ( "Error from gsl_sf_hyperg_U_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
   return result.val ;  
 }
 // ============================================================================
@@ -6260,11 +6347,12 @@ double Ostap::Math::hyperg_2F1
   gsl_sf_result result ;
   const int ierror = gsl_sf_hyperg_2F1_e ( a , b , c , x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_hyperg_2F1_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-	{ return std::numeric_limits<double>::quiet_NaN(); }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_hyperg_2F1_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
   return result.val ; 
 }
 // =============================================================================

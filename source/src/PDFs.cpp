@@ -7510,6 +7510,27 @@ Ostap::Models::GenBetaPrime::GenBetaPrime
   setPars() ;
 }
 // ============================================================================
+Ostap::Models::GenBetaPrime::GenBetaPrime
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          alpha  ,
+  RooAbsReal&          beta   ,
+  RooAbsReal&          p      ,
+  RooAbsReal&          q      ,
+  const double         scale  ,
+  const double         shift  )
+  : GenBetaPrime ( name  ,
+		   title ,
+		   x     ,
+		   alpha ,
+		   beta  ,
+		   p     ,
+		   q     ,
+		   RooFit::RooConst ( scale ) , 
+		   RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
 // "copy" constructor 
 // ============================================================================
 Ostap::Models::GenBetaPrime::GenBetaPrime
@@ -7586,6 +7607,137 @@ Double_t Ostap::Models::GenBetaPrime::analyticalIntegral
   return m_betap.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
 }
 // ============================================================================
+
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenBeta::GenBeta
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          b      ,
+  RooAbsReal&          gamma  ,  
+  RooAbsReal&          p      ,
+  RooAbsReal&          q      ,
+  RooAbsReal&          shift  )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x       ( "!x"     , "Observable" , this , x      ) 
+  , m_a       ( "!a"     , "alpha"      , this , a      ) 
+  , m_b       ( "!b"     , "beta"       , this , b      ) 
+  , m_gamma   ( "!b"     , "beta"       , this , gamma  ) 
+  , m_p       ( "!p"     , "p"          , this , p      ) 
+  , m_q       ( "!q"     , "q"          , this , q      ) 
+  , m_shift   ( "!shift" , "shift"      , this , shift  ) 
+    //
+  , m_beta   () 
+{
+  setPars() ;
+}
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenBeta::GenBeta
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          b      ,
+  RooAbsReal&          gamma  ,  
+  RooAbsReal&          p      ,
+  RooAbsReal&          q      ,
+  const double         shift  )
+  : GenBeta ( name  ,
+	      title ,
+	      x     ,
+	      a     ,
+	      b     ,
+	      gamma ,
+	      p     ,
+	      q     ,
+	      RooFit::RooConst ( shift ) )
+{}	      
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::GenBeta::GenBeta
+( const Ostap::Models::GenBeta& right ,
+  const char*                        name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"     , this , right.m_x     ) 
+  , m_a      ( "!a"     , this , right.m_a     )
+  , m_b      ( "!b"     , this , right.m_b     )
+  , m_gamma  ( "!gamma" , this , right.m_gamma )
+  , m_p      ( "!p"     , this , right.m_p     )
+  , m_q      ( "!q"     , this , right.m_q     )
+  , m_shift  ( "!shift" , this , right.m_shift )
+    //
+  , m_beta  (                   right.m_beta  ) 
+{
+  setPars () ;
+}
+
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::GenBeta::~GenBeta () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GenBeta*
+Ostap::Models::GenBeta::clone ( const char* name ) const 
+{ return new Ostap::Models::GenBeta ( *this , name) ; }
+// ============================================================================
+void Ostap::Models::GenBeta::setPars () const 
+{
+  //
+  m_beta.setA      ( m_a      ) ;
+  m_beta.setB      ( m_b      ) ;
+  m_beta.setGamma  ( m_gamma  ) ;
+  m_beta.setP      ( m_p      ) ;
+  m_beta.setQ      ( m_q      ) ;
+  m_beta.setShift  ( m_shift  ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenBeta::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_beta    ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::GenBeta::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenBeta::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GenBeta"          ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_beta.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 // constructor from all parameters 
@@ -7794,10 +7946,25 @@ Ostap::Models::Landau::Landau
   , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
   , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
-  , m_landau  ( 1 , 0 ) 
+  , m_landau  () 
 {
   setPars() ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Landau::Landau
+( const char*  name   , 
+  const char*  title  ,
+  RooAbsReal&  x      ,
+  const double scale  ,
+  const double shift  )
+  : Landau ( name  ,
+	     title ,
+	     x     ,
+	     RooFit::RooConst ( scale ) ,
+	     RooFit::RooConst ( shift ) )
+{}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -12749,6 +12916,492 @@ Double_t Ostap::Models::BenktanderII::analyticalIntegral
 
 
 // ============================================================================
+Ostap::Models::LogNormal::LogNormal
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          shape     ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_shape   ( "!shape" , "shape-parameter"  , this , shape )
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_ln   () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::LogNormal::LogNormal
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          shape     ,
+  const double         scale     , 
+  const double         shift     )
+  : LogNormal ( name  ,
+		title ,
+		x     ,
+		shape ,
+		RooFit::RooConst ( scale ) ,
+		RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::LogNormal::LogNormal
+( const Ostap::Models::LogNormal& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_shape ( "!shape" , this , right.m_shape )
+  , m_scale ( "!scale" , this , right.m_scale )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_ln ( right.m_ln ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::LogNormal::~LogNormal() {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::LogNormal*
+Ostap::Models::LogNormal::clone ( const char* name ) const 
+{ return new Ostap::Models::LogNormal( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::LogNormal::setPars () const 
+{
+  m_ln.setShape ( m_shape ) ;
+  m_ln.setScale ( m_scale ) ;
+  m_ln.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::LogNormal::evaluate() const 
+{
+  setPars () ;
+  return m_ln ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::LogNormal::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::LogNormal::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                  ,
+                  "Invalid integration code" ,
+                  "Ostap::Models::LogNormal" ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_ln.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+
+
+// ============================================================================
+Ostap::Models::ExpoLog::ExpoLog 
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          beta      ,
+  RooAbsReal&          psi       ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_beta    ( "!beta"  , "beta-parameter"   , this , beta  )
+  , m_psi     ( "!psi"   , "psi-parameter"    , this , psi   )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_el   () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::ExpoLog::ExpoLog
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          beta      ,
+  RooAbsReal&          psi       ,
+  const double         shift     )
+  : ExpoLog ( name  ,
+	      title ,
+	      x     ,
+	      beta  ,
+	      psi   , 
+	      RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::ExpoLog::ExpoLog
+( const Ostap::Models::ExpoLog& right ,      
+  const char*                   name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_beta  ( "!beta"  , this , right.m_beta  )
+  , m_psi   ( "!psi"   , this , right.m_psi   )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_el ( right.m_el ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::ExpoLog::~ExpoLog () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::ExpoLog*
+Ostap::Models::ExpoLog::clone ( const char* name ) const 
+{ return new Ostap::Models::ExpoLog( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::ExpoLog::setPars () const 
+{
+  m_el.setBeta  ( m_beta  ) ;
+  m_el.setPsi   ( m_psi   ) ;
+  m_el.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::ExpoLog::evaluate() const 
+{
+  setPars () ;
+  return m_el ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::ExpoLog::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::ExpoLog::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                  ,
+                  "Invalid integration code" ,
+                  "Ostap::Models::ExpoLog"   ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_el.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+
+
+
+// ============================================================================
+Ostap::Models::Davis::Davis
+( const char*          name   , 
+  const char*          title ,
+  RooAbsReal&          x     ,
+  RooAbsReal&          b     ,
+  RooAbsReal&          n     ,
+  RooAbsReal&          mu    ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x       ( "!x"  , "Observable"    , this , x   ) 
+  , m_b       ( "!b"  , "b-parameter"   , this , b   )
+  , m_n       ( "!n"  , "n-parameter"   , this , n   )
+  , m_mu      ( "!mu" , "mu-parameter"  , this , mu  )
+  , m_davis   () 
+{
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Davis::Davis
+( const Ostap::Models::Davis& right ,      
+  const char*                   name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x   ( "!x"  , this , right.m_x   )
+  , m_b   ( "!b"  , this , right.m_b  )
+  , m_n   ( "!n"  , this , right.m_n  )
+  , m_mu  ( "!mu" , this , right.m_mu ) 
+    //
+  , m_davis ( right.m_davis ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::Davis::~Davis () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Davis*
+Ostap::Models::Davis::clone ( const char* name ) const 
+{ return new Ostap::Models::Davis ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Davis::setPars () const 
+{
+  m_davis.setB  ( m_b   ) ;
+  m_davis.setN  ( m_n   ) ;
+  m_davis.setMu ( m_mu  ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Davis::evaluate() const 
+{
+  setPars () ;
+  return m_davis ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Davis::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Davis::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                  ,
+                  "Invalid integration code" ,
+                  "Ostap::Models::Davis"   ,
+                  INVALID_INTEGRATION_CODE   , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_davis.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+
+
+// ============================================================================
+Ostap::Models::Kumaraswami::Kumaraswami
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          b         ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_a       ( "!a"     , "a-parameter"      , this , a     )
+  , m_b       ( "!b"     , "b-parameter"      , this , b     )
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_k      () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::Kumaraswami::Kumaraswami
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          a         ,
+  RooAbsReal&          b         ,
+  const double         scale     , 
+  const double         shift     )
+  : Kumaraswami ( name  ,
+		  title ,
+		  x     ,
+		  a     ,
+		  b     ,
+		  RooFit::RooConst ( scale ) ,
+		  RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Kumaraswami::Kumaraswami
+( const Ostap::Models::Kumaraswami& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_a     ( "!a"     , this , right.m_a     )
+  , m_b     ( "!b"     , this , right.m_b     )
+  , m_scale ( "!scale" , this , right.m_scale )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_k ( right.m_k ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::Kumaraswami::~Kumaraswami () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Kumaraswami*
+Ostap::Models::Kumaraswami::clone ( const char* name ) const 
+{ return new Ostap::Models::Kumaraswami( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Kumaraswami::setPars () const 
+{
+  m_k.setA     ( m_a ) ;
+  m_k.setB     ( m_b ) ;
+  m_k.setScale ( m_scale ) ;
+  m_k.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Kumaraswami::evaluate() const 
+{
+  setPars () ;
+  return m_k ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Kumaraswami::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Kumaraswami::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                    ,
+                  "Invalid integration code"   ,
+                  "Ostap::Models::Kumaraswami" ,
+                  INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_k.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+
+
+// ============================================================================
+Ostap::Models::InverseGamma::InverseGamma
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          beta      ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"      , "Observable"       , this , x     ) 
+  , m_alpha   ( "!aalpha" , "alpha-parameter"  , this , alpha )
+  , m_beta    ( "!beta"   , "beta-parameter"   , this , beta  )
+  , m_shift   ( "!shift"  , "shift-parameter"  , this , shift )
+  , m_ig      () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::InverseGamma::InverseGamma
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          beta      ,
+  const double         shift     )
+  : InverseGamma ( name  ,
+		   title ,
+		   x     ,
+		   alpha ,
+		   beta  ,
+		   RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::InverseGamma::InverseGamma
+( const Ostap::Models::InverseGamma& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_alpha ( "!alpha" , this , right.m_alpha )
+  , m_beta  ( "!beta"  , this , right.m_beta  )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_ig ( right.m_ig ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::InverseGamma::~InverseGamma(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::InverseGamma*
+Ostap::Models::InverseGamma::clone ( const char* name ) const 
+{ return new Ostap::Models::InverseGamma ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::InverseGamma::setPars () const 
+{
+  m_ig.setAlpha ( m_alpha) ;
+  m_ig.setBeta  ( m_beta ) ;
+  m_ig.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::InverseGamma::evaluate() const 
+{
+  setPars () ;
+  return m_ig ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::InverseGamma::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::InverseGamma::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                     ,
+                  "Invalid integration code"    ,
+                  "Ostap::Models::InverseGamma" ,
+                  INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_ig.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+
+// ============================================================================
 Ostap::Models::Rational::Rational
 ( const char*          name      , 
   const char*          title     ,
@@ -13035,8 +13688,9 @@ ClassImp(Ostap::Models::Amoroso            )
 ClassImp(Ostap::Models::LogGammaDist       ) 
 ClassImp(Ostap::Models::Log10GammaDist     ) 
 ClassImp(Ostap::Models::LogGamma           )
-ClassImp(Ostap::Models::BetaPrime          ) 
 ClassImp(Ostap::Models::Beta               ) 
+ClassImp(Ostap::Models::GenBeta            ) 
+ClassImp(Ostap::Models::BetaPrime          ) 
 ClassImp(Ostap::Models::GenBetaPrime       ) 
 ClassImp(Ostap::Models::Landau             ) 
 ClassImp(Ostap::Models::SinhAsinh          ) 
@@ -13098,6 +13752,11 @@ ClassImp(Ostap::Models::Frechet            )
 ClassImp(Ostap::Models::Dagum              )
 ClassImp(Ostap::Models::BenktanderI        )
 ClassImp(Ostap::Models::BenktanderII       )
+ClassImp(Ostap::Models::LogNormal          )
+ClassImp(Ostap::Models::ExpoLog            )
+ClassImp(Ostap::Models::Davis              )
+ClassImp(Ostap::Models::Kumaraswami        )
+ClassImp(Ostap::Models::InverseGamma       )
 ClassImp(Ostap::Models::Rational           )
 ClassImp(Ostap::Models::Meixner            )
 // ============================================================================

@@ -5366,7 +5366,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::BetaPrime, 1) ;
+      ClassDefOverride(Ostap::Models::BetaPrime, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5379,6 +5379,15 @@ namespace Ostap
         RooAbsReal&           beta      ,
         RooAbsReal&           scale     ,
         RooAbsReal&           shift     ) ;
+      /// constructor from all parameters
+      BetaPrime
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           alpha     ,
+        RooAbsReal&           beta      ,
+        const double          scale = 1 ,
+        const double          shift = 0 ) ;
       /// "copy constructor"
       BetaPrime
       ( const BetaPrime&      right     ,
@@ -5459,15 +5468,26 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       GenBetaPrime
-      ( const char*           name      ,
-        const char*           title     ,
-        RooAbsReal&           x         ,
-        RooAbsReal&           alpha     ,
-        RooAbsReal&           beta      ,
-        RooAbsReal&           p         ,
-        RooAbsReal&           q         ,
-        RooAbsReal&           scale     ,
-        RooAbsReal&           shift     ) ;
+      ( const char*  name      ,
+        const char*  title     ,
+        RooAbsReal&  x         ,
+        RooAbsReal&  alpha     ,
+        RooAbsReal&  beta      ,
+        RooAbsReal&  p         ,
+        RooAbsReal&  q         ,
+        RooAbsReal&  scale     ,
+        RooAbsReal&  shift     ) ;
+      /// constructor from all parameters
+      GenBetaPrime
+      ( const char*  name      ,
+        const char*  title     ,
+        RooAbsReal&  x         ,
+        RooAbsReal&  alpha     ,
+        RooAbsReal&  beta      ,
+        RooAbsReal&  p         ,
+        RooAbsReal&  q         ,
+	const double scale = 1 ,
+	const double shift = 0 ) ; 
       /// "copy constructor"
       GenBetaPrime
       ( const GenBetaPrime&   right     ,
@@ -5533,7 +5553,114 @@ namespace Ostap
       /// the actual function
       mutable Ostap::Math::GenBetaPrime m_betap ; // the actual function
       // ======================================================================
-    } ;    
+    } ;
+    // ========================================================================
+    /** @class GenBeta	
+     *  Generalized Beta distribution (the most general form)
+     *  - \f$ c \equiv \sin^2 \frac{\pi\gamma}{2} \f$ to ensure \f$ 0 \le c \le 1 \f$ 
+     *  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @see Ostap::Math::GenBeta
+     */
+    class  GenBeta: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenBeta, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      GenBeta
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           a         ,
+        RooAbsReal&           b         ,
+        RooAbsReal&           gamma     ,
+        RooAbsReal&           p         ,
+        RooAbsReal&           q         ,
+        RooAbsReal&           shift     ) ;
+      /// constructor from all parameters
+      GenBeta
+      ( const char*           name       ,
+        const char*           title      ,
+        RooAbsReal&           x          ,
+        RooAbsReal&           a          , 
+        RooAbsReal&           b          , 
+        RooAbsReal&           gamma      ,
+        RooAbsReal&           p          ,
+        RooAbsReal&           q          ,
+	const double          shift  = 0 ) ;      
+      /// "copy constructor"
+      GenBeta
+      ( const GenBeta&        right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~GenBeta () ;
+      /// clone
+      GenBeta* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      GenBeta () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenBeta& genbeta  () const
+      { setPars() ; return m_beta ; }
+      /// access to underlying function
+      const Ostap::Math::GenBeta& function () const { return genbeta () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& a     () const { return m_a      .arg() ; }
+      const RooAbsReal& b     () const { return m_b      .arg() ; }
+      const RooAbsReal& gamma () const { return m_gamma  .arg() ; }
+      const RooAbsReal& p     () const { return m_p      .arg() ; }
+      const RooAbsReal& q     () const { return m_q      .arg() ; }
+      const RooAbsReal& shift () const { return m_shift  .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_a     {} ;
+      RooRealProxy m_b     {} ;
+      RooRealProxy m_gamma {} ;
+      RooRealProxy m_p     {} ;
+      RooRealProxy m_q     {} ;      
+      RooRealProxy m_shift {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GenBeta m_beta ; // the actual function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class Landau
      *  http://en.wikipedia.org/wiki/Landau_distribution
@@ -5546,17 +5673,24 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Landau, 1) ;
+      ClassDefOverride(Ostap::Models::Landau, 2) ;
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
       Landau
-      ( const char*           name      ,
-        const char*           title     ,
-        RooAbsReal&           x         ,
-        RooAbsReal&           scale     ,
-        RooAbsReal&           shift     ) ;
+      ( const char* name      ,
+        const char* title     ,
+        RooAbsReal& x         ,
+        RooAbsReal& scale     ,
+        RooAbsReal& shift     ) ;
+      /// constructor from all parameters
+      Landau
+      ( const char*  name      ,
+        const char*  title     ,
+        RooAbsReal&  x         ,
+        const double scale = 1 ,
+        const double shift = 0 ) ;
       /// "copy constructor"
       Landau
       ( const Landau&         right     ,
@@ -5579,12 +5713,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -5647,17 +5781,17 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       SinhAsinh
-        ( const char*           name      ,
-          const char*           title     ,
-          RooAbsReal&           x         ,
-          RooAbsReal&           mu        ,
-          RooAbsReal&           sigma     ,
-          RooAbsReal&           epsilon   ,
-          RooAbsReal&           delta     ) ;
+      ( const char*           name      ,
+	const char*           title     ,
+	RooAbsReal&           x         ,
+	RooAbsReal&           mu        ,
+	RooAbsReal&           sigma     ,
+	RooAbsReal&           epsilon   ,
+	RooAbsReal&           delta     ) ;
       /// "copy constructor"
       SinhAsinh
-        ( const SinhAsinh&      right     ,
-          const char*           name  = 0 )  ;
+      ( const SinhAsinh&      right     ,
+	const char*           name  = 0 )  ;
       /// destructor
       virtual ~SinhAsinh  () ;
       /// clone
@@ -5753,17 +5887,17 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       JohnsonSU
-        ( const char*           name      ,
-          const char*           title     ,
-          RooAbsReal&           x         ,
-          RooAbsReal&           xi        ,
-          RooAbsReal&           lam       ,
-          RooAbsReal&           delta     ,
-          RooAbsReal&           gamma     ) ;
+      ( const char*           name      ,
+	const char*           title     ,
+	RooAbsReal&           x         ,
+	RooAbsReal&           xi        ,
+	RooAbsReal&           lam       ,
+	RooAbsReal&           delta     ,
+	RooAbsReal&           gamma     ) ;
       /// "copy constructor"
       JohnsonSU
-        ( const JohnsonSU&      right     ,
-          const char*           name  = 0 )  ;
+      ( const JohnsonSU&      right     ,
+	const char*           name  = 0 )  ;
       /// destructor
       virtual ~JohnsonSU  () ;
       /// clone
@@ -5782,12 +5916,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -5941,15 +6075,15 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       Sech
-        ( const char*           name      ,
-          const char*           title     ,
-          RooAbsReal&           x         ,
-          RooAbsReal&           mu        ,
-          RooAbsReal&           sigma     ) ;
+      ( const char*           name      ,
+	const char*           title     ,
+	RooAbsReal&           x         ,
+	RooAbsReal&           mu        ,
+	RooAbsReal&           sigma     ) ;
       /// "copy constructor"
       Sech
-        ( const Sech&          right     ,
-          const char*          name  = 0 )  ;
+      ( const Sech&          right     ,
+	const char*          name  = 0 )  ;
       /// destructor
       virtual ~Sech  () ;
       /// clone
@@ -6120,15 +6254,15 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       Logistic
-        ( const char*           name      ,
-          const char*           title     ,
-          RooAbsReal&           x         ,
-          RooAbsReal&           mu        ,
-          RooAbsReal&           sigma     ) ;
+      ( const char*           name      ,
+	const char*           title     ,
+	RooAbsReal&           x         ,
+	RooAbsReal&           mu        ,
+	RooAbsReal&           sigma     ) ;
       /// "copy constructor"
       Logistic
-        ( const Logistic&       right     ,
-          const char*           name  = 0 )  ;
+      ( const Logistic&       right     ,
+	const char*           name  = 0 )  ;
       /// destructor
       virtual ~Logistic  () ;
       /// clone
@@ -6147,12 +6281,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -6325,12 +6459,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -6421,12 +6555,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -6506,7 +6640,7 @@ namespace Ostap
       // ======================================================================
       Int_t    getAnalyticalIntegral
       ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
+	RooArgSet&     analVars     ,
         const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
       ( Int_t          code         ,
@@ -7081,15 +7215,15 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       QGSM
-        ( const char*           name      ,
-          const char*           title     ,
-          RooAbsReal&           x         ,
-          RooAbsReal&           b         ,   // parameter b
-          RooAbsReal&           mass      ) ; // particle mass (fixed)
+      ( const char*           name      ,
+	const char*           title     ,
+	RooAbsReal&           x         ,
+	RooAbsReal&           b         ,   // parameter b
+	RooAbsReal&           mass      ) ; // particle mass (fixed)
       /// "copy constructor"
       QGSM
-        ( const QGSM&           right     ,
-          const char*           name  = 0 )  ;
+      ( const QGSM&           right     ,
+	const char*           name  = 0 )  ;
       /// destructor
       virtual ~QGSM  () ;
       /// clone
@@ -7108,12 +7242,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -7261,16 +7395,16 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       TwoExpos
-        ( const char*           name  ,
-          const char*           title ,
-          RooAbsReal&           x     ,
-          RooAbsReal&           alpha ,
-          RooAbsReal&           delta ,
-          RooAbsReal&           x0    ) ;
+      ( const char*           name  ,
+	const char*           title ,
+	RooAbsReal&           x     ,
+	RooAbsReal&           alpha ,
+	RooAbsReal&           delta ,
+	RooAbsReal&           x0    ) ;
       /// "copy constructor"
       TwoExpos
-        ( const TwoExpos&          right     ,
-          const char*           name  = 0 )  ;
+      ( const TwoExpos&          right     ,
+	const char*           name  = 0 )  ;
       /// destructor
       virtual ~TwoExpos () ;
       /// clone
@@ -7289,12 +7423,12 @@ namespace Ostap
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -7548,12 +7682,12 @@ namespace Ostap
     public:
       // =====================================================================
       Int_t    getAnalyticalIntegral 
-        ( RooArgSet&  allVars       , 
-          RooArgSet&  analVars      , 
-          const char* rangeName = 0 ) const override ;
+      ( RooArgSet&  allVars       , 
+	RooArgSet&  analVars      , 
+	const char* rangeName = 0 ) const override ;
       Double_t analyticalIntegral
-        ( Int_t       code          , 
-          const char* rangeName = 0 ) const override ;
+      ( Int_t       code          , 
+	const char* rangeName = 0 ) const override ;
       // =====================================================================
     public:
       // ======================================================================
@@ -7631,12 +7765,12 @@ namespace Ostap
     public:
       // =====================================================================
       Int_t    getAnalyticalIntegral 
-        ( RooArgSet&  allVars       , 
-          RooArgSet&  analVars      , 
-          const char* rangeName = 0 ) const override ;
+      ( RooArgSet&  allVars       , 
+	RooArgSet&  analVars      , 
+	const char* rangeName = 0 ) const override ;
       Double_t analyticalIntegral
-        ( Int_t       code          , 
-          const char* rangeName = 0 ) const override ;
+      ( Int_t       code          , 
+	const char* rangeName = 0 ) const override ;
       // =====================================================================
     public:
       // ======================================================================
@@ -7720,12 +7854,12 @@ namespace Ostap
     public:
       // =====================================================================
       Int_t    getAnalyticalIntegral 
-        ( RooArgSet&  allVars       , 
-          RooArgSet&  analVars      , 
-          const char* rangeName = 0 ) const override ;
+      ( RooArgSet&  allVars       , 
+	RooArgSet&  analVars      , 
+	const char* rangeName = 0 ) const override ;
       Double_t analyticalIntegral
-        ( Int_t       code          , 
-          const char* rangeName = 0 ) const override ;
+      ( Int_t       code          , 
+	const char* rangeName = 0 ) const override ;
       // =====================================================================
     public:
       // ======================================================================
@@ -7803,12 +7937,12 @@ namespace Ostap
     public:
       // =====================================================================
       Int_t    getAnalyticalIntegral 
-        ( RooArgSet&  allVars       , 
-          RooArgSet&  analVars      , 
-          const char* rangeName = 0 ) const override ;
+      ( RooArgSet&  allVars       , 
+	RooArgSet&  analVars      , 
+	const char* rangeName = 0 ) const override ;
       Double_t analyticalIntegral
-        ( Int_t       code          , 
-          const char* rangeName = 0 ) const override ;
+      ( Int_t       code          , 
+	const char* rangeName = 0 ) const override ;
       // =====================================================================
     public:
       // ======================================================================
@@ -10447,9 +10581,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    
-    // ========================================================================
-    /** @class Freshet
+    /** @class Frechet
      *  @see https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
      */
     class Frechet : public RooAbsPdf 
@@ -10545,7 +10677,6 @@ namespace Ostap
       mutable Ostap::Math::Frechet  m_frechet {} ;  // the function
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class Dagum
      *  Dagum distribution (with bias parameter)
@@ -10685,7 +10816,7 @@ namespace Ostap
 	RooAbsReal&  a      ,
 	RooAbsReal&  r      ,
 	RooAbsReal&  scale  ,
-	RooAbsReal& shift   ) ;
+	RooAbsReal&  shift  ) ;
       // ======================================================================
       /// constructor from all parameters
       BenktanderI
@@ -10860,6 +10991,489 @@ namespace Ostap
       mutable Ostap::Math::BenktanderII m_b2 {} ;  // the function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class LogNormal
+     *  Log-normal distribution
+     *  @see https://en.wikipedia.org/wiki/Log-normal_distribution
+     *  - We add here an shift parameter
+     *  - and use "mu = log(scale)"
+     *  - and we use "sigma" as shape parameter
+     *  @see Ostap::Math::LogNormal 
+     */
+    class LogNormal : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::LogNormal, 1) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      LogNormal 
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  shape  ,
+	RooAbsReal&  scale  ,
+	RooAbsReal&  shift  ) ;
+      /// constructor from all parameters
+      LogNormal 
+      ( const char*  name      ,
+	const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  shape     ,
+	const double scale = 1 , 
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy 
+      LogNormal 
+      ( const LogNormal& right          , 
+	const char*      name = nullptr ) ;
+      /// destructor 
+      virtual ~LogNormal () ;
+      /// clone method
+      LogNormal* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      LogNormal () {} ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::LogNormal& lognormal () const { setPars () ; return m_ln         ; }
+      /// access to underlying function
+      const Ostap::Math::LogNormal& function  () const {              return lognormal () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& shape  () const { return m_shape .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================      
+    protected : 
+      // ======================================================================
+      /// observable 
+      RooRealProxy m_x     {} ; // observable
+      /// shape 
+      RooRealProxy m_shape {} ; // shape 
+      /// scale 
+      RooRealProxy m_scale {} ; // scale 
+      /// shift 
+      RooRealProxy m_shift {} ; // shift 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::LogNormal m_ln {} ;  // the function
+      // ======================================================================
+    }; 
+    // ========================================================================
+    /** @class ExpoLog 
+     *  Exponential-logarithmic distribution
+     *  @see https://en.wikipedia.org/wiki/Exponential-logarithmic_distribution
+     *  - We have added a shift parameter
+     *  - to ensure \f$ 0 < p < 1 \f$  we use
+     *    \f$ p = \frac{1}{2}\left[ 1 + \tanh \psi \right] \f$ 
+     *  @see Ostap::Math::ExpoLog 
+     */
+    class ExpoLog : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::ExpoLog , 1) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      ExpoLog 
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  beta   ,
+	RooAbsReal&  psi    ,
+	RooAbsReal&  shift  ) ;
+      /// constructor from all parameters
+      ExpoLog 
+      ( const char*  name      ,
+	const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  beta      ,
+	RooAbsReal&  psi       ,
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy 
+      ExpoLog 
+      ( const ExpoLog& right          , 
+	const char*      name = nullptr ) ;
+      /// destructor 
+      virtual ~ExpoLog () ;
+      /// clone method
+      ExpoLog* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      ExpoLog () {} ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::ExpoLog& expolog  () const { setPars () ; return m_el       ; }
+      /// access to underlying function
+      const Ostap::Math::ExpoLog& function () const {              return expolog () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& beta   () const { return m_beta  .arg  () ; }
+      const RooAbsReal& psi    () const { return m_psi   .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================      
+    protected : 
+      // ======================================================================
+      /// observable 
+      RooRealProxy m_x     {} ; // observable
+      /// beta 
+      RooRealProxy m_beta  {} ; // beta 
+      /// psi  
+      RooRealProxy m_psi   {} ; // psi  
+      /// shift 
+      RooRealProxy m_shift {} ; // shift 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::ExpoLog m_el {} ;  // the function
+      // ======================================================================
+    }; 
+    // ========================================================================
+    /** @class Davis
+     *  @see https://en.wikipedia.org/wiki/Davis_distribution
+     *  @see Ostap::Math::Davis 
+     */
+    class Davis : public RooAbsPdf
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Davis, 1) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      Davis 
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  b      ,
+	RooAbsReal&  n      ,
+	RooAbsReal&  mu    ) ;
+      // ======================================================================
+      /// copy 
+      Davis 
+      ( const Davis& right          , 
+	const char*      name = nullptr ) ;
+      /// destructor 
+      virtual ~Davis () ;
+      /// clone method
+      Davis* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      Davis() {} ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Davis& davis    () const { setPars () ; return m_davis    ; }
+      /// access to underlying function
+      const Ostap::Math::Davis& function () const {              return   davis () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x  () const { return m_x  .arg  () ; }
+      const RooAbsReal& b  () const { return m_b  .arg  () ; }
+      const RooAbsReal& n  () const { return m_n  .arg  () ; }
+      const RooAbsReal& mu () const { return m_mu .arg  () ; }
+      // ======================================================================      
+    protected : 
+      // ======================================================================
+      /// observable 
+      RooRealProxy m_x  {} ; // observable
+      /// b
+      RooRealProxy m_b  {} ; // beta 
+      /// n  
+      RooRealProxy m_n  {} ; // psi  
+      /// mu 
+      RooRealProxy m_mu {} ; // shift 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Davis m_davis {} ;  // the function
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Kumaraswami
+     *  Kumaraswami distribution with scale and shift
+     *  @see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
+     *  @see Ostap::Math::Kumaraswami 
+     */
+    class Kumaraswami : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Kumaraswami, 1) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      Kumaraswami
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  a      ,
+	RooAbsReal&  b      ,
+	RooAbsReal&  scale  ,
+	RooAbsReal&  shift  ) ;
+      /// constructor from all parameters
+      Kumaraswami
+      ( const char*  name      ,
+	const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  a         ,
+	RooAbsReal&  b         ,
+	const double scale = 1 , 
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy 
+      Kumaraswami
+      ( const Kumaraswami& right          , 
+	const char*        name = nullptr ) ;
+      /// destructor 
+      virtual ~Kumaraswami() ;
+      /// clone method
+      Kumaraswami* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      Kumaraswami() {} ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Kumaraswami& kumaraswami () const { setPars () ; return m_k ; }
+      /// access to underlying function
+      const Ostap::Math::Kumaraswami& function    () const {              return kumaraswami () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& a      () const { return m_a     .arg  () ; }
+      const RooAbsReal& b      () const { return m_b     .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================      
+    protected : 
+      // ======================================================================
+      /// observable 
+      RooRealProxy m_x     {} ; // observable
+      /// a-shape 
+      RooRealProxy m_a     {} ; // a-shape 
+      /// b-shape 
+      RooRealProxy m_b     {} ; // b-shape 
+      /// scale 
+      RooRealProxy m_scale {} ; // scale 
+      /// shift 
+      RooRealProxy m_shift {} ; // shift 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Kumaraswami m_k {} ;  // the function
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class InverseGamma
+     *  Inverse Gamma distribution (with shift)
+     *  @see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
+     *  @see Ostap::Math::InverseGamma
+     */
+    class InverseGamma : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::InverseGamma, 1) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      InverseGamma
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  alpha  ,
+	RooAbsReal&  beta   ,
+	RooAbsReal&  shift  ) ;
+      /// constructor from all parameters
+      InverseGamma
+      ( const char*  name  ,
+	const char*  title ,
+	RooAbsReal&  x     ,
+	RooAbsReal&  alpha ,
+	RooAbsReal&  beta  ,
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy 
+      InverseGamma
+      ( const InverseGamma& right          , 
+	const char*         name = nullptr ) ;
+      /// destructor 
+      virtual ~InverseGamma () ;
+      /// clone method
+      InverseGamma* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      InverseGamma () {} ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::InverseGamma& invgamma () const
+      { setPars () ; return m_ig ; }
+      /// access to underlying function
+      const Ostap::Math::InverseGamma& function () const { return invgamma () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& alpha  () const { return m_alpha .arg  () ; }
+      const RooAbsReal& beta   () const { return m_beta  .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================      
+    protected : 
+      // ======================================================================
+      /// observable 
+      RooRealProxy m_x     {} ; // observable
+      /// a-shape 
+      RooRealProxy m_alpha {} ; // a-shape 
+      /// b-shape 
+      RooRealProxy m_beta  {} ; // b-shape 
+      /// shift 
+      RooRealProxy m_shift {} ; // shift 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::InverseGamma m_ig {} ;  // the function
+      // ======================================================================
+    };    
     // ========================================================================
     /** @class Rational
      *  Ratio of two positive Bernstein polynomials 

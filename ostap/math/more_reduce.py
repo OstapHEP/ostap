@@ -821,6 +821,35 @@ def _om_davis_reduce_ ( peak ) :
 Ostap.Math.Davis  . __reduce__ = _om_davis_reduce_
 
 # =============================================================================
+## Reduce Ostap::Math::Kumaraswami
+#  @see Ostap::Math::Kumaraswami
+def _om_kumaraswami_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.Kumaraswami`
+    - see `Ostap.Math.Kumaraswami`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.a     () ,
+                            peak.b     () ,
+                            peak.scale () ,
+                            peak.shift () )
+
+Ostap.Math.Kumaraswami . __reduce__ = _om_kumaraswami_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::InverseGamma
+#  @see Ostap::Math::InverseGamma
+def _om_inversegamma_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.InverseGamma`
+    - see `Ostap.Math.InverseGamma`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.alpha () ,
+                            peak.beta  () ,
+                            peak.shift () )
+
+Ostap.Math.InverseGamma . __reduce__ = _om_inversegamma_reduce_
+
+# =============================================================================
 ## Reduce Ostap::Math::Slash
 #  @see Ostap::Math::Slash
 def _omslash_reduce_ ( peak ) :
