@@ -26,8 +26,10 @@ from   ostap.core.ostap_types   import ( is_integer     , string_types   ,
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
 from   ostap.fitting.funbasic   import FUN1
+from   ostap.fitting.fithelpers import Shift, Scale  
 from   ostap.fitting.pdfbasic   import PDF1, APDF1, Sum1D
-from   ostap.fitting.utils      import make_name, ZERO, ONE  
+from   ostap.fitting.utils      import make_name, ZERO, ONE
+from   ostap.logger.pretty      import fmt_pretty_values 
 import ROOT, math,  random
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -64,7 +66,7 @@ class CheckMean(object) :
 #  - optionally it checks that this variable is withing the specified range  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class PEAKMEAN(PDF1) :
+class PEAKMEAN(PDF1,Shift) :
     """ Helper base class for implementation of various pdfs
     It is useful for 'peak-like' distributions, where one can talk about
     - 'mean/location'
@@ -82,9 +84,9 @@ class PEAKMEAN(PDF1) :
         if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax ()
         elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin () , xvar.GetXmax ()
 
-        ## intialize the base 
-        PDF1.__init__ ( self , name , xvar = xvar )
-
+        ## intialize the 1st base 
+        PDF1 .__init__ ( self , name , xvar = xvar )
+        
         ## check mean/location values ? 
         self.__check_mean = self.xminmax () and checkMean () 
         
@@ -92,14 +94,18 @@ class PEAKMEAN(PDF1) :
         if  self.check_mean and self.xminmax () and not isinstance ( mean , ROOT.RooAbsReal ) :      
             mn , mx = self.xminmax()
             dm      =  mx - mn
-            self.__limits_mean  = mn - 0.35 * dm , mx + 0.35 * dm
+            self.__limits_mean  = mn - 0.5 * dm , mx + 0.5 * dm
 
         ## mean-value
         m_name  = mean_name  if mean_name  else "mean_%s"  % name
-        m_title = mean_title if mean_title else "mean(%s)" % name        
-        self.__mean = self.make_var ( mean , m_name , m_title , False , *self.limits_mean )
+        m_title = mean_title if mean_title else "mean(%s)" % name
 
-        ##
+        ## create mean-variable 
+        mean_var = self.make_var ( mean , m_name , m_title , False , *self.limits_mean )
+
+        ## initiaze the second base 
+        Shift.__init__ ( self , shift = mean_var ) 
+
         if self.limits_mean :  
             mn , mx = self.limits_mean  
             dm      =  mx - mn
@@ -128,27 +134,25 @@ class PEAKMEAN(PDF1) :
     
     @property
     def mean ( self ):
-        """'mean/location''-variable (the same as 'location')"""
-        return self.__mean
+        """'mean/location'-variable (the same as 'location','shift')"""
+        return self.shift 
     @mean.setter
     def mean ( self , value ) :
-        value =  float ( value )
-        mn , mx = self.mean.minmax()
-        if not mn <= value <= mx :
-            self.warning( "'%s'': %s is outside the interval (%s,%s)/1" % ( self.mean.name , value , mn , mx ) )
+        value = float ( value ) 
         if self.check_mean and self.limits_mean  :  
             mn , mx = self.limits_mean 
             if not mn <= value <= mx :
-                self.error ("'%s'': %s is outside the interval (%s,%s)/2"  % ( self.mean.name , value , mn , mx ) )                
-        self.mean.setVal ( value )
-        
-    @property
-    def location ( self ):
-        """'location/mean'-variable (the same as 'mean')"""
-        return self.mean
-    @location.setter
-    def location ( self , value ) :
-        self.mean =  value
+                fmt , expo = pfmt_pretty_values ( value , mn , mx , with_sign = True )
+                vmn = fmt % ( mn    / 10**expo if expo else mn    )
+                vmx = fmt % ( mx    / 10**expo if expo else mx    )
+                vvv = fmt % ( value / 10**expo if expo else value )
+                vnm = self.shift.name 
+                if expo : self.error ("%s: is outside interval %s [%s,%s] %s"  % ( vnm , vvv , vmn , vmx , '10^%+d' % expo ) )
+                else    : self.error ("%s: is outside interval %s [%s,%s]"     % ( vnm , vvv , vmn , vmx ) )
+                ## 
+                return  ## RETURN
+            
+        self.shift = value 
 
     @property
     def check_mean ( self ) :
@@ -170,7 +174,7 @@ class PEAKMEAN(PDF1) :
 #  - sigma/width/scale
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class PEAK(PEAKMEAN) :
+class PEAK(PEAKMEAN,Scale) :
     """ Helper base class for implementation of various signal-like pdfs
     It is useful for 'peak-like' distributions, where one can talk about
     - 'mean/location'
@@ -198,7 +202,7 @@ class PEAK(PEAKMEAN) :
         if  self.xminmax() and not isinstance ( sigma , ROOT.RooAbsReal ) :            
             mn , mx   = self.xminmax()
             dm        = mx - mn
-            sigma_max = 3 * dm / math.sqrt(12)  
+            sigma_max = 5 * dm / math.sqrt( 12. )  
             self.__limits_sigma = 1.e-4 * sigma_max , sigma_max 
 
         ## sigma
@@ -206,8 +210,11 @@ class PEAK(PEAKMEAN) :
         s_title = sigma_title if sigma_title else "#sigma(%s)" % name
         #
         self.__check_sigma = True 
-        self.__sigma = self.make_var ( sigma  , s_name , s_title , False , *self.limits_sigma )
+        sigmavar = self.make_var ( sigma  , s_name , s_title , False , *self.limits_sigma )
         
+        ## initiaze the second base 
+        Scale.__init__ ( self , scale = sigmavar ) 
+
         ## save the configuration
         self.config = {
             'name'        : self.name   ,
@@ -223,18 +230,24 @@ class PEAK(PEAKMEAN) :
     @property
     def sigma ( self ):
         """'sigma/width/scale/spread'-variable"""
-        return self.__sigma
+        return self.scale
     @sigma.setter
     def sigma ( self , value ) :
-        value =   float ( value )
-        mn , mx = self.sigma.minmax()
-        if not mn <= value <= mx :
-            self.warning ("'%s': %s is outside the interval (%s,%s)/1" % ( self.sigma.name , value , mn , mx ) )
-        if self.limits_sigma and self.check_sigma  : 
-            mn , mx = self.limits_sigma 
+        value = float ( value ) 
+        if self.check_sigma and self.limits_sigma:  
+            mn , mx = self.limits_sigma
             if not mn <= value <= mx :
-                self.error ("'%s': %s is outside the interval (%s,%s)/2" % ( self.sigma.name , value , mn , mx ) )
-        self.sigma.setVal ( value )
+                fmt , expo = pfmt_pretty_values ( value , mn , mx , with_sign = True )
+                vmn = fmt % ( mn    / 10**expo if expo else mn    )
+                vmx = fmt % ( mx    / 10**expo if expo else mx    )
+                vvv = fmt % ( value / 10**expo if expo else value )
+                vnm = self.shift.name 
+                if expo : self.error ("%s: is outside interval %s [%s,%s] %s"  % ( vnm , vvv , vmn , vmx , '10^%+d' % expo ) )
+                else    : self.error ("%s: is outside interval %s [%s,%s]"     % ( vnm , vvv , vmn , vmx ) )
+                ## 
+                return ##
+            
+        self.scale = value 
 
     @property
     def check_sigma ( self ) :

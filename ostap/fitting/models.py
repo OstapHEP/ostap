@@ -281,6 +281,8 @@ from ostap.fitting.roofuncs      import *
 logger.debug ("Import signal     (peaking) models from 'signals'"       )
 from ostap.fitting.signals       import * 
 logger.debug ("Import background (smooth)  models from 'background'"    )
+from ostap.fitting.wide        import * 
+logger.debug ("Import wide-signal          models from 'wide'"          )
 from ostap.fitting.background    import * 
 logger.debug ("Import specialized models          from 'specific'"      )
 from ostap.fitting.specific      import *

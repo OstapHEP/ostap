@@ -1036,7 +1036,7 @@ def _omgdis_reduce_ ( s ) :
     """Reduce `Ostap.Math.GammaDist`
     - see `Ostap.Math.GammaDist`
     """
-    return root_factory , ( type ( s ) , s.k() , s.theta() )  
+    return root_factory , ( type ( s ) , s.k() , s.theta() , s.shift () )  
 
 Ostap.Math.GammaDist     . __reduce__ = _omgdis_reduce_
 Ostap.Math.LogGammaDist  . __reduce__ = _omgdis_reduce_

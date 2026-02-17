@@ -25,7 +25,6 @@
  *  - Difference of two exponents 
  *  - Difference of two exponents modulated by positive polynomial
  *  - Argus & GenArgus
- *  - 
  *
  *  @see Ostap::Math::ExpoPol
  *  @see Ostap::Math::PhaseSpacePol
@@ -1023,7 +1022,6 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    // ========================================================================
     /** @class Argus 
      *  Slightly modified version of Argus distribution, with 
      *  support in the interval  \f$ \mu - c \le x \le \mu \f$
@@ -1194,7 +1192,7 @@ namespace Ostap
       /// get the integral between low and high
       double integral
       ( const double low  ,
-	      const double high ) const ;
+	const double high ) const ;
       /// get CDF 
       double cdf        ( const double x ) const ;
       // ======================================================================
@@ -1217,9 +1215,7 @@ namespace Ostap
       double   m_norm { -1 } ; // normalization
       // ======================================================================
     } ;
-
-
-    
+    // ========================================================================    
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
 } //                                                 The end of namesapce Ostap

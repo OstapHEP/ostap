@@ -341,13 +341,15 @@ class VarMaker (object) :
     # =============================================================================
     ## generate unique name 
     def new_name ( self , prefix = '' , suffix = '' ) :
-        """ Generate unique name"""
+        """ Generate unique name
+        """
         return self.generate_name ( prefix = prefix , suffix = suffix , name = self.name )  
 
     # =============================================================================
     ## generate unique name 
     def new_roo_name ( self , prefix = '' , suffix = '' ) :
-        """ Generate unique ROOT/RooFit name"""
+        """ Generate unique ROOT/RooFit name
+        """
         return self.roo_name ( prefix = prefix , suffix = suffix , name = self.name )  
     
     # =============================================================================
@@ -660,7 +662,7 @@ class VarMaker (object) :
     #  @code
     #  var1 = ...
     #  var2 = ...
-    #  var2 = ...
+    #  var3 = ...
     #  var4 = xxx.add_variables ( var1 , var2 , var3 )
     #  @endcode 
     def add_variables ( self , *variables , name = '' , title = '' ) :
@@ -3342,32 +3344,36 @@ class Phases(object) :
 #  Helper MIXIN class to add `shift` parameter
 #  @author Vanya Belyaev Vanya.Belyaev@CERN.CH
 class Shift ( object ) :
-    """ Helper MIXIN class to add `shift` and `scale` parameters
+    """ Helper MIXIN class to add `shift` parameter
     """
     def __init__ ( self  ,
                    shift       = None ,
                    shift_name  = ''   , 
-                   shift_title = ''   ) :
+                   shift_title = ''   ,
+                   *shift_pars        ) :
         
         if shift is None   : shift = ROOT.RooFit.RooConst ( 0 )
         ##
         name = self.name         
-        if not shift_name  : shift_name  = 'shift_%s' % name
+        if not shift_name  : shift_name  = 'shift_%s'  % name
         if not shift_title : shift_title = 'shift(%s)' % name
-        ## shift parameter 
+        ## shift parameter
+        if not shift_pars  : shift_pars = 0 ,         
         self.__shift  = self.make_var ( shift        ,
                                         shift_name   ,  
                                         shift_title  ,  
-                                        None , shift )
-        
+                                        None , *shift_pars )        
     @property
     def shift ( self ) :
-        """`shift'-parameter"""
+        """`shift'-parameter for location-scale family, the same as `location`"""
         return self.__shift
     @shift.setter 
     def shift ( self , value ) :
         self.set_value ( self.__shift , value )
 
+    ## ALIAS 
+    location = shift
+    
 # =============================================================================
 ## @class Scale 
 #  Helper MIXIN class to add `scale` parameter
@@ -3375,21 +3381,23 @@ class Shift ( object ) :
 class Scale ( object ) :
     """ Helper MIXIN class to add `shift` and `scale` parameters
     """
-    def __init__ ( self  ,
+    def __init__ ( self               ,
                    scale       = None , 
                    scale_name  = ''   , 
-                   scale_title = ''   ) : 
-        
+                   scale_title = ''   ,
+                   *scale_pars        ) : 
+    
         if scale is None   : scale = ROOT.RooFit.RooConst ( 1 )
         ## 
         name = self.name
         if not scale_name  : scale_name  = 'scale_%s'  % name
         if not scale_title : scale_title = 'scale(%s)' % name
-        ## scale parameter 
-        self.__scale  = self.make_var ( scale        ,
-                                        scale_name   ,
-                                        scale_title  ,
-                                        None , scale , 1.e-6  )    
+        ## scale parameter
+        if not scale_pars : scale_pars = 1 , 1e-6 , 1.e+6 
+        self.__scale  = self.make_var ( scale              ,
+                                        scale_name         ,
+                                        scale_title        ,
+                                        None , *scale_pars )    
         
     @property
     def scale ( self ) :
@@ -3412,13 +3420,14 @@ class ShiftAndScale (Shift,Scale) :
                    scale_name  = '' , 
                    scale_title = '' , 
                    shift_name  = '' , 
-                   shift_title = '' ) :
+                   shift_title = '' , 
+                   scale_pars  = () ,
+                   shift_pars  = () ) : 
         
-        Shift.__init__ ( self , shift = shift , shift_name = shift_name , shift_title = shift_title )
-        Scale.__init__ ( self , scale = scale , scale_name = scale_name , scale_title = scale_title )
+        Shift.__init__ ( self , shift = shift , shift_name = shift_name , shift_title = shift_title , *shift_pars )
+        Scale.__init__ ( self , scale = scale , scale_name = scale_name , scale_title = scale_title , *scale_pars )
         
 # =============================================================================
-
 
 # =============================================================================
 ## @class ShiftScalePoly

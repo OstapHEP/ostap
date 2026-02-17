@@ -2699,10 +2699,13 @@ class PDF1(APDF1,FUN1) :
     """ The main helper base class for implementation of various 1D PDF-wrappers
     """
     def __init__ ( self , name ,  xvar , tricks = True , **kwargs ) :
-
+        
         ## initialize the base 
-        FUN1  .__init__ ( self , name = name , xvar = xvar  , tricks = tricks ,
-                          fun = kwargs.pop ( 'pdf' , None ) , **kwargs )
+        FUN1  .__init__ ( self ,
+                          name   = name ,
+                          xvar   = xvar ,
+                          tricks = tricks ,
+                          fun    = kwargs.pop ( 'pdf' , None ) , **kwargs )
 
         ## initialize the base 
         APDF1 .__init__ ( self )

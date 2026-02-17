@@ -381,13 +381,25 @@ std::size_t Ostap::Math::GramCharlierA::tag () const
 // ============================================================================
 Ostap::Math::GammaDist::GammaDist 
 ( const double k     ,   // shape parameter  
-  const double theta )   // scale parameter
+  const double theta ,   // scale parameter
+  const double shift )   // shidt parameter
   : m_k     ( std::abs ( k     ) )
   , m_theta ( std::abs ( theta ) )
-  , m_aux   ( 0 ) 
+  , m_shift (            shift   )
 {
+  //
+  Ostap::Assert ( m_k ,
+		  "k-parameter must be positive!"         ,
+		  "Ostap::Math::GamamDist"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( m_theta ,
+		  "theta-parameter must be positive!"     ,
+		  "Ostap::Math::GamamDist"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
   // evaluate auxillary parameter 
-  m_aux = - m_k * std::log ( m_theta ) - std::lgamma ( m_k ) ;
+  m_lgk = - std::lgamma ( m_k ) ;
 }
 // ============================================================================
 // set the proper parameters
@@ -396,20 +408,21 @@ bool Ostap::Math::GammaDist::setK ( const double x )
 {
   //
   const double v = std::abs ( x ) ;
-  //
-  if ( s_equal ( v , m_k ) ) { return false ; }
+  if ( s_equal  ( v , m_k ) ) { return false ; }
+  Ostap::Assert ( v ,
+		  "k-parameter must be positive!"         ,
+		  "Ostap::Math::GamamDist"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   m_k = v ;
-  //
   if ( s_equal ( 1 , m_k ) ) { m_k    = 1 ; }
-  //
   // evaluate auxillary parameter 
-  m_aux = -m_k * std::log ( m_theta ) - std::lgamma ( m_k ) ;
+  m_lgk = - std::lgamma ( m_k ) ;
   //
   return true ;
 }
 // ============================================================================
-double Ostap::Math::GammaDist::sigma    () const
+double Ostap::Math::GammaDist::rms     () const
 { return std::sqrt ( dispersion ()  ) ; }
 // ============================================================================
 double Ostap::Math::GammaDist::skewness () const
@@ -421,14 +434,22 @@ bool Ostap::Math::GammaDist::setTheta ( const double x )
 {
   //
   const double v = std::abs ( x ) ;
-  //
-  if ( s_equal ( v , m_theta ) ) { return false ; }
+  if ( s_equal  ( v , m_theta ) ) { return false ; }
+  Ostap::Assert ( v ,
+		  "theta-parameter must be positive!"     ,
+		  "Ostap::Math::GamamDist"                ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   m_theta = v ;
-  //
-  // evaluate auxillary parameter 
-  m_aux = -m_k * std::log ( m_theta ) - std::lgamma ( m_k ) ;
-  //
+  return true ;
+}
+// ============================================================================
+// set the proper parameters
+// ============================================================================
+bool Ostap::Math::GammaDist::setShift ( const double x )
+{
+  if ( s_equal  ( x , m_shift ) ) { return false ; }
+  m_shift = x ;
   return true ;
 }
 // ============================================================================
@@ -437,11 +458,12 @@ bool Ostap::Math::GammaDist::setTheta ( const double x )
 double Ostap::Math::GammaDist::pdf ( const double x ) const
 {
   // simple cases 
-  if ( x <= 0 ) { return 0 ; }
-  // 
-  double result = m_aux - x / m_theta  + ( m_k - 1 ) * my_log( x ) ;
+  if ( x <= m_shift ) { return 0 ; }
+  const double z  = ( x - m_shift ) / m_theta ;
+  if ( z <= 0       ) { return 0 ; }
   //
-  return my_exp ( result ) ;
+  const double logr = -z + ( m_k - 1 ) * std::log ( z )  + m_lgk ;
+  return std::exp ( logr ) / m_theta ;
 }
 // ============================================================================
 // get the integral
@@ -455,32 +477,39 @@ double Ostap::Math::GammaDist::integral
   const double high ) const 
 {
   //
-  if      ( s_equal ( low  , high ) ) { return 0 ; }
-  else if (           low  > high   ) { return -1 * integral ( high , low  ) ; }
-  else if (           high <= 0     ) { return 0 ; }
-  else if (           low  < 0      ) { return      integral ( 0    , high ) ; }
+  if      ( s_equal ( low  , high )   ) { return 0 ; }
+  else if (           low  > high     ) { return -1 * integral ( high    , low  ) ; }
+  else if (           high <= m_shift ) { return 0 ; }
+  else if (           low  <  m_shift ) { return      integral ( m_shift , high ) ; }
   //
-  return 
-    gsl_sf_gamma_inc_P ( m_k , high / m_theta ) - 
-    gsl_sf_gamma_inc_P ( m_k , low  / m_theta ) ;
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// get the cdf 
+// ============================================================================
+double Ostap::Math::GammaDist::cdf 
+( const double x ) const 
+{
+  if ( x <= m_shift ) { return 0 ; }
+  const double z = ( x - m_shift ) / m_theta ;
+  return gsl_sf_gamma_inc_P ( m_k , z ) ;
 }
 // ============================================================================
 // calculate the mode
 // ============================================================================
 double Ostap::Math::GammaDist::mode () const
-{
-  const double a = alpha () ;
-  return 1 <= a ? ( a - 1 ) * theta() : 0.0 ;
-}
+{ return m_shift + ( 1 <= m_k  ? ( m_k  - 1 ) * m_theta : 0.0 ) ; }
 // ============================================================================
 // calculatye the quantile   (0<p<1) 
 // ============================================================================
 double Ostap::Math::GammaDist::quantile ( const double p ) const 
 {
-  if      ( p <= 0 ) { return          0 ; }
-  else if ( p >= 1 ) { return s_INFINITY ; }
-  //
-  return gsl_cdf_gamma_Pinv ( p , m_k , m_theta ) ;
+  return
+    p <  0            ? s_QUIETNAN :
+    p >  1            ? s_QUIETNAN :
+    s_zero  ( p     ) ? m_shift    :
+    s_equal ( p , 1 ) ? s_POSHUGE  :    
+    m_shift + gsl_cdf_gamma_Pinv ( p , m_k , m_theta ) ;
 }
 // ============================================================================
 // get the tag
@@ -488,8 +517,29 @@ double Ostap::Math::GammaDist::quantile ( const double p ) const
 std::size_t Ostap::Math::GammaDist::tag () const 
 { 
   static const std::string s_name = "GammaDist" ;
-  return Ostap::Utils::hash_combiner ( s_name  , m_k , m_theta ) ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_k     ,
+				       m_theta ,
+				       m_shift ) ;
 }
+// ============================================================================
+/*  effective \f$ \chi^2 \f$-parameters
+ *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
+ *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
+ *  @attention for shift!=0  NaN is returned
+ */
+// ============================================================================
+double Ostap::Math::GammaDist::nu () const
+{ return !m_shift ? 2   * m_k     : s_QUIETNAN ; }
+// ============================================================================
+/*  effective \f$ \chi^2 \f$-parameters
+ *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
+ *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
+ *  @attention for shift!=0  NaN is returned
+ */
+// ============================================================================
+double Ostap::Math::GammaDist::c  () const
+{ return !m_shift ? 0.5 * m_theta : s_QUIETNAN  ; }
 // ============================================================================
 
 
@@ -550,12 +600,12 @@ double Ostap::Math::GenGammaDist::pdf ( const double x ) const
   //
   if ( x <= m_low || s_equal ( x , m_low ) ) { return 0 ; }
   //
-  const double xc = ( x - m_low ) / theta() ;  
-  const double xt = std::pow ( xc , p () ) ;  
+  const double xc = ( x - m_low ) / m_p ;  
+  const double xt = std::pow ( xc , m_p ) ;  
   //
   double result   = ( k () - 1 ) * gsl_sf_log ( xc ) - xt ;
-  result         +=  gsl_sf_log     ( p ()  / theta  () ) ;
-  result         -=  gsl_sf_lngamma ( k ()  / p      () ) ;
+  result         +=  gsl_sf_log     ( m_p  / m_theta ) ;
+  result         -=  gsl_sf_lngamma ( m_k  / m_p     ) ;
   //return gsl_sf_exp ( result ) ;
   return my_exp ( result ) ;
 }
@@ -565,10 +615,10 @@ double Ostap::Math::GenGammaDist::cdf ( const double x ) const
   //
   if ( x <= m_low || s_equal ( x , m_low ) ) { return 0 ; }
   //
-  const double xc = ( x - m_low ) / theta() ;  
-  const double xt = std::pow ( xc , p () ) ;
+  const double xc = ( x - m_low ) / m_theta ;  
+  const double xt = std::pow ( xc , m_p  ) ;
   //
-  return gsl_sf_gamma_inc_P ( k () / p () , xt ) ;
+  return gsl_sf_gamma_inc_P ( k () / m_p , xt ) ;
 }
 // ============================================================================
 double Ostap::Math::GenGammaDist::integral () const { return 1 ; }
@@ -654,15 +704,15 @@ bool Ostap::Math::Amoroso::setBeta ( const double value )
 double Ostap::Math::Amoroso::pdf ( const double x ) const 
 {
   //
-  if      ( theta () > 0 && ( x <= m_a || s_equal ( x , m_a ) ) ) { return 0 ; }
-  else if ( theta () < 0 && ( x >= m_a || s_equal ( x , m_a ) ) ) { return 0 ; }
+  if      ( m_theta > 0 && ( x <= m_a || s_equal ( x , m_a ) ) ) { return 0 ; }
+  else if ( m_theta < 0 && ( x >= m_a || s_equal ( x , m_a ) ) ) { return 0 ; }
   //
-  const double xc = ( x - m_a ) / theta ()    ;
-  const double xt = std::pow ( xc , beta() ) ;
+  const double xc = ( x - m_a ) / m_theta ;
+  const double xt = std::pow ( xc , m_beta ) ;
   //
-  double result   = ( alpha() * beta() - 1 ) * gsl_sf_log ( xc )  - xt ; 
-  result += gsl_sf_log     ( std::abs ( beta  () / theta() ) ) ;
-  result -= gsl_sf_lngamma (            alpha ()   ) ;
+  double result   = ( m_alpha * m_beta - 1 ) * gsl_sf_log ( xc )  - xt ; 
+  result += gsl_sf_log     ( std::abs ( m_beta  / m_theta ) ) ;
+  result -= gsl_sf_lngamma (            m_alpha ) ;
   //
   return my_exp ( result ) ;
 }
@@ -778,8 +828,9 @@ std::size_t Ostap::Math::Amoroso::tag () const
 // ============================================================================
 Ostap::Math::LogGammaDist::LogGammaDist 
 ( const double k     ,   // shape parameter  
-  const double theta )   // scale parameter
-  : m_gamma ( k , theta ) 
+  const double theta ,   // scale parameter
+  const double shift )   // shift parameter
+  : m_gamma ( k , theta , shift ) 
 {}
 // ============================================================================
 // destructor
@@ -790,10 +841,8 @@ Ostap::Math::LogGammaDist::~LogGammaDist (){}
 // ============================================================================
 double Ostap::Math::LogGammaDist::operator() ( const double x ) const
 {
-  // 
   const double z = my_exp ( x ) ;
   return m_gamma ( z ) * z ;
-  //
 }
 // ============================================================================
 // get the integral
@@ -820,8 +869,8 @@ double Ostap::Math::LogGammaDist::integral
 // ============================================================================
 double Ostap::Math::LogGammaDist::quantile ( const double p ) const 
 {
-  if      ( p <= 0 ) { return -s_INFINITY ; }
-  else if ( p >= 1 ) { return  s_INFINITY ; }
+  if      ( p < 0 ) { return s_QUIETNAN ; }
+  else if ( p > 1 ) { return s_QUIETNAN ; }
   //
   return my_log ( gsl_cdf_gamma_Pinv ( p , k() , theta() ) ) ;
 }
@@ -843,8 +892,9 @@ std::size_t Ostap::Math::LogGammaDist::tag () const
 // ============================================================================
 Ostap::Math::Log10GammaDist::Log10GammaDist 
 ( const double k     ,   // shape parameter  
-  const double theta )   // scale parameter
-  : Ostap::Math::LogGammaDist( k , theta ) 
+  const double theta ,   // scale parameter
+  const double shift )   // shift parameter
+  : Ostap::Math::LogGammaDist( k , theta , shift ) 
 {}
 // ============================================================================
 // destructor
@@ -862,16 +912,17 @@ double Ostap::Math::Log10GammaDist::integral () const { return 1 ; }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
-double Ostap::Math::Log10GammaDist::integral ( const double low  ,
-                                               const double high ) const 
+double Ostap::Math::Log10GammaDist::integral
+( const double low  ,
+  const double high ) const 
 { return LogGammaDist::integral ( low  * s_LN10 , high * s_LN10 ) ; }
 // ============================================================================
 // calculate the quantile   (0<p<1) 
 // ============================================================================
 double Ostap::Math::Log10GammaDist::quantile ( const double p ) const 
 {
-  if      ( p <= 0 ) { return -s_INFINITY ; }
-  else if ( p >= 1 ) { return  s_INFINITY ; }
+  if      ( p < 0 ) { return s_QUIETNAN ; }
+  else if ( p > 1 ) { return s_QUIETNAN ; }
   return LogGammaDist::quantile ( p ) / s_LN10 ;
 }
 // ============================================================================
@@ -1670,9 +1721,6 @@ std::size_t Ostap::Math::GenBetaPrime::tag () const
 }
 // ============================================================================
 
-
-
-
 // ============================================================================
 // the most general form
 // ============================================================================
@@ -1796,6 +1844,42 @@ bool Ostap::Math::GenBeta::setQ ( const double value )
   //
   m_q      = avalue ;
   m_logBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenBeta::setShift ( const double value ) 
+{
+  if ( s_equal ( value , m_shift  ) ) { return false ; }
+  m_shift  = value ;
+  return true ;
+}
+// ============================================================================
+// set parameters A&B
+// ============================================================================
+bool Ostap::Math::GenBeta::setAB
+( const double valuea ,
+  const double valueb )
+{
+  const double avaluea = std::abs ( valuea ) ;
+  const double avalueb = std::abs ( valueb ) ;
+  //
+  if ( s_equal ( avaluea , m_a ) && s_equal ( avalueb , m_b ) ) { return false ; }
+  //
+  Ostap::Assert ( !s_zero ( avaluea ) ,
+		  "a-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( !s_zero ( avalueb ) ,
+		  "b-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_a    = avaluea ;
+  m_ac   = m_c1 ? -1.0 : std::pow ( 1.0L - m_c , 1.0L / m_a ) ;
+  //
+  m_b    = avalueb ;
+  m_logb = std::log ( m_b ) ; 
   return true ;
 }
 // ============================================================================
@@ -2907,6 +2991,11 @@ bool Ostap::Math::GenPareto::setShape ( const double value )
   m_shape = value ;
   return true ;    
 }
+// =============================================================================
+// xmax: can be infinite 
+// =============================================================================
+double Ostap::Math::GenPareto::xmax  () const
+{ return m_shape < 0 ? m_mu - m_scale/m_shape : s_POSINF ; }
 // =============================================================================
 // get the integral 
 // =============================================================================
@@ -4279,6 +4368,33 @@ bool Ostap::Math::BenktanderI::setR
   return true ;
 }
 // ============================================================================
+// Set shift 
+// ============================================================================
+bool Ostap::Math::BenktanderI::setShift
+( const double value )
+{
+  if ( s_equal ( value , m_shift ) ) { return false ; }
+  m_shift = value ;
+  return true ;
+}
+// ============================================================================
+// Set scale
+// ============================================================================
+bool Ostap::Math::BenktanderI::setScale
+( const double value )
+{
+  const double avalue = std::abs ( value ) ; 
+  if ( s_equal ( avalue , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue ,
+		  "scale-parameter must be positive!"     ,
+		  "Ostap::Math::BenktanderI"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_scale = avalue ;
+  return true ;
+}
+// ============================================================================
 // evaluate Benktander Type I distribution
 // ============================================================================
 double Ostap::Math::BenktanderI::evaluate
@@ -4440,6 +4556,33 @@ bool Ostap::Math::BenktanderII::setR
 		  "Ostap::Math::BenktanderII"             ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
+  return true ;
+}
+// ============================================================================
+// Set shift 
+// ============================================================================
+bool Ostap::Math::BenktanderII::setShift
+( const double value )
+{
+  if ( s_equal ( value , m_shift ) ) { return false ; }
+  m_shift = value ;
+  return true ;
+}
+// ============================================================================
+// Set scale
+// ============================================================================
+bool Ostap::Math::BenktanderII::setScale
+( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue ,
+		  "scale-parameter must be positive!"     ,
+		  "Ostap::Math::BenktanderII"             ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_scale = avalue ;
   return true ;
 }
 // ============================================================================

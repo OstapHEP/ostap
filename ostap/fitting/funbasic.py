@@ -74,10 +74,14 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
     """
         
     def __init__ ( self , name , xvar , tricks = True , **kwargs ) :
-
-        ## name is defined via the base class VarMaker 
-        self.name  = name ## name is defined via the base class VarMaker 
-
+        ## 
+        if not name :
+            name = typename ( self )
+            if name.endswith ('_pdf' ) : name = name[:-4]
+            
+        ## name is defined via the base class VarMaker
+        self.name = name 
+        ## 
         XVar .__init__ ( self , xvar )
 
         self.__vars      = ROOT.RooArgSet  ()
@@ -1562,7 +1566,10 @@ class FUN1(AFUN1,F1AUX) :
     """
     def __init__ ( self , name , xvar , tricks = True , **kwargs ) :
         
-        AFUN1 .__init__ ( self , name = name , xvar = xvar , tricks = tricks , **kwargs )
+        AFUN1 .__init__ ( self            ,
+                          name   = name   ,
+                          xvar   = xvar   ,
+                          tricks = tricks , **kwargs )
 
         ## save the configuration
         self.config = {

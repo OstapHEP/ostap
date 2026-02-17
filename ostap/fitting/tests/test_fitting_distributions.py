@@ -12,10 +12,12 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-from   ostap.utils.timing       import timing 
-from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.root_utils   import batch_env 
-import ostap.fitting.models     as     Models 
+from   ostap.utils.timing          import timing 
+from   ostap.plotting.canvas       import use_canvas
+from   ostap.utils.root_utils      import batch_env 
+from   ostap.fitting.distributions import models, spectra
+from   ostap.utils.basic           import typename 
+import ostap.fitting.models        as     Models 
 import ROOT 
 # =============================================================================
 # logging 
@@ -30,221 +32,37 @@ else :
 batch_env ( logger )
 # =============================================================================
 
-x = ROOT.RooRealVar( 'x' , 'x-variable' ,  0  , 10 ) 
-y = ROOT.RooRealVar( 'y' , 'y-variable' , -5 ,   5 ) 
+
+x = ROOT.RooRealVar ( 'x' , 'x-variable' ,  0  , 10 ) 
+y = ROOT.RooRealVar ( 'y' , 'y-variable' , -5 ,   5 ) 
 
 plots  = set ()
 models = set ()
 
+
 # =============================================================================
-def test_GammaDist () :
+def _check_the_model_ ( model_type ) :
 
-    logger = getLogger("test_GammaDist")
 
-    model  = Models.GammaDist_pdf ( 'GammaDist' , x ,
-                                    k     = ( 9     , 1     , 100 ) ,
-                                    theta = ( 0.333 , 0.001 , 2   ) )
+    model  = model_type ( xvar = x )
+    logger = getLogger("test_%s" % model.name )
     
-    with use_canvas ( 'GammaDist_pdf' ) :
+    with use_canvas ( 'test %s' % model.name ) :
+        logger.info ( 'Test the model %s:\n%s' % ( typename ( model ) , model ) )
         plot = model.draw()
-        
+    
     models.add ( model )
     plots .add ( plot  ) 
 
 # =============================================================================
-def test_GenGammaDist () :
+def test_models () :
 
-    logger = getLogger("test_GenGammaDist")
-
-    model  = Models.GenGammaDist_pdf ( 'GenGammaDist' , x ,
-                                       k     = ( 9     , 1     , 100 ) ,
-                                       theta = ( 0.333 , 0.001 , 2   ) )
+    from ostap.fitting.distributions import models 
+    logger.info ( 'Test distributions' )
+    for model in models :
+        if not model in spectra : _check_the_model_ ( model ) 
     
-    with use_canvas ( 'GenGammaDist_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_Amoroso () :
-
-    logger = getLogger("test_Amoroso")
-
-    model  = Models.Amoroso_pdf ( 'Amoroso' , x ,
-                                  alpha = ( 9     , 1     , 100 ) ,
-                                  theta = ( 0.333 , 0.001 , 2   ) )
     
-    with use_canvas ( 'Amoroso_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_LogGammaDist () :
-
-    logger = getLogger("test_LogGammaDist")
-    
-    model  = Models.LogGammaDist_pdf ( 'LogGammaDist' , y ,
-                                       k     = ( 9     , 1     , 100 ) ,
-                                       theta = ( 0.333 , 0.001 , 2   ) )
-    
-    with use_canvas ( 'LogGammaDist_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_Log10GammaDist () :
-
-    logger = getLogger("test_Log10GammaDist")
-    
-    model  = Models.Log10GammaDist_pdf ( 'Log10GammaDist' , y ,
-                                       k     = ( 9     , 1     , 100 ) ,
-                                       theta = ( 0.333 , 0.001 , 2   ) )
-    
-    with use_canvas ( 'Log10GammaDist_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_LogGamma () :
-
-    logger = getLogger("test_LogGamma")
-    
-    model  = Models.LogGamma_pdf ( 'LogGamma' , x , nu = 0 , lambd = 1 , alpha = 1  )
-    
-    with use_canvas ( 'LogGamma_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_BetaPrime () :
-
-    logger = getLogger("test_BetaPrime")
-    
-    model  = Models.BetaPrime_pdf ( 'BetaPrime' , x , alpha = 1 , beta = 1 , scale = 1)
-    
-    with use_canvas ( 'BetaPrime_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_Landau () :
-
-    logger = getLogger("test_Landau")
-    
-    model  = Models.Landau_pdf ( 'Landau' , x , scale = 1 )
-    
-    with use_canvas ( 'BetaPrime_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-
-# =============================================================================
-def test_Argus () :
-
-    logger = getLogger("test_Argus")
-    
-    model  = Models.Argus_pdf ( 'Argus' , x , c = 7 , mu = 8 , chi = 0.1  )
-    
-    with use_canvas ( 'Argus_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_GenArgus () :
-
-    logger = getLogger("test_GenArgus")
-    
-    model  = Models.GenArgus_pdf ( 'GenArgus' , x , c = 7 , mu = 8 , chi = 0.1 , dp = 2  )
-    
-    with use_canvas ( 'GenArgus_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_TwoExpos () :
-
-    logger = getLogger("test_TwoExpos")
-    
-    model  = Models.TwoExpos_pdf ( 'TwoExpos' , x , alpha = 1 , delta = 1 )
-    
-    with use_canvas ( 'TwoExpos_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-
-# =============================================================================
-def test_Gumbel () :
-
-    logger = getLogger("test_Gumbel")
-    
-    model  = Models.Gumbel_pdf ( 'Gumbel' , x , mu = 0 , beta = 1  )
-    
-    with use_canvas ( 'Gumbel_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_Rice () :
-
-    logger = getLogger("test_Rice")
-    
-    model  = Models.Rice_pdf ( 'Rice' , x , nu = 0 , varsigma = 1  )
-    
-    with use_canvas ( 'Rice_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_GenInvGauss () :
-
-    logger = getLogger("test_GenInvGauss")
-    
-    model  = Models.GenInvGauss_pdf ( 'GenInvGauss' , x ,
-                                      theta = 1 , eta = 1 , p = 0 )
-    
-    with use_canvas ( 'GenInvGauss_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_Weibull () :
-
-    logger = getLogger("test_Weibull")
-    
-    model  = Models.Weibull_pdf ( 'Weibull' , x ,
-                                  scale = 1 , shape = 1 )
-    
-    with use_canvas ( 'Weibull_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
 # =============================================================================
 def test_Tsallis () :
 
@@ -372,34 +190,17 @@ def test_db() :
             db['model:' + m.name ] = m
             db['roo:%s' % m.name ] = m.pdf
         db['models'   ] = models
-        db['plots'     ] = plots 
+        db['plots'    ] = plots 
         db.ls() 
 
 # =============================================================================
 if '__main__' == __name__ :
     
-    test_GammaDist      ()
-    test_GenGammaDist   ()
-    test_Amoroso        ()
-    test_LogGammaDist   ()
-    test_Log10GammaDist ()
-    test_LogGamma       ()
-    test_BetaPrime      ()
-    test_Landau         ()
-    test_Argus          ()
-    test_GenArgus       ()
-    test_TwoExpos       ()
-    test_Gumbel         ()
-    test_Rice           ()
-    test_GenInvGauss    ()
-    test_Weibull        ()
-    test_Tsallis        ()
-    test_QGSM           ()
-    test_Hagedorn       ()
-    test_GenPareto      ()
-    test_ExGenPareto    ()
-    test_GEV            ()
-    test_MPERT          ()
+    test_models       ()
+    
+    test_Tsallis      ()
+    test_QGSM         ()
+    test_Hagedorn     ()
 
     ## check that everything is serializeable 
     test_db ()

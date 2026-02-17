@@ -1008,10 +1008,6 @@ std::size_t Ostap::Math::Argus::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_c , m_chi ) ;
 }
 
-
-
-
-
 // =============================================================================
 // constructor for all elements 
 // =============================================================================
@@ -1060,7 +1056,7 @@ bool Ostap::Math::GenArgus::setChi ( const double value )
   const double c2 = m_chi * m_chi ;
   const double p1 = p() + 1 ;
   m_norm = 2 * std::pow ( 0.5 * c2 , p1 ) /
-    ( std::tgamma ( p() + 1 ) * ( 1 - Ostap::Math::gamma_inc_Q (   p1 , 0.5 * c2 ) ) ) ;
+  ( std::tgamma ( p() + 1 ) * ( 1 - Ostap::Math::gamma_inc_Q (   p1 , 0.5 * c2 ) ) ) ;
   //
   return true ;    
 }
@@ -1076,7 +1072,7 @@ bool Ostap::Math::GenArgus::setDp ( const double value )
   const double c2 = m_chi * m_chi ;
   const double p1 = p() + 1 ;
   m_norm = 2 * std::pow ( 0.5 * c2 , p1 ) /
-    ( std::tgamma ( p() + 1 ) * ( 1 - Ostap::Math::gamma_inc_Q (   p1 , 0.5 * c2 ) ) ) ;
+  ( std::tgamma ( p() + 1 ) * ( 1 - Ostap::Math::gamma_inc_Q (   p1 , 0.5 * c2 ) ) ) ;
   //
   return true ;    
 }

@@ -4745,7 +4745,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::GammaDist, 1) ;
+      ClassDefOverride(Ostap::Models::GammaDist, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -4755,10 +4755,20 @@ namespace Ostap
         const char*          title     ,
         RooAbsReal&          x         ,
         RooAbsReal&          k         ,
-        RooAbsReal&          theta     ) ;
+        RooAbsReal&          theta     ,
+        RooAbsReal&          shift     ) ;
+      /// constructor from all parameters
+      GammaDist 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          k         ,
+        RooAbsReal&          theta     ,
+        const double         shift = 0 ) ; 
       /// "copy constructor"
-      GammaDist ( const GammaDist&     right     ,
-                  const char*          name  = 0 )  ;
+      GammaDist
+      ( const GammaDist&     right     ,
+	const char*          name  = 0 )  ;
       /// destructor
       virtual ~GammaDist () ;
       /// clone
@@ -4804,12 +4814,14 @@ namespace Ostap
       const RooAbsReal& x     () const { return m_x     .arg() ; }
       const RooAbsReal& k     () const { return m_k     .arg() ; }
       const RooAbsReal& theta () const { return m_theta .arg() ; }
+      const RooAbsReal& shift () const { return m_shift .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_x        ;
-      RooRealProxy m_k        ;
-      RooRealProxy m_theta    ;
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_k        {} ;
+      RooRealProxy m_theta    {} ;
+      RooRealProxy m_shift    {} ;
       // ======================================================================
     private:
       // ======================================================================
@@ -5019,7 +5031,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::LogGammaDist, 1) ;
+      ClassDefOverride(Ostap::Models::LogGammaDist, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5029,7 +5041,16 @@ namespace Ostap
         const char*          title     ,
         RooAbsReal&          x         ,
         RooAbsReal&          k         ,
-        RooAbsReal&          theta     ) ;
+        RooAbsReal&          theta     , 
+        RooAbsReal&          shift     ) ;
+      /// constructor from all parameters
+      LogGammaDist 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          k         ,
+        RooAbsReal&          theta     , 
+        const double         shift = 0 ) ; 
       /// "copy constructor"
       LogGammaDist ( const LogGammaDist&  right     ,
                      const char*          name  = 0 )  ;
@@ -5074,12 +5095,14 @@ namespace Ostap
       const RooAbsReal& x     () const { return m_x     .arg() ; }
       const RooAbsReal& k     () const { return m_k     .arg() ; }
       const RooAbsReal& theta () const { return m_theta .arg() ; }
+      const RooAbsReal& shift () const { return m_shift .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_x        ;
-      RooRealProxy m_k        ;
-      RooRealProxy m_theta    ;
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_k        {} ;
+      RooRealProxy m_theta    {} ;
+      RooRealProxy m_shift    {} ;
       // ======================================================================
     private:
       // ======================================================================
@@ -5101,7 +5124,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Log10GammaDist, 1) ;
+      ClassDefOverride(Ostap::Models::Log10GammaDist, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5111,7 +5134,16 @@ namespace Ostap
         const char*           title     ,
         RooAbsReal&           x         ,
         RooAbsReal&           k         ,
-        RooAbsReal&           theta     ) ;
+        RooAbsReal&           theta     , 
+        RooAbsReal&           shift     ) ;
+      /// constructor from all parameters
+      Log10GammaDist 
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           k         ,
+        RooAbsReal&           theta     ,
+	const double          shift = 0 ) ;
       /// "copy constructor"
       Log10GammaDist
       ( const Log10GammaDist& right     ,
@@ -5157,12 +5189,14 @@ namespace Ostap
       const RooAbsReal& x     () const { return m_x     .arg() ; }
       const RooAbsReal& k     () const { return m_k     .arg() ; }
       const RooAbsReal& theta () const { return m_theta .arg() ; }
+      const RooAbsReal& shift () const { return m_shift .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_x        ;
-      RooRealProxy m_k        ;
-      RooRealProxy m_theta    ;
+      RooRealProxy m_x      {} ;
+      RooRealProxy m_k      {} ;
+      RooRealProxy m_theta  {} ;
+      RooRealProxy m_shift  {} ;
       // ======================================================================
     private:
       // ======================================================================

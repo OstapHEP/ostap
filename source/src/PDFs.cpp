@@ -6671,17 +6671,36 @@ Ostap::Models::GammaDist::GammaDist
   const char*          title ,
   RooAbsReal&          x     ,
   RooAbsReal&          k     ,
-  RooAbsReal&          theta )
+  RooAbsReal&          theta ,
+  RooAbsReal&          shift )
   : RooAbsPdf  (name ,title ) 
 //
   , m_x       ( "!x"     , "Observable" , this , x     ) 
   , m_k       ( "!k"     , "Shape"      , this , k     ) 
   , m_theta   ( "!theta" , "Scale"      , this , theta )
+  , m_shift   ( "!shift" , "Schift"     , this , shift )
 //
-  , m_gamma   ( 1 , 1 ) 
+  , m_gamma   () 
 {
   setPars () ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GammaDist::GammaDist
+( const char*          name  , 
+  const char*          title ,
+  RooAbsReal&          x     ,
+  RooAbsReal&          k     ,
+  RooAbsReal&          theta , 
+  const double         shift )
+  : GammaDist ( name  ,
+		title ,
+		x     ,
+		k     ,
+		theta ,
+		RooFit::RooConst ( shift ) )
+{}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -6693,8 +6712,9 @@ Ostap::Models::GammaDist::GammaDist
   , m_x     ( "!x"     , this , right.m_x     ) 
   , m_k     ( "!k"     , this , right.m_k     ) 
   , m_theta ( "!theta" , this , right.m_theta )
+  , m_shift ( "!shift" , this , right.m_shift )
 //
-  , m_gamma (                  right.m_gamma ) 
+  , m_gamma ( right.m_gamma ) 
 {
   setPars () ;
 }
@@ -6714,6 +6734,7 @@ void Ostap::Models::GammaDist::setPars () const
   //
   m_gamma.setK     ( m_k     ) ;
   m_gamma.setTheta ( m_theta ) ;
+  m_gamma.setShift ( m_shift ) ;
   //
 }
 // ============================================================================
@@ -6721,9 +6742,7 @@ void Ostap::Models::GammaDist::setPars () const
 // ============================================================================
 Double_t Ostap::Models::GammaDist::evaluate() const 
 {
-  //
   setPars () ;
-  //
   return m_gamma   ( m_x ) ;
 }
 // ============================================================================
@@ -7010,17 +7029,36 @@ Ostap::Models::LogGammaDist::LogGammaDist
   const char*          title ,
   RooAbsReal&          x     ,
   RooAbsReal&          k     ,
-  RooAbsReal&          theta )
+  RooAbsReal&          theta , 
+  RooAbsReal&          shift )
   : RooAbsPdf  (name ,title ) 
 //
   , m_x       ( "!x"     , "Observable" , this , x     ) 
   , m_k       ( "!k"     , "Shape"      , this , k     ) 
   , m_theta   ( "!theta" , "Scale"      , this , theta )
+  , m_shift   ( "!shift" , "Shift"      , this , shift )
 //
-  , m_gamma   ( 1 , 1 ) 
+  , m_gamma   () 
 {
   setPars () ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::LogGammaDist::LogGammaDist
+( const char*  name  , 
+  const char*  title ,
+  RooAbsReal&  x     ,
+  RooAbsReal&  k     ,
+  RooAbsReal&  theta , 
+  const double shift )
+  : LogGammaDist ( name  ,
+		   title ,
+		   x     ,
+		   k     ,
+		   theta ,
+		   RooFit::RooConst ( shift ) )
+{}		   
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -7032,6 +7070,7 @@ Ostap::Models::LogGammaDist::LogGammaDist
   , m_x     ( "!x"     , this , right.m_x     ) 
   , m_k     ( "!k"     , this , right.m_k     ) 
   , m_theta ( "!theta" , this , right.m_theta )
+  , m_shift ( "!shift" , this , right.m_shift )
 //
   , m_gamma (                  right.m_gamma ) 
 {
@@ -7053,6 +7092,7 @@ void Ostap::Models::LogGammaDist::setPars () const
   //
   m_gamma.setK     ( m_k     ) ;
   m_gamma.setTheta ( m_theta ) ;
+  m_gamma.setShift ( m_shift ) ;
   //
 }
 // ============================================================================
@@ -7098,17 +7138,36 @@ Ostap::Models::Log10GammaDist::Log10GammaDist
   const char*          title ,
   RooAbsReal&          x     ,
   RooAbsReal&          k     ,
-  RooAbsReal&          theta )
+  RooAbsReal&          theta , 
+  RooAbsReal&          shift )
   : RooAbsPdf  (name ,title ) 
 //
   , m_x       ( "!x"     , "Observable" , this , x     ) 
   , m_k       ( "!k"     , "Shape"      , this , k     ) 
   , m_theta   ( "!theta" , "Scale"      , this , theta )
+  , m_shift   ( "!shift" , "Shift"      , this , shift )
 //
-  , m_gamma   ( 1 , 1 ) 
+  , m_gamma   () 
 {
   setPars () ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Log10GammaDist::Log10GammaDist
+( const char*  name  , 
+  const char*  title ,
+  RooAbsReal&  x     ,
+  RooAbsReal&  k     ,
+  RooAbsReal&  theta , 
+  const double shift )
+  : Log10GammaDist ( name  ,
+		     title ,
+		     x     ,
+		     k     ,
+		     theta ,
+		     RooFit::RooConst ( shift ) )
+{}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -7120,6 +7179,7 @@ Ostap::Models::Log10GammaDist::Log10GammaDist
   , m_x     ( "!x"     , this , right.m_x     ) 
   , m_k     ( "!k"     , this , right.m_k     ) 
   , m_theta ( "!theta" , this , right.m_theta )
+  , m_shift ( "!shift" , this , right.m_shift )
 //
   , m_gamma (                  right.m_gamma ) 
 {
@@ -7141,6 +7201,7 @@ void Ostap::Models::Log10GammaDist::setPars () const
   //
   m_gamma.setK     ( m_k     ) ;
   m_gamma.setTheta ( m_theta ) ;
+  m_gamma.setShift ( m_shift ) ;
   //
 }
 // ============================================================================
@@ -7680,7 +7741,6 @@ Ostap::Models::GenBeta::GenBeta
 {
   setPars () ;
 }
-
 // ============================================================================
 // destructor
 // ============================================================================
@@ -7695,12 +7755,10 @@ Ostap::Models::GenBeta::clone ( const char* name ) const
 void Ostap::Models::GenBeta::setPars () const 
 {
   //
-  m_beta.setA      ( m_a      ) ;
-  m_beta.setB      ( m_b      ) ;
-  m_beta.setGamma  ( m_gamma  ) ;
-  m_beta.setP      ( m_p      ) ;
-  m_beta.setQ      ( m_q      ) ;
-  m_beta.setShift  ( m_shift  ) ;
+  m_beta.setAB     ( m_a     , m_b ) ;
+  m_beta.setGamma  ( m_gamma       ) ;
+  m_beta.setPQ     ( m_p     , m_q ) ;
+  m_beta.setShift  ( m_shift       ) ;
   //
 }
 // ============================================================================

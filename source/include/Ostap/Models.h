@@ -47,7 +47,7 @@ namespace Ostap
      *  then z, \f$ z  =   log(x) \f$, is distributed according to 
      *  \f$ F(z) = G(x, -\log(\tau), 1 ) \f$ 
      * 
-     *  As a   result, if    x is distributes as sum of exponential components 
+     *  As a   result, if    x is a sum of exponential components 
      *  with different slopes, the transforomation \f$ z=log(x) \f$ will convert each 
      *  exponential components into bump-like structure
      */  
@@ -134,6 +134,7 @@ namespace Ostap
     /** @class GammaDist
      *  Gamma-distribution shape/scale parameters
      *  http://en.wikipedia.org/wiki/Gamma_distribution
+     *  - we have added also shift-parameter 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-05-11
      */
@@ -144,10 +145,12 @@ namespace Ostap
       /** constructor from scale & shape parameters
        *  param k       \f$k\f$      parameter (shape)
        *  param theta   \f$\theta\f$ parameter (scale)
+       *  param shift   shift parameter
        */
       GammaDist 
       ( const double k     = 2 ,   // shape parameter
-        const double delta = 0 ) ; // shift parameter
+        const double theta = 1 ,   // scale parameter
+	const double shift = 0 ) ; // shift parametet 
       // ======================================================================
     public:
       // ======================================================================
@@ -162,6 +165,7 @@ namespace Ostap
       // ======================================================================
       inline double k          () const  { return m_k       ; }
       inline double theta      () const  { return m_theta   ; }
+      inline double shift      () const  { return m_shift   ; }
       // ======================================================================
       inline double alpha      () const  { return m_k       ; }
       inline double beta       () const  { return 1/m_theta ; }
@@ -169,7 +173,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// mean value 
-      inline double mean       () const  { return m_k * m_theta            ; }
+      inline double mean       () const  { return m_shift + m_k * m_theta  ; }
       /// variance 
       inline double variance   () const  { return dispersion ()            ; }
       /// variance 
@@ -177,23 +181,32 @@ namespace Ostap
       /// kurtosis 
       inline double kurtosis   () const  { return 6 / alpha  ()            ; }
       // 
-      double        sigma      () const  ;
+      double        rms        () const  ;
       double        skewness   () const  ;
       double        mode       () const  ; 
       // ======================================================================
+      inline double xmin       () const { return m_shift  ; }
+      // ======================================================================      
     public:
       // ======================================================================
       /** effective \f$ \chi^2 \f$-parameters
        *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
        *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
+       *  @attention for shift!=0  NaN is returned
        */
-      inline double nu () const { return 2   * k     () ; }
-      inline double c  () const { return 0.5 * theta () ; }
+      double nu () const ;
+      /** effective \f$ \chi^2 \f$-parameters
+       *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
+       *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
+       *  @attention for shift!=0  NaN is returned
+       */
+      double c  () const ; 
       // ======================================================================
     public:
       // ======================================================================
       bool setK     ( const double value  ) ;
       bool setTheta ( const double value  ) ;
+      bool setShift ( const double value  ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -203,6 +216,9 @@ namespace Ostap
       double integral 
       ( const double low  ,
         const double high ) const ;
+      /// get CDF 
+      double cdf 
+      ( const double x    ) const ;
       // ======================================================================
     public: // quantiles
       // ======================================================================
@@ -217,17 +233,18 @@ namespace Ostap
     private:
       // ======================================================================
       /// shape
-      double m_k      ; // shape
+      double m_k      { 2 } ; // shape
       /// scale
-      double m_theta  ; // scale
+      double m_theta  { 1 } ; // scale
+      /// shift
+      double m_shift  { 0 } ; // shift 
       // ======================================================================
     private:
       // ======================================================================
-      /// auxillary intermediate parameter
-      mutable double m_aux ; // auxillary intermediate parameter
+      /// auxillary intermediate parameter  -log Gamma ( k ) 
+      mutable double m_lgk { 0 } ; 
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class GramCharlierA4
      *  Gram-Charlier type A approximation
@@ -327,7 +344,8 @@ namespace Ostap
        */
       LogGammaDist
       ( const double k     = 2 ,   // shape parameter
-        const double theta = 1 ) ; // scale parameter
+        const double theta = 1 ,   // scale parameter
+	const double shift = 0 ) ; // shift parameter
       /// destructor
       virtual ~LogGammaDist() ;  // desctructor
       // ======================================================================
@@ -342,12 +360,13 @@ namespace Ostap
       // ======================================================================
       inline double k          () const  { return m_gamma.k     () ; }
       inline double theta      () const  { return m_gamma.theta () ; }
+      inline double shift      () const  { return m_gamma.shift () ; }
       // ======================================================================
     public:
       // ======================================================================
       inline double gamma_mean       () const { return m_gamma.mean       () ; }
       inline double gamma_dispersion () const { return m_gamma.dispersion () ; }
-      inline double gamma_sigma      () const { return m_gamma.sigma      () ; }
+      inline double gamma_rms        () const { return m_gamma.rms        () ; }
       inline double gamma_skewness   () const { return m_gamma.skewness   () ; }
       inline double gamma_kurtosis   () const { return m_gamma.kurtosis   () ; }
       // ======================================================================
@@ -369,6 +388,7 @@ namespace Ostap
       // ======================================================================
       bool setK     ( const double value  ) { return m_gamma.setK     ( value ) ; }
       bool setTheta ( const double value  ) { return m_gamma.setTheta ( value ) ; }
+      bool setShift ( const double value  ) { return m_gamma.setShift ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -412,7 +432,8 @@ namespace Ostap
        */
       Log10GammaDist 
       ( const double k     = 2 ,   // shape parameter
-        const double theta = 1 ) ; // scale parameter
+        const double theta = 1 ,   // scale parameter
+        const double shift = 0 ) ; // shift parameter
       /// destructor
       virtual ~Log10GammaDist() ;  // destructor
       // ======================================================================
@@ -496,10 +517,13 @@ namespace Ostap
       inline double dispersion () const  { return m_k * m_theta * m_theta      ; }
       inline double variance   () const  { return dispersion ()                ; }
       inline double sigma      () const  { return std::sqrt ( dispersion ()  ) ; }
+      inline double rms        () const  { return std::sqrt ( dispersion ()  ) ; }
       inline double skewness   () const  { return 2.0 / std::sqrt ( m_k )      ; }
       // ======================================================================
       // get the mode 
-      double mode   () const ; 
+      double        mode   () const ; 
+      // =====================================================================
+      inline double xmin () const { return low () ; }
       // ======================================================================
     public:  // setters
       // ======================================================================
@@ -1118,9 +1142,12 @@ namespace Ostap
       bool setP      ( const double value  ) ;
       bool setQ      ( const double value  ) ;
       bool setShift  ( const double value  ) ;
-      bool setPQ
+      bool setAB
       ( const double valuep ,
 	const double valueq ) ;		       
+      bool setPQ
+      ( const double valuea ,
+	const double valueb ) ;		       
       // =======================================================================
     public :
       // =======================================================================
@@ -1794,15 +1821,18 @@ namespace Ostap
       // ======================================================================
     public: // setters 
       // ======================================================================
-      bool setMu    ( const double value ) ;
-      bool setScale ( const double value ) ;
-      bool setShape ( const double value ) ;
-      bool setXi    ( const double value ) { return setShape ( value ) ; }
+      bool        setMu    ( const double value ) ;
+      bool        setScale ( const double value ) ;
+      bool        setShape ( const double value ) ;
+      inline bool setXi    ( const double value ) { return setShape ( value ) ; }
       // ====================================================================== 
     public:
       // ====================================================================== 
-      inline double xmin  () const { return m_mu    ; }
       inline double xi    () const { return m_shape ; }
+      /// xmin 
+      inline double xmin  () const { return m_mu    ; }
+      /// xmax: can be infinite 
+      double        xmax  () const ;
       // ======================================================================      
     public: //properties 
       // ====================================================================== 

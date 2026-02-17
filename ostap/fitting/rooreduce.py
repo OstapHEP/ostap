@@ -1990,7 +1990,8 @@ def _rgamdist_reduce_ ( pdf ):
                                   pdf.title         ,
                                   pdf.x          () ,                            
                                   pdf.k          () ,
-                                  pdf.theta      () )
+                                  pdf.theta      () , 
+                                  pdf.shift      () )
 
 Ostap.Models.GammaDist     .__reduce__ = _rgamdist_reduce_ 
 Ostap.Models.LogGammaDist  .__reduce__ = _rgamdist_reduce_ 

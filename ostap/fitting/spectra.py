@@ -50,7 +50,8 @@ models.append ( GammaDist_pdf )
 ## @class PtFitBase
 #  helper object  
 class PtFitBase(object) :
-    """Helper class to implement spetra fitter"""
+    """ Helper class to implement pt-spectrum fitter
+    """
     def __init__ ( self , ptmax , ptmin = 0 ) :
         self._integral = -1
         ptmax = float ( ptmax ) 
