@@ -4820,7 +4820,7 @@ Ostap::Math::LogNormal::LogNormal
   const double shift )
   : m_shape ( std::abs ( shape ) )
   , m_scale ( std::abs ( scale ) )
-  , m_shift ( std::abs ( scale ) )
+  , m_shift (            shift   )
 {
   Ostap::Assert ( m_shape , 
                   "Shape parameter must be positive!"     ,
@@ -4832,6 +4832,7 @@ Ostap::Math::LogNormal::LogNormal
                   "Ostap::Math::LogNormal"                ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //  
+  m_mu = std::log ( m_scale ) ; 
 }
 // ============================================================================
 // set shape 
@@ -4863,6 +4864,19 @@ bool Ostap::Math::LogNormal::setScale ( const double value )
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   m_scale = avalue ; 
+  m_mu    = std::log ( m_scale ) ; 
+  return true ;
+} 
+// ============================================================================
+// set Mu 
+// ============================================================================
+bool Ostap::Math::LogNormal::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu ) ) { return false ; }
+  //
+  m_mu    = value ;
+  m_scale = std::exp ( m_mu ) ; 
+
   return true ;
 } 
 // ============================================================================
@@ -4881,10 +4895,11 @@ bool Ostap::Math::LogNormal::setShift ( const double value )
 double Ostap::Math::LogNormal::evaluate
 ( const double x ) const
 {
-  if ( x <= m_shift || s_equal ( x , m_shift ) ) { return 0 ; }
+  if ( x  <= m_shift || s_equal ( x , m_shift ) ) { return 0 ; }
   const double dx = x - m_shift ; 
+  if ( dx <= 0       || s_zero  ( dx )          ) { return 0 ; }
   const double lz = std::log ( dx / m_scale ) / m_shape  ;   
-  return Ostap::Math::gauss_pdf ( lz ) / dx  ;
+  return Ostap::Math::gauss_pdf ( lz ) / ( dx * m_shape ) ;
 }
 // ============================================================================
 // integral 
@@ -4897,27 +4912,26 @@ double Ostap::Math::LogNormal::integral
 ( const double low  ,
   const double high ) const
 {
-  if      ( s_equal ( low , high ) ) { return 0 ; }
+  if      ( s_equal ( low , high ) ) { return  0 ; }
   else if ( high <  low            ) { return -integral ( high    , low ) ; } 
-  else if ( high <= m_shift        ) { return 0 ; }
-  else if ( low  <= m_shift        ) { return  integral ( m_shift , high ) ; }
+  else if ( high <= m_shift        ) { return  0 ; }
+  else if ( low  <  m_shift        ) { return  integral ( m_shift , high ) ; }
   //
-  const double dh = high - m_shift ; 
-  const double lh = std::log ( dh / m_scale ) / m_shape ;
-  //
-  const double dl = low  - m_shift ; 
-  const double ll = std::log ( dl / m_scale ) / m_shape ;
-  //  
-  return
-    Ostap::Math::gauss_cdf ( lh ) -
-    Ostap::Math::gauss_cdf ( ll ) ;
+  return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
 // CDF  
 // ============================================================================
 double Ostap::Math::LogNormal::cdf 
 ( const double x    ) const
-{ return x <= m_shift ? 0.0 : integral ( m_shift , x ) ; }
+{ 
+  if ( x  <= m_shift || s_equal ( x , m_shift ) ) { return 0 ; }
+  const double dx = x - m_shift ;
+  if ( dx <= 0       || s_zero  ( dx )          ) { return 0 ; }
+  //
+  const double z = std::log ( dx / m_scale      ) / m_shape ;
+  return Ostap::Math::gauss_cdf ( z ) ;
+}
 // ============================================================================
 // quantile  function \f$ 0 < p < 1 \f$ 
 // ============================================================================
@@ -4931,11 +4945,6 @@ double Ostap::Math::LogNormal::quantile
     s_equal ( p , 1 ) ?  s_POSHUGE  :
     m_shift + m_scale * std::exp ( m_shape * Ostap::Math::probit ( p )  ) ;
 }
-// ============================================================================
-// canonical mu
-// ============================================================================
-double Ostap::Math::LogNormal::canonical_mu    () const
-{ return std::log ( m_scale ) ; }
 // ============================================================================
 // mean value 
 // ============================================================================
@@ -4994,7 +5003,6 @@ std::size_t Ostap::Math::LogNormal::tag () const
 				       m_shift ) ;
 }
 // ============================================================================
-
 
 
 // ============================================================================
@@ -5065,6 +5073,16 @@ bool Ostap::Math::ExpoLog::setPsi ( const double value )
                   "Ostap::Math::ExpoLog"                  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
+  return true ;
+} 
+// ============================================================================
+// set shift 
+// ============================================================================
+bool Ostap::Math::ExpoLog::setShift ( const double value ) 
+{
+  if ( s_equal ( value , m_shift  ) ) { return false ; }
+  //
+  m_shift = value ; 
   return true ;
 } 
 // ============================================================================

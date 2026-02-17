@@ -15,7 +15,7 @@ __all__    = () ## nothing to import
 from   ostap.utils.timing          import timing 
 from   ostap.plotting.canvas       import use_canvas
 from   ostap.utils.root_utils      import batch_env 
-from   ostap.fitting.distributions import models, spectra
+
 from   ostap.utils.basic           import typename 
 import ostap.fitting.models        as     Models 
 import ROOT 
@@ -36,9 +36,9 @@ batch_env ( logger )
 x = ROOT.RooRealVar ( 'x' , 'x-variable' ,  0  , 10 ) 
 y = ROOT.RooRealVar ( 'y' , 'y-variable' , -5 ,   5 ) 
 
-plots  = set ()
-models = set ()
 
+the_plots  = set ()
+the_models = set ()
 
 # =============================================================================
 def _check_the_model_ ( model_type ) :
@@ -47,29 +47,29 @@ def _check_the_model_ ( model_type ) :
     model  = model_type ( xvar = x )
     logger = getLogger("test_%s" % model.name )
     
-    with use_canvas ( 'test %s' % model.name ) :
+    with use_canvas ( 'test %s' % model.name , wait = 3 ) :
         logger.info ( 'Test the model %s:\n%s' % ( typename ( model ) , model ) )
         plot = model.draw()
     
-    models.add ( model )
-    plots .add ( plot  ) 
+    the_models.add ( model )
+    the_plots .add ( plot  ) 
 
 # =============================================================================
 def test_models () :
 
-    from ostap.fitting.distributions import models 
+    from   ostap.fitting.distributions import models , spectra
+    models = list ( models )
     logger.info ( 'Test distributions' )
     for model in models :
         if not model in spectra : _check_the_model_ ( model ) 
-    
-    
+        
 # =============================================================================
 def test_Tsallis () :
 
     logger = getLogger("test_Tsallis")
     
-    model  = Models.Tsallis_pdf ( 'Tsallis' , 
-                                  x         ,
+    model  = Models.Tsallis_pdf ( name = 'Tsallis' , 
+                                  xvar = x         ,
                                   m0 = ROOT.RooFit.RooConst ( 0.135 ) ,
                                   n  = 10   ,
                                   T  = 0.2  )
@@ -77,103 +77,43 @@ def test_Tsallis () :
     with use_canvas ( 'Tsallis_pdf' ) :
         plot = model.draw()
         
-    models.add ( model )
-    plots .add ( plot  ) 
+    the_models.add ( model )
+    the_plots .add ( plot  ) 
 
 # =============================================================================
 def test_QGSM () :
 
     logger = getLogger("test_QGSM")
     
-    model  = Models.QGSM_pdf ( 'QGSM'   , 
-                               x        ,
+    model  = Models.QGSM_pdf ( name = 'QGSM'   , 
+                               xvar = x  ,
                                m0 = ROOT.RooFit.RooConst ( 0.135 ) ,
                                b  = 10  )
     
     with use_canvas ( 'QGSM_pdf' ) :
         plot = model.draw()
         
-    models.add ( model )
-    plots .add ( plot  ) 
+    the_models.add ( model )
+    the_plots .add ( plot  ) 
 
 # =============================================================================
 def test_Hagedorn () :
 
     logger = getLogger("test_Hagedorn")
     
-    model  = Models.Hagedorn_pdf ( 'Hagedorn' , x ,
+    model  = Models.Hagedorn_pdf ( name = 'Hagedorn' , 
+                                   xvar = x ,
                                    m0   = 1   ,
                                    beta = 10  )
     
     with use_canvas ( 'QGSM_pdf' ) :
         plot = model.draw()
         
-    models.add ( model )
-    plots .add ( plot  ) 
+    the_models.add ( model )
+    the_plots .add ( plot  ) 
 
 
-# =============================================================================
-def test_GenPareto () :
 
-    logger = getLogger("test_GenPareto")
-    
-    model  = Models.GenPareto_pdf ( 'GenPareto' , x ,
-                                    mu    = 1 ,
-                                    scale = 1 ,
-                                    shape = 1 )
-    
-    with use_canvas ( 'GenPareto_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_ExGenPareto () :
-
-    logger = getLogger("test_ExGenPareto")
-    
-    model  = Models.ExGenPareto_pdf ( 'ExGenPareto' , x ,
-                                      mu    = 1 ,
-                                      scale = 1 ,
-                                      shape = 1 )
-    
-    with use_canvas ( 'ExGenPareto_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_GEV () :
-
-    logger = getLogger("test_GEV")
-    
-    model  = Models.GEV_pdf ( 'GEV' , x ,
-                              mu    = 1 ,
-                              scale = 1 ,
-                                      shape = 1 )
-    
-    with use_canvas ( 'GEV_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
-
-# =============================================================================
-def test_MPERT () :
-
-    logger = getLogger("test_MPERT")
-    
-    model  = Models.MPERT_pdf ( 'MPERT' , x ,
-                                xi    = 3  ,
-                                gamma = 10 )
-    
-    with use_canvas ( 'MPERT_pdf' ) :
-        plot = model.draw()
-        
-    models.add ( model )
-    plots .add ( plot  ) 
 
 
 # =============================================================================
@@ -186,11 +126,11 @@ def test_db() :
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
-        for m in models :
+        for m in the_models :
             db['model:' + m.name ] = m
             db['roo:%s' % m.name ] = m.pdf
-        db['models'   ] = models
-        db['plots'    ] = plots 
+        db['models'   ] = the_models
+        db['plots'    ] = the_plots 
         db.ls() 
 
 # =============================================================================

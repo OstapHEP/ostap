@@ -2852,8 +2852,8 @@ namespace Ostap
       /// constructor 
       LogNormal
       ( const double shape = 1 ,
-	const double scale = 1 ,
-	const double shift = 0 ) ; 
+	      const double scale = 1 ,
+	      const double shift = 0 ) ; 
       // ======================================================================
     public : 
       // ======================================================================
@@ -2875,15 +2875,16 @@ namespace Ostap
     public :  // "canonical parameters"
       // ======================================================================
       /// canonical mu 
-      double        canonical_mu    () const ;
+      inline double mu    () const { return m_mu   ; }
       /// canonical sigma 
-      inline double canonical_sigma () const { return m_shape ; } 
+      inline double sigma () const { return m_shape ; } 
       // ======================================================================
     public:
       // =====================================================================
       bool setShape ( const double value ) ;
       bool setScale ( const double value ) ;
       bool setShift ( const double value ) ;
+      bool setMu    ( const double value ) ;
       // =====================================================================
     public : 
       // =====================================================================
@@ -2892,7 +2893,7 @@ namespace Ostap
       /// integral 
       double integral
       ( const double low  ,
-	const double high ) const ;
+	      const double high ) const ;
       /// CDF  
       double cdf 
       ( const double x    ) const ;
@@ -2928,8 +2929,10 @@ namespace Ostap
       double m_shape { 1 } ; // shape parameter 
       /// scale parameter 
       double m_scale { 1 } ; // scale parameter 
-      // shift parameter
-      double m_shift { 0 } ; // shift parameter      
+      /// shift parameter
+      double m_shift { 0 } ; // shift parameter    
+      /// mu=log(scale)
+      double m_mu    { 0 } ; // mu=log (scale) 
       // ======================================================================
     } ;
     // ========================================================================
@@ -2947,8 +2950,8 @@ namespace Ostap
       // ======================================================================
       ExpoLog
       ( const double beta  = 1 ,   // scale 
-	const double psi   = 0 ,   // related to p 
-	const double shift = 0 ) ; // shift
+	      const double psi   = 0 ,   // related to p 
+	      const double shift = 0 ) ; // shift
       // ======================================================================
     public : 
       // ======================================================================
@@ -3016,8 +3019,8 @@ namespace Ostap
       /// conastructor 
       Davis
       ( const double b  = 1 ,
-	const double n  = 5 ,
-	const double mu = 0 ) ;	
+	      const double n  = 5 ,
+	      const double mu = 0 ) ;	
       // ======================================================================
     public : 
       // ======================================================================

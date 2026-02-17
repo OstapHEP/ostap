@@ -2230,7 +2230,7 @@ class LogNormal_pdf(PDF1,ShiftAndScale) :
         self.__shape  = self.make_var ( shape ,
                                         'shape_%s'         % self.name ,
                                         '#sigma_{LN}(%s)'  % self.name ,
-                                        None , a , 1.e-3 , 1000 )
+                                        None , shape , 1.e-3 , 1000 )
 
         ## create PDF 
         self.pdf  = Ostap.Models.LogNormal (
@@ -2350,7 +2350,7 @@ class Davis_pdf(PDF1,ShiftAndScale) :
                    name  = '' ,   ## the name 
                    n     = 10 ,   ## shape parametr
                    b     = 1  ,   ## scale parameter
-                   mu    = 0  ) : ## shift-location parameer
+                   mu    = 0  ) : ## shift/location parameer
         ## 
         PDF1         .__init__ ( self  , name = name , xvar = xvar  )
         ShiftAndScale.__init__ ( self  ,
@@ -2372,17 +2372,17 @@ class Davis_pdf(PDF1,ShiftAndScale) :
             self.roo_name ( 'davis_' )  ,
             'Davis %s' % self.name , 
             self.x     ,
-            b          ,
+            self.b     ,
             self.n     ,
-            mu         )
+            self.mu    )
         
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
             'n'     : self.n     ,            
-            'b'     : self.scale ,            
-            'mu'    : self.shift }
+            'b'     : self.b     ,            
+            'mu'    : self.mu    }
 
     ## aliases
     b  = ShiftAndScale.scale
@@ -2564,9 +2564,10 @@ class Tsallis_pdf(PDF1) :
     
     is transverse kinetic energy 
     """
-    def __init__ ( self                   ,
+    def __init__ ( self                   , * , 
                    xvar                   ,   ## pT-variable (for fitting) 
-                   m0                     ,   ## particle mass (may be fixed)
+                   name      = ''         , 
+                   m0        = 0.135      ,   ## particle mass (may be fixed)
                    n         = None       ,   ## shape parameter
                    T         = None       ) : ## temperature parameter                   
 
