@@ -212,7 +212,8 @@ std::size_t Ostap::Math::Gumbel::tag () const
 { 
   static const std::string s_name = "Gumbel" ;
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_beta ) ; 
-}// ============================================================================
+}
+// ============================================================================
  
 // ============================================================================
 // Gram-Charlier type A
@@ -5705,7 +5706,7 @@ double Ostap::Math::InverseGamma::integral
   if      ( s_equal ( low  , high ) ) { return  0 ; }
   else if (           high < low    ) { return -integral ( high    , low  ) ; } 
   else if ( high    <= xmin ()      ) { return  0 ; }
-  else if ( low     <= xmin ()      ) { return  integral ( xmin () , high ) ; }
+  else if ( low     <  xmin ()      ) { return  integral ( xmin () , high ) ; }
   //
   return cdf ( high ) - cdf ( low ) ;  
 }

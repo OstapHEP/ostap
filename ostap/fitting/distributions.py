@@ -2596,7 +2596,7 @@ class Burr_pdf(PDF1,ShiftAndScale) :
     @property
     def k ( self ) :
         """`k` : b-parameter for Burr Type XII distribution"""
-        return self.__b
+        return self.__k
     @k.setter 
     def k ( self , value ) :
         self.set_value ( self.__k , value )
