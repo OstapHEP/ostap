@@ -3205,7 +3205,7 @@ namespace Ostap
       /// full constructot 
       InverseGamma
       ( const double alpha = 8 ,
-	const double beta  = 1 ,
+	const double beta  = 1 ,   // scale 
 	const double shift = 0 ) ;	      
       // ======================================================================
     public : 
