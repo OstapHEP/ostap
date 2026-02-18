@@ -48,6 +48,7 @@
 // ============================================================================
 #include "GSL_sentry.h"
 #include "Faddeeva.hh"
+#include "KolmogorovSmirnovDist.h"
 #include "gauss.h"
 #include "Ostap/Workspace.h"
 #include "local_math.h"
@@ -6696,7 +6697,105 @@ std::complex<double> Ostap::Math::moebius
   const std::complex<double> n1 { c * x + d } ;
   return n2 / n1 ;
 }
+// ===========================================================================
 
+// ===========================================================================
+/* @fn kolmogorov_cdf
+ *
+ * The Kolmogorov-Smirnov test statistic D_n is defined by
+ *
+ *        D_n = sup_x |F(x) - S_n(x)|
+ *
+ * where n is the sample size, F(x) is a completely specified theoretical
+ * distribution, and S_n(x) is an empirical distribution function.
+ *
+ * The function computes the cumulative probability P[D_n <= x] of the 2-sided 1-sample
+ * Kolmogorov-Smirnov distribution with sample size n at x.
+ * It returns at least 13 decimal degits of precision for n <= 140,
+ * at least 5 decimal degits of precision for 140 < n <= 100000,
+ * and a few correct decimal digits for n > 100000.
+ *
+ * The code is taken from
+ *  - Simard, R., & L’Ecuyer, P. (2011). 
+ *    "Computing the Two-Sided Kolmogorov-Smirnov Distribution."
+ *    Journal of Statistical Software, 39(11), 1–18.
+ * @see  https://doi.org/10.18637%2Fjss.v039.i11
+ */
+// ==========================================================================
+double Ostap::Math::kolmogorov_cdf
+( const unsigned int n , 
+  const double       x ) 
+  { 
+    Ostap::Assert ( n , 
+                   "n must be positive" , 
+                   "kolmogorov_cdf"     , 
+                   INVALID_PARAMETER , __FILE__, __LINE__) ;
+    return 
+     x <= 0 ? 0.0 : 
+     x >= 1 ? 1.0 : KScdf ( n , x ) ; 
+  }
+// ===========================================================================
+/** @fn kolmogorov_ccdf 
+ *
+ * The function
+ * computes the complementary cumulative probability P[D_n >= x] of the
+ * 2-sided 1-sample Kolmogorov-Smirnov distribution with sample size n at x.
+ * It returns at least 10 decimal degits of precision for n <= 140,
+ * at least 5 decimal degits of precision for 140 < n <= 200000,
+ * and a few correct decimal digits for n > 200000.
+ * 
+ * The code is taken from
+ *  - Simard, R., & L’Ecuyer, P. (2011). 
+ *    "Computing the Two-Sided Kolmogorov-Smirnov Distribution."
+ *    Journal of Statistical Software, 39(11), 1–18.
+ * @see  https://doi.org/10.18637%2Fjss.v039.i11
+ */
+// ===========================================================================
+double Ostap::Math::kolmogorov_ccdf
+( const unsigned int n , 
+  const double       x ) 
+  { 
+    Ostap::Assert ( n , 
+                   "n must be positive" , 
+                   "kolmogorov_ccdf"    , 
+                   INVALID_PARAMETER , __FILE__, __LINE__) ;
+    return 
+     x <= 0 ? 1.0 :
+     x >= 1 ? 0.0 : KSfbar ( n , x ) ; 
+  }
+// ============================================================================
+// Kolmogorov PDF
+// ============================================================================
+double Ostap::Math::kolmogorov_pdf
+( const unsigned int n , 
+  const double       x ) 
+  {
+    Ostap::Assert ( n , 
+                   "n must be positive" , 
+                   "kolmogorov_pdf"    , 
+                   INVALID_PARAMETER , __FILE__, __LINE__) ;
+    if ( x <= 0 || x >= 1 ) { return  0 ; }
+    //
+    // make numerical differentiation 
+    const long double h = std::min ( 0.1L / n , 1.e-3 * 1.0L ) ;
+    //
+    const long double fm4 = kolmogorov_cdf ( n , x - 4 * h ) ;
+    const long double fm3 = kolmogorov_cdf ( n , x - 3 * h ) ;
+    const long double fm2 = kolmogorov_cdf ( n , x - 2 * h ) ;
+    const long double fm1 = kolmogorov_cdf ( n , x - 1 * h ) ;
+    const long double fp1 = kolmogorov_cdf ( n , x + 1 * h ) ;
+    const long double fp2 = kolmogorov_cdf ( n , x + 2 * h ) ;
+    const long double fp3 = kolmogorov_cdf ( n , x + 3 * h ) ;
+    const long double fp4 = kolmogorov_cdf ( n , x + 4 * h ) ;
+    //
+    const long double r = 
+    -1.0L * ( fp4 - fm4 ) / 280 
+    +4.0L * ( fp3 - fm3 ) / 105 
+    -1.0L * ( fp2 - fm2 ) / 5 
+    +4.0L * ( fp1 - fm1 ) / 5 ;
+    //
+    return r / h ; 
+  }
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

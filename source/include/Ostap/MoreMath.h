@@ -2631,6 +2631,58 @@ namespace Ostap
       const std::complex<double>& c = std::complex<double> ( 0 , 0 ) , 
       const std::complex<double>& d = std::complex<double> ( 1 , 0 ) ) ;
     // ========================================================================
+
+    // ========================================================================
+    /** @fn kolmogorov_cdf
+     *
+     * The Kolmogorov-Smirnov test statistic D_n is defined by
+     *
+     *        D_n = sup_x |F(x) - S_n(x)|
+     *
+     * where n is the sample size, F(x) is a completely specified theoretical
+     * distribution, and S_n(x) is an empirical distribution function.
+     *
+     * The function computes the cumulative probability P[D_n <= x] of the 2-sided 1-sample
+     * Kolmogorov-Smirnov distribution with sample size n at x.
+     * It returns at least 13 decimal degits of precision for n <= 140,
+     * at least 5 decimal degits of precision for 140 < n <= 100000,
+     * and a few correct decimal digits for n > 100000.
+     *
+     * The code is taken from
+     *  - Simard, R., & L’Ecuyer, P. (2011). 
+     *    "Computing the Two-Sided Kolmogorov-Smirnov Distribution."
+     *    Journal of Statistical Software, 39(11), 1–18.
+     * @see  https://doi.org/10.18637%2Fjss.v039.i11
+     */
+    double kolmogorov_cdf
+    ( const unsigned int n , 
+      const double       x ) ;
+    /// Kolmogorov PDF
+    double kolmogorov_pdf
+    ( const unsigned int n , 
+      const double       x ) ;
+    // ======================================================================
+    /** @fn kolmogorov_ccdf 
+     *
+     * The function
+     * computes the complementary cumulative probability P[D_n >= x] of the
+     * 2-sided 1-sample Kolmogorov-Smirnov distribution with sample size n at x.
+     * It returns at least 10 decimal degits of precision for n <= 140,
+     * at least 5 decimal degits of precision for 140 < n <= 200000,
+     * and a few correct decimal digits for n > 200000.
+     * 
+     * The code is taken from
+     *  - Simard, R., & L’Ecuyer, P. (2011). 
+     *    "Computing the Two-Sided Kolmogorov-Smirnov Distribution."
+     *    Journal of Statistical Software, 39(11), 1–18.
+     * @see  https://doi.org/10.18637%2Fjss.v039.i11
+     */
+     double kolmogorov_ccdf
+     ( const unsigned int n , 
+       const double       x ) ;
+     // =======================================================================
+
+    // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================
 } //                                                     end of namespace Ostap 

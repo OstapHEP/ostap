@@ -1147,6 +1147,9 @@ double Ostap::Math::Beta::evaluate  ( const double x ) const
 double Ostap::Math::Beta::cdf ( const double x ) const 
 {
   //
+  if      ( x <= xmin () ) { return 0 ; } 
+  else if ( x >= xmax () ) { return 1 ; }
+  //
   const double tt = t ( x ) ;
   if      ( tt <= 0 ) { return 0 ; }
   else if ( tt >= 1 ) { return 1 ; }
@@ -1163,16 +1166,10 @@ double Ostap::Math::Beta::integral
 {
   if      ( s_equal ( low  , high ) ) { return 0 ; }
   else if (           high < low    ) { return - integral ( high , low ) ; }
-  //
-  const double tlow  = t ( low  ) ;
-  const double thigh = t ( high ) ;
-  //
-  if ( thigh <= 0 || 1 <= tlow ) { return 0 ; }
-  //
-  const double flow  = tlow  <= 0 ? 0 : tlow >= 1 ? 1 : beta_cdf ( tlow , m_alpha , m_beta ) ;
-  const double fhigh = thigh <= 0 ? 0 : tlow >= 1 ? 1 : beta_cdf ( tlow , m_alpha , m_beta ) ;
-  //
-  return fhigh - flow ;
+  else if ( high <= xmin ()         ) { return 0 ; }
+  else if ( low  >= xmax ()         ) { return 0 ; }
+  //s
+  return cdf ( high ) - cdf ( low ) ;
 }
 // ===========================================================================
 // mean

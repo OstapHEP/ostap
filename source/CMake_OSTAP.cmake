@@ -30,7 +30,7 @@ add_library(ostap SHARED src/format.cpp
                          src/DataFrameUtils.cpp
                          src/Differences.cpp
                          src/ECDF.cpp
-			 src/EffEntity.cpp
+			             src/EffEntity.cpp
                          src/EPDF.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
@@ -60,6 +60,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Interpolation.cpp
                          src/Iterator.cpp
                          src/Kinematics.cpp
+                         src/KolmogorovSmirnovDist.cpp
                          src/KramersKronig.cpp
                          src/Laplace.cpp
                          src/LinAlg.cpp
@@ -78,11 +79,11 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-            		 src/Names.cpp 
+            		     src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp			 
                          src/Ostap.cpp
-			 src/Quantile.cpp
+			             src/Quantile.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
                          src/Peaks.cpp
