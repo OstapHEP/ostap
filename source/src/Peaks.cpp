@@ -407,6 +407,10 @@ bool Ostap::Math::BifurcatedGauss::setPsi
   return true ;
 }
 // ============================================================================
+
+
+
+// ============================================================================
 /* constructor from all parameters
  *  @param peak     the peak posiion
  *  @param sigmaL   the sigma for first component
@@ -448,8 +452,18 @@ bool Ostap::Math::DoubleGauss::setSigma ( const double value )
 // ============================================================================
 bool Ostap::Math::DoubleGauss::setFraction ( const double value ) 
 {
-  const double value_ = std::min ( std::max ( value , 0.0 ), 1.0 ) ;
+  double value_ = value ;
   if ( s_equal ( value_ , m_fraction ) ) { return false ; }
+  //
+  if      ( s_zero   ( value_         ) ) { value_ = 0 ; }
+  else if ( s_equal  ( value_     , 1 ) ) { value_ = 1 ; }
+  else if ( s_equal  ( value_ + 1 , 1 ) ) { value_ = 0 ; }
+  //
+  Ostap::Assert ( 0 <= value && value_ <= 1 ,
+		  "Parameter 'Fraction' must be betweek 0 and 1",
+		  "Ostap::Math::DoubleGauss"     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
   m_fraction = value_ ;
   return true ;
 }
@@ -549,6 +563,16 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
   return  0.5 * ( f1 * ( r1 + 1  ) + f2 * ( r2  + 1 ) ) ;
 }
 // ============================================================================
+/** "effective sigma/rms"
+ *  \f$ \sigma^2_{eff} = f \sigma^2_1 + (1-f) \sigma^2_2 \f$
+ */
+// ============================================================================
+double Ostap::Math::DoubleGauss::sigma_eff () const
+{
+  const double r2 = m_fraction + ( 1 - m_fraction ) * m_scale * m_scale ;
+  return m_sigma * std::sqrt ( r2 ) ;
+}
+// ============================================================================
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::DoubleGauss::tag () const 
@@ -557,6 +581,59 @@ std::size_t Ostap::Math::DoubleGauss::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_peak , m_sigma , m_fraction , m_scale ) ; 
 }
 // ============================================================================
+
+
+
+
+// ============================================================================
+/* constructor from all parameters
+ *  @param peak     the peak posiion
+ *  @param sigmaL   the sigma for first component
+ *  @param fraction the fraction of first component 
+ *  @param scale    the ratio of sigmas for second and first components
+ */
+// ============================================================================
+Ostap::Math::DoubleGauss2::DoubleGauss2
+( const double peak     ,
+  const double sigma    , 
+  const double fraction , 
+  const double delta    )
+  : m_delta ( -1   )
+  , m_2g    ( peak , sigma , fraction )
+{
+  //
+  Ostap::Assert ( delta                                    ,
+		  "Parameter 'delta' must be non-zero"     ,
+		  "Ostap::Math::DoubleGauss2"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
+  setDelta ( delta ) ;
+}
+// ============================================================================
+bool Ostap::Math::DoubleGauss2::setDelta ( const double value ) 
+{
+  const double avalue =  std::abs ( value ) ;
+  if ( s_equal ( value , m_delta ) && 0 < m_delta  ) { return false ; }
+  //
+  Ostap::Assert ( value                                    ,
+		  "Parameter 'delta' must be non-zero"     ,
+		  "Ostap::Math::DoubleGauss2"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
+  m_delta = avalue ;
+  const double the_scale = std::hypot ( 1.0 , m_delta / sigma1() ) ;
+  return m_2g.setScale ( the_scale ) ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::DoubleGauss2::tag () const 
+{
+  static const std::string s_name = "DoubleGauss2" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_delta , m_2g.tag () ) ; 
+}
+// ============================================================================
+
 
 // ============================================================================
 // Gauss

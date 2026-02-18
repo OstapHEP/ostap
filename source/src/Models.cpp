@@ -5574,8 +5574,6 @@ std::size_t Ostap::Math::Kumaraswami::tag () const
 				       m_shift ) ; 
 }
 
-
-
 // ============================================================================
 // full constructot 
 // ============================================================================
@@ -5636,10 +5634,8 @@ bool Ostap::Math::InverseGamma::setBeta ( const double value )
 // ============================================================================
 bool Ostap::Math::InverseGamma::setShift ( const double value ) 
 {
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_shift ) ) { return false ; }
-  //
-  m_shift = avalue ; 
+  if ( s_equal ( value , m_shift ) ) { return false ; }
+  m_shift = value ; 
   return true ;
 }
 // ============================================================================
@@ -5736,11 +5732,266 @@ std::size_t Ostap::Math::InverseGamma::tag () const
 				       m_beta  ,
 				       m_shift ) ; 
 }
+// ============================================================================
 
 
-
-
-
+// ============================================================================
+/*  constructor
+ *  @param c           shape parameter 
+ *  @param k           shape parameter 
+ *  @param scale scale parameter 
+ *  @param shift shift parameter
+ */
+// ============================================================================
+Ostap::Math::Burr::Burr
+( const double c     ,
+  const double k     ,
+  const double scale ,
+  const double shift )
+  : m_c     ( std::abs ( c     ) )
+  , m_k     ( std::abs ( k     ) )
+  , m_scale ( std::abs ( scale ) )
+  , m_shift (            shift   )
+{
+  Ostap::Assert ( m_c   , 
+                  "c-parameter must be positive!"         ,
+                  "Ostap::Math::Burr"                     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( m_k   , 
+                  "k-parameter must be positive!"         ,
+                  "Ostap::Math::Burr"                     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( m_scale , 
+                  "scale-parameter must be positive!"     ,
+                  "Ostap::Math::Burr"                     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+}
+// ======================================================================
+// set C 
+// ============================================================================
+bool Ostap::Math::Burr::setC ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_c ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue   , 
+                  "c-parameter must be positive!"         ,
+                  "Ostap::Math::Burr"                     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_c = avalue ; 
+  return true ;
+}
+// ======================================================================
+// set K 
+// ============================================================================
+bool Ostap::Math::Burr::setK ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_k ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue   , 
+                  "k-parameter must be positive!"         ,
+                  "Ostap::Math::Burr"                     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_k = avalue ; 
+  return true ;
+} 
+// ======================================================================
+// set scale 
+// ============================================================================
+bool Ostap::Math::Burr::setScale( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_scale ) ) { return false ; }
+  //
+  Ostap::Assert ( avalue   , 
+                  "scale-parameter must be positive!"     ,
+                  "Ostap::Math::Burr"                     ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_scale = avalue ; 
+  return true ;
+} 
+// ======================================================================
+// set shift
+// ============================================================================
+bool Ostap::Math::Burr::setShift ( const double value ) 
+{
+  if ( s_equal ( value , m_shift ) ) { return false ; }
+  m_shift = value ; 
+  return true ;
+}
+// ============================================================================
+// evaluate Burr function
+// ============================================================================
+double Ostap::Math::Burr::evaluate    ( const double x ) const
+{
+  if ( x < m_shift ) { return 0 ; }
+  double z = ( x - m_shift ) / m_scale ;
+  if ( z < 0   ) { return 0 ; }
+  ///
+  if ( m_c < 1 ) { z = std::max ( z , s_NONZERO ) ; } // NB!!! 
+  //
+  if ( z <= 1 )
+  {
+    const double zcm1 = std::pow ( z , m_c - 1 ) ;
+    return m_c * m_k * zcm1 / std::pow ( 1 + z * zcm1 , m_k + 1 ) / m_scale ;       
+  }
+  //
+  const double zc = std::pow ( z , -m_c ) ;
+  const double lr = ( m_c - 1 ) * std::log ( z ) -
+    ( m_k + 1 ) * std::log ( zc / ( 1.0L + zc ) ) ;
+  //
+  return m_c * m_k * std::exp ( lr ) / m_scale ;    
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::Burr::integral ()    const { return 1 ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::Burr::integral
+( const double low  ,
+  const double high )  const
+{
+  if      ( s_equal ( low , high ) ) { return  0 ; }
+  else if ( high <  low            ) { return -integral ( high    , low  ) ; }
+  else if ( high <= m_shift        ) { return  0 ; }
+  else if ( low  <  m_shift        ) { return  integral ( m_shift , high ) ; } 
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::Burr::cdf 
+( const double x ) const
+{
+  if ( x <= m_shift ) { return 0 ; }
+  const double z = ( x - m_shift ) / m_scale ;
+  if ( z <= 0 || s_zero ( z ) ) { return 0 ; }
+  //
+  if ( z <= 1 )
+  {
+    const double zc = std::pow ( z , m_c ) ;
+    return 1 - std::pow (1 + zc , - m_k ) ;
+  }
+  //
+  const double zc = std::pow ( z , -m_c ) ;
+  return 1 - std::pow ( zc / ( 1 + zc ) , m_k ) ;
+}
+// ============================================================================
+// raw-moments of unscaled/unshifted distributions 
+// ============================================================================
+double Ostap::Math::Burr::raw_moment
+( const unsigned short r ) const
+{
+  const double ck = m_c * m_k ;
+  if ( ck <= r || s_equal ( ck , r ) ) { return s_QUIETNAN ; }
+  //
+  return m_k * Ostap::Math::beta ( ( ck - r ) / m_c , 1 + 1 / m_c ) ;
+}
+// ============================================================================
+// mean              (for ck>1) 
+// ============================================================================
+double Ostap::Math::Burr::mean     () const
+{
+  const double ck = m_c * m_k ;
+  if ( ck <= 1 || s_equal ( ck , 1 ) ) { return s_QUIETNAN ; }
+  //
+  const double m1 = raw_moment ( 1 ) ;
+  return m_shift + m_scale * m1 ;
+}
+// ============================================================================
+// mode
+// ============================================================================
+double Ostap::Math::Burr::mode () const
+{
+  if ( m_c <= 1 ) { return m_shift ; }
+  const double ck = m_c * m_k ;
+  return m_shift + m_scale * std::pow ( ( m_c - 1.0L ) / ( ck + 1.0L ) , 1/m_c ) ;
+}
+// ============================================================================
+// median
+// ============================================================================
+double Ostap::Math::Burr::median () const
+{ return m_shift + m_scale * std::pow ( std::pow ( 2.0L , 1.0L/m_k ) - 1.0 , 1.0/m_c ) ; }
+// ============================================================================
+// variance              (for ck>2) 
+// ============================================================================
+double Ostap::Math::Burr::variance () const
+{
+  //
+  const double ck = m_c * m_k ;
+  if ( ck <= 2 || s_equal ( ck , 2 ) ) { return s_QUIETNAN ; }
+  //
+  const double m1 = raw_moment ( 1 ) ;
+  const double m2 = raw_moment ( 2 ) ;
+  //
+  return m_scale * m_scale * ( m2 - m1 * m1 ) ;
+}
+// ============================================================================
+// rms              (for ck>2) 
+// ============================================================================
+double Ostap::Math::Burr::rms () const
+{
+  //
+  const double ck = m_c * m_k ;
+  if ( ck <= 2 || s_equal ( ck , 2 ) ) { return s_QUIETNAN ; }
+  //
+  return std::sqrt ( variance () ) ;
+}
+// ============================================================================
+// skewness              (for ck>3) 
+// ============================================================================
+double Ostap::Math::Burr::skewness () const
+{
+  //
+  const double ck = m_c * m_k ;
+  if ( ck <= 3 || s_equal ( ck , 3 ) ) { return s_QUIETNAN ; }
+  //
+  const double m1 = raw_moment ( 1 ) ;
+  const double m2 = raw_moment ( 2 ) ;
+  const double m3 = raw_moment ( 3 ) ;
+  //
+  return ( m3 - 3 * m1 * m2 + 2 * m1 * m1 * m1 ) /
+    std::pow ( m2 - m1 * m1 , 3.0/2 ) ;
+}
+// ============================================================================
+// kurtosis              (for ck>4) 
+// ============================================================================
+double Ostap::Math::Burr::kurtosis () const
+{
+  //
+  const double ck = m_c * m_k ;
+  if ( ck <= 4 || s_equal ( ck , 4 ) ) { return s_QUIETNAN ; }
+  //
+  const double m1 = raw_moment ( 1 ) ;
+  const double m2 = raw_moment ( 2 ) ;
+  const double m3 = raw_moment ( 3 ) ;
+  const double m4 = raw_moment ( 4 ) ;
+  //  
+  return ( m4 - 4 * m3 * m1 + 6 * m2 * m1 * m1 - 3 * m1 * m1 * m1 * m1 ) /
+    std::pow ( m2 - m1 * m1 , 2 ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Burr::tag () const 
+{ 
+  static const std::string s_name = "Burr" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_c     ,
+				       m_k     ,
+				       m_scale ,
+				       m_shift ) ; 
+}
 
 // ============================================================================
 //                                                                      The END

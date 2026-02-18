@@ -102,10 +102,9 @@ void Ostap::Utils::RooFun::Init
   const RooAbsCollection* normalization )
 {  
   /// the get observables
-  // ==========================================================================
   RooArgSet obsset { observables } ;
   // ==========================================================================
-  // get obserevables 
+  // get observables 
   m_observables = std::unique_ptr<RooArgSet> ( m_fun->getObservables ( obsset ) ) ;
   // ==========================================================================      
   Ostap::Assert ( ::size (    observables ) == ::size ( obsset ) &&
@@ -116,22 +115,22 @@ void Ostap::Utils::RooFun::Init
   // ==========================================================================
   { // ========================================================================
     for ( auto* o : *m_observables )
-      {
-        // ====================================================================
-        Ostap::Assert ( nullptr != o                             ,
-                        "Invalid/nullptr observable"             , 
-                        "Ostap::MoreRoofit::RooFun"              ,
-                        INVALID_OBSERVABLE , __FILE__ , __LINE__ ) ;
-	//
-	const RooAbsRealLValue*     rv = dynamic_cast<RooAbsRealLValue*> ( o ) ;
-	const RooAbsCategoryLValue* cv = nullptr ;
-	if (  nullptr == rv ) { cv = dynamic_cast<RooAbsCategoryLValue*> ( o ) ; }
-	Ostap::Assert ( ( nullptr != rv ) || ( nullptr != cv ) , 
-			            "Illegal observable " + Ostap::Utils::toString ( *o ) , 
-			            "Ostap::Utils::RooFun"                           ,
-			            INVALID_OBSERVABLE , __FILE__ , __LINE__              ) ;
-	      // ====================================================================
-      } //                                                  The end of the loop
+    {
+      // ====================================================================
+      Ostap::Assert ( nullptr != o                             ,
+		      "Invalid/nullptr observable"             , 
+		      "Ostap::MoreRoofit::RooFun"              ,
+		      INVALID_OBSERVABLE , __FILE__ , __LINE__ ) ;
+      //
+      const RooAbsRealLValue*     rv = dynamic_cast<RooAbsRealLValue*> ( o ) ;
+      const RooAbsCategoryLValue* cv = nullptr ;
+      if (  nullptr == rv ) { cv = dynamic_cast<RooAbsCategoryLValue*> ( o ) ; }
+      Ostap::Assert ( ( nullptr != rv ) || ( nullptr != cv ) , 
+		      "Illegal observable " + Ostap::Utils::toString ( *o ) , 
+		      "Ostap::Utils::RooFun"                           ,
+		      INVALID_OBSERVABLE , __FILE__ , __LINE__              ) ;
+      // ====================================================================
+    } //                                                  The end of the loop
     // ========================================================================
   } //                                                       The en of if-block
   // ==========================================================================
@@ -141,11 +140,11 @@ void Ostap::Utils::RooFun::Init
   // normalization
   // ==========================================================================
   if ( normalization )
-    {
-      // ======================================================================
-      m_normset = std::make_unique<RooArgSet> ( *normalization ) ;
-      // ======================================================================
-    }
+  {
+    // ======================================================================
+    m_normset = std::make_unique<RooArgSet> ( *normalization ) ;
+    // ======================================================================
+  }
   // ==========================================================================
 }
 // ============================================================================
@@ -161,7 +160,7 @@ Ostap::Utils::RooFun::RooFun
 Ostap::Utils::RooFun* 
 Ostap::Utils::RooFun::clone () const 
 { return new RooFun ( *this ) ; }
-
+// ============================================================================
 
 // ============================================================================
 // RooFun -> TTree 

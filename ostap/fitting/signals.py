@@ -101,6 +101,7 @@ __all__ = (
     'ApolloniosL_pdf'        , ## bigurcated Apollonios function with power-law tail
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'DoubleGauss_pdf'        , ## double Gauss
+    'DoubleGauss2_pdf'       , ## double Gauss2
     'GenGaussV1_pdf'         , ## generalized normal v1  
     'GenGaussV2_pdf'         , ## generalized normal v2 
     'SkewGauss_pdf'          , ## skewed gaussian (temporarily removed)
@@ -1060,15 +1061,15 @@ class DoubleGauss_pdf(Gauss_pdf) :
                               sigma = sigma )
         
         self.__sigma_scale    = self.make_var ( sigma_scale ,
-                                                'SigmaScale'        + name ,
-                                                'SigmaScale(%s)'    % name ,
-                                                None , 1.5 , 0.1 , 20 ) 
+                                                'SigmaScale_%s'     % self.name ,
+                                                'SigmaScale(%s)'    % self.name ,
+                                                None , sigma_scale , 0.1 , 20 ) 
         
         ## the fraction 
         self.__fraction = self.make_var ( fraction                   , 
-                                          'CoreFraction'      + name ,
-                                          'CoreFraction(%s)'  % name ,
-                                          None , 0.75 , 1.e-6 , 1.0-1.e-6  ) 
+                                          'CoreFraction_%s'   % self.name ,
+                                          'CoreFraction(%s)'  % self.name ,
+                                          None , fraction  , 0 , 1   ) 
         
         self.pdf = Ostap.Models.DoubleGauss (
             self.roo_name ( 'gauss2_' ) , 
@@ -1082,12 +1083,12 @@ class DoubleGauss_pdf(Gauss_pdf) :
 
         ## save the configuration
         self.config = {
-            'name'        : self.name     ,
-            'xvar'        : self.xvar     ,
-            'mean'        : self.mean     ,
-            'sigma'       : self.sigma    ,
-            'fraction'    : self.fraction ,
-            'sigma_scale' : self.scale    ,
+            'name'        : self.name        ,
+            'xvar'        : self.xvar        ,
+            'mean'        : self.mean        ,
+            'sigma'       : self.sigma       ,
+            'fraction'    : self.fraction    ,
+            'sigma_scale' : self.sigma_scale ,
             }
 
     @property
@@ -1107,6 +1108,87 @@ class DoubleGauss_pdf(Gauss_pdf) :
         self.set_value ( self.__fraction , value ) 
 
 models.append ( DoubleGauss_pdf )    
+
+
+# =============================================================================
+## @class DoubleGauss2_pdf
+#  simple wrapper over double gaussian
+#  @see RooGaussian
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2017-07-12
+class DoubleGauss2_pdf(Gauss_pdf) :
+    """ Double Gauss :
+
+    f(x;mu,sigma,scale,fraction) =
+    fraction     * G(x;mu,sigma) +
+    (1-fraction) * G(x;mu;sqrt(sigma^2+delta^2) 
+        
+    """
+    def __init__ ( self                ,
+                   name                ,
+                   xvar               ,
+                   mean     = None  ,
+                   sigma    = None  ,
+                   fraction = None  ,
+                   delta    = None  ) :  
+        #
+        ## initialize the base
+        # 
+        Gauss_pdf.__init__  ( self          ,
+                              name          ,
+                              xvar          ,
+                              mean  = mean  ,
+                              sigma = sigma )
+
+        smnmx = self.sigma.xminmax()
+        if smnmx : smnmx = 0 , smnmx [ 1 ] * 5 
+        
+        self.__delta = self.make_var ( delta ,
+                                       'delta_%s'    % self.name  ,
+                                       '#delta(%s)'  % self.name  ,
+                                       None , delta , *smnmx ) 
+        ## the fraction 
+        self.__fraction = self.make_var ( fraction                   , 
+                                          'CoreFraction_%s'   % self.name ,
+                                          'CoreFraction(%s)'  % self.name ,
+                                          None , fraction  , 0 , 1   ) 
+        
+        self.pdf = Ostap.Models.DoubleGauss2 (
+            self.roo_name ( 'gauss2_' ) , 
+            "double Gauss2 %s" % self.name ,
+            self.mass        ,
+            self.sigma       ,
+            self.fraction    ,
+            self.delta       ,
+            self.mean        )
+                                       
+        ## save the configuration
+        self.config = {
+            'name'        : self.name        ,
+            'xvar'        : self.xvar        ,
+            'mean'        : self.mean        ,
+            'sigma'       : self.sigma       ,
+            'fraction'    : self.fraction    ,
+            'delta'       : self.delta       ,
+            }
+
+    @property
+    def delta ( self ) :
+        """delta-parameter for double Gaussian: sigma^2_2 = sigma^2_1 + delta^2 """
+        return self.__delta 
+    @delta.setter
+    def delta ( self, value ) :
+        self.set_value ( self.__delta , value ) 
+
+    @property
+    def fraction ( self ) :
+        """Fraction-parameter for Bifurcated Gaussian"""
+        return self.__fraction
+    @fraction.setter
+    def fraction ( self, value ) :
+        self.set_value ( self.__fraction , value ) 
+
+models.append ( DoubleGauss2_pdf )    
 
 # =============================================================================
 ## @class GenGaussV1_pdf

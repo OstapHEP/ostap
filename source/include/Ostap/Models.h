@@ -3273,6 +3273,108 @@ namespace Ostap
       double m_shift { 0 } ; // shift  parameter 
       // ======================================================================
     };
+    // ========================================================================
+    /** @class Burr
+     *  Type XII Burr distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class Burr
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param c           shape parameter 
+       *  @param k           shape parameter 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      Burr
+      ( const double c     = 1 ,
+	const double k     = 8 ,
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      inline double c     () const { return m_c     ; } 
+      inline double k     () const { return m_k     ; } 
+      inline double scale () const { return m_scale ; } 
+      inline double shift () const { return m_shift ; } 
+      // ======================================================================
+      inline double xmin  () const { return m_shift ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      bool setC     ( const double value ) ;  
+      bool setK     ( const double value ) ;  
+      bool setScale ( const double value ) ;  
+      bool setShift ( const double value ) ;  	       
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean              (for ck>1) 
+      double mean     () const ;
+      /// mode           
+      double mode     () const ;
+      /// median           
+      double median   () const ;
+      /// variance          (for ck>2)
+      double variance () const ;
+      /// RMS               (for ck>2)
+      double rms      () const ;
+      /// skewness          (for ck>3)
+      double skewness () const ;
+      /// (excess) kurtosis (for ck>4)
+      double kurtosis () const ;      
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    private: // raw-moments of unscaled/unshofted distributions 
+      // ======================================================================
+      /// raw-moments of unscaled/unshifted distributions 
+      double raw_moment ( const unsigned short k ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// parameter c (shape) 
+      double m_c     { 1 } ; // parameter c (shape)
+      /// parameter k (shape) 
+      double m_k     { 8 } ; // parameter k (shape)
+      /// scale parameter
+      double m_scale { 1 } ; // scale parameter 
+      /// shift parameter
+      double m_shift { 0 } ; // shift parameter 
+      // ======================================================================      
+    } ;
     // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

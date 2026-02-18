@@ -9737,6 +9737,116 @@ double Ostap::Models::DoubleGauss::maxVal  ( Int_t      code ) const
 // ============================================================================
 
 // ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::DoubleGauss2::DoubleGauss2
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          sigma     ,  // narrow sigma 
+  RooAbsReal&          fraction  ,  // fraction of narrow sigma 
+  RooAbsReal&          delta     ,  // wide/narrow delta 
+  RooAbsReal&          mean      )  // mean, presumably  fixed at 0
+  //
+  : RooAbsPdf( name , title ) 
+  , m_x        ( "!x"         , "Observable"          , this , x        ) 
+  , m_sigma    ( "!sigma"     , "Narrow sigma"        , this , sigma    ) 
+  , m_fraction ( "!fraction"  , "Fraction"            , this , fraction ) 
+  , m_delta    ( "!delta"     , "Delta"               , this , delta    ) 
+  , m_mean     ( "!mean"      , "Mean"                , this , mean     ) 
+  , m_2gauss  () 
+{
+  setPars() ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::DoubleGauss2::DoubleGauss2
+( const Ostap::Models::DoubleGauss2& right ,  
+  const char*                          name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x        ( "!x"        , this , right.m_x        ) 
+  , m_sigma    ( "!sigma"    , this , right.m_sigma    )
+  , m_fraction ( "!fraction" , this , right.m_fraction )
+  , m_delta    ( "!delta"    , this , right.m_delta    )
+  , m_mean     ( "!mean"     , this , right.m_mean     )
+  , m_2gauss   ( right.m_2gauss ) 
+{
+  setPars() ;
+}
+// ============================================================================
+// clone it!
+// ============================================================================
+Ostap::Models::DoubleGauss2*
+Ostap::Models::DoubleGauss2::clone( const char* name ) const 
+{ return new Ostap::Models::DoubleGauss2 ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::DoubleGauss2::setPars () const 
+{
+  m_2gauss.setPeak      ( m_mean     ) ;
+  m_2gauss.setSigma     ( m_sigma    ) ;
+  m_2gauss.setDelta     ( m_delta    ) ;
+  m_2gauss.setFraction  ( m_fraction ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::DoubleGauss2::evaluate() const 
+{
+  //
+  setPars() ;
+  return m_2gauss ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::DoubleGauss2::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if (matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::DoubleGauss2::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  //
+  Ostap::Assert ( 1 == code                          ,
+                  "Invalid integration code"         ,
+                  "Ostap::Models::DoubleGauss2"      ,
+                  INVALID_INTEGRATION_CODE           , __FILE__ , __LINE__  ) ;
+  //
+  const double  xmax = m_x.max ( rangeName )  ;
+  const double  xmin = m_x.min ( rangeName )  ;
+  //
+  setPars() ;
+  return m_2gauss.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+Int_t  Ostap::Models::DoubleGauss2::getMaxVal ( const RooArgSet& vars ) const 
+{
+  RooArgSet dummy{};
+  if ( matchArgs ( vars , dummy , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+double Ostap::Models::DoubleGauss2::maxVal  ( Int_t      code ) const
+{
+  //
+  Ostap::Assert ( 1 == code                       ,
+                  "Invalid MaxVal code"           ,
+                  "Ostap::Models::DoubleGauss2::maxVal" ,
+                  INVALID_MAXVAL_CODE             , __FILE__ , __LINE__  ) ;
+  //
+  //
+  setPars() ;
+  return 1.01 * m_2gauss ( m_2gauss.mode() ) ;
+}
+// ============================================================================
+
+// ============================================================================
 /*  constructor from all parameters
  *  @param  z    the  variable 
  *  @param  eta  the shape eta-parameter 
@@ -13458,6 +13568,114 @@ Double_t Ostap::Models::InverseGamma::analyticalIntegral
   setPars () ;
   return m_ig.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
+// ============================================================================
+
+
+// ============================================================================
+Ostap::Models::Burr::Burr
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          c         ,
+  RooAbsReal&          k         ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_c       ( "!c"     , "a-parameter"      , this , c     )
+  , m_k       ( "!k"     , "b-parameter"      , this , k     )
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_burr    () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::Burr::Burr
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          c         ,
+  RooAbsReal&          k         ,
+  const double         scale     , 
+  const double         shift     )
+  : Burr ( name  ,
+	   title ,
+	   x     ,
+	   c     ,
+	   k     ,
+	   RooFit::RooConst ( scale ) ,
+	   RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Burr::Burr
+( const Ostap::Models::Burr& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_c     ( "!c"     , this , right.m_c     )
+  , m_k     ( "!k"     , this , right.m_k     )
+  , m_scale ( "!scale" , this , right.m_scale )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_burr ( right.m_burr ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::Burr::~Burr() {} 
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Burr*
+Ostap::Models::Burr::clone ( const char* name ) const 
+{ return new Ostap::Models::Burr ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Burr::setPars () const 
+{
+  m_burr.setC     ( m_c ) ;
+  m_burr.setK     ( m_k ) ;
+  m_burr.setScale ( m_scale ) ;
+  m_burr.setShift ( m_shift ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Burr::evaluate() const 
+{
+  setPars () ;
+  return m_burr ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Burr::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Burr::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                    ,
+                  "Invalid integration code"   ,
+                  "Ostap::Models::Burr"        ,
+                  INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_burr.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
 
 // ============================================================================
 Ostap::Models::Rational::Rational
@@ -13771,6 +13989,7 @@ ClassImp(Ostap::Models::QGSM               )
 ClassImp(Ostap::Models::Hagedorn           ) 
 ClassImp(Ostap::Models::TwoExpos           ) 
 ClassImp(Ostap::Models::DoubleGauss        ) 
+ClassImp(Ostap::Models::DoubleGauss2       ) 
 ClassImp(Ostap::Models::Gumbel             )
 ClassImp(Ostap::Models::Weibull            )
 ClassImp(Ostap::Models::RaisingCosine      )
@@ -13815,6 +14034,7 @@ ClassImp(Ostap::Models::ExpoLog            )
 ClassImp(Ostap::Models::Davis              )
 ClassImp(Ostap::Models::Kumaraswami        )
 ClassImp(Ostap::Models::InverseGamma       )
+ClassImp(Ostap::Models::Burr               )
 ClassImp(Ostap::Models::Rational           )
 ClassImp(Ostap::Models::Meixner            )
 // ============================================================================

@@ -47,7 +47,7 @@ varset   = ROOT.RooArgSet  ( mass )
 events = 10000
 
 logger.debug('Make a test data using Gamma-Distribution')
-m_gamma0 = Models.GammaDist_pdf( 'GD0' , x )
+m_gamma0 = Models.GammaDist_pdf( name = 'GD0' , xvar = x )
 m_gamma0.k    .setVal( 2 )
 m_gamma0.theta.setVal( 1 )
 
@@ -63,7 +63,7 @@ def test_poly4 () :
 
     logger = getLogger ( 'test_poly4' ) 
     logger.info("Test  Poly(4)-Distribution")
-    model = Models.PolyPos_pdf('P4'  , x , power = 3 )
+    model = Models.PolyPos_pdf( name = 'P4'  , xvar = x , power = 3 )
     
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )
     with use_canvas ( 'test_poly4' , wait = 1 ) : 
@@ -81,7 +81,7 @@ def test_monotonic5 () :
 
     logger = getLogger ( 'test_monotonic5' )
     logger.info("Test  monotonic Poly(5)-Distribution") 
-    model = Models.Monotonic_pdf( 'M4'  , x , power = 4, increasing = False  )
+    model = Models.Monotonic_pdf( name = 'M4'  , xvar = x , power = 4, increasing = False  )
     
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )  
     with use_canvas ( 'test_monotonic5' , wait = 1 ) : 
@@ -100,7 +100,7 @@ def test_convex4() :
     logger = getLogger ( 'test_convex4' )
 
     logger.info("Test  convex Poly(4)-Distribution")
-    model = Models.Convex_pdf('C4'  , x , power = 4 , increasing = False , convex = True  )
+    model = Models.Convex_pdf( name = 'C4'  , xvar = x , power = 4 , increasing = False , convex = True  )
     
     result,f  = model.fitTo ( dataset , silent = True , refit = 5 )  
     with use_canvas ( 'test_convex4' , wait = 1 ) : 
@@ -119,7 +119,7 @@ def test_expopoly2() :
     logger = getLogger ( 'test_expopoly2' )
 
     logger.info("Test  Poly(2)*Expo -Distribution")
-    model = Models.Bkg_pdf('P2e'  , x , power = 1 )
+    model = Models.Bkg_pdf( name = 'P2e'  , xvar = x , power = 1 )
     model.tau.fix(-1.25)
 
     result,f  = model.fitTo ( dataset , silent = True )

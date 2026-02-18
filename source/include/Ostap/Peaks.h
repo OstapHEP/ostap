@@ -259,7 +259,15 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class DoubleGauss
-     *  simple representation of double gaussian function
+     *  Simple representation of double gaussian function
+     # 
+     *  Two gaussians:
+     *
+     *  - peak: Common mean
+     *  - sigma:    resolution of the fitst Gaussian
+     *  - fraction: the fraction of the first component
+     *  - scale: the ratio of sigmas for the secodn and the first components
+     *
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
@@ -272,18 +280,19 @@ namespace Ostap
        *  @param peak     the peak position
        *  @param sigma    the sigma for first component
        *  @param fraction the fraction of the first component 
-       *  @param scale    the ratio of sigmas for second and first components
+       *  @param scale    the ratio of sigmas for the second and first components
        */
       DoubleGauss
       ( const double peak     = 0   ,
         const double sigma    = 1   , 
         const double fraction = 0.9 , 
-        const double scale    = 1.1 ) ;
+        const double scale    = 1.2 ) ;
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate Bifurcated Gaussian
+      /// evaluate Double Gaussian
       double        pdf        ( const double x ) const ;
+      /// evaluate Double Gaussian
       inline double operator() ( const double x ) const { return pdf ( x )  ; }
       // ======================================================================
     public:
@@ -295,6 +304,7 @@ namespace Ostap
       inline double mu       () const { return m_peak    ; }
       inline double mode     () const { return m_peak    ; }      
       inline double mass     () const { return m_peak    ; }      
+      inline double median   () const { return m_peak    ; }      
       /// sigma 
       inline double sigma    () const { return m_sigma   ; }
       /// sigma-1
@@ -305,6 +315,13 @@ namespace Ostap
       inline double scale    () const { return m_scale    ; }
       /// fraction 
       inline double fraction () const { return m_fraction ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** "effective sigma/rms"
+       *  \f$ \sigma^2_{eff} = f \sigma^2_1 + (1-f) \sigma^2_2 \f$
+       */
+      double sigma_eff () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -341,13 +358,126 @@ namespace Ostap
     private: // parameters
       // ======================================================================
       /// the peak position
-      double m_peak     ;       //                              the peak position
+      double m_peak     { 0   } ; // the peak position
       /// sigma
-      double m_sigma    ;       // sigma
+      double m_sigma    { 1   } ; // sigma
       /// fraction
-      double m_fraction ;       // fraction
+      double m_fraction { 0.9 } ; // fraction
       /// scale
-      double m_scale    ;       // scale
+      double m_scale    { 1.2 } ; // scale
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class DoubleGauss2
+     *  Simple representation of double gaussian function
+     *
+     *  Two gaussians:
+     *
+     *  - peak: Common mean
+     *  - sigma:    resolution of the fitst Gaussian
+     *  - fraction: the fraction of the first component
+     *  - delta:   sigma^2_2 = sigma^2_1 + delta^2 
+     *
+     *  It has some limitation: the second Gaussian ia always more wider 
+     *  But it also provide more stable fits
+     *
+     *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+     *  @date 2011-04-19
+     */
+    class  DoubleGauss2
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param peak     the peak position
+       *  @param sigma    the sigma for first component
+       *  @param fraction the fraction of the first component 
+       *  @param scale    the ratio of sigmas for the second and first components
+       */
+      DoubleGauss2
+      ( const double peak     = 0   ,
+        const double sigma    = 1   , 
+        const double fraction = 0.9 , 
+        const double delta    = 1   ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate Double Gaussian
+      double        pdf        ( const double x ) const ;
+      /// evaluate Double Gaussian
+      inline double operator() ( const double x ) const { return pdf ( x )  ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// peak position
+      inline double peak     () const { return m_2g.peak     () ; }
+      inline double mean     () const { return m_2g.mean     () ; }
+      inline double m0       () const { return m_2g.m0       () ; }
+      inline double mu       () const { return m_2g.mu       () ; }
+      inline double mode     () const { return m_2g.mode     () ; }      
+      inline double mass     () const { return m_2g.mass     () ; }      
+      inline double median   () const { return m_2g.median   () ; }      
+      /// sigma 
+      inline double sigma    () const { return m_2g.sigma    () ; }
+      /// sigma-1
+      inline double sigma1   () const { return m_2g.sigma1   () ; }
+      /// sigma-2
+      inline double sigma2   () const { return m_2g.sigma2   () ; }
+      /// scale 
+      inline double scale    () const { return m_2g.scale    () ; }
+      /// fraction 
+      inline double fraction () const { return m_2g.fraction () ; }
+      /// delta 
+      inline double delta    () const { return m_delta          ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** "effective sigma/rms"
+       *  \f$ \sigma^2_{eff} = f \sigma^2_1 + (1-f) \sigma^2_2 \f$
+       */
+      inline double sigma_eff () const { return m_2g.sigma_eff() ; } 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// peak positon
+      inline bool setPeak     ( const double value ) { return m_2g.setPeak     ( value ) ; } 
+      /// sigma 
+      inline bool setSigma    ( const double value ) { return m_2g.setSigma    ( value ) ; } 
+      /// fraction 
+      inline bool setFraction ( const double value ) { return m_2g.setFraction ( value ) ; }       
+      /// delta  
+      bool        setDelta    ( const double value ) ;
+      // ======================================================================
+      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
+      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
+      // ======================================================================      
+    public:
+      // ======================================================================
+      /// get the cdf 
+      inline double cdf       ( const double x ) const { return m_2g.cdf ( x )  ; }
+      /// get the integral
+      inline double integral () const
+      { return m_2g.integral() ; } 
+      /// get the integral between low and high limits
+      inline double integral
+      ( const double low  ,
+        const double high ) const
+      { return m_2g.integral ( low , high ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private: // parameters
+      // ======================================================================
+      /// delta 
+      double                   m_delta { 1 } ; // delta 
+      /// double gaussian 
+      Ostap::Math::DoubleGauss m_2g    {   } ; //  double Gaussian 
       // ======================================================================
     } ;
     // ========================================================================

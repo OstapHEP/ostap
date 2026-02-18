@@ -203,7 +203,7 @@ class ResoGaussA(RESOLUTION,TwoSigmas) :
             sigma_name  = 'sigmaL_%s'      % name 
             sigma_title = '#sigma_{L}(%s)' % name
             
-        ## initialize the base
+        ## initialize the base using LEFT sigma 
         RESOLUTION.__init__( self ,
                              name        = name        ,
                              xvar        = xvar        ,
@@ -287,14 +287,14 @@ class ResoGauss2(ResoGauss) :
     - ratio of wide/core widths
     - fraction of core component
     """        
-    def __init__ ( self            ,
-                   name            ,   ## the name 
-                   xvar            ,   ## the variable 
-                   sigma           ,   ## the core sigma
-                   scale    = 1.2  ,   ## sigma2/sigma1 ratio 
-                   fraction = 0.5  ,   ## fraction of
-                   fudge    = 1    ,   ## fudge-factor 
-                   mean     = None ) : ## the mean value
+    def __init__ ( self               ,
+                   name               ,   ## the name 
+                   xvar               ,   ## the variable 
+                   sigma              ,   ## the core sigma
+                   sigma_scale = 1.2  ,   ## sigma2/sigma1 ratio 
+                   fraction    = 0.75 ,   ## fraction of the first Gaussian 
+                   fudge       = 1    ,   ## fudge-factor 
+                   mean        = None ) : ## the mean value
         
         ## initialize the base 
         ResoGauss . __init__ ( self  , 
@@ -308,35 +308,35 @@ class ResoGauss2(ResoGauss) :
         self.__fraction = self.make_var ( fraction                   , 
                                           'CoreFraction_%s'   % self.name ,
                                           'CoreFraction(%s)'  % self.name ,
-                                          None , 0.75 , 1.e-6 , 1 - 1.e-6 ) 
+                                          None , fraction , 0 , 1 ) 
         
         ## sigma-2/sigma-1 width ratio;
-        self.__scale = self.make_var   ( scale ,
-                                         'SigmaScale_%s'     % self.name ,
-                                         'SigmaScale(%s)'    % self.name ,
-                                         None , 1.5  , 1.001 , 50 ) 
+        self.__sigma_scale = self.make_var   ( sigma_scale ,
+                                               'SigmaScale_%s'  % self.name ,
+                                               'SigmaScale(%s)' % self.name ,
+                                               None , sigma_scale , 0.05 , 50 ) 
         # 
         ## build the resolution model
         # 
         self.pdf = Ostap.Models.DoubleGauss (
             self.roo_name ( 'rgauss2_' )       ,
             "Resolution double Gauss %s" % self.name ,
-            self.xvar       ,
-            self.sigma_corr , ## ATTENTION! 
-            self.fraction   ,
-            self.scale      ,
+            self.xvar        ,
+            self.sigma_corr  , ## ATTENTION! 
+            self.fraction    ,
+            self.sigma_scale ,
             self.mean    
             )
         
         ##  save   the configuration
         self.config = {
-            'name'     : self.name     ,
-            'xvar'     : self.xvar     ,
-            'mean'     : self.mean     ,
-            'sigma'    : self.sigma    ,
-            'scale'    : self.scale    ,
-            'fraction' : self.fraction ,
-            'fudge'    : self.fudge    ,
+            'name'        : self.name        ,
+            'xvar'        : self.xvar        ,
+            'mean'        : self.mean        ,
+            'sigma'       : self.sigma       ,
+            'sigma_scale' : self.sigma_scale ,
+            'fraction'    : self.fraction    ,
+            'fudge'       : self.fudge       ,
             }
 
     @property
@@ -351,15 +351,13 @@ class ResoGauss2(ResoGauss) :
         self.set_value ( self.__fraction , value ) 
 
     @property
-    def scale ( self  ) :
-        """'scale' : scale  parameter for double Gaussian resolution function
+    def sigma_scale ( self  ) :
+        """'sigma_scale' : scale  parameter for double Gaussian resolution function
         """
-        return self.__scale
-    @scale.setter
-    def scale ( self , value ) :
-        value = float ( value )
-        assert 1 < value, "'scale'-parameter must be larger than 1"
-        self.set_value ( self.__scale , value )
+        return self.__sigma_scale
+    @sigma_scale.setter
+    def sigma_scale ( self , value ) :
+        self.set_value ( self.__sigma_scale , value )
   
 models.add ( ResoGauss2 ) 
 

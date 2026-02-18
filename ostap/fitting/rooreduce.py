@@ -2374,6 +2374,20 @@ def _r_InverseGamma_reduce_ ( pdf ) :
 
 Ostap.Models.InverseGamma.__reduce__ = _r_InverseGamma_reduce_ 
 
+# =============================================================================
+## reduce Burr
+def _r_Burr_reduce_ ( pdf ) :
+    """ Reduce Burr"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.c      () ,                            
+                                  pdf.k      () ,                            
+                                  pdf.scale  () ,                            
+                                  pdf.shift  () )
+
+Ostap.Models.Burr.__reduce__ = _r_Burr_reduce_ 
 
 # =============================================================================
 ## reduce Slash
@@ -2543,6 +2557,21 @@ def _r2gau_reduce_ ( pdf ):
                                   pdf.mean     () )
 
 Ostap.Models.DoubleGauss.__reduce__ = _r2gau_reduce_ 
+
+# =============================================================================
+## reduce DoubleGauss2
+def _r2gau2_reduce_ ( pdf ):
+    """ Reduce DoubleGauss2"""
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () ,                            
+                                  pdf.sigma    () ,                            
+                                  pdf.fraction () ,
+                                  pdf.delta    () ,
+                                  pdf.mean     () )
+
+Ostap.Models.DoubleGauss2.__reduce__ = _r2gau2_reduce_ 
 
 # =============================================================================
 ## reduce Gumbel

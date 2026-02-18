@@ -10,7 +10,9 @@
 
    1. split command-line option `--macros` into two options: `-l/--load-macros` and `-x/--exec-macros` for the lists of ROOT/C++ macros
       to be loaded via `ROOT.TROOT.LoadMacro` and list of macros to be executed via `ROOT.TROOT.Macro``
-   
+   1. rename `scale` for `ResoGauss2` into `sigma_scale`
+
+
 # v3.6.6.0 
 
 ## New features

@@ -36,8 +36,8 @@ batch_env ( logger )
 x = ROOT.RooRealVar  ( 'x' , 'x-obsevable' , 0 , 10 )
 
 ## "Signals"
-s1 = Models.Gauss_pdf ( 'S1' , xvar = x , mean = 3 , sigma = 0.30 ) 
-s2 = Models.Gauss_pdf ( 'S2' , xvar = x , mean = 7 , sigma = 0.30 )
+s1 = Models.Gauss_pdf ( name = 'S1' , xvar = x , mean = 3 , sigma = 0.30 ) 
+s2 = Models.Gauss_pdf ( name = 'S2' , xvar = x , mean = 7 , sigma = 0.30 )
 
 s1.mean .fix()
 s2.mean .fix()
@@ -45,9 +45,9 @@ s1.sigma.fix()
 s2.sigma.fix()
 
 ## "Components" 
-c1 = Models.Gauss_pdf ( 'C1' , xvar = x , mean = 1 , sigma = 0.70 ) 
-c2 = Models.Gauss_pdf ( 'C2' , xvar = x , mean = 5 , sigma = 0.70 )
-c3 = Models.Gauss_pdf ( 'C3' , xvar = x , mean = 9 , sigma = 0.70 )
+c1 = Models.Gauss_pdf ( name = 'C1' , xvar = x , mean = 1 , sigma = 0.70 ) 
+c2 = Models.Gauss_pdf ( name = 'C2' , xvar = x , mean = 5 , sigma = 0.70 )
+c3 = Models.Gauss_pdf ( name = 'C3' , xvar = x , mean = 9 , sigma = 0.70 )
 
 c1.mean .fix()
 c2.mean .fix()
@@ -57,10 +57,10 @@ c2.sigma.fix()
 c3.sigma.fix()
 
 ## Backgrounds"
-b1 = Models.GammaDist_pdf ( 'B1' , xvar = x , k = 2.5   , theta = 2 )
+b1 = Models.GammaDist_pdf ( name = 'B1' , xvar = x , k = 2.5   , theta = 2 )
 b1.k    .fix()
 b1.theta.fix() 
-b2 = Models.Bkg_pdf       ( 'B2' , xvar = x , power = 1 )
+b2 = Models.Bkg_pdf       ( name = 'B2' , xvar = x , power = 1 )
 b2.tau.fix()
 
 model0 = Models.Fit1D (

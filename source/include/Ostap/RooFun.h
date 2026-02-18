@@ -60,7 +60,7 @@ namespace Ostap
       // ======================================================================
       virtual ~RooFun() ;  
       /// clone funcntion/virtual constructire 
-      virtual RooFun* clone() const ;  
+      virtual  RooFun* clone() const ;  
       // ======================================================================      
     public: // constant getters 
       // ======================================================================

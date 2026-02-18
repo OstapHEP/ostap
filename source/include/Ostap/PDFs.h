@@ -7557,7 +7557,8 @@ namespace Ostap
     public:
       // =====================================================================
       /// access to underlying function
-      const Ostap::Math::DoubleGauss& function () const { setPars() ; return m_2gauss ; }
+      const Ostap::Math::DoubleGauss& gauss2   () const { setPars() ; return m_2gauss ; }
+      const Ostap::Math::DoubleGauss& function () const { return gauss2 () ; }
       // =====================================================================
     public:
       // ======================================================================
@@ -7569,15 +7570,101 @@ namespace Ostap
       // ======================================================================
     protected:
       // =====================================================================
-      RooRealProxy m_x         ;
-      RooRealProxy m_sigma     ;
-      RooRealProxy m_fraction  ;
-      RooRealProxy m_scale     ;
-      RooRealProxy m_mean      ;
+      RooRealProxy m_x         {} ;
+      RooRealProxy m_sigma     {} ;
+      RooRealProxy m_fraction  {} ;
+      RooRealProxy m_scale     {} ;
+      RooRealProxy m_mean      {} ;
       // ======================================================================
     protected: // the function
       // ======================================================================
       mutable Ostap::Math::DoubleGauss  m_2gauss ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class  DoubleGauss2
+     *  Simple double Gaussian PDF
+     *  suitable as resolution model
+     */
+    class DoubleGauss2: public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::DoubleGauss2, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      DoubleGauss2 
+      ( const char*          name      , 
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        RooAbsReal&          sigma     ,   // narrow sigma 
+        RooAbsReal&          fraction  ,   // fraction of narrow sigma 
+        RooAbsReal&          delta     ,   // wide/narrow delta 
+        RooAbsReal&          mean      ) ; // mean, presumably fixed at 0
+      /// "copy" constructor 
+      DoubleGauss2 ( const DoubleGauss2& , const char* name = 0 ) ;
+      /// virtual destructor 
+      virtual ~DoubleGauss2(){} ;
+      /// clone 
+      DoubleGauss2* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      DoubleGauss2 () {} ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+      ( RooArgSet&  allVars       , 
+        RooArgSet&  analVars      , 
+        const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+      ( Int_t       code          , 
+        const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public: // max-values (for generation)
+      // ======================================================================
+      Int_t  getMaxVal ( const RooArgSet& vars ) const override ;
+      double maxVal    ( Int_t            code ) const override ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// access to underlying function
+      const Ostap::Math::DoubleGauss2& gauss2   () const { setPars() ; return m_2gauss ; }
+      const Ostap::Math::DoubleGauss2& function () const { return gauss2 () ; }
+      // =====================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x        () const { return m_x        .arg() ; }
+      const RooAbsReal& sigma    () const { return m_sigma    .arg() ; }
+      const RooAbsReal& fraction () const { return m_fraction .arg() ; }
+      const RooAbsReal& delta    () const { return m_delta    .arg() ; }
+      const RooAbsReal& mean     () const { return m_mean     .arg() ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x        {} ;
+      RooRealProxy m_sigma    {} ;
+      RooRealProxy m_fraction {} ;
+      RooRealProxy m_delta    {} ;
+      RooRealProxy m_mean     {} ;
+      // ======================================================================
+    protected: // the function
+      // ======================================================================
+      mutable Ostap::Math::DoubleGauss2  m_2gauss ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -11506,6 +11593,113 @@ namespace Ostap
       // ======================================================================
       /// the actual function
       mutable Ostap::Math::InverseGamma m_ig {} ;  // the function
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Burr
+     *  Type XII Burr distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift
+     *  @see Ostap::Math::Burr 
+     */
+    class Burr : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Burr, 1) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      Burr
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  c      ,
+	RooAbsReal&  k      ,
+	RooAbsReal&  scale  ,
+	RooAbsReal&  shift  ) ;
+      /// constructor from all parameters
+      Burr
+      ( const char*  name      ,
+	const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  c         ,
+	RooAbsReal&  k         ,
+	const double scale = 1 , 
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy
+      Burr 
+      ( const Burr&   right          , 
+	const char*   name = nullptr ) ;
+      /// destructor 
+      virtual ~Burr() ;
+      /// clone method
+      Burr* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      Burr () {} ; // fake default constructor 
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Burr& burr     () const
+      { setPars () ; return m_burr ; }
+      /// access to underlying function
+      const Ostap::Math::Burr& function () const
+      { return burr () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& c      () const { return m_c     .arg  () ; }
+      const RooAbsReal& k      () const { return m_k     .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================      
+    protected : 
+      // ======================================================================
+      /// observable 
+      RooRealProxy m_x     {} ; // observable
+      /// c-shape 
+      RooRealProxy m_c     {} ; // c-shape 
+      /// k-shape 
+      RooRealProxy m_k     {} ; // k-shape 
+      /// scale 
+      RooRealProxy m_scale {} ; // scale 
+      /// shift 
+      RooRealProxy m_shift {} ; // shift 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Burr m_burr {} ;  // the function
       // ======================================================================
     };    
     // ========================================================================

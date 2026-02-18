@@ -576,11 +576,11 @@ def test_2gauss () :
     logger.info ('Test DoubleGauss_pdf: Double Gaussian' )
     
     signal = Models.DoubleGauss_pdf ( name = 'Gau2' ,
-                                             mean  = signal_gauss.mean  ,
-                                             sigma = signal_gauss.sigma ,
-                                             xvar  = mass               ,
-                                             fraction = 0.9             ,
-                                             scale    = 1.2             )
+                                      mean        = signal_gauss.mean  ,
+                                      sigma       = signal_gauss.sigma ,
+                                      xvar        = mass               ,
+                                      fraction    = 0.9                ,
+                                      sigma_scale = 1.2                )
     
     model = Models.Fit1D(
         signal     = signal      ,
@@ -1548,7 +1548,7 @@ def test_slash():
     model = Models.Fit1D (
         signal = Models.Slash_pdf ( name  = 'Slash' , 
                                     xvar  = mass   ,
-                                    mean  = signal_gauss.mean   , 
+                                    mu    = signal_gauss.mean   , 
                                     scale = signal_gauss.sigma  ) ,
         background = background   ,
         S = S , B = B 
@@ -1556,14 +1556,14 @@ def test_slash():
     
     signal = model.signal
     signal.scale.release() 
-    signal.mean.fix()
+    signal.mu.fix()
     
     model.S = NS 
     model.B = NB
 
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 , silent = True )
-        signal.mean.release ()
+        signal.mu.release ()
         result, frame = model. fitTo ( dataset0 , silent = True )
         
     make_print ( model , result , "Slash model" , logger )

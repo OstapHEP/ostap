@@ -185,9 +185,9 @@ def test_2gauss () :
     logger.info ('Test ResoGauss2:  double Gaussian resolution' )
     from   ostap.fitting.resolution import ResoGauss2
     reso = ResoGauss2( 'Gauss2' , mass ,
-                       sigma    = ( 0.2 , 0.01 , 5     ) ,
-                       fraction = ( 0.5 , 0.01 , 0.95  ) , 
-                       scale    = ( 1.2 , 1.01 , 5.0   ) )
+                       sigma       = ( 0.2 , 0.01 , 5     ) ,
+                       fraction    = ( 0.5 , 0.01 , 0.95  ) , 
+                       sigma_scale = ( 1.2 , 1.01 , 5.0   ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )

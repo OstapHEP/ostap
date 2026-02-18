@@ -74,8 +74,7 @@ def test_Tsallis () :
                                   n  = 10   ,
                                   T  = 0.2  )
     
-    with use_canvas ( 'Tsallis_pdf' ) :
-        plot = model.draw()
+    with use_canvas ( 'Tsallis_pdf' ) : plot = model.draw()
         
     the_models.add ( model )
     the_plots .add ( plot  ) 
@@ -90,8 +89,7 @@ def test_QGSM () :
                                m0 = ROOT.RooFit.RooConst ( 0.135 ) ,
                                b  = 10  )
     
-    with use_canvas ( 'QGSM_pdf' ) :
-        plot = model.draw()
+    with use_canvas ( 'QGSM_pdf' ) : plot = model.draw()
         
     the_models.add ( model )
     the_plots .add ( plot  ) 
@@ -106,15 +104,10 @@ def test_Hagedorn () :
                                    m0   = 1   ,
                                    beta = 10  )
     
-    with use_canvas ( 'QGSM_pdf' ) :
-        plot = model.draw()
+    with use_canvas ( 'QGSM_pdf' ) : plot = model.draw()
         
     the_models.add ( model )
     the_plots .add ( plot  ) 
-
-
-
-
 
 # =============================================================================
 ## check that everything is serializable

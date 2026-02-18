@@ -103,6 +103,9 @@ namespace
   const Ostap::Math::Small<long double> s_small
   ( 2.0L * std::numeric_limits<double>::epsilon() ) ;
   // ==========================================================================
+  // value that is (as float) different from zero for mULPS
+  const double s_NONZERO = Ostap::Math::next_float ( 0.0f , Ostap::Math::mULPS_float + 1 ) ; 
+  // ==========================================================================
   /** @var s_INFINITY_LOG_POS
   *  representation of positive INFINITY_LOG 
   */

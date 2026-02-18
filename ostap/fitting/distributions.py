@@ -50,6 +50,7 @@
 - Davis_pdf            : Davis distribution
 - Kumaraswami_pdf      : Kumaraswami distribution
 - InverseGamma_pdf     : Inverse-Gamma distribution
+- Burr_pdf             : Burr Type XII distribution
 
 - Tsallis_pdf          : Tsallis PDF 
 - QGSM_pdf             : QGSM PDF 
@@ -105,6 +106,7 @@ __all__     = (
     'Davis_pdf'            , ## Davis distribution
     'Kumaraswami_pdf'      , ## Kumaraswami distribution
     'InverseGamma_pdf'     , ## Inverse-Gamma distribution
+    'Burr_pdf'             , ## Burr Type XII distribution
     # 
     'Tsallis_pdf'          , ## Tsallis PDF 
     'QGSM_pdf'             , ## QGSM PDF 
@@ -2526,6 +2528,80 @@ class InverseGamma_pdf(PDF1,ShiftAndScale) :
     beta = ShiftAndScale.scale 
                                 
 models.append ( InverseGamma_pdf )
+
+
+# =============================================================================
+## @class Burr_pdf
+#  Type XII Burr distribution
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift 
+#  @see Ostap::Models::Burr 
+#  @see Ostap::Math::Burr
+class Burr_pdf(PDF1,ShiftAndScale) :
+    """ Burr Type XII distribution with scale and shift
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+    - see Ostap::Models::Burr 
+    - see Ostap::Math::Burr 
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name 
+                   c     = 1  ,
+                   k     = 8  , 
+                   scale = 1  ,
+                   shift = 0  ) :
+        ## 
+        PDF1         .__init__ ( self  , name  = name  , xvar  = xvar )
+        ShiftAndScale.__init__ ( self  , scale = scale , shift = shift )
+        #
+        self.__c   = self.make_var ( c ,
+                                     'c_%s'         % self.name ,
+                                     'c_{Burr}(%s)' % self.name ,
+                                     None , c , 1.e-4 , 100  )
+        self.__k   = self.make_var ( k ,
+                                     'k_%s'         % self.name ,
+                                     'k_{Burr}(%s)' % self.name ,
+                                     None , k , 1.e-4 , 100  )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.Burr (
+            self.roo_name ( 'burr_' )  ,
+            'Burr Type XII  %s' % self.name , 
+            self.x     ,
+            self.c     ,
+            self.k     ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'c'     : self.c     ,            
+            'k'     : self.k     ,            
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+        
+    @property
+    def c ( self ) :
+        """`c` : a-parameter for Burr Type XII distribution"""
+        return self.__c
+    @c.setter 
+    def c ( self , value ) :
+        self.set_value ( self.__c , value )
+        
+    @property
+    def k ( self ) :
+        """`k` : b-parameter for Burr Type XII distribution"""
+        return self.__b
+    @k.setter 
+    def k ( self , value ) :
+        self.set_value ( self.__k , value )
+
+models.append ( Burr_pdf )
 
 # =============================================================================
 ## @class Tsallis_pdf
