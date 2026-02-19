@@ -764,9 +764,9 @@ double Ostap::Math::erfcxinv   ( const double  x  )
 {
   if ( x <= 0 ) { std::numeric_limits<double>::quiet_NaN (); }
   //
-  static const double s_C = 2.0 / std::sqrt ( M_PI ) ;
+  static const double s_C = 2.0 / std::sqrt ( s_pi ) ;
   //
-  double v =  ( x <= 1 ) ? s_SQRTPIi / x : - std::sqrt ( std::log ( x ) ) ;
+  double v =  ( x <= 1 ) ? s_sqrt_1_pi / x : - std::sqrt ( std::log ( x ) ) ;
   //
   for ( unsigned short i = 0 ; i < 25 ; ++i ) 
   {
@@ -994,8 +994,11 @@ double Ostap::Math::beta
   else if (     y_int ) { return beta ( x , (unsigned short) round ( y ) ) ; }
   //
   //
-  // use STD
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_special_fnuctions ) && ( 201603L <= __cpp_lib_math_special_functions )
   return std::beta ( x , y ) ;
+#else
+  return std::exp ( std::lgamma( x ) + std::lgamma ( y ) - std::lgamma ( x + y ) ) ;
+#endif
   // 
   // // use GSL: 
   // Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
@@ -1135,8 +1138,8 @@ double Ostap::Math::lnbeta
   if ( 201 <= i ) { return lnbeta ( 1.0 * x , 1.0 * y ) ; }
   //
   double result = - std::log ( 1.0 * y ) ;
-  for ( unsigned short  k = 1 ; k < i ; ++k ) { result +=
-      std::log ( k * 1.0 / ( k + j ) ) ; }
+  for ( unsigned short  k = 1 ; k < i ; ++k )
+    { result += std::log ( k * 1.0 / ( k + j ) ) ; }
   return result ;  
 }
 // ============================================================================
@@ -1240,23 +1243,21 @@ namespace
   // standard Gauss PDF 
   inline double _gauss_pdf_ ( const double x )
   {
-    static const double s_norm  = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
     const double arg = -0.5 * x * x ;
     if ( arg < s_EXP_UNDERFLOW ) { return 0 ; } // RETURN
-    return s_norm * std::exp ( arg ) ;
+    return s_sqrt_1_2pi * std::exp ( arg ) ;
   } // ========================================================================
   // ==========================================================================
   /// standard Gauss CDF
   inline double _gauss_cdf_ ( const double x ) 
   {
-    static const double s_isqrt2    = 1.0 / std::sqrt ( 2.0 ) ;
-    static const double s_high      =  6                * s_isqrt2 ;
-    static const double s_underflow = -s_ERFC_UNDERFLOW * s_isqrt2 ;
+    static const double s_high      =  6                * s_1_sqrt2 ;
+    static const double s_underflow = -s_ERFC_UNDERFLOW * s_1_sqrt2 ;
     //
     if      ( x >= s_high      ) { return 1 ; }
     else if ( x <= s_underflow ) { return 0 ; }
     //  
-    const double y = x * s_isqrt2 ;
+    const double y = x * s_1_sqrt2 ;
     //
     return y < -2 ? 0.5 * std::erfc ( -y ) : 0.5 * ( 1 + std::erf ( y ) ) ;
   } // ========================================================================
@@ -1265,9 +1266,8 @@ namespace
   inline double _gauss_int_ ( const double a , const double b )
   {
     //
-    static const double s_isqrt2    = 1.0 / std::sqrt ( 2.0 ) ;
-    static const double s_high      = 6                * s_isqrt2 ;
-    static const double s_underflow = s_ERFC_UNDERFLOW * s_isqrt2 ;
+    static const double s_high      = 6                * s_1_sqrt2 ;
+    static const double s_underflow = s_ERFC_UNDERFLOW * s_1_sqrt2 ;
     //     
     const double xmin = std::min ( a , b ) ;
     const double xmax = std::max ( a , b ) ;
@@ -1275,14 +1275,14 @@ namespace
     if      ( xmax <= -s_underflow || xmin   >= s_underflow ) { return 0 ; }
     else if ( xmin <= -s_high      && s_high <= xmax        ) { return 1 ; }
     //
-    const double ya = a * s_isqrt2 ;
-    const double yb = b * s_isqrt2 ;
+    const double ya = a * s_1_sqrt2 ;
+    const double yb = b * s_1_sqrt2 ;
     //
     if      ( xmax <= -2 ) { return 0.5 * ( std::erfc ( std::abs ( yb ) ) - std::erfc ( std::abs ( ya ) ) ) ; } 
     else if ( xmin >= +2 ) { return 0.5 * ( std::erfc (            ya   ) - std::erfc (            yb   ) ) ; }
     //
     return 0.5 * ( std::erf ( yb ) - std::erf ( ya ) ) ;
-  } // =======================================================================
+  } // ========================================================================
   // ==========================================================================
 } //                                             The end of anonymous namespace 
 // ============================================================================
@@ -2163,11 +2163,11 @@ double Ostap::Math::elliptic_E ( const double k ) { return elliptic_Em ( k * k )
 double Ostap::Math::elliptic_Km 
 ( const double m   )
 {
-  if ( s_zero ( m ) )  { return 0.5 * M_PI ; }
+  if ( s_zero ( m ) )  { return s_pi_2  ; }
   if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   const long double sq_mprime = std::sqrt ( 1.0L - m ) ;
-  return 0.5 * M_PI / agm ( 1.0 , sq_mprime) ;
+  return s_pi_2 / agm ( 1.0 , sq_mprime) ;
 }
 // ============================================================================
 /*  Complete elliptic integral \f$ E[m] \f$ as function of parameter m  
@@ -2180,7 +2180,7 @@ double Ostap::Math::elliptic_Km
 double Ostap::Math::elliptic_Em 
 ( const double m )
 {
-  if      ( s_zero  ( m     ) ) { return 0.5 * M_PI ; }
+  if      ( s_zero  ( m     ) ) { return s_pi_2 ; }
   else if ( s_equal ( m , 1 ) ) { return 1 ; }
   if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
@@ -2220,11 +2220,11 @@ double Ostap::Math::elliptic_Fm
   if ( s_zero ( phi ) ) { return 0 ; }
   if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
-  if ( std::abs ( phi ) > 0.5 * M_PI )
+  if ( std::abs ( phi ) > s_pi_2 )
     {
-      const double nc = std::floor ( phi / M_PI + 0.5 ) ;
+      const double nc = std::floor ( phi * s_1_pi + 0.5 ) ;
       const double kk = elliptic_Km ( m ) ;      
-      return elliptic_Fm ( phi - nc * M_PI , m ) + 2 * nc * kk ;	
+      return elliptic_Fm ( phi - nc * s_pi , m ) + 2 * nc * kk ;	
     }
   //
   const long double sinphi = std::sin ( phi ) ;
@@ -2246,11 +2246,11 @@ double Ostap::Math::elliptic_Em
   if ( s_zero ( phi ) ) { return 0 ; }
   if ( ( 1 < m ) || ( m < 0 ) ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
-  if ( std::abs ( phi ) > 0.5 * M_PI )
+  if ( std::abs ( phi ) > s_pi_2 )
     {
-      const double nc = std::floor ( phi / M_PI + 0.5 ) ;
+      const double nc = std::floor ( phi * s_1_pi + 0.5 ) ;
       const double ee = elliptic_Em ( m ) ;      
-      return elliptic_Em ( phi - nc * M_PI , m ) + 2 * nc * ee ;	
+      return elliptic_Em ( phi - nc * s_pi , m ) + 2 * nc * ee ;	
     }
   //  
   const long double sinphi = std::sin ( phi ) ;
@@ -2993,7 +2993,7 @@ double Ostap::Math::carlson_RF
     return std::numeric_limits<double>::quiet_NaN();
     //
   }
-  else if (  s_equal ( x , y ) ) { return 0.5 * M_PI / std::sqrt ( x ) ; }
+  else if (  s_equal ( x , y ) ) { return s_pi_2 / std::sqrt ( x ) ; }
   //
   double xm = std::sqrt ( x ) ;
   double ym = std::sqrt ( y ) ;
@@ -3003,7 +3003,7 @@ double Ostap::Math::carlson_RF
   for ( unsigned int n = 0 ; n < 10000 ; ++n ) 
   {
     if ( 0 < n && std::abs ( xm - ym ) < s_R * std::abs ( xm ) ) 
-    { return M_PI / ( xm + ym ) ; }
+    { return s_pi / ( xm + ym ) ; }
     const double xm1 = 0.5 *     ( xm + ym )     ;
     const double ym1 = std::sqrt ( xm * ym ) ;
     xm  = xm1 ;
@@ -3011,7 +3011,7 @@ double Ostap::Math::carlson_RF
   }
   //
   gsl_error ( "Too many iterations for Ostap::Math::carlson_RF(2)" , __FILE__ , __LINE__ , GSL_EMAXITER ) ;
-  return M_PI / ( xm + ym ) ;
+  return s_pi / ( xm + ym ) ;
   //
 }
 // ============================================================================
@@ -3046,7 +3046,7 @@ double Ostap::Math::carlson_RG
   for ( unsigned int n = 0 ; n < 10000 ; ++n ) 
   {
     if ( 0 < n && std::abs ( xm - ym ) < s_R * std::abs ( xm ) ) 
-    { return 0.125 * result * M_PI / ( xm + ym ) ; }
+    { return 0.125 * result * s_pi / ( xm + ym ) ; }
     //
     const double xm1 = 0.5 *     ( xm + ym )     ;
     const double ym1 = std::sqrt ( xm * ym ) ;
@@ -3056,7 +3056,7 @@ double Ostap::Math::carlson_RG
   }
   //
   gsl_error ( "Too many iterations for Ostap::Math::carlson_RG(2)" , __FILE__ , __LINE__ , GSL_EMAXITER ) ;
-  return 0.125 * result * M_PI / ( xm + ym ) ;
+  return 0.125 * result * s_pi / ( xm + ym ) ;
   //
 }
 
@@ -3524,16 +3524,16 @@ double Ostap::Math::am
   else if ( u < 0             ) { return - am ( -u , m ) ; }
   //
   // some reduction
-  if ( 0.5 * M_PI < std::abs ( u ) )
+  if ( s_pi_2 < std::abs ( u ) )
+  {
+    const double K = elliptic_Km ( m ) ;      
+    if ( 2 * K < std::abs ( u ) )
     {
-      const double K = elliptic_Km ( m ) ;      
-      if ( 2 * K < std::abs ( u ) )
-	{
-	  double ur, nc ;
-	  std::tie ( ur , nc ) = reduce ( u , -2 * K , +2 * K ) ;
-	  if ( !s_zero ( nc ) ) { return am ( ur , m ) + nc * 2 * M_PI ; }
-	}
+      double ur, nc ;
+      std::tie ( ur , nc ) = reduce ( u , -2 * K , +2 * K ) ;
+      if ( !s_zero ( nc ) ) { return am ( ur , m ) + nc * s_2pi ; }
     }
+  }
   //
   typedef std::array<long double,3>     ITEM  ;
   typedef std::vector<ITEM>             ITEMS ;
@@ -3592,7 +3592,7 @@ double Ostap::Math::sn
   else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   // reduce the argument
-  if ( 0.5 * M_PI < u ) 
+  if ( s_pi_2 < u ) 
     {
       const long double KK = elliptic_Km ( m ) ;
       if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
@@ -3674,7 +3674,7 @@ double Ostap::Math::sn_
   else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   // reduce the argument
-  if ( 0.5 * M_PI < u ) 
+  if ( s_pi_2  < u ) 
     {
       const long double KK = elliptic_Km ( m ) ;
       if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
@@ -3746,7 +3746,7 @@ double Ostap::Math::cn
   else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   // reduce the argument
-  if ( 0.5 * M_PI < u ) 
+  if ( s_pi_2 < u ) 
     {
       const long double KK = elliptic_Km ( m ) ;
       if      ( s_equal ( u ,     KK ) ) { return KK - u     ; }
@@ -3811,7 +3811,7 @@ double Ostap::Math::sc
   else if (  m < 0 || 1 < m   ) { return std::numeric_limits<double>::quiet_NaN(); }
   //
   // reduce the argument
-  if ( 0.5 * M_PI < u ) 
+  if ( s_pi_2 < u ) 
   {
     const long double KK = elliptic_Km ( m ) ;
     if ( 4 * KK < u  ) 
@@ -3888,7 +3888,7 @@ double Ostap::Math::zeta ( const int n  )
 {
   // if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
   // use Cauchi principal value: 
-  if      (  1 == n ) { return s_MASCHERONI ; }
+  if      (  1 == n ) { return s_Mascheroni ; }
   else if (  0 == n ) { return -0.5         ; }
   else if ( -1 == n ) { return -1.0/12      ; }  
   // trivial zeroes ?
@@ -3962,7 +3962,7 @@ double Ostap::Math::zeta ( const double s   )
 // ============================================================================
 double Ostap::Math::zetam1 ( const int n  )
 {
-  if      (  1 == n )  { return s_MASCHERONI -1 ; } // use Cauchi principal value: 
+  if      (  1 == n )  { return s_Mascheroni -1 ; } // use Cauchi principal value: 
   else if (  0 == n )  { return -0.5         -1 ; }
   else if ( -1 == n )  { return -1.0/12      -1 ; }  
   // trivial zeroes ?
@@ -4249,7 +4249,7 @@ double Ostap::Math::harmonic ( const double x  )
  */
 // ============================================================================
 double Ostap::Math::mills_normal ( const double x ) 
-{ return s_SQRTPIHALF * Ostap::Math::erfcx ( s_SQRT2i * x ) ; }
+{ return s_sqrt_pi_2 * Ostap::Math::erfcx ( s_1_sqrt2 * x ) ; }
 // ============================================================================
 /* Product of the Gaussian PDF and Millt's ratio 
  *  \f$ f(a,b) = \phi(a) R(b) \f$
@@ -4262,7 +4262,7 @@ double Ostap::Math::gauss_mills
   return 
     0 <= b ? 
     Ostap::Math::gauss_pdf ( a )             * Ostap::Math::mills_normal ( b ) : 
-    std::exp ( 0.5 * ( b - a ) * ( b + a ) ) * Ostap::Math::erfc ( b * s_SQRT2i ) * 0.5 ; 
+    std::exp ( 0.5 * ( b - a ) * ( b + a ) ) * Ostap::Math::erfc ( b * s_1_sqrt2 ) * 0.5 ; 
 }
 // ============================================================================
 /*  get the intermediate polynom \f$ g_l (x)\f$ used for the calculation of 
@@ -5021,6 +5021,30 @@ double Ostap::Math::expm1_x ( const double x )
   return result ;
 }
 // ============================================================================
+/* \f$ f(x) = \frac { erf ( x ) }{ x } \f$
+ * precise for small x 
+ */
+// ============================================================================
+double Ostap::Math::erf_x ( const double x )
+{
+  if      ( !x ) { return s_HALFSQRTPIi ; }
+  else if ( std::abs ( x ) < 1.e-2 )
+  {
+    const double x2 = x * x ;
+    double xx = x2 ;    
+    double s  =  1 ;
+    s  -= xx /   3 ;
+    xx *= x2 ; 
+    s  += xx /  10 ;
+    xx *= x2 ; 
+    s  -= xx /  42 ;
+    xx *= x2 ; 
+    s  += xx / 216 ;
+    return s * s_HALFSQRTPIi ;
+  }
+  return s_HALFSQRTPIi * std::erf ( x ) / x ;
+}
+// =======================================================================
 
 // ============================================================================
 /** Fourrier-image of the finite atomic function <code>up</code> 
@@ -5370,7 +5394,7 @@ double Ostap::Math::gd     ( const double x )
 // ============================================================================
 double Ostap::Math::gd_inv ( const double x ) 
 { return
-    std::abs ( x ) < 0.5 * M_PI ? 
+    std::abs ( x ) < s_pi_2 ? 
     2 * std::atanh ( std::tan ( 0.5L * x ) ) : 
     std::numeric_limits<double>::quiet_NaN() ;
 }                     
@@ -5703,7 +5727,7 @@ double Ostap::Math::Si   ( const double x )
     }
   //
   const double ax = std::abs ( x ) ;
-  const double result = M_PI * 0.5
+  const double result = s_pi_2
     - pade_f ( ax ) * std::cos ( ax )
     - pade_g ( ax ) * std::sin ( ax ) ;
   ///
@@ -6629,10 +6653,10 @@ double Ostap::Math::sigmoid
 		  "Ostap::Math::sigmoid"  ,
 		  INVALID_PARAMETER       , __FILE__ , __LINE__ ) ;
   //
-  static const double s_bias  = M_PI / 2.0  ;
-  static const double s_scale = 1.0  / M_PI ;
+  static const double s_bias  = s_pi_2  ;
+  static const double s_scale = s_1_pi  ;
   //
-  static const double s_erf   = std::sqrt ( M_PI ) ;
+  static const double s_erf   = s_sqrt_pi          ;
   static const double s_p0    = 1.0                ;
   static const double s_p1    = 1.0 / 1.5          ;
   static const double s_p2    = 1.0 / 1.875        ; 

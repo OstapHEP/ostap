@@ -227,7 +227,7 @@ double Ostap::Math::BifurcatedGauss::evaluate ( const double x ) const
     ( x - m_peak ) / m_sigmaL :
     ( x - m_peak ) / m_sigmaR ;
   //
-  const double norm = s_SQRTPIHALF * ( m_sigmaL + m_sigmaR ) ;
+  const double norm = s_sqrt_pi_2 * ( m_sigmaL + m_sigmaR ) ;
   //
   return std::exp ( -0.5 * dx * dx ) / norm ;
 }
@@ -259,7 +259,7 @@ double Ostap::Math::BifurcatedGauss::cdf ( const double x ) const
   if ( x <= m_peak )
     {
       const double sigma = sigmaL () ;
-      const double sf    = s_SQRT2i / sigma  ;
+      const double sf    = s_1_sqrt2 / sigma  ;
       const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
       const double b     = ( x - m_peak ) * sf ;
       return std::erfc ( -b ) * nf ; // RETURN
@@ -282,8 +282,8 @@ double Ostap::Math::BifurcatedGauss::integral
   if       ( high <= m_peak )
     {
       const double sigma = sigmaL () ;
-      const double sf    = s_SQRT2i / sigma  ;
-      const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
+      const double sf    = s_1_sqrt2 / sigma  ;
+      const double nf    = sigma     / ( sigmaL() + sigmaR() ) ;
       const double a     = ( low  - m_peak ) * sf ;
       const double b     = ( high - m_peak ) * sf ;
       return  ( std::erf ( b ) -  std::erf ( a ) ) * nf ; // RETURN
@@ -292,7 +292,7 @@ double Ostap::Math::BifurcatedGauss::integral
   else if ( low >= m_peak )
     {
       const double sigma = sigmaR () ;
-      const double sf    = s_SQRT2i / sigma  ;
+      const double sf    = s_1_sqrt2 / sigma  ;
       const double nf    = sigma    / ( sigmaL() + sigmaR() ) ;
       const double a     = ( low  - m_peak ) * sf ;
       const double b     = ( high - m_peak ) * sf ;
@@ -499,11 +499,9 @@ double Ostap::Math::DoubleGauss::pdf ( const double x ) const
   const double  f1 = fraction ;
   const double  f2 = 1 - f1   ;
   //
-  static const double s_norm = 1.0 / std::sqrt ( 2.0 * M_PI  ) ;
-  //
   return 
-    s_norm * ( f1 * std::exp ( -0.5 * dx1 * dx1 ) / sigma  +
-               f2 * std::exp ( -0.5 * dx2 * dx2 ) / sigma2 ) ;  
+    s_sqrt_1_2pi * ( f1 * std::exp ( -0.5 * dx1 * dx1 ) / sigma  +
+		     f2 * std::exp ( -0.5 * dx2 * dx2 ) / sigma2 ) ;  
 }
 // ============================================================================
 // get the integral between low and high limits
@@ -916,7 +914,7 @@ double Ostap::Math::GenGaussV2::pdf ( const double x ) const
   //
   const double y_   = y ( x ) ;
   //
-  const double gau  = my_exp ( -0.5 * y_ * y_ ) / s_SQRT2PI ;
+  const double gau  = my_exp ( -0.5 * y_ * y_ ) * s_sqrt_1_2pi ;
   //
   return gau / ( alpha() - kappa() * ( x - xi () ) ) ;
 }
@@ -930,7 +928,7 @@ double Ostap::Math::GenGaussV2::cdf ( const double x ) const
   //
   const double y_   = y ( x ) ;
   //
-  const double e_   = std::erf ( y_ * s_SQRT2i ) ;
+  const double e_   = std::erf ( y_ * s_1_sqrt2 ) ;
   //
   return 0.5 * ( 1 + e_ ) ;
 }
@@ -1087,34 +1085,33 @@ double Ostap::Math::SkewGauss::integral ( const double low  ,
 // ============================================================================
 double Ostap::Math::SkewGauss::mean () const 
 {
-  static const double s_c = std::sqrt ( 2.0L / M_PI ) ;
   const double delta = m_alpha / std::sqrt ( 1 + m_alpha * m_alpha ) ;
-  return m_xi + m_omega * delta * s_c ;
+  return m_xi + m_omega * delta * s_sqrt_2_pi ;
 }
 // ============================================================================
 double Ostap::Math::SkewGauss::variance () const 
 {
   const double delta = m_alpha / std::sqrt( 1 + m_alpha * m_alpha ) ;
-  return m_omega * m_omega * ( 1 - 2 * delta * delta / M_PI ) ;
+  return m_omega * m_omega * ( 1 - 2 * delta * delta * s_1_pi ) ;
 }
 // ============================================================================
 double Ostap::Math::SkewGauss::skewness () const 
 {
-  static const double s_c1 =  ( 4.0- M_PI ) / 2.0 ;
-  static const double s_c2 =  std::sqrt ( 2.0 / M_PI ) ;
+  static const double s_c1 =  ( 4.0 - s_pi ) / 2.0 ;
+  static const double s_c2 =  s_sqrt_2_pi ;
   //
   const double delta = m_alpha / std::sqrt( 1 + m_alpha * m_alpha ) ;
   return s_c1 * std::pow ( delta * s_c2 , 3 ) /
-    std::pow ( 1 - 2 * delta * delta / M_PI , 1.5  ) ;
+    std::pow ( 1 - 2 * delta * delta * s_1_pi , 1.5  ) ;
 }
 // ============================================================================
 double Ostap::Math::SkewGauss::kurtosis () const 
 {
-  static const double s_c1 =  2.0 * ( M_PI - 3 ) ;
-  static const double s_c2 =  std::sqrt ( 2.0 / M_PI ) ;
+  static const double s_c1 =  2.0 * ( s_pi - 3 ) ;
+  static const double s_c2 =  s_sqrt_2_pi        ;
   //
   const double delta = m_alpha / std::sqrt ( 1 + m_alpha * m_alpha ) ;
-  return s_c1 * std::pow ( delta * s_c2 , 4 ) / std::pow ( 1 - 2 * delta * delta / M_PI , 2 ) ;
+  return s_c1 * std::pow ( delta * s_c2 , 4 ) / std::pow ( 1 - 2 * delta * delta * s_1_pi , 2 ) ;
 }
 // ============================================================================
 double Ostap::Math::SkewGauss::sigma  () const 
@@ -1127,11 +1124,11 @@ double Ostap::Math::SkewGauss::approximate_mode () const
   if ( s_zero ( m_omega ) )  { return m_xi ; }
   //
   const double delta = m_alpha / std::hypot ( 1.0 , m_alpha ) ;
-  const double d1    = std::sqrt ( 2 / M_PI ) * delta ;
+  const double d1    = s_sqrt_2_pi * delta ;
   //
   double ma = d1 ;
-  ma -= ( 1 - M_PI / 4 ) * std::pow ( d1 , 3 ) / ( 1 - d1 * delta ) ;
-  ma -= 0.5 * Ostap::Math::signum ( m_alpha ) * std::exp ( -2 * M_PI / std::abs ( m_alpha ) ) ;
+  ma -= ( 1 - s_pi_4 ) * std::pow ( d1 , 3 ) / ( 1 - d1 * delta ) ;
+  ma -= 0.5 * Ostap::Math::signum ( m_alpha ) * std::exp ( - s_2pi / std::abs ( m_alpha ) ) ;
   //
   return m_xi + m_omega * ma ;
 }
@@ -1233,8 +1230,8 @@ bool Ostap::Math::ExGauss::setK ( const double value )
     {
       //
       const double kk = 1.0 / m_k ;
-      static const double s_C2 = std::sqrt ( 2.0 / M_PI ) ;
-      const double aa = s_SQRT2 * Ostap::Math::erfcxinv ( s_C2 / std::abs ( kk ) ) ;
+      static const double s_C2  = s_sqrt_2_pi ;
+      const double aa = s_sqrt2 * Ostap::Math::erfcxinv ( s_C2 / std::abs ( kk ) ) ;
       //
       m_mk = 0 < m_k ? kk - aa : kk + aa ;
     }
@@ -1446,7 +1443,7 @@ bool Ostap::Math::Bukin2::setPhi ( const double value )
   //
   m_phi = value ;
   //
-  static const double pi4 = M_PI * 0.25 ;
+  static const double pi4 = s_pi_4 ;
   const        double s   = std::sin ( value + pi4 ) ;
   m_fA = s * s  ;
   m_fB = 1.0 - m_fA ;
@@ -1682,14 +1679,14 @@ Ostap::Math::Bukin::Bukin
   const double rho_L  ,
   const double rho_R  )
 //
-  : m_peak      ( M_PI + peak  )
-  , m_sigma     ( M_PI + sigma )
-  , m_xi        ( M_PI + xi    )
-  , m_rho_L     ( M_PI + rho_L )
-  , m_rho_R     ( M_PI + rho_R )
+  : m_peak      ( s_pi + peak  )
+  , m_sigma     ( s_pi + sigma )
+  , m_xi        ( s_pi + xi    )
+  , m_rho_L     ( s_pi + rho_L )
+  , m_rho_R     ( s_pi + rho_R )
 //
-  , m_x1        ( M_PI )
-  , m_x2        ( M_PI )
+  , m_x1        ( s_pi )
+  , m_x2        ( s_pi )
 //
   , m_workspace ()
 {
@@ -2010,7 +2007,7 @@ double Ostap::Math::Novosibirsk::pdf  ( const double x ) const
   const double l      = Ostap::Math::log1p_x  ( arg ) * m_lambda * dx ;
   const double result = l * l ; // + m_tau * m_tau ;
   //
-  return  my_exp ( -0.5 * result ) * s_SQRT2PIi / m_sigma ;
+  return  my_exp ( -0.5 * result ) * s_sqrt_1_2pi / m_sigma ;
 }
 // =========================================================================
 // get the integral between low and high limits
@@ -3338,7 +3335,7 @@ double Ostap::Math::Apollonios::dFoF ( const double x ) const
     ( x - m_m0 ) / m_sigmaL :
     ( x - m_m0 ) / m_sigmaR ;
   //
-  const double h2 = std::hypot ( s_SQRT2 , m_beta ) ;
+  const double h2 = std::hypot ( s_sqrt2 , m_beta ) ;
   const double hx = std::hypot ( dx      , m_beta ) ;
   //
   return -h2 * dx / ( hx * ( dx < 0 ? m_sigmaL : m_sigmaR ) ) ;
@@ -3356,10 +3353,10 @@ double Ostap::Math::Apollonios::pdf ( const double x ) const
   //
   // the peak
   //
-  const double h2 = std::hypot ( s_SQRT2 , m_beta ) ;
+  const double h2 = std::hypot ( s_sqrt2 , m_beta ) ;
   const double hx = std::hypot ( dx      , m_beta ) ;
   // 
-  return std::exp ( h2 * ( m_beta - hx ) ) * s_SQRT2PIi / sigma()  ;  
+  return std::exp ( h2 * ( m_beta - hx ) ) * s_sqrt_1_2pi / sigma()  ;  
 }
 // ============================================================================
 // get the integral between low and high
@@ -3536,7 +3533,7 @@ double Ostap::Math::Atlas::variance () const { return 3 * m_sigma * m_sigma ; }
 // ============================================================================
 // get rms :  very good numerical approximation 
 // ============================================================================
-double Ostap::Math::Atlas::rms      () const { return s_SQRT3     * m_sigma ; }
+double Ostap::Math::Atlas::rms      () const { return s_sqrt3      * m_sigma ; }
 // ============================================================================
 bool Ostap::Math::Atlas::setMean ( const double value ) 
 {
@@ -3674,7 +3671,7 @@ Ostap::Math::Sech::Sech
 // ============================================================================
 double Ostap::Math::Sech::pdf ( const double x ) const 
 {
-  const long double y = ( x - m_mean ) * M_PI_2 / m_sigma ;
+  const long double y = ( x - m_mean ) * s_pi_2 / m_sigma ;
   return 
     GSL_LOG_DBL_MAX < std::abs ( y )  ? 0 : 
     0.5 / ( m_sigma * std::cosh ( y ) ) ;
@@ -3716,11 +3713,11 @@ double Ostap::Math::Sech::integral () const { return 1 ; }
 // ============================================================================
 double Ostap::Math::Sech::cdf ( const double x ) const 
 {
-  const long double y = ( x - m_mean ) * M_PI_2 / m_sigma ;
+  const long double y = ( x - m_mean ) * s_pi_2 / m_sigma ;
   return
     ( GSL_LOG_DBL_MAX < y ) ? 1 :
     ( GSL_LOG_DBL_MIN > y ) ? 0 : 
-    std::atan (  std::exp ( y ) ) / M_PI_2 ;
+    std::atan (  std::exp ( y ) ) / s_pi_2 ;
 }
 // ============================================================================
 // get quantile (0<p<1)
@@ -3729,7 +3726,7 @@ double Ostap::Math::Sech::quantile ( const double p ) const
 { return 
     0 >= p || s_zero  ( p     ) ? -s_INFINITY :
     1 <= p || s_equal ( p , 1 ) ? +s_INFINITY : 
-    m_mean + m_sigma * 2 / M_PI * std::log( std::tan ( M_PI * p /  2 ) ) ; }
+    m_mean + m_sigma * s_2_pi* std::log ( std::tan ( s_pi_2 * p ) ) ; }
 // ============================================================================
 /*  quantify the effect of the tails, difference from Gaussian
  *  \f[ Q = 1 = frac{I_{CB} - I_G}{I_{CB}} \f]
@@ -3830,7 +3827,7 @@ double Ostap::Math::Losev::pdf ( const double x ) const
   if ( m_norm <= 0 ) 
   {
     const double sumab = m_alpha + m_beta ;
-    m_norm = sumab * std::sin ( M_PI * m_beta / sumab ) / M_PI ;
+    m_norm = sumab * std::sin ( s_pi * m_beta / sumab ) * s_1_pi ;
   }
   //
   const double dx = x - m_mu ;
@@ -4625,10 +4622,7 @@ bool Ostap::Math::PearsonIV::setN ( const double value )
   if ( s_equal ( m_n , avalue ) && 0 < m_C ) { return false ; }
   m_n = avalue ;
   //
-  // m_C = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
-  //                   Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
-  //
-  m_C = Ostap::Math::pearsonIV_g2 ( m() , 0.5 * nu() ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  m_C = Ostap::Math::pearsonIV_g2 ( m() , 0.5 * nu() ) / Ostap::Math::beta  ( m() - 0.5 , 0.5 ) ;
   //
   return true ;
 }   
@@ -4640,10 +4634,7 @@ bool Ostap::Math::PearsonIV::setKappa ( const double value )
   if ( s_equal ( m_kappa , value ) && 0 < m_C ) { return false ; }
   m_kappa = value ;
   //
-  // m_C     = std::norm ( Ostap::Math::gamma ( std::complex<double> ( m() , 0.5 * nu () ) ) /
-  //                       Ostap::Math::gamma ( m() ) ) / std::beta  ( m() - 0.5 , 0.5 ) ;
-  //
-  m_C = Ostap::Math::pearsonIV_g2 ( m() , 0.5 * nu() ) / std::beta  ( m() - 0.5 , 0.5 ) ;
+  m_C = Ostap::Math::pearsonIV_g2 ( m() , 0.5 * nu() ) / Ostap::Math::beta  ( m() - 0.5 , 0.5 ) ;
   //
   return true ;
 }  
@@ -4942,7 +4933,7 @@ double Ostap::Math::SinhAsinh::pdf ( const double x ) const
   const double y = ( x - mu () ) / sigma()  ;
   const double z = shash ( y , epsilon() , delta() )  ;
   //
-  const double r = s_SQRT2PIi * delta() 
+  const double r = s_sqrt_1_2pi * delta() 
     // * std::sqrt  ( ( 1.0 + z * z ) / ( 1.0 + y * y )  ) 
     *    std::hypot ( 1 , z )          / std::hypot ( 1 , y )  
     *    my_exp ( -0.5 * z * z ) ;
@@ -4987,8 +4978,7 @@ double Ostap::Math::SinhAsinh::mean   () const
   const double d1 = 0.5 * ( 1 - m_delta ) / m_delta ;
   const double d2 = 0.5 * ( 1 - m_delta ) / m_delta ;
   //
-  static const double s_const1 = std::pow ( std::exp ( 1 ) , 0.25 ) / std::sqrt ( 8 *M_PI ) ;
-  //
+  static const double s_const1 = std::pow ( std::exp ( 1 ) , 0.25 ) * s_sqrt_1_8pi ;
   const double a = std::sinh ( m_epsilon / m_delta ) * s_const1 *
     ( Ostap::Math::bessel_Knu ( d1 , 0.25 ) + 
       Ostap::Math::bessel_Knu ( d2 , 0.25 ) ) ;
@@ -5004,7 +4994,7 @@ double Ostap::Math::SinhAsinh::variance () const
   const double d1 = 0.5 * ( 1 + m_delta ) / m_delta ;
   const double d2 = 0.5 * ( 1 - m_delta ) / m_delta ;
   //
-  static const double s_const1 = std::pow ( std::exp ( 1 ) , 0.25 ) / std::sqrt ( 8 *M_PI ) ;
+  static const double s_const1 = std::pow ( std::exp ( 1 ) , 0.25 ) * s_sqrt_1_8pi ;
   //
   const double a = std::sinh (     m_epsilon / m_delta ) * s_const1 *
     ( Ostap::Math::bessel_Knu ( d1 , 0.25 ) + 
@@ -5146,7 +5136,7 @@ double Ostap::Math::JohnsonSU::pdf        ( const double x ) const
   //
   const long double res = std::exp ( -0.5 * z * z ) / std::sqrt ( 1 + dx * dx ) ;
   //
-  return res * m_delta / ( m_lambda * s_SQRT2PI ) ;
+  return res * m_delta * s_sqrt_1_2pi / m_lambda  ;
 }
 // ============================================================================
 // evaluate JohnsonSU-distributions
@@ -5245,7 +5235,7 @@ bool Ostap::Math::Slash::setScale ( const double value )
 namespace 
 {
   // ==========================================================================
-  const long double s_slash = 0.5L / std::sqrt( 2.0L * M_PI );
+  const long double s_slash = 0.5L / std::sqrt ( 2.0L * s_pi  );
   // ==========================================================================
   //  (phi(0)-phi(x))/x^2
   inline long double _slash_pdf_ ( const long double x ) 
@@ -5337,14 +5327,14 @@ double Ostap::Math::RaisingCosine::pdf ( const double x ) const
   return 
     x <= m_mu - m_s ? 0.0 : 
     x >= m_mu + m_s ? 0.0 : 
-    ( 1  + std::cos ( M_PI * ( x  - m_mu ) / m_s ) ) / ( 2 * m_s )  ;
+    ( 1  + std::cos ( s_pi * ( x  - m_mu ) / m_s ) ) / ( 2 * m_s )  ;
 }
 // ============================================================================
 // variance  
 // ============================================================================
 double Ostap::Math::RaisingCosine::variance () const 
 {
-  static const double s_c1 = ( 1./3 - 2 / ( M_PI * M_PI ) ) ;
+  static const double s_c1 = ( 1./3 - 2 / s_pi2 ) ;
   return m_s * m_s * s_c1 ;
 }
 // ============================================================================
@@ -5352,7 +5342,7 @@ double Ostap::Math::RaisingCosine::variance () const
 // ============================================================================
 double Ostap::Math::RaisingCosine::rms () const 
 {
-  static const double s_c2 = std::sqrt ( 1./3 - 2 / ( M_PI * M_PI ) ) ;
+  static const double s_c2 = std::sqrt ( 1./3 - 2 / s_pi2 ) ;
   return m_s * s_c2 ;
 }
 // ============================================================================
@@ -5360,8 +5350,7 @@ double Ostap::Math::RaisingCosine::rms () const
 // ============================================================================
 double Ostap::Math::RaisingCosine::kurtosis () const 
 {
-  static const double s_k = 
-    1.2 * ( 90. - std::pow ( M_PI , 4 ) ) / std::pow ( M_PI*M_PI  - 6. , 2 ) ;
+  static const double s_k =  1.2 * ( 90.L - s_pi4 ) / std::pow ( s_pi2 - 6 , 2 ) ;
   return  s_k ;
 }
 // ============================================================================
@@ -5373,7 +5362,7 @@ double Ostap::Math::RaisingCosine::cdf      ( const double x ) const
   else if ( x >= m_mu - m_s ) { return 1 ; }
   //
   const double y = ( x - m_mu ) / m_s ;
-  return 0.5 * ( 1 + y + std::sin ( y  * M_PI ) / M_PI ) ;
+  return 0.5 * ( 1 + y + std::sin ( y * s_pi ) * s_1_pi ) ;
 }
 // ============================================================================
 // evaluate the integral
@@ -5604,7 +5593,7 @@ Ostap::Math::QGaussian::QGaussian
   : m_mean  ( mean               )
   , m_scale ( std::abs ( scale ) )
   , m_q     ( 1                  )
-  , m_cq    ( s_SQRTPI           ) 
+  , m_cq    ( s_sqrt_pi          ) 
 {
   setQ ( q ) ; 
 }
@@ -5645,7 +5634,7 @@ bool Ostap::Math::QGaussian::setQ ( const double value )
   //
   m_q  = value ;
   //
-  m_cq = s_SQRTPI ; 
+  m_cq = s_sqrt_pi ; 
   //
   if      ( 1 > m_q ) 
   {
@@ -5824,10 +5813,10 @@ bool Ostap::Math::KGaussian::setKappa ( const double value )
   m_kappa = avalue                ;
   m_k     = std::tanh ( m_kappa ) ;
   //
-  if ( s_zero ( m_k ) ) { m_Zk = s_SQRT2PIi ; }
+  if ( s_zero ( m_k ) ) { m_Zk = s_sqrt_1_2pi ; }
   else 
   {
-    m_Zk = std::sqrt ( m_k / M_PI ) 
+    m_Zk = std::sqrt ( m_k * s_1_pi ) 
       * ( 1 + 0.5 * m_k ) 
       * std::exp ( std::lgamma ( 0.5/m_k + 0.25 ) - std::lgamma ( 0.5/m_k - 0.25 ) ) ;  
   }
@@ -6191,7 +6180,7 @@ bool Ostap::Math::Hyperbolic::setStandard
   if ( !s_equal ( m_sigma , _sigma ) ) { modified = true ; }
   m_sigma = _sigma ;
   //
-  if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , 1 ) ) ; }
+  if ( modified ) { m_N = s_sqrt_1_2pi / z_knu_scaled ( m_zeta , 1 ) ; }
   //
   const double _kappa = beta / m_sigma ;
   if ( !s_equal ( m_kappa , _kappa ) ) { modified = true ; }
@@ -6392,7 +6381,7 @@ bool Ostap::Math::GenHyperbolic::setZeta ( const double value )
   m_zeta = avalue ;
   //
   m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ;
-  m_N  = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ;
+  m_N  = s_sqrt_1_2pi / z_knu_scaled ( m_zeta , m_lambda ) ;
   //
   return true ;
 }
@@ -6403,7 +6392,7 @@ bool Ostap::Math::GenHyperbolic::setLambda ( const double value )
   m_lambda = value ;
   //
   m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ;
-  m_N  = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ;
+  m_N  = s_sqrt_1_2pi / z_knu_scaled ( m_zeta , m_lambda ) ;
   //
   return true ;
 }
@@ -6445,7 +6434,7 @@ bool Ostap::Math::GenHyperbolic::setStandard
   if ( !s_equal ( m_sigma , _sigma ) ) { modified = true ; }
   m_sigma = _sigma ;
   //
-  if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ; }
+  if ( modified ) { m_N = s_sqrt_1_2pi / z_knu_scaled ( m_zeta , m_lambda ) ; }
   //
   const double _kappa = beta / m_sigma ;
   if ( !s_equal ( m_kappa , _kappa ) ) { modified = true ; }
@@ -7204,7 +7193,7 @@ bool Ostap::Math::SkewGenError::setR
 double Ostap::Math::SkewGenError::v_scale () const 
 {
   const double l2 = m_lambda * m_lambda ;
-  return std::sqrt ( M_PI / ( M_PI * ( 1.0 + 3.0 * l2 ) * m_b1 - l2 * m_b2 * m_b2 ) ) ;
+  return std::sqrt ( s_pi  / ( s_pi * ( 1.0 + 3.0 * l2 ) * m_b1 - l2 * m_b2 * m_b2 ) ) ;
 }
 // ============================================================================
 /* helper bias parameter 
@@ -7212,7 +7201,7 @@ double Ostap::Math::SkewGenError::v_scale () const
  */
 // ============================================================================
 double Ostap::Math::SkewGenError::m_bias  () const 
-{ return m_sigma * m_lambda * m_b2 * s_SQRTPIi ; }
+{ return m_sigma * m_lambda * m_b2 * s_sqrt_1_pi ; }
 // ============================================================================
 // evaluate the pdf 
 // ============================================================================
@@ -7563,12 +7552,12 @@ double Ostap::Math::Up::eval ( const double z )  const
 {
   //
   auto fourrier = []( unsigned int k ) -> double  
-  { return k == 0 || 1 == k % 2 ?  Ostap::Math::up_F ( M_PI * k ) : 0.0 ; } ;
+  { return k == 0 || 1 == k % 2 ?  Ostap::Math::up_F ( s_pi * k ) : 0.0 ; } ;
   static const std::array<double,120> s_fourrier { make_array ( fourrier , std::make_index_sequence<120>() ) } ;
   //
   return 1 <= std::abs ( z ) ? 0.0 : 
     std::max ( 0.0L , Ostap::Math::Clenshaw::cosine_sum 
-               ( s_fourrier.begin () , s_fourrier.end () , z * M_PI ) ) ; 
+               ( s_fourrier.begin () , s_fourrier.end () , z * s_pi ) ) ; 
 }
 // ============================================================================
 // integral 
@@ -7709,7 +7698,7 @@ Ostap::Math::FupN::FupN
   if ( s_FupN_cache->end() == it ) 
   {
     auto fourrier = [this]( unsigned int k ) -> double
-      { return Ostap::Math::fupN_F ( this->m_N , M_PI * k / ( this->m_N + 1 ) ) ; } ;
+      { return Ostap::Math::fupN_F ( this->m_N , s_pi * k / ( this->m_N + 1 ) ) ; } ;
     //
     const RESULT res { make_array( fourrier , std::make_index_sequence<120>() ) } ;
     s_FupN_cache->insert ( std::make_pair ( m_N , res ) ) ;  
@@ -7759,7 +7748,7 @@ double Ostap::Math::FupN::eval ( const double z )  const
   return 0.5 * ( m_N + 2 ) <= std::abs ( z ) ? 0.0 : 
     std::max ( 0.0L , Ostap::Math::Clenshaw::cosine_sum 
                ( it->second.begin () , 
-                 it->second.end   () ,  M_PI * z / ( m_N + 1 ) ) / ( m_N + 1 ) ) ; 
+                 it->second.end   () , s_pi * z / ( m_N + 1 ) ) / ( m_N + 1 ) ) ; 
 }
 // ============================================================================
 // integral 
@@ -7843,7 +7832,7 @@ Ostap::Math::Meixner::Meixner
   setShape ( shape ) ; 
   //
   m_C = 2 * m_shape * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
-    - std::lgamma ( 2 * m_shape ) - std::log ( 2 * M_PI ) ;
+    - std::lgamma ( 2 * m_shape ) - std::log ( 2 * s_pi ) ;
   //
   m_a = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;
 }
@@ -7887,7 +7876,7 @@ bool Ostap::Math::Meixner::setShape
   m_shape = avalue ;
   //
   m_C = 2 * m_shape * std::log ( 2 * std::cos ( 0.5 * m_b ) )
-    - std::lgamma ( 2 * m_shape ) - std::log ( 2 * M_PI ) ;
+    - std::lgamma ( 2 * m_shape ) - s_log_2pi ;
   //
   m_a = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;
   return true ;
@@ -7905,7 +7894,7 @@ bool Ostap::Math::Meixner::setPsi
   m_b = m_psi ? 2 * std::atan ( m_psi ) : 0.0 ; 
   //
   m_C = 2 * m_shape * std::log ( 2 * std::cos ( 0.5 * m_b ) ) 
-    - std::lgamma ( 2 * m_shape ) - std::log ( 2 * M_PI ) ;
+    - std::lgamma ( 2 * m_shape ) - s_log_2pi;
   //
   m_a = m_sigma * std::sqrt ( ( std::cos ( m_b ) + 1 ) / m_shape ) ;
   return true ;
@@ -7926,7 +7915,7 @@ double Ostap::Math::Meixner::evaluate   ( const double x ) const
 // kappa 
 // ============================================================================
 double Ostap::Math::Meixner::kappa () const 
-{ return m_b / M_PI ; }
+{ return m_b * s_1_pi ; }
 // ============================================================================
 // mean values  
 // ============================================================================
@@ -8058,8 +8047,8 @@ std::size_t Ostap::Math::Meixner::tag () const
 // Asymptotic 
 // ===========================================================================
 double Ostap::Math::Meixner::rho         () const { return 2 * d() - 1 ; }
-double Ostap::Math::Meixner::sigma_plus  () const { return ( M_PI + m_b ) / m_a ; }
-double Ostap::Math::Meixner::sigma_minus () const { return ( M_PI - m_b ) / m_a ; }
+double Ostap::Math::Meixner::sigma_plus  () const { return ( s_pi + m_b ) / m_a ; }
+double Ostap::Math::Meixner::sigma_minus () const { return ( s_pi - m_b ) / m_a ; }
 
 
 // ============================================================================

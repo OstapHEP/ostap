@@ -14,6 +14,10 @@
 #include "Ostap/Hash.h"
 #include "Ostap/NSphere.h"
 // ============================================================================
+// Local
+// ============================================================================
+#include "local_math.h"
+// ============================================================================
 /** @file 
  *  Implementation of class Ostap::Math::NSphere 
  *  @see Ostap::Math::NSPhere 
@@ -24,20 +28,12 @@
 namespace 
 {
   // ==========================================================================
-  /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double> s_equal{} ; // equality criteria for doubles
-  /// zero for doubles  
-  const Ostap::Math::Zero<double>     s_zero{}  ; // zero for doubles
-  // ==========================================================================
   inline 
-  std::pair<double,double> _sincos_ ( const double phase ) 
+  std::pair<double,double>
+  _sincos_ ( const double phase ) 
   {
     if ( 0 == phase || s_zero ( phase ) ) { return std::make_pair ( 0 , 1 ) ; }
     //
-    // return std::make_pair ( std::sin( phase ) , std::cos( phase ) ) ;
-    // double sinv = 0 ;
-    // double cosv = 1 ;
-    // vdt::fast_sincos ( phase , sinv , cosv ) ;
     const double sinv  = std::sin ( phase ) ;
     const double cosv  = std::cos ( phase ) ;
     //
@@ -57,11 +53,6 @@ namespace
     //
     return std::make_pair ( sinv , cosv ) ;
   }
-  // ==========================================================================
-  /** @var s_PIHALF 
-   *  useful constant
-   */
-  const double s_PIHALF = 0.5 * M_PI ;
   // ==========================================================================
 }
 // ============================================================================
@@ -281,7 +272,7 @@ Ostap::Math::NSphere::phis ( const std::vector<double>& x )
     const long double xi = x [ i ] ;
     const long double ax = std::abs ( xi  ) ;
     if ( r < ax || s_equal ( ax , r ) ) 
-    { phis [ i ] = ( 0 < xi ) ? 0 : M_PIl ; continue ; }
+    { phis [ i ] = ( 0 < xi ) ? 0 : s_pi ; continue ; }
     //
     phis [ i ] = std::acos ( x [ i ] / r ) ;
   }
@@ -299,7 +290,7 @@ Ostap::Math::NSphere::phis ( const std::vector<double>& x )
     {
       phis [ kphi ] =  
         0 <= x [ nphi ] ? 
-        std::acos ( x [ kphi ] / r ) : 2 * M_PI - std::acos ( x [ kphi ] / r ) ;
+        std::acos ( x [ kphi ] / r ) : s_2pi - std::acos ( x [ kphi ] / r ) ;
     }     
   }
   return phis ;

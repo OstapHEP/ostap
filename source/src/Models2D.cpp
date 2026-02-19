@@ -1907,7 +1907,7 @@ double Ostap::Math::Gauss2D::operator ()
   const double dyp = ( ct * dy - st * dx ) / m_sigmaY ;
   //
   return 
-    std::exp ( -0.5 * ( dxp * dxp + dyp * dyp ) ) / ( 2 * M_PI * m_sigmaX * m_sigmaY ) ;
+    std::exp ( -0.5 * ( dxp * dxp + dyp * dyp ) ) / ( 2 * s_pi * m_sigmaX * m_sigmaY ) ;
 }
 // ============================================================================
 // get the integral over the whole 2D-region

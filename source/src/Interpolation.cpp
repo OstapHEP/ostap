@@ -114,7 +114,7 @@ Ostap::Math::Interpolation::Abscissas::Abscissas
     // ========================================================================
     for  ( unsigned short i = 0 ; i < n ; ++i ) 
     {
-      const long double a = 1.0L * ( 2 * ( n - i ) - 1 ) * M_PIl / ( 2 * n ) ;
+      const long double a = 1.0L * ( 2 * ( n - i ) - 1 ) * s_pi / ( 2 * n ) ;
       const long double x = std::cos ( a ) ;
       m_x [ i ] = 0.5 * ( ( 1 - x ) * mn + ( 1 + x ) * mx ) ;
     }
@@ -125,7 +125,7 @@ Ostap::Math::Interpolation::Abscissas::Abscissas
     // ========================================================================
     for  ( unsigned short i = 0 ; i < n ; ++i ) 
     {
-      const long double a = 1.0L * ( ( n - i - 1 ) * M_PIl / ( n - 1 ) ) ;
+      const long double a = 1.0L * ( ( n - i - 1 ) * s_pi  / ( n - 1 ) ) ;
       const long double x = std::cos ( a ) ;
       m_x [ i ] = 0.5 * ( ( 1 - x ) * mn + ( 1 + x ) * mx ) ;
     }
@@ -782,7 +782,7 @@ void Ostap::Math::Barycentric::get_weights()
     {
       for ( unsigned int i = 0 ; i < N ; ++ i ) 
       {
-        const long double a = 1.0L * ( 2 * ( N - i ) - 1 ) * M_PIl / ( 2 * N ) ;
+        const long double a = 1.0L * ( 2 * ( N - i ) - 1 ) * s_pi / ( 2 * N ) ;
         const long double x = std::sin ( a ) ;
         m_weights [i] = ( i % 2 ? 1 : -1 ) * x ;
       }

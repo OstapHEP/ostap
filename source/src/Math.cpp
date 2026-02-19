@@ -17,6 +17,10 @@
 // ============================================================================
 #include "Ostap/Math.h"
 // ============================================================================
+// Local
+// ============================================================================
+#include "local_math.h"
+// ============================================================================
 /** @file 
  *  Implementation file for functions from namespace LHcb::Math 
  *  @author Vanya BELYAEV ibelyaev@physics.syr.edu
@@ -479,7 +483,7 @@ double Ostap::Math::nball_volume
   //
   const long double R      = r      ;
   const long double R2     = R * R  ;
-  const long double factor = 2 * M_PIl * R2 ;
+  const long double factor = 2 * s_pi * R2 ;
   //
   long double       result = odd ? 2 * R : 1.0L ;
   //
@@ -489,8 +493,6 @@ double Ostap::Math::nball_volume
   return result ; 
 }
 // ============================================================================
-
-
 
 // ============================================================================
 //                                                                      The END 

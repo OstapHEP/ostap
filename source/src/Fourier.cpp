@@ -33,13 +33,13 @@ namespace
     double& xmax )
   {
     // ========================================================================
-    if ( s_equal ( -M_PI     , xmin ) ) { xmin = -M_PI     ; }
+    if ( s_equal ( -s_pi     , xmin ) ) { xmin = -s_pi     ; }
     if ( s_equal ( -1        , xmin ) ) { xmin = -1        ; }
     if ( s_equal (  0        , xmin ) ) { xmin =  0        ; }
     // ========================================================================
     if ( s_equal (  1        , xmax ) ) { xmax =  1        ; }
-    if ( s_equal (      M_PI , xmax ) ) { xmax =     M_PI  ; }
-    if ( s_equal (  2 * M_PI , xmax ) ) { xmax =  2 * M_PI ; }
+    if ( s_equal (      s_pi , xmax ) ) { xmax =      s_pi ; }
+    if ( s_equal (  2 * s_pi , xmax ) ) { xmax =  2 * s_pi ; }
     // ========================================================================
   }
   // ==========================================================================
@@ -65,7 +65,7 @@ Ostap::Math::FourierSum::FourierSum
                   "Ostap::Math::FourierSum"            ,
                   INVALID_MINMAX , __FILE__ , __LINE__ ) ;
   //
-  m_scale = 2 * M_PI / ( m_xmax - m_xmin ) ;
+  m_scale = 2 * s_pi / ( m_xmax - m_xmin ) ;
   m_delta = 0.5      * ( m_xmax + m_xmin ) ;
 }
 // ============================================================================
@@ -91,7 +91,7 @@ Ostap::Math::FourierSum::FourierSum
                   "Ostap::Math::FourierSum"            ,
                   INVALID_MINMAX , __FILE__ , __LINE__ ) ;
   //  //
-  m_scale = 2 * M_PI / ( m_xmax - m_xmin ) ;
+  m_scale = 2 * s_pi / ( m_xmax - m_xmin ) ;
   m_delta = 0.5      * ( m_xmax + m_xmin ) ;
 }
 // ============================================================================
@@ -124,7 +124,7 @@ double Ostap::Math::FourierSum::mag    ( const unsigned short k ) const
 double Ostap::Math::FourierSum::phase ( const unsigned short k ) const 
 {
   if      ( k > N () ) { return 0 ; }
-  else if ( 0 == k   ) { return 0 <= m_pars [ 0 ] ? 0. : -M_PI ; }
+  else if ( 0 == k   ) { return 0 <= m_pars [ 0 ] ? 0. : -s_pi ; }
   //
   return std::atan2 ( m_pars [ 2 * k - 1 ] , m_pars [ 2 * k ] ) ;
 } 
@@ -306,7 +306,7 @@ Ostap::Math::CosineSum::CosineSum
                   "Ostap::Math::CosineSum"             ,
                   INVALID_MINMAX , __FILE__ , __LINE__ ) ;
   //
-  m_scale = M_PI / ( m_xmax - m_xmin ) ;
+  m_scale = s_pi / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
 // constructor from non-empty list of parameters 
@@ -330,7 +330,7 @@ Ostap::Math::CosineSum::CosineSum
                   "Ostap::Math::CosineSum"             ,
                   INVALID_MINMAX , __FILE__ , __LINE__ ) ;
   //
-  m_scale = M_PI / ( m_xmax - m_xmin ) ;
+  m_scale = s_pi / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
 // swap 
@@ -494,7 +494,7 @@ Ostap::Math::SineSum::SineSum
                   "Ostap::Math::SineSum"               ,
                   INVALID_MINMAX , __FILE__ , __LINE__ ) ;
   //
-  m_scale = M_PI / ( m_xmax - m_xmin ) ;
+  m_scale = s_pi / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
 // constructor from non-empty list of parameters
@@ -511,7 +511,7 @@ Ostap::Math::SineSum::SineSum
   //
   adjust_minmax ( m_xmin , m_xmax ) ;
   //
-  m_scale = M_PI / ( m_xmax - m_xmin ) ;
+  m_scale = s_pi / ( m_xmax - m_xmin ) ;
   // ===========================================================================  
 }
 // =============================================================================

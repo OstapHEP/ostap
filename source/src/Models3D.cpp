@@ -194,7 +194,7 @@ double Ostap::Math::Gauss3D::operator ()
                                                             z - m_muZ ) ) } ;
   
   // (2) evaluate 3D gaussian  
-  static const double s_norm = std::pow ( 2 * M_PI , 1.5 ) ;
+  static const double s_norm = std::pow ( 2 * s_pi , 1.5 ) ;
   //
   return std::exp ( -0.5 * ( std::pow ( dv.X() / m_sigmaX , 2 )  + 
                              std::pow ( dv.Y() / m_sigmaY , 2 )  + 

@@ -357,7 +357,7 @@ double Ostap::Math::Hagedorn::mean () const
 {
   const double mt = m_mass * m_beta ;
   return 
-    s_SQRTPIHALF * std::sqrt ( m_mass / m_beta ) * 
+    s_sqrt_pi_2 * std::sqrt ( m_mass / m_beta ) * 
     Ostap::Math::bessel_Knu ( 5.0/2 , mt ) /
     Ostap::Math::bessel_Kn  ( 2     , mt ) ;
 }

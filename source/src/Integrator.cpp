@@ -745,7 +745,7 @@ Ostap::Math::Integrator::kramers_kronig_
   }
   // no subtractions
   result r = cauchy_pv_to_infinity_ ( std::cref ( f1 ) , s , xmin , ws , tag , rescale , aprecision , rprecision , width ) ;
-  return result ( r.first / M_PI , r.second / M_PI ) ;
+  return result ( r.first * s_1_pi , r.second * s_1_pi ) ;
 }
 // ============================================================================
 /*  integration with known singular points 

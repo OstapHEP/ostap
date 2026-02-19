@@ -928,7 +928,7 @@ bool Ostap::Math::Argus::setChi ( const double value )
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( m_chi , avalue ) && 0 < m_norm ) { return false ; }
   m_chi  = avalue ;
-  m_norm = std::pow ( m_chi , 3 ) / psi ( m_chi ) * s_SQRT2PIi  ;
+  m_norm = std::pow ( m_chi , 3 ) / psi ( m_chi ) * s_sqrt_1_2pi ;
   return true ;    
 }
 // ============================================================================
@@ -988,7 +988,7 @@ double Ostap::Math::Argus::mean     () const
 {
   const double c2  = 0.25 * m_chi * m_chi ;
   return ( m_mu - m_c ) + 
-    0.5 * m_c * m_chi * s_SQRTPIHALF * std::exp ( - c2 ) * Ostap::Math::bessel_In ( 1 , c2 ) / psi ( m_chi );
+    0.5 * m_c * m_chi * s_sqrt_pi_2 * std::exp ( - c2 ) * Ostap::Math::bessel_In ( 1 , c2 ) / psi ( m_chi );
 }
 // ===========================================================================
 // mode of the distribution 
@@ -997,7 +997,7 @@ double Ostap::Math::Argus::mode     () const
 {
   const double c2  = m_chi * m_chi ;
   return ( m_mu - m_c ) + 
-    m_c * s_SQRT2i * std::sqrt ( ( c2 - 2 ) + std::sqrt ( c2 * c2 + 4 ) ) / m_chi ;
+    m_c * s_1_sqrt2 * std::sqrt ( ( c2 - 2 ) + std::sqrt ( c2 * c2 + 4 ) ) / m_chi ;
 }
 // ============================================================================
 // get the tag
@@ -1007,7 +1007,6 @@ std::size_t Ostap::Math::Argus::tag () const
   static const std::string s_name = "Argus" ;
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_c , m_chi ) ;
 }
-
 // =============================================================================
 // constructor for all elements 
 // =============================================================================
@@ -1148,8 +1147,8 @@ Ostap::Math::HORNSdini::HORNSdini
   : m_a        ( a   ) 
   , m_delta    ( std::abs ( delta ) )
   , m_phi      ( phi ) 
-  , m_cos2_phi ( std::pow ( std::cos ( phi + 0.25 * M_PI ) , 2 ) ) 
-  , m_sin2_phi ( std::pow ( std::sin ( phi + 0.25 * M_PI ) , 2 ) ) 
+  , m_cos2_phi ( std::pow ( std::cos ( phi + s_pi_4 ) , 2 ) ) 
+  , m_sin2_phi ( std::pow ( std::sin ( phi + s_pi_4 ) , 2 ) ) 
 {}
 // ======================================================================
 // evaluate the function 
@@ -1187,8 +1186,8 @@ bool Ostap::Math::HORNSdini::setPhi ( const double value )
   if ( s_equal ( m_phi , value ) ) { return false ; }
   //
   m_phi      = value ;
-  m_cos2_phi = std::pow ( std::cos ( m_phi + 0.25 * M_PI ) , 2 ) ;
-  m_sin2_phi = std::pow ( std::sin ( m_phi + 0.25 * M_PI ) , 2 ) ;
+  m_cos2_phi = std::pow ( std::cos ( m_phi + s_pi_4 ) , 2 ) ;
+  m_sin2_phi = std::pow ( std::sin ( m_phi + s_pi_4 ) , 2 ) ;
   //
   return true ;    
 }
@@ -1245,8 +1244,8 @@ Ostap::Math::HILLdini::HILLdini
   : m_a        ( a   ) 
   , m_delta    ( std::abs ( delta ) )
   , m_phi      ( phi ) 
-  , m_cos2_phi ( std::pow ( std::cos ( phi + 0.25 * M_PI ) , 2 ) ) 
-  , m_sin2_phi ( std::pow ( std::sin ( phi + 0.25 * M_PI ) , 2 ) ) 
+  , m_cos2_phi ( std::pow ( std::cos ( phi + s_pi_4 ) , 2 ) ) 
+  , m_sin2_phi ( std::pow ( std::sin ( phi + s_pi_4 ) , 2 ) ) 
 {}
 // ======================================================================
 // evaluate the function 
@@ -1284,8 +1283,8 @@ bool Ostap::Math::HILLdini::setPhi ( const double value )
   if ( s_equal ( m_phi , value ) ) { return false ; }
   //
   m_phi      = value ;
-  m_cos2_phi = std::pow ( std::cos ( m_phi + 0.25 * M_PI ) , 2 ) ;
-  m_sin2_phi = std::pow ( std::sin ( m_phi + 0.25 * M_PI ) , 2 ) ;
+  m_cos2_phi = std::pow ( std::cos ( m_phi + s_pi_4 ) , 2 ) ;
+  m_sin2_phi = std::pow ( std::sin ( m_phi + s_pi_4 ) , 2 ) ;
   //
   return true ;    
 }
@@ -1394,12 +1393,10 @@ double Ostap::Math::CutOffGauss::integral
   if      (  m_right && high <= m_x0 ) { return high - low ; }
   else if ( !m_right && low  >= m_x0 ) { return high - low ; }
   //
-  static const double s_norm = std::sqrt ( 2.0 * M_PI ) ;
-  return s_norm * m_sigma * 
+  return s_sqrt_2pi * m_sigma * 
     ( Ostap::Math::gauss_cdf ( high , m_x0 , m_sigma ) -
       Ostap::Math::gauss_cdf ( low  , m_x0 , m_sigma ) ) ;  
 }
-
 // ============================================================================
 // get the tag
 // ============================================================================
@@ -1409,9 +1406,6 @@ std::size_t Ostap::Math::CutOffGauss::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_right , m_x0 , m_sigma ) ; 
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 /*  Constructor from all parameters
@@ -1455,7 +1449,7 @@ bool Ostap::Math::CutOffStudent::setNu ( const double value )
   //
   m_C  = std::exp ( - std::lgamma (  0.5 * ( m_nu + 1 ) )  
                     + std::lgamma (  0.5 * ( m_nu     ) ) 
-                    + 0.5 * std::log ( m_nu * M_PI ) ) ;
+                    + 0.5 * std::log ( m_nu * s_pi ) ) ;
   return true ;
 }
 // ============================================================================

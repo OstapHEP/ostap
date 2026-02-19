@@ -57,13 +57,6 @@
 namespace
 {
   // ==========================================================================
-  /** @var x_sqrt2
-   *  \f$\sqrt{2}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-05-23
-   */
-  const double s_sqrt2  = s_SQRT2 ;
-  // ==========================================================================
   /// join two vectors together
   template <class SCALAR>
   inline
@@ -79,13 +72,7 @@ namespace
     return ab ;    
   }
   // ==========================================================================
-  
-
-  // ==========================================================================
-  // ==========================================================================
 } //                                                 end of anonymous namespace
-// ============================================================================
-
 // ============================================================================
 /*  constructor  from all parameters 
  *  @param mu location, bias parameter 
@@ -139,20 +126,20 @@ double Ostap::Math::Gumbel::mean () const
 // ============================================================================
 double Ostap::Math::Gumbel::variance () const 
 {
-  static const double s_pisq6 = M_PI * M_PI / 6.0L ;
+  static const double s_pisq6 = s_pi2 / 6.0L ;
   return m_beta * m_beta * s_pisq6 ;
 }
 // ============================================================================
 double Ostap::Math::Gumbel::sigma () const 
 {
-  static const double s_pisqr6 = M_PI / std::sqrt ( 6.0L ) ;
+  static const double s_pisqr6 = s_pi / std::sqrt ( 6.0L ) ;
   return std::abs ( m_beta ) * s_pisqr6 ;
 }
 // ============================================================================
 double Ostap::Math::Gumbel::skewness () const 
 {
   static const double s_skew  = 
-    12 * std::sqrt( 6.0L ) * Ostap::Math::zeta ( 3 ) / ( M_PI * M_PI * M_PI ) ;
+    12 * std::sqrt( 6.0L ) * Ostap::Math::zeta ( 3 ) / s_pi3  ;
   return std::copysign ( s_skew , m_beta ) ;
 }
 // ============================================================================
@@ -247,7 +234,7 @@ double Ostap::Math::GramCharlierA::pdf ( const double x ) const
   //
   const double dx = ( x - m_mean ) / m_sigma ;
   //
-  const double result_0 = my_exp ( -0.5 * dx * dx ) / m_sigma / s_SQRT2PI ;
+  const double result_0 = my_exp ( -0.5 * dx * dx ) / m_sigma * s_sqrt_1_2pi ;
   //
   double correction = 1 ;
   //
@@ -905,7 +892,7 @@ Ostap::Math::Log10GammaDist::~Log10GammaDist (){}
 // calculate log-gamma distribution shape
 // ============================================================================
 double Ostap::Math::Log10GammaDist::operator() ( const double x ) const
-{ return LogGammaDist::operator() ( x * s_LN10 ) * s_LN10 ; }
+{ return LogGammaDist::operator() ( x * s_ln10 ) * s_ln10 ; }
 // ============================================================================
 // get the integral 
 // ============================================================================
@@ -916,7 +903,7 @@ double Ostap::Math::Log10GammaDist::integral () const { return 1 ; }
 double Ostap::Math::Log10GammaDist::integral
 ( const double low  ,
   const double high ) const 
-{ return LogGammaDist::integral ( low  * s_LN10 , high * s_LN10 ) ; }
+{ return LogGammaDist::integral ( low  * s_ln10 , high * s_ln10 ) ; }
 // ============================================================================
 // calculate the quantile   (0<p<1) 
 // ============================================================================
@@ -924,7 +911,7 @@ double Ostap::Math::Log10GammaDist::quantile ( const double p ) const
 {
   if      ( p < 0 ) { return s_QUIETNAN ; }
   else if ( p > 1 ) { return s_QUIETNAN ; }
-  return LogGammaDist::quantile ( p ) / s_LN10 ;
+  return LogGammaDist::quantile ( p ) / s_ln10 ;
 }
 // ============================================================================
 // get the tag
@@ -1788,7 +1775,7 @@ bool Ostap::Math::GenBeta::setGamma ( const double value )
   if ( s_equal ( m_gamma , value ) && 0 <= m_c && m_c <= 1 ) { return false ; }
   //
   m_gamma = value ;
-  const double sin_g = std::sin ( 0.5 * M_PI * m_gamma ) ;
+  const double sin_g = std::sin ( s_pi_2 * m_gamma ) ;
   //
   m_c  = sin_g * sin_g ;
   m_c1 = s_equal ( m_c , 1.0 ) ;
@@ -2436,7 +2423,7 @@ bool Ostap::Math::Rice::setShift ( const double value )
 // ============================================================================
 double Ostap::Math::Rice::mean       () const 
 {
-  return m_shift + m_varsigma * s_SQRTPIHALF * 
+  return m_shift + m_varsigma * s_sqrt_pi_2 * 
     Ostap::Math::laguerre_q ( 0.5 , -0.5 * std::pow ( m_nu / m_varsigma , 2 ) ) ;
 }
 // ============================================================================
@@ -2447,7 +2434,7 @@ double Ostap::Math::Rice::variance   () const
   const double s2 = m_varsigma * m_varsigma ;
   const double n2 = m_nu       * m_nu       ;
   const double l  = Ostap::Math::laguerre_q ( 0.5 , - 0.5 * n2 / s2 ) ;
-  return 2 * s2 + n2 - 0.5 * M_PI * s2 * l * l ;  
+  return 2 * s2 + n2 - s_pi_2 * s2 * l * l ;  
 }
 // ============================================================================
 /// evaluate the function
@@ -4464,7 +4451,7 @@ double Ostap::Math::BenktanderI::variance () const
   const double sqb = std::sqrt ( _b ) ;
   const double t1  = ( m_a - 1 ) / ( 2 * sqb ) ;
   //
-  const double t2  = -sqb + m_a * s_SQRTPI * Ostap::Math::erfcx ( t1 ) ;
+  const double t2  = -sqb + m_a * s_sqrt_pi * Ostap::Math::erfcx ( t1 ) ;
   return m_scale * m_scale * t2 / ( m_a * m_a * sqb ) ;
 }
 // ============================================================================
@@ -5163,9 +5150,9 @@ Ostap::Math::Davis::Davis
                   "Ostap::Math::Davis"                    ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_z0 = s_equal ( m_n     , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n     ) * 1.0L ;
-  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
-  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
+  m_z0 = s_equal ( m_n     , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n     ) * 1.0L ;
+  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
+  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
   //
   m_C  = Ostap::Math::igamma ( m_n     ) / m_z0  ;
   //
@@ -5201,9 +5188,9 @@ bool Ostap::Math::Davis::setN ( const double value )
   //
   m_n  = avalue ;
   //
-  m_z0 = s_equal ( m_n     , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n     ) * 1.0L ;
-  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
-  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_MASCHERONI : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
+  m_z0 = s_equal ( m_n     , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n     ) * 1.0L ;
+  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
+  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
   //
   m_C  = Ostap::Math::igamma ( m_n ) / m_z0 ;  
   //

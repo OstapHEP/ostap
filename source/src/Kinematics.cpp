@@ -907,9 +907,7 @@ double Ostap::Kinematics::phasespace2
   const double lam = 
     Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
   //
-  static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
-  //
-  return 0 < lam ? s_inv8pi * std::sqrt ( lam ) / msq : 0.0 ;
+  return 0 < lam ? s_1_8pi * std::sqrt ( lam ) / msq : 0.0 ;
 }
 // ============================================================================
 /* two-body phase space: 
@@ -938,9 +936,7 @@ double Ostap::Kinematics::phasespace2_bk
   const double lam = 
     Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
   //
-  static const double s_norm = 0.5 * M_PI ;  
-  //
-  return 0 < lam ? s_norm * std::sqrt ( lam ) / msq : 0.0 ;
+  return 0 < lam ? s_pi_2 * std::sqrt ( lam ) / msq : 0.0 ;
 }
 // ============================================================================
 /*  three-body phase space, with all particles being massless 
@@ -950,7 +946,7 @@ double Ostap::Kinematics::phasespace2_bk
 double Ostap::Kinematics::phasespace3 
 ( const double x  ) 
 {
-  static const double s_norm = 0.125 * M_PI * M_PI ;
+  static const double s_norm = 0.125 * s_pi2 ;
   return x <= 0.0 ? 0.0 : s_norm * x * x ;
 }
 // ========================================================================
@@ -999,8 +995,7 @@ double Ostap::Kinematics::phasespace3
   const double D     =  ( sm1m2 - dm * dm + std::abs ( dm ) * sqlam ) / ( 2 * am1 * s ) ; // no m2! 
   const double E     =  ( s - m1sq - m2sq + sqlam ) / ( 2 * am1 ) ;                       // no m2! 
   //
-  static const double s_norm = 0.125 * M_PI * M_PI ;
-  //
+  static const double s_norm = 0.125 * s_pi2 ;
   return s_norm * s * ( A + B * std::log ( D ) - C * std::log ( E ) ) ;
 }
 // ========================================================================
@@ -1066,8 +1061,7 @@ double Ostap::Kinematics::phasespace3
   const double D     =  ( sm1m2 - dm * dm + std::abs ( dm ) * sqlam ) / ( 2 * am1 * am2 * s ) ;
   const double E     =  ( s - m1sq - m2sq + sqlam ) / ( 2 * am1 * am2  ) ;
   //
-  static const double s_norm = 0.125 * M_PI * M_PI ;
-  //
+  static const double s_norm = 0.125 * s_pi2 ;
   return s_norm * s * ( A + B * std::log ( D ) - C * std::log ( E ) ) ;
 }
 // ============================================================================
@@ -1106,7 +1100,7 @@ double Ostap::Kinematics::phasespace3s
   const double m3 ) 
 {
   //
-  static const double s_norm = 0.125 * M_PI * M_PI ;
+  static const double s_norm = 0.125 * s_pi2  ;
   //
   const double xm1 = std::max ( 0.0 , m1 ) ;
   const double xm2 = std::max ( 0.0 , m2 ) ;
@@ -1192,7 +1186,7 @@ double Ostap::Kinematics::phasespace3a
   const double m3 ) 
 {
   //
-  static const double s_norm = 0.25 * M_PI * M_PI ;
+  static const double s_norm = 0.25 * s_pi2  ;
   //
   const double xm1 = std::max ( 0.0 , m1 ) ;
   const double xm2 = std::max ( 0.0 , m2 ) ;
@@ -1288,7 +1282,7 @@ double Ostap::Kinematics::phasespace3nr
   const double m2 , 
   const double m3 ) 
 {
-  static const double s_norm = 0.5 * M_PI * M_PI * M_PI ;
+  static const double s_norm = 0.5 * s_pi3 ;
   //
   const double xm1 = std::max ( 0.0 , m1 ) ;
   const double xm2 = std::max ( 0.0 , m2 ) ;

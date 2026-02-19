@@ -109,7 +109,7 @@ double Ostap::Kinematics::Dalitz0::density
   const double s1 , 
   const double s2 ) const 
 {
-  static const double s_dens = 0.25 * M_PI * M_PI ;
+  static const double s_dens = 0.25 * s_pi2 ;
   return
     s  <= s_min  () ? 0.0 : 
     s1 <= s1_min () ? 0.0 : 
@@ -1162,7 +1162,7 @@ double Ostap::Kinematics::Dalitz::dRds2   ( const double s2 ) const
   const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;  
   if ( f1 < 0 ) {  return 0 ; }
   //
-  static const double s_norm = 0.25 * M_PI * M_PI ;
+  static const double s_norm = 0.25 * s_pi2 ;
   //
   return 0 < f1 && 0 < f2 ? s_norm * std::sqrt ( f1 * f2 ) / ( s () * s2 ) : 0.0 ; 
 }
@@ -1185,7 +1185,7 @@ double Ostap::Kinematics::Dalitz::dRds3   ( const double s3 ) const
   const double f2 = Ostap::Kinematics::triangle ( s3 , m3sq() , m1sq () ) ;  
   if ( f1 < 0 ) {  return 0 ; }
   //
-  static const double s_norm = 0.25 * M_PI * M_PI ;
+  static const double s_norm = 0.25 * s_pi2 ;
   //
   return 0 < f1 && 0 < f2 ? s_norm * std::sqrt ( f1 * f2 ) / ( s () * s3 ) : 0.0 ; 
 }
@@ -1208,7 +1208,7 @@ double Ostap::Kinematics::Dalitz::dRds1   ( const double s1 ) const
   const double f2 = Ostap::Kinematics::triangle ( s1 , m1sq() , m2sq () ) ;  
   if ( f1 < 0 ) {  return 0 ; }
   //
-  static const double s_norm = 0.25 * M_PI * M_PI ;
+  static const double s_norm = 0.25 * s_pi2  ;
   //
   return 0 < f1 && 0 < f2 ? s_norm * std::sqrt ( f1 * f2 ) / ( s () * s1 ) : 0.0 ; 
 }
@@ -1221,7 +1221,7 @@ double Ostap::Kinematics::Dalitz::density
 ( const double s1 , 
   const double s2 ) const 
 {
-  static const double s_dens = 0.25 * M_PI * M_PI ;
+  static const double s_dens = 0.25 * s_pi2 ;
   return
     s1 <= s1_min ()     ? 0.0 : 
     s2 <= s2_min ()     ? 0.0 : 

@@ -20,6 +20,7 @@
 // Local
 // ============================================================================
 #include "GSL_sentry.h"
+#include "local_math.h"
 // ============================================================================
 namespace 
 {
@@ -27,9 +28,6 @@ namespace
   typedef Ostap::Math::GSL::GSL_Error_Handler Sentry ;
   // ==========================================================================
   typedef Ostap::Math::GSL::Hesse::function function ;
-  // ==========================================================================
-  /// 1/sqrt(2) 
-  const double s_SQRT2i = 1.0 / std::sqrt ( 2.0 ) ;                // 1/sqrt(2) 
   // ==========================================================================
   // finite difference coefficients 
   // ==========================================================================
@@ -247,8 +245,8 @@ namespace
     }
     else 
     { 
-      gsl_vector_set ( b , i ,  s_SQRT2i ) ;
-      gsl_vector_set ( b , j ,  s_SQRT2i ) ;
+      gsl_vector_set ( b , i ,  s_1_sqrt2 ) ;
+      gsl_vector_set ( b , j ,  s_1_sqrt2 ) ;
     }
     //
     return deriv2  ( f , x , b , h , error , a ) ;

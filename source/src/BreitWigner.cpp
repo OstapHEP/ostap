@@ -40,12 +40,6 @@
 namespace 
 {
   // ==========================================================================
-  /// imaginary unit 
-  const std::complex<double> s_j { 0.0 , 1.0 } ;
-  // ==========================================================================
-  /// @var s_iPI  
-  const double s_iPI = 1.0 / M_PI ;
-  // ==========================================================================
   /** @var s_WS 
    *  local integration workspace 
    */
@@ -1072,7 +1066,7 @@ double Ostap::Math::BW::breit_wigner
   // rescale the overall  normalization   facror
   const double gs = 1 < m_channels.size () ? gamma () / channel()->gamma0 () : 1.0 ;
   //
-  return 2 * m * n2 * std::norm ( A ) * rhos * gs / M_PI * m_scale ;
+  return 2 * m * n2 * std::norm ( A ) * rhos * gs * s_1_pi * m_scale ;
   //
 }
 // ============================================================================
@@ -2417,9 +2411,7 @@ Ostap::Math::GammaBW3::GammaBW3
 double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const 
 {
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
-  //
-  static const double s_CONST = 0.25 * M_PI * M_PI / std::pow ( 2 * M_PI , 5 ) ;
-  //
+  static const double s_CONST = 0.25 * s_pi * s_pi / std::pow ( 2 * s_pi , 5 ) ;
   return s_CONST * Ostap::Math::DalitzIntegrator::integrate_s1s2 
     ( std::cref ( m_me2 ) , s , m_dalitz , m_tag , m_n1 , m_n2 ) / s  ;
 }
@@ -2473,25 +2465,25 @@ Ostap::Math::ChannelGS::clone() const
 double Ostap::Math::ChannelGS::h ( const double s ) const 
 {
   //
-  if      ( s_zero ( s ) ) { return s_iPI; }
+  if      ( s_zero ( s ) ) { return s_1_pi ; }
   else if ( s <= 0       ) 
   {
     const double q2  = m_sthreshold - s ;
     const double sqs = std::sqrt ( -s  ) ;
     const double sq2 = std::sqrt (  q2 ) ;
-    return ( sq2 / sqs ) * std::log  ( ( sqs + sq2 ) / ( 2 * m_mpi ) ) * s_iPI ;
+    return ( sq2 / sqs ) * std::log  ( ( sqs + sq2 ) / ( 2 * m_mpi ) ) * s_1_pi ;
   }
   else if ( s <= m_sthreshold ) 
   {
     const double q2 = m_sthreshold - s ;
     const double a  = std::sqrt ( q2 / s ) ;
-    return 0.5 * a * ( 1 - 2 * s_iPI * std::atan ( a ) ) ;
+    return 0.5 * a * ( 1 - 2 * s_1_pi * std::atan ( a ) ) ;
   }
   /// physical region 
   const double q2  = s - m_sthreshold ;
   const double sqs = std::sqrt ( s  ) ;
   const double sq2 = std::sqrt ( q2 ) ;
-  return ( sq2 / sqs ) * std::log  ( ( sqs + sq2  ) / ( 2 * m_mpi ) ) * s_iPI ;
+  return ( sq2 / sqs ) * std::log  ( ( sqs + sq2  ) / ( 2 * m_mpi ) ) * s_1_pi ;
   //
 }
 // ============================================================================
@@ -2511,10 +2503,10 @@ double Ostap::Math::ChannelGS::h_prime ( const double s ) const
     
     const double t1    = sq2 / sqs ;
     const double et2   = ( sqs + sq2 ) / ( 2 * m_mpi ) ;
-    const double t2    = std::log ( et2 ) * s_iPI ;
+    const double t2    = std::log ( et2 ) * s_1_pi ;
     //
     const double dt1ds = 0.5 / t1 * ( 1 + q2 / s ) / s ;
-    const double dt2ds = - 0.25 * s_iPI / ( et2 * m_mpi ) * ( 1/sqs + 1/sq2 ) ;
+    const double dt2ds = - 0.25 * s_1_pi / ( et2 * m_mpi ) * ( 1/sqs + 1/sq2 ) ;
     //
     return dt1ds * t2 + t1 * dt2ds ;
   }
@@ -2528,10 +2520,10 @@ double Ostap::Math::ChannelGS::h_prime ( const double s ) const
     const double dsqads = 0.5 / sqa * dads ;
     
     const double t1     = 0.5 * sqa ;
-    const double t2     = ( 1 - 2  * s_iPI * std::atan ( sqa ) ) ;
+    const double t2     = ( 1 - 2 * s_1_pi * std::atan ( sqa ) ) ;
     //
     const double dt1ds  = 0.5 * dsqads ;
-    const double dt2ds  = -2 * s_iPI / ( 1 + a ) * dsqads ;
+    const double dt2ds  = -2 * s_1_pi / ( 1 + a ) * dsqads ;
     //
     return dt1ds * t2 + t1 * dt2ds ;
   }
@@ -2542,10 +2534,10 @@ double Ostap::Math::ChannelGS::h_prime ( const double s ) const
   //
   const double t1    = sq2 / sqs ;
   const double et2   = ( sqs + sq2  ) / ( 2 * m_mpi ) ;
-  const double t2    = std::log  ( et2 ) * s_iPI ;
+  const double t2    = std::log  ( et2 ) * s_1_pi ;
   //
   const double dt1ds = 0.5 / t1 * ( 1 - q2 / s ) / s ;
-  const double dt2ds = 0.25 * s_iPI / ( et2 * m_mpi ) * ( 1/sqs + 1/sq2 ) ;
+  const double dt2ds = 0.25 * s_1_pi / ( et2 * m_mpi ) * ( 1/sqs + 1/sq2 ) ;
   //
   return dt1ds * t2 + t1 * dt2ds ;
   //
@@ -2805,7 +2797,7 @@ Ostap::Math::LASS::amplitude ( const double m ) const
 double Ostap::Math::LASS::operator () ( const double m ) const 
 {
   return m <= m_ps2.threshold () ? 0.0 :
-    2 * m * m_ps2 ( m ) * std::norm ( amplitude ( m ) ) / M_PI ;
+    2 * m * m_ps2 ( m ) * std::norm ( amplitude ( m ) ) * s_1_pi ;
 }
 // ============================================================================
 // set the proper parameters

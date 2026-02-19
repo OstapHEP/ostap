@@ -152,7 +152,7 @@ double Ostap::Math::tsallis_qgaussian
   //
   const double absbeta = std::abs ( beta ) ;
   const double arg     = - absbeta * x * x ;
-  const double c1      = std::sqrt ( absbeta / M_PI ) ;
+  const double c1      = std::sqrt ( absbeta * s_1_pi ) ;
   //
   const double result  = c1 * tsallis_qexp ( arg , q ) ;
   //

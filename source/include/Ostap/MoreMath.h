@@ -298,12 +298,12 @@ namespace Ostap
     /** \overload cotangent \f$ cot(x) = \frac{\cos x } {\sin x} \f$ 
      */
     inline double               cot ( const double x )
-    { return 1.0/ std::tan ( x ) ; }
+    { return 1.0 / std::tan ( x ) ; }
     // ========================================================================
     /** \overload cotangent \f$ cot(x) = \frac{\cos x } {\sin x} \f$ 
      */
     inline std::complex<double> cot ( const std::complex<double>& x )
-    { return 1.0/std::tan ( x ) ; }    
+    { return 1.0 / std::tan ( x ) ; }    
     // ========================================================================
     /** \overload cosecant \f$ csc (x) = \frac{1}{\sin x }\f$ 
      */
@@ -312,7 +312,7 @@ namespace Ostap
     /** \overload cosecant \f$ csc(x) = \frac{1} {\sin x} \f$ 
      */
     inline std::complex<double> csc ( const std::complex<double>& x )
-    { return 1.0/std::sin ( x ) ; }    
+    { return 1.0 / std::sin ( x ) ; }    
     // ========================================================================
     /** \overload cosecant \f$ sec (x) = \frac{1}{\cos x }\f$ 
      */
@@ -321,9 +321,7 @@ namespace Ostap
     /** \overload cosecant \f$ sec (x) = \frac{1} {\cos x} \f$ 
      */
     inline std::complex<double> sec ( const std::complex<double>& x )
-    { return 1.0/std::cos ( x ) ; }    
-    // ========================================================================
-    
+    { return 1.0 / std::cos ( x ) ; }    
     // ========================================================================
     /** \overload versin \f$ versin (x) = 1 - \cos x \f$ 
      */
@@ -334,8 +332,6 @@ namespace Ostap
     inline std::complex<double> versin ( const std::complex<double>& x )
     { return 1.0 - std::cos ( x ) ; }    
     // ========================================================================
-
-    // ========================================================================
     /** \overload vercos \f$ vercos (x) = 1 + \cos x \f$ 
      */
     inline double vercos ( const double x ) { return 1.0 + std::cos ( x ) ; }
@@ -344,8 +340,6 @@ namespace Ostap
      */
     inline std::complex<double> vercos ( const std::complex<double>& x )
     { return 1.0 + std::cos ( x ) ; }    
-    // ========================================================================
-    
     // ========================================================================
     /** \overload coversin \f$ coversin (x) = 1 - \sin x \f$ 
      */
@@ -356,8 +350,6 @@ namespace Ostap
     inline std::complex<double> coversin ( const std::complex<double>& x )
     { return 1.0 - std::sin ( x ) ; }    
     // ========================================================================
-    
-    // ========================================================================
     /** \overload covercos \f$ vercos (x) = 1 + \sin x \f$ 
      */
     inline double covercos ( const double x ) { return 1.0 + std::sin ( x ) ; }
@@ -366,8 +358,6 @@ namespace Ostap
      */
     inline std::complex<double> covercos ( const std::complex<double>& x )
     { return 1.0 + std::sin ( x ) ; }    
-    // ========================================================================
-    
     // ========================================================================
     /** \overload cas \f$ cas x = \sin x + \cos x f$
      */
@@ -1579,24 +1569,26 @@ namespace Ostap
      */
     double sinc ( const double x ) ;
     // ========================================================================
-    /** \f$ f(x) = \frac{ \sin x }{x}  \f$ 
+
+    // ========================================================================
+    /** \f$ f(x) = \frac{ \sin x }{ x }  \f$ 
      *  @see https://en.wikipedia.org/wiki/Sinc_function
      *  @see Ostap::Math::sinc 
      *  precise for small x 
      */
     double sin_x  ( const double x ) ;    
     // ========================================================================
-    /** \f$ f(x) = \frac{ \sinh x }{x}  \f$ 
+    /** \f$ f(x) = \frac{ \sinh x }{ x }  \f$ 
      *  precise for small x 
      */
     double sinh_x  ( const double x ) ;
     // =======================================================================
-    /** \f$ f(x) = \frac{ \asinh x }{x}  \f$ 
+    /** \f$ f(x) = \frac{ \asinh x }{ x }  \f$ 
      *  precise for small x 
      */
     double asinh_x ( const double x ) ;
     // ========================================================================
-    /** \f$ f(x) = \frac{ \log ( 1 + x ) }{x}  \f$ 
+    /** \f$ f(x) = \frac{ \log ( 1 + x ) }{ x }  \f$ 
      *  precise for small x 
      */
     double log1p_x ( const double x ) ;
@@ -1606,6 +1598,11 @@ namespace Ostap
      */
     double expm1_x ( const double x ) ;
     // ========================================================================
+    /** \f$ f(x) = \frac { erf ( x ) }{ x } \f$
+     * precise for small x 
+     */
+    double erf_x ( const double x ) ; 
+    // =======================================================================
     
     // ========================================================================
     /** simple infinitely smooth and finite function 

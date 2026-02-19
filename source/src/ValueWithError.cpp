@@ -23,6 +23,7 @@
 // Local
 // ============================================================================
 #include "format.h"
+#include "local_math.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Gaudi::Math::ValueWithError
@@ -38,14 +39,14 @@ namespace
   // const unsigned int _maxULPs = 10000 ;
   // ==========================================================================
   /// equality of doubles 
-  const Ostap::Math::Equal_To<double> s_equal{} ;
+  // const Ostap::Math::Equal_To<double> s_equal{} ;
   /// equality of doubles
   inline bool _equal ( const double value1 ,
                        const double value2 )
   { return value1 == value2 || s_equal ( value1 , value2 ) ; }
   // ==========================================================================
   // check if the double value close to zero
-  const Ostap::Math::Zero<double> s_zero{} ;
+  // const Ostap::Math::Zero<double> s_zero{} ;
   // check if the double value close to zero
   inline bool _zero  ( const double value ) { return s_zero ( value) ; }
   // check if the double value close to zero
@@ -61,19 +62,8 @@ namespace
   inline bool _is_long ( const double value ) 
   { return Ostap::Math::islong ( value ) ; }
   // ==========================================================================
-  /// precomputed value of ln(2) 
-  const double s_ln2    = std::log( double ( 2 ) ) ;
-  /// precomputed value of ln(2) squared 
-  const double s_ln2_sq = s_ln2 * s_ln2 ;  
-  // precomputed value of 1/ln(10) 
-  const double s_ln10_i =  1 / std::log ( double(10) ) ;
-  // precomputed value of 1/ln(2) 
-  const double s_ln2_i  =  1 / std::log ( double( 2) ) ;
-  // ==========================================================================
   static_assert ( std::numeric_limits<float> ::is_specialized        ,
                   "std::numeric_limits<float>  is not specialized"   ) ;
-  /// epsilon 
-  const double s_EPSILON = std::numeric_limits<double>::epsilon() ;
   // ==========================================================================
 }
 // ============================================================================
@@ -2588,7 +2578,7 @@ Ostap::Math::ValueWithError Ostap::Math::log2
   //
   const double v  = std::log2 ( b.value() ) ;
   ///
-  const double e1 = s_ln2_i / b.value() ;
+  const double e1 = s_1_ln2 / b.value() ;
   //
   return Ostap::Math::ValueWithError ( v , e1 * e1 * b.cov2 () ) ;
 }
@@ -2607,7 +2597,7 @@ Ostap::Math::ValueWithError Ostap::Math::log10
   //
   const double v  = std::log10 ( b.value() ) ;
   ///
-  const double e1 = s_ln10_i / b.value() ;
+  const double e1 = s_1_ln10 / b.value() ;
   //
   return Ostap::Math::ValueWithError ( v , e1 * e1 * b.cov2 () ) ;
 }
@@ -2909,8 +2899,7 @@ Ostap::Math::ValueWithError Ostap::Math::erf
   const double bv = b.value() ;
   const double v  = std::erf ( bv ) ;
   //
-  static const double factor  = 4.0 / M_PI ;
-  //
+  static const double factor  = s_4_pi ;
   const double d2 = factor * std::exp ( - bv * bv ) ;
   const double e2 = d2     * b.cov2() ;
   //
@@ -2932,8 +2921,7 @@ Ostap::Math::ValueWithError Ostap::Math::erfc
   const double bv = b.value() ;
   const double v  = std::erfc ( bv ) ;
   //
-  static const double factor  = 4.0 / M_PI ;
-  //
+  static const double factor  = s_4_pi ; 
   const double d2 = factor * std::exp ( - bv * bv ) ;
   const double e2 = d2     * b.cov2() ;
   //
@@ -2955,7 +2943,7 @@ Ostap::Math::ValueWithError Ostap::Math::erfi
   const double bv = b.value() ;
   const double v  = Ostap::Math::erfi ( bv ) ;
   //
-  static const double factor  = 2.0 / std::sqrt ( M_PI ) ;
+  static const double factor  = 2.0 * s_sqrt_1_pi ;
   //
   const double d2 = factor * std::exp ( bv * bv ) ;
   const double e2 = d2     * b.cov2() ;
@@ -2978,7 +2966,7 @@ Ostap::Math::ValueWithError Ostap::Math::erfcx
   const double bv = b.value() ;
   const double v  = Ostap::Math::erfcx ( bv ) ;
   //
-  static const double factor  = 2.0 / std::sqrt ( M_PI ) ;
+  static const double factor  = 2.0 * s_sqrt_1_pi ;
   //
   // derivative 
   const double d  = 2 * bv * v - factor ; //  
@@ -3002,7 +2990,7 @@ Ostap::Math::ValueWithError Ostap::Math::probit
   const double bv = b.value() ;
   const double v  = Ostap::Math::probit ( bv ) ;
   //
-  static const double factor  = std::sqrt ( 2 * M_PI ) ;
+  static const double factor  = s_sqrt_2pi ; 
   //
   // derivative 
   const double d  = factor * std::exp ( 0.5 * v * v );
@@ -3134,9 +3122,9 @@ Ostap::Math::ValueWithError Ostap::Math::atan2
   {
     // no reliable error estimates is possible
     if      ( x_err || y_err )
-    { return  Ostap::Math::ValueWithError ( v , M_PI * M_PI ) ; }
+    { return  Ostap::Math::ValueWithError ( v , s_pi2 ) ; }
     else  
-    { return  Ostap::Math::ValueWithError ( v               ) ; }
+    { return  Ostap::Math::ValueWithError ( v         ) ; }
   }  
   //
   const double      r4 = r2 * r2 ;
@@ -3995,10 +3983,10 @@ Ostap::Math::agm
     const double k = std::abs ( x - y ) / ( x + y ) ;
     const double e = Ostap::Math::elliptic_E ( k ) ;
     //
-    const double f = result / ( ( xv - yv ) * M_PI ) ;
+    const double f = result / ( ( xv - yv ) * s_pi ) ;
     //
-    dfdy =   f * ( 2 * result * e - xv * M_PI ) / yv ;
-    dfdx = - f * ( 2 * result * e - yv * M_PI ) / xv ;
+    dfdy =   f * ( 2 * result * e - xv * s_pi ) / yv ;
+    dfdx = - f * ( 2 * result * e - yv * s_pi ) / xv ;
   }
   //
   double cov2 = 0 ;

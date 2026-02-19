@@ -53,10 +53,10 @@ namespace
     RECORD ( Ostap::Math::DensityEstimator::Quartic,     &Ostap::Math::k_quartic     ,1,1./7   ,5./7                   ,0.994) ,
     RECORD ( Ostap::Math::DensityEstimator::Triweight,   &Ostap::Math::k_triweight   ,1,1./9   ,350./429               ,0.987) ,
     RECORD ( Ostap::Math::DensityEstimator::Tricube,     &Ostap::Math::k_tricube     ,1,35./243,175./447               ,0.998) ,
-    RECORD ( Ostap::Math::DensityEstimator::Gaussian,    &Ostap::Math::k_gaussian    ,0,1      ,0.5/std::sqrt(M_PI)    ,0.951) ,
-    RECORD ( Ostap::Math::DensityEstimator::Cosine,      &Ostap::Math::k_cosine      ,1,1-8/(M_PI*M_PI) , M_PI*M_PI/16 ,0.999) ,
-    RECORD ( Ostap::Math::DensityEstimator::Logistic,    &Ostap::Math::k_logistic    ,0,M_PI*M_PI/3 , 1.6              ,0.887) ,
-    RECORD ( Ostap::Math::DensityEstimator::Sigmoid,     &Ostap::Math::k_sigmoid     ,0,M_PI*M_PI/4 , 2/(M_PI*M_PI)    ,0.843) ,
+    RECORD ( Ostap::Math::DensityEstimator::Gaussian,    &Ostap::Math::k_gaussian    ,0,1      ,0.5/std::sqrt(s_pi)    ,0.951) ,
+    RECORD ( Ostap::Math::DensityEstimator::Cosine,      &Ostap::Math::k_cosine      ,1,1-8/(s_pi*s_pi) , s_pi*s_pi/16 ,0.999) ,
+    RECORD ( Ostap::Math::DensityEstimator::Logistic,    &Ostap::Math::k_logistic    ,0,s_pi*s_pi/3 , 1.6              ,0.887) ,
+    RECORD ( Ostap::Math::DensityEstimator::Sigmoid,     &Ostap::Math::k_sigmoid     ,0,s_pi*s_pi/4 , 2/(s_pi*s_pi)    ,0.843) ,
   } ;
   // ==========================================================================
 }
@@ -88,7 +88,7 @@ double Ostap::Math::DensityEstimator::kernel
 // Cosine kernel 
 // ============================================================================
 double Ostap::Math::k_cosine       ( const double u ) 
-{ return std::abs ( u ) <= 1 ? 0.25 * M_PI * std::cos ( 0.5 * M_PI * u ) : 0.0 ;  } 
+{ return std::abs ( u ) <= 1 ? 0.25 * s_pi * std::cos ( 0.5 * s_pi * u ) : 0.0 ;  } 
 // ============================================================================
 // Logistic Kernel
 // ============================================================================
@@ -98,7 +98,7 @@ double Ostap::Math::k_logistic     ( const double u )
 // sigmoid kernel 
 // ============================================================================
 double Ostap::Math::k_sigmoid      ( const double u ) 
-{ return std::abs ( u ) < s_EXP_OVERFLOW ? s_PIi / std::cosh ( u ) : 0.0 ; }
+{ return std::abs ( u ) < s_EXP_OVERFLOW ? s_1_pi / std::cosh ( u ) : 0.0 ; }
 // ============================================================================
 // Gaussian kernel 
 // ============================================================================

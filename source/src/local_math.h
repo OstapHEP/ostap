@@ -9,8 +9,9 @@
 #include <cmath>
 #include <numbers>
 #include <limits>
+#include <complex>
 // ============================================================================
-#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && 201907L <= __cpp_ilb_math_comstats
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
 #include <numbers>
 #endif 
 // ============================================================================
@@ -23,15 +24,15 @@ namespace
 {
   // ==========================================================================
   /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double>                s_equal{}      ; // equality criteria for doubles
+  const Ostap::Math::Equal_To<double>                s_equal  {} ; // equality criteria for doubles
   /// zero for doubles  
-  const Ostap::Math::Zero<double>                    s_zero {}      ; // zero for doubles
+  const Ostap::Math::Zero<double>                    s_zero   {} ; // zero for doubles
   /// zero for vectors 
-  const Ostap::Math::Zero< std::vector<double> >     s_vzero{}      ; // zero for vectors
+  const Ostap::Math::Zero< std::vector<double> >     s_vzero  {} ; // zero for vectors
   /// zero for comples doubles  
-  const Ostap::Math::Zero<std::complex<double> >     s_czero {}      ; // zero for complex doubles
+  const Ostap::Math::Zero<std::complex<double> >     s_czero  {} ; // zero for complex doubles
   /// equality criteria for comples doubles
-  const Ostap::Math::Equal_To<std::complex<double> > s_cequal{}      ; // equality criteria for complex doubles
+  const Ostap::Math::Equal_To<std::complex<double> > s_cequal {} ; // equality criteria for complex doubles
   // ==========================================================================
   // Limits? 
   // ==========================================================================
@@ -139,161 +140,188 @@ namespace
    */
   const double s_ERFC_UNDERFLOW = 26.55 ;
   // ==========================================================================
+  /// imaginary unit 
+  const std::complex<double> s_j { 0.0 , 1.0 } ;
+  // ==========================================================================  
   // Constants
   // ==========================================================================
-  /** @var s_LN10
-  *  \f$\ln(10)\f$ 
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-05-23
-  */
-  const double       s_LN10 = std::log ( 10 ) ;
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
   // ==========================================================================
-  /** @var s_SQRTPIHALF
-  *  helper constant \f$ \sqrt{\frac{\pi}{2}}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double  s_SQRTPIHALF = std::sqrt( M_PI_2 ) ;
+  /// @var s_pi   constant pi 
+  constexpr long double s_pi         { std::numbers::pi_v<long double>      } ;
+  /// @var s_1_pi    \f$ \frac{1}{\pi} \f$  
+  constexpr long double s_1_pi       { std::numbers::inv_pi_v<long double>  } ;  
+  /// @var s_E   constant e  
+  constexpr long double s_e          { std::numbers::e_v<long double>      } ;
+  /// @var s_Mascheroni Euler-Mascheroni constant \f$ \gamma_E \f$
+  constexpr long double s_Mascheroni { std::numbers::egamma_v<long double> } ;  
+  /// @var s_GammaE     Euler-Mascheroni constant \f$ \gamma_E \f$
+  constexpr long double s_GammaE     { std::numbers::egamma_v<long double> } ;    
+  /// @var s_ln10 \f$\log 10\f$ 
+  constexpr long double s_ln10       { std::numbers::ln10_v<long double>   } ;  
+  /// @var s_ln2 \f$\log 2 \f$ 
+  constexpr long double s_ln2        { std::numbers::ln2_v<long double>    } ;
+  /// @var s_sqrt2  \f$ \sqrt{2} \f$
+  constexpr long double s_sqrt2      { std::numbers::sqrt2_v<long double>  } ;
+  /// @var s_sqrt3  \f$ \sqrt{3} \f$
+  constexpr long double s_sqrt3      { std::numbers::sqrt3_v<long double>  } ;
+  // ==========================================================================    
+#else // ======================================================================
   // ==========================================================================
-  /** @var s_SQRTPI
-   *  helper constant \f$ \sqrt{\pi}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2016-06-11
-   */
-  const double  s_SQRTPI = std::sqrt( M_PI ) ;
+  /// @var s_pi  constant pi 
+  const long double s_pi         = 3.141592653589793238462643383279502884L /* pi */ ; 
+  /// @var s_1_pi    \f$ \frac{1}{\pi} \f$  
+  const long double s_1_pi       = 1.0L / s_pi ;
+  /// @var s_e   constant e  
+  const long double s_3          = 2.718281828459045235360287471352L       /* e */  ; 
+  /// @var s_Mascheroni Euler-Mascheroni constant \f$ \gamma_E \f$
+  const long double s_Mascheroni = 0.57721566490153286060651209008240243104215933593992L ;
+  /// @var s_GammaE     Euler-Mascheroni constant \f$ \gamma_E \f$
+  const long double s_GammaE     = s_Mascheroni       ;
+  /// @var s_ln10 \f$\log 10\f$ 
+  const long double s_ln10       = std::log ( 10.0L ) ; 
+  /// @var s_ln10 \f$\log 2 \f$ 
+  const long double s_ln2        = std::log (  2.0L ) ; 
+  /// @var s_sqrt2  \f$ \sqrt{2} \f$
+  const long double s_sqrt2      = std::sqrt ( 2.0L ) ;
+  /// @var s_sqrt3  \f$ \sqrt{3} \f$
+  const long double s_sqrt3      = std::sqrt ( 3.0L ) ; 
   // ==========================================================================
-  /** @var s_SQRTPIi
-   *  helper constant \f$ \frac{1}{\sqrt{\pi}}\f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-   *  @date 2016-06-11
-   */
-  const double  s_SQRTPIi = 1.0/std::sqrt( M_PI ) ;
+#endif // =====================================================================
   // ==========================================================================
-  /** @var s_SQRT2PI
-  *  helper constant \f$ \sqrt{2\pi}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double  s_SQRT2PI    =       std::sqrt ( 2 * M_PI ) ;
-  // ===========================================================================
-  /** @var s_SQRT2PIi
-  *  helper constant \f$ \frac{1}{\sqrt{2\pi}}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double  s_SQRT2PIi    =      1./s_SQRT2PI ;
-  // ===========================================================================
-  /** @var s_SQRT2 
-  *  helper constant \f$\sqrt{2}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2013-08-25
-  */
-  const double  s_SQRT2      =       std::sqrt ( 2.0 )      ;
-  // ===========================================================================
-  /** @var s_SQRT2i 
-  *  helper constant \f$\frac{1}{\sqrt{2}}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2013-08-25
-  */
-  const double  s_SQRT2i      =       1/std::sqrt ( 2.0 )    ;
-  // ===========================================================================
+  /// @var s_2pi   \f$  2\pi\f$
+  const long double s_2pi        = s_pi * 2 ;
+  /// @var s_pi2   \f$  \pi^2 \f$
+  const long double s_pi2        = s_pi  * s_pi ;
+  /// @var s_pi3   \f$  \pi^3 \f$
+  const long double s_pi3        = s_pi2 * s_pi ;
+  /// @var s_pi4   \f$  \pi^4 \f$
+  const long double s_pi4        = s_pi2 * s_pi2 ;
+  /// @var s_pi_2  \f$ \frac{\pi}{2}\f$
+  const long double s_pi_2       = s_pi / 2 ;  
+  /// @var s_3pi_2  \f$ \frac{3\pi}{2}\f$
+  const long double s_3pi_2      = s_pi * 1.5L ;
+  /// @var s_pi_3  \f$ \frac{\pi}{3}\f$
+  const long double s_pi_3       = s_pi / 3 ;
+  /// @var s_pi_4  \f$ \frac{\pi}{4}\f$
+  const long double s_pi_4       = s_pi / 4 ;
+  /// @var s_pi_5  \f$ \frac{\pi}{5}\f$
+  const long double s_pi_5       = s_pi / 5 ;
+  /// @var s_2_pi  \f$ \frac{2}{\pi} \f$
+  const long double s_2_pi       = s_1_pi * 2 ;  
+  /// @var s_4_pi  \f$ \frac{4}{\pi} \f$
+  const long double s_4_pi       = s_1_pi * 4 ;
+  /// @var s_8_pi  \f$ \frac{8}{\pi} \f$
+  const long double s_8_pi       = s_1_pi * 8 ;
+  /// @var s_1_2pi \f$ \frac{1}{2\pi} \f$
+  const long double s_1_2pi      = s_1_pi / 2  ;
+  /// @var s_1_4pi \f$ \frac{1}{4\pi} \f$
+  const long double s_1_4pi      = s_1_pi / 4  ;
+  /// @var s_1_8pi \f$ \frac{1}{8\pi} \f$
+  const long double s_1_8pi      = s_1_pi / 8  ;  
+  /// @var s_1_sqrt2  \f$  \frac{1}{\sqrt{2}}\f$ 
+  const long double s_1_sqrt2    = 1.0L / s_sqrt2 ;
+  /// @var s_sqrt_pi   \f$ \sqrt { \pi } \f$
+  const long double s_sqrt_pi    = std::sqrt ( s_pi ) ; 
+  /// @var s_sqrt_2pi  \f$ \sqrt { 2\pi } \f$
+  const long double s_sqrt_2pi   = std::sqrt ( 2.0L * s_pi ) ; 
+  /// @var s+sqrt_ip_2 \f$ \sqrt { \frac { \pi }{ 2 } \f$
+  const long double s_sqrt_pi_2  = std::sqrt ( s_pi_2  ) ; 
+  /// @var s_sqrt_1_pi  \f$ \frac{1}{ \sqrt { \pi }\f$
+  const long double s_sqrt_1_pi  = std::sqrt ( s_1_pi  ) ; 
+  /// @var s_sqrt_1_2pi \f$ \frac{1}{ \sqrt { 2\pi }\f$
+  const long double s_sqrt_1_2pi = 1.0L / s_sqrt_2pi ;
+  /// @var s_sqrt_2_pi \f$ \sqrt{\frac{2}{\pi} }\f$
+  const long double s_sqrt_2_pi  = s_sqrt2 / s_sqrt_pi ;  
+  /// @var s_sqrt_1_8pi \f$ \frac{1}{ \sqrt { 8\pi }\f$
+  const long double s_sqrt_1_8pi = 0.5L / s_sqrt_2pi;
+  /// @var s_1_pi3   \f$  \frac{1}{\pi^2}\f$
+  const long double s_1_pi2      = 1.0L / s_pi2 ;
+  /// @var s_log_2pi \f$ \log 2\pi \f$
+  const long double s_log_2pi    = std::log ( s_2pi ) ;
+  // ==========================================================================
+
+  // ==========================================================================
+  /// precomputed value of ln(2) squared 
+  const long double s_ln2_sq = s_ln2 * s_ln2 ;  
+  /// precomputed value of 1/ln(10) 
+  const long double s_1_ln10 = 1.0L / s_ln10 ;
+  /// precomputed value of 1/ln(2) 
+  const long double s_1_ln2  = 1.0L / s_ln2  ;
+  // ==========================================================================
+
+  // ==========================================================================
+  // some old-fashioned names 
+  // ==========================================================================  
+  ///  @var s_PIHALF  \f$ \frac{\pi}{2} \f$ 
+  const long double s_PIHALF     = s_pi_2 ; 
+  // ==========================================================================
   /** @var s_HALFSQRTPI
-  *  helper constant \f$ \frac{\sqrt{\pi}}{2}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double  s_HALFSQRTPI = 0.5 * std::sqrt(     M_PI ) ;
+   *  helper constant \f$ \frac{\sqrt{\pi}}{2}\f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-04-19
+   */
+  const long double s_HALFSQRTPI = 0.5L * s_sqrt_pi ;
   // ==========================================================================
   /** @var s_HALFSQRTPIi
-  *  helper constant \f$ \frac{2}{\sqrt{\pi}}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double  s_HALFSQRTPIi = 1/s_HALFSQRTPI  ;
-  // ==========================================================================
-  /** @var s_SQRT3 
-  *  helper constant \f$ \sqrt{3} \f$ 
-  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-  *  @date 2015-08-21
-  */
-  const double  s_SQRT3 = std::sqrt ( 3.0 ) ;
+   *  helper constant \f$ \frac{2}{\sqrt{\pi}}\f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-04-19
+   */
+  const long double s_HALFSQRTPIi = 1.0L / s_HALFSQRTPI  ;
   // ==========================================================================
   /** @var s_HALFSQRTPI_log
   *  helper constant \f$ \log \frac{\sqrt{\pi}}{2}\f$
   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
   *  @date 2010-04-19
   */
-  const double s_HALFSQRTPI_log  = std::log ( 0.5 * std::sqrt(     M_PI )  ) ;
+  const long double s_HALFSQRTPI_log  = std::log ( 0.5L * s_sqrt_pi ) ;
   // ==========================================================================
   /** @var s_SQRT2PISQUARED 
-  *  helper constant  \f$   \sqrt{2}\pi^2\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2016-06-11
-  */
-  const double s_SQRT2PISQUARED  = std::sqrt(2.0)*M_PI*M_PI ;
+   *  helper constant  \f$   \sqrt{2}\pi^2\f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2016-06-11
+   */
+  const long double s_SQRT2PISQUARED  = s_sqrt2 * s_pi * s_pi ;
   // ==========================================================================
   /** @var s_SQRT2PISQUAREDi
-  *  helper constant  \f$   \frac{1}{\sqrt{2}\pi^2}\f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2016-06-11
-  */
-  const double s_SQRT2PISQUAREDi = 1.0/(std::sqrt(2.0)*M_PI*M_PI) ;
+   *  helper constant  \f$   \frac{1}{\sqrt{2}\pi^2}\f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2016-06-11
+   */
+  const long double s_SQRT2PISQUAREDi = 1.0 / s_SQRT2PISQUARED ;
   // ==========================================================================
   /** @var s_SQRT3overPI 
-  *  helper constant \f$ \frac{\sqrt{3}}{\pi} \f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2016-06-14
-  */
-  const double s_SQRT3overPI = std::sqrt(3.0)/M_PI ;
-  // ==========================================================================
-  /** @var s_PIi 
-  *  helper constant \f$ \frac{1}{\pi} \f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2016-06-14
-  */
-  const double s_PIi = 1.0 /M_PI ;
-  // ==========================================================================
-  /** @var s_MASCHERONI 
-   * Euler-Mascheroni constant \f$ \gamma \f$
+   *  helper constant \f$ \frac{\sqrt{3}}{\pi} \f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2016-06-14
    */
-#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && 201907L <= __cpp_ilb_math_comstats  
-  const long double s_MASCHERONI { std::numbers::egamma_v<long double> } ;
-#else
-  const long double s_MASCHERONI = 0.57721566490153286060651209008240243104215933593992L ;
-#endif 
+  const long double s_SQRT3overPI = s_sqrt3 / s_pi ;
   // ==========================================================================
   // Bukin & Co
   // ==========================================================================
   /** @var s_Bukin
-  *  useful constant for Bukin's function
-  *  \f$ \sqrt{ 2 \log 2 } \f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double s_Bukin   = std::sqrt ( 2.0 * std::log ( 2.0 ) ) ;
-  // ==========================================================================
-  /** @var s_ln2
-  *  useful constant for Bukin's function
-  *  \f$ \log 2 \f$
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double s_ln2 = std::log ( 2.0 ) ;
+   *  useful constant for Bukin's function
+   *  \f$ \sqrt{ 2 \log 2 } \f$
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-04-19
+   */
+  const long double s_Bukin   = std::sqrt ( 2.0L * std::log ( 2.0L ) ) ;
   // ==========================================================================
   // Novosibirsk & Co
   // ==========================================================================
   /** @var s_Novosibirsk
-  *  useful constant for evaliuation of ``Novosibirsk'' function
-  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-  *  @date 2010-04-19
-  */
-  const double s_Novosibirsk = std::sqrt ( std::log ( 4.0 ) ) ;
+   *  useful constant for evaluation of `Novosibirsk' function
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-04-19
+   */
+  const long double s_Novosibirsk = std::sqrt ( std::log ( 4.0L ) ) ;
   // ==========================================================================
   /** @var s_WMODE 
    *  width of the window between mean and mode:
    * |mean -mode|< sqrt(3) * sigma
    */
-  const double s_WMODE            = std::sqrt ( 3 ) * 1.05 ;
+  const double s_WMODE            = s_sqrt3 * 1.05 ;
   // ===========================================================================
   const double s_INFINITY_LOG     = s_INFINITY_LOG_POS ;
   // ==========================================================================

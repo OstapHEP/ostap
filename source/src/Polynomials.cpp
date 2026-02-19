@@ -28,6 +28,7 @@
 // ============================================================================
 // local
 // ============================================================================
+#include "local_math.h"
 #include "status_codes.h"
 // ============================================================================
 /** @file 
@@ -42,18 +43,7 @@ namespace
   // ==========================================================================
   static_assert ( std::numeric_limits<double>::is_specialized           , 
                   "mumeric_limits are not specialized for doubles"      ) ;
-  // ==========================================================================
-  /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double> s_equal {} ;       // equality criteria for doubles
-  /// zero for doubles  
-  const Ostap::Math::Zero<double>     s_zero  {} ;       // zero for doubles
-  /// zero fo vectors 
-  const Ostap::Math::Zero< std::vector<double> > s_vzero {} ; // zero for vectors
-  /// small element 
-  const long double            s_epsilon =  2 * std::numeric_limits<double>::epsilon() ;
-  /// small element 
-  Ostap::Math::Small<double>    s_small ( s_epsilon ) ;
-  // ==========================================================================
+    // ==========================================================================
   /// get a factorial 
   inline long double 
   _factorial_d_ ( const unsigned short N ) 
@@ -211,7 +201,7 @@ std::vector<double> Ostap::Math::Chebyshev::roots   () const
     if ( i == j ) { rs[i] = 0.0 ; }
     else 
     {
-      rs[j] =  std::cos ( ( 2 * i + 1 ) * M_PIl / ( 2 * m_N ) ) ; 
+      rs[j] =  std::cos ( ( 2 * i + 1 ) * s_pi / ( 2 * m_N ) ) ; 
       rs[i] = -rs[j] ;
     }
   }
@@ -230,7 +220,7 @@ std::vector<double> Ostap::Math::Chebyshev::extrema () const
     if  ( i == j ) { e[i] = 0.0 ; }
     else 
     {
-      e[j] = std::cos ( ( i + 1 ) * M_PIl / m_N ) ; 
+      e[j] = std::cos ( ( i + 1 ) * s_pi / m_N ) ; 
       e[i] = -e[j] ;  
     }
   }
@@ -337,7 +327,7 @@ double Ostap::Math::Legendre::calculate_root ( const unsigned short i ) const
   const unsigned short ii = i % m_N ;
   static const unsigned short s_maxiter = 500 ;
   /// the the first approximation 
-  long double r = - std::cos ( ( 4 * ii + 3  ) * M_PIl / ( 4 * m_N + 2 ) ) ;
+  long double r = - std::cos ( ( 4 * ii + 3  ) * s_pi / ( 4 * m_N + 2 ) ) ;
   /// Newton's iterations
   for ( unsigned short j = 0 ; j < s_maxiter + 1 ; ++j ) 
   {
@@ -1833,7 +1823,7 @@ Ostap::Math::ChebyshevSum::fill
   const long double tt =  t ( x ) ;
   if ( 1 <= std::abs ( tt )       ) { return false ; }
   //
-  const long double w  = weight * 4.0L / ( m_xmax - m_xmin ) / ( std::sqrt ( 1.0L - tt * tt ) * M_PI ) ;
+  const long double w  = weight * 4.0L / ( m_xmax - m_xmin ) / ( std::sqrt ( 1.0L - tt * tt ) * s_pi ) ;
   if ( !std::isfinite ( w  )     ) { return false ; }
   //
   const unsigned short N = degree() ;
@@ -3693,7 +3683,7 @@ Ostap::Math::chebyshev_sum
   //
   const double      xhs  = 0.5 * ( xmin + xmax ) ;
   const double      xhd  = 0.5 * ( xmax - xmin ) ;
-  const long double pi_N = M_PIl / N ;
+  const long double pi_N = s_pi / N ;
   auto _xi_ = [xhs,xhd,pi_N] ( const unsigned short k ) 
     { return std::cos ( pi_N * ( k + 0.5 ) ) * xhd + xhs ; } ;
   //
@@ -3716,9 +3706,6 @@ Ostap::Math::chebyshev_sum
   return cs ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // constructor: assert  that alpha>-0.5

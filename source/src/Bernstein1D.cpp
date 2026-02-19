@@ -226,8 +226,8 @@ double Ostap::Math::Utils::positive_pseudo_roots
     {
       const unsigned short k = n / 2 ;
       const double pp = 0 == n % 2 ? 
-        - std::cos ( ( 2 * k + 1 ) * M_PIl / ( 2 * K ) ) :
-        - std::cos ( (     k + 1 ) * M_PIl / (     K ) ) ; 
+        - std::cos ( ( 2 * k + 1 ) * s_pi / ( 2 * K ) ) :
+        - std::cos ( (     k + 1 ) * s_pi / (     K ) ) ; 
       pproots [ n ] = 0.5 * ( pp + 1 ) ;
     }
   }
@@ -238,8 +238,8 @@ double Ostap::Math::Utils::positive_pseudo_roots
     {
       const unsigned short k = n / 2 ;
       const double pp = ( 0 == n % 2 ) ? 
-        std::cos ( ( 2 * K - 2 * k     ) * M_PIl / ( 2 * K + 1 ) ) :
-        std::cos ( ( 2 * K - 2 * k - 1 ) * M_PIl / ( 2 * K + 1 ) ) ;
+        std::cos ( ( 2 * K - 2 * k     ) * s_pi / ( 2 * K + 1 ) ) :
+        std::cos ( ( 2 * K - 2 * k - 1 ) * s_pi / ( 2 * K + 1 ) ) ;
       pproots [ n ] = 0.5 * ( pp + 1 ) ;
     }  
   }

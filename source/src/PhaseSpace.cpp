@@ -142,7 +142,7 @@ Ostap::Math::PhaseSpace2::rho1_s ( const double s ) const
   //
   const double lam = Ostap::Kinematics::triangle ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ;
   //
-  static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
+  static const double s_inv8pi = 1.0 / ( 8 * s_pi ) ;
   //
   return 0 < lam ?
     s_inv8pi * std::complex<double>(     std::sqrt (  lam ) / s , 0 ) :
@@ -168,7 +168,7 @@ double Ostap::Math::PhaseSpace2::phasespace_s
   //
   if ( s < 0 || m2_1 < 0 || m2_1 < 0 ) { return 0 ; }
   //
-  static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
+  static const double s_inv8pi = 1.0 / ( 8 * s_pi ) ;
   //
   const double lam = Ostap::Kinematics::triangle ( s , m2_1 , m2_2 ) ;
   //
@@ -388,7 +388,7 @@ double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
   //
   if ( x <= lowEdge() ) { return 0 ; }
   //
-  static const double s_norm = 0.25 * M_PI * M_PI ;
+  static const double s_norm = 0.25 * s_pi2 ;
   //
   // all masses are zero 
   if ( 0 == m_l1 && 0 == m_l2 && 
@@ -664,7 +664,7 @@ double Ostap::Kinematics::phasespace3i
   if ( s_zero ( xm2 ) ) { return Ostap::Kinematics::phasespace3 ( x , xm1 , xm3 ) ; }
   if ( s_zero ( xm3 ) ) { return Ostap::Kinematics::phasespace3 ( x , xm1 , xm2 ) ; }
   //
-  static const double s_norm = 0.25 * M_PI * M_PI ;
+  static const double s_norm = 0.25 * s_pi2 ;
   //
   const double norm = s_norm / ( x * x ) ;
   //
@@ -1335,7 +1335,7 @@ double Ostap::Math::PhaseSpace23L::ps23L ( const double x ) const
   if ( lowEdge() >= x || highEdge() <= x ) { return  0 ; }
   //
   // represent 3-body phase space as extension of the 2-body phase space
-  double ps =  x / M_PI *
+  double ps =  x * s_1_pi *
     Ostap::Math::PhaseSpace2::phasespace ( x    , m1 () , m2 () , m_l ) *
     Ostap::Math::PhaseSpace2::phasespace ( M () ,    x  , m3 () , m_L ) ;
   //

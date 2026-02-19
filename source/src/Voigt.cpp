@@ -49,8 +49,8 @@ Ostap::Math::Voigt::~Voigt(){}
 double Ostap::Math::Voigt::operator() ( const double x ) const
 {
   //
-  const double s1 = 1 / ( m_sigma * s_SQRT2   ) ;
-  const double s2 = 1 / ( m_sigma * s_SQRT2PI ) ;
+  const double s1 = 1 / ( m_sigma * s_sqrt2    ) ;
+  const double s2 = 1 / ( m_sigma * s_sqrt_2pi ) ;
   //
   return Ostap::Math::faddeeva_w
     ( std::complex<double> ( x - m_m0 , m_gamma ) * s1 ).real() * s2 ;
@@ -210,11 +210,11 @@ namespace
   // ==========================================================================
   /// gaussian profile 
   inline double f_gauss       ( const double dx , const double gamma ) 
-  { return my_exp ( - dx * dx / ( gamma * gamma) ) / ( gamma * s_SQRTPI ) ; }
+  { return my_exp ( - dx * dx / ( gamma * gamma ) ) / ( gamma * s_sqrt_pi ) ; }
   // ==========================================================================
   /// lorenzian profile 
   inline double f_lorentzian  ( const double dx , const double gamma ) 
-  { return gamma / ( ( dx*dx + gamma * gamma)  * M_PI ) ; }
+  { return gamma / ( ( dx*dx + gamma * gamma )  * s_pi ) ; }
   // ==========================================================================
   /// irrational profile 
   inline double f_irrational  ( const double dx , const double gamma ) 

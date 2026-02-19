@@ -34,54 +34,54 @@
 namespace
 {
   // ==========================================================================
-  const std::array<long double,2>  s_S1 { -0.50L      ,  M_PI / 2.0L  } ;
-  const std::array<long double,3>  s_C2 {  0.25L      , -M_PI / 2.0L  ,  M_PI * M_PI / 6.0L  } ;
-  const std::array<long double,4>  s_S3 {  1.0L /  12 , -M_PI * M_PI / 4.0L , M_PI * M_PI / 6.0L , 0.0L } ;
-  const std::array<long double,5>  s_C4 {  1.0L /  48 ,  M_PI / 12.0L , -M_PI * M_PI / 12.0L , 0.0L , std::pow ( M_PI , 4 ) / 90.0L } ;
-  const std::array<long double,6>  s_S5 { -1.0L / 240 ,  M_PI / 48.0L , -M_PI * M_PI / 36.0L , 0.0L , std::pow ( M_PI , 4 ) / 90.0L , 0.0L } ;
+  const std::array<long double,2>  s_S1 { -0.50L      ,  s_pi / 2.0L  } ;
+  const std::array<long double,3>  s_C2 {  0.25L      , -s_pi / 2.0L  ,  s_pi * s_pi / 6.0L  } ;
+  const std::array<long double,4>  s_S3 {  1.0L /  12 , -s_pi * s_pi / 4.0L , s_pi * s_pi / 6.0L , 0.0L } ;
+  const std::array<long double,5>  s_C4 {  1.0L /  48 ,  s_pi / 12.0L , -s_pi * s_pi / 12.0L , 0.0L , std::pow ( s_pi , 4 ) / 90.0L } ;
+  const std::array<long double,6>  s_S5 { -1.0L / 240 ,  s_pi / 48.0L , -s_pi * s_pi / 36.0L , 0.0L , std::pow ( s_pi , 4 ) / 90.0L , 0.0L } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_c3
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::C_<3>  () , 0.0 , M_PI , 70 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::C_<3>  () , 0.0 , s_pi , 70 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_s4
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::S_<4>  () , 0.0 , M_PI , 50 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::S_<4>  () , 0.0 , s_pi , 50 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_c5
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::C_<5>  () , 0.0 , M_PI , 25 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::C_<5>  () , 0.0 , s_pi , 25 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_s6
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::S_<6>  () , 0.0 , M_PI , 20 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::S_<6>  () , 0.0 , s_pi , 20 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_c7
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::C_<7>  () , 0.0 , M_PI , 15 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::C_<7>  () , 0.0 , s_pi , 15 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_s8
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::S_<9>  () , 0.0 , M_PI , 15 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::S_<9>  () , 0.0 , s_pi , 15 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_c9
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::C_<9>  () , 0.0 , M_PI , 15 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::C_<9>  () , 0.0 , s_pi , 15 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
   const Ostap::Math::ChebyshevSum  s_s10
     { Ostap::Math::ChebyshevApproximation
-      ( Ostap::Math::Clausen::S_<10> () , 0.0 , M_PI , 15 ).polynomial ( 1.e-10 ) } ;
+      ( Ostap::Math::Clausen::S_<10> () , 0.0 , s_pi , 15 ).polynomial ( 1.e-10 ) } ;
   // ==========================================================================
 } //                                            The END of anonymous namespace 
 // ============================================================================
 // S-functions 
 // ============================================================================
 double Ostap::Math::Clausen::S0 ( const double x )
-{ return 0.5 * std::tan ( 0.5 * M_PI - x * 0.5L ) ; }
+{ return 0.5 * std::tan ( 0.5 * s_pi - x * 0.5L ) ; }
 // ============================================================================
 double Ostap::Math::Clausen::S1 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
   return Ostap::Math::Clenshaw::monomial_sum ( s_S1.begin () , s_S1.end () , y ) . first ;
 }
 // ============================================================================
@@ -90,26 +90,26 @@ double Ostap::Math::Clausen::S2 ( const double x )
 // ============================================================================
 double Ostap::Math::Clausen::S3 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
   return Ostap::Math::Clenshaw::monomial_sum ( s_S3.begin () , s_S3.end () , y ) . first ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::S4 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   const double z = s_s4 ( std::abs ( y ) ) ;
   return 0 < y ? z : -z ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::S5 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
   return Ostap::Math::Clenshaw::monomial_sum ( s_S5.begin () , s_S5.end () , y ) . first ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::S6 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   const double z = s_s6 ( std::abs ( y ) ) ;
   return 0 < y ? z : -z ;
 }
@@ -118,15 +118,15 @@ double Ostap::Math::Clausen::S7 ( const double x )
 {
   const unsigned int m = 4 ;
   static const Ostap::Math::Bernulli s_B { 7 } ;
-  static const long double           s_C { std::pow ( 2.0L * M_PI , 7 ) / ( 2 * 5040 ) } ;
+  static const long double           s_C { std::pow ( 2.0L * s_pi , 7 ) / ( 2 * 5040 ) } ;
   //
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
-  return s_C * s_B ( y / ( 2.0L * M_PI ) ) ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
+  return s_C * s_B ( y / ( 2.0L * s_pi ) ) ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::S8 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   const double z = s_s8 ( std::abs ( y ) ) ;
   return 0 < y ? z : -z ;
 }
@@ -135,15 +135,15 @@ double Ostap::Math::Clausen::S9 ( const double x )
 {
   const unsigned int m = 5 ;
   static const Ostap::Math::Bernulli s_B { 9 } ;
-  static const long double           s_C { std::pow ( 2.0L * M_PI , 9 ) / ( 2 * 362880L ) } ;
+  static const long double           s_C { std::pow ( 2.0L * s_pi , 9 ) / ( 2 * 362880L ) } ;
   //
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
-  return - s_C * s_B ( y / ( 2.0L * M_PI ) ) ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
+  return - s_C * s_B ( y / ( 2.0L * s_pi ) ) ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::S10 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   const double z = s_s10 ( std::abs ( y ) ) ;
   return 0 < y ? z : -z ;
 }
@@ -157,25 +157,25 @@ double Ostap::Math::Clausen::C1 ( const double x )
 // ============================================================================
 double Ostap::Math::Clausen::C2 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
   return Ostap::Math::Clenshaw::monomial_sum ( s_C2.begin () , s_C2.end () , y ) . first ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::C3 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   return s_c3 ( std::abs ( y ) ) ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::C4 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
   return Ostap::Math::Clenshaw::monomial_sum ( s_C4.begin () , s_C4.end () , y ) . first ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::C5 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   return s_c5 ( std::abs ( y ) ) ;
 }
 // ============================================================================
@@ -183,15 +183,15 @@ double Ostap::Math::Clausen::C6 ( const double x )
 {
   const unsigned int m = 3 ;
   static const Ostap::Math::Bernulli s_B { 2 * m  } ;
-  static const long double           s_C { std::pow ( 2.0L * M_PI , 6 ) / ( 2 * 720 ) } ;
+  static const long double           s_C { std::pow ( 2.0L * s_pi , 6 ) / ( 2 * 720 ) } ;
   //
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
-  return s_C * s_B ( y / ( 2.0L * M_PI ) ) ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
+  return s_C * s_B ( y / ( 2.0L * s_pi ) ) ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::C7 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   return s_c7 ( std::abs ( y ) ) ;
 }
 // =============================================================================
@@ -199,15 +199,15 @@ double Ostap::Math::Clausen::C8 ( const double x )
 {
   const unsigned int m = 4 ;
   static const Ostap::Math::Bernulli s_B { 2 * m  } ;
-  static const long double           s_C { std::pow ( 2.0L * M_PI , 8 ) / ( 2 * 40320 ) } ;
+  static const long double           s_C { std::pow ( 2.0L * s_pi , 8 ) / ( 2 * 40320 ) } ;
   //
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
-  return - s_C * s_B ( y / ( 2.0L * M_PI ) ) ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
+  return - s_C * s_B ( y * s_1_2pi ) ;
 }
 // ============================================================================
 double Ostap::Math::Clausen::C9 ( const double x )
 {  
-  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * M_PI , +1.0L * M_PI ).first ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , -1.0L * s_pi , +1.0L * s_pi ).first ;
   return s_c9 ( std::abs ( y ) ) ;
 }
 // ============================================================================
@@ -215,10 +215,10 @@ double Ostap::Math::Clausen::C10 ( const double x )
 {
   const unsigned int m = 5 ;
   static const Ostap::Math::Bernulli s_B { 2 * m  } ;
-  static const long double           s_C { std::pow ( 2.0L * M_PI , 6 ) / ( 2 * 3628800L  ) } ;
+  static const long double           s_C { std::pow ( 2.0L * s_pi , 6 ) / ( 2 * 3628800L  ) } ;
   //
-  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * M_PI ).first ;
-  return s_C * s_B ( y / ( 2.0L * M_PI ) ) ;
+  const long double y = Ostap::Math::reduce ( 1.0L * x , 0.0L , 2.0L * s_pi ).first ;
+  return s_C * s_B ( y * s_1_2pi ) ;
 }
 // ============================================================================
 
