@@ -65,19 +65,21 @@ namespace Ostap
         explicit
         Basic
         ( const unsigned short k = 0 ,
-          const unsigned short N = 0 )
-          : m_k ( k )
-          , m_N ( N ) {}
+          const unsigned short N = 0 ) ; 
         // ====================================================================
       public :
         // ====================================================================
+	/// polynomial index 
         unsigned short k () const { return m_k ; }
+	/// polynomial degree 
         unsigned short N () const { return m_N ; }
         // ====================================================================
       private:
         // ====================================================================
-        unsigned short m_k ;
-        unsigned short m_N ;
+	/// polynomial index 
+        unsigned short m_k { 0 } ; // polynomial index
+	/// polynomial degree 
+        unsigned short m_N { 0 } ; // polynomial degree
         // ====================================================================
       } ;
       // ======================================================================
@@ -904,7 +906,9 @@ namespace Ostap
     public:  // various assignements
       // ======================================================================
       /// assignement from the constant
-      Bernstein& operator=( const double      right ) ;
+      Bernstein& operator=( const double right ) ;
+      /// assignement from the basic bernstein 
+      Bernstein& operator=( const Basic& right ) ;
       // ======================================================================
     private:  // internal data
       // ======================================================================

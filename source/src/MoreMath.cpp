@@ -989,8 +989,8 @@ double Ostap::Math::beta
   const bool x_int = 0.95 < x && x <= 200 && isushort ( y ) ;
   const bool y_int = 0.95 < y && y <= 200 && isushort ( y ) ;
   //
-  if ( x_int && y_int ) { return beta ( (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
-  else if (     x_int ) { return beta ( (unsigned short) round ( x ) , y ) ; }
+  if ( x_int && y_int ) { return beta (     (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
+  else if (     x_int ) { return beta (     (unsigned short) round ( x ) , y ) ; }
   else if (     y_int ) { return beta ( x , (unsigned short) round ( y ) ) ; }
   //
   //
@@ -1179,7 +1179,94 @@ double Ostap::Math::lnbeta
 ( const double         x , 
   const unsigned short y )
 { return lnbeta ( y , x ) ; }
-
+// ============================================================================
+/*  reciprocal beta function for 
+ *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of reciprocal beta function 
+ */
+// ============================================================================
+double Ostap::Math::ibeta 
+( const unsigned short x , 
+  const unsigned short y )
+{
+  if ( !x || !y ) { return 0 ; }
+  //
+  const unsigned short i = std::min ( x , y ) ;
+  const unsigned short j = std::max ( x , y ) ;
+  //
+  if ( 201 <= i ) { return ibeta ( 1.0 * x , 1.0 * y ) ; }
+  //
+  long double result = j ;
+  for ( unsigned short  k = 1 ; k < i ; ++k ) { result *= ( k + j ) * 1.0L / k ; }
+  return result ;
+}
+// ============================================================================
+/*  reciprocal beta function for 
+ *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of reciprocal beta function 
+ */
+// ============================================================================
+double Ostap::Math::ibeta 
+( const unsigned short x , 
+  const double         y )
+{
+  if ( !x || y < 0 || s_zero ( y ) ) { return 0 ; }
+  // y is integer? 
+  const bool y_int = 0.95 < y && y <= 200 && isushort ( y ) ;
+  if ( y_int    ) { return ibeta ( x , (unsigned short) round ( y ) ) ; }
+  //
+  if ( 201 <= x ) { return ibeta ( 1.0 * x , y ) ; }
+  //
+  long double result = y ;
+  for ( unsigned short k = 1 ; k < x ; ++k ) { result *= ( k + y ) * 1.0L / k ; }
+  return result ;
+}
+// ============================================================================
+/*  reciprocal beta function for 
+ *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of reciprocal beta function 
+ */
+// ============================================================================
+double Ostap::Math::ibeta 
+( const double         y , 
+  const unsigned short x ) { return ibeta ( x , y ) ; }
+// ============================================================================
+/*  reciprocal beta function for 
+ *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of reciprocal beta function 
+ */
+// ============================================================================
+double Ostap::Math::ibeta
+( const double x ,
+  const double y ) 
+{ 
+  //
+  if ( x <  0 || s_zero ( x ) ) { return 0 ; }
+  if ( y <  0 || s_zero ( y ) ) { return 0 ; }
+  if ( s_equal ( x , 1 )      ) { return y ; }
+  if ( s_equal ( y , 1 )      ) { return x ; }
+  //
+  const bool x_int = 0.95 < x && x <= 200 && isushort ( y ) ;
+  const bool y_int = 0.95 < y && y <= 200 && isushort ( y ) ;
+  //
+  if ( x_int && y_int ) { return ibeta (     (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
+  else if (     x_int ) { return ibeta (     (unsigned short) round ( x ) , y ) ; }
+  else if (     y_int ) { return ibeta ( x , (unsigned short) round ( y ) ) ; }
+  //  
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_special_fnuctions ) && ( 201603L <= __cpp_lib_math_special_functions )
+  return 1.0/ std::beta ( x , y ) ;
+#else
+  return std::exp ( std::lgamma ( x + y ) - std::lgamma( x ) - std::lgamma ( y ) ) ;
+#endif
+}
 // ============================================================================
 /*  get the gaussian integral
  *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
@@ -1527,9 +1614,11 @@ double Ostap::Math::beta_inc
   //
   if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
   //
-  if ( 0.99 < alpha1       && 0.99 < alpha2 &&
-       alpha1 < 50         && alpha2 < 50   &&
-       isushort ( alpha1 ) && alpha2 < 50     )
+  if ( 0.999  < alpha1         &&
+       0.999  < alpha2         &&
+       alpha1 + alpha2 <= 50.5 && 
+       isushort ( alpha1 )     &&
+       isushort ( alpha2 )     )    
     { return beta_inc ( (unsigned short) round ( alpha1 ) ,
                         (unsigned short) round ( alpha2 ) , z ) ; }
   // =============================================================================  
@@ -1541,15 +1630,15 @@ double Ostap::Math::beta_inc
   gsl_sf_result result ;
   const int ierror = gsl_sf_beta_inc_e ( alpha1 , alpha2 , z , &result ) ;
   if ( ierror ) 
-    {
-      if ( ierror == GSL_EMAXITER ) {}
-      if ( ierror == GSL_EUNDRFLW ) { return 0 ; }
-      //
-      gsl_error ( "Error from gsl_sf_beta_inc_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN(); }
-      //
-    }
+  {
+    if ( ierror == GSL_EMAXITER ) {}
+    if ( ierror == GSL_EUNDRFLW ) { return 0 ; }
+    //
+    gsl_error ( "Error from gsl_sf_beta_inc_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
   return result.val ;         
 }
 // ============================================================================
@@ -1575,16 +1664,17 @@ double Ostap::Math::beta_inc
   //
   if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
   //
-  if ( 51 <= alpha1 || 51 <= alpha2 ) { return beta_inc ( 1.0 * alpha1 , 1.0 * alpha2 , z ) ; }
+  /// do not use large degree polynomials 
+  if ( 51 <= alpha1 + alpha2 ) { return beta_inc ( 1.0 * alpha1 , 1.0 * alpha2 , z ) ; }
   //
   const unsigned short k = alpha1 - 1 ;
   const unsigned short m = alpha2 - 1 ;
-  const unsigned short N { static_cast<unsigned short> ( k + m ) } ;
   //
-  const Ostap::Math::Bernstein::Basic bb { k , N } ;
+  const Ostap::Math::Bernstein::Basic bb ( k , k + m ) ;
+  ///
   const Ostap::Math::Bernstein        B  { bb    } ;
   //
-  return B.integral ( 0 , z ) * ( k + m + 1 ) ;
+  return B.integral ( 0 , z ) * B.degree ()  ;
 }
 // ============================================================================
 /** Derivative of the normalized incomplete Beta function  
@@ -1607,8 +1697,10 @@ double Ostap::Math::dbeta_inc
   if ( alpha2 <= 0       ) { return std::numeric_limits<double>::quiet_NaN () ; }
   if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
   //
-  if ( 0.99 < alpha1       && 0.99 < alpha2 &&
-       alpha1 < 50         && alpha2 < 50   &&
+  if ( 0.999  < alpha1 &&
+       0.999  < alpha2 &&
+       alpha1 < 101.1  &&
+       alpha2 < 101.1  &&
        isushort ( alpha1 ) && alpha2 < 50     )
     { return dbeta_inc ( (unsigned short) round ( alpha1 ) ,
                          (unsigned short) round ( alpha2 ) , z ) ; }
@@ -1621,13 +1713,18 @@ double Ostap::Math::dbeta_inc
   if ( alpha2 > 1 && s_zero ( 1 - z ) ) { return 0 ; }
   //
   // ==========================================================================
-  double presult  = ( alpha1 - 1 ) * std::log ( z     ) ;
-  presult        += ( alpha2 - 1 ) * std::log ( 1 - z ) ;
+  if ( 1 < alpha1 && 1 < alpha2 )
+  {
+    const double a = std::pow ( 0.0L + z , alpha1 - 1.0L ) ;
+    const double b = std::pow ( 1.0L - z , alpha2 - 1.0L  ) ;
+    return a * b * Ostap::Math::ibeta ( alpha1 , alpha2 ) ;
+  }
+  //  
+  double presult  = ( alpha1 - 1.0L ) * std::log ( 0.0L + z ) ;
+  presult        += ( alpha2 - 1.0L ) * std::log ( 1.0L - z ) ;
   presult        -= lnbeta ( alpha1 , alpha2 ) ;
   //
-  return presult  <= s_EXP_UNDERFLOW ? 0.0 : std::exp ( presult ) ;
-  // const double result = std::pow ( z , alpha1 - 1 ) * std::pow ( 1 - z , alpha2 - 1 ) ;
-  // return result / beta ( alpha1 , alpha2 ) ;
+  return std::exp ( presult ) ;
   // ==========================================================================
 }
 // ============================================================================
@@ -1650,16 +1747,16 @@ double Ostap::Math::dbeta_inc
   //
   if ( z < 0 || 1 < z     ) { return std::numeric_limits<double>::quiet_NaN () ; }
   //
-  if ( 51 <= alpha1 || 51 <= alpha2 ) { return dbeta_inc ( 1.0 * alpha1 , 1.0 * alpha2 , z ) ; }
+  if ( 101.1 <= alpha1 || 100.1 <= alpha2 )
+    { return dbeta_inc ( 1.0 * alpha1 , 1.0 * alpha2 , z ) ; }
   //
   const unsigned short k = alpha1 - 1 ;
   const unsigned short m = alpha2 - 1 ;
-  const unsigned short N { static_cast<unsigned short> ( k + m ) } ;
   //
-  const Ostap::Math::Bernstein::Basic bb { k , N } ;
-  const Ostap::Math::Bernstein        B  { bb    } ;
+  const double a = std::pow ( 0.0L + z , k ) ;
+  const double b = std::pow ( 1.0L - z , k ) ;
   //
-  return B ( z ) * ( k + m + 1 ) ;
+  return a * b * Ostap::Math::ibeta ( alpha1 , alpha2 ) ;
 }
 // ============================================================================
 /*   get PDF for beta distribution 
@@ -1673,10 +1770,7 @@ double Ostap::Math::dbeta_inc
 double Ostap::Math::beta_pdf
 ( const double x     ,
   const double alpha ,
-  const double beta  )
-{
-  return dbeta_inc ( alpha , beta , x ) ;
-}
+  const double beta  ) { return dbeta_inc ( alpha , beta , x ) ; }
 // ============================================================================
 /*  get CDF for beta distribution 
  *  \f[ F(x,\alpha, \beta ) = I_x(\alpha,\beta)\f] 
@@ -1704,7 +1798,6 @@ namespace
     const double beta  )
   {
     // make real calculations
-    // 
     auto f  = [ alpha, beta, p ] ( const double x ) -> double
     { return Ostap::Math::beta_cdf ( x , alpha , beta ) - p ; } ;
     //

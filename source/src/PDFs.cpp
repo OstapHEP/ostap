@@ -7370,10 +7370,29 @@ Ostap::Models::Beta::Beta
   , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
   , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
-  , m_bfun    ( 1 , 1 , 1 , 0 ) 
+  , m_bfun    () 
 {
   setPars() ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Beta::Beta
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          alpha  ,
+  RooAbsReal&          beta   ,
+  const  double        scale  ,
+  const  double        shift  )
+  : Beta ( name  ,
+	   title ,
+	   x     ,
+	   alpha ,
+	   beta  ,
+	   RooFit::RooConst ( scale ) ,
+	   RooFit::RooConst ( shift ) )
+{}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -7419,7 +7438,6 @@ Double_t Ostap::Models::Beta::evaluate() const
 {
   //
   setPars () ;
-  //
   return m_bfun ( m_x ) ;
 }
 // ============================================================================
@@ -7443,7 +7461,7 @@ Double_t Ostap::Models::Beta::analyticalIntegral
                   INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
-  return m_bfun.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+  return m_bfun.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
 

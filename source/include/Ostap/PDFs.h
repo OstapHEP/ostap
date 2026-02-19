@@ -5314,7 +5314,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Beta, 1) ;
+      ClassDefOverride(Ostap::Models::Beta, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5327,6 +5327,15 @@ namespace Ostap
         RooAbsReal&           beta      ,
         RooAbsReal&           scale     ,
         RooAbsReal&           shift     ) ;
+      /// constructor from all parameters
+      Beta
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           alpha     ,
+        RooAbsReal&           beta      ,
+        const double          scale = 1 ,
+        const double          shift = 0 ) ;
       /// "copy constructor"
       Beta
       ( const Beta&           right     ,

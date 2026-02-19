@@ -1061,40 +1061,49 @@ Ostap::Math::Beta::Beta
   , m_beta  ( std::abs ( beta  ) )
   , m_scale ( std::abs ( scale ) )
   , m_shift (            shift   )
+  , m_norm  ( -1 )
 {
+  //
   Ostap::Assert ( 0 < m_alpha && !s_zero ( m_alpha )          ,
                   "Invalid value of alpha (must be positive)" ,
                   "Ostap::Math::Beta"                         ,
                   INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  //
   Ostap::Assert ( 0 < m_beta  && !s_zero ( m_beta  )          ,
                   "Invalid value of beta  (must be positive)" ,
                   "Ostap::Math::Beta"                         ,
                   INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  //
+  m_norm = Ostap::Math::ibeta ( m_alpha , m_beta ) ;
 }
 // ============================================================================
 bool Ostap::Math::Beta::setAlpha ( const double value ) 
 {
   const double value_ = std::abs ( value ) ;
-  if ( s_equal ( value_ , m_alpha ) ) { return false ; }
+  if ( s_equal ( value_ , m_alpha ) && 0 < m_norm ) { return false ; }
   m_alpha = value_ ;
   //
   Ostap::Assert ( 0 < m_alpha && !s_zero ( m_alpha )          ,
                   "Invalid value of alpha (must be positive)" ,
                   "Ostap::Math::Beta"                         ,
                   INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  //
+  m_norm = Ostap::Math::ibeta ( m_alpha , m_beta ) ;
   return true ;
 }
 // ============================================================================
 bool Ostap::Math::Beta::setBeta  ( const double value ) 
 {
   const double value_ = std::abs ( value ) ;
-  if ( s_equal ( value_ , m_beta  ) ) { return false ; }
-  m_beta  = value_ ;
+  if ( s_equal ( value_ , m_beta  ) &&  0 < m_norm ) { return false ; }
+  m_beta = value_ ;
   //
   Ostap::Assert ( 0 < m_beta  && !s_zero ( m_beta  )          ,
                   "Invalid value of beta  (must be positive)" ,
                   "Ostap::Math::Beta"                         ,
                   INVALID_PARAMETER  , __FILE__ , __LINE__    ) ;
+  //
+  m_norm = Ostap::Math::ibeta ( m_alpha , m_beta ) ;
   return true ;
 }
 // ============================================================================
@@ -1113,7 +1122,7 @@ bool Ostap::Math::Beta::setShift ( const double value )
   return true ;
 }
 // ============================================================================
-// evaluate beta-distributions
+// evaluate beta-distribution
 // ============================================================================
 double Ostap::Math::Beta::evaluate  ( const double x ) const
 {
@@ -1126,7 +1135,10 @@ double Ostap::Math::Beta::evaluate  ( const double x ) const
   if ( m_alpha > 1 && s_zero (     tt ) ) { return 0 ; }
   if ( m_beta  > 1 && s_zero ( 1 - tt ) ) { return 0 ; }
   //
-  return beta_pdf ( tt , m_alpha , m_beta ) / m_scale ;
+  const double a = std::pow ( 0.0L + tt , m_alpha - 1.0L ) ;
+  const double b = std::pow ( 1.0L - tt , m_alpha - 1.0L ) ;
+  //
+  return a * b * m_norm / m_scale ;
 }
 // ============================================================================
 // get CDF 
@@ -1141,7 +1153,7 @@ double Ostap::Math::Beta::cdf ( const double x ) const
   if      ( tt <= 0 ) { return 0 ; }
   else if ( tt >= 1 ) { return 1 ; }
   //
-  return beta_cdf ( tt , m_alpha , m_beta ) ;
+  return beta_cdf ( m_alpha , m_beta , tt ) ;
 }
 // ============================================================================
 // get integral 
@@ -1151,10 +1163,10 @@ double Ostap::Math::Beta::integral
 ( const double low  ,
   const double high ) const
 {
-  if      ( s_equal ( low  , high ) ) { return 0 ; }
-  else if (           high < low    ) { return - integral ( high , low ) ; }
-  else if ( high <= xmin ()         ) { return 0 ; }
-  else if ( low  >= xmax ()         ) { return 0 ; }
+  if      ( s_equal ( low  , high ) ) { return  0 ; }
+  else if (           high < low    ) { return -integral ( high , low ) ; }
+  else if ( high <= xmin ()         ) { return  0 ; }
+  else if ( low  >= xmax ()         ) { return  0 ; }
   //s
   return cdf ( high ) - cdf ( low ) ;
 }

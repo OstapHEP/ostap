@@ -547,6 +547,50 @@ namespace Ostap
     ( const double         x , 
       const unsigned short y ) ;
     // ========================================================================
+    /** reciprocal beta function for 
+     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of reciprocal beta function 
+     */
+    // ========================================================================
+    double ibeta
+    ( const unsigned short x ,
+      const unsigned short y ) ;
+    // ========================================================================
+    /** reciprocal beta function for 
+     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of reciprocal beta function 
+     */
+    // ========================================================================
+    double ibeta
+    ( const unsigned short x ,
+      const double         y ) ;
+    // ========================================================================
+    /** reciprocal beta function for 
+     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of reciprocal beta function 
+     */
+    // ========================================================================
+    double ibeta
+    ( const double         x , 
+      const unsigned short y ) ;
+    // ========================================================================
+    /** reciprocal beta function for 
+     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of reciprocal beta function 
+     */
+    // ========================================================================
+    double ibeta
+    ( const double         x , 
+      const double         y ) ;
+    // ========================================================================    
     /** Normalized incomplete Beta function  
      *  \f$ f ( \alpha_1,\alpha_2, z ) = 
      *      I_z( \alpha_1, \alpha_2 ) = 
@@ -1491,7 +1535,7 @@ namespace Ostap
      */
     inline 
     double dirichlet_eta ( const int    n ) { return eta ( n ) ; }
-
+    // ========================================================================
     /** Dirichlet's Eta function 
      *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
      */

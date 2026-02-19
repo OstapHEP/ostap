@@ -14,14 +14,13 @@
 #include "Ostap/NSphere.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Bernstein.h"
-#include "Ostap/Bernstein1D.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/BSpline.h"
 #include "Ostap/MoreMath.h"
 // ============================================================================
 /** @file Ostap/Models.h
- *  Set of useful continiod PDFs/models
+ *  Set of useful continuos  PDFs/models
  *
  *  Models defined for \f$\left[ +\infty, -\infty \right]\f$: 
  *  @see Ostap::Math::Gumbel
@@ -694,11 +693,12 @@ namespace Ostap
       double mean       () const ;
       double mode       () const ;
       double variance   () const ;
-      double dispersion () const { return variance () ; }
-      double sigma2     () const { return variance () ; }
       double sigma      () const ;
       double skewness   () const ;
       double kurtosis   () const ;
+      inline double dispersion () const { return variance () ; }
+      inline double sigma2     () const { return variance () ; }
+      inline double rms        () const { return sigma    () ; }
       // ======================================================================
     public: // setters
       // ======================================================================
@@ -731,6 +731,9 @@ namespace Ostap
     // ========================================================================
     /** @class Beta
      *  http://en.wikipedia.org/wiki/Beta_prime_distribution
+     *
+     *  For positive integer alpha and beta is it a polynom
+     *
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2025-08-10
      */
@@ -745,8 +748,8 @@ namespace Ostap
        *  @param shift  shift-parameter
        */
       Beta
-      ( const double alpha = 1 ,
-        const double beta  = 1 ,
+      ( const double alpha = 2 ,
+        const double beta  = 2 ,
         const double scale = 1 ,
         const double shift = 0 ) ;
       // ======================================================================
@@ -828,10 +831,15 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      double m_alpha { 1 } ;
-      double m_beta  { 5 } ;
-      double m_scale { 1 } ;
-      double m_shift { 0 } ;
+      double m_alpha {  2 } ;
+      double m_beta  {  2 } ;
+      double m_scale {  1 } ;
+      double m_shift {  0 } ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// normalization constant 
+      double m_norm  { -1 } ;  // normailization constant
       // ======================================================================
     } ;    
     // ========================================================================

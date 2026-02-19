@@ -35,12 +35,24 @@
 #include "bernstein_utils.h"
 // ============================================================================
 /** @file 
- *  Implementation file for functions, related to Bernstein's polynomnials 
+ *  Implementation file for the functions, related to Bernstein's polynomials
  *
  *  @see http://en.wikipedia.org/wiki/Bernstein_polynomial
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
+// ============================================================================
+Ostap::Math::Bernstein::Basic::Basic
+( const unsigned short k ,
+  const unsigned short N )
+  : m_k ( k )
+  , m_N ( N )
+{
+  Ostap::Assert ( m_k <= m_N ,
+		  "Invalid k/N for Bernstein::Basic"      ,
+		  "Ostap::Math::Bernstein::Basic"         ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+}
 // ============================================================================
 // constructor from the order
 // ============================================================================
@@ -292,6 +304,23 @@ Ostap::Math::Bernstein&
 Ostap::Math::Bernstein::operator=( const double right ) 
 {
   std::fill ( m_pars.begin() , m_pars.end() , s_zero ( right ) ? 0.0 : right )  ;
+  return *this ;
+}
+// ============================================================================
+// assignement from the basic bernstein 
+// ============================================================================
+Ostap::Math::Bernstein&
+Ostap::Math::Bernstein::operator=( const Ostap::Math::Bernstein::Basic& bb ) 
+{
+  m_xmin = 0 ;
+  m_xmax = 1 ;
+  const std::size_t N  = bb.N () ;
+  const std::size_t N1 = N + 1   ;
+  const std::size_t N2 = N + 2   ;
+  if ( m_pars.size() != N1 ) { m_pars.resize ( N1 ) ; } 
+  if ( m_aux .size() != N2 ) { m_aux .resize ( N2 ) ; } 
+  std::fill ( m_pars.begin() , m_pars.end() , 0.0 )  ;
+  if ( bb.k () <= bb.N () ) { m_pars [ bb.k() ] = 1 ; }   
   return *this ;
 }
 // ============================================================================
