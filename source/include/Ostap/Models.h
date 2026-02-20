@@ -748,8 +748,8 @@ namespace Ostap
        *  @param shift  shift-parameter
        */
       Beta
-      ( const double alpha = 2 ,
-        const double beta  = 2 ,
+      ( const double alpha = 3 ,
+        const double beta  = 3 ,
         const double scale = 1 ,
         const double shift = 0 ) ;
       // ======================================================================
@@ -831,8 +831,8 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      double m_alpha {  2 } ;
-      double m_beta  {  2 } ;
+      double m_alpha {  3 } ;
+      double m_beta  {  3 } ;
       double m_scale {  1 } ;
       double m_shift {  0 } ;
       // ======================================================================
@@ -859,8 +859,8 @@ namespace Ostap
        *  @param shift  shift-parameter
        */
       BetaPrime
-      ( const double alpha = 1 ,
-        const double beta  = 5 ,
+      ( const double alpha = 2 ,
+        const double beta  = 6 ,
         const double scale = 1 ,
         const double shift = 0 ) ;
       // ======================================================================
@@ -873,21 +873,26 @@ namespace Ostap
       // ======================================================================
     public: // direct getters
       // ======================================================================
-      double alpha () const { return m_alpha ; }
-      double beta  () const { return m_beta  ; }
-      double scale () const { return m_scale ; }
-      double shift () const { return m_shift ; }
+      inline double alpha () const { return m_alpha ; }
+      inline double beta  () const { return m_beta  ; }
+      inline double scale () const { return m_scale ; }
+      inline double shift () const { return m_shift ; }
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double xmin  () const { return shift () ; }
       // ======================================================================
     public: // general properties
       // ======================================================================
       double mean       () const ;
       double mode       () const ;
       double variance   () const ;
-      double dispersion () const { return variance () ; }
-      double sigma2     () const { return variance () ; }
       double sigma      () const ;
       double skewness   () const ;
       double kurtosis   () const ;
+      inline double dispersion () const { return variance () ; }
+      inline double sigma2     () const { return variance () ; }
+      inline double rms        () const { return sigma    () ; }
       // ======================================================================
     public: // direct setters
       // ======================================================================
@@ -911,8 +916,8 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      double m_alpha { 1 } ;
-      double m_beta  { 5 } ;
+      double m_alpha { 2 } ;
+      double m_beta  { 6 } ;
       double m_scale { 1 } ;
       double m_shift { 0 } ;
       // ======================================================================
@@ -1027,10 +1032,10 @@ namespace Ostap
        *  @param shift  shift-parameter
        */
       GenBetaPrime
-      ( const double alpha = 1 ,
-        const double beta  = 5 ,
-	const double p     = 1 ,
-	const double q     = 1 ,	
+      ( const double alpha = 2 ,
+        const double beta  = 6 ,
+	const double p     = 2 ,
+	const double q     = 2 ,	
         const double scale = 1 ,
         const double shift = 0 ) ;
       // ======================================================================
@@ -1079,10 +1084,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      double m_alpha { 1 } ;
-      double m_beta  { 5 } ;
-      double m_p     { 1 } ;
-      double m_q     { 1 } ;
+      double m_alpha { 2 } ;
+      double m_beta  { 6 } ;
+      double m_p     { 2 } ;
+      double m_q     { 2 } ;
       double m_scale { 1 } ;
       double m_shift { 0 } ;
       // ======================================================================
@@ -1109,14 +1114,16 @@ namespace Ostap
       ( const double a     = 1 , // shape 
 	const double b     = 1 , // scale 
 	const double gamma = 0 , // c = sin^2 gamma
-	const double p     = 1 , // shape 
-	const double q     = 1 , // shape 
+	const double p     = 2 , // shape 
+	const double q     = 2 , // shape 
 	const double shift = 0 ) ;
       // =======================================================================
     public :
       // =======================================================================
       /// evaluate generalized Beta distribution 
       inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate generalized Beta distribution 
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
       /// evaluate generalized Beta distribution 
       double        evaluate   ( const double x ) const ;
       // =======================================================================
@@ -1131,7 +1138,7 @@ namespace Ostap
       inline double shift        () const { return m_shift ; } 
       inline double scale        () const { return b ()    ; }
       // =======================================================================
-    public:
+    public: // range & limits 
       // =======================================================================
       /// finite range ? (beta-like or beta'-like?)
       inline bool   finite_range () const { return 0 < m_a && !m_c1 ; }
@@ -1183,9 +1190,9 @@ namespace Ostap
       ///  parameter c
       double m_c         { -1 } ; // parameter c
       ///  parameter p
-      double m_p         {  1 } ; // parameter p
+      double m_p         {  2 } ; // parameter p
       ///  parameter q
-      double m_q         {  1 } ; // parameter q
+      double m_q         {  2 } ; // parameter q
       ///  shift/location parameter 
       double m_shift     {  0 } ; // shift/location parameter q
       /// parameter gamma
@@ -1201,6 +1208,103 @@ namespace Ostap
       bool   m_c1        { false } ;
       /// \f$ \f$
       double m_ac        { -1    } ;  // (1-c)**(1/a) 
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================      
+    } ;    
+    // ========================================================================
+    /** @class GenBeta1
+     *  Generalized Beta distribution of first kind 
+     *  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+     *
+     *  Important:
+     *  - parameter a defines the support: finite for \f$ 0<a \f$  and infinite for \f$ a<0 \f$
+     *  - paramter  b is a scale parameter 
+     */
+    class GenBeta1
+    {
+    public :
+      // =======================================================================
+      /// the most general form
+      GenBeta1
+      ( const double a     = 1 , // shape 
+	const double p     = 2 , // shape 
+	const double q     = 2 , // shape 
+	const double scale = 1 , // scale 
+	const double shift = 0 ) ;
+      // =======================================================================
+    public :
+      // =======================================================================
+      /// evaluate generalized Beta distribution 
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate generalized Beta distribution 
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate generalized Beta distribution 
+      double        evaluate   ( const double x ) const ;
+      // =======================================================================
+    public :
+      // =======================================================================
+      inline double a     () const { return m_a     ; } 
+      inline double p     () const { return m_p     ; } 
+      inline double q     () const { return m_q     ; } 
+      inline double scale () const { return m_scale ; }
+      inline double shift () const { return m_shift ; } 
+      // =======================================================================
+    public: // range & limits 
+      // =======================================================================
+      /// finite range ? (beta-like or beta'-like?)
+      inline bool   finite_range () const { return 0 < m_a ; }
+      /// xmin 
+      inline double xmin         () const
+      { return 0 < m_a ? m_shift : m_shift + m_scale ; }
+      /// xmax 
+      double        xmax         () const ; 
+      // =======================================================================
+    public :
+      // =======================================================================
+      bool setA      ( const double value  ) ;
+      bool setP      ( const double value  ) ;
+      bool setQ      ( const double value  ) ;
+      bool setScale  ( const double value  ) ;
+      bool setShift  ( const double value  ) ;
+      bool setPQ
+      ( const double valuea ,
+	const double valueb ) ;		       
+      // =======================================================================
+    public :
+      // =======================================================================
+      /// get the integral 
+      double integral () const ;
+      /// get the integral 
+      double integral
+      ( const double low  ,
+	const double high ) const ; 
+      /// get the CDF 
+      double cdf 
+      ( const double x    ) const ; 
+      // =======================================================================
+    public :
+      // ======================================================================
+      /// unique tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      ///  parameter a 
+      double m_a         {  1 } ; // parameter a
+      ///  parameter p
+      double m_p         {  2 } ; // parameter p
+      ///  parameter q
+      double m_q         {  2 } ; // parameter q
+      ///  scale   parameter 
+      double m_scale     {  1 } ; // scale parameter 
+      ///  shift/location parameter 
+      double m_shift     {  0 } ; // shift/location parameter q
+      // ======================================================================
+    private: 
+      // ======================================================================
+      ///  \f$ \log \Beta Beta ( p , q ) 
+      double m_lnBpq     {  0    } ; //  \f$ \log \Beta ( p , q )
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
       // ======================================================================      
@@ -3113,8 +3217,8 @@ namespace Ostap
     public :
       // ======================================================================
       Kumaraswami
-      ( const double a     = 1 , // 0<a 
-	const double b     = 1 , // 0<b 
+      ( const double alpha = 2 , // 0<alpha 
+	const double beta  = 2 , // 0<beta 
 	const double scale = 1 , // 0<scale
 	const double shift = 0 ) ;      	
       // ======================================================================
@@ -3129,10 +3233,10 @@ namespace Ostap
       // ======================================================================
     public : 
       // ======================================================================
-      inline double a      () const { return m_a     ; }
-      inline double b      () const { return m_b     ; }
-      inline double scale  () const { return m_scale ; }
-      inline double shift  () const { return m_shift ; }
+      inline double alpha () const { return m_alpha ; }
+      inline double beta  () const { return m_beta  ; }
+      inline double scale () const { return m_scale ; }
+      inline double shift () const { return m_shift ; }
       // ======================================================================
     public :
       // ======================================================================
@@ -3141,8 +3245,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      bool setA     ( const double value ) ;
-      bool setB     ( const double value ) ;
+      bool setAlpha ( const double value ) ;
+      bool setBeta  ( const double value ) ;
       bool setScale ( const double value ) ;
       bool setShift ( const double value ) ;
       // ======================================================================
@@ -3190,10 +3294,10 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
-      /// parameter a 
-      double m_a      { 1 } ; // parameter a 
-      /// parameter b
-      double m_b      { 1 } ; // parameter b 
+      /// parameter alpha 
+      double m_alpha  { 2 } ; // parameter alpha 
+      /// parameter beta 
+      double m_beta   { 2 } ; // parameter beta  
       /// scale parameter
       double m_scale  { 1 } ; // scale parameter 
       /// shift parameter

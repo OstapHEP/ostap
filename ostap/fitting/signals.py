@@ -2136,18 +2136,17 @@ class SkewGenError_pdf(PEAK) :
         """'r'-parameter (shape) for SkewGenError distribution: r = 1/p """
         return self.__r
     @r.setter
-    def p  ( self, value ) :
+    def r ( self, value ) :
         self.set_value ( self.__r , value )
         
     @property
     def lambd   ( self ) :
         """`lambd` : the original `lambda`-parameter"""
         return self.pdf.lambd ()
-    @property
-    def lambda_ ( self ) :
-        """`lambda_` : the original `lambda`-parameter"""
-        return self.pdf.lambd ()
 
+    lambda_ = lambd
+    Lambda  = lambd
+    
     @property
     def p ( self ) :
         """`p` : original p-parameter of: p = 1/r 

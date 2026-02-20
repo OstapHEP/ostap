@@ -2353,8 +2353,8 @@ def _r_Kumaraswami_reduce_ ( pdf ) :
                                   pdf.name      ,
                                   pdf.title     ,
                                   pdf.x      () ,                            
-                                  pdf.a      () ,                            
-                                  pdf.b      () ,                            
+                                  pdf.alpha  () ,                            
+                                  pdf.beta   () ,                            
                                   pdf.scale  () , 
                                   pdf.shift  () )
 

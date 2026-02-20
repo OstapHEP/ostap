@@ -7810,10 +7810,9 @@ Double_t Ostap::Models::GenBeta::analyticalIntegral
                   INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
-  return m_beta.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+  return m_beta.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 // constructor from all parameters 
@@ -13389,14 +13388,14 @@ Ostap::Models::Kumaraswami::Kumaraswami
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          a         ,
-  RooAbsReal&          b         ,
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          beta      ,
   RooAbsReal&          scale     ,
   RooAbsReal&          shift     ) 
   : RooAbsPdf ( name , title     ) 
   , m_x       ( "!x"     , "Observable"       , this , x     ) 
-  , m_a       ( "!a"     , "a-parameter"      , this , a     )
-  , m_b       ( "!b"     , "b-parameter"      , this , b     )
+  , m_alpha   ( "!alpha" , "a-parameter"      , this , alpha )
+  , m_beta    ( "!beta"  , "b-parameter"      , this , beta  )
   , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
   , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
   , m_k      () 
@@ -13408,15 +13407,15 @@ Ostap::Models::Kumaraswami::Kumaraswami
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          a         ,
-  RooAbsReal&          b         ,
+  RooAbsReal&          alpha     ,
+  RooAbsReal&          beta      ,
   const double         scale     , 
   const double         shift     )
   : Kumaraswami ( name  ,
 		  title ,
 		  x     ,
-		  a     ,
-		  b     ,
+		  alpha ,
+		  beta  ,
 		  RooFit::RooConst ( scale ) ,
 		  RooFit::RooConst ( shift ) )
 {}
@@ -13429,8 +13428,8 @@ Ostap::Models::Kumaraswami::Kumaraswami
   : RooAbsPdf ( right , name ) 
     //
   , m_x     ( "!x"     , this , right.m_x     )
-  , m_a     ( "!a"     , this , right.m_a     )
-  , m_b     ( "!b"     , this , right.m_b     )
+  , m_alpha ( "!alpha" , this , right.m_alpha )
+  , m_beta  ( "!beta"  , this , right.m_beta  )
   , m_scale ( "!scale" , this , right.m_scale )
   , m_shift ( "!shift" , this , right.m_shift ) 
     //
@@ -13451,8 +13450,8 @@ Ostap::Models::Kumaraswami::clone ( const char* name ) const
 // ============================================================================
 void Ostap::Models::Kumaraswami::setPars () const 
 {
-  m_k.setA     ( m_a ) ;
-  m_k.setB     ( m_b ) ;
+  m_k.setAlpha ( m_alpha ) ;
+  m_k.setBeta  ( m_beta  ) ;
   m_k.setScale ( m_scale ) ;
   m_k.setShift ( m_shift ) ;
 }

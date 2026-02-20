@@ -20,11 +20,14 @@ __all__     = (
     'XVar'              , ## helper MIXIN to deal with x-variable
     'YVar'              , ## helper MIXIN to deal with y-variable
     'ZVar'              , ## helper MIXIN to deal with z-variable
-    #
+    ##
     "H1D_dset"          , ## 1D-histogram to RooDataHist converter 
     "H2D_dset"          , ## 2D-histogram to RooDataHist converter 
     "H3D_dset"          , ## 3D-histogram to RooDataHist converter
-    #
+    ##
+    'NameDuplicates'    , ## allow/disallow name duplicates
+    'SETPARS'           , ## context manager to keep/preserve parameters
+    ## 
     'Phases'            , ## helper class for Ostap polynomial/PDFs
     'ParamsPoly'        , ## helper class for RooFit polynomials
     'ShiftScalePoly'    , ## helper class for RooFit polynomials
@@ -32,9 +35,15 @@ __all__     = (
     'Shift'             , ## helper mixin to add shift-parameter
     'Scale'             , ## helper mixin to add scale-parameter 
     'ShiftAndScale'     , ## helper mixin to add shift&scale parameters 
+    ##
+    'P'                 , ## helper mixin to add p-parameter
+    'Q'                 , ## helper mixin to add q-parameter
+    'PandQ'             , ## helper mixin to add p&q parameters 
+    ## 
+    'Alpha'             , ## helper mixin to add alpha-parameter
+    'Beta'              , ## helper mixin to add beta-parameter 
+    'AlphaAndBeta'      , ## helper mixin to add alpha&beta parameters 
     #
-    'NameDuplicates'    , ## allow/disallow name duplicates
-    'SETPARS'           , ## context manager to keep/preserve parameters
     ###
     'TailN'             , ## helper mixin to define N-parameter for tail
     'TailNL'            , ## helper mixin to define N-parameter for tail
@@ -63,7 +72,7 @@ from   ostap.fitting.variables import SETVAR, make_formula
 from   ostap.utils.utils       import make_iterable
 from   ostap.utils.basic       import typename , items_loop
 from   ostap.utils.valerrors   import VAE 
-from   ostap.logger.symbols    import times
+from   ostap.logger.symbols    import times, arrow_right
 import ostap.logger.table      as     T 
 import ROOT, sys, random, math
 # =============================================================================
@@ -379,18 +388,55 @@ class VarMaker (object) :
         v = self.make_var ( None , 'myvar' , 'mycomment' , 10 , 0 , -1 , 1 )
         v = self.make_var ( v    , 'myvar' , 'mycomment' , 10 )        
         """
-        # var = ( value )
-        # var = ( min , max )
-        # var = ( value , min , max )
+        
+        ## expand args [ 0 ] 
+        if args and isinstance ( args [ 0 ] , sequence_types ) :
+            args0 = tuple ( args [ 0 ] ) 
+            args  = args0 + args [ 1 : ] 
 
+        ## None ? 
+        if args and args [ 0 ] is None : args = args [ 1 : ] 
+
+        ## args = name , title , *args 
+        if args and isinstance ( args [ 0 ] , string_types ) :            
+            if args [ 0 ] and not name  : name = str ( args  [ 0 ] ) 
+            args = args [ 1: ]
+            
+        ## args = name , title , *args 
+        if args and isinstance ( args [ 0 ] , string_types ) :
+            if args [ 0 ] and not title : title = str ( args  [ 0 ] )  
+            args = args [ 1: ]
+
+        ## (1) Try to resolve ambiguity when two variables are specified:
+        
+        v1 =          isinstance ( var        , ROOT.RooAbsReal )
+        v2 = args and isinstance ( args [ 0 ] , ROOT.RooAbsReal )
+
+        if   v2 and not v1               : var  = args [ 0 ]            
+        elif v2 and     v1 and v1 is v2  :
+            args = ( float ( var ) , ) + args [ 1: ]            
+        elif v2 and     v1 and isinstance ( args  [ 0 ] , ROOT.RooConstVar ) :
+            a0   = args [ 0 ] 
+            args = ( float ( a0  ) , ) + args [ 1: ]
+        elif v2 and     v1 and isinstance ( var         , ROOT.RooConstVar ) :
+            args = ( float ( var ) , ) + args [ 1: ]
+            
+        assert var or var is None                or \
+            isinstance ( var , numvar_types    ) or \
+            isinstance ( var , ROOT.RooAbsReal ) , "Invalid vaiable type %s" % typename ( var )  
+        
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif var is None : 
-            assert name and args , "make_var: `name' and `args' *must* be specified when 'var' is None!"
-            var  = name , title if title else name            
+            assert name and args and isinstance ( name , strnig_types ) ,\
+                "make_var: valid `name' and `args' *must* be specified when 'var' is None!"
+            name = str ( name )
+            var  = name , title if title else "The %s-variable" % name            
         elif isinstance ( var , numvar_types ) :
-            assert name , "make_var: `name' *must* be specified when `var' is numerical type!"            
-            var  = name , title if title else name , float ( var ) 
-
+            assert name and isinstance ( name , string_types ) , \
+                "make_var: `name' *must* be specified when `var' is numerical type!"
+            name = str ( name )            
+            var  = name , title if title else "The %s-variable" % name , float ( var )
+            
         ## convert sequence of values 
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif isinstance ( var , sequence_types  ) : var = tuple ( var )
@@ -400,13 +446,13 @@ class VarMaker (object) :
 
             ## at most four arguments:  (value, min, max, unit)
             assert len ( args ) <= 4 , "make_var: invalid length of 'args' %s" % len ( args ) 
-            
+
             ## strip out the units from args 
             vunit = ''
             vargs = args 
             if args and isinstance ( args [ -1 ] , string_types ) :
-                vunit = args[ -1]
-                vargs = args[:-1]
+                vunit = str ( args [  -1 ] ) 
+                vargs =       args [ :-1 ]
 
             ## extended list of arguments
             all_args = []
@@ -416,11 +462,12 @@ class VarMaker (object) :
                 else :
                     self.error ( "make_var: cannot properly parse args[%s]: %s : %s, skip!" % ( i , str ( args ) , typename ( v ) ) )
                     
-            vargs = tuple ( float ( v ) for v in all_args ) 
+            vargs = tuple ( float ( v ) for v in all_args )
+
             ## at most three arguments:  (value, min, max)
             if 3 < len ( vargs ) :
                 v2 = min ( vargs ) , max ( vargs ) 
-                self.warning ( "make_var: shorten %s -> %s " % ( str ( vars ) , str ( v2 ) ) )
+                self.warning ( "make_var: shorten %s %s %s " % ( str ( vars ) , arrow_right , str ( v2 ) ) )
                 vargs  = v2
                         
             ## content of var             
@@ -441,7 +488,7 @@ class VarMaker (object) :
                 vtitle = vvars [ 0 ] 
                 if isinstance ( vtitle , string_types ) :
                     if title and vtitle and title != vtitle : 
-                        self.warning ("make_var[%s]: title is redefined: %s -> %s" % ( name , title , vtitle ) ) 
+                        self.warning ("make_var[%s]: title is redefined: %s %s %s" % ( name , title , arrow_right , vtitle ) ) 
                     if vtitle : title = vtitle
                     vvars = vvars [1:]
                     
@@ -451,14 +498,18 @@ class VarMaker (object) :
             ## strip out the units from vvars 
             unit = '' 
             if vvars and isinstance ( vvars [ -1 ] , string_types ) :
-                unit = vvars [ -1]
-                vvar = vvars [:-1]
+                unit = str ( vvars [  -1 ] ) 
+                vvar =       vvars [ :-1 ]
 
+            if   unit and vunit and unit != vunit :
+                logger.warning ( "make_var[%s]: units duplicated %s vs %s " % ( name , unit , vunit ) )
+            elif vunit and not unit : unit = vunit
+            
             ## convert to numbers 
             vvars = tuple ( float ( v ) for v in vvars )
 
             if unit and vunit and unit != unit :
-                self.warning ("make_var[%s]: unit is redefined: %s -> %s" % ( name , vunit , unit ) ) 
+                self.warning ("make_var[%s]: unit is redefined: %s %s %s" % ( name , vunit , arrow_right , unit ) ) 
             elif vunit : unit = vunit
             
             len_vvars = len ( vvars )
@@ -467,103 +518,187 @@ class VarMaker (object) :
             vvars_ = vvars
             vargs_ = vargs
             vvars  = tuple ( sorted ( vvars ) ) 
-            vargs  = tuple ( sorted ( vargs ) ) 
+            vargs  = tuple ( sorted ( vargs ) )
+
             ## attention! for 3-tuple the order is (value, min, max)
             if 3 == len ( vvars ) : vvars = vvars [ 1 ] , vvars [ 0 ] , vvars [ 2 ] 
-            if 3 == len ( vargs ) : vargs = vargs [ 1 ] , vargs [ 0 ] , vargs [ 2 ] 
-            if vvars != vvars_ : self.warning ( "make_var[%s]: %s -> %s " % ( name , str ( vvars_ ) , str ( vvars ) ) )  
-            if vargs != vargs_ : self.warning ( "make_var[%s]: %s -> %s " % ( name , str ( vargs_ ) , str ( vargs ) ) )  
+            if 3 == len ( vargs ) : vargs = vargs [ 1 ] , vargs [ 0 ] , vargs [ 2 ]
+
+            if vvars != vvars_ : self.warning ( "make_var[%s]: %s %s %s " % ( name , str ( vvars_ ) , arrow_right , str ( vvars ) ) )  
+            if vargs != vargs_ : self.warning ( "make_var[%s]: %s %s %s " % ( name , str ( vargs_ ) , arrow_right , str ( vargs ) ) )  
 
             ## there should be at least one useful number! 
             assert 1 <= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
 
-            fixed = False
+            ## fixed/corrected 
+            fixed    = False
+            the_case = 0
             
-            if   0 == len_vvars :
+            if   0 == len_vvars and 1 <= len_vargs <= 3 :
                 
-                ## OK 
-                params = vargs + ( unit , )
-                
-            elif 1 == len_vvars and 0 == len_vargs :
-                
-                ## OK: use only vvar 
-                params  = vvars + ( unit , )
+                ## OK
+                if   3 == len ( vargs ) : 
+                    sv       = sorted ( vargs )
+                    sv       = sv [ 1 ] , sv [ 0 ] , sv [ 2 ]
+                    fixed    = sv != vargs 
+                elif 2 == len ( vargs ) : 
+                    sv       = sorted ( vargs )
+                    sv       = sv [ 0 ] , sv [ 1 ]
+                    fixed    = sv != vargs 
+                else :
+                    fixed    = vvars [ 0 ] != vargs [ 0 ] 
+                    sv       = vargs 
+                    
+                params   = sv + ( unit , )
+                the_case = 1
+            
+            ## 1 + (0|1)
+            elif 1 == len_vvars and 0 <= len_vargs <= 1  :
+
+                vv = vvars [ 0 ] 
+                ## OK: use only vvar
+                params   = vv , unit 
+                the_case = 2
+                fixed    = vargs and vargs [ 0 ] != vvars [ 0 ]
                 
             elif 1 == len_vvars and 2 == len_vargs and vargs [ 0 ] <= vvars [ 0 ] <= vargs [ 1 ] :
                 
+                vv = vvars [ 0 ] 
                 ## OK, get min/max from vargs 
-                params  = vvars + vargs + ( unit , )
+                params   =  ( vv , ) + vargs + ( unit , )
+                the_case = 3 
 
             elif 1 == len_vvars and 2 == len_vargs :
                 
-                ## OK, get min/max from vargs 
-                params = vvars + ( min ( vvars [ 0 ] , vargs [ 0 ] ) , max ( vvars[0] , vargs [ 1 ] ) , unit )
-                fixed  = True 
-
-            elif 1 == len_vvars and 3 == len_vargs and vargs [ 1 ] <= vvars [ 0 ] <= vargs [ 2 ] :
+                vv = vvars [ 0 ] 
+                ## OK, get min/max from vargs
+                vmin     = min ( vv , *vargs )
+                vmax     = max ( vv , *vargs )                
+                params   = vv , vmin , vmax , unit 
+                the_case = 4
+                if ( vmin , vmax ) != vargs : fixed = True
                 
-                ## OK 
-                params = vvars + ( min ( vvars [ 0 ] , vargs [ 1 ] ) , max ( vvars [ 0 ] , vargs [ 2 ]  ) , unit ) 
+            elif 1 == len_vvars and 3 == len_vargs         and \
+                 vargs [ 1 ] <= vvars [ 0 ] <= vargs [ 2 ] and \
+                 vargs [ 1 ] <= vargs [ 0 ] <= vargs [ 2 ] :
                 
+                vv = vvars [ 0 ] 
+                ## OK
+                vmin     = min ( vv , *vargs )
+                vmax     = max ( vv , *vargs )
+                params   = vv , vmin , vmax , unit
+                the_case = 5
+                                
             elif 1 == len_vvars and 3 == len_vargs :
-                
-                ## FIX IT
-                params = vvars + ( min ( vvars[0] , vargs [ 1 ] ) , max ( vvars[0] , vargs [ 2 ] ) , unit ) 
-                fixed  = True 
+
+                vv = vvars [ 0 ] 
+                ## OK
+                vmin     = min ( vv , *vargs )
+                vmax     = max ( vv , *vargs )
+                params   = vv , vmin , vmax , unit 
+                the_case = 6
+                fixed    = True
                 
             elif 1 == len_vvars :
                 
-                ## 'vargs" are ignored 
-                params = vvars + ( unit , )
-                fixed  = True
+                vv = vvars [ 0 ] 
+                ## 'vargs" are ignored                
+                params   = vv , unit
+                the_case = 7
+                fixed    = True
                 
+            elif 2 == len_vvars and vvars [ 0 ] < vvars [ 1 ] and 0 == len_vargs :
+                
+                ## OK: min/max specified via vvar
+                vmin     = min ( *vvars )
+                vmax     = max ( *vvars )                
+                params   = vmin , vmax , unit
+                the_case = 8
+                fixed    = ( vmin , vmax ) != vvars 
+
             elif 2 == len_vvars and 0 == len_vargs :
                 
                 ## OK: min/max specified via vvar
-                params = vvars  + (  unit , ) 
+                vmin     = min ( *vvars )
+                vmax     = max ( *vvars )                
+                params   = vmin , vmax  , unit
+                the_case = 9
+                if ( vmin , vmax ) != vvars : fixed = True 
 
+            ## get min/max from vvars and the value from vargs
             elif 2 == len_vvars and 1 == len_vargs and vvars [ 0 ] <= vargs [ 0 ] <= vvars [ 1 ] :
                 
-                ## get the value from vargs 
-                params = vargs + vvars + ( unit , ) 
+                ## get min/max from vvars and the value from vargs
+                params    = ( vargs [0] , vvars [ 0 ] , vvars [ 1 ] ) + ( unit , )
+                the_case = 10
 
             elif 2 == len_vvars and 1 == len_vargs :
                 
+                vmin     = min ( vargs [ 0 ] , *vvars )
+                vmax     = max ( vargs [ 0 ] , *vvars )                
                 ## get the value from vargs 
-                params = vvars + ( unit , )
-                fixed  = True 
+                params   = ( vargs [ 0 ] , vmin , vmax )  + ( unit , )
+                the_case = 11
+                fixed    = True 
 
             elif 2 == len_vvars and 2 == len_vargs :
                 
-                ## igore vargs 
-                params = vvars + ( unit , ) 
+                ## ignore vargs
+                vmin     = min ( *vvars )
+                vmax     = max ( *vvars )                
+                ## get the value from vargs 
+                params   = ( vmin , vmax )  + ( unit , )
+                the_case = 12
+                fixed    = True
                 
             elif 2 == len_vvars and 3 == len_vargs and vvars [ 0 ] <= vargs [ 0 ] <= vvars [ 1 ] :
                 
+                vmin     = min ( min ( *vvars ) , *vargs ) 
+                vmax     = max ( max ( *vvars ) , *vargs )
+                
+                vv       = vargs [ 0 ] 
                 ## get the value from vargs 
-                params = vargs[:1]  + vvars + ( unit , )
-            
+                params   = vv , vmin , vmax , unit 
+                the_case = 13
+                
+            ## 'vargs" are ignored
             elif 2 == len_vvars :
                 
-                ## 'vargs" are ignored
-                params = vvars + ( unit , )
-                fixed  = True 
+                vmin     = min ( *vvars )
+                vmax     = max ( *vvars )                
+                params   = vmin , vmax  , unit 
+                the_case = 14                
+                if vargs or params[:2] != vvars : fixed    = True 
 
-            elif 3 == len_vvars :
+            ## ignore vargs
+            elif 3 == len_vvars and vvars [ 1 ] <= vvars [ 0 ] <= vvars [ 2 ] :
+
+                vmin     = min ( *vvars )
+                vmax     = max ( *vvars )                
+                params   = vvars [ 0 ] , vmin , vmax , unit 
+                the_case = 15                
+                if vargs : fixed = True
                 
-                ## ignore vargs 
-                params = vvars + ( unit , )
+            ## ignore vargs
+            elif 3 == len_vvars :
 
+                sv = sorted ( vvars )
+                sv = sv [ 1 ] , sv [ 0 ] , sv [ 2 ]                 
+                params   = sv + ( unit , )
+                the_case = 16
+                if vargs or vars != sv : fixed = True
+                
             else : 
                 
-                args   = vvar + vargs
-                vmin   = vmin ( *args )
-                vmax   = vmax ( *args )
-                params = vmin , vmax , unit
-                fixed  = True
+                args     = vvar + vargs
+                vmin     = vmin ( *args )
+                vmax     = vmax ( *args )
+                params   = vmin , vmax , unit
+                the_case = 17
+                fixed    = True
                 
-            if fixed : self.warning ( "make_var[%s]: %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
-            else     : self.debug   ( "make_var[%s]: %s + %s -> %s" % ( name , str ( vvars_ ) , str ( vargs_ ) , str ( params[:-1] ) ) )
+            if fixed : self.warning ( "make_var[%s]: %s + %s %s %s [case #%d]" % ( name , str ( vvars_ ) , str ( vargs_ ) , arrow_right , str ( params[:-1] ) , the_case ) )
+            else     : self.debug   ( "make_var[%s]: %s + %s %s %s [case #%d]" % ( name , str ( vvars_ ) , str ( vargs_ ) , arrow_right , str ( params[:-1] ) , the_case ) )
 
             ## check the name: 
             ## if usedRootID ( name ) : self.warning ( "make_var[%s]: name is already used by ROOT/RooFit" % name )
@@ -591,7 +726,7 @@ class VarMaker (object) :
 
         ## var is either newly created or provided as RooAbsArg 
         assert isinstance ( var , ROOT.RooAbsReal ) , \
-               "make_var[%s]: invalid 'var' type! %s/%s" % ( name , var , type ( var ) ) 
+               "make_var[%s]: invalid 'var' type! %s/%s" % ( name , var , typename ( var ) ) 
 
         ## store the variable
         self.aux_keep.append ( var ) 
@@ -4078,7 +4213,193 @@ class SigmaLR(object) :
     @psi.setter
     def psi ( self , value ) :
         self.__AV_SIGMA_LR.psi = value 
+
+
+# =============================================================================
+## P & Q 
+# =============================================================================
+
+# =============================================================================
+## @class P
+#  Helper MIXIN class to add p-parameter 
+class P(object) :
+    """ Helper MIXIN class to add p-parameters
+    """
+    def __init__ ( self         ,
+                   p       = 1  ,
+                   p_name  = '' ,                   
+                   p_title = '' , *p_pars ) :
         
+        name = self.name
+        
+        if not p_name  : p_name  = 'p_%s'   % name 
+        if not p_title : p_title = 'p(%s)'  % name
+        if not p_pars  : p_pars  = 1 , 1.e-5 , 1000
+        
+        ## parameter alpha 
+        self.__p = self.make_var ( p , p_name , p_title , None , *p_pars )
+ 
+    @property
+    def p ( self ) :
+        """`p'-parameter (p>0)"""
+        return self.__p
+    @p.setter 
+    def p ( self , value ) :
+        self.set_value ( self.__p , value )
+
+# =============================================================================
+## @class Q
+#  Helper MIXIN class to add q-parameter 
+class Q(object) :
+    """ Helper MIXIN class to add q-parameters
+    """
+    def __init__ ( self         ,
+                   q       = 1  ,
+                   q_name  = '' ,                   
+                   q_title = '' , *q_pars ) :
+        
+        name = self.name
+        
+        if not q_name  : q_name  = 'q_%s'   % name 
+        if not q_title : q_title = 'q(%s)'  % name
+        if not q_pars  : q_pars  = 1 , 1.e-5 , 1000
+        
+        ## parameter alpha 
+        self.__q = self.make_var ( q , q_name , q_title , None , *q_pars )
+ 
+    @property
+    def q ( self ) :
+        """`q'-parameter (q>0)"""
+        return self.__q
+    @q.setter 
+    def q ( self , value ) :
+        self.set_value ( self.__q , value )
+
+# =============================================================================
+## @class PandQ
+#  Helper MIXIN class to add 'p' and `q`-parameters
+class PandQ (P,Q):
+    """ Helper MIXIN class to add 'p' and `q`-parameters
+    """
+    def __init__ ( self ,
+                   p       = 1  ,
+                   q       = 1  , * , 
+                   p_name  = '' ,                   
+                   p_title = '' ,
+                   q_name  = '' ,                   
+                   q_title = '' ,                   
+                   p_pars  = () , 
+                   q_pars  = () ) :
+        
+        P.__init__ ( self , p , p_name , p_title , *p_pars )
+        Q.__init__ ( self , q , q_name , q_title , *q_pars )
+        
+        
+# =============================================================================
+## Alpha & Beta 
+# =============================================================================
+        
+# =============================================================================
+## @class Alpha
+#  Helper MIXIN class to add 'alpha' parameter
+#  It defines two methods/properties 
+#  - alpha 
+#  - a
+class Alpha(object) :
+    """ Helper MIXIN class to add 'alpha'-parameters
+    It defines two methods/properties 
+    - alpha 
+    - a
+    """
+    def __init__ ( self             ,
+                   alpha       = 2  ,
+                   alpha_name  = '' ,                   
+                   alpha_title = '' , *alpha_pars ) :
+        
+        name = self.name
+        
+        if not alpha_name  : alpha_name  = 'alpha_%s'   % name 
+        if not alpha_title : alpha_title = '#alpha(%s)' % name
+        if not alpha_pars  : alpha_pars = 2 , 1.e-5 , 1000
+        
+        ## parameter alpha 
+        self.__alpha = self.make_var ( alpha       ,
+                                       alpha_name  ,
+                                       alpha_title ,
+                                       None        ,
+                                       *alpha_pars )
+        
+    @property
+    def alpha ( self ) :
+        """`alpha'-parameter (alpha>0)"""
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        self.set_value ( self.__alpha , value )
+
+    ## ALIAS
+    a = alpha
+    
+# =============================================================================
+## @class Beta
+#  Helper MIXIN class to add 'beta' parameter 
+#  It defines two methods/properties 
+#  - beta 
+#  - b
+class Beta(object) :
+    """ Helper MIXIN class to add 'beta'-parameters
+    It defines two methods/properties 
+    - alpha 
+    - a
+    """
+    def __init__ ( self            ,
+                   beta       = 2  , 
+                   beta_name  = '' ,                   
+                   beta_title = '' , *beta_pars ) :
+        
+        name = self.name
+        
+        if not beta_name  : beta_name  = 'beta_%s'   % name 
+        if not beta_title : beta_title = '#beta(%s)' % name
+        if not beta_pars  : beta_pars  = 2 , 1.e-5 , 1000
+        
+        ## parameter beta 
+        self.__beta = self.make_var ( beta        ,
+                                      beta_name   ,
+                                      beta_title  ,
+                                      None        ,
+                                      *beta_pars  )
+        
+    @property
+    def beta ( self ) :
+        """`beta'-parameter, same as `b` (beta>0)"""
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        self.set_value ( self.__beta , value )
+        
+    ## ALIAS
+    b = beta 
+
+# =============================================================================
+## @class AlphaAndBeta
+#  Helper MIXIN class to add 'alpha' and `beta`-parameters
+class AlphaAndBeta (Alpha,Beta):
+    """ Helper MIXIN class to add 'alpha' and `beta`-parameters
+    """
+    def __init__ ( self ,
+                   alpha       =  2 ,
+                   beta        =  2 , * , 
+                   alpha_name  = '' ,                   
+                   alpha_title = '' , 
+                   beta_name   = '' ,                   
+                   beta_title  = '' ,
+                   alpha_pars  = () ,
+                   beta_pars   = () ) : 
+        
+        Alpha.__init__ ( self , alpha , alpha_name , alpha_title , *alpha_pars )
+        Beta .__init__ ( self , beta  , beta_name  , beta_title  , *beta_pars  )
+
 # =============================================================================
 ## Power-law tails 
 # =============================================================================
@@ -4135,11 +4456,6 @@ class TailN(object) :
     @n.setter
     def n ( self, value ) :   
         self.set_value ( self.__n , value )        
-        
-    @property
-    def N ( self ) :
-        """`N` : actual N-parameter used for power-law tail"""
-        return self.__N
 
 # =============================================================================
 ## @class TailNL 
@@ -4193,11 +4509,6 @@ class TailNL(object) :
     @nL.setter
     def nL ( self, value ) :   
         self.set_value ( self.__nL , value )        
-        
-    @property
-    def NL ( self ) :
-        """`NL` : actual N-parameter used for left power-law tail"""
-        return self.__NL
 
 # =============================================================================
 ## @class TailNR 
@@ -4234,7 +4545,7 @@ class TailNR(object) :
         if not title_n : title_n = 'n_{R}(%s)' % name
         if not title_N : title_N = 'N_{R}(%s)' % name
                 
-        ## parameter n for power=law tails 
+        ## parameter n for the power-law tails 
         self.__nR  = self.make_var ( n       ,
                                      name_n  , 
                                      title_n , 
@@ -4250,57 +4561,21 @@ class TailNR(object) :
     @nR.setter
     def nR ( self, value ) :   
         self.set_value ( self.__nR , value )        
-        
-    @property
-    def NR ( self ) :
-        """`NR` : actual N-parameter used for right power-law tail"""
-        return self.__NR
-
 
 # ==============================================================================
 ##  @class  TailA
 #   Helper mixin class  to define alpha-parameter for tails 
-#   It defines fillowinng properties
+#   It defines two properties
 #   - alpha
 #   - a    
-class TailA(object) :
-    """ Helper mixin class  to define alpha-parameter for tails 
-    It defines two properties
-    - alpha
-    - a
+class TailA(Alpha) :
+    """ Helper mixin class  to define alpha-parameter for the tails 
     """    
-    def __init__  ( self               , 
-                    alpha       = None ,
-                    name_alpha  = ''   , 
-                    title_alpha = ''   ) :
-        
-        name = self.name 
-        
-        if not name_alpha  : name_alpha  = 'alpha_%s'    % name 
-        if not title_alpha : title_alpha = '#alpha(%s)'  % name        
-
-        ## parameter alpha         ## parameter alpha         ## parameter alpha 
-        self.__alpha = self.make_var ( alpha       ,
-                                       name_alpha  ,
-                                       title_alpha , 
-                                       None        , 1.50 ,  0.45 , 5.00 )
-
-    @property
-    def alpha ( self ) :
-        """'alpha': alpha-parameter for Crysta Ball-like power-law tail
-        """
-        return self.__alpha 
-    @alpha.setter
-    def alpha ( self, value ) :
-        self.set_value ( self.__alpha , value ) 
-        
-    @property
-    def a ( self ) :
-        """'a:': alpha-parameter for Crystal Ball-like power-law tail (same as 'alpha')"""
-        return self.alpha
-    @a.setter
-    def a ( self, value ) :
-        self.alpha = value 
+    def __init__  ( self              , 
+                    alpha       = 1.7 ,
+                    name_alpha  = ''  , 
+                    title_alpha = ''  ) :        
+        Alpha.__init__ ( self , alpha , name_alpha , title_alpha , None , 1.7 , 0.5 , 5.0 )
 
 # ==============================================================================
 ##  @class  TailAL
@@ -4314,10 +4589,10 @@ class TailAL(object) :
     - alphaL
     - aL
     """    
-    def __init__  ( self               , 
-                    alpha       = None ,
-                    name_alpha  = ''   , 
-                    title_alpha = ''   ) :
+    def __init__  ( self              , 
+                    alpha       = 1.7 ,
+                    name_alpha  = ''  , 
+                    title_alpha = ''  ) :
         
         name = self.name 
         
@@ -4326,10 +4601,10 @@ class TailAL(object) :
 
         ## parameter alpha         ## parameter alpha         ## parameter alpha 
         self.__alphaL = self.make_var ( alpha       ,
-                                       name_alpha  ,
-                                       title_alpha , 
-                                       None        , 1.50 ,  0.45 , 5.00 )
-
+                                        name_alpha  ,
+                                        title_alpha , 
+                                        None        , 1.7 ,  0.5 , 5.0 )
+        
     @property
     def alphaL ( self ) :
         """'alphaL': alpha-parameter for left Crystal Ball-like power-law tail
@@ -4338,14 +4613,9 @@ class TailAL(object) :
     @alphaL.setter
     def alphaL ( self, value ) :
         self.set_value ( self.__alphaL , value ) 
-        
-    @property
-    def aL ( self ) :
-        """'aL': alpha-parameter for left Crystal Ball-like power-law tail (same as 'alphaL')"""
-        return self.alphaL
-    @aL.setter
-    def aL ( self, value ) :
-        self.alphaL = value 
+
+    ## ALIAS 
+    aL = alphaL 
 
 # ==============================================================================
 ##  @class  TailAR
@@ -4359,10 +4629,10 @@ class TailAR(object) :
     - alphaR
     - aR
     """    
-    def __init__  ( self               , 
-                    alpha       = None ,
-                    name_alpha  = ''   , 
-                    title_alpha = ''   ) :
+    def __init__  ( self              , 
+                    alpha       = 1.7 ,
+                    name_alpha  = ''  , 
+                   title_alpha = ''   ) :
         
         name = self.name 
         
@@ -4373,8 +4643,8 @@ class TailAR(object) :
         self.__alphaR = self.make_var ( alpha      ,
                                        name_alpha  ,
                                        title_alpha , 
-                                       None        , 1.50 ,  0.45 , 5.00 )
-
+                                       None        , 1.7 ,  0.5 , 5.0 )
+        
     @property
     def alphaR ( self ) :
         """'alphaR': alpha-parameter for right Crystal Ball-like power-law tail
@@ -4384,13 +4654,8 @@ class TailAR(object) :
     def alphaR ( self, value ) :
         self.set_value ( self.__alphaR , value ) 
         
-    @property
-    def aR ( self ) :
-        """'aR': alpha-parameter for right Crystal Ball-like power-law tail (same as 'alphaR')"""
-        return self.alphaR
-    @aR.setter
-    def aR ( self, value ) :
-        self.alphaR = value 
+    ## ALIAS 
+    aR = alphaR 
 
 # =============================================================================
 ## @class Tail
@@ -4407,7 +4672,7 @@ class Tail(TailN,TailA) :
     see `Ostap.Math.Tail.N`
     """
     def __init__ ( self               ,
-                   alpha       = None ,
+                   alpha       = 1.7  ,
                    n           = None ,
                    name_alpha  = ''   ,
                    title_alpha = ''   , 
@@ -4415,17 +4680,18 @@ class Tail(TailN,TailA) :
                    title_n     = ''   , 
                    name_N      = ''   ,
                    title_N     = ''   ) :
-
-        TailN.__init__ ( self              , 
-                        n       = n        ,
-                        name_n  = name_n   , 
-                        title_n = title_n  , 
-                        name_N  = name_N   , 
-                        title_N = title_N  )  
-        TailA.__init__ ( self , 
-                        alpha       = alpha       , 
-                        name_alpha  = name_alpha  , 
-                        title_alpha = title_alpha ) 
+        
+        TailN.__init__ ( self    , 
+                         n       = n        ,
+                         name_n  = name_n   , 
+                         title_n = title_n  , 
+                         name_N  = name_N   , 
+                         title_N = title_N  )
+        
+        TailA.__init__ ( self        , 
+                         alpha       = alpha       , 
+                         name_alpha  = name_alpha  , 
+                         title_alpha = title_alpha ) 
 
 # =============================================================================
 ## @class LeftTail
@@ -4443,7 +4709,7 @@ class LeftTail(TailNL,TailAL) :
     """
     
     def __init__ ( self               ,
-                   alpha       = None ,
+                   alpha       = 1.7  ,
                    n           = None , 
                    name_alpha  = ''   ,                   
                    title_alpha = ''   , 
@@ -4479,7 +4745,7 @@ class RightTail(TailNR,TailAR) :
     see `Ostap.Math.Tail.N`    
     """
     def __init__ ( self               ,
-                   alpha       = None ,
+                   alpha       = 1.7  ,
                    n           = None ,
                    name_alpha  = ''   ,                   
                    title_alpha = ''   , 
@@ -4498,8 +4764,7 @@ class RightTail(TailNR,TailAR) :
                           alpha       = alpha       , 
                           name_alpha  = name_alpha  , 
                           title_alpha = title_alpha ) 
-      
-              
+
 # =============================================================================
 if '__main__' == __name__ :
     

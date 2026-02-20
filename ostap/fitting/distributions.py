@@ -118,7 +118,9 @@ __all__     = (
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.base          import isfinite, pos_infinity, neg_infinity 
 from   ostap.fitting.pdfbasic   import PDF1, PDF2
-from   ostap.fitting.fithelpers import ShiftAndScale, Shift, Scale  
+from   ostap.fitting.fithelpers import ( ShiftAndScale , Shift , Scale ,
+                                         AlphaAndBeta  , Alpha , Beta  ,
+                                         PandQ         , P     , Q     ) 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -233,7 +235,7 @@ models.append ( GammaDist_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Math::GenGammaDist 
 #  @see Ostap::Models::GenGammaDist 
-class GenGammaDist_pdf(GammaDist_pdf) :
+class GenGammaDist_pdf(GammaDist_pdf,P) :
     """ Generalized Gamma-distribution with additional shift parameter 
     http://en.wikipedia.org/wiki/Generalized_gamma_distribution
     Special cases : 
@@ -251,19 +253,16 @@ class GenGammaDist_pdf(GammaDist_pdf) :
                    p     = 1  , ## p-parameter
                    shift = ROOT.RooFit.RooConst ( 0 ) ) : ## shift-parameter
         
-        ## Initialize the base 
+        ## Initialize the 1st base 
         GammaDist_pdf.__init__ ( self ,
                                  name  = name  ,
                                  xvar  = xvar  ,
                                  k     = k     ,
                                  theta = theta ,
                                  shift = shift )
-        
-        ## shape parameter p 
-        self.__p     = self.make_var ( p       ,
-                                       'p_%s'                % self.name ,
-                                       'p_{#Gamma}(%s)'      % self.name ,
-                                       None , 1 , 1.e-3 , 10 )
+        ## initiailze the second base
+        P.__init__ ( self  ,
+                     p = p )
         ## 
         self.pdf  = Ostap.Models.GenGammaDist (
             self.roo_name ( 'ggamma_' ) ,
@@ -284,14 +283,6 @@ class GenGammaDist_pdf(GammaDist_pdf) :
             'shift' : self.shift ,            
             }
 
-    @property
-    def p ( self ) :
-        """`p'--parameter of generalized Gamma distribution   (p>0)"""
-        return self.__p
-    @p.setter 
-    def p ( self , value ) :
-        self.set_value ( self.__p , value ) 
-
 models.append ( GenGammaDist_pdf ) 
 # =============================================================================
 ## @class Amoroso_pdf
@@ -301,7 +292,7 @@ models.append ( GenGammaDist_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Math::Amoroso
 #  @see Ostap::Models::Amoroso
-class Amoroso_pdf(PDF1,ShiftAndScale) :
+class Amoroso_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
     """ Another view on generalized gamma distribution
     http://arxiv.org/pdf/1005.3274
     """
@@ -314,9 +305,9 @@ class Amoroso_pdf(PDF1,ShiftAndScale) :
                    beta  = 1  ,   ## beta-parameter
                    a     = 0  ) : ## a-parameter/shift 
         
-        ## the 1st base 
+        ## The 1st base 
         PDF1         .__init__ ( self , name = name , xvar = xvar )
-        ### the 2nd base
+        ## The 2nd base
         ShiftAndScale.__init__ ( self ,
                                  scale       = theta ,
                                  shift       = a     ,
@@ -324,16 +315,11 @@ class Amoroso_pdf(PDF1,ShiftAndScale) :
                                  scale_title = '#theta_{Amoroso}(%s)' % self.name ,
                                  shift_name  = 'a_%s'                 % self.name ,
                                  shift_title = 'a_{Amoroso}(%s)'      % self.name )
-                                 
-        self.__alpha = self.make_var ( alpha   ,
-                                       'alpha_%s'             % self.name ,
-                                       '#alpha_{Amoroso}(%s)' % self.name ,
-                                       None , 1 , 1.e-3 , 100 )
-        self.__beta  = self.make_var ( beta    ,
-                                       'beta_%s'              % self.name ,
-                                       '#beta_{Amoroso}(%s) ' % self.name ,
-                                       None , 1 , 1.e-3 ,  10 )        
-        
+        ## The 3rd base
+        AlphaAndBeta .__init__  ( self          ,
+                                  alpha = alpha ,
+                                  beta  = beta  )
+                                  
         self.pdf  = Ostap.Models.Amoroso (
             self.roo_name ( 'amo_' ) ,
             'Amoroso %s' % self.name , 
@@ -357,21 +343,6 @@ class Amoroso_pdf(PDF1,ShiftAndScale) :
     theta = ShiftAndScale.scale 
     a     = ShiftAndScale.shift
 
-    @property
-    def alpha ( self ) :
-        """`alpha'-parameter of Amoroso function (alpha>0)"""
-        return self.__alpha
-    @alpha.setter 
-    def alpha ( self , value ) :
-        self.set_value ( self.__alpha , value )
-
-    @property
-    def beta ( self ) :
-        """`beta'-parameter of Amoroso function (beta>0)"""
-        return self.__beta
-    @beta.setter 
-    def beta ( self , value ) :
-        self.set_value ( self.__beta , value )
 
 models.append ( Amoroso_pdf ) 
 # =============================================================================
@@ -792,7 +763,7 @@ models.append ( GenArgus_pdf )
 #  @date   2025-08-10
 #  @see Ostap::Models::Beta
 #  @see Ostap::Math::Beta
-class Beta_pdf(PDF1,ShiftAndScale) :
+class Beta_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
     """ Beta distribution 
     - see https://en.wikipedia.org/wiki/Beta_distribution
     with scale and shift 
@@ -801,24 +772,17 @@ class Beta_pdf(PDF1,ShiftAndScale) :
     def __init__ ( self        , * , 
                    xvar        , ## the variable
                    name   = '' , ## the name 
-                   alpha  = 1  ,
-                   beta   = 1  ,
+                   alpha  = 2  ,
+                   beta   = 2  ,
                    scale  = 1  ,
                    shift  = 0  ) :
         
         # =====================================================================
         # Initiailze the base
-        PDF1         .__init__ ( self , name  = name  , xvar = xvar )
-        ShiftAndScale.__init__ ( self , scale = scale , shift = shift ) 
+        PDF1         .__init__ ( self , name  = name  , xvar  = xvar  )
+        ShiftAndScale.__init__ ( self , scale = scale , shift = shift )
+        AlphaAndBeta .__init__ ( self , alpha = alpha , beta  = beta  ) 
         # =====================================================================
-        self.__alpha  = self.make_var ( alpha                        ,  
-                                        'alpha_%s'       % self.name ,
-                                        '#alpha_{B}(%s)' % self.name ,
-                                        None , alpha , 1.e-6 , 1.e+6 )
-        self.__beta   = self.make_var ( beta                    ,  
-                                        'beta_%s'        % self.name ,
-                                        '#beta_{B}(%s)'  % self.name ,
-                                        None , beta  , 1.e-6 , 1.e+6 )        
         ## create PDF 
         self.pdf  = Ostap.Models.Beta (
             self.roo_name ( 'beta_' ) ,
@@ -839,22 +803,6 @@ class Beta_pdf(PDF1,ShiftAndScale) :
             'shift' : self.shift ,            
             }
 
-    @property
-    def alpha ( self ) :
-        """`alpha'-parameter of Beta distribution"""
-        return self.__alpha
-    @alpha.setter 
-    def alpha ( self , value ) :
-        self.set_value ( self.__alpha , value )
-        
-    @property
-    def beta ( self ) :
-        """`beta'-parameter of Beta distribution"""
-        return self.__beta
-    @beta.setter 
-    def beta ( self , value ) :
-        self.set_value ( self.__beta , value )
-
 models.append ( Beta_pdf ) 
 
 # =============================================================================
@@ -872,8 +820,8 @@ class BetaPrime_pdf(Beta_pdf) :
     def __init__ ( self        , * , 
                    xvar        , ## the variable
                    name   = '' , ## the name 
-                   alpha  = 1  ,
-                   beta   = 1  ,
+                   alpha  = 2  ,
+                   beta   = 6  ,
                    scale  = 1  ,
                    shift  = 0  ) :
         ## 
@@ -916,7 +864,7 @@ models.append ( BetaPrime_pdf )
 #  @see Ostap::Models::GenBeta 
 #  @see Ostap::Math::GenBeta 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-class GenBeta_pdf(Beta_pdf) :
+class GenBeta_pdf(Beta_pdf,PandQ) :
     """ Generalized Beta-prime disribution 
     - http://en.wikipedia.org/wiki/Beta_prime_distribution
     """
@@ -924,11 +872,11 @@ class GenBeta_pdf(Beta_pdf) :
     def __init__ ( self        , * , 
                    xvar        ,   ## the variable
                    name  = ''  ,   ## the name 
-                   alpha = 1   ,   ## alpha-parameter
-                   beta  = 1   ,   ## beta-parameter: scale!
+                   alpha = 1   ,   ## alpha-parameter (shape) 
+                   beta  = 1   ,   ## beta-parameter: (scale)
                    gamma = 0   ,   ## gamma : c = sin^2 ( pi gamma / 2 ) 
-                   p     = 1   ,   ## p-parameter, p>0 
-                   q     = 1   ,   ## q-parameter, q>0 
+                   p     = 2   ,   ## p-parameter, p>0 
+                   q     = 2   ,   ## q-parameter, q>0 
                    shift = 0   ) : ## shift-parameter
         
         ## inialize the base 
@@ -938,22 +886,15 @@ class GenBeta_pdf(Beta_pdf) :
                             alpha = alpha ,
                             beta  = beta  ,
                             scale = ROOT.RooFit.RooConst ( 1 ) , ## for gen-beta  beta is the scale!
-                            shift = shift ) 
-        
-        self.__p     = self.make_var ( p    ,
-                                       'p_%s'          % self.name ,
-                                       'p_{#beta}(%s)' % self.name ,
-                                       None , 1 , 1.e-5 , 1000 )
-        self.__q     = self.make_var ( q    ,
-                                       'q_%s'          % self.name ,
-                                       'q_{#beta}(%s)' % self.name ,
-                                       None , 1 , 1.e-5 , 1000 )
+                            shift = shift )
+        ## the second base 
+        PandQ   .__init__ ( self , p = p , q = q ) 
+        ## 
         self.__gamma = self.make_var ( gamma ,
                                        'gamma_%s'           % self.name ,
                                        '#gamma_{#beta}(%s)' % self.name ,
-                                       None , gamma , -10 * math.pi , +10 * math.pi ) 
-        
-        
+                                       None  , gamma , -10 * math.pi , +10 * math.pi ) 
+                
         self.pdf  = Ostap.Models.GenBeta (
             self.roo_name ( 'genbeta_' )   ,
             "gen-Beta %s"% self.name , 
@@ -978,22 +919,6 @@ class GenBeta_pdf(Beta_pdf) :
             }
     
     @property
-    def p ( self ) :
-        """`p'-parameter of gen-Beta distribution   (p>0)"""
-        return self.__p
-    @p.setter 
-    def p ( self , value ) :
-        self.set_value ( self.__p , value )
-
-    @property
-    def q ( self ) :
-        """`q'-parameter of gen-Beta distribution   (q>0)"""
-        return self.__p
-    @p.setter 
-    def q ( self , value ) :
-        self.set_value ( self.__q , value )
-
-    @property
     def gamma ( self ) :
         """`gamma` : parameter gamma for gen-Beta distribution: c = sin^2 ( pi gamma / 2 )
         """
@@ -1014,7 +939,7 @@ models.append ( GenBeta_pdf )
 #  @see Ostap::Math::GenBetaPrime
 #  @see Ostap::Models::BetaPrime
 #  @see Ostap::Math::BetaPrime
-class GenBetaPrime_pdf(Beta_pdf) :
+class GenBetaPrime_pdf(Beta_pdf,PandQ) :
     """ Generalized Beta-prime disribution 
     - http://en.wikipedia.org/wiki/Beta_prime_distribution
     """
@@ -1022,14 +947,14 @@ class GenBetaPrime_pdf(Beta_pdf) :
     def __init__ ( self       , * , 
                    xvar       ,   ## the variable
                    name  = '' ,   ## the name 
-                   alpha = 1  ,   ## alpha-parameter
-                   beta  = 1  ,   ## beta-parameter
-                   p     = 1  ,   ## p-parameter, p>0 
-                   q     = 1  ,   ## q-parameter, q>0 
+                   alpha = 2  ,   ## alpha-parameter
+                   beta  = 6  ,   ## beta-parameter
+                   p     = 2  ,   ## p-parameter, p>0 
+                   q     = 2  ,   ## q-parameter, q>0 
                    scale = 1  ,   ## scale-parameter 
                    shift = 0  ) : ## shift-parameter
         
-        ## inialize the base 
+        ## inialize the 1st base 
         Beta_pdf.__init__ ( self  ,
                             xvar  = xvar  , 
                             name  = name  ,
@@ -1037,16 +962,10 @@ class GenBetaPrime_pdf(Beta_pdf) :
                             beta  = beta  ,
                             scale = scale ,
                             shift = shift ) 
+        ## initiailze the 2nd base
+        PandQ  .__init__ ( self , p = p , q = q ) ;
         
-        self.__p  = self.make_var ( p    ,
-                                    'p_%s'                % self.name ,
-                                    'p_{#beta#prime}(%s)' % self.name ,
-                                    None , 1 , 1.e-5 , 1.e+6 )
-        self.__q  = self.make_var ( q    ,
-                                    'q_%s'                % self.name ,
-                                    'q_{#beta#prime}(%s)' % self.name ,
-                                    None , 1 , 1.e-5 , 1.e+6 )
-        
+        ## make PDF 
         self.pdf  = Ostap.Models.GenBetaPrime (
             self.roo_name ( 'genbetap_' )   ,
             "gen-Beta' %s"% self.name , 
@@ -1069,23 +988,7 @@ class GenBetaPrime_pdf(Beta_pdf) :
             'scale' : self.scale ,            
             'shift' : self.shift ,            
             }
-    
-    @property
-    def p ( self ) :
-        """`p'-parameter of gen-Beta' distribution   (p>0)"""
-        return self.__p
-    @p.setter 
-    def p ( self , value ) :
-        self.set_value ( self.__p , value )
-
-    @property
-    def q ( self ) :
-        """`q'-parameter of gen-Beta' distribution   (q>0)"""
-        return self.__p
-    @p.setter 
-    def q ( self , value ) :
-        self.set_value ( self.__q , value )
-        
+            
 models.append ( GenBetaPrime_pdf ) 
 
 # =============================================================================
@@ -1928,7 +1831,7 @@ models.append ( BirnbaumSaunders_pdf )
 #  @see https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
 #  @see Ostap::Models::Frechet
 #  @see Ostap::Math::Frechet
-class Frechet_pdf(PDF1,ShiftAndScale) :
+class Frechet_pdf(PDF1,ShiftAndScale,Alpha) :
     """ Frechet distribution
     - see https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
     - see Ostap::Models::Frechet
@@ -1946,14 +1849,9 @@ class Frechet_pdf(PDF1,ShiftAndScale) :
         PDF1         .__init__ ( self  , name = name , xvar = xvar )
         ShiftAndScale.__init__ ( self  ,
                                  scale = scale ,
-                                 shift = shift ) 
-        #
-        self.__alpha  = self.make_var ( alpha    ,
-                                        'alpha_%s'               % name ,
-                                        '#alpha_{F}(%s)'         % name ,
-                                        None , alpha , 1.e-6 , 1.e6 )
-        
-        
+                                 shift = shift )
+        Alpha        .__init__ ( self , alpha = alpha )
+        ##
         ## create PDF 
         self.pdf  = Ostap.Models.Frechet (
             self.roo_name ( 'fr_' )  ,
@@ -1970,14 +1868,6 @@ class Frechet_pdf(PDF1,ShiftAndScale) :
             'alpha' : self.alpha ,            
             'scale' : self.scale ,            
             'shift' : self.shift }
-        
-    @property
-    def alpha ( self ) :
-        """`alpha` : alpha-parameter for Frechet's distribution"""
-        return self.__alpha
-    @alpha.setter 
-    def alpha ( self , value ) :
-        self.set_value ( self.__alpha , value )
         
 models.append ( Frechet_pdf ) 
 
@@ -2269,7 +2159,7 @@ models.append ( LogNormal_pdf )
 # - to ensure \f$ 0 < p < 1 \f$  we use
 # \f$ p = \frac{1}{2}\left[ 1 + \tanh \psi \right] \f$ 
 # see Ostap::Math::ExpoLog 
-class ExpoLog_pdf(PDF1,Shift) :
+class ExpoLog_pdf(PDF1,Shift,Beta) :
     """ Log-normal distribution
     - see https://en.wikipedia.org/wiki/Log-normal_distribution
     - We add here an shift parameter
@@ -2286,15 +2176,11 @@ class ExpoLog_pdf(PDF1,Shift) :
                    psi   = 0  ,   
                    shift = 0  ) : ## shift  
         
-        #
-        PDF1  .__init__ ( self  , name  = name  , xvar = xvar  )
-        Shift .__init__ ( self  , shift = shift )
-        #
-        self.__beta = self.make_var ( beta ,
-                                      'beta_%s'         % self.name ,
-                                      '#bete_{EL}(%s)'  % self.name ,
-                                      None , beta , 1.e-3 , 1000 )
-        
+        ##
+        PDF1  .__init__ ( self , name  = name  , xvar = xvar  )
+        Shift .__init__ ( self , shift = shift )
+        Beta  .__init__ ( self , beta  = beta  ) 
+        ## 
         self.__psi  = self.make_var ( psi ,
                                       'psi_%s'         % self.name ,
                                       '#psi_{EL}(%s)'  % self.name ,
@@ -2318,14 +2204,6 @@ class ExpoLog_pdf(PDF1,Shift) :
             'psi'   : self.psi   ,            
             'shift' : self.shift }
         
-    @property
-    def beta ( self ) :
-        """`beta` : beta-parameter for Expo-Log distribution"""
-        return self.__beta
-    @beta.setter 
-    def beta ( self , value ) :
-        self.set_value ( self.__beta , value )
-
     @property
     def psi ( self ) :
         """`psi` : psi-parameter for Expo-Log distribution: p = [ 1+ tanh ( psi ) ] / 2 """
@@ -2406,7 +2284,7 @@ models.append ( Davis_pdf )
 #  @see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
 #  @see Ostap::Models::Kumaraswami 
 #  @see Ostap::Math::Kumaraswami 
-class Kumaraswami_pdf(PDF1,ShiftAndScale) :
+class Kumaraswami_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
     """ Kumaraswami distribution with scale and shift
     - see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
     - see Ostap::Models::Kumaraswami 
@@ -2416,57 +2294,33 @@ class Kumaraswami_pdf(PDF1,ShiftAndScale) :
     def __init__ ( self       , * , 
                    xvar       ,  ## the variable
                    name  = '' ,  ## the name 
-                   a     = 2  ,
-                   b     = 2  , 
+                   alpha = 2  ,
+                   beta  = 2  , 
                    scale = 1  ,
                    shift = 0  ) :
         ## 
-        PDF1         .__init__ ( self  , name  = name  , xvar  = xvar )
-        ShiftAndScale.__init__ ( self  , scale = scale , shift = shift )
-        #
-        self.__a   = self.make_var ( a ,
-                                    'a_%s'       % self.name ,
-                                    'a_{K}(%s)'  % self.name ,
-                                     None , a , 1.e-3 , 100  )
-        self.__b   = self.make_var ( b ,
-                                    'b_%s'       % self.name ,
-                                    'b_{K}(%s)'  % self.name ,
-                                     None , b , 1.e-3 , 100  )
-
+        PDF1         .__init__ ( self , name  = name  , xvar  = xvar  )
+        ShiftAndScale.__init__ ( self , scale = scale , shift = shift )
+        AlphaAndBeta .__init__ ( self , alpha = alpha , beta  = beta  ) 
+        ## 
         ## create PDF 
         self.pdf  = Ostap.Models.Kumaraswami(
             self.roo_name ( 'kumaraswami_' )  ,
             'Kumaraswami %s' % self.name , 
             self.x     ,
-            self.a     ,
-            self.b     ,
+            self.alpha ,
+            self.beta  ,
             self.scale ,
             self.shift )
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'a'     : self.a     ,            
-            'b'     : self.b     ,            
+            'alpha' : self.alpha ,            
+            'beta'  : self.beta  ,            
             'scale' : self.scale ,            
             'shift' : self.shift }
         
-    @property
-    def a ( self ) :
-        """`a` : a-parameter for Kumaraswami distribution"""
-        return self.__a
-    @a.setter 
-    def a ( self , value ) :
-        self.set_value ( self.__a , value )
-        
-    @property
-    def b ( self ) :
-        """`b` : b-parameter for Kumaraswami distribution"""
-        return self.__b
-    @b.setter 
-    def b ( self , value ) :
-        self.set_value ( self.__b , value )
-
 models.append ( Kumaraswami_pdf )
 
 # =============================================================================
@@ -2474,7 +2328,7 @@ models.append ( Kumaraswami_pdf )
 #  Inverse Gamma distribution (with shift)
 #  @see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
 #  @see Ostap::Math::InverseGamma
-class InverseGamma_pdf(PDF1,ShiftAndScale) :
+class InverseGamma_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
     """ Inverse Gamma distribution (with shift)
     - see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
     - see Ostap::Math::InverseGamma
@@ -2493,12 +2347,8 @@ class InverseGamma_pdf(PDF1,ShiftAndScale) :
                                  shift = shift , 
                                  scale_name  = 'beta_%s'        % self.name , 
                                  scale_title = '#beta_{IG}(%s)' % self.name )
-    
-        #
-        self.__alpha = self.make_var ( alpha   ,
-                                       'alpha_%s'        % self.name ,
-                                       '#alpha_{IG}(%s)' % self.name ,
-                                       None , 1 , 1.e-3 , 100 )
+        AlphaAndBeta.__init__  ( self , alpha = alpha , beta = self.scale )
+        ## 
         ## create PDF 
         self.pdf  = Ostap.Models.InverseGamma (
             self.roo_name ( 'invgamma_' )  ,
@@ -2516,19 +2366,10 @@ class InverseGamma_pdf(PDF1,ShiftAndScale) :
             'beta'  : self.beta  ,            
             'shift' : self.shift }
         
-    @property
-    def alpha ( self ) :
-        """`alpha'-parameter of Inverse-Gamma function (alpha>0)"""
-        return self.__alpha
-    @alpha.setter 
-    def alpha ( self , value ) :
-        self.set_value ( self.__alpha , value )
-
     ## ALIAS 
     beta = ShiftAndScale.scale 
                                 
 models.append ( InverseGamma_pdf )
-
 
 # =============================================================================
 ## @class Burr_pdf
@@ -2561,11 +2402,11 @@ class Burr_pdf(PDF1,ShiftAndScale) :
         self.__c   = self.make_var ( c ,
                                      'c_%s'         % self.name ,
                                      'c_{Burr}(%s)' % self.name ,
-                                     None , c , 1.e-4 , 100  )
+                                     None , c , 1.e-5 , 1000  )
         self.__k   = self.make_var ( k ,
                                      'k_%s'         % self.name ,
                                      'k_{Burr}(%s)' % self.name ,
-                                     None , k , 1.e-4 , 100  )
+                                     None , k , 1.e-5 , 1000  )
         
         ## create PDF 
         self.pdf  = Ostap.Models.Burr (

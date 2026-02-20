@@ -11425,8 +11425,8 @@ namespace Ostap
       ( const char*  name   ,
 	const char*  title  ,
 	RooAbsReal&  x      ,
-	RooAbsReal&  a      ,
-	RooAbsReal&  b      ,
+	RooAbsReal&  alpha  ,
+	RooAbsReal&  beta   ,
 	RooAbsReal&  scale  ,
 	RooAbsReal&  shift  ) ;
       /// constructor from all parameters
@@ -11434,8 +11434,8 @@ namespace Ostap
       ( const char*  name      ,
 	const char*  title     ,
 	RooAbsReal&  x         ,
-	RooAbsReal&  a         ,
-	RooAbsReal&  b         ,
+	RooAbsReal&  alpha     ,
+	RooAbsReal&  beta      ,
 	const double scale = 1 , 
 	const double shift = 0 ) ;
       // ======================================================================
@@ -11483,8 +11483,8 @@ namespace Ostap
     public :
       // ======================================================================      
       const RooAbsReal& x      () const { return m_x     .arg  () ; }
-      const RooAbsReal& a      () const { return m_a     .arg  () ; }
-      const RooAbsReal& b      () const { return m_b     .arg  () ; }
+      const RooAbsReal& alpha  () const { return m_alpha .arg  () ; }
+      const RooAbsReal& beta   () const { return m_beta  .arg  () ; }
       const RooAbsReal& scale  () const { return m_scale .arg  () ; }
       const RooAbsReal& shift  () const { return m_shift .arg  () ; }
       // ======================================================================      
@@ -11493,9 +11493,9 @@ namespace Ostap
       /// observable 
       RooRealProxy m_x     {} ; // observable
       /// a-shape 
-      RooRealProxy m_a     {} ; // a-shape 
+      RooRealProxy m_alpha {} ; // a-shape 
       /// b-shape 
-      RooRealProxy m_b     {} ; // b-shape 
+      RooRealProxy m_beta  {} ; // b-shape 
       /// scale 
       RooRealProxy m_scale {} ; // scale 
       /// shift 

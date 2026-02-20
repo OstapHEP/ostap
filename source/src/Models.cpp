@@ -1132,11 +1132,11 @@ double Ostap::Math::Beta::evaluate  ( const double x ) const
   if ( m_alpha < 1 && s_zero (     tt ) ) { return std::numeric_limits<double>::max () ; }
   if ( m_beta  < 1 && s_zero ( 1 - tt ) ) { return std::numeric_limits<double>::max () ; }
   //
-  if ( m_alpha > 1 && s_zero (     tt ) ) { return 0 ; }
-  if ( m_beta  > 1 && s_zero ( 1 - tt ) ) { return 0 ; }
+  if ( 1 < m_alpha && s_equal ( 1 + tt , 1 ) ) { return 0 ; }
+  if ( 1 < m_beta  && s_equal ( 0 + tt , 1 ) ) { return 0 ; }
   //
   const double a = std::pow ( 0.0L + tt , m_alpha - 1.0L ) ;
-  const double b = std::pow ( 1.0L - tt , m_alpha - 1.0L ) ;
+  const double b = std::pow ( 1.0L - tt , m_beta  - 1.0L ) ;
   //
   return a * b * m_norm / m_scale ;
 }
@@ -1150,15 +1150,19 @@ double Ostap::Math::Beta::cdf ( const double x ) const
   else if ( x >= xmax () ) { return 1 ; }
   //
   const double tt = t ( x ) ;
-  if      ( tt <= 0 ) { return 0 ; }
-  else if ( tt >= 1 ) { return 1 ; }
   //
-  return beta_cdf ( m_alpha , m_beta , tt ) ;
+  if      ( tt <= 0 || s_equal ( 1 + tt , 1 ) ) { return 0 ; }
+  else if ( tt >= 1 || s_equal ( 0 + tt , 1 ) ) { return 1 ; }
+  //
+  return beta_cdf ( tt , m_alpha , m_beta ) ;
 }
 // ============================================================================
 // get integral 
 // ============================================================================
 double Ostap::Math::Beta::integral () const { return 1 ; }
+// ============================================================================
+// get integral 
+// ============================================================================
 double Ostap::Math::Beta::integral
 ( const double low  ,
   const double high ) const
@@ -1202,7 +1206,7 @@ double Ostap::Math::Beta::median () const
 double Ostap::Math::Beta::variance () const
 {
   const double value = m_alpha * m_beta /
-    ( std::pow ( m_alpha + m_beta , 2 ) * ( m_alpha + m_beta + 1 ) );
+  ( std::pow ( m_alpha + m_beta , 2 ) * ( m_alpha + m_beta + 1 ) );
   //
   return value  * m_scale * m_scale ;
 }
@@ -1212,7 +1216,7 @@ double Ostap::Math::Beta::variance () const
 double Ostap::Math::Beta::rms   () const
 { return std::sqrt ( variance ()  ) ; }
 // ===========================================================================
-// skeness 
+// skewness 
 // ===========================================================================
 double Ostap::Math::Beta::skewness () const
 {
@@ -1790,6 +1794,11 @@ bool Ostap::Math::GenBeta::setGamma ( const double value )
   const double sin_g = std::sin ( s_pi_2 * m_gamma ) ;
   //
   m_c  = sin_g * sin_g ;
+  //
+  if      ( s_zero  (     m_c     ) ) { m_c = 0 ; }
+  else if ( s_equal ( 1 + m_c , 1 ) ) { m_c = 0 ; }
+  else if ( s_equal ( 0 + m_c , 1 ) ) { m_c = 1 ; }
+  //
   m_c1 = s_equal ( m_c , 1.0 ) ;
   m_ac = m_c1  ? -1.0 : std::pow ( 1.0L - m_c , 1 / m_a ) ;
   //
@@ -1930,7 +1939,7 @@ double Ostap::Math::GenBeta::evaluate ( const double x ) const
   const double z = ( x - m_shift ) / m_b ;
   if ( z <= 0  || s_zero ( z )  ) { return 0 ; }             // RETURN 
   //
-  if      (                   x <= xmin () ) { return 0 ; }
+  if      ( x <= xmin ()                   ) { return 0 ; }
   else if ( finite_range() && xmax() <= x  ) { return 0 ; }
   //
   const long double za   = std::pow ( z * 1.0L , m_a * 1.0L ) ;
@@ -2042,6 +2051,253 @@ std::size_t Ostap::Math::GenBeta::tag () const
 				       m_shift ) ; 
 }
 // ============================================================================
+
+
+
+// ============================================================================
+// Generalized beta of first kind 
+// ============================================================================
+Ostap::Math::GenBeta1::GenBeta1
+( const double a     , // shape 
+  const double p     , // shape 
+  const double q     , // shape 
+  const double scale , // scale 
+  const double shift )
+  : m_a      (  a  )
+  , m_p      (  std::abs ( p     ) )
+  , m_q      (  std::abs ( q     ) )
+  , m_scale  (  std::abs ( scale ) )
+  , m_shift  (             shift   )
+{
+  Ostap::Assert ( !s_zero ( m_a )  ,
+		  "a-parameter must be non-zero!"         ,
+		  "Ostap::Math::GenBeta"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( !s_zero ( m_p ) , 
+		  "p-parameter must be non-zero!"         ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;  
+  Ostap::Assert ( !s_zero ( m_q ) , 
+		  "q-parameter must be non-zero!"         ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  Ostap::Assert ( !s_zero ( m_scale ) ,  
+		  "scale-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_lnBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+}
+// ============================================================================
+// set parameter A 
+// ============================================================================
+bool Ostap::Math::GenBeta1::setA ( const double value ) 
+{
+  if ( s_equal ( value , m_a ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( value ) ,
+		  "a-parameter must be non-zero!"         ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  m_a  = value ;
+  return true ;
+}
+// ============================================================================
+// set parameter P
+// ============================================================================
+bool Ostap::Math::GenBeta1::setP ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_p  ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( avalue ) ,
+		  "p-parameter must be non-zero!"         ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_p     = avalue ;
+  m_lnBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  return true ;
+}
+// ============================================================================
+// set parameter Q
+// ============================================================================
+bool Ostap::Math::GenBeta1::setQ ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_q  ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( avalue ) ,
+		  "q-parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta1"                  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_q     = avalue ;
+  m_lnBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenBeta1::setScale ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;  
+  if ( s_equal ( avalue , m_scale  ) ) { return false ; }
+  Ostap::Assert ( !s_zero ( avalue ) ,
+		  "scale parameter must be non-zero!"     ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_scale = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenBeta1::setShift ( const double value ) 
+{
+  if ( s_equal ( value , m_shift  ) ) { return false ; }
+  m_shift  = value ;
+  return true ;
+}
+// ============================================================================
+// set parameters P&Q
+// ============================================================================
+bool Ostap::Math::GenBeta1::setPQ
+( const double valuep ,
+  const double valueq )
+{
+  const double avaluep = std::abs ( valuep ) ;
+  const double avalueq = std::abs ( valueq ) ;
+  if ( s_equal ( avaluep , m_p ) && s_equal ( avalueq , m_q ) ) { return false ; }
+  //
+  Ostap::Assert ( !s_zero ( avaluep ) ,
+		  "p-parameter must be non-zero!"         ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( !s_zero ( avalueq ) ,
+		  "q-parameter must be non-zero!"         ,
+		  "Ostap::Math::GenBeta1"                 ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_p     = avaluep ;
+  m_q     = avalueq ;
+  m_lnBpq = Ostap::Math::lnbeta ( m_p , m_q ) ;
+  return true ;
+}
+// ============================================================================
+// x-max
+// ============================================================================
+double Ostap::Math::GenBeta1::xmax () const
+{ return 0 < m_a ? m_shift + m_scale : s_POSINF ; }
+// ============================================================================
+// evaluate GenBeta1-distribution
+// ============================================================================
+double Ostap::Math::GenBeta1::evaluate ( const double x ) const 
+{
+  if      ( 0 < m_a && ( x <= m_shift || m_shift + m_scale <= x ) ) { return 0 ; }
+  else if ( 0 > m_a &&                   m_shift + m_scale >= x   ) { return 0 ; }
+  //
+  const double z = ( x - m_shift ) / m_scale ;
+  //
+  if      ( 0 < m_a && ( z <=  0 || 1 <= z ) ) { return 0 ; }
+  else if ( 0 > m_a &&              z <= 1   ) { return 0 ; }
+  //
+  const long double za  = std::pow ( z * 1.0L , m_a * 1.0L ) ;
+  //
+  const long double lz1 = std::log ( 0.0L + za ) ;
+  const long double lz2 = std::log ( 1.0L - za ) ; 
+  //
+  const long double lr = ( m_p - 1.0L ) * lz1 + ( m_q - 1.0L ) * lz2 - m_lnBpq ;
+  return std::abs ( m_a ) * std::exp ( lr ) / m_scale ;
+  //
+}
+// ============================================================================
+// evaluate integral 
+// ============================================================================
+double Ostap::Math::GenBeta1::integral () const { return 1 ; }
+// ============================================================================
+// evaluate integral 
+// ============================================================================
+double Ostap::Math::GenBeta1::integral
+( const double low  ,
+  const double high ) const
+{
+  if       ( s_equal ( low , high ) ) { return 0 ; }
+  else if  ( high <  low            ) { return - integral ( high , low ) ; }
+  else if  ( high <= m_shift        ) { return 0 ; }
+  ///
+  const double xmn = xmin () ;
+  if       ( high <= xmn ) { return 0                       ; }
+  else if  ( low  <  xmn ) { return integral ( xmn , high ) ; }
+  //
+  const double d2 = high - low ;
+  if ( finite_range () )
+  {
+    const double xmx = xmax () ;
+    if      ( xmx <= low  ) { return 0 ; }
+    else if ( xmx <  high ) { return integral ( low , xmx ) ; }
+    //
+    const double d1 = xmx  - xmn ;
+    // split ...
+    if ( d1 < 10 * d2  )
+    {
+      const double mid = 0.5 * ( low + high ) ;
+      return integral ( low , mid ) + integral ( mid , high ) ;
+    }
+  }
+  else
+  {
+    // split 
+    if ( m_scale < 10 * d2 )
+    {
+      const double mid = 0.5 * ( low + high ) ;
+      return integral ( low , mid ) + integral ( mid , high ) ;      
+    }
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<GenBeta1> s_integrator ;
+  static const char s_message[] = "Integral(GenBeta1)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag  () , 
+      &F      , 
+      low     , high ,            // low & high edges
+      workspace ( m_workspace ) , // workspace
+      s_APRECISION              , // absolute precision
+      s_RPRECISION              , // relative precision
+      m_workspace.size()        , // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+// get the CDF 
+// ============================================================================
+double Ostap::Math::GenBeta1::cdf 
+( const double x    ) const
+{
+  const double xmn = xmin () ;
+  if      ( x <= xmn                       ) { return 0 ; }
+  else if ( finite_range() && xmax () <= x ) { return 1 ; }
+  return integral ( xmn , x ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GenBeta1::tag () const 
+{ 
+  static const std::string s_name = "GenBeta1" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       m_a     ,
+				       m_p     ,
+				       m_q     ,
+				       m_scale , 
+				       m_shift ) ; 
+}
+// ============================================================================
+
 
 // ============================================================================
 // Landau
@@ -5348,21 +5604,21 @@ std::size_t Ostap::Math::Davis::tag () const
 
 // ======================================================================
 Ostap::Math::Kumaraswami::Kumaraswami
-( const double a     , // 0<a 
-  const double b     , // 0<b 
+( const double alpha , // 0<alpha 
+  const double beta  , // 0<beta 
   const double scale , // 0<scale
   const double shift )
-  : m_a     ( std::abs ( a     ) )
-  , m_b     ( std::abs ( b     ) )
+  : m_alpha ( std::abs ( alpha ) )
+  , m_beta  ( std::abs ( beta  ) )
   , m_scale ( std::abs ( scale ) )
   , m_shift (            shift   )
 {
-  Ostap::Assert ( 0 < m_a  , 
-                  "a-parameter must be positive!"         ,
+  Ostap::Assert ( 0 < m_alpha , 
+                  "alpha-parameter must be positive!"     ,
                   "Ostap::Math::Kumaraswami"              ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  Ostap::Assert ( 0 < m_b  , 
-                  "b-parameter must be positive!"         ,
+  Ostap::Assert ( 0 < m_beta  , 
+                  "beta-parameter must be positive!"      ,
                   "Ostap::Math::Kumaraswami"              ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   Ostap::Assert ( 0 < m_scale  , 
@@ -5373,33 +5629,33 @@ Ostap::Math::Kumaraswami::Kumaraswami
 // ======================================================================
 // set a 
 // ============================================================================
-bool Ostap::Math::Kumaraswami::setA ( const double value ) 
+bool Ostap::Math::Kumaraswami::setAlpha ( const double value ) 
 {
   const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_a ) ) { return false ; }
+  if ( s_equal ( avalue , m_alpha ) ) { return false ; }
   //
   Ostap::Assert ( avalue , 
-                  "a-parameter must be positive!"         ,
+                  "alpha-parameter must be positive!"     ,
                   "Ostap::Math::Kumaraswami"              ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_a = avalue ; 
+  m_alpha = avalue ; 
   return true ;
 } 
 // ======================================================================
-// set b
+// set beta
 // ============================================================================
-bool Ostap::Math::Kumaraswami::setB ( const double value ) 
+bool Ostap::Math::Kumaraswami::setBeta ( const double value ) 
 {
   const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_b ) ) { return false ; }
+  if ( s_equal ( avalue , m_beta ) ) { return false ; }
   //
   Ostap::Assert ( avalue , 
-                  "b-parameter must be positive!"         ,
+                  "beta-parameter must be positive!"      ,
                   "Ostap::Math::Kumaraswami"              ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_b = avalue ; 
+  m_beta = avalue ; 
   return true ;
 }
 // ======================================================================
@@ -5437,8 +5693,8 @@ double Ostap::Math::Kumaraswami::evaluate    ( const double x ) const
   if ( x <= m_shift || m_scale + m_shift <= x ) { return 0 ; }
   const double z = ( x - m_shift ) / m_scale ;
   //
-  const long double za = std::pow ( z * 1.0L , m_a * 1.0L ) ;
-  return m_a * m_b * za * std::pow ( 1.0L - za , m_b - 1.0L ) / ( z * m_scale ) ;
+  const long double za = std::pow ( z * 1.0L , m_alpha * 1.0L ) ;
+  return m_alpha * m_beta * za * std::pow ( 1.0L - za , m_beta - 1.0L ) / ( z * m_scale ) ;
 }
 // ======================================================================
 // intergal 
@@ -5470,8 +5726,8 @@ double Ostap::Math::Kumaraswami::cdf
   //
   const double z = ( x - m_shift ) / m_scale ;
   //
-  const long double za = std::pow ( z * 1.0L , m_a * 1.0L ) ;
-  return 1.0 - std::pow ( 1.0L- za , m_b * 1.0L ) ;
+  const long double za = std::pow ( z * 1.0L , m_alpha * 1.0L ) ;
+  return 1.0 - std::pow ( 1.0L- za , m_beta * 1.0L ) ;
 }
 // ======================================================================
 // quantile  function \f$ 0 < p < 1 \f$ 
@@ -5484,14 +5740,14 @@ double Ostap::Math::Kumaraswami::quantile
     p > 1             ?  s_QUIETNAN : 
     s_zero  ( p     ) ?  xmin ()    : 
     s_equal ( p , 1 ) ?  xmax ()    :
-    m_shift + m_scale * std::pow ( 1.0L - std::pow ( 1.0L - p , 1.0L/m_b ) , 1.0L/m_a ) ;
+    m_shift + m_scale * std::pow ( 1.0L - std::pow ( 1.0L - p , 1.0L/m_beta ) , 1.0L/m_alpha ) ;
 }
 // ============================================================================
 // raw moment for standartized Kumaraswami
 // ============================================================================
 double Ostap::Math::Kumaraswami::moment
 ( const unsigned int n ) const
-{ return m_b * Ostap::Math::beta ( 1 + n / m_a , m_b ) ; }
+{ return m_beta * Ostap::Math::beta ( 1 + n / m_alpha , m_beta ) ; }
 // ============================================================================
 // mean-value 
 // ============================================================================
@@ -5517,7 +5773,7 @@ double Ostap::Math::Kumaraswami::rms     () const
 // ============================================================================
 double Ostap::Math::Kumaraswami::median() const
 {
-  const double m = std::pow ( 1.0L - std::pow ( 2.0L , -1.0L/m_b ) , 1.0L/m_a ) ; 
+  const double m = std::pow ( 1.0L - std::pow ( 2.0L , -1.0L/m_beta ) , 1.0L/m_alpha ) ; 
   return m_shift + m_scale * m ;
 }
 // ============================================================================
@@ -5525,10 +5781,10 @@ double Ostap::Math::Kumaraswami::median() const
 // ============================================================================
 double Ostap::Math::Kumaraswami::mode () const
 {
-  if      ( m_a < 1 || m_b < 1                         ) { return s_QUIETNAN ; }
-  else if ( s_equal ( m_a , 1 ) && s_equal ( m_b , 1 ) ) { return m_shift + 0.5 * m_scale ; }
+  if      ( m_alpha < 1 || m_beta < 1                         ) { return s_QUIETNAN ; }
+  else if ( s_equal ( m_alpha , 1 ) && s_equal ( m_beta , 1 ) ) { return m_shift + 0.5 * m_scale ; }
   //  
-  const double m = std::pow ( ( m_a - 1.0L ) / ( m_a * m_b - 1.0L ) , 1.0L/m_a ) ;
+  const double m = std::pow ( ( m_alpha - 1.0L ) / ( m_alpha * m_beta - 1.0L ) , 1.0L/m_alpha ) ;
   return m_shift + m_scale * m ;
 }
 // ============================================================================
@@ -5565,8 +5821,8 @@ std::size_t Ostap::Math::Kumaraswami::tag () const
 { 
   static const std::string s_name = "Kumaraswami" ;
   return Ostap::Utils::hash_combiner ( s_name  ,
-				       m_a     ,
-				       m_b     ,
+				       m_alpha ,
+				       m_beta  ,
 				       m_scale ,
 				       m_shift ) ; 
 }

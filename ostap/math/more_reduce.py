@@ -841,8 +841,8 @@ def _om_kumaraswami_reduce_ ( peak ) :
     - see `Ostap.Math.Kumaraswami`
     """
     return root_factory , ( type ( peak ) ,
-                            peak.a     () ,
-                            peak.b     () ,
+                            peak.alpha () ,
+                            peak.beta  () ,
                             peak.scale () ,
                             peak.shift () )
 
