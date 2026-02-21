@@ -591,14 +591,17 @@ namespace Ostap
     ( const double         x , 
       const double         y ) ;
     // ========================================================================    
-    /** Normalized incomplete Beta function  
+    /** Normalized incomplete Beta function
+     *  - CDF for beta-distribution
+     *
      *  \f$ f ( \alpha_1,\alpha_2, z ) = 
      *      I_z( \alpha_1, \alpha_2 ) = 
      *      \frac{\Beta_z(\alpha_1,\alpha_2}}
      *           {\Beta  (\alpha_1,\alpha_2}
-     *  - \f$ 0<z<1\f$
+     *
+     *  - \f$ 0 \le z \le 1\f$
      *  - \f$ 0<\alpha_1\f$
-     *  - \f$ 0<\alpha_2\f$ 
+     *  - \f$ 0<\alpha_2\f$
      */
     double beta_inc 
     ( const double alpha1 , 
@@ -606,11 +609,14 @@ namespace Ostap
       const double z      ) ;
     // ========================================================================
     /** Normalized incomplete Beta function  
+     *  - CDF for beta-distribution
+     *
      *  \f$ f ( \alpha_1,\alpha_2, z ) = 
      *      I_z( \alpha_1, \alpha_2 ) = 
      *      \frac{\Beta_z(\alpha_1,\alpha_2}}
      *           {\Beta  (\alpha_1,\alpha_2}
-     *  - \f$ 0<z<1\f$
+     *
+     *  - \f$ 0 \le z \le 1\f$
      *  - \f$ 0<\alpha_1\f$
      *  - \f$ 0<\alpha_2\f$ 
      */
@@ -619,11 +625,14 @@ namespace Ostap
       const unsigned short alpha2 , 
       const double         z      ) ;
     // ========================================================================
-    /** Derivatime of the normalized incomplete Beta function  
+    /** Derivative of the normalized incomplete Beta function
+     *  - PDF for beta-distribition
+     *
      *  \f$ f ( \alpha_1,\alpha_2, z ) = 
      *      I_z( \alpha_1, \alpha_2 ) = 
      *      \frac{\Beta_z(\alpha_1,\alpha_2}}
      *           {\Beta  (\alpha_1,\alpha_2}
+     *
      *  - \f$ 0<z<1\f$
      *  - \f$ 0<\alpha_1\f$
      *  - \f$ 0<\alpha_2\f$ 
@@ -633,11 +642,14 @@ namespace Ostap
       const double alpha2 , 
       const double z      ) ;    
     // ========================================================================
-    /** Derivatime of the normalized incomplete Beta function  
+    /** Derivative of the normalized incomplete Beta function
+     *  - PDF for beta-distribition
+     *
      *  \f$ f ( \alpha_1,\alpha_2, z ) = 
      *      I_z( \alpha_1, \alpha_2 ) = 
      *      \frac{\Beta_z(\alpha_1,\alpha_2}}
      *           {\Beta  (\alpha_1,\alpha_2}
+     *
      *  - \f$ 0<z<1\f$
      *  - \f$ 0<\alpha_1\f$
      *  - \f$ 0<\alpha_2\f$ 
@@ -2121,7 +2133,9 @@ namespace Ostap
      *   \frac{ x^(\alpha-1) (1-x)^{\beta-1}} { B(\alpha,\beta} \f] 
      *  - \f$ 0 < x < 1 \f$ 
      *  - \f$ 0 < alpha \f$ 
-     *  - \f$ 0 < beta   \f$ 
+     *  - \f$ 0 < beta   \f$
+     *  @see Ostap::Math::dbeta_inc 
+     *  @attention Not ethe order of arguments!
      */
     double beta_pdf
     ( const double x     ,
@@ -2132,7 +2146,9 @@ namespace Ostap
      *  \f[ F(x,\alpha, \beta ) = I_x(\alpha,\beta)\f] 
      *  - \f$ 0 < x < 1 \f$ 
      *  - \f$ 0 < alpha \f$ 
-     *  - \f$ 0 < beta   \f$ 
+     *  - \f$ 0 < beta   \f$
+     *  @see Ostap::Math::beta_inc 
+     *  @attention Note the order of arguments!     
      */
     double beta_cdf
     ( const double x     ,
