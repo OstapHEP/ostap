@@ -12,6 +12,7 @@
 // ============================================================================
 #include "TNamed.h"
 #include "TUUID.h"
+#include "TClassEdit.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -169,6 +170,49 @@ std::string Ostap::toupper
   return result ;
 }
 // ============================================================================
+/*  @fn class_name
+ *  Get the de-mangled class name
+ *  @see TClassEdit::DemangleName 
+ *  @param  mangled mangeld C++ class name
+ *  @return demangled class name
+ */
+// ============================================================================
+std::string Ostap::class_name
+( const std::string& mangled )
+{ return mangled.empty() ? mangled : class_name ( mangled.c_str () ) ;}
+// ============================================================================
+/*  @fn class_name
+ *  Get the de-mangled class name
+ *  @see TClassEdit::DemangleName 
+ *  @param  mangled mangled C++ class name
+ *  @return demangled class name
+ */
+// ============================================================================
+std::string Ostap::class_name
+( const char* mangled )
+{
+  std::string result {} ;
+  if ( !mangled ) { return result ; ; }
+  int error_code { 0 } ;
+  char* demangled = TClassEdit::DemangleName ( mangled , error_code ) ;
+  if ( demangled && !error_code ) { result = std::string ( demangled ) ; }
+  //
+  if ( demangled ) { std::free ( demangled ) ; }
+  //
+  return result ;
+}
+// ==========================================================================
+/* @fn class_name
+ *  Get the de-mangled class name
+ *  @see TClassEdit::DemangleName 
+ *  @param  into type-info object 
+ *  @return demangled class name
+ */
+// ==========================================================================
+std::string Ostap::class_name
+( const std::type_info& info  )
+{ return class_name ( info.name()  ) ; }
+// ==========================================================================
 
 // ============================================================================
 //                                                                     The END 

@@ -11,11 +11,9 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "Ostap/NSphere.h"
-#include "Ostap/Polynomials.h"
+#include "Ostap/Parameters.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Workspace.h"
-#include "Ostap/PhaseSpace.h"
 #include "Ostap/BSpline.h"
 #include "Ostap/MoreMath.h"
 // ============================================================================
@@ -64,20 +62,21 @@ namespace Ostap
       // ======================================================================
     public: // primary getters 
       // ======================================================================
-      inline double mu       () const { return m_mu      ; }
+      inline double mu       () const { return m_ss.shift () ; }
+      inline double beta     () const { return m_ss.scale () ; }
+      //
       inline double peak     () const { return   mu   () ; }
       inline double location () const { return   mu   () ; }
-      inline double beta     () const { return m_beta    ; }
       inline double scale    () const { return   beta () ; }
       // ======================================================================
     public: // settetrs 
       // ======================================================================
-      bool setMu       ( const double value ) ;
-      bool setBeta     ( const double value ) ;
+      inline bool setMu       ( const double value ) { return m_ss.setShift ( value ) ;} 
+      inline bool setBeta     ( const double value ) { return m_ss.setScale ( value ) ;} 
       // ======================================================================
-      bool setPeak     ( const double value ) { return setMu   ( value ) ; }
-      bool setLocation ( const double value ) { return setMu   ( value ) ; }
-      bool setScale    ( const double value ) { return setBeta ( value ) ; }
+      inline bool setPeak     ( const double value ) { return setMu   ( value ) ; }
+      inline bool setLocation ( const double value ) { return setMu   ( value ) ; }
+      inline bool setScale    ( const double value ) { return setBeta ( value ) ; }
       // ======================================================================
     public: // derived quantities 
       // ======================================================================
@@ -123,10 +122,8 @@ namespace Ostap
       // ======================================================================
     private:      
       // ======================================================================
-      /// mode, location, bias parameter 
-      double m_mu   ; // mode, location, bias parameter 
-      /// scale parameter 
-      double m_beta ; // scale parameter
+      /// shift and scale parameters
+      Ostap::Math::ShiftAndScale m_ss { 1 , 0 }  ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -141,7 +138,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      /** constructor from scale & shape parameters
+      /** constructor from shape/scale&shift parameters
        *  param k       \f$k\f$      parameter (shape)
        *  param theta   \f$\theta\f$ parameter (scale)
        *  param shift   shift parameter
@@ -153,38 +150,42 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      double pdf        ( const double x ) const ;
       /// calculate gamma distribution shape
-      inline double operator() ( const double x ) const { return pdf ( x ) ; }
-      inline double evaluate   ( const double x ) const { return pdf ( x ) ; }
+      double evaluate( const double x ) const ;
+      /// calculate gamma distribution shape
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// calculate gamma distribution shape
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       // variables
       // ======================================================================
-      inline double k          () const  { return m_k       ; }
-      inline double theta      () const  { return m_theta   ; }
-      inline double shift      () const  { return m_shift   ; }
+      inline double k          () const  { return m_k .value () ; }
+      inline double theta      () const  { return m_ss.scale () ; }
+      inline double shift      () const  { return m_ss.shift () ; }
       // ======================================================================
-      inline double alpha      () const  { return m_k       ; }
-      inline double beta       () const  { return 1/m_theta ; }
+      inline double alpha      () const  { return m_k .value () ; }
+      inline double beta       () const  { return 1 / theta  () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// mean value 
-      inline double mean       () const  { return m_shift + m_k * m_theta  ; }
+      double        mean       () const ;
       /// variance 
-      inline double variance   () const  { return dispersion ()            ; }
-      /// variance 
-      inline double dispersion () const  { return m_k * m_theta * m_theta  ; }
-      /// kurtosis 
-      inline double kurtosis   () const  { return 6 / alpha  ()            ; }
-      // 
+      double        variance   () const ;
+      /// RMS 
       double        rms        () const  ;
+      ///  kewness 
       double        skewness   () const  ;
-      double        mode       () const  ; 
+      /// Mode 
+      double        mode       () const  ;
+      /// dispersion 
+      inline double dispersion () const  { return variance  () ; }
+      /// kurtosis 
+      inline double kurtosis   () const  { return 6 / alpha () ; }
       // ======================================================================
-      inline double xmin       () const { return m_shift  ; }
+      inline double xmin       () const { return shift () ; }
       // ======================================================================      
     public:
       // ======================================================================
@@ -203,9 +204,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      bool setK     ( const double value  ) ;
-      bool setTheta ( const double value  ) ;
-      bool setShift ( const double value  ) ;
+      bool        setK     ( const double value  ) ; 
+      inline bool setTheta ( const double value  ) { return m_ss.setScale ( value ) ; } 
+      inline bool setShift ( const double value  ) { return m_ss.setShift ( value ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -232,11 +233,9 @@ namespace Ostap
     private:
       // ======================================================================
       /// shape
-      double m_k      { 2 } ; // shape
-      /// scale
-      double m_theta  { 1 } ; // scale
-      /// shift
-      double m_shift  { 0 } ; // shift 
+      Ostap::Math::Scale         m_k  { 2     } ; // shape
+      /// scale & shift
+      Ostap::Math::ShiftAndScale m_ss { 1 , 0 } ; // scale & shift 
       // ======================================================================
     private:
       // ======================================================================

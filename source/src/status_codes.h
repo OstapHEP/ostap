@@ -79,6 +79,8 @@ namespace
     INVALID_PARAMETER          = 825 , 
     INVALID_PARAMETERS         = 826 , 
     INVALID_MINMAX             = 827 ,
+    INVALID_LOGPARAMETER       = 828 , 
+    INVALID_SCALEPARAMETER     = 829 , 
     //
     INVALID_ENTRY              = 830 ,
     INVALID_EVENT              = 831 ,    

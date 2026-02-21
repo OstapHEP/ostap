@@ -7,8 +7,17 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Hash.h"
+#include "Ostap/Names.h"
 #include "Ostap/Math.h"
+#include "Ostap/MoreMath.h"
 #include "Ostap/Parameters.h"
+// ============================================================================
+// Local
+// ============================================================================
+#include "local_hash.h"
+#include "local_math.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::Math::Parameters
@@ -16,20 +25,498 @@
  *  @author Vanya BELYAEV
  */
 // ============================================================================
-namespace 
+/*  full constructor
+ *  @param value parameter value  
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner) class 
+ */
+// ============================================================================
+Ostap::Math::Value::Value
+( const double       value      ,
+  const std::string& value_name ,
+  const std::string& class_name )
+  : m_value ( value      )
+  , m_name  ()
 {
-  // ==========================================================================
-  static_assert ( std::numeric_limits<double>::is_specialized           , 
-                  "mumeric_limits are not specialized for doubles"      ) ;
-  // ==========================================================================
-  /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double> s_equal {} ;       // equality criteria for doubles
-  /// zero for doubles  
-  const Ostap::Math::Zero<double>     s_zero  {} ;       // zero for doubles
-  /// zero fo vectors 
-  const Ostap::Math::Zero< std::vector<double> > s_vzero {} ; // zero for vectors
-  // ==========================================================================
+  setFullName ( value_name , class_name ) ;
 }
+// ============================================================================
+/** full constructor
+ *  @param value parameter value  
+ *  @param name  parameter name  
+ *  @param the_class the (owner/holder) object
+ */
+// ============================================================================
+Ostap::Math::Value::Value
+( const double          value     , 
+  const std::string&    name      ,
+  const std::type_info& the_class )
+  : Value ( value , name , Ostap::class_name ( the_class ) )
+{}
+// ============================================================================
+// set new value for parameter 
+// ============================================================================
+bool Ostap::Math::Value::setValue ( const double value )
+{
+  if ( s_equal ( value , m_value ) ) { return false ; }
+  m_value = value ;
+  return true ;
+}
+// ============================================================================
+/** set the full name of parameter
+ *  @param the_class the name of ower/holder class
+ *  @parm  the_name  the parameter  name
+ */
+// ============================================================================
+const std::string& Ostap::Math::Value::setFullName
+( const std::string& the_class ,
+  const std::string& the_name  )
+{
+  //
+  const std::string c1 { Ostap::strip ( the_class ) } ;
+  const std::string c2 { Ostap::strip ( the_name  ) } ;
+  //
+  if       ( !c1.empty() && !c2.empty() ) { m_name = c1 + "::" + c2 ; }
+  else if  ( !c1.empty()                ) { m_name = c1 ; }
+  else if  ( !c2.empty()                ) { m_name = c2 ; }
+  else                                    { m_name = "" ; }
+  //
+  return m_name  ;
+}
+// ============================================================================
+/*  set the full name of parameter
+ *  @param the_class the typeinfo of ower/holder class
+ *  @parm  the_name  the parameter  name
+ */
+// ============================================================================
+const std::string&
+Ostap::Math::Value::setFullName
+( const std::type_info& the_class ,
+  const std::string&    the_name  )
+{ return setFullName ( Ostap::class_name ( the_class ) , the_name ) ; }
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::Value::tag () const 
+{
+  static const std::string s_name { "Value" } ;
+  return Ostap::Utils::hash_combiner ( s_name , m_value , m_name )  ;
+}
+// ============================================================================
+
+// ============================================================================
+/*  full constructor
+ *  @param value logarithm of parameter
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::LogValue::LogValue
+( const double       log_value ,
+  const std::string& name      ,
+  const std::string& the_class )
+  : m_log_value ( 0 )
+  , m_value     ( 0 , name , the_class )
+{
+  static const std::string s_invalid_log { "Invalid log-value!" } ;  
+  Ostap::Assert ( s_EXP_UNDERFLOW < log_value && log_value < s_EXP_OVERFLOW ,		  
+		  s_invalid_log                              ,
+		  m_value.name ()                            , 
+		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_log_value = log_value ;
+  m_value.setValue ( std::exp ( m_log_value ) ) ;
+  //
+}
+
+// ============================================================================
+/*  full constructor
+ *  @param value parameter value  
+ *  @param name  parameter name  
+ *  @param the_class the (owner/holder) object
+ */
+// ============================================================================
+Ostap::Math::LogValue::LogValue
+( const double          value     , 
+  const std::string&    name      ,
+  const std::type_info& the_class )
+  : LogValue ( value , name , Ostap::class_name ( the_class ) )
+{}
+// =====================================================================
+// set new value for parameter 
+// ============================================================================
+bool Ostap::Math::LogValue::setLogValue ( const double log_value )
+{
+  if ( s_equal ( log_value , m_log_value ) ) { return false ; }
+  static const std::string s_invalid_log { "Invalid log-value!" } ;  
+  Ostap::Assert ( s_EXP_UNDERFLOW < log_value && log_value < s_EXP_OVERFLOW ,		  
+		  s_invalid_log                               ,
+		  m_value.name ()                             , 
+		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_log_value = log_value ;  
+  return m_value.setValue ( std::exp ( m_log_value ) ) ;
+}
+// =====================================================================
+// set new value for     parameter 
+// =====================================================================
+bool Ostap::Math::LogValue::setValue ( const double value  )
+{
+  if ( s_equal ( m_value.value() , value ) ) { return false ; }
+  //
+  static const std::string s_invalid_log { "Invalid log/exp-value!" } ;  
+  Ostap::Assert ( s_EXP_UNDERFLOW_EXP < value && value < s_EXP_OVERFLOW_EXP ,		  
+		  s_invalid_log                               ,
+		  m_value.name ()                             , 
+		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_log_value = std::log  ( value ) ;  
+  return m_value.setValue ( value ) ;
+}
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::LogValue::tag () const 
+{
+  static const std::string s_name { "LogValue" } ;
+  return Ostap::Utils::hash_combiner ( s_name , m_value.tag () )  ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/*  full constructor
+ *  @param value parameter value  
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ===========================================================================
+Ostap::Math::Scale::Scale
+( const double       value     ,
+  const std::string& name      ,
+  const std::string& the_class ,
+  const bool         positive  )
+  : m_scale    ( positive ? std::abs ( value ) : value , name , the_class )
+  , m_positive ( positive ) 
+{
+  static const std::string s_invalid_scale { "Invalid scale-value!" } ;  
+  Ostap::Assert ( !s_zero ( scale () ) ,		  
+		  s_invalid_scale      ,                               
+		  m_scale.name ()      , 
+		  INVALID_SCALEPARAMETER , __FILE__ , __LINE__ ) ;
+  //
+}
+// ============================================================================
+/*  full constructor
+ *  @param value parameter value  
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::Scale::Scale
+( const double          value     ,
+  const std::string&    name      ,
+  const std::type_info& the_class , 
+  const bool            positive  )
+  : Scale ( value , name , Ostap::class_name ( the_class ) , positive )
+{}
+// ============================================================================
+// set new value for scale parameter 
+// ============================================================================
+bool Ostap::Math::Scale::setValue ( const double value )
+{
+  const double new_value = m_positive ? std::abs ( value ) : value ;
+  if ( s_equal ( new_value , m_scale.value () ) ) { return false ; }
+  //
+  static const std::string s_invalid_scale { "Invalid scale-value!" } ;
+  Ostap::Assert ( !s_zero ( new_value) ,		  
+		  s_invalid_scale      ,                               
+		  m_scale.name ()      , 
+		  INVALID_SCALEPARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return m_scale.setValue ( new_value ) ; 
+}
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::Scale::tag () const 
+{
+  static const std::string s_name { "Scale" } ;
+  return Ostap::Utils::hash_combiner ( s_name , m_scale.tag () , m_positive )  ;
+}
+// ============================================================================
+
+// ============================================================================
+/*  @param scale the value of scale parameter 
+ *  @param shift the value of scale parameter 
+ *  @param scale_name the name of scale parameter
+ *  @param shift_name the name of shift parameter
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::ShiftAndScale::ShiftAndScale
+( const double       scale      ,
+  const double       shift      ,
+  const std::string& scale_name ,
+  const std::string& shift_name ,
+  const std::string& the_class  , 
+  const bool         positive   )
+  : m_scale ( scale , scale_name , the_class , positive )
+  , m_shift ( shift , shift_name , the_class )
+{}
+// ============================================================================
+/*  @param scale the value of scale parameter 
+ *  @param shift the value of scale parameter 
+ *  @param scale_name the name of scale parameter
+ *  @param shift_name the name of shift parameter
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::ShiftAndScale::ShiftAndScale
+( const double          scale      ,
+  const double          shift      ,
+  const std::string&    scale_name ,
+  const std::string&    shift_name ,
+  const std::type_info& the_class  , 
+  const bool            positive   )
+  : ShiftAndScale ( scale      ,
+		    shift      ,
+		    scale_name ,
+		    shift_name , Ostap::class_name ( the_class ) , positive )
+{}
+// ============================================================================
+/*  set the full name of parameter
+ *  @param the_class the name of ower/holder class
+ *  @parm  scale_name  the parameter  name
+ *  @parm  shift_name  the parameter  name
+ */
+// ============================================================================
+void Ostap::Math::ShiftAndScale::setFullName
+( const std::string&    the_class   ,
+  const std::string&    scale_name  , 
+  const std::string&    shift_name  )
+{
+  m_scale.setFullName ( the_class , scale_name ) ;
+  m_shift.setFullName ( the_class , scale_name ) ;
+}
+// ============================================================================
+/* set the full name of parameter
+ *  @param the_class the type-info of owner/holder class
+ *  @parm  the_name  the parameter  name
+ */
+// ============================================================================
+void Ostap::Math::ShiftAndScale::setFullName
+( const std::type_info& the_class  ,
+  const std::string&    scale_name , 
+  const std::string&    shift_name )
+{
+  setFullName ( Ostap::class_name ( the_class ) ,
+		scale_name ,
+		shift_name ) ; 
+}
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::ShiftAndScale::tag () const 
+{
+  static const std::string s_name { "ShiftAndScale" } ;
+  return Ostap::Utils::hash_combiner ( s_name         ,
+				       m_shift.tag () , 
+				       m_scale.tag () )  ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/*  @param loga logarithm of a-parameter 
+ *  @param logb logarithm of b-parameter 
+ *  @param aname the name of a-parameter
+ *  @param bname the name of b-parameter
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ===========================================================================
+Ostap::Math::AB::AB
+( const double       loga      ,
+  const double       logb      , 
+  const std::string& aname     , 
+  const std::string& bname     , 
+  const std::string& the_class )
+  : m_a ( loga , aname, the_class ) 
+  , m_b ( logb , bname, the_class ) 
+{}
+// ============================================================================
+/*  @param loga logarithm of a-parameter 
+ *  @param logb logarithm of b-parameter 
+ *  @param aname the name of b-parameter
+ *  @param bname the name of b-parameter
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::AB::AB
+( const double          loga      ,
+  const double          logb      , 
+  const std::string&    aname     , 
+  const std::string&    bname     ,
+  const std::type_info& the_class )
+  : AB ( loga , logb , aname , bname , Ostap::class_name ( the_class ) )
+{}
+// ============================================================================
+/* set the full name of parameter
+ *  @param the_class the name of ower/holder class
+ *  @parm  pname  the name of a-parameter
+ *  @parm  qname  the name of b-parameter
+ */
+// ============================================================================
+void Ostap::Math::AB::setFullName
+( const std::string& the_class ,
+  const std::string& aname    , 
+  const std::string& bname    )
+{
+  m_a.setFullName ( the_class , aname ) ;
+  m_b.setFullName ( the_class , bname ) ; 
+}
+// ======================================================================			
+/* set the full name of parameter
+ *  @param the_class the type-info of owner/holder class
+ *  @parm  pname  the name of a-parameter
+ *  @parm  qname  the name of b-parameter
+ */
+// ======================================================================			
+void Ostap::Math::AB::setFullName
+( const std::type_info& the_class  ,
+  const std::string& aname    , 
+  const std::string& bname    )
+{ return setFullName ( Ostap::class_name ( the_class ) , aname , bname ) ; }
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::AB::tag () const 
+{
+  static const std::string s_name { "AB" } ;
+  return Ostap::Utils::hash_combiner ( s_name     ,
+				       m_a.tag () , 
+				       m_b.tag () )  ;
+}
+// ============================================================================
+/*  @param logp  logarithm of p-parameter 
+ *  @param logq  logarithm of q-parameter 
+ *  @param pname the name of p-parameter
+ *  @param qname the name of q-parameter
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::PQ::PQ
+( const double       logp      ,
+  const double       logq      ,
+  const std::string& pname     ,
+  const std::string& qname     ,
+  const std::string& the_class )
+  : m_p ( logp , pname , the_class )
+  , m_q ( logq , qname , the_class )
+{
+  m_log_B_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;  
+}
+// ============================================================================
+/*  @param logp  logarithm of p-parameter 
+ *  @param logq  logarithm of q-parameter 
+ *  @param pname the name of p-parameter
+ *  @param qname the name of q-parameter
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::PQ::PQ
+( const double          logp      ,
+  const double          logq      ,
+  const std::string&    pname     ,
+  const std::string&    qname     ,
+  const std::type_info& the_class )
+  : PQ ( logp , logq , pname , qname , Ostap::class_name ( the_class ) )
+{}
+// ============================================================================
+// update log-P
+// ============================================================================
+bool Ostap::Math::PQ::setLogP ( const double value  )
+{
+  if ( !m_p.setLogValue ( value ) ) { return false ; } 
+  m_log_B_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
+  return true ;
+} 
+// ============================================================================
+// update log-Q
+// ============================================================================
+bool Ostap::Math::PQ::setLogQ ( const double value  )
+{
+  if ( !m_p.setLogValue ( value ) ) { return false ; } 
+  m_log_B_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
+  return true ;
+} 
+// ============================================================================
+// update P
+// ============================================================================
+bool Ostap::Math::PQ::setP ( const double value  )
+{
+  if ( !m_p.setValue ( value ) ) { return false ; } 
+  m_log_B_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
+  return true ;
+} 
+// ============================================================================
+// update Q
+// ============================================================================
+bool Ostap::Math::PQ::setQ ( const double value  )
+{
+  if ( !m_q.setValue ( value ) ) { return false ; } 
+  m_log_B_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
+  return true ;
+} 
+// ============================================================================
+/*  set the full name of parameter
+ *  @param the_class the name of ower/holder class
+ *  @parm  pname  the name of p-parameter
+ *  @parm  qname  the name of q-parameter
+ */
+// ============================================================================
+void Ostap::Math::PQ::setFullName
+( const std::string& the_class ,
+  const std::string& pname     , 
+  const std::string& qname     )
+{
+  m_p.setFullName ( the_class , pname ) ;
+  m_q.setFullName ( the_class , pname ) ;
+}
+// ============================================================================
+/*  set the full name of parameter
+ *  @param the_class the name of ower/holder class
+ *  @parm  pname  the name of p-parameter
+ *  @parm  qname  the name of q-parameter
+ */
+// ============================================================================
+void Ostap::Math::PQ::setFullName
+( const std::type_info& the_class  ,
+  const std::string& pname     , 
+  const std::string& qname     )
+{ return setFullName ( Ostap::class_name ( the_class ) , pname , qname ) ;}
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::PQ::tag () const 
+{
+  static const std::string s_name { "PQ" } ;
+  return Ostap::Utils::hash_combiner ( s_name     ,
+				       m_p.tag () , 
+				       m_q.tag () )  ;
+}
+// ============================================================================
+
+
+
+
+
+
+
+
+
+
+
 // ============================================================================
 // PARAMETERS
 // ============================================================================

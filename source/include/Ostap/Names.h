@@ -5,8 +5,9 @@
 // Include files
 // ============================================================================
 // STD&STL
-// ============================================================================
+// ============================================================================/
 #include <string>
+#include <typeinfo>
 // ============================================================================
 // Forward declarations 
 // ============================================================================
@@ -72,9 +73,36 @@ namespace  Ostap
   /// convert to upper case 
   std::string toupper ( const std::string& name ) ;
   // ==========================================================================
+  /** @fn class_name
+   *  Get the de-mangled class name
+   *  @see TClassEdit::DemangleName 
+   *  @param  mangled mangled C++ class name
+   *  @return demangled class name
+   */
+  std::string class_name
+  ( const std::string& mangled ) ;
+  // ==========================================================================
+  /** @fn class_name
+   *  Get the de-mangled class name
+   *  @see TClassEdit::DemangleName 
+   *  @param  mangled mangled C++ class name
+   *  @return demangled class name
+   */
+  std::string class_name
+  ( const char* mangled ) ;  
+  // ==========================================================================
+  /** @fn class_name
+   *  Get the de-mangled class name
+   *  @see TClassEdit::DemangleName 
+   *  @param  into type-info object 
+   *  @return demangled class name
+   */
+  std::string class_name
+  ( const std::type_info& info  ) ;  
+  // ==========================================================================
 } //                                                 The end of namespace Ostap
 // ============================================================================
 //                                                                      The END
 // ============================================================================
-#endif // OSTYAP_NAMES_H
+#endif // OSTAP_NAMES_H
 // ============================================================================

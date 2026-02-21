@@ -117,25 +117,37 @@ namespace
   */
   const double  s_INFINITY_LOG_NEG = std::log ( 2 * s_SMALL2 ) ;
   // ==========================================================================
-  /** @var S_EXP_OVERFLOW 
+  /** @var s_EXP_OVERFLOW 
    *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
    *  and underflow is guaranteed if num < -708.4.
    */
-  const double s_EXP_OVERFLOW = 709.8 ;
+  const long double s_EXP_OVERFLOW =  709.8L ;
   // ===========================================================================
-  /** @var S_EXP_UNDERFLOW 
+  /** @var s_EXP_UNDERFLOW 
    *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
    *  and underflow is guaranteed if num < -708.4.
    */
-  const double s_EXP_UNDERFLOW = -708.4 ;
+  const long double s_EXP_UNDERFLOW = -708.4L ;
   // ==========================================================================
- /** @var S_GAUSS_UNDERFLOW 
+  /** @var s_EXP_OVERFLOW_EXP 
    *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
    *  and underflow is guaranteed if num < -708.4.
    */
-  const double s_GAUSS_UNDERFLOW = std::sqrt ( 2 * std::abs ( s_EXP_UNDERFLOW ) ) ;
+  const long double s_EXP_OVERFLOW_EXP = std::exp ( s_EXP_OVERFLOW ) ;
+  // ===========================================================================
+  /** @var s_EXP_UNDERFLOW_EXP 
+   *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
+   *  and underflow is guaranteed if num < -708.4.
+   */
+  const long double s_EXP_UNDERFLOW_EXP = std::exp ( s_EXP_UNDERFLOW ) ;
   // ==========================================================================
-  /** @var S_INFINITY_ERFC_UNDERFLOW 
+ /** @var s_GAUSS_UNDERFLOW 
+   *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
+   *  and underflow is guaranteed if num < -708.4.
+   */
+  const long double s_GAUSS_UNDERFLOW = std::sqrt ( 2.0L * std::abs ( s_EXP_UNDERFLOW ) ) ;
+  // ==========================================================================
+  /** @var s_INFINITY_ERFC_UNDERFLOW 
    *  For the IEEE-compatible type double, underflow is guaranteed if num > 26.55.
    */
   const double s_ERFC_UNDERFLOW = 26.55 ;
