@@ -36,9 +36,9 @@ __all__     = (
     'Scale'             , ## helper mixin to add scale-parameter 
     'ShiftAndScale'     , ## helper mixin to add shift&scale parameters 
     ##
-    'P'                 , ## helper mixin to add p-parameter
-    'Q'                 , ## helper mixin to add q-parameter
-    'PandQ'             , ## helper mixin to add p&q parameters 
+    'P'                 , ## helper mixin to add log-p-parameter
+    'Q'                 , ## helper mixin to add log-q-parameter
+    'PandQ'             , ## helper mixin to add log-p&q parameters 
     ## 
     'Alpha'             , ## helper mixin to add alpha-parameter
     'Beta'              , ## helper mixin to add beta-parameter 

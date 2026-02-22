@@ -121,13 +121,13 @@ namespace
    *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
    *  and underflow is guaranteed if num < -708.4.
    */
-  const long double s_EXP_OVERFLOW =  709.8L ;
+  const long double s_EXP_OVERFLOW =  709.6L ;
   // ===========================================================================
   /** @var s_EXP_UNDERFLOW 
    *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
    *  and underflow is guaranteed if num < -708.4.
    */
-  const long double s_EXP_UNDERFLOW = -708.4L ;
+  const long double s_EXP_UNDERFLOW = -708.2L ;
   // ==========================================================================
   /** @var s_EXP_OVERFLOW_EXP 
    *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num

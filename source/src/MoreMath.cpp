@@ -6764,6 +6764,132 @@ double Ostap::Math::sigmoid
   return 0 ;
 }
 // ============================================================================
+/*  variance from raw-moments
+ *  @param m2 raw second  moment
+ *  @param m1 raw first   moment
+ */
+// ============================================================================
+double Ostap::Math::variance
+( const double m2 ,
+  const double m1 )
+{
+  if      ( !std::isfinite ( m2 ) ) { return m2 ; }
+  else if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  //
+  Ostap::Assert ( 0 <= m2 ,
+		  "Invalid 2nd-moment!"    ,
+		  "Ostap::Math::variance"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double v2 = m2 - m1 * m1 ;
+  Ostap::Assert ( 0 <= v2 || s_zero ( v2 ) ,
+		  "Invalid raw-moments!"   ,
+		  "Ostap::Math::variance"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return std::max ( v2 , 0.0 ) ;
+}
+// ============================================================================
+/*  rms from raw-moments
+ *  @param m2 raw second  moment
+ *  @param m1 raw first   moment
+ */
+// ============================================================================
+double Ostap::Math::rms 
+( const double m2 ,
+  const double m1 )
+{
+  if      ( !std::isfinite ( m2 ) ) { return m2 ; }
+  else if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  //
+  Ostap::Assert ( 0 <= m2 ,
+		  "Invalid 2nd-moment!"    ,
+		  "Ostap::Math::rms"       ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double v2 = m2 - m1 * m1 ;
+  Ostap::Assert ( 0 <= m2 && 0 <= v2 || s_zero ( v2 ) ,
+		  "Invalid raw-moments!"   ,
+		  "Ostap::Math::rms"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  return std::sqrt ( std::max ( v2 , 0.0 ) ) ;
+}
+// ============================================================================
+/*  skewness from raw-moments
+ *  @param m3 raw third   moment
+ *  @param m2 raw second  moment
+ *  @param m1 raw first   moment
+ */
+// ============================================================================
+double Ostap::Math::skewness 
+( const double m3 ,
+  const double m2 ,
+  const double m1 )
+{
+  //
+  if      ( !std::isfinite ( m3 ) ) { return m3 ; }
+  else if ( !std::isfinite ( m2 ) ) { return m2 ; }
+  else if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  //
+  Ostap::Assert ( 0 <= m2 ,
+		  "Invalid 2nd-moment!"    ,
+		  "Ostap::Math::skewness"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double v2 = variance ( m2 , m1 ) ;
+  Ostap::Assert ( std::isfinite ( v2 ) && 0 <= v2 ,
+		  "Invalid variance"       ,
+		  "Ostap::Math::skewness"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double v3 = m3 - m1 * ( 3 * m2 - 2 * m1 * m1 ) ;
+  return v3 / std::pow ( v2 , 3.0/2 ) ;
+}
+// ============================================================================
+/*  (excess) kurtosis  from raw-moments
+ *  @param m4 raw fourth  moment
+ *  @param m3 raw third   moment
+ *  @param m2 raw second  moment
+ *  @param m1 raw first   moment
+ */
+// ============================================================================
+double Ostap::Math::kurtosis 
+( const double m4 ,
+  const double m3 ,
+  const double m2 ,
+  const double m1 )
+{
+  if      ( !std::isfinite ( m4 ) ) { return m4 ; }
+  else if ( !std::isfinite ( m3 ) ) { return m3 ; }
+  else if ( !std::isfinite ( m2 ) ) { return m2 ; }
+  else if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  //
+  Ostap::Assert ( 0 <= m4 ,
+		  "Invalid 4th-moment!"    ,
+		  "Ostap::Math::kurtosis"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  Ostap::Assert ( 0 <= m2 ,
+		  "Invalid 2nd-moment!"    ,
+		  "Ostap::Math::kurtosis"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double v2 = variance ( m2 , m1 ) ;
+  Ostap::Assert ( std::isfinite ( v2 ) && 0 <= v2 ,
+		  "Invalid variance"       ,
+		  "Ostap::Math::skewness"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double v4 = m4 - m1 * ( 4 * m3 + m1 *( 6 * m2 - 3 * m1 * m1 ) ) ;
+  //
+  Ostap::Assert ( 0 <= v4 || s_zero ( v4 ) ,
+		  "Invalid 4th central moment!"    ,
+		  "Ostap::Math::kurtosis"  ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //  
+  return std::max ( v4 , 0.0 ) / ( v2 * v2 ) - 3 ;
+}
 
 // ============================================================================
 /*  Moebius transformation

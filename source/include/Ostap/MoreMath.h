@@ -2662,7 +2662,47 @@ namespace Ostap
     ( const double      x                           ,
       const SigmoidType t = SigmoidType::Hyperbolic ) ;
     // ========================================================================
-
+    
+    // ========================================================================
+    /** variance from raw-moments
+     *  @param m2 raw second  moment
+     *  @param m1 raw first   moment
+     */
+    double variance
+    ( const double m2 ,
+      const double m1 ) ;
+    // ========================================================================
+    /** rms from raw-moments
+     *  @param m2 raw second  moment
+     *  @param m1 raw first   moment
+     */
+    double rms 
+    ( const double m2 ,
+      const double m1 ) ;
+    // =======================================================================
+    /** skewness from raw-moments
+     *  @param m3 raw third   moment
+     *  @param m2 raw second  moment
+     *  @param m1 raw first   moment
+     */
+    double skewness 
+    ( const double m3 ,
+      const double m2 ,
+      const double m1 ) ;
+    // =======================================================================
+    /** (excess) kurtosis  from raw-moments
+     *  @param m4 raw fourth  moment
+     *  @param m3 raw third   moment
+     *  @param m2 raw second  moment
+     *  @param m1 raw first   moment
+     */
+    double kurtosis 
+    ( const double m4 ,
+      const double m3 ,
+      const double m2 ,
+      const double m1 ) ;
+    // =======================================================================
+        
     // ========================================================================
     // Moebius ransformation
     // ========================================================================
