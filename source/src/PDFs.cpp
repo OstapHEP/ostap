@@ -7425,10 +7425,8 @@ Ostap::Models::Beta::clone( const char* name ) const
 void Ostap::Models::Beta::setPars () const 
 {
   //
-  m_bfun.setAlpha  ( m_alpha  ) ;
-  m_bfun.setBeta   ( m_beta   ) ;
-  m_bfun.setScale  ( m_scale  ) ;
-  m_bfun.setShift  ( m_shift  ) ;
+  m_bfun.setAB          ( m_alpha , m_beta  ) ;
+  m_bfun.setScaleShift  ( m_scale , m_shift ) ;
   //
 }
 // ============================================================================
@@ -7520,10 +7518,8 @@ Ostap::Models::BetaPrime::clone( const char* name ) const
 void Ostap::Models::BetaPrime::setPars () const 
 {
   //
-  m_betap.setAlpha  ( m_alpha  ) ;
-  m_betap.setBeta   ( m_beta   ) ;
-  m_betap.setScale  ( m_scale  ) ;
-  m_betap.setShift  ( m_shift  ) ;
+  m_betap.setAB         ( m_alpha  , m_beta ) ;
+  m_betap.setScaleShift ( m_scale , m_shift ) ;
   //
 }
 // ============================================================================
@@ -7584,7 +7580,7 @@ Ostap::Models::GenBetaPrime::GenBetaPrime
   , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
   , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
-  , m_betap   ( 1 , 5 , 1 , 1 , 1 , 0 ) 
+  , m_betap   () 
 {
   setPars() ;
 }
@@ -7773,10 +7769,10 @@ Ostap::Models::GenBeta::clone ( const char* name ) const
 void Ostap::Models::GenBeta::setPars () const 
 {
   //
-  m_beta.setAB     ( m_a     , m_b ) ;
-  m_beta.setGamma  ( m_gamma       ) ;
-  m_beta.setPQ     ( m_p     , m_q ) ;
-  m_beta.setShift  ( m_shift       ) ;
+  // m_beta.setAB     ( m_a     , m_b ) ;
+  // m_beta.setGamma  ( m_gamma       ) ;
+  // m_beta.setPQ     ( m_p     , m_q ) ;
+  // m_beta.setShift  ( m_shift       ) ;
   //
 }
 // ============================================================================

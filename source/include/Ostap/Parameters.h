@@ -72,11 +72,16 @@ namespace Ostap
       // ======================================================================
       /// implicit conversion to double 
       inline operator double () const { return m_value ; } 
+      /// set the value from double
+      inline Value& operator=( const double value )
+      { setValue ( value ) ; return *this ; }
       // ======================================================================
     public :
       // ======================================================================
       /// set new value for parameter 
-      bool setValue ( const double value ) ;
+      bool setValue
+      ( const double value         ,
+	const bool   force = false ) ; 
       // ======================================================================
     public :
       // ======================================================================
@@ -129,12 +134,12 @@ namespace Ostap
     public :
       // ======================================================================
       /** full constructor
-       *  @param value logarithm of parameter
+       *  @param value of parameter
        *  @param name  parameter name  
        *  @param the_class name of the (owner/holder) class 
        */
       LogValue
-      ( const double       log_value = 0       ,
+      ( const double       value     = 1       ,
 	const std::string& name      = "value" ,
 	const std::string& the_class = ""      ) ;	
       // ======================================================================
@@ -155,10 +160,10 @@ namespace Ostap
        */
       template <class CLASS>
       LogValue
-      ( const double          log_value , 
+      ( const double          value     , 
 	const std::string&    name      ,
 	const CLASS&          the_class )
-	: LogValue ( log_value , name , typeid ( the_class ) )
+	: LogValue ( value , name , typeid ( the_class ) )
       {}
       // ======================================================================      
     public :
@@ -166,21 +171,28 @@ namespace Ostap
       /// get the value 
       inline double             value      () const { return m_value.value () ; }
       /// get the full parameter name  
-      inline const std::string& name       () const { return m_value.name  () ; }
+      inline const std::string& name       () const { return m_value.name  () ; }      
       // ======================================================================
     public : // conversion 
       // ======================================================================
       /// implicit conversion to double 
       inline operator double  () const { return m_value.value ()  ; } 
+      /// set the value from double
+      inline LogValue& operator=( const double value )
+      { setValue ( value ) ; return *this ; }
       // ======================================================================
     public : // get & set log-value 
       // ======================================================================
       /// get log-value 
       inline double logValue   () const { return m_logValue ; }
       /// set new value for log-parameter 
-      bool          setLogValue ( const double log_value ) ;
+      bool          setLogValue
+      ( const double value         , 
+	const bool   force = false ) ; 
       /// set new value for     parameter 
-      bool          setValue    ( const double value     ) ;
+      bool          setValue
+      ( const double value         , 
+	const bool   force = false ) ; 
       // ======================================================================
     public :
       // ======================================================================
@@ -228,7 +240,6 @@ namespace Ostap
     /** @class InRange
      *  Trivial parameter with limit \f$ R \rightarrow [A,B] \f$
      *
-     *
      *  The actual transformation is 
      *  \f[ p = ( B - A ) * \sin^2 \frac{\pi x}{2} + A \f]
      *
@@ -242,53 +253,95 @@ namespace Ostap
     public :
       // =====================================================================
       /** full constructor
-       *  @param value parameter value (external)
+       *  @param value parameter value
        *  @param avalue A-value 
        *  @param bvalue Bvalue 
        *  @param name  parameter name  
        *  @param the_class name of the (owner/holder) class 
        */
       InRange
-      ( const double       extvalue  = 0 ,
+      ( const double       value     = 0 ,
         const double       avalue    = 0 , 
         const double       bvalue    = 1 , 
 	const std::string& name      = "value" ,
-	const std::string& the_class = ""      ) ;	
+	const std::string& the_class = ""      ) ;      
       // =====================================================================
       /** full constructor
-       *  @param value parameter value (external)
+       *  @param value parameter
        *  @param avalue A-value 
        *  @param bvalue B-value 
        *  @param name  parameter name  
        *  @param the_class name of the (owner/holder) class 
        */
       InRange
-      ( const double          extvalue  ,
+      ( const double          value     ,
         const double          avalue    , 
         const double          bvalue    , 
 	const std::string&    name      ,      
 	const std::type_info& the_class ) ;
       // =====================================================================
       /** full constructor
-       *  @param value parameter value (external)
+       *  @param value parameter value
        *  @param avalue A-value 
-       *  @param bvalue Bvalue 
+       *  @param bvalue B-value 
        *  @param name  parameter name  
        *  @param the_class name of the (owner/holder) class 
        */
       template <class CLASS>
       InRange      
-      ( const double         extvalue  ,
+      ( const double         value     ,
         const double         avalue    , 
         const double         bvalue    , 
 	const std::string&   name      ,      
 	const CLASS&         the_class )
-	: InRange ( extvalue ,
-		    avalue   ,
-		    bvalue   ,
-		    name     ,
+	: InRange ( value  ,
+		    avalue ,
+		    bvalue ,
+		    name   ,
 		    typeid ( the_class ) )
       {}
+      // =====================================================================
+      /** full constructor
+       *  @param avalue A-value 
+       *  @param bvalue Bvalue 
+       *  @param name  parameter name  
+       *  @param the_class name of the (owner/holder) class 
+       */
+      InRange
+      ( const double       avalue         , 
+        const double       bvalue         , 
+	const std::string& name           ,
+	const std::string& the_class = "" ) ;      
+      // =====================================================================
+      /** full constructor
+       *  @param avalue A-value 
+       *  @param bvalue B-value 
+       *  @param name  parameter name  
+       *  @param the_class name of the (owner/holder) class 
+       */
+      InRange
+      ( const double          avalue    , 
+        const double          bvalue    , 
+	const std::string&    name      ,      
+	const std::type_info& the_class ) ;
+      // =====================================================================
+      /** full constructor
+       *  @param avalue A-value 
+       *  @param bvalue B-value 
+       *  @param name  parameter name  
+       *  @param the_class name of the (owner/holder) class 
+       */
+      template <class CLASS>
+      InRange      
+      ( const double         avalue    , 
+        const double         bvalue    , 
+	const std::string&   name      ,      
+	const CLASS&         the_class )
+	: InRange ( avalue ,
+		    bvalue ,
+		    name   ,
+		    typeid ( the_class ) )
+      {}      
       // =====================================================================
     public :
       // ======================================================================
@@ -300,16 +353,23 @@ namespace Ostap
     public : // conversion 
       // ======================================================================
       /// implicit conversion to double 
-      inline operator double  () const { return m_value.value ()  ; } 
+      inline operator double  () const { return m_value.value ()  ; }
+      /// set the value from double
+      inline InRange& operator=( const double value )
+      { setValue ( value ) ; return *this ; }
       // ======================================================================
     public : // get & set log-value 
       // ======================================================================
       /// get external value  
       inline double external    () const { return m_external  ; }
       /// set new value for external -parameter 
-      bool          setExternal ( const double value ) ;
+      bool          setExternal
+      ( const double value         ,
+	const bool   force = false ) ;
       /// set new value for     parameter 
-      bool          setValue    ( const double value ) ;
+      bool          setValue
+      ( const double value         ,
+	const bool   force = false ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -342,16 +402,23 @@ namespace Ostap
       // ======================================================================			      
     public: 
       // ======================================================================
+      /// minimal value 
+      inline double vmin () const  { return std::min ( m_A , m_B ) ; } 
+      /// maximal  value 
+      inline double vmax () const  { return std::max ( m_A , m_B ) ; } 
+      // ======================================================================      
+    public : // variable transformation 
+      // =====================================================================
+      /// external -> internal 
+      double t ( const double x ) const ;
+      /// interbnal-> external 
+      double x ( const double t ) const ;
+      // =====================================================================
+    public: 
+      // ======================================================================
       /// unique tag
       std::size_t tag () const ; 
       // ======================================================================
-    private:
-      // =====================================================================
-      /// external -> internal 
-      double z ( const double x ) const ;
-      /// interbnal-> external 
-      double x ( const double z ) const ;
-      // =====================================================================
     private:
       // =====================================================================
       /// A-limit
@@ -425,11 +492,16 @@ namespace Ostap
       // ======================================================================
       /// implicit conversion to double 
       inline operator double () const { return m_scale.value () ; } 
+      /// set the value from double
+      inline Scale& operator=( const double value )
+      { setValue ( value ) ; return *this ; }
       // ======================================================================
     public :
       // ======================================================================
       /// set new value for parameter 
-      bool setValue ( const double value ) ;
+      bool setValue
+      ( const double value         ,
+	const bool   force = false ) ;       
       // ======================================================================
     public :
       // ======================================================================
@@ -552,16 +624,23 @@ namespace Ostap
     public: 
       // =====================================================================
       /// set new scale value
-      inline bool setScale ( const double value ) { return m_scale.setValue ( value ) ; }
+      inline bool setScale
+      ( const double value         , 
+	const bool   force = false )
+      { return m_scale.setValue ( value , force ) ; }
       /// set new shift value
-      inline bool setShift ( const double value ) { return m_shift.setValue ( value ) ; }
+      inline bool setShift
+      ( const double value         , 
+	const bool   force = false )
+      { return m_shift.setValue ( value , force ) ; }
       /// set both scale & shift 
       inline bool setScaleShift
       ( const double scale ,
-	const double shift )
+	const double shift , 
+	const bool   force = false )
       {
-	const bool m1 = m_scale.setValue ( scale ) ;
-	const bool m2 = m_shift.setValue ( scale ) ;
+	const bool m1 = m_scale.setValue ( scale , force ) ;
+	const bool m2 = m_shift.setValue ( shift , force ) ;
 	return m1 && m2 ;
       }
       // =====================================================================					 
@@ -616,10 +695,16 @@ namespace Ostap
       /// shift parameter 
       Value m_shift { 0 } ; // shift parameter 
       // =====================================================================
-    } ;     
+    } ;
+    // ========================================================================
+    /** @typedef ScaleAndShift
+     *  anothe name for ShiftandScale
+     *  @see ShiftAndScale
+     */
+    typedef ShiftAndScale ScaleAndShift ; 
     // ========================================================================
     /** @class AB
-     *  keep two positive variables A & B
+     *  Two positive variables A & B
      *  - variables are positive and defined via their logarithms
      */
     class AB
@@ -627,58 +712,58 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      /** @param loga logarithm of a-parameter 
-       *  @param logb logarithm of b-parameter 
+      /** @param a a-parameter 
+       *  @param b b-parameter 
        *  @param aname the name of a-parameter
        *  @param bname the name of b-parameter
        *  @param the_class name of the (owner/holder) class 
        */
       AB
-      ( const double       loga     =  0  ,
-	const double       logb     =  0  ,
+      ( const double       a        =  1  ,
+	const double       b        =  1  ,
 	const std::string& aname    = "a" ,
 	const std::string& bname    = "b" ,
 	const std::string& the_class = ""  ) ;
-      // ======================================================================
-      /** @param loga logarithm of a-parameter 
-       *  @param logb logarithm of b-parameter 
+      // ====================================================================== 
+      /** @param a a-parameter 
+       *  @param b b-parameter 
        *  @param aname the name of a-parameter
        *  @param bname the name of b-parameter
        *  @param the_class name of the (owner/holder) class 
        */
       AB
-      ( const double          loga      ,
-	const double          logb      ,
+      ( const double          a         ,
+	const double          b         ,
 	const std::string&    aname     ,
 	const std::string&    bname     ,
 	const std::type_info& the_class ) ;
       // ======================================================================
-      /** @param loga logarithm of a-parameter 
-       *  @param logb logarithm of b-parameter 
+      /** @param a a-parameter 
+       *  @param b b-parameter 
        *  @param aname the name of a-parameter
        *  @param bname the name of b-parameter
        *  @param the_class name of the (owner/holder) class 
        */
       template <class CLASS>
       AB
-      ( const double          loga      ,
-	const double          logb      ,
+      ( const double          a         ,
+	const double          b         ,
 	const std::string&    aname     ,
 	const std::string&    bname     ,
 	const CLASS&          the_class )
-	: AB ( loga , logb , aname , bname , typeid ( the_class ) ) 
+	: AB ( a , b , aname , bname , typeid ( the_class ) ) 
       {}      
       // =====================================================================
     public :
       // =====================================================================
       // get a 
-      inline double             a     () const { return m_a.value () ; }
+      inline double             a     () const { return m_a.value    () ; }
       // get b 
-      inline double             b     () const { return m_b.value () ; }
+      inline double             b     () const { return m_b.value    () ; }
       /// get a-name  
-      inline const std::string& aname () const { return m_a.name () ; }
+      inline const std::string& aname () const { return m_a.name     () ; }
       /// get b-name  
-      inline const std::string& bname () const { return m_b.name () ; }
+      inline const std::string& bname () const { return m_b.name     () ; }
       /// get log-a
       inline double             logA  () const { return m_a.logValue () ; } 
       /// get log-b
@@ -686,31 +771,39 @@ namespace Ostap
       // =====================================================================
     public : 
       // =====================================================================
+      /// a-parameter 
       inline const LogValue&    avar  () const { return m_a ; }
+      /// b-parameter 
       inline const LogValue&    bvar  () const { return m_b ; }
       // =====================================================================      
     public: // setters 
       // =====================================================================
-      inline bool setLogA ( const double value  ) { return m_a.setLogValue ( value ) ; } 
-      inline bool setLogB ( const double value  ) { return m_b.setLogValue ( value ) ; } 
-      inline bool setA    ( const double value  ) { return m_a.setValue    ( value ) ; } 
-      inline bool setB    ( const double value  ) { return m_b.setValue    ( value ) ; }
+      inline bool setLogA ( const double value , const bool force = false )
+      { return m_a.setLogValue ( value , force ) ; } 
+      inline bool setLogB ( const double value , const bool force = false )
+      { return m_b.setLogValue ( value , force ) ; } 
+      inline bool setA    ( const double value , const bool force = false )
+      { return m_a.setValue    ( value , force ) ; } 
+      inline bool setB    ( const double value , const bool force = false )
+      { return m_b.setValue    ( value , force ) ; }
       /// set two parameters at once
       inline bool setLogAB
-      ( const double avalue  ,
-	const double bvalue  )
+      ( const double avalue ,
+	const double bvalue ,
+	const bool   force  = false )
       {
-	const bool ma = m_a.setLogValue ( avalue ) ;
-	const bool mb = m_b.setLogValue ( bvalue ) ;
+	const bool ma = m_a.setLogValue ( avalue , force ) ;
+	const bool mb = m_b.setLogValue ( bvalue , force ) ;
 	return ma && mb ;
       }
       /// set two parameters at once
       inline bool setAB
-      ( const double avalue  ,
-	const double bvalue  )
+      ( const double avalue ,
+	const double bvalue ,
+	const bool   force  = false )
       {
-	const bool ma = m_a.setValue ( avalue ) ;
-	const bool mb = m_b.setValue ( bvalue ) ;
+	const bool ma = m_a.setValue ( avalue , force ) ;
+	const bool mb = m_b.setValue ( bvalue , force ) ;
 	return ma && mb ;
       }	
       // =====================================================================      
@@ -751,9 +844,9 @@ namespace Ostap
     public: // helper  expressions 
       // ======================================================================
       /// helper expression \f$ \log \Beta (a , b ) \f$
-      double log_Beta_ab() const ; 
+      double log_Beta_ab () const ; 
       /// helper expression \f$ \frac{1}{\Beta (a , b ) {\f$
-      double inv_Beta_ab() const ; 
+      double inv_Beta_ab () const ; 
       // ======================================================================			      
     public: 
       // ======================================================================
@@ -771,54 +864,58 @@ namespace Ostap
     // ========================================================================
     /** @class PQ
      *  keep two positive variables P & Q
-     *  - variables positive and defied vi their logarithms
-     *  - cache \f$  ln \Beta ( p , q ) \f$ 
+     *  - variables positive and defied via their logarithms
+     *  - cache \f$  ln \Beta ( p , q )         \f$
+     *  - cache \f$  \frac{1}{ \Beta ( p , q )} \f$
+     *  @see Ostap::Math::AB 
+     *  @see Ostap::Math::ibeta 
+     *  @see Ostap::Math::lnbeta
      */
     class PQ
     {
       // ======================================================================
     public :
       // ======================================================================
-      /** @param logp  logarithm of p-parameter 
-       *  @param logq  logarithm of q-parameter 
+      /** @param p     p-parameter 
+       *  @param q     q-parameter 
        *  @param pname the name of p-parameter
        *  @param qname the name of q-parameter
        *  @param the_class name of the (owner/holder) class 
        */
       PQ
-      ( const double       logp      =  0  ,
-	const double       logq      =  0  ,
+      ( const double       p         =  1  ,
+	const double       q         =  1  ,
 	const std::string& pname     = "p" ,
 	const std::string& qname     = "q" ,
 	const std::string& the_class = ""  ) ;
       // ======================================================================
-      /** @param logp  logarithm of p-parameter 
-       *  @param logq  logarithm of q-parameter 
+      /** @param p     p-parameter 
+       *  @param q     q-parameter 
        *  @param pname the name of p-parameter
        *  @param qname the name of q-parameter
        *  @param the_class name of the (owner/holder) class
        */
       PQ      
-      ( const double          logp      ,
-	const double          logq      ,
+      ( const double          p         ,
+	const double          q         ,
 	const std::string&    pname     ,
 	const std::string&    qname     ,
 	const std::type_info& the_class ) ;
       // ======================================================================      
-      /** @param logp  logarithm of p-parameter 
-       *  @param logq  logarithm of q-parameter 
+      /** @param p     p-parameter 
+       *  @param q     q-parameter 
        *  @param pname the name of p-parameter
        *  @param qname the name of q-parameter
        *  @param the_class name of the (owner/holder) class
        */
       template <class CLASS>
       PQ
-      ( const double          logp      ,
-	const double          logq      ,
+      ( const double          p         ,
+	const double          q         ,
 	const std::string&    pname     ,
 	const std::string&    qname     ,
 	const CLASS&          the_class )
-	: PQ ( logp , logq , pname , qname , typeid ( the_class ) )
+	: PQ ( p , q , pname , qname , typeid ( the_class ) )
       {}      
       // =====================================================================
     public :
@@ -845,26 +942,28 @@ namespace Ostap
       // =====================================================================      
     public:   /// setters 
       // =====================================================================
-      bool setLogP ( const double value ) ; 
-      bool setLogQ ( const double value ) ; 
-      bool setP    ( const double value ) ; 
-      bool setQ    ( const double value ) ; 
+      bool setLogP ( const double value , const bool force = false ) ; 
+      bool setLogQ ( const double value , const bool force = false ) ; 
+      bool setP    ( const double value , const bool force = false ) ;
+      bool setQ    ( const double value , const bool force = false ) ; 
       /// set two parameters at once
       inline bool setLogPQ
-      ( const double pvalue  ,
-	const double qvalue  )
+      ( const double pvalue ,
+	const double qvalue , 
+	const bool   force  = false )
       {
-	const bool mp = setLogP ( pvalue ) ;
-	const bool mq = setLogQ ( qvalue ) ;
+	const bool mp = setLogP ( pvalue , force ) ;
+	const bool mq = setLogQ ( qvalue , force ) ;
 	return mp && mq ;
       } 
       /// set two parameters at once
       inline bool setPQ
-      ( const double pvalue  ,
-	const double qvalue  )
+      ( const double pvalue ,
+	const double qvalue ,
+	const bool   force  = false )
       {
-	const bool mp = setP ( pvalue ) ;
-	const bool mq = setQ ( qvalue ) ;
+	const bool mp = setP ( pvalue , force ) ;
+	const bool mq = setQ ( qvalue , force ) ;
 	return mp && mq ;
       }
       // =====================================================================      
@@ -904,7 +1003,7 @@ namespace Ostap
       // ======================================================================			      
     public: 
       // ======================================================================
-      /// get cahed value of ln B(p,q)
+      /// get cached value of ln B(p,q)
       inline double log_Beta_pq () const { return m_log_Beta_pq ; } 
       /// get cached value of 1/B(p,q)
       inline double inv_Beta_pq () const { return m_inv_Beta_pq ; } 
@@ -917,9 +1016,9 @@ namespace Ostap
     private :
       // ======================================================================
       /// parameter P 
-      LogValue m_p         { 0 } ; // parameter P 
+      LogValue m_p         { 1 } ; // parameter P 
       /// parameter Q 
-      LogValue m_q         { 0 } ; // parameter Q
+      LogValue m_q         { 1 } ; // parameter Q
       /// cached value of \f$ \log \Beta (p,q \f$ 
       double m_log_Beta_pq { 0 } ; // log Beta (p,q) 
       /// cached value of \f$ \frac{1} { \Beta (p,q } \f$ 
@@ -927,7 +1026,10 @@ namespace Ostap
       // ======================================================================      
     } ;    
     // ========================================================================
-    // "Vector" parameters 
+
+
+    // ========================================================================
+    // "Vector" parameters : polynomials, etc..
     // ========================================================================
     /** @class Parameters Ostap/Parameters.h
      *  Holder for parameters 

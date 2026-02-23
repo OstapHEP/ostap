@@ -25,6 +25,15 @@
  *  @author Vanya BELYAEV
  */
 // ============================================================================
+namespace
+{
+  // ==========================================================================
+  static const std::string s_invalid_value { "Invalid value!"         } ;
+  static const std::string s_invalid_log   { "Invalid log/exp-value!" } ;    
+  static const std::string s_invalid_range { "Invalid min/max-range!" } ;  
+  // ==========================================================================
+} // the end of anonymous namespace 
+// ===========================================================================
 /*  full constructor
  *  @param value parameter value  
  *  @param name  parameter name  
@@ -56,9 +65,11 @@ Ostap::Math::Value::Value
 // ============================================================================
 // set new value for parameter 
 // ============================================================================
-bool Ostap::Math::Value::setValue ( const double value )
+bool Ostap::Math::Value::setValue
+( const double value ,
+  const bool   force )
 {
-  if ( s_equal ( value , m_value ) ) { return false ; }
+  if ( !force && s_equal ( value , m_value ) ) { return false ; }
   m_value = value ;
   return true ;
 }
@@ -106,27 +117,26 @@ std::size_t Ostap::Math::Value::tag () const
 
 // ============================================================================
 /*  full constructor
- *  @param value logarithm of parameter
+ *  @param value of parameter
  *  @param name  parameter name  
  *  @param the_class name of the (owner/holder) class 
  */
 // ============================================================================
 Ostap::Math::LogValue::LogValue
-( const double       log_value ,
+( const double       value     ,
   const std::string& name      ,
   const std::string& the_class )
   : m_logValue ( 0 )
-  , m_value    ( 0 , name , the_class )
+  , m_value    ( value , name , the_class )
 {
-  static const std::string s_invalid_log { "Invalid log-value!" } ;  
-  Ostap::Assert ( s_EXP_UNDERFLOW < log_value && log_value < s_EXP_OVERFLOW ,		  
-		  s_invalid_log                              ,
+  //
+  Ostap::Assert ( s_EXP_UNDERFLOW_EXP < value && value < s_EXP_OVERFLOW_EXP ,		  
+		  s_invalid_value                            ,
 		  m_value.name ()                            , 
 		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_logValue = log_value ;
-  m_value.setValue ( std::exp ( m_logValue ) ) ;
-  //
+  m_logValue = std::log   ( value ) ;  
+  m_value.setValue ( value ) ;
 }
 // ============================================================================
 /*  full constructor
@@ -144,33 +154,36 @@ Ostap::Math::LogValue::LogValue
 // =====================================================================
 // set new value for parameter 
 // ============================================================================
-bool Ostap::Math::LogValue::setLogValue ( const double log_value )
+bool Ostap::Math::LogValue::setLogValue
+( const double log_value ,   
+  const bool   force     ) 
 {
-  if ( s_equal ( log_value , m_logValue ) ) { return false ; }
-  static const std::string s_invalid_log { "Invalid log-value!" } ;  
+  if ( !force && s_equal ( log_value , m_logValue ) ) { return false ; }
+  //
   Ostap::Assert ( s_EXP_UNDERFLOW < log_value && log_value < s_EXP_OVERFLOW ,		  
 		  s_invalid_log                               ,
 		  m_value.name ()                             , 
 		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
   //
   m_logValue = log_value ;  
-  return m_value.setValue ( std::exp ( m_logValue ) ) ;
+  return m_value.setValue ( std::exp ( m_logValue ) , force ) ;
 }
 // =====================================================================
 // set new value for     parameter 
 // =====================================================================
-bool Ostap::Math::LogValue::setValue ( const double value  )
+bool Ostap::Math::LogValue::setValue
+( const double value ,
+  const bool   force ) 
 {
-  if ( s_equal ( m_value.value() , value ) ) { return false ; }
+  if ( !force && s_equal ( m_value.value() , value ) ) { return false ; }
   //
-  static const std::string s_invalid_log { "Invalid log/exp-value!" } ;  
   Ostap::Assert ( s_EXP_UNDERFLOW_EXP < value && value < s_EXP_OVERFLOW_EXP ,		  
-		  s_invalid_log                               ,
-		  m_value.name ()                             , 
+		  s_invalid_value                            ,
+		  m_value.name ()                            , 
 		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
   //
   m_logValue = std::log   ( value ) ;  
-  return m_value.setValue ( value ) ;
+  return m_value.setValue ( value , force ) ;
 }
 // ============================================================================
 // Unique value 
@@ -182,8 +195,6 @@ std::size_t Ostap::Math::LogValue::tag () const
 }
 // ============================================================================
 
-
-
 // ============================================================================
 /*  full constructor
  *  @param value parameter value (external)
@@ -194,23 +205,35 @@ std::size_t Ostap::Math::LogValue::tag () const
  */
 // ============================================================================
 Ostap::Math::InRange::InRange
-( const double       extvalue  , 
+( const double       value     , 
   const double       avalue    ,
   const double       bvalue    , 
   const std::string& name      ,
   const std::string& the_class )
   : m_A         ( avalue   ) 
   , m_B         ( bvalue   ) 
-  , m_external  ( extvalue )
-  , m_value     ( 0 , name , the_class ) 
+  , m_external  ( 0        )
+  , m_value     ( value    , name , the_class ) 
 {
-  static const std::string s_invalid_range { "Invalid minmax-range!" } ;  
-  Ostap::Assert ( !s_equal ( m_A , m_B ) ,
-		  s_invalid_range ,
+  //
+  Ostap::Assert ( !s_equal ( m_A , m_B ) && std::isfinite ( m_A ) && std::isfinite ( m_B ) , 
+		  s_invalid_range  ,
+		  m_value.name ()  ,		  
+		  INVALID_RANGE    , __FILE__ , __LINE__  ) ;
+  //
+  const double vmn = vmin () ;
+  const double vmx = vmax () ;
+  //
+  Ostap::Assert ( vmn <= value && value <= vmx , 
+		  s_invalid_value ,
 		  m_value.name () ,		  
 		  INVALID_RANGE   , __FILE__ , __LINE__  ) ;
   //
-  m_value.setValue ( z ( extvalue ) ) ;
+  if      ( s_equal ( m_A , value ) ) { m_value.setValue ( m_A , true ) ; }
+  else if ( s_equal ( m_B , value ) ) { m_value.setValue ( m_B , true ) ; }
+  //
+  /// internal -> external 
+  m_external = t ( m_value.value () ) ;    
 }
 // ============================================================================
 /*  full constructor
@@ -232,11 +255,49 @@ Ostap::Math::InRange::InRange
 	      bvalue   ,
 	      name     ,
 	      Ostap::class_name ( the_class ) )
-{}	      
+{}
+// ============================================================================
+/*  full constructor
+ *  @param avalue A-value 
+ *  @param bvalue Bvalue 
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::InRange::InRange
+( const double       avalue    , 
+  const double       bvalue    , 
+  const std::string& name      ,
+  const std::string& the_class )
+  : InRange ( 0.5 * ( avalue + bvalue ) ,
+	      avalue    ,
+	      bvalue    ,
+	      name      ,
+	      the_class )
+{}
+// ============================================================================
+/*  full constructor
+ *  @param avalue A-value 
+ *  @param bvalue B-value 
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::InRange::InRange
+( const double          avalue    , 
+  const double          bvalue    , 
+  const std::string&    name      ,      
+  const std::type_info& the_class ) 
+  : InRange ( 0.5 * ( avalue + bvalue ) ,
+	      avalue    ,
+	      bvalue    ,
+	      name      ,
+	      the_class )
+{}
 // ============================================================================
 // external -> internal 
 // ============================================================================
-double Ostap::Math::InRange::z
+double Ostap::Math::InRange::t
 ( const double x ) const
 {
   const double s2 = std::sin ( s_pi2 * x ) ; 
@@ -264,20 +325,24 @@ double Ostap::Math::InRange::x
 // =====================================================================
 // set new value for parameter 
 // ============================================================================
-bool Ostap::Math::InRange::setExternal ( const double value )
+bool Ostap::Math::InRange::setExternal
+( const double value ,
+  const bool   force )
 {
-  if ( s_equal ( value , m_external ) ) { return false ; }
+  if ( !force && s_equal ( value , m_external ) ) { return false ; }
   m_external = value ;  
-  return m_value.setValue ( z ( m_external ) ) ;
+  return m_value.setValue ( t ( m_external ) , force ) ;
 }
 // =====================================================================
 // set new value for     parameter 
 // =====================================================================
-bool Ostap::Math::InRange::setValue ( const double value  )
+bool Ostap::Math::InRange::setValue
+( const double value ,
+  const bool   force )
 {
-  if ( s_equal ( m_value.value() , value ) ) { return false ; }
+  if ( !force && s_equal ( m_value.value() , value ) ) { return false ; }
   m_external  = x ( value ) ;  
-  return m_value.setValue ( value ) ;
+  return m_value.setValue ( value , force ) ;
 }
 // ============================================================================
 // Unique value 
@@ -328,10 +393,12 @@ Ostap::Math::Scale::Scale
 // ============================================================================
 // set new value for scale parameter 
 // ============================================================================
-bool Ostap::Math::Scale::setValue ( const double value )
+bool Ostap::Math::Scale::setValue
+( const double value ,
+  const bool   force )
 {
   const double new_value = m_positive ? std::abs ( value ) : value ;
-  if ( s_equal ( new_value , m_scale.value () ) ) { return false ; }
+  if ( !force && s_equal ( new_value , m_scale.value () ) ) { return false ; }
   //
   static const std::string s_invalid_scale { "Invalid scale-value!" } ;
   Ostap::Assert ( !s_zero ( new_value) ,		  
@@ -339,7 +406,7 @@ bool Ostap::Math::Scale::setValue ( const double value )
 		  m_scale.name ()      , 
 		  INVALID_SCALEPARAMETER , __FILE__ , __LINE__ ) ;
   //
-  return m_scale.setValue ( new_value ) ; 
+  return m_scale.setValue ( new_value , force ) ; 
 }
 // ============================================================================
 // Unique value 
@@ -433,37 +500,37 @@ std::size_t Ostap::Math::ShiftAndScale::tag () const
 
 
 // ============================================================================
-/*  @param loga logarithm of a-parameter 
- *  @param logb logarithm of b-parameter 
+/*  @param a a-parameter 
+ *  @param b b-parameter 
  *  @param aname the name of a-parameter
  *  @param bname the name of b-parameter
  *  @param the_class name of the (owner/holder) class 
  */
 // ===========================================================================
 Ostap::Math::AB::AB
-( const double       loga      ,
-  const double       logb      , 
+( const double       a         ,
+  const double       b         , 
   const std::string& aname     , 
   const std::string& bname     , 
   const std::string& the_class )
-  : m_a ( loga , aname, the_class ) 
-  , m_b ( logb , bname, the_class ) 
+  : m_a ( a , aname, the_class ) 
+  , m_b ( b , bname, the_class ) 
 {}
 // ============================================================================
-/*  @param loga logarithm of a-parameter 
- *  @param logb logarithm of b-parameter 
+/*  @param a a-parameter 
+ *  @param b b-parameter 
  *  @param aname the name of b-parameter
  *  @param bname the name of b-parameter
  *  @param the_class name of the (owner/holder) class 
  */
 // ============================================================================
 Ostap::Math::AB::AB
-( const double          loga      ,
-  const double          logb      , 
+( const double          a         ,
+  const double          b         , 
   const std::string&    aname     , 
   const std::string&    bname     ,
   const std::type_info& the_class )
-  : AB ( loga , logb , aname , bname , Ostap::class_name ( the_class ) )
+  : AB ( a , b , aname , bname , Ostap::class_name ( the_class ) )
 {}
 // ============================================================================
 /* set the full name of parameter
@@ -515,47 +582,49 @@ double Ostap::Math::AB::inv_Beta_ab() const
 // ============================================================================
 
 // ============================================================================
-/*  @param logp  logarithm of p-parameter 
- *  @param logq  logarithm of q-parameter 
+/*  @param p     p-parameter p>0
+ *  @param q     q-parameter q>0
  *  @param pname the name of p-parameter
  *  @param qname the name of q-parameter
  *  @param the_class name of the (owner/holder) class 
  */
 // ============================================================================
 Ostap::Math::PQ::PQ
-( const double       logp      ,
-  const double       logq      ,
+( const double       p         ,
+  const double       q         ,
   const std::string& pname     ,
   const std::string& qname     ,
   const std::string& the_class )
-  : m_p ( logp , pname , the_class )
-  , m_q ( logq , qname , the_class )
+  : m_p ( p , pname , the_class )
+  , m_q ( q , qname , the_class )
 {
   m_log_Beta_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;  
   m_inv_Beta_pq = Ostap::Math::ibeta  ( m_p.value () , m_q.value () ) ;  
 }
 // ============================================================================
-/*  @param logp  logarithm of p-parameter 
- *  @param logq  logarithm of q-parameter 
+/*  @param p     p-parameter p>0
+ *  @param q     q-parameter q>0
  *  @param pname the name of p-parameter
  *  @param qname the name of q-parameter
  *  @param the_class name of the (owner/holder) class 
  */
 // ============================================================================
 Ostap::Math::PQ::PQ
-( const double          logp      ,
-  const double          logq      ,
+( const double          p         ,
+  const double          q         ,
   const std::string&    pname     ,
   const std::string&    qname     ,
   const std::type_info& the_class )
-  : PQ ( logp , logq , pname , qname , Ostap::class_name ( the_class ) )
+  : PQ ( p , q , pname , qname , Ostap::class_name ( the_class ) )
 {}
 // ============================================================================
 // update log-P
 // ============================================================================
-bool Ostap::Math::PQ::setLogP ( const double value  )
+bool Ostap::Math::PQ::setLogP
+( const double value , 
+  const bool   force ) 
 {
-  if ( !m_p.setLogValue ( value ) ) { return false ; } 
+  if ( !m_p.setLogValue ( value , force ) ) { return false ; } 
   m_log_Beta_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
   m_inv_Beta_pq = Ostap::Math::ibeta  ( m_p.value () , m_q.value () ) ;  
   return true ;
@@ -563,9 +632,11 @@ bool Ostap::Math::PQ::setLogP ( const double value  )
 // ============================================================================
 // update log-Q
 // ============================================================================
-bool Ostap::Math::PQ::setLogQ ( const double value  )
+bool Ostap::Math::PQ::setLogQ
+( const double value , 
+  const bool   force )
 {
-  if ( !m_p.setLogValue ( value ) ) { return false ; } 
+  if ( !m_p.setLogValue ( value , force ) ) { return false ; } 
   m_log_Beta_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
   m_inv_Beta_pq = Ostap::Math::ibeta  ( m_p.value () , m_q.value () ) ;  
   return true ;
@@ -573,9 +644,11 @@ bool Ostap::Math::PQ::setLogQ ( const double value  )
 // ============================================================================
 // update P
 // ============================================================================
-bool Ostap::Math::PQ::setP ( const double value  )
+bool Ostap::Math::PQ::setP
+( const double value , 
+  const bool   force ) 
 {
-  if ( !m_p.setValue ( value ) ) { return false ; } 
+  if ( !m_p.setValue ( value , force ) ) { return false ; } 
   m_log_Beta_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
   m_inv_Beta_pq = Ostap::Math::ibeta  ( m_p.value () , m_q.value () ) ;  
   return true ;
@@ -583,9 +656,11 @@ bool Ostap::Math::PQ::setP ( const double value  )
 // ============================================================================
 // update Q
 // ============================================================================
-bool Ostap::Math::PQ::setQ ( const double value  )
+bool Ostap::Math::PQ::setQ
+( const double value , 
+  const bool   force ) 
 {
-  if ( !m_q.setValue ( value ) ) { return false ; } 
+  if ( !m_q.setValue ( value , force ) ) { return false ; } 
   m_log_Beta_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
   m_inv_Beta_pq = Ostap::Math::ibeta  ( m_p.value () , m_q.value () ) ;  
   return true ;

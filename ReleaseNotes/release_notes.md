@@ -1,7 +1,8 @@
 ## New features
 
   1. Sigmoid type can be also specified by the string/"sigmoid name" (not only by enum!)
-  
+  1. add `Sine`-type sigmoid, based on (1+sin(2x))/2 
+
 ## Bug fixes
 
    1, Fix recently introduced bug (thanks to @DmitryYuGolubkov Dima Golubkov)  

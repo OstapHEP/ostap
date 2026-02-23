@@ -6659,6 +6659,9 @@ Ostap::Math::sigmoid_type
     { "p5"               , SigmoidType::Polynomial_n5    } ,      
     { "p6"               , SigmoidType::Polynomial_n6    } ,
     //
+    { "sin"              , SigmoidType::Sine             } ,
+    { "sine"             , SigmoidType::Sine             } ,
+    //
   } ;
   //
   auto i = s_map1.find ( _name ) ;
@@ -6702,6 +6705,8 @@ std::string Ostap::Math::sigmoid_name
     case Ostap::Math::SigmoidType::Polynomial_n4    : return "Polynomial_n4"    ;
     case Ostap::Math::SigmoidType::Polynomial_n5    : return "Polynomial_n5"    ;
     case Ostap::Math::SigmoidType::Polynomial_n6    : return "Polynomial_n6"    ;
+      //
+    case Ostap::Math::SigmoidType::Sine             : return "Sine"             ;
       //
     default :
       break ; 
@@ -6759,6 +6764,8 @@ double Ostap::Math::sigmoid
     case Ostap::Math::SigmoidType::Polynomial_n4    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p4  ,  4 ) ;
     case Ostap::Math::SigmoidType::Polynomial_n5    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p5  ,  5 ) ;
     case Ostap::Math::SigmoidType::Polynomial_n6    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p6  ,  6 ) ;
+    case Ostap::Math::SigmoidType::Sine             :
+      return z <= s_pi_4 ? 0 : s_pi_4 <= z ? 1.0 : 0.5 * ( 1.0 + std::sin ( 2 * z ) ) ;
     } ;
   //
   return 0 ;
@@ -6997,33 +7004,120 @@ double Ostap::Math::kolmogorov_ccdf
 double Ostap::Math::kolmogorov_pdf
 ( const unsigned int n , 
   const double       x ) 
-  {
-    Ostap::Assert ( n , 
-                   "n must be positive" , 
-                   "kolmogorov_pdf"    , 
-                   INVALID_PARAMETER , __FILE__, __LINE__) ;
-    if ( x <= 0 || x >= 1 ) { return  0 ; }
-    //
-    // make numerical differentiation 
-    const long double h = std::min ( 0.1L / n , 1.e-3 * 1.0L ) ;
-    //
-    const long double fm4 = kolmogorov_cdf ( n , x - 4 * h ) ;
-    const long double fm3 = kolmogorov_cdf ( n , x - 3 * h ) ;
-    const long double fm2 = kolmogorov_cdf ( n , x - 2 * h ) ;
-    const long double fm1 = kolmogorov_cdf ( n , x - 1 * h ) ;
-    const long double fp1 = kolmogorov_cdf ( n , x + 1 * h ) ;
-    const long double fp2 = kolmogorov_cdf ( n , x + 2 * h ) ;
-    const long double fp3 = kolmogorov_cdf ( n , x + 3 * h ) ;
-    const long double fp4 = kolmogorov_cdf ( n , x + 4 * h ) ;
-    //
-    const long double r = 
+{
+  Ostap::Assert ( n , 
+		  "n must be positive" , 
+		  "kolmogorov_pdf"    , 
+		  INVALID_PARAMETER , __FILE__, __LINE__) ;
+  if ( x <= 0 || x >= 1 ) { return  0 ; }
+  //
+  // make numerical differentiation 
+  const long double h = std::min ( 0.1L / n , 1.e-3 * 1.0L ) ;
+  //
+  const long double fm4 = kolmogorov_cdf ( n , x - 4 * h ) ;
+  const long double fm3 = kolmogorov_cdf ( n , x - 3 * h ) ;
+  const long double fm2 = kolmogorov_cdf ( n , x - 2 * h ) ;
+  const long double fm1 = kolmogorov_cdf ( n , x - 1 * h ) ;
+  const long double fp1 = kolmogorov_cdf ( n , x + 1 * h ) ;
+  const long double fp2 = kolmogorov_cdf ( n , x + 2 * h ) ;
+  const long double fp3 = kolmogorov_cdf ( n , x + 3 * h ) ;
+  const long double fp4 = kolmogorov_cdf ( n , x + 4 * h ) ;
+  //
+  const long double r = 
     -1.0L * ( fp4 - fm4 ) / 280 
     +4.0L * ( fp3 - fm3 ) / 105 
     -1.0L * ( fp2 - fm2 ) / 5 
     +4.0L * ( fp1 - fm1 ) / 5 ;
-    //
-    return r / h ; 
+  //
+  return r / h ; 
+}
+// ============================================================================
+
+// ============================================================================
+/* @fn pow_ratio_a1
+ *  Evaluate the expression \f$ \frac{x^a}{1+x^a}\f$ 
+ *  @param x argument \f$ 0 \le x \f$
+ *  @param a exponent
+ *  @see Ostap::Math::pow_ratio_a1
+ */
+// ============================================================================
+double Ostap::Math::pow_ratio_a1
+( const double x ,
+  const double a )
+{
+  if      ( s_zero ( a ) || s_equal ( x , 1 ) ) { return 0.5 ; }
+  else if ( 0 < a && s_zero ( x )             ) { return 0   ; }
+  else if ( s_equal ( a , 1 )                 ) { return x   / ( 1 + x ) ; }
+  //
+  // p = x**a  q = 1/p = x**-1 = (1/x)**a
+  //
+  // 1 < p 
+  if      ( 1 < x && 0 < a )
+  {
+    const double q = std::pow ( 1 / x , a ) ;
+    return 1 / ( 1 + q ) ;
   }
+  // 1 < p 
+  else if ( 1 > x && 0 > a )
+  {
+    const double q = std::pow ( x , -a ) ;
+    return 1 / ( 1 + q ) ;
+  }
+  // p < 1 
+  else if ( 1 < x && 0 > a )
+    {
+    const double p = std::pow ( 1 / x , -a ) ;
+    return p / ( 1 + p ) ;
+  }
+  //
+  // p < 1 
+  const double p = std::pow ( x , a ) ;
+  return p / ( 1 + p ) ;
+}
+// ============================================================================
+/*  @fn pow_ratio_a2
+ *  Evaluate the expression \f$ \frac{1}{1+x^a}\f$ 
+ *  @param x argument \f$ 0< x \f$
+ *  @param a exponent
+ *  @see Ostap::Math::pow_ratio_a2 
+ */
+// ============================================================================
+double Ostap::Math::pow_ratio_a2
+( const double x ,
+  const double a )
+{
+  //
+  if      ( s_zero ( a ) || s_equal ( x , 1 ) ) { return 0.5 ; }
+  else if ( 0 < a && s_zero ( x )             ) { return 1   ; }
+  else if ( s_equal ( a , 1 )                 ) { return 1 / ( 1 + x ) ; }
+  //
+  // p = x**a  q = 1/p = x**-1 = (1/x)**a
+  //
+  // 1 < p 
+  if      ( 1 < x && 0 < a )
+  {
+    const double q = std::pow ( 1 / x , a ) ;
+    return q / ( 1 + q ) ;
+  }
+  // 1 < p 
+  else if ( 1 > x && 0 > a )
+  {
+    const double q = std::pow ( x , -a ) ;
+    return q / ( 1 + q ) ;
+  }
+  // p < 1 
+  else if ( 1 < x && 0 > a )
+  {
+    const double p = std::pow ( 1 / x , -a ) ;
+    return 1 / ( 1 + p ) ;
+  }
+  //
+  // p < 1 
+  const double p = std::pow ( x , a ) ;
+  return 1 / ( 1 + p ) ;
+}
+// ============================================================================
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

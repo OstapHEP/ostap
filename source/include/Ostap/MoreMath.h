@@ -63,7 +63,7 @@ namespace Ostap
     /** regularized incomplete gamma function 
      *  \f[ \gamma^{\ast}(a,x) = \frac{x^{-a}}{\Gamma(a)} \gamma(a,x) \f], 
      *  where \f[\gamma(a,x) = \int_0^x e^{-t}t^{a-1}dt\f], 
-     *  Abramowitz & Stegun, 6.5.4
+    *  Abramowitz & Stegun, 6.5.4
      *  @param a INPUT a-parameter 
      *  @param x INPUT x-argument 
      *  @return the value of regularized incomplete gamma function 
@@ -147,7 +147,7 @@ namespace Ostap
      */
     double  probit ( const double alpha  ) ;
     // =========================================================================
-    /**inverse of standard logistic distribution
+    /** inverse of standard logistic distribution
      * \f[ logit p  = \log \frac{p}{1-p} \f]
      * for \f$ 0 < p < 1 \f$
      * @see https://en.wikipedia.org/wiki/Logit
@@ -314,18 +314,19 @@ namespace Ostap
     inline std::complex<double> csc ( const std::complex<double>& x )
     { return 1.0 / std::sin ( x ) ; }    
     // ========================================================================
-    /** \overload cosecant \f$ sec (x) = \frac{1}{\cos x }\f$ 
+    /** \overload secant \f$ sec (x) = \frac{1}{\cos x }\f$ 
      */
     inline double sec ( const double x ) { return 1.0 / std::cos ( x ) ; }
     // ========================================================================    
-    /** \overload cosecant \f$ sec (x) = \frac{1} {\cos x} \f$ 
+    /** \overload secant \f$ sec (x) = \frac{1} {\cos x} \f$ 
      */
     inline std::complex<double> sec ( const std::complex<double>& x )
     { return 1.0 / std::cos ( x ) ; }    
     // ========================================================================
     /** \overload versin \f$ versin (x) = 1 - \cos x \f$ 
      */
-    inline double versin ( const double x ) { return 1.0 - std::cos ( x ) ; }
+    inline double versin ( const double x )
+    { return 1.0 - std::cos ( x ) ; }
     // ========================================================================    
     /** \overload versin \f$ versin (x) = 1 - \cos x \f$ 
      */
@@ -334,7 +335,8 @@ namespace Ostap
     // ========================================================================
     /** \overload vercos \f$ vercos (x) = 1 + \cos x \f$ 
      */
-    inline double vercos ( const double x ) { return 1.0 + std::cos ( x ) ; }
+    inline double vercos ( const double x )
+    { return 1.0 + std::cos ( x ) ; }
     // ========================================================================    
     /** \overload vercos \f$ vercos (x) = 1 - \cos x \f$ 
      */
@@ -343,16 +345,18 @@ namespace Ostap
     // ========================================================================
     /** \overload coversin \f$ coversin (x) = 1 - \sin x \f$ 
      */
-    inline double coversin ( const double x ) { return 1.0 - std::sin ( x ) ; }
+    inline double coversin ( const double x )
+    { return 1.0 - std::sin ( x ) ; }
     // ========================================================================    
-    /** \overload versin \f$ coversin (x) = 1 - \sin x \f$ 
+    /** \overload coversin \f$ coversin (x) = 1 - \sin x \f$ 
      */
     inline std::complex<double> coversin ( const std::complex<double>& x )
     { return 1.0 - std::sin ( x ) ; }    
     // ========================================================================
     /** \overload covercos \f$ vercos (x) = 1 + \sin x \f$ 
      */
-    inline double covercos ( const double x ) { return 1.0 + std::sin ( x ) ; }
+    inline double covercos ( const double x )
+    { return 1.0 + std::sin ( x ) ; }
     // ========================================================================    
     /** \overload covercos \f$ vercos (x) = 1 + \sin x \f$ 
      */
@@ -361,7 +365,8 @@ namespace Ostap
     // ========================================================================
     /** \overload cas \f$ cas x = \sin x + \cos x f$
      */
-    inline double  cas ( const double x ) { return std::sin ( x ) + std::cos ( x ) ; }
+    inline double  cas ( const double x )
+    { return std::sin ( x ) + std::cos ( x ) ; }
     // ========================================================================
     /** \overload cas \f$ cas x = \sin x + \cos x f$
      */
@@ -377,6 +382,7 @@ namespace Ostap
      *  @see Ostapo::Math::gamma 
      */
     double               tgamma ( const double x ) ;
+    // ========================================================================
     /** Gamma function
      *  \f$ \Gamma ( x )\f$ 
      *  @see Ostapo::Math::tgamma 
@@ -409,10 +415,11 @@ namespace Ostap
      * 
      *   Note that the imaginary part (arg) is not well-determined 
      *   when |z| is very large, due to inevitable roundoff in restricting 
- x    *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
+     *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
      *   The real part (lnr), however, never suffers from loss of precision.
      */
     std::complex<double> lgamma ( const std::complex<double>& x ) ;
+    // ========================================================================
 
     // ========================================================================
     /** Compute psi function 
@@ -659,6 +666,8 @@ namespace Ostap
       const unsigned short alpha2 , 
       const double         z      ) ;    
     // ========================================================================
+
+    // ========================================================================
     /** Pochhammer symbol, aka "rising factorial"
      *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
      *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
@@ -735,7 +744,8 @@ namespace Ostap
     double
     arithmetic_mean 
     ( const double a , 
-      const double b ) { return 0.5 * ( a + b ) ; } 
+      const double b )
+    { return 0.5 * ( a + b ) ; } 
     // ========================================================================
     /** simple arithmetic mean for two complex numbers 
      *  @param a the first number 
@@ -746,7 +756,8 @@ namespace Ostap
     std::complex<double>
     arithmetic_mean 
     ( const std::complex<double>& a , 
-      const std::complex<double>& b ) { return 0.5 * ( a + b ) ; }
+      const std::complex<double>& b )
+    { return 0.5 * ( a + b ) ; }
     // ========================================================================
     /** simple geometric mean for two real numbers (just for completeness)
      *  @param a the first number 
@@ -816,7 +827,7 @@ namespace Ostap
     // ========================================================================
     /** Heinz mean for two real numbers (just for completeness)
      *  @see https://en.wikipedia.org/wiki/Heinz_mean 
-     *  \f$ 0 \le x \l1 1/2 \f$ 
+     *  \f$ 0 \le x \le 1/2 \f$ 
      *  @param x-parameter: 0<=x<=0.5
      *  @param a the first number 
      *  @param b the second number 
@@ -1485,7 +1496,7 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
-    /** Riemann's Zeta function \f$ n\ne 1\f$:
+    /** Riemann's Zeta function \f$ n \ne 1\f$:
      *  \f$ \zeta ( n ) = \sum_k k^{-n}\f$ 
      */
     double zeta ( const int    n ) ;
@@ -1517,7 +1528,6 @@ namespace Ostap
     double hurwitz
     ( const double s     ,
       const double q = 1 ) ;
-
     // ========================================================================
     /** Hurwitz Zeta function 
      *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
@@ -1528,7 +1538,7 @@ namespace Ostap
     double hurwitz_zeta
     ( const double s     ,
       const double q = 1 ) { return hurwitz ( s , q ) ; }
-
+    
     // ========================================================================
     /** Dirichlet's Eta function 
      *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
@@ -1539,8 +1549,6 @@ namespace Ostap
      *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
      */
     double eta ( const double s ) ;
-    // ========================================================================
-    
     // ========================================================================
     /** Dirichlet's Eta function 
      *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
@@ -1566,7 +1574,6 @@ namespace Ostap
      */
     double dirichlet_beta
     ( const int x ) ;
-
     // ========================================================================
     /** Dirichet's beta funnction
      *  \f[ \beta ( s ) 
@@ -1578,6 +1585,7 @@ namespace Ostap
      */
     double dirichlet_beta
     ( const double x ) ;
+    // ========================================================================
     
     // ========================================================================
     /** complete Fermi-Dirac integral 
@@ -1657,17 +1665,15 @@ namespace Ostap
     /** \f$ f(x) = \frac { erf ( x ) }{ x } \f$
      * precise for small x 
      */
-    double erf_x ( const double x ) ; 
+    double erf_x   ( const double x ) ; 
     // =======================================================================
-    
+
     // ========================================================================
     /** simple infinitely smooth and finite function 
      *  \f$ f(x) = \mathrm{e}^{ - \frac{1}{1-x^2}}\f$ 
      *   for \f$ \left| x \right| \< 1\f$. else 0.
      */
     double hat ( const double  x ) ;
-    // ========================================================================
-
     // ========================================================================
     /** Fourrier-image of the finite atomic function <code>up</code> 
      *  \f$ \hat{up}(p) = \Pi_{k=1}^{\infty} \frac{ \sin p 2^{-k}}{ p 2^{-k}}\f$ 
@@ -1955,7 +1961,6 @@ namespace Ostap
       const double x ) ;
     // ========================================================================
 
-
     // ========================================================================
     /** Airy function Ai 
      *  @see https://en.wikipedia.org/wiki/Airy_function
@@ -2074,8 +2079,8 @@ namespace Ostap
      *      \end{array}   \f] 
      */
     double Cl
-      ( const unsigned short n , 
-        const double         x ) ;
+    ( const unsigned short n , 
+      const double         x ) ;
     // ========================================================================
     /** standard Clausen function
      *  \f[ \begin{array}{lcc}
@@ -2084,8 +2089,8 @@ namespace Ostap
      *      \end{array}   \f] 
      */
     double Sl
-      ( const unsigned short n , 
-        const double         x ) ;    
+    ( const unsigned short n , 
+      const double         x ) ;    
     // ========================================================================
     
     // ========================================================================
@@ -2632,8 +2637,10 @@ namespace Ostap
       Polynomial_n5         , // Based on "smooth step" with n=5
       Polynomial_n6         , // Based on "smooth step" with n=6
       //
+      Sine                  , // based on sine-function
+      //
       First = Logistic      , 
-      Last  = Polynomial_n6 
+      Last  = Sine          ,  
     } ;      	
     // ========================================================================
     /** sigmoid type
@@ -2778,7 +2785,30 @@ namespace Ostap
      ( const unsigned int n , 
        const double       x ) ;
      // =======================================================================
+    
+    // ========================================================================
+    /** @fn pow_ratio_a1
+     *  Evaluate the expression \f$ \frac{x^a}{1+x^a}\f$ 
+     *  @param x argument \f$ 0< x \f$
+     *  @param a exponent
+     *  @see Ostap::Math::pow_ratio_a1
+     */
+    double pow_ratio_a1
+    ( const double x ,
+      const double a ) ;
+    // ========================================================================
+    /** @fn pow_ratio_a2
+     *  Evaluate the expression \f$ \frac{1}{1+x^a}\f$ 
+     *  @param x argument \f$ 0< x \f$
+     *  @param a exponent
+     *  @see Ostap::Math::pow_ratio_a2 
+     */
+    double pow_ratio_a2
+    ( const double x ,
+      const double a ) ;
+    // ========================================================================
 
+    
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================
