@@ -114,6 +114,11 @@ std::size_t Ostap::Math::Value::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_value , m_name )  ;
 }
 // ============================================================================
+// sign of the value
+// ============================================================================
+signed char Ostap::Math::Value::signum () const
+{ return Ostap::Math::signum ( m_value ) ; }
+// ============================================================================
 
 // ============================================================================
 /*  full constructor
@@ -660,7 +665,7 @@ bool Ostap::Math::PQ::setQ
 ( const double value , 
   const bool   force ) 
 {
-  if ( !m_q.setValue ( value , force ) ) { return false ; } 
+  if ( !m_q.setValue ( value , force ) ) { return false ; }  
   m_log_Beta_pq = Ostap::Math::lnbeta ( m_p.value () , m_q.value () ) ;
   m_inv_Beta_pq = Ostap::Math::ibeta  ( m_p.value () , m_q.value () ) ;  
   return true ;

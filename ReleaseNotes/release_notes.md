@@ -5,7 +5,8 @@
 
 ## Bug fixes
 
-   1, Fix recently introduced bug (thanks to @DmitryYuGolubkov Dima Golubkov)  
+   1. Fix recently introduced bug (thanks to @DmitryYuGolubkov Dima Golubkov)  
+   1. Fix `Ostap::Math::(ln,i)beta`
    
 ## Backward incompatible
 

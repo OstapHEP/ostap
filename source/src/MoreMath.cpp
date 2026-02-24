@@ -990,12 +990,12 @@ double Ostap::Math::beta
   else if ( s_equal ( x , 1 )      ) { return 1 / y ; }
   else if ( s_equal ( y , 1 )      ) { return 1 / x ; }
   //
-  const bool x_int = 0.999 < x && x < s_BETA_MAX + 0.001 && isushort ( y ) ;
+  const bool x_int = 0.999 < x && x < s_BETA_MAX + 0.001 && isushort ( x ) ;
   const bool y_int = 0.999 < y && y < s_BETA_MAX + 0.001 && isushort ( y ) ;
   //
   if      ( x_int && y_int ) { return beta ( (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
   else if ( x_int          ) { return beta ( (unsigned short) round ( x ) , y ) ; }
-  else if (          y_int ) { return beta ( (unsigned short) round ( y ) , x ) ; }
+  else if ( y_int          ) { return beta ( (unsigned short) round ( y ) , x ) ; }
   //
   // ==========================================================================
 #if defined ( __cplusplus ) && defined ( __cpp_lib_math_special_functions ) && ( 201603L <= __cpp_lib_math_special_functions )
@@ -1084,30 +1084,14 @@ double Ostap::Math::lnbeta
   else if  ( s_equal ( x , 1 )      ) { return - std::log ( y )  ; }
   else if  ( s_equal ( y , 1 )      ) { return - std::log ( x )  ; }
   //
-  const bool x_int = 0.999 < x && x < s_BETA_MAX + 0.001 && isushort ( y ) ;
+  const bool x_int = 0.999 < x && x < s_BETA_MAX + 0.001 && isushort ( x ) ;
   const bool y_int = 0.999 < y && y < s_BETA_MAX + 0.001 && isushort ( y ) ;
   //
   if      ( x_int && y_int ) { return lnbeta ( (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
   else if ( x_int          ) { return lnbeta ( (unsigned short) round ( x ) , y ) ; }
-  else if (          y_int ) { return lnbeta ( (unsigned short) round ( y ) , x ) ; }
+  else if ( y_int          ) { return lnbeta ( (unsigned short) round ( y ) , x ) ; }
   //
   return std::lgamma ( x ) + std::lgamma ( y ) - std::lgamma ( x + y ) ;
-  //
-  //  // use GSL: 
-  //   Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
-  //   //
-  //   gsl_sf_result result ;
-  //   const int ierror = gsl_sf_lnbeta_e ( x , y , &result ) ;
-  //   if ( ierror ) 
-  //   {
-  //     //
-  //     gsl_error ( "Error from gsl_sf_lnbeta_e" , __FILE__ , __LINE__ , ierror ) ;
-  //     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-  //       { return std::numeric_limits<double>::quiet_NaN(); }
-  //     //
-  //   }
-  //   //
-  //   return result.val ;
 }
 // ============================================================================
 /* Natural logarithm of beta function     
@@ -1125,7 +1109,7 @@ double Ostap::Math::lnbeta
   else if ( 1 == x   ) { return - std::log ( 1.0 * y ) ; }
   else if ( 1 == y   ) { return - std::log ( 1.0 * x ) ; }
   //
-  if ( s_BETA_MAX < x || s_BETA_MAX < y  ) { return lnbeta ( 1.0 * x , 1.0 * y ) ; }
+  if ( s_BETA_MAX < x && s_BETA_MAX < y  ) { return lnbeta ( 1.0 * x , 1.0 * y ) ; }
   //
   return std::log ( beta ( x , y ) ) ;
 }
@@ -1173,7 +1157,7 @@ double Ostap::Math::ibeta
   if ( !x || !y ) { return 0 ; }
   //
   const unsigned short i = std::min ( x , y ) ;
-  if ( s_BETA_MAX <= i ) { return ibeta ( 1.0 * x , 1.0 * y ) ; }
+  if ( s_BETA_MAX < i ) { return ibeta ( 1.0 * x , 1.0 * y ) ; }
   //
   const unsigned short j = std::max ( x , y ) ;
   //
@@ -1194,11 +1178,11 @@ double Ostap::Math::ibeta
   const double         y )
 {
   if      ( !x || y <= 0 || s_zero ( y ) ) { return 0 ; }
-  else if ( s_BETA_MAX <= x              ) { return ibeta ( 1.0 * x , y ) ; }
+  else if ( s_BETA_MAX < x               ) { return ibeta ( 1.0 * x , y ) ; }
   //
   // y is integer? 
   const bool y_int = 0.999 < y && y < s_BETA_MAX + 0.001  && isushort ( y ) ;
-  if ( y_int    ) { return ibeta ( (unsigned short) round ( y ) , y ) ; }
+  if ( y_int    ) { return ibeta ( x , (unsigned short) round ( y ) ) ; }
   //
   long double result = y ;
   for ( unsigned short k = 1 ; k < x ; ++k ) { result *= ( k + y ) * 1.0L / k ; }
@@ -1233,14 +1217,14 @@ double Ostap::Math::ibeta
   else if ( s_equal ( x , 1 )      ) { return y ; }
   else if ( s_equal ( y , 1 )      ) { return x ; }
   //
-  const bool x_int = 0.999 < x && x < s_BETA_MAX + 0.001 && isushort ( y ) ;
+  const bool x_int = 0.999 < x && x < s_BETA_MAX + 0.001 && isushort ( x ) ;
   const bool y_int = 0.999 < y && y < s_BETA_MAX + 0.001 && isushort ( y ) ;
   //
   if      ( x_int && y_int ) { return ibeta ( (unsigned short) round ( x ) , (unsigned short) round ( y ) ) ; } 
   else if ( x_int          ) { return ibeta ( (unsigned short) round ( x ) , y ) ; }
-  else if (          y_int ) { return ibeta ( (unsigned short) round ( y ) , x ) ; }
+  else if ( y_int          ) { return ibeta ( (unsigned short) round ( y ) , x ) ; }
   //
-  return 1.0 / ibeta ( x , y ) ; 
+  return std::exp ( std::lgamma ( x + y ) - std::lgamma ( x ) - std::lgamma ( y )  ) ;
 }
 // ============================================================================
 /*  get the gaussian integral
@@ -1567,7 +1551,7 @@ double Ostap::Math::student_cdf
 // ============================================================================
 /* Normalized incomplete Beta function  
  *  \f$ f(\alpha_1,\alpha_2, z ) = 
- *      I_z( \alpha_1, \alpha_2 ) = 
+ *      I_z ( \alpha_1, \alpha_2 ) = 
  *      \frac{\Beta_z(\alpha_1,\alpha_2}}
  *           {\Beta  (\alpha_1,\alpha_2}
  *  - \f$ 0<\alpha_1\f$
@@ -1581,21 +1565,22 @@ double Ostap::Math::beta_inc
   const double z      ) 
 {
   //
-  if ( alpha1 <= 0 || s_zero ( alpha1 ) ) { return std::numeric_limits<double>::quiet_NaN () ; }
-  if ( alpha2 <= 0 || s_zero ( alpha2 ) ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  if      ( alpha1 <= 0 || s_zero ( alpha1 ) ) { return s_QUIETNAN ; }
+  else if ( alpha2 <= 0 || s_zero ( alpha2 ) ) { return s_QUIETNAN ; }
   //
-  if      ( s_equal ( z + 1 , 1 ) ) { return 0 ; }
-  else if ( s_equal ( z     , 1 ) ) { return 1 ; }
+  if      ( s_equal ( z + 1 , 1 ) ) { return          0 ; }
+  else if ( s_equal ( z     , 1 ) ) { return          1 ; }
+  else if ( z < 0       || 1 < z  ) { return s_QUIETNAN ; }
   //
-  if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  //  
+  // if ( 0.999  < alpha1         &&
+  //      0.999  < alpha2         &&
+  //      alpha1 + alpha2 <= 50.5 && 
+  //      isushort ( alpha1 )     &&
+  //      isushort ( alpha2 )     )    
+  //   { return beta_inc ( (unsigned short) round ( alpha1 ) ,
+  //                       (unsigned short) round ( alpha2 ) , z ) ; }
   //
-  if ( 0.999  < alpha1         &&
-       0.999  < alpha2         &&
-       alpha1 + alpha2 <= 50.5 && 
-       isushort ( alpha1 )     &&
-       isushort ( alpha2 )     )    
-    { return beta_inc ( (unsigned short) round ( alpha1 ) ,
-                        (unsigned short) round ( alpha2 ) , z ) ; }
   // =============================================================================  
   // use GSL: 
   // Ostap::Math::GSL::GSL_Error_Handler sentry { false } ;
@@ -1611,7 +1596,7 @@ double Ostap::Math::beta_inc
     //
     gsl_error ( "Error from gsl_sf_beta_inc_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-      { return std::numeric_limits<double>::quiet_NaN(); }
+      { return std::numeric_limits<double>::quiet_NaN () ; }
     //
   }
   return result.val ;         
@@ -1634,21 +1619,23 @@ double Ostap::Math::beta_inc
   const unsigned short alpha2 , 
   const double         z      )
 {
-  if ( !alpha1 || !alpha2 ) { return std::numeric_limits<double>::quiet_NaN () ; }
-  ///
-  if      ( s_equal ( z + 1 , 1 ) ) { return 0 ; }
-  else if ( s_equal ( z     , 1 ) ) { return 1 ; }
-  ///
-  if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
-  ///
-  const unsigned short k = alpha1 - 1 ;
-  const unsigned short m = alpha2 - 1 ;
-  //
-  const Ostap::Math::Bernstein::Basic bb ( k , k + m ) ;
-  ///
-  const Ostap::Math::Bernstein        B  { bb    } ;
-  //
-  return B.integral ( 0 , z ) * B.degree ()  ;
+  return beta_inc ( 1.0 * alpha1 , 1.0 * alpha2 , z ) ;
+  
+  // if ( !alpha1 || !alpha2 ) { s_QUIETNAN ; }
+  // ///
+  // if      ( s_equal ( z + 1 , 1 ) ) { return 0 ; }
+  // else if ( s_equal ( z     , 1 ) ) { return 1 ; }
+  // ///
+  // if ( z < 0 || 1 < z    ) { return std::numeric_limits<double>::quiet_NaN () ; }
+  // ///
+  // const unsigned short k = alpha1 - 1 ;
+  // const unsigned short m = alpha2 - 1 ;
+  // //
+  // const Ostap::Math::Bernstein::Basic bb ( k , k + m ) ;
+  // ///
+  // const Ostap::Math::Bernstein        B  { bb    } ;
+  // //
+  // return B.integral ( 0 , z ) * B.degree ()  ;
 }
 // ============================================================================
 /** Derivative of the normalized incomplete Beta function
@@ -1807,7 +1794,6 @@ namespace
     // Blended bisection/regular falsi iterations 
     for ( std::size_t i = 0 ; i < s_N1 ; ++i )
       {
-	//
 	// (1) normal bisection:
 	double xmid = 0.5 * ( xlow + xhigh ) ;
 	// (2) regular falsi step 
