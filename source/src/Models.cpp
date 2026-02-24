@@ -1750,25 +1750,20 @@ double Ostap::Math::GenBeta::integral
 // ============================================================================
 // get the CDF 
 // ============================================================================
-#include <iostream>
 double Ostap::Math::GenBeta::cdf 
 ( const double x    ) const
 {
   const signed char ss  = Ostap::Math::signum ( scale () ) ;
   const double y = t ( x ) ;
   
-  std::cout
-    << " (0) CDF "
-    << " x= "   << x
-    << " y= "   << y
-    << std::endl ;
+  const double R0 = 0 < ss ? 0.0 : 1.0 ;
+  const double R1 = 0 < ss ? 1.0 : 0.0 ; 
   
-  
-  if      ( y <= 0        ) { return 0 ; }
+  if      ( y <= 0        ) { return R0 ; }
   //
   const bool fr = finite_range () ;
-  if      (  fr && 1 <= y ) { return 1 ; }
-  else if ( !fr && y <= 1 ) { return 0 ; }
+  if      (  fr && 1 <= y ) { return R1 ; }
+  else if ( !fr && y <= 1 ) { return R0 ; }
   //
   const double av = a ()   ;
   const double rv = r ()   ;
@@ -1776,11 +1771,11 @@ double Ostap::Math::GenBeta::cdf
   //
   const double z = pow_ratio_a1 ( yr , av ) / pow_ratio_a2 ( rv , av ) ;
   //
-  const double      result =
-    // z <= 0 ? 0.0 :
-    // z >= 1 ? 1.0 :
-    beta_inc ( p () , q () , z ) ;
-
+  if      ( 0 >= z ) { return R0 ; }
+  else if ( 1 <= z ) { return R1 ; }
+  //
+  const double result = beta_inc ( p () , q () , z ) ;
+  //
   return 0 < ss ? result : ( 1 - result ) ;
 } 
 // ============================================================================
@@ -2256,9 +2251,6 @@ std::size_t Ostap::Math::GenBeta2::tag () const
 				       m_ss.tag () ) ;
 }
 // ============================================================================
-
-
-
 
 // ============================================================================
 // Landau
