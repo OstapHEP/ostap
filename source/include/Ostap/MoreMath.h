@@ -2065,6 +2065,17 @@ namespace Ostap
     double Chi ( const double x ) ; 
     // =========================================================================
     
+    // =========================================================================
+    /** generalized exponential integral  \f$ E_n ( x ) \f$ 
+     *  https://en.wikipedia.org/wiki/Exponential_integral
+     *  \f[ E_n (x) = \int_1^{+\infty} \frac{ e^{-xt}}{t^n}dt
+     *              = x^{n-1} \Gamma ( 1 - n , x ) \f]
+     */
+    double En
+    ( const double n ,
+      const double x ) ;
+    // =========================================================================
+    
     // ========================================================================
     /** get Clausen function \f$ Cl_2 \f$ 
      *  @param x argument 

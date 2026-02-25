@@ -15,7 +15,6 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/BSpline.h"
-#include "Ostap/MoreMath.h"
 // ============================================================================
 /** @file Ostap/Models.h
  *  Set of useful continuos  PDFs/models
@@ -844,7 +843,7 @@ namespace Ostap
     public: // quantile 
       // ======================================================================
       /// quantile \f$ 0 \le p \le1 \f$
-      double quantile ( const double p  ) const ; 
+      double quantile ( const double p  ) const ;  
       // ======================================================================
     public: // internal <--> external transformation 
       // ======================================================================
@@ -855,6 +854,8 @@ namespace Ostap
       // ======================================================================
     public: // support 
       // ======================================================================
+      /// finite range ? (beta-like or beta'-like?)
+      inline bool   finite_range () const { return true ; }      
       /// minimal x 
       double xmin () const ; 
       /// maximal x 
@@ -988,6 +989,8 @@ namespace Ostap
       // ======================================================================
     public: // support 
       // ======================================================================
+      /// finite range ? (beta-like or beta'-like?)
+      inline bool   finite_range () const { return false ; }      
       /// minimal x 
       double xmin () const ; 
       /// maximal x 
@@ -1173,6 +1176,8 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
+      /// finite range ? (beta-like or beta'-like?)
+      inline bool   finite_range () const { return false ; }      
       /// xmin: can be infinite or NaN
       double xmin () const ;
       /// xmaxL can be nfinite or NaN
@@ -1292,11 +1297,6 @@ namespace Ostap
       /// parameter c: beta2/beta1 = r = ( ( 1 - c ) / c ) ^ { 1 / a }      
       double c () const ;
       // =======================================================================
-    public: // range & limits 
-      // =======================================================================
-      /// finite range ? (beta-like or beta'-like?)
-      inline bool   finite_range () const { return 0 < a () ; }
-      // =======================================================================
     public :
       // =======================================================================
       inline bool setA      ( const double value  ) { return m_a .setValue ( value ) ; }
@@ -1338,8 +1338,10 @@ namespace Ostap
       double cdf 
       ( const double x    ) const ; 
       // =======================================================================
-    public :
-      // ======================================================================
+    public: // range & limits 
+      // =======================================================================
+      /// finite range ? (beta-like or beta'-like?)
+      inline bool   finite_range () const { return Ostap::Math::is_positive ( a () ) ; }
       /// xmin: can be infinite or NaN
       double xmin () const ;
       /// xmaxL can be nfinite or NaN
@@ -1356,6 +1358,11 @@ namespace Ostap
       // ======================================================================
       /// unique tag
       std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// "raw" cdf (for positive scale)
+      double raw_cdf ( const double y ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1394,15 +1401,15 @@ namespace Ostap
       // =======================================================================
       /** The most general form
        *  @param  shape a-parameter   \f$ a \ne 0 \f$
-       *  @param  logp  logarithm of p-parameter
-       *  @param  logq  logarithm of q-parameter
+       *  @param  p-parameter
+       *  @param  q-parameter
        *  @param  scale scale b-parameter \f$ b > 0 \f$
        *  @param  shift shift parameter b
        */       
       GenBeta1
       ( const double a     = 1 , // shape
-	const double logp  = 0 , // p-parameter
-	const double logq  = 0 , // q-parameter 
+	const double p     = 1 , // p-parameter
+	const double q     = 1 , // q-parameter 
 	const double scale = 1 , // scale 
 	const double shift = 0 ) ;
       // =======================================================================
@@ -1423,24 +1430,15 @@ namespace Ostap
       inline double scale () const { return m_ss.scale () ; }
       inline double shift () const { return m_ss.shift () ; }
       // =======================================================================
-      /// b/scale 
-      inline double b     () const { return scale     () ; }
-      /// mu/location/shift 
-      inline double mu    () const { return shift     () ; }
-      /// log P
-      inline double logP  () const { return m_pq.logP () ; } 
-      /// log Q
-      inline double logQ  () const { return m_pq.logQ () ; } 
-      // =======================================================================
     public: // range & limits 
       // =======================================================================
       /// finite range ? (beta-like or beta'-like?)
-      inline bool   finite_range () const { return 0 < a () ; }
+      inline bool   finite_range () const
+      { return Ostap::Math::is_positive ( a () ) ; }
       /// xmin 
-      inline double xmin         () const
-      { return a () ? shift () : shift () + scale () ; }
+      double xmin () const ;
       /// xmax 
-      double        xmax         () const ; 
+      double xmax () const ; 
       // =======================================================================
     public : // setters 
       // =======================================================================
@@ -1455,7 +1453,6 @@ namespace Ostap
       ( const double pvalue ,
 	const double qvalue )
       { return m_pq.setLogPQ ( pvalue , qvalue ) ; }
-      // ==============================================================================
       /// set P
       inline bool   setP      ( const double value  ) { return m_pq.setP     ( value ) ; }
       /// set P
@@ -1465,7 +1462,6 @@ namespace Ostap
       ( const double pvalue ,
 	const double qvalue )
       { return m_pq.setPQ    ( pvalue , qvalue ) ; } ;
-      // =======================================================================
       /// set scale 
       inline bool   setScale  ( const double value  ) { return m_ss.setScale ( value ) ; }
       /// set shift 
@@ -1501,6 +1497,13 @@ namespace Ostap
       double cdf 
       ( const double x    ) const ; 
       // =======================================================================
+    public: // internal <--> external tsranformation 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
+      /// externa x to internal t 
+      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
+      // ======================================================================
     public :
       // ======================================================================
       /// unique tag
@@ -1509,16 +1512,18 @@ namespace Ostap
     private:
       // ======================================================================
       /// raw moment  of unscaled/unshifted distribution
-      double raw_moment ( const unsigned short k ) const ; 
-      // =======================================================================
+      double raw_moment ( const unsigned short k ) const ;
+      /// "raw" cdf (for positive scale)
+      double raw_cdf    ( const double y ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// parameter a 
-      Ostap::Math::Scale         m_a  { 1 } ; // parameter a
+      Ostap::Math::Scale         m_a  { 1 }        ; // parameter a
       /// parameters p&q
-      Ostap::Math::PQ            m_pq {}    ; // parameters p&q
+      Ostap::Math::PQ            m_pq { 1 , 1 }    ; // parameters p&q
       // shift and scale 
-      Ostap::Math::ShiftAndScale m_ss {}    ; // shift and scale 
+      Ostap::Math::ShiftAndScale m_ss { 1 , 0 }    ; // shift and scale 
       // ======================================================================
     private: 
       // ======================================================================
@@ -1542,15 +1547,15 @@ namespace Ostap
       // =======================================================================
       /** The most general form
        *  @param  shape a-parameter   \f$ a \ne 0 \f$
-       *  @param  logp  logarithm of p-parameter
-       *  @param  logq  logarithm of q-parameter
+       *  @param  p     p-parameter
+       *  @param  q     q-parameter
        *  @param  scale scale b-parameter \f$ b > 0 \f$
        *  @param  shift shift parameter b
        */       
       GenBeta2
       ( const double a     = 1 , // shape
-	const double logp  = 0 , // p-parameter
-	const double logq  = 0 , // q-parameter 
+	const double p     = 1 , // p-parameter
+	const double q     = 1 , // q-parameter 
 	const double scale = 1 , // scale 
 	const double shift = 0 ) ;
       // =======================================================================
@@ -1565,27 +1570,20 @@ namespace Ostap
       // =======================================================================
     public :
       // =======================================================================
-      inline double a     () const { return m_a.value  () ; } 
+      inline double a     () const { return m_a .value () ; } 
       inline double p     () const { return m_pq.p     () ; } 
       inline double q     () const { return m_pq.q     () ; } 
       inline double scale () const { return m_ss.scale () ; }
       inline double shift () const { return m_ss.shift () ; }
       // =======================================================================
-      /// b/scale 
-      inline double b     () const { return scale     () ; }
-      /// mu/location/shift 
-      inline double mu    () const { return shift     () ; }
-      /// log P
-      inline double logP  () const { return m_pq.logP () ; } 
-      /// log Q
-      inline double logQ  () const { return m_pq.logQ () ; } 
-      // =======================================================================
     public: // range & limits 
       // =======================================================================
       /// finite range ? (beta-like or beta'-like?)
-      inline bool   finite_range () const { return false    ; }
+      inline bool   finite_range () const { return false    ; }      
       /// xmin 
-      inline double xmin         () const { return shift () ; }
+      double xmin         () const ; 
+      /// xmax 
+      double xmax         () const ; 
       // =======================================================================
     public : // setters 
       // =======================================================================
@@ -1646,16 +1644,25 @@ namespace Ostap
       double cdf 
       ( const double x    ) const ; 
       // =======================================================================
-    private:
+    public: // internal <--> external tsranformation 
       // ======================================================================
-      /// raw moment  of unscaled/unshifted distribution
-      double raw_moment ( const unsigned short k ) const ; 
-      // =======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
+      /// externa x to internal t 
+      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
+      // ======================================================================
     public :
       // ======================================================================
       /// unique tag
       std::size_t tag () const ;
       // ======================================================================
+    private:
+      // ======================================================================
+      /// raw moment  of unscaled/unshifted distribution
+      double raw_moment ( const unsigned short k ) const ; 
+      /// "raw" cdf (for positive scale)
+      double raw_cdf    ( const double y ) const ;
+      // =======================================================================
     private:
       // ======================================================================
       /// parameter a 
@@ -2966,12 +2973,11 @@ namespace Ostap
     public :
       // ====================================================================== 
       /// shape parameter 
-      inline double alpha () const { return m_alpha ; }
+      inline double alpha () const { return m_alpha.value ()  ; }
       /// scale parameter 
-      inline double scale () const { return m_scale ; }
+      inline double scale () const { return m_ss   .scale () ; }
       /// shift parameter 
-      inline double shift () const { return m_shift ; }
-      // ======================================================================
+      inline double shift () const { return m_ss   .shift () ; }
       /// shape parameter 
       inline double shape () const { return alpha () ; }
       /// shift/bias 
@@ -2979,10 +2985,11 @@ namespace Ostap
       // ======================================================================
     public : 
       // ======================================================================
-      bool         setAlpha ( const double value ) ;
-      bool         setScale ( const double value ) ;
-      bool         setShift ( const double value ) ;
-      inline  bool setShape ( const double value ) { return setAlpha ( value ) ; }
+      inline bool setAlpha    ( const double value ) { return m_alpha.setValue    ( value ) ; } 
+      inline bool setLogAlpha ( const double value ) { return m_alpha.setLogValue ( value ) ; } 
+      inline bool setScale    ( const double value ) { return m_ss   .setScale    ( value ) ; } 
+      inline bool setShift    ( const double value ) { return m_ss   .setShift    ( value ) ; } 
+      inline bool setShape    ( const double value ) { return         setAlpha    ( value ) ; }
       // ======================================================================
     public :
       // ======================================================================
@@ -3017,6 +3024,13 @@ namespace Ostap
       double cdf
       ( const double x ) const ;
       // ======================================================================
+    public: // internal <--> external transformation 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
+      /// external x to internal t       
+      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
+      // =====================================================================      
     public :
       // ======================================================================
       /// uniquie tag
@@ -3024,12 +3038,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// shape parameter alpha 
-      double m_alpha { 1 } ; // shape parameter alpha 
-      /// scale parameter  
-      double m_scale { 1 } ; // scale parameter  
-      /// shift parameter  
-      double m_shift { 0 } ; // shift parameter  
+      /// shape parameter alpha
+      Ostap::Math::LogValue      m_alpha { 1 } ;
+      /// scale&shift parameter  
+      Ostap::Math::ShiftAndScale m_ss    { 1 , 0 } ; // scale&shift  parameter  
       // ======================================================================
     } ;
     // ========================================================================
@@ -3043,15 +3055,15 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor from all parameters
-       *  @param p shape parameter \f$ 0 < p \f$
        *  @param a shape parameter \f$ 0 < a \f$
-       *  @param b scale parameter \f$ 0 < b \f$
+       *  @param p shape parameter \f$ 0 < p \f$
+       *  @param scale parameter    n 
        *  @param shift shift parameter        
        */
       Dagum
-      ( const double p     = 1 ,
-	const double a     = 1 ,
-	const double b     = 1 ,
+      ( const double a     = 1 ,
+	const double p     = 1 ,
+	const double scale = 1 ,
 	const double shift = 0 ) ;       	
       // ======================================================================
     public :
@@ -3065,27 +3077,28 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      /// shape parameter p 
-      inline double  p     () const { return m_p      ; } 
       /// shape parameter a 
-      inline double  a     () const { return m_a      ; } 
-      /// scale parameter b
-      inline double  b     () const { return m_b      ; } 
+      inline double  a     () const { return m_a.value () ; } 
+      /// shape parameter p 
+      inline double  p     () const { return m_p.value () ; }
+      /// scale parameter 
+      inline double scale () const { return m_ss   .scale () ; }
       /// shift parameter 
-      inline double  shift () const { return m_shift  ; } 
+      inline double shift () const { return m_ss   .shift () ; }
+      /// b-parameyer
+      inline double b     () const { return scale () ; } 
       /// shift parameter 
-      inline double  xmin  () const { return shift () ; } 
+      inline double xmin  () const { return shift () ; } 
       // ======================================================================
     public:
       // ======================================================================
-      /// set shape parameter p 
-      bool setP     ( const double value ) ;
-      /// set shape parameter a
-      bool setA     ( const double value ) ;
-      /// set scale parameter b
-      bool setB     ( const double value ) ;
-      /// set shift parameter 
-      bool setShift ( const double value ) ;
+      inline bool setA        ( const double value ) { return m_a    .setValue    ( value ) ; } 
+      inline bool setP        ( const double value ) { return m_p    .setValue    ( value ) ; } 
+      inline bool setLogA     ( const double value ) { return m_a    .setLogValue ( value ) ; } 
+      inline bool setLogP     ( const double value ) { return m_p    .setLogValue ( value ) ; } 
+      inline bool setScale    ( const double value ) { return m_ss   .setScale    ( value ) ; } 
+      inline bool setShift    ( const double value ) { return m_ss   .setShift    ( value ) ; } 
+      inline bool setB        ( const double value ) { return         setScale    ( value ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -3115,6 +3128,13 @@ namespace Ostap
       double quantile
       ( const double u ) const ;
       // ======================================================================
+    public: // internal <--> external transformation 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
+      /// external x to internal t       
+      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
+      // =====================================================================      
     public :
       // ======================================================================
       /// uniquie tag
@@ -3122,14 +3142,12 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// shape parameter p
-      double m_p     { 1 } ; // shape parameter p 
       /// shape parameter a
-      double m_a     { 1 } ; // shape parameter a
-      /// scale parameter b
-      double m_b     { 1 } ; // scale parameter a
-      /// shift parameter 
-      double m_shift { 0 } ; // shift parameter a
+      Ostap::Math::LogValue      m_a  { 1 } ; /// shape parameter a
+      /// shape parameter p
+      Ostap::Math::LogValue      m_p  { 1 } ; /// shape parameter p
+      /// scale&shift parameter  
+      Ostap::Math::ShiftAndScale m_ss { 1 , 0 } ; // scale&shift  parameter        
       // ======================================================================      
     } ;
     // ========================================================================
@@ -3164,24 +3182,24 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      inline double a     () const { return m_a      ; } 
-      inline double r     () const { return m_r      ; } 
-      inline double scale () const { return m_scale  ; } 
-      inline double shift () const { return m_shift  ; }
+      inline double a     () const { return m_a .value () ; } 
+      inline double r     () const { return m_r .value () ; } 
+      inline double scale () const { return m_ss.scale () ; } 
+      inline double shift () const { return m_ss.shift () ; }
       // =====================================================================
-      /// helper parameter "p"
+      /// helper parameter "p"  \f$ 0 < p \le 1 \f$ 
       inline double p     () const { return m_p      ; }
       /// original parameter "b" 
-      inline double b     () const { return m_p * m_a * ( m_a + 1 ) / 2 ; }
+      double        b     () const ; 
       /// minimal x 
       inline double xmin  () const { return shift () ; }
       // =====================================================================
     public :
       // =====================================================================
-      bool setA     ( const double value ) ;
-      bool setR     ( const double value ) ;
-      bool setScale ( const double value ) ;
-      bool setShift ( const double value ) ;
+      bool        setR     ( const double value ) ;
+      inline bool setA     ( const double value ) { return m_a.setValue ( value ) ; }
+      inline bool setScale ( const double value ) { return m_ss.setScale ( value ) ; }  
+      inline bool setShift ( const double value ) { return m_ss.setShift ( value ) ; }  
       // =====================================================================
     public: 
       // =====================================================================
@@ -3204,28 +3222,28 @@ namespace Ostap
       double cdf 
       ( const double x    ) const ;
       // =====================================================================
+    public: // internal <--> external transformation 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_ss.x ( t - 1.0 ) ; }
+      /// external x to internal t       
+      inline double t ( const double x ) const { return 1.0 + m_ss.t ( x ) ; }
+      // =====================================================================      
     public :
       // ======================================================================
       /// unique tag
       std::size_t tag () const ;
       // ======================================================================
-    private:
-      // ======================================================================
-      /// set the p from delta 
-      void setP ( const double delta ) ;
-      // ======================================================================
-    private:
+      private:
       // ======================================================================
       ///  parameter a 
-      double m_a         {  1 } ; // parameter a
+      Ostap::Math::LogValue      m_a  { 1 } ; // parameter a
       ///  parameter r 
-      double m_r         {  0 } ; // parameter r 
-      /// scale parameter 
-      double m_scale     {  1 }  ; // scale parameter 
-      /// shift parameter 
-      double m_shift     {  0 }  ; // shift parameter
+      Ostap::Math::Value         m_r  { 0 } ; // parameter r      
+      /// scale & shift parameter 
+      Ostap::Math::ShiftAndScale m_ss { 1 , 0 }  ; // scale&shift  parameter 
       /// parameter p 
-      double m_p         { -1 } ; // parameter p 
+      double                     m_p  { 1 } ; // parameter p 
       // ======================================================================
     } ; 
     // ========================================================================
@@ -3259,10 +3277,11 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      inline double a     () const { return m_a     ; } 
-      inline double r     () const { return m_r     ; } 
-      inline double scale () const { return m_scale ; } 
-      inline double shift () const { return m_shift ; }
+      inline double a     () const { return m_a .value () ; } 
+      inline double r     () const { return m_r .value () ; } 
+      inline double scale () const { return m_ss.scale () ; } 
+      inline double shift () const { return m_ss.shift () ; }
+      // =====================================================================
       /// original parameter "b" 
       inline double b     () const { return m_b      ; }
       /// minimal x 
@@ -3270,15 +3289,21 @@ namespace Ostap
       // =====================================================================
     public :
       // =====================================================================
-      bool setA     ( const double value ) ;
-      bool setR     ( const double value ) ;
-      bool setScale ( const double value ) ;
-      bool setShift ( const double value ) ;
+      bool        setR     ( const double value ) ;
+      inline bool setA     ( const double value ) { return m_a.setValue ( value ) ; }
+      inline bool setScale ( const double value ) { return m_ss.setScale ( value ) ; }  
+      inline bool setShift ( const double value ) { return m_ss.setShift ( value ) ; }  
       // =====================================================================
     public: 
       // =====================================================================
       /// mode 
       double mode     () const ;
+      /// mean value 
+      double mean     () const ;
+      /// variance value 
+      double variance () const ;
+      /// RMS value 
+      double rms      () const ;
       // =====================================================================
     public : 
       // =====================================================================
@@ -3292,6 +3317,13 @@ namespace Ostap
       double cdf 
       ( const double x    ) const ;
       // =====================================================================
+    public: // internal <--> external transformation 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_ss.x ( t - 1.0 ) ; }
+      /// external x to internal t       
+      inline double t ( const double x ) const { return 1.0 + m_ss.t ( x ) ; }
+      // =====================================================================      
     public :
       // ======================================================================
       /// unique tag
@@ -3300,15 +3332,13 @@ namespace Ostap
     private:
       // ======================================================================
       ///  parameter a 
-      double m_a         {  1 } ; // parameter a
-      ///  parameter r             
-      double m_r         {  0 } ; // parameter r
-      /// scale parameter 
-      double m_scale     {  1 }  ; // scale parameter 
-      /// shift parameter 
-      double m_shift     {  0 }  ; // shift parameter
-      ///  parameter b       
-      double m_b         { -1 }  ; // parameter b
+      Ostap::Math::LogValue      m_a  { 1 } ; // parameter a
+      ///  parameter r 
+      Ostap::Math::Value         m_r  { 0 } ; // parameter r      
+      /// scale & shift parameter 
+      Ostap::Math::ShiftAndScale m_ss { 1 , 0 }  ; // scale&shift  parameter 
+      /// parameter b
+      double                     m_b  { 1 } ; // parameter b 
       // ======================================================================
     } ; 
     // ========================================================================
@@ -3579,8 +3609,8 @@ namespace Ostap
     public :
       // ======================================================================
       Kumaraswami
-      ( const double alpha = 2 , // 0<alpha 
-	const double beta  = 2 , // 0<beta 
+      ( const double alpha = 1 , // 0<alpha 
+	const double beta  = 1 , // 0<beta 
 	const double scale = 1 , // 0<scale
 	const double shift = 0 ) ;      	
       // ======================================================================
@@ -3595,22 +3625,24 @@ namespace Ostap
       // ======================================================================
     public : 
       // ======================================================================
-      inline double alpha () const { return m_alpha ; }
-      inline double beta  () const { return m_beta  ; }
-      inline double scale () const { return m_scale ; }
-      inline double shift () const { return m_shift ; }
-      // ======================================================================
-    public :
-      // ======================================================================
-      inline double xmin  () const { return m_shift           ; }
-      inline double xmax  () const { return m_shift + m_scale ; }
+      inline double alpha () const { return m_alpha.value () ; }
+      inline double beta  () const { return m_beta .value () ; }
+      inline double scale () const { return m_ss   .scale () ; }
+      inline double shift () const { return m_ss   .shift () ; }
       // ======================================================================
     public:
       // ======================================================================
-      bool setAlpha ( const double value ) ;
-      bool setBeta  ( const double value ) ;
-      bool setScale ( const double value ) ;
-      bool setShift ( const double value ) ;
+      inline bool setAlpha ( const double value ) { return m_alpha.setValue ( value ) ; } 
+      inline bool setBeta  ( const double value ) { return m_beta .setValue ( value ) ; }
+      inline bool setScale ( const double value ) { return m_ss   .setScale ( value ) ; } 
+      inline bool setShift ( const double value ) { return m_ss   .setShift ( value ) ; }
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// support: xmin 
+      double xmin  () const ; 
+      /// support: xmax
+      double xmax  () const ; 
       // ======================================================================
     public:
       // ======================================================================
@@ -3629,11 +3661,6 @@ namespace Ostap
       /// (excess) kurtosis
       double kurtosis () const ;
       // ======================================================================
-    private :
-      // ======================================================================
-      /// raw moment for standartized Kumaraswami
-      double moment ( const unsigned int n ) const ;
-      // ======================================================================
     public: // integrals
       // ======================================================================
       /// intergal 
@@ -3649,21 +3676,33 @@ namespace Ostap
       double quantile 
       ( const double p    ) const ;
       // ======================================================================
+    public: // internal <--> external transformation 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
+      /// externa x to internal t 
+      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
+      // ======================================================================
     public:
       // ======================================================================
       // get the tag
       std::size_t tag () const ;
       // ======================================================================
+    private : 
+      // ======================================================================
+      /// "raw" cdf (for positive scale)
+      double raw_cdf    ( const double         y ) const ; 
+      /// raw moment for standartized Kumaraswami
+      double raw_moment ( const unsigned short n ) const ;
+      // ======================================================================
     private :
       // ======================================================================
       /// parameter alpha 
-      double m_alpha  { 2 } ; // parameter alpha 
+      Ostap::Math::LogValue      m_alpha { 1 }     ; // parameter alpha 
       /// parameter beta 
-      double m_beta   { 2 } ; // parameter beta  
-      /// scale parameter
-      double m_scale  { 1 } ; // scale parameter 
-      /// shift parameter
-      double m_shift  { 0 } ; // shift  parameter 
+      Ostap::Math::LogValue      m_beta  { 1 }     ; // parameter beta  
+      /// scale&shift  parameter
+      Ostap::Math::ShiftAndScale m_ss    { 1 , 0 } ; // shift&scale 
       // ======================================================================
     };
     // ========================================================================

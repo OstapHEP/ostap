@@ -5632,10 +5632,26 @@ double Ostap::Math::Ein  ( const double x )
  */
 // =============================================================================
 double Ostap::Math::E1  ( const double x )
-{ return -s_EULER - std::log ( x ) + Ein( x ) ; }
+{ return -s_EULER - std::log ( x ) + Ein ( x ) ; }
 // =============================================================================
 
-
+// =========================================================================
+/*  Generalized exponential integral  \f$ E_n ( x ) \f$ 
+ *  https://en.wikipedia.org/wiki/Exponential_integral
+ *  \f[ E_n (x) = \int_1^{+\infty} \frac{ e^{-xt}}{t^n}dt
+ *              = x^{n-1} \Gamma ( 1 - n , x ) \f]
+ */
+// =========================================================================
+double Ostap::Math::En
+( const double n ,
+  const double x )
+{
+  if ( x < 0 ) { return s_QUIETNAN ; }
+  return std::pow ( x , n - 1 )
+    * gamma       ( n - 1     )
+    * gamma_inc_Q ( 1 - n , x ) ;  
+}
+// =========================================================================
 
 // =============================================================================
 /* Integal sinh 
@@ -6874,7 +6890,8 @@ double Ostap::Math::kurtosis
 		  "Ostap::Math::skewness"  ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  const double v4 = m4 - m1 * ( 4 * m3 + m1 *( 6 * m2 - 3 * m1 * m1 ) ) ;
+  const std::array<double,5> h {{ m4 , -4.0 * m3  , +6.0 * m2 , 0.0 , -3.0 }} ;   
+  const double v4 = Ostap::Math::Clenshaw::monomial_sum ( h.rbegin() , h.rend () , m1 ).first ;
   //
   Ostap::Assert ( 0 <= v4 || s_zero ( v4 ) ,
 		  "Invalid 4th central moment!"    ,
@@ -6883,7 +6900,6 @@ double Ostap::Math::kurtosis
   //  
   return std::max ( v4 , 0.0 ) / ( v2 * v2 ) - 3 ;
 }
-
 // ============================================================================
 /*  Moebius transformation
  * \f[ f(x) = \frac{ax+b}{cx+d}\f]

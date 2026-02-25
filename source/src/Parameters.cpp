@@ -75,19 +75,19 @@ bool Ostap::Math::Value::setValue
 }
 // ============================================================================
 /** set the full name of parameter
- *  @param the_class the name of ower/holder class
  *  @parm  the_name  the parameter  name
+ *  @param the_class the name of ower/holder class
  */
 // ============================================================================
 const std::string& Ostap::Math::Value::setFullName
-( const std::string& the_class ,
-  const std::string& the_name  )
+( const std::string& the_name  , 
+  const std::string& the_class ) 
 {
   //
-  const std::string c1 { Ostap::strip ( the_class ) } ;
-  const std::string c2 { Ostap::strip ( the_name  ) } ;
+  const std::string c1 { Ostap::strip ( the_name  ) } ;
+  const std::string c2 { Ostap::strip ( the_class ) } ;
   //
-  if       ( !c1.empty() && !c2.empty() ) { m_name = c1 + "::" + c2 ; }
+  if       ( !c1.empty() && !c2.empty() ) { m_name = c2 + "::" + c1 ; }
   else if  ( !c1.empty()                ) { m_name = c1 ; }
   else if  ( !c2.empty()                ) { m_name = c2 ; }
   else                                    { m_name = "" ; }
@@ -496,89 +496,6 @@ std::size_t Ostap::Math::ShiftAndScale::tag () const
 				       m_shift.tag () , 
 				       m_scale.tag () )  ;
 }
-// ============================================================================
-
-
-// ============================================================================
-/*  @param a a-parameter 
- *  @param b b-parameter 
- *  @param aname the name of a-parameter
- *  @param bname the name of b-parameter
- *  @param the_class name of the (owner/holder) class 
- */
-// ===========================================================================
-Ostap::Math::AB::AB
-( const double       a         ,
-  const double       b         , 
-  const std::string& aname     , 
-  const std::string& bname     , 
-  const std::string& the_class )
-  : m_a ( a , aname, the_class ) 
-  , m_b ( b , bname, the_class ) 
-{}
-// ============================================================================
-/*  @param a a-parameter 
- *  @param b b-parameter 
- *  @param aname the name of b-parameter
- *  @param bname the name of b-parameter
- *  @param the_class name of the (owner/holder) class 
- */
-// ============================================================================
-Ostap::Math::AB::AB
-( const double          a         ,
-  const double          b         , 
-  const std::string&    aname     , 
-  const std::string&    bname     ,
-  const std::type_info& the_class )
-  : AB ( a , b , aname , bname , Ostap::class_name ( the_class ) )
-{}
-// ============================================================================
-/* set the full name of parameter
- *  @param the_class the name of ower/holder class
- *  @parm  pname  the name of a-parameter
- *  @parm  qname  the name of b-parameter
- */
-// ============================================================================
-void Ostap::Math::AB::setFullName
-( const std::string& the_class ,
-  const std::string& aname    , 
-  const std::string& bname    )
-{
-  m_a.setFullName ( the_class , aname ) ;
-  m_b.setFullName ( the_class , bname ) ; 
-}
-// ======================================================================			
-/*  set the full name of parameter
- *  @param the_class the type-info of owner/holder class
- *  @parm  pname  the name of a-parameter
- *  @parm  qname  the name of b-parameter
- */
-// ======================================================================			
-void Ostap::Math::AB::setFullName
-( const std::type_info& the_class  ,
-  const std::string& aname    , 
-  const std::string& bname    )
-{ return setFullName ( Ostap::class_name ( the_class ) , aname , bname ) ; }
-// ============================================================================
-// Unique value 
-// ============================================================================
-std::size_t Ostap::Math::AB::tag () const 
-{
-  static const std::string s_name { "AB" } ;
-  return Ostap::Utils::hash_combiner ( s_name     ,
-				       m_a.tag () , 
-				       m_b.tag () )  ;
-}
-// ============================================================================
-// helper expression \f$ \log \Beta (a , b ) \f$
-// ============================================================================
-double Ostap::Math::AB::log_Beta_ab() const
-{  return Ostap::Math::lnbeta ( m_a.value () , m_b.value () ) ; }
-// ============================================================================
-// helper expression \f$ \frac{1}{\Beta (a , b ) } \f$
-// ============================================================================
-double Ostap::Math::AB::inv_Beta_ab() const
-{  return Ostap::Math::ibeta  ( m_a.value () , m_b.value () ) ; }
 // ============================================================================
 
 // ============================================================================

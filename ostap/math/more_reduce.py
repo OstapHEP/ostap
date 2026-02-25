@@ -1086,28 +1086,10 @@ def _ombprim_reduce_ ( s ) :
     - see `Ostap.Math.BetaPrime`
     - see `Ostap.Math.Beta`
     """
-    return root_factory , ( type ( s ) , s.alpha () , s.beta() , s.scale() , s.shift () )
+    return root_factory , ( type ( s ) , s.p () , s.q() , s.scale() , s.shift () )
 
 Ostap.Math.BetaPrime. __reduce__ = _ombprim_reduce_
 Ostap.Math.Beta     . __reduce__ = _ombprim_reduce_
-
-
-# =============================================================================
-## Reduce Ostap::Math::GenBeta
-#  @see Ostap::Math::GenBeta
-def _om_genbeta_reduce_ ( s ) :
-    """Reduce `Ostap.Math.GenBeta` 
-    - see `Ostap.Math.GenBeta`
-    """
-    return root_factory , ( type ( s ) ,
-                            s.a     () ,
-                            s.b     () ,
-                            s.gamma () ,
-                            s.p     () ,
-                            s.q     () ,
-                            s.shift () )
-
-Ostap.Math.GenBeta     . __reduce__ = _om_genbeta_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::FDistribution
@@ -1127,9 +1109,47 @@ def _omgenbprim_reduce_ ( s ) :
     """Reduce `Ostap.Math.GenBetaPrime`
     - see `Ostap.Math.GenBetaPrime`
     """
-    return root_factory , ( type ( s ) , s.alpha () , s.beta() , s.p () , s.q() , s.scale() , s.shift () )
+    return root_factory , ( type ( s ) ,
+                            s.a     () ,
+                            s.p     () ,
+                            s.q     () ,
+                            s.scale () ,
+                            s.shift () )
 
 Ostap.Math.GenBetaPrime. __reduce__ = _omgenbprim_reduce_
+
+
+# =============================================================================
+## Reduce Ostap::Math::GenBeta
+#  @see Ostap::Math::GenBeta
+def _om_genbeta_reduce_ ( s ) :
+    """Reduce `Ostap.Math.GenBeta` 
+    - see `Ostap.Math.GenBeta`
+    """
+    return root_factory , ( type ( s ) ,
+                            s.a     () ,
+                            s.r     () ,
+                            s.p     () ,
+                            s.q     () ,
+                            s.scale () , 
+                            s.shift () )
+
+# =============================================================================
+## Reduce Ostap::Math::GenBeta1 & Ostap::Math::GenBeta2
+#  @see Ostap::Math::GenBeta
+def _om_genbeta12_reduce_ ( s ) :
+    """Reduce `Ostap.Math.GenBeta1` & `Ostap.Math.GenBeta2` 
+    - see `Ostap.Math.GenBeta`
+    """
+    return root_factory , ( type ( s ) ,
+                            s.a     () ,
+                            s.p     () ,
+                            s.q     () ,
+                            s.scale () , 
+                            s.shift () )
+
+Ostap.Math.GenBeta1   . __reduce__ = _om_genbeta12_reduce_
+Ostap.Math.GenBeta2   . __reduce__ = _om_genbeta12_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::Landau
