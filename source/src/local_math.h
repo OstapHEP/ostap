@@ -209,6 +209,8 @@ namespace
   // ==========================================================================
 #endif // =====================================================================
   // ==========================================================================
+  /// @var s_Euler   Euler-Mascheroni constant \f$ \gamma_E \f$
+  const long double s_Euler = s_Mascheroni ;
   /// @var s_2pi   \f$  2\pi\f$
   const long double s_2pi        = s_pi * 2 ;
   /// @var s_pi2   \f$  \pi^2 \f$
@@ -268,7 +270,8 @@ namespace
   const long double s_1_ln10 = 1.0L / s_ln10 ;
   /// precomputed value of 1/ln(2) 
   const long double s_1_ln2  = 1.0L / s_ln2  ;
-  // ==========================================================================
+  /// precomputer lnllb 2 
+  const long double s_ln_ln2 = std::log ( s_ln2 ) ;
 
   // ==========================================================================
   // some old-fashioned names 

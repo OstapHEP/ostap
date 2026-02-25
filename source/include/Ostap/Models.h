@@ -47,7 +47,7 @@ namespace Ostap
      *  with different slopes, the transforomation \f$ z=log(x) \f$ will convert each 
      *  exponential components into bump-like structure
      */  
-    class Gumbel
+    class Gumbel : public ShiftAndScale
     {
     public:
       // ======================================================================
@@ -61,25 +61,16 @@ namespace Ostap
       // ======================================================================
     public: // primary getters 
       // ======================================================================
-      inline double mu       () const { return m_ss.shift () ; }
-      inline double beta     () const { return m_ss.scale () ; }
-      //
-      inline double shift    () const { return m_ss.shift () ; }
-      inline double scale    () const { return m_ss.scale () ; }
+      inline double mu       () const { return shift () ; }
+      inline double beta     () const { return scale () ; }
       //
       inline double peak     () const { return mu   () ; }
       inline double location () const { return mu   () ; }
       // ======================================================================
     public: // settetrs 
       // ======================================================================
-      inline bool   setMu       ( const double value ) { return m_ss.setShift ( value ) ; } 
-      inline bool   setBeta     ( const double value ) { return m_ss.setScale ( value ) ; } 
-      // ======================================================================
-      inline bool   setShift    ( const double value ) { return m_ss.setShift ( value ) ; } 
-      inline bool   setScale    ( const double value ) { return m_ss.setScale ( value ) ; } 
-      // ======================================================================
-      inline bool   setPeak     ( const double value ) { return setMu ( value ) ; } 
-      inline bool   setLocation ( const double value ) { return setMu ( value ) ; } 
+      inline bool   setMu       ( const double value ) { return setShift ( value ) ; } 
+      inline bool   setBeta     ( const double value ) { return setScale ( value ) ; } 
       // ======================================================================
     public: // characteristics 
       // ======================================================================
@@ -117,7 +108,7 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral
       ( const double low  ,
-	const double high ) const ;
+	      const double high ) const ;
       // ======================================================================
       /** quantile function
        *  @parameter p  probability \f$ 0 < p < 1 \f$
@@ -129,11 +120,6 @@ namespace Ostap
       /// get the tag 
       std::size_t tag ()   const ;
       // ======================================================================
-    private:      
-      // ======================================================================
-      /// shift and scale parameters
-      Ostap::Math::ShiftAndScale m_ss { 1 , 0 }  ;
-      // ======================================================================
     } ;
     // ========================================================================
     /** @class GammaDist
@@ -143,7 +129,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-05-11
      */
-    class  GammaDist
+    class  GammaDist : public ShiftAndScale 
     {
     public:
       // ======================================================================
@@ -155,12 +141,12 @@ namespace Ostap
       GammaDist 
       ( const double k     = 2 ,   // shape parameter
         const double theta = 1 ,   // scale parameter
-	const double shift = 0 ) ; // shift parametet 
+	      const double shift = 0 ) ; // shift parametet 
       // ======================================================================
     public:
       // ======================================================================
       /// calculate gamma distribution shape
-      double evaluate( const double x ) const ;
+      double evaluate ( const double x ) const ;
       /// calculate gamma distribution shape
       inline double operator() ( const double x ) const { return evaluate ( x ) ; }
       /// calculate gamma distribution shape
@@ -171,8 +157,7 @@ namespace Ostap
       // variables
       // ======================================================================
       inline double k          () const  { return m_k .value () ; }
-      inline double theta      () const  { return m_ss.scale () ; }
-      inline double shift      () const  { return m_ss.shift () ; }
+      inline double theta      () const  { return      scale () ; }
       // ======================================================================
       inline double alpha      () const  { return m_k .value () ; }
       inline double beta       () const  { return 1 / theta  () ; }
@@ -213,9 +198,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      bool        setK     ( const double value  ) ; 
-      inline bool setTheta ( const double value  ) { return m_ss.setScale ( value ) ; } 
-      inline bool setShift ( const double value  ) { return m_ss.setShift ( value ) ; } 
+      bool        setK     ( const double value ) ; 
+      bool        setLogK  ( const double value ) ; 
+      inline bool setTheta ( const double value ) { return setScale    ( value ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -242,14 +227,9 @@ namespace Ostap
     private:
       // ======================================================================
       /// shape
-      Ostap::Math::Scale         m_k  { 2     } ; // shape
-      /// scale & shift
-      Ostap::Math::ShiftAndScale m_ss { 1 , 0 } ; // scale & shift 
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// auxillary intermediate parameter  -log Gamma ( k ) 
-      mutable double m_lgk { 0 } ; 
+      Ostap::Math::LogValue m_k  { 2 } ; // shape
+      /// auxillary intermediate parameter log Gamma ( k ) 
+      mutable double        m_lgk { 0 } ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -352,7 +332,7 @@ namespace Ostap
       LogGammaDist
       ( const double k     = 2 ,   // shape parameter
         const double theta = 1 ,   // scale parameter
-	const double shift = 0 ) ; // shift parameter
+	      const double shift = 0 ) ; // shift parameter
       /// destructor
       virtual ~LogGammaDist() ;  // desctructor
       // ======================================================================
@@ -404,7 +384,7 @@ namespace Ostap
       /// get the integral between low and high limits
       virtual double integral
       ( const double low  ,
-	const double high ) const ;
+	      const double high ) const ;
       // ======================================================================
     public: // quantiles
       // ======================================================================
@@ -419,7 +399,7 @@ namespace Ostap
     protected:
       // ======================================================================
       /// helper gamma distribution
-      GammaDist m_gamma ;  // helper gamma distribution
+      GammaDist m_gamma { 2 , 1 , 0 } ;  // helper gamma distribution
       // ======================================================================
     } ;
     // ========================================================================
