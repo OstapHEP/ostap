@@ -7,6 +7,7 @@
 // STD & STL
 // ============================================================================
 #include <cmath>
+#include <cstdint>
 #include <numbers>
 #include <limits>
 #include <complex>
@@ -56,6 +57,15 @@ namespace
   static_assert ( std::numeric_limits<unsigned long>  ::is_specialized        ,
                   "std::numeric_limits<unsigned long> is not specialized"   ) ;
   // ==========================================================================
+  static_assert ( std::numeric_limits<std::int8_t>  ::is_specialized        ,
+                  "std::numeric_limits<std::int8_t> is not specialized"     ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::int8_t>  ::is_signed             ,
+                  "std::numeric_limits<std::int8_t> is not signed"          ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::int8_t>  ::is_integer            ,
+                  "std::numeric_limits<std::int8_t> is not integer"         ) ;
+  // ==========================================================================
   /** @var s_QUIETNAN
    *  quite NaN
    */
@@ -95,8 +105,6 @@ namespace
   static_assert ( 0       < s_SMALL  , "`s_SMALL' is not positive" ) ;
   static_assert ( s_SMALL < s_SMALL2 , "`S_SMALL' is too large"    ) ;
   // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned int>::is_specialized , 
-                  "std::numeric_limits<usigned int> is not specialized" ) ;
   constexpr unsigned long s_UL_max = std::numeric_limits<unsigned int>::max () - 1 ;
   static_assert ( 1 < s_UL_max ,  "s_UL_max is not large enough!" ) ;
   // ==========================================================================

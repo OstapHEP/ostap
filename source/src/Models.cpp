@@ -1708,8 +1708,8 @@ double Ostap::Math::GenBeta::evaluate ( const double x ) const
 // ============================================================================
 double Ostap::Math::GenBeta::xmin () const
 {
-  const bool        fr = finite_range () ;
-  const signed char ss = Ostap::Math::signum ( scale () ) ;
+  const bool       fr = finite_range () ;
+  const signed int ss = Ostap::Math::signum ( scale () ) ;
   //
   if      (  fr && 0 < ss ) { return x ( 0 ) ; } 
   else if (  fr && 0 > ss ) { return x ( 1 ) ; } 
@@ -1722,8 +1722,8 @@ double Ostap::Math::GenBeta::xmin () const
 // ============================================================================
 double Ostap::Math::GenBeta::xmax () const
 {
-  const bool        fr = finite_range () ;
-  const signed char ss = Ostap::Math::signum ( scale () ) ;
+  const bool       fr = finite_range () ;
+  const signed int ss = Ostap::Math::signum ( scale () ) ;
   //
   if      (  fr && 0 < ss ) { return x ( 1 ) ; } 
   else if (  fr && 0 > ss ) { return x ( 0 ) ; } 
@@ -1753,7 +1753,7 @@ double Ostap::Math::GenBeta::integral
 double Ostap::Math::GenBeta::cdf 
 ( const double x    ) const
 {
-  const signed char ss  = Ostap::Math::signum ( scale () ) ;
+  const signed int ss  = Ostap::Math::signum ( scale () ) ;
   const double y = t ( x ) ;
   
   const double R0 = 0 < ss ? 0.0 : 1.0 ;

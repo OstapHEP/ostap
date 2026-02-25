@@ -6,6 +6,7 @@
 // ============================================================================
 // STD & STL 
 // ============================================================================
+#include <cstdint>
 #include <cmath>
 #include <complex>
 #include <algorithm>
@@ -1516,14 +1517,27 @@ namespace Ostap
      *  @see https://stackoverflow.com/a/4609795
      */
     template <typename T> 
-    inline constexpr signed char signum ( T x , std::false_type /* is_signed */ ) 
-    { return T ( 0 ) < x; }    
+    inline constexpr std::int8_t signum ( T x , std::false_type /* is_signed */ ) 
+    { return   T ( 0 ) < x ; }    
     template <typename T> 
-    inline constexpr signed char signum ( T x , std::true_type  /* is_signed */ ) 
-    { return ( T ( 0 ) < x ) - ( x < T ( 0 ) ); }
+    inline constexpr std::int8_t signum ( T x , std::true_type  /* is_signed */ ) 
+    { return ( T ( 0 ) < x ) - ( x < T ( 0 ) ) ; }
     template <typename T>
-    inline constexpr signed char signum ( T x ) 
+    inline constexpr std::int8_t signum ( T x ) 
     { return signum ( x , std::is_signed<T>() ) ; }
+    // ========================================================================
+    /// positive number ?
+    template <typename T>
+    inline constexpr bool is_positive ( T x )
+    { return 0 < signum ( x ) ; }
+    /// negative number ?
+    template <typename T>
+    inline constexpr bool is_negative ( T x )
+    { return 0 > signum ( x ) ; }
+    /// numbers of same sign ?
+    template <typename T>
+    inline constexpr bool same_sign   ( T  x , T y )
+    { return 0 < signum ( x ) * signum ( y ) ; }
     // ========================================================================
     /** number of (strickt) sign-variations in the sequence
      *  @param first begin-iterator for the input sequence 
@@ -1531,7 +1545,7 @@ namespace Ostap
      *  @return number if strickt sign variations 
      */
     template <class ITERATOR, class ZERO>
-    unsigned int sign_changes
+    std::size_t sign_changes
     ( ITERATOR first , 
       ITERATOR last  , 
       ZERO     zero  )
@@ -1540,12 +1554,12 @@ namespace Ostap
       //
       if ( first == last ) { return 0 ; }         //   RETURN
       //
-      signed char si = signum ( *first ) ;
-      unsigned int  nc = 0 ;
+      signed   int si = signum ( *first ) ;
+      std::size_t  nc = 0 ;
       for ( ITERATOR j = first + 1 ; j != last ; ++j )
       {
         if ( zero ( *j ) )  { continue ;  }         // CONTINUE
-        const signed char sj  = signum ( *j ) ;
+        const signed int sj  = signum ( *j ) ;
         if ( 0 <= si * sj ) { continue ;  }         // CONTINUE 
         nc +=1  ;
         si = sj ;

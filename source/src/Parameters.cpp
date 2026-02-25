@@ -114,11 +114,6 @@ std::size_t Ostap::Math::Value::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_value , m_name )  ;
 }
 // ============================================================================
-// sign of the value
-// ============================================================================
-signed char Ostap::Math::Value::signum () const
-{ return Ostap::Math::signum ( m_value ) ; }
-// ============================================================================
 
 // ============================================================================
 /*  full constructor

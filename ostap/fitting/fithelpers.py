@@ -427,7 +427,7 @@ class VarMaker (object) :
         
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif var is None : 
-            assert name and args and isinstance ( name , strnig_types ) ,\
+            assert name and args and isinstance ( name , string_types ) ,\
                 "make_var: valid `name' and `args' *must* be specified when 'var' is None!"
             name = str ( name )
             var  = name , title if title else "The %s-variable" % name            

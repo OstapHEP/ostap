@@ -76,9 +76,6 @@ namespace Ostap
       inline Value& operator=( const double value )
       { setValue ( value ) ; return *this ; }
       // ======================================================================
-      /// sign of the value
-      signed char signum () const ; 
-      // ======================================================================
     public :
       // ======================================================================
       /// set new value for parameter 
@@ -183,9 +180,6 @@ namespace Ostap
       /// set the value from double
       inline LogValue& operator=( const double value )
       { setValue ( value ) ; return *this ; }
-      // ======================================================================
-      /// sign of the value
-      inline signed char signum () const { return true ; } 
       // ======================================================================
     public : // get & set log-value 
       // ======================================================================
@@ -363,8 +357,6 @@ namespace Ostap
       /// set the value from double
       inline InRange& operator=( const double value )
       { setValue ( value ) ; return *this ; }
-      /// sign of the value
-      inline signed char signum () const { return m_value.signum () ; } 
       // ======================================================================
     public : // get & set log-value 
       // ======================================================================
@@ -493,8 +485,6 @@ namespace Ostap
       inline double             value    () const { return m_scale.value  () ; }
       /// get the full parameter name  
       inline const std::string& name     () const { return m_scale.name   () ; }
-      /// sign of the value
-      inline signed char        signum   () const { return m_scale.signum () ; } 
       // ======================================================================
     public :
       // ======================================================================

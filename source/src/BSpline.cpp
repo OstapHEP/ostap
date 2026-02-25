@@ -2946,8 +2946,8 @@ namespace
       //
       if ( s_zero ( pi ) || s_equal ( pi + norm , norm ) ) { continue ; }
       //
-      const signed char sj = Ostap::Math::signum ( pj ) ;
-      const signed char si = Ostap::Math::signum ( pi ) ;
+      const signed int sj = Ostap::Math::signum ( pj ) ;
+      const signed int si = Ostap::Math::signum ( pi ) ;
       //
       if ( 0 > si * sj ) // there is root here! 
       {
@@ -3001,8 +3001,8 @@ namespace
       const double pj = *j ;
       const double pi = *i ;
       //
-      const signed char sj = Ostap::Math::signum ( pj ) ;
-      const signed char si = Ostap::Math::signum ( pi ) ;
+      const signed int sj = Ostap::Math::signum ( pj ) ;
+      const signed int si = Ostap::Math::signum ( pi ) ;
       //
       // there is root here! 
       if ( si * sj < 0 ) 

@@ -1331,7 +1331,7 @@ Ostap::Math::Bernstein::nearest ( const double qinv ) const
     uc   += u[i] * m_pars[i] ; 
   }
   //
-  const signed char suc = Ostap::Math::signum ( uc ) ;
+  const signed int suc = Ostap::Math::signum ( uc ) ;
   //
   std::vector<long double>  v ( m_pars.size() ) ;
   const  bool p_inf = s_zero ( ip ) ;
@@ -2485,8 +2485,8 @@ Ostap::Math::crossing_points ( const Ostap::Math::Bernstein& b )
     //
     if ( s_zero ( pi ) || s_equal ( pi + norm , norm ) ) { continue ; }
     //
-    const signed char sj = Ostap::Math::signum ( pj ) ;
-    const signed char si = Ostap::Math::signum ( pi ) ;
+    const signed int sj = Ostap::Math::signum ( pj ) ;
+    const signed int si = Ostap::Math::signum ( pi ) ;
     //
     if ( 0 > si * sj )  // there is root here! 
     {
@@ -2536,8 +2536,8 @@ namespace
     // left point is already zero 
     if ( s_zero ( b0 ) || s_equal ( b0 + bnorm , bnorm ) ) { return 0 ; } // left point 
     //
-    const signed  char   s0 = Ostap::Math::signum ( b0 ) ;
-    const bool           up = 0 > b0          ;
+    const signed int s0 = Ostap::Math::signum ( b0 ) ;
+    const bool       up = 0 > b0          ;
     //
     typedef typename std::iterator_traits<ITERATOR>::difference_type SIZE ;
 
