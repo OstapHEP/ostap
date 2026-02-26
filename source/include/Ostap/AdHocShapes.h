@@ -34,6 +34,7 @@
  *  @see Ostap::Math::TwoExpoPositive
  *  @see Ostap::Math::Argus 
  *  @see Ostap::Math::GenArgus 
+ *  @see Ostap::Math::GraCharlierA
  *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
@@ -1213,6 +1214,89 @@ namespace Ostap
       double   m_dp   {  1 } ; // parameter chi
       /// normalization 
       double   m_norm { -1 } ; // normalization
+      // ======================================================================
+    } ;
+    // ========================================================================
+
+    /** @class GramCharlierA4
+     *  Gram-Charlier type A approximation
+     *  http://en.wikipedia.org/wiki/Edgeworth_series
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2011-06-13
+     */
+    class  GramCharlierA
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param mean   the mean value for distribution
+       *  @param sigma  the sigma
+       *  @param kappa3 the standartized 3rd cumulant
+       *  @param kappa4 the standartized 4th cumulant
+       */
+      GramCharlierA  
+      ( const double mean   = 0 ,
+        const double sigma  = 1 ,
+        const double kappa3 = 1 ,
+        const double kappa4 = 1 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate Gram-Charlier type A approximation
+      double pdf         ( const double x ) const ;
+      /// evaluate Gram-Charlier type A approximation
+      inline double operator () ( const double x ) const { return pdf ( x ) ; }
+      inline double evaluate    ( const double x ) const { return pdf ( x ) ; }
+      // ======================================================================
+    public: // trivial accessors
+      // ======================================================================
+      inline double   mean   () const { return m_mean          ; }
+      inline double   m0     () const { return   mean   ()     ; }
+      inline double   peak   () const { return   mean   ()     ; }
+      inline double   sigma  () const { return m_sigma         ; }
+      inline double   kappa3 () const { return m_kappa3        ; }
+      inline double   kappa4 () const { return m_kappa4        ; }
+      // ======================================================================
+    public: // trivial accessors
+      // ======================================================================
+      bool setM0      ( const double value ) ;
+      bool setMean    ( const double value ) { return setM0   ( value ) ; }
+      bool setPeak    ( const double value ) { return setM0   ( value ) ; }
+      bool setMass    ( const double value ) { return setPeak ( value ) ; }
+      //
+      bool setSigma   ( const double value ) ;
+      bool setKappa3  ( const double value ) ;
+      bool setKappa4  ( const double value ) ;
+      // ======================================================================
+    public: //
+      // ======================================================================
+      /// get (possibly truncated) integral
+      double integral () const ;
+      /// get integral between low and high
+      double integral
+      ( const double low ,
+	const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// mean value
+      double              m_mean   ;           //         mean
+      /// rms
+      double              m_sigma  ;           //          rms
+      /// the standartized 3rd cumulant
+      double              m_kappa3 ;           // the standartized 3rd cumulant
+      /// the standartized 4th cumulant
+      double              m_kappa4 ;           // the standartized 4th cumulant
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;
     // ========================================================================    

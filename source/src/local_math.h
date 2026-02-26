@@ -241,7 +241,7 @@ namespace
   const long double s_1_4pi      = s_1_pi / 4  ;
   /// @var s_1_8pi \f$ \frac{1}{8\pi} \f$
   const long double s_1_8pi      = s_1_pi / 8  ;  
-  /// @var s_1_sqrt2  \f$  \frac{1}{\sqrt{2}}\f$ 
+  /// @var s_1_sqrt2  \f$  \frac{1}{\sqrt{2}}\f$  
   const long double s_1_sqrt2    = 1.0L / s_sqrt2 ;
   /// @var s_sqrt_pi   \f$ \sqrt { \pi } \f$
   const long double s_sqrt_pi    = std::sqrt ( s_pi ) ; 

@@ -6798,20 +6798,39 @@ Ostap::Models::GenGammaDist::GenGammaDist
   RooAbsReal&          x     ,
   RooAbsReal&          k     ,
   RooAbsReal&          theta ,
-  RooAbsReal&          p     ,
-  RooAbsReal&          low   )
+  RooAbsReal&          logp  ,
+  RooAbsReal&          shift )
   : RooAbsPdf  (name ,title ) 
 //
   , m_x       ( "!x"     , "Observable" , this , x     ) 
   , m_k       ( "!k"     , "Shape"      , this , k     ) 
   , m_theta   ( "!theta" , "Scale"      , this , theta )
-  , m_p       ( "!p"     , "P"          , this , p     )
-  , m_low     ( "!low"   , "Low"        , this , low   )
+  , m_logp    ( "!log"   , "log(P)"     , this , logp  )
+  , m_shift   ( "!shift" , "Shift"      , this , shift )
 //
-  , m_ggamma   ( 2 , 1 , 1 , 0 ) 
+  , m_ggamma   () 
 {
   setPars () ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenGammaDist::GenGammaDist
+( const char*          name  , 
+  const char*          title ,
+  RooAbsReal&          x     ,
+  RooAbsReal&          k     ,
+  RooAbsReal&          theta ,
+  RooAbsReal&          logp  ,
+  const double         shift )
+  : GenGammaDist ( name  ,
+		   title ,
+		   x     ,
+		   k     ,
+		   theta ,
+		   logp  ,
+		   RooFit::RooConst ( shift ) )
+{}		   
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -6823,8 +6842,8 @@ Ostap::Models::GenGammaDist::GenGammaDist
   , m_x      ( "!x"     , this , right.m_x      ) 
   , m_k      ( "!k"     , this , right.m_k      ) 
   , m_theta  ( "!theta" , this , right.m_theta  )
-  , m_p      ( "!p"     , this , right.m_p      )
-  , m_low    ( "!low"   , this , right.m_low    )
+  , m_logp   ( "!logp"  , this , right.m_logp   )
+  , m_shift  ( "!shift" , this , right.m_shift  )
 //
   , m_ggamma (                  right.m_ggamma ) 
 {
@@ -6845,9 +6864,9 @@ void Ostap::Models::GenGammaDist::setPars () const
 {
   //
   m_ggamma.setK     ( m_k     ) ;
+  m_ggamma.setLogP  ( m_logp  ) ;
   m_ggamma.setTheta ( m_theta ) ;
-  m_ggamma.setP     ( m_p     ) ;
-  m_ggamma.setLow   ( m_low   ) ;
+  m_ggamma.setShift ( m_shift ) ;
   //
 }
 // ============================================================================
@@ -7358,15 +7377,15 @@ Ostap::Models::Beta::Beta
 ( const char*          name   , 
   const char*          title  ,
   RooAbsReal&          x      ,
-  RooAbsReal&          alpha  ,
-  RooAbsReal&          beta   ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
   RooAbsReal&          scale  ,
   RooAbsReal&          shift  )
   : RooAbsPdf ( name , title ) 
 //
   , m_x       ( "!x"      , "Observable" , this , x      ) 
-  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  ) 
-  , m_beta    ( "!beta"   , "beta"       , this , beta   ) 
+  , m_logp    ( "!logp"   , "log(p)"     , this , logp   ) 
+  , m_logq    ( "!logq"   , "log(q)"     , this , logq   ) 
   , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
   , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
@@ -7381,15 +7400,15 @@ Ostap::Models::Beta::Beta
 ( const char*          name   , 
   const char*          title  ,
   RooAbsReal&          x      ,
-  RooAbsReal&          alpha  ,
-  RooAbsReal&          beta   ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
   const  double        scale  ,
   const  double        shift  )
   : Beta ( name  ,
 	   title ,
 	   x     ,
-	   alpha ,
-	   beta  ,
+	   logp  ,
+	   logq  ,
 	   RooFit::RooConst ( scale ) ,
 	   RooFit::RooConst ( shift ) )
 {}
@@ -7401,13 +7420,13 @@ Ostap::Models::Beta::Beta
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "!x"      , this , right.m_x      ) 
-  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
-  , m_beta   ( "!beta"   , this , right.m_beta   )
-  , m_scale  ( "!scale"  , this , right.m_scale  )
-  , m_shift  ( "!shift"  , this , right.m_shift  )
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_logp   ( "!logp"   , this , right.m_logp  )
+  , m_logq   ( "!logq"   , this , right.m_logq  )
+  , m_scale  ( "!scale"  , this , right.m_scale )
+  , m_shift  ( "!shift"  , this , right.m_shift )
     //
-  , m_bfun   (                   right.m_bfun    ) 
+  , m_bfun   (                   right.m_bfun   ) 
 {
   setPars () ;
 }
@@ -7425,7 +7444,7 @@ Ostap::Models::Beta::clone( const char* name ) const
 void Ostap::Models::Beta::setPars () const 
 {
   //
-  m_bfun.setPQ          ( m_alpha , m_beta  ) ;
+  m_bfun.setLogPQ       ( m_logp  , m_logq  ) ;
   m_bfun.setScaleShift  ( m_scale , m_shift ) ;
   //
 }
@@ -7470,22 +7489,41 @@ Ostap::Models::BetaPrime::BetaPrime
 ( const char*          name   , 
   const char*          title  ,
   RooAbsReal&          x      ,
-  RooAbsReal&          alpha  ,
-  RooAbsReal&          beta   ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
   RooAbsReal&          scale  ,
   RooAbsReal&          shift  )
   : RooAbsPdf ( name , title ) 
 //
-  , m_x       ( "!x"      , "Observable" , this , x      ) 
-  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  ) 
-  , m_beta    ( "!beta"   , "beta"       , this , beta   ) 
+  , m_x       ( "!x"      , "Observable" , this , x      )
+  , m_logp    ( "!logp"   , "log(p)"     , this , logp   ) 
+  , m_logq    ( "!logq"   , "log(q)"     , this , logq   ) 
   , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
   , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
-  , m_betap   ( 3 , 3 , 1 , 0 ) 
+  , m_betap   () 
 {
   setPars() ;
 }
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::BetaPrime::BetaPrime
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
+  const double         scale  ,
+  const double         shift  )
+  : BetaPrime ( name  ,
+		title ,
+		x     ,
+		logp  ,
+		logq  ,
+		RooFit::RooConst ( scale ) ,
+		RooFit::RooConst ( shift ) )
+{}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
@@ -7495,11 +7533,11 @@ Ostap::Models::BetaPrime::BetaPrime
   : RooAbsPdf ( right , name ) 
 //
   , m_x      ( "!x"      , this , right.m_x      ) 
-  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
-  , m_beta   ( "!beta"   , this , right.m_beta   )
+  , m_logp   ( "!logp"   , this , right.m_logp  )
+  , m_logq   ( "!logq"   , this , right.m_logq  )
   , m_scale  ( "!scale"  , this , right.m_scale  )
   , m_shift  ( "!shift"  , this , right.m_shift  )
-//
+    //
   , m_betap  (                   right.m_betap  ) 
 {
   setPars () ;
@@ -7518,7 +7556,7 @@ Ostap::Models::BetaPrime::clone( const char* name ) const
 void Ostap::Models::BetaPrime::setPars () const 
 {
   //
-  m_betap.setPQ         ( m_alpha , m_beta ) ;
+  m_betap.setLogPQ      ( m_logp  , m_logq  ) ;
   m_betap.setScaleShift ( m_scale , m_shift ) ;
   //
 }
@@ -7564,19 +7602,17 @@ Ostap::Models::GenBetaPrime::GenBetaPrime
 ( const char*          name   , 
   const char*          title  ,
   RooAbsReal&          x      ,
-  RooAbsReal&          alpha  ,
-  RooAbsReal&          beta   ,
-  RooAbsReal&          p      ,
-  RooAbsReal&          q      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
   RooAbsReal&          scale  ,
   RooAbsReal&          shift  )
   : RooAbsPdf ( name , title ) 
 //
   , m_x       ( "!x"      , "Observable" , this , x      ) 
-  , m_alpha   ( "!alpha"  , "alpha"      , this , alpha  ) 
-  , m_beta    ( "!beta"   , "beta"       , this , beta   ) 
-  , m_p       ( "!p"      , "p"          , this , p      ) 
-  , m_q       ( "!q"      , "q"          , this , q      ) 
+  , m_a       ( "!a"      , "a-parameter", this , a      )
+  , m_logp    ( "!logp"   , "log(p)"     , this , logp   ) 
+  , m_logq    ( "!logq"   , "log(q)"     , this , logq   ) 
   , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
   , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
     //
@@ -7589,19 +7625,17 @@ Ostap::Models::GenBetaPrime::GenBetaPrime
 ( const char*          name   , 
   const char*          title  ,
   RooAbsReal&          x      ,
-  RooAbsReal&          alpha  ,
-  RooAbsReal&          beta   ,
-  RooAbsReal&          p      ,
-  RooAbsReal&          q      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
   const double         scale  ,
   const double         shift  )
   : GenBetaPrime ( name  ,
 		   title ,
 		   x     ,
-		   alpha ,
-		   beta  ,
-		   p     ,
-		   q     ,
+		   a     ,
+		   logp  ,
+		   logq  ,
 		   RooFit::RooConst ( scale ) , 
 		   RooFit::RooConst ( shift ) )
 {}
@@ -7612,20 +7646,18 @@ Ostap::Models::GenBetaPrime::GenBetaPrime
 ( const Ostap::Models::GenBetaPrime& right ,
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
-//
-  , m_x      ( "!x"      , this , right.m_x      ) 
-  , m_alpha  ( "!alpha"  , this , right.m_alpha  )
-  , m_beta   ( "!beta"   , this , right.m_beta   )
-  , m_p      ( "!p"      , this , right.m_p      )
-  , m_q      ( "!q"      , this , right.m_q      )
-  , m_scale  ( "!scale"  , this , right.m_scale  )
-  , m_shift  ( "!shift"  , this , right.m_shift  )
-//
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_a      ( "!a"      , this , right.m_a     )
+  , m_logp   ( "!logp"   , this , right.m_logp  )
+  , m_logq   ( "!logq"   , this , right.m_logq  )
+  , m_scale  ( "!scale"  , this , right.m_scale )
+  , m_shift  ( "!shift"  , this , right.m_shift )
+    //
   , m_betap  (                   right.m_betap  ) 
 {
   setPars () ;
 }
-
 // ============================================================================
 // destructor
 // ============================================================================
@@ -7640,11 +7672,9 @@ Ostap::Models::GenBetaPrime::clone ( const char* name ) const
 void Ostap::Models::GenBetaPrime::setPars () const 
 {
   //
-  m_betap.setA      ( m_alpha  ) ;
-  m_betap.setP      ( m_p      ) ;
-  m_betap.setQ      ( m_q      ) ;
-  m_betap.setScale  ( m_scale  ) ;
-  m_betap.setShift  ( m_shift  ) ;
+  m_betap.setA           ( m_a     ) ;
+  m_betap.setLogPQ       ( m_logp  , m_logq ) ;
+  m_betap.setScaleShift  ( m_scale , m_shift ) ;
   //
 }
 // ============================================================================
@@ -7692,22 +7722,21 @@ Ostap::Models::GenBeta::GenBeta
   const char*          title  ,
   RooAbsReal&          x      ,
   RooAbsReal&          a      ,
-  RooAbsReal&          b      ,
-  RooAbsReal&          gamma  ,  
-  RooAbsReal&          p      ,
-  RooAbsReal&          q      ,
+  RooAbsReal&          logr   ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
+  RooAbsReal&          scale  , 
   RooAbsReal&          shift  )
   : RooAbsPdf ( name , title ) 
     //
-  , m_x       ( "!x"     , "Observable" , this , x      ) 
-  , m_a       ( "!a"     , "alpha"      , this , a      ) 
-  , m_b       ( "!b"     , "beta"       , this , b      ) 
-  , m_gamma   ( "!b"     , "beta"       , this , gamma  ) 
-  , m_p       ( "!p"     , "p"          , this , p      ) 
-  , m_q       ( "!q"     , "q"          , this , q      ) 
-  , m_shift   ( "!shift" , "shift"      , this , shift  ) 
-    //
-  , m_beta   () 
+  , m_x       ( "!x"     , "Observable"  , this , x      ) 
+  , m_a       ( "!a"     , "a-parameter" , this , a      ) 
+  , m_logr    ( "!logr"   , "log(r)"     , this , logr   )
+  , m_logp    ( "!logp"   , "log(p)"     , this , logp   ) 
+  , m_logq    ( "!logq"   , "log(q)"     , this , logq   ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
+  , m_beta    () 
 {
   setPars() ;
 }
@@ -7719,19 +7748,19 @@ Ostap::Models::GenBeta::GenBeta
   const char*          title  ,
   RooAbsReal&          x      ,
   RooAbsReal&          a      ,
-  RooAbsReal&          b      ,
-  RooAbsReal&          gamma  ,  
-  RooAbsReal&          p      ,
-  RooAbsReal&          q      ,
+  RooAbsReal&          logr   ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
+  const double         scale  , 
   const double         shift  )
   : GenBeta ( name  ,
 	      title ,
 	      x     ,
 	      a     ,
-	      b     ,
-	      gamma ,
-	      p     ,
-	      q     ,
+	      logr  ,
+	      logp  ,
+	      logq  ,
+	      RooFit::RooConst ( scale ) , 
 	      RooFit::RooConst ( shift ) )
 {}	      
 // ============================================================================
@@ -7742,15 +7771,15 @@ Ostap::Models::GenBeta::GenBeta
   const char*                        name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x      ( "!x"     , this , right.m_x     ) 
-  , m_a      ( "!a"     , this , right.m_a     )
-  , m_b      ( "!b"     , this , right.m_b     )
-  , m_gamma  ( "!gamma" , this , right.m_gamma )
-  , m_p      ( "!p"     , this , right.m_p     )
-  , m_q      ( "!q"     , this , right.m_q     )
-  , m_shift  ( "!shift" , this , right.m_shift )
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_a      ( "!a"      , this , right.m_a     )
+  , m_logr   ( "!logr"   , this , right.m_logr  )
+  , m_logp   ( "!logp"   , this , right.m_logp  )
+  , m_logq   ( "!logq"   , this , right.m_logq  )
+  , m_scale  ( "!scale"  , this , right.m_scale )
+  , m_shift  ( "!shift"  , this , right.m_shift )
     //
-  , m_beta  (                   right.m_beta  ) 
+  , m_beta  ( right.m_beta  ) 
 {
   setPars () ;
 }
@@ -7767,11 +7796,11 @@ Ostap::Models::GenBeta::clone ( const char* name ) const
 // ============================================================================
 void Ostap::Models::GenBeta::setPars () const 
 {
-  //
-  // m_beta.setAB     ( m_a     , m_b ) ;
-  // m_beta.setGamma  ( m_gamma       ) ;
-  // m_beta.setPQ     ( m_p     , m_q ) ;
-  // m_beta.setShift  ( m_shift       ) ;
+  // 
+  m_beta.setA           ( m_a     ) ;
+  m_beta.setLogR        ( m_logr  ) ;
+  m_beta.setLogPQ       ( m_logp  , m_logq ) ;
+  m_beta.setScaleShift  ( m_scale , m_shift ) ;
   //
 }
 // ============================================================================
@@ -7802,6 +7831,241 @@ Double_t Ostap::Models::GenBeta::analyticalIntegral
   Ostap::Assert ( 1 == code                         ,
                   "Invalid integration code"        ,
                   "Ostap::Models::GenBeta"          ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_beta.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenBeta1::GenBeta1
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
+  RooAbsReal&          scale  , 
+  RooAbsReal&          shift  )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x       ( "!x"     , "Observable"  , this , x      ) 
+  , m_a       ( "!a"     , "a-parameter" , this , a      ) 
+  , m_logp    ( "!logp"   , "log(p)"     , this , logp   ) 
+  , m_logq    ( "!logq"   , "log(q)"     , this , logq   ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
+  , m_beta    () 
+{
+  setPars() ;
+}
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenBeta1::GenBeta1
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
+  const double         scale  , 
+  const double         shift  )
+  : GenBeta1 ( name  ,
+	       title ,
+	       x     ,
+	       a     ,
+	       logp  ,
+	       logq  ,
+	       RooFit::RooConst ( scale ) , 
+	       RooFit::RooConst ( shift ) )
+{}	      
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::GenBeta1::GenBeta1
+( const Ostap::Models::GenBeta1& right ,
+  const char*                        name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_a      ( "!a"      , this , right.m_a     )
+  , m_logp   ( "!logp"   , this , right.m_logp  )
+  , m_logq   ( "!logq"   , this , right.m_logq  )
+  , m_scale  ( "!scale"  , this , right.m_scale )
+  , m_shift  ( "!shift"  , this , right.m_shift )
+    //
+  , m_beta  (                   right.m_beta  ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::GenBeta1::~GenBeta1 () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GenBeta1*
+Ostap::Models::GenBeta1::clone ( const char* name ) const 
+{ return new Ostap::Models::GenBeta1 ( *this , name) ; }
+// ============================================================================
+void Ostap::Models::GenBeta1::setPars () const 
+{
+  // 
+  m_beta.setA           ( m_a     ) ;
+  m_beta.setLogPQ       ( m_logp  , m_logq ) ;
+  m_beta.setScaleShift  ( m_scale , m_shift ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenBeta1::evaluate() const 
+{
+  //
+  setPars () ;
+  return m_beta    ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::GenBeta1::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenBeta1::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GenBeta1"         ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_beta.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenBeta2::GenBeta2
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
+  RooAbsReal&          scale  , 
+  RooAbsReal&          shift  )
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x       ( "!x"     , "Observable"  , this , x      ) 
+  , m_a       ( "!a"     , "a-parameter" , this , a      ) 
+  , m_logp    ( "!logp"   , "log(p)"     , this , logp   ) 
+  , m_logq    ( "!logq"   , "log(q)"     , this , logq   ) 
+  , m_scale   ( "!scale"  , "scale"      , this , scale  ) 
+  , m_shift   ( "!shift"  , "shift"      , this , shift  ) 
+  , m_beta    () 
+{
+  setPars() ;
+}
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::GenBeta2::GenBeta2
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,
+  RooAbsReal&          a      ,
+  RooAbsReal&          logp   ,
+  RooAbsReal&          logq   ,
+  const double         scale  , 
+  const double         shift  )
+  : GenBeta2 ( name  ,
+	      title ,
+	      x     ,
+	      a     ,
+	      logp  ,
+	      logq  ,
+	      RooFit::RooConst ( scale ) , 
+	      RooFit::RooConst ( shift ) )
+{}	      
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::GenBeta2::GenBeta2
+( const Ostap::Models::GenBeta2& right ,
+  const char*                        name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "!x"      , this , right.m_x     ) 
+  , m_a      ( "!a"      , this , right.m_a     )
+  , m_logp   ( "!logp"   , this , right.m_logp  )
+  , m_logq   ( "!logq"   , this , right.m_logq  )
+  , m_scale  ( "!scale"  , this , right.m_scale )
+  , m_shift  ( "!shift"  , this , right.m_shift )
+    //
+  , m_beta  (                   right.m_beta  ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::GenBeta2::~GenBeta2 () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::GenBeta2*
+Ostap::Models::GenBeta2::clone ( const char* name ) const 
+{ return new Ostap::Models::GenBeta2 ( *this , name) ; }
+// ============================================================================
+void Ostap::Models::GenBeta2::setPars () const 
+{
+  // 
+  m_beta.setA           ( m_a     ) ;
+  m_beta.setLogPQ       ( m_logp  , m_logq ) ;
+  m_beta.setScaleShift  ( m_scale , m_shift ) ;
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::GenBeta2::evaluate() const 
+{
+  //
+  setPars () ;
+  return m_beta    ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::GenBeta2::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::GenBeta2::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::GenBeta2"         ,
                   INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
@@ -13980,6 +14244,10 @@ ClassImp(Ostap::Models::Beta               )
 ClassImp(Ostap::Models::GenBeta            ) 
 ClassImp(Ostap::Models::BetaPrime          ) 
 ClassImp(Ostap::Models::GenBetaPrime       ) 
+ClassImp(Ostap::Models::GenBetaPrime       ) 
+ClassImp(Ostap::Models::GenBeta            ) 
+ClassImp(Ostap::Models::GenBeta1           ) 
+ClassImp(Ostap::Models::GenBeta2           ) 
 ClassImp(Ostap::Models::Landau             ) 
 ClassImp(Ostap::Models::SinhAsinh          ) 
 ClassImp(Ostap::Models::JohnsonSU          ) 

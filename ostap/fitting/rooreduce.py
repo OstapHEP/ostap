@@ -2007,8 +2007,8 @@ def _rggamdist_reduce_ ( pdf ):
                                   pdf.x          () ,                            
                                   pdf.k          () ,
                                   pdf.theta      () ,
-                                  pdf.p          () ,
-                                  pdf.low        () )
+                                  pdf.logp       () ,
+                                  pdf.shift      () )
 
 Ostap.Models.GenGammaDist.__reduce__ = _rggamdist_reduce_ 
 
@@ -2049,8 +2049,8 @@ def _rbetap_reduce_ ( pdf ):
                                   pdf.name          ,
                                   pdf.title         ,
                                   pdf.x          () ,                            
-                                  pdf.alpha      () ,
-                                  pdf.beta       () ,
+                                  pdf.logp       () ,
+                                  pdf.logq       () ,
                                   pdf.scale      () ,
                                   pdf.shift      () )
 
@@ -2065,10 +2065,9 @@ def _rgenbetap_reduce_ ( pdf ):
                                   pdf.name          ,
                                   pdf.title         ,
                                   pdf.x          () ,                            
-                                  pdf.alpha      () ,
-                                  pdf.beta       () ,
-                                  pdf.p          () ,
-                                  pdf.q          () ,
+                                  pdf.a          () ,
+                                  pdf.logp       () ,
+                                  pdf.logq       () ,
                                   pdf.scale      () ,
                                   pdf.shift      () )
 
@@ -2083,13 +2082,31 @@ def _r_GenBeta_reduce_ ( pdf ):
                                   pdf.title         ,
                                   pdf.x          () ,                            
                                   pdf.a          () ,
-                                  pdf.b          () ,
-                                  pdf.gamma      () ,
-                                  pdf.p          () ,
-                                  pdf.q          () ,
+                                  pdf.logr       () ,
+                                  pdf.logp       () ,
+                                  pdf.logq       () ,
+                                  pdf.scale      () ,
                                   pdf.shift      () )
 
 Ostap.Models.GenBeta .__reduce__ = _r_GenBeta_reduce_ 
+
+# =============================================================================
+## reduce GenBeta1&2 
+def _r_GenBeta12_reduce_ ( pdf ):
+    """ Reduce GenBeta1&2"""
+    return root_store_factory , ( type ( pdf )      ,
+                                  pdf.name          ,
+                                  pdf.title         ,
+                                  pdf.x          () ,                            
+                                  pdf.a          () ,
+                                  pdf.logp       () ,
+                                  pdf.logq       () ,
+                                  pdf.scale      () ,
+                                  pdf.shift      () )
+
+Ostap.Models.GenBeta1 .__reduce__ = _r_GenBeta12_reduce_ 
+Ostap.Models.GenBeta2 .__reduce__ = _r_GenBeta12_reduce_ 
+
 
 # =============================================================================
 ## reduce Landau

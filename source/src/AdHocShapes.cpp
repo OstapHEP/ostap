@@ -1507,5 +1507,164 @@ std::size_t Ostap::Math::CutOffStudent::tag () const
 // ============================================================================
 
 // ============================================================================
+// Gram-Charlier type A
+// ============================================================================
+// constructor from all parameters
+// ============================================================================
+Ostap::Math::GramCharlierA::GramCharlierA
+( const double mean   ,
+  const double sigma  ,
+  const double kappa3 ,
+  const double kappa4 )
+  : m_mean   ( mean )
+  , m_sigma  ( std::fabs ( sigma ) )
+  , m_kappa3 ( kappa3 )
+  , m_kappa4 ( kappa4 )
+//
+  , m_workspace ()
+//
+{}
+// ============================================================================
+namespace 
+{ 
+  constexpr Ostap::Math::Hermite_<3>  s_h3{} ;
+  constexpr Ostap::Math::Hermite_<4>  s_h4{} ;
+}
+// ============================================================================
+// evaluate Gram-Charlier type A approximation
+// ============================================================================
+double Ostap::Math::GramCharlierA::pdf ( const double x ) const
+{
+  //
+  const double dx = ( x - m_mean ) / m_sigma ;
+  //
+  const double result_0 = my_exp ( -0.5 * dx * dx ) / m_sigma * s_sqrt_1_2pi ;
+  //
+  double correction = 1 ;
+  //
+  correction += m_kappa3 * s_h3 ( dx ) /  6 ;
+  //
+  correction += m_kappa4 * s_h4 ( dx ) / 24 ;
+  //
+  return correction * result_0 ;
+}
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::GramCharlierA::integral () const { return 1 ; }
+// ============================================================================
+// integral
+// ============================================================================
+double Ostap::Math::GramCharlierA::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return                         0.0 ; } // RETURN
+  else if (           low > high   ) { return - integral ( high , low   ) ; } // RETURN
+  //
+  const double x_low  = m_mean - 5 * m_sigma ;
+  const double x_high = m_mean + 5 * m_sigma ;
+  //
+  // split for the reasonable sub intervals:
+  //
+  if      ( low < x_low  && x_low < high )
+  {
+    return
+      integral (   low , x_low  ) +
+      integral ( x_low ,   high ) ;
+  }
+  else if ( low <  x_high && x_high < high )
+  {
+    return
+      integral (   low  , x_high  ) +
+      integral ( x_high ,   high  ) ;
+  }
+  //
+  //
+  // split, if the interval is too large
+  //
+  const double width = std::max ( std::abs  ( m_sigma)  , 0.0 ) ;
+  if ( 0 < width &&  3 * width < high - low  )
+  {
+    return
+      integral ( low                   , 0.5 *  ( high + low ) ) +
+      integral ( 0.5 *  ( high + low ) ,          high         ) ;
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<GramCharlierA> s_integrator ;
+  static const char s_message[] = "Integral(GramCharlierA)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.qag_integrate
+    ( tag  () , 
+      &F      , 
+      low     , high ,                                        // low & high edges
+      workspace ( m_workspace ) ,                             // workspace
+      ( high   <= x_low  ) ? s_APRECISION_TAIL :
+      ( x_high <=   low  ) ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      ( high   <= x_low  ) ? s_RPRECISION_TAIL :
+      ( x_high <=   low  ) ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()              ,                                   // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+// ============================================================================
+bool Ostap::Math::GramCharlierA::setM0  ( const double value )
+{
+  //
+  if ( s_equal ( m_mean , value ) ) { return false ; }
+  //
+  m_mean  = value ;
+  //
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GramCharlierA::setSigma  ( const double value )
+{
+  //
+  const double value_ = std::fabs ( value ) ;
+  if ( s_equal ( m_sigma , value_ ) ) { return false ; }
+  //
+  m_sigma  = value_ ;
+  //
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GramCharlierA::setKappa3 ( const double value )
+{
+  if ( s_equal ( m_kappa3 , value )  ) { return false ; }
+  //
+  m_kappa3  = value ;
+  //
+  return false ;
+}
+// ============================================================================
+bool Ostap::Math::GramCharlierA::setKappa4 ( const double value )
+{
+  if ( s_equal ( m_kappa4 , value )  ) { return false ; }
+  //
+  m_kappa4  = value ;
+  //
+  return false ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::GramCharlierA::tag () const 
+{ 
+  static const std::string s_name = "GramCharlier" ;
+  return Ostap::Utils::hash_combiner ( s_name , m_mean , m_sigma , m_kappa3 , m_kappa4 ) ;
+}
+// ============================================================================
+
+// ============================================================================
 //                                                                      The END 
 // ============================================================================

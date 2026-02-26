@@ -1986,7 +1986,9 @@ namespace
   // ==========================================================================
   // calculate Pochhammer symbol
   // ==========================================================================
-  inline long double _pochhammer_ ( const long double x , const unsigned short N ) 
+  inline long double _pochhammer_
+  ( const long double    x ,
+    const unsigned short N ) 
   {
     if      (  0 == N ) { return 1 ; }
     else if (  1 == N ) { return x ; }
@@ -2036,7 +2038,9 @@ namespace
   // ==========================================================================
   typedef std::pair<long double, long double> RESULT ;
   // ==========================================================================
-  inline RESULT _pochhammer2_ ( const long double x , const unsigned short N ) 
+  inline RESULT _pochhammer2_
+  ( const long double    x ,
+    const unsigned short N ) 
   {
     //
     if      (  0 == N ) { return std::make_pair ( 1.L , 0.L ) ; }
@@ -2092,7 +2096,9 @@ namespace
                             p * ( Ostap::Math::psi ( x + N ) - Ostap::Math::psi ( x ) ) );
   }
   // ==========================================================================
-  inline long double __pochhammer__ ( const long double x , const unsigned short N ) 
+  inline long double __pochhammer__
+  ( const long double    x ,
+    const unsigned short N ) 
   {
     return  
       0 == N       ? 1 :
@@ -2111,7 +2117,9 @@ namespace
  *  @see Ostap::Math::rising_factorial
  */
 // ============================================================================
-double Ostap::Math::pochhammer ( const double x , const unsigned short n ) 
+double Ostap::Math::pochhammer
+( const double         x ,
+  const unsigned short n ) 
 { return __pochhammer__ ( x , n ) ; }
 // ============================================================================
 /*  Rising  factorial, aka Pochhammer's symbol   
@@ -2121,7 +2129,9 @@ double Ostap::Math::pochhammer ( const double x , const unsigned short n )
  *  @see Ostap::Math::falling_factorial
  */
 // ============================================================================
-double Ostap::Math::rising_factorial  ( const double x , const unsigned short n ) 
+double Ostap::Math::rising_factorial
+( const double         x ,
+  const unsigned short n ) 
 { return __pochhammer__ ( x , n ) ; }
 // ============================================================================
 /*  Falling factorial, aka Pochhammer's symbol   
@@ -2130,7 +2140,9 @@ double Ostap::Math::rising_factorial  ( const double x , const unsigned short n 
  *  @see Ostap::Math::rising_factorial
  */
 // ============================================================================
-double Ostap::Math::falling_factorial ( const double x , const unsigned short n ) 
+double Ostap::Math::falling_factorial
+( const double         x ,
+  const unsigned short n ) 
 { return __pochhammer__ ( -1 * x , n ) * ( n % 2 ? -1 : 1 ) ; }
 // ============================================================================
 /*  Pochhammer symbol, aka "rising factorial" and its derivative 
@@ -2140,18 +2152,16 @@ double Ostap::Math::falling_factorial ( const double x , const unsigned short n 
  *  @see Ostap::Math::pochhammer
  */
 // ============================================================================
-std::pair<double,double> Ostap::Math::pochhammer_with_derivative 
+std::pair<double,double>
+Ostap::Math::pochhammer_with_derivative 
 ( const double         x , 
-  const unsigned short n ) { return _pochhammer2_ ( x , n ) ; }
+  const unsigned short n )
+{ return _pochhammer2_ ( x , n ) ; }
 // ============================================================================
-
-
 
 // ============================================================================
 // Elliptic integrals 
 // ============================================================================
-
-
 
 // ============================================================================
 /*  Complete elliptic integral \f$ K(k) \f$  

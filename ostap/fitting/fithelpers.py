@@ -38,7 +38,8 @@ __all__     = (
     ##
     'P'                 , ## helper mixin to add log-p-parameter
     'Q'                 , ## helper mixin to add log-q-parameter
-    'PandQ'             , ## helper mixin to add log-p&q parameters 
+    'R'                 , ## helper mixin to add log-r-parameter
+    'PQ'                , ## helper mixin to add log-p&q parameters 
     ## 
     'Alpha'             , ## helper mixin to add alpha-parameter
     'Beta'              , ## helper mixin to add beta-parameter 
@@ -4226,26 +4227,26 @@ class P(object) :
     """ Helper MIXIN class to add p-parameters
     """
     def __init__ ( self         ,
-                   p       = 1  ,
+                   logp    = 0  ,
                    p_name  = '' ,                   
                    p_title = '' , *p_pars ) :
         
         name = self.name
         
-        if not p_name  : p_name  = 'p_%s'   % name 
-        if not p_title : p_title = 'p(%s)'  % name
-        if not p_pars  : p_pars  = 1 , 1.e-5 , 1000
+        if not p_name  : p_name  = 'logp_%s'    % name 
+        if not p_title : p_title = 'log P(%s)'  % name
+        if not p_pars  : p_pars  = 0 , -100 , 100 
         
-        ## parameter alpha 
-        self.__p = self.make_var ( p , p_name , p_title , None , *p_pars )
+        ## parameter log(p)
+        self.__logp = self.make_var ( logp , p_name , p_title , None , *p_pars )
  
     @property
-    def p ( self ) :
-        """`p'-parameter (p>0)"""
-        return self.__p
-    @p.setter 
-    def p ( self , value ) :
-        self.set_value ( self.__p , value )
+    def logp ( self ) :
+        """`logp'-parameter: logarithm of P-parameter """
+        return self.__logp
+    @logp.setter 
+    def logp ( self , value ) :
+        self.set_value ( self.__logp , value )
 
 # =============================================================================
 ## @class Q
@@ -4254,36 +4255,64 @@ class Q(object) :
     """ Helper MIXIN class to add q-parameters
     """
     def __init__ ( self         ,
-                   q       = 1  ,
+                   logq    = 0  ,
                    q_name  = '' ,                   
                    q_title = '' , *q_pars ) :
         
         name = self.name
         
-        if not q_name  : q_name  = 'q_%s'   % name 
-        if not q_title : q_title = 'q(%s)'  % name
-        if not q_pars  : q_pars  = 1 , 1.e-5 , 1000
+        if not q_name  : q_name  = 'logq_%s'    % name 
+        if not q_title : q_title = 'log Q (%s)' % name
+        if not q_pars  : q_pars  = 0 , -100 , 100 
         
-        ## parameter alpha 
-        self.__q = self.make_var ( q , q_name , q_title , None , *q_pars )
+        ## parameter log(q) 
+        self.__logq = self.make_var ( logq , q_name , q_title , None , *q_pars )
  
     @property
-    def q ( self ) :
-        """`q'-parameter (q>0)"""
-        return self.__q
-    @q.setter 
-    def q ( self , value ) :
-        self.set_value ( self.__q , value )
+    def logq ( self ) :
+        """`logp'-parameter: logarithm of Q-parameter """
+        return self.__logq
+    @logq.setter 
+    def logq ( self , value ) :
+        self.set_value ( self.__logq , value )
 
 # =============================================================================
-## @class PandQ
-#  Helper MIXIN class to add 'p' and `q`-parameters
-class PandQ (P,Q):
-    """ Helper MIXIN class to add 'p' and `q`-parameters
+## @class R
+#  Helper MIXIN class to add log(r)-parameter 
+class R(object) :
+    """ Helper MIXIN class to add log(r)-parameter
+    """
+    def __init__ ( self         ,
+                   logr    = 0  ,
+                   r_name  = '' ,                   
+                   r_title = '' , *r_pars ) :
+        
+        name = self.name
+        
+        if not r_name  : r_name  = 'logq_%s'    % name 
+        if not r_title : r_title = 'log R (%s)' % name
+        if not r_pars  : r_pars  = 0 , -100 , 100 
+        
+        ## parameter log(r) 
+        self.__logr = self.make_var ( logr , r_name , r_title , None , *r_pars )
+ 
+    @property
+    def logr ( self ) :
+        """`logr'-parameter: logarithm of R-parameter """
+        return self.__logr
+    @logr.setter 
+    def logr ( self , value ) :
+        self.set_value ( self.__logr , value )
+        
+# =============================================================================
+## @class PQ
+#  Helper MIXIN class to add logs of 'P' and `Q`-parameters
+class PQ (P,Q):
+    """ Helper MIXIN class to add logs of 'P' and `Q`-parameters
     """
     def __init__ ( self ,
-                   p       = 1  ,
-                   q       = 1  , * , 
+                   logp    = 0  ,
+                   logq    = 0  , * , 
                    p_name  = '' ,                   
                    p_title = '' ,
                    q_name  = '' ,                   
@@ -4291,9 +4320,8 @@ class PandQ (P,Q):
                    p_pars  = () , 
                    q_pars  = () ) :
         
-        P.__init__ ( self , p , p_name , p_title , *p_pars )
-        Q.__init__ ( self , q , q_name , q_title , *q_pars )
-        
+        P.__init__ ( self , logp , p_name , p_title , *p_pars )
+        Q.__init__ ( self , logq , q_name , q_title , *q_pars )
         
 # =============================================================================
 ## Alpha & Beta 

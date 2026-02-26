@@ -120,7 +120,7 @@ from   ostap.math.base          import isfinite, pos_infinity, neg_infinity
 from   ostap.fitting.pdfbasic   import PDF1, PDF2
 from   ostap.fitting.fithelpers import ( ShiftAndScale , Shift , Scale ,
                                          AlphaAndBeta  , Alpha , Beta  ,
-                                         PandQ         , P     , Q     ) 
+                                         P , Q , R , PQ ) 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -249,8 +249,8 @@ class GenGammaDist_pdf(GammaDist_pdf,P) :
                    xvar       , ## the variable
                    name  = '' , ## the name 
                    k     = 2  , ## k-parameter
-                   theta = 1  , ## theta-parameter
-                   p     = 1  , ## p-parameter
+                   theta = 1  , ## theta-parameter, scale 
+                   logp  = 0  , ## p-parameter
                    shift = ROOT.RooFit.RooConst ( 0 ) ) : ## shift-parameter
         
         ## Initialize the 1st base 
@@ -261,8 +261,7 @@ class GenGammaDist_pdf(GammaDist_pdf,P) :
                                  theta = theta ,
                                  shift = shift )
         ## initiailze the second base
-        P.__init__ ( self  ,
-                     p = p )
+        P.__init__ ( self  , logp = logp )
         ## 
         self.pdf  = Ostap.Models.GenGammaDist (
             self.roo_name ( 'ggamma_' ) ,
@@ -270,7 +269,7 @@ class GenGammaDist_pdf(GammaDist_pdf,P) :
             self.x         ,
             self.k         ,
             self.theta     ,
-            self.p         , 
+            self.logp      , 
             self.shift     )
         
         ## save the configuration:
@@ -279,7 +278,7 @@ class GenGammaDist_pdf(GammaDist_pdf,P) :
             'xvar'  : self.xvar  ,
             'k'     : self.k     ,
             'theta' : self.theta ,            
-            'p'     : self.p     ,            
+            'logp'  : self.logp  ,            
             'shift' : self.shift ,            
             }
 
@@ -763,7 +762,7 @@ models.append ( GenArgus_pdf )
 #  @date   2025-08-10
 #  @see Ostap::Models::Beta
 #  @see Ostap::Math::Beta
-class Beta_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
+class Beta_pdf(PDF1,ShiftAndScale,PQ) :
     """ Beta distribution 
     - see https://en.wikipedia.org/wiki/Beta_distribution
     with scale and shift 
@@ -772,8 +771,8 @@ class Beta_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
     def __init__ ( self        , * , 
                    xvar        , ## the variable
                    name   = '' , ## the name 
-                   alpha  = 2  ,
-                   beta   = 2  ,
+                   logp   = 0  ,
+                   logq   = 0  ,
                    scale  = 1  ,
                    shift  = 0  ) :
         
@@ -781,15 +780,15 @@ class Beta_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
         # Initiailze the base
         PDF1         .__init__ ( self , name  = name  , xvar  = xvar  )
         ShiftAndScale.__init__ ( self , scale = scale , shift = shift )
-        AlphaAndBeta .__init__ ( self , alpha = alpha , beta  = beta  ) 
+        PQ           .__init__ ( self , logp  = logp  , logq  = logq  ) 
         # =====================================================================
         ## create PDF 
         self.pdf  = Ostap.Models.Beta (
             self.roo_name ( 'beta_' ) ,
             'Beta %s' % self.name     , 
             self.x     ,            
-            self.alpha ,
-            self.beta  ,
+            self.logp  ,
+            self.logq  ,
             self.scale ,
             self.shift )
         
@@ -797,8 +796,8 @@ class Beta_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,            
-            'beta'  : self.beta  ,            
+            'logp'  : self.logp  ,            
+            'logq'  : self.logq  ,            
             'scale' : self.scale ,            
             'shift' : self.shift ,            
             }
@@ -820,16 +819,16 @@ class BetaPrime_pdf(Beta_pdf) :
     def __init__ ( self        , * , 
                    xvar        , ## the variable
                    name   = '' , ## the name 
-                   alpha  = 2  ,
-                   beta   = 6  ,
+                   logp   = 0  ,
+                   logq   = 0  ,
                    scale  = 1  ,
                    shift  = 0  ) :
         ## 
         Beta_pdf.__init__ ( self  ,
                             name  = name  ,
                             xvar  = xvar  ,
-                            alpha = alpha ,
-                            beta  = beta  ,
+                            logp  = logp  ,
+                            logq  = logq  ,
                             scale = scale ,
                             shift = shift )
         
@@ -838,8 +837,8 @@ class BetaPrime_pdf(Beta_pdf) :
             self.roo_name ( 'betap_' ) ,
             "Beta' %s" % self.name     , 
             self.x     ,
-            self.alpha ,
-            self.beta  ,
+            self.logp  ,
+            self.logq  ,
             self.scale ,
             self.shift )
         
@@ -847,87 +846,13 @@ class BetaPrime_pdf(Beta_pdf) :
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,            
-            'beta'  : self.beta  ,            
+            'logp'  : self.logp  ,            
+            'logq'  : self.logq  ,            
             'scale' : self.scale ,            
             'shift' : self.shift ,            
             }
 
 models.append ( BetaPrime_pdf ) 
-
-# =============================================================================
-## @class GenBeta_pdf
-#  Generalized beta-distribution
-#  Generalized Beta distribution (the most general form)
-#  - \f$ c \equiv \sin^2 \frac{\pi\gamma}{2} \f$ to ensure \f$ 0 \le c \le 1 \f$ 
-#  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
-#  @see Ostap::Models::GenBeta 
-#  @see Ostap::Math::GenBeta 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-class GenBeta_pdf(Beta_pdf,PandQ) :
-    """ Generalized Beta-prime disribution 
-    - http://en.wikipedia.org/wiki/Beta_prime_distribution
-    """
-    ## constructor
-    def __init__ ( self        , * , 
-                   xvar        ,   ## the variable
-                   name  = ''  ,   ## the name 
-                   alpha = 1   ,   ## alpha-parameter (shape) 
-                   beta  = 1   ,   ## beta-parameter: (scale)
-                   gamma = 0   ,   ## gamma : c = sin^2 ( pi gamma / 2 ) 
-                   p     = 2   ,   ## p-parameter, p>0 
-                   q     = 2   ,   ## q-parameter, q>0 
-                   shift = 0   ) : ## shift-parameter
-        
-        ## inialize the base 
-        Beta_pdf.__init__ ( self ,
-                            xvar  = xvar , 
-                            name  = name ,
-                            alpha = alpha ,
-                            beta  = beta  ,
-                            scale = ROOT.RooFit.RooConst ( 1 ) , ## for gen-beta  beta is the scale!
-                            shift = shift )
-        ## the second base 
-        PandQ   .__init__ ( self , p = p , q = q ) 
-        ## 
-        self.__gamma = self.make_var ( gamma ,
-                                       'gamma_%s'           % self.name ,
-                                       '#gamma_{#beta}(%s)' % self.name ,
-                                       None  , gamma , -10 * math.pi , +10 * math.pi ) 
-                
-        self.pdf  = Ostap.Models.GenBeta (
-            self.roo_name ( 'genbeta_' )   ,
-            "gen-Beta %s"% self.name , 
-            self.x     ,
-            self.alpha ,
-            self.beta  ,
-            self.gamma ,            
-            self.p     ,
-            self.q     ,
-            self.shift )
-        
-        ## save the configuration:
-        self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,            
-            'beta'  : self.beta  ,            
-            'gamma' : self.gamma ,            
-            'p'     : self.p     ,            
-            'q'     : self.q     ,            
-            'shift' : self.shift ,            
-            }
-    
-    @property
-    def gamma ( self ) :
-        """`gamma` : parameter gamma for gen-Beta distribution: c = sin^2 ( pi gamma / 2 )
-        """
-        return self.__gamma
-    @gamma.setter
-    def gamma ( self , value ) :
-        self.set_value ( self.__gamma , value )
-        
-models.append ( GenBeta_pdf ) 
 
 # =============================================================================
 ## @class GenBetaPrime_pdf
@@ -939,41 +864,43 @@ models.append ( GenBeta_pdf )
 #  @see Ostap::Math::GenBetaPrime
 #  @see Ostap::Models::BetaPrime
 #  @see Ostap::Math::BetaPrime
-class GenBetaPrime_pdf(Beta_pdf,PandQ) :
+class GenBetaPrime_pdf(Beta_pdf) :
     """ Generalized Beta-prime disribution 
     - http://en.wikipedia.org/wiki/Beta_prime_distribution
     """
     ## constructor
     def __init__ ( self       , * , 
                    xvar       ,   ## the variable
-                   name  = '' ,   ## the name 
-                   alpha = 2  ,   ## alpha-parameter
-                   beta  = 6  ,   ## beta-parameter
-                   p     = 2  ,   ## p-parameter, p>0 
-                   q     = 2  ,   ## q-parameter, q>0 
+                   name  = '' ,   ## the name                   
+                   a     = 1  ,   ## alpha-parameter                   
+                   logp  = 0  ,   ## p-parameter, p>0 
+                   logq  = 0  ,   ## q-parameter, q>0 
                    scale = 1  ,   ## scale-parameter 
                    shift = 0  ) : ## shift-parameter
         
-        ## inialize the 1st base 
+        ## inialize the base 
         Beta_pdf.__init__ ( self  ,
                             xvar  = xvar  , 
                             name  = name  ,
-                            alpha = alpha ,
-                            beta  = beta  ,
+                            logp  = logp  ,
+                            logq  = logq  ,
                             scale = scale ,
                             shift = shift ) 
-        ## initiailze the 2nd base
-        PandQ  .__init__ ( self , p = p , q = q ) ;
+        
+        ##  a: It also could  be negative!  
+        self.__a = self.make_var ( a,
+                                   'a_%s'          % self.name ,
+                                   'a_{#beta}(%s)' % self.name ,
+                                   None  , 1 , 1.e-3 , 100 )
         
         ## make PDF 
         self.pdf  = Ostap.Models.GenBetaPrime (
             self.roo_name ( 'genbetap_' )   ,
             "gen-Beta' %s"% self.name , 
             self.x     ,
-            self.alpha ,
-            self.beta  ,
-            self.p     ,
-            self.q     ,
+            self.a     ,
+            self.logp  ,
+            self.logq  ,
             self.scale ,
             self.shift )
         
@@ -981,15 +908,202 @@ class GenBetaPrime_pdf(Beta_pdf,PandQ) :
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,            
-            'beta'  : self.beta  ,            
-            'p'     : self.p     ,            
-            'q'     : self.q     ,            
+            'a'     : self.a     ,            
+            'logp'  : self.logp  ,            
+            'logq'  : self.logq  ,            
             'scale' : self.scale ,            
             'shift' : self.shift ,            
             }
-            
+        
+    @property
+    def a ( self ) :
+        """`e` : parameter a for gen-Beta(') distribution
+        """
+        return self.__a
+    @a.setter
+    def a ( self , value ) :
+        self.set_value ( self.__a , value )
+        
 models.append ( GenBetaPrime_pdf ) 
+
+# =============================================================================
+## @class GenBeta1_pdf
+#  Generalized beta-distribution
+#  Generalized Beta distribution of 1st kind 
+#  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+#  @see Ostap::Models::GenBeta1 
+#  @see Ostap::Math::GenBeta1 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+class GenBeta1_pdf(GenBetaPrime_pdf) :
+    """ Generalized Beta-prime disribution of 1st kind 
+    - http://en.wikipedia.org/wiki/Beta_prime_distribution
+    """
+    ## constructor
+    def __init__ ( self        , * , 
+                   xvar        ,   ## the variable
+                   name  = ''  ,   ## the name 
+                   a     = 1   ,   ## alpha-parameter (shape) 
+                   logp  = 0   ,   ## log(p)-parameter
+                   logq  = 0   ,   ## log(q_-parameter
+                   scale = 1   ,   ## scale-parameter
+                   shift = 0   ) : ## shift-parameter
+        
+        ## inialize the base 
+        GenBetaPrime_pdf.__init__ ( self ,
+                                    xvar  = xvar , 
+                                    name  = name ,
+                                    a     = a    , 
+                                    logp  = logp ,
+                                    logq  = logq ,
+                                    scale = scale ,
+                                    shift = shift )
+        
+        self.pdf  = Ostap.Models.GenBeta1 (
+            self.roo_name ( 'genbeta1_' )   ,
+            "gen-Beta-1 %s"% self.name , 
+            self.x     ,
+            self.a     ,
+            self.logp  ,
+            self.logq  ,
+            self.scale ,
+            self.shift )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'a'     : self.a     ,            
+            'logp'  : self.logp  ,            
+            'logq'  : self.logq  ,            
+            'scale' : self.scale ,            
+            'shift' : self.shift ,            
+            }
+
+models.append ( GenBeta1_pdf ) 
+
+# =============================================================================
+## @class GenBeta2_pdf
+#  Generalized beta-distribution
+#  Generalized Beta distribution of 2nd kind 
+#  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+#  @see Ostap::Models::GenBeta2 
+#  @see Ostap::Math::GenBeta2 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+class GenBeta2_pdf(GenBeta1_pdf) :
+    """ Generalized Beta-prime disribution of 2nd kind 
+    - http://en.wikipedia.org/wiki/Beta_prime_distribution
+    """
+    ## constructor
+    def __init__ ( self        , * , 
+                   xvar        ,   ## the variable
+                   name  = ''  ,   ## the name 
+                   a     = 1   ,   ## alpha-parameter (shape) 
+                   logp  = 0   ,   ## log(p)-parameter
+                   logq  = 0   ,   ## log(q_-parameter
+                   scale = 1   ,   ## scale-parameter
+                   shift = 0   ) : ## shift-parameter
+        
+        ## inialize the base 
+        GenBeta1_pdf.__init__ ( self ,
+                                xvar  = xvar , 
+                                name  = name ,
+                                a     = a    , 
+                                logp  = logp ,
+                                logq  = logq ,
+                                scale = scale ,
+                                shift = shift )
+        
+        self.pdf  = Ostap.Models.GenBeta2 (
+            self.roo_name ( 'genbeta2_' )   ,
+            "gen-Beta-2 %s"% self.name , 
+            self.x     ,
+            self.a     ,
+            self.logp  ,
+            self.logq  ,
+            self.scale ,
+            self.shift )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'a'     : self.a     ,            
+            'logp'  : self.logp  ,            
+            'logq'  : self.logq  ,            
+            'scale' : self.scale ,            
+            'shift' : self.shift ,            
+            }
+
+models.append ( GenBeta2_pdf ) 
+
+# =============================================================================
+## @class GenBeta_pdf
+#  Generalized beta-distribution
+#  Generalized Beta distribution (the most general form)
+#  - \f$ c \equiv \sin^2 \frac{\pi\gamma}{2} \f$ to ensure \f$ 0 \le c \le 1 \f$ 
+#  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+#  @see Ostap::Models::GenBeta 
+#  @see Ostap::Math::GenBeta 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+class GenBeta_pdf(GenBeta2_pdf,R) :
+    """ Generalized Beta-prime disribution 
+    - http://en.wikipedia.org/wiki/Beta_prime_distribution
+    """
+    ## constructor
+    def __init__ ( self        , * , 
+                   xvar        ,   ## the variable
+                   name  = ''  ,   ## the name 
+                   a     = 1   ,   ## alpha-parameter (shape) 
+                   logr  = 0   ,   ## log(r)
+                   logp  = 0   ,   ## log(p)-parameter
+                   logq  = 0   ,   ## log(q_-parameter
+                   scale = 1   ,   ## scale-parameter
+                   shift = 0   ) : ## shift-parameter
+        
+        ## inialize the base 
+        GenBeta2_pdf.__init__ ( self ,
+                                xvar  = xvar , 
+                                name  = name ,
+                                a     = a    , 
+                                logp  = logp ,
+                                logq  = logq ,
+                                scale = scale ,
+                                shift = shift )
+        ## the second base 
+        R.__init__ ( self , logr = logr )
+        
+        self.pdf  = Ostap.Models.GenBeta (
+            self.roo_name ( 'genbeta_' )   ,
+            "gen-Beta %s"% self.name , 
+            self.x     ,
+            self.a     ,
+            self.logr  ,
+            self.logp  ,
+            self.logq  ,
+            self.scale ,
+            self.shift )
+        
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'a'     : self.a     ,            
+            'logr'  : self.logr  ,            
+            'logp'  : self.logp  ,            
+            'logq'  : self.logq  ,            
+            'scale' : self.scale ,            
+            'shift' : self.shift ,            
+            }
+        
+    @property
+    def logr ( self ) :
+        """`logr'-parameter: logarithm of R-parameter """
+        return self.__logr
+    @logr.setter 
+    def logr ( self , value ) :
+        self.set_value ( self.__logr , value )
+
+models.append ( GenBeta_pdf ) 
 
 # =============================================================================
 ## @class TwoExpos_pdf

@@ -4848,7 +4848,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::GenGammaDist, 1) ;
+      ClassDefOverride(Ostap::Models::GenGammaDist, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -4859,8 +4859,17 @@ namespace Ostap
         RooAbsReal&          x         ,
         RooAbsReal&          k         ,
         RooAbsReal&          theta     ,
-        RooAbsReal&          p         ,
-        RooAbsReal&          low       ) ;
+        RooAbsReal&          logp      ,
+        RooAbsReal&          shift     ) ;
+      /// constructor from all parameters
+      GenGammaDist
+      ( const char*          name       ,
+        const char*          title      ,
+        RooAbsReal&          x          ,
+        RooAbsReal&          k          ,
+        RooAbsReal&          theta      ,
+        RooAbsReal&          logp       ,
+        const double         shift  = 0 ) ;
       /// "copy constructor"
       GenGammaDist
       ( const GenGammaDist&  right     ,
@@ -4910,16 +4919,16 @@ namespace Ostap
       const RooAbsReal& x     () const { return m_x     .arg() ; }
       const RooAbsReal& k     () const { return m_k     .arg() ; }
       const RooAbsReal& theta () const { return m_theta .arg() ; }
-      const RooAbsReal& p     () const { return m_p     .arg() ; }
-      const RooAbsReal& low   () const { return m_low   .arg() ; }
+      const RooAbsReal& logp  () const { return m_logp  .arg() ; }
+      const RooAbsReal& shift () const { return m_shift .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
       RooRealProxy m_k        ;
       RooRealProxy m_theta    ;
-      RooRealProxy m_p        ;
-      RooRealProxy m_low      ;
+      RooRealProxy m_logp     ;
+      RooRealProxy m_shift    ;
       // ======================================================================
     private:
       // ======================================================================
@@ -5304,7 +5313,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Beta
-     *  http://en.wikipedia.org/wiki/Beta_prime_distribution
+     *  http://en.wikipedia.org/wiki/Beta_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2025-08-10
      *  @see Ostap::Math::Beta
@@ -5314,7 +5323,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Beta, 2) ;
+      ClassDefOverride(Ostap::Models::Beta, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5323,8 +5332,8 @@ namespace Ostap
       ( const char*           name      ,
         const char*           title     ,
         RooAbsReal&           x         ,
-        RooAbsReal&           alpha     ,
-        RooAbsReal&           beta      ,
+        RooAbsReal&           logp      ,
+        RooAbsReal&           logq      ,
         RooAbsReal&           scale     ,
         RooAbsReal&           shift     ) ;
       /// constructor from all parameters
@@ -5332,8 +5341,8 @@ namespace Ostap
       ( const char*           name      ,
         const char*           title     ,
         RooAbsReal&           x         ,
-        RooAbsReal&           alpha     ,
-        RooAbsReal&           beta      ,
+        RooAbsReal&           logp      ,
+        RooAbsReal&           logq      ,
         const double          scale = 1 ,
         const double          shift = 0 ) ;
       /// "copy constructor"
@@ -5378,16 +5387,16 @@ namespace Ostap
     public:
       // ======================================================================
       const RooAbsReal& x     () const { return m_x      .arg() ; }
-      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
-      const RooAbsReal& beta  () const { return m_beta   .arg() ; }
+      const RooAbsReal& logp  () const { return m_logp   .arg() ; }
+      const RooAbsReal& logq  () const { return m_logq   .arg() ; }
       const RooAbsReal& scale () const { return m_scale  .arg() ; }
       const RooAbsReal& shift () const { return m_shift  .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
-      RooRealProxy m_alpha    ;
-      RooRealProxy m_beta     ;
+      RooRealProxy m_logp     ;
+      RooRealProxy m_logq     ;
       RooRealProxy m_scale    ;
       RooRealProxy m_shift    ;
       // ======================================================================
@@ -5409,7 +5418,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::BetaPrime, 2) ;
+      ClassDefOverride(Ostap::Models::BetaPrime, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5418,8 +5427,8 @@ namespace Ostap
       ( const char*           name      ,
         const char*           title     ,
         RooAbsReal&           x         ,
-        RooAbsReal&           alpha     ,
-        RooAbsReal&           beta      ,
+        RooAbsReal&           logp      ,
+        RooAbsReal&           logq      ,
         RooAbsReal&           scale     ,
         RooAbsReal&           shift     ) ;
       /// constructor from all parameters
@@ -5427,8 +5436,8 @@ namespace Ostap
       ( const char*           name      ,
         const char*           title     ,
         RooAbsReal&           x         ,
-        RooAbsReal&           alpha     ,
-        RooAbsReal&           beta      ,
+        RooAbsReal&           logp      ,
+        RooAbsReal&           logq      ,
         const double          scale = 1 ,
         const double          shift = 0 ) ;
       /// "copy constructor"
@@ -5473,16 +5482,16 @@ namespace Ostap
     public:
       // ======================================================================
       const RooAbsReal& x     () const { return m_x      .arg() ; }
-      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
-      const RooAbsReal& beta  () const { return m_beta   .arg() ; }
+      const RooAbsReal& logp  () const { return m_logp   .arg() ; }
+      const RooAbsReal& logq  () const { return m_logq   .arg() ; }      
       const RooAbsReal& scale () const { return m_scale  .arg() ; }
       const RooAbsReal& shift () const { return m_shift  .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
-      RooRealProxy m_alpha    ;
-      RooRealProxy m_beta     ;
+      RooRealProxy m_logp     ;
+      RooRealProxy m_logq     ;
       RooRealProxy m_scale    ;
       RooRealProxy m_shift    ;
       // ======================================================================
@@ -5505,7 +5514,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::GenBetaPrime, 1) ;
+      ClassDefOverride(Ostap::Models::GenBetaPrime, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5514,10 +5523,9 @@ namespace Ostap
       ( const char*  name      ,
         const char*  title     ,
         RooAbsReal&  x         ,
-        RooAbsReal&  alpha     ,
-        RooAbsReal&  beta      ,
-        RooAbsReal&  p         ,
-        RooAbsReal&  q         ,
+        RooAbsReal&  a         ,
+        RooAbsReal&  logp      ,
+        RooAbsReal&  logq      ,
         RooAbsReal&  scale     ,
         RooAbsReal&  shift     ) ;
       /// constructor from all parameters
@@ -5525,10 +5533,9 @@ namespace Ostap
       ( const char*  name      ,
         const char*  title     ,
         RooAbsReal&  x         ,
-        RooAbsReal&  alpha     ,
-        RooAbsReal&  beta      ,
-        RooAbsReal&  p         ,
-        RooAbsReal&  q         ,
+	RooAbsReal&  a         ,
+        RooAbsReal&  logp      ,
+        RooAbsReal&  logq      ,
 	const double scale = 1 ,
 	const double shift = 0 ) ; 
       /// "copy constructor"
@@ -5574,20 +5581,18 @@ namespace Ostap
     public:
       // ======================================================================
       const RooAbsReal& x     () const { return m_x      .arg() ; }
-      const RooAbsReal& alpha () const { return m_alpha  .arg() ; }
-      const RooAbsReal& beta  () const { return m_beta   .arg() ; }
-      const RooAbsReal& p     () const { return m_p      .arg() ; }
-      const RooAbsReal& q     () const { return m_q      .arg() ; }
+      const RooAbsReal& a     () const { return m_a      .arg() ; }
+      const RooAbsReal& logp  () const { return m_logp   .arg() ; }
+      const RooAbsReal& logq  () const { return m_logq   .arg() ; }
       const RooAbsReal& scale () const { return m_scale  .arg() ; }
       const RooAbsReal& shift () const { return m_shift  .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
-      RooRealProxy m_alpha    ;
-      RooRealProxy m_beta     ;
-      RooRealProxy m_p        ;
-      RooRealProxy m_q        ;      
+      RooRealProxy m_a        ;
+      RooRealProxy m_logp     ;
+      RooRealProxy m_logq     ;      
       RooRealProxy m_scale    ;
       RooRealProxy m_shift    ;
       // ======================================================================
@@ -5610,7 +5615,7 @@ namespace Ostap
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::GenBeta, 1) ;
+      ClassDefOverride(Ostap::Models::GenBeta, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -5620,21 +5625,21 @@ namespace Ostap
         const char*           title     ,
         RooAbsReal&           x         ,
         RooAbsReal&           a         ,
-        RooAbsReal&           b         ,
-        RooAbsReal&           gamma     ,
-        RooAbsReal&           p         ,
-        RooAbsReal&           q         ,
-        RooAbsReal&           shift     ) ;
+        RooAbsReal&           logr      ,
+        RooAbsReal&           logp      ,
+        RooAbsReal&           logq      ,
+        RooAbsReal&           shift     , 
+        RooAbsReal&           scale     ) ;
       /// constructor from all parameters
       GenBeta
       ( const char*           name       ,
         const char*           title      ,
         RooAbsReal&           x          ,
         RooAbsReal&           a          , 
-        RooAbsReal&           b          , 
-        RooAbsReal&           gamma      ,
-        RooAbsReal&           p          ,
-        RooAbsReal&           q          ,
+        RooAbsReal&           logr       , 
+        RooAbsReal&           logp       ,
+        RooAbsReal&           logq       ,
+	const double          scale  = 1 ,   
 	const double          shift  = 0 ) ;      
       /// "copy constructor"
       GenBeta
@@ -5682,20 +5687,20 @@ namespace Ostap
       // ======================================================================
       const RooAbsReal& x     () const { return m_x      .arg() ; }
       const RooAbsReal& a     () const { return m_a      .arg() ; }
-      const RooAbsReal& b     () const { return m_b      .arg() ; }
-      const RooAbsReal& gamma () const { return m_gamma  .arg() ; }
-      const RooAbsReal& p     () const { return m_p      .arg() ; }
-      const RooAbsReal& q     () const { return m_q      .arg() ; }
+      const RooAbsReal& logr  () const { return m_logr   .arg() ; }
+      const RooAbsReal& logp  () const { return m_logp   .arg() ; }
+      const RooAbsReal& logq  () const { return m_logq   .arg() ; }
+      const RooAbsReal& scale () const { return m_scale  .arg() ; }
       const RooAbsReal& shift () const { return m_shift  .arg() ; }
       // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     {} ;
       RooRealProxy m_a     {} ;
-      RooRealProxy m_b     {} ;
-      RooRealProxy m_gamma {} ;
-      RooRealProxy m_p     {} ;
-      RooRealProxy m_q     {} ;      
+      RooRealProxy m_logr  {} ;
+      RooRealProxy m_logp  {} ;
+      RooRealProxy m_logq  {} ;      
+      RooRealProxy m_scale {} ;
       RooRealProxy m_shift {} ;
       // ======================================================================
     private:
@@ -5704,6 +5709,209 @@ namespace Ostap
       mutable Ostap::Math::GenBeta m_beta ; // the actual function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class GenBeta1	
+     *  Generalized Beta distribution type 1 
+     *  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @see Ostap::Math::GenBeta
+     */
+    class  GenBeta1: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenBeta1, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      GenBeta1
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           a         ,
+        RooAbsReal&           logp      ,
+        RooAbsReal&           logq      ,
+        RooAbsReal&           shift     , 
+        RooAbsReal&           scale     ) ;
+      /// constructor from all parameters
+      GenBeta1
+      ( const char*           name       ,
+        const char*           title      ,
+        RooAbsReal&           x          ,
+        RooAbsReal&           a          , 
+        RooAbsReal&           logp       ,
+        RooAbsReal&           logq       ,
+	const double          scale  = 1 ,   
+	const double          shift  = 0 ) ;      
+      /// "copy constructor"
+      GenBeta1
+      ( const GenBeta1&       right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~GenBeta1 () ;
+      /// clone
+      GenBeta1* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      GenBeta1 () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenBeta1& genbeta1  () const
+      { setPars() ; return m_beta ; }
+      /// access to underlying function
+      const Ostap::Math::GenBeta1& function () const { return genbeta1 () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& a     () const { return m_a      .arg() ; }
+      const RooAbsReal& logp  () const { return m_logp   .arg() ; }
+      const RooAbsReal& logq  () const { return m_logq   .arg() ; }
+      const RooAbsReal& scale () const { return m_scale  .arg() ; }
+      const RooAbsReal& shift () const { return m_shift  .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_a     {} ;
+      RooRealProxy m_logp  {} ;
+      RooRealProxy m_logq  {} ;      
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shift {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GenBeta1 m_beta ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class GenBeta2	
+     *  Generalized Beta distribution type 2 
+     *  @see https://en.wikipedia.org/wiki/Generalized_beta_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @see Ostap::Math::GenBeta
+     */
+    class  GenBeta2: public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenBeta2, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      GenBeta2
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           a         ,
+        RooAbsReal&           logp      ,
+        RooAbsReal&           logq      ,
+        RooAbsReal&           shift     , 
+        RooAbsReal&           scale     ) ;
+      /// constructor from all parameters
+      GenBeta2
+      ( const char*           name       ,
+        const char*           title      ,
+        RooAbsReal&           x          ,
+        RooAbsReal&           a          , 
+        RooAbsReal&           logp       ,
+        RooAbsReal&           logq       ,
+	const double          scale  = 1 ,   
+	const double          shift  = 0 ) ;      
+      /// "copy constructor"
+      GenBeta2      ( const GenBeta2&       right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~GenBeta2 () ;
+      /// clone
+      GenBeta2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for proper (de)serialization
+      GenBeta2 () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenBeta2& genbeta2  () const
+      { setPars() ; return m_beta ; }
+      /// access to underlying function
+      const Ostap::Math::GenBeta2& function () const { return genbeta2 () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      const RooAbsReal& x     () const { return m_x      .arg() ; }
+      const RooAbsReal& a     () const { return m_a      .arg() ; }
+      const RooAbsReal& logp  () const { return m_logp   .arg() ; }
+      const RooAbsReal& logq  () const { return m_logq   .arg() ; }
+      const RooAbsReal& scale () const { return m_scale  .arg() ; }
+      const RooAbsReal& shift () const { return m_shift  .arg() ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_a     {} ;
+      RooRealProxy m_logp  {} ;
+      RooRealProxy m_logq  {} ;      
+      RooRealProxy m_scale {} ;
+      RooRealProxy m_shift {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::GenBeta2 m_beta ; // the actual function
+      // ======================================================================
+    } ;    
     // ========================================================================
     /** @class Landau
      *  http://en.wikipedia.org/wiki/Landau_distribution

@@ -19,7 +19,7 @@ namespace Ostap
     // Scalar and transformed parameters 
     // ========================================================================
     /** @class Value
-     *  Trivial (scalar) Id-parameter
+     *  Trivial (scalar) "Id"-parameter
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.c
      *  @date 2026-02-21
      */
@@ -192,7 +192,9 @@ namespace Ostap
       bool          setValue
       ( const double value         , 
 	const bool   force = false ) ; 
-      // ======================================================================
+      /// get the Value 
+      inline const Value& the_value () const { return m_value ; }
+      // ======================================================================      
     public :
       // ======================================================================
       /** set the full name of parameter
@@ -243,9 +245,9 @@ namespace Ostap
      *  \f[ p = ( B - A ) * \sin^2 \frac{\pi x}{2} + A \f]
      *
      *  such that
-     *   -  \f$ p(0)= A \f$ 
-     *   -  \f$ p(1)= B \f$
-     *   -  \f$   \min {A,B} \le p \le \max { A, B} 
+     *   -  \f$  p(0) = \min (A,B)
+     *   -  \f$  p(1) = \max (A,B)     
+     *   -  \f$  \min {A,B} \le p \le \max { A, B} 
      */
     class InRange
     {
@@ -402,32 +404,32 @@ namespace Ostap
     public: 
       // ======================================================================
       /// minimal value 
-      inline double vmin () const  { return std::min ( m_A , m_B ) ; } 
+      inline double vmin () const  { return m_min ; } 
       /// maximal  value 
-      inline double vmax () const  { return std::max ( m_A , m_B ) ; } 
+      inline double vmax () const  { return m_max ; } 
       // ======================================================================      
-    public : // variable transformation 
-      // =====================================================================
-      /// external -> internal 
-      double t ( const double x ) const ;
-      /// interbnal-> external 
-      double x ( const double t ) const ;
-      // =====================================================================
     public: 
       // ======================================================================
       /// unique tag
       std::size_t tag () const ; 
       // ======================================================================
+    protected : // variable transformation 
+      // =====================================================================
+      /// external -> internal 
+      double t ( const double x ) const ;
+      /// internal -> external 
+      double x ( const double t ) const ;
+      // ======================================================================
     private:
       // =====================================================================
       /// A-limit
-      double m_A         { 0 } ; // A-limit
+      double m_min       {  0   } ; // A-limit
       /// B-limit
-      double m_B         { 1 } ; // B-limit
+      double m_max       {  1   } ; // B-limit
       /// external value 
-      double m_external  { 0 }  ; // external value 
-      /// the value ;
-      Value m_value             ; // the value
+      double m_external  {  0   }  ; // external value 
+      /// the value 
+      Value  m_value     {  0.5 } ; // the value
       // =====================================================================
     } ;
     // ========================================================================
@@ -617,7 +619,9 @@ namespace Ostap
       // =====================================================================
     public : 
       // =====================================================================
+      /// scale variable 
       inline const Scale&       scale_var  () const { return m_scale ; }
+      /// shift variable 
       inline const Value&       shift_var  () const { return m_shift ; }
       // =====================================================================      
     public: 
@@ -674,7 +678,7 @@ namespace Ostap
       // ======================================================================			      
     public: 
       // ======================================================================
-      /// x -> t transfrormation
+      /// x -> t transformation
       inline double t ( const double x ) const
       { return ( x - m_shift.value () ) / m_scale.value () ;  } 
       // ======================================================================			      
@@ -776,10 +780,10 @@ namespace Ostap
       // =====================================================================      
     public:   /// setters 
       // =====================================================================
-      bool setLogP ( const double value , const bool force = false ) ; 
-      bool setLogQ ( const double value , const bool force = false ) ; 
       bool setP    ( const double value , const bool force = false ) ;
       bool setQ    ( const double value , const bool force = false ) ; 
+      bool setLogP ( const double value , const bool force = false ) ; 
+      bool setLogQ ( const double value , const bool force = false ) ; 
       /// set two parameters at once
       inline bool setLogPQ
       ( const double pvalue ,
@@ -837,30 +841,29 @@ namespace Ostap
       // ======================================================================			      
     public: 
       // ======================================================================
-      /// get cached value of ln B(p,q)
-      inline double log_Beta_pq () const { return m_log_Beta_pq ; } 
-      /// get cached value of 1/B(p,q)
-      inline double inv_Beta_pq () const { return m_inv_Beta_pq ; } 
-      // ======================================================================			      
-    public: 
-      // ======================================================================
       /// unique tag
       std::size_t tag () const ; 
+      // ======================================================================			      
+    protected : 
+      // ======================================================================
+      /// get cached value of ln B(p,q)
+      inline double log_Beta () const { return m_log_Beta ; } 
+      /// get cached value of 1/B(p,q)
+      inline double inv_Beta () const { return m_inv_Beta ; } 
       // ======================================================================			      
     private :
       // ======================================================================
       /// parameter P 
-      LogValue m_p         { 1 } ; // parameter P 
+      LogValue m_p      { 1 } ; // parameter P 
       /// parameter Q 
-      LogValue m_q         { 1 } ; // parameter Q
+      LogValue m_q      { 1 } ; // parameter Q
       /// cached value of \f$ \log \Beta (p,q \f$ 
-      double m_log_Beta_pq { 0 } ; // log Beta (p,q) 
+      double m_log_Beta { 0 } ; // log Beta (p,q) 
       /// cached value of \f$ \frac{1} { \Beta (p,q } \f$ 
-      double m_inv_Beta_pq { 0 } ; // inv Beta (p,q) 
+      double m_inv_Beta { 0 } ; // inv Beta (p,q) 
       // ======================================================================      
     } ;    
     // ========================================================================
-
 
     // ========================================================================
     // "Vector" parameters : polynomials, etc..
