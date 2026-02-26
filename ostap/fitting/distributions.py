@@ -1095,14 +1095,6 @@ class GenBeta_pdf(GenBeta2_pdf,R) :
             'shift' : self.shift ,            
             }
         
-    @property
-    def logr ( self ) :
-        """`logr'-parameter: logarithm of R-parameter """
-        return self.__logr
-    @logr.setter 
-    def logr ( self , value ) :
-        self.set_value ( self.__logr , value )
-
 models.append ( GenBeta_pdf ) 
 
 # =============================================================================
@@ -1324,7 +1316,7 @@ models.append ( Rice_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @see Ostap::Math::GenInvGauss
 #  @see Ostap::Models::GenInvGauss
-class GenInvGauss_pdf(PDF1,Shift) :
+class GenInvGauss_pdf(PDF1,ShiftAndScale) :
     """ Generalized Inverse Gaussian distribution
     Generalised Inverse Gaussian distribution using (theta,eta) parameterisation
     - see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
@@ -1335,25 +1327,21 @@ class GenInvGauss_pdf(PDF1,Shift) :
                    xvar        , ## the variable 
                    name  = ''  , ## the name 
                    theta = 1   , ## parameter theta
-                   eta   = 1   , ## parameter eta
-                   p     = 0   , ## parameter p
+                   eta   = 1   , ## parameter eta: scale
+                   p     = 1   , ## parameter p
                    shift = ROOT.RooFit.RooConst ( 0.0 )  ) : ## shift parameter
         #
-        PDF1 .__init__ ( self , name  = name  , xvar = xvar )
-        Shift.__init__ ( self , shift = shift )
+        PDF1         .__init__ ( self , name  = name  , xvar = xvar )
+        ShiftAndScale.__init__ ( self , scale = eta   , shift = shift )
         #
         self.__theta    = self.make_var ( theta             ,
                                           'theta_%s'          % self.name ,
                                           '#theta_{GIG}(%s)'  % self.name ,
                                           None , 1.0 , 1.e-8 , 100 )
-        self.__eta      = self.make_var ( eta               ,
-                                          'eta_%s'            % self.name ,
-                                          '#eta_{GIG}(%s)'    % self.name ,
-                                          None ,  1.0 , 1.e-8 , 100 )
         self.__p        = self.make_var ( p                 ,
                                           'p_%s'              % self.name ,
                                           'p_{GIG}(%s)'       % self.name ,
-                                          None , 0   , -100  , 100 )        
+                                          None , 1 , -100 , 100 )        
         
         self.pdf  = Ostap.Models.GenInvGauss (
             self.roo_name ( 'gig_' )   ,
@@ -1373,7 +1361,10 @@ class GenInvGauss_pdf(PDF1,Shift) :
             'p'        : self.p        ,
             'shift'    : self.shift    ,            
             }
-        
+    
+    ## ALIAS    
+    eta = ShiftAndScale.scale 
+    
     @property
     def theta ( self ) :
         """`theta'-parameter of Generalized Inverse Gaussian  function"""
@@ -1381,14 +1372,6 @@ class GenInvGauss_pdf(PDF1,Shift) :
     @theta.setter
     def theta ( self , value ) :
         self.set_value ( self.__theta , value )
-
-    @property
-    def eta ( self ) :
-        """`eta'-parameter of Generalized Inverse Gaussian  function"""
-        return self.__eta
-    @eta.setter
-    def eta ( self , value ) :
-        self.set_value ( self.__eta , value )
 
     @property
     def p   ( self ) :

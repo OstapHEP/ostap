@@ -11499,8 +11499,9 @@ Ostap::Models::GenInvGauss::GenInvGauss
   RooAbsReal&  x         ,
   RooAbsReal&  theta     ,
   RooAbsReal&  eta       ,
-  RooAbsReal&  p         )
-  : GenInvGauss ( name , title , x , theta , eta , p , RooFit::RooConst ( 0.0 ) ) 
+  RooAbsReal&  p         ,
+  const double shift     )
+  : GenInvGauss ( name , title , x , theta , eta , p , RooFit::RooConst ( shift ) ) 
 {}
 // ============================================================================
 // copy constructor

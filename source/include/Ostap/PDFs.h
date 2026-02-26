@@ -9607,7 +9607,8 @@ namespace Ostap
         RooAbsReal&  x         ,
         RooAbsReal&  theta     ,
         RooAbsReal&  eta       ,
-        RooAbsReal&  p         ) ;
+        RooAbsReal&  p         , 
+        const double shift = 0 ) ; 
       /// copy constructor 
       GenInvGauss ( const GenInvGauss& right , const char* name = nullptr ) ;
       /// clone method

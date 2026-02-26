@@ -1669,11 +1669,11 @@ namespace Ostap
     private:      
       // ======================================================================
       /// parameter theta
-      Ostap::Math::Scale  m_theta      {  1 } ; // parameter theta 
+      Ostap::Math::Scale m_theta      {  1 } ; // parameter theta 
       /// parameter p
-      Ostap::Math::Scale  m_p          {  1 } ; // parameter theta
+      Ostap::Math::Value m_p          {  1 } ; // parameter theta
       /// cache 
-      double              m_iKp_theta  { -1 } ; // cache 
+      double             m_iKp_theta  { -1 } ; // cache 
       // ======================================================================
     private:
       // ======================================================================

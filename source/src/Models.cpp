@@ -2080,8 +2080,10 @@ double Ostap::Math::GenBeta2::cdf
 double Ostap::Math::GenBeta2::raw_cdf 
 ( const double y ) const
 {
-  const double rcdf = raw_cdf ( y ) ;
-  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
+  if ( y <= 0 ) { return 0 ; }
+  //
+  const double z = pow_ratio_a1 ( y , a()  ) ; 
+  return z <= 0 ? 0 : z >= 1 ? 1 : beta_inc ( p () , q () , z ) ;
 } 
 // ============================================================================
 // get the tag
