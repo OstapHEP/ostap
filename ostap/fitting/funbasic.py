@@ -823,7 +823,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                     rows.append ( row )
                     import ostap.logger.table as T
                     title = 'draw: curve-options'
-                    table = T.table ( rows , title = 'Draw curve' ,prefix = '# ' )
+                    table = T.table ( rows , title = 'Draw curve' , prefix = '# ' )
                     self.info ( '%s:\n%s' % ( title , table ) )
                             
             self.plot_on ( self.fun , frame , *coptions )

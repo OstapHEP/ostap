@@ -34,6 +34,24 @@ namespace
   // ==========================================================================
 } // the end of anonymous namespace 
 // ===========================================================================
+/*  @fn set_par
+ *  Helper function to set parameter
+ *  @param parameter  (update) parameter
+ *  @param value      (input)  new value
+ *  @param force      (input)  froce updating
+ *  @return true if parameter is modified
+ */
+// ===========================================================================
+bool Ostap::Math::set_par
+( double&      parameter ,
+  const double value     ,
+  const bool   force     )
+{
+  if ( !force && s_equal ( value , parameter ) ) { return false ; }
+  parameter = value ;
+  return true ;  
+}
+// ===========================================================================
 /*  full constructor
  *  @param value parameter value  
  *  @param name  parameter name  
@@ -63,16 +81,12 @@ Ostap::Math::Value::Value
   : Value ( value , name , Ostap::class_name ( the_class ) )
 {}
 // ============================================================================
-// set new value for parameter 
+/*  the sign of the value
+ *  @see Ostap::Math::signum
+ */
 // ============================================================================
-bool Ostap::Math::Value::setValue
-( const double value ,
-  const bool   force )
-{
-  if ( !force && s_equal ( value , m_value ) ) { return false ; }
-  m_value = value ;
-  return true ;
-}
+std::int8_t Ostap::Math::Value::signum () const
+{ return Ostap::Math::signum ( m_value ) ;  }
 // ============================================================================
 /** set the full name of parameter
  *  @parm  the_name  the parameter  name
@@ -658,19 +672,6 @@ Ostap::Math::Parameters::Parameters
 // all zero ?
 // ============================================================================
 bool Ostap::Math::Parameters::zero  () const { return s_vzero ( m_pars ) ; }
-// ============================================================================
-// set k-parameter
-// ============================================================================
-bool Ostap::Math::Parameters::_setPar 
-( const std::size_t k     , 
-  const double      value ,
-  const bool        force ) 
-{
-  if ( m_pars.size() <= k                         ) { return false ; }
-  if ( s_equal ( m_pars [ k ] , value ) && !force ) { return false ; }
-  m_pars [ k ] = value ;
-  return true ;
-}
 // ============================================================================
 // rest all parameters to zero 
 // ============================================================================

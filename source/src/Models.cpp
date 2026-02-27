@@ -82,7 +82,7 @@ namespace
 Ostap::Math::Gumbel::Gumbel
 ( const double mu   , 
   const double beta )
-  : ShiftAndScale ( beta , mu   , "beta" , "mu"  , *this , false )
+  : ShiftAndScale ( beta , mu   , "beta" , "mu"  , typeid ( *this ) , false )
 {}
 // ============================================================================
 double Ostap::Math::Gumbel::median () const 
@@ -103,9 +103,7 @@ double Ostap::Math::Gumbel::rms () const
 double Ostap::Math::Gumbel::skewness () const 
 {  
   static const double s_skew  =  12 * std::sqrt ( 6.0L ) * Ostap::Math::zeta ( 3 ) / s_pi3  ;
-  //
-  const auto ss = Ostap::Math::signum ( scale () ) ;
-  return ss * s_skew ;
+  return scale_sign () * s_skew ;
 }
 // ============================================================================
 // get a value for the function      
@@ -171,8 +169,8 @@ Ostap::Math::GammaDist::GammaDist
 ( const double k     ,   // shape parameter  
   const double theta ,   // scale parameter
   const double shift )   // shidt parameter
-  : ShiftAndScale ( theta , shift , "theta" , "shift" , *this , false ) 
-  , m_k           ( k                       , "k"     , *this )
+  : ShiftAndScale ( theta , shift , "theta" , "shift" , typeid ( *this ) , false ) 
+  , m_k           ( k                       , "k"     , typeid ( *this ) )
 {
   // evaluate auxillary parameter 
   m_lgk = Ostap::Math::lgamma ( m_k.value() ) ;
@@ -243,9 +241,7 @@ double Ostap::Math::GammaDist::skewness () const
 {
   const double kv = k () ; 
   const double r  = 2.0 / std::sqrt ( kv ) ;
-  const auto ss   = Ostap::Math::signum ( scale () ) ;
-  //
-  return r * ss ;
+  return scale_sign () * r ;
 }
 // ============================================================================
 // calculate gamma distribution shape
@@ -381,9 +377,9 @@ Ostap::Math::GenGammaDist::GenGammaDist
   const double theta , 
   const double p     , // 1 corresponds to gamma distribution 
   const double shift )
-  : ShiftAndScale ( theta , shift , "theta" , "shift" , *this , false ) 
-  , m_k           ( k                       , "p"     , *this )
-  , m_p           ( p                       , "p"     , *this )
+  : ShiftAndScale ( theta , shift , "theta" , "shift" , typeid ( *this ) , false ) 
+  , m_k           ( k                       , "p"     , typeid ( *this ) )
+  , m_p           ( p                       , "p"     , typeid ( *this ) )
 {
   // evaluate auxillary parameter 
   m_lgkp = Ostap::Math::lgamma ( m_k.value() / m_p.value () ) ;
@@ -524,10 +520,9 @@ double Ostap::Math::GenGammaDist::rms () const
 // ============================================================================
 double Ostap::Math::GenGammaDist::skewness () const
 {
-  const auto ss = Ostap::Math::signum ( scale () ) ;
-  return ss * Ostap::Math::skewness ( raw_moment ( 3 ) ,
-				      raw_moment ( 2 ) ,
-				      raw_moment ( 1 ) ) ;
+  return scale_sign () * Ostap::Math::skewness ( raw_moment ( 3 ) ,
+						 raw_moment ( 2 ) ,
+						 raw_moment ( 1 ) ) ;
 }
 // ============================================================================
 // kurtosis 
@@ -1124,8 +1119,7 @@ double Ostap::Math::Beta::skewness () const
     * std::sqrt ( ( pv + qv + 1 ) / ( pv * qv ) )
     / ( pv + qv + 2 ) ;
   //
-  const auto ss = Ostap::Math::signum ( scale () ) ;
-  return ss * r ;
+  return scale_sign ()  * r ;
 }
 // ===========================================================================
 // (excess) kurtosis
@@ -1290,8 +1284,7 @@ double Ostap::Math::BetaPrime::skewness  () const
   //
   const double r = 2 * ( 2 * pv + qv - 1 ) / q3 * std::sqrt( q2 / ( pv * ( pv + qv - 1 ) ) ) ;
   //
-  const auto ss = Ostap::Math::signum ( scale () ) ;
-  return ss * r ;
+  return scale_sign () * r ;
 }
 // ===========================================================================
 double Ostap::Math::BetaPrime::kurtosis  () const 
@@ -1830,8 +1823,7 @@ double Ostap::Math::GenBeta1::skewness () const
   const double m1 = raw_moment ( 1 ) ;
   if ( !std::isfinite ( m1 ) ) { return m1 ; }
   //
-  const auto ss = Ostap::Math::signum ( scale () ) ;
-  return ss * Ostap::Math::skewness ( m3 , m2 , m1 ) ;
+  return scale_sign () * Ostap::Math::skewness ( m3 , m2 , m1 ) ;
 }
 // ============================================================================
 // (excess) kurtosis @attention it can be infinite/NaN!
@@ -2028,8 +2020,7 @@ double Ostap::Math::GenBeta2::skewness () const
   const double m1 = raw_moment ( 1 ) ;
   if ( !std::isfinite ( m1 ) ) { return m1 ; }
   //
-  const auto ss = Ostap::Math::signum ( scale () ) ;
-  return ss * Ostap::Math::skewness ( m3 , m2 , m1 ) ;
+  return scale_sign () * Ostap::Math::skewness ( m3 , m2 , m1 ) ;
 }
 // ============================================================================
 // (excess) kurtosis @attention it can be infinite/NaN!
@@ -2399,10 +2390,9 @@ double Ostap::Math::Weibull::variance () const
 // ============================================================================
 double Ostap::Math::Weibull::skewness () const 
 {
-  const auto ss = Ostap::Math::signum ( scale () ) ;  
-  return ss * Ostap::Math::skewness ( raw_moment ( 3 ) ,
-				      raw_moment ( 2 ) ,
-				      raw_moment ( 1 ) ) ;
+  return scale_sign () * Ostap::Math::skewness ( raw_moment ( 3 ) ,
+						 raw_moment ( 2 ) ,
+						 raw_moment ( 1 ) ) ;
 }
 // ============================================================================
 // kurtosis
@@ -3344,8 +3334,21 @@ std::size_t Ostap::Math::ExGenPareto::tag () const
   static const std::string s_name = "ExGenPareto" ;
   return Ostap::Utils::hash_combiner ( s_name , m_mu , m_scale , m_shape ) ;
 }
+// ============================================================================
 
-
+// ============================================================================
+Ostap::Math::Benini::Benini
+( const std::size_t          n     ,   // number of shape parameters: n >= 1
+  const double               scale ,   // scale parameter 
+  const double               shift )  // shift parameter
+  : ShiftAndScale ( scale , shift  , "beta" , "mu"  , typeid ( *this )  , false )    
+  , m_pars  ( !n ? 1 : n , 0.0 ) 
+  , m_pars2 ( !n ? 1 : n , 0.0 )
+{
+  m_pars  [ 0 ] = 1 ;
+  m_pars2 [ 0 ] = 1 ;
+}
+// ============================================================================
 
 // ============================================================================
 // Benini distribution 
@@ -3353,41 +3356,26 @@ std::size_t Ostap::Math::ExGenPareto::tag () const
 Ostap::Math::Benini::Benini
 ( const std::vector<double>& pars  ,   // shape parameters               
   const double               scale ,   // scale parameter 
-  const double               shift )   // shift parameter 
-  : m_pars  ( pars.size() ) 
+  const double               shift )   // shift parameter
+  : ShiftAndScale ( scale , shift  , "scale" , "shift" , typeid ( *this )  , false )    
+  , m_pars  ( pars.size() ) 
   , m_pars2 ( pars.size() ) 
-  , m_scale ( std::abs ( scale ) ) 
-  , m_shift (            shift   ) 
 {
   setPars ( pars ) ;
   //
-  Ostap::Assert ( 2 <= m_pars.size() , 
-                  "Invalid number of parameters/1!" , 
-                  "Ostap::Math::Benini" ) ;
-  std::transform ( m_pars.begin () ,
-		   m_pars.end   () ,
-		   m_pars.begin () ,
-		   []( const double v ) -> double { return std::abs ( v ) ;} ) ;
-  Ostap::Assert ( 0 < std::accumulate ( m_pars.begin() , m_pars.end() , 0.0 ) ,
-                  "Invalid number of parameters!" , 
-                  "Ostap::Math::Benini" ) ;
+  Ostap::Assert ( !m_pars.empty() && 0 < std::accumulate ( m_pars.begin() , m_pars.end() , 0.0 ) ,
+                  "Invalid parameters!"  , 
+                  "Ostap::Math::Benini"  ,
+		  INVALID_PARAMETERS , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
-// only two shape parameters: alpha and beta 
+// one shape parameters: alpha
 // ============================================================================
 Ostap::Math::Benini::Benini
-( const double               scale ,             // scale parameter 
-  const double               shift )             // shift parameter
-  : Benini ( std::vector<double>( 2 , 1.0 ) , scale , shift ) 
-{}
-// ============================================================================
-// n parameteters 
-// ============================================================================
-Ostap::Math::Benini::Benini
-( const unsigned short       n     ,             // shape parameters 
-  const double               scale ,             // scale parameter 
-  const double               shift )             // shift parameter
-  : Benini ( std::vector<double> ( n , 1.0 ) , scale , shift ) 
+( const double               alpha     , 
+  const double               scale     ,      
+  const double               shift     )
+  : Benini ( std::vector<double>(1,alpha)  , scale , shift )
 {}
 // ============================================================================
 // two shape parameters: alpha and beta 
@@ -3406,8 +3394,8 @@ Ostap::Math::Benini::Benini
 ( const double               alpha     , 
   const double               beta      , 	
   const double               gamma     , 	
-  const double               scale     ,              // scale parameter 
-  const double               shift     )             // shift parameter
+  const double               scale     ,  // scale parameter 
+  const double               shift     )  // shift parameter
   : Benini ( {{ alpha , beta , gamma }} , scale , shift )
 {}
 // ======================================================================
@@ -3418,12 +3406,12 @@ Ostap::Math::Benini::Benini
   const double               beta      , 	
   const double               gamma     , 	
   const double               delta     , 	
-  const double               scale     ,              // scale parameter 
-  const double               shift     )             // shift parameter
+  const double               scale     ,  // scale parameter 
+  const double               shift     )  // shift parameter
   : Benini ( {{ alpha , beta , gamma , delta }} , scale , shift )
-{}    
+{}
 // ============================================================================
-bool Ostap::Math::Benini::_setPar  
+bool Ostap::Math::Benini::setPar  
 ( const unsigned short i     , 
   const double         value ) 
 {
@@ -3431,8 +3419,14 @@ bool Ostap::Math::Benini::_setPar
   const double avalue = std::abs ( value ) ;
   if ( s_equal ( m_pars [ i ] , avalue ) ) { return false ; }
   //
-  m_pars  [ i ] = avalue ;
+  m_pars  [ i ] =              avalue ;
   m_pars2 [ i ] = ( i + 1 ) *  avalue ;
+  //
+  Ostap::Assert ( !s_zero ( avalue ) ||
+		  0 < std::accumulate ( m_pars.begin() , m_pars.end() , 0.0 ) ,
+                  "Invalid parameters/sum of parameters"   , 
+                  "Ostap::Math::Benini"                    ,
+		  INVALID_PARAMETERS , __FILE__ , __LINE__ ) ;
   //
   return true ; 
 }
@@ -3452,8 +3446,24 @@ bool Ostap::Math::Benini::setPars
     //
     changed = true ;
   }
+  //
+  Ostap::Assert ( 0 < std::accumulate ( m_pars.begin() , m_pars.end() , 0.0 ) ,
+                  "Invalid sum of parameters"   , 
+                  "Ostap::Math::Benini"         ,
+		  INVALID_PARAMETERS , __FILE__ , __LINE__ ) ;
+  //
   return changed ;
 }
+// ============================================================================
+// xmin  
+// ============================================================================
+double Ostap::Math::Benini::xmin () const
+{ return Ostap::Math::is_positive ( scale () ) ? x ( 1 ) : s_NEGINF ; }
+// ============================================================================
+// xmax
+// ============================================================================
+double Ostap::Math::Benini::xmax () const
+{ return Ostap::Math::is_positive ( scale () ) ? s_POSINF : x ( 1 ) ; }
 // ============================================================================
 // evaluate the function 
 // ============================================================================
@@ -3461,47 +3471,37 @@ double Ostap::Math::Benini::evaluate
 ( const double x ) const 
 {
   //
-  if ( x < m_shift + m_scale  ) { return 0 ; }
+  const double y    = t ( x ) ;
+  if ( y <= 1 ) { return 0 ; }
   //
-  const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
+  const double logy = std::log ( y ) ;
   //
-  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( m_pars .rbegin() , m_pars .rend  () , lxs ).first ;
-  const double p2 = Ostap::Math::Clenshaw::monomial_sum ( m_pars2.rbegin() , m_pars2.rend  () , lxs ).first ;
+  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( m_pars .rbegin() , m_pars .rend  () , logy ).first ;
+  const double p2 = Ostap::Math::Clenshaw::monomial_sum ( m_pars2.rbegin() , m_pars2.rend  () , logy).first ;
   //
-  return std::exp ( - lxs * p1 ) * p2 / x ;
+  return std::exp ( - logy * p1 ) * p2 / ( y * scale_abs () ) ;
 }
 // =============================================================================
-// set scale parameter
-// =============================================================================
-bool Ostap::Math::Benini::setScale ( const double value ) 
+// evaluate the cdf 
+// ============================================================================
+double Ostap::Math::Benini::cdf
+( const double x ) const
 {
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( m_scale , avalue ) ) { return false ; }
-  m_scale     = avalue ;
-  return true ;    
-}
-// =============================================================================
-// set shift  parameter
-// =============================================================================
-bool Ostap::Math::Benini::setShift ( const double value ) 
-{
-  if ( s_equal ( m_shift , value ) ) { return false ; }
-  m_shift     = value ;
-  return true ;    
+  const double y    = t ( x )       ;
+  const double rcdf = raw_cdf ( y ) ;
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
 }
 // ============================================================================
 // evaluate the cdf 
 // ============================================================================
-double Ostap::Math::Benini::cdf
-( const double x ) const 
+double Ostap::Math::Benini::raw_cdf
+( const double y ) const 
 {
-  if  ( x <= m_shift + m_scale ) { return 0 ; }
-  //
-  const double lxs = std::log ( ( x - m_shift ) / m_scale ) ;
-  //
-  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( m_pars.rbegin() , m_pars.rend  () , lxs ).first ;
-  //
-  return 1.0L - std::exp ( -lxs * p1 ) ;
+  if ( y <= 1 ) { return 0 ; }
+  const double logy = std::log ( y ) ;
+  // evaluate polynomial 
+  const double p1 = Ostap::Math::Clenshaw::monomial_sum ( m_pars.rbegin() , m_pars.rend  () , logy ).first ;
+  return 1.0L - std::exp ( - logy * p1 ) ;
 }
 // =============================================================================
 // get the integral 
@@ -3513,9 +3513,12 @@ double Ostap::Math::Benini::integral  () const { return 1 ; }
 double Ostap::Math::Benini::integral 
 ( const double low  ,
   const double high ) const 
-{ return 
-    std::max ( low , high ) <= m_shift + m_scale ? 0.0 :
-    s_equal ( low , high )                       ? 0.0 : cdf ( high ) - cdf ( low ) ; }
+{
+  if      ( s_equal ( low ,high ) ) { return 0 ; }
+  else if ( high < low            ) { return -integral ( high , low ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
 // ============================================================================
 // get the tag
 // ============================================================================
@@ -3523,8 +3526,7 @@ std::size_t Ostap::Math::Benini::tag () const
 { 
   static const std::string s_name = "Benini" ;
   return Ostap::Utils::hash_combiner ( s_name  , 
-                                       m_scale , 
-                                       m_shift , 
+				       ShiftAndScale::tag () , 
                                        Ostap::Utils::hash_range ( m_pars ) ) ;
 }
 // ============================================================================
@@ -3939,9 +3941,19 @@ Ostap::Math::Frechet::Frechet
 ( const double alpha , 
   const double scale ,  
   const double shift )
-  : m_alpha ( alpha                     , "alpha" , typeid ( *this )  )
-  , m_ss    ( scale , shift   , "scale" , "shift" , typeid ( *this )  ) 
+  : ShiftAndScale ( scale , shift   , "scale" , "shift" , typeid ( *this ) , false ) 
+  , m_alpha       ( alpha                     , "alpha" , typeid ( *this ) )
 {}
+// ============================================================================
+// xmin  
+// ============================================================================
+double Ostap::Math::Frechet::xmin () const
+{ return Ostap::Math::is_positive ( scale () ) ? x ( 0 ) : s_NEGINF ; }
+// ============================================================================
+// xmax
+// ============================================================================
+double Ostap::Math::Frechet::xmax () const
+{ return Ostap::Math::is_positive ( scale () ) ? s_POSINF : x ( 0 ) ; }
 // ============================================================================
 // evaluate Frechet distribution
 // ============================================================================
@@ -3951,14 +3963,21 @@ double Ostap::Math::Frechet::evaluate
   const double y = t ( x ) ;
   if ( y < 0 ) { return 0 ; }
   //
-  const double av = alpha () ;
-  const double s  = std::abs ( scale () ) ;
+  const double av = alpha     () ;
+  const double s  = abs_scale () ;
   //
   const double dd = ( av + 1 ) * std::log ( y ) ;
   //
   if ( 1 < y ) { return av / s * std::exp ( - std::pow ( 1.0 / y , av ) - dd ) ; }
-  //
   return av / s * std::exp ( - std::pow ( y , - av ) - dd ) ;
+}
+// ============================================================================
+// raw moments (unscaled & unshifted)
+// ============================================================================
+double Ostap::Math::Frechet::raw_moment ( const unsigned short r ) const
+{
+  const double av = alpha () ;
+  return Ostap::Math::gamma ( 1.0 - r / av ) ;
 }
 // ============================================================================
 // mean value
@@ -3967,7 +3986,7 @@ double Ostap::Math::Frechet::mean () const
 {
   const double av = alpha () ;
   if ( av <= 1 || s_equal ( av , 1 ) ) { return s_QUIETNAN ; } 
-  const double m1 = Ostap::Math::gamma ( 1.0 - 1.0 / av ) ;
+  const double m1 = raw_moment ( 1 ) ;
   return x ( m1 ) ;
 }
 // ============================================================================
@@ -3998,8 +4017,8 @@ double Ostap::Math::Frechet::variance  () const
   //
   const double ss = scale () ;
   return ss * ss * Ostap::Math::variance
-    ( Ostap::Math::gamma ( 1.0 - 2.0 / av ) , 
-      Ostap::Math::gamma ( 1.0 - 1.0 / av ) ) ; 
+    ( raw_moment ( 2 ) ,
+      raw_moment ( 1 ) ) ;
 }
 // ============================================================================
 // rms 
@@ -4019,11 +4038,10 @@ double Ostap::Math::Frechet::skewness() const
   const double av = alpha () ;
   if ( av <= 3 || s_equal ( av , 3 ) ) { return s_QUIETNAN ; } 
   //
-  const auto ss = Ostap::Math::signum ( scale () ) ;
-  return ss * Ostap::Math::skewness
-    ( Ostap::Math::gamma ( 1.0 - 3.0 / av ) , 
-      Ostap::Math::gamma ( 1.0 - 2.0 / av ) , 
-      Ostap::Math::gamma ( 1.0 - 1.0 / av ) ) ;
+  return scale_sign () * Ostap::Math::skewness
+    ( raw_moment ( 3 ) ,
+      raw_moment ( 2 ) ,
+      raw_moment ( 1 ) ) ;
 }
 // ============================================================================
 // (excess) kurtosis
@@ -4034,10 +4052,10 @@ double Ostap::Math::Frechet::kurtosis () const
   if ( av <= 4 || s_equal ( av , 4 ) ) { return s_QUIETNAN ; } 
   //
   return Ostap::Math::kurtosis
-    ( Ostap::Math::gamma ( 1.0 - 4.0 / av ) , 
-      Ostap::Math::gamma ( 1.0 - 3.0 / av ) , 
-      Ostap::Math::gamma ( 1.0 - 2.0 / av ) , 
-      Ostap::Math::gamma ( 1.0 - 1.0 / av ) ) ;
+    ( raw_moment ( 4 ) ,
+      raw_moment ( 3 ) ,
+      raw_moment ( 2 ) ,
+      raw_moment ( 1 ) ) ;
 }
 // ============================================================================
 // evaluate Frechet CDF 
@@ -4045,7 +4063,16 @@ double Ostap::Math::Frechet::kurtosis () const
 double Ostap::Math::Frechet::cdf 
 ( const double x ) const
 {
-  const double y  = t ( x ) ;
+  const double y    = t ( x ) ;
+  const double rcdf = raw_cdf ( y ) ;
+  return  0 < scale_sign () ? rcdf : 1 - rcdf ;
+}
+// ============================================================================
+// evaluate Frechet CDF 
+// ============================================================================
+double Ostap::Math::Frechet::raw_cdf 
+( const double y ) const
+{
   if ( y <= 0 ) { return  0 ; }
   // 
   const double av = alpha () ;
@@ -4062,7 +4089,10 @@ double Ostap::Math::Frechet::integral () const { return 1 ; }
 double Ostap::Math::Frechet::integral
 ( const double a ,
   const double b ) const
-{ return cdf ( b ) - cdf ( a ) ; }
+{
+  if ( s_equal ( a , b ) ) { return 0 ; }
+  return cdf ( b ) - cdf ( a ) ;
+}
 // ============================================================================
 /*  get quantile 
  *  @param p probability \f$ 0 \le p < 1 \f$
@@ -4086,8 +4116,8 @@ std::size_t Ostap::Math::Frechet::tag () const
 { 
   static const std::string s_name = "Frechet" ;
   return Ostap::Utils::hash_combiner ( s_name ,
-				       m_alpha.tag () ,
-				       m_ss   .tag () ) ;
+				       ShiftAndScale::tag () , 
+				       m_alpha       .tag () ) ; 
 }
 // ============================================================================
 
@@ -4104,9 +4134,9 @@ Ostap::Math::Dagum::Dagum
   const double a     ,
   const double scale ,
   const double shift )
-  : m_a  ( a                         , "a"     , typeid ( *this ) )
-  , m_p  ( p                         , "p"     , typeid ( *this ) )
-  , m_ss ( scale , shift   , "scale" , "shift" , typeid ( *this ) ) 
+  : ShiftAndScale ( scale , shift   , "scale" , "shift" , typeid ( *this ) , false ) 
+  , m_a           ( a                         , "a"     , typeid ( *this ) )
+  , m_p           ( p                         , "p"     , typeid ( *this ) )
 {}
 // ============================================================================
 // evaluate Dagum distribution
@@ -4130,8 +4160,17 @@ double Ostap::Math::Dagum::evaluate
 // ============================================================================
 double Ostap::Math::Dagum::cdf
 ( const double x    ) const
-{
+{  
   const double y = t ( x ) ;
+  const double rcdf = raw_cdf ( y ) ;
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ; 
+}
+// ============================================================================
+// evaluate Dagum CDF 
+// ============================================================================
+double Ostap::Math::Dagum::raw_cdf
+( const double y    ) const
+{
   if ( y <= 0 ) { return 0 ; }
   const double av = a () ;
   const double pv = p () ;
@@ -4241,10 +4280,10 @@ double Ostap::Math::Dagum::rms  () const
 std::size_t Ostap::Math::Dagum::tag () const 
 { 
   static const std::string s_name = "Dagum" ;
-  return Ostap::Utils::hash_combiner ( s_name      ,
-				       m_a .tag () ,
-				       m_p .tag () ,
-				       m_ss.tag () ) ;
+  return Ostap::Utils::hash_combiner ( s_name                ,
+				       ShiftAndScale::tag () , 
+				       m_a           .tag () ,
+				       m_p           .tag () ) ;
 }
 // ============================================================================
 
@@ -5194,17 +5233,15 @@ std::size_t Ostap::Math::Davis::tag () const
 }
 // ============================================================================
 
-
-
 // ======================================================================
 Ostap::Math::Kumaraswami::Kumaraswami
 ( const double alpha , // 0<alpha 
   const double beta  , // 0<beta 
   const double scale , // 0<scale
   const double shift )
-  : m_alpha ( alpha , "alpha" , typeid ( *this ) )
-  , m_beta  ( beta  , "beta"  , typeid ( *this ) )
-  , m_ss    ( scale , shift   , "scale"  , "shift"  , typeid ( *this ) , false )
+  : ShiftAndScale ( scale , shift   , "scale"  , "shift" , typeid ( *this ) , false )
+  , m_alpha       ( alpha                      , "alpha" , typeid ( *this ) )
+  , m_beta        ( beta                       , "beta"  , typeid ( *this ) )
 {}
 // ======================================================================
 // evaluate Kumaraswami function
@@ -5355,10 +5392,9 @@ double Ostap::Math::Kumaraswami::mode () const
 // ============================================================================
 double Ostap::Math::Kumaraswami::skewness () const
 {
-  const auto ss = Ostap::Math::signum ( scale () ) ;  
-  return ss * Ostap::Math::skewness ( raw_moment ( 3 ) ,
-				      raw_moment ( 2 ) ,
-				      raw_moment ( 1 ) ) ;
+  return scale_sign () * Ostap::Math::skewness ( raw_moment ( 3 ) ,
+						 raw_moment ( 2 ) ,
+						 raw_moment ( 1 ) ) ;
 }
 // ============================================================================
 // kurtosis-value 
@@ -5375,12 +5411,11 @@ std::size_t Ostap::Math::Kumaraswami::tag () const
 { 
   static const std::string s_name = "Kumaraswami" ;
   return Ostap::Utils::hash_combiner ( s_name  ,
-				       m_alpha.tag () ,
-				       m_beta .tag () ,
-				       m_ss   .tag () ) ;
+				       ShiftAndScale::tag () , 
+				       m_alpha       .tag () ,
+				       m_beta        .tag () ) ; 
 }
 // ============================================================================
-
 
 // ============================================================================
 // full constructot 
@@ -5545,260 +5580,671 @@ std::size_t Ostap::Math::InverseGamma::tag () const
 
 // ============================================================================
 /*  constructor
- *  @param c           shape parameter 
- *  @param k           shape parameter 
  *  @param scale scale parameter 
  *  @param shift shift parameter
  */
 // ============================================================================
-Ostap::Math::Burr::Burr
-( const double c     ,
-  const double k     ,
-  const double scale ,
+Ostap::Math::BurrI::BurrI
+( const double scale ,
   const double shift )
-  : m_c     ( std::abs ( c     ) )
-  , m_k     ( std::abs ( k     ) )
-  , m_scale ( std::abs ( scale ) )
-  , m_shift (            shift   )
-{
-  Ostap::Assert ( m_c   , 
-                  "c-parameter must be positive!"         ,
-                  "Ostap::Math::Burr"                     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  Ostap::Assert ( m_k   , 
-                  "k-parameter must be positive!"         ,
-                  "Ostap::Math::Burr"                     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  Ostap::Assert ( m_scale , 
-                  "scale-parameter must be positive!"     ,
-                  "Ostap::Math::Burr"                     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-}
-// ======================================================================
-// set C 
+  : ShiftAndScale ( scale , shift , "scale" , "shift" , typeid ( *this ) , false ) 
+{}
 // ============================================================================
-bool Ostap::Math::Burr::setC ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_c ) ) { return false ; }
-  //
-  Ostap::Assert ( avalue   , 
-                  "c-parameter must be positive!"         ,
-                  "Ostap::Math::Burr"                     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  m_c = avalue ; 
-  return true ;
-}
-// ======================================================================
-// set K 
+// evaluate BurrXII function
 // ============================================================================
-bool Ostap::Math::Burr::setK ( const double value ) 
+double Ostap::Math::BurrI::evaluate    ( const double x ) const
 {
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_k ) ) { return false ; }
-  //
-  Ostap::Assert ( avalue   , 
-                  "k-parameter must be positive!"         ,
-                  "Ostap::Math::Burr"                     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  m_k = avalue ; 
-  return true ;
-} 
-// ======================================================================
-// set scale 
-// ============================================================================
-bool Ostap::Math::Burr::setScale( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_scale ) ) { return false ; }
-  //
-  Ostap::Assert ( avalue   , 
-                  "scale-parameter must be positive!"     ,
-                  "Ostap::Math::Burr"                     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  m_scale = avalue ; 
-  return true ;
-} 
-// ======================================================================
-// set shift
-// ============================================================================
-bool Ostap::Math::Burr::setShift ( const double value ) 
-{
-  if ( s_equal ( value , m_shift ) ) { return false ; }
-  m_shift = value ; 
-  return true ;
-}
-// ============================================================================
-// evaluate Burr function
-// ============================================================================
-double Ostap::Math::Burr::evaluate    ( const double x ) const
-{
-  if ( x < m_shift ) { return 0 ; }
-  double z = ( x - m_shift ) / m_scale ;
-  if ( z < 0   ) { return 0 ; }
-  ///
-  if ( m_c < 1 ) { z = std::max ( z , s_NONZERO ) ; } // NB!!! 
-  //
-  if ( z <= 1 )
-  {
-    const double zcm1 = std::pow ( z , m_c - 1 ) ;
-    return m_c * m_k * zcm1 / std::pow ( 1 + z * zcm1 , m_k + 1 ) / m_scale ;       
-  }
-  //
-  const double zc = std::pow ( z , -m_c ) ;
-  const double lr = ( m_c - 1 ) * std::log ( z ) -
-    ( m_k + 1 ) * std::log ( zc / ( 1.0L + zc ) ) ;
-  //
-  return m_c * m_k * std::exp ( lr ) / m_scale ;    
+  const double y = t ( x ) ;
+  if ( y < 0 || 1 < y ) { return 0 ; }
+  return 1 / abs_scale() ;  
 }
 // ============================================================================
 // integral 
 // ============================================================================
-double Ostap::Math::Burr::integral ()    const { return 1 ; }
+double Ostap::Math::BurrI::integral ()    const { return 1 ; }
 // ============================================================================
 // integral 
 // ============================================================================
-double Ostap::Math::Burr::integral
+double Ostap::Math::BurrI::integral
 ( const double low  ,
   const double high )  const
 {
   if      ( s_equal ( low , high ) ) { return  0 ; }
   else if ( high <  low            ) { return -integral ( high    , low  ) ; }
-  else if ( high <= m_shift        ) { return  0 ; }
-  else if ( low  <  m_shift        ) { return  integral ( m_shift , high ) ; } 
   //
   return cdf ( high ) - cdf ( low ) ;
 }
 // ============================================================================
 // CDF 
 // ============================================================================
-double Ostap::Math::Burr::cdf 
+double Ostap::Math::BurrI::cdf 
 ( const double x ) const
 {
-  if ( x <= m_shift ) { return 0 ; }
-  const double z = ( x - m_shift ) / m_scale ;
-  if ( z <= 0 || s_zero ( z ) ) { return 0 ; }
-  //
-  if ( z <= 1 )
-  {
-    const double zc = std::pow ( z , m_c ) ;
-    return 1 - std::pow (1 + zc , - m_k ) ;
-  }
-  //
-  const double zc = std::pow ( z , -m_c ) ;
-  return 1 - std::pow ( zc / ( 1 + zc ) , m_k ) ;
+  const double y    = t ( x ) ;
+  const double rcdf = y <= 0 ? 0.0 :  y >= 1 ? 1.0 : y ; 
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
 }
 // ============================================================================
 // raw-moments of unscaled/unshifted distributions 
 // ============================================================================
-double Ostap::Math::Burr::raw_moment
-( const unsigned short r ) const
-{
-  const double ck = m_c * m_k ;
-  if ( ck <= r || s_equal ( ck , r ) ) { return s_QUIETNAN ; }
-  //
-  return m_k * Ostap::Math::beta ( ( ck - r ) / m_c , 1 + 1 / m_c ) ;
-}
+double Ostap::Math::BurrI::raw_moment
+( const unsigned short r ) const { return 1 / ( r + 1 ) ; }
 // ============================================================================
-// mean              (for ck>1) 
+// mean              
 // ============================================================================
-double Ostap::Math::Burr::mean     () const
-{
-  const double ck = m_c * m_k ;
-  if ( ck <= 1 || s_equal ( ck , 1 ) ) { return s_QUIETNAN ; }
-  //
-  const double m1 = raw_moment ( 1 ) ;
-  return m_shift + m_scale * m1 ;
-}
+double Ostap::Math::BurrI::mean   () const { return x ( 0.5 ) ; }
 // ============================================================================
 // mode
 // ============================================================================
-double Ostap::Math::Burr::mode () const
-{
-  if ( m_c <= 1 ) { return m_shift ; }
-  const double ck = m_c * m_k ;
-  return m_shift + m_scale * std::pow ( ( m_c - 1.0L ) / ( ck + 1.0L ) , 1/m_c ) ;
-}
+double Ostap::Math::BurrI::mode   () const { return x ( 0.5 ) ; }
 // ============================================================================
 // median
 // ============================================================================
-double Ostap::Math::Burr::median () const
-{ return m_shift + m_scale * std::pow ( std::pow ( 2.0L , 1.0L/m_k ) - 1.0 , 1.0/m_c ) ; }
+double Ostap::Math::BurrI::median () const { return x ( 0.5 ) ; }
 // ============================================================================
-// variance              (for ck>2) 
+// variance  
 // ============================================================================
-double Ostap::Math::Burr::variance () const
+double Ostap::Math::BurrI::variance () const
 {
-  //
-  const double ck = m_c * m_k ;
-  if ( ck <= 2 || s_equal ( ck , 2 ) ) { return s_QUIETNAN ; }
-  //
-  const double m1 = raw_moment ( 1 ) ;
-  const double m2 = raw_moment ( 2 ) ;
-  //
-  return m_scale * m_scale * ( m2 - m1 * m1 ) ;
+  const double ss = scale () ;
+  return ss * ss / 12 ;
 }
 // ============================================================================
-// rms              (for ck>2) 
+// rms              
 // ============================================================================
-double Ostap::Math::Burr::rms () const
+double Ostap::Math::BurrI::rms () const { return scale () * s_1_sqrt12 ; }
+// ============================================================================
+// skewness            
+// ============================================================================
+double Ostap::Math::BurrI::skewness () const { return 0 ; }
+// ============================================================================
+// kurtosis         
+// ============================================================================
+double Ostap::Math::BurrI::kurtosis () const
 {
   //
-  const double ck = m_c * m_k ;
-  if ( ck <= 2 || s_equal ( ck , 2 ) ) { return s_QUIETNAN ; }
-  //
-  return std::sqrt ( variance () ) ;
-}
-// ============================================================================
-// skewness              (for ck>3) 
-// ============================================================================
-double Ostap::Math::Burr::skewness () const
-{
-  //
-  const double ck = m_c * m_k ;
-  if ( ck <= 3 || s_equal ( ck , 3 ) ) { return s_QUIETNAN ; }
-  //
-  const double m1 = raw_moment ( 1 ) ;
-  const double m2 = raw_moment ( 2 ) ;
-  const double m3 = raw_moment ( 3 ) ;
-  //
-  return ( m3 - 3 * m1 * m2 + 2 * m1 * m1 * m1 ) /
-    std::pow ( m2 - m1 * m1 , 3.0/2 ) ;
-}
-// ============================================================================
-// kurtosis              (for ck>4) 
-// ============================================================================
-double Ostap::Math::Burr::kurtosis () const
-{
-  //
-  const double ck = m_c * m_k ;
-  if ( ck <= 4 || s_equal ( ck , 4 ) ) { return s_QUIETNAN ; }
-  //
-  const double m1 = raw_moment ( 1 ) ;
-  const double m2 = raw_moment ( 2 ) ;
-  const double m3 = raw_moment ( 3 ) ;
   const double m4 = raw_moment ( 4 ) ;
-  //  
-  return ( m4 - 4 * m3 * m1 + 6 * m2 * m1 * m1 - 3 * m1 * m1 * m1 * m1 ) /
-    std::pow ( m2 - m1 * m1 , 2 ) ;
+  const double m3 = raw_moment ( 3 ) ;
+  const double m2 = raw_moment ( 2 ) ;
+  const double m1 = raw_moment ( 1 ) ;
+  //
+  return Ostap::Math::kurtosis ( m4 , m3 , m2 , m1 ) ;
 }
 // ============================================================================
 // get the tag
 // ============================================================================
-std::size_t Ostap::Math::Burr::tag () const 
+std::size_t Ostap::Math::BurrI::tag () const 
 { 
-  static const std::string s_name = "Burr" ;
+  static const std::string s_name = "BurrI" ;
+  return Ostap::Utils::hash_combiner ( s_name  , ShiftAndScale::tag () ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/*  constructor
+ *  @param scale scale parameter 
+ *  @param shift shift parameter
+ */
+// ============================================================================
+Ostap::Math::BurrII::BurrII
+( const double r     ,
+  const double scale ,
+  const double shift )
+  : ShiftAndScale ( scale , shift , "scale" , "shift" , typeid ( *this ) , false )
+  , m_r           ( r                       , "r"     , typeid ( *this ) )
+{}
+// ============================================================================
+// xmin  
+// ============================================================================
+double Ostap::Math::BurrII::xmin () const { return s_NEGINF ; }
+// ============================================================================
+// xmax
+// ============================================================================
+double Ostap::Math::BurrII::xmax () const { return s_POSINF ; }
+// ============================================================================
+// evaluate BurrII function
+// ============================================================================
+double Ostap::Math::BurrII::evaluate    ( const double x ) const
+{
+  const double y  = t ( x ) ;
+  //
+  const double rv = r () ;
+  //
+  const double r1 = std::pow ( Ostap::Math::logistic (  y ) , rv ) ;
+  const double r2 =            Ostap::Math::logistic ( -y )        ;
+  //
+  return rv * r1 * r2 / abs_scale() ;  
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrII::integral ()    const { return 1 ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrII::integral
+( const double low  ,
+  const double high )  const
+{
+  if      ( s_equal ( low , high ) ) { return  0 ; }
+  else if ( high <  low            ) { return -integral ( high    , low  ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrII::cdf 
+( const double x ) const
+{
+  const double y    = t ( x ) ;
+  // raw-cdf 
+  const double rcdf = std::pow ( Ostap::Math::logistic ( y ) , r () ) ;   
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BurrII::tag () const 
+{ 
+  static const std::string s_name = "BurrII" ;
   return Ostap::Utils::hash_combiner ( s_name  ,
-				       m_c     ,
-				       m_k     ,
-				       m_scale ,
-				       m_shift ) ; 
+				       ShiftAndScale::tag () , 
+				       m_r           .tag () ) ;
+}
+// ============================================================================
+
+// ============================================================================
+/*  constructor
+ *  @param scale scale parameter 
+ *  @param shift shift parameter
+ */
+// ============================================================================
+Ostap::Math::BurrIII::BurrIII
+( const double r     ,
+  const double k     ,
+  const double scale ,
+  const double shift )
+  : ShiftAndScale ( scale , shift , "scale" , "shift" , typeid ( *this ) , false )
+  , m_r           ( r                       , "r"     , typeid ( *this ) )
+  , m_k           ( k                       , "k"     , typeid ( *this ) )
+{}
+// ============================================================================
+// xmin  
+// ============================================================================
+double Ostap::Math::BurrIII::xmin () const
+{ return Ostap::Math::is_positive ( scale () ) ? x ( 0 ) : s_NEGINF ; }
+// ============================================================================
+// xmax
+// ============================================================================
+double Ostap::Math::BurrIII::xmax () const
+{ return Ostap::Math::is_positive ( scale () ) ? s_POSINF : x ( 0 ) ; }
+// ============================================================================
+// evaluate Burr-III function
+// ============================================================================
+double Ostap::Math::BurrIII::evaluate    ( const double x ) const
+{
+  const double y  = t ( x ) ;
+  if ( y <= 0 ) { return 0 ; }
+  //
+  const double kv = k () ;
+  const double rv = r () ;
+  //
+  const double f1 = pow_ratio_a1 ( y , -kv ) ;
+  const double f2 = pow_ratio_a2 ( y , -kv ) ;
+  //
+  return rv * kv * f1 * std::pow ( f2 , rv ) / ( y * abs_scale() ) ; 
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrIII::integral ()    const { return 1 ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrIII::integral
+( const double low  ,
+  const double high )  const
+{
+  if      ( s_equal ( low , high ) ) { return  0 ; }
+  else if ( high <  low            ) { return -integral ( high    , low  ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrIII::cdf 
+( const double x ) const
+{
+  const double y    = t ( x ) ;
+  const double rcdf = raw_cdf ( y ) ;
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrIII::raw_cdf 
+( const double y ) const
+{
+  if ( y <= 0 ) { return 0 ; }
+  //
+  const double kv = k () ;
+  const double rv = r () ;
+  //
+  return std::pow ( pow_ratio_a2 ( y , -kv ) , rv  ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BurrIII::tag () const 
+{ 
+  static const std::string s_name = "BurrIII" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       ShiftAndScale::tag () , 
+				       m_r           .tag () , 
+				       m_k           .tag () ) ;
+}
+// ============================================================================
+
+// ============================================================================
+/*  constructor
+ *  @param scale scale parameter 
+ *  @param shift shift parameter
+ */
+// ============================================================================
+Ostap::Math::BurrIV::BurrIV
+( const double r     ,
+  const double c     ,
+  const double scale ,
+  const double shift )
+  : ShiftAndScale ( scale , shift , "scale" , "shift" , typeid ( *this ) , false )
+  , m_r           ( r                       , "r"     , typeid ( *this ) )
+  , m_c           ( c                       , "c"     , typeid ( *this ) )
+{}
+// ============================================================================
+// evaluate Burr-IV function
+// ============================================================================
+double Ostap::Math::BurrIV::evaluate    ( const double x ) const
+{
+  const double y  = t ( x ) ;
+  if      ( y <= 0 ) { return 0 ; }
+  else if ( y >= 1 ) { return 0 ; }
+  //
+  const double cv = c () ;
+  const double rv = r () ;
+  //
+  const double z = ( 1 - y ) / y ;
+  //
+  const double f1 = pow_ratio_a1 ( z , cv ) ;
+  const double f2 = pow_ratio_a2 ( z , cv ) ;
+  //
+  return rv * cv * f1 * std::pow ( f2 , rv ) / ( y * ( 1 - y ) * abs_scale() ) ;
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrIV::integral ()    const { return 1 ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrIV::integral
+( const double low  ,
+  const double high )  const
+{
+  if      ( s_equal ( low , high ) ) { return  0 ; }
+  else if ( high <  low            ) { return -integral ( high    , low  ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrIV::cdf 
+( const double x ) const
+{
+  const double y    = t ( x ) ;
+  const double rcdf = raw_cdf ( y ) ;
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrIV::raw_cdf 
+( const double y ) const
+{
+  if      ( y <= 0 ) { return 0 ; }
+  else if ( y >= 1 ) { return 1 ; }
+  //
+  const double cv = c () ;
+  const double rv = r () ;
+  //
+  const double z = ( 1 - y ) / y ;
+  return std::pow ( pow_ratio_a2 ( z , cv ) , rv  ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BurrIV::tag () const 
+{ 
+  static const std::string s_name = "BurrIV" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       ShiftAndScale::tag () , 
+				       m_r           .tag () , 
+				       m_c           .tag () ) ;
+}
+// ============================================================================
+
+// ============================================================================
+/*  constructor
+ *  @param scale scale parameter 
+ *  @param shift shift parameter
+ */
+// ============================================================================
+Ostap::Math::BurrV::BurrV
+( const double r     ,
+  const double k     ,
+  const double scale ,
+  const double shift )
+  : ShiftAndScale ( scale , shift , "scale" , "shift" , typeid ( *this ) , false )
+  , m_r           ( r                       , "r"     , typeid ( *this ) )
+  , m_k           ( k                       , "k"     , typeid ( *this ) )
+{}
+// ============================================================================
+// evaluate Burr-V function
+// ============================================================================
+double Ostap::Math::BurrV::evaluate    ( const double x ) const
+{
+  const double y  = t ( x ) ;
+  if      ( y <= -1 ) { return 0 ; }
+  else if ( y >=  1 ) { return 0 ; }
+  //
+  const double rv = r () ;
+  const double lk = m_k.logValue () ;
+  //
+  // exponent argument
+  const double ea = lk - std::tan ( s_pi_2 * y ) ;
+  // 
+  const double sc = Ostap::Math::sec ( s_pi_2 * y ) ;
+  //
+  if ( ea <= 0 )
+  {
+    const double f = std::exp ( ea ) ;
+    return rv * s_pi_2 * sc * sc
+      * std::pow ( 1 / ( f + 1 ) , rv )
+      *            f / ( f + 1 )       
+      / abs_scale() ;		    
+  }
+  //
+  const double f = std::exp ( -ea ) ;
+  return rv * s_pi_2 * sc * sc
+    * std::pow ( f / ( f + 1 ) , rv )
+    *            1 / ( f + 1 )       
+    / abs_scale() ;		    
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrV::integral ()    const { return 1 ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrV::integral
+( const double low  ,
+  const double high )  const
+{
+  if      ( s_equal ( low , high ) ) { return  0 ; }
+  else if ( high <  low            ) { return -integral ( high    , low  ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrV::cdf 
+( const double x ) const
+{
+  const double y    = t ( x ) ;
+  const double rcdf = raw_cdf ( y ) ;
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrV::raw_cdf 
+( const double y ) const
+{
+  if      ( y <= -1 ) { return 0 ; }
+  else if ( y >=  1 ) { return 1 ; }
+  //
+  const double rv = r () ;
+  const double lk = m_k.logValue () ;
+  //
+  /// exponent argument 
+  const double ea = lk - std::tan ( s_pi_2 * y ) ;
+  //
+  if ( ea <= 0 )
+  {
+    const double f  = std::exp ( ea ) ;
+    return std::pow ( 1 / ( 1 + f ) , rv ) / abs_scale () ;
+  }
+  //
+  const double f = std::exp ( - ea  ) ;
+  return std::pow   ( f / ( 1 + f ) , rv ) / abs_scale () ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BurrV::tag () const 
+{ 
+  static const std::string s_name = "BurrV" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       ShiftAndScale::tag () , 
+				       m_r           .tag () , 
+				       m_k           .tag () ) ;
+}
+// ============================================================================
+
+
+
+
+
+
+
+
+
+
+// ============================================================================
+/*  constructor
+ *  @param c           shape parameter 
+ *  @param k           shape parameter 
+ *  @param scale scale parameter 
+ *  @param shift shift parameter
+ */
+// ============================================================================
+Ostap::Math::BurrXII::BurrXII
+( const double c     ,
+  const double k     ,
+  const double scale ,
+  const double shift )
+  : ShiftAndScale ( scale , shift , "scale" , "shift" , typeid ( *this ) , false ) 
+  , m_c           ( c                       , "c"     , typeid ( *this ) ) 
+  , m_k           ( k                       , "k"     , typeid ( *this ) ) 
+{}
+// ============================================================================
+// evaluate BurrXII function
+// ============================================================================
+double Ostap::Math::BurrXII::evaluate    ( const double x ) const
+{
+  const double y = t ( x ) ;
+  if ( y < 0 ) { return 0 ; }
+  //
+  const double cv  = c () ;
+  if ( 1 < cv && s_zero ( y ) ) { return 0 ; }
+  //
+  const double kv = k () ;
+  const double as = abs_scale() ;  
+  //
+  return cv * cv
+    *            pow_ratio_a1 ( y , cv )
+    * std::pow ( pow_ratio_a2 ( y , cv ) , kv ) / ( as * y ) ;
+}
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrXII::integral ()    const { return 1 ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::BurrXII::integral
+( const double low  ,
+  const double high )  const
+{
+  if      ( s_equal ( low , high ) ) { return  0 ; }
+  else if ( high <  low            ) { return -integral ( high    , low  ) ; }
+  //
+  return cdf ( high ) - cdf ( low ) ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrXII::cdf 
+( const double x ) const
+{
+  const double y = t ( x ) ;
+  const double rcdf = raw_cdf ( y ) ;
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
+}
+// ============================================================================
+// CDF 
+// ============================================================================
+double Ostap::Math::BurrXII::raw_cdf 
+( const double y ) const
+{
+  if ( y <= 0 ) { return 0 ; }
+  const double cv = c () ;
+  const double kv = k () ;  
+  return 1 - std::pow ( pow_ratio_a2 ( y , cv ) , kv ) ;
+}
+// ============================================================================
+// raw-moments of unscaled/unshifted distributions 
+// ============================================================================
+double Ostap::Math::BurrXII::raw_moment
+( const unsigned short r ) const
+{
+  const double cv = c () ;
+  const double kv = k () ;  
+  const double ck = ck * cv ;
+  if ( ck <= r || s_equal ( ck , r ) ) { return s_QUIETNAN ; }
+  //
+  return m_k * Ostap::Math::beta ( ( ck - r ) / cv , 1 + 1 / cv ) ;
+}
+// ============================================================================
+// mean              (for ck>1) 
+// ============================================================================
+double Ostap::Math::BurrXII::mean     () const
+{
+  const double m1 = raw_moment ( 1 ) ;
+  if ( !std::isfinite ( m1 ) ) { return m1 ; } 
+  return x ( m1 ) ;
+}
+// ============================================================================
+// mode
+// ============================================================================
+double Ostap::Math::BurrXII::mode () const
+{
+  const double cv = c () ;
+  const double kv = k () ;
+  const double ck = cv * kv ;
+  const double m  = cv <= 1 ? 0.0 : std::pow ( ( cv - 1.0L ) / ( ck + 1.0L ) , 1 / cv ) ;
+  return x ( m ) ;
+}
+// ============================================================================
+// median
+// ============================================================================
+double Ostap::Math::BurrXII::median () const
+{
+  const double cv = c () ;
+  const double kv = k () ;
+  const double m  = std::pow ( std::pow ( 2.0L , 1.0L / kv  ) - 1.0 , 1.0 / cv  ) ;
+  return x ( m ) ; 
+}
+// ============================================================================
+// variance              (for ck>2) 
+// ============================================================================
+double Ostap::Math::BurrXII::variance () const
+{
+  //
+  const double cv = c () ;
+  const double kv = k () ;  
+  const double ck = ck * cv ;
+  if ( ck <= 2 || s_equal ( ck , 2 ) ) { return s_QUIETNAN ; }
+  //
+  const double ss = scale () ;
+  return ss * ss * Ostap::Math::variance ( raw_moment ( 2 ) ,
+					   raw_moment ( 1 ) ); 
+}
+// ============================================================================
+// rms              (for ck>2) 
+// ============================================================================
+double Ostap::Math::BurrXII::rms () const
+{
+  //
+  const double cv = c () ;
+  const double kv = k () ;  
+  const double ck = ck * cv ;
+  if ( ck <= 2 || s_equal ( ck , 2 ) ) { return s_QUIETNAN ; }
+  //
+  const double vv = variance () ; 
+  if ( !std::isfinite ( vv ) ) { return vv ; }
+  return std::sqrt ( vv ) ;
+}
+// ============================================================================
+// skewness              (for ck>3) 
+// ============================================================================
+double Ostap::Math::BurrXII::skewness () const
+{
+  //
+  const double cv = c () ;
+  const double kv = k () ;  
+  const double ck = ck * cv ;
+  if ( ck <= 3 || s_equal ( ck , 3 ) ) { return s_QUIETNAN ; }
+  //
+  const double m3 = raw_moment ( 3 ) ;
+  const double m2 = raw_moment ( 2 ) ;
+  const double m1 = raw_moment ( 1 ) ;
+  //
+  return scale_sign () * Ostap::Math::skewness ( m3 , m2 , m1 ) ;
+}
+// ============================================================================
+// kurtosis              (for ck>4) 
+// ============================================================================
+double Ostap::Math::BurrXII::kurtosis () const
+{
+  //
+  const double cv = c () ;
+  const double kv = k () ;  
+  const double ck = ck * cv ;
+  if ( ck <= 4 || s_equal ( ck , 4 ) ) { return s_QUIETNAN ; }
+  //
+  const double m4 = raw_moment ( 4 ) ;
+  const double m3 = raw_moment ( 3 ) ;
+  const double m2 = raw_moment ( 2 ) ;
+  const double m1 = raw_moment ( 1 ) ;
+  //
+  return Ostap::Math::kurtosis ( m4 , m3 , m2 , m1 ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::BurrXII::tag () const 
+{ 
+  static const std::string s_name = "BurrXII" ;
+  return Ostap::Utils::hash_combiner ( s_name  ,
+				       ShiftAndScale::tag () ,
+				       m_c           .tag () ,
+				       m_k           .tag () ) ;
 }
 
 // ============================================================================

@@ -32,10 +32,8 @@ else :
 batch_env ( logger )
 # =============================================================================
 
-
-x = ROOT.RooRealVar ( 'x' , 'x-variable' ,  0  , 10 ) 
-y = ROOT.RooRealVar ( 'y' , 'y-variable' , -5 ,   5 ) 
-
+x = ROOT.RooRealVar ( 'x' , 'x-variable' , -5 , 10 ) 
+y = ROOT.RooRealVar ( 'y' , 'y-variable' , -5 ,  5 ) 
 
 the_plots  = set ()
 the_models = set ()

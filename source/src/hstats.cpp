@@ -32,7 +32,7 @@ Ostap::Utils::H1::H1 ( TH1* histo )
   Ostap::Assert ( m_histo && 1 == m_histo->GetDimension () , 
 		  "Invalid TH1"                              ,
 		  "Ostap::Utils::H1"                         ,
-		  INVALID_TH2 , __FILE__ , __LINE__          ) ;
+		  INVALID_TH1 , __FILE__ , __LINE__          ) ;
 }
 // ==============================================================================
 Ostap::Utils::H2::H2 ( TH2* histo )
@@ -80,7 +80,6 @@ Ostap::Utils::P3::P3 ( TProfile3D* histo )
 		  INVALID_TPROFILE3D , __FILE__ , __LINE__   ) ;
 }
 // =============================================================================
-
 
 // =============================================================================
 // reset 

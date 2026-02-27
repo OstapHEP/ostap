@@ -224,17 +224,17 @@ namespace Ostap
       /// calculate the quantile   (0<p<1)
       double quantile ( const double p ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
     private :
       // ======================================================================
       /// raw moments (unscaled & unshifted)
       double raw_moment ( const unsigned short k ) const ;
       /// "raw" cdf   (for positive scale)
       double raw_cdf    ( const double         y ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // get the tag
-      std::size_t tag () const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -2134,45 +2134,47 @@ namespace Ostap
      *  - shape parameters \f$ p_i \f$
      * 
      * Cumulative distribution function is defined for \f$x>\mu\f$ as 
-     * \f[ F(x) = 1 - \mathrm{e}^{ - \sum_i \left| p_i \right| \Delta^i } \f]
-     * where \f$ \Delta = \log \frac{x-\mu}{s} \f$ 
+     * \f[ F(x) = 1 - \mathrm{e}^{ - \sum_i \left| p_i \right| z ^i } \f]
+     * where \f$ z = \log \left ( \frac{x-\mu}{s} + 1 \right) \f$ 
      *
      *  For standard Benini one has only linear and quadratic terms 
      *  and shift is zero \f$ \mu=0\f$ 
      */
-    class Benini 
+    class Benini : public ShiftAndScale 
     {
       // ======================================================================
     public:
       // ======================================================================
       Benini
-      ( const std::vector<double>& pars      , // shape parameters               
-        const double               scale = 1 ,               // scale parameter 
-        const double               shift = 0 ) ;             // shift parameter 
+      ( const std::size_t          n     = 1 ,   // number of shape parameters: n >= 1
+        const double               scale = 1 ,   // scale parameter 
+        const double               shift = 0 ) ; // shift parameter 
       // ======================================================================
       Benini
-      ( const double               scale = 1 ,              // scale parameter 
-        const double               shift = 0 ) ;            // shift parameter 
+      ( const std::vector<double>& pars      ,   // shape parameters               
+        const double               scale = 1 ,   // scale parameter 
+        const double               shift = 0 ) ; // shift parameter 
       // ======================================================================
+      /// one shape parameters: alpha
       Benini
-      ( const unsigned short       n         ,              // number of shape parameters 
-        const double               scale     ,              // scale parameter 
-        const double               shift     ) ;            // shift parameter 
+      ( const double               alpha     , 
+	const double               scale     ,    // scale parameter 
+        const double               shift     ) ;  // shift parameter
       // ======================================================================
       /// two shape parameters: alpha and beta 
       Benini
       ( const double               alpha     , 
 	const double               beta      ,	
-	const double               scale     ,              // scale parameter 
-        const double               shift     ) ;            // shift parameter
+	const double               scale     ,    // scale parameter 
+        const double               shift     ) ;  // shift parameter
       // ======================================================================
       /// three shape parameters: alpha, beta & gamma 
       Benini
       ( const double               alpha     , 
 	const double               beta      , 	
 	const double               gamma     , 	
-	const double               scale     ,              // scale parameter 
-        const double               shift     ) ;            // shift parameter
+	const double               scale     ,    // scale parameter 
+        const double               shift     ) ;  // shift parameter
       // ======================================================================
       /// four shape parameters: alpha, beta, gamma & delta 
       Benini
@@ -2180,8 +2182,8 @@ namespace Ostap
 	const double               beta      , 	
 	const double               gamma     , 	
 	const double               delta     , 	
-	const double               scale     ,              // scale parameter 
-        const double               shift     ) ;            // shift parameter
+	const double               scale     ,    // scale parameter 
+        const double               shift     ) ;  // shift parameter
       // ======================================================================
     public:
       // ======================================================================
@@ -2194,46 +2196,42 @@ namespace Ostap
       // ======================================================================
     public : // getters 
       // ======================================================================
-      /// shift parameter 
-      inline double shift  () const { return m_shift ; }
-      /// scale parameter 
-      inline double scale  () const { return m_scale ; }
+      /// number of shape parameters
+      inline double npars  () const { return m_pars.size() ;} 
       /// shape parameter
       inline double par    ( const unsigned short i ) const 
       { return i < m_pars.size() ? m_pars [ i ] : 0.0 ; }
-      /// all shape parametgers 
-      inline const std::vector<double>& pars ()       const { return m_pars ; }
+      /// all shape parameters 
+      inline const std::vector<double>& pars ()       const { return m_pars ; }      
       /// linear     term 
       inline double alpha  () const { return par ( 0 ) ; }
       /// quadrattic term 
       inline double beta   () const { return par ( 1 ) ; }
-      /// cubic      term 
+      /// cubic      term  or zero 
       inline double gamma  () const { return par ( 2 ) ; }
-      /// quartic    term 
+      /// quartic    term  or zero 
       inline double delta  () const { return par ( 3 ) ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
-      bool setScale ( const double value ) ;
-      bool setShift ( const double value ) ;
-      bool _setPar  ( const unsigned short i , const double value ) ;
-      bool setPar   ( const unsigned short i , const double value ) 
-      { return i < m_pars.size() ? _setPar ( i , value ) : false ; }
+      bool setPar  ( const unsigned short i , const double value ) ;
       /// linear term  (if present) 
-      bool setAlpha ( const double value ) { return _setPar ( 0 , value ) ; }
+      bool setAlpha ( const double value ) { return setPar ( 0 , value ) ; }
       /// quadratic term 
-      bool setBeta  ( const double value ) { return _setPar ( 1 , value ) ; }
+      bool setBeta  ( const double value ) { return setPar ( 1 , value ) ; }
       /// cubic term    (i fpresent)
-      bool setGamma ( const double value ) { return _setPar ( 2 , value ) ; }
+      bool setGamma ( const double value ) { return setPar ( 2 , value ) ; }
       /// quartic term  (if present) 
-      bool setDelta ( const double value ) { return _setPar ( 3 , value ) ; }
+      bool setDelta ( const double value ) { return setPar ( 3 , value ) ; }
       /// set paramters
       bool setPars  ( const std::vector<double>& values ) ;
       // ====================================================================== 
-    public:
+    public: // support 
       // ====================================================================== 
-      /// minimal x 
-      inline double xmin () const { return m_shift + m_scale ; }
+      /// x-min 
+      double xmin () const ; 
+      /// xmax 
+      double xmax () const ; 
       // ====================================================================== 
     public:
       // ====================================================================== 
@@ -2251,16 +2249,24 @@ namespace Ostap
       // get the tag
       std::size_t tag () const ;
       // ======================================================================
+    protected : 
+      // ======================================================================
+      /// internal t to external x 
+      inline double x ( const double t ) const { return ShiftAndScale::x ( t - 1.0 ) ; }
+      /// external x to internal t       
+      inline double t ( const double x ) const { return 1.0 + ShiftAndScale::t ( x ) ; }
+      // =====================================================================      
+    private :
+      // ======================================================================
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;
+      // ======================================================================
     private:
       // ======================================================================
+      /// vector of parameters (for 
+      std::vector<double>  m_pars  { 1 , 1.0 } ; // vector of parameters 
       /// vector of parameters 
-      std::vector<double>  m_pars  ; // vector of parameters 
-      /// vector of parameters 
-      std::vector<double>  m_pars2 ; // auxillary vector of parameters 
-      /// scale parameter 
-      double m_scale { 1 } ; // scale parameter 
-      /// shift parameter 
-      double m_shift { 0 } ; // shift parameter 
+      std::vector<double>  m_pars2 { 1 , 1.0 } ; // vector of parameters 
       // ======================================================================
     } ;
     // ========================================================================
@@ -2268,7 +2274,7 @@ namespace Ostap
      *  Generalized extreme value distribution 
      *  https://en.wikipedia.org/wiki/Generalized_extreme_value_distribution
      */
-    class GEV
+    class GEV 
     {
       // ======================================================================
     public:
@@ -2628,7 +2634,7 @@ namespace Ostap
     /** @class Freshet distribution
      *  @see https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
      */
-    class Frechet
+    class Frechet : public ShiftAndScale 
     {
     public :
       // ======================================================================
@@ -2650,21 +2656,20 @@ namespace Ostap
       // ====================================================================== 
       /// shape parameter 
       inline double alpha () const { return m_alpha.value ()  ; }
-      /// scale parameter 
-      inline double scale () const { return m_ss   .scale () ; }
-      /// shift parameter 
-      inline double shift () const { return m_ss   .shift () ; }
       /// shape parameter 
       inline double shape () const { return alpha () ; }
+      // ====================================================================== 
+    public : // support 
+      // ====================================================================== 
       /// shift/bias 
-      inline double xmin  () const { return shift () ; } 
+      double xmin () const ;
+      /// shift/bias 
+      double xmax () const ;
       // ======================================================================
     public : 
       // ======================================================================
       inline bool setAlpha    ( const double value ) { return m_alpha.setValue    ( value ) ; } 
       inline bool setLogAlpha ( const double value ) { return m_alpha.setLogValue ( value ) ; } 
-      inline bool setScale    ( const double value ) { return m_ss   .setScale    ( value ) ; } 
-      inline bool setShift    ( const double value ) { return m_ss   .setShift    ( value ) ; } 
       inline bool setShape    ( const double value ) { return         setAlpha    ( value ) ; }
       // ======================================================================
     public :
@@ -2700,24 +2705,22 @@ namespace Ostap
       double cdf
       ( const double x ) const ;
       // ======================================================================
-    public: // internal <--> external transformation 
-      // ======================================================================
-      /// internal t to external x 
-      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
-      /// external x to internal t       
-      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
-      // =====================================================================      
     public :
       // ======================================================================
       /// uniquie tag
       std::size_t tag () const ;
       // ======================================================================
+    private :
+      // ======================================================================
+      /// raw moments (unscaled & unshifted)
+      double raw_moment ( const unsigned short k ) const ;
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// shape parameter alpha
       Ostap::Math::LogValue      m_alpha { 1 } ;
-      /// scale&shift parameter  
-      Ostap::Math::ShiftAndScale m_ss    { 1 , 0 } ; // scale&shift  parameter  
       // ======================================================================
     } ;
     // ========================================================================
@@ -2726,7 +2729,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Dagum_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      */
-    class Dagum
+    class Dagum : public ShiftAndScale 
     {
     public:
       // ======================================================================
@@ -2754,14 +2757,10 @@ namespace Ostap
     public :
       // ======================================================================
       /// shape parameter a 
-      inline double  a     () const { return m_a.value () ; } 
+      inline double a     () const { return m_a.value () ; } 
       /// shape parameter p 
-      inline double  p     () const { return m_p.value () ; }
-      /// scale parameter 
-      inline double scale () const { return m_ss   .scale () ; }
-      /// shift parameter 
-      inline double shift () const { return m_ss   .shift () ; }
-      /// b-parameyer
+      inline double p     () const { return m_p.value () ; }
+      /// b-parameter
       inline double b     () const { return scale () ; } 
       /// shift parameter 
       inline double xmin  () const { return shift () ; } 
@@ -2772,8 +2771,6 @@ namespace Ostap
       inline bool setP        ( const double value ) { return m_p    .setValue    ( value ) ; } 
       inline bool setLogA     ( const double value ) { return m_a    .setLogValue ( value ) ; } 
       inline bool setLogP     ( const double value ) { return m_p    .setLogValue ( value ) ; } 
-      inline bool setScale    ( const double value ) { return m_ss   .setScale    ( value ) ; } 
-      inline bool setShift    ( const double value ) { return m_ss   .setShift    ( value ) ; } 
       inline bool setB        ( const double value ) { return         setScale    ( value ) ; } 
       // ======================================================================
     public:
@@ -2804,26 +2801,24 @@ namespace Ostap
       double quantile
       ( const double u ) const ;
       // ======================================================================
-    public: // internal <--> external transformation 
-      // ======================================================================
-      /// internal t to external x 
-      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
-      /// external x to internal t       
-      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
-      // =====================================================================      
     public :
       // ======================================================================
       /// uniquie tag
       std::size_t tag () const ;
       // ======================================================================
+    private :
+      // ======================================================================
+      /// raw moments (unscaled & unshifted)
+      double raw_moment ( const unsigned short k ) const ;
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;
+      // ======================================================================
     private:
       // ======================================================================
       /// shape parameter a
-      Ostap::Math::LogValue      m_a  { 1 } ; /// shape parameter a
+      Ostap::Math::LogValue m_a  { 1 } ; // shape parameter a
       /// shape parameter p
-      Ostap::Math::LogValue      m_p  { 1 } ; /// shape parameter p
-      /// scale&shift parameter  
-      Ostap::Math::ShiftAndScale m_ss { 1 , 0 } ; // scale&shift  parameter        
+      Ostap::Math::LogValue m_p  { 1 } ; // shape parameter p
       // ======================================================================      
     } ;
     // ========================================================================
@@ -2966,7 +2961,7 @@ namespace Ostap
     public :
       // =====================================================================
       bool        setR     ( const double value ) ;
-      inline bool setA     ( const double value ) { return m_a.setValue ( value ) ; }
+      inline bool setA     ( const double value ) { return m_a .setValue ( value ) ; }
       inline bool setScale ( const double value ) { return m_ss.setScale ( value ) ; }  
       inline bool setShift ( const double value ) { return m_ss.setShift ( value ) ; }  
       // =====================================================================
@@ -3279,7 +3274,7 @@ namespace Ostap
      *  Kumaraswami distribution with scale and shift
      *  @see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
      */
-    class Kumaraswami
+    class Kumaraswami : public ShiftAndScale 
     {
       // ======================================================================
     public :
@@ -3303,15 +3298,13 @@ namespace Ostap
       // ======================================================================
       inline double alpha () const { return m_alpha.value () ; }
       inline double beta  () const { return m_beta .value () ; }
-      inline double scale () const { return m_ss   .scale () ; }
-      inline double shift () const { return m_ss   .shift () ; }
       // ======================================================================
     public:
       // ======================================================================
-      inline bool setAlpha ( const double value ) { return m_alpha.setValue ( value ) ; } 
-      inline bool setBeta  ( const double value ) { return m_beta .setValue ( value ) ; }
-      inline bool setScale ( const double value ) { return m_ss   .setScale ( value ) ; } 
-      inline bool setShift ( const double value ) { return m_ss   .setShift ( value ) ; }
+      inline bool setAlpha    ( const double value ) { return m_alpha.setValue    ( value ) ; } 
+      inline bool setBeta     ( const double value ) { return m_beta .setValue    ( value ) ; }
+      inline bool setLogAlpha ( const double value ) { return m_alpha.setLogValue ( value ) ; } 
+      inline bool setLogBeta  ( const double value ) { return m_beta .setLogValue ( value ) ; }
       // ======================================================================
     public : // support 
       // ======================================================================
@@ -3352,13 +3345,6 @@ namespace Ostap
       double quantile 
       ( const double p    ) const ;
       // ======================================================================
-    public: // internal <--> external transformation 
-      // ======================================================================
-      /// internal t to external x 
-      inline double x ( const double t ) const { return m_ss.x ( t ) ; }
-      /// externa x to internal t 
-      inline double t ( const double x ) const { return m_ss.t ( x ) ; }
-      // ======================================================================
     public:
       // ======================================================================
       // get the tag
@@ -3377,8 +3363,6 @@ namespace Ostap
       Ostap::Math::LogValue      m_alpha { 1 }     ; // parameter alpha 
       /// parameter beta 
       Ostap::Math::LogValue      m_beta  { 1 }     ; // parameter beta  
-      /// scale&shift  parameter
-      Ostap::Math::ShiftAndScale m_ss    { 1 , 0 } ; // shift&scale 
       // ======================================================================
     };
     // ========================================================================
@@ -3463,15 +3447,467 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    /** @class Burr
-     *  Type XII Burr distribution
-     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+    /** @class BurrI
+     *  Type I Burr distribution   Eq (9) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *
+     * - uniform distribution for \f$ 0 \le x \le 1 \f$
      *
      *  We have added two parameters: 
      *  - scale
      *  - shift 
      */
-    class Burr
+    class BurrI : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrI 
+      ( const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate BurrI function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate BurrI function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate BurrI function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// minimal x 
+      inline double xmin () const { return std::min ( x ( 0 ) , x ( 1 ) ) ; } 
+      /// maximal x 
+      inline double xmax () const { return std::max ( x ( 0 ) , x ( 1 ) ) ; } 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean 
+      double mean     () const ;
+      /// mode           
+      double mode     () const ;
+      /// median           
+      double median   () const ;
+      /// variance
+      double variance () const ;
+      /// RMS     
+      double rms      () const ;
+      /// skewness
+      double skewness () const ;
+      /// (excess) kurtosis 
+      double kurtosis () const ;
+      // ======================================================================      
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// raw moments (unscaled & unshifted)
+      double raw_moment ( const unsigned short k ) const ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrII
+     *  Type II Burr distribution   Eq (10) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *
+     * - \f$ \left ( 1+ \mathrm{e}^{-x}\right)^{-r} \f$ 
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrII : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrII 
+      ( const double r     = 1 , // r>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-II function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-II function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-II function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      // ======================================================================
+    public : // support: xmin&xmax 
+      // =====================================================================
+      /// xmin 
+      double xmin () const ;
+      /// xmax 
+      double xmax () const ;      
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrIII
+     *  Type III Burr distribution   Eq (11) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *
+     *  \f$ f(x) = \left( x^{-k} + 1 \right)^{-r}\f$
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrIII : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param k k-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrIII 
+      ( const double r     = 1 , // r>0
+	const double k     = 1 , // k>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-III function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-III function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-III function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      /// k-parameter 
+      inline double k () const { return m_k.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setK    ( const double value ) { return m_k.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      inline bool setLogK ( const double value ) { return m_k.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support: xmin&xmax 
+      // =====================================================================
+      /// xmin 
+      double xmin () const ;
+      /// xmax 
+      double xmax () const ;      
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private: // raw-moments of unscaled/unshifted distributions 
+      // ======================================================================
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;      
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      /// k-parameter 
+      Ostap::Math::LogValue m_k { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrIV
+     *  Type IV Burr distribution   Eq (12) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *
+     *  \f[ F(y) = \ \left( z^{c} + 1 \right)^{-r} \f]
+     *  - where \f$z = \frac{1-y}{y} \f$ for \f$ 0 < y < 1 \f$ 
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrIV : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param c c-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrIV
+      ( const double r     = 1 , // r>0
+	const double c     = 1 , // c>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-IV function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-IV function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-IV function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      /// c-parameter 
+      inline double c () const { return m_c.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setC    ( const double value ) { return m_c.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      inline bool setLogC ( const double value ) { return m_c.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// minimal x 
+      inline double xmin () const { return std::min ( x ( 0 ) , x ( 1 ) ) ; } 
+      /// maximal x 
+      inline double xmax () const { return std::max ( x ( 0 ) , x ( 1 ) ) ; } 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private: // raw-moments of unscaled/unshifted distributions 
+      // ======================================================================
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;      
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      /// c-parameter 
+      Ostap::Math::LogValue m_c { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrV
+     *  Type V Burr distribution   Eq (13) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *
+     *  \f[ F(y) = \left( k \mathrm{e}^{-\tan \frac{\pi}{2}x }\right)^{-r}
+     *  - for \f$ -1 < y < 1 \f$ 
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrV : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param k k-parameter k>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrV
+      ( const double r     = 1 , // r>0
+	const double k     = 1 , // k>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-IV function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-IV function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-IV function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      /// k-parameter 
+      inline double k () const { return m_k.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setK    ( const double value ) { return m_k.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      inline bool setLogK ( const double value ) { return m_k.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// minimal x 
+      inline double xmin () const { return std::min ( x ( -1 ) , x ( 1 ) ) ; } 
+      /// maximal x 
+      inline double xmax () const { return std::max ( x (  1 ) , x ( 1 ) ) ; } 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private: // raw-moments of unscaled/unshifted distributions 
+      // ======================================================================
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;      
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      /// k-parameter 
+      Ostap::Math::LogValue m_k { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;
+
+    // ========================================================================
+    /** @class BurrXII
+     *  Type XII BurrXII distribution
+     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrXII : public ShiftAndScale 
     {
       // ======================================================================
     public:
@@ -3482,36 +3918,39 @@ namespace Ostap
        *  @param scale scale parameter 
        *  @param shift shift parameter
        */
-      Burr
+      BurrXII
       ( const double c     = 1 ,
-	const double k     = 8 ,
+	const double k     = 4 ,
 	const double scale = 1 ,
 	const double shift = 0 ) ;
       // ======================================================================
     public : 
       // ======================================================================
-      /// evaluate Burr function
+      /// evaluate BurrXII function
       double        evaluate    ( const double x ) const ;
-      /// evaluate Burr function
+      /// evaluate BurrXII function
       inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
-      /// evaluate Burr function
+      /// evaluate BurrXII function
       inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
       // ======================================================================
     public : 
       // ======================================================================
-      inline double c     () const { return m_c     ; } 
-      inline double k     () const { return m_k     ; } 
-      inline double scale () const { return m_scale ; } 
-      inline double shift () const { return m_shift ; } 
+      inline double c     () const { return m_c.value () ; } 
+      inline double k     () const { return m_k.value () ; } 
       // ======================================================================
-      inline double xmin  () const { return m_shift ; } 
+    public : // support 
+      // ======================================================================
+      /// xmin
+      double xmin  () const ;
+      /// xmax
+      double xmax  () const ;
       // ======================================================================
     public : 
       // ======================================================================
-      bool setC     ( const double value ) ;  
-      bool setK     ( const double value ) ;  
-      bool setScale ( const double value ) ;  
-      bool setShift ( const double value ) ;  	       
+      inline bool setC    ( const double value ) { return m_c.setValue    ( value ) ; } 
+      inline bool setK    ( const double value ) { return m_k.setValue    ( value ) ; } 
+      inline bool setLogC ( const double value ) { return m_c.setLogValue ( value ) ; } 
+      inline bool setLogK ( const double value ) { return m_k.setLogValue ( value ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -3541,27 +3980,25 @@ namespace Ostap
       /// CDF 
       double cdf 
       ( const double x ) const ;
-      // ======================================================================      
-    private: // raw-moments of unscaled/unshofted distributions 
-      // ======================================================================
-      /// raw-moments of unscaled/unshifted distributions 
-      double raw_moment ( const unsigned short k ) const ;
       // ======================================================================
     public:
       // ======================================================================
       // get the tag
       std::size_t tag () const ;
+      // ======================================================================      
+    private: // raw-moments of unscaled/unshifted distributions 
+      // ======================================================================
+      /// raw-moments of unscaled/unshifted distributions 
+      double raw_moment ( const unsigned short k ) const ;
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;      
       // ======================================================================
     private :
       // ======================================================================
       /// parameter c (shape) 
-      double m_c     { 1 } ; // parameter c (shape)
+      Ostap::Math::LogValue m_c { 1 } ; // parameter c (shape)
       /// parameter k (shape) 
-      double m_k     { 8 } ; // parameter k (shape)
-      /// scale parameter
-      double m_scale { 1 } ; // scale parameter 
-      /// shift parameter
-      double m_shift { 0 } ; // shift parameter 
+      Ostap::Math::LogValue m_k { 4 } ; // parameter k (shape)
       // ======================================================================      
     } ;
     // ========================================================================    

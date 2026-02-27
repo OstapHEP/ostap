@@ -261,8 +261,9 @@ namespace
   const long double s_1_pi2      = 1.0L / s_pi2 ;
   /// @var s_log_2pi \f$ \log 2\pi \f$
   const long double s_log_2pi    = std::log ( s_2pi ) ;
-  // ==========================================================================
-
+  /// !@var s_1_sqrt12 \f$ \frac{1}{\sqrt{12}}\f$
+  const long double s_1_sqrt12   = 1.0L / std::sqrt ( 12.0L ) ;
+  
   // ==========================================================================
   /// precomputed value of ln(2) squared 
   const long double s_ln2_sq = s_ln2 * s_ln2 ;  

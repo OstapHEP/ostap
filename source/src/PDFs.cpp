@@ -12399,64 +12399,34 @@ Ostap::Models::Benini::Benini
     //
   , m_benini  ( ::size ( shape ) , 1.0 , 0.0 ) 
 {
-  ::copy_real ( shape, m_shape , "Invalid width parameter!" ,
-                "Ostap::Models::Benini"  ) ;
-  setPars () ;
-}
-
-
-
-
-
-
-
-// ============================================================================
-// Benini Distorbution
-// ============================================================================
-Ostap::Models::Benini::Benini
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          alpha     ,
-  RooAbsReal&          beta      ,
-  RooAbsReal&          gamma     ,
-  RooAbsReal&          delta     ,
-  RooAbsReal&          scale     ,
-  RooAbsReal&          shift     ) 
-  : RooAbsPdf ( name , title     ) 
-  , m_x       ( "!x"     , "Observable"       , this , x     ) 
-  , m_shape   ( "!shape" , "shape-parameters" , this         )
-  , m_scale   ( "!scale" , "scale-parameter"  , this , scale ) 
-  , m_shift   ( "!shift" , "shift-parameter"  , this , shift ) 
+  ::copy_real ( shape   ,
+		m_shape , "Invalid shape parameters!" ,
+                "Ostap::Models::Benini"               ) ;
   //
-  , m_benini  ( 4 , 1.0 , 0.0 ) 
-{
-  //
-  m_shape.add ( alpha ) ;
-  m_shape.add ( beta  ) ;
-  m_shape.add ( gamma ) ;
-  m_shape.add ( delta ) ;
+  Ostap::Assert ( 1 <= ::size ( m_shape )          ,
+		  "Invalid number of parameters!"  ,
+		  "Ostap::Models::Benini"          ,
+		  INVALID_PARAMETERS , __FILE__ , __LINE__ ) ;
   //
   setPars () ;
 }
 // ============================================================================
-// Standard Benini Distribution
+// Modified Benini
 // ============================================================================
 Ostap::Models::Benini::Benini
-( const char*          name      , 
+( const char*          name      ,
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          alpha     ,
-  RooAbsReal&          beta      ,
-  RooAbsReal&          scale     ) 
-  : Benini ( name , title , x , 
-             alpha , 
-             beta  , 
-             RooFit::RooConst ( 0 ) , 
-             RooFit::RooConst ( 0 ) , 
-             scale ,
-             RooFit::RooConst ( 0 ) )
-{}             
+  RooArgList&          shape     ,
+  const double         scale     ,
+  const double         shift     )
+  : Benini ( name  ,
+	     title ,
+	     x     , 
+	     shape ,
+	     RooFit::RooConst ( scale ) ,
+	     RooFit::RooConst ( shift ) )
+{}
 // ============================================================================
 // copy constructor
 // ============================================================================
@@ -12492,8 +12462,7 @@ void Ostap::Models::Benini::setPars () const
   for ( unsigned short i = 0 ; i < n ; ++i ) 
   { m_benini.setPar ( i , ::get_par ( i , m_shape ) ) ; }
   //
-  m_benini.setScale ( m_scale ) ;
-  m_benini.setShift ( m_shift ) ;
+  m_benini.setScaleShift ( m_scale , m_shift ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -13848,8 +13817,105 @@ Double_t Ostap::Models::InverseGamma::analyticalIntegral
 // ============================================================================
 
 
+
+
 // ============================================================================
-Ostap::Models::Burr::Burr
+Ostap::Models::BurrI::BurrI
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          scale     ,
+  RooAbsReal&          shift     ) 
+  : RooAbsPdf ( name , title     ) 
+  , m_x       ( "!x"     , "Observable"       , this , x     ) 
+  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
+  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  , m_burr    () 
+{
+  setPars () ;
+}
+// ============================================================================
+Ostap::Models::BurrI::BurrI
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  const double         scale     , 
+  const double         shift     )
+  : BurrI ( name  ,
+	    title ,
+	    x     ,
+	    RooFit::RooConst ( scale ) ,
+	    RooFit::RooConst ( shift ) )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::BurrI::BurrI
+( const Ostap::Models::BurrI& right ,      
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x     ( "!x"     , this , right.m_x     )
+  , m_scale ( "!scale" , this , right.m_scale )
+  , m_shift ( "!shift" , this , right.m_shift ) 
+    //
+  , m_burr ( right.m_burr ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================O
+Ostap::Models::BurrI::~BurrI() {} 
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BurrI*
+Ostap::Models::BurrI::clone ( const char* name ) const 
+{ return new Ostap::Models::BurrI ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::BurrI::setPars () const 
+{ m_burr.setScaleShift ( m_scale , m_shift ) ; }
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::BurrI::evaluate() const 
+{
+  setPars () ;
+  return m_burr ( m_x ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::BurrI::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::BurrI::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                    ,
+                  "Invalid integration code"   ,
+                  "Ostap::Models::BurrI"       ,
+                  INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_burr.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+
+
+
+
+
+
+// ============================================================================
+Ostap::Models::BurrXII::BurrXII
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
@@ -13868,7 +13934,7 @@ Ostap::Models::Burr::Burr
   setPars () ;
 }
 // ============================================================================
-Ostap::Models::Burr::Burr
+Ostap::Models::BurrXII::BurrXII
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
@@ -13876,7 +13942,7 @@ Ostap::Models::Burr::Burr
   RooAbsReal&          k         ,
   const double         scale     , 
   const double         shift     )
-  : Burr ( name  ,
+  : BurrXII ( name  ,
 	   title ,
 	   x     ,
 	   c     ,
@@ -13887,8 +13953,8 @@ Ostap::Models::Burr::Burr
 // ============================================================================
 // copy constructor
 // ============================================================================
-Ostap::Models::Burr::Burr
-( const Ostap::Models::Burr& right ,      
+Ostap::Models::BurrXII::BurrXII
+( const Ostap::Models::BurrXII& right ,      
   const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
     //
@@ -13905,15 +13971,15 @@ Ostap::Models::Burr::Burr
 // ============================================================================
 // destructor 
 // ============================================================================O
-Ostap::Models::Burr::~Burr() {} 
+Ostap::Models::BurrXII::~BurrXII() {} 
 // ============================================================================
 // clone 
 // ============================================================================
-Ostap::Models::Burr*
-Ostap::Models::Burr::clone ( const char* name ) const 
-{ return new Ostap::Models::Burr ( *this , name ) ; }
+Ostap::Models::BurrXII*
+Ostap::Models::BurrXII::clone ( const char* name ) const 
+{ return new Ostap::Models::BurrXII ( *this , name ) ; }
 // ============================================================================
-void Ostap::Models::Burr::setPars () const 
+void Ostap::Models::BurrXII::setPars () const 
 {
   m_burr.setC     ( m_c ) ;
   m_burr.setK     ( m_k ) ;
@@ -13923,13 +13989,13 @@ void Ostap::Models::Burr::setPars () const
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
-Double_t Ostap::Models::Burr::evaluate() const 
+Double_t Ostap::Models::BurrXII::evaluate() const 
 {
   setPars () ;
   return m_burr ( m_x ) ; 
 }
 // ============================================================================
-Int_t Ostap::Models::Burr::getAnalyticalIntegral
+Int_t Ostap::Models::BurrXII::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
   RooArgSet&     analVars     ,
   const char* /* rangename */ ) const 
@@ -13938,20 +14004,24 @@ Int_t Ostap::Models::Burr::getAnalyticalIntegral
   return 0 ;
 }
 // ============================================================================
-Double_t Ostap::Models::Burr::analyticalIntegral 
+Double_t Ostap::Models::BurrXII::analyticalIntegral 
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
   //
   Ostap::Assert ( 1 == code                    ,
                   "Invalid integration code"   ,
-                  "Ostap::Models::Burr"        ,
+                  "Ostap::Models::BurrXII"        ,
                   INVALID_INTEGRATION_CODE     , __FILE__ , __LINE__  ) ;
   //
   setPars () ;
   return m_burr.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
+
+
+
+
 
 
 // ============================================================================
@@ -14315,7 +14385,8 @@ ClassImp(Ostap::Models::ExpoLog            )
 ClassImp(Ostap::Models::Davis              )
 ClassImp(Ostap::Models::Kumaraswami        )
 ClassImp(Ostap::Models::InverseGamma       )
-ClassImp(Ostap::Models::Burr               )
+ClassImp(Ostap::Models::BurrI              )
+ClassImp(Ostap::Models::BurrXII            )
 ClassImp(Ostap::Models::Rational           )
 ClassImp(Ostap::Models::Meixner            )
 // ============================================================================

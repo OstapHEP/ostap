@@ -6,6 +6,7 @@
 // ============================================================================
 // STD& STL 
 // ============================================================================
+#include <cstdint>
 #include <initializer_list>
 #include <vector>
 #include <typeinfo>
@@ -16,11 +17,23 @@ namespace Ostap
   namespace Math
   {
     // ========================================================================
+    /** @fn set_par
+     *  Helper function to set parameter
+     *  @param parameter  (update) parameter
+     *  @param value      (input)  new value
+     *  @param force      (input)  froce updating
+     *  @return true if parameter is modified
+     */
+    bool set_par
+    ( double&      parameter      ,
+      const double value          ,
+      const bool   force  = false ) ; 
+    // ========================================================================
     // Scalar and transformed parameters 
     // ========================================================================
     /** @class Value
      *  Trivial (scalar) "Id"-parameter
-     *  @author Vanya BELYAEV Ivan.Belyaev@cern.c
+     *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date 2026-02-21
      */
     class Value
@@ -67,6 +80,11 @@ namespace Ostap
       /// get the full parameter name  
       inline const std::string& name  () const { return m_name  ; }
       // ======================================================================
+      /** the sign of the value
+       *  @see Ostap::Math::signum
+       */
+      std::int8_t               signum () const ; 
+      // ======================================================================      
     public :
       // ======================================================================
       /// implicit conversion to double 
@@ -78,9 +96,10 @@ namespace Ostap
     public :
       // ======================================================================
       /// set new value for parameter 
-      bool setValue
+      inline bool setValue
       ( const double value         ,
-	const bool   force = false ) ; 
+	const bool   force = false )
+      { return set_par ( m_value , value , force ) ;  }
       // ======================================================================
     public :
       // ======================================================================
@@ -347,10 +366,15 @@ namespace Ostap
     public :
       // ======================================================================
       /// get the value 
-      inline double             value      () const { return m_value.value () ; }
+      inline double             value  () const { return m_value.value () ; }
       /// get the full parameter name  
-      inline const std::string& name       () const { return m_value.name  () ; }
-      // ======================================================================
+      inline const std::string& name   () const { return m_value.name  () ; }
+      /** the sign of the value
+       *  @see Ostap::Math::signum
+       *  @see Ostap::Math::Value::signum
+       */
+      inline std::int8_t        signum () const { return m_value.signum () ; }  
+      // ======================================================================      
     public : // conversion 
       // ======================================================================
       /// implicit conversion to double 
@@ -481,11 +505,18 @@ namespace Ostap
     public :
       // ======================================================================
       /// get the value 
-      inline double             scale    () const { return m_scale.value  () ; }
+      inline double             scale  () const { return m_scale.value  () ; }
       /// get the value 
-      inline double             value    () const { return m_scale.value  () ; }
+      inline double             value  () const { return m_scale.value  () ; }
       /// get the full parameter name  
-      inline const std::string& name     () const { return m_scale.name   () ; }
+      inline const std::string& name   () const { return m_scale.name   () ; }
+      /** the sign of the value
+       *  @see Ostap::Math::signum
+       *  @see Ostap::Math::Value::signum
+       */
+      inline std::int8_t        signum () const { return m_scale.signum () ; }
+      /// absolute value of the scale
+      inline double             abs    () const { return std::abs ( m_scale.value () ) ; }	  
       // ======================================================================
     public :
       // ======================================================================
@@ -616,6 +647,21 @@ namespace Ostap
       inline const std::string& scale_name () const { return m_scale.name ()  ; }
       /// get shift name  
       inline const std::string& shift_name () const { return m_shift.name ()  ; }      
+      // =====================================================================
+      /** the sign of the value
+       *  @see Ostap::Math::signum
+       *  @see Ostap::Math::Value::signum
+       */
+      inline std::int8_t        scale_sign () const { return m_scale.signum () ; }
+      /** the sign of the value
+       *  @see Ostap::Math::signum
+       *  @see Ostap::Math::Value::signum
+       */      
+      inline std::int8_t        sign_scale () const { return m_scale.signum () ; }
+      /// absolute value of the scale
+      inline double             scale_abs  () const { return m_scale.abs    () ; }
+      /// absoluet value of the scale
+      inline double             abs_scale  () const { return m_scale.abs    () ; }
       // =====================================================================
     public : 
       // =====================================================================
@@ -781,19 +827,10 @@ namespace Ostap
     public:   /// setters 
       // =====================================================================
       bool setP    ( const double value , const bool force = false ) ;
-      bool setQ    ( const double value , const bool force = false ) ; 
+      bool setQ    ( const double value , const bool force = false ) ;
+      //
       bool setLogP ( const double value , const bool force = false ) ; 
       bool setLogQ ( const double value , const bool force = false ) ; 
-      /// set two parameters at once
-      inline bool setLogPQ
-      ( const double pvalue ,
-	const double qvalue , 
-	const bool   force  = false )
-      {
-	const bool mp = setLogP ( pvalue , force ) ;
-	const bool mq = setLogQ ( qvalue , force ) ;
-	return mp && mq ;
-      } 
       /// set two parameters at once
       inline bool setPQ
       ( const double pvalue ,
@@ -804,6 +841,16 @@ namespace Ostap
 	const bool mq = setQ ( qvalue , force ) ;
 	return mp && mq ;
       }
+      /// set two parameters at once
+      inline bool setLogPQ
+      ( const double pvalue ,
+	const double qvalue , 
+	const bool   force  = false )
+      {
+	const bool mp = setLogP ( pvalue , force ) ;
+	const bool mq = setLogQ ( qvalue , force ) ;
+	return mp && mq ;
+      } 
       // =====================================================================      
     public :
       // ======================================================================
@@ -922,7 +969,7 @@ namespace Ostap
       ( const std::size_t  k             , 
         const double       value         ,
         const bool         force = false ) 
-      { return k < m_pars.size() ?  _setPar ( k , value , force ) : false ; }
+      { return k < m_pars.size() ?  set_par ( m_pars [ k  ] , value , force ) : false ; }
       // ======================================================================
       /** set several/all parameters at once 
        *  @param begin  start iterator for the sequence of coefficients 
@@ -940,7 +987,7 @@ namespace Ostap
         bool update = false ;
         const unsigned int   N = m_pars.size()  ;
         for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
-          { update = this->_setPar ( k  , *begin , force ) ? true : update ; }
+          { update = this->setPar ( k  , *begin , force ) ? true : update ; }
         return update ;
       }
       // ======================================================================
@@ -978,13 +1025,6 @@ namespace Ostap
       ( const double epsilon = 0 , 
         const double scale   = 0 ) ;
       // ======================================================================
-    public: // simple  manipulations with parameters 
-      // ======================================================================
-      /// simple  manipulations with parameters: scale it! 
-      /// Parameters& operator *= ( const double a ) ;     // scale it! 
-      /// simple  manipulations with parameters: scale it! 
-      /// Parameters& operator /= ( const double a ) ;     // scale it! 
-      // ======================================================================
     public: // expose constant iterators 
       // ======================================================================
       /// begin iterator
@@ -996,18 +1036,6 @@ namespace Ostap
       // ======================================================================
       /// swap two parameter sets 
       void swap ( Parameters& right ) ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /** set k-parameter
-       *  @param k index
-       *  @param value new value 
-       *  @return true if parameter is actually changed 
-       */
-    bool _setPar 
-    ( const std::size_t k             , 
-      const double      value         ,
-      const bool        force = false ) ;
       // ======================================================================
     public : // few helper static fuctions 
       // ======================================================================

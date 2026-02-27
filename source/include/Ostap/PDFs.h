@@ -10487,20 +10487,9 @@ namespace Ostap
       ( const char*          name      ,
         const char*          title     ,
         RooAbsReal&          x         ,
-        RooAbsReal&          alpha     ,
-        RooAbsReal&          beta      ,
-        RooAbsReal&          gamma     ,
-        RooAbsReal&          delta     ,
-        RooAbsReal&          scale     , 
-        RooAbsReal&          shift     ) ;
-      /// standard Benini
-      Benini
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          alpha     ,
-        RooAbsReal&          beta      ,
-        RooAbsReal&          scale     ) ;
+        RooArgList&          shape     , 
+        const double         scale = 1 ,
+        const double         shift = 0 ) ;
       /// copy
       Benini
       ( const Benini&        right     ,
@@ -10538,7 +10527,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Benini& function () const { setPars () ; return m_benini ; }
+      const Ostap::Math::Benini& benini   () const { setPars () ; return m_benini    ; }
+      const Ostap::Math::Benini& function () const {              return   benini () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -10642,9 +10632,6 @@ namespace Ostap
       mutable Ostap::Math::GEV  m_gev {} ;  // the function
       // ======================================================================
     } ;
-
-
-    
     // ========================================================================
     /** @class MPERT
      *  Modified PERT distribution 
@@ -11814,55 +11801,53 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    /** @class Burr
-     *  Type XII Burr distribution
-     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+    /** @class BurrI
+     *  Type I Burr distribution 0 unifrm
      *
-     *  We have added two parameters: 
-     *  - scale
-     *  - shift
-     *  @see Ostap::Math::Burr 
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *
+     *  @see Ostap::Math::BurrI 
      */
-    class Burr : public RooAbsPdf 
+    class BurrI : public RooAbsPdf 
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Burr, 1) ;
+      ClassDefOverride(Ostap::Models::BurrI, 1) ;
       // ======================================================================
     public : 
       // ======================================================================
       /// constructor from all parameters
-      Burr
+      BurrI
       ( const char*  name   ,
 	const char*  title  ,
 	RooAbsReal&  x      ,
-	RooAbsReal&  c      ,
-	RooAbsReal&  k      ,
 	RooAbsReal&  scale  ,
 	RooAbsReal&  shift  ) ;
       /// constructor from all parameters
-      Burr
+      BurrI
       ( const char*  name      ,
 	const char*  title     ,
 	RooAbsReal&  x         ,
-	RooAbsReal&  c         ,
-	RooAbsReal&  k         ,
 	const double scale = 1 , 
 	const double shift = 0 ) ;
       // ======================================================================
       /// copy
-      Burr 
-      ( const Burr&   right          , 
+      BurrI
+      ( const BurrI& right          , 
 	const char*   name = nullptr ) ;
       /// destructor 
-      virtual ~Burr() ;
+      virtual ~BurrI () ;
       /// clone method
-      Burr* clone ( const char* name ) const override ;
+      BurrI* clone ( const char* name ) const override ;
       // ======================================================================
     public:
       // ======================================================================
       /// fake default constructor 
-      Burr () {} ; // fake default constructor 
+      BurrI () {} ; // fake default constructor 
       // ======================================================================      
     public:
       // ======================================================================
@@ -11887,10 +11872,111 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Burr& burr     () const
+      const Ostap::Math::BurrI& burr     () const
       { setPars () ; return m_burr ; }
       /// access to underlying function
-      const Ostap::Math::Burr& function () const
+      const Ostap::Math::BurrI& function () const
+      { return burr () ; }
+      // ======================================================================      
+    public :
+      // ======================================================================      
+      const RooAbsReal& x      () const { return m_x     .arg  () ; }
+      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
+      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      // ======================================================================      
+    protected : 
+      // ======================================================================
+      /// observable 
+      RooRealProxy m_x     {} ; // observable
+      /// scale 
+      RooRealProxy m_scale {} ; // scale 
+      /// shift 
+      RooRealProxy m_shift {} ; // shift 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::BurrI m_burr {} ;  // the function
+      // ======================================================================
+    };    
+    // ========================================================================
+    /** @class BurrXII
+     *  Type XII Burr distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift
+     *  @see Ostap::Math::BurrXII 
+     */
+    class BurrXII : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::BurrXII, 1) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// constructor from all parameters
+      BurrXII
+      ( const char*  name   ,
+	const char*  title  ,
+	RooAbsReal&  x      ,
+	RooAbsReal&  c      ,
+	RooAbsReal&  k      ,
+	RooAbsReal&  scale  ,
+	RooAbsReal&  shift  ) ;
+      /// constructor from all parameters
+      BurrXII
+      ( const char*  name      ,
+	const char*  title     ,
+	RooAbsReal&  x         ,
+	RooAbsReal&  c         ,
+	RooAbsReal&  k         ,
+	const double scale = 1 , 
+	const double shift = 0 ) ;
+      // ======================================================================
+      /// copy
+      BurrXII
+      ( const BurrXII& right          , 
+	const char*    name = nullptr ) ;
+      /// destructor 
+      virtual ~BurrXII () ;
+      /// clone method
+      BurrXII* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fake default constructor 
+      BurrXII () {} ; // fake default constructor 
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::BurrXII& burr     () const
+      { setPars () ; return m_burr ; }
+      /// access to underlying function
+      const Ostap::Math::BurrXII& function () const
       { return burr () ; }
       // ======================================================================      
     public :
@@ -11917,7 +12003,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Burr m_burr {} ;  // the function
+      mutable Ostap::Math::BurrXII m_burr {} ;  // the function
       // ======================================================================
     };    
     // ========================================================================

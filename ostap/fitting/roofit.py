@@ -290,7 +290,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
         from ostap.logger.symbols import palette as plot_symbol
         if plot_symbol : title = '%s %s' % ( plot_symbol , title )
         
-    table = [ ( 'Index' , 'Type' , 'Option' , 'Binw' , 'Line' , 'Marker' , 'Fill' , 'Name' ) ]
+    table = [ ( 'Index' , 'Type' , 'Option' , 'Binw' , 'Line' , 'Marker' , 'Fill' , 'Name' , 'Title') ]
 
     names = set() 
     for index , obj in enumerate ( plot )  :
@@ -332,13 +332,19 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
         
         ## 
         row.append  ( name )
+
+        if hasattr ( obj , GetTitle ) :
+            objtitle = obj.GetTitle()
+            if objtitle : row.append ( str ( objtitle ) )
+            else        : row.append ( '' )
         
         row = tuple ( row  )
         
         table.append ( row )
 
     import ostap.logger.table as T
-    return T.table ( table , title = title, prefix = prefix , alignment = 'clcclllw' )
+    table = T.remove_empty_columns ( table ) 
+    return T.table ( table , title = title, prefix = prefix , alignment = 'clcclllww' )
 
 ROOT.RooPlot.table    =  _rp_table_
 ROOT.RooPlot.__str__  =  _rp_table_

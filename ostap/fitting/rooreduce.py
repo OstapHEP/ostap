@@ -2392,9 +2392,9 @@ def _r_InverseGamma_reduce_ ( pdf ) :
 Ostap.Models.InverseGamma.__reduce__ = _r_InverseGamma_reduce_ 
 
 # =============================================================================
-## reduce Burr
-def _r_Burr_reduce_ ( pdf ) :
-    """ Reduce Burr"""
+## reduce BurrXII
+def _r_BurrXII_reduce_ ( pdf ) :
+    """ Reduce BurrXII"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
@@ -2404,7 +2404,7 @@ def _r_Burr_reduce_ ( pdf ) :
                                   pdf.scale  () ,                            
                                   pdf.shift  () )
 
-Ostap.Models.Burr.__reduce__ = _r_Burr_reduce_ 
+Ostap.Models.BurrXII.__reduce__ = _r_BurrXII_reduce_ 
 
 # =============================================================================
 ## reduce Slash

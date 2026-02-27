@@ -848,6 +848,22 @@ def _om_kumaraswami_reduce_ ( peak ) :
 
 Ostap.Math.Kumaraswami . __reduce__ = _om_kumaraswami_reduce_
 
+
+# =============================================================================
+## Reduce Ostap::Math::BurrXII
+#  @see Ostap::Math::BurrXII
+def _om_BurrXII_reduce_ ( peak ) :
+    """Reduce `Ostap.Math.BurrXII`
+    - see `Ostap.Math.BurrXII`
+    """
+    return root_factory , ( type ( peak ) ,
+                            peak.c     () ,
+                            peak.k     () ,
+                            peak.scale () ,
+                            peak.shift () )
+
+Ostap.Math.BurrXII. __reduce__ = _om_BurrXII_reduce_
+
 # =============================================================================
 ## Reduce Ostap::Math::InverseGamma
 #  @see Ostap::Math::InverseGamma

@@ -859,7 +859,7 @@ class APDF1 ( Components ) :
     def _draw_signals ( self , frame  , *args , **kwargs ) :
         """ Helper method to draw `signal-like' components
         """
-
+        
         if self.combined_signals or self.signals :
             drawit1   = self.draw_option ( 'draw_combined_signal'    , **kwargs )
             drawit2   = self.draw_option ( 'draw_signals'            , **kwargs )

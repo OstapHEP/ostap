@@ -26,6 +26,8 @@
 - BetaPrime_pdf        : Beta-prime distribution 
 - GenBeta_pdf          : Generalized Bet distribution 
 - GenBetaPrime_pdf     : generalized Beta-prime distribution 
+- GenBeta1_pdf         : Generalized Bet distribution type 1  
+- GenBeta2_pdf         : Generalized Bet distribution type 2  
 
 - TwoExpos_pdf         : Difference of two exponents
 
@@ -81,6 +83,8 @@ __all__     = (
     'BetaPrime_pdf'        , ## Beta-prime distribution 
     'GenBeta_pdf'          , ## generalized Beta distribution
     'GenBetaPrime_pdf'     , ## generalized Beta-prime distribution
+    'GenBeta1_pdf'         , ## generalized Beta distribution type 1 
+    'GenBeta2_pdf'         , ## generalized Beta distribution type 2 
     #
     'TwoExpos_pdf'         , ## difference of two exponents
     #
@@ -106,7 +110,7 @@ __all__     = (
     'Davis_pdf'            , ## Davis distribution
     'Kumaraswami_pdf'      , ## Kumaraswami distribution
     'InverseGamma_pdf'     , ## Inverse-Gamma distribution
-    'Burr_pdf'             , ## Burr Type XII distribution
+    'BurrXII_pdf'          , ## Burr Type XII distribution
     # 
     'Tsallis_pdf'          , ## Tsallis PDF 
     'QGSM_pdf'             , ## QGSM PDF 
@@ -2469,16 +2473,16 @@ class InverseGamma_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
 models.append ( InverseGamma_pdf )
 
 # =============================================================================
-## @class Burr_pdf
+## @class BurrXII_pdf
 #  Type XII Burr distribution
 #  @see https://en.wikipedia.org/wiki/Burr_distribution
 #
 #  We have added two parameters: 
 #  - scale
 #  - shift 
-#  @see Ostap::Models::Burr 
-#  @see Ostap::Math::Burr
-class Burr_pdf(PDF1,ShiftAndScale) :
+#  @see Ostap::Models::BurrXII 
+#  @see Ostap::Math::BurrXII
+class BurrXII_pdf(PDF1,ShiftAndScale) :
     """ Burr Type XII distribution with scale and shift
     - see https://en.wikipedia.org/wiki/Burr_distribution
     - see Ostap::Models::Burr 
@@ -2497,17 +2501,17 @@ class Burr_pdf(PDF1,ShiftAndScale) :
         ShiftAndScale.__init__ ( self  , scale = scale , shift = shift )
         #
         self.__c   = self.make_var ( c ,
-                                     'c_%s'         % self.name ,
-                                     'c_{Burr}(%s)' % self.name ,
+                                     'c_%s'            % self.name ,
+                                     'c_{BurrXII}(%s)' % self.name ,
                                      None , c , 1.e-5 , 1000  )
         self.__k   = self.make_var ( k ,
-                                     'k_%s'         % self.name ,
-                                     'k_{Burr}(%s)' % self.name ,
+                                     'k_%s'            % self.name ,
+                                     'k_{BurrXII}(%s)' % self.name ,
                                      None , k , 1.e-5 , 1000  )
         
         ## create PDF 
-        self.pdf  = Ostap.Models.Burr (
-            self.roo_name ( 'burr_' )  ,
+        self.pdf  = Ostap.Models.BurrXII (
+            self.roo_name ( 'burrXII_' )  ,
             'Burr Type XII  %s' % self.name , 
             self.x     ,
             self.c     ,
@@ -2539,7 +2543,7 @@ class Burr_pdf(PDF1,ShiftAndScale) :
     def k ( self , value ) :
         self.set_value ( self.__k , value )
 
-models.append ( Burr_pdf )
+models.append ( BurrXII_pdf )
 
 # =============================================================================
 ## @class Tsallis_pdf
