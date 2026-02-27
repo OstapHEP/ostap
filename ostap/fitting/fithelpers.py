@@ -446,7 +446,7 @@ class VarMaker (object) :
         elif isinstance ( var , tuple           ) and var :
 
             ## at most four arguments:  (value, min, max, unit)
-            assert len ( args ) <= 4 , "make_var: invalid length of 'args' %s" % len ( args ) 
+            ## assert len ( args ) <= 4 , "make_var[%s]: invalid length of 'args' %s" % ( name, len ( args ) ) 
 
             ## strip out the units from args 
             vunit = ''
@@ -454,21 +454,21 @@ class VarMaker (object) :
             if args and isinstance ( args [ -1 ] , string_types ) :
                 vunit = str ( args [  -1 ] ) 
                 vargs =       args [ :-1 ]
-
+                
             ## extended list of arguments
             all_args = []
             for i, v in enumerate ( vargs ) :
                 if   isinstance ( v , num_types      ) : all_args.append  ( v )
                 elif isinstance ( v , sequence_types ) and all ( isinstance ( p , num_types ) for p in v ) : all_args += list ( v )
                 else :
-                    self.error ( "make_var: cannot properly parse args[%s]: %s : %s, skip!" % ( i , str ( args ) , typename ( v ) ) )
+                    self.error ( "make_var[%s]: cannot properly parse args[%s]: %s : %s, skip!" % ( name , i , str ( args ) , typename ( v ) ) )
                     
             vargs = tuple ( float ( v ) for v in all_args )
 
             ## at most three arguments:  (value, min, max)
             if 3 < len ( vargs ) :
-                v2 = min ( vargs ) , max ( vargs ) 
-                self.warning ( "make_var: shorten %s %s %s " % ( str ( vars ) , arrow_right , str ( v2 ) ) )
+                v2 = vargs [ 0 ] , min ( vargs ) , max ( vargs ) 
+                self.warning ( "make_var[%s]: shorten %s %s %s " % ( name , str ( vargs ) , arrow_right , str ( v2 ) ) )
                 vargs  = v2
                         
             ## content of var             
@@ -529,7 +529,7 @@ class VarMaker (object) :
             if vargs != vargs_ : self.warning ( "make_var[%s]: %s %s %s " % ( name , str ( vargs_ ) , arrow_right , str ( vargs ) ) )  
 
             ## there should be at least one useful number! 
-            assert 1 <= len_vvars + len_vargs , "make_var: empty 'vvars' and 'vargs'!"
+            assert 1 <= len_vvars + len_vargs , "make_var[%s]: empty 'vvars' and 'vargs'!" % name 
 
             ## fixed/corrected 
             fixed    = False
