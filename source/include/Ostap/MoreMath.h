@@ -85,6 +85,14 @@ namespace Ostap
      */
     double gamma_star ( const int n , const double x ) ;
     // ========================================================================
+    /** unnormailzed incomplete gamma function for \f$ 0 \le x \f$
+     *  \f[ \Gamma ( a , x ) = \int_x^{+\infty} t^{a-1}e^{-t}dt\f]
+     *  such as \f$ \Gamma ( a, x = 0 ) = \Gamma(a) \f$
+     */
+    double gamma_inc 
+    ( const double a ,
+      const double x ) ;
+    // ========================================================================    
     /** normalized incomplete gamma function 
      *  \f$ Q(a,x) = \frac { \Gamma ( a , x ) }{\Gamma(a) } \f$, 
      *  where \f$ \Gamma(a,x) =  \int_x^{+\infty} t^{a-1} e^{-t}dt \f$ 
@@ -425,7 +433,7 @@ namespace Ostap
      */
     std::complex<double> lgamma ( const std::complex<double>& x ) ;
     // ========================================================================
-
+    
     // ========================================================================
     /** Compute psi function 
      *  \f[ f(x) = \frac{d}{dx}\ln \Gamma(x)\f]
@@ -674,13 +682,21 @@ namespace Ostap
 
     // ========================================================================
     /** Pochhammer symbol, aka "rising factorial"
-     *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  \f[ P(a,n) = a ( a + 1) ( a + 1 ) ... ( a + n - 1 ) = \Pi^{k-1}_{k=0} (a + k) \f] 
      *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
      *  @see Ostap::Math::rising_factorial
      */
     double pochhammer
-    ( const double         x , 
+    ( const double         a , 
       const unsigned short n ) ;    
+    // ========================================================================
+    /** Pochhammer symbol, aka "rising factorial"
+     *  \f[ P(a,x) = \frac{ \Gamma ( a + x ) } { \Gamma ( a ) } \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     */
+    double pochhammer
+    ( const double a , 
+      const double x ) ;    
     // ========================================================================
     /** Rising  factorial, aka "Pochhammer's symbol"
      *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 

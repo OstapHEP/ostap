@@ -137,6 +137,16 @@ namespace
    */
   const long double s_EXP_UNDERFLOW = -708.2L ;
   // ==========================================================================
+  /** @var s_TANH_XXXFLOW  
+   *  the value where abs(tanh(x)) is still distinguished from +/-1
+   */ 
+  const long double s_TANH_XXXFLOW = 18.714973875118524 ;
+  // ==========================================================================
+  /** @var s_ATAN_XXXFLOW  
+   *  the value where abs(atan(x)) is still distinguished from pi/2 
+   */ 
+  const long double s_ATAN_XXXFLOW = 3530114321217157.5 ;
+  // ====================================================a======================
   /** @var s_EXP_OVERFLOW_EXP 
    *  For IEEE-compatible type double, overflow is guaranteed if 709.8 < num
    *  and underflow is guaranteed if num < -708.4.

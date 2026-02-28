@@ -1475,6 +1475,103 @@ Ostap::Math::ValueWithError Ostap::Math::pochhammer
   return Ostap::Math::ValueWithError ( v , e2 ) ;
 }
 // ============================================================================
+/* \overload evaluate Pochhammer symbol 
+ *  \f[  \frac{\Gamma ( a+ x ) } {\Gamma ( a ) } \f] 
+ *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+ *  @param   a (INPUT) the parameter 
+ *  @param   x (INPUT) the parameter 
+ *  @return  pochhammer  symbol 
+ *  @warning invalid and small covariances are ignored 
+ *  @see     Ostap::Math::rising_factorial
+ *  @see     Ostap::Math::falling_factorial
+ *  @see     Ostap::Math::pochhammer 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::pochhammer 
+( const Ostap::Math::ValueWithError& a , 
+  const double                       x )
+{
+  if      ( !x || s_zero ( x )                    ) { return                            1 ; } 
+  else if ( a.cov2 () <= 0 || s_zero ( a.cov2() ) ) { return pochhammer ( a.value() , x ) ; }
+  else if ( -0.001 < x && x < 1000.1 && isushort ( x ) )
+  {
+    const unsigned short n = round ( x ) ;
+    return pochhammer ( a , n ) ; 
+  }
+  //
+  const double av = a.value() ;
+  const double xv = x ;
+  //
+  const double p  = pochhammer ( av , xv ) ;
+  const double da = p * ( psi ( av + xv ) - psi ( av ) ) ;
+  //
+  const double c2 = a.cov2() * da * da ;
+  // 
+  return Ostap::Math::ValueWithError ( p , c2 ) ;
+}
+// ============================================================================
+/* \overload evaluate Pochhammer symbol 
+ *  \f[  \frac{\Gamma ( a+ x ) } {\Gamma ( a ) } \f] 
+ *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+ *  @param   a (INPUT) the parameter 
+ *  @param   x (INPUT) the parameter 
+ *  @return  pochhammer  symbol 
+ *  @warning invalid and small covariances are ignored 
+ *  @see     Ostap::Math::rising_factorial
+ *  @see     Ostap::Math::falling_factorial
+ *  @see     Ostap::Math::pochhammer 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError Ostap::Math::pochhammer 
+( const double                       a , 
+  const Ostap::Math::ValueWithError& x ) 
+{
+  if ( x.cov2 () <= 0 || s_zero ( x.cov2 () ) ) { return pochhammer ( a , x.value ()  ) ; }
+  //
+  const double av = a          ;
+  const double xv = x.value () ;
+  //
+  const double p  = pochhammer ( av , xv ) ;
+  const double dx = p * psi ( av + xv )  ;
+  //
+  const double c2 = x.cov2() * dx * dx ;
+  // 
+  return Ostap::Math::ValueWithError ( p , c2 ) ;
+}
+// ==========================================================================
+/* \overload evaluate Pochhammer symbol 
+ *  \f[  \frac{\Gamma ( a+ x ) } {\Gamma ( a ) } \f] 
+ *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+ *  @param   a (INPUT) the parameter 
+ *  @param   x (INPUT) the parameter 
+ *  @return  pochhammer  symbol 
+ *  @warning invalid and small covariances are ignored 
+ *  @see     Ostap::Math::rising_factorial
+ *  @see     Ostap::Math::falling_factorial
+ *  @see     Ostap::Math::pochhammer 
+ */
+// ==========================================================================
+Ostap::Math::ValueWithError Ostap::Math::pochhammer 
+( const Ostap::Math::ValueWithError& a ,  
+  const Ostap::Math::ValueWithError& x )
+{
+  //
+  if      ( a.cov2 () <= 0 || s_zero ( a.cov2 () ) ) { return pochhammer ( a.value() , x          ) ; }
+  else if ( x.cov2 () <= 0 || s_zero ( x.cov2 () ) ) { return pochhammer ( a         , x.value () ) ; }
+  //
+  const double av = a.value () ;
+  const double xv = x.value () ;
+  //
+  const double p  = pochhammer ( av , xv ) ;
+  //
+  const double da = p * ( psi ( av + xv ) - psi ( av ) ) ;
+  const double dx = p *   psi ( av + xv )  ;
+  //
+  const double c2 = a.cov2() * da * da  + x.cov2() * dx * dx ;
+  // 
+  return Ostap::Math::ValueWithError ( p , c2 ) ;
+}
+// ============================================================================
 /*  evaluate <code>hypot(x,y)</code>
  *  \f$ \sqrt( x^2 + y^2 ) \f$
  *   @param x (INPUT) the first parameter

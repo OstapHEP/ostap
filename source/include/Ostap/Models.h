@@ -59,6 +59,14 @@ namespace Ostap
       ( const double mu   = 0 , 
         const double beta = 1 );
       // ======================================================================
+    public: // the main block 
+      // ======================================================================
+      /// get a value for the function 
+      inline double operator() ( const double x )  const { return pdf ( x ) ; }
+      inline double evaluate   ( const double x )  const { return pdf ( x ) ; }
+      /// get a value for the function      
+      double pdf  ( const double x ) const ;
+      // ======================================================================
     public: // primary getters 
       // ======================================================================
       inline double mu       () const { return shift () ; }
@@ -75,16 +83,15 @@ namespace Ostap
     public: // characteristics 
       // ======================================================================
       /// mean-value 
-      double        mean     () const ;
+      double        mean       () const ;
       /// median-value 
-      double        median   () const ;
+      double        median     () const ;
       /// variance 
-      double        variance () const ;
+      double        variance   () const ;
       /// RMS 
-      double        rms      () const ;
+      double        rms        () const ;
       /// skewness 
-      double        skewness () const ;
-      // ======================================================================
+      double        skewness   () const ;
       /// Mode 
       inline double mode       () const { return mu       () ; }
       /// dispersion 
@@ -92,14 +99,15 @@ namespace Ostap
       /// kurtosis
       inline double kurtosis   () const { return 12.0 / 5    ; }
       // ======================================================================
-    public: // the main block 
+    public: // support 
       // ======================================================================
-      /// get a value for the function 
-      inline double operator() ( const double x )  const { return pdf ( x ) ; }
-      inline double evaluate   ( const double x )  const { return pdf ( x ) ; }
-      /// get a value for the function      
-      double pdf  ( const double x ) const ;
-      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return true ; }      
+      /// minimal x 
+      double xmin () const ; 
+      /// maximal x 
+      double xmax () const ; 
+      // ======================================================================      
     public:  // integrals
       // ======================================================================
       double cdf      ( const double x ) const ;
@@ -179,8 +187,10 @@ namespace Ostap
       /// kurtosis 
       inline double kurtosis   () const  { return 6 / alpha () ; }
       // ======================================================================
-    public : // support: xmin&xmax 
-      // =====================================================================
+    public: // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false ; }      
       /// xmin 
       double xmin () const ;
       /// xmax 
@@ -507,15 +517,15 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date   2013-05-11
      */
-    class  Amoroso
+    class  Amoroso : public ShiftAndScale 
     {
     public:
       // ======================================================================
       /** constructor
-       *  param theta \f$\theta\f$-parameter
+       *  param theta \f$\theta\f$-parameter , scale 
        *  param alpha \f$\alpha\f$-parameter (>0)
        *  param beta  \f$\beta\f$-parameter
-       *  param a     a-parameter
+       *  param a     a-parameter            , shift
        *  Note that   \f$\alpha\beta\f$ is equal to k-parameter
        */
       Amoroso
@@ -527,16 +537,18 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate Amoroso distribtion
-      double pdf               ( const double x ) const ;
+      double        evaluate   ( const double x ) const ;
       /// evaluate Amoroso distribtion
-      inline double operator() ( const double x ) const { return pdf ( x ) ; }
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Amoroso distribtion
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
       // ======================================================================
     public:  // direct getters
       // ======================================================================
-      double a     () const { return m_a     ; }
-      double theta () const { return m_theta ; }
-      double alpha () const { return m_alpha ; }
-      double beta  () const { return m_beta  ; }
+      double a     () const { return shift () ; }
+      double theta () const { return scale () ; }
+      double alpha () const { return m_alpha.value()  ; }
+      double beta  () const { return m_beta .value()  ; }
       // ======================================================================
     public:  // derived getters
       // ======================================================================
@@ -544,26 +556,30 @@ namespace Ostap
       double k      () const { return alpha () * beta () ; }
       double p      () const { return            beta () ; }
       // ======================================================================
-    public:  // helper getters
-      // ======================================================================
-      double theta2 () const { return m_theta * m_theta  ; }
-      // ======================================================================
     public: // direct setters
       // ======================================================================
-      bool setA      ( const double value ) ;
-      bool setTheta  ( const double value ) ;
-      bool setAlpha  ( const double value ) ;
-      bool setBeta   ( const double value ) ;
-      bool setP      ( const double value ) { return setBeta ( value ) ; }
+      inline bool setA      ( const double value ) { return setShift ( value ) ; } 
+      inline bool setTheta  ( const double value ) { return setScale ( value ) ; } 
+      inline bool setBeta   ( const double value ) { return m_beta .setValue ( value ) ; } 
+      bool        setAlpha  ( const double value ) ;
+      // =======================================================================
+    public: // support 
       // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return true ; }      
+      /// minimal x 
+      double xmin () const ; 
+      /// maximal x 
+      double xmax () const ; 
+      // ======================================================================      
     public: // general properties
       // ======================================================================
-      double mode       () const ;
-      double mean       () const ;
-      double variance   () const ;
-      double dispersion () const { return variance () ; }
-      double sigma2     () const { return variance () ; }
-      double sigma      () const ;
+      double mode     () const ;
+      double mean     () const ;
+      double variance () const ;
+      double rms      () const ;
+      double skewness () const ;
+      double kurtosis () const ;
       // ======================================================================
     public: // integrals
       // ======================================================================
@@ -578,12 +594,21 @@ namespace Ostap
       // get the tag
       std::size_t tag () const ;
       // ======================================================================
+    private :
+      // ======================================================================
+      /// raw moments (unscaled & unshifted)
+      double raw_moment ( const unsigned short k ) const ;
+      /// "raw" cdf (for positive scale)
+      double raw_cdf    ( const double         y ) const ;
+      // ======================================================================
     private:
       // ======================================================================
-      double m_a     ;
-      double m_theta ;
-      double m_alpha ;
-      double m_beta  ;
+      /// parameter alpha>0
+      Ostap::Math::Scale m_alpha { 1 } ; // parameter alpha>0
+      /// parameter beta!=0 
+      Ostap::Math::Value m_beta  { 1 } ; // parameter beta!=0
+      ///   1 / Gamma ( alpha )
+      double             m_iga   { 1 } ; // 1/Gamma(alpha) 
       // ======================================================================
     };
     // ========================================================================
@@ -3455,7 +3480,7 @@ namespace Ostap
      *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
      *  @see https://doi.org/10.1214%2Faoms%2F1177731607
      *  @see https://www.jstor.org/stable/2235756     
-     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
      *
      * - uniform distribution for \f$ 0 \le x \le 1 \f$
      *
@@ -3487,6 +3512,8 @@ namespace Ostap
       // ======================================================================
     public : // support 
       // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return true ; }      
       /// minimal x 
       inline double xmin () const { return std::min ( x ( 0 ) , x ( 1 ) ) ; } 
       /// maximal x 
@@ -3541,7 +3568,7 @@ namespace Ostap
      *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
      *  @see https://doi.org/10.1214%2Faoms%2F1177731607
      *  @see https://www.jstor.org/stable/2235756     
-     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
      *
      * - \f$ \left ( 1+ \mathrm{e}^{-x}\right)^{-r} \f$ 
      *
@@ -3580,6 +3607,8 @@ namespace Ostap
       // ======================================================================
     public : // support: xmin&xmax 
       // =====================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false ; }      
       /// xmin 
       double xmin () const ;
       /// xmax 
@@ -3622,7 +3651,7 @@ namespace Ostap
      *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
      *  @see https://doi.org/10.1214%2Faoms%2F1177731607
      *  @see https://www.jstor.org/stable/2235756     
-     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
      *
      *  \f$ f(x) = \left( x^{-k} + 1 \right)^{-r}\f$
      *
@@ -3672,6 +3701,8 @@ namespace Ostap
       // ======================================================================
     public : // support: xmin&xmax 
       // =====================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false ; }      
       /// xmin 
       double xmin () const ;
       /// xmax 
@@ -3716,7 +3747,7 @@ namespace Ostap
      *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
      *  @see https://doi.org/10.1214%2Faoms%2F1177731607
      *  @see https://www.jstor.org/stable/2235756     
-     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
      *
      *  \f[ F(y) = \ \left( z^{c} + 1 \right)^{-r} \f]
      *  - where \f$z = \frac{1-y}{y} \f$ for \f$ 0 < y < 1 \f$ 
@@ -3767,6 +3798,8 @@ namespace Ostap
       // ======================================================================
     public : // support 
       // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return true ; }      
       /// minimal x 
       inline double xmin () const { return std::min ( x ( 0 ) , x ( 1 ) ) ; } 
       /// maximal x 
@@ -3811,9 +3844,9 @@ namespace Ostap
      *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
      *  @see https://doi.org/10.1214%2Faoms%2F1177731607
      *  @see https://www.jstor.org/stable/2235756     
-     *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
      *
-     *  \f[ F(y) = \left( k \mathrm{e}^{-\tan \frac{\pi}{2}x }\right)^{-r}
+     *  \f[ F(y) = \left( k \mathrm{e}^{-\tan \frac{\pi}{2}y } + 1 \right)^{-r} \f]
      *  - for \f$ -1 < y < 1 \f$ 
      *
      *  We have added two parameters: 
@@ -3839,11 +3872,11 @@ namespace Ostap
       // ======================================================================
     public : 
       // ======================================================================
-      /// evaluate Burr-IV function
+      /// evaluate Burr-V function
       double        evaluate    ( const double x ) const ;
-      /// evaluate Burr-IV function
+      /// evaluate Burr-V function
       inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
-      /// evaluate Burr-IV function
+      /// evaluate Burr-V function
       inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
       // ======================================================================
     public :
@@ -3862,6 +3895,8 @@ namespace Ostap
       // ======================================================================
     public : // support 
       // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return true ; }      
       /// minimal x 
       inline double xmin () const { return std::min ( x ( -1 ) , x ( 1 ) ) ; } 
       /// maximal x 
@@ -3897,11 +3932,534 @@ namespace Ostap
       Ostap::Math::LogValue m_k { 1 } ; // r-parameter 
       // ======================================================================
     } ;
-
+    // ========================================================================
+    /** @class BurrVI
+     *  Type VI Burr distribution   Eq (14) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  \f[ F(y) = \left( k \mathrm{e}^{-c\sinh y  } + 1 \right)^{-r} \f]
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrVI : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param k k-parameter k>0 
+       *  @param c k-parameter k>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrVI
+      ( const double r     = 1 , // r>0
+	const double k     = 1 , // k>0
+	const double c     = 1 , // c>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-VI function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-VI function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-VI function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      /// k-parameter 
+      inline double k () const { return m_k.value() ; }
+      /// c-parameter 
+      inline double c () const { return m_c.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setK    ( const double value ) { return m_k.setValue    ( value ) ; } 
+      inline bool setC    ( const double value ) { return m_c.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      inline bool setLogK ( const double value ) { return m_k.setLogValue ( value ) ; } 
+      inline bool setLogC ( const double value ) { return m_c.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false ; }      
+      /// minimal x 
+      double xmin () const ; 
+      /// maximal x 
+      double xmax () const ; 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      /// k-parameter 
+      Ostap::Math::LogValue m_k { 1 } ; // r-parameter 
+      /// k-parameter 
+      Ostap::Math::LogValue m_c { 1 } ; // c-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrVII
+     *  Type VII Burr distribution   Eq (15) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  \f[ F(y) = \left( \frac{ 1 + \tanh y } {2} \right)^{r} \f]
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrVII : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrVII
+      ( const double r     = 1 , // r>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-VII function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-VII function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-VII function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false  ; }      
+      /// minimal x 
+      double xmin () const ; 
+      /// maximal x 
+      double xmax () const ; 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrVIII
+     *  Type VIII Burr distribution   Eq (16) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  \f[ F(y) = \left(\frac{2}{\pi} \atan \mathrm{e}^x \right)^{r} \f]
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrVIII : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrVIII
+      ( const double r     = 1 , // r>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-VIII function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-VIII function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-VIII function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false  ; }      
+      /// minimal x 
+      double xmin () const ; 
+      /// maximal x 
+      double xmax () const ; 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrIX
+     *  Type IX Burr distribution   Eq (17) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  \f[ F(y) = 1 - \frac{2}{ k \left[(1+e^x)^r-1\right] +2  } \f]
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrIX : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param k k-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrIX
+      ( const double r     = 1 , // r>0
+	const double k     = 1 , // r>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-IX function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-IX function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-IX function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      /// k-parameter 
+      inline double k () const { return m_k.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setK    ( const double value ) { return m_k.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      inline bool setLogK ( const double value ) { return m_k.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false  ; }      
+      /// minimal x 
+      double xmin () const ; 
+      /// maximal x 
+      double xmax () const ; 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      /// k-parameter 
+      Ostap::Math::LogValue m_k { 1 } ; // k-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrX
+     *  Type X Burr distribution   Eq (17) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  \f[ F(y) = \left( 1 - e^{-x^2} \right)^{r}  \f]
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrX : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrX
+      ( const double r     = 1 , // r>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-X function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-X function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-X function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false  ; }      
+      /// minimal x 
+      double xmin () const ; 
+      /// maximal x 
+      double xmax () const ; 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class BurrXI
+     *  Type XI Burr distribution   Eq (19) 
+     *
+     *  @see Burr, I. W. (1942). "Cumulative frequency functions".
+     *     Annals of Mathematical Statistics. 13 (2): 215–232.
+     *     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+     *  @see https://doi.org/10.1214%2Faoms%2F1177731607
+     *  @see https://www.jstor.org/stable/2235756     
+     *  @see https://en.wikipedia.org/wiki/Burr_distribution
+     *
+     *  \f[ F(y) = \left( y - \frac{1}{2\pi} \sin 2\pi y \right)^{r}  \f]
+     *   for \f$  0 \le y \le 1 \f$ 
+     *
+     *  We have added two parameters: 
+     *  - scale
+     *  - shift 
+     */
+    class BurrXI : public ShiftAndScale 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor
+       *  @param r r-parameter r>0 
+       *  @param scale scale parameter 
+       *  @param shift shift parameter
+       */
+      BurrXI
+      ( const double r     = 1 , // r>0
+	const double scale = 1 ,
+	const double shift = 0 ) ;
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// evaluate Burr-X function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Burr-X function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Burr-X function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// r-parameter 
+      inline double r () const { return m_r.value() ; }
+      // ======================================================================
+    public :
+      // =====================================================================
+      inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
+      inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return true ; }      
+      /// minimal x 
+      inline double xmin () const { return std::min ( x ( 0 ) , x ( 1 ) ) ; } 
+      /// maximal x 
+      inline double xmax () const { return std::max ( x ( 0 ) , x ( 1 ) ) ; } 
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      /// CDF 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// r-parameter 
+      Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
+      // ======================================================================
+    } ;    
     // ========================================================================
     /** @class BurrXII
      *  Type XII BurrXII distribution
      *  @see https://en.wikipedia.org/wiki/BurrXII_distribution
+     *  - aka Singh-Maddala distribution
      *
      *  We have added two parameters: 
      *  - scale

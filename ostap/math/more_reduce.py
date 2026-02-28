@@ -848,6 +848,98 @@ def _om_kumaraswami_reduce_ ( peak ) :
 
 Ostap.Math.Kumaraswami . __reduce__ = _om_kumaraswami_reduce_
 
+# =============================================================================
+## Reduce Ostap::Math::BurrI
+#  @see Ostap::Math::BurrI
+def _om_BurrI_reduce_ ( shape ) :
+    """Reduce `Ostap.Math.BurrI`
+    - see `Ostap.Math.BurrI`
+    """
+    return root_factory , ( type ( shape ) ,
+                            shape.scale () ,
+                            shape.shift () )
+
+Ostap.Math.BurrI. __reduce__ = _om_BurrI_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::BurrII Ostap::Math::BurrVII,
+#         Ostap::Math::BurrVIII, Ostap::Math::BurrX and Ostap::Math::BurrXI 
+#  @see Ostap::Math::BurrII 
+#  @see Ostap::Math::BurrVII
+#  @see Ostap::Math::BurrVIII
+#  @see Ostap::Math::BurrX
+#  @see Ostap::Math::BurrXI
+def _om_BurrII_reduce_ ( shape ) :
+    """ Reduce `Ostap.Math.BurrII`, `Ostap.Math.BurrVII`,
+     `Ostap.Math.BurrVIII`, `Ostap.Math.BurrX` and `Ostap.Math.BurrXI`
+    - see `Ostap.Math.BurrII`
+    - see `Ostap.Math.BurrVII`
+    - see `Ostap.Math.BurrVIII`
+    - see `Ostap.Math.BurrX`
+    - see `Ostap.Math.BurrXI`
+    """
+    return root_factory , ( type ( shape ) ,
+                            shape.r     () ,
+                            shape.scale () ,
+                            shape.shift () )
+
+Ostap.Math.BurrII   . __reduce__ = _om_BurrII_reduce_
+Ostap.Math.BurrVII  . __reduce__ = _om_BurrII_reduce_
+Ostap.Math.BurrVIII . __reduce__ = _om_BurrII_reduce_
+Ostap.Math.BurrX    . __reduce__ = _om_BurrII_reduce_
+Ostap.Math.BurrXI   . __reduce__ = _om_BurrII_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::BurrIII, Ostap::Math::BurrV and Ostap::Math::BurrIX 
+#  @see Ostap::Math::BurrIII 
+#  @see Ostap::Math::BurrV
+#  @see Ostap::Math::BurrIX
+def _om_BurrIII_reduce_ ( shape ) :
+    """Reduce `Ostap.Math.BurrIII`, `Ostap.Math.BurrV` and `Ostap.Math.BurrIX` 
+    - see `Ostap.Math.BurrIII`
+    - see `Ostap.Math.BurrV`
+    - see `Ostap.Math.BurrIX`
+    """
+    return root_factory , ( type ( shape ) ,
+                            shape.r     () ,
+                            shape.k     () ,
+                            shape.scale () ,
+                            shape.shift () )
+
+Ostap.Math.BurrIII . __reduce__ = _om_BurrIII_reduce_
+Ostap.Math.BurrV   . __reduce__ = _om_BurrIII_reduce_
+Ostap.Math.BurrIX   . __reduce__ = _om_BurrIII_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::BurrIV
+#  @see Ostap::Math::BurrIV 
+def _om_BurrIV_reduce_ ( shape ) :
+    """Reduce `Ostap.Math.BurrIV`
+    - see `Ostap.Math.BurrIV`
+    """
+    return root_factory , ( type ( shape ) ,
+                            shape.r     () ,
+                            shape.c     () ,
+                            shape.scale () ,
+                            shape.shift () )
+
+Ostap.Math.BurrIV . __reduce__ = _om_BurrIV_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::BurrVI
+#  @see Ostap::Math::BurrVI 
+def _om_BurrVI_reduce_ ( shape ) :
+    """Reduce `Ostap.Math.BurrVI`
+    - see `Ostap.Math.BurrVI`
+    """
+    return root_factory , ( type ( shape ) ,
+                            shape.r     () ,
+                            shape.k     () ,
+                            shape.c     () ,
+                            shape.scale () ,
+                            shape.shift () )
+
+Ostap.Math.BurrVI . __reduce__ = _om_BurrVI_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::BurrXII

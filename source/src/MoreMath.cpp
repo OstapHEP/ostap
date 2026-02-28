@@ -374,6 +374,36 @@ double Ostap::Math::gamma_star ( const int n , const double x )
     1.1 <  x ? _gamma_star_2_ ( n ,  y ) : _gamma_star_  ( n , y ) ;  
 }
 // ============================================================================
+/*  unnormailzed incomplete gamma function for \f$ 0 \le x \f$
+ *  \f[ \Gamma ( a , x ) = \int_x^{+\infty} t^{a-1}e^{-t}dt\f]
+ *  such as \f$ \Gamma ( a, x = 0 ) = \Gamma(a) \f$
+ */
+// ============================================================================
+double Ostap::Math::gamma_inc 
+( const double a ,
+  const double x )
+{
+  //
+  if      ( s_zero ( x ) ) { return gamma  ( a ) ; }
+  else if ( x <= 0       ) { return s_QUIETNAN   ; }
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_gamma_inc_e ( a  , x, &result) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_gamma_inc_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN() ; }
+    //
+  }
+  return result.val ;
+  
+}
+// ============================================================================
 /*  normalized incomplete gamma function 
  *  \f$ Q(a,x) = \frac { \Gamma ( a , x ) }{\Gamma(a) } \f$, 
  *  where \f$ \Gamma(a,x) =  \int_x^{+\infty} t^{a-1} e^{-t}dt \f$ 
@@ -789,19 +819,26 @@ double Ostap::Math::erfcxinv   ( const double  x  )
  */
 // ============================================================================
 double Ostap::Math::sech ( const double x ) 
-{ return 700 < std::abs ( x )  ? 0.0 : 2.0 / ( std::exp(x)+std::exp(-x) ) ; }
+{
+  const double ax = std::abs (   x ) ;
+  const double ex = std::exp ( -ax ) ;
+  return 2.0 * ex / ( 1 + ex * ex ) ;
+}
 // ============================================================================
 /*  compute sech function 
  *  \$f f(x) = \frac{1}{\cosh x} = \frac{2}{ e^{x}+e^{-x} }\f$
  *  @return the value of sech function 
  */
 // ============================================================================
-std::complex<double> Ostap::Math::sech 
+std::complex<double>
+Ostap::Math::sech 
 ( const std::complex<double>& x )
-{ return 700 < std::abs ( x.real() ) ? 
-    std::complex<double>(0,0) : 2.0 / ( std::exp(x)+std::exp(-x) ) ; }
+{
+  const std::complex<double>  y { 0 < x.real() ? -1.0 * x : x } ;
+  const std::complex<double> ey = std::exp ( y ) ;
+  return 2.0 * ey / ( 1.0 + ey * ey ) ;
+}
 // ============================================================================
-
 
 // ============================================================================
 // Gamma function and friends 
@@ -2121,6 +2158,38 @@ double Ostap::Math::pochhammer
 ( const double         x ,
   const unsigned short n ) 
 { return __pochhammer__ ( x , n ) ; }
+// ============================================================================
+/* Pochhammer symbol, aka "rising factorial"
+ *  \f[ P(a,x) = \frac{ \Gamma ( a + x ) } { \Gamma ( a ) } \f] 
+ *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+ */
+// ============================================================================
+double Ostap::Math::pochhammer
+( const double a , 
+  const double x )
+{
+  if ( -0.001 < x && x < 1000.1 && isushort ( x ) )
+  {
+    const unsigned short n = round ( x ) ;
+    return pochhammer ( a , n ) ;
+  }
+  //
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_poch_e ( a , x , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_poch_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
 // ============================================================================
 /*  Rising  factorial, aka Pochhammer's symbol   
  *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
