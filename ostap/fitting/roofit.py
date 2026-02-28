@@ -333,7 +333,7 @@ def _rp_table_ ( plot , prefix = '' , title = '' ) :
         ## 
         row.append  ( name )
 
-        if hasattr ( obj , GetTitle ) :
+        if hasattr ( obj , 'GetTitle' ) :
             objtitle = obj.GetTitle()
             if objtitle : row.append ( str ( objtitle ) )
             else        : row.append ( '' )
@@ -350,7 +350,6 @@ ROOT.RooPlot.table    =  _rp_table_
 ROOT.RooPlot.__str__  =  _rp_table_
 ROOT.RooPlot.__repr__ =  _rp_table_
 
-
 # ================================================================================
 ## Friendly print of RooSimultaneous
 def _rsim_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
@@ -364,7 +363,7 @@ def _rsim_table_ ( pdf , title = '' , prefix = '' , style = '' ) :
     for label, index in cat.items() :
         cpdf = pdf.getPdf ( label )
         if not valid_pointer ( cpdf ) :
-            print ('INVALID POINTER' , label )
+            loger.error('RooSimultaneous: invalid PDF for category %s' % label )
         else :
             row  = '%s' % label , '%+d' % index , typename ( cpdf ) , cpdf.name , cpdf.title
             rows.append ( row )
