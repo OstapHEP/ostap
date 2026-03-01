@@ -88,6 +88,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Parameterization.cpp
                          src/Peaks.cpp
                          src/PDFs.cpp
+                         src/PDFsUtils.cpp
                          src/PDFs2D.cpp
                          src/PDFs3D.cpp
                          src/PhaseSpace.cpp

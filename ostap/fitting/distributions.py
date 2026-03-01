@@ -52,7 +52,19 @@
 - Davis_pdf            : Davis distribution
 - Kumaraswami_pdf      : Kumaraswami distribution
 - InverseGamma_pdf     : Inverse-Gamma distribution
-- Burr_pdf             : Burr Type XII distribution
+
+- BurrI_pdf             : Burr Type I    distribution
+- BurrII_pdf            : Burr Type II   distribution
+- BurrIII_pdf           : Burr Type III  distribution
+- BurrIV_pdf            : Burr Type IV   distribution
+- BurrV_pdf             : Burr Type V    distribution
+- BurrVI_pdf            : Burr Type VI   distribution
+- BurrVII_pdf           : Burr Type VII  distribution
+- BurrVIII_pdf          : Burr Type VIII distribution
+- BurrIX_pdf            : Burr Type IX   distribution
+- BurrX_pdf             : Burr Type X    distribution
+- BurrXI_pdf            : Burr Type XI   distribution
+- BurrXII_pdf           : Burr Type XII  distribution
 
 - Tsallis_pdf          : Tsallis PDF 
 - QGSM_pdf             : QGSM PDF 
@@ -110,7 +122,19 @@ __all__     = (
     'Davis_pdf'            , ## Davis distribution
     'Kumaraswami_pdf'      , ## Kumaraswami distribution
     'InverseGamma_pdf'     , ## Inverse-Gamma distribution
-    'BurrXII_pdf'          , ## Burr Type XII distribution
+    #
+    'BurrI_pdf'            , ## Burr Type I    distribution
+    'BurrII_pdf'           , ##  Burr Type II   distribution
+    'BurrIII_pdf'          , ## Burr Type III  distribution
+    'BurrIV_pdf'           , ## Burr Type IV   distribution
+    'BurrV_pdf'            , ## Burr Type V    distribution
+    'BurrVI_pdf'           , ## Burr Type VI   distribution
+    'BurrVII_pdf'          , ## Burr Type VII  distribution
+    'BurrVIII_pdf'         , ## Burr Type VIII distribution
+    'BurrIX_pdf'           , ## Burr Type IX   distribution
+    'BurrX_pdf'            , ## Burr Type X    distribution
+    'BurrXI_pdf'           , ## Burr Type XI   distribution
+    'BurrXII_pdf'          , ## Burr Type XII  distribution
     # 
     'Tsallis_pdf'          , ## Tsallis PDF 
     'QGSM_pdf'             , ## QGSM PDF 
@@ -124,7 +148,7 @@ from   ostap.math.base          import isfinite, pos_infinity, neg_infinity
 from   ostap.fitting.pdfbasic   import PDF1, PDF2
 from   ostap.fitting.fithelpers import ( ShiftAndScale , Shift , Scale ,
                                          AlphaAndBeta  , Alpha , Beta  ,
-                                         P , Q , R , PQ ) 
+                                         P , Q , PQ , R , K , C ) 
 import ROOT, math
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -142,7 +166,7 @@ spectra = []
 #  @date   2013-05-11
 #  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
-class GammaDist_pdf(PDF1,ShiftAndScale) :
+class GammaDist_pdf(PDF1,ShiftAndScale,K) :
     """ Gamma-distribution with shape/scale parameters
     http://en.wikipedia.org/wiki/Gamma_distribution
     It suits nicely for fits of multiplicity and/or, especially chi2 distributions
@@ -175,7 +199,7 @@ class GammaDist_pdf(PDF1,ShiftAndScale) :
     def __init__ ( self        , * , 
                    xvar        , ## the variable
                    name  = ''  , ## the name 
-                   k     = 2   , ## k-parameter
+                   logk  = 0   , ## log(k)-parameter
                    theta = 1   , ## theta-parameter (scale)
                    shift = ROOT.RooFit.RooConst ( 0 ) ) : ## shift
         
@@ -183,45 +207,37 @@ class GammaDist_pdf(PDF1,ShiftAndScale) :
         PDF1.__init__ ( self , name = name , xvar = xvar )
         ## Initialize the 2nd base
         ShiftAndScale.__init__ ( self ,
-                                 shift       = shift        ,
                                  scale       = theta        ,
+                                 shift       = shift        ,
                                  scale_name  = 'theta_%s'   % self.name ,
                                  scale_title = '#theta(%s)' % self.name )
-        
-        ## shape 
-        self.__k     = self.make_var ( k     ,
-                                       'k_%s'                % self.name ,
-                                       'k_{#Gamma}(%s)'      % self.name ,
-                                       None , 2 , 1.e-3 , 100 )
+        # the third base
+        K.__init__ ( self , logk = logk ) 
+
+        print ( 'I AM HERE: x     ' , self.x     )
+        print ( 'I AM HERE: logk  ' , self.logk  )
+        print ( 'I AM HERE: theta ' , self.theta )
+        print ( 'I AM HERE: shift ' , self.shift )
         
         self.pdf  = Ostap.Models.GammaDist (
-            self.roo_name ( 'gamma_' ) ,
+            self.roo_name ( 'gamma_' )          ,
             'Gamma distribution %s' % self.name , 
-            self.x                 ,
-            self.k                 ,
-            self.theta             )
+            self.x      ,
+            self.logk   ,
+            self.theta  , 
+            self.shift  )
         
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'k'     : self.k     ,
+            'logk'  : self.logk  ,
             'theta' : self.theta ,            
             'shift' : self.shift ,            
             }
 
-    @property
-    def k ( self ) :
-        """`k'-parameter of Gamma distribution   (k>0)"""
-        return self.__k
-    @k.setter 
-    def k ( self , value ) :
-        self.set_value ( self.__k , value ) 
-
     ## ALIAS
     theta = ShiftAndScale.scale
-    low   = ShiftAndScale.shift
-
     
 models.append ( GammaDist_pdf )
 
@@ -252,16 +268,16 @@ class GenGammaDist_pdf(GammaDist_pdf,P) :
     def __init__ ( self       , * , 
                    xvar       , ## the variable
                    name  = '' , ## the name 
-                   k     = 2  , ## k-parameter
+                   logk  = 0  , ## log(k) parameter
                    theta = 1  , ## theta-parameter, scale 
-                   logp  = 0  , ## p-parameter
+                   logp  = 0  , ## log(p) parameter
                    shift = ROOT.RooFit.RooConst ( 0 ) ) : ## shift-parameter
         
         ## Initialize the 1st base 
         GammaDist_pdf.__init__ ( self ,
                                  name  = name  ,
                                  xvar  = xvar  ,
-                                 k     = k     ,
+                                 logk  = logk     ,
                                  theta = theta ,
                                  shift = shift )
         ## initiailze the second base
@@ -271,18 +287,18 @@ class GenGammaDist_pdf(GammaDist_pdf,P) :
             self.roo_name ( 'ggamma_' ) ,
             'Generalized Gamma distribution %s' % self.name , 
             self.x         ,
-            self.k         ,
-            self.theta     ,
+            self.logk      ,
             self.logp      , 
+            self.theta     ,
             self.shift     )
         
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'k'     : self.k     ,
-            'theta' : self.theta ,            
+            'logk'  : self.logk   ,
             'logp'  : self.logp  ,            
+            'theta' : self.theta ,            
             'shift' : self.shift ,            
             }
 
@@ -303,17 +319,17 @@ class Amoroso_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
     def __init__ ( self       , * , 
                    xvar       ,   ## the variable
                    name  = '' ,   ## the name 
-                   theta = 1  ,   ## theta-parameter/ scale 
                    alpha = 1  ,   ## alpha-parameter
                    beta  = 1  ,   ## beta-parameter
-                   a     = 0  ) : ## a-parameter/shift 
+                   scale = 1  ,   ## theta-parameter/ scale 
+                   shift = 0  ) : ## a-parameter/shift 
         
         ## The 1st base 
         PDF1         .__init__ ( self , name = name , xvar = xvar )
         ## The 2nd base
         ShiftAndScale.__init__ ( self ,
-                                 scale       = theta ,
-                                 shift       = a     ,
+                                 scale       = scale ,
+                                 shift       = shift ,
                                  scale_name  = 'theta_%s'             % self.name ,
                                  scale_title = '#theta_{Amoroso}(%s)' % self.name ,
                                  shift_name  = 'a_%s'                 % self.name ,
@@ -326,26 +342,25 @@ class Amoroso_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
         self.pdf  = Ostap.Models.Amoroso (
             self.roo_name ( 'amo_' ) ,
             'Amoroso %s' % self.name , 
-            self.x         ,
-            self.theta     ,
-            self.alpha     ,
-            self.beta      ,
-            self.a         )
+            self.x      ,
+            self.alpha  ,
+            self.beta   ,
+            self.scale  ,
+            self.shift  )
         
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'theta' : self.theta ,            
             'alpha' : self.alpha ,
             'beta'  : self.beta  ,            
-            'a'     : self.a     ,            
+            'scale' : self.scale ,            
+            'shift' : self.shift ,            
             }
         
     ## ALIAS
     theta = ShiftAndScale.scale 
     a     = ShiftAndScale.shift
-
 
 models.append ( Amoroso_pdf ) 
 # =============================================================================
@@ -366,14 +381,14 @@ class LogGammaDist_pdf(GammaDist_pdf) :
     def __init__ ( self       , * , 
                    xvar       , ## the variable
                    name  = '' , ## the name 
-                   k     = 2  , ## k-parameter
+                   logk  = 0  , ## log(k)-parameter
                    theta = 1  , ## theta-parameter
                    shift = ROOT.RooFit.RooConst ( 0 ) ) : ## shift-parameter
         #
         GammaDist_pdf.__init__ ( self  ,
                                  name  = name  ,
                                  xvar  = xvar  ,
-                                 k     = k     ,
+                                 logk  = logk  ,
                                  theta = theta ,
                                  shift = shift )
         #
@@ -381,14 +396,15 @@ class LogGammaDist_pdf(GammaDist_pdf) :
             self.roo_name ( 'lgamma_' ) ,
             'Log-Gamma %s' % self.name , 
             self.x                 ,
-            self.k                 ,
-            self.theta             )
+            self.logk              ,
+            self.theta             ,
+            self.shift             )
 
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'k'     : self.k     ,            
+            'logk'  : self.logk  ,            
             'theta' : self.theta ,            
             'shift' : self.shift ,            
             }
@@ -414,14 +430,14 @@ class Log10GammaDist_pdf(LogGammaDist_pdf) :
     def __init__ ( self       , * , 
                    xvar       , 
                    name  = '' , ## the name 
-                   k     = 2  , ## k-parameter
+                   logk  = 0  , ## k-parameter
                    theta = 1  , ## theta-parameter
                    shift = ROOT.RooFit.RooConst ( 0 ) ) : ## shift-parameter
         #
         LogGammaDist_pdf.__init__ ( self ,
                                     name  = name  ,
                                     xvar  = xvar  ,
-                                    k     = k     ,
+                                    logk  = logk   ,
                                     theta = theta ,
                                     shift = shift )
         ## 
@@ -429,14 +445,15 @@ class Log10GammaDist_pdf(LogGammaDist_pdf) :
             self.roo_name ( 'l10gamma_' ) ,
             'Log10 Gamma %s' % self.name , 
             self.x                 ,
-            self.k                 ,
-            self.theta             )
+            self.logk              ,
+            self.theta             , 
+            self.shift             )
         
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'k'     : self.k     ,            
+            'logk'  : self.logk  ,            
             'theta' : self.theta ,            
             'shift' : self.shift ,            
             }
@@ -871,6 +888,8 @@ models.append ( BetaPrime_pdf )
 class GenBetaPrime_pdf(Beta_pdf) :
     """ Generalized Beta-prime disribution 
     - http://en.wikipedia.org/wiki/Beta_prime_distribution
+    
+    Note that one can also use negative `a` parameter 
     """
     ## constructor
     def __init__ ( self       , * , 
@@ -1708,7 +1727,7 @@ class Benini_pdf(PDF1, ShiftAndScale) :
     @property
     def alpha ( self ) :
         """'alpha'- shape parameter for Benini-distribution"""
-        return self.__shape[0]
+        return self.__shape [ 0 ] 
     @alpha.setter 
     def alpha ( self , value ) :
         self.set_value ( self.__shape [ 0 ] , value )
@@ -1717,7 +1736,7 @@ class Benini_pdf(PDF1, ShiftAndScale) :
     def beta ( self ) :
         """'beta'- shape parameter for Benini-distribution"""
         assert 1 < len ( self.__shape ) , 'Invalid parameter!'
-        return self.__shape[1] 
+        return self.__shape [ 1 ] 
     @beta.setter 
     def beta ( self , value ) :
         assert 1 < len ( self.__shape ) , 'Invalid parameter!'
@@ -1752,7 +1771,6 @@ class Benini_pdf(PDF1, ShiftAndScale) :
         self.component_setter ( self.__shape , values )
         
 models.append ( Benini_pdf ) 
-
 
 # =============================================================================
 ## @class MPERT_pdf
@@ -2258,7 +2276,7 @@ models.append ( LogNormal_pdf )
 #  @see https://en.wikipedia.org/wiki/Exponential-logarithmic_distribution
 # - We have added a shift parameter
 # - to ensure \f$ 0 < p < 1 \f$  we use
-# \f$ p = \frac{1}{2}\left[ 1 + \tanh \psi \right] \f$ 
+#  \f$ p = \frac{1}{2}\left[ 1 + \tanh \psi \right] \f$ 
 # see Ostap::Math::ExpoLog 
 class ExpoLog_pdf(PDF1,Shift,Beta) :
     """ Log-normal distribution
@@ -2473,6 +2491,813 @@ class InverseGamma_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
 models.append ( InverseGamma_pdf )
 
 # =============================================================================
+## @class BurrI_pdf 
+#  Type I Burr distribution   Eq (9) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+# This one if just an uniform distribution for \f$ 0 \le x \le 1 \f$
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrI 
+#  @see Ostap::Math::BurrI 
+class BurrI_pdf( PDF1,ShiftAndScale) :
+    """ Type I Burr distribution   Eq (9) 
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+    
+    This one if just an uniform distribution for \f$ 0 <  x < 1 \f$
+    We have added two parameters: 
+    - scale
+    -  shift
+    - see `Ostap.Models.BurrI`
+    - see `Ostap.Math.BurrI`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name 
+                   scale = 1  ,
+                   shift = 0  ) :        
+        ## 
+        PDF1         .__init__ ( self  , name  = name  , xvar  = xvar )
+        ShiftAndScale.__init__ ( self  , scale = scale , shift = shift )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrI (
+            self.roo_name ( 'burrI_' )  ,
+            'Burr Type I  %s' % self.name , 
+            self.x     ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+        
+models.append ( BurrI_pdf )
+
+# =============================================================================
+## @class BurrII_pdf 
+#  Type II Burr distribution   Eq (10) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  \f[ F(x) = \left ( 1+ \mathrm{e}^{-x}\right)^{-r} \f$] 
+# 
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrII 
+#  @see Ostap::Math::BurrII 
+class BurrII_pdf(BurrI_pdf,R) :
+    r""" Type II Burr distribution   Eq (10) 
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+    
+     \f[ F(x) = \left ( 1+ \mathrm{e}^{-x}\right)^{-r} \f$] 
+
+    We have added two parameters: 
+    - scale
+    -  shift
+    - see `Ostap.Models.BurrII`
+    - see `Ostap.Math.BurrII`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrI_pdf.__init__ ( self          ,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             scale = scale ,
+                             shift = shift )
+        ## log(r)-parameter 
+        R.__init__    ( self , logr = logr )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrII (
+            self.roo_name ( 'burrII_' )  ,
+            'Burr Type II  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrII_pdf )
+
+# =============================================================================
+## @class BurrIII_pdf 
+#  Type III Burr distribution   Eq (11) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#   \f[ F(x) = \left( x^{-k} + 1 \right)^{-r}\f] 
+# 
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrIII
+#  @see Ostap::Math::BurrIII 
+class BurrIII_pdf(BurrII_pdf,K) :
+    r""" Type III Burr distribution   Eq (11) 
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+    
+    \f[ F(x) = \left( x^{-k} + 1 \right)^{-r}\f] 
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrIII`
+    - see `Ostap.Math.BurrIII`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   logk  = 0  ,  ## log(k) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrII_pdf.__init__ ( self          ,
+                              name  = name  ,
+                              xvar  = xvar  ,
+                              logr  = logr  , 
+                              scale = scale ,
+                              shift  = shift )
+        ## log(r)-parameter 
+        K.__init__    ( self , logk = logk )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrIII (
+            self.roo_name ( 'burrIII_' )  ,
+            'Burr Type III  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.logk  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'logk'  : self.logk  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrIII_pdf )
+
+# =============================================================================
+## @class BurrIV_pdf 
+#  Type IY Burr distribution   Eq (12) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  \f[ F(y) = \ \left( z^{c} + 1 \right)^{-r} \f]
+#  - where \f$z = \frac{1-y}{y} \f$ for \f$ 0 < y < 1 \f$ 
+# 
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrIII
+#  @see Ostap::Math::BurrIII 
+class BurrIV_pdf(BurrII_pdf,C) :
+    r""" Type IV Burr distribution   Eq (12)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+    
+    \f[ F(y) = \ \left( z^{c} + 1 \right)^{-r} \f]
+    - where \f$z = \frac{1-y}{y} \f$ for \f$ 0 < y < 1 \f$ 
+    \f[ F(x) = \left( x^{-k} + 1 \right)^{-r}\f] 
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrIV`
+    - see `Ostap.Math.BurrIV`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   logc  = 0  ,  ## log(c) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrII_pdf.__init__ ( self          ,
+                              name  = name  ,
+                              xvar  = xvar  ,
+                              logr  = logr  , 
+                              scale = scale ,
+                              shift = shift )
+        ## log(c)-parameter 
+        C.__init__    ( self , logc = logc )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrIV (
+            self.roo_name ( 'burrIV_' )  ,
+            'Burr Type IV  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.logc  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'logc'  : self.logc  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrIV_pdf )
+
+# =============================================================================
+## @class BurrV_pdf 
+#  Type IY Burr distribution   Eq (13) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#   \f[ F(y) = \left( k \mathrm{e}^{-c\tan \frac{\pi}{2}y } + 1 \right)^{-r} \f]
+#   - for \f$ -1 < y < 1 \f$
+# 
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrV
+#  @see Ostap::Math::BurrV 
+class BurrV_pdf(BurrII_pdf,K,C) :
+    r""" Type V Burr distribution   Eq (13)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+    
+    \f[ F(y) = \left( k \mathrm{e}^{-c\tan \frac{\pi}{2}y } + 1 \right)^{-r} \f]
+    - for \f$ -1 < y < 1 \f$
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrV`
+    - see `Ostap.Math.BurrV`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   logk  = 0  ,  ## log(k) 
+                   logc  = 0  ,  ## log(c) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrII_pdf.__init__ ( self          ,
+                              name  = name  ,
+                              xvar  = xvar  ,
+                              logr  = logr  , 
+                              scale = scale ,
+                              shift = shift )
+        ## log(k) & log(c)-parameters  
+        K.__init__    ( self , logk = logk )
+        C.__init__    ( self , logc = logc )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrV (
+            self.roo_name ( 'burrV_' )  ,
+            'Burr Type V  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.logk  ,
+            self.logc  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'logk'  : self.logk  ,
+            'logc'  : self.logc  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrV_pdf )
+
+# =============================================================================
+## @class BurrVI_pdf 
+#  Type YI Burr distribution   Eq (14) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  \f[ F(y) = \left( k \mathrm{e}^{-c\sinh y  } + 1 \right)^{-r} \f]
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrVI
+#  @see Ostap::Math::BurrVI 
+class BurrVI_pdf(BurrV_pdf) :
+    r""" Type VI Burr distribution   Eq (14)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+    
+    \f[ F(y) = \left( k \mathrm{e}^{-c\sinh y  } + 1 \right)^{-r} \f]
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrVI`
+    - see `Ostap.Math.BurrVI`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   logk  = 0  ,  ## log(k) 
+                   logc  = 0  ,  ## log(c) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrV_pdf.__init__ ( self          ,
+                             name  = name  ,
+                             xvar  = xvar  ,
+                             logr  = logr  , 
+                             logk  = logk  , 
+                             logc  = logc  , 
+                             scale = scale ,
+                             shift = shift )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrVI (
+            self.roo_name ( 'burrVI_' )  ,
+            'Burr Type VI  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.logk  ,
+            self.logc  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'logk'  : self.logk  ,
+            'logc'  : self.logc  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrVI_pdf )
+
+# =============================================================================
+## @class BurrVII_pdf 
+#  Type YII Burr distribution   Eq (15) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  \f[ F(y) = \left( \frac{ 1 + \tanh y } {2} \right)^{r} \f]
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrVI
+#  @see Ostap::Math::BurrVI 
+class BurrVII_pdf(BurrII_pdf) :
+    r""" Type VII Burr distribution   Eq (15)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+     
+    \f[ F(y) = \left( \frac{ 1 + \tanh y } {2} \right)^{r} \f]
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrVII`
+    - see `Ostap.Math.BurrVII`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrII_pdf.__init__ ( self          ,
+                              name  = name  ,
+                              xvar  = xvar  ,
+                              logr  = logr  , 
+                              scale = scale ,
+                              shift = shift )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrVII (
+            self.roo_name ( 'burrVII_' )  ,
+            'Burr Type VII  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrVII_pdf )
+
+# =============================================================================
+## @class BurrVIII_pdf 
+#  Type YIII Burr distribution   Eq (16) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  \f[ F(y) = \left(\frac{2}{\pi} \atan \mathrm{e}^x \right)^{r} \f]
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrVIII
+#  @see Ostap::Math::BurrVIII 
+class BurrVIII_pdf(BurrII_pdf) :
+    r""" Type VIII Burr distribution   Eq (16)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+     
+    \f[ F(y) = \left(\frac{2}{\pi} \atan \mathrm{e}^x \right)^{r} \f]
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrVIII`
+    - see `Ostap.Math.BurrVIII`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrII_pdf.__init__ ( self          ,
+                              name  = name  ,
+                              xvar  = xvar  ,
+                              logr  = logr  , 
+                              scale = scale ,
+                              shift = shift )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrVIII (
+            self.roo_name ( 'burrVIII_' )  ,
+            'Burr Type VIII  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrVIII_pdf )
+
+# =============================================================================
+## @class BurrIX_pdf 
+#  Type IX Burr distribution   Eq (17) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  \f[ F(y) = 1 - \frac{2}{ k \left[(1+e^x)^r-1\right] +2  } \f]
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrIX
+#  @see Ostap::Math::BurrVIX 
+class BurrIX_pdf(BurrIII_pdf) :
+    r""" Type IX Burr distribution   Eq (17)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+     
+    \f[ F(y) = 1 - \frac{2}{ k \left[(1+e^x)^r-1\right] +2  } \f]
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrIX`
+    - see `Ostap.Math.BurrIX`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   logk  = 0  ,  ## log(k) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrIII_pdf.__init__ ( self          ,
+                               name  = name  ,
+                               xvar  = xvar  ,
+                               logr  = logr  , 
+                               logk  = logk  , 
+                               scale = scale ,
+                               shift = shift )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrIX (
+            self.roo_name ( 'burrIX_' )  ,
+            'Burr Type IX  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.logk  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'logk'  : self.logk  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrIX_pdf )
+
+# =============================================================================
+## @class BurrX_pdf 
+#  Type X Burr distribution   Eq (18) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#   \f[ F(y) = \left( 1 - e^{-x^2} \right)^{r}  \f]
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrX
+#  @see Ostap::Math::BurrX 
+class BurrX_pdf(BurrII_pdf) :
+    r""" Type X Burr distribution   Eq (18)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+     
+    \f[ F(y) = \left( 1 - e^{-x^2} \right)^{r}  \f]
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrX`
+    - see `Ostap.Math.BurrX`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrII_pdf.__init__ ( self          ,
+                              name  = name  ,
+                              xvar  = xvar  ,
+                              logr  = logr  , 
+                              scale = scale ,
+                              shift = shift )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrX (
+            self.roo_name ( 'burrX_' )  ,
+            'Burr Type X  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrX_pdf )
+
+# =============================================================================
+## @class BurrXI_pdf 
+#  Type XI Burr distribution   Eq (19) 
+#
+#  @see Burr, I. W. (1942). "Cumulative frequency functions".
+#     Annals of Mathematical Statistics. 13 (2): 215–232.
+#     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+#  @see https://doi.org/10.1214%2Faoms%2F1177731607
+#  @see https://www.jstor.org/stable/2235756     
+#  @see https://en.wikipedia.org/wiki/Burr_distribution
+#
+#  \f[ F(y) = \left( y - \frac{1}{2\pi} \sin 2\pi y \right)^{r}  \f]
+#   for \f$  0 \le y \le 1 \f$ 
+#
+#  We have added two parameters: 
+#  - scale
+#  - shift
+#  @see Ostap::Models::BurrXI
+#  @see Ostap::Math::BurrXI 
+class BurrXI_pdf(BurrII_pdf) :
+    r""" Type XI Burr distribution   Eq (19)
+    
+    - see Burr, I. W. (1942). "Cumulative frequency functions".
+     Annals of Mathematical Statistics. 13 (2): 215–232.
+     doi:10.1214/aoms/1177731607. JSTOR 2235756.
+    - see https://doi.org/10.1214%2Faoms%2F1177731607
+    - see https://www.jstor.org/stable/2235756     
+    - see https://en.wikipedia.org/wiki/Burr_distribution
+     
+    \f[ F(y) = \left( y - \frac{1}{2\pi} \sin 2\pi y \right)^{r}  \f]
+    for \f$  0 \le y \le 1 \f$ 
+
+    We have added two parameters: 
+    - scale
+    - shift
+    
+    - see `Ostap.Models.BurrXI`
+    - see `Ostap.Math.BurrXI`
+    """
+    ## constructor
+    def __init__ ( self       , * , 
+                   xvar       ,  ## the variable
+                   name  = '' ,  ## the name
+                   logr  = 0  ,  ## log(r) 
+                   scale = 1  ,
+                   shift = 0  ) :
+        
+        ## the main base 
+        BurrII_pdf.__init__ ( self          ,
+                              name  = name  ,
+                              xvar  = xvar  ,
+                              logr  = logr  , 
+                              scale = scale ,
+                              shift = shift )
+        
+        ## create PDF 
+        self.pdf  = Ostap.Models.BurrXI (
+            self.roo_name ( 'burrXI_' )  ,
+            'Burr Type XI  %s' % self.name , 
+            self.x     ,
+            self.logr  ,
+            self.scale ,
+            self.shift )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'logr'  : self.logr  ,
+            'scale' : self.scale ,            
+            'shift' : self.shift }
+
+models.append ( BurrXI_pdf )
+
+# =============================================================================
 ## @class BurrXII_pdf
 #  Type XII Burr distribution
 #  @see https://en.wikipedia.org/wiki/Burr_distribution
@@ -2482,7 +3307,7 @@ models.append ( InverseGamma_pdf )
 #  - shift 
 #  @see Ostap::Models::BurrXII 
 #  @see Ostap::Math::BurrXII
-class BurrXII_pdf(PDF1,ShiftAndScale) :
+class BurrXII_pdf(BurrI_pdf,C,K) :
     """ Burr Type XII distribution with scale and shift
     - see https://en.wikipedia.org/wiki/Burr_distribution
     - see Ostap::Models::Burr 
@@ -2491,59 +3316,37 @@ class BurrXII_pdf(PDF1,ShiftAndScale) :
     ## constructor
     def __init__ ( self       , * , 
                    xvar       ,  ## the variable
-                   name  = '' ,  ## the name 
-                   c     = 1  ,
-                   k     = 8  , 
+                   name  = '' ,  ## the name
+                   logc  = 0  ,
+                   logk  = 0  ,
                    scale = 1  ,
                    shift = 0  ) :
-        ## 
-        PDF1         .__init__ ( self  , name  = name  , xvar  = xvar )
-        ShiftAndScale.__init__ ( self  , scale = scale , shift = shift )
-        #
-        self.__c   = self.make_var ( c ,
-                                     'c_%s'            % self.name ,
-                                     'c_{BurrXII}(%s)' % self.name ,
-                                     None , c , 1.e-5 , 1000  )
-        self.__k   = self.make_var ( k ,
-                                     'k_%s'            % self.name ,
-                                     'k_{BurrXII}(%s)' % self.name ,
-                                     None , k , 1.e-5 , 1000  )
-        
+        ##
+        BurrI_pdf.__init__ ( self , name = name , xvar = xvar)
+        C        .__init__ ( self , logc = logc )
+        K        .__init__ ( self , logk = logk )
+        ##        
         ## create PDF 
         self.pdf  = Ostap.Models.BurrXII (
             self.roo_name ( 'burrXII_' )  ,
             'Burr Type XII  %s' % self.name , 
             self.x     ,
-            self.c     ,
-            self.k     ,
+            self.logc  ,
+            self.logk  ,
             self.scale ,
             self.shift )
         ## save the configuration:
         self.config = {
             'name'  : self.name  ,
             'xvar'  : self.xvar  ,
-            'c'     : self.c     ,            
-            'k'     : self.k     ,            
+            'logc'  : self.logc  ,            
+            'logk'  : self.logk  ,            
             'scale' : self.scale ,            
             'shift' : self.shift }
-        
-    @property
-    def c ( self ) :
-        """`c` : a-parameter for Burr Type XII distribution"""
-        return self.__c
-    @c.setter 
-    def c ( self , value ) :
-        self.set_value ( self.__c , value )
-        
-    @property
-    def k ( self ) :
-        """`k` : b-parameter for Burr Type XII distribution"""
-        return self.__k
-    @k.setter 
-    def k ( self , value ) :
-        self.set_value ( self.__k , value )
+
 
 models.append ( BurrXII_pdf )
+
 
 # =============================================================================
 ## @class Tsallis_pdf

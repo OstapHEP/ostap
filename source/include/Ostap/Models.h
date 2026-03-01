@@ -167,7 +167,7 @@ namespace Ostap
       inline double k          () const  { return m_k .value () ; }
       inline double theta      () const  { return      scale () ; }
       // ======================================================================
-      inline double alpha      () const  { return m_k .value () ; }
+      inline double alpha      () const  { return k ()          ; }
       inline double beta       () const  { return 1 / theta  () ; }
       // ======================================================================
     public:
@@ -249,7 +249,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// shape
-      Ostap::Math::LogValue m_k  { 2 } ; // shape
+      Ostap::Math::LogValue m_k   { 2 } ; // shape
       /// auxillary intermediate parameter log Gamma ( k ) 
       mutable double        m_lgk { 0 } ; 
       // ======================================================================
@@ -318,10 +318,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      bool setK     ( const double value  ) { return m_gamma.setK     ( value ) ; }
-      bool setTheta ( const double value  ) { return m_gamma.setTheta ( value ) ; }
-      bool setShift ( const double value  ) { return m_gamma.setShift ( value ) ; }
-      bool setScale ( const double value  ) { return m_gamma.setScale ( value ) ; }
+      inline bool setK     ( const double value  ) { return m_gamma.setK     ( value ) ; }
+      inline bool setLogK  ( const double value  ) { return m_gamma.setLogK  ( value ) ; }
+      inline bool setTheta ( const double value  ) { return m_gamma.setTheta ( value ) ; }
+      inline bool setShift ( const double value  ) { return m_gamma.setShift ( value ) ; }
+      inline bool setScale ( const double value  ) { return m_gamma.setScale ( value ) ; }
+      inline bool setScaleShift
+      ( const double value1 ,
+	const double value2 ) 
+      { return m_gamma.setScaleShift  ( value1 , value2  ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -529,10 +534,10 @@ namespace Ostap
        *  Note that   \f$\alpha\beta\f$ is equal to k-parameter
        */
       Amoroso
-      ( const double theta = 1 ,
-        const double alpha = 1 ,
+      ( const double alpha = 1 ,
         const double beta  = 1 ,
-        const double a     = 0 ) ;
+	const double scale = 1 ,   // scale 	
+        const double shift = 0 ) ; // shift 
       // ======================================================================
     public:
       // ======================================================================
@@ -545,10 +550,11 @@ namespace Ostap
       // ======================================================================
     public:  // direct getters
       // ======================================================================
-      double a     () const { return shift () ; }
-      double theta () const { return scale () ; }
       double alpha () const { return m_alpha.value()  ; }
       double beta  () const { return m_beta .value()  ; }
+      //
+      double a     () const { return shift () ; }
+      double theta () const { return scale () ; }
       // ======================================================================
     public:  // derived getters
       // ======================================================================
@@ -558,10 +564,11 @@ namespace Ostap
       // ======================================================================
     public: // direct setters
       // ======================================================================
-      inline bool setA      ( const double value ) { return setShift ( value ) ; } 
-      inline bool setTheta  ( const double value ) { return setScale ( value ) ; } 
-      inline bool setBeta   ( const double value ) { return m_beta .setValue ( value ) ; } 
-      bool        setAlpha  ( const double value ) ;
+      inline bool setA        ( const double value ) { return setShift ( value ) ; } 
+      inline bool setTheta    ( const double value ) { return setScale ( value ) ; } 
+      inline bool setBeta     ( const double value ) { return m_beta .setValue ( value ) ; } 
+      bool        setAlpha    ( const double value ) ;
+      bool        setLogAlpha ( const double value ) ;
       // =======================================================================
     public: // support 
       // ======================================================================
@@ -604,11 +611,11 @@ namespace Ostap
     private:
       // ======================================================================
       /// parameter alpha>0
-      Ostap::Math::Scale m_alpha { 1 } ; // parameter alpha>0
+      Ostap::Math::LogValue m_alpha { 1 } ; // parameter alpha>0
       /// parameter beta!=0 
-      Ostap::Math::Value m_beta  { 1 } ; // parameter beta!=0
+      Ostap::Math::Value    m_beta  { 1 } ; // parameter beta!=0
       ///   1 / Gamma ( alpha )
-      double             m_iga   { 1 } ; // 1/Gamma(alpha) 
+      double                m_iga   { 1 } ; // 1/Gamma(alpha) 
       // ======================================================================
     };
     // ========================================================================
@@ -1614,16 +1621,15 @@ namespace Ostap
      *  - |f$ \eta   = \sqrt{\frac{b}{a}}\$ 
      *  @see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
      */
-    class GenInvGauss
-      : public ShiftAndScale 
+    class GenInvGauss : public ShiftAndScale 
     {
       // ======================================================================
     public:
       // ======================================================================
       GenInvGauss 
       ( const double theta = 1 , 
-        const double eta   = 1 , // scale 
         const double p     = 1 , 
+        const double scale = 1 , // scale 
         const double shift = 0 ) ;
       // ======================================================================
     public:
@@ -1640,7 +1646,7 @@ namespace Ostap
       /// parameter theta 
       inline double theta () const { return m_theta ; }
       /// parameter p 
-      inline double p     () const { return m_p     ; }  
+      inline double p     () const { return m_p.value() ; }  
       /// parameter eta 
       inline double eta   () const { return scale  () ; }  
       // ======================================================================
@@ -1653,9 +1659,10 @@ namespace Ostap
       // ======================================================================
     public: // setters 
       // ======================================================================
-      bool        setP     ( const double value ) ;
-      bool        setTheta ( const double value ) ; 
-      inline bool setEta   ( const double value ) { return setScale ( value ) ; }
+      bool        setP        ( const double value ) ;
+      bool        setTheta    ( const double value ) ; 
+      bool        setLogTheta ( const double value ) ; 
+      inline bool setEta      ( const double value ) { return setScale ( value ) ; }
       // ======================================================================
     public: // properties 
       // ======================================================================
@@ -1694,11 +1701,11 @@ namespace Ostap
     private:      
       // ======================================================================
       /// parameter theta
-      Ostap::Math::Scale m_theta      {  1 } ; // parameter theta 
+      Ostap::Math::LogValue m_theta  {  1 } ; // parameter theta 
       /// parameter p
-      Ostap::Math::Value m_p          {  1 } ; // parameter theta
+      Ostap::Math::Value    m_p      {  0 } ; // parameter p 
       /// cache 
-      double             m_iKp_theta  { -1 } ; // cache 
+      double                m_iKp_theta { -1 } ; // cache 
       // ======================================================================
     private:
       // ======================================================================
@@ -3395,15 +3402,15 @@ namespace Ostap
      *  Inverse Gamma distribution (with shift)
      *  @see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
      */
-    class InverseGamma
+    class InverseGamma : public ShiftAndScale 
     {
       // ======================================================================
     public:
       // ======================================================================
       /// full constructot 
       InverseGamma
-      ( const double alpha = 8 ,
-	const double beta  = 1 ,   // scale 
+      ( const double alpha = 8 ,   // shape
+	const double scale = 1 ,   // scale 
 	const double shift = 0 ) ;	      
       // ======================================================================
     public : 
@@ -3417,19 +3424,22 @@ namespace Ostap
       // ======================================================================
     public : 
       // ======================================================================
-      inline double alpha  () const { return m_alpha ; }
-      inline double beta   () const { return m_beta  ; }
-      inline double shift  () const { return m_shift ; }
+      inline double alpha  () const { return m_alpha.value() ; }      
+      inline double beta   () const { return scale () ; }
       // ======================================================================
     public :
       // ======================================================================
-      inline double xmin  () const { return m_shift ; }
+      inline bool finite_range () const { return false ; }
+      /// x-min 
+      double xmin () const ;
+      /// x-max 
+      double xmax () const ;      
       // ======================================================================
     public:
       // ======================================================================
-      bool setAlpha ( const double value ) ;
-      bool setBeta  ( const double value ) ;
-      bool setShift ( const double value ) ;
+      bool        setAlpha    ( const double value ) ;
+      bool        setLogAlpha ( const double value ) ;
+      inline bool setBeta     ( const double value ) { return setScale ( value ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -3463,12 +3473,17 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
+      /// raw moments (unscaled & unshifted)
+      double raw_moment ( const unsigned short k ) const ;
+      /// "raw" cdf   (for positive scale)
+      double raw_cdf    ( const double         y ) const ;
+      // ======================================================================
+    private :
+      // ======================================================================
       /// parameter alpha (shape) 
-      double m_alpha { 8 } ; // parameter alpha
-      /// parameter beta  (scale) 
-      double m_beta  { 1 } ; // parameter b 
-      /// shift parameter
-      double m_shift { 0 } ; // shift  parameter 
+      Ostap::Math::LogValue m_alpha { 8 } ; // parameter alpha
+      /// cache 1/Gamma(alpha)
+      double                m_iga   { 0 } ; // cache: 1/Gamma(alpha)
       // ======================================================================
     };
     // ========================================================================
@@ -3846,12 +3861,12 @@ namespace Ostap
      *  @see https://www.jstor.org/stable/2235756     
      *  @see https://en.wikipedia.org/wiki/Burr_distribution
      *
-     *  \f[ F(y) = \left( k \mathrm{e}^{-\tan \frac{\pi}{2}y } + 1 \right)^{-r} \f]
+     *  \f[ F(y) = \left( k \mathrm{e}^{-c\tan \frac{\pi}{2}y } + 1 \right)^{-r} \f]
      *  - for \f$ -1 < y < 1 \f$ 
      *
      *  We have added two parameters: 
      *  - scale
-     *  - shift 
+     *  - shift
      */
     class BurrV : public ShiftAndScale 
     {
@@ -3861,12 +3876,14 @@ namespace Ostap
       /** constructor
        *  @param r r-parameter r>0 
        *  @param k k-parameter k>0 
+       *  @param c c-parameter c>0 
        *  @param scale scale parameter 
        *  @param shift shift parameter
        */
       BurrV
       ( const double r     = 1 , // r>0
 	const double k     = 1 , // k>0
+	const double c     = 1 , // c>0
 	const double scale = 1 ,
 	const double shift = 0 ) ;
       // ======================================================================
@@ -3885,13 +3902,17 @@ namespace Ostap
       inline double r () const { return m_r.value() ; }
       /// k-parameter 
       inline double k () const { return m_k.value() ; }
+      /// c-parameter 
+      inline double c () const { return m_c.value() ; }
       // ======================================================================
     public :
       // =====================================================================
       inline bool setR    ( const double value ) { return m_r.setValue    ( value ) ; } 
       inline bool setK    ( const double value ) { return m_k.setValue    ( value ) ; } 
+      inline bool setC    ( const double value ) { return m_c.setValue    ( value ) ; } 
       inline bool setLogR ( const double value ) { return m_r.setLogValue ( value ) ; } 
       inline bool setLogK ( const double value ) { return m_k.setLogValue ( value ) ; } 
+      inline bool setLogC ( const double value ) { return m_c.setLogValue ( value ) ; } 
       // ======================================================================
     public : // support 
       // ======================================================================
@@ -3930,6 +3951,8 @@ namespace Ostap
       Ostap::Math::LogValue m_r { 1 } ; // r-parameter 
       /// k-parameter 
       Ostap::Math::LogValue m_k { 1 } ; // r-parameter 
+      /// c-parameter 
+      Ostap::Math::LogValue m_c { 1 } ; // r-parameter 
       // ======================================================================
     } ;
     // ========================================================================

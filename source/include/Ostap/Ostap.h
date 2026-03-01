@@ -108,6 +108,7 @@
 #include "Ostap/Notifier.h"
 #include "Ostap/Ostap.h"
 #include "Ostap/PDFs.h"
+#include "Ostap/PDFsUtils.h"
 #include "Ostap/PDFs2D.h"
 #include "Ostap/PDFs3D.h"
 #include "Ostap/Parameterization.h"

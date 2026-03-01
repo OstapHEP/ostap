@@ -36,10 +36,12 @@ __all__     = (
     'Scale'             , ## helper mixin to add scale-parameter 
     'ShiftAndScale'     , ## helper mixin to add shift&scale parameters 
     ##
-    'P'                 , ## helper mixin to add log-p-parameter
-    'Q'                 , ## helper mixin to add log-q-parameter
-    'R'                 , ## helper mixin to add log-r-parameter
-    'PQ'                , ## helper mixin to add log-p&q parameters 
+    'P'                 , ## helper mixin to add log(p)-parameter
+    'Q'                 , ## helper mixin to add log(q)-parameter
+    'PQ'                , ## helper mixin to add logs p&q parameters 
+    'R'                 , ## helper mixin to add log(r)-parameter
+    'K'                 , ## helper mixin to add log(k)-parameter
+    'C'                 , ## helper mixin to add log(c)-parameter
     ## 
     'Alpha'             , ## helper mixin to add alpha-parameter
     'Beta'              , ## helper mixin to add beta-parameter 
@@ -3475,40 +3477,6 @@ class Phases(object) :
         """'power'  : polynomial degree """
         return len ( self.__phis ) 
     
-# =============================================================================
-## @class Shift
-#  Helper MIXIN class to add `shift` parameter
-#  @author Vanya Belyaev Vanya.Belyaev@CERN.CH
-class Shift ( object ) :
-    """ Helper MIXIN class to add `shift` parameter
-    """
-    def __init__ ( self  ,
-                   shift       = None ,
-                   shift_name  = ''   , 
-                   shift_title = ''   ,
-                   *shift_pars        ) :
-        
-        if shift is None   : shift = ROOT.RooFit.RooConst ( 0 )
-        ##
-        name = self.name         
-        if not shift_name  : shift_name  = 'shift_%s'  % name
-        if not shift_title : shift_title = 'shift(%s)' % name
-        ## shift parameter
-        if not shift_pars  : shift_pars = 0 ,         
-        self.__shift  = self.make_var ( shift        ,
-                                        shift_name   ,  
-                                        shift_title  ,  
-                                        None , *shift_pars )        
-    @property
-    def shift ( self ) :
-        """`shift'-parameter for location-scale family, the same as `location`"""
-        return self.__shift
-    @shift.setter 
-    def shift ( self , value ) :
-        self.set_value ( self.__shift , value )
-
-    ## ALIAS 
-    location = shift
     
 # =============================================================================
 ## @class Scale 
@@ -3529,11 +3497,12 @@ class Scale ( object ) :
         if not scale_name  : scale_name  = 'scale_%s'  % name
         if not scale_title : scale_title = 'scale(%s)' % name
         ## scale parameter
-        if not scale_pars : scale_pars = 1 , 1e-6 , 1.e+6 
-        self.__scale  = self.make_var ( scale              ,
-                                        scale_name         ,
-                                        scale_title        ,
-                                        None , *scale_pars )    
+        if not scale_pars : scale_pars = 1 , 1e-6 , 1.e+6
+        ## create the variable 
+        self.__scale = self.make_var ( scale              ,
+                                       scale_name         ,
+                                       scale_title        ,
+                                       None , *scale_pars )    
         
     @property
     def scale ( self ) :
@@ -3544,13 +3513,49 @@ class Scale ( object ) :
         self.set_value ( self.__scale , value )
 
 # =============================================================================
+## @class Shift
+#  Helper MIXIN class to add `shift` parameter
+#  @author Vanya Belyaev Vanya.Belyaev@CERN.CH
+class Shift ( object ) :
+    """ Helper MIXIN class to add `shift` parameter
+    """
+    def __init__ ( self               ,
+                   shift       = None ,
+                   shift_name  = ''   , 
+                   shift_title = ''   ,
+                   *shift_pars        ) :
+        
+        if shift is None   : shift = ROOT.RooFit.RooConst ( 0 )
+        ##
+        name = self.name         
+        if not shift_name  : shift_name  = 'shift_%s'  % name
+        if not shift_title : shift_title = 'shift(%s)' % name
+        ## shift parameter
+        if not shift_pars  : shift_pars = 0 ,
+        ## create the variable 
+        self.__shift  = self.make_var ( shift        ,
+                                        shift_name   ,  
+                                        shift_title  ,  
+                                        None , *shift_pars )        
+    @property
+    def shift ( self ) :
+        """`shift'-parameter for location-scale family, the same as `location`"""
+        return self.__shift
+    @shift.setter 
+    def shift ( self , value ) :
+        self.set_value ( self.__shift , value )
+
+    ## ALIAS 
+    location = shift
+        
+# =============================================================================
 ## @class ShiftAndScale 
 #  Helper MIXIN class to add `shift` and `scale` parameters 
 #  @author Vanya Belyaev Vanya.Belyaev@CERN.CH
 class ShiftAndScale (Shift,Scale) :
     """ Helper MIXIN class to add `shift` and `scale` parameters
     """
-    def __init__ ( self  ,
+    def __init__ ( self        , * , 
                    scale       =  ROOT.RooFit.RooConst ( 1 ) , 
                    shift       =  ROOT.RooFit.RooConst ( 0 ) ,
                    scale_name  = '' , 
@@ -3560,8 +3565,8 @@ class ShiftAndScale (Shift,Scale) :
                    scale_pars  = () ,
                    shift_pars  = () ) : 
         
-        Shift.__init__ ( self , shift = shift , shift_name = shift_name , shift_title = shift_title , *shift_pars )
         Scale.__init__ ( self , scale = scale , scale_name = scale_name , scale_title = scale_title , *scale_pars )
+        Shift.__init__ ( self , shift = shift , shift_name = shift_name , shift_title = shift_title , *shift_pars )
         
 # =============================================================================
 
@@ -4217,8 +4222,11 @@ class SigmaLR(object) :
 
 
 # =============================================================================
-## P & Q 
+## P,Q,R,R&C 
 # =============================================================================
+## @var log_limits
+#  valid limits for log(value) 
+log_limits = 0 , -500 , 500
 
 # =============================================================================
 ## @class P
@@ -4235,7 +4243,7 @@ class P(object) :
         
         if not p_name  : p_name  = 'logp_%s'    % name 
         if not p_title : p_title = 'log P(%s)'  % name
-        if not p_pars  : p_pars  = 0 , -100 , 100 
+        if not p_pars  : p_pars  =  log_limits 
         
         ## parameter log(p)
         self.__logp = self.make_var ( logp , p_name , p_title , None , *p_pars )
@@ -4246,13 +4254,17 @@ class P(object) :
         return self.__logp
     @logp.setter 
     def logp ( self , value ) :
-        self.set_value ( self.__logp , value )
-
+        self.set_value ( self.__logp , value )        
+    @property
+    def p ( self ) :
+        """`p` : parameter `p` recalcualted from `log(p)` """
+        return math.exp ( float ( self.logp ) )
+    
 # =============================================================================
 ## @class Q
-#  Helper MIXIN class to add q-parameter 
+#  Helper MIXIN class to add log(q)-parameter 
 class Q(object) :
-    """ Helper MIXIN class to add q-parameters
+    """ Helper MIXIN class to add log(q)-parameters
     """
     def __init__ ( self         ,
                    logq    = 0  ,
@@ -4263,7 +4275,7 @@ class Q(object) :
         
         if not q_name  : q_name  = 'logq_%s'    % name 
         if not q_title : q_title = 'log Q (%s)' % name
-        if not q_pars  : q_pars  = 0 , -100 , 100 
+        if not q_pars  : q_pars  =  log_limits 
         
         ## parameter log(q) 
         self.__logq = self.make_var ( logq , q_name , q_title , None , *q_pars )
@@ -4274,7 +4286,30 @@ class Q(object) :
         return self.__logq
     @logq.setter 
     def logq ( self , value ) :
-        self.set_value ( self.__logq , value )
+        self.set_value ( self.__logq , value )        
+    @property
+    def q ( self ) :
+        """`q` : parameter `q` recalcualted from `log(q)` """
+        return math.exp ( float ( self.logq ) ) 
+
+# =============================================================================
+## @class PQ
+#  Helper MIXIN class to add logs of 'p' and `q`-parameters
+class PQ (P,Q):
+    """ Helper MIXIN class to add logs of 'p' and `q`-parameters
+    """
+    def __init__ ( self ,
+                   logp    = 0  ,
+                   logq    = 0  , * , 
+                   p_name  = '' ,                   
+                   p_title = '' ,
+                   q_name  = '' ,                   
+                   q_title = '' ,                   
+                   p_pars  = () , 
+                   q_pars  = () ) :
+        
+        P.__init__ ( self , logp , p_name , p_title , *p_pars )
+        Q.__init__ ( self , logq , q_name , q_title , *q_pars )
 
 # =============================================================================
 ## @class R
@@ -4289,39 +4324,92 @@ class R(object) :
         
         name = self.name
         
-        if not r_name  : r_name  = 'logq_%s'    % name 
+        if not r_name  : r_name  = 'logr_%s'    % name 
         if not r_title : r_title = 'log R (%s)' % name
-        if not r_pars  : r_pars  = 0 , -100 , 100 
+        if not r_pars  : r_pars  =  log_limits 
         
         ## parameter log(r) 
         self.__logr = self.make_var ( logr , r_name , r_title , None , *r_pars )
  
     @property
     def logr ( self ) :
-        """`logr'-parameter: logarithm of R-parameter """
+        """`logr'-parameter: logarithm of r-parameter """
         return self.__logr
     @logr.setter 
     def logr ( self , value ) :
         self.set_value ( self.__logr , value )
         
-# =============================================================================
-## @class PQ
-#  Helper MIXIN class to add logs of 'P' and `Q`-parameters
-class PQ (P,Q):
-    """ Helper MIXIN class to add logs of 'P' and `Q`-parameters
-    """
-    def __init__ ( self ,
-                   logp    = 0  ,
-                   logq    = 0  , * , 
-                   p_name  = '' ,                   
-                   p_title = '' ,
-                   q_name  = '' ,                   
-                   q_title = '' ,                   
-                   p_pars  = () , 
-                   q_pars  = () ) :
+    @property
+    def r ( self ) :
+        """`r` : parameter `r` recalcualted from `log(r)` """
+        return math.exp ( float ( self.logr ) ) 
         
-        P.__init__ ( self , logp , p_name , p_title , *p_pars )
-        Q.__init__ ( self , logq , q_name , q_title , *q_pars )
+# =============================================================================
+## @class K
+#  Helper MIXIN class to add log(k)-parameter 
+class K(object) :
+    """ Helper MIXIN class to add log(k)-parameter
+    """
+    def __init__ ( self         ,
+                   logk    = 0  ,
+                   k_name  = '' ,                   
+                   k_title = '' , *k_pars ) :
+        
+        name = self.name
+        
+        if not k_name  : k_name  = 'logk_%s'    % name 
+        if not k_title : k_title = 'log K (%s)' % name
+        if not k_pars  : k_pars  =  log_limits 
+        
+        ## parameter log(k) 
+        self.__logk = self.make_var ( logk , k_name , k_title , None , *k_pars )
+ 
+    @property
+    def logk ( self ) :
+        """`logk'-parameter: logarithm of k-parameter """
+        return self.__logk
+    @logk.setter 
+    def logk ( self , value ) :
+        self.set_value ( self.__logk , value )
+
+    ## @property
+    ## def k ( self ) :
+    ##    """`k` : parameter `k` recalculated from `log(k)` """
+    ##    return math.exp ( float ( self.logk ) ) 
+        
+# =============================================================================
+## @class C
+#  Helper MIXIN class to add log(c)-parameter 
+class C(object) :
+    """ Helper MIXIN class to add log(c)-parameter
+    """
+    def __init__ ( self         ,
+                   logc    = 0  ,
+                   c_name  = '' ,                   
+                   c_title = '' , *c_pars ) :
+        
+        name = self.name
+        
+        if not c_name  : c_name  = 'logc_%s'    % name 
+        if not c_title : c_title = 'log C (%s)' % name
+        if not c_pars  : c_pars  =  log_limits 
+        
+        ## parameter log(c) 
+        self.__logc = self.make_var ( logc , c_name , c_title , None , *c_pars )
+ 
+    @property
+    def logc ( self ) :
+        """`logc'-parameter: logarithm of c-parameter """
+        return self.__logc
+    @logc.setter 
+    def logc ( self , value ) :
+        self.set_value ( self.__logc , value )
+        
+    @property
+    def c ( self ) :
+        """`c` : parameter `c` recalcualted from `log(c)` """
+        return math.exp ( float ( self.logc ) ) 
+        
         
 # =============================================================================
 ## Alpha & Beta 
@@ -4593,17 +4681,42 @@ class TailNR(object) :
 # ==============================================================================
 ##  @class  TailA
 #   Helper mixin class  to define alpha-parameter for tails 
-#   It defines two properties
+#   It defines two properties:
 #   - alpha
 #   - a    
-class TailA(Alpha) :
+class TailA(object) :
     """ Helper mixin class  to define alpha-parameter for the tails 
+    It defines two properties:
+    - `alpha`
+    - `a`    
     """    
     def __init__  ( self              , 
                     alpha       = 1.7 ,
                     name_alpha  = ''  , 
-                    title_alpha = ''  ) :        
-        Alpha.__init__ ( self , alpha , name_alpha , title_alpha , None , 1.7 , 0.5 , 5.0 )
+                    title_alpha = ''  , *alpha_pars ) :
+        
+        name = self.name
+        
+        if not alpha_name  : alpha_name  = 'alpha_%s'   % name 
+        if not alpha_title : alpha_title = '#alpha(%s)' % name
+        if not alpha_pars  : alpha_pars  = 1.7 , 0.5 , 4.5
+        
+        ## parameter alpha 
+        self.__alpha = self.make_var ( alpha       ,
+                                       alpha_name  ,
+                                       alpha_title ,
+                                       None        ,
+                                       *alpha_pars )
+    @property
+    def alpha ( self ) :
+        """`alpha': alpha-tail parameter, same as `a`"""
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        self.set_value ( self.__alpha , value )
+
+    ## ALIAS
+    a = alpha
 
 # ==============================================================================
 ##  @class  TailAL

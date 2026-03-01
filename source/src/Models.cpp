@@ -224,10 +224,8 @@ double Ostap::Math::GammaDist::raw_moment
 // ============================================================================
 double Ostap::Math::GammaDist::mean       () const
 {
-  //
   const double kv     = k     () ; 
   const double tv     = theta () ;
-  //
   return x ( kv * tv ) ; 
 }
 // ============================================================================
@@ -235,10 +233,8 @@ double Ostap::Math::GammaDist::mean       () const
 // ============================================================================
 double Ostap::Math::GammaDist::variance () const
 {
-  //
   const double kv     = k     () ; 
   const double ss     = scale () ;
-  //
   return kv * ss * ss ; 
 }
 // ============================================================================
@@ -264,8 +260,7 @@ double Ostap::Math::GammaDist::evaluate ( const double x ) const
   //
   const double logr = -y + ( kv - 1 ) * std::log ( y  ) - m_lgk ;
   //
-  const  double s = std::abs ( scale () ) ;
-  return std::exp ( logr ) / s ;
+  return std::exp ( logr ) / abs_scale ()  ;
 }
 // ============================================================================
 // get the integral
@@ -555,7 +550,6 @@ std::size_t Ostap::Math::GenGammaDist::tag () const
 }
 // ============================================================================
 
-
 // ============================================================================
 // Amoroso 
 // ============================================================================
@@ -568,13 +562,13 @@ std::size_t Ostap::Math::GenGammaDist::tag () const
  */
 // ============================================================================
 Ostap::Math::Amoroso::Amoroso 
-( const double theta , 
-  const double alpha , 
+( const double alpha , 
   const double beta  ,
-  const double a     )
-  : ShiftAndScale ( theta , a , "theta" , "a"     , typeid ( *this ) , false ) 
-  , m_alpha       ( alpha               , "alpha" , typeid ( *this ) ) 
-  , m_beta        ( beta                , "beta"  , typeid ( *this ) ) 
+  const double scale , 
+  const double shift )
+  : ShiftAndScale ( scale , shift , "theta" , "a"     , typeid ( *this ) , false ) 
+  , m_alpha       ( alpha                   , "alpha" , typeid ( *this ) ) 
+  , m_beta        ( beta                    , "beta"  , typeid ( *this ) ) 
 {
   m_iga = Ostap::Math::igamma ( m_alpha.value () ) ; 
 }
@@ -594,6 +588,15 @@ double Ostap::Math::Amoroso::xmax () const
 bool Ostap::Math::Amoroso::setAlpha  ( const double value )
 {
   if ( !m_alpha.setValue ( value ) ) { return false ; }
+  m_iga = Ostap::Math::igamma ( m_alpha.value () ) ;
+  return true ;
+}
+// ============================================================================
+// Set parameter alpha
+// ============================================================================
+bool Ostap::Math::Amoroso::setLogAlpha  ( const double value )
+{
+  if ( !m_alpha.setLogValue ( value ) ) { return false ; }
   m_iga = Ostap::Math::igamma ( m_alpha.value () ) ;
   return true ;
 }
@@ -2607,10 +2610,10 @@ std::size_t Ostap::Math::Rice::tag () const
 // ============================================================================
 Ostap::Math::GenInvGauss::GenInvGauss 
 ( const double theta , 
-  const double eta   ,
   const double p     ,  
+  const double scale ,
   const double shift )
-  : ShiftAndScale ( eta   , shift , "eta" , "shift" , typeid ( *this ) , false )
+  : ShiftAndScale ( scale , shift , "eta" , "shift" , typeid ( *this ) , false )
   , m_theta       ( theta                 , "theta" , typeid ( *this ) )
   , m_p           ( p                     , "p"     , typeid ( *this ) )
 {
@@ -2638,6 +2641,15 @@ double Ostap::Math::GenInvGauss::evaluate ( const double x ) const
 bool Ostap::Math::GenInvGauss::setTheta  ( const double value ) 
 {
   if ( !m_theta.setValue ( value ) ) { return false ; }
+  m_iKp_theta = 1.0 / Ostap::Math::bessel_Knu ( p () , theta ()) ;  
+  return true ;
+}
+// ============================================================================
+// set parameter theta 
+// ============================================================================
+bool Ostap::Math::GenInvGauss::setLogTheta  ( const double value ) 
+{
+  if ( !m_theta.setLogValue ( value ) ) { return false ; }
   m_iKp_theta = 1.0 / Ostap::Math::bessel_Knu ( p () , theta ()) ;  
   return true ;
 }
@@ -5437,116 +5449,137 @@ std::size_t Ostap::Math::Kumaraswami::tag () const
 // ============================================================================
 Ostap::Math::InverseGamma::InverseGamma
 ( const double alpha ,
-  const double beta  ,
+  const double scale ,
   const double shift )
-  : m_alpha ( std::abs ( alpha ) )
-  , m_beta  ( std::abs ( beta  ) )
-  , m_shift (            shift   )
+  : ShiftAndScale ( scale , shift , "beta" , "shift" , typeid ( *this ) , false ) 
+  , m_alpha       ( alpha                  , "alpha" , typeid ( *this ) )  
 {
-  //
-  Ostap::Assert ( m_alpha  , 
-                  "Alpha parameter must be positive!"     ,
-                  "Ostap::Math::InverseGamma"             ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  Ostap::Assert ( m_beta  , 
-                  "Beta parameter must be positive!"      ,
-                  "Ostap::Math::InverseGamma"             ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
+  m_iga = Ostap::Math::igamma ( m_alpha.value () ) ;
 }
 // ============================================================================
 // set alpha 
 // ============================================================================
 bool Ostap::Math::InverseGamma::setAlpha ( const double value ) 
 {
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_alpha ) ) { return false ; }
-  //
-  Ostap::Assert ( avalue   , 
-                  "Alpha parameter must be positive!"     ,
-                  "Ostap::Math::InverseGamma"             ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  m_alpha = avalue ; 
+  if ( !m_alpha.setValue ( value ) ) { return false ; }
+  m_iga = Ostap::Math::igamma ( m_alpha.value () ) ;
   return true ;
 } 
-// ======================================================================
-// set beta 
 // ============================================================================
-bool Ostap::Math::InverseGamma::setBeta ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_beta ) ) { return false ; }
-  //
-  Ostap::Assert ( avalue   , 
-                  "Beta parameter must be positive!"      ,
-                  "Ostap::Math::InverseGamma"             ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  m_beta = avalue ; 
-  return true ;
-} 
-// ======================================================================
-// set shift
+// set alpha 
 // ============================================================================
-bool Ostap::Math::InverseGamma::setShift ( const double value ) 
+bool Ostap::Math::InverseGamma::setLogAlpha ( const double value ) 
 {
-  if ( s_equal ( value , m_shift ) ) { return false ; }
-  m_shift = value ; 
+  if ( !m_alpha.setLogValue ( value ) ) { return false ; }
+  m_iga = Ostap::Math::igamma ( m_alpha.value () ) ;
   return true ;
 }
+// ============================================================================
+// xmin  
+// ============================================================================
+double Ostap::Math::InverseGamma::xmin () const
+{ return Ostap::Math::is_positive ( scale () ) ? x ( 0 ) : s_NEGINF ; }
+// ============================================================================
+// xmax
+// ============================================================================
+double Ostap::Math::InverseGamma::xmax () const
+{ return Ostap::Math::is_positive ( scale () ) ? s_POSINF : x ( 0 ) ; }
 // ============================================================================
 // evaluate Inverse-Gamma function
 // ============================================================================
 double Ostap::Math::InverseGamma::evaluate    ( const double x ) const
 {
-  if ( x <= m_shift ) { return 0 ; }
-  const double z = ( x - m_shift ) / m_beta ;
-  if ( s_zero ( z ) ) { return 0 ; }
-  //
-  const double lnr =  -1.0 / z - ( m_alpha + 1 ) * std::log ( z ) ;      
-  return std::exp ( lnr ) / m_beta ; 
+  const double y = t ( x )  ;
+  if ( y <= 0 || s_zero ( y ) ) {  return 0  ; }  
+  const double lnr =  - 1.0 / y - ( alpha () + 1 ) * std::log ( y )  ;  
+  return m_iga * std::exp ( lnr ) / abs_scale () ; 
+}
+// ============================================================================
+// raw moments (unscaled & unshifted)
+// ============================================================================
+double Ostap::Math::InverseGamma::raw_moment ( const unsigned short n ) const
+{
+  const double av = alpha () ;
+  if ( av <= n || s_equal ( av , 1.0 * n ) ) { return s_QUIETNAN ; }
+  return std::exp ( Ostap::Math::lngamma ( av - n ) -
+		    Ostap::Math::lngamma ( av     ) ) ;
 }
 // ============================================================================
 // mean
 // ============================================================================
 double Ostap::Math::InverseGamma::mean     () const
 {
-  if ( m_alpha <= 1 || s_equal ( m_alpha , 1 ) ) { return s_QUIETNAN ; }
-  return m_shift + m_beta / ( m_alpha - 1 ) ;
+  const double av = alpha () ;
+  if ( av <= 1 || s_equal ( av , 1 ) ) { return s_QUIETNAN ; }
+  ///
+  const double m1 = raw_moment ( 1 ) ;
+  if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  ///
+  return x ( m1 ) ;
 }
 // ============================================================================
 // variance 
 // ============================================================================
 double Ostap::Math::InverseGamma::variance () const
 {
-  if ( m_alpha <= 2 || s_equal ( m_alpha , 2 ) ) { return s_QUIETNAN ; }
-  return m_beta * m_beta / ( ( m_alpha - 1 ) * ( m_alpha - 1 ) * ( m_alpha - 2 ) ) ;
+  const double av = alpha () ;
+  if ( av <= 2  || s_equal ( av , 2 ) ) { return s_QUIETNAN ; }
+  ///
+  const double m1 = raw_moment ( 1 ) ;
+  if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  const double m2 = raw_moment ( 2 ) ;
+  if ( !std::isfinite ( m2 ) ) { return m2 ; }
+  ///
+  const double ss = scale () ;
+  return ss * ss * Ostap::Math::variance ( m2 , m1 ) ;
 }
 // ============================================================================
 // rms 
 // ============================================================================
 double Ostap::Math::InverseGamma::rms  () const
 {
-  if ( m_alpha <= 2 || s_equal ( m_alpha , 2 ) ) { return s_QUIETNAN ; }
-  return std::sqrt ( variance () ) ;
+  const double av = alpha () ;
+  if ( av <= 2  || s_equal ( av , 2 ) ) { return s_QUIETNAN ; }
+  ///
+  const double vv = variance () ;
+  if ( !std::isfinite ( vv ) ) { return vv ; }
+  return std::sqrt ( vv ) ;
 }
 // ============================================================================
 // skewness 
 // ============================================================================
 double Ostap::Math::InverseGamma::skewness () const
 {
-  if ( m_alpha <= 3 || s_equal ( m_alpha , 3 ) ) { return s_QUIETNAN ; }
-  return 4 * std::sqrt ( m_alpha - 2 ) / ( m_alpha - 3 ) ;
+  const double av = alpha () ;
+  if ( av <= 3  || s_equal ( av , 3 ) ) { return s_QUIETNAN ; }
+  ///
+  const double m1 = raw_moment ( 1 ) ;
+  if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  const double m2 = raw_moment ( 2 ) ;
+  if ( !std::isfinite ( m2 ) ) { return m2 ; }
+  const double m3 = raw_moment ( 3 ) ;
+  if ( !std::isfinite ( m3 ) ) { return m3 ; }
+  ///
+  return scale_sign () * Ostap::Math::skewness ( m3 , m2 , m1 ) ;
 }
 // ============================================================================
 // kurtosis
 // ============================================================================
 double Ostap::Math::InverseGamma::kurtosis () const
 {
-  if ( m_alpha <= 4 || s_equal ( m_alpha , 4 ) ) { return s_QUIETNAN ; }
-  return 6 * ( 5 * m_alpha - 11 ) / ( ( m_alpha - 3 ) * ( m_alpha - 4 ) ) ;
+  const double av = alpha () ;
+  if ( av <= 4  || s_equal ( av , 4 ) ) { return s_QUIETNAN ; }
+  ///
+  const double m1 = raw_moment ( 1 ) ;
+  if ( !std::isfinite ( m1 ) ) { return m1 ; }
+  const double m2 = raw_moment ( 2 ) ;
+  if ( !std::isfinite ( m2 ) ) { return m2 ; }
+  const double m3 = raw_moment ( 3 ) ;
+  if ( !std::isfinite ( m3 ) ) { return m3 ; }
+  const double m4 = raw_moment ( 4 ) ;
+  if ( !std::isfinite ( m4 ) ) { return m4 ; }
+  ///
+  return Ostap::Math::kurtosis ( m4 , m3 , m2 , m1 ) ;
 }
 // ============================================================================
 // intergal 
@@ -5562,9 +5595,6 @@ double Ostap::Math::InverseGamma::integral
   //
   if      ( s_equal ( low  , high ) ) { return  0 ; }
   else if (           high < low    ) { return -integral ( high    , low  ) ; } 
-  else if ( high    <= xmin ()      ) { return  0 ; }
-  else if ( low     <  xmin ()      ) { return  integral ( xmin () , high ) ; }
-  //
   return cdf ( high ) - cdf ( low ) ;  
 }
 // ============================================================================
@@ -5573,11 +5603,18 @@ double Ostap::Math::InverseGamma::integral
 double Ostap::Math::InverseGamma::cdf 
 ( const double x ) const
 {
-  if ( x <= xmin ()           ) { return 0  ; }
-  const double z = ( x - m_shift ) / m_beta ;
-  if ( z <= 0 || s_zero ( z ) ) { return 0  ; } 
-  //
-  return Ostap::Math::gamma_inc_Q ( m_alpha , 1 / z ) ;
+  const double y    = t ( x ) ;
+  const double rcdf = raw_cdf ( y ) ;
+  return Ostap::Math::is_positive ( scale () ) ? rcdf : 1 - rcdf ;
+}
+// ============================================================================
+// raw-cdf 
+// ============================================================================
+double Ostap::Math::InverseGamma::raw_cdf 
+( const double y ) const
+{
+  if ( y <= 0 || s_zero ( y ) ) { return 0  ; } 
+  return Ostap::Math::gamma_inc_Q ( alpha () , 1 / y ) ;
 }
 // ============================================================================
 // get the tag
@@ -5586,12 +5623,10 @@ std::size_t Ostap::Math::InverseGamma::tag () const
 { 
   static const std::string s_name = "InverseGamma" ;
   return Ostap::Utils::hash_combiner ( s_name  ,
-				       m_alpha ,
-				       m_beta  ,
-				       m_shift ) ; 
+				       ShiftAndScale::tag () , 
+				       m_alpha       .tag () ) ;
 }
 // ============================================================================
-
 
 // ============================================================================
 /*  constructor
@@ -5960,11 +5995,13 @@ std::size_t Ostap::Math::BurrIV::tag () const
 Ostap::Math::BurrV::BurrV
 ( const double r     ,
   const double k     ,
+  const double c     ,
   const double scale ,
   const double shift )
   : ShiftAndScale ( scale , shift , "scale" , "shift" , typeid ( *this ) , false )
   , m_r           ( r                       , "r"     , typeid ( *this ) )
   , m_k           ( k                       , "k"     , typeid ( *this ) )
+  , m_c           ( c                       , "c"     , typeid ( *this ) )
 {}
 // ============================================================================
 // evaluate Burr-V function
@@ -5976,24 +6013,25 @@ double Ostap::Math::BurrV::evaluate    ( const double x ) const
   else if ( y >=  1 ) { return 0 ; }
   //
   const double rv = r () ;
+  const double cv = c () ;
   const double lk = m_k.logValue () ;
   //
   // exponent argument
-  const double ea = lk - std::tan ( s_pi_2 * y ) ;
+  const double ea = lk - cv * std::tan ( s_pi_2 * y ) ;
   // 
   const double sc = Ostap::Math::sec ( s_pi_2 * y ) ;
   //
   if ( ea <= 0 )
   {
     const double f = std::exp ( ea ) ;
-    return rv * s_pi_2 * sc * sc
+    return rv * s_pi_2 * sc * sc * cv 
       * std::pow ( 1 / ( f + 1 ) , rv )
       *            f / ( f + 1 )       
       / abs_scale() ;		    
   }
   //
   const double f = std::exp ( -ea ) ;
-  return rv * s_pi_2 * sc * sc
+  return rv * s_pi_2 * sc * sc * cv 
     * std::pow ( f / ( f + 1 ) , rv )
     *            1 / ( f + 1 )       
     / abs_scale() ;		    
@@ -6034,10 +6072,11 @@ double Ostap::Math::BurrV::raw_cdf
   else if ( y >=  1 ) { return 1 ; }
   //
   const double rv = r () ;
+  const double cv = c () ;
   const double lk = m_k.logValue () ;
   //
   /// exponent argument 
-  const double ea = lk - std::tan ( s_pi_2 * y ) ;
+  const double ea = lk - cv * std::tan ( s_pi_2 * y ) ;
   //
   if ( ea <= 0 )
   {
@@ -6057,7 +6096,8 @@ std::size_t Ostap::Math::BurrV::tag () const
   return Ostap::Utils::hash_combiner ( s_name  ,
 				       ShiftAndScale::tag () , 
 				       m_r           .tag () , 
-				       m_k           .tag () ) ;
+				       m_k           .tag () , 
+				       m_c           .tag () ) ;
 }
 // ============================================================================
 

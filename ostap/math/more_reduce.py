@@ -890,14 +890,12 @@ Ostap.Math.BurrX    . __reduce__ = _om_BurrII_reduce_
 Ostap.Math.BurrXI   . __reduce__ = _om_BurrII_reduce_
 
 # =============================================================================
-## Reduce Ostap::Math::BurrIII, Ostap::Math::BurrV and Ostap::Math::BurrIX 
+## Reduce Ostap::Math::BurrIII and Ostap::Math::BurrIX 
 #  @see Ostap::Math::BurrIII 
-#  @see Ostap::Math::BurrV
 #  @see Ostap::Math::BurrIX
 def _om_BurrIII_reduce_ ( shape ) :
     """Reduce `Ostap.Math.BurrIII`, `Ostap.Math.BurrV` and `Ostap.Math.BurrIX` 
     - see `Ostap.Math.BurrIII`
-    - see `Ostap.Math.BurrV`
     - see `Ostap.Math.BurrIX`
     """
     return root_factory , ( type ( shape ) ,
@@ -926,10 +924,12 @@ def _om_BurrIV_reduce_ ( shape ) :
 Ostap.Math.BurrIV . __reduce__ = _om_BurrIV_reduce_
 
 # =============================================================================
-## Reduce Ostap::Math::BurrVI
+## Reduce Ostap::Math::BurrV and Ostap::Math::BurrVI 
+#  @see Ostap::Math::BurrV 
 #  @see Ostap::Math::BurrVI 
-def _om_BurrVI_reduce_ ( shape ) :
-    """Reduce `Ostap.Math.BurrVI`
+def _om_BurrV_reduce_ ( shape ) :
+    """Reduce `Ostap.Math.BurrV` & `Ostap.Math.BurrVI` 
+    - see `Ostap.Math.BurrV`
     - see `Ostap.Math.BurrVI`
     """
     return root_factory , ( type ( shape ) ,
@@ -939,7 +939,8 @@ def _om_BurrVI_reduce_ ( shape ) :
                             shape.scale () ,
                             shape.shift () )
 
-Ostap.Math.BurrVI . __reduce__ = _om_BurrVI_reduce_
+Ostap.Math.BurrV  . __reduce__ = _om_BurrV_reduce_
+Ostap.Math.BurrVI . __reduce__ = _om_BurrV_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::BurrXII
@@ -1359,7 +1360,11 @@ def _omgig_reduce_ ( s ) :
     """Reduce `Ostap.Math.GenInvGauss`
     - see `Ostap.Math.GenInvGauss`
     """
-    return root_factory , ( type ( s ) , s.theta() , s.eta() , s.p() , s.shift()  )
+    return root_factory , ( type ( s ) ,
+                            s.theta () ,
+                            s.p     () ,
+                            s.scale () ,
+                            s.shift () )
 
 Ostap.Math.GenInvGauss. __reduce__ = _omgig_reduce_
 
