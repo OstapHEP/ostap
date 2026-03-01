@@ -58,8 +58,8 @@ class ErrMode(enum.IntEnum):
     MEAN       = 3  ## Use mean
     AVERAGE    = 3  ## Use mean
     GEOMETRIC  = 4  ## Use geometric mean
-    QUADRATIC  = 5  ## USe quadratic (root mean sqaure) 
-    RMS        = 5  ## USe quadratic (root mean sqaure) 
+    QUADRATIC  = 5  ## Use quadratic (root mean sqaure) 
+    RMS        = 5  ## Use quadratic (root mean sqaure) 
 
 # =============================================================================
 ## get the `reference/representative error' from the list of uncertainties
@@ -68,7 +68,7 @@ class ErrMode(enum.IntEnum):
 #  error = ref_error ( Mode.MIN , 0.1 , 0.2 , 0.3 ) 
 #  @endcode 
 def ref_error ( mode , error , *errors ) :
-    """Get the `reference/representative error' from the list of uncertainties
+    """ Get the `reference/representative error' from the list of uncertainties
     >>> error = ref_error ( 'total'  , 0.1 , 0.2 , 0.3 ) 
     >>> error = ref_error ( Mode.MIN , 0.1 , 0.2 , 0.3 ) 
     """
@@ -96,7 +96,7 @@ def ref_error ( mode , error , *errors ) :
         
     elif isinstance ( mode , integer_types ) :
 
-        for k,v in ErrMode.__members__.items() :
+        for k , v in ErrMode.__members__.items() :
             if v == mode :
                 umode = v
                 break
@@ -169,10 +169,9 @@ def ref_error ( mode , error , *errors ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def round_N ( value , n ) :
-    """Round value to to N-digits    
+    """ Round value to to N-digits    
     >>> new_value = round_N ( value , 3 )    
-    """
-    
+    """    
     assert isinstance ( n , integer_types ) and 0 <= n,\
            "round_N: invalid `n' %s (must be non-negative integer)" % n 
 
@@ -219,7 +218,7 @@ def _frexp10_ ( value ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def three_digits ( value ) :
-    """Get three first significant digits
+    """ Get three first significant digits
     
     >>> nums = three_digits ( value ) 
     """
@@ -251,7 +250,7 @@ def three_digits ( value ) :
 #  case , rounded_error = pdg_case ( error ) 
 #  @endcode 
 def pdg_case ( error ) :
-    """Classify according to PDG prescription
+    """ Classify according to PDG prescription
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     - see section 5.3 of doi:10.1088/0954-3899/33/1/001
     
@@ -301,7 +300,7 @@ def pdg_case ( error ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_round__ ( value , error ) :
-    """Make a rounding according to PDG prescription
+    """ Make a rounding according to PDG prescription
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     - see section 5.3 of doi:10.1088/0954-3899/33/1/001
     
@@ -318,8 +317,7 @@ def pdg_round__ ( value , error ) :
 
     ecase , err = pdg_case ( error )
 
-    assert -2 <= ecase <= 3 ,\
-           'pdg_round: invalid error case %s/%s' %  ( ecase , error ) 
+    assert -2 <= ecase <= 3 , 'pdg_round: invalid error case %s/%s' %  ( ecase , error ) 
 
     ## irregular casses :
     if ecase <= 0 or not isfinite ( value ) : 
@@ -355,7 +353,7 @@ def pdg_round__ ( value , error ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_round_ ( value , error ) :
-    """Make a rounding according to PDG prescription
+    """ Make a rounding according to PDG prescription
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     - see section 5.3 of doi:10.1088/0954-3899/33/1/001
     
@@ -372,7 +370,7 @@ def pdg_round_ ( value , error ) :
     ##
     val, err , q , c = pdg_round__ ( value , error )
     ##
-    return v , e , q  
+    return val , err , q  
 
 # =============================================================================
 ## make a rounding according to PDG prescription
@@ -430,7 +428,7 @@ def pdg_round ( value , error ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_format ( value , error , latex = False ) :
-    """Round value/error accoridng to PDG prescription and format it for print
+    """ Round value/error accoridng to PDG prescription and format it for print
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     - see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -541,8 +539,8 @@ def pdg_format ( value , error , latex = False ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
-def pdg_format2( value , error1 , error2  , latex = False , mode = 'min' ) :
-    """Round value/error accoridng to PDG prescription and format it for print
+def pdg_format2 ( value , error1 , error2  , latex = False , mode = 'min' ) :
+    """ Round value/error according to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -580,8 +578,7 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'min' ) :
                 
     qe , be = _frexp10_ ( error )                
     a , b = divmod ( be , 3 ) 
-        
-    
+            
     if   1 == ecase :
 
         err1 = round_N ( error1 , 2 ) ## if isclose ( error1 , error , rel_tol = 1.e-2 ) else err 
@@ -651,9 +648,6 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'min' ) :
 
     return fmt % ( val * scale , err1 * scale , err2 * scale , 3 * a )
 
-
-
-
 # =============================================================================
 ## Round value/error according to PDG prescription and format it for print
 #  @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
@@ -671,8 +665,8 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'min' ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
-def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'min' ) :
-    """Round value/error accoridng to PDG prescription and format it for print
+def pdg_format3 ( value , error1 , error2 , error3 , latex = False , mode = 'min' ) :
+    """ Round value/error according to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -806,7 +800,7 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'min'
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def _ve_pdg_ ( ve ) :
-    """Make a rounding according to PDG prescription
+    """ Make a rounding according to PDG prescription
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -819,7 +813,7 @@ def _ve_pdg_ ( ve ) :
 
     >>> ve  = VE( ...
     >>> vr  = ve.pdg()
-    >>> print ' Rounded value with error is  %s ' % vr
+    >>> print 'Rounded value with error is  %s ' % vr
     """
     #
     v , e  = pdg_round  ( ve.value() , ve.error() )
@@ -844,7 +838,7 @@ def _ve_pdg_ ( ve ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def _ve_pdg_format_ ( ve , latex = False ) :
-    """Round value/error accoridng to PDG prescription and format it for print
+    """ Round value/error according to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
       
@@ -858,7 +852,7 @@ def _ve_pdg_format_ ( ve , latex = False ) :
     >>> ve = VE(... ) 
     >>> print ' Rounded value/error is %s ' % ve.pdg_format ()
     """
-    return pdg_format ( ve.value() , ve.error() , latex ) 
+    return pdg_format ( ve.value () , ve.error() , latex = latex ) 
 
 
 # =============================================================================
