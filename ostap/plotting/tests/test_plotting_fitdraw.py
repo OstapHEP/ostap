@@ -58,7 +58,7 @@ c3.sigma.fix()
 
 ## Backgrounds"
 b1 = Models.GammaDist_pdf ( name = 'B1' , xvar = x , logk = 1 , theta = 2 )
-b1.k    .fix()
+b1.logk    .fix()
 b1.theta.fix() 
 b2 = Models.Bkg_pdf       ( name = 'B2' , xvar = x , power = 1 )
 b2.tau.fix()
