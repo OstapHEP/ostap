@@ -4953,7 +4953,7 @@ namespace Ostap
       ( const char*  name      ,
         const char*  title     ,
         RooAbsReal&  x         ,
-        RooAbsReal&  log_alpha ,
+        RooAbsReal&  logalpha  ,
         RooAbsReal&  beta      ,
         RooAbsReal&  scale     ,   // theta 
         RooAbsReal&  shift     ) ; // a 
@@ -4962,7 +4962,7 @@ namespace Ostap
       ( const char*  name      ,
         const char*  title     ,
         RooAbsReal&  x         ,
-        RooAbsReal&  log_alpha ,
+        RooAbsReal&  logalpha  ,
         RooAbsReal&  beta      ,
 	const double scale = 1 , 
 	const double shift = 0 ) ;
@@ -5010,7 +5010,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& log_alpha () const { return m_log_alpha .arg() ; }
+      const RooAbsReal& logalpha  () const { return m_logalpha .arg() ; }
       const RooAbsReal& beta      () const { return m_beta      .arg() ; }
       //
       const RooAbsReal& a         () const { return shift () ; }
@@ -5018,8 +5018,8 @@ namespace Ostap
       // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_log_alpha {} ;
-      RooRealProxy m_beta      {} ;
+      RooRealProxy m_logalpha {} ;
+      RooRealProxy m_beta     {} ;
       // ======================================================================
     private:
       // ======================================================================
@@ -10901,30 +10901,30 @@ namespace Ostap
     /** @class Frechet
      *  @see https://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
      */
-    class Frechet : public RooAbsPdf 
+    class Frechet : public ShiftAndScale 
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Frechet, 1 ) ;
+      ClassDefOverride(Ostap::Models::Frechet, 2 ) ;
       // ======================================================================
     public:    public :
       // ======================================================================
       /// full constructor 
       Frechet
-      ( const char* name ,
-	const char* title , 
-	RooAbsReal& x     ,
-	RooAbsReal& alpha ,
-	RooAbsReal& scale ,
-	RooAbsReal& shift ) ;
+      ( const char* name     ,
+	const char* title    , 
+	RooAbsReal& x        ,
+	RooAbsReal& logalpha ,
+	RooAbsReal& scale    ,
+	RooAbsReal& shift   ) ;
       // ======================================================================
       /// full constructor 
       Frechet
-      ( const char*  name  ,
-	const char*  title , 
-	RooAbsReal&  x     ,
-	RooAbsReal&  alpha ,
+      ( const char*  name      ,
+	const char*  title     , 
+	RooAbsReal&  x         ,
+	RooAbsReal&  logalpha  ,
 	const double scale = 1 ,
 	const double shift = 0 ) ;
       // ======================================================================
@@ -10976,17 +10976,11 @@ namespace Ostap
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& x      () const { return m_x     .arg  () ; }
-      const RooAbsReal& alpha  () const { return m_alpha .arg  () ; }
-      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
-      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      const RooAbsReal& logalpha  () const { return m_logalpha .arg  () ; }
       // ======================================================================
     protected :
       // ======================================================================
-      RooRealProxy m_x     {} ;
-      RooRealProxy m_alpha {} ;
-      RooRealProxy m_scale {} ;
-      RooRealProxy m_shift {} ;
+      RooRealProxy m_logalpha {} ;
       // ======================================================================
     private:
       // ======================================================================
@@ -11000,12 +10994,12 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Dagum_distribution
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      */
-    class Dagum : public RooAbsPdf 
+    class Dagum : public ShiftAndScale
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Dagum ,  1 ) ;
+      ClassDefOverride(Ostap::Models::Dagum ,  2 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -11016,13 +11010,13 @@ namespace Ostap
        *  @param shift shift parameter        
        */
       Dagum
-      ( const char*  name  ,
-        const char*  title ,
-	RooAbsReal&  x     ,
-	RooAbsReal&  p     ,
-	RooAbsReal&  a     ,
-	RooAbsReal&  b     ,
-	RooAbsReal&  shift ) ;
+      ( const char*  name     ,
+        const char*  title    ,
+	RooAbsReal&  x        ,
+	RooAbsReal&  logp     ,
+	RooAbsReal&  logalpha ,
+	RooAbsReal&  b        ,
+	RooAbsReal&  shift    ) ;
       // ======================================================================
       /** constructor from all parameters
        *  @param p shape parameter \f$ 0 < p \f$
@@ -11034,9 +11028,9 @@ namespace Ostap
       ( const char*  name      ,
         const char*  title     ,
 	RooAbsReal&  x         ,
-	RooAbsReal&  p         ,
-	RooAbsReal&  a         ,
-	RooAbsReal&  b         ,
+	RooAbsReal&  logp      ,
+	RooAbsReal&  logalpha  ,
+	const double scale = 1 , 
 	const double shift = 0 ) ; 
       // ======================================================================
       /// copy constructor
@@ -11087,19 +11081,15 @@ namespace Ostap
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& x      () const { return m_x     .arg  () ; }
-      const RooAbsReal& p      () const { return m_p     .arg  () ; }
-      const RooAbsReal& a      () const { return m_a     .arg  () ; }
-      const RooAbsReal& b      () const { return m_b     .arg  () ; }
-      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      const RooAbsReal& logp     () const { return m_logp      .arg  () ; }
+      const RooAbsReal& logalpha () const { return m_logalpha  .arg  () ; }
+      //
+      const RooAbsReal& b      () const { return scale () ; }
       // ======================================================================
     protected :
       // ======================================================================
-      RooRealProxy m_x     {} ;
-      RooRealProxy m_p     {} ;
-      RooRealProxy m_a     {} ;
-      RooRealProxy m_b     {} ;
-      RooRealProxy m_shift {} ;
+      RooRealProxy m_logp     {} ;
+      RooRealProxy m_logalpha {} ;
       // ======================================================================
     private:
       // ======================================================================
@@ -11599,30 +11589,30 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
      *  @see Ostap::Math::Kumaraswami 
      */
-    class Kumaraswami : public RooAbsPdf 
+    class Kumaraswami : public ShiftAndScale 
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Kumaraswami, 1) ;
+      ClassDefOverride(Ostap::Models::Kumaraswami, 2) ;
       // ======================================================================
     public : 
       // ======================================================================
       /// constructor from all parameters
       Kumaraswami
-      ( const char*  name   ,
-	const char*  title  ,
-	RooAbsReal&  x      ,
-	RooAbsReal&  alpha  ,
-	RooAbsReal&  beta   ,
-	RooAbsReal&  scale  ,
-	RooAbsReal&  shift  ) ;
+      ( const char*  name     ,
+	const char*  title    ,
+	RooAbsReal&  x        ,
+	RooAbsReal&  logalpha ,
+	RooAbsReal&  logbeta  ,
+	RooAbsReal&  scale    ,
+	RooAbsReal&  shift    ) ;
       /// constructor from all parameters
       Kumaraswami
       ( const char*  name      ,
 	const char*  title     ,
 	RooAbsReal&  x         ,
-	RooAbsReal&  alpha     ,
-	RooAbsReal&  beta      ,
+	RooAbsReal&  logalpha  ,
+	RooAbsReal&  logbeta   ,
 	const double scale = 1 , 
 	const double shift = 0 ) ;
       // ======================================================================
@@ -11669,24 +11659,15 @@ namespace Ostap
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& x      () const { return m_x     .arg  () ; }
-      const RooAbsReal& alpha  () const { return m_alpha .arg  () ; }
-      const RooAbsReal& beta   () const { return m_beta  .arg  () ; }
-      const RooAbsReal& scale  () const { return m_scale .arg  () ; }
-      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      const RooAbsReal& logalpha () const { return m_logalpha .arg  () ; }
+      const RooAbsReal& logbeta  () const { return m_logbeta  .arg  () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
-      /// observable 
-      RooRealProxy m_x     {} ; // observable
       /// a-shape 
-      RooRealProxy m_alpha {} ; // a-shape 
+      RooRealProxy m_logalpha {} ; // a-shape 
       /// b-shape 
-      RooRealProxy m_beta  {} ; // b-shape 
-      /// scale 
-      RooRealProxy m_scale {} ; // scale 
-      /// shift 
-      RooRealProxy m_shift {} ; // shift 
+      RooRealProxy m_logbeta  {} ; // b-shape 
       // ======================================================================
     private:
       // ======================================================================
@@ -11700,29 +11681,29 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
      *  @see Ostap::Math::InverseGamma
      */
-    class InverseGamma : public RooAbsPdf 
+    class InverseGamma : public ShiftAndScale
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::InverseGamma, 1) ;
+      ClassDefOverride(Ostap::Models::InverseGamma, 2) ;
       // ======================================================================
     public : 
       // ======================================================================
       /// constructor from all parameters
       InverseGamma
-      ( const char*  name   ,
-	const char*  title  ,
-	RooAbsReal&  x      ,
-	RooAbsReal&  alpha  ,
-	RooAbsReal&  beta   ,
-	RooAbsReal&  shift  ) ;
+      ( const char*  name     ,
+	const char*  title    ,
+	RooAbsReal&  x        ,
+	RooAbsReal&  logalpha ,
+	RooAbsReal&  scale    ,
+	RooAbsReal&  shift    ) ;
       /// constructor from all parameters
       InverseGamma
       ( const char*  name  ,
 	const char*  title ,
-	RooAbsReal&  x     ,
-	RooAbsReal&  alpha ,
-	RooAbsReal&  beta  ,
+	RooAbsReal&  x          ,
+	RooAbsReal&  alpha     ,
+	const double scale = 1 ,
 	const double shift = 0 ) ;
       // ======================================================================
       /// copy 
@@ -11769,21 +11750,14 @@ namespace Ostap
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& x      () const { return m_x     .arg  () ; }
-      const RooAbsReal& alpha  () const { return m_alpha .arg  () ; }
-      const RooAbsReal& beta   () const { return m_beta  .arg  () ; }
-      const RooAbsReal& shift  () const { return m_shift .arg  () ; }
+      const RooAbsReal& logalpha () const { return m_logalpha .arg  () ; }
+      //
+      const RooAbsReal& beta     () const { return scale () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
-      /// observable 
-      RooRealProxy m_x     {} ; // observable
       /// a-shape 
-      RooRealProxy m_alpha {} ; // a-shape 
-      /// b-shape 
-      RooRealProxy m_beta  {} ; // b-shape 
-      /// shift 
-      RooRealProxy m_shift {} ; // shift 
+      RooRealProxy m_logalpha {} ; // a-shape 
       // ======================================================================
     private:
       // ======================================================================
@@ -13132,11 +13106,11 @@ namespace Ostap
     /** @class Shape1D
      *  simple generic PDF
      */
-    class Shape1D final : public RooAbsPdf 
+    class Shape1D final : public ShiftAndScale 
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::Shape1D, 1) ;
+      ClassDefOverride(Ostap::Models::Shape1D, 3) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -13146,19 +13120,55 @@ namespace Ostap
       ( const std::string& name   , 
         const std::string& title  , 
         RooAbsReal&        x      ,
-        FUNCTION           f      , 
-        const std::size_t tag = 0 )
-        : RooAbsPdf   (  name.c_str() ,  title.c_str() ) 
-        , m_x         ( "!x"   , "Variable" , this , x ) 
+        FUNCTION           f      ,
+	RooAbsReal&        scale  ,
+	RooAbsReal&        shift  ,	
+        const std::size_t  tag    = 0 )
+        : ShiftAndScale ( name.c_str() , title.c_str() , x , scale , shift ) 
+        , m_function    ( f   ) 
+        , m_tag         ( tag ) 
+      {}
+      /// templated constructor 
+      template <class FUNCTION> 
+      Shape1D
+      ( const std::string& name       , 
+        const std::string& title      , 
+        RooAbsReal&        x          ,
+        FUNCTION           f          ,
+	const double       scale  = 1 ,
+	const double       shift  = 0 ,	
+        const std::size_t  tag    = 0 )
+        : ShiftAndScale ( name.c_str() , title.c_str() , x , scale , shift ) 
         , m_function  ( f   ) 
         , m_tag       ( tag ) 
       {}
-      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION,
+		typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 >
+      Shape1D
+      ( const std::string& name  , 
+        const std::string& title , 
+        RooAbsReal&        x     ,
+        const FUNCTION&    f     ,
+        const std::size_t  tag   )
+        : ShiftAndScale ( name.c_str() , title.c_str() , x ) 
+        , m_function  ( f   ) 
+        , m_tag       ( tag ) 
+      {}            
+      // ======================================================================  
       Shape1D
       ( const std::string&            name    , 
         const std::string&            title   , 
         RooAbsReal&                   x       ,
         std::function<double(double)> f       , 
+        const std::size_t             tag = 0 ) ;
+      Shape1D
+      ( const std::string&            name    , 
+        const std::string&            title   , 
+        RooAbsReal&                   x       ,
+        std::function<double(double)> f       , 
+	RooAbsReal&                   scale   ,
+	RooAbsReal&                   shift   ,	
         const std::size_t             tag = 0 ) ;
       /// copy constructor 
       Shape1D ( const Shape1D& right , const char* name = nullptr ) ;
@@ -13181,29 +13191,26 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate the PDF 
-      Double_t evaluate () const override
-      { const double x = m_x ; return std::max ( m_function ( x ) , 0.0 ) ; ; }
+      Double_t evaluate () const override ;
       // ======================================================================        
-    public:
+    protected : 
       // ======================================================================
       /// evaluate the function
-      double func  ( const double x ) const 
-      { return std::max ( m_function ( x ) , 0.0 ) ; }
+      inline double func ( const double x ) const 
+      { return std::max ( m_function ( x2t ( x ) ) , 0.0 ) ; }
       // ======================================================================        
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
       // ======================================================================
     private :
       // ======================================================================
-      /// variable 
-      RooRealProxy                   m_x            ; // variable 
       /// the function itself 
       std::function<double(double)>  m_function     ; // function 
       /// helper (hopefully unique) tag 

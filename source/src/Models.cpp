@@ -377,11 +377,11 @@ double Ostap::Math::GammaDist::c  () const
 // ============================================================================
 Ostap::Math::GenGammaDist::GenGammaDist
 ( const double k     , 
-  const double theta , 
   const double p     , // 1 corresponds to gamma distribution 
+  const double theta , 
   const double shift )
   : ShiftAndScale ( theta , shift , "theta" , "shift" , typeid ( *this ) , false ) 
-  , m_k           ( k                       , "p"     , typeid ( *this ) )
+  , m_k           ( k                       , "k"     , typeid ( *this ) )
   , m_p           ( p                       , "p"     , typeid ( *this ) )
 {
   // evaluate auxillary parameter 
@@ -2604,7 +2604,6 @@ std::size_t Ostap::Math::Rice::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_nu , m_varsigma , m_shift ) ;
 }
   
-
 // ============================================================================
 // Constructor 
 // ============================================================================
@@ -2630,8 +2629,7 @@ double Ostap::Math::GenInvGauss::evaluate ( const double x ) const
   const double pv = p     () ;
   const double tv = theta () ;
   //
-  const double ss = std::abs ( scale () ) ;
-  return 0.5 * m_iKp_theta / ss
+  return 0.5 * m_iKp_theta / abs_scale () 
     * std::pow ( y , pv - 1 )  
     * std::exp ( -0.5 * tv * ( y + 1 / y ) )  ; 
 }

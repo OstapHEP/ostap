@@ -424,8 +424,8 @@ namespace Ostap
        */
       GenGammaDist
       ( const double k     = 2 ,
-        const double theta = 1 ,    // scale 
         const double p     = 1 ,    // p=1 corresponds to gamma distribution
+        const double theta = 1 ,    // scale 
         const double shift = 0 ) ; 
       // ======================================================================
     public:
@@ -527,10 +527,10 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor
-       *  param theta \f$\theta\f$-parameter , scale 
        *  param alpha \f$\alpha\f$-parameter (>0)
        *  param beta  \f$\beta\f$-parameter
-       *  param a     a-parameter            , shift
+       *  param scale \f$\theta\f$-parameter , scale 
+       *  param shift shift-parameter        , a 
        *  Note that   \f$\alpha\beta\f$ is equal to k-parameter
        */
       Amoroso
@@ -566,7 +566,8 @@ namespace Ostap
       // ======================================================================
       inline bool setA        ( const double value ) { return setShift ( value ) ; } 
       inline bool setTheta    ( const double value ) { return setScale ( value ) ; } 
-      inline bool setBeta     ( const double value ) { return m_beta .setValue ( value ) ; } 
+      inline bool setBeta     ( const double value ) { return m_beta .setValue ( value ) ; }
+      //
       bool        setAlpha    ( const double value ) ;
       bool        setLogAlpha ( const double value ) ;
       // =======================================================================
@@ -2796,6 +2797,8 @@ namespace Ostap
       inline double b     () const { return scale () ; } 
       /// shift parameter 
       inline double xmin  () const { return shift () ; } 
+      /// shape parameter alpha 
+      inline double alpha () const { return a () ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -2803,7 +2806,10 @@ namespace Ostap
       inline bool setP        ( const double value ) { return m_p    .setValue    ( value ) ; } 
       inline bool setLogA     ( const double value ) { return m_a    .setLogValue ( value ) ; } 
       inline bool setLogP     ( const double value ) { return m_p    .setLogValue ( value ) ; } 
-      inline bool setB        ( const double value ) { return         setScale    ( value ) ; } 
+      inline bool setB        ( const double value ) { return         setScale    ( value ) ; }
+      //
+      inline bool setAlpha    ( const double value ) { return setA    ( value ) ; } 
+      inline bool setLogAlpha ( const double value ) { return setLogA ( value ) ; } 
       // ======================================================================
     public:
       // ======================================================================

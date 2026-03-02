@@ -48,8 +48,8 @@ events = 10000
 
 logger.debug('Make a test data using Gamma-Distribution')
 m_gamma0 = Models.GammaDist_pdf( name = 'GD0' , xvar = x )
-m_gamma0.k    .setVal( 2 )
-m_gamma0.theta.setVal( 1 )
+m_gamma0.logk  = 1 
+m_gamma0.theta = 1 
 
 dataset = m_gamma0.pdf.generate ( varset , events ) 
 

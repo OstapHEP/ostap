@@ -1158,7 +1158,10 @@ def _omgdis_reduce_ ( s ) :
     """Reduce `Ostap.Math.GammaDist`
     - see `Ostap.Math.GammaDist`
     """
-    return root_factory , ( type ( s ) , s.k() , s.theta() , s.shift () )  
+    return root_factory , ( type ( s ) ,
+                            s.k     () ,
+                            s.theta () ,
+                            s.shift () )  
 
 Ostap.Math.GammaDist     . __reduce__ = _omgdis_reduce_
 Ostap.Math.LogGammaDist  . __reduce__ = _omgdis_reduce_
@@ -1171,9 +1174,30 @@ def _omggdis_reduce_ ( s ) :
     """Reduce `Ostap.Math.GenGammaDist`
     - see `Ostap.Math.GenGammaDist`
     """
-    return root_factory , ( type ( s ) , s.k() , s.theta() , s.p() , s.low() )  
+    return root_factory , ( type ( s ) ,
+                            s.k     () , 
+                            s.p     () ,
+                            s.theta () ,
+                            s.shift () )  
 
 Ostap.Math.GenGammaDist    . __reduce__ = _omggdis_reduce_
+
+# =============================================================================
+## Reduce Ostap::Math::Amoroso
+#  @see Ostap::Math::amoroso
+def _om_Amoroso_reduce_ ( s ) :
+    """Reduce `Ostap.Math.Amoroso`
+    - see `Ostap.Math.Amoroso`
+    """
+    return root_factory , ( type ( s ) ,
+                            s.alpha () , 
+                            s.beta  () ,
+                            s.theta () ,
+                            s.shift () )  
+
+Ostap.Math.GenGammaDist    . __reduce__ = _om_Amoroso_reduce_
+
+
 
 # =============================================================================
 ## Reduce Ostap::Math::LogGamma

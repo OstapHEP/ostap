@@ -44,8 +44,9 @@ __all__     = (
     'C'                 , ## helper mixin to add log(c)-parameter
     ## 
     'Alpha'             , ## helper mixin to add alpha-parameter
-    'Beta'              , ## helper mixin to add beta-parameter 
-    'AlphaAndBeta'      , ## helper mixin to add alpha&beta parameters 
+    'Beta'              , ## helper mixin to add beta-parameter
+    'LogAlpha'          , ## helper mixin to add log(alpha)-parameter 
+    'LogBeta'           , ## helper mixin to add log(beta)-parameter 
     #
     ###
     'TailN'             , ## helper mixin to define N-parameter for tail
@@ -4230,9 +4231,9 @@ log_limits = 0 , -500 , 500
 
 # =============================================================================
 ## @class P
-#  Helper MIXIN class to add p-parameter 
+#  Helper MIXIN class to add log(p)-parameter 
 class P(object) :
-    """ Helper MIXIN class to add p-parameters
+    """ Helper MIXIN class to add log(p)-parameters
     """
     def __init__ ( self         ,
                    logp    = 0  ,
@@ -4372,10 +4373,10 @@ class K(object) :
     def logk ( self , value ) :
         self.set_value ( self.__logk , value )
 
-    ## @property
-    ## def k ( self ) :
-    ##    """`k` : parameter `k` recalculated from `log(k)` """
-    ##    return math.exp ( float ( self.logk ) ) 
+    @property
+    def k ( self ) :
+        """`k` : parameter `k` recalculated from `log(k)` """
+        return math.exp ( float ( self.logk ) ) 
         
 # =============================================================================
 ## @class C
@@ -4498,27 +4499,81 @@ class Beta(object) :
     b = beta 
 
 # =============================================================================
-## @class AlphaAndBeta
-#  Helper MIXIN class to add 'alpha' and `beta`-parameters
-class AlphaAndBeta (Alpha,Beta):
-    """ Helper MIXIN class to add 'alpha' and `beta`-parameters
+## @class LogAlpha
+#  Helper MIXIN class to add log(alpha)-parameter 
+class LogAlpha(object) :
+    """ Helper MIXIN class to add log(alpha)-parameter
     """
-    def __init__ ( self ,
-                   alpha       =  2 ,
-                   beta        =  2 , * , 
+    def __init__ ( self         ,
+                   logalpha    = 0  ,
                    alpha_name  = '' ,                   
-                   alpha_title = '' , 
-                   beta_name   = '' ,                   
-                   beta_title  = '' ,
-                   alpha_pars  = () ,
-                   beta_pars   = () ) : 
+                   alpha_title = '' , *alpha_pars ) :
         
-        Alpha.__init__ ( self , alpha , alpha_name , alpha_title , *alpha_pars )
-        Beta .__init__ ( self , beta  , beta_name  , beta_title  , *beta_pars  )
-
+        name = self.name
+        
+        if not alpha_name  : alpha_name  = 'logalpha_%s'    % name 
+        if not alpha_title : alpha_title = 'log #alpha (%s)' % name
+        if not alpha_pars  : alpha_pars  =  log_limits 
+        
+        ## parameter log(alpha)
+        self.__logalpha = self.make_var ( logalpha    ,
+                                          alpha_name  ,
+                                          alpha_title , None , *alpha_pars )
+        
+    @property
+    def logalpha ( self ) :
+        """`logalpha'-parameter: logarithm of alpha-parameter """
+        return self.__logalpha
+    @logalpha.setter 
+    def logalpha ( self , value ) :
+        self.set_value ( self.__logalpha , value )        
+    @property
+    def alpha ( self ) :
+        """`alpha` : parameter `alpha` recalcualted from `log(alpha)` """
+        return math.exp ( float ( self.logalpha ) )
+    
+# =============================================================================
+## @class LogBeta
+#  Helper MIXIN class to add log(beta)-parameter 
+class LogBeta(object) :
+    """ Helper MIXIN class to add log(beta)-parameter
+    """
+    def __init__ ( self            ,
+                   logbeta    = 0  ,
+                   beta_name  = '' ,                   
+                   beta_title = '' , *beta_pars ) :
+        
+        name = self.name
+        
+        if not beta_name  : beta_name  = 'logbeta_%s'     % name 
+        if not beta_title : beta_title = 'log #beta (%s)' % name
+        if not beta_pars  : beta_pars  =  log_limits 
+        
+        ## parameter log(beta)
+        self.__logbeta = self.make_var ( logbeta    ,
+                                         beta_name  ,
+                                         beta_title , None , *beta_pars )
+        
+    @property
+    def logbeta ( self ) :
+        """`logbeta'-parameter: logarithm of beta-parameter """
+        return self.__logbeta
+    @logbeta.setter 
+    def logbeta ( self , value ) :
+        self.set_value ( self.__logbeta , value )        
+    @property
+    
+    def beta ( self ) :
+        """`beta` : parameter `beta` recalcualted from `log(beta)` """
+        return math.exp ( float ( self.logbeta ) )
+    
 # =============================================================================
 ## Power-law tails 
 # =============================================================================
+## @var n_limits
+#  valid limits for N-parameters 
+n_limits     = 1   , -1  , 100 
+
 
 # =============================================================================
 ## @class TailN 
@@ -4540,38 +4595,45 @@ class TailN(object) :
      see `Ostap.Math.Tail.N`
 
     """
-    def __init__ ( self               ,   
-                   n           = None ,
-                   name_n      = ''   ,
-                   title_n     = ''   ,
-                   name_N      = ''   ,
-                   title_N     = ''   ) :
+    def __init__ ( self            , 
+                   n        = None ,
+                   n_name   = ''   ,
+                   n_title  = ''   ,
+                   N_name   = ''   ,
+                   N_title  = ''   , *n_pars ) :
 
         ## get the name
         name = self.name
 
-        if not name_n  : name_n  = 'n_%s'  % name
-        if not name_N  : name_N  = 'N_%s'  % name
+        if not n_name  : n_name  = 'n_%s'  % name
+        if not n_title : n_title = 'n(%s)' % name
         
-        if not title_n : title_n = 'n(%s)' % name
-        if not title_N : title_N = 'N(%s)' % name
-                
+        if not N_name  : N_name  = 'N_%s'  % name        
+        if not N_title : N_title = 'N(%s)' % name
+        
+        if not n_pars  : n_pars  = n_limits 
+        
         ## parameter n for power=law tails 
         self.__n  = self.make_var ( n       ,
-                                    name_n  , 
-                                    title_n , 
-                                    None    , 1.0 , -1.0 , 200 )
+                                    n_name  , 
+                                    n_title , 
+                                    None    , *n_pars  )
                 
         ## The actual power-law exponent : N = N(n) 
-        self.__N = Ostap.MoreRooFit.TailN ( name_N , title_N , self.__n )
-              
+        self.__N = Ostap.MoreRooFit.TailN ( self.roo_name ( N_name ) , N_title , self.__n )
+        
     @property
     def n ( self ) :
-        """'n' :  n-parameeter for power-law tail """
+        """'n' :  n-parameter for power-law tail (external)"""
         return self.__n
     @n.setter
     def n ( self, value ) :   
-        self.set_value ( self.__n , value )        
+        self.set_value ( self.__n , value )
+        
+    @property
+    def N ( self ) :
+        """'N:' :  N-parameter for power-law tail (internal))"""
+        return self.__N
 
 # =============================================================================
 ## @class TailNL 
@@ -4592,40 +4654,47 @@ class TailNL(object) :
      
      see `Ostap.Math.Tail.N`
 
-    """
-    def __init__ ( self               ,   
-                   n           = None ,
-                   name_n      = ''   ,
-                   title_n     = ''   ,
-                   name_N      = ''   ,
-                   title_N     = ''   ) :
+    """ 
+    def __init__ ( self            , 
+                   n        = None ,
+                   n_name   = ''   ,
+                   n_title  = ''   ,
+                   N_name   = ''   ,
+                   N_title  = ''   , *n_pars ) :
 
         ## get the name
         name = self.name
 
-        if not name_n  : name_n  = 'nL_%s'     % name
-        if not name_N  : name_N  = 'NL_%s'     % name
+        if not n_name  : n_name  = 'nL_%s'     % name
+        if not n_title : n_title = 'n_{L}(%s)' % name
         
-        if not title_n : title_n = 'n_{L}(%s)' % name
-        if not title_N : title_N = 'N_{L}(%s)' % name
-                
+        if not N_name  : N_name  = 'NL_%s'     % name        
+        if not N_title : N_title = 'N_{L}(%s)' % name
+        
+        if not n_pars  : n_pars  = n_limits 
+        
         ## parameter n for power=law tails 
-        self.__nL  = self.make_var ( n       ,
-                                     name_n  , 
-                                     title_n , 
-                                     None    , 1.0 , -1.0 , 200 )
+        self.__nL  = self.make_var ( n      ,
+                                    n_name  , 
+                                    n_title , 
+                                    None    , *n_pars  )
                 
         ## The actual power-law exponent : N = N(n) 
-        self.__NL = Ostap.MoreRooFit.TailN ( name_N , title_N , self.__nL )
+        self.__NL = Ostap.MoreRooFit.TailN ( self.roo_name ( N_name ) , N_title , self.__nL )
               
     @property
     def nL ( self ) :
-        """'n:' :  n-parameeter for left power-law tail """
+        """'nL:' :  n-parameter for left power-law tail (external)"""
         return self.__nL
     @nL.setter
     def nL ( self, value ) :   
-        self.set_value ( self.__nL , value )        
-
+        self.set_value ( self.__nL , value )
+        
+    @property
+    def NL ( self ) :
+        """'NL:' :  N-parameter for left power-law tail (internal))"""
+        return self.__NL
+        
 # =============================================================================
 ## @class TailNR 
 #  Helper mixin class for right power-law tails
@@ -4645,38 +4714,50 @@ class TailNR(object) :
      
      see `Ostap.Math.Tail.N`
     """
-    def __init__ ( self               ,   
-                   n           = None ,
-                   name_n      = ''   ,
-                   title_n     = ''   ,
-                   name_N      = ''   ,
-                   title_N     = ''   ) :
+    def __init__ ( self            , 
+                   n        = None ,
+                   n_name   = ''   ,
+                   n_title  = ''   ,
+                   N_name   = ''   ,
+                   N_title  = ''   , *n_pars ) :
 
         ## get the name
         name = self.name
 
-        if not name_n  : name_n  = 'nR_%s'     % name
-        if not name_N  : name_N  = 'NR_%s'     % name
+        if not n_name  : n_name  = 'nR_%s'     % name
+        if not n_title : n_title = 'n_{R}(%s)' % name
         
-        if not title_n : title_n = 'n_{R}(%s)' % name
-        if not title_N : title_N = 'N_{R}(%s)' % name
-                
-        ## parameter n for the power-law tails 
-        self.__nR  = self.make_var ( n       ,
-                                     name_n  , 
-                                     title_n , 
-                                     None    , 1.0 , -1.0 , 200 )
-                
+        if not N_name  : N_name  = 'NR_%s'     % name        
+        if not N_title : N_title = 'N_{R}(%s)' % name
+        
+        if not n_pars  : n_pars  = n_limits 
+        
+        ## parameter n for power=law tails 
+        self.__nR  = self.make_var ( n      ,
+                                    n_name  , 
+                                    n_title , 
+                                    None    , *n_pars  )
+        
         ## The actual power-law exponent : N = N(n) 
-        self.__NR = Ostap.MoreRooFit.TailN ( name_N , title_N , self.__nR )
+        self.__NR = Ostap.MoreRooFit.TailN ( self.roo_name ( N_name ) , N_title , self.__nR )
               
     @property
     def nR ( self ) :
-        """'nR:' :  n-parameeter for right power-law tail """
+        """'nR:' :  n-parameter for right power-law tail (external)"""
         return self.__nR
     @nR.setter
     def nR ( self, value ) :   
         self.set_value ( self.__nR , value )        
+
+    @property
+    def NR ( self ) :
+        """'NR:' :  N-parameter for right power-law tail (internal))"""
+        return self.__NR
+        
+# =============================================================================
+## @var n_limits
+#  valid limits for N-parameters 
+alpha_limits = 1.7 , 0.5 , 5.0
 
 # ==============================================================================
 ##  @class  TailA
@@ -4692,14 +4773,14 @@ class TailA(object) :
     """    
     def __init__  ( self              , 
                     alpha       = 1.7 ,
-                    name_alpha  = ''  , 
-                    title_alpha = ''  , *alpha_pars ) :
+                    alpha_name  = ''  , 
+                    alpha_title = ''  , *alpha_pars ) :
         
         name = self.name
         
         if not alpha_name  : alpha_name  = 'alpha_%s'   % name 
         if not alpha_title : alpha_title = '#alpha(%s)' % name
-        if not alpha_pars  : alpha_pars  = 1.7 , 0.5 , 4.5
+        if not alpha_pars  : alpha_pars  = alpha_limits 
         
         ## parameter alpha 
         self.__alpha = self.make_var ( alpha       ,
@@ -4730,21 +4811,21 @@ class TailAL(object) :
     - alphaL
     - aL
     """    
-    def __init__  ( self              , 
+    def __init__  ( self              ,
                     alpha       = 1.7 ,
-                    name_alpha  = ''  , 
-                    title_alpha = ''  ) :
+                    alpha_name  = ''  , 
+                    alpha_title = ''  , *alpha_pars ) :
         
         name = self.name 
+        if not alpha_name  : alpha_name  = 'alphaL_%s'      % name 
+        if not alpha_title : alpha_title = '#alpha_{L}(%s)' % name
+        if not alpha_pars  : alpha_pars  = alpha_limits
         
-        if not name_alpha  : name_alpha  = 'alphaL_%s'       % name 
-        if not title_alpha : title_alpha = '#alpha_{L}(%s)'  % name        
-
-        ## parameter alpha         ## parameter alpha         ## parameter alpha 
+        ## parameter alpha 
         self.__alphaL = self.make_var ( alpha       ,
-                                        name_alpha  ,
-                                        title_alpha , 
-                                        None        , 1.7 ,  0.5 , 5.0 )
+                                        alpha_name  ,
+                                        alpha_title ,
+                                        None        , *alpha_pars )
         
     @property
     def alphaL ( self ) :
@@ -4770,21 +4851,21 @@ class TailAR(object) :
     - alphaR
     - aR
     """    
-    def __init__  ( self              , 
+    def __init__  ( self              ,
                     alpha       = 1.7 ,
-                    name_alpha  = ''  , 
-                   title_alpha = ''   ) :
-        
+                    alpha_name  = ''  , 
+                    alpha_title = ''  , *alpha_pars ) :
+
         name = self.name 
-        
-        if not name_alpha  : name_alpha  = 'alphaR_%s'       % name 
-        if not title_alpha : title_alpha = '#alpha_{R}(%s)'  % name        
+        if not alpha_name  : alpha_name  = 'alphaR_%s'      % name 
+        if not alpha_title : alpha_title = '#alpha_{R}(%s)' % name
+        if not alpha_pars  : alpha_pars  = alpha_limits
 
         ## parameter alpha         ## parameter alpha         ## parameter alpha 
-        self.__alphaR = self.make_var ( alpha      ,
-                                       name_alpha  ,
-                                       title_alpha , 
-                                       None        , 1.7 ,  0.5 , 5.0 )
+        self.__alphaR = self.make_var ( alpha       ,
+                                        alpha_name  ,
+                                        alpha_title , 
+                                        None        , *alpha_pars )
         
     @property
     def alphaR ( self ) :
@@ -4812,27 +4893,29 @@ class Tail(TailN,TailA) :
     
     see `Ostap.Math.Tail.N`
     """
-    def __init__ ( self               ,
+    def __init__ ( self               , * , 
                    alpha       = 1.7  ,
                    n           = None ,
-                   name_alpha  = ''   ,
-                   title_alpha = ''   , 
-                   name_n      = ''   , 
-                   title_n     = ''   , 
-                   name_N      = ''   ,
-                   title_N     = ''   ) :
+                   alpha_name  = ''   ,
+                   alpha_title = ''   , 
+                   n_name      = ''   , 
+                   n_title     = ''   , 
+                   N_name      = ''   ,
+                   N_title     = ''   ,
+                   n_pars      = ()   ,
+                   alpha_pars  = () ) :
         
         TailN.__init__ ( self    , 
                          n       = n        ,
-                         name_n  = name_n   , 
-                         title_n = title_n  , 
-                         name_N  = name_N   , 
-                         title_N = title_N  )
+                         n_name  = n_name   , 
+                         n_title = n_title  , 
+                         N_name  = N_name   , 
+                         N_title = N_title  , *n_pars )
         
         TailA.__init__ ( self        , 
                          alpha       = alpha       , 
-                         name_alpha  = name_alpha  , 
-                         title_alpha = title_alpha ) 
+                         alpha_name  = alpha_name  , 
+                         alpha_title = alpha_title , *alpha_pars ) 
 
 # =============================================================================
 ## @class LeftTail
@@ -4849,28 +4932,30 @@ class LeftTail(TailNL,TailAL) :
     see `Ostap.Math.Tail.N`
     """
     
-    def __init__ ( self               ,
+    def __init__ ( self               , * , 
                    alpha       = 1.7  ,
-                   n           = None , 
-                   name_alpha  = ''   ,                   
-                   title_alpha = ''   , 
-                   name_n      = ''   ,
-                   title_n     = ''   , 
-                   name_N      = ''   ,
-                   title_N     = ''   ) :
-
-        TailNL.__init__ ( self              , 
+                   n           = None ,
+                   alpha_name  = ''   ,
+                   alpha_title = ''   , 
+                   n_name      = ''   , 
+                   n_title     = ''   , 
+                   N_name      = ''   ,
+                   N_title     = ''   ,
+                   n_pars      = ()   ,
+                   alpha_pars  = () ) :
+        
+        TailNL.__init__ ( self    , 
                           n       = n        ,
-                          name_n  = name_n   , 
-                          title_n = title_n  , 
-                          name_N  = name_N   , 
-                          title_N = title_N  )  
-        TailAL.__init__ ( self , 
+                          n_name  = n_name   , 
+                          n_title = n_title  , 
+                          N_name  = N_name   , 
+                          N_title = N_title  , *n_pars )
+        
+        TailAL.__init__ ( self        , 
                           alpha       = alpha       , 
-                          name_alpha  = name_alpha  , 
-                          title_alpha = title_alpha ) 
-
-
+                          alpha_name  = alpha_name  , 
+                          alpha_title = alpha_title , *alpha_pars ) 
+        
 # =============================================================================
 ## @class RightTail
 #  Helper mixin class to define CrystalBall-like (right) power-law tails
@@ -4885,26 +4970,29 @@ class RightTail(TailNR,TailAR) :
     
     see `Ostap.Math.Tail.N`    
     """
-    def __init__ ( self               ,
+    def __init__ ( self               , * ,
                    alpha       = 1.7  ,
                    n           = None ,
-                   name_alpha  = ''   ,                   
-                   title_alpha = ''   , 
-                   name_n      = ''   ,
-                   title_n     = ''   , 
-                   name_N      = ''   ,
-                   title_N     = ''   ) :
-
-        TailNR.__init__ ( self              , 
+                   alpha_name  = ''   ,
+                   alpha_title = ''   , 
+                   n_name      = ''   , 
+                   n_title     = ''   , 
+                   N_name      = ''   ,
+                   N_title     = ''   ,
+                   n_pars      = ()   ,
+                   alpha_pars  = () ) :
+        
+        TailNR.__init__ ( self    , 
                           n       = n        ,
-                          name_n  = name_n   , 
-                          title_n = title_n  , 
-                          name_N  = name_N   , 
-                          title_N = title_N  ) 
-        TailAR.__init__ ( self , 
+                          n_name  = n_name   , 
+                          n_title = n_title  , 
+                          N_name  = N_name   , 
+                          N_title = N_title  , *n_pars )
+        
+        TailAR.__init__ ( self        , 
                           alpha       = alpha       , 
-                          name_alpha  = name_alpha  , 
-                          title_alpha = title_alpha ) 
+                          alpha_name  = alpha_name  , 
+                          alpha_title = alpha_title , *alpha_pars ) 
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -43,10 +43,9 @@ Ostap::Models::Shape1D::Shape1D
   RooAbsReal&                   x       ,
   std::function<double(double)> f       , 
   const std::size_t             tag     )
-  : RooAbsPdf   (  name.c_str() ,  title.c_str() ) 
-  , m_x         ( "!x" , "Variable" , this , x ) 
-  , m_function  ( f   ) 
-  , m_tag       ( tag ) 
+  : ShiftAndScale (  name.c_str() ,  title.c_str() , x )
+  , m_function    ( f   ) 
+  , m_tag         ( tag ) 
 {}
 // ============================================================================
 // copy constructor 
@@ -54,10 +53,9 @@ Ostap::Models::Shape1D::Shape1D
 Ostap::Models::Shape1D::Shape1D
 ( const Ostap::Models::Shape1D& right ,
   const char*                   name  )
-  : RooAbsPdf ( right , name ) 
-  , m_x         ( "!x"  , this , right.m_x ) 
-  , m_function  ( right.m_function  ) 
-  , m_tag       ( right.m_tag       ) 
+  : ShiftAndScale ( right , name ) 
+  , m_function    ( right.m_function  ) 
+  , m_tag         ( right.m_tag       ) 
 {}
 // ============================================================================
 // clone 
@@ -65,6 +63,10 @@ Ostap::Models::Shape1D::Shape1D
 Ostap::Models::Shape1D*
 Ostap::Models::Shape1D::clone ( const char* name ) const 
 { return new Ostap::Models::Shape1D(*this,name) ; }
+// ============================================================================
+// evaluate the PDF 
+// ============================================================================
+Double_t Ostap::Models::Shape1D::evaluate () const { return func ( m_x ) ; } 
 // ============================================================================
 Int_t Ostap::Models::Shape1D::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
@@ -88,7 +90,7 @@ Double_t Ostap::Models::Shape1D::analyticalIntegral
   static const Ostap::Math::Integrator s_integrator {} ;
   //
   auto fun = [this] ( const double x ) -> double 
-    { return this->func ( x  ) ; } ;
+  { return this->func ( x ) ; } ;
   //
   return s_integrator.integrate 
     ( fun                   , 
@@ -6908,7 +6910,7 @@ Ostap::Models::Amoroso::Amoroso
 ( const char* name      , 
   const char* title     ,
   RooAbsReal& x         , 
-  RooAbsReal& log_alpha , 
+  RooAbsReal& logalpha  , 
   RooAbsReal& beta      ,
   RooAbsReal& scale     , 
   RooAbsReal& shift     ) 
@@ -6917,8 +6919,8 @@ Ostap::Models::Amoroso::Amoroso
 		    x     ,
 		    scale ,
 		    shift )
-  , m_log_alpha   ( "!log_alpha" , "log(alpha)" , this , log_alpha )
-  , m_beta        ( "!beta"      , "beta"       , this , beta      )
+  , m_logalpha  ( "!logalpha" , "log(alpha)" , this , logalpha )
+  , m_beta      ( "!beta"     , "beta"       , this , beta     )
   , m_amoroso   () 
 {
   setPars ();
@@ -6930,14 +6932,14 @@ Ostap::Models::Amoroso::Amoroso
 ( const char*  name      , 
   const char*  title     ,
   RooAbsReal&  x         , 
-  RooAbsReal&  log_alpha , 
+  RooAbsReal&  logalpha  , 
   RooAbsReal&  beta      ,
   const double scale     , 
   const double shift     )
   : Amoroso ( name      ,
 	      title     ,
 	      x         ,
-	      log_alpha ,
+	      logalpha  ,
 	      beta      ,
 	      RooFit::RooConst ( scale ) ,
 	      RooFit::RooConst ( shift ) )
@@ -6949,9 +6951,9 @@ Ostap::Models::Amoroso::Amoroso
 ( const Ostap::Models::Amoroso& right , 
   const char*                      name  ) 
   : ShiftAndScale ( right , name )
-  , m_log_alpha  ( "!log_alpha" , this , right.m_log_alpha )
-  , m_beta       ( "!beta"      , this , right.m_beta      )
-  , m_amoroso    ( right.m_amoroso ) 
+  , m_logalpha  ( "!logalpha" , this , right.m_logalpha )
+  , m_beta      ( "!beta"     , this , right.m_beta      )
+  , m_amoroso   ( right.m_amoroso ) 
 {
   setPars () ;
 }
@@ -6969,9 +6971,9 @@ Ostap::Models::Amoroso::clone( const char* name ) const
 void Ostap::Models::Amoroso::setPars () const 
 {
   //
-  m_amoroso.setScaleShift ( m_scale , m_shift ) ;
-  m_amoroso.setLogAlpha   ( m_log_alpha       ) ;
+  m_amoroso.setLogAlpha   ( m_logalpha        ) ;
   m_amoroso.setBeta       ( m_beta            ) ;
+  m_amoroso.setScaleShift ( m_scale , m_shift ) ;
   //
 }
 // ============================================================================
@@ -12847,14 +12849,11 @@ Ostap::Models::Frechet::Frechet
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          alpha     ,
+  RooAbsReal&          logalpha  ,
   RooAbsReal&          scale     ,
   RooAbsReal&          shift     ) 
-  : RooAbsPdf ( name , title     ) 
-  , m_x       ( "!x"     , "Observable"       , this , x     ) 
-  , m_alpha   ( "!alpha" , "alpha-parameter"  , this , alpha )
-  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
-  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  : ShiftAndScale ( name , title , x , scale , shift ) 
+  , m_logalpha ( "!logalpha" , "log(alpha) parameter"  , this , logalpha )
   , m_frechet () 
 {
   setPars () ;
@@ -12864,13 +12863,13 @@ Ostap::Models::Frechet::Frechet
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          alpha     ,
+  RooAbsReal&          logalpha  ,
   const double         scale     ,
   const double         shift     )
-  : Frechet ( name  ,
-	      title ,
-	      x     ,
-	      alpha ,
+  : Frechet ( name     ,
+	      title    ,
+	      x        ,
+	      logalpha ,
 	      RooFit::RooConst ( scale ) ,
 	      RooFit::RooConst ( shift ) )
 {}
@@ -12880,14 +12879,9 @@ Ostap::Models::Frechet::Frechet
 Ostap::Models::Frechet::Frechet
 ( const Ostap::Models::Frechet&  right ,      
   const char*                    name  ) 
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x     ( "!x"     , this , right.m_x     ) 
-  , m_alpha ( "!alpha" , this , right.m_alpha ) 
-  , m_scale ( "!scale" , this , right.m_scale ) 
-  , m_shift ( "!shift" , this , right.m_shift ) 
-    //
-  , m_frechet ( right.m_frechet ) 
+  : ShiftAndScale ( right , name ) 
+  , m_logalpha ( "!logalpha" , this , right.m_logalpha ) 
+  , m_frechet   ( right.m_frechet ) 
 {
   setPars () ;
 }
@@ -12904,9 +12898,8 @@ Ostap::Models::Frechet::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::Frechet::setPars () const 
 {
-  m_frechet.setAlpha  ( m_alpha ) ;
-  m_frechet.setScale  ( m_scale ) ;
-  m_frechet.setShift  ( m_shift ) ;
+  m_frechet.setLogAlpha    ( m_logalpha ) ;
+  m_frechet.setScaleShift  ( m_scale , m_shift ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -12965,16 +12958,13 @@ Ostap::Models::Dagum::Dagum
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          p         ,
-  RooAbsReal&          a         ,
-  RooAbsReal&          b         ,
+  RooAbsReal&          logp      ,
+  RooAbsReal&          logalpha  ,
+  RooAbsReal&          scale     ,
   RooAbsReal&          shift     ) 
-  : RooAbsPdf ( name , title     ) 
-  , m_x       ( "!x"     , "Observable"       , this , x     ) 
-  , m_p       ( "!p"     , "p-parameter"      , this , p     )
-  , m_a       ( "!a"     , "a-parameter"      , this , a     )
-  , m_b       ( "!b"     , "b-parameter"      , this , b     )    
-  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
+  : ShiftAndScale ( name , title , x , scale , shift ) 
+  , m_logp      ( "!logp"     , "log(p)-parameter"      , this , logp     )
+  , m_logalpha  ( "!logalpha" , "log(aalpha)-parameter" , this , logalpha )
   , m_dagum   () 
 {
   setPars () ;
@@ -12984,16 +12974,16 @@ Ostap::Models::Dagum::Dagum
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          p         ,
-  RooAbsReal&          a         ,
-  RooAbsReal&          b         ,
+  RooAbsReal&          logp      ,
+  RooAbsReal&          logalpha  ,
+  const double         scale     ,
   const double         shift     )
-  : Dagum ( name  ,
-	    title ,
-	    x     ,
-	    p     ,
-	    a     ,
-	    b     , 
+  : Dagum ( name     , 
+	    title    ,
+	    x        ,
+	    logp     ,
+	    logalpha ,
+	    RooFit::RooConst ( scale ) , 
 	    RooFit::RooConst ( shift ) )
 {}
 // ============================================================================
@@ -13002,14 +12992,9 @@ Ostap::Models::Dagum::Dagum
 Ostap::Models::Dagum::Dagum
 ( const Ostap::Models::Dagum&  right ,      
   const char*                    name  ) 
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x     ( "!x"     , this , right.m_x     )
-  , m_p     ( "!p"     , this , right.m_p     )
-  , m_a     ( "!a"     , this , right.m_a     )
-  , m_b     ( "!b"     , this , right.m_b     )
-  , m_shift ( "!shift" , this , right.m_shift ) 
-    //
+  : ShiftAndScale ( right , name ) 
+  , m_logp     ( "!logp"     , this , right.m_logp     )
+  , m_logalpha ( "!logalpha" , this , right.m_logalpha )
   , m_dagum ( right.m_dagum ) 
 {
   setPars () ;
@@ -13027,10 +13012,9 @@ Ostap::Models::Dagum::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::Dagum::setPars () const 
 {
-  m_dagum.setP     ( m_p ) ;
-  m_dagum.setA     ( m_a ) ;
-  m_dagum.setB     ( m_b  ) ;
-  m_dagum.setShift ( m_shift ) ;
+  m_dagum.setLogP     ( m_logp     ) ;
+  m_dagum.setLogAlpha ( m_logalpha ) ;
+  m_dagum.setScale    ( m_scale    , m_shift ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -13582,17 +13566,14 @@ Ostap::Models::Kumaraswami::Kumaraswami
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          alpha     ,
-  RooAbsReal&          beta      ,
+  RooAbsReal&          logalpha  ,
+  RooAbsReal&          logbeta   ,
   RooAbsReal&          scale     ,
   RooAbsReal&          shift     ) 
-  : RooAbsPdf ( name , title     ) 
-  , m_x       ( "!x"     , "Observable"       , this , x     ) 
-  , m_alpha   ( "!alpha" , "a-parameter"      , this , alpha )
-  , m_beta    ( "!beta"  , "b-parameter"      , this , beta  )
-  , m_scale   ( "!scale" , "scale-parameter"  , this , scale )
-  , m_shift   ( "!shift" , "shift-parameter"  , this , shift )
-  , m_k      () 
+  : ShiftAndScale ( name , title , x , scale , shift )  
+  , m_logalpha ( "!logalpha" , "log(alpha)-parameter" , this , logalpha )
+  , m_logbeta  ( "!logbeta"  , "log(beta)-parameter"  , this , logbeta  )
+  , m_k        () 
 {
   setPars () ;
 }
@@ -13619,14 +13600,9 @@ Ostap::Models::Kumaraswami::Kumaraswami
 Ostap::Models::Kumaraswami::Kumaraswami
 ( const Ostap::Models::Kumaraswami& right ,      
   const char*                       name  ) 
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x     ( "!x"     , this , right.m_x     )
-  , m_alpha ( "!alpha" , this , right.m_alpha )
-  , m_beta  ( "!beta"  , this , right.m_beta  )
-  , m_scale ( "!scale" , this , right.m_scale )
-  , m_shift ( "!shift" , this , right.m_shift ) 
-    //
+  : ShiftAndScale ( right , name ) 
+  , m_logalpha ( "!logalpha" , this , right.m_logalpha )
+  , m_logbeta  ( "!logbeta"  , this , right.m_logbeta  )
   , m_k ( right.m_k ) 
 {
   setPars () ;
@@ -13644,10 +13620,9 @@ Ostap::Models::Kumaraswami::clone ( const char* name ) const
 // ============================================================================
 void Ostap::Models::Kumaraswami::setPars () const 
 {
-  m_k.setAlpha ( m_alpha ) ;
-  m_k.setBeta  ( m_beta  ) ;
-  m_k.setScale ( m_scale ) ;
-  m_k.setShift ( m_shift ) ;
+  m_k.setLogAlpha   ( m_logalpha ) ;
+  m_k.setLogBeta    ( m_logbeta  ) ;
+  m_k.setScaleShift ( m_scale    , m_shift ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -13687,31 +13662,28 @@ Ostap::Models::InverseGamma::InverseGamma
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
-  RooAbsReal&          alpha     ,
-  RooAbsReal&          beta      ,
+  RooAbsReal&          logalpha  ,
+  RooAbsReal&          scale     ,
   RooAbsReal&          shift     ) 
-  : RooAbsPdf ( name , title     ) 
-  , m_x       ( "!x"      , "Observable"       , this , x     ) 
-  , m_alpha   ( "!aalpha" , "alpha-parameter"  , this , alpha )
-  , m_beta    ( "!beta"   , "beta-parameter"   , this , beta  )
-  , m_shift   ( "!shift"  , "shift-parameter"  , this , shift )
-  , m_ig      () 
+  : ShiftAndScale ( name , title , x , scale , shift )
+  , m_logalpha ( "!logalpha" , "log(alpha)-parameter"  , this , logalpha )
+  , m_ig       () 
 {
   setPars () ;
 }
 // ============================================================================
 Ostap::Models::InverseGamma::InverseGamma
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          alpha     ,
-  RooAbsReal&          beta      ,
-  const double         shift     )
+( const char*  name      , 
+  const char*  title     ,
+  RooAbsReal&  x         ,
+  RooAbsReal&  logalpha  ,
+  const double scale     ,
+  const double shift     )
   : InverseGamma ( name  ,
 		   title ,
 		   x     ,
-		   alpha ,
-		   beta  ,
+		   logalpha ,
+		   RooFit::RooConst ( scale ) ,
 		   RooFit::RooConst ( shift ) )
 {}
 // ============================================================================
@@ -13720,14 +13692,9 @@ Ostap::Models::InverseGamma::InverseGamma
 Ostap::Models::InverseGamma::InverseGamma
 ( const Ostap::Models::InverseGamma& right ,      
   const char*                       name  ) 
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x     ( "!x"     , this , right.m_x     )
-  , m_alpha ( "!alpha" , this , right.m_alpha )
-  , m_beta  ( "!beta"  , this , right.m_beta  )
-  , m_shift ( "!shift" , this , right.m_shift ) 
-    //
-  , m_ig ( right.m_ig ) 
+  : ShiftAndScale ( right , name ) 
+  , m_logalpha ( "!logalpha" , this , right.m_logalpha )
+  , m_ig       ( right.m_ig ) 
 {
   setPars () ;
 }
@@ -13744,9 +13711,8 @@ Ostap::Models::InverseGamma::clone ( const char* name ) const
 // ============================================================================
 void Ostap::Models::InverseGamma::setPars () const 
 {
-  m_ig.setAlpha ( m_alpha) ;
-  m_ig.setBeta  ( m_beta ) ;
-  m_ig.setShift ( m_shift ) ;
+  m_ig.setLogAlpha   ( m_logalpha ) ;
+  m_ig.setScaleShift ( m_scale    , m_shift ) ;
 }
 // ============================================================================
 // the actual evaluation of function 

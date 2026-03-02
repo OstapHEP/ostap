@@ -19,12 +19,6 @@
 // ============================================================================
 #include "Ostap/PDFsUtils.h"
 // ============================================================================
-// Local
-// ============================================================================
-// #include "local_roofit.h"
-// #include "local_gsl.h"
-// #include "status_codes.h"
-// ============================================================================
 /** @file 
  *  Implementation file for functions & classes from ffrom the file Ostap/PDFsUtils.h
  *  @see Ostap/PDFsUtils.h
@@ -34,22 +28,17 @@
 // ============================================================================
 //  ShiftAndScalle 
 // ============================================================================
-#include <iostream>
 Ostap::Models::ShiftAndScale::ShiftAndScale
 ( const char* name  ,
   const char* title ,
   RooAbsReal& x     ,
   RooAbsReal& scale ,
   RooAbsReal& shift )
-  : RooAbsPdf   ( name     , title        ) 
-  , m_x         ( "!x"     , "Observable"      , this , x     ) 
-  , m_scale     ( "!scale" , "scale-parameter" , this , scale ) 
-  , m_shift     ( "!shift" , "shift-parameter" , this , shift )
-{
-  std::cerr << " I AM CONSTRUCTOR (1)" << std::endl ;
-  m_x.print ( std::cerr ) ;
-  std::cerr << std::endl  ; 
-}
+  : RooAbsPdf ( name     , title        ) 
+  , m_x       ( "!x"     , "Observable"      , this , x     ) 
+  , m_scale   ( "!scale" , "scale-parameter" , this , scale ) 
+  , m_shift   ( "!shift" , "shift-parameter" , this , shift )
+{}
 // ============================================================================
 //  ShiftAndScale 
 // ============================================================================
@@ -75,16 +64,12 @@ Ostap::Models::ShiftAndScale::ShiftAndScale
   , m_x       ( "!x"     , this , right.m_x     )
   , m_scale   ( "!scale" , this , right.m_scale )
   , m_shift   ( "!shift" , this , right.m_shift )
-{
-  std::cerr << " I AM CONSTRUCTOR (2) " << std::endl  ;
-}
+{}
 // ============================================================================
 // fake default constructor, needed just for proper (de)serialization
 // ============================================================================
 Ostap::Models::ShiftAndScale::ShiftAndScale  ()
-{
-  std::cerr << " I AM CONSTRUCTOR (3) " << std::endl ;
-} 
+{} 
 // ============================================================================
 // virtual destructor
 // ============================================================================

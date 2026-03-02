@@ -79,11 +79,11 @@ namespace Ostap
     protected :
       // ======================================================================
       /// x observable
-      RooRealProxy m_x     {} ; // x-observable
+      RooRealProxy m_x     {}    ; // x-observable
       /// scale  
-      RooRealProxy m_scale {} ; // scale
+      RooRealProxy m_scale {}    ; // scale
       /// shift 
-      RooRealProxy m_shift {} ; // shift 
+      RooRealProxy m_shift {}    ; // shift
       // ======================================================================
     } ; //                        The end of class Ostap::Models::ShiftAndScale
     // ========================================================================

@@ -218,6 +218,8 @@ __all__ = (
     #
     'Tsallis_pdf'       , ## useful model for fitting pT-spectra 
     'QGSM_pdf'          , ## useful model for fitting pT-spectra
+    'Hagedorn_pdf'      , ## useful model for fitting pT-spectra
+    'Tsallis2_pdf'      , ## useful model for fitting pT-spectra 
     #
     ## Non-parametric PDFs
     #
@@ -286,6 +288,8 @@ logger.debug ("Import wide-signal          models from 'wide'"          )
 from ostap.fitting.background    import * 
 logger.debug ("Import specialized models          from 'specific'"      )
 from ostap.fitting.specific      import *
+logger.debug ("Import specialized models          from 'spectra'"       )
+from ostap.fitting.spectra        import *
 logger.debug ("Import 'other'     models          from 'distributions'" )
 from ostap.fitting.distributions import *
 
@@ -293,6 +297,8 @@ models = []
 from ostap.fitting.signals       import models as _models 
 models += _models
 from ostap.fitting.background    import models as _models
+models += _models
+from ostap.fitting.spectra       import models as _models
 models += _models
 from ostap.fitting.distributions import models as _models
 models += _models

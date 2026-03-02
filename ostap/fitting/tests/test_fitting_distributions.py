@@ -55,11 +55,9 @@ def _check_the_model_ ( model_type ) :
 # =============================================================================
 def test_models () :
 
-    from   ostap.fitting.distributions import models , spectra
-    models = list ( models )
+    from   ostap.fitting.distributions import models
     logger.info ( 'Test distributions' )
-    for model in models :
-        if not model in spectra : _check_the_model_ ( model ) 
+    for model in models : _check_the_model_ ( model ) 
         
 # =============================================================================
 def test_Tsallis () :

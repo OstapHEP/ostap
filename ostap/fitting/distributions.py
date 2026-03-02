@@ -66,10 +66,6 @@
 - BurrXI_pdf            : Burr Type XI   distribution
 - BurrXII_pdf           : Burr Type XII  distribution
 
-- Tsallis_pdf          : Tsallis PDF 
-- QGSM_pdf             : QGSM PDF 
-- Hagedorn_pdf         : Hagedorn PDF 
-- Tsallis2_pdf         : 2D Tsallis PDF 
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -136,18 +132,13 @@ __all__     = (
     'BurrXI_pdf'           , ## Burr Type XI   distribution
     'BurrXII_pdf'          , ## Burr Type XII  distribution
     # 
-    'Tsallis_pdf'          , ## Tsallis PDF 
-    'QGSM_pdf'             , ## QGSM PDF 
-    'Hagedorn_pdf'         , ## Hagedorn PDF 
-    'Tsallis2_pdf'         , ## 2D Tsallis PDF
-    #
     )
 # =============================================================================
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.base          import isfinite, pos_infinity, neg_infinity 
 from   ostap.fitting.pdfbasic   import PDF1, PDF2
-from   ostap.fitting.fithelpers import ( ShiftAndScale , Shift , Scale ,
-                                         AlphaAndBeta  , Alpha , Beta  ,
+from   ostap.fitting.fithelpers import ( ShiftAndScale , Shift    , Scale   ,
+                                         Alpha , Beta  , LogAlpha , LogBeta , 
                                          P , Q , PQ , R , K , C ) 
 import ROOT, math
 # =============================================================================
@@ -156,7 +147,6 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.distributions' 
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
 models  = []
-spectra = []
 # =============================================================================
 ## @class GammaDist_pdf
 #  Gamma-distribution with shape/scale parameters
@@ -311,18 +301,18 @@ models.append ( GenGammaDist_pdf )
 #  @date   2013-05-11
 #  @see Ostap::Math::Amoroso
 #  @see Ostap::Models::Amoroso
-class Amoroso_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
+class Amoroso_pdf(PDF1,ShiftAndScale,LogAlpha,Beta) :
     """ Another view on generalized gamma distribution
     http://arxiv.org/pdf/1005.3274
     """
     ## constructor
-    def __init__ ( self       , * , 
-                   xvar       ,   ## the variable
-                   name  = '' ,   ## the name 
-                   alpha = 1  ,   ## alpha-parameter
-                   beta  = 1  ,   ## beta-parameter
-                   scale = 1  ,   ## theta-parameter/ scale 
-                   shift = 0  ) : ## a-parameter/shift 
+    def __init__ ( self          , * , 
+                   xvar          ,   ## the variable
+                   name     = '' ,   ## the name 
+                   logalpha = 0  ,   ## alpha-parameter
+                   beta     = 1  ,   ## beta-parameter
+                   scale    = 1  ,   ## theta-parameter/ scale 
+                   shift    = 0  ) : ## a-parameter/shift 
         
         ## The 1st base 
         PDF1         .__init__ ( self , name = name , xvar = xvar )
@@ -334,28 +324,27 @@ class Amoroso_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
                                  scale_title = '#theta_{Amoroso}(%s)' % self.name ,
                                  shift_name  = 'a_%s'                 % self.name ,
                                  shift_title = 'a_{Amoroso}(%s)'      % self.name )
-        ## The 3rd base
-        AlphaAndBeta .__init__  ( self          ,
-                                  alpha = alpha ,
-                                  beta  = beta  )
+        ## The 3rd&4tgh bases
+        LogAlpha.__init__ ( self , logalpha = logalpha )
+        Beta    .__init__ ( self , beta     = beta     ) 
                                   
         self.pdf  = Ostap.Models.Amoroso (
             self.roo_name ( 'amo_' ) ,
             'Amoroso %s' % self.name , 
-            self.x      ,
-            self.alpha  ,
-            self.beta   ,
-            self.scale  ,
+            self.x        ,
+            self.logalpha ,
+            self.beta     ,
+            self.scale    ,
             self.shift  )
         
         ## save the configuration:
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,
-            'beta'  : self.beta  ,            
-            'scale' : self.scale ,            
-            'shift' : self.shift ,            
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'logalpha' : self.logalpha ,
+            'beta'     : self.beta     ,            
+            'scale'    : self.scale    ,            
+            'shift'    : self.shift    ,            
             }
         
     ## ALIAS
@@ -1661,7 +1650,7 @@ models.append ( GEV_pdf )
 # 
 #  @see Ostap::Models::Benini
 #  @see Ostap::Math::Benini
-class Benini_pdf(PDF1, ShiftAndScale) :
+class Benini_pdf(PDF1,ShiftAndScale) :
     """ Modified version of Benini distribution 
     - see https://en.wikipedia.org/wiki/Benini_distribution
     Parameters 
@@ -1996,20 +1985,20 @@ models.append ( Frechet_pdf )
 #  @see https://en.wikipedia.org/wiki/Dagum_distribution
 #  @see Ostap::Models::Dagum
 #  @see Ostap::Math::Dagum 
-class Dagum_pdf(PDF1,ShiftAndScale) :
+class Dagum_pdf(PDF1,ShiftAndScale,P,LogAlpha) :
     """ Dagum distribution
     - see https://en.wikipedia.org/wiki/Dagum_distribution
     - see Ostap::Models::Dagum
     - see Ostap::Math::Dagum 
     """
     ## constructor
-    def __init__ ( self       , * , 
-                   xvar       ,   ## the variable
-                   name  = '' ,   ## the name 
-                   p     = 1  ,
-                   a     = 1  ,   
-                   b     = 1  ,   ## b-parametes is a scale 
-                   shift = 0  ) : ## shift  
+    def __init__ ( self           , * , 
+                   xvar           ,   ## the variable
+                   name      = '' ,   ## the name 
+                   logp      = 0  ,
+                   logalpha  = 1  ,   
+                   b         = 1  ,   ## b-parametes is a scale 
+                   shift     = 0  ) : ## shift  
         
         #
         PDF1         .__init__ ( self  , name = name , xvar = xvar )
@@ -2018,55 +2007,31 @@ class Dagum_pdf(PDF1,ShiftAndScale) :
                                  shift       = shift , 
                                  scale_name  = 'b_%s'      % self.name , 
                                  scale_title = 'b_{D}(%s)' % self.name )
-        
-        #
-        self.__a  = self.make_var ( a    ,
-                                    'a_%s'       % self.name ,
-                                    'a_{D}(%s)'  % self.name ,
-                                    None , a , 1.e-6 , 100 )
-        self.__p  = self.make_var ( p    ,
-                                    'p_%s'       % self.name ,
-                                    'p_{D}(%s)'  % self.name ,
-                                    None , p , 1.e-6 , 100 )
-        
+
+        P       .__init__ ( self , logp     = logp      )
+        LogAlpha.__init__ ( self , logalpha = logalpha  )
         
         ## create PDF 
         self.pdf  = Ostap.Models.Dagum (
             self.roo_name ( 'dagum_' )  ,
             'Dagum %s' % self.name , 
-            self.x     ,
-            self.p     ,
-            self.a     ,
-            self.b     ,
-            self.shift )
+            self.x        ,
+            self.logp     ,
+            self.logalpha ,
+            self.b        ,
+            self.shift    )
         
         ## save the configuration:
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'p'     : self.p     ,            
-            'a'     : self.a     ,            
-            'b'     : self.b     ,            
-            'shift' : self.shift }
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'logp'     : self.logp     ,            
+            'logalpha' : self.logalpha ,            
+            'b'        : self.b     ,            
+            'shift'    : self.shift }
 
     ## ALIAS
     b  = ShiftAndScale.scale
-    
-    @property
-    def a ( self ) :
-        """`a` : a-parameter for Dagum distribution"""
-        return self.__a
-    @a.setter 
-    def a ( self , value ) :
-        self.set_value ( self.__a , value )
-
-    @property
-    def p ( self ) :
-        """`p` : p-parameter for Dagum distribution"""
-        return self.__p
-    @p.setter 
-    def p ( self , value ) :
-        self.set_value ( self.__p , value )
         
 models.append ( Dagum_pdf ) 
 
@@ -2403,42 +2368,43 @@ models.append ( Davis_pdf )
 #  @see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
 #  @see Ostap::Models::Kumaraswami 
 #  @see Ostap::Math::Kumaraswami 
-class Kumaraswami_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
+class Kumaraswami_pdf(PDF1,ShiftAndScale,LogAlpha,LogBeta) :
     """ Kumaraswami distribution with scale and shift
     - see https://en.wikipedia.org/wiki/Kumaraswamy_distribution
     - see Ostap::Models::Kumaraswami 
     - see Ostap::Math::Kumaraswami 
     """
     ## constructor
-    def __init__ ( self       , * , 
-                   xvar       ,  ## the variable
-                   name  = '' ,  ## the name 
-                   alpha = 2  ,
-                   beta  = 2  , 
-                   scale = 1  ,
-                   shift = 0  ) :
+    def __init__ ( self          , * , 
+                   xvar          ,  ## the variable
+                   name     = '' ,  ## the name 
+                   logalpha = 0  ,
+                   logbeta  = 0  , 
+                   scale    = 1  ,
+                   shift    = 0  ) :
         ## 
         PDF1         .__init__ ( self , name  = name  , xvar  = xvar  )
         ShiftAndScale.__init__ ( self , scale = scale , shift = shift )
-        AlphaAndBeta .__init__ ( self , alpha = alpha , beta  = beta  ) 
+        LogAlpha     .__init__ ( self , logalpha = logalpha )
+        LogBeta      .__init__ ( self , logbeta  = logbeta  )
         ## 
         ## create PDF 
         self.pdf  = Ostap.Models.Kumaraswami(
             self.roo_name ( 'kumaraswami_' )  ,
             'Kumaraswami %s' % self.name , 
-            self.x     ,
-            self.alpha ,
-            self.beta  ,
-            self.scale ,
-            self.shift )
+            self.x        ,
+            self.logalpha ,
+            self.logbeta  ,
+            self.scale    ,
+            self.shift    )
         ## save the configuration:
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,            
-            'beta'  : self.beta  ,            
-            'scale' : self.scale ,            
-            'shift' : self.shift }
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'logalpha' : self.logalpha ,            
+            'logbeta'  : self.logbeta  ,            
+            'scale'    : self.scale    ,            
+            'shift'    : self.shift    }
         
 models.append ( Kumaraswami_pdf )
 
@@ -2447,18 +2413,18 @@ models.append ( Kumaraswami_pdf )
 #  Inverse Gamma distribution (with shift)
 #  @see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
 #  @see Ostap::Math::InverseGamma
-class InverseGamma_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
+class InverseGamma_pdf(PDF1,ShiftAndScale,LogAlpha) :
     """ Inverse Gamma distribution (with shift)
     - see https://en.wikipedia.org/wiki/Inverse-gamma_distribution
     - see Ostap::Math::InverseGamma
     """
     ## constructor
-    def __init__ ( self       , * , 
-                   xvar       ,   ## the variable
-                   name  = '' ,   ## the name 
-                   alpha = 8  ,   ## shape parameter 
-                   beta  = 1  ,   ## scale parameter 
-                   shift = 0  ) : ## shift parameter 
+    def __init__ ( self          , * , 
+                   xvar          ,   ## the variable
+                   name     = '' ,   ## the name 
+                   logalpha = 1  ,   ## shape parameter 
+                   beta     = 1  ,   ## scale parameter 
+                   shift    = 0  ) : ## shift parameter 
         ## 
         PDF1         .__init__ ( self , name = name , xvar = xvar  )
         ShiftAndScale.__init__ ( self ,
@@ -2466,24 +2432,24 @@ class InverseGamma_pdf(PDF1,ShiftAndScale,AlphaAndBeta) :
                                  shift = shift , 
                                  scale_name  = 'beta_%s'        % self.name , 
                                  scale_title = '#beta_{IG}(%s)' % self.name )
-        AlphaAndBeta.__init__  ( self , alpha = alpha , beta = self.scale )
+        LogAlpha.__init__  ( self , logalpha = logalpha  )
         ## 
         ## create PDF 
         self.pdf  = Ostap.Models.InverseGamma (
             self.roo_name ( 'invgamma_' )  ,
-        'Inverse-Gamma %s' % self.name , 
-            self.x     ,
-            self.alpha ,
-            self.beta  ,
-            self.shift )
+            'Inverse-Gamma %s' % self.name , 
+            self.x        ,
+            self.logalpha ,
+            self.beta     ,
+            self.shift    )
         
         ## save the configuration:
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'alpha' : self.alpha ,            
-            'beta'  : self.beta  ,            
-            'shift' : self.shift }
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'logalpha' : self.logalpha ,            
+            'beta'     : self.beta     ,            
+            'shift'    : self.shift    }
         
     ## ALIAS 
     beta = ShiftAndScale.scale 
@@ -3347,432 +3313,6 @@ class BurrXII_pdf(BurrI_pdf,C,K) :
 
 models.append ( BurrXII_pdf )
 
-
-# =============================================================================
-## @class Tsallis_pdf
-#  Useful function to describe pT-spectra of particles 
-#
-#  - C. Tsallis, 
-#  "Possible generalization of Boltzmann-Gibbs statistics,
-#  J. Statist. Phys. 52 (1988) 479.
-#  - C. Tsallis, 
-#  Nonextensive statistics: theoretical, experimental and computational 
-#  evidences and connections, Braz. J. Phys. 29 (1999) 1.
-# 
-#  \f[ \frac{d\sigma}{dp_T} \propto  
-#    p_T\times \left( 1 + \frac{E_{kin}}{Tn}\right)^{-n}\f],
-#  where \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$ 
-#  is transverse kinetic energy 
-#
-#  @see Ostap::Models::Tsallis
-#  @see Ostap::Math::Tsallis
-#  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
-#  @date 2011-07-25
-class Tsallis_pdf(PDF1) :
-    r""" Useful function to describe pT-spectra of particles 
-    
-    - C. Tsallis, 
-    Possible generalization of Boltzmann-Gibbs statistics,
-    J. Statist. Phys. 52 (1988) 479.
-    - C. Tsallis, 
-    Nonextensive statistics: theoretical, experimental and computational 
-    evidences and connections, Braz. J. Phys. 29 (1999) 1.
-    
-    \f[ \frac{d\sigma}{dp_T} \propto  
-    p_T\times \left( 1 + \frac{E_{kin}}{Tn}\right)^{-n}\f],
-    
-    where \f$E_{kin} = \sqrt{p_T^2-M^2}-M\f$
-    
-    is transverse kinetic energy 
-    """
-    def __init__ ( self                   , * , 
-                   xvar                   ,   ## pT-variable (for fitting) 
-                   name      = ''         , 
-                   m0        = 0.135      ,   ## particle mass (may be fixed)
-                   n         = None       ,   ## shape parameter
-                   T         = None       ) : ## temperature parameter                   
-
-        ## initialize the base 
-        PDF1.__init__  ( self , name = name , xvar = xvar )
-        
-        self.__m0   = self.make_var ( m0                   ,
-                                      'm0_%s'  % self.name , 
-                                      'm0(%s)' % self.name ,
-                                      True , 1.e-10   , 1e+6 )
-        
-        self.__n    = self.make_var ( n               ,
-                                      'n_%s'   % self.name , 
-                                      'n(%s) ' % self.name ,
-                                      False , 1 , 0.01  , 1000 )  
-        
-        self.__T    = self.make_var ( T               ,
-                                      'T_%s'   % self.name , 
-                                      'T(%s) ' % self.name ,
-                                      False , 1 , 1.e-4 , 1e+6 )
-        
-        self.pdf  = Ostap.Models.Tsallis (
-            self.roo_name ( 'tsallis_' )   ,
-            'Tsallis %s' % self.name  , 
-            self.pt               ,
-            self.n                ,
-            self.T                ,
-            self.m0               )
-        
-        ## save the configuration:
-        self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'n'     : self.n     ,            
-            'T'     : self.T     ,            
-            'm0'    : self.m0    ,            
-            }
-    
-    @property
-    def pt ( self ) :
-        """`pt'-variable for Tsallis distribution (the same as ``x'')"""
-        return self.xvar
-    
-    @property
-    def m0 ( self ) :
-        """`m0'-parameter of Tsallis' function"""
-        return self.__m0
-    @m0.setter
-    def m0 ( self , value ) :
-        self.set_value ( self.__m0 , value )
-
-    @property
-    def n ( self ) :
-        """`n'-parameter of Tsallis' function"""
-        return self.__n
-    @n.setter
-    def n ( self , value ) :
-        self.set_value ( self.__n , value )
-
-    @property
-    def T ( self ) :
-        """`T'-parameter of Tsallis' function"""
-        return self.__T
-    @T.setter
-    def T ( self , value ) :
-        self.set_value ( self.__T , value )
- 
-        
-models  .append ( Tsallis_pdf )
-spectra .append ( Tsallis_pdf )
-
-# =============================================================================
-## @class QGSM_pdf
-#  Useful function to describe pT-spectra of particles 
-#
-# - A. B. Kaidalov and O. I. Piskunova, Z. Phys. C 30 (1986) 145.
-# - O. I. Piskounova, arXiv:1301.6539 [hep-ph]; 
-# - O. I. Piskounova, arXiv:1405.4398 [hep-ph].
-# - A. A. Bylinkin and O. I. Piskounova, 
-#  "Transverse momentum distributions of baryons at LHC energies",
-#  arXiv:1501.07706.
-#
-#  \f[ \frac{d\sigma}{dp_T} \propto 
-#  p_T \times \mathrm{e}^{ -b_0 (m_T-m)} \f], 
-#  where transverse mass is defined as \f$m_T = \sqrt{p_T^2+m^2}\f$
-# 
-#  @see Ostap::Models::QGSM
-#  @see Ostap::Math::QGSM
-#  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
-#  @date 2011-07-25
-class QGSM_pdf(PDF1) :
-    r""" Useful function to describe pT-spectra of particles 
-    
-    - A. B. Kaidalov and O. I. Piskunova, Z. Phys. C 30 (1986) 145.
-    - O. I. Piskounova, arXiv:1301.6539 [hep-ph]; 
-    - O. I. Piskounova, arXiv:1405.4398 [hep-ph].
-    - A. A. Bylinkin and O. I. Piskounova, 
-    'Transverse momentum distributions of baryons at LHC energies',
-    arXiv:1501.07706.
-
-    \f[ \frac{d\sigma}{dp_T} \propto p_T \times \mathrm{e}^{ -b_0 (m_T-m)} \f],
-    
-    where transverse mass is defined as \f$m_T = \sqrt{p_T^2+m^2}\f$
-    """
-    def __init__ ( self             ,
-                   name             , 
-                   xvar             ,   ## pT-variable (for fitting) 
-                   m0        = 0    ,   ## particle mass (may be fixed)
-                   b         = None ) : ## slope parameter
-        
-        ## initialize the base 
-        PDF1.__init__  ( self , name = name , xvar = xvar )
-
-        
-        self.__m0   = self.make_var ( m0              ,
-                                      'm0_%s'  % self.name , 
-                                      'm0(%s)' % self.name ,
-                                      True , 0  , 1e+6 )
-        
-        self.__b    = self.make_var ( b               ,
-                                      'b_%s'   % self.name , 
-                                      'b(%s) ' % self.name ,
-                                      False , 0. , 1e+6 )  
-        
-        self.pdf  = Ostap.Models.QGSM (
-            self.roo_name ( 'qgsm_' ) ,
-            'QGSM %s' % self.name , 
-            self.pt               ,
-            self.b                ,
-            self.m0               )
-
-        ## save the configuration:
-        self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'b'     : self.b     ,            
-            'm0'    : self.m0    ,            
-            }
-    
-    @property
-    def pt ( self ) :
-        """`pt'-variable for QGSM distribution (the same as ``x'')"""
-        return self.xvar
-    
-    @property
-    def m0 ( self ) :
-        """`m0'-parameter of QGSM function"""
-        return self.__m0
-    @m0.setter
-    def m0 ( self , value ) :
-        self.set_value ( self.__m0 , value )
-
-    @property
-    def b ( self ) :
-        """`b'-parameter of QGSM function"""
-        return self.__b
-    @b.setter
-    def b ( self , value ) :
-        self.set_value ( self.__b , value )
-
-models  .append ( QGSM_pdf )
-spectra .append ( QGSM_pdf )
-
-# =============================================================================
-## @class Hagedorn_pdf
-#  Useful function to describe pT-spectra of particles 
-#  @see R.Hagedorn, "Multiplicities, p_T distributions and the 
-#       expected hadron \to Quark - Gluon Phase Transition", 
-#       Riv.Nuovo Cim. 6N10 (1983) 1-50
-#  @see https://doi.org/10.1007/BF02740917 
-#  @see https://inspirehep.net/literature/193590
-#  
-#  \f[ f(p_T; m, T) \propto 
-#   p_T \sqrt{p^2_T + m^2} K_1( \beta \sqrt{ p^2_T+m^2} ) \f] 
-#
-#  where \f$ \beta \f$ is inverse temporature 
-#  \f$ \beta = \frac{1}{T} f$ 
-#
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2022-12-06
-#  @see Ostap::Models::Hagedorn
-#  @see Ostap::Math::Hagedorn
-class Hagedorn_pdf(PDF1) :
-    r"""Useful function to describe pT-spectra of particles 
-    
-    - see R.Hagedorn, 'Multiplicities, p_T distributions and the 
-    expected hadron \to Quark - Gluon Phase Transition', 
-    Riv.Nuovo Cim. 6N10 (1983) 1-50
-    - see https://doi.org/10.1007/BF02740917 
-    - see https://inspirehep.net/literature/193590
-    
-    \f[ f(p_T; m, T) \propto 
-    p_T \sqrt{p^2_T + m^2} K_1( \beta \sqrt{ p^2_T+m^2} ) \f] 
-    
-    where \f$ \beta \f$ is inverse temporature 
-    \f$ \beta = \frac{1}{T} f$ 
-    """
-    def __init__ ( self             ,
-                   name             , 
-                   xvar             ,   ## pT-variable (for fitting) 
-                   m0        = 0    ,   ## particle mass (may be fixed)
-                   beta      = None ) : ## inverse temperature
-        
-        ## initialize the base 
-        PDF1.__init__  ( self , name  = name  , xvar = xvar )
-
-        
-        self.__m0   = self.make_var ( m0              ,
-                                      'm0_%s'  % self.name , 
-                                      'm0(%s)' % self.name ,
-                                      True , 0  , 1e+6 )
-        
-        self.__beta = self.make_var ( beta                 ,
-                                      'beta_%s'    % self.name  , 
-                                      '#beta(%s) ' % self.name  ,
-                                      False , 1.e-6 , 1e+6 )  
-        
-        self.pdf  = Ostap.Models.Hagedorn (
-            self.roo_name ( 'hage_' ) ,
-            'Hagedorn %s' % self.name , 
-            self.pt               ,
-            self.beta             ,
-            self.m0               )
-        
-        ## save the configuration:
-        self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'beta'  : self.beta  ,             
-            'm0'    : self.m0    ,            
-            }
-    
-    @property
-    def pt ( self ) :
-        """'pt'-variable for Hagedorn distribution (the same as ``x'')"""
-        return self.xvar
-    
-    @property
-    def m0 ( self ) :
-        """'m0'-parameter of Hagedorn function"""
-        return self.__m0
-    @m0.setter
-    def m0 ( self , value ) :
-        self.set_value ( self.__m0 , value )
-
-    @property
-    def beta ( self ) :
-        """'beta'-parameter (inverse temperature) of Hagedorn  function"""
-        return self.__beta
-    @beta.setter
-    def beta ( self , value ) :
-        self.set_value ( self.__beta , value )
-       
-models  .append ( Hagedorn_pdf )
-spectra .append ( Hagedorn_pdf )
-
-# =============================================================================
-## @class Tsallis2_pdf
-#  Useful function to describe pT and saidity -spectra of particles 
-#
-#  2D particle density distribution as function of pt and rapidity 
-#  @see L. Marques, J. Cleymans, A. Deppman, 
-#       "Description of High-Energy pp Collisions 
-#        Using Tsallis Thermodynamics: 
-#        Transverse Momentum and Rapidity Distributions", 
-#        Phys. Rev. D 91, 054025, 	arXiv:1501.00953 
-#  @see https://arxiv.org/abs/1501.00953
-#  @see https://doi.org/10.1103/PhysRevD.91.054025
-#  @see Ostap::Models::Tsallis2
-#  @see Ostap::Models::Tsallis
-#  @see Ostap::Math::Tsallis2
-#  @see Ostap::Math::Tsallis
-class Tsallis2_pdf(PDF2) :
-    """ 2D particle density distribution as function of pt and rapidity 
-    @see L. Marques, J. Cleymans, A. Deppman, 
-    ``Description of High-Energy pp Collisions 
-    Using Tsallis Thermodynamics: 
-    Transverse Momentum and Rapidity Distributions'', 
-    Phys. Rev. D 91, 054025, 	arXiv:1501.00953 
-    - see https://arxiv.org/abs/1501.00953
-    - see https://doi.org/10.1103/PhysRevD.91.054025
-    - see `Ostap.Models.Tsallis2`
-    - see `Ostap.Models.Tsallis`
-    - see `Ostap.Math.Tsallis2`
-    - see `Ostap.Math.Tsallis`
-    """
-    def __init__ ( self                   ,
-                   xvar                   ,   ## pT-observable )
-                   yvar                   ,   ## rapidity observable
-                   m0        = 1          ,   ## partile mass (presumably constant) 
-                   T         = None       ,   ## temperature parameter
-                   q         = 1.1        ,   ## q-parameter
-                   mu        = 0          ,   ## chemical potential                    
-                   name      = ''         ) :
-        
-        ## initialize the base 
-        PDF2.__init__  ( self , name = name , xvar = xvar , yvar =  yvar )
-        
-        self.__m0   = self.make_var ( m0              ,
-                                      'm0_%s'  % self.name , 
-                                      'm0(%s)' % self.name ,
-                                      True , 0     , 1e+6 )
-        
-        self.__q    = self.make_var ( q               ,
-                                      'q_%s'   % self.name , 
-                                      'q(%s) ' % self.name ,
-                                      None , 1.1 , 1.e-6, 10 )  
-        
-        self.__T    = self.make_var ( T               ,
-                                      'T_%s'   % self.name , 
-                                      'T(%s) ' % self.name ,
-                                      None , 1 , 1.e-4 , 1e+6 )
-        
-        self.__mu   = self.make_var ( mu               ,
-                                      'mu_%s'   % self.name , 
-                                      '#mu(%s) '% self.name ,
-                                      True  , 0 , 0 , 100 )
-        
-        self.pdf  = Ostap.Models.Tsallis2 (
-            self.roo_name ( 'tsallis2_' )   ,
-            'Tsallis2 %s' % self.name  , 
-            self.pt               ,
-            self.y                ,
-            self.m0               ,
-            self.T                ,
-            self.q                ,
-            self.mu               )
-        
-        ## save the configuration:
-        self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'yvar'  : self.yvar  ,
-            'm0'    : self.m0    ,            
-            'q'     : self.q     ,            
-            'T'     : self.T     ,            
-            'mu'    : self.mu    ,            
-            }
-        
-    @property
-    def pt ( self ) :
-        """'pt'-observable (transverse momentum) for Tsallis distribution (the same as 'xvar')"""
-        return self.xvar
-    
-    @property
-    def y ( self ) :
-        """'y'-observable (rapidity) for Tsallis distribution (the same as 'yvar')"""
-        return self.yvar
-
-    @property
-    def m0 ( self ) :
-        """'m0'-parameter (particle mass) of Tsallis' function"""
-        return self.__m0
-    @m0.setter
-    def m0 ( self , value ) :
-        self.set_value ( self.__m0 , value )
-
-    @property
-    def q ( self ) :
-        """'q'-parameter (shape) of Tsallis' function"""
-        return self.__q
-    @q.setter
-    def q ( self , value ) :
-        self.set_value ( self.__q , value )
-
-    @property
-    def T ( self ) :
-        """'T'-parameter (temperature) of Tsallis' function"""
-        return self.__T
-    @T.setter
-    def T ( self , value ) :
-        self.set_value ( self.__T , value )
-
-    @property
-    def mu ( self ) :
-        """'mu'-parameter (chemical potential) of Tsallis' function"""
-        return self.__mu
-    @mu.setter
-    def mu ( self , value ) :
-        self.set_value ( self.__mu , value )
- 
-        
-models  .append ( Tsallis2_pdf ) 
-spectra .append ( Tsallis2_pdf )
 
 # =============================================================================
 if '__main__' == __name__ : 

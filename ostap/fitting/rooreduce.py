@@ -1989,7 +1989,7 @@ def _rgamdist_reduce_ ( pdf ):
                                   pdf.name          ,
                                   pdf.title         ,
                                   pdf.x          () ,                            
-                                  pdf.k          () ,
+                                  pdf.logk       () ,
                                   pdf.theta      () , 
                                   pdf.shift      () )
 
@@ -2005,9 +2005,9 @@ def _rggamdist_reduce_ ( pdf ):
                                   pdf.name          ,
                                   pdf.title         ,
                                   pdf.x          () ,                            
-                                  pdf.k          () ,
-                                  pdf.theta      () ,
+                                  pdf.logk       () ,
                                   pdf.logp       () ,
+                                  pdf.theta      () ,
                                   pdf.shift      () )
 
 Ostap.Models.GenGammaDist.__reduce__ = _rggamdist_reduce_ 
@@ -2016,14 +2016,14 @@ Ostap.Models.GenGammaDist.__reduce__ = _rggamdist_reduce_
 ## reduce Amoroso
 def _ramoroso_reduce_ ( pdf ):
     """ Reduce Amoroso"""
-    return root_store_factory , ( type ( pdf )      ,
-                                  pdf.name          ,
-                                  pdf.title         ,
-                                  pdf.x          () ,                            
-                                  pdf.theta      () ,
-                                  pdf.alpha      () ,
-                                  pdf.beta       () ,
-                                  pdf.a          () )
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x         () ,                            
+                                  pdf.logalpha  () ,
+                                  pdf.beta      () ,
+                                  pdf.theta     () ,
+                                  pdf.a         () )
 
 Ostap.Models.Amoroso.__reduce__ = _ramoroso_reduce_ 
 
@@ -2279,13 +2279,13 @@ Ostap.Models.BirnbaumSaunders.__reduce__ = _rBS_reduce_
 ## reduce Frechet
 def _r_Frechet_reduce_ ( pdf ) :
     """ Reduce Frechet"""
-    return root_store_factory , ( type ( pdf )  ,
-                                  pdf.name      ,
-                                  pdf.title     ,
-                                  pdf.x      () ,                            
-                                  pdf.alpha  () ,                            
-                                  pdf.scale  () ,
-                                  pdf.shift  () )
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x         () ,                            
+                                  pdf.logalpha  () ,                            
+                                  pdf.scale     () ,
+                                  pdf.shift     () )
 
 Ostap.Models.Frechet.__reduce__ = _r_Frechet_reduce_ 
 
@@ -2293,14 +2293,14 @@ Ostap.Models.Frechet.__reduce__ = _r_Frechet_reduce_
 ## reduce Dagum
 def _r_Dagum_reduce_ ( pdf ) :
     """ Reduce Dagum"""
-    return root_store_factory , ( type ( pdf )  ,
-                                  pdf.name      ,
-                                  pdf.title     ,
-                                  pdf.x      () ,                            
-                                  pdf.p      () ,                            
-                                  pdf.a      () ,                            
-                                  pdf.b      () ,                            
-                                  pdf.shift  () )
+    return root_store_factory , ( type ( pdf )    ,
+                                  pdf.name        ,
+                                  pdf.title       ,
+                                  pdf.x        () ,                            
+                                  pdf.logp     () ,                            
+                                  pdf.logalpha () ,                            
+                                  pdf.scale    () ,                            
+                                  pdf.shift    () )
 
 Ostap.Models.Dagum.__reduce__ = _r_Dagum_reduce_ 
 
@@ -2369,11 +2369,11 @@ def _r_Kumaraswami_reduce_ ( pdf ) :
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
-                                  pdf.x      () ,                            
-                                  pdf.alpha  () ,                            
-                                  pdf.beta   () ,                            
-                                  pdf.scale  () , 
-                                  pdf.shift  () )
+                                  pdf.x         () ,                            
+                                  pdf.logalpha  () ,                            
+                                  pdf.logbeta   () ,                            
+                                  pdf.scale     () , 
+                                  pdf.shift     () )
 
 Ostap.Models.Kumaraswami.__reduce__ = _r_Kumaraswami_reduce_ 
 
@@ -2381,15 +2381,96 @@ Ostap.Models.Kumaraswami.__reduce__ = _r_Kumaraswami_reduce_
 ## reduce InverseGamma
 def _r_InverseGamma_reduce_ ( pdf ) :
     """ Reduce InverseGamma"""
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x         () ,                            
+                                  pdf.logalpha  () ,                            
+                                  pdf.beta      () ,                            
+                                  pdf.shift     () )
+
+Ostap.Models.InverseGamma.__reduce__ = _r_InverseGamma_reduce_ 
+
+
+# =============================================================================
+## reduce BurrI
+def _r_BurrI_reduce_ ( pdf ) :
+    """ Reduce BurrI"""
     return root_store_factory , ( type ( pdf )  ,
                                   pdf.name      ,
                                   pdf.title     ,
                                   pdf.x      () ,                            
-                                  pdf.alpha  () ,                            
-                                  pdf.beta   () ,                            
+                                  pdf.scale  () ,                            
                                   pdf.shift  () )
 
-Ostap.Models.InverseGamma.__reduce__ = _r_InverseGamma_reduce_ 
+Ostap.Models.BurrI.__reduce__ = _r_BurrI_reduce_ 
+
+# =============================================================================
+## reduce BurrII, BurrVII, BurrVIII, BurrX & BurrXI
+def _r_BurrII_reduce_ ( pdf ) :
+    """ Reduce BurrII, BurrVII, BurrVIII, BurrX & BurrXI"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.logr   () ,                            
+                                  pdf.scale  () ,                            
+                                  pdf.shift  () )
+
+Ostap.Models.BurrII   .__reduce__ = _r_BurrII_reduce_ 
+Ostap.Models.BurrVII  .__reduce__ = _r_BurrII_reduce_ 
+Ostap.Models.BurrVIII .__reduce__ = _r_BurrII_reduce_ 
+Ostap.Models.BurrX    .__reduce__ = _r_BurrII_reduce_ 
+Ostap.Models.BurrXI   .__reduce__ = _r_BurrII_reduce_ 
+
+# =============================================================================
+## reduce BurrIII & BurrIX
+def _r_BurrIII_reduce_ ( pdf ) :
+    """ Reduce BurrIII & BurrIX"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.logr   () ,                            
+                                  pdf.logk   () ,                            
+                                  pdf.scale  () ,                            
+                                  pdf.shift  () )
+
+Ostap.Models.BurrIII .__reduce__ = _r_BurrIII_reduce_ 
+Ostap.Models.BurrIX  .__reduce__ = _r_BurrIII_reduce_ 
+
+
+# =============================================================================
+## reduce BurrIV
+def _r_BurrIV_reduce_ ( pdf ) :
+    """ Reduce BurrIV"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.logr   () ,                            
+                                  pdf.logc   () ,                            
+                                  pdf.scale  () ,                            
+                                  pdf.shift  () )
+
+Ostap.Models.BurrIV.__reduce__ = _r_BurrIV_reduce_ 
+
+# =============================================================================
+## reduce BurrV & BurrVI
+def _r_BurrV_reduce_ ( pdf ) :
+    """ Reduce BurrV & BurrVI"""
+    return root_store_factory , ( type ( pdf )  ,
+                                  pdf.name      ,
+                                  pdf.title     ,
+                                  pdf.x      () ,                            
+                                  pdf.logr   () ,                            
+                                  pdf.logk   () ,                            
+                                  pdf.logc   () ,                            
+                                  pdf.scale  () ,                            
+                                  pdf.shift  () )
+
+Ostap.Models.BurrV .__reduce__ = _r_BurrV_reduce_ 
+Ostap.Models.BurrVI.__reduce__ = _r_BurrV_reduce_ 
 
 # =============================================================================
 ## reduce BurrXII
@@ -2399,8 +2480,8 @@ def _r_BurrXII_reduce_ ( pdf ) :
                                   pdf.name      ,
                                   pdf.title     ,
                                   pdf.x      () ,                            
-                                  pdf.c      () ,                            
-                                  pdf.k      () ,                            
+                                  pdf.logc   () ,                            
+                                  pdf.logk   () ,                            
                                   pdf.scale  () ,                            
                                   pdf.shift  () )
 
