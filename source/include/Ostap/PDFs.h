@@ -13106,7 +13106,7 @@ namespace Ostap
     /** @class Shape1D
      *  simple generic PDF
      */
-    class Shape1D final : public ShiftAndScale 
+    class Shape1D final : public RooAbsPdf 
     {
     public:
       // ======================================================================
@@ -13114,62 +13114,26 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// templated constructor 
-      template <class FUNCTION> 
-      Shape1D
-      ( const std::string& name   , 
-        const std::string& title  , 
-        RooAbsReal&        x      ,
-        FUNCTION           f      ,
-	RooAbsReal&        scale  ,
-	RooAbsReal&        shift  ,	
-        const std::size_t  tag    = 0 )
-        : ShiftAndScale ( name.c_str() , title.c_str() , x , scale , shift ) 
-        , m_function    ( f   ) 
-        , m_tag         ( tag ) 
-      {}
-      /// templated constructor 
-      template <class FUNCTION> 
-      Shape1D
-      ( const std::string& name       , 
-        const std::string& title      , 
-        RooAbsReal&        x          ,
-        FUNCTION           f          ,
-	const double       scale  = 1 ,
-	const double       shift  = 0 ,	
-        const std::size_t  tag    = 0 )
-        : ShiftAndScale ( name.c_str() , title.c_str() , x , scale , shift ) 
-        , m_function  ( f   ) 
-        , m_tag       ( tag ) 
-      {}
-      /// templated constructor 
       template <class FUNCTION,
 		typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 >
       Shape1D
-      ( const std::string& name  , 
-        const std::string& title , 
-        RooAbsReal&        x     ,
-        const FUNCTION&    f     ,
-        const std::size_t  tag   )
-        : ShiftAndScale ( name.c_str() , title.c_str() , x ) 
-        , m_function  ( f   ) 
-        , m_tag       ( tag ) 
-      {}            
-      // ======================================================================  
+      ( const std::string& name     , 
+        const std::string& title    ,  
+        RooAbsReal&        x        ,
+        const FUNCTION&    f        ,
+        const std::size_t  tag  = 0 )
+        : RooAbsPdf  ( name.c_str() , title.c_str() )
+	, m_x        ( "!x"   , "x-variable" , this , x ) 
+        , m_function ( f   ) 
+        , m_tag      ( tag ) 
+      {}
+      // ======================================================================      
       Shape1D
-      ( const std::string&            name    , 
-        const std::string&            title   , 
-        RooAbsReal&                   x       ,
-        std::function<double(double)> f       , 
-        const std::size_t             tag = 0 ) ;
-      Shape1D
-      ( const std::string&            name    , 
-        const std::string&            title   , 
-        RooAbsReal&                   x       ,
-        std::function<double(double)> f       , 
-	RooAbsReal&                   scale   ,
-	RooAbsReal&                   shift   ,	
-        const std::size_t             tag = 0 ) ;
+      ( const std::string&            name      , 
+        const std::string&            title     , 
+        RooAbsReal&                   x         ,
+        std::function<double(double)> f         ,
+        const std::size_t             tag = 0   ) ;
       /// copy constructor 
       Shape1D ( const Shape1D& right , const char* name = nullptr ) ;
       /// clone method
@@ -13197,7 +13161,7 @@ namespace Ostap
       // ======================================================================
       /// evaluate the function
       inline double func ( const double x ) const 
-      { return std::max ( m_function ( x2t ( x ) ) , 0.0 ) ; }
+      { return std::max ( m_function ( x ) , 0.0 ) ; }
       // ======================================================================        
     public: // integrals
       // ======================================================================
@@ -13211,6 +13175,8 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
+      /// x-variable 
+      RooRealProxy                    m_x        ; // x-variable    
       /// the function itself 
       std::function<double(double)>  m_function     ; // function 
       /// helper (hopefully unique) tag 

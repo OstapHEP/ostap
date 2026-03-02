@@ -41,11 +41,12 @@ Ostap::Models::Shape1D::Shape1D
 ( const std::string&            name    , 
   const std::string&            title   , 
   RooAbsReal&                   x       ,
-  std::function<double(double)> f       , 
+  std::function<double(double)> f       ,
   const std::size_t             tag     )
-  : ShiftAndScale (  name.c_str() ,  title.c_str() , x )
-  , m_function    ( f   ) 
-  , m_tag         ( tag ) 
+  : RooAbsPdf  (  name.c_str() ,  title.c_str()   ) 
+  , m_x        ( "!x"   , "x-variable" , this , x ) 
+  , m_function ( f   ) 
+  , m_tag      ( tag ) 
 {}
 // ============================================================================
 // copy constructor 
@@ -53,9 +54,10 @@ Ostap::Models::Shape1D::Shape1D
 Ostap::Models::Shape1D::Shape1D
 ( const Ostap::Models::Shape1D& right ,
   const char*                   name  )
-  : ShiftAndScale ( right , name ) 
-  , m_function    ( right.m_function  ) 
-  , m_tag         ( right.m_tag       ) 
+  : RooAbsPdf  ( right , name ) 
+  , m_x        ( "!x"  , this , right.m_x ) 
+  , m_function ( right.m_function  ) 
+  , m_tag      ( right.m_tag       ) 
 {}
 // ============================================================================
 // clone 
