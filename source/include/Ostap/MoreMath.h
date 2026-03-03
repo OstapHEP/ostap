@@ -622,11 +622,31 @@ namespace Ostap
      *  - \f$ 0 \le z \le 1\f$
      *  - \f$ 0<\alpha_1\f$
      *  - \f$ 0<\alpha_2\f$
+     *  @see Ostap::Math::I
      */
     double beta_inc 
     ( const double alpha1 , 
       const double alpha2 , 
       const double z      ) ;
+    // =======================================================================
+    /** Normalized incomplete Beta function
+     *  - CDF for beta-distribution
+     *
+     *  \f$ f ( \alpha_1,\alpha_2, z ) = 
+     *      I_z( \alpha_1, \alpha_2 ) = 
+     *      \frac{\Beta_z(\alpha_1,\alpha_2}}
+     *           {\Beta  (\alpha_1,\alpha_2}
+     *
+     *  - \f$ 0 \le z \le 1\f$
+     *  - \f$ 0<\alpha_1\f$
+     *  - \f$ 0<\alpha_2\f$
+     *  @see Ostap::Math::beta_inc
+     */
+    inline double I
+    ( const double alpha1 , 
+      const double alpha2 , 
+      const double z      ) 
+    { return beta_inc ( alpha1 , alpha2 , z ) ; }
     // ========================================================================
     /** Normalized incomplete Beta function  
      *  - CDF for beta-distribution

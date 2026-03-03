@@ -1442,7 +1442,7 @@ def _ds_fold_ ( dataset                 ,
     var_types   = ROOT.RooAbsReal , ROOT.RooAbsCategory
     ## 
     if   variables is True  : vars = vset      ##        copy all variables into new dataset 
-    elif varibales is False : vars = []        ## do not copy all variables into new dataset 
+    elif variables is False : vars = []        ## do not copy all variables into new dataset 
     elif variables is None  : vars = []        ## do not copy all variables into new dataset 
     else                    : vars = variables ## list of variables to be copied 
     ## 
