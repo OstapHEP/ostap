@@ -2671,27 +2671,34 @@ double Ostap::Math::GenInvGauss::xmin () const
 double Ostap::Math::GenInvGauss::xmax () const
 { return Ostap::Math::is_positive ( scale () ) ? s_POSINF : x ( 0 ) ; }
 // ============================================================================
+// raw moments for unnscaled and unshifted distribution
+// ============================================================================
+double Ostap::Math::GenInvGauss::raw_moment    
+( const unsigned short k ) const 
+{
+  if ( !k ) {  return 1 ; }
+  const double pv = p     () ;
+  const double tv = theta () ; 
+  return bessel_Knu ( pv + k , tv ) / bessel_Knu ( pv , tv ) ; 
+}
+// ============================================================================
 // mean value
 // ============================================================================
 double Ostap::Math::GenInvGauss::mean     () const 
 {
-  const double r = Ostap::Math::bessel_Knu ( p () + 1 , theta () ) * m_iKp_theta ;
-  return x ( r ) ;
+  const double m1 = raw_moment ( 1 ) ; 
+  return x ( m1 ) ;
 }
 // ============================================================================
 // variance  
 // ============================================================================
 double Ostap::Math::GenInvGauss::variance () const 
 {
-  const double pv = p     () ;
-  const double tv = theta () ;
-  //
-  const double k1 = Ostap::Math::bessel_Knu ( pv + 1 , tv ) ;
-  const double k2 = Ostap::Math::bessel_Knu ( pv + 2 , tv ) ;
+  const double m2 = raw_moment ( 2 ) ; 
+  const double m1 = raw_moment ( 1 ) ; 
   //
   const double ss = scale () ;
-  //
-  return ss * ss * ( k2 * m_iKp_theta - std::pow ( k1 * m_iKp_theta , 2 ) ) ;
+  return ss * ss * Ostap::Math::variance ( m2  , m1 ) ;
 }
 // ============================================================================
 // RMS
@@ -2708,6 +2715,29 @@ double Ostap::Math::GenInvGauss::mode     () const
   const double r  = ( ( pv - 1 ) + std::hypot ( pv - 1 , tv ) ) / tv ; 
   return x ( r ) ;
 }  
+// ============================================================================
+// skewness  
+// ============================================================================
+double Ostap::Math::GenInvGauss::skewness () const 
+{
+  const double m3 = raw_moment ( 3 ) ; 
+  const double m2 = raw_moment ( 2 ) ; 
+  const double m1 = raw_moment ( 1 ) ; 
+  //
+  return scale_sign () * Ostap::Math::skewness ( m3 , m2  , m1 ) ;
+}
+// ============================================================================
+// kurtosis
+// ============================================================================
+double Ostap::Math::GenInvGauss::kurtosis  () const 
+{ 
+  const double m4 = raw_moment ( 4 ) ; 
+  const double m3 = raw_moment ( 3 ) ; 
+  const double m2 = raw_moment ( 2 ) ; 
+  const double m1 = raw_moment ( 1 ) ; 
+  //
+  return Ostap::Math::kurtosis ( m4 , m3 , m2  , m1 ) ;
+}
 // ============================================================================
 // get the integral 
 // ============================================================================
@@ -2750,7 +2780,7 @@ double Ostap::Math::GenInvGauss::integral
   // (3) more splits
   const double sigma = rms () ;
   // split points 
-  static const std::array<double,3> s_splits {{ 2.0 , 5.0 , 10.0 }}  ; 
+  static const std::array<double,4> s_splits {{ 2.0 , 5.0 , 10.0 , 15 }}  ; 
   for ( const auto split  : s_splits )
   {
     //
@@ -2872,8 +2902,6 @@ std::size_t Ostap::Math::IrwinHall::tag () const
   static const std::string s_name = "IrwinHall" ;
   return Ostap::Utils::hash_combiner ( s_name , n () ) ;
 }
-
-
 
 
 // ============================================================================

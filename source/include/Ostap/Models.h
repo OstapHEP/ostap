@@ -1630,7 +1630,7 @@ namespace Ostap
       GenInvGauss 
       ( const double theta = 1 , 
         const double p     = 1 , 
-        const double scale = 1 , // scale 
+        const double scale = 1 , // scale=eta 
         const double shift = 0 ) ;
       // ======================================================================
     public:
@@ -1645,18 +1645,18 @@ namespace Ostap
     public: // getters 
       // ======================================================================
       /// parameter theta 
-      inline double theta () const { return m_theta ; }
+      inline double theta () const { return m_theta.value ()  ; }
       /// parameter p 
-      inline double p     () const { return m_p.value() ; }  
+      inline double p     () const { return m_p    .value () ; }  
       /// parameter eta 
       inline double eta   () const { return scale  () ; }  
       // ======================================================================
     public: // derived parameters
       // ======================================================================      
       // parameter a (derived) 
-      inline double a () const { return theta () / eta () ; }
+      inline double a () const { return theta () / abs_scale () ; }
       // parameter b (derived) 
-      inline double b () const { return theta () * eta () ; } 
+      inline double b () const { return theta () * abs_scale () ; } 
       // ======================================================================
     public: // setters 
       // ======================================================================
@@ -1675,16 +1675,22 @@ namespace Ostap
       double variance () const ;
       /// RMS 
       double rms      () const ;
+      /// skewness 
+      double skewness () const ;
+      /// kurtosis
+      double kurtosis () const ;
       /// dispersion
       inline double dispersion () const { return variance () ; }
       // ======================================================================
     public : // support: xmin&xmax 
-      // =====================================================================
+      // ======================================================================
+      /// finite range ?
+      inline bool finite_range () const { return false ; }
       /// xmin 
       double xmin () const ;
       /// xmax 
       double xmax () const ;      
-      // =====================================================================
+      // ======================================================================
     public:
       // ======================================================================
       /// get the integral 
@@ -1699,12 +1705,17 @@ namespace Ostap
       // get the tag
       std::size_t tag() const ;
       // ======================================================================
+ private :
+      // ======================================================================
+      /// raw moments (unscaled & unshifted)
+      double raw_moment ( const unsigned short k ) const ;
+      // ======================================================================
     private:      
       // ======================================================================
       /// parameter theta
-      Ostap::Math::LogValue m_theta  {  1 } ; // parameter theta 
+      Ostap::Math::LogValue m_theta     {  1 } ; // parameter theta 
       /// parameter p
-      Ostap::Math::Value    m_p      {  0 } ; // parameter p 
+      Ostap::Math::Value    m_p         {  0 } ; // parameter p 
       /// cache 
       double                m_iKp_theta { -1 } ; // cache 
       // ======================================================================
@@ -2876,9 +2887,9 @@ namespace Ostap
       /// constructor from all parameters
       BenktanderI
       ( const double a     = 1 ,
-	const double r     = 0 , 
-	const double scale = 1 ,
-	const double shift = 0 ) ;
+	      const double r     = 0 , 
+	      const double scale = 1 ,
+	      const double shift = 0 ) ;
       // ======================================================================
     public :
       // ======================================================================

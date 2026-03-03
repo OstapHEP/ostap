@@ -204,11 +204,6 @@ class GammaDist_pdf(PDF1,ShiftAndScale,K) :
         # the third base
         K.__init__ ( self , logk = logk ) 
 
-        print ( 'I AM HERE: x     ' , self.x     )
-        print ( 'I AM HERE: logk  ' , self.logk  )
-        print ( 'I AM HERE: theta ' , self.theta )
-        print ( 'I AM HERE: shift ' , self.shift )
-        
         self.pdf  = Ostap.Models.GammaDist (
             self.roo_name ( 'gamma_' )          ,
             'Gamma distribution %s' % self.name , 
@@ -1335,21 +1330,21 @@ class GenInvGauss_pdf(PDF1,ShiftAndScale) :
     - see Ostap::Math::GenInvGauss
     """
     ## constructor
-    def __init__ ( self        , * , 
-                   xvar        , ## the variable 
-                   name  = ''  , ## the name 
-                   theta = 1   , ## parameter theta
-                   eta   = 1   , ## parameter eta: scale
-                   p     = 1   , ## parameter p
+    def __init__ ( self           , * , 
+                   xvar           , ## the variable 
+                   name     = ''  , ## the name 
+                   logtheta = 1   , ## parameter theta
+                   p        = 1   , ## parameter p 
+                   eta      = 1   , ## parameter eta: scale
                    shift = ROOT.RooFit.RooConst ( 0.0 )  ) : ## shift parameter
         #
         PDF1         .__init__ ( self , name  = name  , xvar = xvar )
         ShiftAndScale.__init__ ( self , scale = eta   , shift = shift )
         #
-        self.__theta    = self.make_var ( theta             ,
-                                          'theta_%s'          % self.name ,
-                                          '#theta_{GIG}(%s)'  % self.name ,
-                                          None , 1.0 , 1.e-8 , 100 )
+        self.__logtheta = self.make_var ( logtheta                ,
+                                          'log theta_%s'          % self.name ,
+                                          'log #theta_{GIG}(%s)'  % self.name ,
+                                          None , 0.0 , -400 , +400  )
         self.__p        = self.make_var ( p                 ,
                                           'p_%s'              % self.name ,
                                           'p_{GIG}(%s)'       % self.name ,
@@ -1358,32 +1353,32 @@ class GenInvGauss_pdf(PDF1,ShiftAndScale) :
         self.pdf  = Ostap.Models.GenInvGauss (
             self.roo_name ( 'gig_' )   ,
             'GenInvGauss %s' % self.name  , 
-            self.x      ,
-            self.theta  ,
-            self.eta    ,
-            self.p      ,
-            self.shift  )
+            self.x        ,
+            self.logtheta , 
+            self.p        ,
+            self.eta      ,
+            self.shift    )
         
         ## save the configuration:
         self.config = {
-            'name'     : self.name     ,
-            'xvar'     : self.xvar     ,
-            'theta'    : self.theta    ,
-            'eta'      : self.eta      ,
-            'p'        : self.p        ,
-            'shift'    : self.shift    ,            
+            'name'     : self.name      ,
+            'xvar'     : self.xvar      ,
+            'logtheta' : self.logtheta  ,
+            'eta'      : self.eta       ,
+            'p'        : self.p         ,
+            'shift'    : self.shift     ,            
             }
     
     ## ALIAS    
     eta = ShiftAndScale.scale 
     
     @property
-    def theta ( self ) :
-        """`theta'-parameter of Generalized Inverse Gaussian  function"""
-        return self.__theta
-    @theta.setter
-    def theta ( self , value ) :
-        self.set_value ( self.__theta , value )
+    def logtheta ( self ) :
+        """`logtheta'-parameter log(theta) of Generalized Inverse Gaussian  function"""
+        return self.__logtheta
+    @logtheta.setter
+    def logtheta ( self , value ) :
+        self.set_value ( self.__logtheta , value )
 
     @property
     def p   ( self ) :

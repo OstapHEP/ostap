@@ -9576,11 +9576,11 @@ namespace Ostap
      *  - |f$ \eta   = \sqrt{\frac{b}{a}}\$ 
      *  @see https://en.wikipedia.org/wiki/Generalized_inverse_Gaussian_distribution
      */
-    class GenInvGauss : public RooAbsPdf 
+    class GenInvGauss : public ShiftAndScale 
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::GenInvGauss, 1) ;
+      ClassDefOverride(Ostap::Models::GenInvGauss, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -9588,17 +9588,17 @@ namespace Ostap
       ( const char*  name      , 
         const char*  title     , 
         RooAbsReal&  x         ,
-        RooAbsReal&  theta     ,
+        RooAbsReal&  logtheta  ,
+        RooAbsReal&  p         , 
         RooAbsReal&  eta       ,
-        RooAbsReal&  p         ,
         RooAbsReal&  shift     ) ;
       GenInvGauss 
       ( const char*  name      , 
         const char*  title     , 
         RooAbsReal&  x         ,
-        RooAbsReal&  theta     ,
-        RooAbsReal&  eta       ,
+        RooAbsReal&  logtheta  ,
         RooAbsReal&  p         , 
+        const double scale = 1 ,     
         const double shift = 0 ) ; 
       /// copy constructor 
       GenInvGauss ( const GenInvGauss& right , const char* name = nullptr ) ;
@@ -9640,24 +9640,20 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::GenInvGauss& function() const { setPars () ; return m_gig ; }
+      const Ostap::Math::GenInvGauss& function() const { return gig () ; }
       const Ostap::Math::GenInvGauss& gig     () const { setPars () ; return m_gig ; }
       // ======================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x       () const { return m_x     .arg() ; }
-      const RooAbsReal& theta   () const { return m_theta .arg() ; }
-      const RooAbsReal& eta     () const { return m_eta   .arg() ; }
-      const RooAbsReal& p       () const { return m_p     .arg() ; }
-      const RooAbsReal& shift   () const { return m_shift .arg() ; }
+      const RooAbsReal& logtheta () const { return m_logtheta .arg() ; }
+      const RooAbsReal& p        () const { return m_p     .arg() ; }
+      //
+      const RooAbsReal& eta     () const { return scale () ; }
       // ======================================================================
     protected :
       // ======================================================================
-      RooRealProxy   m_x        { } ;
-      RooRealProxy   m_theta    { } ;
-      RooRealProxy   m_eta      { } ;
-      RooRealProxy   m_p        { } ;
-      RooRealProxy   m_shift    { } ;
+      RooRealProxy   m_logtheta {} ;
+      RooRealProxy   m_p        {} ;
       // ======================================================================
     private:
       // ======================================================================

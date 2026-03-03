@@ -11447,16 +11447,13 @@ Ostap::Models::GenInvGauss::GenInvGauss
 ( const char*  name      , 
   const char*  title     , 
   RooAbsReal&  x         ,
-  RooAbsReal&  theta     ,
-  RooAbsReal&  eta       ,
+  RooAbsReal&  logtheta  ,
   RooAbsReal&  p         ,
+  RooAbsReal&  eta       ,
   RooAbsReal&  shift     ) 
-  : RooAbsPdf ( name , title ) 
-  , m_x        ( "x"        , "x-observable"       , this , x        )
-  , m_theta    ( "theta"    , "theta-parameter"    , this , theta    )
-  , m_eta      ( "eta  "    , "eta-parameter"      , this , eta      )
-  , m_p        ( "p"        , "p-parameter"        , this , p        )
-  , m_shift    ( "shift"    , "shift-parameter"    , this , shift    )
+  : ShiftAndScale ( name , title , x , eta , shift ) 
+  , m_logtheta ( "!logtheta" , "log(theta)-parameter" , this , logtheta  )
+  , m_p        ( "!p"        , "p-parameter"          , this , p        )
   , m_gig () 
 {
   setPars() ;
@@ -11467,10 +11464,16 @@ Ostap::Models::GenInvGauss::GenInvGauss
   const char*  title     , 
   RooAbsReal&  x         ,
   RooAbsReal&  theta     ,
-  RooAbsReal&  eta       ,
   RooAbsReal&  p         ,
+  const double scale     , 
   const double shift     )
-  : GenInvGauss ( name , title , x , theta , eta , p , RooFit::RooConst ( shift ) ) 
+  : GenInvGauss ( name  , 
+                  title , 
+                  x     , 
+                  theta , 
+                  p     , 
+                  RooFit::RooConst ( scale ) , 
+                  RooFit::RooConst ( shift ) ) 
 {}
 // ============================================================================
 // copy constructor
@@ -11478,13 +11481,9 @@ Ostap::Models::GenInvGauss::GenInvGauss
 Ostap::Models::GenInvGauss::GenInvGauss
 ( const Ostap::Models::GenInvGauss& right ,
   const char*                       name  ) 
-  : RooAbsPdf  ( right , name ) 
-    //
-  , m_x        ( "x"        , this , right.m_x        ) 
-  , m_theta    ( "theta"    , this , right.m_theta    ) 
-  , m_eta      ( "eta"      , this , right.m_eta      ) 
-  , m_p        ( "p"        , this , right.m_p        ) 
-  , m_shift    ( "shift"    , this , right.m_shift    ) 
+  : ShiftAndScale ( right , name ) 
+  , m_logtheta ( "!logtheta" , this , right.m_logtheta ) 
+  , m_p        ( "!p"        , this , right.m_p        ) 
   , m_gig      ( right.m_gig ) 
 {}  
 // ============================================================================
@@ -11498,10 +11497,9 @@ Ostap::Models::GenInvGauss::~GenInvGauss(){}
 // ============================================================================
 void Ostap::Models::GenInvGauss::setPars () const 
 {
-  m_gig.setTheta ( m_theta ) ;
-  m_gig.setEta   ( m_eta   ) ;
-  m_gig.setP     ( m_p     ) ;
-  m_gig.setShift ( m_shift ) ;
+  m_gig.setLogTheta   ( m_logtheta ) ;
+  m_gig.setP          ( m_p        ) ;
+  m_gig.setScaleShift ( m_scale    , m_shift ) ;
 }
 // ============================================================================
 // the actual evaluation of function 

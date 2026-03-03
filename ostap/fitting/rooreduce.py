@@ -2820,14 +2820,14 @@ Ostap.Models.ADas.__reduce__ = _radas_reduce_
 ## reduce GenInvGauss
 def _rgig_reduce_ ( pdf ):
     """ Reduce GenInvGauss"""
-    return root_store_factory , ( type ( pdf )  ,
-                                  pdf.name      ,
-                                  pdf.title     ,
-                                  pdf.x      () ,                            
-                                  pdf.theta  () ,                            
-                                  pdf.eta    () ,
-                                  pdf.p      () ,
-                                  pdf.shift  () )
+    return root_store_factory , ( type ( pdf )     ,
+                                  pdf.name         ,
+                                  pdf.title        ,
+                                  pdf.x         () ,                            
+                                  pdf.logtheta  () ,                            
+                                  pdf.p         () ,
+                                  pdf.eta       () ,
+                                  pdf.shift     () )
 
 Ostap.Models.GenInvGauss.__reduce__ = _rgig_reduce_ 
 
