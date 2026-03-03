@@ -16,6 +16,7 @@ __date__    = "2011-06-07"
 __all__     = (
     'expression_types' , ## valid types for expressions/selections/weights
     'vars_and_cuts'    , ## helper routibe to treat expressions
+    'expression_types' , ## valid cut-types 
 )
 # =============================================================================
 from   ostap.core.meta_info   import ostap_info
@@ -40,7 +41,7 @@ if order_warning :
     import datetime
     order_warning = datetime.datetime.now () < datetime.datetime ( 2025, 7 , 1 )
 # =============================================================================
-## float aformat for conversion of floats into cut-expressions
+## float format for conversion of floats into cut-expressions
 fmt_float = '%.16g'
 fmt_int   = '%d'
 fmt_other = '%s'
@@ -73,7 +74,6 @@ def vars_and_cuts ( expressions , cuts , allow_empty = False ) :
     if isinstance ( expressions , expression_types ) :
         expressions  = split_string ( str ( expressions ) , strip = True , respect_groups = True )
         input_string = 1 == len ( expressions )
-
 
     # ===========================================================================
     ## CUTS

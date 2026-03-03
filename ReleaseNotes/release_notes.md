@@ -2,7 +2,10 @@
 
   1. Sigmoid type can be also specified by the string/"sigmoid name" (not only by enum!)
   1. add `Sine`-type sigmoid, based on (1+sin(2x))/2 
-
+  1. add many new distributions
+  1. upgrade many distribution to use ew ase classes. Drastic reduction of code lines.
+  1, add "folding" for `RooDataSet` and extend the corresponding test
+  
 ## Bug fixes
 
    1. Fix recently introduced bug (thanks to @DmitryYuGolubkov Dima Golubkov)  
@@ -13,8 +16,9 @@
    1. split command-line option `--macros` into two options: `-l/--load-macros` and `-x/--exec-macros` for the lists of ROOT/C++ macros
       to be loaded via `ROOT.TROOT.LoadMacro` and list of macros to be executed via `ROOT.TROOT.Macro``
    1. rename `scale` for `ResoGauss2` into `sigma_scale`
-
-
+   1. for several distributinos  change the parameters from "X" to "logx" 
+   1. rename `Burr` -> `BurrXII`
+   
 # v3.6.6.0 
 
 ## New features

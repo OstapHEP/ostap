@@ -74,6 +74,7 @@ weighted = dataset.makeWeighted ( 'Weight' )
 logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 logger.info ( 'Print           weighted dataset:\n%s' % weighted.table ( prefix = '# ' ) )
 
+""" 
 # =============================================================================
 ## (2) loop over some subset of entries 
 # =============================================================================
@@ -373,7 +374,6 @@ logger.info ( 'Using `slice(structured=False,transpose=True)` method/function' )
 logger.info ( 'slice   unweighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
 logger.info ( 'slice     weighted sample: type=%s shape:%s\n%s' % ( typename ( rr ) , rr.shape , rr ) )
 
-
 # =============================================================================
 ## (27) add category item 
 # =============================================================================
@@ -393,6 +393,36 @@ dsw = weighted [:1000]
 
 ds .add_var ( category , +1 , report = True , progress = True )
 dsw.add_var ( category , -1 , report = True , progress = True )
+
+# =============================================================================
+## (27) fold Pt1 and Pt2 
+# =============================================================================
+
+"""
+ds  = dataset  
+dsw = weighted
+
+fds  = ds .fold ( 'PT' , ( 'Pt1' , 'Pt2' ) , progress = True , report = True )
+fdsd = dsw.fold ( 'PT' , ( 'Pt1' , 'Pt2' ) , progress = True , report = True )
+
+fds  = ds .fold ( 'PT' , { 'Pt1' : 'Mass>4' , 'Pt2' : 'Mass<7' } , progress = True , report = True )
+fdsd = dsw.fold ( 'PT' , { 'Pt1' : 'Mass>4' , 'Pt2' : 'Mass<7' }  , progress = True , report = True )
+
+fds  = ds .fold ( 'PT' , ( ( 'Pt1', 'Mass>4' ) , 'Pt2' ) , progress = True , report = True )
+fdsd = dsw.fold ( 'PT' , ( ( 'Pt1', 'Mass>4' ) , 'Pt2' )  , progress = True , report = True )
+
+
+fds  = ds .fold ( 'PT' , ( 'Pt1' , 'Pt2' ) , variables = ( 'Evt' , 'Run' ) , progress = True , report = True )
+fdsd = dsw.fold ( 'PT' , ( 'Pt1' , 'Pt2' ) , variables = ( 'Evt' , 'Run' ) , progress = True , report = True )
+
+fds  = ds .fold ( 'PT' , ( 'Pt1' , 'Pt2' ) , variables =  'Evt,Run'  , progress = True , report = True )
+fdsd = dsw.fold ( 'PT' , ( 'Pt1' , 'Pt2' ) , variables =  'Evt,Run'  , progress = True , report = True )
+
+
+
+fds  = ds .fold ( 'PT' , ( '+1*Pt1' , '-1*Pt2' ) , variables = ( 'Evt' , 'Run' ) , progress = True , report = True )
+fdsd = dsw.fold ( 'PT' , ( '+1*Pt1' , '-1*Pt2' ) , variables = ( 'Evt' , 'Run' ) , progress = True , report = True )
+
 
 
 # =============================================================================

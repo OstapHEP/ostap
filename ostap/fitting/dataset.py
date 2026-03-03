@@ -30,7 +30,8 @@ from   ostap.core.core              import ( Ostap          ,
                                              VE , SE , dsID , 
                                              valid_pointer  )
 from   ostap.core.ostap_types       import ( integer_types , string_types   ,
-                                             num_types     , sequence_types )
+                                             num_types     , sequence_types ,
+                                             sized_types   , dictlike_types )
 from   ostap.utils.basic            import loop_items  , typename            
 from   ostap.math.base              import evt_range, FIRST_ENTRY, LAST_ENTRY 
 from   ostap.utils.random_seed      import random_seed
@@ -843,25 +844,40 @@ def _rad_subset_ ( dataset                  ,
         "Invalid type of cut_range: %s" % type ( cut_range )
     
     cut_range   = str ( cut_range ).strip() if cut_range else ''
-
+    
     ## variables in this dataset 
     vset = dataset.get()
 
-    var_types   = ROOT.RooAbsReal , ROOT.RooAbsCategory 
-    vars        = variables 
-    if   isinstance ( variables , expression_types                    ) : vars = [ str ( variables ) ]
-    elif isinstance ( variables , ROOT.RooAbsCollection               ) : vars = [ str ( v.GetName() ) for v in variables ]
-    elif isinstance ( variables , var_types                           ) : vars = [ str ( variables.GetName() ) ]
-    elif all ( isinstance ( v , var_types        ) for v in variables ) : vars = [ str ( v.GetName() ) for v in variables ]
-    elif all ( isinstance ( v , expression_types ) for v in variables ) : vars = [ str ( v           ) for v in variables ]
-    elif not vars                                                       : vars = [ str ( v.GetName() ) for v in vset      ] 
+    var_types   = ROOT.RooAbsReal , ROOT.RooAbsCategory
+    
+    if   variables is True  : vars = vset      ## copy all variables into new dataset 
+    elif variables          : vars = variables ## expliit list of variables to be copied 
+    else                    : vars = vset      ## copy all 
+
+    ## 
+    if   isinstance ( vars , expression_types       ) : vars = [ str ( vars ) ]
+    elif isinstance ( vars , ROOT.RooAbsCollection  ) : vars = [ str ( v.GetName() ) for v in vars ]
+    elif isinstance ( vars , var_types              ) : vars = [ str ( vars.GetName() ) ]
+    elif isinstance ( vars , sequence_types ) : 
+        if   all ( isinstance ( v , var_types        ) for v in vars ) : vars = [ str ( v.GetName() ) for v in vars ]
+        elif all ( isinstance ( v , expression_types ) for v in vars ) : vars = [ str ( v )           for v in vars ]
+
+    ## check 
+    assert isinstance ( vars , sequence_types ) and \
+        all ( isinstance ( v , expression_types ) for v in vars ) , \
+        "Invalid type/content of `variables':" % typename ( variables )
+
     ## 
     ## decode list of variables 
     varlst, cuts, _ = vars_and_cuts ( vars , cuts )
+
+    ## remove duplicates, if any 
+    varlst  = tuple ( set ( varlst ) )
+    
     ## 
     ## extra items? 
     extra  = [ v for v in varlst if not v in dataset ]
-    assert varlst and not extra , 'Variables are not in dataset: %s' % str ( extra ) 
+    assert varlst and not extra , 'Variables are not in dataset: %s' % ( ','.join ( v for v in extra ) )
     ## 
     ## create cuts as RooFormulaVar 
     if cuts : cuts = make_formula ( cuts , cuts , dataset.varlist() )
@@ -1277,6 +1293,251 @@ _new_methods_ += [
    ROOT.RooAbsData . shared_entries , 
    ]
 
+# =============================================================================
+## "Fold" entries in the dataset
+#  Assume dataset has following branches
+#  - A, B, .. , v1 , ... , v2 , ... , v3 ,...
+#  where v`,v2 & v3 are variables to be "folded"
+#  then "folded" dataset has following structure
+#  - VAR ,  (for VAR=v1) , ... 
+#  - VAR ,  (for VAR=v2) , ... 
+#  - VAR ,  (for VAR=v3) , ...
+#  @code
+#  dataset =
+#  folded  = ds.fold ( 'VAR' , ( 'v1' , 'v2' , 'v3' ) )
+#  @endcode
+#  - For each "folding: one can specify dedicated cuts:
+#  dataset =
+#  folded  = ds.fold ( 'VAR' , ( ( 'v1' , 'A<0' ) , ( 'v2' , 'B>0'  , 'v3' ) )
+#  @endcode
+#  - also one an use dictinoary
+#  @code 
+#  dataset =
+#  folded  = ds.fold ( 'VAR' , foldings = { 'v1' : 'A<0' ,
+#                                           'v2' : 'B>0' ,
+#                                           'v3' : 'A>0' ) )
+#  @endcode
+#  - One can specify the functions:
+#  @code 
+#  dataset =
+#  folded  = ds.fold ( 'VAR' , foldings = { 'v1/2'   : 'A<0' ,
+#                                           'v2*2'   : 'B>0' ,
+#                                           'v3+A/B' : 'A>0' ) )
+#  @endcode
+#  @param newvar name for new variable
+#  @param foldings desciption of foldings
+#  @param variables extra variables to be copied to new data set
+#  @param cuts      global cuts
+#  @param cut_range cut-range 
+#  @param progress  show progress bar ?
+#  @param report    show the final report
+#
+#  if   variables is True   : copy al variables 
+#  elif variables is False  : do not copy variables 
+#  elif variables is None   : do not copy variables
+#  else                     : copy only specified variables
+#
+def _ds_fold_ ( dataset                 ,
+                newvar                  ,
+                foldings                , * , 
+                variables = []          , 
+                cuts      = ''          ,
+                cut_range = ''          ,
+                progress  = True        , 
+                report    = True        , 
+                first     = FIRST_ENTRY ,
+                last      = LAST_ENTRY  ) :
+    """ `Fold' entries in the dataset
+     Assume dataset has following branches
+    - A, B, .. , v1 , ... , v2 , ... , v3 ,...
+    where v`,v2 & v3 are variables to be "folded"
+    then `folded' dataset has following structure:
+    - VAR ,  (for VAR=v1) , ... 
+    - VAR ,  (for VAR=v2) , ... 
+    - VAR ,  (for VAR=v3) , ...
+
+    >>> dataset =
+    >>> folded  = ds.fold ( 'VAR' , ( 'v1' , 'v2' , 'v3' ) )
+    
+    - For each `folding' one can specify dedicated cuts:
+    >>> dataset =
+    >>> folded  = ds.fold ( 'VAR' , ( ( 'v1' , 'A<0' ) , ( 'v2' , 'B>0'  , 'v3' ) )
+
+    - Also one an use dictinoary
+    >>> dataset =
+    >>> folded  = ds.fold ( 'VAR' , foldings = { 'v1' : 'A<0' ,
+    ...                                          'v2' : 'B>0' ,
+    ...                                          'v3' : 'A>0' ) )
+
+    - One can specify the functions for folded variables 
+    >>> dataset =
+    >>> folded  = ds.fold ( 'VAR' , foldings = { 'v1/2'   : 'A<0' ,
+    ...                                          'v2*2'   : 'B>0' ,
+    ...                                          'v3+A/B' : 'A>0' ) )
+
+    - foldings  : description of foldings
+    - variables : extra variables to be copied to new data se
+    - cuts      : global cuts
+    - cut_range : global cut-range 
+    - progress  : show progress bar ?
+    - report    : show the final report
+
+
+    if   variables is True   : copy all variables 
+    elif variables is False  : do not copy variables 
+    elif variables is None   : do not copy variables
+    else                     : copy only specified variables
+
+    """
+    assert newvar and isinstance ( newvar , string_types ) and Ostap.primitive ( newvar ), \
+        "Invalid 'newvar':%s/%s" % ( newvar , typename ( newvar) )
+
+    newvar = str ( newvar ) 
+    assert not newvar in dataset, "Variable '%s' is already in the dataset!" %  newvar 
+    
+    assert foldings and isinstance  ( foldings, sequence_types ), \
+        "Invalid `foldings' type: %s" % typename ( foldings )
+
+    new_vars = []
+
+    if isinstance  ( foldings, dictlike_types ) :
+
+        for key, value in foldings.items()  :
+            assert key and isinstance ( key , expression_types ) and isinstance ( value , expression_types ) , \
+                "Invalid key/value : %s/%s" % ( typename ( key ) , typename ( value ) )
+
+            expression = str ( key   ).strip ()
+            cut        = str ( value ).strip ()
+            
+            assert expression , "Invalid (empty) expression!"
+            
+            item = expression , ROOT.TCut ( cut )
+            new_vars.append ( item ) 
+            
+    else :
+        
+        for i, item in enumerate ( foldings ) :
+            
+            if   isinstance ( item , expression_types ) : expression, cut = item , ''
+            elif isinstance ( item , sequence_types   ) and \
+                 isinstance ( item , sized_types      ) and 2 == len ( item ) : expression, cut = item
+            else :
+                raise TypeError ( "Invalid `foldings' entry[%d] %s/%s" % ( i , item , typename ( item ) ) )
+            
+            assert expression and isinstance ( expression , expression_types ) and isinstance ( cut, expression_types ) , \
+                "Invalid expression/cut : %s/%s" % ( typename ( expression  ) , typename ( cut ) )
+
+            expression = str ( expression ).strip ()
+            cut        = str ( cut        ).strip ()
+            
+            assert expression , "Invalid (empty) expression!"
+            
+            item = expression , ROOT.TCut ( cut ) 
+            new_vars.append ( item ) 
+
+    assert new_vars , "Empty list of folding expressions!"
+
+    ## all variables in this dataset 
+    vset        = dataset.get()
+    var_types   = ROOT.RooAbsReal , ROOT.RooAbsCategory
+    ## 
+    if   variables is True  : vars = vset      ##        copy all variables into new dataset 
+    elif varibales is False : vars = []        ## do not copy all variables into new dataset 
+    elif variables is None  : vars = []        ## do not copy all variables into new dataset 
+    else                    : vars = variables ## list of variables to be copied 
+    ## 
+    ## 
+    if   isinstance ( vars , expression_types       ) : vars = [ str ( vars ) ]
+    elif isinstance ( vars , ROOT.RooAbsCollection  ) : vars = [ str ( v.GetName() ) for v in vars ]
+    elif isinstance ( vars , var_types              ) : vars = [ str ( vars.GetName() ) ]
+    elif isinstance ( vars , sequence_types ) : 
+        if   all ( isinstance ( v , var_types        ) for v in vars ) : vars = [ str ( v.GetName() ) for v in vars ]
+        elif all ( isinstance ( v , expression_types ) for v in vars ) : vars = [ str ( v )           for v in vars ]
+
+    ## check 
+    assert isinstance ( vars , sequence_types ) and \
+        all ( isinstance ( v , expression_types ) for v in vars ) , \
+        "Invalid type/content of `variables':" % typename ( variables )
+
+    ## decode list of variables 
+    varlst, cuts, _ = vars_and_cuts ( vars , cuts , allow_empty = True )
+    
+    ## remove duplicates, if any 
+    vars = tuple ( set ( varlst ) ) 
+
+    assert all ( v in dataset for v in vars  ) , \
+        "Variables are not in dataset: %s" % ( ', '.join ( ( str ( v ) for v in vars if not v in dataset ) ) )
+    
+    ##
+    vars = set   ( vars   )
+    vars.add     ( newvar )
+    vars = tuple ( vars   )
+
+    ## adjust first&last 
+    first , last = evt_range ( dataset , first , last )
+    assert 0 <= first < last , "Invalid size/first/last: %d/%d/%d" % ( len ( dataset ) , first , last )
+
+    ## logical OR for all cust assciated with variables 
+    var_cut = ROOT.TCut  ( cuts )
+    for _ , c in new_vars :
+        if c : var_cut |= c
+
+    ## global cust and var_cuts   
+    the_cut = ROOT.TCut  ( cuts ) & var_cut 
+
+    ## (pre)filter it if needed 
+    if the_cut or cut_range or 0 != first or last < len ( dataset ) :
+        reduced = dataset.subset ( cuts      = cuts      ,
+                                   cut_range = cut_range ,
+                                   first     = first     ,
+                                   last      = last      )
+    else :
+        reduced = dataset
+
+    ## the titke for the folded variable 
+    vartitle = 'Fold: ' + ( ', '.join ( v[0] for v in new_vars ) )
+    
+    ## final dataset
+    result = None
+    for nvar , vcut in new_vars :
+
+        ## This it no very efficinet, but OK
+        
+        dsv = reduced.subset ( cuts = vcut )        
+        dsv . add_var ( newvar , what = nvar , progress = progress , report = False )
+        
+        dsn = dsv.subset     ( variables = vars ) 
+        ## 
+        nv = getattr ( dsn , newvar , None )
+        if nv : nv.SetTitle ( vartitle )
+        
+        if result is None : result  = dsn
+        else              :
+            result += dsn 
+            dsn.clear()
+            
+        dsv.clear()
+        del dsv 
+        del dsn
+            
+    if not reduced is dataset :
+        reduced.clear()
+        del reduced
+
+    if report :        
+        branches = sorted ( result.branches() )
+        title    = "Folded dataset with var=%s" % newvar   
+        table    = result.table ( title = title , prefix = '# ' )
+        logger.info ( '%s:\n%s' % ( title , table ) )
+
+    return result 
+        
+ROOT.RooDataSet.fold  = _ds_fold_
+
+_new_methods_ += [
+    ROOT.RooDataSet . fold , 
+]
+                       
 # =============================================================================
 ## some decoration over RooDataSet 
 ROOT.RooAbsData . varlist       = _rad_vlist_
@@ -3464,6 +3725,7 @@ except ImportError : # ======================================================
     from array import array as _array 
     def get_result ( data ) : return _array ( 'd' , data )
     # = =====================================================================
+    
 # ===========================================================================
 ## Iterator for rows in dataset
 #  @code
@@ -3511,6 +3773,9 @@ ROOT.RooAbsData.rows = _rad_rows_
 _new_methods_ += [
     ROOT.RooAbsData.rows 
     ]
+
+# ============================================================================
+
 
 # ============================================================================
 ## Convert RooDataSet to TTree
