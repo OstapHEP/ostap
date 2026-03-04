@@ -115,6 +115,30 @@ def fmt_pretty_values ( *values             ,
     return fmtv , expo + 3 * n 
 
 # ==================================================================================
+## Get the effective exponent for the set of values :
+#  - we use max abs
+#  - we scale exponent by 10^3 to get scaled value 0.1<= a < 1000 
+def the_expo ( value , *values ) :
+    """ Get the effective exponent for the set of values
+    - we use max abs
+    - we scale exponent by 10^3 to get scaled value 0.1<= a < 1000 
+    """
+    av = abs ( value )
+    for v in values : av = max ( av , abs ( v ) )
+    ##
+    if   0.1 <= av < 1000 : return 0 
+    elif iszero ( av )    : return 0 
+    ##
+    v_a , v_e = frexp10 ( av )
+    v_ee      = v_e - 1
+    n , r     = divmod  ( v_ee , 3 )    
+    ## 
+    scale     = 10** ( r - v_ee  )    
+    av       *= scale
+    ##
+    return 3 * n + the_expo ( av ) 
+
+# ==================================================================================
 ## Formats for nice printout of the object with errors  ( string + exponent)
 #  @code
 #  fmtv , fmte , expo = fmt_pretty_errors ( number , ( e1 , e2 , e3 ) ) 
@@ -131,7 +155,8 @@ def fmt_pretty_errors ( value               ,
     """
     assert isinstance ( width  , integer_types ) and 0 <= precision and \
         isinstance ( precision , integer_types ) , \
-        "Invalid width/precision parameters: %s/%s" % ( width , precision ) 
+        "Invalid width/precision parameters: %s/%s" % ( width , precision )
+    
     width = max ( width , 2 + precision )
     
     assert isinstance ( value , num_types ) and errors and \
@@ -147,54 +172,41 @@ def fmt_pretty_errors ( value               ,
 
     vformat = '%%+%d.%df' if with_sign else '%%%d.%df'
     eformat = '%%-%d.%df'
-    
-    if   100 <= av < 1000 and 2 <= precision :
-        
-        fmtv  = vformat %  ( width , precision - 2 )
-        fmte  = eformat %  ( width , precision - 2 )        
-        return fmtv, fmte , 0
-    
-    elif 10  <= av < 100  and 1 <= precision :
-        
-        fmtv  = vformat  %  ( width , precision - 1 )
-        fmte  = eformat  %  ( width , precision - 1 )
-        return fmtv  , fmte , 0
-    
-    elif 0.1 <= av < 10 :
-        
-        fmtv  = vformat  %  ( width , precision     )
-        fmte  = eformat  %  ( width , precision     )
-        return fmtv , fmte , 0
 
-    if iszero ( av ) :
-        
-        fmtv  = vformat %  ( width , precision     )
-        fmte  = eformat %  ( width , precision     )
+    from ostap.math.base import iszero, isequal 
+    if iszero ( av ) :        
+        fmtv  = vformat % ( width  , precision )
+        fmte  = eformat % ( width  , precision )        
         return fmtv , fmte , 0 
 
-    #
-    ## here we scale input data and try to get formats for scaled data
-    #
-    
-    v_a , v_e = frexp10 ( av )
-    v_ee   = v_e - 1
-    n , r  = divmod  ( v_ee , 3 )    
+    ## the effective exponent 
+    ee = the_expo ( av )
 
-    scale  = 10** ( r - v_ee  )    
-    v     *= scale
-    errs   = tuple ( e * scale for e in errors ) 
+    ## scaled value 
+    avs = av if not ee else av / ( 10 ** ee )
 
-    #
-    ## get formats for scaled data
-    # 
-    fmtv , fmte , expo = fmt_pretty_errors ( v                     ,
-                                             *errs                 , 
-                                             width     = width     ,
-                                             precision = precision ,
-                                             with_sign = with_sign ,
-                                             latex     = latex     )
+    if   100 <= avs < 1000 :
+        
+        fmtv  = vformat % ( width  , max ( 1 , precision - 2 ) )
+        fmte  = eformat % ( width  , max ( 1 , precision - 2 ) )         
+        return fmtv, fmte , ee
     
-    return fmtv , fmte , expo + 3 * n 
+    elif 10  <= avs < 100 :
+        
+        fmtv  = vformat % ( width , max ( 1 , precision - 1 ) ) 
+        fmte  = eformat % ( width , max ( 1 , precision - 1 ) ) 
+        return fmtv  , fmte , ee
+    
+    elif 0.1 <= avs < 10 or isequal ( avs , 0.1 ) :
+        
+        fmtv  = vformat % ( width , precision     )
+        fmte  = eformat % ( width , precision     )
+        return fmtv , fmte , ee
+
+    logger.warning ( 'Scaled value is outside the [0.1,1000) region!' ) 
+    fmtv  = vformat % ( width , precision     )
+    fmte  = eformat % ( width , precision     )
+    return fmtv , fmte , ee 
 
 # =============================================================================
 ## Format for nice printout of the floating number (string + exponent)

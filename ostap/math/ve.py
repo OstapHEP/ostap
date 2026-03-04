@@ -511,7 +511,7 @@ def fmt_pretty_ve ( value               , * ,
     >>> fmt , fmtv , fmte , expo = fmt_pretty_ve ( number ) 
     """
     assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % typename ( value )
-    ## decode object 
+    ## decode object           
     v , e = value.value () , max ( 0 , value.error () )
     from ostap.logger.pretty import fmt_pretty_error 
     return fmt_pretty_error ( v , e ,
@@ -563,7 +563,8 @@ def pretty_ve ( value               , * ,
                 precision   = 5     ,
                 with_sign   = True  , 
                 parentheses = True  ,
-                latex       = False ) :
+                latex       = False ,
+                PDG         = False ) :
     """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
@@ -631,6 +632,87 @@ def ve_reduce ( v ) :
 
 Ostap.Math.ValueWithError.__reduce__ = ve_reduce
 
+# =============================================================================
+
+# ====================================================================================
+## make a rounding according to PDG prescription
+#  @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
+#  @see section 5.3 of doi:10.1088/0954-3899/33/1/001
+#  
+#  The basic rule states that if the three highest order digits of the error
+#  lie between 100 and 354, we round to two significant digits. If they lie between
+#  355 and 949, we round to one significant digit. Finally,
+#   if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+#  In all cases, the central value is given with a precision that matches that of the error.
+#
+#  @code
+#  ve  = VE( ...
+#  vr  = ve.pdg()
+#  print ' Rounded value with error is  %s ' % vr 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-07-20 
+def _ve_pdg_ ( ve ) :
+    """ Make a rounding according to PDG prescription
+    @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
+    @see section 5.3 of doi:10.1088/0954-3899/33/1/001
+      
+    Quote:
+    The basic rule states that if the three highest order digits of the error
+    lie between 100 and 354, we round to two significant digits. If they lie between
+    355 and 949, we round to one significant digit. Finally,
+    if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+    In all cases, the central value is given with a precision that matches that of the error.
+
+    >>> ve  = VE( ...
+    >>> vr  = ve.pdg()
+    >>> print 'Rounded value with error is  %s ' % vr
+    """
+    #
+    from ostap.utils.pdg_format import pdg_round 
+    v , e  = pdg_round  ( ve.value() , ve.error() )
+    # 
+    return VE ( v , e * e )
+
+
+# =============================================================================
+## Round value/error accoridng to PDG prescription and format it for print
+#  @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
+#  @see section 5.3 of doi:10.1088/0954-3899/33/1/001
+#  
+#  The basic rule states that if the three highest order digits of the error
+#  lie between 100 and 354, we round to two significant digits. If they lie between
+#  355 and 949, we round to one significant digit. Finally,
+#   if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+#  In all cases, the central value is given with a precision that matches that of the error.
+#
+#  @code
+#  ve = VE( ... ) 
+#  print ' Rounded value/error is %s ' % ve.pdg_format ()
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-07-20 
+def _ve_pdg_format_ ( ve , latex = False ) :
+    """ Round value/error according to PDG prescription and format it for print
+    @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
+    @see section 5.3 of doi:10.1088/0954-3899/33/1/001
+      
+    Quote:
+    The basic rule states that if the three highest order digits of the error
+    lie between 100 and 354, we round to two significant digits. If they lie between
+    355 and 949, we round to one significant digit. Finally,
+    if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+    In all cases, the central value is given with a precision that matches that of the error.
+    
+    >>> ve = VE(... ) 
+    >>> print ( ' Rounded value/error is %s ' % ve.pdg_format () )
+    """
+    from ostap.utils.pdg_format import pdg_format      
+    return pdg_format ( ve.value () , ve.error() , latex = latex ) 
+
+VE.pdg        = _ve_pdg_
+VE.pdg_format = _ve_pdg_format_ 
+    
 # =============================================================================
 ## decorated classes 
 _decorated_classes_  = (

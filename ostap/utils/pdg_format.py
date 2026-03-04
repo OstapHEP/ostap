@@ -6,10 +6,14 @@
 # @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
 # @see section 5.3 of doi:10.1088/0954-3899/33/1/001
 # Quote:
-# The basic rule states that if the three highest order digits of the error
-# lie between 100 and 354, we round to two significant digits. If they lie between
-# 355 and 949, we round to one significant digit. Finally,
-# if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+# The basic rule states that:
+# - if the three highest order digits of the error lie between 100 and 354,
+#   we round to two significant digits. 
+# - If they lie between 355 and 949,
+#   we round to one significant digit.
+# - Finally, if they lie between 950 and 999,
+#   we round up to 1000 and keep two significant digits.
+# 
 # In all cases, the central value is given with a precision that matches that of the error.
 # 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -21,12 +25,16 @@ see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
 see section 5.3 of doi:10.1088/0954-3899/33/1/001
 
 Quote:
-| The basic rule states that if the three highest order digits of the error
-| lie between 100 and 354, we round to two significant digits. If they lie between
-| 355 and 949, we round to one significant digit. Finally,
-| if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
-| In all cases, the central value is given with a precision that matches that of the error.
 
+The basic rule states that:
+ - if the three highest order digits of the error lie between 100 and 354,
+   we round to two significant digits. 
+ - If they lie between 355 and 949,
+   we round to one significant digit.
+ - Finally, if they lie between 950 and 999,
+   we round up to 1000 and keep two significant digits.
+
+In all cases, the central value is given with a precision that matches that of the error.
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -41,8 +49,10 @@ __all__ = (
     )
 # ===============================================================================
 from   ostap.math.ve          import VE
-from   ostap.math.base        import frexp10, isfinite, isclose  
-from   ostap.core.ostap_types import integer_types, string_types 
+from   ostap.math.base        import ( frexp10  , round_N , 
+                                       isfinite , isclose , iszero, isequal )
+from   ostap.core.ostap_types import integer_types, string_types
+from   ostap.logger.symbols   import times, plus_minus 
 import ROOT,  math, sys, enum  
 # =============================================================================
 # logging 
@@ -51,6 +61,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.pdg_format' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
+## the reference error type (in case seevral errors are specified) 
 class ErrMode(enum.IntEnum):
     TOTAL      = 0  ## Use total uncertainty 
     MIN        = 1  ## Use minimal uncertainty 
@@ -58,8 +69,8 @@ class ErrMode(enum.IntEnum):
     MEAN       = 3  ## Use mean
     AVERAGE    = 3  ## Use mean
     GEOMETRIC  = 4  ## Use geometric mean
-    QUADRATIC  = 5  ## Use quadratic (root mean sqaure) 
-    RMS        = 5  ## Use quadratic (root mean sqaure) 
+    QUADRATIC  = 5  ## Use quadratic (root mean square) 
+    RMS        = 5  ## Use quadratic (root mean square) 
 
 # =============================================================================
 ## get the `reference/representative error' from the list of uncertainties
@@ -84,32 +95,30 @@ def ref_error ( mode , error , *errors ) :
         if   umode in ( 'MIMIMAL'    , 'MINIMUM' , 'MIN'     , 'MN'        ) : umode = ErrMode.MIN      .name 
         elif umode in ( 'MAXIMAL'    , 'MAXIMUM' , 'MAX'     , 'MX'        ) : umode = ErrMode.MAX      .name 
         elif umode in ( 'A' , 'AV'   , 'AVE'     , 'MEAN'                  ) : umode = ErrMode.AVERAGE  .name        
-        elif umode in ( 'G' , 'GEO'  , 'GEOM'    , 'GEOMET'  , 'GEOMETRIC' ) : umode = ErrMode.QUADRATIC.name
+        elif umode in ( 'G' , 'GEO'  , 'GEOM'    , 'GEOMET'  , 'GEOMETRIC' ) : umode = ErrMode.GEOMETRIC.name
         elif umode in ( 'Q' , 'QUAD' , 'QUADR'   , 'QUADRAT' , 'QUADRATIC' ) : umode = ErrMode.QUADRATIC.name
         elif umode in ( 'R' , 'RMS'                                        ) : umode = ErrMode.QUADRATIC.name
         elif umode                                                           : umode = ErrMode.TOTAL    .name 
         
-        assert umode in ErrMode.__members__ ,\
-               'ref_error: Unknown string mode: %s' % mode 
+        assert umode in ErrMode.__members__ , 'ref_error: Unknown string mode: %s' % mode 
         
-        umode = ErrMode[umode]
+        umode = ErrMode [ umode ]
         
     elif isinstance ( mode , integer_types ) :
 
-        for k , v in ErrMode.__members__.items() :
+        for _ , v in ErrMode.__members__.items() :
             if v == mode :
                 umode = v
                 break
         else :
             raise ValueError("ref_error: Unknown integer mode %s" % mode )
 
-    assert isinstance ( umode , ErrMode ),\
-           'ref_error: Unknown mode %s' % umode
+    assert isinstance ( umode , ErrMode ), 'ref_error: Unknown mode %s' % umode
 
     if umode == ErrMode.TOTAL :
         
         result = error * error 
-        for e in errors : result +=  e * e 
+        for e in errors : result += e * e 
         return math.sqrt ( result )
     
     elif umode == ErrMode.MIN :
@@ -137,7 +146,7 @@ def ref_error ( mode , error , *errors ) :
     
     elif umode == ErrMode.QUADRATIC :
         
-        result = abs ( error )
+        result = error * error 
         ne     = 1 
         for e in errors :
             result += e * e 
@@ -153,7 +162,6 @@ def ref_error ( mode , error , *errors ) :
             ne     += 1                 
         return result  / float ( ne ) 
 
-
 # =============================================================================
 ## round to nearest integer, rounds half integers to nearest even integer 
 #  It is just a simple wrapper around boost::numeric::converter 
@@ -161,41 +169,8 @@ def ref_error ( mode , error , *errors ) :
 ## cpp_round   = Ostap.Math.round
 ## cpp_round_N = Ostap.Math.round_N 
 
-## ============================================================================
-#  round value to N-digits
-#  @code
-#  new_value = round_N ( value , 3 )
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2015-07-20
-def round_N ( value , n ) :
-    """ Round value to to N-digits    
-    >>> new_value = round_N ( value , 3 )    
-    """    
-    assert isinstance ( n , integer_types ) and 0 <= n,\
-           "round_N: invalid `n' %s (must be non-negative integer)" % n 
-
-    v = float ( value )
-    
-    if 0 == v : return 0
-
-    a , b = frexp10 ( v ) 
-    
-    e = b - 1
-    m = a * 10
-    
-    ni = n - 1
-
-    f1 = 10 ** ni 
-
-    f2 = 1 
-    if   ni < e : f2 =     ( 10 ** ( e  - ni ) ) 
-    elif ni > e : f2 = 1.0/( 10 ** ( ni - e  ) )
-
-    return round ( m * f1 ) * float ( f2 ) 
-
 # =============================================================================
-## get ``mantissa'' (1<=m<10) and exponent for radix10
+## get mantissa (1<=m<10) and exponent for radix10
 #  similar for frexp, but use radix=10
 #  @code
 #  m,e = _frexp10_ ( value ) 
@@ -203,12 +178,12 @@ def round_N ( value , n ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20
 def _frexp10_ ( value ) :
-    """Get ``mantissa'' (1<=m<10) and exponent for radix10
+    """ Get mantissa ( 1<= m <10 ) and exponent for radix10
     similar for frexp, but use radix=10
     >>> m , e = _frexp10_ ( value ) 
     """
     m , e = frexp10 ( value ) 
-    return m * 10 , e-1
+    return m * 10 , e - 1
 
 # =============================================================================
 ## get three significant digits from the floating value
@@ -223,10 +198,15 @@ def three_digits ( value ) :
     >>> nums = three_digits ( value ) 
     """
     #
-    if not 0.1<= abs ( value ) < 1 : value  = frexp10 ( float ( value ) ) [0]
-    #
-    return int ( round ( float ( value ) * 1000 , 0 ) )
-
+    value = abs ( float ( value ) )
+    ## 
+    if   not value or iszero ( value ) : return 0
+    elif isequal ( value , 1 )         : return 100  
+    elif not 0.1 <= abs ( value ) < 1  :
+        value  = frexp10 ( value ) [ 0 ]
+        #
+    result = int ( round ( value * 1000 , 0 ) )
+    return result if 100 <= result else 100 
 
 # ==============================================================================
 #  Classify according to PDG prescription
@@ -239,15 +219,16 @@ def three_digits ( value ) :
 #   - Finally, if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
 #
 #  Cases:
-#   -  -2, error is NaN
-#   -  -1, error is Inf
+#   -  -3, error is NaN
+#   -  -2, error is Inf
+#   -  -1, error is `not isfinite`
 #   -   0, error is zero 
 #   -   1, the first regular case
 #   -   2, the second regular case
 #   -   3, the third  regular case
 
 #  @code
-#  case , rounded_error = pdg_case ( error ) 
+#  case = pdg_case ( error ) 
 #  @endcode 
 def pdg_case ( error ) :
     """ Classify according to PDG prescription
@@ -260,8 +241,9 @@ def pdg_case ( error ) :
     - Finally, if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
     
     Cases:
-    -  -2, error is NaN
-    -  -1, error is Inf
+    -  -3, error is NaN
+    -  -2, error is Inf 
+    -  -1, error is nontfinite 
     -   0, error is zero 
     -   1, the first regular case
     -   2, the second regular case
@@ -271,30 +253,35 @@ def pdg_case ( error ) :
     >>> case , rounded_error = pdg_case ( error ) 
     """
     
-    if    math.isnan ( error ) : return -2 , error
-    elif  math.isinf ( error ) : return -1 , error
+    if        math.isnan    ( error ) : return -3 
+    elif      math.isinf    ( error ) : return -2
+    elif  not math.isfinite ( error ) : return -1 
     
     ne = abs ( three_digits ( error ) )
     
-    if   0 == ne    : return  0 , 0 
-    elif ne  <= 354 : return  1 , round_N ( error , 2 )    
-    elif ne  <= 949 : return  2 , round_N ( error , 1 )    
-    else            : return  3 , round_N ( error , 1 )    
-    
-    
+    if   not ne     : return  0 
+    elif ne  <= 354 : return  1 
+    elif ne  <= 949 : return  2 
+    else            : return  3 
+
+# ==============================================================================
+
+
 # ==============================================================================
 # make a rounding according to PDG prescription
 #  @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
 #  @see section 5.3 of doi:10.1088/0954-3899/33/1/001
 #  
-#  The basic rule states that if the three highest order digits of the error
-#  lie between 100 and 354, we round to two significant digits. If they lie between
-#  355 and 949, we round to one significant digit. Finally,
-#   if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+#  The basic rule states that:
+#  - if the three highest order digits of the error
+#    lie between 100 and 354, we round to two significant digits.
+#  - If they lie between 355 and 949, we round to one significant digit.
+#  - Finally, if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+#
 #  In all cases, the central value is given with a precision that matches that of the error.
 #
 #  @code
-#  val, err , exponnet, err_case  = pdg_round__ ( value , error )
+#  val, err , exponent, err_case  = pdg_round__ ( value , error )
 #  print ( ' Rounded value +/- error is  (%s +/- %s)' % ( val , err ) )
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -314,11 +301,11 @@ def pdg_round__ ( value , error ) :
     >>> val , err , exponent , err_case = pdg_round__ ( value , error )    
     >>> print ( ' Rounded value +/- error is  (%s +/- %s)' % ( val , err ) ) 
     """
-
+    
+    ## analyse the error 
     ecase , err = pdg_case ( error )
-
-    assert -2 <= ecase <= 3 , 'pdg_round: invalid error case %s/%s' %  ( ecase , error ) 
-
+    assert -3 <= ecase <= 3 , 'pdg_round: invalid error case %s/%s' %  ( ecase , error ) 
+    
     ## irregular casses :
     if ecase <= 0 or not isfinite ( value ) : 
         return value , error , 0 , ecase
@@ -390,25 +377,29 @@ def pdg_round_ ( value , error ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
 def pdg_round ( value , error ) :
-    """Make a rounding according to PDG prescription
+    """ Make a rounding according to PDG prescription
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     - see section 5.3 of doi:10.1088/0954-3899/33/1/001
     
     Quote:
     
     The basic rule states that
-    - if the three highest order digits of the error lie between 100 and 354, we round to two significant digits.
-    - If they lie between 355 and 949, we round to one significant digit.
-    - Finally, if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+    - if the three highest order digits of the error lie between 100 and 354,
+      we round to two significant digits.
+    - If they lie between 355 and 949,
+      we round to one significant digit.
+    - Finally, if they lie between 950 and 999,
+      we round up to 1000 and keep two significant digits.
+    
     In all cases, the central value is given with a precision that matches that of the error.
     
     >>> val, err = pdg_round ( value , error )    
     >>> print ( ' Rounded value +/- error is  (%s +/- %s)' % ( val , err ) )
     """
     ##
-    val , err , f = pdg_round_ ( value , error )
+    val , err , _ = pdg_round_ ( value , error )
     ##
-    return val , err
+    return val , err 
 
 # =============================================================================
 ## Round value/error accoriding to PDG prescription and format it for print
@@ -447,16 +438,17 @@ def pdg_format ( value , error , latex = False ) :
     val , err , q , ecase = pdg_round__ ( value , error )  
 
     if ecase <= 0 :
+        
         if not isfinite ( val ) :
-            return ( '%+g \\pm %-g ' % ( val , err ) ) if latex else ( '% +g +/- %-g ' % ( val , err ) ) 
+            return ( '%+g \\pm %-g ' % ( val , err ) ) if latex else ( '% +g%s%-g ' % ( val , plus_minus , err ) ) 
         else :
             qv , bv = _frexp10_ ( val )
-            if 0 != bv : 
-                if latex : return '(%+.2f \\pm %-s)\\times 10^{%d}' % ( qv , err / 10**bv , bv )
-                else     : return ' %+.2f +/- %-s)*10^{%d} '        % ( qv , err / 10**bv , bv )
+            if not bv  : 
+                if latex : return '(%+.2f \\pm %-s)\\times 10^{%+d}' % ( qv ,              err / 10**bv ,         bv )
+                else     : return '(%+.2f%s%-s)%s10^{%+d} '          % ( qv , plus_minus , err / 10**bv , times , bv )
             else :
                 if latex : return ' %+.2f \\pm %-s ' % ( qv , err )
-                else     : return ' %+.2f +/- %-s '  % ( qv , err )
+                else     : return ' %+.2f%s%-s '     % ( qv , plus_minus , err )
                 
     qe , be = _frexp10_ ( error )
 
@@ -509,18 +501,17 @@ def pdg_format ( value , error , latex = False ) :
     if 0 == a :
         
         if latex: fmt = '(%%+.%df \\pm %%.%df)' %  ( nd , nd ) 
-        else    : fmt = ' %%+.%df +/- %%.%df '  %  ( nd , nd )
+        else    : fmt = ' %%+.%df%s%%.%df '     %  ( nd , plus_minus , nd )
 
         return fmt % ( val , err )
 
-        
-    if latex: fmt = '(%%+.%df \\pm %%.%df)\\times 10^{%%d}' %  ( nd , nd ) 
-    else    : fmt = '(%%+.%df +/- %%.%df)*10^{%%d}'         %  ( nd , nd ) 
-        
+    if latex : fmt = '(%%+.%df \\pm %%.%df)\\times 10^{%%+d}' % ( nd , nd ) 
+    else     : fmt = '(%%+.%df %s %%.%df )%s10^{%%+d}'        % ( nd , plus_minus , nd , times ) 
         
     scale = 1.0/10**(3*a)
 
     return fmt % ( val * scale , err * scale , 3 * a )
+
 
 # =============================================================================
 ## Round value/error according to PDG prescription and format it for print
@@ -781,92 +772,11 @@ def pdg_format3 ( value , error1 , error2 , error3 , latex = False , mode = 'min
 
     return fmt % ( val * scale , err1 * scale , err2 * scale , err3 * scale , 3 * a )
 
-# ====================================================================================
-## make a rounding according to PDG prescription
-#  @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
-#  @see section 5.3 of doi:10.1088/0954-3899/33/1/001
-#  
-#  The basic rule states that if the three highest order digits of the error
-#  lie between 100 and 354, we round to two significant digits. If they lie between
-#  355 and 949, we round to one significant digit. Finally,
-#   if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
-#  In all cases, the central value is given with a precision that matches that of the error.
-#
-#  @code
-#  ve  = VE( ...
-#  vr  = ve.pdg()
-#  print ' Rounded value with error is  %s ' % vr 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2015-07-20 
-def _ve_pdg_ ( ve ) :
-    """ Make a rounding according to PDG prescription
-    @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
-    @see section 5.3 of doi:10.1088/0954-3899/33/1/001
-      
-    Quote:
-    The basic rule states that if the three highest order digits of the error
-    lie between 100 and 354, we round to two significant digits. If they lie between
-    355 and 949, we round to one significant digit. Finally,
-    if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
-    In all cases, the central value is given with a precision that matches that of the error.
 
-    >>> ve  = VE( ...
-    >>> vr  = ve.pdg()
-    >>> print 'Rounded value with error is  %s ' % vr
-    """
-    #
-    v , e  = pdg_round  ( ve.value() , ve.error() )
-    # 
-    return VE ( v , e * e )
-
-# =============================================================================
-## Round value/error accoridng to PDG prescription and format it for print
-#  @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
-#  @see section 5.3 of doi:10.1088/0954-3899/33/1/001
-#  
-#  The basic rule states that if the three highest order digits of the error
-#  lie between 100 and 354, we round to two significant digits. If they lie between
-#  355 and 949, we round to one significant digit. Finally,
-#   if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
-#  In all cases, the central value is given with a precision that matches that of the error.
-#
-#  @code
-#  ve = VE( ... ) 
-#  print ' Rounded value/error is %s ' % ve.pdg_format ()
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2015-07-20 
-def _ve_pdg_format_ ( ve , latex = False ) :
-    """ Round value/error according to PDG prescription and format it for print
-    @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
-    @see section 5.3 of doi:10.1088/0954-3899/33/1/001
-      
-    Quote:
-    The basic rule states that if the three highest order digits of the error
-    lie between 100 and 354, we round to two significant digits. If they lie between
-    355 and 949, we round to one significant digit. Finally,
-    if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
-    In all cases, the central value is given with a precision that matches that of the error.
-    
-    >>> ve = VE(... ) 
-    >>> print ' Rounded value/error is %s ' % ve.pdg_format ()
-    """
-    return pdg_format ( ve.value () , ve.error() , latex = latex ) 
-
-
-# =============================================================================
-## finally decorate class ValueWith Error
-# =============================================================================
-
-VE.pdg        = _ve_pdg_
-VE.pdg_format = _ve_pdg_format_ 
-    
 # =============================================================================
 ## insert it to math
 if not hasattr ( math , 'frexp10' ) : math.frexp10 = frexp10
 if not hasattr ( math , 'round_N' ) : math.round_N = round_N
-
 
 # =============================================================================
 if '__main__' == __name__ :

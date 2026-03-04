@@ -932,6 +932,16 @@ def lround ( x ) :
     return x if isinstance  ( x , int ) else _round ( x ) 
 
 # ============================================================================
+## Round value to N significant digits 
+def round_N ( value , N ) :
+    """ Round value to N significant digits
+    """
+    value = float ( value ) 
+    if not value or not math.isfinite ( value ) : return value
+    N -= math.ceil ( math.log10 ( abs ( value ) ) )    
+    return round ( value , N )
+    
+# ============================================================================
 ## The first entry for event loops
 FIRST_ENTRY = Ostap.FirstEvent 
 ## The last entry for event loops 
@@ -968,6 +978,7 @@ def evt_range ( sized , first = FIRST_ENTRY , last = LAST_ENTRY  ) :
     elif size <= last  : return first , min ( size , last )
     ##
     return first , last 
+
 # =========================================================================
 ## Are all entries required to process?
 #  @code
