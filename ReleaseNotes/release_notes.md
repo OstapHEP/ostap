@@ -4,7 +4,9 @@
   1. add `Sine`-type sigmoid, based on (1+sin(2x))/2 
   1. add many new distributions
   1. upgrade many distribution to use ew ase classes. Drastic reduction of code lines.
-  1, add "folding" for `RooDataSet` and extend the corresponding test
+  1. add "folding" for `RooDataSet` and extend the corresponding test
+  1. add `dump` and `dump_table` methods to `RooDataSet` to dump the content of dataset in a table form
+  1. fix `shared_entries` and `shared_data` methdos for `RooDataSet`
   
 ## Bug fixes
 

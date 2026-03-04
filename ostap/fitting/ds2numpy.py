@@ -31,7 +31,7 @@ from   ostap.math.base              import doubles
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar
-from   ostap.trees.cuts             import vars_and_cuts 
+from   ostap.trees.cuts             import vars_and_cuts, expression_types  
 import ostap.fitting.roocollections
 import ROOT, numpy 
 # =============================================================================
@@ -68,29 +68,29 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                    structured  = True     ,
                    weight_name = 'weight' , 
                    weight_split = False   ) :
-        """ Convert dataset into numpy array using `ROOT.RooAbsData` iterface 
+        """ Convert dataset into numpy array using `ROOT.RooAbsData` interface 
         - see ROOT.RooAbsData.getBatches
         - see ROOT.RooAbsData.getCategoryBatches
         - see ROOT.RooAbsData.getWeightBatche    
         - see ROOT.RooAbsDataStore.getBatches
         - see ROOT.RooAbsDataStore.getCategoryBatches
-        - see ROOT.RooAbsDataStore.getWeightBatche    
+        - see ROOT.RooAbsDataStore.getWeightBatches    
         - attention: Conversion to `ROOT.RooVectorDataStore` is used! 
 
-        Unlike `ROOT.RooDataSet.to_numpy` method it allows more flexible outp
+        Unlike `ROOT.RooDataSet.to_numpy` method it allows more flexible output
         - structured array (default) vs unstructured array
         - optional split data and weight columns     
 
         """
         
-        if isinstance ( var_lst , string_types ) : var_lst = [ var_lst ]
+        if isinstance ( var_lst , expression_types ) : var_lst = [ str ( var_lst ) ]
         
         assert not more_vars or isinstance ( more_vars , dictlike_types ) , \
             "ds2numpy: invalid type of `more_vars`" % typename ( more_vars )
         
         # =====================================================================
         ## (1) get names of all requested variables
-        if   all ( isinstance ( v , string_types   ) for v in var_lst ) :
+        if   all ( isinstance ( v , expression_types   ) for v in var_lst ) :
             vnames , cuts , _ = vars_and_cuts ( var_lst , cuts , allow_empty = more_vars )
         elif all ( isinstance ( v , ROOT.RooAbsArg ) for v in var_lst ) :
             vnames = [ v.GetName() for v in var_lst ]
@@ -473,7 +473,7 @@ else :
         data = numpy.zeros ( len ( dataset )  , dtype = dtypes )
     
         ## make an explict loop:
-        for i , item in enumerate ( progress_bar ( dataset , silent = silent , description = 'Entries:' ) ) :
+        for i , item in enumerate ( progress_bar ( dataset , silent  = silent , description = 'Entries:' ) ) :
 
             evt, the_weight = item
             

@@ -74,7 +74,6 @@ weighted = dataset.makeWeighted ( 'Weight' )
 logger.info ( 'Print         unweighted dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 logger.info ( 'Print           weighted dataset:\n%s' % weighted.table ( prefix = '# ' ) )
 
-""" 
 # =============================================================================
 ## (2) loop over some subset of entries 
 # =============================================================================
@@ -395,10 +394,50 @@ ds .add_var ( category , +1 , report = True , progress = True )
 dsw.add_var ( category , -1 , report = True , progress = True )
 
 # =============================================================================
-## (27) fold Pt1 and Pt2 
+## (27) "shared" 
 # =============================================================================
 
-"""
+ds  = dataset  [:20]
+dsw = weighted [:20] 
+
+## get 33% subsamples 
+dss  = ds.sample  ( 0.33 )
+dsws = dsw.sample ( 0.33 )
+
+entry_tag = 'Evt' , 'Run'
+
+shared = [] 
+unique = []
+for entry in ds.shared_entries ( dss , entry_tag , shared = True  , progress = True , report = True ) : shared.append ( entry ) 
+for entry in ds.shared_entries ( dss , entry_tag , shared = False , progress = True , report = True ) : unique.append ( entry ) 
+
+logger.info ('Shared indices: %s' % sorted ( shared ) )
+logger.info ('Unique indices: %s' % sorted ( unique ) )
+
+ds1 = ds.shared_data ( dss , entry_tag , shared = True  , progress = True , report = True )
+ds2 = ds.shared_data ( dss , entry_tag , shared = False , progress = True , report = True )
+
+logger.info ('Shared/unique dataset %d/%d' % ( len ( ds1 ) , len ( ds2 ) ) )
+
+
+shared = [] 
+unique = []
+for entry in dss.shared_entries ( ds , entry_tag , shared = True  , progress = True , report = True ) : shared.append ( entry ) 
+for entry in dss.shared_entries ( ds , entry_tag , shared = False , progress = True , report = True ) : unique.append ( entry ) 
+
+logger.info ('Shared indices: %s' % sorted ( shared ) )
+logger.info ('Unique indices: %s' % sorted ( unique ) )
+
+ds1 = dss.shared_data ( ds , entry_tag , shared = True  , progress = True , report = True )
+ds2 = dss.shared_data ( ds , entry_tag , shared = False , progress = True , report = True )
+
+logger.info ('Shared/unique dataset %d/%d' % ( len ( ds1 ) , len ( ds2 ) ) )
+
+
+# =============================================================================
+## (28) fold Pt1 and Pt2 
+# =============================================================================
+
 ds  = dataset  
 dsw = weighted
 
@@ -423,6 +462,17 @@ fdsd = dsw.fold ( 'PT' , ( 'Pt1' , 'Pt2' ) , variables =  'Evt,Run'  , progress 
 fds  = ds .fold ( 'PT' , ( '+1*Pt1' , '-1*Pt2' ) , variables = ( 'Evt' , 'Run' ) , progress = True , report = True )
 fdsd = dsw.fold ( 'PT' , ( '+1*Pt1' , '-1*Pt2' ) , variables = ( 'Evt' , 'Run' ) , progress = True , report = True )
 
+
+# =============================================================================
+## (29) dump
+# =============================================================================
+
+ds  = dataset  [:1000]
+dsw = weighted [:1000]
+
+cuts = '(Mass>1)&&(Pt1>1)&&(Pt2>1)'
+logger.info ( 'Dump dataset  :\n%s' % ds .dump_table ( cuts = cuts , first = 950 , prefix = '# ' ) )
+logger.info ( 'Dump weighted :\n%s' % dsw.dump_table ( cuts = cuts , first = 950 , prefix = '# ' ) )
 
 
 # =============================================================================

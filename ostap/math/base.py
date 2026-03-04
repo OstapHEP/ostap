@@ -131,20 +131,16 @@ neg_infinity = float('-inf')
 # =============================================================================
             
 # =============================================================================
-## with ROOTIgnore ( ROOT.kError ) :
-if True :
-    iszero   = Ostap.Math.Zero     ('double')()
-    isequal  = Ostap.Math.Equal_To ('double')()
-    isequalf = Ostap.Math.Equal_To ('float' )()
-    isint    = Ostap.Math.isint 
-    islong   = Ostap.Math.islong
-    
+iszero   = Ostap.Math.Zero     ('double')()
+isequal  = Ostap.Math.Equal_To ('double')()
+isequalf = Ostap.Math.Equal_To ('float' )()
+isint    = Ostap.Math.isint 
+islong   = Ostap.Math.islong
+#
 vDoubles = std.vector ( 'double' )
 vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
-
-
 
 # =============================================================================
 ## local version of <code>isfinite</code>

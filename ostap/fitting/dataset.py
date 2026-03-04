@@ -33,15 +33,17 @@ from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types ,
                                              sized_types   , dictlike_types )
 from   ostap.utils.basic            import loop_items  , typename            
-from   ostap.math.base              import evt_range, FIRST_ENTRY, LAST_ENTRY 
+from   ostap.math.base              import evt_range, FIRST_ENTRY, LAST_ENTRY, isint  
 from   ostap.utils.random_seed      import random_seed
 from   ostap.fitting.variables      import valid_formula, make_formula 
 from   ostap.trees.cuts             import expression_types, vars_and_cuts, order_warning
 from   ostap.stats.statvars         import data_decorate, data_range 
 from   ostap.utils.valerrors        import VAE
-from   ostap.logger.symbols         import cabinet, weight_lifter 
 from   ostap.utils.progress_conf    import progress_conf
-from   ostap.utils.progress_bar     import progress_bar 
+from   ostap.utils.progress_bar     import progress_bar
+from   ostap.logger.pretty          import pretty_float 
+from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis
+import ostap.logger.table           as     T
 import ostap.fitting.roocollections
 import ostap.fitting.variables  
 import ostap.fitting.printable
@@ -63,7 +65,7 @@ _maxv =  0.99 * sys.float_info.max
 _minv = -0.99 * sys.float_info.max
 # =============================================================================
 ## iterator for RooAbsData entries 
-#  @cdoe
+#  @code
 #  dataset = ...
 #  for entry, weight  in dataset : ...
 #  @endcode 
@@ -247,7 +249,6 @@ def _rad_getitem_ ( data , index ) :
     return result
 
 # ==============================================================================
-
 
 # ==============================================================================
 ## Get (asymmetric) weigth errors for the current entry in dataset
@@ -501,7 +502,6 @@ def _rad_rmul_ ( ds1 , ds2 ) :
     """
     return _rad_mul_ ( ds1 , ds2 )
 
-    
 # =============================================================================
 ## get small (random) fraction of  dataset
 #  @code
@@ -518,7 +518,6 @@ def  _rad_div_ ( self , fraction ) :
         elif  1   == fraction : return self.clone ()
     
     return NotImplemented
-
 
 # =============================================================================
 ## get small (fixed) fraction of  dataset
@@ -1058,7 +1057,6 @@ def _rds_unique_entries_ ( dataset           ,
         rows.append ( row )
         row   =  'Duplicated  max'          , '%d' % cnt.max()         
         rows.append ( row )
-        import ostap.logger.table as T 
         logger.info ( '%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' , style = style ) ) )
         
 # =============================================================================        
@@ -1130,7 +1128,7 @@ _new_methods_ += [
    ]
 
 # =============================================================================
-## Iterator over entries in dataset that are *shared* or *NOT* between two datasete
+## Iterator over entries in dataset that are *shared*/*unique* between two datasete
 #
 #  @code
 #  dataset1 = ...
@@ -1150,8 +1148,9 @@ def _rds_shared_entries_ ( dataset1         ,
                            dataset2         ,
                            entrytag         ,
                            shared           ,     
-                           progress = False ) :
-    """ Iterator over entries in dataset that are *shared* or *NOT* between two datasete
+                           progress = False ,
+                           report   = True  ) :
+    """ Iterator over entries in dataset that are *shared*/*unique* between two datasete
 
     >>> dataset1 = ...
     >>> dataset2 = ...
@@ -1170,43 +1169,64 @@ def _rds_shared_entries_ ( dataset1         ,
     assert isinstance ( dataset2 , ROOT.RooDataSet ) , \
         "Invalid type of `dataset2`: %s" % typename ( another1 )
     
-    if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
-    elif isinstance ( entrytag , string_types   ) : entrytag = [ entrytag ]
-
+    if   isinstance   ( entrytag , ROOT.RooAbsArg   ) : entrytag = [       entrytag   ]
+    elif isinstance   ( entrytag , expression_types ) : entrytag = [ str ( entrytag ) ]
+    
     assert isinstance ( entrytag , sequence_types ) , 'Invalid "entrytag" %s' % str ( entrytag )
-
+    
+    if   all ( isinstance ( v , expression_types   ) for v in entrytag ) :
+        entrytag , _ , _ = vars_and_cuts ( entrytag , '' ) 
+        entrytag = tuple ( sorted ( set ( entrytag ) ) )
+        
+    assert all ( v in dataset1 for v in entrytag ) , \
+        "Variables are not in dataset1: %s" % ( ','.join ( str ( v ) for v in entrytag if not v in dataset1 ) )
+    
+    assert all ( v in dataset2 for v in entrytag ) , \
+        "Variables are not in dataset2: %s" % ( ','.join ( str ( v ) for v in entrytag if not v in dataset2 ) ) 
+        
     from ostap.fitting.ds2numpy import ds2numpy
 
-    ## get the entry tags from the secod dataset 
+    ## get all entry tags from the second dataset 
     data2 = ds2numpy ( dataset2, entrytag , silent = True )
 
-    ## copy numpy array into python's set 
-    the_set = set()
+    ## copy numpy array into python's set via the first explicit loop 
+    the_set = set ()
     for entry in progress_bar ( data2 , silent = not progress , description = "Entries:" ) : 
         item = tuple ( entry )
         the_set.add  ( item )
     data2 = the_set
     
     ## get the entry tags from the first datasets 
-    data1 = ds2numpy ( dataset1, entrytag , silent = True  )
+    data1 = ds2numpy ( dataset1, entrytag , silent = not progress )
     
     ## 
     shared = True if shared else False
-    
-    def _xor2_ ( a , b ) : return  ( a and not b ) or ( b and not a )
-    def _xor1_ ( a     ) : return _xor2_ ( a , shared )
-    
-    ## make an explicit loop over input data
+
+    nshared   = 0 
+    ## make the second explicit loop over input data
     for i, item  in enumerate ( progress_bar ( data1 , silent = not progress , description = 'Entries:' ) ) :
         
         ## the main line here!!!
         result = tuple ( item ) in data2
-        
-        if _xor1_ ( result ) : yield i 
+
+        if result : nshared += 1
+
+        if       shared and     result : yield i
+        elif not shared and not result : yield i
+
+    if report :
+        n1 = len ( dataset1 )
+        n2 = len ( dataset2 )
+        table =  [ ( '#l' , '#2' , '#nshared' ) ]
+        row   = '%d' % n1 , '%d' % n2 , '%d' % nshared
+        table .append ( row )
+        title = 'Shared entries for (%s)' % ( ','.join ( str ( v ) for v in entrytag ) ) 
+        table = T.table ( table , title = title , prefix = '# ' , alignment = 'ccc' )                          
+        logger.info ( '%s:\n%s' % ( title , table ) ) 
 
     del data1
     del data2
-    
+        
 # =============================================================================
 ## make datasets WITH or WITHOUT shared entries
 #  @code
@@ -1228,7 +1248,8 @@ def _rds_shared_data_ ( dataset          ,
                         another          ,
                         entrytag         ,
                         shared           , 
-                        progress = False ) :
+                        progress = False ,
+                        report   = True  ) :
     """ Make datasets WITH or WITHOUT shared entries
     >>> dataset1  = ...
     >>> dataset2  = ...
@@ -1250,10 +1271,20 @@ def _rds_shared_data_ ( dataset          ,
     assert isinstance ( another , ROOT.RooDataSet ) , \
         "Invalid type of `another`: %s" % typename ( another )
     
-    if   isinstance ( entrytag , ROOT.RooAbsArg ) : entrytag = [ entrytag ]
-    elif isinstance ( entrytag , string_types   ) : entrytag = [ entrytag ]
+    if   isinstance ( entrytag , ROOT.RooAbsArg   ) : entrytag = [       entrytag   ]
+    elif isinstance ( entrytag , expression_types ) : entrytag = [ str ( entrytag ) ]
 
     assert isinstance ( entrytag , sequence_types ) , 'Invalid "entrytag" %s' % str ( entrytag )
+
+    if   all ( isinstance ( v , expression_types   ) for v in entrytag ) :
+        entrytag , _ , _ = vars_and_cuts ( entrytag , '' ) 
+        entrytag = tuple ( sorted ( set ( entrytag ) ) )
+        
+    assert all ( v in dataset for v in entrytag ) , \
+        "Variables are not in dataset: %s" % ( ','.join ( str ( v ) for v in entrytag if not v in dataset ) )
+    
+    assert all ( v in another for v in entrytag ) , \
+        "Variables are not in another: %s" % ( ','.join ( str ( v ) for v in entrytag if not v in another ) ) 
 
     ## Dataset properties    
     weighted          = dataset.isWeighted                     ()
@@ -1262,12 +1293,14 @@ def _rds_shared_data_ ( dataset          ,
 
     ## prepare the result 
     result = dataset.emptyClone ( dsID () )
-    
+
+    ## explicit loop over entries 
     for i in _rds_shared_entries_ ( dataset             ,
                                     another             ,
                                     entrytag            ,
                                     shared   = shared   , 
-                                    progress = progress ) :
+                                    progress = progress ,
+                                    report   = False    ) :
         vars = dataset.get ( i )
         
         if   store_asym_errors :  
@@ -1280,6 +1313,17 @@ def _rds_shared_data_ ( dataset          ,
             result.add ( vars , dataset.weight () ) 
         else : 
             result.add ( vars ) 
+
+            
+    if report :
+        n1 = len ( dataset )
+        n2 = len ( another )
+        table =  [ ( '#l' , '#2' , '#result' ) ]
+        row   = '%d' % n1 , '%d' % n2 , '%d' % len ( result ) 
+        table .append ( row )
+        title = 'Shared entries for (%s)' % ( ','.join ( str ( v ) for v in entrytag ) ) 
+        table = T.table ( table , title = title , prefix = '# ' , alignment = 'ccc' )                          
+        logger.info ( '%s:\n%s' % ( title , table ) ) 
 
     ## get the final result 
     return result 
@@ -1796,8 +1840,6 @@ def _ds_getattr_ ( dataset , attname ) :
 def get_var ( self, aname ) :
     _vars = self.get()
     return getattr ( _vars , aname )  
-
-
 
 # =============================================================================\
 ## Get suitable ranges for drawing expressions/variables
@@ -2708,7 +2750,6 @@ def _ds_table_0_ ( dataset                 ,
         
         table_data.append ( tuple ( cols ) ) 
 
-    import ostap.logger.table as T
     t  = T.table ( table_data , title = title , prefix =  prefix , style = style )
     w  = T.table_width ( t ) 
     return t , w 
@@ -2816,7 +2857,6 @@ def _ds_table_1_ ( dataset                 ,
         table_data.append ( tuple ( cols ) ) 
 
     title = title    
-    import ostap.logger.table as T
     t  = T.table ( table_data , title = title , prefix =  prefix , style = style )
     w  = T.table_width ( t ) 
     return t , w 
@@ -3534,7 +3574,6 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
         row  =  'R'                  , "%+13.6g" % r1  , "%+13.6g" % r2  , '' 
         rows.append ( row )
         
-        import ostap.logger.table as Table
         title = title if title else 'Combine two datasets: %+.6g*A%+.6g*B' % ( r1 , r2 )
         table = Table.table ( rows               ,
                               title     = title  ,
@@ -3548,7 +3587,6 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
     if w2 or v1 != v2 : ds2.clear()
     
     ds.clear()
-
     
     return dsw
 
@@ -3847,6 +3885,146 @@ ROOT.RooDataSet.ds2tree = _ds_2tree_
 _new_methods_ += [
     ROOT.RooDataSet.ds2tree 
     ]
+
+# ============================================================================
+## dump a content of the dataset as table
+def _rds_dump_table_ ( dataset   , *    , 
+                       variables = True ,
+                       cuts      = ''   ,
+                       cut_range = ''   ,
+                       first     = FIRST_ENTRY ,
+                       last      = LAST_ENTRY  ,
+                       precision = 4           ,
+                       width     = 6           ,
+                       progress  = True        , 
+                       title     = ''          ,
+                       prefix    = ''          ) :
+    
+    ## all variables in this dataset 
+    vset        = dataset.get()
+    var_types   = ROOT.RooAbsReal , ROOT.RooAbsCategory
+    ## 
+    if      variables is True : vars = vset      ##        copy all variables into new dataset
+    elif not variables        : vars = vset  
+    else                      : vars = variables ## list of variables to be copied 
+    ## 
+    if   isinstance ( vars , expression_types       ) : vars = [ str ( vars ) ]
+    elif isinstance ( vars , ROOT.RooAbsCollection  ) : vars = [ str ( v.GetName() ) for v in vars ]
+    elif isinstance ( vars , var_types              ) : vars = [ str ( vars.GetName() ) ]
+    elif isinstance ( vars , sequence_types ) : 
+        if   all ( isinstance ( v , var_types        ) for v in vars ) : vars = [ str ( v.GetName() ) for v in vars ]
+        elif all ( isinstance ( v , expression_types ) for v in vars ) : vars = [ str ( v )           for v in vars ]
+
+    ## check 
+    assert isinstance ( vars , sequence_types ) and \
+        all ( isinstance ( v , expression_types ) for v in vars ) , \
+        "Invalid type/content of `variables':" % typename ( variables )
+
+    ## decode list of variables 
+    varlst, cuts, _ = vars_and_cuts ( vars , cuts , allow_empty = True )
+
+    ## remove duplicates, if any 
+    vars = tuple ( sorted ( set ( varlst ) ) ) 
+
+    
+    weighted          = dataset.isWeighted                     ()
+    store_errors      = weighted and dataset.store_errors      ()
+    store_asym_errors = weighted and dataset.store_asym_errors () 
+
+    header = '#' ,
+    for v in vars : header += ( v , '%s[%s]' % ( times , ellipsis ) ) 
+    if weighted   : header += ( weight_lifter if weight_lifter else 'weight' , '' )
+    
+    rows   = [ header ]
+
+    
+    ## adjust first&last 
+    first , last = evt_range ( dataset , first , last )
+    
+    for index , entry , weight  in dataset.loop ( cuts      = cuts      ,
+                                                  cut_range = cut_range ,
+                                                  first     = first     ,
+                                                  last      = last      ,
+                                                  progress  = progress  ) :
+        
+        row = '%d' % index ,
+        for v in vars :
+            vv = entry [ v ]
+            if isinstance ( vv , ROOT.RooAbsReal ) :
+                vv = float ( vv )
+                if isint ( vv ) :
+                    row  += ( '%+d' % int ( vv ) , '' ) 
+                else  :
+                    sv , expo = pretty_float ( vv , precision = precision , width = width , with_sign = True ) 
+                    row  += ( sv , '10^%+d' % expo if expo else '' )
+            else :
+                row += '%s' % vv , ''
+                
+        if store_asym_errors or store_errors :
+            sv , expo = weight.pretty_print ( precision   = precision ,
+                                              width       = width     ,
+                                              parentheses = False     )
+            row  += ( sv , '10^%+d' % expo if expo else '' )
+        elif weighted and not weight is None :
+            sv , expo = pretty_float ( weight , precision = precision , width = width , with_sign = True ) 
+            row  += ( sv , '10^%+d' % expo if expo else '' )
+                                                         
+        rows.append ( row )
+        
+    if not title :
+        title = 'DataSet(%s)' % dataset.GetName()
+        if cuts      : title += ' Cuts:%s'      % cuts
+        if cut_range : title += ' Cut-range:%s' % cut_range
+        if 0 != first or len ( dataset ) != last : title += ' [%d:%d]' % ( first , last )
+        
+    rows  = T.remove_empty_columns ( rows )
+    return T.table ( rows , title = title , prefix = prefix )
+    
+# ===============================================================================    
+## dump a content of the dataset as table
+def _rds_dump_ ( dataset   , *           , 
+                 variables = True        ,
+                 cuts      = ''          ,
+                 cut_range = ''          ,
+                 first     = FIRST_ENTRY ,
+                 last      = LAST_ENTRY  , 
+                 precision = 4           , 
+                 width     = 6           ,
+                 progress  = True        ) : 
+
+    ## adjust first&last 
+    first , last = evt_range ( dataset , first , last )
+    
+    title = 'DataSet(%s)' % dataset.GetName()
+    if cuts      : title += ' Cuts:%s'      % cuts
+    if cut_range : title += ' Cut-range:%s' % cut_range
+    if 0 != first or len ( dataset ) != last : title += ' [%d:%d]' % ( first , last )
+    
+    table = _rds_dump_table_ ( dataset ,
+                               variables = variables ,
+                               cuts      = cuts      ,
+                               cut_range = cut_range ,
+                               first     = first     ,
+                               last      = last      ,
+                               precision = precision ,
+                               width     = width     ,
+                               progress  = progress  , 
+                               title     = title     , 
+                               prefix    = "# "      )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+
+ROOT.RooDataSet .dump_table = _rds_dump_table_
+ROOT.RooDataSet .dump       = _rds_dump_
+ROOT.RooDataHist.dump_table = _rds_dump_table_
+ROOT.RooDataHist.dump       = _rds_dump_
+
+_new_methods_ += [
+    ROOT.RooDataSet .dump_table , 
+    ROOT.RooDataSet .dump       , 
+    ROOT.RooDataHist.dump_table , 
+    ROOT.RooDataHist.dump       , 
+]
 
 # ============================================================================
 
