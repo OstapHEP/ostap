@@ -316,9 +316,9 @@ class AsymErrors (object) :
                                             with_sign   = with_sign   ,
                                             parentheses = parentheses ,
                                             latex       = latex       )
-        ## 
+        ##
         if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-        elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+        elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
         ##
         return result.replace ( '  ' , ' ' ) 
 
@@ -726,7 +726,8 @@ class ValWithErrors(object) :
                        precision   = 4     ,
                        with_sign   = True  , 
                        parentheses = True  ,
-                       latex       = False ) :
+                       latex       = False ,
+                       PDG         = ''    ) :
         """ Pretty print
         >>> value = ...
         >>> result, expo = value.pretty_print () 
@@ -736,7 +737,8 @@ class ValWithErrors(object) :
                             precision   = precision   ,
                             with_sign   = with_sign   , 
                             parentheses = parentheses ,
-                            latex       = latex       )
+                            latex       = latex       ,
+                            PDG         = PDG         )
 
     # =========================================================================
     ## nice print
@@ -749,7 +751,8 @@ class ValWithErrors(object) :
                       precision   = 4     ,
                       with_sign   = True  , 
                       parentheses = True  ,
-                      latex       = False ) : 
+                      latex       = False ,
+                      PDG         = ''    ) : 
         """ Nice print
         >>> value  = ...
         >>> result = value.nice_print () 
@@ -758,10 +761,11 @@ class ValWithErrors(object) :
                                             precision   = precision   ,
                                             with_sign   = with_sign   , 
                                             parentheses = parentheses ,
-                                            latex       = latex       )
+                                            latex       = latex       ,
+                                            PDG         = PDG         )
         ## 
         if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-        elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+        elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
         ##
         return result.replace ( '  ' , ' ' ) 
     
@@ -1097,7 +1101,8 @@ class ValWithMultiErrors(object) :
                          precision   = 4     ,
                          with_sign   = True  , 
                          parentheses = True  ,
-                         latex       = False ) :
+                         latex       = False ,
+                         PDG         = ''    ) :
         """ Pretty print
         >>> value = ...
         >>> result, expo = value.pretty_print () 
@@ -1107,7 +1112,8 @@ class ValWithMultiErrors(object) :
                             precision   = precision   ,
                             with_sign   = with_sign   , 
                             parentheses = parentheses ,
-                            latex       = latex       )
+                            latex       = latex       ,
+                            PDG         = PDG         )
     
     # =========================================================================
     ## nice print
@@ -1120,7 +1126,8 @@ class ValWithMultiErrors(object) :
                       precision   = 4     ,
                       with_sign   = True  , 
                       parentheses = True  ,
-                      latex       = False ) : 
+                      latex       = False ,
+                      PDG         = False ) : 
         """ Nice print
         >>> value  = ...
         >>> result = value.nice_print () 
@@ -1129,10 +1136,11 @@ class ValWithMultiErrors(object) :
                                             precision   = precision   ,
                                             with_sign   = with_sign   , 
                                             parentheses = parentheses ,
-                                            latex       = latex       )
+                                            latex       = latex       ,
+                                            PDG         = PDG         )
         ## 
         if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-        elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+        elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
         ##
         return result.replace ( '  ' , ' ' ) 
 
@@ -1270,18 +1278,39 @@ def pretty_ae ( errors              ,
 #  vae = ValWithErrors ( 1 , -5 , 10000 )
 #  s , expo = pretty_vae ( vae , width = 8, precision = 6 ) 
 #  @endcode
-def pretty_vae ( value               ,
-                 width       = 6     ,
-                 precision   = 4     ,
-                 with_sign   = True  , 
-                 parentheses = True  ,
-                 latex       = False )  :
-    """ Pretty print for value  with asymemtric errors
+def pretty_vae ( value                 ,
+                 width       = 6       ,
+                 precision   = 4       ,
+                 with_sign   = True    , 
+                 parentheses = True    ,
+                 latex       = False   ,
+                 PDG         = ''      ) : 
+    """ Pretty print for value  with asymmetric errors
     >>> vae = ValWithErrors ( ... )
     >>> s , expo = pretty_vae ( vae , width = 8, precision = 6 ) 
     """    
     assert isinstance ( value , ValWithErrors ), "Invalid type of `value`: %s" % typename ( value )
 
+    if PDG :
+        import ostap.utils.pdg_format as pdg
+        referror = pdg.ref_error ( PDG , value.pos_error , value.neg_error )
+        err_case , fmtv , fmte , expo = pdg.fmt_pdg ( value.value , referror )
+        if '%+' in fmte  : fmte = fmte.replace ( '%+' , '%' )
+        
+        scale = 10 ** expo if expo else 1
+        
+        if latex : fmt = '%s_{-%s}^{+%s}' % ( fmtv , fmte , fmte )
+        else     : fmt = '%s -/%s +/%s'   % ( fmtv , fmte , fmte )
+        
+        if ( latex and expo ) or parentheses : fmt = '( ' + fmt + ' )' 
+
+        result = fmt % ( value.value             / scale ,
+                         abs ( value.neg_error ) / scale , 
+                         abs ( value.pos_error ) / scale )
+        
+        return result , expo 
+
+    
     if value.symmetric :
         from ostap.logger.pretty import pretty_error
         return pretty_error ( value.value               , 
@@ -1313,35 +1342,49 @@ def pretty_vme ( value               ,
                  precision   = 4     ,
                  with_sign   = True  , 
                  parentheses = True  ,
-                 latex       = False )  :
+                 latex       = False , 
+                 PDG         = ''    )  :
+    
     """ Pretty print for value  with multiple asymmetric errors
     >>> vme = ValWithMultiErrors ( ... )
     >>> s , expo = pretty_vme ( vme , width = 8, precision = 6 ) 
     """    
     assert isinstance ( value , ValWithMultiErrors ), "Invalid type of `value`: %s" % typename ( value)
     
-    errors  = tuple ( e.negative for e in value.errors ) 
-    errors += tuple ( e.positive for e in value.errors ) 
-    
-    from ostap.logger.pretty import fmt_pretty_errors
-    fmtv , fmte , expo = fmt_pretty_errors ( value.value           ,
-                                             *errors               , 
-                                             width     = width     ,
-                                             with_sign = with_sign , 
-                                             precision = precision ,
-                                             latex     = latex     )
 
+    
+    errors  = tuple ( e.negative for e in value.errors ) 
+    errors += tuple ( e.positive for e in value.errors )
+
+
+    if PDG :        
+        import ostap.utils.pdg_format as pdg
+        referror = pdg.ref_error ( PDG , value.pos_error , value.neg_error )
+        
+        err_case , fmtv , fmte , expo = pdg.fmt_pdg ( value.value , referror )
+
+    else : 
+        
+        from ostap.logger.pretty import fmt_pretty_errors
+        fmtv , fmte , expo = fmt_pretty_errors ( value.value           ,
+                                                 *errors               , 
+                                                 width     = width     ,
+                                                 with_sign = with_sign , 
+                                                 precision = precision ,
+                                                 latex     = latex     )
+
+    ## remove forced sign from uncertainty 
+    if '%+' in fmte  : fmte = fmte.replace ( '%+' , '%' )
+        
     ## format asymmetric
     fea  = " {}_{-%s}^{+%s}" % ( fmte , fmte ) if latex else " -/%s +/%s" % ( fmte       , fmte )
     ## format symmetric 
     fes  = " \\pm %s"        % ( fmte        ) if latex else " %s %s"     % ( plus_minus , fmte ) 
-    
-    if expo : scale = 10 ** expo
-    else    : scale = 1 
 
+    
+    scale  = 10 ** expo if expo else 1 
     result = fmtv % ( value.value / scale ) 
-    for e in value.errors :
-        
+    for e in value.errors :        
         if e.symmetric : result += fes % (                              e.positive / scale )
         else           : result += fea % ( abs ( e.negative ) / scale , e.positive / scale )
 

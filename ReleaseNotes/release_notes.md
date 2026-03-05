@@ -7,7 +7,9 @@
   1. add "folding" for `RooDataSet` and extend the corresponding test
   1. add `dump` and `dump_table` methods to `RooDataSet` to dump the content of dataset in a table form
   1. fix `shared_entries` and `shared_data` methdos for `RooDataSet`
-  
+  1. major upgrade for `pdg_format` utiilty: reduce code & improve fuctionality 
+  1. add `PDG` option for pretty-print functions for `VE`, `VAE` and `VME` objects  
+
 ## Bug fixes
 
    1. Fix recently introduced bug (thanks to @DmitryYuGolubkov Dima Golubkov)  

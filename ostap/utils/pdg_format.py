@@ -41,18 +41,16 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2015-07-15"
 __version__ = "$Revision$"
 __all__ = (
-    'round_N'      , ## round floating value to N-significant digits
     'pdg_round'    , ## round value,error-pair according to PDG prescription
     'pdg_format_'  , ## format value&error according to PDG prescription
     'pdg_format'   , ## format value+2errors according to PDG
     )
 # ===============================================================================
-from   ostap.math.ve          import VE
-from   ostap.math.base        import ( frexp10  , round_N , 
-                                       isfinite , isclose , iszero, isequal )
+from   ostap.math.base        import frexp10
 from   ostap.core.ostap_types import integer_types, string_types
-from   ostap.logger.symbols   import times, plus_minus 
-import ROOT,  math, sys, enum  
+from   ostap.logger.pretty    import pretty_float 
+from   ostap.logger.symbols   import times, plus_minus
+import math, enum  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -67,9 +65,8 @@ class ErrMode(enum.IntEnum):
     MAX        = 2  ## Use maximal uncertainty 
     MEAN       = 3  ## Use mean
     AVERAGE    = 3  ## Use mean
-    GEOMETRIC  = 4  ## Use geometric mean
-    QUADRATIC  = 5  ## Use quadratic (root mean square) 
-    RMS        = 5  ## Use quadratic (root mean square) 
+    QUADRATIC  = 4  ## Use quadratic (root mean square) 
+    RMS        = 4  ## Use quadratic (root mean square) 
 
 # =============================================================================
 ## get the `reference/representative error' from the list of uncertainties
@@ -84,9 +81,12 @@ def ref_error ( mode , error , *errors ) :
     """
 
     if not errors  : return abs ( error ) 
-        
+
+    if not mode : mode = ErrMode.TOTAL 
+
     umode = mode
 
+        
     if isinstance ( mode , string_types ) :
         
         umode = mode.upper()
@@ -94,7 +94,6 @@ def ref_error ( mode , error , *errors ) :
         if   umode in ( 'MIMIMAL'    , 'MINIMUM' , 'MIN'     , 'MN'        ) : umode = ErrMode.MIN      .name 
         elif umode in ( 'MAXIMAL'    , 'MAXIMUM' , 'MAX'     , 'MX'        ) : umode = ErrMode.MAX      .name 
         elif umode in ( 'A' , 'AV'   , 'AVE'     , 'MEAN'                  ) : umode = ErrMode.AVERAGE  .name        
-        elif umode in ( 'G' , 'GEO'  , 'GEOM'    , 'GEOMET'  , 'GEOMETRIC' ) : umode = ErrMode.GEOMETRIC.name
         elif umode in ( 'Q' , 'QUAD' , 'QUADR'   , 'QUADRAT' , 'QUADRATIC' ) : umode = ErrMode.QUADRATIC.name
         elif umode in ( 'R' , 'RMS'                                        ) : umode = ErrMode.QUADRATIC.name
         elif umode                                                           : umode = ErrMode.TOTAL    .name 
@@ -124,9 +123,9 @@ def ref_error ( mode , error , *errors ) :
         
         result = abs ( error )  
         for e in errors :
-            if not e : continue  
-            ae = abs ( e ) 
-            result = ae if not result else min ( result , ae )          
+            ae = abs ( e )
+            if ae and 0 < ae :
+                result = ae if not result else min ( result , ae )          
         return result
     
     elif umode == ErrMode.MAX :
@@ -135,18 +134,7 @@ def ref_error ( mode , error , *errors ) :
         for e in errors : result = max ( result , abs ( e ) )            
         return result
     
-    elif umode == ErrMode.GEOMETRIC :
-        
-        result = abs ( error )
-        ne     = 1 
-        for e in errors :
-            ae = abs ( e )
-            if 0 < ae :
-                result *= ae
-                ne     += 1                 
-        return result if 0 == result else pow ( result , 1.0 / ne )
-    
-    elif umode == ErrMode.QUADRATIC :
+    elif umode == ErrMode.QUADRATIC or umode == ErrMode.RMS : 
         
         result = error * error 
         ne     = 1 
@@ -154,16 +142,16 @@ def ref_error ( mode , error , *errors ) :
             result += e * e 
             ne     += 1                 
         return result if 0 == result else math.sqrt ( result / ne )
-    
-    else :
-        
-        result = abs ( error )
-        ne     = 1 
-        for e in errors :
-            result += abs ( e ) 
-            ne     += 1                 
-        return result  / float ( ne ) 
 
+    
+    ## MEAN 
+    result = abs ( error )
+    ne     = 1 
+    for e in errors :
+        result += abs ( e ) 
+        ne     += 1                 
+    return result  / float ( ne ) 
+    
 
 # ==============================================================================
 #  Classify according to PDG prescription
@@ -284,9 +272,9 @@ def pdg_round ( value , error ) :
 #
 #  @code
 #  value, error = ...
-#  fmtv, fmte, expo = pdg_fmt  ( value , error )
+#  case , fmtv, fmte, expo = fmt_pdg ( value , error )
 #  @ndcode
-def pdg_fmt ( value , error ) :
+def fmt_pdg ( value , error ) :
     """ Format value and error according to PDG prescription
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     - see section 5.3 of doi:10.1088/0954-3899/33/1/001
@@ -300,18 +288,34 @@ def pdg_fmt ( value , error ) :
       we round up to 1000 and keep two significant digits.
       
     >>> value , error = ...
-    >>> fmtv, fmte, expo = pdg_fmt  ( value , error )
+    >>> case , fmtv, fmte, expo = fmt_pdg  ( value , error )
     """
     
     the_case , the_error , expo = pdg_case ( error )
     if  the_case <= 0 : return the_case , '%+g', '%g' , expo
         
     scale = 10 ** expo if expo else 1 
-    vv    = value / scale 
+    vv    = value / scale
+    
+    av    = abs ( vv ) 
     ev    = the_error
+
+    rr = expo % 3
+    
+    r0 = 0 == rr
+    r1 = 1 == rr
+    r2 = 2 == rr
+    
+    if   1 == the_case :
         
-    if   1 == the_case : return the_case  , '%+.2f' , '%.2f' , expo 
-        
+        if   r1             : return the_case  , '%+.1f' , '%.1f' , expo - 1 
+        elif r2 and 1 <= av : return the_case  , '%+.3f' , '%.3f' , expo + 1 
+        elif r2             : return the_case  , '%+.0f' , '%.0f' , expo - 2 
+        return the_case  , '%+.2f' , '%.2f' , expo 
+
+    if   r1 and 10 <= av : return the_case  , '%+.3f' , '%.3f' , expo + 2 
+    elif r1              : return the_case  , '%+.0f' , '%.0f' , expo - 1    
+    elif r2              : return the_case  , '%+.2f' , '%.2f' , expo + 1 
     return the_case , '%+.1f' , '%.1f' , expo 
 
        
@@ -329,9 +333,10 @@ def pdg_fmt ( value , error ) :
 #  value, error = ...
 #  result , expo = pdg_format_  ( value , error )
 #  @ndcode     
-def pdg_format_ ( value  , *errors , 
-                  mode   = 'TOTAL' , 
-                  latex  = False   ) :
+def pdg_format_ ( value         , *errors , 
+                  mode          = 'TOTAL' , 
+                  latex         = False   , 
+                  neglect_error = 1.1e-8  ) :
     """ Format value and error according to PDG prescription
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     - see section 5.3 of doi:10.1088/0954-3899/33/1/001
@@ -346,26 +351,23 @@ def pdg_format_ ( value  , *errors ,
       
     >>> value , error = ...
     >>> result , expo = pdg_format_ ( value , error )
-    """
-  
-    if not errors :
-        result = '%+g' % value
-        if parentheses : result = '( %s )' % result 
-        return result , 0 
+    """  
+    sumerr2  = sum (  float ( e ) * float ( e ) for e in errors )
+    if not errors or not sumerr2 or ( 0 < neglect_error and math.sqrt ( sumerr2 ) <= neglect_error * abs ( value ) ) : 
+        return pretty_float ( value , latex = latex , precision = 6 )
     
     ## get the representative error 
     the_error = ref_error ( mode , *errors )
     
     pm = ' %s ' %  ( '\\pm' if latex else plus_minus ) 
         
-    the_case , fmtv , fmte , expo = pdg_fmt ( value , the_error )
+    the_case , fmtv , fmte , expo = fmt_pdg ( value , the_error )
     if  the_case <= 0 :
         result  = ( fmtv % value ) + pm 
         result += pm.join ( ( fmte % e ) for e in errors )  
         return result , expo 
     
-    scale = 10 ** expo if expo else 1  
-    
+    scale   = 10 ** expo if expo else 1      
     result  = ( fmtv %  ( value / scale ) ) + pm 
     result += pm.join ( ( fmte % ( e / scale ) ) for e in errors )  
     
@@ -385,9 +387,10 @@ def pdg_format_ ( value  , *errors ,
 #  value, error = ...
 #  result = pdg_format ( value , error )
 #  @ndcode     
-def pdg_format ( value , *errors , 
-                 mode  = 'TOTAL' ,
-                 latex = False   ) :
+def pdg_format ( value         , *errors , 
+                 mode          = 'TOTAL' ,
+                 latex         = False   ,
+                 neglect_error = 1.1e-8  ) :
     
     """ Format value and error according to PDG prescription
     - see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
@@ -404,62 +407,24 @@ def pdg_format ( value , *errors ,
     >>> value , error = ...
     >>> result = pdg_format ( value , error )
     """
-    ## 
-    result, expo  = pdg_format_ ( value, *errors , mode = mode, latex = latex )
-    if not expo : return result 
-    
-    if latex : return '( %s )\\times 10^{%d}' % ( result , expo )
-    return '( %s ) %s 10^%+d' %  ( result , times , expo )
-     
+    ##
+    sumerr2  = sum (  float ( e ) * float ( e ) for e in errors )
+    if not errors or not sumerr2 or ( 0 < neglect_error and math.sqrt ( sumerr2 ) <= neglect_error * abs ( value ) ) : 
+        result , expo = pretty_float ( value , precision = 6 , latex = latex  )
+    else :    
+        result , expo  = pdg_format_ ( value, *errors , mode = mode, latex = latex , neglect_error = neglect_error )
+
+    if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
+    elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
+    ##
+    return result
+
 # =============================================================================
 if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    N = 37
-
-    rows = [ ( 'n1' , 'n2' , 'n3' , 'n4' , 'n5' ) ] 
-    for i in range ( 1 , N ) :
-        
-        v  = float(i)/N
-         
-        v1 = VE ( v        , 0.01 * v*v             )
-        v2 = VE ( v        , 0.01 * v*v/100         )
-        v3 = VE ( v        , 0.01 * v*v/10000       )
-        v4 = VE ( v        , 0.01 * v*v/1000000     )
-        v5 = VE ( v        , 0.01 * v*v/100000000   )
-        v6 = VE ( v        , 0.01 * v*v/10000000000 )
-        v7 = VE ( math.inf , 0.01 * v*v/10000000000 )
-        v8 = VE ( v        , math.nan        )
-        
-        for e in [ -100 , -50 , -10 ] + [ g for g in range ( -5 , 6 ) ] + [ 10 , 50 , 100 ] : 
-            
-            w1 = v1 * 10 ** e 
-            w2 = v2 * 10 ** e 
-            w3 = v3 * 10 ** e 
-            w4 = v4 * 10 ** e 
-            w5 = v5 * 10 ** e 
-            w6 = v6 * 10 ** e 
-            w7 = v7 * 10 ** e 
-            w8 = v8 * 10 ** e 
-            
-            row = ( pdg_format ( w1.value() , w1.error() ) ,
-                    pdg_format ( w2.value() , w2.error() ) ,
-                    pdg_format ( w3.value() , w3.error() ) ,
-                    pdg_format ( w4.value() , w4.error() ) ,
-                    pdg_format ( w5.value() , w5.error() ) ,
-                    pdg_format ( w6.value() , w6.error() ) ,
-                    pdg_format ( w7.value() , w7.error() ) ,
-                    pdg_format ( w8.value() , w8.error() ) ) 
-            
-            rows.append  ( row )
-            
-    import ostap.logger.table as T
-    logger.info ( 'PDG roundings:\n%s ' % T.table ( rows , prefix = '# ' , alignment = 'ccccc' ) ) 
-                  
-    logger.info ( 80*'*' )
-    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

@@ -558,7 +558,8 @@ def pretty_vae ( value               , * ,
                  width       = 6     ,
                  precision   = 4     ,
                  parentheses = True  ,
-                 latex       = False ) :
+                 latex       = False ,
+                 PDG         = ''    ) :
     """ Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
@@ -568,7 +569,8 @@ def pretty_vae ( value               , * ,
                           width       = width       ,
                           precision   = precision   ,
                           parentheses = parentheses ,
-                          latex       = latex       ) 
+                          latex       = latex       ,
+                          PDG         = PDG         ) 
 
 # =======================================================================
 ## Pretty print for the object
@@ -623,10 +625,9 @@ def nice_print ( what              , * ,
                                    latex     = latex     , **kwargs )
     
     if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-    elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+    elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
     ##
     return result
-
 
 # =======================================================================
 ## Pretty LaTeX print for the object
@@ -680,7 +681,8 @@ def pretty_vme ( value               , * ,
                  precision   = 4     ,
                  with_sign   = True  , 
                  parentheses = True  ,
-                 latex       = False ) :
+                 latex       = False ,
+                 PDG         = ''    ) :
     """ Nice printout of the ValueWithMultiError object  ( string + exponent)
     - return nice string and the separate exponent 
     >>> s , expo = pretty_ve ( number ) 
@@ -691,7 +693,8 @@ def pretty_vme ( value               , * ,
                           precision   = precision   ,
                           with_sign   = True        , 
                           parentheses = parentehses ,
-                          latex       = latex       ) 
+                          latex       = latex       ,
+                          PDG         = PDG         ) 
 
 # =============================================================================
 if '__main__' == __name__ :

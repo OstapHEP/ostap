@@ -570,8 +570,13 @@ def pretty_ve ( value               , * ,
     >>> s , expo = pretty_ve ( number ) 
     """
     assert isinstance ( value , VE ) , "Invalid `value' parameter: %s" % typename ( value )
-    ## decode object 
+    ## decode object
     v , e =  value.value () , max ( 0 , value.error () )
+    
+    if PDG :
+        import ostap.utils.pdg_format as pdg
+        return pdg.pdg_format_ ( v , e , latex = latex ) 
+        
     ## delegate
     from ostap.logger.pretty import pretty_error 
     return pretty_error ( v , e ,
@@ -592,7 +597,8 @@ def nice_ve ( value               , * ,
               precision   = 5     ,
               with_sign   = True  , 
               parentheses = True  ,
-              latex       = False ) :
+              latex       = False ,
+              PDG         = False ) :
     """ Nice ready-to-use printout of the ValueWithError object  ( string + exponent)
     >>> result =  nice_ve ( number ) 
     """
@@ -601,10 +607,11 @@ def nice_ve ( value               , * ,
                                precision   = precision   ,
                                with_sign   = with_sign   , 
                                parentheses = parentheses ,
-                               latex       = latex       )
+                               latex       = latex       ,
+                               PDG         = PDG         )
     
     if   expo and latex : result = '%s %s 10^{%+d}' % ( result , '\\times' , expo )
-    elif expo           : result = '%s%s10^%+d'     % ( result ,    times  , expo )
+    elif expo           : result = '%s %s 10^%+d'   % ( result ,    times  , expo )
     ##
     return result
 
