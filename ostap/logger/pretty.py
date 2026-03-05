@@ -121,13 +121,15 @@ def fmt_pretty_values ( *values             ,
 def the_expo ( value , *values ) :
     """ Get the effective exponent for the set of values
     - we use max abs
-    - we scale exponent by 10^3 to get scaled value 0.1<= a < 1000 
+    - we scale exponent by 10^3 to get scaled value 0.1 <= a < 1000 
     """
     av = abs ( value )
     for v in values : av = max ( av , abs ( v ) )
     ##
-    if   0.1 <= av < 1000 : return 0 
-    elif iszero ( av )    : return 0 
+    from ostap.math.base import iszero, frexp10
+    ## 
+    if   0.1 <= av < 1000        : return 0 
+    elif not av or iszero ( av ) : return 0 
     ##
     v_a , v_e = frexp10 ( av )
     v_ee      = v_e - 1
