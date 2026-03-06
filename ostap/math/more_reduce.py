@@ -1730,7 +1730,6 @@ def _omi_reduce_ ( s ) :
 
 Ostap.Math.Integrator. __reduce__ = _omi_reduce_
 
-
 # ============================================================================
 ## reduce 2D polynomial objects
 #  @see Ostap::Math::Bernstein2D
@@ -1755,6 +1754,31 @@ Ostap.Math.Bernstein2D  .__reduce__ = _b2d_reduce_
 Ostap.Math.Positive2D   .__reduce__ = _b2d_reduce_
 Ostap.Math.LegendreSum2 .__reduce__ = _b2d_reduce_
 
+# ============================================================================
+## Reduce Dual bernstein
+#  @see Ostap::Math::BernsteinDual
+def _b_Dual_reduce_ ( p ) :
+    """ Reduce Dual bernstein
+    - see `Ostap.Math.BernsteinDual`
+    """
+    return root_factory , ( type ( p ) ,
+                            p.N  (   ) ,
+                            p.k  (   ) )
+
+Ostap.Math.BernsteinDual  .__reduce__ = _b_Dual_reduce_
+
+# ============================================================================
+## Reduce Basic bernstein
+#  @see Ostap::Math::Bernstein::Basic 
+def _b_Basic_reduce_ ( p ) :
+    """ Reduce BAsic bernstein
+    - see `Ostap.Math.Bernstein.Basic`
+    """
+    return root_factory , ( type ( p ) ,
+                            p.k  (   ) ,
+                            p.N  (   ) )
+
+Ostap.Math.Bernstein.Basic .__reduce__ = _b_Basic_reduce_
 
 # ============================================================================
 ## Reduce KarlinShapley polynomials 

@@ -1074,6 +1074,7 @@ for model in ( Ostap.Math.Chebyshev               ,
                Ostap.Math.ChebyshevU              ,
                Ostap.Math.Legendre                ,
                Ostap.Math.Hermite                 ,
+               Ostap.Math.Bernstein.Basic         ,
                Ostap.Math.Bernstein               ,
                Ostap.Math.BernsteinEven           ,
                Ostap.Math.ChebyshevSum            ,
@@ -1361,6 +1362,8 @@ Ostap.Math.BernsteinDual.__getattr__ = _bdb_getattr_
 ## add some drawing method for some shapes 
 for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.BernsteinEven     , 
+               Ostap.Math.Bernstein.Basic   , 
+               Ostap.Math.BernsteinDual     , 
                Ostap.Math.Positive          ,
                Ostap.Math.PositiveEven      ,
                Ostap.Math.Monotonic         ,
@@ -2648,7 +2651,8 @@ _decorated_classes_ = set( [
     Ostap.Math.ConvexSpline           ,
     Ostap.Math.ConvexOnlySpline       ,
     #
-    Ostap.Math.BernsteinDual          ,
+    Ostap.Math.BernsteinDual     ,
+    Ostap.Math.Bernstein.Basic   ,
     ##
     Ostap.Math.Bernstein         ,
     Ostap.Math.BernsteinEven     , 

@@ -5,6 +5,7 @@
 // STD/STL 
 // ============================================================================
 #include <cmath>
+#include <map>
 #include <climits>
 #include <algorithm>
 // ============================================================================
@@ -16,16 +17,132 @@
 // ============================================================================
 //  local 
 // ============================================================================
-#include "choose_utils.h"
+#include "syncedcache.h"
 // ============================================================================
 /** @file 
- *  Calcualate binbomial coefficients and related quantities 
+ *  Calculaate binbomial coefficients and related quantities 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2015-03-08
  */
 // ============================================================================
 namespace 
 {
+  // ===================================================================
+  typedef std::numeric_limits<unsigned long long> ULLTYPE ;
+  static_assert ( ULLTYPE::is_specialized, "numeric_limits<unsigned long long> is not specialzaed!" ) ;
+  const unsigned long long     s_ULLMAX = ULLTYPE::max () ;
+  static const long double     s_emax   = std::log ( 0.2L * s_ULLMAX ) ;
+  static const unsigned short  s_digits = ULLTYPE::digits - 2          ;
+  // ======================================================================
+  /** calculate the binomial coefficient C(k,n) = n!/((n-k)!*k!)
+   *  In case of overflow std::numeric_limits<unsigned long long>::max is returned 
+   */
+  inline unsigned long long choose 
+  ( unsigned short n , 
+    unsigned short k ) 
+  {
+    //
+    // ====================================================================
+    //
+    if      ( k > n                ) { return 0 ; }
+    else if ( 0 == k || n == k     ) { return 1 ; }
+    else if ( 1 == k || n == k + 1 ) { return n ; }
+    else if ( 2 == k || n == k + 2 ) { return 1ull * n * ( n - 1 ) / 2 ; }
+    //
+    k = std::min ( k , (unsigned short) ( n - k ) ) ;
+    //
+    unsigned long long       r = 1  ;
+    const unsigned long long L = s_ULLMAX / n ; 
+    for ( unsigned short d = 1 ; d <= k  ; ++d , --n ) 
+    {
+      // if ( r > s_ULLMAX / n * d ) { return s_ULLMAX ; }  //  RETURN
+      if ( r > L * d ) { return s_ULLMAX ; }  //  RETURN
+      r = ( r / d ) * n + ( r % d ) * n / d;
+    }
+    return r ;
+  }
+  // =====================================================================
+  /** calculate the inverse binomial coefficient 
+   */
+  inline long double ichoose 
+  ( const unsigned short n , 
+    const unsigned short k ) 
+  {
+    //
+    if      ( k > n                ) { return 0        ; }
+    else if ( 0 == k || n == k     ) { return 1        ; }
+    else if ( 1 == k || n == k + 1 ) { return 1.0L / n ; }
+    else if ( 2 == k || n == k + 2 ) { return 2.0L / ( 1ull * n * ( n - 1 ) ) ; }
+    else if ( n <= 67              ) { return 1.0L / Ostap::Math::choose ( n , k ) ; }
+    //
+    const unsigned short kk = std::min ( k , (unsigned short) ( n - k ) ) ;
+    //
+    if ( 120 <= kk )
+    {
+      const long double logr =
+	std::lgamma ( 1.0L +      kk ) +
+	std::lgamma ( 1.0L + n  - kk ) -
+	std::lgamma ( 1.0L + n       ) ;
+      return  std::exp ( logr ) ;
+    }
+    //
+    long double r = 1  ;
+    for ( unsigned short i = 1 ; i <= kk  ; ++i ) 
+    {
+      r *= i ;
+      r /= ( n + 1 - i ) ;
+      if ( !r ) { return r ; }
+    }
+    return r ;
+  }
+  // ======================================================================
+  /*  calculate the logarithm of binomial coefficient
+   *  \f$ \log C^n_k \f$
+   */
+  // ======================================================================
+  inline long double log_choose
+  ( const unsigned short n ,
+    const unsigned short k ) 
+  {
+    if      ( k <= 1 || k >= n ) { return 0 ; } //
+    else if ( n <= 67 )          { return std::log ( 1.0L * Ostap::Math::choose ( n , k ) ) ; }
+    //
+    const unsigned  short k1 = 2*k < n ? k : n - k ;
+    if ( k1 * std::log2 ( M_E * n / k1 ) < 63 ) 
+      { return std::log ( 1.0L * Ostap::Math::choose ( n , k ) ) ; }
+    // 
+    return 
+      std::lgamma ( 1.0L + n     ) - 
+      std::lgamma ( 1.0L + k     ) - 
+      std::lgamma ( 1.0L + n - k ) ;
+  }
+  // ======================================================================
+  /// evaluate the binomial coefficient as long double C(k,n) = n!/((n-k)!*k!)
+  inline long double choose_long_double 
+  ( const unsigned short n ,
+    const unsigned short k ) 
+  {
+    //
+    // ====================================================================
+    //
+    if      ( k > n            ) { return 0 ; }
+    else if ( 0 == k || n == k ) { return 1 ; }
+    else if ( n < s_digits     ) { return 1.0L * Ostap::Math::choose ( n , k ) ; }
+    else if ( n <= 67          ) { return 1.0L * Ostap::Math::choose ( n , k ) ; }
+    //
+    const unsigned  short k1 =  2 * k < n ? k : n - k ;
+    if ( k1 * std::log2 ( M_E * n / k1 ) < 63 )
+      { return Ostap::Math::choose ( n , k1 ) ; }
+    //
+    long double a = std::lgamma ( ( long double )     n + 1 )  ;
+    if ( a < s_emax ) { return Ostap::Math::choose ( n , k1 ) ; }
+    a            -= std::lgamma ( ( long double ) n - k + 1 ) ;
+    if ( a < s_emax ) { return Ostap::Math::choose ( n , k1 ) ; }
+    a            -= std::lgamma ( ( long double )     k + 1 ) ;
+    if ( a < s_emax ) { return Ostap::Math::choose ( n , k1 ) ; }
+    //
+    return std::exp ( a ) ;
+  }
   // ==========================================================================
   inline unsigned long long _stirling_ 
   ( const unsigned short n ,
@@ -64,9 +181,53 @@ unsigned long long
 Ostap::Math::choose 
 ( const unsigned short n , 
   const unsigned short k ) 
-{ return  Ostap::Math::Utils::choose ( n , k ) ; }
+{
+  //
+  if      ( k > n                ) { return 0 ; }
+  else if ( 0 == k || n == k     ) { return 1 ; }
+  else if ( 1 == k || n == k + 1 ) { return n ; }
+  else if ( 2 == k || n == k + 2 ) { return 1ull * n * ( n - 1 ) / 2 ; }
+  //
+  const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
+  //
+  typedef std::pair<unsigned short,unsigned short> KEY    ;
+  typedef unsigned long long                       RESULT ;
+  typedef std::map<KEY,RESULT>                     MAP    ;
+  typedef SyncedCache<MAP>                         CACHE  ;
+  /// the cache
+  static CACHE                        s_CACHE     {} ; // the cache
+  static const std::size_t            s_MAX_CACHE { 4000 } ;
+  //
+  // 
+  const KEY key { n , m } ;
+  //
+  { // (1) check a value already calculated
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) calculate it using Pascal's rule : 
+  //
+  const RESULT p1 = choose ( n - 1 , m - 1 ) ;
+  if ( s_ULLMAX <= p1 ) { return p1 ; }
+  //
+  const RESULT p2 = choose ( n - 1 , m     ) ;
+  if ( s_ULLMAX <= p2 ) { return p2 ; }
+  //
+  const RESULT result = p1 + p2 ;
+  if ( s_ULLMAX <= result ) { return result ; }
+  //
+  {  // (3) add valid calculated value into the cache 
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear () ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }  
+  //
+  return result ;
+}
 // ============================================================================
-/*  calculate the inverse binomial conefficient 
+/*  calculate the inverse binomial coefficient 
  *  \f$ a = C(n,k)^{-1} = \frac{ (n-k)!k!}{n!}\f$
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2020-01-31
@@ -75,17 +236,88 @@ Ostap::Math::choose
 double Ostap::Math::ichoose 
 ( const unsigned short n , 
   const unsigned short k ) 
-{ return  Ostap::Math::Utils::ichoose ( n , k ) ; }
+{
+  //
+  if      ( k > n                ) { return 0        ; }
+  else if ( 0 == k || n == k     ) { return 1        ; }
+  else if ( 1 == k || n == k + 1 ) { return 1.0L / n ; }
+  else if ( 2 == k || n == k + 2 ) { return 2.0L / ( 1ull * n * ( n - 1 ) ) ; }
+  //
+  const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
+  //
+  typedef std::pair<unsigned short,unsigned short> KEY    ;
+  typedef double                                   RESULT ; 
+  typedef std::map<KEY,RESULT>                     MAP    ;
+  typedef SyncedCache<MAP>                         CACHE  ;
+  /// the cache
+  static CACHE                        s_CACHE     {} ; // the cache
+  static const std::size_t            s_MAX_CACHE { 10000 } ;
+  //
+  const KEY key { n , m } ;
+  //
+  { // (1) check a value already calculated
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) calculate it!
+  const double result = ::ichoose ( n , m ) ;
+  //
+  { // (3) add calculated value into the cache
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }  
+  //
+  return result ;
+}
 // ============================================================================
 /** calculate the binomial coefficient C(k,n) = n!/((n-k)!*k!)
  *  @author Vanya BELYAEV Ivan.Belyaev@irep.ru
  *  @date 2015-03-08
  */
 // ============================================================================
-double Ostap::Math::choose_double 
+long double
+Ostap::Math::choose_double 
 ( const unsigned short n , 
   const unsigned short k ) 
-{ return  Ostap::Math::Utils::choose_long_double ( n , k ) ; }
+{
+  //
+  if      ( k > n            ) { return 0 ; }
+  else if ( 0 == k || n == k ) { return 1 ; }
+  else if ( n <= 67          ) { return Ostap::Math::choose ( n , k ) ; }
+  //
+  const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
+  //
+  typedef std::pair<unsigned short,unsigned short> KEY    ; 
+  typedef long double                              RESULT ;
+  typedef std::map<KEY,RESULT>                     MAP    ;
+  typedef SyncedCache<MAP>                         CACHE  ;
+  /// the cache
+  static CACHE                        s_CACHE     {} ; // the cache
+  static const std::size_t            s_MAX_CACHE { 10000 } ;
+  // 
+  const KEY key { n , m } ;
+  //
+  // 
+  { // (1) check a value already calculated
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) calculate it!
+  const RESULT result = ::choose_long_double ( n , m ) ;
+  //
+  { // (3) add calculated value into the cache
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }  
+  //
+  return result ;
+}
 // ============================================================================
 /*  calculate the generalized binomial coefficient C(a,n) 
  *  \f$C(\alpha,k) = \frac{\alpha}{k}\frac{\alpha-1}{k-1}...\f$
@@ -153,7 +385,39 @@ double Ostap::Math::choose_half
 double Ostap::Math::log_choose 
 ( const unsigned short n ,
   const unsigned short k ) 
-{ return Ostap::Math::Utils::log_choose ( n , k ) ; }
+{
+  if      ( k <= 1 || k >= n ) { return 0 ; } //
+  //
+  const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
+  //
+  typedef std::pair<unsigned short,unsigned short> KEY    ;
+  typedef double                                   RESULT ;
+  typedef std::map<KEY,RESULT>                     MAP    ;
+  typedef SyncedCache<MAP>                         CACHE  ;
+  /// the cache
+  static CACHE                        s_CACHE     {} ; // the cache
+  static const std::size_t            s_MAX_CACHE { 10000 } ;
+  //
+  const KEY key { n , m } ;
+  //
+  // 
+  { // (1) check a value already calculated
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) calculate it!
+  const RESULT result = ::log_choose ( n , m ) ;
+  //
+  { // (3) add calculated value into the cache
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }  
+  //
+  return result ;
+}
 // ============================================================================
 /* calculate unsigned Stirling number of 1st kind 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -175,8 +439,6 @@ double Ostap::Math::stirling1_double
   const unsigned short k ) 
 { return _stirling_double_ ( n , k ) ; }  
 // ========================================================================
-
-
 
 // ============================================================================
 // The END 

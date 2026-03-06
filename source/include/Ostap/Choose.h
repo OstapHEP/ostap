@@ -32,7 +32,7 @@ namespace Ostap
     ( const unsigned short n ,
       const unsigned short k ) ;
     // ========================================================================
-    /** calculate the inverse binomial conefficient 
+    /** calculate the inverse binomial coefficient 
      *  \f$ a = C(n,k)^{-1} = \frac{ (n-k)!k!}{n!}\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2020-01-31
@@ -54,7 +54,8 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@irep.ru
      *  @date 2015-03-08
      */
-    double choose_double 
+    long double
+    choose_double 
     ( const unsigned short n , 
       const unsigned short k ) ;
     // ========================================================================
@@ -131,7 +132,7 @@ namespace Ostap
     }; 
     // ========================================================================
     /** Compile-time generation of the sequence of Stirling numbers of 1st kind 
-     *  useful for implementatinoof Pochhammer symbols 
+     *  useful for implementatino of Pochhammer symbols 
      *  @code
      *  std::array<double,7> p7 = stirling_array<double,6>() ;
      *  @endcode 

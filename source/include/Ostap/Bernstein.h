@@ -69,10 +69,42 @@ namespace Ostap
         // ====================================================================
       public :
         // ====================================================================
+	///  evaluate the basic Bernstein polynomial
+	inline double evaluate    ( const double x ) const
+	{ return evaluate ( m_k , m_N , x ) ; } 
+	inline double operator () ( const double x ) const
+	{ return evaluate ( m_k , m_N , x ) ; } 
+        // ====================================================================
+      public : 
+        // ====================================================================
+	/// get the 1st derivative
+	double derivative ( const double x ) const ;
+	/// get the definite intergal \f$ \int_{0}^{x} f(x)dx \f$ 
+	double integral   ( const double x ) const ;
+	/// get the definite intergal \f$ \int_{a}^{b} f(x)dx \f$ 
+	double integral
+	( const double a ,
+	  const double b ) const ;
+        // ====================================================================
+      public :
+        // ====================================================================
 	/// polynomial index 
-        unsigned short k () const { return m_k ; }
+        inline unsigned short k () const { return m_k ; }
 	/// polynomial degree 
-        unsigned short N () const { return m_N ; }
+        inline unsigned short N () const { return m_N ; }
+        // ====================================================================
+      protected :
+        // ====================================================================
+	/** evaluate the polynomial
+	 *  @param k polynomial index
+	 *  @param n polynomial degree
+	 *  @param x the argumnet
+	 *  @reutrn the value of basic Bernstein polynomial (k,n) at point x
+	 */
+	static double evaluate
+	( const unsigned short k ,
+	  const unsigned short n ,
+	  const double         x ) ;
         // ====================================================================
       private:
         // ====================================================================
@@ -1062,11 +1094,6 @@ namespace Ostap
     class BernsteinDual 
     {
       // ======================================================================
-    public :
-      // ======================================================================
-      unsigned short k () const { return m_k                  ; }
-      unsigned short N () const { return m_bernstein.degree() ; }
-      // ======================================================================
     public:
       // ======================================================================
       /// constructor from the order
@@ -1074,27 +1101,32 @@ namespace Ostap
       ( const unsigned short N     = 0 ,
         const unsigned short k     = 0 ) ;
       // ======================================================================
+    public :
+      // ======================================================================
+      unsigned short k () const { return m_k                  ; }
+      unsigned short N () const { return m_bernstein.degree() ; }
+      // ======================================================================
     public:
       // ======================================================================
       /// calculate the value of dual bernstein function
-      double operator() ( const double x ) const
+      inline double operator() ( const double x ) const
       { return m_k <= N() ? m_bernstein ( x ) : 0.0 ; }
       // ======================================================================
     public:
       // ======================================================================
       ///  get the parameters
-      double par ( const unsigned short i ) const { return m_bernstein.par( i ) ; }
+      inline double par ( const unsigned short i ) const { return m_bernstein.par( i ) ; }
       ///  get all parameters
-      const std::vector<double>& pars()     const { return m_bernstein.pars() ; }
+      inline const std::vector<double>& pars()     const { return m_bernstein.pars() ; }
       ///  get the underlying bernstein polynomial
-      const Bernstein& bernstein ()         const { return m_bernstein ; }
+      inline const Bernstein& bernstein ()         const { return m_bernstein ; }
       // ======================================================================
     public:
       // ======================================================================
       /// swap  them!
       void swap ( BernsteinDual& right ) ;
       ///  get the tag 
-      std::size_t tag () const { return m_bernstein.tag () ; }
+      inline std::size_t tag () const { return m_bernstein.tag () ; }
       // ======================================================================
     private:
       // ======================================================================

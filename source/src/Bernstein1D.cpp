@@ -329,7 +329,7 @@ bool Ostap::Math::Positive::updateBernstein ()
     const long double r         = m_sphereR . x2 ( 0 ) ;
     ///
     std::array<long double,3> v2 = { { 0.0 , 0.0 , 0.0 } } ;
-    Ostap::Math::Utils::bernstein2_from_roots ( r , r , v2 ) ;
+    ::bernstein2_from_roots ( r , r , v2 ) ;
     //
     const long double sv = v2 [ 0 ] + v2 [ 1 ] + v2 [ 2 ] ;
     const long double na = alpha * norm / sv ;
@@ -381,17 +381,17 @@ bool Ostap::Math::Positive::updateBernstein ()
   for ( unsigned short iR = 0 ; iR < nR ; ++iR ) 
   {
     const long double r  = m_rs [ iR ] ;    
-    Ostap::Math::Utils::bernstein2_from_roots ( r , r , br ) ;
+    ::bernstein2_from_roots ( r , r , br ) ;
     //
     if ( 0 == iR % 2 ) 
     {
-      Ostap::Math::Utils::b_multiply ( m_v1.begin () , m_v1.begin () + n1 , br , m_aux.begin () );
+      ::b_multiply ( m_v1.begin () , m_v1.begin () + n1 , br , m_aux.begin () );
       n1  += 2 ;
       std::swap  ( m_v1 , m_aux ) ;
     }
     else 
     {
-      Ostap::Math::Utils::b_multiply ( m_v2.begin () , m_v2.begin () + n2 , br , m_aux.begin () );
+      ::b_multiply ( m_v2.begin () , m_v2.begin () + n2 , br , m_aux.begin () );
       n2  += 2 ;
       std::swap  ( m_v2 , m_aux ) ;      
     }

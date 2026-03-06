@@ -54,6 +54,61 @@ Ostap::Math::Bernstein::Basic::Basic
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
+//  evaluate the basic Bernstein polynomial
+// ============================================================================
+double  Ostap::Math::Bernstein::Basic::evaluate
+( const unsigned short k ,
+  const unsigned short N ,
+  const double         x )
+{
+  //
+  if      ( N < k  ) { return 0 ; }
+  else if ( !k     ) { return Ostap::Math::POW ( 1.0L - x , N ) ; }
+  else if ( N == k ) { return Ostap::Math::POW ( 0.0L + x , k ) ; }
+  //
+  const unsigned short kk =     k ;
+  const unsigned short nk = N - k ;
+  //
+  const double p1 = Ostap::Math::POW ( 0.0L + x  , kk ) ;
+  const double p2 = Ostap::Math::POW ( 1.0L - x  , nk ) ;
+  //
+  return N < 60 ?
+    Ostap::Math::choose        ( N , k ) * p1 * p2 : 
+    Ostap::Math::choose_double ( N , k ) * p1 * p2 ;
+}
+// ============================================================================
+// get the 1st derivative
+// ============================================================================
+double Ostap::Math::Bernstein::Basic::derivative
+( const double x ) const  
+{
+  if ( !m_N ) { return 0 ; }
+  //
+  const double a1 = !m_k        ? 0.0 : evaluate ( m_k - 1 , m_N - 1 , x ) ; 
+  const double a2 =  m_k == m_N ? 0.0 : evaluate ( m_k     , m_N - 1 , x ) ; 
+  //
+  return m_N * ( a1 - a2 );
+}
+// ============================================================================
+// get the definite integral \f$ \int_{0}^{x} f(x)dx \f$ 
+// ============================================================================
+double Ostap::Math::Bernstein::Basic::integral
+( const double x ) const
+{
+  double result = 0 ;
+  const unsigned short np1 = m_N + 1 ; 
+  for ( unsigned short j = m_k + 1 ; j <= np1 ; ++j )  
+  { result += evaluate ( j , np1 , x ) ; }
+  return result / np1 ;
+}
+// ============================================================================
+// get the definite integral \f$ \int_{a}^{b} f(x)dx \f$ 
+// ============================================================================
+double Ostap::Math::Bernstein::Basic::integral
+( const double a ,
+  const double b ) const
+{ return s_equal ( a , b ) ? 0.0 : ( integral ( b ) - integral ( a ) ) ;}
+// ============================================================================
 // constructor from the order
 // ============================================================================
 Ostap::Math::Bernstein::Bernstein
@@ -261,8 +316,8 @@ Ostap::Math::Bernstein::Bernstein
   for  ( const double r : roots_real )
   {
     const double tr = t ( r ) ;
-    Ostap::Math::Utils::bernstein1_from_roots ( tr , v1 ) ;
-    Ostap::Math::Utils::b_multiply ( m_pars.begin() , m_pars.begin() + m , v1 , vtmp.begin() ) ;
+    ::bernstein1_from_roots ( tr , v1 ) ;
+    ::b_multiply ( m_pars.begin() , m_pars.begin() + m , v1 , vtmp.begin() ) ;
     std::swap  ( m_pars , vtmp ) ;
     ++m ;
   }
@@ -271,8 +326,8 @@ Ostap::Math::Bernstein::Bernstein
   const double idx = 1.0 / ( m_xmax - m_xmin ) ;
   for  ( std::complex<double> r : roots_complex ) 
   {
-    Ostap::Math::Utils::bernstein2_from_roots ( ( r - m_xmin ) * idx , v2 ) ;
-    Ostap::Math::Utils::b_multiply ( m_pars.begin() , m_pars.begin() + m , v2 , vtmp.begin() ) ;
+    ::bernstein2_from_roots ( ( r - m_xmin ) * idx , v2 ) ;
+    ::b_multiply ( m_pars.begin() , m_pars.begin() + m , v2 , vtmp.begin() ) ;
     std::swap ( m_pars , vtmp ) ;
     m += 2 ;
   }
@@ -449,7 +504,7 @@ Ostap::Math::Bernstein::derivative
   const double t0 = t ( x ) ;
   const double t1 = 1 - t0  ;
   //
-  return Ostap::Math::Utils::casteljau 
+  return ::casteljau 
     ( m_aux.begin () + 1        , 
       m_aux.begin () + npars () , t0 , t1 ) * 
     ( npars () - 1 ) / ( m_xmax - m_xmin ) ;
@@ -487,8 +542,8 @@ double Ostap::Math::Bernstein::evaluate ( const double x ) const
   // start de casteljau algorithm:
   if ( degree() + 2 > m_aux.size() ) { m_aux.resize ( degree () + 2 ) ; }
   std::copy ( m_pars.begin() , m_pars.end() , m_aux.begin() ) ;
-  return Ostap::Math::Utils::casteljau ( m_aux.begin ()            , 
-                                         m_aux.begin () + npars () , t0 , t1 ) ;
+  return ::casteljau ( m_aux.begin ()            , 
+		       m_aux.begin () + npars () , t0 , t1 ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein&
@@ -950,10 +1005,9 @@ Ostap::Math::Bernstein::imul
   std::vector<double> result ( m + n + 1 )  ;
   m_aux .resize ( m + n + 2 ) ;
   //
-  Ostap::Math::Utils::b_multiply
-    ( m_pars        . begin () ,         m_pars . end () ,
-      other.m_pars  . begin () , other . m_pars . end () , 
-      result        . begin () ) ;
+  ::b_multiply ( m_pars        . begin () ,         m_pars . end () ,
+		 other.m_pars  . begin () , other . m_pars . end () , 
+		 result        . begin () ) ;
   //
   std::swap ( m_pars , result ) ;
   // 
@@ -1072,10 +1126,9 @@ Ostap::Math::Bernstein::mul
   //
   Bernstein result ( m + n , xmin() , xmax() ) ;  
   //
-  Ostap::Math::Utils::b_multiply
-    ( m_pars        . begin () ,         m_pars . end () ,
-      other.m_pars  . begin () , other . m_pars . end () , 
-      result.m_pars . begin () ) ;
+  ::b_multiply ( m_pars        . begin () ,         m_pars . end () ,
+		 other.m_pars  . begin () , other . m_pars . end () , 
+		 result.m_pars . begin () ) ;
   //
   return result ; 
 }
@@ -1795,8 +1848,7 @@ double Ostap::Math::casteljau
   const long double t0 =     x  ;
   const long double t1 = 1 - t0 ;
   //
-  return Ostap::Math::Utils::casteljau 
-    ( _tmp.begin() , _tmp.end  () , t0 , t1 ) ;
+  return ::casteljau ( _tmp.begin() , _tmp.end  () , t0 , t1 ) ;
 }
 // ============================================================================
 namespace 
@@ -2626,28 +2678,30 @@ Ostap::Math::BernsteinDual::BernsteinDual
   : m_k         ( j ) 
   , m_bernstein ( N ) 
 {
-  if ( j <= N ) 
+  Ostap::Assert ( j <= N                                  ,
+		  "Invaild Bernstein-Dual index!"         ,
+		  "Ostap::Math::BernsteinDual"            ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+
+  const unsigned short n = N ;
+  for ( unsigned short k = 0 ; k <= N ; ++k ) 
   {
-    const unsigned short n = N ;
-    for ( unsigned short k = 0 ; k <= N ; ++k ) 
+    double ck = 0.0 ;
+    const unsigned short imax = std::min ( j ,  k ) ;
+    for ( unsigned short i = 0 ; i <= imax ; ++i ) 
     {
-      double ck = 0.0 ;
-      const unsigned short imax = std::min ( j ,  k ) ;
-      for ( unsigned short i = 0 ; i <= imax ; ++i ) 
-      {
-        long double a = 2 * i + 1 ;
-        a *= c_nk (  n + i + 1 , n - j ) ;
-        a *= c_nk (  n - i     , n - j ) ;
-        a *= c_nk (  n + i + 1 , n - k ) ;
-        a *= c_nk (  n - i     , n - k ) ;
-        //
-        ck += a ;
-      }
-      ck /= ( c_nk ( n , j ) * c_nk ( n , k ) ) ;
-      if ( ( j + k )  % 2 ) { ck = -ck ; }
-      m_bernstein.setPar ( k , ck ) ;
+      long double a = 2 * i + 1 ;
+      a *= c_nk (  n + i + 1 , n - j ) ;
+      a *= c_nk (  n - i     , n - j ) ;
+      a *= c_nk (  n + i + 1 , n - k ) ;
+      a *= c_nk (  n - i     , n - k ) ;
+      //
+      ck += a ;
     }
-  } 
+    ck /= ( c_nk ( n , j ) * c_nk ( n , k ) ) ;
+    if ( ( j + k )  % 2 ) { ck = -ck ; }
+    m_bernstein.setPar ( k , ck ) ;
+  }
 }
 // ============================================================================
 // swap  them!
@@ -2674,7 +2728,7 @@ Ostap::Math::BernsteinDualBasis::basis
     // ========================================================================
     STORE::Lock lock ( s_store.mutex() ) ;
     auto it = s_store->find ( N ) ;
-    if  ( s_store->end() != it ) { return &(it->second) ; }
+    if ( s_store->end() != it ) { return &(it->second) ; }
     // ========================================================================
   } // ========================================================================
   // ==========================================================================
