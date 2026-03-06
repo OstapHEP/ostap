@@ -1,3 +1,5 @@
+# v3.6.6.9 
+
 ## New features
 
   1. Sigmoid type can be also specified by the string/"sigmoid name" (not only by enum!)
