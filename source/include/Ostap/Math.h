@@ -15,6 +15,9 @@
 #include <array>
 #include <utility>
 #include <type_traits>
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
+#include <numbers>
+#endif
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -617,7 +620,7 @@ namespace Ostap
       {
         return 
           v.empty() || v.end() == std::find_if 
-          ( v.begin() , v.end() , std::not1 ( m_cmp ) ) ;
+          ( v.begin() , v.end() , std::not_fn ( m_cmp ) ) ;
       }
       // ======================================================================
     private :
@@ -1684,7 +1687,11 @@ namespace Ostap
       static double volume () { return unit_volume   ; }
       /// volume of uinit n-ball is : 2*pi/n*V(n-2) 
       static constexpr double unit_volume =
-        ( 2 * M_PIl * NBallVolume_<N-2>::unit_volume ) / N  ;
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
+        ( 2 * std::numbers::pi_v<long double>         * NBallVolume_<N-2>::unit_volume ) / N  ;
+#else 
+        ( 2 * 3.141592653589793238462643383279502884L * NBallVolume_<N-2>::unit_volume ) / N  ;
+#endif 
       // ======================================================================
     } ;
     // ========================================================================

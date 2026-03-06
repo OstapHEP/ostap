@@ -11,6 +11,10 @@
 #include <initializer_list>
 #include <vector>
 #include <cmath>
+#include <type_traits>
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
+#include <numbers>
+#endif 
 // ============================================================================
 // Ostap 
 // ============================================================================
@@ -39,6 +43,18 @@ namespace Ostap
   // ==========================================================================
   namespace Math
   {
+    // ========================================================================
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
+    // ========================================================================
+    /// @var s_PI   constant pi
+    constexpr long double s_PI { std::numbers::pi_v<long double>      } ;
+    // ========================================================================
+#else // ======================================================================
+    // ========================================================================
+    /// @var s_PI   constant pi
+    constexpr long double s_PI  = 3.141592653589793238462643383279502884L /* pi */ ;
+    // ========================================================================
+#endif // =====================================================================
     // ========================================================================
     // Chebyshev 
     // ========================================================================
@@ -274,7 +290,7 @@ namespace Ostap
     inline const std::array<double,N>& Chebyshev_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double  
-      { return -std::cos ( ( 2 * k + 1 ) * M_PIl / ( 2 * N ) ) ; } ;
+      { return -std::cos ( ( 2 * k + 1 ) * s_PI / ( 2 * N ) ) ; } ;
       static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
@@ -284,7 +300,7 @@ namespace Ostap
     inline const std::array<double,N-1>& Chebyshev_<N>::extrema ()
     {
       auto extremum = []( unsigned int k ) -> double 
-      { return -std::cos ( ( k + 1 ) * M_PIl / N ) ; } ;
+      { return -std::cos ( ( k + 1 ) * s_PI / N ) ; } ;
       static const std::array<double,N-1> s_extrema { make_array ( extremum , std::make_index_sequence<N-1>() ) } ;
       return s_extrema ;
     }
@@ -398,7 +414,7 @@ namespace Ostap
     inline const std::array<double,N>& ChebyshevU_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double 
-        { return - std::cos ( ( k + 1 ) * M_PIl / ( N + 1 ) ) ; } ;
+        { return - std::cos ( ( k + 1 ) * s_PI / ( N + 1 ) ) ; } ;
       static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
@@ -483,7 +499,7 @@ namespace Ostap
     inline const std::array<double,N>& Chebyshev3_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double 
-      { return std::cos ( ( 2 * N - 2 * k - 1 ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
+      { return std::cos ( ( 2 * N - 2 * k - 1 ) * s_PI / ( 2 * N + 1 ) ) ; } ;
       static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
@@ -528,7 +544,7 @@ namespace Ostap
     inline const std::array<double,N>& Chebyshev4_<N>::roots ()
     {
       auto root = []( unsigned int k ) -> double 
-      { return std::cos ( ( 2 * N - 2 * k ) * M_PIl / ( 2 * N + 1 ) ) ; } ;
+      { return std::cos ( ( 2 * N - 2 * k ) * s_PI / ( 2 * N + 1 ) ) ; } ;
       static const std::array<double,N> s_roots { make_array ( root , std::make_index_sequence<N>() ) } ;
       return s_roots ;
     }
@@ -845,7 +861,7 @@ namespace Ostap
         inline double operator()      ( const double    x ) const { return evaluate ( x ) ; }
         static inline double evaluate ( const double /* x */ )    
         {
-          static const long double s_P00 = std::sqrt ( 1.0L / ( 4 * M_PIl ) ) ;
+          static const long double s_P00 = std::sqrt ( 1.0L / ( 4 * s_PI ) ) ;
           return s_P00 ; 
         }
       };
@@ -3085,7 +3101,7 @@ namespace Ostap
       //
       const double xhs = 0.5 * ( xmin + xmax ) ;
       const double xhd = 0.5 * ( xmax - xmin ) ;
-      const long double pi_N = M_PIl / N ;
+      const long double pi_N = s_PI / N ;
       auto _xi_ = [xhs,xhd,pi_N] ( const unsigned short k ) 
         { return std::cos ( pi_N * ( k + 0.5 ) ) * xhd + xhs ; } ;
       for ( unsigned short i = 0 ; i < N ; ++i ) { fv[i] = func ( _xi_ ( i ) ) ; }
