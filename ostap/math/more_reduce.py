@@ -306,8 +306,10 @@ def _om2g_reduce_ ( peak ) :
     - see `Ostap.Math.GoubleGauss`
     """
     return root_factory , ( type ( peak ) ,
-                            peak.m0       () , peak.sigma() ,
-                            peak.fraction () , peak.scale() ) 
+                            peak.m0          () ,
+                            peak.sigma       () ,
+                            peak.fraction    () ,
+                            peak.sigma_scale () ) 
 
 Ostap.Math.DoubleGauss. __reduce__ = _om2g_reduce_
 
@@ -319,8 +321,10 @@ def _om2g2_reduce_ ( peak ) :
     - see `Ostap.Math.GoubleGauss2`
     """
     return root_factory , ( type ( peak ) ,
-                            peak.m0       () , peak.sigma() ,
-                            peak.fraction () , peak.delta() ) 
+                            peak.m0       () ,
+                            peak.sigma    () ,
+                            peak.fraction () ,
+                            peak.delta    () ) 
 
 Ostap.Math.DoubleGauss2. __reduce__ = _om2g2_reduce_
 

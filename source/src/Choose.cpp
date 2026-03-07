@@ -31,7 +31,7 @@ namespace
   typedef std::numeric_limits<unsigned long long> ULLTYPE ;
   static_assert ( ULLTYPE::is_specialized, "numeric_limits<unsigned long long> is not specialzaed!" ) ;
   const unsigned long long s_ULLMAX = ULLTYPE::max () - 1 ;
-  const long double        s_emax   = std::log ( 0.2L * s_ULLMAX ) ;
+  const long double        s_emax   = std::log ( 0.4L * ( s_ULLMAX / 2 ) ) ;
   // ======================================================================
   /** calculate the binomial coefficient C(k,n) = n!/((n-k)!*k!)
    *  In case of overflow std::numeric_limits<unsigned long long>::max is returned 

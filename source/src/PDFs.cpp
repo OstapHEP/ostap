@@ -9875,20 +9875,16 @@ Double_t Ostap::Models::TwoExpos::analyticalIntegral
 // constructor from all parameters 
 // ============================================================================
 Ostap::Models::DoubleGauss::DoubleGauss
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          sigma     ,  // narrow sigma 
-  RooAbsReal&          fraction  ,  // fraction of narrow sigma 
-  RooAbsReal&          scale     ,  // wide/narrow sigma ratio    
-  RooAbsReal&          mean      )  // mean, presumably  fixed at 0
-  //
-  : RooAbsPdf( name , title ) 
-  , m_x        ( "!x"         , "Observable"          , this , x        ) 
-  , m_sigma    ( "!sigma"     , "Narrow sigma"        , this , sigma    ) 
-  , m_fraction ( "!fraction"  , "Fraction"            , this , fraction ) 
-  , m_scale    ( "!scale"     , "Scale"               , this , scale    ) 
-  , m_mean     ( "!mean"      , "Mean"                , this , mean     ) 
+( const char*          name        , 
+  const char*          title       ,
+  RooAbsReal&          x           ,
+  RooAbsReal&          mean        ,  // mean, presumably  fixed at 0
+  RooAbsReal&          sigma       ,  // narrow sigma 
+  RooAbsReal&          fraction    ,  // fraction of narrow sigma 
+  RooAbsReal&          sigma_scale )  // wide/narrow sigma ratio    
+  : ShiftAndScale ( name , title , x , sigma , mean ) 
+  , m_fraction    ( "!fraction"    , "Fraction"     , this , fraction ) 
+  , m_sigma_scale ( "!sigmascale"  , "sigma-Scale"  , this , sigma_scale    ) 
   , m_2gauss  () 
 {
   setPars() ;
@@ -9898,14 +9894,10 @@ Ostap::Models::DoubleGauss::DoubleGauss
 // ============================================================================
 Ostap::Models::DoubleGauss::DoubleGauss
 ( const Ostap::Models::DoubleGauss& right ,  
-  const char*                          name  ) 
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x        ( "!x"        , this , right.m_x        ) 
-  , m_sigma    ( "!sigma"    , this , right.m_sigma    )
-  , m_fraction ( "!fraction" , this , right.m_fraction )
-  , m_scale    ( "!scale"    , this , right.m_scale    )
-  , m_mean     ( "!mean"     , this , right.m_mean    )
+  const char*                       name  ) 
+  : ShiftAndScale ( right , name ) 
+  , m_fraction    ( "!fraction"   , this , right.m_fraction    )
+  , m_sigma_scale ( "!sigmascale" , this , right.m_sigma_scale )
   , m_2gauss   ( right.m_2gauss ) 
 {
   setPars() ;
@@ -9919,10 +9911,10 @@ Ostap::Models::DoubleGauss::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::DoubleGauss::setPars () const 
 {
-  m_2gauss.setPeak      ( m_mean     ) ;
-  m_2gauss.setSigma     ( m_sigma    ) ;
-  m_2gauss.setScale     ( m_scale    ) ;
-  m_2gauss.setFraction  ( m_fraction ) ;
+  m_2gauss.setPeak       ( m_shift        ) ;
+  m_2gauss.setSigma      ( m_scale        ) ;
+  m_2gauss.setSigmaScale ( m_sigma_scale  ) ;
+  m_2gauss.setFraction   ( m_fraction     ) ;
 }
 // ============================================================================
 // the actual evaluation of function 
@@ -9988,17 +9980,14 @@ Ostap::Models::DoubleGauss2::DoubleGauss2
 ( const char*          name      , 
   const char*          title     ,
   RooAbsReal&          x         ,
+  RooAbsReal&          mean      , 
   RooAbsReal&          sigma     ,  // narrow sigma 
   RooAbsReal&          fraction  ,  // fraction of narrow sigma 
-  RooAbsReal&          delta     ,  // wide/narrow delta 
-  RooAbsReal&          mean      )  // mean, presumably  fixed at 0
+  RooAbsReal&          delta     )  // wide/narrow delta 
   //
-  : RooAbsPdf( name , title ) 
-  , m_x        ( "!x"         , "Observable"          , this , x        ) 
-  , m_sigma    ( "!sigma"     , "Narrow sigma"        , this , sigma    ) 
+  : ShiftAndScale ( name , title , x , sigma , mean ) 
   , m_fraction ( "!fraction"  , "Fraction"            , this , fraction ) 
   , m_delta    ( "!delta"     , "Delta"               , this , delta    ) 
-  , m_mean     ( "!mean"      , "Mean"                , this , mean     ) 
   , m_2gauss  () 
 {
   setPars() ;
@@ -10009,13 +9998,9 @@ Ostap::Models::DoubleGauss2::DoubleGauss2
 Ostap::Models::DoubleGauss2::DoubleGauss2
 ( const Ostap::Models::DoubleGauss2& right ,  
   const char*                          name  ) 
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x        ( "!x"        , this , right.m_x        ) 
-  , m_sigma    ( "!sigma"    , this , right.m_sigma    )
+  : ShiftAndScale ( right , name ) 
   , m_fraction ( "!fraction" , this , right.m_fraction )
   , m_delta    ( "!delta"    , this , right.m_delta    )
-  , m_mean     ( "!mean"     , this , right.m_mean     )
   , m_2gauss   ( right.m_2gauss ) 
 {
   setPars() ;
@@ -10029,8 +10014,8 @@ Ostap::Models::DoubleGauss2::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::DoubleGauss2::setPars () const 
 {
-  m_2gauss.setPeak      ( m_mean     ) ;
-  m_2gauss.setSigma     ( m_sigma    ) ;
+  m_2gauss.setPeak      ( m_shift    ) ;
+  m_2gauss.setSigma     ( m_scale    ) ;
   m_2gauss.setDelta     ( m_delta    ) ;
   m_2gauss.setFraction  ( m_fraction ) ;
 }

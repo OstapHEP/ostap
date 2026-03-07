@@ -1075,10 +1075,10 @@ class DoubleGauss_pdf(Gauss_pdf) :
             self.roo_name ( 'gauss2_' ) , 
             "double Gauss %s" % self.name ,
             self.mass        ,
+            self.mean        ,            
             self.sigma       ,
             self.fraction    ,
             self.sigma_scale ,
-            self.mean    
             )
 
         ## save the configuration
@@ -1157,10 +1157,10 @@ class DoubleGauss2_pdf(Gauss_pdf) :
             self.roo_name ( 'gauss2_' ) , 
             "double Gauss2 %s" % self.name ,
             self.mass        ,
-            self.sigma       ,
+            self.mean        ,            
+            self.sigma       , 
             self.fraction    ,
-            self.delta       ,
-            self.mean        )
+            self.delta       )
                                        
         ## save the configuration
         self.config = {

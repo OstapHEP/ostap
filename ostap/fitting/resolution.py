@@ -322,11 +322,10 @@ class ResoGauss2(ResoGauss) :
             self.roo_name ( 'rgauss2_' )       ,
             "Resolution double Gauss %s" % self.name ,
             self.xvar        ,
+            self.mean        ,             
             self.sigma_corr  , ## ATTENTION! 
             self.fraction    ,
-            self.sigma_scale ,
-            self.mean    
-            )
+            self.sigma_scale ) 
         
         ##  save   the configuration
         self.config = {

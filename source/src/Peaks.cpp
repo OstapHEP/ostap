@@ -400,89 +400,34 @@ bool Ostap::Math::BifurcatedGauss::setPsi
  */
 // ============================================================================
 Ostap::Math::DoubleGauss::DoubleGauss
-( const double peak     ,
-  const double sigma    , 
-  const double fraction , 
-  const double scale    ) 
-  : m_peak     ( peak               ) 
-  , m_sigma    ( std::abs ( sigma ) )
-  , m_fraction ( std::min ( std::max ( fraction , 0.0 ), 1.0 ) ) 
-  , m_scale    ( std::abs ( scale ) )
+( const double peak        ,
+  const double sigma       , 
+  const double fraction    , 
+  const double sigma_scale )
+  : ShiftAndScale ( sigma       , peak , "sigma" , "mu"   , typeid ( *this ) , true )
+  , m_fraction    ( fraction    , 0.0  , 1.0 , "fraction" , typeid ( *this ) )
+  , m_sigma_scale ( sigma_scale ,           "sigma_scale" , typeid ( *this ) )
 {}
-// ============================================================================
-bool Ostap::Math::DoubleGauss::setPeak   ( const double value ) 
-{
-  if ( s_equal ( value , m_peak ) ) { return false ; }
-  m_peak = value ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::DoubleGauss::setSigma ( const double value ) 
-{
-  const double value_ =  std::abs (value ) ;
-  if ( s_equal ( value_ , m_sigma ) ) { return false ; }
-  //
-  Ostap::Assert ( value_                                   ,
-		  "Parameter 'sigma' must be non-zero"     ,
-		  "Ostap::Math::DoubleGauss::setSigma"     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
-  //    
-  m_sigma = value_ ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::DoubleGauss::setFraction ( const double value ) 
-{
-  double value_ = value ;
-  if ( s_equal ( value_ , m_fraction ) ) { return false ; }
-  //
-  if      ( s_zero   ( value_         ) ) { value_ = 0 ; }
-  else if ( s_equal  ( value_     , 1 ) ) { value_ = 1 ; }
-  else if ( s_equal  ( value_ + 1 , 1 ) ) { value_ = 0 ; }
-  //
-  Ostap::Assert ( 0 <= value && value_ <= 1 ,
-		  "Parameter 'Fraction' must be betweek 0 and 1",
-		  "Ostap::Math::DoubleGauss"     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
-  //    
-  m_fraction = value_ ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::DoubleGauss::setScale ( const double value ) 
-{
-  const double value_ =  std::abs (value ) ;
-  if ( s_equal ( value_ , m_scale ) ) { return false ; }
-  //
-  Ostap::Assert ( value_                                   ,
-		  "Parameter 'scale' must be non-zero"     ,
-		  "Ostap::Math::DoubleGauss::setScale"     ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
-  //    
-  m_scale = value_ ;
-  return true ;
-}
 // ============================================================================
 // evaluate  double Gaussian
 // ============================================================================
 double Ostap::Math::DoubleGauss::evaluate ( const double x ) const 
 {
-  const double mu       = m_peak     ;
-  const double sigma    = m_sigma    ;
-  const double scale    = m_scale    ;
-  const double fraction = m_fraction ;
+  const double _mu       = peak        () ;
+  const double _s1       = sigma1      () ;
+  const double _s2       = sigma2      () ;
+  const double _sc       = sigma_scale () ;
+  const double _fr       = fraction    () ;
   //
-  const double sigma2   =  scale *  sigma ;
+  const double dx1      = ( x - _mu ) / _s1 ;
+  const double dx2      = ( x - _mu ) / _s2 ;
   //
-  const double dx1      = ( x - mu ) / sigma  ;
-  const double dx2      = ( x - mu ) / sigma2 ;
-  //
-  const double  f1 = fraction ;
+  const double  f1 = _fr ;
   const double  f2 = 1 - f1   ;
   //
   return 
-    s_sqrt_1_2pi * ( f1 * std::exp ( -0.5 * dx1 * dx1 ) / sigma  +
-		     f2 * std::exp ( -0.5 * dx2 * dx2 ) / sigma2 ) ;  
+    s_sqrt_1_2pi * ( f1 * std::exp ( -0.5 * dx1 * dx1 ) / _s1 +
+		     f2 * std::exp ( -0.5 * dx2 * dx2 ) / _s2 ) ;  
 }
 // ============================================================================
 // get the integral between low and high limits
@@ -491,28 +436,27 @@ double Ostap::Math::DoubleGauss::integral
 ( const double xmin , 
   const double xmax ) const 
 {
-  const double mu       = m_peak     ;
-  const double sigma    = m_sigma    ;
-  const double scale    = m_scale    ;
-  const double fraction = m_fraction ;
+  const double _mu = peak        () ;
+  const double _s1 = sigma1      () ;
+  const double _s2 = sigma2      () ;
+  const double _sc = sigma_scale () ;
+  const double _fr = fraction    () ;
   //
-  const double sigma2   =  scale *  sigma ;
-  //
-  const double  f1 = fraction ;
+  const double  f1 = _fr    ;
   const double  f2 = 1 - f1 ;
   //
   static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
   //
-  const double ixscale1 = s_isqrt2 / sigma  ;
-  const double ixscale2 = s_isqrt2 / sigma2 ;
+  const double ixscale1 = s_isqrt2 / _s1 ;
+  const double ixscale2 = s_isqrt2 / _s2  ;
   //
   const double r1 = 
-    std::erf ( ( xmax - mu ) * ixscale1 ) - 
-    std::erf ( ( xmin - mu ) * ixscale1 ) ;
+    std::erf ( ( xmax - _mu ) * ixscale1 ) - 
+    std::erf ( ( xmin - _mu ) * ixscale1 ) ;
   //
   const double r2 = 
-    std::erf ( ( xmax - mu ) * ixscale2 ) - 
-    std::erf ( ( xmin - mu ) * ixscale2 ) ;
+    std::erf ( ( xmax - _mu ) * ixscale2 ) - 
+    std::erf ( ( xmin - _mu ) * ixscale2 ) ;
   //
   return 0.5 * ( f1 * r1 + f2 * r2  ) ;
 } 
@@ -521,23 +465,22 @@ double Ostap::Math::DoubleGauss::integral
 // ============================================================================
 double Ostap::Math::DoubleGauss::cdf ( const double x )  const 
 {
-  const double mu       = m_peak     ;
-  const double sigma    = m_sigma    ;
-  const double scale    = m_scale    ;
-  const double fraction = m_fraction ;
+  const double _mu = peak        () ;
+  const double _s1 = sigma1      () ;
+  const double _s2 = sigma2      () ;
+  const double _sc = sigma_scale () ;
+  const double _fr = fraction    () ;
   //
-  const double sigma2   =  scale *  sigma ;
-  //
-  const double  f1 = fraction ;
+  const double  f1 = _fr ;
   const double  f2 =  1 - f1  ;
   //
   static const double s_isqrt2 = 1.0 / std::sqrt ( 2.0 ) ;
   //
-  const double ixscale1 = s_isqrt2 / sigma  ;
-  const double ixscale2 = s_isqrt2 / sigma2 ;
+  const double ixscale1 = s_isqrt2 / _s1 ;
+  const double ixscale2 = s_isqrt2 / _s2 ;
   //
-  const double r1 = std::erf ( ( x - mu ) * ixscale1 ) ;
-  const double r2 = std::erf ( ( x - mu ) * ixscale2 ) ;
+  const double r1 = std::erf ( ( x - _mu ) * ixscale1 ) ;
+  const double r2 = std::erf ( ( x - _mu ) * ixscale2 ) ;
   //
   return  0.5 * ( f1 * ( r1 + 1  ) + f2 * ( r2  + 1 ) ) ;
 }
@@ -548,8 +491,11 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
 // ============================================================================
 double Ostap::Math::DoubleGauss::sigma_eff () const
 {
-  const double r2 = m_fraction + ( 1 - m_fraction ) * m_scale * m_scale ;
-  return m_sigma * std::sqrt ( r2 ) ;
+  const double _sc = sigma_scale () ;
+  const double _fr = fraction    () ;
+  //
+  const double r2 = _fr + ( 1 - _fr ) * _sc * _sc ;
+  return sigma1 () * std::sqrt ( r2 ) ;
 }
 // ============================================================================
 // get the tag 
@@ -557,11 +503,12 @@ double Ostap::Math::DoubleGauss::sigma_eff () const
 std::size_t Ostap::Math::DoubleGauss::tag () const 
 {
   static const std::string s_name = "DoubleGauss" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_peak , m_sigma , m_fraction , m_scale ) ; 
+  return Ostap::Utils::hash_combiner ( s_name ,
+				       ShiftAndScale::tag () ,
+				       m_fraction    .tag () ,
+				       m_sigma_scale .tag () ) ;
 }
 // ============================================================================
-
-
 
 
 // ============================================================================
@@ -577,8 +524,8 @@ Ostap::Math::DoubleGauss2::DoubleGauss2
   const double sigma    , 
   const double fraction , 
   const double delta    )
-  : m_delta ( -1   )
-  , m_2g    ( peak , sigma , fraction )
+  : m_2g    ( peak , sigma , fraction )
+  , m_delta ( delta , "delta" , typeid ( *this ) )
 {
   //
   Ostap::Assert ( delta                                    ,
@@ -592,16 +539,28 @@ Ostap::Math::DoubleGauss2::DoubleGauss2
 bool Ostap::Math::DoubleGauss2::setDelta ( const double value ) 
 {
   const double avalue =  std::abs ( value ) ;
-  if ( s_equal ( value , m_delta ) && 0 < m_delta  ) { return false ; }
+  if ( !m_delta.setValue ( avalue ) ) { return false ; }
   //
-  Ostap::Assert ( value                                    ,
+  Ostap::Assert ( delta ()                                 ,
 		  "Parameter 'delta' must be non-zero"     ,
 		  "Ostap::Math::DoubleGauss2"              ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
   //    
-  m_delta = avalue ;
-  const double the_scale = std::hypot ( 1.0 , m_delta ) ;
-  return m_2g.setScale ( the_scale ) ;
+  const double the_scale = std::hypot ( 1.0 , delta () ) ;
+  return m_2g.setSigmaScale ( the_scale ) ;
+}
+// ============================================================================
+bool Ostap::Math::DoubleGauss2::setLogDelta ( const double value ) 
+{
+  if ( !m_delta.setLogValue ( value ) ) { return false ; }
+  //
+  Ostap::Assert ( delta ()                                 ,
+		  "Parameter 'delta' must be non-zero"     ,
+		  "Ostap::Math::DoubleGauss2"              ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
+  //    
+  const double the_scale = std::hypot ( 1.0 , delta () ) ;
+  return m_2g.setSigmaScale ( the_scale ) ;
 }
 // ============================================================================
 // get the tag 
@@ -609,9 +568,12 @@ bool Ostap::Math::DoubleGauss2::setDelta ( const double value )
 std::size_t Ostap::Math::DoubleGauss2::tag () const 
 {
   static const std::string s_name = "DoubleGauss2" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_delta , m_2g.tag () ) ; 
+  return Ostap::Utils::hash_combiner ( s_name ,
+				       m_2g    .tag () , 
+				       m_delta .tag () ) ; 
 }
 // ============================================================================
+
 
 // ============================================================================
 // Gauss

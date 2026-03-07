@@ -32,8 +32,9 @@ __all__     = (
     'valid_pointer'       , ## valid C++ pointer?
 )
 # =============================================================================
-from  ostap.utils.basic import NoContext 
-import ROOT, cppyy 
+import ostap.fixes.fixes 
+from   ostap.utils.basic import NoContext 
+import ROOT, cppyy
 # ============================================================================= 
 ## get global C++ namespace
 cpp   = cppyy.gbl
@@ -304,14 +305,16 @@ def rootException () :
     return RootError2Exception()
 
 # =============================================================================
-## with ROOTIgnore ( ROOT.kError ) :
-if True : 
+with ROOTIgnore ( ROOT.kError ) :
+## if True :
+    print ( 'OSTAP' , dir(Ostap) )
+    print ( 'HAS UTILS?' , hasattr ( Ostap , 'Utils' ) ) 
     _error_sentry_  = Ostap.Utils.ErrorSentry  
     ## valid C++ pointer ?
     _valid_pointer_ = Ostap.Utils.valid_pointer
     _rootID_        = Ostap.Utils.rootID
     ## used by ROOT/RooFit ?  
-    usedRootID = Ostap.Utils.usedRootID 
+    usedRootID      = Ostap.Utils.usedRootID 
 
 # =============================================================================
 ## global identifier for ROOT objects 

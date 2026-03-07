@@ -97,7 +97,7 @@ with MuteC ( True , True ) :
 # Include path for ACLiC:
 # =============================================================================
 opath = ROOT.gSystem.GetIncludePath()
-## logger.debug ( 'Old include ath: %s' % opath  )
+## logger.debug ( 'Old include path: %s' % opath  )
 opath = opath.replace ( '-I' , ' ' ) . split ()
 ## add gsl ? 
 opath.append ( '$OSTAP_DIR/include' ) 

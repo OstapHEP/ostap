@@ -284,7 +284,7 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class  DoubleGauss 
+    class DoubleGauss : public ShiftAndScale 
     {
       // ======================================================================
     public:
@@ -296,10 +296,10 @@ namespace Ostap
        *  @param scale    the ratio of sigmas for the second and first components
        */
       DoubleGauss
-      ( const double peak     = 0   ,
-        const double sigma    = 1   , 
-        const double fraction = 0.9 , 
-        const double scale    = 1.2 ) ;
+      ( const double peak        = 0   ,
+        const double sigma       = 1   , 
+        const double fraction    = 0.9 , 
+        const double sigma_scale = 1.2 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -313,23 +313,28 @@ namespace Ostap
     public:
       // ======================================================================
       /// peak position
-      inline double peak     () const { return m_peak    ; }
-      inline double mean     () const { return m_peak    ; }
-      inline double m0       () const { return m_peak    ; }
-      inline double mu       () const { return m_peak    ; }
-      inline double mode     () const { return m_peak    ; }      
-      inline double mass     () const { return m_peak    ; }      
-      inline double median   () const { return m_peak    ; }      
+      inline double peak        () const { return shift () ; }
+      inline double m0          () const { return shift () ; }
+      inline double mu          () const { return shift () ; }
+      inline double mass        () const { return shift () ; }      
+      inline double location    () const { return shift () ; }      
+      inline double position    () const { return shift () ; }      
       /// sigma 
-      inline double sigma    () const { return m_sigma   ; }
+      inline double sigma       () const { return scale ()  ; }
       /// sigma-1
-      inline double sigma1   () const { return m_sigma   ; }
+      inline double sigma1      () const { return scale ()   ; }
       /// sigma-2
-      inline double sigma2   () const { return m_sigma * m_scale ; }
+      inline double sigma2      () const { return scale () * m_sigma_scale.value() ; }
       /// scale 
-      inline double scale    () const { return m_scale    ; }
+      inline double sigma_scale () const { return m_sigma_scale.value () ; }
       /// fraction 
-      inline double fraction () const { return m_fraction ; }
+      inline double fraction    () const { return m_fraction.value    () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline double mode     () const { return shift () ; }      
+      inline double mean     () const { return shift () ; }      
+      inline double median   () const { return shift () ; }            
       // ======================================================================
     public:
       // ======================================================================
@@ -341,19 +346,21 @@ namespace Ostap
     public:
       // ======================================================================
       /// peak positon
-      bool setPeak     ( const double value ) ;
+      inline bool setPeak          ( const double value ) { return setShift ( value ) ; } 
+      inline bool setM0            ( const double value ) { return setShift ( value ) ; }
+      inline bool setMu            ( const double value ) { return setShift ( value ) ; }
+      inline bool setMass          ( const double value ) { return setShift ( value ) ; }
+      inline bool setLocation      ( const double value ) { return setShift ( value ) ; }
+      inline bool setPosition      ( const double value ) { return setShift ( value ) ; }
       /// sigma 
-      bool setSigma    ( const double value ) ;
-      /// scale 
-      bool setScale    ( const double value ) ;
+      inline bool setSigma         ( const double value ) { return setScale ( value ) ; } 
       /// fraction 
-      bool setFraction ( const double value ) ;
+      inline bool setFraction      ( const double value ) { return m_fraction   .setValue    ( value ) ; }      
+      /// sigma-scale  
+      inline bool setSigmaScale    ( const double value ) { return m_sigma_scale.setValue    ( value ) ; } 
+      /// sigma-scale  
+      inline bool setLogSigmaScale ( const double value ) { return m_sigma_scale.setLogValue ( value ) ; } 
       // ======================================================================
-      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
-      // ======================================================================      
     public:
       // ======================================================================
       /// get the cdf 
@@ -372,14 +379,10 @@ namespace Ostap
       // ======================================================================
     private: // parameters
       // ======================================================================
-      /// the peak position
-      double m_peak     { 0   } ; // the peak position
-      /// sigma
-      double m_sigma    { 1   } ; // sigma
       /// fraction
-      double m_fraction { 0.9 } ; // fraction
+      Ostap::Math::InRange  m_fraction     { 0.0 , 1.0 } ; // fraction
       /// scale
-      double m_scale    { 1.2 } ; // scale
+      Ostap::Math::LogValue m_sigma_scale  { 1.2 } ; // scale
       // ======================================================================
     } ;
     // ========================================================================
@@ -394,12 +397,12 @@ namespace Ostap
      *  - delta:    sigma_2 = sigma_1 \times \sqrt{ 1 + delta^2 }  
      *
      *  It has some limitation: the second Gaussian ia always more wider 
-     *  But it also provide more stable fits
+     *  But it also provides more stable fits
      *
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
-    class  DoubleGauss2
+    class DoubleGauss2  
     {
       // ======================================================================
     public:
@@ -419,70 +422,77 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate Double Gaussian
-      inline double evaluate   ( const double x ) const { return m_2g.evaluate ( x ) ; } 
-      /// evaluate Double Gaussian
-      inline double pdf        ( const double x ) const { return m_2g.evaluate ( x ) ; } 
-      /// evaluate Double Gaussian
       inline double operator() ( const double x ) const { return m_2g.evaluate ( x ) ; }
+      /// evaluate Double Gaussian
+      inline double pdf        ( const double x ) const { return m_2g.evaluate ( x ) ; }
+      /// evaluate Double Gaussian
+      inline double evaluate   ( const double x ) const { return m_2g.evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// peak position
-      inline double peak     () const { return m_2g.peak     () ; }
-      inline double mean     () const { return m_2g.mean     () ; }
-      inline double m0       () const { return m_2g.m0       () ; }
-      inline double mu       () const { return m_2g.mu       () ; }
-      inline double mode     () const { return m_2g.mode     () ; }      
-      inline double mass     () const { return m_2g.mass     () ; }      
-      inline double median   () const { return m_2g.median   () ; }      
+      inline double peak        () const { return m_2g.peak        () ; }
+      inline double m0          () const { return m_2g.m0          () ; }
+      inline double mu          () const { return m_2g.mu          () ; }
+      inline double mass        () const { return m_2g.mass        () ; }
+      inline double location    () const { return m_2g.location    () ; }
+      inline double position    () const { return m_2g.position    () ; }
+      //
       /// sigma 
-      inline double sigma    () const { return m_2g.sigma    () ; }
+      inline double sigma       () const { return m_2g.sigma       () ; }
       /// sigma-1
-      inline double sigma1   () const { return m_2g.sigma1   () ; }
+      inline double sigma1      () const { return m_2g.sigma1      () ; }
       /// sigma-2
-      inline double sigma2   () const { return m_2g.sigma2   () ; }
+      inline double sigma2      () const { return m_2g.sigma2      () ; }
       /// scale 
-      inline double scale    () const { return m_2g.scale    () ; }
+      inline double sigma_scale () const { return m_2g.sigma_scale () ; }
       /// fraction 
-      inline double fraction () const { return m_2g.fraction () ; }
+      inline double fraction    () const { return m_2g.fraction    () ; }
       /// delta 
-      inline double delta    () const { return m_delta          ; }
+      inline double delta       () const { return m_delta.value    () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline double mode     () const { return m_2g.mode   () ; }      
+      inline double mean     () const { return m_2g.mean   () ; }      
+      inline double median   () const { return m_2g.median () ; }            
       // ======================================================================
     public:
       // ======================================================================
       /** "effective sigma/rms"
        *  \f$ \sigma^2_{eff} = f \sigma^2_1 + (1-f) \sigma^2_2 \f$
        */
-      inline double sigma_eff () const { return m_2g.sigma_eff() ; } 
+      inline double sigma_eff () const { return m_2g.sigma_eff () ; } 
       // ======================================================================
-    public:
+    public : 
       // ======================================================================
       /// peak positon
-      inline bool setPeak     ( const double value ) { return m_2g.setPeak     ( value ) ; } 
+      inline bool setPeak       ( const double value ) { return m_2g.setPeak       ( value ) ; } 
+      inline bool setM0         ( const double value ) { return m_2g.setM0         ( value ) ; }
+      inline bool setMu         ( const double value ) { return m_2g.setMu         ( value ) ; }
+      inline bool setMass       ( const double value ) { return m_2g.setMass       ( value ) ; }
+      inline bool setLocation   ( const double value ) { return m_2g.setLocation   ( value ) ; }
+      inline bool setPosition   ( const double value ) { return m_2g.setPosition   ( value ) ; }
       /// sigma 
-      inline bool setSigma    ( const double value ) { return m_2g.setSigma    ( value ) ; } 
+      inline bool setSigma      ( const double value ) { return m_2g.setSigma      ( value ) ; } 
       /// fraction 
-      inline bool setFraction ( const double value ) { return m_2g.setFraction ( value ) ; }       
-      /// delta  
-      bool        setDelta    ( const double value ) ;
+      inline bool setFraction   ( const double value ) { return m_2g.setFraction   ( value ) ; }            
+      /// delta
+      bool        setDelta      ( const double value ) ;
+      /// delta
+      bool        setLogDelta   ( const double value ) ;
       // ======================================================================
-      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
-      // ======================================================================      
     public:
       // ======================================================================
       /// get the cdf 
-      inline double cdf       ( const double x ) const { return m_2g.cdf ( x )  ; }
+      inline double cdf      ( const double x ) const { return m_2g.cdf ( x ) ; } 
       /// get the integral
-      inline double integral () const
-      { return m_2g.integral() ; } 
+      inline double integral () const                 { return m_2g.integral() ; }
       /// get the integral between low and high limits
       inline double integral
       ( const double low  ,
         const double high ) const
-      { return m_2g.integral ( low , high ) ; }
+      { return m_2g.integral ( low , high ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -491,10 +501,10 @@ namespace Ostap
       // ======================================================================
     private: // parameters
       // ======================================================================
+      /// double gauss
+      Ostap::Math::DoubleGauss m_2g    {   } ; // double gauss 
       /// delta 
-      double                   m_delta { 1 } ; // delta 
-      /// double gaussian 
-      Ostap::Math::DoubleGauss m_2g    {   } ; //  double Gaussian 
+      Ostap::Math::LogValue    m_delta { 1 } ; // delta 
       // ======================================================================
     } ;
     // ========================================================================

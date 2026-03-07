@@ -7708,23 +7708,23 @@ namespace Ostap
      *  Simple double Gaussian PDF
      *  suitable as resolution model
      */
-    class DoubleGauss: public RooAbsPdf 
+    class DoubleGauss: public ShiftAndScale 
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::DoubleGauss, 1) ;
+      ClassDefOverride(Ostap::Models::DoubleGauss, 2) ;
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
       DoubleGauss 
-      ( const char*          name      , 
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          sigma     ,   // narrow sigma 
-        RooAbsReal&          fraction  ,   // fraction of narrow sigma 
-        RooAbsReal&          scale     ,   // wide/narrow sigma ratio    
-        RooAbsReal&          mean      ) ; // mean, presumably fixed at 0
+      ( const char*          name        , 
+        const char*          title       ,
+        RooAbsReal&          x           ,
+        RooAbsReal&          mean        ,   // mean, presumably fixed at 0
+        RooAbsReal&          sigma       ,   // narrow sigma 	
+        RooAbsReal&          fraction    ,   // fraction of narrow sigma 
+        RooAbsReal&          sigma_scale ) ; // wide/narrow sigma ratio    
       /// "copy" constructor 
       DoubleGauss ( const DoubleGauss& , const char* name = 0 ) ;
       /// virtual destructor 
@@ -7770,19 +7770,17 @@ namespace Ostap
       // =====================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x        () const { return m_x        .arg() ; }
-      const RooAbsReal& sigma    () const { return m_sigma    .arg() ; }
-      const RooAbsReal& fraction () const { return m_fraction .arg() ; }
-      const RooAbsReal& scale    () const { return m_scale    .arg() ; }
-      const RooAbsReal& mean     () const { return m_mean     .arg() ; }
+      const RooAbsReal& x           () const { return m_x           .arg() ; }
+      const RooAbsReal& fraction    () const { return m_fraction    .arg() ; }
+      const RooAbsReal& sigma_scale () const { return m_sigma_scale .arg() ; }
+      //
+      const RooAbsReal& mean        () const { return shift () ; }
+      const RooAbsReal& sigma       () const { return scale () ; }
       // ======================================================================
     protected:
       // =====================================================================
-      RooRealProxy m_x         {} ;
-      RooRealProxy m_sigma     {} ;
-      RooRealProxy m_fraction  {} ;
-      RooRealProxy m_scale     {} ;
-      RooRealProxy m_mean      {} ;
+      RooRealProxy m_fraction    {} ;
+      RooRealProxy m_sigma_scale {} ;
       // ======================================================================
     protected: // the function
       // ======================================================================
@@ -7794,11 +7792,11 @@ namespace Ostap
      *  Simple double Gaussian PDF
      *  suitable as resolution model
      */
-    class DoubleGauss2: public RooAbsPdf 
+    class DoubleGauss2: public ShiftAndScale 
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::DoubleGauss2, 1) ;
+      ClassDefOverride(Ostap::Models::DoubleGauss2, 2) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -7807,10 +7805,10 @@ namespace Ostap
       ( const char*          name      , 
         const char*          title     ,
         RooAbsReal&          x         ,
-        RooAbsReal&          sigma     ,   // narrow sigma 
+	RooAbsReal&          mean      ,   // mean, presumably fixed at 0
+        RooAbsReal&          sigma     ,   // narrow sigma 	
         RooAbsReal&          fraction  ,   // fraction of narrow sigma 
-        RooAbsReal&          delta     ,   // wide/narrow delta 
-        RooAbsReal&          mean      ) ; // mean, presumably fixed at 0
+        RooAbsReal&          delta     ) ; // wide/narrow delta 
       /// "copy" constructor 
       DoubleGauss2 ( const DoubleGauss2& , const char* name = 0 ) ;
       /// virtual destructor 
@@ -7856,19 +7854,16 @@ namespace Ostap
       // =====================================================================
     public:
       // ======================================================================
-      const RooAbsReal& x        () const { return m_x        .arg() ; }
-      const RooAbsReal& sigma    () const { return m_sigma    .arg() ; }
       const RooAbsReal& fraction () const { return m_fraction .arg() ; }
       const RooAbsReal& delta    () const { return m_delta    .arg() ; }
-      const RooAbsReal& mean     () const { return m_mean     .arg() ; }
+      //
+      const RooAbsReal& sigma    () const { return scale () ; }
+      const RooAbsReal& mean     () const { return shift () ; }
       // ======================================================================
     protected:
       // =====================================================================
-      RooRealProxy m_x        {} ;
-      RooRealProxy m_sigma    {} ;
       RooRealProxy m_fraction {} ;
       RooRealProxy m_delta    {} ;
-      RooRealProxy m_mean     {} ;
       // ======================================================================
     protected: // the function
       // ======================================================================

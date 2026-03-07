@@ -2645,14 +2645,14 @@ Ostap.Models.TwoExpos.__reduce__ = _r2expo_reduce_
 ## reduce DoubleGauss
 def _r2gau_reduce_ ( pdf ):
     """ Reduce DoubleGauss"""
-    return root_store_factory , ( type ( pdf )    ,
-                                  pdf.name        ,
-                                  pdf.title       ,
-                                  pdf.x        () ,                            
-                                  pdf.sigma    () ,                            
-                                  pdf.fraction () ,
-                                  pdf.scale    () ,
-                                  pdf.mean     () )
+    return root_store_factory , ( type ( pdf )       ,
+                                  pdf.name           ,
+                                  pdf.title          ,
+                                  pdf.x           () ,
+                                  pdf.mean        () , 
+                                  pdf.sigma       () ,                            
+                                  pdf.fraction    () ,
+                                  pdf.sigma_scale () )
 
 Ostap.Models.DoubleGauss.__reduce__ = _r2gau_reduce_ 
 
@@ -2663,11 +2663,11 @@ def _r2gau2_reduce_ ( pdf ):
     return root_store_factory , ( type ( pdf )    ,
                                   pdf.name        ,
                                   pdf.title       ,
-                                  pdf.x        () ,                            
+                                  pdf.x        () ,
+                                  pdf.mean     () ,                                  
                                   pdf.sigma    () ,                            
                                   pdf.fraction () ,
-                                  pdf.delta    () ,
-                                  pdf.mean     () )
+                                  pdf.delta    () )
 
 Ostap.Models.DoubleGauss2.__reduce__ = _r2gau2_reduce_ 
 
