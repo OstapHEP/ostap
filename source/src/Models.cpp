@@ -4349,9 +4349,9 @@ Ostap::Math::BenktanderI::BenktanderI
   const double r     , 
   const double scale ,
   const double shift )
-  : m_a  ( a                       , "a"     , typeid ( *this ) )
+  : ShiftAndScale  ( scale , shift , "scale" , "shift" , typeid ( *this ) )
+  , m_a  ( a                       , "a"     , typeid ( *this ) )
   , m_r  ( r                       , "r"     , typeid ( *this ) )
-  , m_ss ( scale , shift , "scale" , "shift" , typeid ( *this ) )
   , m_p  ( 1.0 / std::hypot ( r , 1.0 ) )    
 {}
 // ============================================================================
@@ -4467,9 +4467,9 @@ std::size_t Ostap::Math::BenktanderI::tag () const
 { 
   static const std::string s_name = "BenktanderI" ;
   return Ostap::Utils::hash_combiner ( s_name  ,
-				       m_a .tag () ,
-				       m_r .tag () ,
-				       m_ss.tag () ) ;
+				       ShiftAndScale::tag () , 
+				       m_a           .tag () ,
+				       m_r           .tag () ) ;
 }
 // ============================================================================
 
@@ -4481,9 +4481,9 @@ Ostap::Math::BenktanderII::BenktanderII
   const double r     , 
   const double scale ,
   const double shift )
-  : m_a  ( a                       , "a"     , typeid ( *this ) )
+  : ShiftAndScale  ( scale , shift , "scale" , "shift" , typeid ( *this ) )
+  , m_a  ( a                       , "a"     , typeid ( *this ) )
   , m_r  ( r                       , "r"     , typeid ( *this ) )
-  , m_ss ( scale , shift , "scale" , "shift" , typeid ( *this ) )
   , m_b  ( 1.0 / std::hypot ( r , 1.0 ) )    
 {}
 // ============================================================================
@@ -4588,9 +4588,9 @@ std::size_t Ostap::Math::BenktanderII::tag () const
 { 
   static const std::string s_name = "BenktanderII" ;
   return Ostap::Utils::hash_combiner ( s_name  ,
-				       m_a .tag () ,
-				       m_r .tag () ,
-				       m_ss.tag () ) ;
+				       ShiftAndScale::tag () , 
+				       m_a           .tag () ,
+				       m_r           .tag () ) ;
 }
 // ============================================================================
 
@@ -5087,91 +5087,82 @@ std::size_t Ostap::Math::ExpoLog::tag () const
 // constructor 
 // ============================================================================
 Ostap::Math::Davis::Davis
-( const double b  ,
-  const double n  ,
-  const double mu )
-  : m_b  ( std::abs ( b ) )
-  , m_n  ( std::abs ( n ) )
-  , m_mu ( mu )
-  , m_C  ( -1 )
+( const double shape ,
+  const double scale ,  
+  const double shift )
+  : ShiftAndScale  ( scale , shift , "b" , "mu" , typeid ( *this ) )
+  , m_n            ( shape               , "n"  , typeid ( *this ) )
 {
-  Ostap::Assert ( 0 < m_b  , 
-                  "b-parameter must be positive!"         ,
-                  "Ostap::Math::Davis"                    ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  Ostap::Assert ( 0 < m_n  , 
-                  "b-parameter must be positive!"         ,
-                  "Ostap::Math::Davis"                    ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_z0 = s_equal ( m_n     , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n     ) * 1.0L ;
-  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
-  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
-  //
-  m_C  = Ostap::Math::igamma ( m_n     ) / m_z0  ;
+  const double _n = n () ;
+  m_zn = Ostap::Math::zeta   ( _n  ) ;
+  m_C  = Ostap::Math::igamma ( _n  ) / m_zn ;
+  if ( 2 < _n ) { m_z1 =  m_zn = Ostap::Math::zeta ( _n - 1 ) ; } 
+  if ( 3 < _n ) { m_z2 =  m_zn = Ostap::Math::zeta ( _n - 2 ) ; }     
   //
 }
 // ============================================================================
-// set beta 
+// xmin  
 // ============================================================================
-bool Ostap::Math::Davis::setB ( const double value ) 
-{
-  const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_b ) ) { return false ; }
-  //
-  Ostap::Assert ( avalue , 
-                  "b-parameter must be positive!"         ,
-                  "Ostap::Math::Davis"                    ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
-  m_b = avalue ; 
-  return true ;
-} 
+double Ostap::Math::Davis::xmin () const
+{ return Ostap::Math::is_positive ( scale () ) ? x ( 0 ) : s_NEGINF ; }
+// ============================================================================
+// xmax
+// ============================================================================
+double Ostap::Math::Davis::xmax () const
+{ return Ostap::Math::is_positive ( scale () ) ? s_POSINF : x ( 0 ) ; }
 // ============================================================================
 // set n
 // ============================================================================
 bool Ostap::Math::Davis::setN ( const double value ) 
 {
   const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_n ) && 0 < m_C ) { return false ; }
+  if ( !m_n.setValue ( avalue ) ) { return false ; } 
   //
-  Ostap::Assert ( avalue , 
-                  "n-parameter must be positive!"         ,
-                  "Ostap::Math::Davis"                    ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  const double _n = n () ;
+  m_zn = Ostap::Math::zeta   ( _n  ) ;
+  m_C  = Ostap::Math::igamma ( _n  ) / m_zn  ;
   //
-  m_n  = avalue ;
-  //
-  m_z0 = s_equal ( m_n     , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n     ) * 1.0L ;
-  m_z1 = s_equal ( m_n - 1 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 1 ) * 1.0L ;
-  m_z2 = s_equal ( m_n - 2 , 1 ) ? s_Mascheroni : Ostap::Math::zeta ( m_n - 2 ) * 1.0L ;
-  //
-  m_C  = Ostap::Math::igamma ( m_n ) / m_z0 ;  
+  if ( 2 < _n ) { m_z1 =  m_zn = Ostap::Math::zeta ( _n - 1 ) ; } 
+  if ( 3 < _n ) { m_z2 =  m_zn = Ostap::Math::zeta ( _n - 2 ) ; }     
   //
   return true ;
-} 
+}
 // ============================================================================
-// set mu
+// set log(n)
 // ============================================================================
-bool Ostap::Math::Davis::setMu ( const double value ) 
+bool Ostap::Math::Davis::setLogN ( const double value ) 
 {
-  if ( s_equal ( value , m_mu ) ) { return false ; }
-  m_mu = value ; 
+  if ( !m_n.setLogValue ( value ) ) { return false ; } 
+  //
+  const double _n = n () ;
+  //
+  m_zn = Ostap::Math::zeta   ( _n  ) ;
+  m_C  = Ostap::Math::igamma ( _n  ) / m_zn ;
+  //
+  if ( 2 < _n ) { m_z1 =  m_zn = Ostap::Math::zeta ( _n - 1 ) ; } 
+  if ( 3 < _n ) { m_z2 =  m_zn = Ostap::Math::zeta ( _n - 2 ) ; }     
+  //
   return true ;
-} 
+}
 // ============================================================================
 // evaluate davis function
 // ============================================================================
 double Ostap::Math::Davis::evaluate  ( const double x ) const
 {
-  if ( x <= m_mu || s_equal ( x , m_mu ) ) { return 0 ; } 
-  const double z = m_b / ( x - m_mu ) ;
+  const double y = t ( x ) ;
+  if ( y <= 0 || s_zero ( y ) ) { return 0 ; }
   //
-  if ( z <= 1 ) { return m_C / m_b * std::pow ( z , m_n ) / Ostap::Math::expm1_x ( z ) ; }
+  const double nv  = n () ;
+  ///
+  const long double z = 1.0L / y ;
+  const double      C = m_C / abs_scale () ; 
+  if ( 1 <= y ) { return C * std::pow ( z , nv ) / Ostap::Math::expm1_x ( z )  ; }
   //
-  const double e2 = std::exp ( -z )  ;
-  const double rr = ( m_n + 1 ) * std::log ( z ) + std::log ( e2 / ( 1.0L - e2 ) ) ;  
-  return m_C / m_b * std::exp ( rr ) ;
+  const long double e2 = std::exp ( -z )  ;
+  const long double rr = ( nv + 1 ) * std::log ( z ) + std::log ( e2 / ( 1.0L - e2 ) ) ;
+  // 
+  return C * std::exp ( rr ) ;
 }
 // ============================================================================
 // intergal 
@@ -5186,36 +5177,43 @@ double Ostap::Math::Davis::integral
 {
   //
   if      ( s_equal ( low , high ) ) { return 0 ; }
-  else if ( high < low     ) { return -integral ( high , low )  ; }
-  else if ( high <= m_mu   ) { return  0 ; }
-  else if ( low  <  m_mu   ) { return  integral ( m_mu , high ) ; }
+  else if ( high < low             ) { return -integral ( high , low )  ; }
   //
-  if ( 2 < m_n )
+  const double nv = n() ;
+  //
+  if ( 2 < nv  )
   {
     const double xmean = mean () ;
-    if ( low < xmean && xmean < high ) { return integral ( low , xmean ) + integral ( xmean , high ) ; }
+    if ( std::isfinite ( xmean ) && low < xmean && xmean < high )
+    { return integral ( low , xmean ) + integral ( xmean , high ) ; }
   }
   //
-  if ( 3 < m_n )
+  if ( 3 < nv )
   {
     const double xmean = mean () ;
     const double xrms  = rms  () ;
-    const double x1    = xmean - 3 * xrms ;
-    if ( low < x1 && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
-    const double x2    = xmean + 3 * xrms ;
-    if ( low < x2 && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
-    const double x3    = xmean - 6 * xrms ;
-    if ( low < x3 && x3 < high ) { return integral ( low , x3 ) + integral ( x3 , high ) ; }
-    const double x4    = xmean + 6 * xrms ;
-    if ( low < x4 && x4 < high ) { return integral ( low , x4 ) + integral ( x4 , high ) ; }
+    if ( std::isfinite ( xmean ) && std::isfinite ( xrms ) )
+    {
+      static const std::array<double,4> s_splits {{ 2.0 , 5.0 , 10.0 , 15.0 }}  ; 
+      for ( const auto split : s_splits )
+      {
+	//
+	const double xmid1 = xmean + split * xrms  ;
+	if ( low < xmid1 && xmid1 < high ) 
+	{ return integral ( low , xmid1 ) + integral ( xmid1 , high ) ; }
+	//
+	const double xmid2 = xmean - split * xrms ;
+	if ( low < xmid2 && xmid2 < high ) 
+	{ return integral ( low , xmid2 ) + integral ( xmid2 , high ) ; }
+      }
+    }
   }
-  //  
-  const double dx = high - low ;
-  // split 
-  if ( dx > 10 * m_b )
+  //
+  if ( ( high - low ) > 20 * abs_scale () )
   {
-    const double mid = 0.5 * ( low + high ) ;
-    return integral ( low , mid ) + integral ( mid , high ) ;
+    const double xmid = 0.5 * ( low + high ) ;
+    if ( low < xmid && xmid < high ) 
+    { return integral ( low , xmid ) + integral ( xmid , high ) ; }
   }
   //
   // use GSL to evaluate the integral
@@ -5241,36 +5239,37 @@ double Ostap::Math::Davis::integral
   return result ; 
 }
 // ============================================================================
-// CDF 
-// ============================================================================
-double Ostap::Math::Davis::cdf 
-( const double x ) const
-{ return x <= m_mu ? 0.0 : integral ( m_mu , x ) ; }
-// ============================================================================
 // mean value 
 // ============================================================================
 double Ostap::Math::Davis::mean     () const
 {
-  if ( m_n <= 2 || s_equal ( m_n , 2 ) ) { return s_QUIETNAN ; }
-  return m_mu + m_b * m_z1 / ( ( m_n - 1 ) * m_z0 ) ;
+  const double nv = n() ;
+  if ( nv <= 2 || s_equal ( nv , 2 ) ) { return s_QUIETNAN ; }
+  //
+  const double m1 = m_z1 / ( ( nv - 1 ) * m_zn ) ;
+  return x ( m1 ) ;
 }
 // ============================================================================
 // variance   
 // ============================================================================
 double Ostap::Math::Davis::variance () const
 {
-  if ( m_n <= 3 || s_equal ( m_n , 3 ) ) { return s_QUIETNAN ; }
-  return
-    m_b * m_b * ( - ( m_n - 2 ) * m_z1 * m_z1  + ( m_n - 1 ) * m_z2 * m_z0 )
-    / ( ( m_n - 2 ) * ( m_n - 1 ) * ( m_n -1 ) * m_z0 * m_z0 ) ;
+  const double nv = n() ;
+  if ( nv <= 3 || s_equal ( nv , 3 ) ) { return s_QUIETNAN ; }
+  //
+  const double t1 = - ( nv - 2 ) * m_z1 * m_z1 + ( nv - 1 ) * m_z2 * m_zn ;
+  const double t2 =   ( nv - 2 ) * ( nv - 1 )  * ( nv - 1 ) * m_zn * m_zn ;
+  //
+  const double ss = scale () ;
+  return ss * ss * t1 / t2 ;
 }
 // ============================================================================
 // rms 
 // ============================================================================
 double Ostap::Math::Davis::rms () const
 {
-  if ( m_n <= 3 || s_equal ( m_n , 3 ) ) { return s_QUIETNAN ; }
-  //
+  const double nv = n () ;
+  if ( nv <= 3 || s_equal ( nv , 3 ) ) { return s_QUIETNAN ; }
   return std::sqrt ( variance () ) ;
 }
 // ============================================================================
@@ -5280,9 +5279,8 @@ std::size_t Ostap::Math::Davis::tag () const
 { 
   static const std::string s_name = "Davis" ;
   return Ostap::Utils::hash_combiner ( s_name  ,
-				       m_b     ,
-				       m_n     ,
-				       m_mu    ) ;
+				       ShiftAndScale::tag () ,
+				       m_n           .tag () ) ;
 }
 // ============================================================================
 

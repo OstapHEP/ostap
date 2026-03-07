@@ -153,25 +153,6 @@ namespace
       (     GSL_LOG_DBL_MAX < y ) ?    s_INFINITY :
       ( -1* GSL_LOG_DBL_MAX > y ) ? -1*s_INFINITY : std::sinh ( y ) ;
   }
-  // // ==========================================================================
-  // /en-t'
-  // // ==========================================================================
-  // inline double student_cdf (  const double t , const double nu ) 
-  // {
-  //   const double xt    = nu / ( t * t + nu ) ;
-  //   const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * nu , 0.5 , xt ) ;
-  //   return t >= 0 ? 1 - value : value ;
-  // }
-  // ==========================================================================
-  /** product of Gaussian PDF and Mill's ratio 
-   *  \f$ f(x; a ) = \phi ( x ) R( a + x ) \f$ 
-   */
-  // inline double gauss_mills 
-  // ( const double x , 
-  //  const double a ) 
-  // { 
-  //   return Ostap::Math::gauss_pdf ( x ) * Ostap::Math::mills_normal ( a + x ) ; 
-  // } ;
   // ==========================================================================
 }
 // ============================================================================
@@ -644,21 +625,29 @@ std::size_t Ostap::Math::DoubleGauss2::tag () const
 Ostap::Math::Gauss::Gauss
 ( const double peak   ,
   const double sigma  )
-  : m_peak  ( peak )
-  , m_sigma ( std::abs ( sigma ) )
-  //
+  : ShiftAndScale ( sigma , peak , "sigma" , "peak" , typeid ( *this ) )
+{}
+// ============================================================================
+// x-min
+// ============================================================================
+double Ostap::Math::Gauss::xmin () const { return s_NEGINF ; } 
+// ============================================================================
+// x-max
+// ============================================================================
+double Ostap::Math::Gauss::xmax () const { return s_POSINF ; } 
+// ============================================================================
+// variance 
+// ============================================================================
+double Ostap::Math::Gauss::variance () const
 {
- Ostap::Assert ( m_sigma ,
-                  "Invalid parameter `sigma` : must be non-zero!" ,
-                  "Ostap::Math::Gauss" ,
-                  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-  //
+  const double s = sigma () ;
+  return s * s ; 
 }
 // ============================================================================
 // evaluate Bifurcated Gaussian
 // ============================================================================
 double Ostap::Math::Gauss::evaluate ( const double x ) const
-{ return Ostap::Math::gauss_pdf ( x , m_peak , m_sigma ) ; }
+{ return Ostap::Math::gauss_pdf ( x , shift() , scale () ) ; }
 // ============================================================================
 // get the integral
 // ============================================================================
@@ -667,7 +656,7 @@ double Ostap::Math::Gauss::integral () const { return 1 ; }
 //  get CDF 
 // ============================================================================
 double Ostap::Math::Gauss::cdf ( const double x ) const 
-{ return Ostap::Math::gauss_cdf ( x , m_peak , m_sigma ) ; }
+{ return Ostap::Math::gauss_cdf ( x , shift()  ,  scale () ) ; }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
@@ -676,28 +665,7 @@ double Ostap::Math::Gauss::integral
   const double high ) const 
 {
   if ( s_equal ( low , high ) ) { return 0 ; }                         // RETURN
-  return Ostap::Math::gauss_int ( low , high , m_peak , m_sigma ) ;
-}
-// ============================================================================
-bool Ostap::Math::Gauss::setSigma ( const double value )
-{
-  const double value_ = std::abs ( value ) ;
-  if ( s_equal ( m_sigma , value_ ) ) { return false ; }
-  //
-  Ostap::Assert ( value_                                   ,
-		  "Parameter 'sigma' must be non-zero"     ,
-		  "Ostap::Math::Gauss::setSigma"           ,
-		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
-  //      
-  m_sigma = value_ ;
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Gauss::setPeak ( const double value )
-{
-  if ( s_equal ( m_peak , value ) ) { return false ; }
-  m_peak   = value  ;
-  return true ;
+  return Ostap::Math::gauss_int ( low , high , shift() , scale()  ) ;
 }
 // ============================================================================
 // get the tag 
@@ -705,8 +673,10 @@ bool Ostap::Math::Gauss::setPeak ( const double value )
 std::size_t Ostap::Math::Gauss::tag () const 
 { 
   static const std::string s_name = "Gauss" ;
-  return Ostap::Utils::hash_combiner ( s_name , m_peak , m_sigma ) ; 
+  return Ostap::Utils::hash_combiner ( s_name , ShiftAndScale::tag () ) ; 
 }
+
+
 // ============================================================================
 /* get the logarithmic derivative 
  * \f$ \frac{ f^\prime}{f}  \f$
@@ -716,8 +686,11 @@ std::size_t Ostap::Math::Gauss::tag () const
 // ===========================================================================
 double Ostap::Math::Gauss::dFoF
 ( const double x ) const 
-{ return - ( x - m_peak ) / ( m_sigma * m_sigma ) ; } 
-
+{
+  const double _mu = m_shift.value () ;
+  const double _ss = m_scale.value () ;    
+  return - ( x - _mu ) / ( _ss * _ss ) ;
+} 
 // ============================================================================
 /*  constructor from all agruments 
  *  @param mu     location/peak posiiton 

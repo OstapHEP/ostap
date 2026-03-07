@@ -13,6 +13,7 @@
 // ============================================================================
 #include "Ostap/Workspace.h"
 #include "Ostap/Tails.h"
+#include "Ostap/Parameter.h"
 // ============================================================================
 /** @file Ostap/Peaks.h
  *  Collection of useful peak-like models
@@ -29,7 +30,7 @@ namespace Ostap
     /** @class  Gauss 
      *  trivial gaussian , just for completeness 
      */
-    class Gauss
+    class Gauss : public ShiftAndScale 
     {
       // ======================================================================
     public:
@@ -54,26 +55,49 @@ namespace Ostap
     public:
       // ======================================================================
       /// peak position
-      double peak    () const { return m_peak    ; }
-      double m0      () const { return m_peak    ; }
-      double mu      () const { return m_peak    ; }
-      double mode    () const { return m_peak    ; }
-      double mass    () const { return m_peak    ; }
+      inline double peak     () const { return shift () ; }
+      inline double m0       () const { return shift () ; }
+      inline double mu       () const { return shift () ; }
+      inline double mode     () const { return shift () ; }
+      inline double mean     () const { return shift () ; }
+      inline double mass     () const { return shift () ; }
+      inline double location () const { return shift () ; }
       /// sigma
-      double sigma   () const { return m_sigma   ; }
+      inline double sigma   () const { return scale () ; }
       // ======================================================================
     public:
       // ======================================================================
       /// peak position 
-      bool setPeak    ( const double value ) ;
+      inline bool setPeak     ( const double value ) { return setShift ( value ) ; }
+      inline bool setM0       ( const double value ) { return setShift ( value ) ; }
+      inline bool setMu       ( const double value ) { return setShift ( value ) ; }
+      inline bool setMode     ( const double value ) { return setShift ( value ) ; }
+      inline bool setMean     ( const double value ) { return setShift ( value ) ; }
+      inline bool setMass     ( const double value ) { return setShift ( value ) ; }
+      inline bool setLocation ( const double value ) { return setShift ( value ) ; }
       /// left sigma 
-      bool setSigma   ( const double value ) ;
+      inline bool setSigma    ( const double value ) { return setScale ( value ) ; } 
+      // ======================================================================a
+    public: // support & range 
       // ======================================================================
-      /// peak position 
-      inline bool setM0   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMu   ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMode ( const double value ) { return setPeak ( value ) ; }
-      inline bool setMass ( const double value ) { return setPeak ( value ) ; }
+      inline bool finite_range () const { return false ; }
+      /// x-min 
+      double xmin () const ;
+      /// x-max 
+      double xmax () const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// variance 
+      double variance () const ;
+      /// dispersion
+      inline double dispersion () const { return variance () ; }
+      /// RMS 
+      inline double rms        () const { return scale    () ; }
+      /// skewness 
+      inline double skewness   () const { return 0 ; }
+      /// (excess) kurtosis 
+      inline double kurtosis   () const { return 0 ; }
       // ======================================================================
     public: // integrals & CDF
       // ======================================================================
@@ -93,21 +117,10 @@ namespace Ostap
        */  
       double  dFoF ( const  double x ) const ; 
       // ======================================================================
-      // get normalized version of the variable 
-      inline double t ( const double x ) const 
-      { return ( x - m_peak ) / m_sigma ;}
-      // ======================================================================
     public:
       // ======================================================================  
       /// get the tag 
       std::size_t tag () const ;
-      // ======================================================================
-    private: // parameters
-      // ======================================================================
-      /// the peak position
-      double m_peak   ;       //                              the peak position
-      /// sigma 
-      double m_sigma  ;       // sigma
       // ======================================================================
     } ; 
     // ========================================================================
@@ -378,7 +391,7 @@ namespace Ostap
      *  - peak: Common mean
      *  - sigma:    resolution of the fitst Gaussian
      *  - fraction: the fraction of the first component
-     *  - delta:   sigma^2_2 = sigma^2_1 + delta^2 
+     *  - delta:    sigma_2 = sigma_1 \times \sqrt{ 1 + delta^2 }  
      *
      *  It has some limitation: the second Gaussian ia always more wider 
      *  But it also provide more stable fits
@@ -395,7 +408,7 @@ namespace Ostap
        *  @param peak     the peak position
        *  @param sigma    the sigma for first component
        *  @param fraction the fraction of the first component 
-       *  @param scale    the ratio of sigmas for the second and first components
+       *  @param delta    :  sigma_2 = sigma_1 \times \sqrt{ 1 + delta^2 }  
        */
       DoubleGauss2
       ( const double peak     = 0   ,

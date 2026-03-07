@@ -11,6 +11,7 @@
 // ============================================================================
 // Ostap
 // ============================================================================
+#include "Ostap/Parameter.h"
 #include "Ostap/Parameters.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Workspace.h"
@@ -2879,7 +2880,7 @@ namespace Ostap
      *  - \f$ p = 1 / \sqrt{ r^2 + 1 } \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      */
-    class BenktanderI
+    class BenktanderI : public ShiftAndScale 
     {      
       // ======================================================================
     public : 
@@ -2887,9 +2888,9 @@ namespace Ostap
       /// constructor from all parameters
       BenktanderI
       ( const double a     = 1 ,
-	      const double r     = 0 , 
-	      const double scale = 1 ,
-	      const double shift = 0 ) ;
+	const double r     = 0 ,
+	const double scale = 1 ,
+	const double shift = 0 ) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -2904,8 +2905,6 @@ namespace Ostap
       // ======================================================================
       inline double a     () const { return m_a .value () ; } 
       inline double r     () const { return m_r .value () ; } 
-      inline double scale () const { return m_ss.scale () ; } 
-      inline double shift () const { return m_ss.shift () ; }
       // =====================================================================
       /// helper parameter "p"  \f$ 0 < p \le 1 \f$ 
       inline double p     () const { return m_p      ; }
@@ -2918,8 +2917,6 @@ namespace Ostap
       // =====================================================================
       bool        setR     ( const double value ) ;
       inline bool setA     ( const double value ) { return m_a.setValue ( value ) ; }
-      inline bool setScale ( const double value ) { return m_ss.setScale ( value ) ; }  
-      inline bool setShift ( const double value ) { return m_ss.setShift ( value ) ; }  
       // =====================================================================
     public: 
       // =====================================================================
@@ -2945,23 +2942,21 @@ namespace Ostap
     public: // internal <--> external transformation 
       // ======================================================================
       /// internal t to external x 
-      inline double x ( const double t ) const { return m_ss.x ( t - 1.0 ) ; }
+      inline double x ( const double t ) const { return ShiftAndScale::x ( t - 1.0 ) ; }
       /// external x to internal t       
-      inline double t ( const double x ) const { return 1.0 + m_ss.t ( x ) ; }
+      inline double t ( const double x ) const { return 1.0 + ShiftAndScale::t ( x ) ; }
       // =====================================================================      
     public :
       // ======================================================================
       /// unique tag
       std::size_t tag () const ;
       // ======================================================================
-      private:
+    private:
       // ======================================================================
       ///  parameter a 
       Ostap::Math::LogValue      m_a  { 1 } ; // parameter a
       ///  parameter r 
       Ostap::Math::Value         m_r  { 0 } ; // parameter r      
-      /// scale & shift parameter 
-      Ostap::Math::ShiftAndScale m_ss { 1 , 0 }  ; // scale&shift  parameter 
       /// parameter p 
       double                     m_p  { 1 } ; // parameter p 
       // ======================================================================
@@ -2974,7 +2969,7 @@ namespace Ostap
      *  - \f$ b = 1 / \sqrt{ r^1 + 1 }  \f$ 
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      */
-    class BenktanderII
+    class BenktanderII : public  ShiftAndScale 
     {      
       // ======================================================================
     public : 
@@ -2999,8 +2994,6 @@ namespace Ostap
       // ======================================================================
       inline double a     () const { return m_a .value () ; } 
       inline double r     () const { return m_r .value () ; } 
-      inline double scale () const { return m_ss.scale () ; } 
-      inline double shift () const { return m_ss.shift () ; }
       // =====================================================================
       /// original parameter "b" 
       inline double b     () const { return m_b      ; }
@@ -3011,8 +3004,6 @@ namespace Ostap
       // =====================================================================
       bool        setR     ( const double value ) ;
       inline bool setA     ( const double value ) { return m_a .setValue ( value ) ; }
-      inline bool setScale ( const double value ) { return m_ss.setScale ( value ) ; }  
-      inline bool setShift ( const double value ) { return m_ss.setShift ( value ) ; }  
       // =====================================================================
     public: 
       // =====================================================================
@@ -3040,9 +3031,9 @@ namespace Ostap
     public: // internal <--> external transformation 
       // ======================================================================
       /// internal t to external x 
-      inline double x ( const double t ) const { return m_ss.x ( t - 1.0 ) ; }
+      inline double x ( const double t ) const { return ShiftAndScale::x ( t - 1.0 ) ; }
       /// external x to internal t       
-      inline double t ( const double x ) const { return 1.0 + m_ss.t ( x ) ; }
+      inline double t ( const double x ) const { return 1.0 + ShiftAndScale::t ( x ) ; }
       // =====================================================================      
     public :
       // ======================================================================
@@ -3055,8 +3046,6 @@ namespace Ostap
       Ostap::Math::LogValue      m_a  { 1 } ; // parameter a
       ///  parameter r 
       Ostap::Math::Value         m_r  { 0 } ; // parameter r      
-      /// scale & shift parameter 
-      Ostap::Math::ShiftAndScale m_ss { 1 , 0 }  ; // scale&shift  parameter 
       /// parameter b
       double                     m_b  { 1 } ; // parameter b 
       // ======================================================================
@@ -3076,8 +3065,8 @@ namespace Ostap
       /// constructor 
       LogNormal
       ( const double shape = 1 ,
-	      const double scale = 1 ,
-	      const double shift = 0 ) ; 
+	const double scale = 1 ,
+	const double shift = 0 ) ; 
       // ======================================================================
     public : 
       // ======================================================================
@@ -3234,17 +3223,19 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class Davis
-     * @see https://en.wikipedia.org/wiki/Davis_distribution
+     *  @see https://en.wikipedia.org/wiki/Davis_distribution
+     *  \f[ f(z;\mu,\beta, n) = \frac{1}{\beta}  \frac{1}{ z^{n+1} ( e^{1/z} -1 ) \Gamma(n) \zeta(n) }\f]
+     *  where \f$ z = \frac{z-\mu}{\beta}\f$ for \f$ x \ge  \muf$ 
      */
-    class Davis
+    class Davis : public ShiftAndScale 
     {
     public:
       // ======================================================================
       /// conastructor 
       Davis
-      ( const double b  = 1 ,
-	const double n  = 5 ,
-	const double mu = 0 ) ;	
+      ( const double shape = 10 ,
+	const double scale =  1 ,
+	const double shift =  0 ) ;	
       // ======================================================================
     public : 
       // ======================================================================
@@ -3255,18 +3246,29 @@ namespace Ostap
       /// evaluate davis  function
       inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
       // ======================================================================
-    public : 
+    public :  // support and range 
       // ======================================================================
-      inline double b    () const { return m_b  ; }
-      inline double n    () const { return m_n  ; }
-      inline double mu   () const { return m_mu ; }
-      inline double xmin () const { return m_mu ; }
+      inline bool finite_range () const { return false ; }
+      /// x-min
+      double xmin () const ;
+      /// x-max
+      double xmax () const ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      inline double n    () const { return m_n.value() ; }
+      inline double b    () const { return scale ()    ; }
+      inline double beta () const { return scale ()    ; }
+      inline double mu   () const { return shift ()    ; }
       // ======================================================================
     public:
       // ======================================================================
-      bool setB  ( const double value ) ;
-      bool setN  ( const double value ) ;
-      bool setMu ( const double value ) ;
+      bool setN     ( const double value ) ; 
+      bool setLogN  ( const double value ) ;
+      // =====================================================================
+      inline bool setB     ( const double value ) { return     setScale    ( value ) ; } 
+      inline bool setBeta  ( const double value ) { return     setScale    ( value ) ; } 
+      inline bool setMu    ( const double value ) { return     setShift    ( value ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -3285,9 +3287,6 @@ namespace Ostap
       double integral
       ( const double low  ,
         const double high ) const ;
-      /// CDF 
-      double cdf 
-      ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -3296,23 +3295,21 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
-      /// parameter b 
-      double m_b  { 1 } ; // parameter b
       /// parameter n 
-      double m_n  { 5 } ; // parameter n
-      /// parameter mu 
-      double m_mu { 0 } ; // parameter mu
+      Ostap::Math::LogValue m_n  { 10 } ; // parameter n
       // ======================================================================
     private:
       // ======================================================================
-      /// zeta ( n     ) 
-      double m_z0  { 0  } ; // zeta ( n     ) 
-      /// zeta ( n - 1 ) 
-      double m_z1  { 0  } ; // zeta ( n - 1 ) 
-      /// zeta ( n - 2  ) 
-      double m_z2  { 0  } ; // zeta ( n - 2 ) 
-      /// normailzation
-      double m_C   { -1 } ; // normalzation 
+      ///  zeta     ( n ) 
+      double m_zn  {  0 } ; // zeta ( n     )
+      ///  zeta     ( n - 1 ) 
+      double m_z1  {  0 } ; // zeta ( n - 1 )
+      ///  zeta     ( n - 2 ) 
+      double m_z2  {  0 } ; // zeta ( n - 2 )
+      /// 1/ ( Gamma ( n ) * zeta ( n ) )  
+      double m_C   {  0 } ; // zeta ( n     )
+      // ======================================================================
+    private: 
       // ======================================================================
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace

@@ -304,8 +304,10 @@ def rootException () :
     return RootError2Exception()
 
 # =============================================================================
-with ROOTIgnore ( ROOT.kError ) :
-    ## valid C++ pointer ? 
+## with ROOTIgnore ( ROOT.kError ) :
+if True : 
+    _error_sentry_  = Ostap.Utils.ErrorSentry  
+    ## valid C++ pointer ?
     _valid_pointer_ = Ostap.Utils.valid_pointer
     _rootID_        = Ostap.Utils.rootID
     ## used by ROOT/RooFit ?  
