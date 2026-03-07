@@ -786,7 +786,8 @@ double Ostap::Math::erfi ( const double x )
  *  @see https://en.wikipedia.org/wiki/Error_function
  */
 // ============================================================================
-std::complex<double> Ostap::Math::erfi ( const std::complex<double>& x ) 
+std::complex<double> Ostap::Math::erfi
+( const std::complex<double>& x ) 
 { return Faddeeva::erfi ( x ) ; }  
 // ============================================================================
 /** Inverse scaled error function for \f$ 0 < x \f$ 
@@ -796,7 +797,7 @@ std::complex<double> Ostap::Math::erfi ( const std::complex<double>& x )
 // ============================================================================
 double Ostap::Math::erfcxinv   ( const double  x  ) 
 {
-  if ( x <= 0 ) { std::numeric_limits<double>::quiet_NaN (); }
+  if ( x <= 0 ) { return std::numeric_limits<double>::quiet_NaN (); }
   //
   static const double s_C = 2.0 / std::sqrt ( s_pi ) ;
   //

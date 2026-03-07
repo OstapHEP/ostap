@@ -24,6 +24,73 @@
 namespace 
 {
   // ==========================================================================
+  // Limits? 
+  // ==========================================================================
+  static_assert ( std::numeric_limits<float> ::is_specialized                ,
+                  "std::numeric_limits<float>       is not specialized"      ) ;
+  static_assert ( std::numeric_limits<double>::is_specialized                ,
+                  "std::numeric_limits<double>      is not specialized"      ) ;
+  static_assert ( std::numeric_limits<long double>::is_specialized           ,
+                  "std::numeric_limits<long double> is not specialized"      ) ;
+  // ==========================================================================  
+  static_assert ( std::numeric_limits<float>::has_infinity                   ,
+                  "std::numeric_limits<float> does not have infinity"        ) ;
+  static_assert ( std::numeric_limits<double>::has_infinity                  ,
+                  "std::numeric_limits<double> does not have infinity"       ) ;
+  static_assert ( std::numeric_limits<long double>::has_infinity             ,
+                  "std::numeric_limits<long double> does not have infinity"  ) ;
+  // ==========================================================================    
+  static_assert ( std::numeric_limits<float>::has_quiet_NaN                  ,
+                  "std::numeric_limits<float> does not have quiet NaN"       ) ;
+  static_assert ( std::numeric_limits<double>::has_quiet_NaN                 ,
+                  "std::numeric_limits<double> does not have quiet NaN"      ) ;
+  static_assert ( std::numeric_limits<long double>::has_quiet_NaN            ,
+                  "std::numeric_limits<long double> does not have quiet NaN" ) ;
+  // ==========================================================================
+  
+  // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned short> ::is_specialized         ,
+                  "std::numeric_limits<unsigned short>  is not specialized"    ) ;
+  static_assert ( std::numeric_limits<unsigned int>   ::is_specialized         ,
+                  "std::numeric_limits<unsigned int>  is not specialized"      ) ;
+  static_assert ( std::numeric_limits<unsigned long>  ::is_specialized         ,
+                  "std::numeric_limits<unsigned long> is not specialized"      ) ;
+  static_assert ( std::numeric_limits<unsigned long long>  ::is_specialized    ,
+                  "std::numeric_limits<unsigned long long> is not specialized" ) ;
+  // ==========================================================================
+
+  // ==========================================================================
+  static_assert ( std::numeric_limits<signed short> ::is_specialized         ,
+                  "std::numeric_limits<signed short>  is not specialized"    ) ;
+  static_assert ( std::numeric_limits<signed int>   ::is_specialized         ,
+                  "std::numeric_limits<signed int>  is not specialized"      ) ;
+  static_assert ( std::numeric_limits<signed long>  ::is_specialized         ,
+                  "std::numeric_limits<signed long> is not specialized"      ) ;
+  static_assert ( std::numeric_limits<signed long long>  ::is_specialized    ,
+                  "std::numeric_limits<signed long long> is not specialized" ) ;
+  // ==========================================================================
+
+  // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned char> ::is_specialized        ,
+                  "std::numeric_limits<unsigned char> is not specialized"    ) ;
+  static_assert ( std::numeric_limits<signed char>    ::is_specialized         ,
+                  "std::numeric_limits<signed char>   is not specialized"    ) ;
+  static_assert ( std::numeric_limits<char>           ::is_specialized         ,
+                  "std::numeric_limits<char>          is not specialized"    ) ;
+  // ==========================================================================
+  
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::int8_t>  ::is_specialized        ,
+                  "std::numeric_limits<std::int8_t> is not specialized"     ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::int8_t>  ::is_signed             ,
+                  "std::numeric_limits<std::int8_t> is not signed"          ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::int8_t>  ::is_integer            ,
+                  "std::numeric_limits<std::int8_t> is not integer"         ) ;  
+  // ==========================================================================
+  
+  // ==========================================================================
   /// equality criteria for doubles
   const Ostap::Math::Equal_To<double>                s_equal  {} ; // equality criteria for doubles
   /// zero for doubles  
@@ -34,37 +101,9 @@ namespace
   const Ostap::Math::Zero<std::complex<double> >     s_czero  {} ; // zero for complex doubles
   /// equality criteria for comples doubles
   const Ostap::Math::Equal_To<std::complex<double> > s_cequal {} ; // equality criteria for complex doubles
-  // ==========================================================================
-  // Limits? 
-  // ==========================================================================
-  static_assert ( std::numeric_limits<float> ::is_specialized           ,
-                  "std::numeric_limits<float>  is not specialized"      ) ;
-  static_assert ( std::numeric_limits<double>::is_specialized           ,
-                  "std::numeric_limits<double> is not specialized"      ) ;
-  static_assert ( std::numeric_limits<double>::has_denorm               ,
-                  "std::numeric_limits<double> does not have denorm"    ) ;
-  static_assert ( std::numeric_limits<double>::has_infinity             ,
-                  "std::numeric_limits<double> does not have infinity"  ) ;
-  static_assert ( std::numeric_limits<double>::has_quiet_NaN            ,
-                  "std::numeric_limits<double> does not have quiet NaN" ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned short> ::is_specialized        ,
-                  "std::numeric_limits<unsigned short>  is not specialized" ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned int>   ::is_specialized        ,
-                  "std::numeric_limits<unsigned int>  is not specialized"   ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned long>  ::is_specialized        ,
-                  "std::numeric_limits<unsigned long> is not specialized"   ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::int8_t>  ::is_specialized        ,
-                  "std::numeric_limits<std::int8_t> is not specialized"     ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::int8_t>  ::is_signed             ,
-                  "std::numeric_limits<std::int8_t> is not signed"          ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::int8_t>  ::is_integer            ,
-                  "std::numeric_limits<std::int8_t> is not integer"         ) ;
+  // ==========================================================================    
+
+
   // ==========================================================================
   /** @var s_QUIETNAN
    *  quite NaN

@@ -484,7 +484,7 @@ bool Ostap::Math::DoubleGauss::setScale ( const double value )
 // ============================================================================
 // evaluate  double Gaussian
 // ============================================================================
-double Ostap::Math::DoubleGauss::pdf ( const double x ) const 
+double Ostap::Math::DoubleGauss::evaluate ( const double x ) const 
 {
   const double mu       = m_peak     ;
   const double sigma    = m_sigma    ;
@@ -619,7 +619,7 @@ bool Ostap::Math::DoubleGauss2::setDelta ( const double value )
 		  INVALID_PARAMETER , __FILE__ , __LINE__  ) ;
   //    
   m_delta = avalue ;
-  const double the_scale = std::hypot ( 1.0 , m_delta / sigma1() ) ;
+  const double the_scale = std::hypot ( 1.0 , m_delta ) ;
   return m_2g.setScale ( the_scale ) ;
 }
 // ============================================================================
@@ -631,7 +631,6 @@ std::size_t Ostap::Math::DoubleGauss2::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_delta , m_2g.tag () ) ; 
 }
 // ============================================================================
-
 
 // ============================================================================
 // Gauss

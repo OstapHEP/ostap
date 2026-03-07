@@ -291,9 +291,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate Double Gaussian
-      double        pdf        ( const double x ) const ;
+      inline double operator() ( const double x ) const { return evaluate ( x )  ; }
       /// evaluate Double Gaussian
-      inline double operator() ( const double x ) const { return pdf ( x )  ; }
+      inline double pdf        ( const double x ) const { return evaluate ( x )  ; }
+      /// evaluate Double Gaussian
+      double        evaluate   ( const double x ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -404,9 +406,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate Double Gaussian
-      double        pdf        ( const double x ) const ;
+      inline double evaluate   ( const double x ) const { return m_2g.evaluate ( x ) ; } 
       /// evaluate Double Gaussian
-      inline double operator() ( const double x ) const { return pdf ( x )  ; }
+      inline double pdf        ( const double x ) const { return m_2g.evaluate ( x ) ; } 
+      /// evaluate Double Gaussian
+      inline double operator() ( const double x ) const { return m_2g.evaluate ( x ) ; }
       // ======================================================================
     public:
       // ======================================================================
