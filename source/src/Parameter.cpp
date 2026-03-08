@@ -1,4 +1,4 @@
-// ============================================================================
+ // ============================================================================
 // Include files 
 // ============================================================================
 // STD&STL
@@ -34,6 +34,7 @@ namespace
   static const std::string s_invalid_value { "Invalid value!"         } ;
   static const std::string s_invalid_log   { "Invalid log/exp-value!" } ;    
   static const std::string s_invalid_range { "Invalid min/max-range!" } ;  
+  static const std::string s_not_same_sign { "Variables must have the same sign!" } ;  
   // ==========================================================================
 } // the end of anonymous namespace 
 // ===========================================================================
@@ -637,6 +638,167 @@ std::size_t Ostap::Math::PQ::tag () const
 				       m_q.tag () )  ;
 }
 // ============================================================================
+
+
+// ============================================================================
+/*  full constructor
+ *  @param   var1   the first variable 
+ *  @param   var2   the second variable
+ *  @param   v1name the name of the first variable 
+ *  @param   v2name the name of the second variable
+ *  @param the_class name of the (owner/holder) class 
+ */       
+// ============================================================================
+Ostap::Math::AsymVars::AsymVars
+( const double       var1      ,
+  const double       var2      ,
+  const std::string& v1name    ,
+  const std::string& v2name    ,
+  const std::string& the_class )
+  : m_var1  ( var1                  , v1name  , the_class )
+  , m_var2  ( var2                  , v2name  , the_class )
+  , m_mean  ( 0.5 * ( var1 + var2 ) , "mean"  , the_class , false )
+  , m_kappa ( 0.0                   , "kappa" , the_class )
+  , m_psi   ( 0.0                   , "psi"   , the_class )
+{
+  //
+  const double v1 = m_var1.value () ;
+  const double v2 = m_var2.value () ;
+  //
+  Ostap::Assert ( Ostap::Math::same_sign ( v1 , v2 ) ,
+		  s_not_same_sign   ,
+		  m_mean.name ()    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  const double k  = ( v1 - v2 ) / ( v1 + v2 ) ;
+  //  
+  m_kappa.setValue ( k ) ;
+  //
+  const double p  = std::atanh ( k ) ;
+  m_psi  .setValue ( p ) ;
+  //    
+}
+// ============================================================================
+/*  full constructor
+ *  @param   var1   the first variable 
+ *  @param   var2   the second variable
+ *  @param   v1name the name of the first variable 
+ *  @param   v2name the name of the second variable
+ *  @param the_class name of the (owner/holder) class 
+ */       
+// ============================================================================
+Ostap::Math::AsymVars::AsymVars
+( const double          var1      ,
+  const double          var2      ,
+  const std::string&    v1name    ,
+  const std::string&    v2name    ,
+  const std::type_info& the_class )
+  : AsymVars ( var1   ,
+	       var2   ,
+	       v1name ,
+	       v2name ,
+	       Ostap::class_name ( the_class ) )
+{}
+// ============================================================================
+// set two variables simultaneously 
+// ============================================================================
+bool Ostap::Math::AsymVars::setVars
+( const double var1 ,
+  const double var2 )
+{
+  const bool m1 = m_var1.setValue ( var1 ) ;
+  const bool m2 = m_var2.setValue ( var2 ) ;
+  if ( !m1 && !m2 ) { return false ; }
+  //
+  const double v1 = m_var1.value () ;
+  const double v2 = m_var2.value () ;
+  //
+  Ostap::Assert ( Ostap::Math::same_sign ( v1 , v2 ) ,
+		  s_not_same_sign   ,
+		  m_mean.name ()    ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //    
+  const double k  = ( v1 - v2 ) / ( v1 + v2 ) ;
+  m_kappa.setValue ( k ) ;
+  //
+  const double p  = std::atanh ( k ) ;
+  m_psi  .setValue ( p ) ;
+  //    
+  return true ;  
+}
+// ============================================================================
+// set two Mean/Average & kappa
+// ============================================================================
+bool Ostap::Math::AsymVars::setMeanKappa 
+( const double vmean  ,
+  const double vkappa )
+{
+  Ostap::Assert ( -1 < vkappa && vkappa < 1 ,
+		  s_invalid_range ,
+		  m_kappa.name () ,
+		  INVALID_RANGE   , __FILE__ , __LINE__  ) ;
+  //
+  const bool mm = m_mean .setValue ( vmean  ) ;
+  const bool mk = m_kappa.setValue ( vkappa ) ;
+  if ( !mm && !mk  ) { return false ; }
+  //
+  const double mv = m_mean .value () ;
+  const double k  = m_kappa.value () ;
+  //
+  const double v1 = mv * ( 1 + k ) ;
+  const double v2 = mv * ( 1 - k ) ;
+  //
+  const double m1 = m_var1.setValue ( v1 ) ;
+  const double m2 = m_var2.setValue ( v2 ) ;
+  if ( !m1 && !m2  ) { return false ; }
+  //
+  const double p  = std::atanh ( k ) ;
+  Ostap::Assert ( std::isfinite ( p ) , 
+		  s_invalid_range     ,
+		  m_psi.name ()       ,
+		  INVALID_RANGE       , __FILE__ , __LINE__  ) ;
+  //
+  if ( !m_psi .setValue ( p ) ) { return false ; }
+  //
+  return true ; 
+}
+// ============================================================================
+// set two Mean/Average & psi
+// ============================================================================
+bool Ostap::Math::AsymVars::setMeanPsi  
+( const double vmean  ,
+  const double vpsi   )
+{
+  //
+  const bool   mm = m_mean .setValue ( vmean ) ;
+  const bool   mp = m_psi  .setValue ( vpsi  ) ;
+  if ( !mm && !mp  ) { return false ; }
+  //
+  const double mv = m_mean .value () ;
+  const double vp = m_psi  .value () ;
+  //
+  const double k  = std::tanh ( vp ) ;
+  const double mk = m_kappa.setValue ( k ) ;
+  //
+  const double v1 = mv * ( 1 + k ) ;
+  const double v2 = mv * ( 1 - k ) ;
+  //
+  const double m1 = m_var1.setValue ( v1 ) ;
+  const double m2 = m_var2.setValue ( v2 ) ;
+  if ( !m1 && !m2 && !mk ) { return false ; }
+  //
+  return true ;
+}
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::AsymVars::tag () const 
+{
+  static const std::string s_name { "AsymVars" } ;
+  return Ostap::Utils::hash_combiner ( s_name        ,
+				       m_var1.tag () ,
+				       m_var2.tag () ) ; 
+}
 
 // ============================================================================
 //                                                                      The END 

@@ -7,6 +7,7 @@
 // STD& STL 
 // ============================================================================
 #include <cstdint>
+#include <utility>
 #include <vector>
 #include <string>
 #include <typeinfo>
@@ -902,6 +903,120 @@ namespace Ostap
       double m_inv_Beta { 0 } ; // inv Beta (p,q) 
       // ======================================================================      
     } ;    
+    // ========================================================================
+    /** @class AsymVars
+     *  Hold two same-sign varables and their asymemtries
+     *  - var1
+     *  - var2
+     *  - average :   var1 + var2 
+     *  - kappa   : ( var1 - var2 ) / ( var1 + var2 )
+     *  - psi     : kappa = tanh ( psi )
+     */
+    class AsymVars
+    {
+    public:
+      // ======================================================================
+      /** full constructor
+       *  @param   var1   the first variable 
+       *  @param   var2   the second variable
+       *  @param   v1name the name of the first variable 
+       *  @param   v2name the name of the second variable
+       *  @param the_class name of the (owner/holder) class 
+       */       
+      AsymVars
+      ( const double          var1       = 1      ,
+	const double          var2       = 1      ,
+	const std::string&    v1name     = "var1" ,
+	const std::string&    v2name     = "var2" ,
+	const std::string&    the_class  = ""     ) ;
+      // =====================================================================
+      /** full constructor
+       *  @param   var1   the first variable 
+       *  @param   var2   the second variable
+       *  @param   v1name the name of the first variable 
+       *  @param   v2name the name of the second variable
+       *  @param   the_class name of the (owner/holder) class 
+       */       
+      AsymVars
+      ( const double          var1      ,
+	const double          var2      ,
+	const std::string&    v1name    ,
+	const std::string&    v2name    ,
+      	const std::type_info& the_class ) ;
+      // =====================================================================
+      /** full constructor
+       *  @param   var1   the first variable 
+       *  @param   var2   the second variable
+       *  @param   v1name the name of the first variable 
+       *  @param   v2name the name of the second variable
+       *  @param   the_class name of the (owner/holder) class 
+       */
+      template <class CLASS>
+      AsymVars
+      ( const double          var1      ,
+	const double          var2      ,
+	const std::string&    v1name    ,
+	const std::string&    v2name    ,
+      	const CLASS&          the_class )
+	: AsymVars ( var1 , var2 , v1name , v2name , typeid ( the_class ) )
+      {}
+      // =====================================================================
+    public:
+      // ======================================================================
+      inline double var1    () const { return m_var1  .value () ; } 
+      inline double var2    () const { return m_var2  .value () ; }
+      inline double mean    () const { return m_mean  .value () ; }
+      inline double kappa   () const { return m_kappa .value () ; }
+      inline double psi     () const { return m_psi   .value () ; }      
+      // =====================================================================
+      inline const std::string& v1name     () const { return m_var1 .name () ; } 
+      inline const std::string& v2name     () const { return m_var2 .name () ; } 
+      inline const std::string& mean_name  () const { return m_mean .name () ; } 
+      inline const std::string& kappa_name () const { return m_kappa.name () ; } 
+      inline const std::string& psi_name   () const { return m_psi  .name () ; } 
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// set two variables simultaneously 
+      bool setVars
+      ( const double v1 ,
+	const double v2 ) ;
+      /// set two Mean/Average & kappa 
+      bool setMeanKappa 
+      ( const double vmean  ,
+	const double vkappa ) ;
+      /// set two Mean/Average & psi 
+      bool setMeanPsi  
+      ( const double vmean  ,
+	const double vpsi   ) ;      
+      // =====================================================================
+    public:
+      // =====================================================================
+      inline const Ostap::Math::Value& var_1     () const { return m_var1  ; }
+      inline const Ostap::Math::Value& var_2     () const { return m_var2  ; }
+      inline const Ostap::Math::Scale& var_mean  () const { return m_mean  ; }
+      inline const Ostap::Math::Value& var_kappa () const { return m_kappa ; }
+      inline const Ostap::Math::Value& var_psi   () const { return m_psi   ; }
+      // =====================================================================      
+    public :
+      // ======================================================================
+      /// unique tag
+      std::size_t tag () const ; 
+      // ======================================================================			      
+    private :
+      // ======================================================================
+      /// the first  variable 
+      Ostap::Math::Value m_var1  { 1 } ; // the first variable
+      /// the second variable       
+      Ostap::Math::Value m_var2  { 1 } ; // the second variable 
+      /// mean value:
+      Ostap::Math::Scale m_mean  { 1 } ; // average 
+      /// asymmetry: kappa 
+      Ostap::Math::Value m_kappa { 0 } ; // asymmetry kappa 
+      /// asymmetry: psi
+      Ostap::Math::Value m_psi   { 0 } ; // asymmetry psi 
+      // =====================================================================
+    } ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

@@ -1,3 +1,11 @@
+## New features
+
+  1. Add `Ostap::Math::AsymVars` utuilty for asymemtri-related parameters, e.g. for asymmetic peaks
+  
+## Bug fixes
+
+## Backward incompatible
+
 # v3.7.0.0 
 
 # v3.6.6.9 
