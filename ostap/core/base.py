@@ -306,9 +306,9 @@ def rootException () :
 
 # =============================================================================
 with ROOTIgnore ( ROOT.kError ) :
-## if True :
-    print ( 'OSTAP' , dir(Ostap) )
-    print ( 'HAS UTILS?' , hasattr ( Ostap , 'Utils' ) ) 
+    ## strange symbols 
+    __strange__     = tuple ( s for s in dir ( Ostap ) if not hasattr ( Ostap , s ) )
+    ## 
     _error_sentry_  = Ostap.Utils.ErrorSentry  
     ## valid C++ pointer ?
     _valid_pointer_ = Ostap.Utils.valid_pointer
@@ -349,6 +349,25 @@ def valid_pointer ( obj ) :
     r = _valid_pointer_ ( obj )
     return True if r else False
 
+
+# =============================================================================
+#  Report strange symbols
+#  @see https://github.com/root-project/root/issues/21536
+def _report_strange_( symbols ) :
+    """ Report strange symbols
+    - see https://github.com/root-project/root/issues/21536
+    """
+    if not symbols : return    
+    from ostap.logger.logger import getLogger 
+    logger = getLogger( 'ostap.core.base' )
+    ns     = len ( symbols ) 
+    logger.warning ( "Strange/truncated symbols in namespace Ostap: #%d" % ns  )
+    logger.warning ( "[see https://github.com/root-project/root/issues/21536]")
+    for i, s in enumerate ( symbols ) : logger.warning ( "%d/%d  %s" % ( i , ns , s ) ) 
+
+import atexit
+atexit.register ( _report_strange_  , __strange__ ) 
+
 # =============================================================================
 if '__main__' == __name__ :
 
@@ -357,7 +376,10 @@ if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
+
+    if not __strange__ :
+        logger.info    ( "No strange/truncated symbols in namespace Ostap" )
+        
 # =============================================================================
 ##                                                                      The END 
 # ============================================================================= 

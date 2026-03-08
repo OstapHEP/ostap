@@ -10,7 +10,7 @@
 #include <algorithm>
 // ============================================================================
 /** @file Ostap/Cesaro.h
- *  Utilities to calualte Cesarp's sums 
+ *  Utilities to calculate Cesaro's sums 
  *  @see https://en.wikipedia.org/wiki/Ces%C3%A0ro_summation
  */
 // ============================================================================
@@ -20,9 +20,9 @@ namespace Ostap
   namespace Math
   {
     // =========================================================================
-    /** Calculate "corrected" coefficeincy for Cesaro's sum
+    /** Calculate "corrected" coefficients for Cesaro's sum
      *  @see https://encyclopediaofmath.org/index.php?title=Ces%C3%A0ro_summation_methods
-     *  @param k      (INPUT) summationorder, k=1 correspond sot regular sum 
+     *  @param k      (INPUT) summation order, k=1 correspond sot regular sum 
      *  @param first  (INPUT) start of the sequnce of coefficients 
      *  @param last   (INPUT) end   of the sequnce of coefficients 
      *  @param output (OUTPUT) iterator for the sequnce of updated coefficients 
