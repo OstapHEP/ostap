@@ -1,6 +1,7 @@
 ## New features
 
   1. Add `Ostap::Math::AsymVars` utuilty for asymemtri-related parameters, e.g. for asymmetic peaks
+  1. In addtion to `Ostap::Math::InRange`   ( R -> [A,B] ) add `Ostap::Math::InRange2` ( R -> (A,B) )
   
 ## Bug fixes
 

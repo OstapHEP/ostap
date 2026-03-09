@@ -97,7 +97,8 @@ std::int8_t Ostap::Math::Value::signum () const
  *  @param the_class the name of ower/holder class
  */
 // ============================================================================
-const std::string& Ostap::Math::Value::setFullName
+const std::string&
+Ostap::Math::Value::setFullName
 ( const std::string& the_name  , 
   const std::string& the_class ) 
 {
@@ -120,9 +121,9 @@ const std::string& Ostap::Math::Value::setFullName
 // ============================================================================
 const std::string&
 Ostap::Math::Value::setFullName
-( const std::type_info& the_class ,
-  const std::string&    the_name  )
-{ return setFullName ( Ostap::class_name ( the_class ) , the_name ) ; }
+( const std::string&    the_name  , 
+  const std::type_info& the_class ) 
+{ return setFullName ( the_name , Ostap::class_name ( the_class ) ) ; }
 // ============================================================================
 // Unique value 
 // ============================================================================
@@ -320,8 +321,12 @@ Ostap::Math::InRange::InRange
 double Ostap::Math::InRange::t
 ( const double x ) const
 {
-  const double s2 = std::sin ( s_pi_2 * x ) ; 
-  return m_min + ( m_max - m_min ) * s2 * s2 ;
+  //
+  const long double dx = 0.5L   * ( m_max - m_min )      ;
+  const long double xx = s_pi_2 * ( x     - m_min ) / dx ;
+  const long double tt = 1.0L - std::cos ( xx ) ;
+  //
+  return m_min + dx * tt ;
 }  
 // ============================================================================
 // internal -> external 
@@ -330,15 +335,17 @@ double Ostap::Math::InRange::x
 ( const double t ) const
 {
   //
-  if      ( t <= m_min || s_equal ( t , m_min ) ) { return 0 ; }
-  else if ( t >= m_max || s_equal ( t , m_max ) ) { return 1 ; }
+  Ostap::Assert ( m_min <= t && t <= m_max , 
+		  s_invalid_range          ,
+		  m_value.name      ()     ,
+		  INVALID_RANGE , __FILE__ , __LINE__ ) ;
   //
-  const double z = ( t - m_min ) / ( m_max - m_min ) ;
+  const long double dx = 0.5L * ( m_max - m_min   ) ;
+  
+  const long double t1 = 1.0L - ( 1.0L * t - m_min ) / dx ;
+  const long double t2 = std::acos  ( t1 ) * s_2_pi       ;
   //
-  if      ( z <= 0     || s_zero  ( z         ) ) { return 0 ; }
-  else if ( z >= 1     || s_equal ( z , 1     ) ) { return 1 ; }
-  //
-  return std::asin ( std::sqrt ( z ) ) * s_2_pi ;
+  return dx * t2 + m_min ;
 }
 // =====================================================================
 // set new value for parameter 
@@ -358,9 +365,9 @@ bool Ostap::Math::InRange::setValue
 ( const double value ,
   const bool   force )
 {
-  if ( !force && s_equal ( m_value.value() , value ) ) { return false ; }
-  m_external  = x ( value ) ;  
-  return m_value.setValue ( value , force ) ;
+  if ( !m_value.setValue ( value , force ) ) { return false ; }
+  m_external  = x ( value ) ;
+  return true ;
 }
 // ============================================================================
 // Unique value 
@@ -371,6 +378,170 @@ std::size_t Ostap::Math::InRange::tag () const
   return Ostap::Utils::hash_combiner ( s_name , m_value.tag () )  ;
 }
 // ============================================================================
+
+// ============================================================================
+/*  full constructor
+ *  @param value parameter value (external)
+ *  @param avalue A0value 
+ *  @param bvalue B-value 
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::InRange2::InRange2
+( const double       value     , 
+  const double       avalue    ,
+  const double       bvalue    , 
+  const std::string& name      ,
+  const std::string& the_class )
+  : m_min       ( ) 
+  , m_max       ( ) 
+  , m_external  ( )
+  , m_value     ( value , name   , the_class ) 
+{
+  //
+  Ostap::Assert ( !s_equal ( avalue , bvalue ) && std::isfinite ( avalue ) && std::isfinite ( bvalue ) , 
+		  s_invalid_range  ,
+		  m_value.name ()  ,		  
+		  INVALID_RANGE    , __FILE__ , __LINE__  ) ;
+  //
+  m_min = std::min ( avalue , bvalue ) ;
+  m_max = std::max ( avalue , bvalue ) ;
+  //
+  Ostap::Assert ( ( m_min < value && value < m_max )
+		  || s_equal ( m_min , value )
+		  || s_equal ( m_max , value ) , 
+		  s_invalid_value ,
+		  m_value.name () ,		  
+		  INVALID_RANGE   , __FILE__ , __LINE__  ) ;
+  //
+  /// internal -> external 
+  m_external = t ( m_value.value () ) ;    
+}
+// ============================================================================
+/*  full constructor
+ *  @param value parameter value
+ *  @param avalue A0value 
+ *  @param bvalue B-value 
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::InRange2::InRange2
+( const double          value     , 
+  const double          avalue    ,
+  const double          bvalue    , 
+  const std::string&    name      ,
+  const std::type_info& the_class )
+  : InRange2 ( value  ,
+	       avalue ,
+	       bvalue ,
+	       name   ,
+	       Ostap::class_name ( the_class ) )
+{}
+// ============================================================================
+/*  full constructor
+ *  @param avalue A-value 
+ *  @param bvalue Bvalue 
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::InRange2::InRange2
+( const double       avalue    , 
+  const double       bvalue    , 
+  const std::string& name      ,
+  const std::string& the_class )
+  : InRange2 ( 0.5 * ( avalue + bvalue ) ,
+	       avalue    ,
+	       bvalue    ,
+	       name      ,
+	       the_class )
+{}
+// ============================================================================
+/*  full constructor
+ *  @param avalue A-value 
+ *  @param bvalue B-value 
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */
+// ============================================================================
+Ostap::Math::InRange2::InRange2
+( const double          avalue    , 
+  const double          bvalue    , 
+  const std::string&    name      ,      
+  const std::type_info& the_class ) 
+  : InRange2 ( 0.5 * ( avalue + bvalue ) ,
+	       avalue    ,
+	       bvalue    ,
+	       name      ,
+	       the_class )
+{}
+// ============================================================================
+// external -> internal 
+// ============================================================================
+double Ostap::Math::InRange2::t
+( const double x ) const
+{
+  const long double x0 = 0.5L   * ( m_min + m_max ) ;
+  const long double dx = 0.5L   * ( m_max - m_min ) ;
+  //
+  const long double xx = s_pi_2 * ( x - x0 ) / dx ;  
+  const long double tt = 1.0L + s_2_pi * std::atan ( xx ) ;
+  //
+  return m_min + dx * tt ;
+}  
+// ============================================================================
+// internal -> external 
+// ============================================================================
+double Ostap::Math::InRange2::x
+( const double t ) const
+{
+  //
+  Ostap::Assert ( m_min < t && t < m_max ,
+		  s_invalid_range        ,
+		  m_value.name      ()   ,
+		  INVALID_RANGE , __FILE__ , __LINE__ ) ;
+  //
+  const long double dx = 0.5L * ( m_max - m_min   ) ;
+  const long double x0 = 0.5L * ( m_max + m_min   ) ;
+  const long double t1 = ( 1.0L * t - m_min ) / dx  - 1.0L ;
+  const long double t2 = std::tan ( s_pi_2 * t1 ) * s_2_pi * dx ;
+  //
+  return t2 + x0 ;
+}
+// =====================================================================
+// set new value for parameter 
+// =====================================================================
+bool Ostap::Math::InRange2::setExternal
+( const double value ,
+  const bool   force )
+{
+  if ( !force && s_equal ( value , m_external ) ) { return false ; }
+  m_external = value ;  
+  return m_value.setValue ( t ( m_external ) , force ) ;
+}
+// =====================================================================
+// set new value for     parameter 
+// =====================================================================
+bool Ostap::Math::InRange2::setValue
+( const double value ,
+  const bool   force )
+{
+  if ( !m_value.setValue ( value , force ) ) { return false ; }
+  m_external  = x ( value ) ;  
+  return true ;
+}
+// ============================================================================
+// Unique value 
+// ============================================================================
+std::size_t Ostap::Math::InRange2::tag () const 
+{
+  static const std::string s_name { "InRange2" } ;
+  return Ostap::Utils::hash_combiner ( s_name , m_value.tag () )  ;
+}
+// ============================================================================
+
 
 // ============================================================================
 /*  full constructor
@@ -475,36 +646,6 @@ Ostap::Math::ShiftAndScale::ShiftAndScale
 		    shift_name , Ostap::class_name ( the_class ) , positive )
 {}
 // ============================================================================
-/*  set the full name of parameter
- *  @param the_class the name of ower/holder class
- *  @parm  scale_name  the parameter  name
- *  @parm  shift_name  the parameter  name
- */
-// ============================================================================
-void Ostap::Math::ShiftAndScale::setFullName
-( const std::string&    the_class   ,
-  const std::string&    scale_name  , 
-  const std::string&    shift_name  )
-{
-  m_scale.setFullName ( the_class , scale_name ) ;
-  m_shift.setFullName ( the_class , scale_name ) ;
-}
-// ============================================================================
-/* set the full name of parameter
- *  @param the_class the type-info of owner/holder class
- *  @parm  the_name  the parameter  name
- */
-// ============================================================================
-void Ostap::Math::ShiftAndScale::setFullName
-( const std::type_info& the_class  ,
-  const std::string&    scale_name , 
-  const std::string&    shift_name )
-{
-  setFullName ( Ostap::class_name ( the_class ) ,
-		scale_name ,
-		shift_name ) ; 
-}
-// ============================================================================
 // Unique value 
 // ============================================================================
 std::size_t Ostap::Math::ShiftAndScale::tag () const 
@@ -600,33 +741,6 @@ bool Ostap::Math::PQ::setQ
   m_inv_Beta = Ostap::Math::ibeta  ( m_p.value () , m_q.value () ) ;  
   return true ;
 }
-// ============================================================================
-/*  set the full name of parameter
- *  @param the_class the name of ower/holder class
- *  @parm  pname  the name of p-parameter
- *  @parm  qname  the name of q-parameter
- */
-// ============================================================================
-void Ostap::Math::PQ::setFullName
-( const std::string& the_class ,
-  const std::string& pname     , 
-  const std::string& qname     )
-{
-  m_p.setFullName ( the_class , pname ) ;
-  m_q.setFullName ( the_class , pname ) ;
-}
-// ============================================================================
-/*  set the full name of parameter
- *  @param the_class the name of ower/holder class
- *  @parm  pname  the name of p-parameter
- *  @parm  qname  the name of q-parameter
- */
-// ============================================================================
-void Ostap::Math::PQ::setFullName
-( const std::type_info& the_class  ,
-  const std::string& pname     , 
-  const std::string& qname     )
-{ return setFullName ( Ostap::class_name ( the_class ) , pname , qname ) ;}
 // ============================================================================
 // Unique value 
 // ============================================================================

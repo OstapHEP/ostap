@@ -259,7 +259,6 @@ def roo_silent ( silence , *args ) :
     return rooSilent ( *args ) if silence else NoContext() 
 
 # =============================================================================
-
             
 # =============================================================================
 ## helper context manager to activate ROOT Error -> Python exception converter 
@@ -349,12 +348,11 @@ def valid_pointer ( obj ) :
     r = _valid_pointer_ ( obj )
     return True if r else False
 
-
 # =============================================================================
-#  Report strange symbols
+#  Report strange/truncated symbols
 #  @see https://github.com/root-project/root/issues/21536
 def _report_strange_( symbols ) :
-    """ Report strange symbols
+    """ Report strange/truncated symbols
     - see https://github.com/root-project/root/issues/21536
     """
     if not symbols : return    
@@ -362,7 +360,7 @@ def _report_strange_( symbols ) :
     logger = getLogger( 'ostap.core.base' )
     ns     = len ( symbols ) 
     logger.warning ( "Strange/truncated symbols in namespace Ostap: #%d" % ns  )
-    logger.warning ( "[see https://github.com/root-project/root/issues/21536]")
+    logger.warning ( "[see https://github.com/root-project/root/issues/21536]" )
     for i, s in enumerate ( symbols ) : logger.warning ( "%d/%d  %s" % ( i , ns , s ) ) 
 
 import atexit
