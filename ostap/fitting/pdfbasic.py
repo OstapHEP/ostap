@@ -1218,6 +1218,7 @@ class APDF1 ( Components ) :
 
 
             if not residual and not pull:
+                ## 
                 frame = frame.copy () ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
                 if frame and not kwargs.get ( 'draw_axis_title' , False ) : 
                     frame.SetXTitle ( '' )
@@ -1232,7 +1233,7 @@ class APDF1 ( Components ) :
                 rframe  = frame.emptyClone ( rootID ( 'residual_' ) )
                 rh      = frame.residHist()
                 rframe.addPlotable ( rh , *residual )
-                
+                ## 
                 rframe = rframe.copy()                
                 if not kwargs.get( 'draw_axis_title' , False ) :  
                     rframe.SetXTitle ( '' )
@@ -1246,7 +1247,7 @@ class APDF1 ( Components ) :
                 pframe  = frame.emptyClone ( rootID ( 'pull_' ) )
                 ph      = frame.pullHist()
                 pframe.addPlotable ( ph , *pull )
-                
+                ## 
                 pframe = pframe.copy()                
                 if not kwargs.get( 'draw_axis_title' , False ) :  
                     pframe.SetXTitle ( '' )
@@ -1254,9 +1255,9 @@ class APDF1 ( Components ) :
                     pframe.SetZTitle ( '' )
                                     
             ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
-            frame  =  frame.copy () if  frame else  frame 
-            rframe = rframe.copy () if rframe else rframe 
-            pframe = pframe.copy () if pframe else pframe 
+            ## frame  =  frame.copy () if  frame else  frame 
+            ## rframe = rframe.copy () if rframe else rframe 
+            ## pframe = pframe.copy () if pframe else pframe 
             
             if frame and not kwargs.get ( 'draw_axis_title' , False ) : 
                 frame.SetXTitle ( '' )

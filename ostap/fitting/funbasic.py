@@ -113,6 +113,9 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         ## derived functions/objects
         self.__derived = {}
 
+        ## the list of all created RooPlot objects 
+        self.__plots   = []
+
         ## decode the keyword arguments 
         dropts = draw_options ( **kwargs )
         self.__draw_options.update ( dropts )
@@ -186,7 +189,14 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         if val and not self.__tricks :
             raise ValueError("Can't allow tricks&shortcuts!")
         self.__tricks = value
-        
+
+    # =========================================================================
+    ## Get the list of all created plots
+    def plots ( self ) :
+        """`plots`: the list of all created `RooPlot` plots 
+        """
+        return self.__plots
+    
     # =========================================================================
     ##  Does this function depend on this variable,
     #   @code
@@ -811,7 +821,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             drawvar = drawvar if drawvar else ( self.draw_var if self.draw_var else self.xvar )  
 
             frame = drawvar.frame ()
-            
             #
             ## the total fit curve
             #
@@ -829,9 +838,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             self.plot_on ( self.fun , frame , *coptions )
             kwargs.pop ( 'curve_options' , () )            
             #
-            #
             ## suppress ugly axis labels
-            #
             if not kwargs.get ( 'draw_axis_title' , False ) :  
                 frame.SetXTitle ( '' )
                 frame.SetYTitle ( '' )
@@ -845,7 +852,7 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
                 with rootWarning (): frame.draw ( kwargs.pop ( 'draw_options','' ) )
             
             if kwargs :
-                self.warning("draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
+                self.warning ( "draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
 
                 
             ## a bit strange action but it helps to avoid decolorization/reset for the last created frame

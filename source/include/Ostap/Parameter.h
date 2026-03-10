@@ -73,10 +73,10 @@ namespace Ostap
       /// get the full parameter name  
       inline const std::string& name  () const { return m_name  ; }
       // ======================================================================
-      /** the sign of the value
-       *  @see Ostap::Math::signum
-       */
-      std::int8_t               signum () const ; 
+      /// the sign of the value
+      std::int8_t               signum () const ;
+      /// absolute value of parameter
+      inline double             abs    () const { return std::abs ( m_value ) ; }
       // ======================================================================      
     public :
       // ======================================================================
@@ -136,12 +136,113 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Transform
+     *  Helper base class to represent the tranformed parameter
+     *  - the "external" value: \f$ x \in \mathbb{R} \f$ 
+     */
+    class Transform
+    {
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      /** full constructor
+       *  @param value parameter value  
+       *  @param name  parameter name  
+       *  @param the_class name of the (owner/holder) class 
+       */      
+      Transform 
+      ( const double       value               ,
+	const std::string& name      = "value" ,
+	const std::string& the_class = ""      ) ;
+      // ======================================================================
+      /** full constructor
+       *  @param value parameter value  
+       *  @param name  parameter name  
+       *  @param the_class the (owner/holder) object
+       */
+      Transform 
+      ( const double          value     , 
+	const std::string&    name      ,
+	const std::type_info& the_class ) ;
+      // ======================================================================
+      /** full constructor
+       *  @param value parameter value  
+       *  @param name  parameter name  
+       *  @param the_class the (owner/holder) object
+       */
+      template <class CLASS>
+      Transform 
+      ( const double          value     , 
+	const std::string&    name      ,
+	const CLASS&          the_class )
+	:  Transform ( value , name , typeid ( the_class ) )
+      {}           
+      // ======================================================================
+    public: // the most important methods from Ostap::Math::Value 
+      // ======================================================================
+      /// get the value 
+      inline double             value     () const { return m_value.value  () ; }
+      /// get the full parameter name  
+      inline const std::string& name      () const { return m_value.name   () ; }
+      /// the sign of the value
+      std::int8_t               signum    () const { return m_value.signum () ; } 
+      /// absolute value of parameter
+      inline double             abs       () const { return m_value.abs    () ; }
+      /// implicit conversion to double  
+      inline operator           double    () const { return m_value.value  () ; }
+      /// get the underlying value
+      inline const Value&       the_value () const { return m_value           ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// get external value
+      inline double external    () const { return m_external ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** set the full name of parameter
+       *  @parm  the_name  the parameter  name
+       *  @param the_class the name of ower/holder class
+       */
+      inline const std::string& setFullName
+      ( const std::string& the_name  , 
+	const std::string& the_class )
+      { return m_value.setFullName ( the_name , the_class ) ; } 
+      // ======================================================================
+      /**  set the full name of parameter
+       *  @parm  the_name  the parameter  name
+       *  @param the_class the typeinfo of ower/holder class
+       */
+      inline const std::string& setFullName
+      ( const std::string&    the_name  , 
+	const std::type_info& the_class ) 
+      { return m_value.setFullName ( the_name , the_class ) ; } 
+      // ====================================================================
+      /**  set the full name of parameter
+       *  @parm  the_name  the parameter  name
+       *  @param the_class the typeinfo of ower/holder class
+       */
+      template <class CLASS>
+      inline const std::string& setFullName
+      ( const std::string&    the_name  , 
+	const CLASS&          the_class )
+      { return this->setFullName ( the_name , typeid ( the_class ) ) ; }	      
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// the "external" value: \f$ x \in \mathbb{R} \f$ 
+      double              m_external { 0 } ; 
+      /// the value of parameter 
+      Ostap::Math::Value  m_value    { 0 } ;
+      // ======================================================================      
+    };
+    // ========================================================================    
     /** @class LogValue
      *  Trivial (scalar) parameter: \f$ R \rigtharrow (0,+\infty) \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.c
      *  @date 2026-02-21
      */
-    class LogValue
+    class LogValue : public Transform 
     {
     public :
       // ======================================================================
@@ -178,24 +279,15 @@ namespace Ostap
 	: LogValue ( value , name , typeid ( the_class ) )
       {}
       // ======================================================================      
-    public :
+    public : // assignement from double 
       // ======================================================================
-      /// get the value 
-      inline double             value      () const { return m_value.value () ; }
-      /// get the full parameter name  
-      inline const std::string& name       () const { return m_value.name  () ; }      
-      // ======================================================================
-    public : // conversion 
-      // ======================================================================
-      /// implicit conversion to double 
-      inline operator double  () const { return m_value.value ()  ; } 
       /// set the value from double
       inline LogValue& operator=( const double value )
       { setValue ( value ) ; return *this ; }
       // ======================================================================
     public : 
       // ======================================================================
-      /// set new value for  parameter parameter 
+      /// set new value for  parameter
       bool setValue
       ( const double value         , 
 	const bool   force = false ) ;
@@ -203,7 +295,7 @@ namespace Ostap
     public : // get & set internal/external values 
       // ======================================================================
       /// get log-value 
-      inline double logValue   () const { return m_logValue ; }
+      inline double logValue   () const { return m_external ; }
       /// set new value for log-parameter 
       bool          setLogValue
       ( const double value         , 
@@ -211,45 +303,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================      
-      /// get external value
-      inline double external    () const { return m_logValue ; }
       /// set external value
       inline bool   setExternal
       ( const double value         , 
 	const bool   force = false )
       { return setLogValue ( value , force ) ; }      
-      /// get the Value 
-      inline const Value& the_value () const { return m_value ; }
-      // ======================================================================      
-    public: 
-      // ======================================================================
-      /** set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the name of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string& the_name  , 
-	const std::string& the_class )
-      { return m_value.setFullName ( the_name , the_class ) ; } 
-      // ======================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const std::type_info& the_class ) 
-      { return m_value.setFullName ( the_name , the_class ) ; } 
-      // ====================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      template <class CLASS>
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const CLASS&          the_class )
-      { return this->setFullName ( the_name , typeid ( the_class ) ) ; }	      
       // ======================================================================      
     public: 
       // ======================================================================
@@ -266,7 +324,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class InRange
-     *  Trivial parameter with the limits \f$ R \rightarrow [A,B] \f$
+     *  Trivial parameter with the limits \f$ \mathbb{R} \rightarrow \left[A,B\right]\f$
      *
      *  The actual transformation is
      *  \f[ p ( x ) = \frac{ B - A}{2} \left( 1 - \cos \frac{\pi\left(x-A){B-A}\right) + A \f]      
@@ -280,7 +338,7 @@ namespace Ostap
      *   -  \f$  p( \frac{A+B}{2} ) = \frac{A+B}{2} \f$
      *
      */
-    class InRange
+    class InRange : public Transform  
     {
     public :
       // =====================================================================
@@ -375,30 +433,14 @@ namespace Ostap
 		    typeid ( the_class ) )
       {}      
       // =====================================================================
-    public :
+    public : 
       // ======================================================================
-      /// get the value 
-      inline double             value  () const { return m_value.value () ; }
-      /// get the full parameter name  
-      inline const std::string& name   () const { return m_value.name  () ; }
-      /** the sign of the value
-       *  @see Ostap::Math::signum
-       *  @see Ostap::Math::Value::signum
-       */
-      inline std::int8_t        signum () const { return m_value.signum () ; }  
-      // ======================================================================      
-    public : // conversion 
-      // ======================================================================
-      /// implicit conversion to double 
-      inline operator double  () const { return m_value.value ()  ; }
       /// set the value from double
       inline InRange& operator=( const double value )
       { setValue ( value ) ; return *this ; }
       // ======================================================================
     public : // get & set internal/external values
       // ======================================================================
-      /// get external value  
-      inline double external    () const { return m_external  ; }
       /// set new value for external -parameter 
       bool          setExternal
       ( const double value         ,
@@ -417,41 +459,10 @@ namespace Ostap
       // ======================================================================      
     public: 
       // ======================================================================
-      /** set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the name of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string& the_name  , 
-	const std::string& the_class )
-      { return m_value.setFullName ( the_name , the_class ) ; } 
-      // ======================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const std::type_info& the_class ) 
-      { return m_value.setFullName ( the_name , the_class ) ; } 
-      // ====================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      template <class CLASS>
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const CLASS&          the_class )
-      { return this->setFullName ( the_name , typeid ( the_class ) ) ; }	      
-      // ======================================================================      
-    public: 
-      // ======================================================================
       /// unique tag
       std::size_t tag () const ; 
       // ======================================================================
     protected : // variable transformation 
-    public: 
       // =====================================================================
       /// external -> internal 
       double t ( const double x ) const ;
@@ -460,6 +471,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      using Ostap::Math::Transform::value ;
       /// get the value as function external parameter
       inline double value       ( const double p ) const { return t ( p ) ; }
       /// get the value as function external parameter 
@@ -471,10 +483,6 @@ namespace Ostap
       double m_min       {  0   } ; // A-limit
       /// B-limit
       double m_max       {  1   } ; // B-limit
-      /// external value 
-      double m_external  {  0   }  ; // external value 
-      /// the value 
-      Value  m_value     {  0.5 } ; // the value
       // =====================================================================
     } ;
     // ========================================================================
@@ -498,7 +506,7 @@ namespace Ostap
      *   -  \f$  p^\prime( \frac{A+B}{2} ) = 1 \f$ 
      *
      */
-    class InRange2
+    class InRange2 : public Transform 
     {
     public :
       // =====================================================================
@@ -593,30 +601,14 @@ namespace Ostap
 		     typeid ( the_class ) )
       {}      
       // =====================================================================
-    public :
-      // ======================================================================
-      /// get the value 
-      inline double             value  () const { return m_value.value () ; }
-      /// get the full parameter name  
-      inline const std::string& name   () const { return m_value.name  () ; }
-      /** the sign of the value
-       *  @see Ostap::Math::signum
-       *  @see Ostap::Math::Value::signum
-       */
-      inline std::int8_t        signum () const { return m_value.signum () ; }  
-      // ======================================================================      
     public : // conversion 
       // ======================================================================
-      /// implicit conversion to double 
-      inline operator double  () const { return m_value.value ()  ; }
       /// set the value from double
       inline InRange2& operator=( const double value )
       { setValue ( value ) ; return *this ; }
       // ======================================================================
     public : // get & set internal/external values
       // ======================================================================
-      /// get external value  
-      inline double external    () const { return m_external  ; }
       /// set new value for external -parameter 
       bool          setExternal
       ( const double value         ,
@@ -635,36 +627,6 @@ namespace Ostap
       // ======================================================================      
     public: 
       // ======================================================================
-      /** set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the name of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string& the_name  , 
-	const std::string& the_class )
-      { return m_value.setFullName ( the_name , the_class ) ; } 
-      // ======================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const std::type_info& the_class ) 
-      { return m_value.setFullName ( the_name , the_class ) ; } 
-      // ====================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      template <class CLASS>
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const CLASS&          the_class )
-      { return this->setFullName ( the_name , typeid ( the_class ) ) ; }	      
-      // ======================================================================      
-    public: 
-      // ======================================================================
       /// unique tag
       std::size_t tag () const ; 
       // ======================================================================
@@ -677,6 +639,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      using Ostap::Math::Transform::value ;
       /// get the value as function external parameter
       inline double value       ( const double p ) const { return t ( p ) ; }
       /// get the value as function external parameter 
@@ -688,10 +651,6 @@ namespace Ostap
       double m_min       {  0   } ; // A-limit
       /// B-limit
       double m_max       {  1   } ; // B-limit
-      /// external value 
-      double m_external  {  0   }  ; // external value 
-      /// the value 
-      Value  m_value     {  0.5 } ; // the value
       // =====================================================================
     } ;    
     // ========================================================================
@@ -700,14 +659,15 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.c
      *  @date 2026-02-21
      */
-    class Scale
+    class Scale : public Transform 
     {
     public :
       // ======================================================================
       /** full constructor
        *  @param value the value of scale parameter 
        *  @param name  the name of scale parameer 
-       *  @param the_class name of the (owner/holder) class 
+       *  @param the_class name of the (owner/holder) class
+       *  @param positive force the scale to be positive 
        */
       Scale
       ( const double       value               ,
@@ -719,6 +679,7 @@ namespace Ostap
        *  @param value the value of scale parameter 
        *  @param name  the name of scale parameer 
        *  @param the_class the (owner/holder) object
+       *  @param positive force the scale to be positive 
        */
       Scale
       ( const double          value     , 
@@ -730,6 +691,7 @@ namespace Ostap
        *  @param value the value of scale parameter 
        *  @param name  the name of scale parameer 
        *  @param the_class the (owner/holder) object
+       *  @param positive force the scale to be positive 
        */
       template <class CLASS>
       Scale
@@ -743,23 +705,10 @@ namespace Ostap
     public :
       // ======================================================================
       /// get the value 
-      inline double             scale  () const { return m_scale.value  () ; }
-      /// get the value 
-      inline double             value  () const { return m_scale.value  () ; }
-      /// get the full parameter name  
-      inline const std::string& name   () const { return m_scale.name   () ; }
-      /** the sign of the value
-       *  @see Ostap::Math::signum
-       *  @see Ostap::Math::Value::signum
-       */
-      inline std::int8_t        signum () const { return m_scale.signum () ; }
-      /// absolute value of the scale
-      inline double             abs    () const { return std::abs ( m_scale.value () ) ; }	  
+      inline double             scale  () const { return m_value.value  () ; } 
       // ======================================================================
     public :
       // ======================================================================
-      /// implicit conversion to double 
-      inline operator double () const { return m_scale.value () ; } 
       /// set the value from double
       inline Scale& operator=( const double value )
       { setValue ( value ) ; return *this ; }
@@ -772,48 +721,35 @@ namespace Ostap
       bool setValue
       ( const double value         ,
 	const bool   force = false ) ;       
+      /// set new value for exetrnal parameter 
+      bool setExternal 
+      ( const double value         ,
+	const bool   force = false ) ;       
       // ======================================================================
-    public: 
+      /// get the external parameter 
+      inline double inv_value () const { return m_external ; }
+      /// get the external parameter 
+      inline double inv_scale () const { return m_external ; }
+      /// set new value for exetrnal parameter 
+      inline bool setInvScale 
+      ( const double value         ,
+	const bool   force = false )
+      { return setExternal ( value , force ) ; }       
+      /// set new value for exetrnal parameter 
+      inline bool setInvValue 
+      ( const double value         ,
+	const bool   force = false )
+      { return setExternal ( value , force ) ; }       
       // ======================================================================
-      /** set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the name of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string& the_name  , 
-	const std::string& the_class )
-      { return m_scale.setFullName ( the_name , the_class ) ; } 
-      // ======================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const std::type_info& the_class ) 
-      { return m_scale.setFullName ( the_name , the_class ) ; } 
-      // ====================================================================
-      /**  set the full name of parameter
-       *  @parm  the_name  the parameter  name
-       *  @param the_class the typeinfo of ower/holder class
-       */
-      template <class CLASS>
-      inline const std::string& setFullName
-      ( const std::string&    the_name  , 
-	const CLASS&          the_class )
-      { return this->setFullName ( the_name , typeid ( the_class ) ) ; }	      
-      // ======================================================================      
     public: 
       // ======================================================================
       /// unique tag
       std::size_t tag () const ; 
       // ======================================================================			      
-    private :
+    private : 
       // ======================================================================
-      /// parameter 
-      Ostap::Math::Value m_scale    { 1    } ; // parameter
       /// forced to be positive ? 
-      bool               m_positive { true } ; // forced to be positive ? 
+      bool m_positive { true } ; // forced to be positive ? 
       // ======================================================================
     } ;    
     // ========================================================================

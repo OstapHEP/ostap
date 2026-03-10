@@ -1065,8 +1065,60 @@ except ImportError : # ========================================================
     sp_minimum_1D = None 
     sp_maximum_1D = None 
     sp_solve      = None 
-    
 
+
+# =============================================================================
+## decorations for parameter values 
+# =============================================================================
+## decorate printout for Ostap::Math::Value
+#  @see Ostap::Math::Value 
+def _pv_str_value_ ( v ) :
+    """ Decorate printout for Ostap::Math::Value
+    - see `Ostap.Math.Value`    
+    """
+    from ostap.logger.pretty import nice_print 
+    return '%s(%s,name=%s)' % ( typename   ( v )         ,
+                                nice_print ( v.value() ) ,
+                                v.name     (   )         )
+# =============================================================================
+## decorate printout for Ostap::Math::Transform
+#  @see Ostap::Math::Transform 
+def _pv_str_transform_ ( v ) :
+    """ Decorate printout for Ostap::Math::Transform
+    - see `Ostap.Math.Transform`    
+    """
+    from ostap.logger.pretty import nice_print 
+    return '%s(%s,name=%s)' % ( typename   ( v )         ,
+                                nice_print ( v.value() ) ,
+                                v.name     (   )         )
+
+# =============================================================================
+## decorate printout for Ostap::Math::Scale 
+#  @see Ostap::Math::Scale 
+def _pv_str_scale_ ( v ) :
+    """ Decorate printout for Ostap::Math::Scale
+    - see `Ostap.Math.Scale`    
+    """
+    from ostap.logger.pretty import nice_print 
+    return '%s(%s,name=%s,positive=%s)' % ( typename   ( v )                 ,
+                                            nice_print ( v.value() )         ,
+                                            v.name     (   )                 ,
+                                            True if v.positive () else False )
+
+
+Ostap.Math.Value    .__str__  = _pv_str_value_
+Ostap.Math.Value    .__repr__ = _pv_str_value_
+
+Ostap.Math.Transform.__str__  = _pv_str_transform_
+Ostap.Math.Transform.__repr__ = _pv_str_transform_
+
+Ostap.Math.Scale    .__str__  = _pv_str_scale_
+Ostap.Math.Scale    .__repr__ = _pv_str_scale_
+
+for t in ( Ostap.Math.Value     ,
+           Ostap.Math.Transform ) :
+    t.__float__ = lambda v : v.value()
+    
 # =============================================================================
 ## decorate 1D-models/functions 
 # =============================================================================
@@ -2856,7 +2908,6 @@ _decorated_classes_ = set( [
 import ostap.math.bernstein 
 import ostap.math.bspline
 import ostap.math.karlin
-
      
 # =============================================================================
 if '__main__' == __name__ :

@@ -803,13 +803,16 @@ def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
     plot.SetMinimum ( ymin )
     plot.SetMaximum ( ymax )
     ##
+    print ('FACTORY ROOPLOT:')
     for ( obj , options , invisible ) in items :
+        print ('FACTORY ROOPLOT/0' , options, invisible  )
         if   isinstance ( obj  , ROOT.RooPlotable ) :            
             plot.addPlotable ( obj , options , invisible )
         elif isinstance ( obj  , ROOT.TH1 ) and 1 == obj.GetDimension() :
             plot.addTH1      ( obj , options , invisible )
         else :
-            plot.addObject   ( obj , options , invisible )            
+            plot.addObject   ( obj , options , invisible )
+        print ('FACTORY ROOPLOT/1')
     ## 
     plot.__store = items  ## ATTENTION!! keep the items! 
     return plot 
@@ -818,6 +821,12 @@ def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
 ## reduce RooPlot object
 def _rplot_reduce_ ( plot ) :
     """ Reduce `ROOT.RooPlot` object"""
+
+    print ('REDUCE ROOPLOT/0')
+    for i in plot.items()  : pass
+    print ( plot ) 
+    print ('REDUCE ROOPLOT/1')
+    
     return _rplot_factory_ , ( type ( plot )   ,
                                plot.GetXaxis().GetXmin() ,
                                plot.GetXaxis().GetXmax() ,

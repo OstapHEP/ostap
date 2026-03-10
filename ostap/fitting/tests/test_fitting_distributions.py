@@ -116,11 +116,14 @@ def test_db() :
     from ostap.utils.timing     import timing 
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
         for m in the_models :
+            logger.info ( 'Saving : %s' % typename (  m ) )
             db['model:' + m.name ] = m
             db['roo:%s' % m.name ] = m.pdf
-        db['models'   ] = the_models
-        db['plots'    ] = the_plots 
-        db.ls() 
+        logger.info ( 'Saving all models' ) 
+        db [ 'models' ] = the_models
+        logger.info ( 'Saving all plots'  ) 
+        db [ 'plots'  ] = the_plots 
+        ## db.ls() 
 
 # =============================================================================
 if '__main__' == __name__ :

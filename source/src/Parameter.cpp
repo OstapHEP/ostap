@@ -135,6 +135,36 @@ std::size_t Ostap::Math::Value::tag () const
 // ============================================================================
 
 // ============================================================================
+/* full constructor
+ *  @param value parameter value  
+ *  @param name  parameter name  
+ *  @param the_class name of the (owner/holder) class 
+ */      
+// ============================================================================
+Ostap::Math::Transform::Transform 
+( const double       value     ,
+  const std::string& name      ,
+  const std::string& the_class )
+  : m_external ( 0  )
+  , m_value    ( value , name , the_class ) 
+{}
+// ============================================================================
+/* full constructor
+ *  @param value parameter value  
+ *  @param name  parameter name  
+ *  @param the_class the (owner/holder) object
+ */
+// ============================================================================
+Ostap::Math::Transform::Transform 
+( const double          value     , 
+  const std::string&    name      ,
+  const std::type_info& the_class )
+  : Transform ( value , name , Ostap::class_name ( the_class ) )
+{}
+// ============================================================================
+ 
+
+// ============================================================================
 /*  full constructor
  *  @param value of parameter
  *  @param name  parameter name  
@@ -145,17 +175,15 @@ Ostap::Math::LogValue::LogValue
 ( const double       value     ,
   const std::string& name      ,
   const std::string& the_class )
-  : m_logValue ( 0 )
-  , m_value    ( value , name , the_class )
+  : Transform  ( value , name , the_class )
 {
   //
-  Ostap::Assert ( s_EXP_UNDERFLOW_EXP < value && value < s_EXP_OVERFLOW_EXP ,		  
+  Ostap::Assert ( std::isfinite ( value ) && s_EXP_UNDERFLOW_EXP < value && value < s_EXP_OVERFLOW_EXP ,		  
 		  s_invalid_value                            ,
 		  m_value.name ()                            , 
 		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_logValue = std::log   ( value ) ;  
-  m_value.setValue ( value ) ;
+  m_external = std::log  ( value ) ;  
 }
 // ============================================================================
 /*  full constructor
@@ -184,8 +212,8 @@ bool Ostap::Math::LogValue::setLogValue
 		  m_value.name ()                             , 
 		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_logValue = log_value ;  
-  return m_value.setValue ( std::exp ( m_logValue ) , force ) ;
+  m_external = log_value ;  
+  return m_value.setValue ( std::exp ( m_external ) , force ) ;
 }
 // =====================================================================
 // set new value for     parameter 
@@ -201,7 +229,7 @@ bool Ostap::Math::LogValue::setValue
 		  m_value.name ()                            , 
 		  INVALID_LOGPARAMETER , __FILE__ , __LINE__ ) ;
   //
-  m_logValue = std::log   ( value ) ;  
+  m_external = std::log   ( value ) ;  
   return m_value.setValue ( value , force ) ;
 }
 // ============================================================================
@@ -229,19 +257,15 @@ Ostap::Math::InRange::InRange
   const double       bvalue    , 
   const std::string& name      ,
   const std::string& the_class )
-  : m_min       ( ) 
-  , m_max       ( ) 
-  , m_external  ( )
-  , m_value     ( value , name   , the_class ) 
+  : Transform ( value , name   , the_class ) 
+  , m_min       ( std::min ( avalue , bvalue ) ) 
+  , m_max       ( std::max ( avalue , bvalue ) ) 
 {
   //
-  Ostap::Assert ( !s_equal ( avalue , bvalue ) && std::isfinite ( avalue ) && std::isfinite ( bvalue ) , 
+  Ostap::Assert ( std::isfinite ( avalue ) && std::isfinite ( bvalue ) && !s_equal ( avalue , bvalue ) , 
 		  s_invalid_range  ,
 		  m_value.name ()  ,		  
 		  INVALID_RANGE    , __FILE__ , __LINE__  ) ;
-  //
-  m_min = std::min ( avalue , bvalue ) ;
-  m_max = std::max ( avalue , bvalue ) ;
   //
   Ostap::Assert ( ( m_min <= value && value <= m_max )
 		  || s_equal ( m_min , value )
@@ -347,7 +371,7 @@ double Ostap::Math::InRange::x
   //
   return dx * t2 + m_min ;
 }
-// =====================================================================
+// ============================================================================
 // set new value for parameter 
 // ============================================================================
 bool Ostap::Math::InRange::setExternal
@@ -358,9 +382,9 @@ bool Ostap::Math::InRange::setExternal
   m_external = value ;  
   return m_value.setValue ( t ( m_external ) , force ) ;
 }
-// =====================================================================
+// ============================================================================
 // set new value for     parameter 
-// =====================================================================
+// ============================================================================
 bool Ostap::Math::InRange::setValue
 ( const double value ,
   const bool   force )
@@ -394,19 +418,15 @@ Ostap::Math::InRange2::InRange2
   const double       bvalue    , 
   const std::string& name      ,
   const std::string& the_class )
-  : m_min       ( ) 
-  , m_max       ( ) 
-  , m_external  ( )
-  , m_value     ( value , name   , the_class ) 
+  : Transform ( value , name , the_class ) 
+  , m_min     ( std::min ( avalue , bvalue ) ) 
+  , m_max     ( std::max ( avalue , bvalue ) ) 
 {
   //
-  Ostap::Assert ( !s_equal ( avalue , bvalue ) && std::isfinite ( avalue ) && std::isfinite ( bvalue ) , 
+  Ostap::Assert ( std::isfinite ( avalue ) && std::isfinite ( bvalue ) && !s_equal ( avalue , bvalue ) , 
 		  s_invalid_range  ,
 		  m_value.name ()  ,		  
 		  INVALID_RANGE    , __FILE__ , __LINE__  ) ;
-  //
-  m_min = std::min ( avalue , bvalue ) ;
-  m_max = std::max ( avalue , bvalue ) ;
   //
   Ostap::Assert ( ( m_min < value && value < m_max )
 		  || s_equal ( m_min , value )
@@ -555,15 +575,16 @@ Ostap::Math::Scale::Scale
   const std::string& name      ,
   const std::string& the_class ,
   const bool         positive  )
-  : m_scale    ( positive ? std::abs ( value ) : value , name , the_class )
+  : Transform  ( positive ? std::abs ( value ) : value , name , the_class )
   , m_positive ( positive ) 
 {
   static const std::string s_invalid_scale { "Invalid scale-value!" } ;  
-  Ostap::Assert ( !s_zero ( scale () ) ,		  
+  Ostap::Assert ( !s_zero ( m_value.value () ) ,		  
 		  s_invalid_scale      ,                               
-		  m_scale.name ()      , 
+		  m_value.name ()      , 
 		  INVALID_SCALEPARAMETER , __FILE__ , __LINE__ ) ;
   //
+  m_external = 1 / m_value.value() ;
 }
 // ============================================================================
 /*  full constructor
@@ -587,15 +608,35 @@ bool Ostap::Math::Scale::setValue
   const bool   force )
 {
   const double new_value = m_positive ? std::abs ( value ) : value ;
-  if ( !force && s_equal ( new_value , m_scale.value () ) ) { return false ; }
+  if ( !m_value.setValue ( new_value ) ) { return false ; }
   //
   static const std::string s_invalid_scale { "Invalid scale-value!" } ;
   Ostap::Assert ( !s_zero ( new_value) ,		  
 		  s_invalid_scale      ,                               
-		  m_scale.name ()      , 
+		  m_value.name ()      , 
 		  INVALID_SCALEPARAMETER , __FILE__ , __LINE__ ) ;
   //
-  return m_scale.setValue ( new_value , force ) ; 
+  m_external = 1 / new_value ; 
+  return true ;
+}
+// ============================================================================
+// set new value for scale parameter 
+// ============================================================================
+bool Ostap::Math::Scale::setExternal 
+( const double value ,
+  const bool   force )
+{
+  const double new_value = m_positive ? std::abs ( value ) : value ;
+  if ( !force && s_equal ( new_value , m_external ) ) { return false ; }
+  //
+  static const std::string s_invalid_scale { "Invalid scale-value!" } ;
+  Ostap::Assert ( !s_zero ( new_value) ,		  
+		  s_invalid_scale      ,                               
+		  m_value.name ()      , 
+		  INVALID_SCALEPARAMETER , __FILE__ , __LINE__ ) ;
+  //
+  m_external = new_value ; 
+  return m_value.setValue ( 1.0 / new_value , force ) ; 
 }
 // ============================================================================
 // Unique value 
@@ -603,7 +644,7 @@ bool Ostap::Math::Scale::setValue
 std::size_t Ostap::Math::Scale::tag () const 
 {
   static const std::string s_name { "Scale" } ;
-  return Ostap::Utils::hash_combiner ( s_name , m_scale.tag () , m_positive )  ;
+  return Ostap::Utils::hash_combiner ( s_name , m_value.tag () , m_positive )  ;
 }
 // ============================================================================
 

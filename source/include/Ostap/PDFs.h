@@ -12137,8 +12137,8 @@ namespace Ostap
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
-      const RooAbsReal& logc  () const { return m_logc   .arg  () ; }
+      inline const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
+      inline const RooAbsReal& logc  () const { return m_logc   .arg  () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
@@ -12177,7 +12177,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::BurrV, 1) ;
+      ClassDefOverride(Ostap::Models::BurrV, 2) ;
       // ======================================================================
     public : 
       // ======================================================================
@@ -12239,17 +12239,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BurrV& burr     () const
+      inline const Ostap::Math::BurrV& burr     () const
       { setPars () ; return m_burr ; }
       /// access to underlying function
-      const Ostap::Math::BurrV& function () const
+      inline const Ostap::Math::BurrV& function () const
       { return burr () ; }
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
-      const RooAbsReal& logk  () const { return m_logk   .arg  () ; }
-      const RooAbsReal& logc  () const { return m_logc   .arg  () ; }
+      inline const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
+      inline const RooAbsReal& logk  () const { return m_logk   .arg  () ; }
+      inline const RooAbsReal& logc  () const { return m_logc   .arg  () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
@@ -12289,7 +12289,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      ClassDefOverride(Ostap::Models::BurrVI, 1) ;
+      ClassDefOverride(Ostap::Models::BurrVI, 2) ;
       // ======================================================================
     public : 
       // ======================================================================
@@ -12359,9 +12359,9 @@ namespace Ostap
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
-      const RooAbsReal& logk  () const { return m_logk   .arg  () ; }
-      const RooAbsReal& logc  () const { return m_logc   .arg  () ; }
+      inline const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
+      inline const RooAbsReal& logk  () const { return m_logk   .arg  () ; }
+      inline const RooAbsReal& logc  () const { return m_logc   .arg  () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
@@ -12467,7 +12467,7 @@ namespace Ostap
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
+      inline const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
@@ -12561,15 +12561,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BurrVIII& burr     () const
+      inline const Ostap::Math::BurrVIII& burr     () const
       { setPars () ; return m_burr ; }
       /// access to underlying function
-      const Ostap::Math::BurrVIII& function () const
+      inline const Ostap::Math::BurrVIII& function () const
       { return burr () ; }
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
+      inline const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
@@ -12665,16 +12665,16 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::BurrIX& burr     () const
+      inline const Ostap::Math::BurrIX& burr     () const
       { setPars () ; return m_burr ; }
       /// access to underlying function
-      const Ostap::Math::BurrIX& function () const
+      inline const Ostap::Math::BurrIX& function () const
       { return burr () ; }
       // ======================================================================      
     public :
       // ======================================================================      
-      const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
-      const RooAbsReal& logk  () const { return m_logk   .arg  () ; }
+      inline const RooAbsReal& logr  () const { return m_logr   .arg  () ; }
+      inline const RooAbsReal& logk  () const { return m_logk   .arg  () ; }
       // ======================================================================      
     protected : 
       // ======================================================================
