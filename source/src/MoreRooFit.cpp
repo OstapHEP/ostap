@@ -24,6 +24,10 @@
 #include "RooAbsCategory.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
+#include "RooPlot.h"
+#include "RooCurve.h"
+#include "RooHist.h"
+#include "RooEllipse.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -2578,7 +2582,157 @@ Ostap::Utils::toStream
 }
 // ============================================================================
 
+// ============================================================================
+/* @fn copy_plot
+ *  make a copy/clone of RooPlot object
+ *  @see RooPlot
+ *  Note that RooPlot has no copy constructor!
+ */
+// ============================================================================ 
+RooPlot* Ostap::MoreRooFit::copy_plot 
+( const RooPlot& plot ) 
+{
+  TAxis* axis = plot.GetXaxis() ;
+  std::unique_ptr<RooPlot>  copy { new RooPlot ( axis->GetXmin  () , 
+                                                 axis->GetXmax  () , 
+                                                 plot.GetNbinsX () ) } ;
+  //
+  //  NULL ? ot gROOT ? 
+  TDirectory* the_dir = nullptr ;
+  //
+  copy->SetDirectory ( the_dir ) ;
+  //
+  const unsigned int N = plot.numItems() ;
+  //
+  for ( unsigned short index = 0 ; index < N ; ++index )
+  {
+     TObject* object = plot.getObject ( index ) ; 
+     if ( !object ) { continue ; }
+     const char* name      = plot.nameOf         ( index ) ;
+     TString     dopts     = plot.getDrawOptions ( name  ) ;
+     bool        invisible = plot.getInvisible   ( name  ) ; 
+     //
+     TH1* th1 = dynamic_cast<TH1*> ( object ) ;
+     if ( th1 )
+     {
+      th1 = static_cast<TH1*> ( th1->Clone () ) ;
+      th1 ->SetDirectory ( the_dir ) ;    
+      copy->addTH1  ( th1 , dopts , invisible ) ;
+      continue ;
+     }
+     //
+     RooCurve* curve = dynamic_cast<RooCurve*> ( object ) ;
+     if ( curve )
+     {
+      curve = new RooCurve ( *curve ) ;
+      copy->addPlotable ( curve , dopts, invisible ) ;
+      continue ; 
+     }
+     //
+     RooHist* histo = dynamic_cast<RooHist*> ( object ) ;
+     if ( histo )
+     {
+      histo = new RooHist ( *histo ) ;
+      copy->addPlotable ( histo , dopts, invisible ) ;
+      continue ; 
+     }
+     //
+     RooEllipse* ellipse = dynamic_cast<RooEllipse*> ( object ) ;
+     if ( ellipse )
+     {
+      ellipse = new RooEllipse ( *ellipse ) ;
+      copy->addPlotable ( ellipse , dopts, invisible ) ;
+      continue ; 
+     }
+     //
+     //
+     TObject* cloned = object -> Clone() ;
+     RooPlotable* pl = dynamic_cast<RooPlotable*> ( cloned ) ;
+     if ( cloned && pl )
+     {
+      copy->addPlotable ( ellipse , dopts, invisible ) ;
+      continue ;
+     }
+     //
+     if ( cloned ) { copy->addObject ( cloned , dopts , invisible ) ;  }
+    }
+  //
+  // copy->SetAxisColor     ( plot.GetAxisColor ( "x" ) , "x" ) ;
+  // copy->SetAxisRange     ( ... )
+  // copy->SetBarOffset     ( ... )
+  // copy->SetBarWidth      ( ... )
+  // copy->SetContour       ( ... )
+  // copy->SetCountourLevel ( ... )
+  //
+  copy->SetMinimum    ( plot.GetMinimum () ) ;
+  copy->SetMaximum    ( plot.GetMaximum () ) ;
+  //
+  copy->SetNdivisions ( plot.GetNdivisions ( "x" ) , "x") ;
+  copy->SetNdivisions ( plot.GetNdivisions ( "y" ) , "y") ;
+  copy->SetNdivisions ( plot.GetNdivisions ( "z" ) , "z") ;
 
+  return copy.release() ; 
+}
+// ============================================================================
+namespace 
+{ 
+  inline RooCurve*    copy_curve    ( const RooCurve&    p ) { return new RooCurve    ( p ) ; }
+  inline RooHist*     copy_hist     ( const RooHist&     p ) { return new RooHist     ( p ) ; }
+  inline TH1*         copy_th1      ( const TH1&         p ) 
+  { 
+    TObject* result = p.Clone () ;
+    return dynamic_cast<TH1*> ( result ) ;
+  }
+  inline RooEllipse* copy_ellipse ( const RooEllipse& p ) { return new RooEllipse ( p ) ; }
+  // ==========================================================================
+  RooPlotable* copy_plotable  ( const RooPlotable& p )
+  {
+    const RooCurve*    curve    = dynamic_cast<const RooCurve*>    ( &p ) ;  
+    if  ( curve    ) { return copy_curve    ( *curve    ) ; }
+    const RooHist*     hist     = dynamic_cast<const RooHist*>     ( &p ) ;  
+    if  ( hist     ) { return copy_hist     ( *hist     ) ; }
+    const RooEllipse*  ellipse  = dynamic_cast<const RooEllipse*>  ( &p ) ;  
+    if  ( ellipse  ) { return copy_ellipse  ( *ellipse  ) ; }
+    const TObject*     object   = dynamic_cast<const TObject*>     ( &p ) ;
+    if  ( object   )
+    {
+      TObject* copied = object->Clone ()  ; 
+      if ( copied )
+      {
+        RooPlotable*result = dynamic_cast<RooPlotable*> ( copied ) ;
+        if ( result ) { return result ; }
+      }
+    }
+    return nullptr ; 
+  }
+  // ==========================================================================
+  TObject* copy_object ( const TObject& p )
+  {
+    const RooCurve*    curve  = dynamic_cast<const RooCurve*>    ( &p ) ;  
+    if ( curve    ) { return copy_curve    ( *curve    ) ; }
+    const RooHist*     hist   = dynamic_cast<const RooHist*>     ( &p ) ;  
+    if ( hist     ) { return copy_hist     ( *hist     ) ; }
+    const RooEllipse* ellipse = dynamic_cast<const RooEllipse*>  ( &p ) ;  
+    if ( ellipse  ) { return copy_ellipse  ( *ellipse  ) ; }
+    const TH1*         th1    = dynamic_cast<const TH1*>         ( &p ) ;
+    if ( th1      ) { return copy_th1     ( *th1       ) ; }
+    const RooPlotable* plot   = dynamic_cast<const RooPlotable*> ( &p ) ; 
+    if ( plot     ) 
+    { 
+      RooPlotable* result = copy_plotable ( *plot ) ; 
+      return dynamic_cast<TObject*> ( result ) ; 
+    }
+    return p.Clone () ; 
+  }
+  // ==========================================================================
+}
+// ============================================================================
+RooHist*     Ostap::MoreRooFit::copy ( const RooHist&     p ) { return ::copy_hist     ( p ) ; } 
+RooCurve*    Ostap::MoreRooFit::copy ( const RooCurve&    p ) { return ::copy_curve    ( p ) ; } 
+RooEllipse*  Ostap::MoreRooFit::copy ( const RooEllipse&  p ) { return ::copy_ellipse  ( p ) ; } 
+RooPlotable* Ostap::MoreRooFit::copy ( const RooPlotable& p ) { return ::copy_plotable ( p ) ; } 
+TH1*         Ostap::MoreRooFit::copy ( const TH1&         p ) { return ::copy_th1      ( p ) ; } 
+TObject*     Ostap::MoreRooFit::copy ( const TObject&     p ) { return ::copy_object   ( p ) ; } 
 // ============================================================================
 //                                                                      The END
 // ============================================================================

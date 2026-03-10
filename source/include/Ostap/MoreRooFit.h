@@ -42,6 +42,11 @@ class RooMultiVarGaussian ; // ROOT/RooFit
 class RooLinearVar        ; // ROOT/RooFit
 class RooAbsData          ; // ROOT/RooFit
 class RooDataSet          ; // ROOT/RooFit
+class RooPlot             ; // ROOT/RooFit 
+class RooPlotable         ; // ROOT/RooFit 
+class RooCurve            ; // ROOT/RooFit 
+class RooHist             ; // ROOT/RooFit
+class RooEllipse          ; // ROOT/RooFit 
 // ============================================================================
 namespace Ostap 
 {
@@ -4646,6 +4651,27 @@ namespace Ostap
      */
     const RooAbsReal& get_offset
     ( const RooLinearVar& var ) ;
+    // ========================================================================
+    /** @fn copy_plot
+     *  make a copy/clone of RooPlot object
+     *  @see RooPlot
+     *  Note that RooPlot has no copy constructor!
+     */
+    RooPlot* copy_plot 
+     ( const RooPlot& plot ) ;
+    // ========================================================================
+    /// helper copy methdod 
+    RooPlotable* copy  ( const RooPlotable& right ) ;
+    /// helper copy methdod 
+    RooCurve*    copy  ( const RooCurve&    right ) ;
+    /// helper copy methdod 
+    RooEllipse*  copy  ( const RooEllipse&  right ) ;
+    /// helper copy methdod 
+    RooHist*     copy  ( const RooHist&     right ) ;
+    /// helper copy methdod 
+    TH1*         copy  ( const TH1&         right ) ;
+    /// helper copy methdod 
+    TObject*     copy  ( const TObject&     right ) ;
     // ========================================================================
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================

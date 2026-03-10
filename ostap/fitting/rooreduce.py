@@ -794,39 +794,50 @@ def _rrfr_reduce_ ( res ) :
 
 ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
 
+
+__store = [] 
 # =============================================================================
 ## reconstruct/deserialize <code>RooPlot</code> object
 def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
     """ Reconstruct/deserialize `ROOT.RooPlot` object
     """
+    print ( 'FACTORY HERE' )
     plot = klass    ( xmin , xmax )
     plot.SetMinimum ( ymin )
     plot.SetMaximum ( ymax )
     ##
-    print ('FACTORY ROOPLOT:')
+    plot.SetDirectory ( ROOT.nullptr )
     for ( obj , options , invisible ) in items :
-        print ('FACTORY ROOPLOT/0' , options, invisible  )
+        print ( 'FACTORY LOOP/1')
+        if  hasattr ( obj , 'SetDirectory' ) : obj.SetDirectory ( ROOT.nullptr ) 
         if   isinstance ( obj  , ROOT.RooPlotable ) :            
             plot.addPlotable ( obj , options , invisible )
         elif isinstance ( obj  , ROOT.TH1 ) and 1 == obj.GetDimension() :
             plot.addTH1      ( obj , options , invisible )
         else :
             plot.addObject   ( obj , options , invisible )
-        print ('FACTORY ROOPLOT/1')
+        print ( 'FACTORY LOOP/2' ) 
     ## 
-    plot.__store = items  ## ATTENTION!! keep the items! 
-    return plot 
+    print ( 'FACTORY LOOP-2')
+    pcopy = plot.copy ()
+    print ( 'FACTORYLOOP-3')
+    __store.append ( items )
+    __store.append ( plot  ) 
+    ##  del plot 
+    print ( 'FACTORYLOOP-4')
+    
+    return pcopy 
+    ##  return plot.copy()
+    del items
+    del plot    
+    ## plot.__store = items  ## ATTENTION!! keep the items! 
+    return new_plot  
                 
 # =============================================================================
 ## reduce RooPlot object
 def _rplot_reduce_ ( plot ) :
-    """ Reduce `ROOT.RooPlot` object"""
-
-    print ('REDUCE ROOPLOT/0')
-    for i in plot.items()  : pass
-    print ( plot ) 
-    print ('REDUCE ROOPLOT/1')
-    
+    """ Reduce `ROOT.RooPlot` object
+    """
     return _rplot_factory_ , ( type ( plot )   ,
                                plot.GetXaxis().GetXmin() ,
                                plot.GetXaxis().GetXmax() ,

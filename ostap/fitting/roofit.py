@@ -383,12 +383,15 @@ _new_methods_ += [
     ]
 
 # ================================================================================
-## copy RooPlot object
+## copy/clone RooPlot object
 def _rp_copy_ ( plot ) :
-    """ Copy RooPlot object"""
-    return copy.deepcopy ( plot )
+    """ Copy/Clone RooPlot object"""
+    ##
+    return Ostap.MoreRooFit.copy_plot ( plot )
+    ## return copy.deepcopy ( plot )
 
-ROOT.RooPlot.copy      =  _rp_copy_ 
+ROOT.RooPlot.copy  =  _rp_copy_ 
+ROOT.RooPlot.clone =  _rp_copy_ 
 
 _new_methods_ += [
     ROOT.RooPlot.__len__      ,

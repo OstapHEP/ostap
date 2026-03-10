@@ -123,7 +123,7 @@ def test_db() :
         db [ 'models' ] = the_models
         logger.info ( 'Saving all plots'  ) 
         db [ 'plots'  ] = the_plots 
-        ## db.ls() 
+        db.ls() 
 
 # =============================================================================
 if '__main__' == __name__ :
