@@ -95,6 +95,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PhaseSpace.cpp
                          src/PhaseSpacePol.cpp
                          src/Piecewise.cpp
+                         src/Plot.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
                          src/Polarization.cpp

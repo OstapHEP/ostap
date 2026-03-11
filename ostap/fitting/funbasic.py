@@ -113,8 +113,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
         ## derived functions/objects
         self.__derived = {}
 
-        ## the list of all created RooPlot objects 
-        self.__plots   = []
 
         ## decode the keyword arguments 
         dropts = draw_options ( **kwargs )
@@ -190,13 +188,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             raise ValueError("Can't allow tricks&shortcuts!")
         self.__tricks = value
 
-    # =========================================================================
-    ## Get the list of all created plots
-    def plots ( self ) :
-        """`plots`: the list of all created `RooPlot` plots 
-        """
-        return self.__plots
-    
     # =========================================================================
     ##  Does this function depend on this variable,
     #   @code

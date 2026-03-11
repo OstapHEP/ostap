@@ -201,6 +201,19 @@ def _rp_contains_ ( plot , what ) :
 ROOT.RooPlot.__contains__ =  _rp_contains_
 
 # =============================================================================
+## Add cloned object to RooPlot
+#  @see RooPlot
+#  @see Ostap::Utils::add_copy 
+def _rp_add_copy_ ( rp , what , opts , invisible ) :
+    """ Add cloned object to RooPlot
+    - see `RooPlot`
+    - see `Ostap.Utils.add_copy`
+    """
+    return Ostap.Utils.add_copy ( rp , what , opts , invisible )
+    
+ROOT.RooPlot.add_copy = _rp_add_copy_
+
+# =============================================================================
 ## Get <code>RooPlot</code> componet 
 #  @code
 #  frame = ...
@@ -387,11 +400,12 @@ _new_methods_ += [
 def _rp_copy_ ( plot ) :
     """ Copy/Clone RooPlot object"""
     ##
-    return Ostap.MoreRooFit.copy_plot ( plot )
-    ## return copy.deepcopy ( plot )
+    return Ostap.Utils.copy_plot ( plot )
 
-ROOT.RooPlot.copy  =  _rp_copy_ 
-ROOT.RooPlot.clone =  _rp_copy_ 
+ROOT.RooPlot.copy         =  _rp_copy_ 
+ROOT.RooPlot.clone        =  _rp_copy_ 
+ROOT.RooPlot.__copy__     =  _rp_copy_ 
+ROOT.RooPlot.__deepcopy__ =  _rp_copy_ 
 
 _new_methods_ += [
     ROOT.RooPlot.__len__      ,

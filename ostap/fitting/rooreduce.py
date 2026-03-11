@@ -795,43 +795,26 @@ def _rrfr_reduce_ ( res ) :
 ROOT.RooFitResult.__reduce__  = _rrfr_reduce_ 
 
 
-__store = [] 
 # =============================================================================
 ## reconstruct/deserialize <code>RooPlot</code> object
-def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items )  :
+def _rplot_factory_ ( klass , xmin , xmax , ymin , ymax , items , nbins = 100 )  :
     """ Reconstruct/deserialize `ROOT.RooPlot` object
     """
-    print ( 'FACTORY HERE' )
-    plot = klass    ( xmin , xmax )
+    ## 
+    if ( 6 , 32 ) <= root_info : plot = klass ( xmin , xmax , nbins )
+    else                       : plot = klass ( xmin , xmax )
+    ## 
     plot.SetMinimum ( ymin )
     plot.SetMaximum ( ymax )
     ##
     plot.SetDirectory ( ROOT.nullptr )
-    for ( obj , options , invisible ) in items :
-        print ( 'FACTORY LOOP/1')
-        if  hasattr ( obj , 'SetDirectory' ) : obj.SetDirectory ( ROOT.nullptr ) 
-        if   isinstance ( obj  , ROOT.RooPlotable ) :            
-            plot.addPlotable ( obj , options , invisible )
-        elif isinstance ( obj  , ROOT.TH1 ) and 1 == obj.GetDimension() :
-            plot.addTH1      ( obj , options , invisible )
-        else :
-            plot.addObject   ( obj , options , invisible )
-        print ( 'FACTORY LOOP/2' ) 
     ## 
-    print ( 'FACTORY LOOP-2')
-    pcopy = plot.copy ()
-    print ( 'FACTORYLOOP-3')
-    __store.append ( items )
-    __store.append ( plot  ) 
-    ##  del plot 
-    print ( 'FACTORYLOOP-4')
-    
-    return pcopy 
-    ##  return plot.copy()
-    del items
-    del plot    
-    ## plot.__store = items  ## ATTENTION!! keep the items! 
-    return new_plot  
+    for ( obj , options , invisible ) in items :
+        if  hasattr ( obj , 'SetDirectory' ) : obj.SetDirectory ( ROOT.nullptr )
+        plot.add_copy ( obj , options , invisible ) 
+    ## 
+    return plot 
+
                 
 # =============================================================================
 ## reduce RooPlot object
@@ -843,7 +826,8 @@ def _rplot_reduce_ ( plot ) :
                                plot.GetXaxis().GetXmax() ,
                                plot.GetMinimum () ,
                                plot.GetMaximum () ,
-                               tuple ( i for i in plot.items() ) )
+                               tuple ( i for i in plot.items() ) ,
+                               plot.GetNbinsX  () )
 
 ROOT.RooPlot.__reduce__  = _rplot_reduce_ 
 

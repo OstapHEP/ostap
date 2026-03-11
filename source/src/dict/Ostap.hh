@@ -124,6 +124,7 @@
 #include "Ostap/Plane3DTypes.h"
 #include "Ostap/Point3DTypes.h"
 #include "Ostap/Point3DWithError.h"
+#include "Ostap/Plot.h"
 #include "Ostap/Polarization.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Positive.h"
