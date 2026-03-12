@@ -46,7 +46,7 @@ weight  = ROOT.RooRealVar ( 'Weight' , 'some weight'   , -10 , 10 )
 varset  = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
 dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
 
-NR  = 1000
+NR  = 10000
 NE  = 100
 
 with memory ( 'Create initial dataset' , logger = logger ) :
@@ -81,53 +81,28 @@ with memory ( 'Bootstrapping' , logger  = logger ) :
     size = 100
     for i , ds in progress_bar ( enumerate ( dataset.bootstrap ( size  , extended = True ) ) ,
                                  max_value = size ) :
-
-        ds = Ostap.MoreRooFit.delete_data ( ds )            
+        
+        ds = Ostap.MoreRooFit.delete_data ( ds )
         del ds 
 
 # =============================================================================
-## (3)  Bootstrapping + delete  
-# =============================================================================
-with memory ( "Bootstrapping + `delete'" , logger  = logger ) :
-
-    size = 100
-
-    for i , ds in progress_bar ( enumerate ( dataset.bootstrap ( size  , extended = True , delete = True ) ) ,
-                                 max_value = size ) :
-        pass
-    
-# =============================================================================
-## (4) Jackknife  
+## (3) Jackknife  
 # =============================================================================
 with memory ( 'Jackknife' , logger  = logger ) :
 
     first , last = 0, 100 
 
-    data = [] 
     for i , ds in progress_bar ( enumerate ( dataset.jackknife ( first , last ) ) ,
                                  max_value = 100 ) :
 
-        ds = Ostap.MoreRooFit.delete_data ( ds )            
+        ds = Ostap.MoreRooFit.delete_data ( ds )
         del ds 
 
-# =============================================================================
-## (5) Jackknife + delete 
-# =============================================================================
-with memory ( "Jackknife + `delete`" , logger  = logger ) :
-
-    first, last = 0, 100 
-    
-    data = [] 
-    for i , ds in progress_bar ( enumerate ( dataset.jackknife ( first , last , delete = True ) ) , 
-                                 max_value = 100 ) :
-
-        pass
-        
 # ==============================================================================
 ## delete it! 
 with memory ( 'Delete Initial dataset' , logger = logger ) :
     
-    dataset = Ostap.MoreRooFit.delete_data ( dataset )            
+    dataset = Ostap.MoreRooFit.delete_data ( dataset )
     del dataset 
     
 # =============================================================================

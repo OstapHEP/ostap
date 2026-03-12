@@ -568,17 +568,16 @@ def _rds_remevt_ ( dataset , index ) :
         if   0 == index     : return dataset.reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
         elif N == index + 1 : return dataset.reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
 
-        ds1 = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
-        ds2 = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
-
+        ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
+        ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
         result = ds1 + ds2
 
         assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
 
         ds1 = Ostap.MoreRooFit.delete_data ( ds1 )
-        del ds1
-        
         ds2 = Ostap.MoreRooFit.delete_data ( ds2 )
+        
+        del ds1        
         del ds2
         
         return result
@@ -644,24 +643,10 @@ def _rds_sub_ ( dataset , what ) :
 #  for ds in ds.jackknife() :
 #      ...
 #  @endcode
-#  - Dataset need to be deleted explicitely:
-#  @code
-#  dataset = ...
-#  for ds in ds.jackknife() :
-#      ...
-#      ds = Ostap.MoreRooFit.delete_data ( ds )
-#      del ds 
-#  @endcode
-#  - Alternatively one can use `delete=True` :
-#  dataset = ...
-#  for ds in ds.jackknife( delete = True ) :
-#      ...
-#  @endcode
-#  @see Ostap::MoreRooFit::delete_data
+#  - Dataset need to be deleted explicitely!
 def _rds_jackknife_ ( dataset ,
                       first    = FIRST_ENTRY  ,
                       last     = LAST_ENTRY   ,
-                      delete   = False        ,
                       progress = False        ) :
     """ Jackknife generator
 
@@ -669,29 +654,13 @@ def _rds_jackknife_ ( dataset ,
     >>> for ds in ds.jackknife() :
     >>> ...
     
-    - Dataset need to be deleted explicitely:
-    >>> dataset = ...
-    >>> for ds in ds.jackknife() :
-    >>>     ...
-    >>>     ds = Ostap.MoreRooFit.delete_data ( ds )
-    >>>     del ds 
-    
-    - Alternatively one can use `delete=True` :
-
-    >>> dataset = ...
-    >>> for ds in ds.jackknife( delete = True ) :
-    >>>     ...
-
-    - see `Ostap.MoreRooFit.delete_data`
-
+    - Dataset need to be deleted explicitely!
     """
+    
     first , last = evt_range ( dataset , first , last )    
     for i in progress_bar ( range ( first , last ) , silent = not progress ) :
         ds = dataset - i                    ## this is the line! 
         yield ds
-        if delete :
-            ds = Ostap.MoreRooFit.delete_data ( ds )
-            del ds
             
 # =============================================================================
 ## Boostrap generator
@@ -700,20 +669,11 @@ def _rds_jackknife_ ( dataset ,
 #  for ds in dataset.bootstrap ( 100 ) :
 #  ...
 #  @endcode
-#  The dataset must be remove explicitely:
-#  @code
-#  dataset = ...
-#  for ds in dataset.bootstrap ( 100 ) :
-#      ...
-#      ds = Ostap.MoreRooFit.delete_data ( ds )
-#      del ds 
-#  @endcode
-#  Alternatively one can add `delete=True`
-#  @code
-#  for ds in dataset.bootstrap ( 100 , delete = True ) :
-#      ...
-#  @endcode 
-def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False , progress = False ) :
+#  The dataset must be remove explicitely!
+def _rds_bootstrap_ ( dataset          ,
+                      size     = 100   ,
+                      extended = False ,
+                      progress = False ) :
     """ Boostrap generator:
 
     >>> dataset = ...
@@ -721,18 +681,6 @@ def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False ,
     >>>     ...
 
     - The dataset must be remove explicitely:
-
-    >>> dataset = ...
-    >>> for ds in dataset.bootstrap ( 100 ) :
-    >>>    ...
-    >>>    ds = Ostap.MoreRooFit.delete_data ( ds )
-    >>>    del ds 
-
-     - Alternatively one can add `delete=True`
-
-    >>> dataset = ... 
-    >>> for ds in dataset.bootstrap ( 100 , delete = True ) :
-    >>>     ... 
     """
     from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
     N    = len ( dataset )
@@ -740,10 +688,6 @@ def _rds_bootstrap_ ( dataset , size = 100 , extended = False , delete = False ,
     for indices in progress_bar ( bgen , silent = not progress , max_value = N ) :
         ds = dataset [ indices ] 
         yield ds
-        if delete :
-            ds = Ostap.MoreRooFit.delete_data ( ds )
-            del ds
-            
 
 # =============================================================================
 ## get (random) unique sub-sample from the dataset
@@ -1917,7 +1861,8 @@ def _ds_clear_ ( data ) :
     >>> data.erase () ## ditto
     """
     Ostap.MoreRooFit.reset_data ( data )
-        
+    return len ( data )
+
 ROOT.RooDataSet.clear = _ds_clear_ 
 ROOT.RooDataSet.clean = _ds_clear_ 
 ROOT.RooDataSet.erase = _ds_clear_ 
@@ -1925,6 +1870,7 @@ ROOT.RooDataSet.erase = _ds_clear_
 ROOT.RooAbsData.get_var= get_var
 
 _new_methods_ += [
+    ROOT.RooDataSet .clean   ,
     ROOT.RooDataSet .clear   ,
     ROOT.RooDataSet .erase   ,    
     ROOT.RooAbsData .get_var ,
@@ -3846,7 +3792,7 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
                                  cut_range = cut_range )
         result = _ds_2tree_ ( dsaux , name = name , filename = filename )
         if dsaux and isinstance ( dsaux , ROOT.RooDataSet ) :
-            dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
+            if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
             del dsaux
         return result 
     
@@ -3870,9 +3816,9 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
             rfile [ name ] = store.tree()
 
     with ROOT.TFile ( filename , 'r' ) as rfile : rfile.ls()
-            
+    
     if dstmp and isinstance ( dstmp , ROOT.RooDataSet ) :
-        dstmp = Ostap.MoreRooFit.delete_data ( dstmp )
+        if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
         del dstmp
         
     return Data ( chain       = name         ,
