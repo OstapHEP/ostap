@@ -46,10 +46,10 @@ weight  = ROOT.RooRealVar ( 'Weight' , 'some weight'   , -10 , 10 )
 varset  = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
 dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
 
-NR  = 10000
+NR  = 100
 NE  = 100
 
-with memory ( 'Create initial dataset' , logger = logger ) :
+with memory ( 'Create initial dataset' , logger = logger ) as dm0 :
     
     for r in progress_bar ( range ( NR ) )  :
         
@@ -73,36 +73,49 @@ with memory ( 'Create initial dataset' , logger = logger ) :
 # =============================================================================
 logger.info ( 'Print initial dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 
+
+
+from ostap.math.base import std
+data_ptr = std.unique_ptr(ROOT.RooAbsData)
+
 # =============================================================================
 ## (2)  Bootstrapping 
 # =============================================================================
-with memory ( 'Bootstrapping' , logger  = logger ) :
+with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
 
-    size = 100
+    size = 200
     for i , ds in progress_bar ( enumerate ( dataset.bootstrap ( size  , extended = True ) ) ,
-                                 max_value = size ) :
+                                 max_value   = size         , 
+                                 description = "Bootstrap:" ) :
         
-        ds = Ostap.MoreRooFit.delete_data ( ds )
+        ## ds = Ostap.MoreRooFit.delete_data ( ds )
+        ## ds.Delete()
+        ds = data_ptr ( ds )
         del ds 
+
 
 # =============================================================================
 ## (3) Jackknife  
 # =============================================================================
-with memory ( 'Jackknife' , logger  = logger ) :
+with memory ( 'Jackknife' , logger  = logger ) as dm2 :
 
-    first , last = 0, 100 
-
+    first , last = 0, 200 
     for i , ds in progress_bar ( enumerate ( dataset.jackknife ( first , last ) ) ,
-                                 max_value = 100 ) :
+                                 max_value   = 100          , 
+                                 description = "Jackknife:" ) :
 
-        ds = Ostap.MoreRooFit.delete_data ( ds )
+        ## ds = Ostap.MoreRooFit.delete_data ( ds )
+        ## ds.Delete ()
+        ds = data_ptr ( ds ) 
         del ds 
 
 # ==============================================================================
 ## delete it! 
-with memory ( 'Delete Initial dataset' , logger = logger ) :
+with memory ( 'Delete Initial dataset' , logger = logger ) as dm3 :
     
-    dataset = Ostap.MoreRooFit.delete_data ( dataset )
+    ## dataset = Ostap.MoreRooFit.delete_data ( dataset )
+    ## del dataset 
+    dataset = data_ptr ( dataset )
     del dataset 
     
 # =============================================================================
