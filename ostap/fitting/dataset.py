@@ -66,6 +66,9 @@ DPTR_AD = std.unique_ptr(ROOT.RooAbsData)
 def data_ptr ( data ) :
     """ Add unique-pointer to dataset
     """
+    ROOT.SetOwnership ( data , True )
+    return data
+    
     if   isinstance ( data , DPTR_DS ) : return data
     elif isinstance ( data , DPTR_AD ) : return data
     
