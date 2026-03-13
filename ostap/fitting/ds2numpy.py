@@ -28,7 +28,7 @@ from   ostap.core.core              import Ostap
 from   ostap.utils.basic            import loop_items, typename  
 from   ostap.utils.utils            import split_range
 from   ostap.math.base              import doubles
-from   ostap.fitting.dataset        import useStorage
+from   ostap.fitting.dataset        import useStorage, data_ptr 
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.trees.cuts             import vars_and_cuts, expression_types  
@@ -120,7 +120,8 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                                 weight_name  = weight_name  ,
                                 weight_split = weight_split )
             ## dstmp.erase()
-            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            dstmp = data_ptr ( dstmp ) 
             del dstmp 
             return result
 
@@ -137,7 +138,8 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                                 weight_name  = weight_name  ,
                                 weight_split = weight_split )
             ## dstmp.erase()
-            dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
+            dstmp = data_ptr ( dstmp ) 
             del dstmp 
             return result
 
@@ -376,7 +378,7 @@ else :
                                 weight_split = weight_split )
             ## dstmp.erase()
             ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp )
-            dstmp.clear() 
+            dstmp = data_ptr ( dstmp )
             del dstmp 
             return result
         
@@ -393,7 +395,7 @@ else :
                                 weight_split = weight_split )
             ## dstmp.erase()
             ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
-            dstmp.clear() 
+            dstmp = data_ptr ( dstmp )
             del dstmp 
             return result
         

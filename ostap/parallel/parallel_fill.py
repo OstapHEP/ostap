@@ -79,7 +79,7 @@ class  MakeDSTask(Task) :
     def merge_results ( self , result , jobid = -1 ) :
         """ Merge results/datasets
         """
-        from ostap.fitting.dataset import Ostap
+        from ostap.fitting.dataset import Ostap, data_ptr
         if result :
             ds , stat = result
             if not self.the_output or not self.the_output[0] :
@@ -92,8 +92,9 @@ class  MakeDSTask(Task) :
                 stat_.skipped    += stat.skipped   ## skipped                
                 self.the_output   = ds_ , stat_
                 if isinstance ( ds , ROOT.RooDataSet ) :
-                    ds = Ostap.MoreRooFit.delete_data ( ds )
-                    del ds 
+                    ## ds = Ostap.MoreRooFit.delete_data ( ds )
+                    ds    = data_ptr ( ds ) 
+                del ds 
             del result            
             logger.debug ( 'Merging: %d entries ' % len( self.the_output[0] ) )
         else :

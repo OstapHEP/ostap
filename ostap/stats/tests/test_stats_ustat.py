@@ -72,8 +72,10 @@ def test_stats_ustat_G2D () :
             histos.add ( h )  
             h.draw()
 
-            ## delete data 
-            data = Ostap.MoreRooFit.delete_data ( data )            
+            ## data = Ostap.MoreRooFit.delete_data ( data )
+            if isinstance ( data , ROOT.RooAbsData ) : 
+                from ostap.fitting.dataset import data_ptr
+                data = data_ptr ( data ) 
             del data
 
 # =============================================================================
@@ -130,8 +132,11 @@ def test_stats_ustat_G3D () :
             histos.add ( h )  
             h.draw()
             
-            ## delete data 
-            data = Ostap.MoreRooFit.delete_data ( data )            
+            ## data = Ostap.MoreRooFit.delete_data ( data )
+            if isinstance ( data , ROOT.RooAbsData ) : 
+                from ostap.fitting.dataset import data_ptr
+                data = data_ptr ( data )
+                
             del data
             
 

@@ -733,8 +733,9 @@ class GoF1DToys(GoF1D) :
             cnt += ks 
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) :
-                dset.clear () 
+                from ostap.fitting.dataset import data_ptr 
                 ## dset = Ostap.MoreRooFit.delete_data ( dset )
+                dset = data_ptr ( dset )
                 
             del dset
             del data

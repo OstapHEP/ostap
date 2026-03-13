@@ -21,7 +21,8 @@ __all__     = (
     'useStorage' , ## define (as context) the default storage for  RooDataStore
     'ds_draw'    , ## draw variables from RooDataSet 
     'ds_project' , ## project variables from RooDataSet to histogram
-    'ds_combine' , ## combine two datasets with weights 
+    'ds_combine' , ## combine two datasets with weights
+    'data_ptr'   , ## C++ unique-ot to keep (and delete) RooAbsData objects 
     )
 # =============================================================================
 from   collections                  import defaultdict
@@ -33,7 +34,7 @@ from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types ,
                                              sized_types   , dictlike_types )
 from   ostap.utils.basic            import loop_items  , typename            
-from   ostap.math.base              import evt_range, FIRST_ENTRY, LAST_ENTRY, isint  
+from   ostap.math.base              import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint  
 from   ostap.utils.random_seed      import random_seed
 from   ostap.fitting.variables      import valid_formula, make_formula 
 from   ostap.trees.cuts             import expression_types, vars_and_cuts, order_warning
@@ -43,6 +44,7 @@ from   ostap.utils.progress_conf    import progress_conf
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.logger.pretty          import pretty_float 
 from   ostap.logger.symbols         import cabinet, weight_lifter, times, ellipsis
+from   ostap.logger.colorized       import allright,  attention
 import ostap.logger.table           as     T
 import ostap.fitting.roocollections
 import ostap.fitting.variables  
@@ -58,7 +60,18 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
-from ostap.logger.colorized import allright,  attention
+DPTR_DS = std.unique_ptr(ROOT.RooDataSet)
+DPTR_AD = std.unique_ptr(ROOT.RooAbsData)
+## add unique-pointer to dataset 
+def data_ptr ( data ) :
+    """ Add unique-pointer to dataset
+    """
+    if   isinstance ( data , DPTR_DS         ) : return data
+    elif isinstance ( data , DPTR_AD         ) : return data
+    elif isinstance ( data , ROOT.RooDataSet ) : return DPTR_DS ( data )
+    return DPTR_AD ( data )
+
+# =============================================================================
 _new_methods_ = []
 # =============================================================================
 _maxv =  0.99 * sys.float_info.max
@@ -568,14 +581,18 @@ def _rds_remevt_ ( dataset , index ) :
         if   0 == index     : return dataset.reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
         elif N == index + 1 : return dataset.reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
 
-        ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
-        ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
+        ## ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
+        ## ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
+        
+        ds1    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) ) ) 
+        ds2    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) ) )
+        
         result = ds1 + ds2
 
         assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
 
-        ds1 = Ostap.MoreRooFit.delete_data ( ds1 )
-        ds2 = Ostap.MoreRooFit.delete_data ( ds2 )
+        ## ds1 = data_ptr ( ds1 )
+        ## ds2 = data_ptr ( ds2 )
         
         del ds1        
         del ds2
@@ -600,10 +617,14 @@ def _rds_remvar_ ( dataset , variables ) :
     >>> another3 = dataset - ( 'pt,mass,z' )
     """
     ## decode list of variables
-    try :
+    # ========================================================================
+    try : # ==================================================================
+        # ====================================================================
         vars , _ , _ = vars_and_cuts ( variables , '' )
-        if not vars : return NotImplemented             ## RETURN 
-    except AssertionError :
+        if not vars : return NotImplemented             ## RETURN
+        # ====================================================================
+    except AssertionError : # ================================================
+        # ====================================================================
         return NotImplemented                           ## RETURN 
     ##
     if not all ( v in dataset for v in vars ) : return NotImplemented   
@@ -632,8 +653,7 @@ def _rds_sub_ ( dataset , what ) :
     >>> another2 = dataset - ( 'pt', 'mass' )
     >>> another3 = dataset - ( 'pt,mass,z' )
     """
-    if isinstance ( what , integer_types ) :
-        return _rds_remevt_ ( dataset , what )
+    if isinstance ( what , integer_types ) : return _rds_remevt_ ( dataset , what )
     return _rds_remvar_ ( dataset , what )
     
 # ============================================================================
@@ -647,7 +667,8 @@ def _rds_sub_ ( dataset , what ) :
 def _rds_jackknife_ ( dataset ,
                       first    = FIRST_ENTRY  ,
                       last     = LAST_ENTRY   ,
-                      progress = False        ) :
+                      progress = False        ,
+                      wrap     = False        ) :
     """ Jackknife generator
 
     >>> dataset = ...
@@ -659,8 +680,9 @@ def _rds_jackknife_ ( dataset ,
     
     first , last = evt_range ( dataset , first , last )    
     for i in progress_bar ( range ( first , last ) , silent = not progress ) :
-        ds = dataset - i                    ## this is the line! 
-        yield ds
+
+        if wrap : yield  data_ptr ( dataset - i )
+        else    : yield             dataset - i 
             
 # =============================================================================
 ## Boostrap generator
@@ -669,25 +691,32 @@ def _rds_jackknife_ ( dataset ,
 #  for ds in dataset.bootstrap ( 100 ) :
 #  ...
 #  @endcode
-#  The dataset must be remove explicitely!
 def _rds_bootstrap_ ( dataset          ,
                       size     = 100   ,
                       extended = False ,
-                      progress = False ) :
+                      progress = False ,
+                      sort     = False ,
+                      wrap     = False ) :
     """ Boostrap generator:
 
     >>> dataset = ...
     >>> for ds in dataset.bootstrap ( 100 ) :
     >>>     ...
 
-    - The dataset must be remove explicitely:
+    with sorted indices:
+    
+    >>> dataset = ...
+    >>> for ds in dataset.bootstrap ( 100 , sort = True ) :
+    >>>     ...
+    
     """
     from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
     N    = len ( dataset )
-    bgen = bootstrap_indices ( N , size = size ) if not extended else extended_bootstrap_indices ( N , size = size )    
+    bgen = bootstrap_indices ( N , size = size , sort = sort ) if not extended else extended_bootstrap_indices ( N , size = size , sort = sort )    
     for indices in progress_bar ( bgen , silent = not progress , max_value = N ) :
-        ds = dataset [ indices ] 
-        yield ds
+
+        if wrap : yield data_ptr ( dataset [ indices ] )
+        else    : yield            dataset [ indices ] 
 
 # =============================================================================
 ## get (random) unique sub-sample from the dataset
@@ -706,7 +735,7 @@ def _rad_sample_ ( self , num ) :
     if   0 == num : return self.emptyClone ( dsID () )
     elif num == N : return _rad_shuffle_ ( self )
     elif isinstance ( num , integer_types ) and 0 < num < N : pass 
-    elif isinstance ( num , float ) and 0 < num < 1 :
+    elif isinstance ( num , float         ) and 0 < num < 1 :
         from ostap.math.random_ext import poisson 
         num = poisson ( num * N )
         return _rad_sample_ ( self , num )
@@ -732,7 +761,7 @@ def _rad_choice_ ( self , num ) :
     N = len ( self )     
     if   0 == num  or 0 == N : return self.emptyClone ( dsID () )
     elif isinstance ( num , integer_types ) and 0 < num <= N : pass 
-    elif isinstance ( num , float ) and 0 < num < 1 :
+    elif isinstance ( num , float         ) and 0 < num < 1  :
         from ostap.math.random_ext import poisson 
         num = poisson ( num * N  )
         return _rad_choice_ ( self , num )
@@ -760,7 +789,7 @@ def _rad_shuffle_ ( self ) :
     return self [ indices ]
 
 # ==============================================================================
-## Imporved reduce
+## Improved reduce
 #  @code
 #  data = ...
 #  data =  data.subset ( RooArgSet( ... ) , 'a>0' )
@@ -773,7 +802,8 @@ def _rad_subset_ ( dataset                  ,
                    cuts       = ''          ,
                    cut_range  = ''          ,
                    first      = FIRST_ENTRY ,
-                   last       = LAST_ENTRY  ) :
+                   last       = LAST_ENTRY  ,
+                   wrap       = False       ) :
 
     """ Improved reduce
     >>> data = ...
@@ -838,6 +868,8 @@ def _rad_subset_ ( dataset                  ,
     first, last = evt_range ( dataset , first , last )
     if 0 < first or last < len ( dataset ) : 
         args.append ( ROOT.RooFit.EventRange ( first , last ) )
+    ##
+    if wrap : return data_ptr ( dataset.reduce ( *args ) )
     ## 
     return dataset.reduce ( *args ) 
 
@@ -889,7 +921,7 @@ def _rds_seek_for_duplicates_ ( dataset           ,
     ## make a loop over dataset
     for i, e in progress_bar ( enumerate ( dataset ) ,
                                max_value   = len ( dataset ) ,
-                               description = '!st loop:'     , 
+                               description = '1st loop:'     , 
                                silent      = not progress    ) : 
 
         entry = tuple (  float ( v ) for v in tag ) 
@@ -3792,7 +3824,8 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
                                  cut_range = cut_range )
         result = _ds_2tree_ ( dsaux , name = name , filename = filename )
         if dsaux and isinstance ( dsaux , ROOT.RooDataSet ) :
-            if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
+            ## if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
+            dsaux = data_ptr ( dsaux)
             del dsaux
         return result 
     
@@ -3818,7 +3851,8 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
     with ROOT.TFile ( filename , 'r' ) as rfile : rfile.ls()
     
     if dstmp and isinstance ( dstmp , ROOT.RooDataSet ) :
-        if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
+        ## if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
+        dstmp = data_ptr ( dstmp)        
         del dstmp
         
     return Data ( chain       = name         ,

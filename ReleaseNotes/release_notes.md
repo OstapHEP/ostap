@@ -2,6 +2,9 @@
 
   1. Add `Ostap::Math::AsymVars` utuilty for asymemtri-related parameters, e.g. for asymmetic peaks
   1. In addtion to `Ostap::Math::InRange`   ( R -> [A,B] ) add `Ostap::Math::InRange2` ( R -> (A,B) )
+  1. Add option `sort=False` to boostrapping indices to use *sorted* sequence of indices.
+  1. Add option `wrap=False` to `bootstrap`,`jackknife` and `subset` method to get result in form of `std::unique_ptr`
+  1. remove usage of `delete_data`
   
 ## Bug fixes
 
@@ -20,7 +23,7 @@
   1. add "folding" for `RooDataSet` and extend the corresponding test
   1. add `dump` and `dump_table` methods to `RooDataSet` to dump the content of dataset in a table form
   1. fix `shared_entries` and `shared_data` methdos for `RooDataSet`
-  1. major upgrade for `pdg_format` utiilty: reduce code & improve fuctionality 
+  1. major upgrade for `pdg_format` utility: reduce code & improve fuctionality 
   1. add `PDG` option for pretty-print functions for `VE`, `VAE` and `VME` objects  
 
 ## Bug fixes

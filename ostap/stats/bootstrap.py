@@ -39,7 +39,7 @@ try : # =======================================================================
     #  for indices  in bootstrap ( range ( N ) , size = 100  ) :
     #      sample = data [ indices ]
     #  @endcode
-    def bootstrap ( data , size = 100 ) :
+    def bootstrap ( data , size = 100 , sort = False ) :
         """ Generate bootstrap samples
         >>> data = ...
         >>> for ds in bootstrap ( data , size = 100 ) :
@@ -52,7 +52,9 @@ try : # =======================================================================
         """
         N   = len ( data )
         for i in range ( size ) :
-            yield np_rng.choice ( data , size = N )
+            indices = np_rng.choice ( data , size = N )
+            if sort : indices.sort () 
+            yield indices 
 
     # =========================================================================
     ## Generate "extended" bootstrap
@@ -67,7 +69,7 @@ try : # =======================================================================
     #  for indices  in extended_bootstrap ( range ( N ) , size = 100  ) :
     #      sample = data [ indices ]
     #  @endcode        
-    def extended_bootstrap ( data , size ) :
+    def extended_bootstrap ( data , size , sort = False  )  :
         """ Generate "extended" bootstrap
         >>> data = ...
         >>> for ds = extended_bootstrap ( data , size = 25 ) :
@@ -79,7 +81,9 @@ try : # =======================================================================
         """
         N    = len ( data )
         for i in range ( size ) :
-            yield np_rng.choice ( data , size = np_rng.poisson ( N )  )
+            indices = np_rng.choice ( data , size = np_rng.poisson ( N ) )
+            if sort : indices.sort () 
+            yield indices 
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
@@ -99,7 +103,7 @@ except ImportError : # ========================================================
     #  for indices  in bootstrap ( range ( N ) , size = 100  ) :
     #      sample = data [ indices ]
     #  @endcode
-    def bootstrap ( data , size = 100 ) :
+    def bootstrap ( data , size = 100 , sort = False ) :
         """ Generate bootstrap samples 
         >>> data = ...
         >>> for ds in bootstrap ( data , size = 100 ) :
@@ -112,7 +116,9 @@ except ImportError : # ========================================================
         """
         N = len ( data )
         for i in range ( size ) :
-            yield tuple ( choices ( data , k = N ) ) 
+            indices = choices ( data , k = N )
+            if sort : indices = sorted ( indices ) 
+            yield tuple ( indices ) 
 
     from ostap.math.random_ext import poisson
 
@@ -129,7 +135,7 @@ except ImportError : # ========================================================
     #  for indices  in extended_bootstrap ( range ( N ) , size = 100  ) :
     #      sample = data [ indices ]
     #  @endcode        
-    def extended_bootstrap ( data , size ) :
+    def extended_bootstrap ( data , size , sort = False ) :
         """ Generate "extended" bootstrap
         >>> data = ...
         >>> for ds = extended_bootstrap ( data , size = 25 ) :
@@ -141,7 +147,9 @@ except ImportError : # ========================================================
         """        
         N = len ( data )
         for i in range ( size ) :
-            yield tuple ( choices ( data , k = poisson ( N ) ) ) 
+            indices = choices ( data , k = poisson ( N ) )
+            if sort : indices = sorted ( indices )             
+            yield tuple ( indices )
             
 # =============================================================================
 ## Generate indices for bootstrap samples:
@@ -150,13 +158,13 @@ except ImportError : # ========================================================
 #  for indices  in bootstrap_indices ( N , size = 100  ) :
 #      sample = data [ indices ]
 #  @endcode
-def bootstrap_indices ( N , size = 100 ) :
+def bootstrap_indices ( N , size = 100 , sort = False ) :
     """ Generate indices for bootstrap  samples:
     >>> data = ...
     >>> for indices  in bootstrap_indices ( N , size = 100  ) :
     >>> ... sample = data [ indices ]
     """
-    for indices in bootstrap ( range ( N ) , size ) :
+    for indices in bootstrap ( range ( N ) , size , sort = sort ) :
         yield indices
 
 # =============================================================================
@@ -166,13 +174,13 @@ def bootstrap_indices ( N , size = 100 ) :
 #  for indices  in extended_bootstrap_indices ( N , size = 100  ) :
 #      sample = data [ indices ]
 #  @endcode
-def extended_bootstrap_indices ( N , size = 100 ) :
+def extended_bootstrap_indices ( N , size = 100 , sort = False ) :
     """ Generate indices for bootstrap  samples:
     >>> data = ...
     >>> for indices  in extended_bootstrap_indices ( N , size = 100  ) :
     >>> ... sample = data [ indices ]
     """
-    for indices in extended_bootstrap ( range ( N ) , size ) :
+    for indices in extended_bootstrap ( range ( N ) , size , sort = sort ) :
         yield indices
   
 # =============================================================================

@@ -25,8 +25,9 @@ __all__     = (
     'memory_usage'   , # report current memory usage 
     )
 # =============================================================================
+from   ostap.logger.symbols import ram          as ram_symbol
+from   ostap.logger.symbols import delta_symbol, sum_symbol
 import os
-from ostap.logger.symbols import ram as ram_symbol 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.memory' )
@@ -71,10 +72,14 @@ except ImportError : # ========================================================
         if not proc : 
             import os 
             proc = '/proc/%d/stat' % os.getpid()
-        try : 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
             with open ( proc , 'r' ) as p :
                 for l in  p : return int ( l.split(' ')[22] )/1024./1024
-        except:
+            # ================================================================
+        except: # ============================================================
+            # ================================================================
             return -1
 # ============================================================================
         
@@ -135,12 +140,10 @@ class Memory(object):
     
     >>> delta = M.delta    
     """
-    from ostap.logger.logger import getLogger 
-    _logger = getLogger( 'ostap.utils.memory' )
-    del getLogger
-    
+    _logger  = logger     
     _printed = False
-    def __init__  ( self , name = '' , logger = None , format = 'Memory %-18s %+.1fMB/[%.2fGB]') :
+    
+    def __init__  ( self , name = '' , logger = None , format = 'Memory %%-30s %s=%%+.2fMB %s=%%.2fGB' % ( delta_symbol , sum_symbol ) ) :
         self.name   = name
         self.logger = logger if logger else self._logger 
         self.format = format
@@ -149,21 +152,54 @@ class Memory(object):
             ## if not self._printed :
             ##    self.logger.warning('Memory:"psutil" module is not available, "/proc/[pid]/stat"-based replacement is in use')
             ##    self.__class__._printed = True
-            self.proc = '/procs/%d/stat' %  os.getpid()            
+            self.proc = '/procs/%d/stat' %  os.getpid()
+            
+        self.__memory = self.current 
+        self.__delta  = None
+
     def __enter__ ( self ) :
-        self.memory = memory_usage ( self._proc )
-        return self 
+        
+        self.__memory  = self.current 
+        self.__delta = None  
+        return self
+    
     def __exit__  ( self, *_ ) :
 
-        current     = memory_usage ( self._proc )
-        self.delta  = current - self.memory
-        try :
-            message = self.format                    % ( self.name , self.delta , current / 1024. ) 
-        except TypeError :
-            message = 'Memory %-18s %+.1fMB/[%.2fGB]'% ( self.name , self.delta , current / 1024. )
-
+        current      = self.current 
+        self.__delta = current - self.memory
+        total        = current / 1024         ## in GB 
+        # ====================================================================
+        try : # ==============================================================
+            # ================================================================
+            message = self.format % ( self.name , self.delta , total )
+            # ================================================================
+        except TypeError : # =================================================
+            # ================================================================
+            message = 'Memory %-30s %s=%+.2fMB %s=%.2fGB'% ( self.name , delta_symbol , self.delta , sum_symbol , total  )
+            # ================================================================
         self.logger.info ( ram_symbol + message )
- 
+
+    ## delta-memory
+    @property 
+    def delta ( self ) :
+        """`delta`: delta-memory [MB] between enter&exit or None
+        """
+        return self.__delta 
+
+    ## current memory
+    @property
+    def current ( self ) :
+        """`current` : current memory usage [MB]
+        """
+        return memory_usage ( self._proc )
+
+    ## memory at the start of measurement
+    @property
+    def memory ( self ) :
+        """`memory` : initial/start memory usage [MB] 
+        """
+        return self.__memory 
+        
 # ============================================================================
 ## create the context manager to monitor the virtual memory increase  
 def virtualMemory ( name = '' , logger = None ) :
@@ -186,11 +222,9 @@ memory = virtualMemory  ## ditto
 
 # =============================================================================
 if '__main__' == __name__ :
-
         
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
     
     with memory(), memory() , memory()  :
         logger.info ( 80*'*' ) 

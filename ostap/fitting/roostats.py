@@ -1285,11 +1285,11 @@ class FrequentistCalculator (Calculator) :
                 logger.warning ("Frequentist calculator %s :\n%s" % ( title , ds2.table ( diffs , prefix = '# ' , title = title ) ) ) 
             else :
                 logger.info    ("Frequentist calculator: datasets are fine" )
-                
-            
+                            
             self.__cloned_dataset = None 
             if isinstance ( ds2 , ROOT.RooDataSet ) :
-                ds2 = Ostap.MoreRooFit.delete_data ( ds2 )
+                ## ds2 = Ostap.MoreRooFit.delete_data ( ds2 )
+                ds2 = data_ptr ( ds2 )
                 del ds2 
 
             logger.info ( 'Frequentist calculator: CLONED dataset is deleted' )

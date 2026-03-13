@@ -318,7 +318,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     ## elif iter < 4 : the_plots = plots [ : 4 ]
     ## else          : the_plots = plots
 
-    ## weigth truncation: avoid very large change of weights for  single iteration 
+    ## weight truncation: avoid very large change of weights for  single iteration 
     wtruncate = ( 0.1 , 10 ) if iter < 4 else ( 0.5 , 2.0 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
@@ -341,7 +341,10 @@ for iter in range ( 1 , maxIter + 1 ) :
         converged = True 
         break
     
-    mcds = Ostap.MoreRooFit.delete_data ( mcds ) 
+    if isinstance ( mcds , ROOT.RooAbsData ) : 
+        ## mcds = Ostap.MoreRooFit.delete_data ( mcds )
+        from ostap.fitting.dataset import data_ptr 
+        mcds = data_ptr ( mcds ) 
     del mcds
     
 else :

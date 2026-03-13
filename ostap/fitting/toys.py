@@ -31,6 +31,7 @@ from   ostap.core.core            import VE, SE, Ostap
 from   ostap.logger.pretty        import pretty_float, fmt_pretty_float
 from   ostap.logger.colorized     import attention
 from   ostap.fitting.funbasic     import AFUN1
+from   ostap.fitting.dataset      import data_ptr 
 from   ostap.utils.progress_bar   import progress_bar 
 import ostap.fitting.roofitresult 
 import ROOT
@@ -226,7 +227,7 @@ def jackknife_statistics ( statistics , theta = None ) :
 
 # =============================================================================
 ## print Jackknife statistics
-def print_jackknife  ( fitresult          , ## restl of the fit of th e total datasample 
+def print_jackknife  ( fitresult          , ## result of the fit to the total data sample 
                        stats              ,
                        morevars  = {}     ,                       
                        logger    = logger ,
@@ -711,7 +712,8 @@ def make_toys ( pdf                   ,
         ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
         ##    r = Ostap.MoreRooFit.delete_result ( r )                                    
         if isinstance ( dataset , ROOT.RooAbsData ) :
-            dataset = Ostap.MoreRooFit.delete_data ( dataset )
+            ## dataset = Ostap.MoreRooFit.delete_data ( dataset )
+            dataset = data_ptr ( dataset )
             
         del dataset
         del fit_result
@@ -992,7 +994,8 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
         ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
         ##     r = Ostap.MoreRooFit.delete_result ( r )            
         if isinstance ( dataset , ROOT.RooAbsData ) :
-            dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
+            ## dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
+            dataset    = data_ptr ( dataset )
             
         del dataset
         del fit_result
@@ -1254,7 +1257,8 @@ def make_toys3 ( gen_pdf               , ## pdf to generate toys
                 results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
                                         
         if isinstance ( dataset , ROOT.RooAbsData ) :
-            dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
+            ## dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
+            dataset = data_ptr ( dataset )
             
         del dataset
         del fit_result
@@ -1458,7 +1462,9 @@ def make_jackknife ( pdf                  ,
                 
         ## if not add_result and isinstance ( r , ROOT.RooFitResult ) : r.Delete()                                
         ## reset/remove/delete dataset 
-        if isinstance ( ds , ROOT.RooAbsData ) : ds = Ostap.MoreRooFit.delete_data ( ds ) 
+        if isinstance ( ds , ROOT.RooAbsData ) :
+            ## ds = Ostap.MoreRooFit.delete_data ( ds )
+            ds = data_ptr ( ds )
         
         del ds
         del r
@@ -1676,7 +1682,9 @@ def make_bootstrap (
                 if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
 
         ## if not add_results and isinstance ( r , ROOT.RooFitResult ) : r.Delete()            
-        if isinstance ( ds , ROOT.RooAbsData ) : ds = Ostap.MoreRooFit.delete_data ( ds ) 
+        if isinstance ( ds , ROOT.RooAbsData ) :
+            ## ds = Ostap.MoreRooFit.delete_data ( ds )
+            ds = data_ptr ( ds ) 
         
         del ds
         del r

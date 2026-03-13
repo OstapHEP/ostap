@@ -26,7 +26,7 @@ __all__     = (
 from   ostap.core.core              import Ostap, VE, valid_pointer
 from   ostap.core.ostap_types       import integer_types, string_types 
 from   ostap.fitting.variables      import SETVAR, FIXVAR , SETPAR, FIXPAR 
-from   ostap.fitting.dataset        import setStorage, useStorage
+from   ostap.fitting.dataset        import setStorage, useStorage, data_ptr
 from   ostap.utils.basic            import typename 
 import ostap.fitting.roocollections
 import ostap.fitting.rooreduce 
