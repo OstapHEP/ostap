@@ -48,7 +48,7 @@ varset  = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
 dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
 
 NR  = 1000
-NE  =  200
+NE  =  500
 
 with memory ( 'Create initial dataset' , logger = logger ) as dm0 :
     

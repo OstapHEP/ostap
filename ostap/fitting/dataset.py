@@ -66,10 +66,14 @@ DPTR_AD = std.unique_ptr(ROOT.RooAbsData)
 def data_ptr ( data ) :
     """ Add unique-pointer to dataset
     """
-    if   isinstance ( data , DPTR_DS         ) : return data
-    elif isinstance ( data , DPTR_AD         ) : return data
-    elif isinstance ( data , ROOT.RooDataSet ) : return DPTR_DS ( data )
-    return DPTR_AD ( data )
+    if   isinstance ( data , DPTR_DS ) : return data
+    elif isinstance ( data , DPTR_AD ) : return data
+    
+    assert isinstance ( data, ROOT.RooAbsData ) , "Invalid data type %s" % typename ( data )
+    
+    ROOT.SetOwnership ( data , False )
+    
+    return DPTR_DS ( data ) if isinstance ( data , ROOT.RooDataSet ) else DPTR_AD ( data )
 
 # =============================================================================
 _new_methods_ = []
