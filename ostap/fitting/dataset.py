@@ -60,8 +60,8 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
-DPTR_DS = std.unique_ptr(ROOT.RooDataSet)
-DPTR_AD = std.unique_ptr(ROOT.RooAbsData)
+DPTR_DS = std.unique_ptr[ROOT.RooDataSet]
+DPTR_AD = std.unique_ptr[ROOT.RooAbsData]
 ## add unique-pointer to dataset 
 def data_ptr ( data ) :
     """ Add unique-pointer to dataset
