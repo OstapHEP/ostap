@@ -1759,6 +1759,12 @@ class Trainer(object):
                 all_vars.append ( vv[0] ) 
                 dataloader.AddSpectator ( *vv )
 
+                
+            print ( 'SIGNAL' , typename ( self.signal ) )
+            self.signal.Print ( 'vvv' )
+            print ( 'BACKGROUND' , typename ( self.background ) ) 
+            self.background.Print ( 'vvv' )
+            
             if self.verbose : self.logger.info ( "Loading 'Signal'     sample" ) 
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
             
@@ -1771,8 +1777,8 @@ class Trainer(object):
             if self.background_weight :
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
                 self.logger.info ( "Background weight: '%s'" % ( attention ( self.background_weight ) ) )
-
-            ## disbale scatter plots...
+                
+            ## disable scatter plots...
             Ostap.Tmva.disable_scatter_plots ()
 
             self.logger.info     ( "Configuration    : '%s'" % str ( self.configuration ) )
@@ -1785,8 +1791,11 @@ class Trainer(object):
                 bo = m[2].split(':')
                 bo.sort() 
                 if  self.verbose : self.logger.info  ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
-                else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )                
-                factory.BookMethod ( dataloader , *m )
+                else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
+                mm    = [ i for i in m ]
+                mm[0] = int ( mm [ 0 ] )  
+                print ( 'BOOK METHODS' , [ i for i in mm ] )
+                factory.BookMethod ( dataloader , *mm )
 
             # ==========================================================================
             Ostap.Tmva.disable_scatter_plots ()
