@@ -4460,21 +4460,6 @@ namespace Ostap
     ( const RooAddPdf&  pdf       , 
       bool&             recursive ) ;  
     // ========================================================================
-    /** reset RooAbsData and underlying store 
-     *  @see RooAbsData
-     *  @see RooAbsDataStore 
-     *  @param data dataset to be reset/clean 
-     */
-    RooAbsData* reset_data ( RooAbsData* data ) ;
-    // ========================================================================
-    /** delete  RooDataSet
-     *  @see RooDataSet
-     *  @see RooAbsDataStore 
-     *  @param data dataset to be reset/clean 
-     *  @return nullptr 
-     */
-    RooAbsData* delete_data ( RooAbsData* data ) ;
-    // =========================================================================
     /** assign RooAbsCollection
      *  @see RooAbsCollection
      *  @see RooAbsDataStore 

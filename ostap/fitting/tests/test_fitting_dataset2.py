@@ -50,21 +50,6 @@ dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )
 
 NR  = 1000
 NE  =  500
-
-
-## kill 
-def kill_me ( obj ) :
-
-    if   hasattr    ( obj , '__destruct__' ) :
-        print ( 'CALL __DESTRUCT__' ) 
-        obj.__destruct__ () 
-    elif isinstance ( obj , ROOT.TObject     ) :
-        print ( 'CALL TOBJECT.DELETE' ) 
-        obj.Delete         () 
-    else                                       :
-        print ( 'CALL DELETE' ) 
-        del obj
-
     
 with memory ( 'Create initial dataset' , logger = logger ) as dm0 :
     
@@ -102,8 +87,6 @@ with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
                                  max_value   = size         , 
                                  description = "Bootstrap:" ) :
 
-        ## print ( 'boostrap', typename ( ds ) ) 
-        ## kill_me ( ds ) 
         del ds 
 
 # =============================================================================
@@ -116,20 +99,14 @@ with memory ( 'Jackknife' , logger  = logger ) as dm2 :
                                  max_value   = 100          , 
                                  description = "Jackknife:" ) :
         
-        ## print ( 'jackknife', typename ( ds ) ) 
-        ## kill_me ( ds ) 
         del ds 
 
 # ==============================================================================
 ## delete it! 
 with memory ( 'Delete Initial dataset' , logger = logger ) as dm3 :
     
-    ## dataset = Ostap.MoreRooFit.delete_data ( dataset )
-    ## del dataset 
-    ## dataset = data_ptr ( dataset )
-    ## kill_me ( dataset ) 
-    ## del dataset 
-    pass
+    dataset.__destruct__ ()
+    del dataset    
 
 
 # ==============================================================================
@@ -151,13 +128,12 @@ title = "Memory usage"
 table = T.table ( rows , title = title , prefix = '# ' , alignment = 'lc' )
 logger.info ( '%s:\n%s' % ( title , table ) )
 
-
-if True :
-    raise TypeError ( " MEMORY: %+.3f %+.3f %+.3f %+.3f " % ( dm0.delta , dm1.delta , dm2.delta , dm3.delta ) )
+## if True :
+##    raise TypeError ( " MEMORY: %+.3f %+.3f %+.3f %+.3f " % ( dm0.delta , dm1.delta , dm2.delta , dm3.delta ) )
                  
-assert dm1.delta < max ( 1 , 2 * dm0.delta ) , "There is some memory leak in Bootstrap: %s vs %s " % ( dm1.delta , dm0.delta )
-assert dm2.delta < max ( 1 , 2 * dm0.delta ) , "There is some memory leak in Jackknife: %s vs %s " % ( dm1.delta , dm0.delta )
-assert dm3.delta < max ( 1 , 2 * dm0.delta ) , "Memory is not released %s" % dm3.delta
+assert dm1.delta < max ( 1 , 1.0 * dm0.delta ) , "There is some memory leak in Bootstrap: %+.2f vs %+.2f [MB]" % ( dm1.delta , dm0.delta )
+assert dm2.delta < max ( 1 , 1.0 * dm0.delta ) , "There is some memory leak in Jackknife: %+.2f vs %+.2f [MB]" % ( dm1.delta , dm0.delta )
+assert dm3.delta < 1                           , "Memory is not released %+.2f [MB]" % dm3.delta
 
 # =============================================================================
 ##                                                                      The END 

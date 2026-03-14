@@ -5,6 +5,9 @@
   1. Add option `sort=False` to boostrapping indices to use *sorted* sequence of indices.
   1. Add option `wrap=False` to `bootstrap`,`jackknife` and `subset` method to get result in form of `std::unique_ptr`
   1. remove usage of `delete_data`
+  1. make use of new `RooPlot::hist`  accessor (for copy `RooPlot` objects)
+  1. improve memoery management for `RooDataSet.bootstrap` and `RooDataSet.jackknife`
+  1. insert `ROOT.SetOwnership ( ... , True )` for all implicit&explicit call for `RooAbsData::reduce`
   
 ## Bug fixes
 

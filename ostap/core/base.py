@@ -348,6 +348,22 @@ def valid_pointer ( obj ) :
     r = _valid_pointer_ ( obj )
     return True if r else False
 
+
+# ============================================================================
+## Brutally kill  object
+#   @code
+#   the_object = ...
+#   brutally_kill ( the_object ) 
+#   @endcode 
+def brutally_kill  ( obj ) :
+    """ Brutally kill  object
+    >>> the_object = ...
+    >>> brutally_kill ( the_object ) 
+    """    
+    if   hasattr    ( obj , '__destruct__'  ) : obj.__destruct__  () 
+    elif isinstance ( obj , ROOT.TObject    ) : obj.Delete        () 
+    else                                      : del obj
+
 # =============================================================================
 #  Report strange/truncated symbols
 #  @see https://github.com/root-project/root/issues/21536

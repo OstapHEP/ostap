@@ -2384,52 +2384,6 @@ Double_t Ostap::MoreRooFit::NeedhamAlpha::evaluate () const
                                       m_amin  ) ; }
 // ============================================================================
 
-// ============================================================================
-/* reset RooabsData and ubnderlying store 
- *  @see RooAbsData
- *  @see RooAbsDataStore 
- *  @param data dataset to be reset/clean 
- */
-// ============================================================================
-RooAbsData*
-Ostap::MoreRooFit::reset_data
-( RooAbsData* data )
-{
-  if ( nullptr == data ) { return nullptr ; }
-  //
-  RooAbsDataStore* store = data->store() ;
-  if ( store )
-  {
-    store -> resetCache   () ;
-    store -> resetBuffers () ;
-    store -> reset        () ; 
-  }
-  //
-  data -> resetBuffers () ;
-  data -> reset        () ;
-  //
-  return data ;
-}
-// ============================================================================
-/*  delete  RooAbsData
- *  @see RooAbsData
- *  @see RooAbsDataStore 
- *  @param data dataset to be reset/clean 
- *  @return nullptr 
- */
-// ============================================================================
-RooAbsData*
-Ostap::MoreRooFit::delete_data
-( RooAbsData* data )
-{
-  if ( nullptr == data ) { return nullptr ; }
-  reset_data ( data ) ;
-  delete data ;
-  // auto ec = data->emptyClone() ;
-  // *data = (*ec) ;
-  // *data = RooDataSet () ;
-  return nullptr ;
-}
 // ========================================================================
 // helper function to call RooAbsPdf::fitTo ( data , options ) 
 // ============================================================================

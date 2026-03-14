@@ -1896,7 +1896,7 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
     ROOT.RooDataSet._old_reset_ = ROOT.RooDataSet.reset
     def _ds_new_reset_ ( self ) :
         """ Clear dataset storage
-        >>> print ds
+        >>> print ( ds ) 
         >>> ds.clear()
         >>> ds.erase() ## ditto
         >>> ds.reset() ## ditto
@@ -1909,47 +1909,24 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
             store.resetBuffers ()
             store.resetCache   ()
         
-        ## self.resetCache    ()
         self.resetBuffers  ()
         self._old_reset_   ()
+        ## 
         return len ( self )
     
-    ## ROOT.RooDataSet.reset = _ds_new_reset_
     ROOT.RooDataSet.clear = _ds_new_reset_
+    ROOT.RooDataSet.clean = _ds_new_reset_
     ROOT.RooDataSet.erase = _ds_new_reset_
-    ## ROOT.RooDataSet.Reset = _ds_new_reset_
+
+    _new_methods_ += [
+        ROOT.RooDataSet .clean   ,
+        ROOT.RooDataSet .clear   ,
+        ROOT.RooDataSet .erase   ,    
+    ]
 
 
-# =============================================================================
-## clear dataset
-#  @see Ostap::MoreRooFit::reset_data
-#  @code
-#  data = ...
-#  data.clear ()
-#  data.clean () ## ditto
-#  data.erase () ## ditto
-#  @endcode 
-def _ds_clear_ ( data ) :
-    """ Clear dataset
-    - see `Ostap.MoreRooFit.reset_data`
-    >>> data = ...
-    >>> data.clear ()
-    >>> data.clean () ## ditto
-    >>> data.erase () ## ditto
-    """
-    Ostap.MoreRooFit.reset_data ( data )
-    return len ( data )
-
-ROOT.RooDataSet.clear = _ds_clear_ 
-ROOT.RooDataSet.clean = _ds_clear_ 
-ROOT.RooDataSet.erase = _ds_clear_ 
-
-ROOT.RooAbsData.get_var= get_var
-
+ROOT.RooAbsData.get_var = get_var
 _new_methods_ += [
-    ROOT.RooDataSet .clean   ,
-    ROOT.RooDataSet .clear   ,
-    ROOT.RooDataSet .erase   ,    
     ROOT.RooAbsData .get_var ,
     ]
 
