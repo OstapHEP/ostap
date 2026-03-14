@@ -73,9 +73,8 @@ def test_stats_ustat_G2D () :
             h.draw()
 
             ## data = Ostap.MoreRooFit.delete_data ( data )
-            if isinstance ( data , ROOT.RooAbsData ) : 
-                from ostap.fitting.dataset import data_ptr
-                data = data_ptr ( data ) 
+            if isinstance ( data , ROOT.RooAbsData ) :
+                ROOT.SetOwnership ( data , True ) 
             del data
 
 # =============================================================================
@@ -133,10 +132,8 @@ def test_stats_ustat_G3D () :
             h.draw()
             
             ## data = Ostap.MoreRooFit.delete_data ( data )
-            if isinstance ( data , ROOT.RooAbsData ) : 
-                from ostap.fitting.dataset import data_ptr
-                data = data_ptr ( data )
-                
+            if isinstance ( data , ROOT.RooAbsData ) :
+                ROOT.SetOwnership ( data , True ) 
             del data
             
 

@@ -341,10 +341,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         converged = True 
         break
     
-    if isinstance ( mcds , ROOT.RooAbsData ) : 
-        ## mcds = Ostap.MoreRooFit.delete_data ( mcds )
-        from ostap.fitting.dataset import data_ptr 
-        mcds = data_ptr ( mcds ) 
+    if isinstance ( mcds , ROOT.RooAbsData ) : ROOT.SetOwnership ( mcds , True ) 
     del mcds
     
 else :

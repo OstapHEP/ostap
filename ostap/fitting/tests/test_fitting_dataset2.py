@@ -19,9 +19,9 @@ from   ostap.utils.memory       import memory
 from   ostap.utils.basic        import typename 
 from   ostap.utils.root_utils   import batch_env
 from   ostap.logger.symbols     import delta_symbol, ram 
-from   ostap.fitting.dataset import data_ptr
 import ostap.logger.table       as     T
 import ostap.fitting.roofit 
+import ostap.fitting.dataset 
 import ostap.trees.trees   
 import ostap.histos.histos 
 import ROOT, random
