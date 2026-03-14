@@ -15,7 +15,8 @@ __all__    = () ## nothing to import
 from   ostap.core.core          import dsID, hID, Ostap 
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.utils.memory       import memory 
+from   ostap.utils.memory       import memory
+from   ostap.utils.basic        import typename 
 from   ostap.utils.root_utils   import batch_env
 from   ostap.logger.symbols     import delta_symbol, ram 
 from   ostap.fitting.dataset import data_ptr
@@ -48,8 +49,23 @@ varset  = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
 dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
 
 NR  = 1000
-NE  = 1000
+NE  =  100
 
+
+## kill 
+def kill_me ( obj ) :
+
+    if   hasattr    ( obj , '__destruct__' ) :
+        print ( 'CALL __DESTRUCT__' ) 
+        obj.__destruct__ () 
+    elif isinstance ( obj , ROOT.TObject     ) :
+        print ( 'CALL TOBJECT.DELETE' ) 
+        obj.Delete         () 
+    else                                       :
+        print ( 'CALL DELETE' ) 
+        del obj
+
+    
 with memory ( 'Create initial dataset' , logger = logger ) as dm0 :
     
     for r in progress_bar ( range ( NR ) , description = "Create:")  :
@@ -81,11 +97,13 @@ logger.info ( 'Print initial dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 # =============================================================================
 with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
 
-    size = 20
-    for i , ds in progress_bar ( enumerate ( dataset.bootstrap ( size  , extended = True , wrap = True ) ) ,
+    size = 40
+    for i , ds in progress_bar ( enumerate ( dataset.bootstrap ( size  , extended = True , delete = True ) ) ,
                                  max_value   = size         , 
                                  description = "Bootstrap:" ) :
 
+        ## print ( 'boostrap', typename ( ds ) ) 
+        ## kill_me ( ds ) 
         del ds 
 
 # =============================================================================
@@ -93,10 +111,13 @@ with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
 # =============================================================================
 with memory ( 'Jackknife' , logger  = logger ) as dm2 :
 
-    first , last = 10, 30
-    for i , ds in progress_bar ( enumerate ( dataset.jackknife ( first , last , wrap = True ) ) ,
+    first , last = 10, 50
+    for i , ds in progress_bar ( enumerate ( dataset.jackknife ( first , last , delete = True ) ) ,
                                  max_value   = 100          , 
                                  description = "Jackknife:" ) :
+        
+        ## print ( 'jackknife', typename ( ds ) ) 
+        ## kill_me ( ds ) 
         del ds 
 
 # ==============================================================================
@@ -106,7 +127,9 @@ with memory ( 'Delete Initial dataset' , logger = logger ) as dm3 :
     ## dataset = Ostap.MoreRooFit.delete_data ( dataset )
     ## del dataset 
     ## dataset = data_ptr ( dataset )
-    del dataset 
+    ## kill_me ( dataset ) 
+    ## del dataset 
+    pass
 
 
 # ==============================================================================

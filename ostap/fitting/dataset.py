@@ -64,7 +64,10 @@ DATA_PTR  = std.unique_ptr[ROOT.RooAbsData]
 ## add unique-pointer to dataset 
 def data_ptr ( data ) :
     """ Add unique-pointer to dataset
-    """ 
+    """
+
+    ## return data
+    
     if isinstance ( data , DATA_PTR ) : return data
 
     assert isinstance ( data, ROOT.RooAbsData ) , "Invalid data type %s" % typename ( data )
@@ -246,7 +249,8 @@ def _rad_getitem_ ( data , index ) :
         ##    raise IndexError ( 'Invalid index [%s]=%s/%s' % ( i , j , type ( j ) ) )
         
         j = int ( j )            ## the content must be convertible to integer 
-        if j < 0 : j += N        ## allow `slightly-negative' indices             
+        if j < 0 : j += N        ## allow `slightly-negative' indices
+        
         if not 0 <= j < N :      ## adjusted integer in the proper range ?
             raise IndexError ( 'Invalid index [%s]=%s,' % ( i , j ) ) 
 
@@ -589,18 +593,17 @@ def _rds_remevt_ ( dataset , index ) :
         ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
         ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
         
-        ## ds1    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) ) ) 
-        ## ds2    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) ) )
-        
         result = ds1 + ds2
 
-        assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
-
-        ds1 = data_ptr ( ds1 )
-        ds2 = data_ptr ( ds2 )
+        ## ds1.__destruct__ () 
+        ## ds2.__destruct__ () 
+        ds1.Delete()
+        ds2.Delete()
         
         del ds1        
         del ds2
+        
+        assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
         
         return result
     
@@ -661,34 +664,6 @@ def _rds_sub_ ( dataset , what ) :
     if isinstance ( what , integer_types ) : return _rds_remevt_ ( dataset , what )
     return _rds_remvar_ ( dataset , what )
     
-# ============================================================================
-## Jackknife generator: generates data sets with removed i-th element
-#  @code
-#  dataset = ...
-#  for ds in ds.jackknife() :
-#      ...
-#  @endcode
-#  - Dataset need to be deleted explicitely!
-def _rds_jackknife_ ( dataset ,
-                      first    = FIRST_ENTRY  ,
-                      last     = LAST_ENTRY   ,
-                      progress = False        ,
-                      wrap     = False        ) :
-    """ Jackknife generator
-
-    >>> dataset = ...
-    >>> for ds in ds.jackknife() :
-    >>> ...
-    
-    - Dataset need to be deleted explicitely!
-    """
-    
-    first , last = evt_range ( dataset , first , last )    
-    for i in progress_bar ( range ( first , last ) , silent = not progress ) :
-
-        if wrap : yield  data_ptr ( dataset - i )
-        else    : yield             dataset - i 
-            
 # =============================================================================
 ## Boostrap generator
 #  @code
@@ -701,7 +676,7 @@ def _rds_bootstrap_ ( dataset          ,
                       extended = False ,
                       progress = False ,
                       sort     = False ,
-                      wrap     = False ) :
+                      delete   = False ) :
     """ Boostrap generator:
 
     >>> dataset = ...
@@ -717,12 +692,63 @@ def _rds_bootstrap_ ( dataset          ,
     """
     from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
     N    = len ( dataset )
-    bgen = bootstrap_indices ( N , size = size , sort = sort ) if not extended else extended_bootstrap_indices ( N , size = size , sort = sort )    
+    if extended : bgen = extended_bootstrap_indices ( N , size = size , sort = sort )
+    else        : bgen =          bootstrap_indices ( N , size = size , sort = sort )
+
     for indices in progress_bar ( bgen , silent = not progress , max_value = N ) :
 
-        if wrap : yield data_ptr ( dataset [ indices ] )
-        else    : yield            dataset [ indices ] 
+        result = dataset [ indices ]
 
+        print ( 'BOOTSTRAP' , typename ( result ) , id ( result ) ) 
+
+        if delete : ROOT.SetOwnership ( result , True )
+        
+        yield result
+        
+        if  delete :
+            print ( 'BOOTSTRAP/DELETE' , type ( result ) , typename ( result ) , id ( result ) )             
+            result.__destruct__() 
+        del result
+
+# ============================================================================
+## Jackknife generator: generates data sets with removed i-th element
+#  @code
+#  dataset = ...
+#  for ds in ds.jackknife() :
+#      ...
+#  @endcode
+#  - Dataset need to be deleted explicitely!
+def _rds_jackknife_ ( dataset ,
+                      first    = FIRST_ENTRY  ,
+                      last     = LAST_ENTRY   ,
+                      progress = False        ,
+                      delete   = False        ) :
+    """ Jackknife generator
+
+    >>> dataset = ...
+    >>> for ds in ds.jackknife() :
+    >>> ...
+    
+    - Dataset need to be deleted explicitely!
+    """
+    
+    first , last = evt_range ( dataset , first , last )    
+    for i in progress_bar ( range ( first , last ) , silent = not progress ) :
+
+        result = dataset - i
+
+        if delete : ROOT.SetOwnership ( result , True  )
+        
+        ## print ( 'JACKKNIFE' , typename ( result ) , id ( result ) )
+        
+        yield result
+        
+        if  delete :
+            print ( 'JACKKNIFE/DELETE' , type ( result ) , typename ( result ) , id ( result ) )
+            result .__destruct__ () 
+
+        del result 
+        
 # =============================================================================
 ## get (random) unique sub-sample from the dataset
 #  @code

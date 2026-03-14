@@ -370,11 +370,11 @@ then
     return ${sc}
 fi
 
-( echo -e "${prefix1}"' [7/7] Last   pass of cmake&'${make_command}'&package'                  && 
-      cd ${OSTAP_BUILD}                                                                        && 
-      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_gtenerator} &&
-      ${make_command} -j$(nproc --all)                                                         && 
-      ${make_command} -j$(nproc --all)  package )
+## ( echo -e "${prefix1}"' [7/7] Last   pass of cmake&'${make_command}'&package'                  && 
+##      cd ${OSTAP_BUILD}                                                                        && 
+##      cmake         ${OSTAP_SOURCE} -DCMAKE_INSTALL_PREFIX=${OSTAP_INSTALL} ${make_gtenerator} &&
+##      ${make_command} -j$(nproc --all)                                                         && 
+##      ${make_command} -j$(nproc --all)  package )
 
 sc=$?
 if [[ ${sc} -ne 0 ]]
