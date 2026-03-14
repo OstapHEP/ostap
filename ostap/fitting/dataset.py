@@ -606,10 +606,11 @@ def _rds_remevt_ ( dataset , index ) :
         
         result = ds1 + ds2
         
-        ## ds1.__destruct__ () 
-        ## ds2.__destruct__ ()        
-        ## ds1.Delete()
-        ## ds2.Delete()
+        if ( 6, 32 ) <= root_info < ( 6, 36 ) :
+            ## ds1.Delete()
+            ## ds2.Delete()            
+            ds1.__destruct__ () 
+            ds2.__destruct__ ()        
         
         del ds1        
         del ds2

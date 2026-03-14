@@ -197,15 +197,28 @@ RooPlot* Ostap::Utils::copy_plot
     //
   }
   //
+  // ==========================================================================
+  newplot->SetMinimum    ( plot->GetMinimum () ) ;
+  newplot->SetMaximum    ( plot->GetMaximum () ) ;
+  // ==========================================================================
+#if ROOT_VERSION(6,39,0) <= ROOT_VERSION_CODE // ==============================
+  // ==========================================================================  
+  TH1*       hnew = newplot->hist () ;
+  const TH1* hold =    plot->hist () ;
+  /// copy all TH1-attributes 
+  if ( hnew && hold ) { hold->Copy ( *hnew ) ; }
+  // ==========================================================================  
+#else // ======================================================================
+  // ==========================================================================     
   newplot->SetAxisColor ( plot->GetXaxis() -> GetAxisColor () , "x" ) ;
   newplot->SetAxisColor ( plot->GetYaxis() -> GetAxisColor () , "y" ) ; 
   //		
-  newplot->SetMinimum    ( plot->GetMinimum () ) ;
-  newplot->SetMaximum    ( plot->GetMaximum () ) ;
-  //
   newplot->SetNdivisions ( plot->GetNdivisions ( "x" ) , "x") ;
   newplot->SetNdivisions ( plot->GetNdivisions ( "y" ) , "y") ;
   newplot->SetNdivisions ( plot->GetNdivisions ( "z" ) , "z") ;
+  // ==========================================================================      
+#endif // =====================================================================
+  // ==========================================================================
   //  
   return newplot.release() ;
 }
