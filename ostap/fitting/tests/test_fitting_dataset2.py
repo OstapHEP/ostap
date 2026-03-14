@@ -48,7 +48,7 @@ varset  = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
 dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
 
 NR  = 1000
-NE  =  500
+NE  = 1000
 
 with memory ( 'Create initial dataset' , logger = logger ) as dm0 :
     
@@ -81,7 +81,7 @@ logger.info ( 'Print initial dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 # =============================================================================
 with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
 
-    size = 10
+    size = 20
     for i , ds in progress_bar ( enumerate ( dataset.bootstrap ( size  , extended = True , wrap = True ) ) ,
                                  max_value   = size         , 
                                  description = "Bootstrap:" ) :
@@ -93,7 +93,7 @@ with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
 # =============================================================================
 with memory ( 'Jackknife' , logger  = logger ) as dm2 :
 
-    first , last = 0, 10
+    first , last = 10, 30
     for i , ds in progress_bar ( enumerate ( dataset.jackknife ( first , last , wrap = True ) ) ,
                                  max_value   = 100          , 
                                  description = "Jackknife:" ) :
@@ -130,7 +130,7 @@ logger.info ( '%s:\n%s' % ( title , table ) )
 
 
 if True :
-    raise TypeError ( " MEMORY %+.3f %+.3f %+.3f " % ( dm0.delta , dm1.delta , dm2.delta ) )
+    raise TypeError ( " MEMORY: %+.3f %+.3f %+.3f %+.3f " % ( dm0.delta , dm1.delta , dm2.delta , dm3.delta ) )
                  
 assert dm1.delta < max ( 1 , 2 * dm0.delta ) , "There is some memory leak in Bootstrap: %s vs %s " % ( dm1.delta , dm0.delta )
 assert dm2.delta < max ( 1 , 2 * dm0.delta ) , "There is some memory leak in Jackknife: %s vs %s " % ( dm1.delta , dm0.delta )

@@ -60,23 +60,21 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
-DPTR_DS = std.unique_ptr[ROOT.RooDataSet]
-DPTR_AD = std.unique_ptr[ROOT.RooAbsData]
+DATA_PTR  = std.unique_ptr[ROOT.RooAbsData]
 ## add unique-pointer to dataset 
 def data_ptr ( data ) :
     """ Add unique-pointer to dataset
-    """
-    ROOT.SetOwnership ( data , True )
-    return data
-    
-    if   isinstance ( data , DPTR_DS ) : return data
-    elif isinstance ( data , DPTR_AD ) : return data
-    
+    """ 
+    if isinstance ( data , DATA_PTR ) : return data
+
     assert isinstance ( data, ROOT.RooAbsData ) , "Invalid data type %s" % typename ( data )
+
+    ## ROOT.SetOwnership ( data , True )
+    ## return data
+
     
     ROOT.SetOwnership ( data , False )
-    
-    return DPTR_DS ( data ) if isinstance ( data , ROOT.RooDataSet ) else DPTR_AD ( data )
+    return DATA_PTR ( data ) 
 
 # =============================================================================
 _new_methods_ = []
@@ -588,18 +586,18 @@ def _rds_remevt_ ( dataset , index ) :
         if   0 == index     : return dataset.reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
         elif N == index + 1 : return dataset.reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
 
-        ## ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
-        ## ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
+        ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
+        ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
         
-        ds1    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) ) ) 
-        ds2    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) ) )
+        ## ds1    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) ) ) 
+        ## ds2    = data_ptr ( dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) ) )
         
         result = ds1 + ds2
 
         assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
 
-        ## ds1 = data_ptr ( ds1 )
-        ## ds2 = data_ptr ( ds2 )
+        ds1 = data_ptr ( ds1 )
+        ds2 = data_ptr ( ds2 )
         
         del ds1        
         del ds2
