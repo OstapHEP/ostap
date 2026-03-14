@@ -221,14 +221,22 @@ def _rad_getitem_ ( data , index ) :
 
         ## simple case 
         start , stop , step = index.start , index.stop , index.step
-        if 1 == step and start <= stop : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )  ## RETURN 
+        if 1 == step and start <= stop :
+            result = data.reduce ( ROOT.RooFit.EventRange ( start , stop ) ) 
+            ROOT.SetOwnership ( result , True )
+            return result                                                     ## RETURN
+        
         index = range ( start , stop , step ) 
 
     ## slice -> range 
     elif isinstance ( index , slice ) :
         
         start , stop , step = index.indices ( N )                              
-        if 1 == step and start <= stop : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) ) ## RETURN 
+        if 1 == step and start <= stop :
+            result = data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
+            ROOT.SetOwnership ( result , True )
+            return result                                                     ## RETURN 
+        
         index = range ( start , stop , step ) 
 
     ## require sequence of indices here 
@@ -587,18 +595,21 @@ def _rds_remevt_ ( dataset , index ) :
 
         if not 0 <= index < N : return NotImplemented
         
-        if   0 == index     : return dataset.reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
-        elif N == index + 1 : return dataset.reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
+        if   0 == index     : return dataset[ 1 :   ] ## .reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
+        elif N == index + 1 : return dataset[   :-1 ] ## .reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
 
         ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
         ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
         
+        ROOT.SetOwnership ( ds1 , True ) 
+        ROOT.SetOwnership ( ds2 , True )
+        
         result = ds1 + ds2
-
+        
         ## ds1.__destruct__ () 
-        ## ds2.__destruct__ () 
-        ds1.Delete()
-        ds2.Delete()
+        ## ds2.__destruct__ ()        
+        ## ds1.Delete()
+        ## ds2.Delete()
         
         del ds1        
         del ds2
@@ -642,7 +653,9 @@ def _rds_remvar_ ( dataset , variables ) :
     for v in varset :
         if not v.name in vars : newvars.add ( v )
     ## 
-    return dataset.reduce (  ROOT.RooFit.SelectVars ( newvars ) )  
+    result = dataset.reduce (  ROOT.RooFit.SelectVars ( newvars ) )
+    ROOT.SetOwnership ( result , True )
+    return result 
 
 # =============================================================================
 ## remove entry or variable(s) from dataset
@@ -833,8 +846,7 @@ def _rad_subset_ ( dataset                  ,
                    cuts       = ''          ,
                    cut_range  = ''          ,
                    first      = FIRST_ENTRY ,
-                   last       = LAST_ENTRY  ,
-                   wrap       = False       ) :
+                   last       = LAST_ENTRY  ) :
 
     """ Improved reduce
     >>> data = ...
@@ -900,9 +912,9 @@ def _rad_subset_ ( dataset                  ,
     if 0 < first or last < len ( dataset ) : 
         args.append ( ROOT.RooFit.EventRange ( first , last ) )
     ##
-    if wrap : return data_ptr ( dataset.reduce ( *args ) )
-    ## 
-    return dataset.reduce ( *args ) 
+    result = dataset.reduce ( *args )
+    ROOT.SetOwnership ( result , True )
+    return result 
 
 # =============================================================================
 ## helper technical method to seek for unique and/or duplicated entries
@@ -1542,6 +1554,7 @@ def _ds_fold_ ( dataset                 ,
                                    cut_range = cut_range ,
                                    first     = first     ,
                                    last      = last      )
+        ROOT.SetOwnership ( reduced , True ) 
     else :
         reduced = dataset
 

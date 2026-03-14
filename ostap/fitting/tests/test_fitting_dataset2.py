@@ -49,7 +49,7 @@ varset  = ROOT.RooArgSet  ( evt , run , mass , pt1 , pt2 , weight )
 dataset = ROOT.RooDataSet ( dsID () , 'Test Data set-0' , varset )  
 
 NR  = 1000
-NE  =  100
+NE  =  500
 
 
 ## kill 
@@ -97,7 +97,7 @@ logger.info ( 'Print initial dataset:\n%s' % dataset .table ( prefix = '# ' ) )
 # =============================================================================
 with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
 
-    size = 40
+    size = 50
     for i , ds in progress_bar ( enumerate ( dataset.bootstrap ( size  , extended = True , delete = True ) ) ,
                                  max_value   = size         , 
                                  description = "Bootstrap:" ) :
@@ -111,7 +111,7 @@ with memory ( 'Bootstrapping' , logger  = logger ) as dm1 :
 # =============================================================================
 with memory ( 'Jackknife' , logger  = logger ) as dm2 :
 
-    first , last = 10, 50
+    first , last = 10, 60
     for i , ds in progress_bar ( enumerate ( dataset.jackknife ( first , last , delete = True ) ) ,
                                  max_value   = 100          , 
                                  description = "Jackknife:" ) :
