@@ -28,7 +28,7 @@ from   ostap.core.core              import Ostap
 from   ostap.utils.basic            import loop_items, typename  
 from   ostap.utils.utils            import split_range
 from   ostap.math.base              import doubles
-from   ostap.fitting.dataset        import useStorage, data_ptr 
+from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.trees.cuts             import vars_and_cuts, expression_types  
@@ -112,6 +112,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
         if 2 * len ( vnames )  <= nvars and not more_vars  :            
             with useStorage ( ROOT.RooAbsData.Vector ) : 
                 dstmp  = dataset.subset ( vnames , cuts = cuts , cut_range = cut_range )
+                
             result = ds2numpy ( dstmp     ,
                                 vnames    ,
                                 more_vars    = more_vars    ,
@@ -119,9 +120,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                                 structured   = structured   , 
                                 weight_name  = weight_name  ,
                                 weight_split = weight_split )
-            ## dstmp.erase()
-            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
-            dstmp = data_ptr ( dstmp ) 
+            ## 
             del dstmp 
             return result
 
@@ -137,9 +136,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                                 structured   = structured   ,
                                 weight_name  = weight_name  ,
                                 weight_split = weight_split )
-            ## dstmp.erase()
-            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
-            dstmp = data_ptr ( dstmp ) 
+            ## 
             del dstmp 
             return result
 
@@ -376,9 +373,7 @@ else :
                                 structured   = structured   ,
                                 weight_name  = weight_name  ,
                                 weight_split = weight_split )
-            ## dstmp.erase()
-            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp )
-            dstmp = data_ptr ( dstmp )
+            ## 
             del dstmp 
             return result
         
@@ -393,9 +388,7 @@ else :
                                 structured   = structured   ,
                                 weight_name  = weight_name  ,
                                 weight_split = weight_split )
-            ## dstmp.erase()
-            ## dstmp = Ostap.MoreRooFit.delete_data ( dstmp ) 
-            dstmp = data_ptr ( dstmp )
+            ## 
             del dstmp 
             return result
         

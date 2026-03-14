@@ -730,12 +730,11 @@ class GoF1DToys(GoF1D) :
             results  [ 'ZA' ].append ( za ) 
             results  [ 'ZC' ].append ( zc ) 
 
-            cnt += ks 
+            cnt += ks
+            
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) :
-                from ostap.fitting.dataset import data_ptr 
-                ## dset = Ostap.MoreRooFit.delete_data ( dset )
-                dset = data_ptr ( dset )
+                ROOT.SetOwnership ( dset , True ) 
                 
             del dset
             del data

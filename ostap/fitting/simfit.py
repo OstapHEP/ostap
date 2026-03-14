@@ -976,7 +976,6 @@ class SimFit (VarMaker,ConfigReducer) :
             data [ label ]  = ds
             for v in ds.varset() :
                 if not v in vars : vars.add ( v ) 
-                ## vars       |= ds.varset()                 
 
         ## combine generated datasets
         args = () if not weight else ( ROOT.RooFit.WeightVar ( weight ) , )
@@ -989,7 +988,8 @@ class SimFit (VarMaker,ConfigReducer) :
             _ , ds = data.popitem()
             ds.reset()
             del ds
-            
+
+        ROOT.SetOwnership ( result , True ) 
         return result 
 
     # =========================================================================

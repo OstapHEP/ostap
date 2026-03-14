@@ -2249,8 +2249,10 @@ class APDF1 ( Components ) :
                 from ostap.fitting.dataset import useStorage
                 with useStorage ( storage ) : 
                     return self.pdf.generate (  varset , *args )
-
-            return self.pdf.generate (  varset , *args )
+                
+            result = self.pdf.generate (  varset , *args )
+            ROOT.SetOwnership ( result , True )
+            return result 
 
     # ========================================================================
     ## clean some stuff 

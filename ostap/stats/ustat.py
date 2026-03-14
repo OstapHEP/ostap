@@ -240,9 +240,8 @@ def uToys ( pdf            ,
         counter += bool ( t_value < ti  )
 
         if isinstance ( ds , ROOT.RooDataSet ) :
-            ## ds = Ostap.MoreRooFit.delete_data ( ds )
-            from ostap.fitting.dataset import data_ptr 
-            ds = data_ptr ( ds )            
+            ROOT.SetOwnership ( ds ,True ) 
+            
         del ds
         
     p_value = 1 - counter.eff

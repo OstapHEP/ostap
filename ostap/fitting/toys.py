@@ -31,8 +31,9 @@ from   ostap.core.core            import VE, SE, Ostap
 from   ostap.logger.pretty        import pretty_float, fmt_pretty_float
 from   ostap.logger.colorized     import attention
 from   ostap.fitting.funbasic     import AFUN1
-from   ostap.fitting.dataset      import data_ptr 
-from   ostap.utils.progress_bar   import progress_bar 
+from   ostap.utils.progress_bar   import progress_bar
+from   ostap.logger.symbols       import delta_symbol, ram 
+import ostap.fitting.dataset     
 import ostap.fitting.roofitresult 
 import ROOT
 # =============================================================================
@@ -132,7 +133,10 @@ def make_stats ( results , fits = {} , covs = {} , accept = SE () ) :
 
 # =============================================================================
 ## Print statistics of pseudoexperiments
-def print_stats ( stats , ntoys = '' , logger = logger ) :
+def print_stats ( stats                 ,
+                  ntoys        = ''     ,
+                  logger       = logger ,
+                  delta_memory = None   ) :
     """ Print statistics of pseudoexperiments
     """
     ##              0          1      2       3        4        5          6           7 
@@ -182,13 +186,17 @@ def print_stats ( stats , ntoys = '' , logger = logger ) :
             
     import ostap.logger.table as Table
     table = Table.remove_empty_columns ( table ) 
-        
-    table = Table.table ( table                                    ,
-                          title     = "Results of %s toys" % ntoys ,
-                          alignment = 'lccccccc'                   ,
-                          prefix    = "# "                         )
     
-    logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
+    title = "Results of %s toys" % ntoys
+    if not delta_memory is None :
+        title += ' %s%s=%+.2f[MB]' % ( delta_symbol , ram , float ( delta_memory ) ) 
+            
+    table = Table.table ( table                  ,
+                          title     = title      ,
+                          alignment = 'lccccccc' ,
+                          prefix    = "# "       )
+    
+    logger.info ( '%s:\n%s' % ( title , table ) ) 
 
 
 # =============================================================================
@@ -227,11 +235,12 @@ def jackknife_statistics ( statistics , theta = None ) :
 
 # =============================================================================
 ## print Jackknife statistics
-def print_jackknife  ( fitresult          , ## result of the fit to the total data sample 
-                       stats              ,
-                       morevars  = {}     ,                       
-                       logger    = logger ,
-                       title     = ''     ) :
+def print_jackknife  ( fitresult             , ## result of the fit to the total data sample 
+                       stats                 ,
+                       morevars     = {}     ,                       
+                       logger       = logger ,
+                       title        = ''     ,
+                       delta_memory = None   ) :
     """ Print Jackknife statistics
     """
 
@@ -323,7 +332,10 @@ def print_jackknife  ( fitresult          , ## result of the fit to the total da
     import ostap.logger.table as Table
     table = Table.remove_empty_columns ( table )
     
-    title = title if title else "Jackknife results (N=%d)" % N  
+    title = title if title else "Jackknife results (N=%d)" % N    
+    if not delta_memory is None :
+        title += ' %s%s=%+.2f[MB]' % ( delta_symbol , ram , float ( delta_memory ) ) 
+
     table = Table.table ( table                           ,
                           title     = title               ,
                           alignment = 'lcccccc'           ,
@@ -333,11 +345,13 @@ def print_jackknife  ( fitresult          , ## result of the fit to the total da
 
 # =============================================================================
 ## print Bootstrap statistics
-def print_bootstrap  ( fitresult          ,
-                       stats              ,
-                       morevars  = {}     ,
-                       logger    = logger ,
-                       title     = ''     ) :
+def print_bootstrap  ( fitresult             ,
+                       stats                 ,
+                       morevars     = {}     ,
+                       logger       = logger ,
+                       title        = ''     ,
+                       delta_memory = None   ) :
+
     """ Print Bootstrap statistics
     """
     
@@ -412,7 +426,10 @@ def print_bootstrap  ( fitresult          ,
 
     import ostap.logger.table as Table
     table = Table.remove_empty_columns ( table ) 
-    title = title if title else "Bootstrapping with #%d samples" % n 
+    title = title if title else "Bootstrapping with #%d samples" % n
+    if not delta_memory is None :
+        title += ' %s%s=%+.2f[MB]' % ( delta_symbol , ram , float ( delta_memory ) ) 
+        
     table = Table.table ( table                ,
                           title     = title    ,
                           alignment = 'lccccccc'  ,
@@ -588,6 +605,7 @@ def make_toys ( pdf                   ,
     """
 
     from ostap.core.ostap_types import string_types, integer_types  
+    from ostap.utils.memory     import memory_usage 
     
     assert isinstance ( nToys , integer_types ) and 0 < nToys,\
            'Invalid "nToys" argument %s/%s' % ( nToys , type ( nToys ) )
@@ -620,6 +638,9 @@ def make_toys ( pdf                   ,
     import ostap.fitting.pdfbasic 
     import ostap.histos.histos   
 
+    ## initial memory stamp 
+    memory_init  = memory_usage () 
+    
     params = pdf.params ()
     varset = ROOT.RooArgSet() 
     
@@ -709,11 +730,8 @@ def make_toys ( pdf                   ,
             ## 4.3 save results 
             if  add_results : results [ '' ].append ( fit_result )
 
-        ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
-        ##    r = Ostap.MoreRooFit.delete_result ( r )                                    
         if isinstance ( dataset , ROOT.RooAbsData ) :
-            ## dataset = Ostap.MoreRooFit.delete_data ( dataset )
-            dataset = data_ptr ( dataset )
+            ROOT.SetOwnership ( dataset , True )
             
         del dataset
         del fit_result
@@ -721,13 +739,15 @@ def make_toys ( pdf                   ,
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
-                print_stats ( stats , i + 1 , logger = logger )
+                delta_memory = memory_usage ()  - memory_init 
+                print_stats ( stats , i + 1 , logger = logger , delta_memory = delta_memory )
            
     ## make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
         
     if progress or not silent :
-        print_stats ( stats , nToys , logger = logger )
+        delta_memory = memory_usage ()  - memory_init                               
+        print_stats ( stats , nToys , logger = logger , delta_memory = delta_memory ) 
     
     return results, stats 
 
@@ -866,6 +886,7 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
     """
 
     from ostap.core.ostap_types import string_types, integer_types  
+    from ostap.utils.memory     import memory_usage 
     
     assert isinstance ( nToys , integer_types ) and 0 < nToys,\
            'Invalid "nToys" argument %s/%s' % ( nToys , type ( nToys ) )
@@ -897,6 +918,9 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
     import ostap.fitting.roofitresult
     import ostap.fitting.pdfbasic 
     import ostap.histos.histos   
+    
+    ## initial memory stamp 
+    memory_init  = memory_usage () 
 
     gparams = gen_pdf.params ()
     varset  = ROOT.RooArgSet () 
@@ -991,11 +1015,8 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
             ## 5.3 save results 
             if add_results  : results [ '' ].append ( fit_result )
 
-        ## if not add_results and isinstance ( r , ROOT.RooFitResult ) :
-        ##     r = Ostap.MoreRooFit.delete_result ( r )            
         if isinstance ( dataset , ROOT.RooAbsData ) :
-            ## dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
-            dataset    = data_ptr ( dataset )
+            ROOT.SetOwnership ( dataset , True ) 
             
         del dataset
         del fit_result
@@ -1003,16 +1024,17 @@ def make_toys2 ( gen_pdf               , ## pdf to generate toys
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
-                print_stats ( stats , i + 1 , logger = logger )
+                delta_memory = memory_usage ()  - memory_init                 
+                print_stats ( stats , i + 1 , logger = logger , delta_memory = delta_memory )
 
     ## make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
                     
     if progress or not silent :
-        print_stats ( stats , nToys , logger = logger  )
+        delta_memory = memory_usage ()  - memory_init                         
+        print_stats ( stats , nToys , logger = logger , delta_memory = delta_memory )
     
     return results, stats 
-
 
 # =============================================================================
 ## make <code>nToys</code> pseudoexperiments
@@ -1135,12 +1157,13 @@ def make_toys3 ( gen_pdf               , ## pdf to generate toys
     ...                 action     = ...                            , ## the action 
     ...                 gen_config = { 'nEvents' : 5000 }           , ## configuration of `pdf.generate`
     ...                 fit_config = { 'ncpus'   : 2    }           , ## configuration of `pdf.fitTo`
-    ...                 gemn_pars  = { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
+    ...                 gen_pars   = { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
     ...                )
     """
-
-    from ostap.core.ostap_types import string_types, integer_types  
     
+    from ostap.core.ostap_types import string_types, integer_types  
+    from ostap.utils.memory     import memory_usage 
+                      
     assert isinstance ( nToys , integer_types ) and 0 < nToys,\
            'Invalid "nToys" argument %s/%s' % ( nToys , type ( nToys ) )
     
@@ -1171,6 +1194,9 @@ def make_toys3 ( gen_pdf               , ## pdf to generate toys
     import ostap.fitting.roofitresult
     import ostap.fitting.pdfbasic 
     import ostap.histos.histos   
+    
+    ## initial memory stamp 
+    memory_init  = memory_usage () 
 
     gparams = gen_pdf.params ()
     varset  = ROOT.RooArgSet () 
@@ -1257,8 +1283,7 @@ def make_toys3 ( gen_pdf               , ## pdf to generate toys
                 results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
                                         
         if isinstance ( dataset , ROOT.RooAbsData ) :
-            ## dataset = Ostap.MoreRooFit.delete_data ( dataset ) 
-            dataset = data_ptr ( dataset )
+            ROOT.SetOwnership ( dataset , True ) 
             
         del dataset
         del fit_result
@@ -1266,13 +1291,15 @@ def make_toys3 ( gen_pdf               , ## pdf to generate toys
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
-                print_stats ( stats , i + 1 , logger = logger )
+                delta_memory = memory_usage ()  - memory_init                 
+                print_stats ( stats , i + 1 , logger = logger , delta_memory = delta_memory )
 
     ## make a final statistics 
     stats = make_stats ( results , fits , covs , accept )
                     
     if progress or not silent :
-        print_stats ( stats , nToys , logger = logger  )
+        delta_memory = memory_usage ()  - memory_init                                       
+        print_stats ( stats , nToys , logger = logger , delta_memory = delta_memory )
     
     return results, stats 
 
@@ -1350,7 +1377,9 @@ def make_jackknife ( pdf                  ,
     - `logger`      : use this logger 
     - `frequency`   : how often to dump the intermediate results ? 
     """
+    from ostap.utils.memory     import memory_usage
     
+        
     N = len ( data )
     assert 1 < N            , 'make_jackknife: invalid dataset size %s' % N
 
@@ -1385,7 +1414,10 @@ def make_jackknife ( pdf                  ,
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
     import ostap.fitting.pdfbasic 
-       
+
+    ## initial memory stamp 
+    memory_init  = memory_usage () 
+
     ## parameters for fitting 
 
     fparams      = pdf.params ()
@@ -1458,13 +1490,12 @@ def make_jackknife ( pdf                  ,
         if progress or not silent :
             if 0 < frequency and 1 <= i and 0 == i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )
-                print_stats ( stats , i + 1 , logger = logger )
+                delta_memory = memory_usage ()  - memory_init 
+                print_stats ( stats , i + 1 , logger = logger , delta_memory = delta_memory )
                 
         ## if not add_result and isinstance ( r , ROOT.RooFitResult ) : r.Delete()                                
         ## reset/remove/delete dataset 
-        if isinstance ( ds , ROOT.RooAbsData ) :
-            ## ds = Ostap.MoreRooFit.delete_data ( ds )
-            ds = data_ptr ( ds )
+        if isinstance ( ds , ROOT.RooAbsData ) : ROOT.SetOwnership ( ds , True ) 
         
         del ds
         del r
@@ -1482,12 +1513,14 @@ def make_jackknife ( pdf                  ,
         title = '' 
         if not ok1 :
             logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")
-            title = "Jackknife results (N=%d).[Estimates for `yield` are likely wrong!]" % NN            
-        print_jackknife ( r_tot   ,
-                          stats   ,
-                          morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) ,
-                          logger   = logger ,
-                          title    = title  ) 
+            title = "Jackknife results (N=%d).[Estimates for `yield` are likely wrong!]" % NN
+            
+        print_jackknife ( r_tot        ,
+                          stats        ,
+                          morevars     = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) ,
+                          logger       = logger ,
+                          title        = title  ,                          
+                          delta_memory = memory_usage ()  - memory_init ) 
         
     if not ok1 and not silent : logger.warning ( "Jackknife: estimates for `yield` parameters are likely wrong!")
     return results , stats 
@@ -1568,6 +1601,7 @@ def make_bootstrap (
     - `logger`      : use this logger 
     - `frequency`   : how often dump the intermediate results? 
     """
+    from ostap.utils.memory     import memory_usage 
     
     N = len ( data )
     assert 1 < N            , 'make_bootstrap: invalid dataset size %s' % N
@@ -1596,8 +1630,11 @@ def make_bootstrap (
     import ostap.fitting.dataset
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
-    import ostap.fitting.pdfbasic 
-       
+    import ostap.fitting.pdfbasic
+    
+    ## initial memory stamp 
+    memory_init  = memory_usage () 
+
     ## parameters for fitting 
 
     fparams      = pdf.params ()
@@ -1620,7 +1657,6 @@ def make_bootstrap (
     pdf.load_params ( params = fix_fit_init , silent = True ) ## silent = silent )
     pdf.load_params ( params = fix_fit_pars , silent = True ) ## silent = silent )
     r_tot = fit_fun ( pdf , data , **fitcnf )
-
     
     NN = 0
     from ostap.utils.progress_bar import progress_bar
@@ -1672,19 +1708,17 @@ def make_bootstrap (
             if 0 < frequency and 1 <= i and 0 ==  i % frequency : 
                 stats = make_stats ( results , fits , covs , accept )                
                 title = "Bootstrapping with #%d/%d samples" % ( NN , i ) 
-                if extended : title = '(Extended) %s' % title
+                if extended : title  = '(Extended) %s' % title
                 if not ok1  : title += '[Estimates for `yield` are likely wrong!]'
                 print_bootstrap ( r_tot ,
                                   stats ,
-                                  morevars = dict ( ( k , more_vars [ k ] ( r_tot , pdf ) ) for k in more_vars ),
-                                  logger   = logger , 
-                                  title    = title  )
+                                  morevars     = dict ( ( k , more_vars [ k ] ( r_tot , pdf ) ) for k in more_vars ),
+                                  logger       = logger , 
+                                  title        = title  ,
+                                  delta_memory = memory_usage () - memory_init )
                 if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
 
-        ## if not add_results and isinstance ( r , ROOT.RooFitResult ) : r.Delete()            
-        if isinstance ( ds , ROOT.RooAbsData ) :
-            ## ds = Ostap.MoreRooFit.delete_data ( ds )
-            ds = data_ptr ( ds ) 
+        if isinstance ( ds , ROOT.RooAbsData ) : ROOT.SetOwnership ( ds , True ) 
         
         del ds
         del r
@@ -1706,9 +1740,10 @@ def make_bootstrap (
             logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
         print_bootstrap ( r_tot ,
                           stats ,
-                          morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ),
-                          logger   = logger ,
-                          title    = title  ) 
+                          morevars     = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ),
+                          logger       = logger ,
+                          title        = title  , 
+                          delta_memory = memory_usage () - memory_init )
             
         if not ok1 and not silent : logger.warning ( "Bootstrap: estimates for `yield` parameters are likely wrong!")
         
@@ -1717,23 +1752,23 @@ def make_bootstrap (
 # =============================================================================
 ## @class FunToys
 #  Helper class to get uncertainties for certaoin
-#  chacacteristis usiung pseudoexperiments
+#  characteristics using pseudoexperiments
 #  @code
 #  model      = ...
 #  fit_result = ...
 #  with FunToys ( model , fit_result ) as toys :
 #     rms = toys.run ( 1000 , model.rms )
 #  @endcode
-#  Propagate fit uncertainties for the model features using pseudoexpeeriments 
+#  Propagate fit uncertainties for the model features using pseudoexperiments 
 class FunToys(object) :
     """ Helper class to get uncertainties for certaoin
-    chacacteristis usiung pseudoexperiments
+    characteristis using pseudoexperiments
     >>> model      = ...
     >>> fit_result = ...
     >>> with FunToys ( model , fit_result ) as toys :
     ...     rms = toys.run ( 1000 , model.rms )
     >>> print ( rms ) 
-    - Propagate fit uncertainties for the model features using pseudoexpeeriments 
+    - Propagate fit uncertainties for the model features using pseudoexperiments 
     """
     def __init__ ( self , fun , fitresult , progress = False ) :
         

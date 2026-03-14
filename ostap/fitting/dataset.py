@@ -22,7 +22,6 @@ __all__     = (
     'ds_draw'    , ## draw variables from RooDataSet 
     'ds_project' , ## project variables from RooDataSet to histogram
     'ds_combine' , ## combine two datasets with weights
-    'data_ptr'   , ## C++ unique-ot to keep (and delete) RooAbsData objects 
     )
 # =============================================================================
 from   collections                  import defaultdict
@@ -61,23 +60,6 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Some useful decorations for RooAbsData object')
 # =============================================================================
 DATA_PTR  = std.unique_ptr[ROOT.RooAbsData]
-## add unique-pointer to dataset 
-def data_ptr ( data ) :
-    """ Add unique-pointer to dataset
-    """
-
-    ## return data
-    
-    if isinstance ( data , DATA_PTR ) : return data
-
-    assert isinstance ( data, ROOT.RooAbsData ) , "Invalid data type %s" % typename ( data )
-
-    ## ROOT.SetOwnership ( data , True )
-    ## return data
-
-    
-    ROOT.SetOwnership ( data , False )
-    return DATA_PTR ( data ) 
 
 # =============================================================================
 _new_methods_ = []
@@ -595,8 +577,8 @@ def _rds_remevt_ ( dataset , index ) :
 
         if not 0 <= index < N : return NotImplemented
         
-        if   0 == index     : return dataset[ 1 :   ] ## .reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
-        elif N == index + 1 : return dataset[   :-1 ] ## .reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
+        if   0 == index     : return dataset [ 1 :    ]
+        elif N == index + 1 : return dataset [   : -1 ]
 
         ds1    = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
         ds2    = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
@@ -712,16 +694,12 @@ def _rds_bootstrap_ ( dataset          ,
     for indices in progress_bar ( bgen , silent = not progress , max_value = N ) :
 
         result = dataset [ indices ]
-
-        print ( 'BOOTSTRAP' , typename ( result ) , id ( result ) ) 
-
+        
         if delete : ROOT.SetOwnership ( result , True )
         
         yield result
         
-        if  delete :
-            print ( 'BOOTSTRAP/DELETE' , type ( result ) , typename ( result ) , id ( result ) )             
-            result.__destruct__() 
+        if  delete : result.__destruct__() 
         del result
 
 # ============================================================================
@@ -753,13 +731,9 @@ def _rds_jackknife_ ( dataset ,
 
         if delete : ROOT.SetOwnership ( result , True  )
         
-        ## print ( 'JACKKNIFE' , typename ( result ) , id ( result ) )
-        
         yield result
         
-        if  delete :
-            print ( 'JACKKNIFE/DELETE' , type ( result ) , typename ( result ) , id ( result ) )
-            result .__destruct__ () 
+        if  delete : result .__destruct__ () 
 
         del result 
         
@@ -3846,8 +3820,7 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
                                  cut_range = cut_range )
         result = _ds_2tree_ ( dsaux , name = name , filename = filename )
         if dsaux and isinstance ( dsaux , ROOT.RooDataSet ) :
-            ## if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
-            dsaux = data_ptr ( dsaux)
+            ROOT.SetOwnership ( dsaux , True ) 
             del dsaux
         return result 
     
@@ -3873,8 +3846,7 @@ def _ds_2tree_ ( dataset , name = '' , filename = '' , cuts = '' , vars = () , c
     with ROOT.TFile ( filename , 'r' ) as rfile : rfile.ls()
     
     if dstmp and isinstance ( dstmp , ROOT.RooDataSet ) :
-        ## if root_info < ( 6 , 39 ) : dsaux = Ostap.MoreRooFit.delete_data ( dsaux)
-        dstmp = data_ptr ( dstmp)        
+        ROOT.SetOwnership ( dstmp , True ) 
         del dstmp
         
     return Data ( chain       = name         ,

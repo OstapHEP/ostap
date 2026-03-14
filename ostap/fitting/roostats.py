@@ -1288,8 +1288,7 @@ class FrequentistCalculator (Calculator) :
                             
             self.__cloned_dataset = None 
             if isinstance ( ds2 , ROOT.RooDataSet ) :
-                ## ds2 = Ostap.MoreRooFit.delete_data ( ds2 )
-                ds2 = data_ptr ( ds2 )
+                ROOT.SetOwnership ( ds2 , True ) 
                 del ds2 
 
             logger.info ( 'Frequentist calculator: CLONED dataset is deleted' )

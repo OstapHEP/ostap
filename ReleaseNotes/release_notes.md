@@ -13,6 +13,8 @@
 
 ## Backward incompatible
 
+  1. remove `delete_data`  & `reset_data` functions 
+
 # v3.7.0.0 
 
 # v3.6.6.9 
