@@ -891,10 +891,23 @@ def _rf_exit_  ( self , *_ ) :
     """ Use ROOT-file with the context manager    
     >>> with ROOT.TFile('ququ.root') as f : f.ls()
     """
-    try :
-        if self and self.IsOpen() : self.Close()
-    except:
+    # =======================================================================
+    try: # ==================================================================
+        # ===================================================================
+        delattr( self , "_cached_items" )
+        # ===================================================================
+    except AttributeError: # ================================================
+        # ===================================================================
         pass
+    # =======================================================================
+    try : # =================================================================
+        # ===================================================================
+        if valid_pointer ( self ) and self.IsOpen() and not self.IsZombie () : self.Close()
+        # ===================================================================
+    except: # ===============================================================
+        #  ==================================================================
+        pass
+    return False 
 
 # =============================================================================
 ## Create the graphical representation of the directory structure as tree 
@@ -1122,10 +1135,10 @@ ROOT.TDirectory.as_table     = _rd_table_
 
 ROOT.TDirectory.rm           = _rd_rm_
 
-if hasattr ( ROOT.TFile , '__enter__' ) and hasattr ( ROOT.TFile , '__exit__' ) : pass
-else :
-    ROOT.TFile.__enter__ = _rf_enter_
-    ROOT.TFile.__exit__  = _rf_exit_
+## if hasattr ( ROOT.TFile , '__enter__' ) and hasattr ( ROOT.TFile , '__exit__' ) : pass
+## else :
+ROOT.TFile.__enter__ = _rf_enter_
+ROOT.TFile.__exit__  = _rf_exit_
 
 ROOT.TDirectory.make_tree = _rd_make_tree_
 ROOT.TDirectory.show_tree = _rd_show_tree_
@@ -1202,32 +1215,37 @@ def _rf_new_open_ ( fname , mode = '' , *args , exception = False ) :
     >>> print ROOT.gROOT.CurrentDirectory()
     ATTENTION: No exceptions are raised for invalid file/open_mode, unless specified 
     """
+    print ( 'I AM NEW OPEN/1')
     with ROOTCWD() :
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
         # ======================================================================
         try : # ================================================================
             # ==================================================================
             with rootException () : 
+                print ( 'CALL FOR OLD_OPEN')
                 fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )            
             # ==================================================================
         except ( OSError, IOError ) : # ========================================
             # ==================================================================
             if exception : raise # =============================================
+            # ==================================================================
             logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
             return None
             # ==================================================================
         except : # =============================================================
             # ==================================================================
             if exception : raise # =============================================
+            #  =================================================================
             logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
             return None
             # ==================================================================
 
         # ======================================================================
-        if not fopen or not fopen.IsOpen() or fopen.IsZombie () : # ============
+        if not valid_pointer ( fopen ) or not fopen.IsOpen() or fopen.IsZombie () :
             if  exception : raise IOError ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
             logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
-            
+        
+        print ( 'I AM NEW OPEN/2')
         return fopen
         
 # =============================================================================
@@ -1246,10 +1264,12 @@ def _rf_new_close_ ( rfile , option = '' ) :
     >>> f.Close()
     >>> print ROOT.gROOT.CurrentDirectory()
     """
-    if rfile and rfile.IsOpen() :
+    print ( 'I AM NEW CLOSE/1/' )
+    if valid_pointer ( rfile ) and rfile.IsOpen() and not rfile.IsZombie () :
         ## with ROOTCWD() :
         logger.debug ( "Close ROOT file %s" % rfile.GetName() ) 
-        return rfile ._old_close_ ( option )
+        print ( 'I AM NEW CLOSE/2' )
+        return rfile._old_close_ ( option )
             
 # =============================================================================
 ## another name, just for convinince
@@ -1290,11 +1310,8 @@ else :
     ROOT.TFile._old_close_   = ROOT.TFile.Close
     ROOT.TFile._new_close_   = _rf_new_close_ 
     ROOT.TFile.Close         = _rf_new_close_
+    ROOT.TFile.close         = _rf_new_close_
     
-if not hasattr ( ROOT.TFile , 'close' ) :
-    ROOT.TFile.close = ROOT.TFile._new_close_
-
-
 # ==============================================================================
 ## get a full path of the directory
 #  @code

@@ -1,4 +1,4 @@
-1#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/tools/tests/test_tools_reweight4.py
@@ -282,6 +282,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     weighter = Weight ( dbname , weightings )
     ## 1a) create new "weighted" mcdataset
     mcds = mcds_.Clone()
+    ROOT.SetOwnership ( mcds , True ) 
     
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================
@@ -329,8 +330,9 @@ for iter in range ( 1 , maxIter + 1 ) :
             mcds                   , ## what to be reweighted
             the_plots              , ## reweighting plots/setup
             dbname                 , ## DBASE with reweighting constant 
-            delta      = 0.03      , ## stopping criteria
-            minmax     = 0.08      , ## stopping criteria  
+            delta      = 0.05      , ## stopping criteria
+            minmax     = 0.10      , ## stopping criteria  
+            maxchi2    = 2.0       , ## stopping criteria 
             power      = power     , ## tune: effective power
             wtruncate  = wtruncate , ## truncate weights 
             make_plots = True      , ## make control plots 
@@ -341,7 +343,6 @@ for iter in range ( 1 , maxIter + 1 ) :
         converged = True 
         break
     
-    if isinstance ( mcds , ROOT.RooAbsData ) : ROOT.SetOwnership ( mcds , True ) 
     del mcds
     
 else :

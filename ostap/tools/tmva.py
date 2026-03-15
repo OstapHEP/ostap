@@ -1713,10 +1713,11 @@ class Trainer(object):
             factory = ROOT.TMVA.Factory (                
                 self.name             ,
                 outFile               ,
-                self.bookingoptions   )
+                "" ) ## self.bookingoptions   )
 
-            factory.SetVerbose( self.verbose )
-        
+            ##factory.SetVerbose( self.verbose )
+            factory.SetVerbose( True )
+         
             ## 
             dataloader = ROOT.TMVA.DataLoader ( self.name )
             
@@ -1801,8 +1802,11 @@ class Trainer(object):
             dataloader.PrepareTrainingAndTestTree(
                 ROOT.TCut ( self.signal_cuts     ) ,
                 ROOT.TCut ( self.background_cuts ) ,
-                self.configuration            )
+                "" ) ## self.configuration            )
             #
+            
+            print ( 'CONFIGURATION ', self.configuration   )
+            print ( 'BOOKING '      , self.bookingoptions  )
             
             print ( "LOADER3")
             dataloader.Print('vvvv')

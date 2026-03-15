@@ -146,8 +146,8 @@ def test_tmva () :
               "H:!V:NTrees=200:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" )  , 
             ( ROOT.TMVA.Types.kBDT        , "BDTD"        ,
               "H:!V:NTrees=200:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=G,D" ) ,        
-                ( ROOT.TMVA.Types.kCuts       , "Cuts"        ,
-                  "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
+            ( ROOT.TMVA.Types.kCuts       , "Cuts"        ,
+              "H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" ) ,
             ( ROOT.TMVA.Types.kFisher     , "Fisher"      ,
               "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" ),
             ( ROOT.TMVA.Types.kFisher     , "FisherG"     ,
@@ -160,7 +160,7 @@ def test_tmva () :
             ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS' , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
             ## ( ROOT.TMVA.Types.kKNN        , 'KNN'   , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ##
-        ][3:5] ,
+        ][:1] ,
         ## 
         variables = input_vars , ## Variables for training
         ## 
