@@ -1705,6 +1705,9 @@ class Trainer(object):
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
 
+            ## ATTENTION!!! check it later
+            outFile.cd() 
+            
             Ostap.Tmva.disable_scatter_plots ()
             
             factory = ROOT.TMVA.Factory (                
@@ -1759,7 +1762,11 @@ class Trainer(object):
                 all_vars.append ( vv[0] ) 
                 dataloader.AddSpectator ( *vv )
 
-                
+            print ( "LOADER")
+            dataloader.Print('vvvv')
+            
+            
+            
             print ( 'SIGNAL' , typename ( self.signal ) )
             self.signal.Print ( 'vvv' )
             print ( 'BACKGROUND' , typename ( self.background ) ) 
@@ -1778,8 +1785,17 @@ class Trainer(object):
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
                 self.logger.info ( "Background weight: '%s'" % ( attention ( self.background_weight ) ) )
                 
-            ## disable scatter plots...
-            Ostap.Tmva.disable_scatter_plots ()
+                
+            print ( "LOADER2")
+            dataloader.Print('vvvv')
+            
+            di = dataloader.DataInput()
+            print ( "INPUT:")
+            di.Print('vvv')
+            print ( "AFTER.")
+            
+            ## disable scatter plots...???
+            ###  Ostap.Tmva.disable_scatter_plots ()
 
             self.logger.info     ( "Configuration    : '%s'" % str ( self.configuration ) )
             dataloader.PrepareTrainingAndTestTree(
@@ -1787,6 +1803,20 @@ class Trainer(object):
                 ROOT.TCut ( self.background_cuts ) ,
                 self.configuration            )
             #
+            
+            print ( "LOADER3")
+            dataloader.Print('vvvv')
+            
+            di = dataloader.DataInput()
+            print ( "INPUT:")
+            di.Print('vvv')
+            
+            print ( "AFTER:", di.GetNTrees("Signal"))
+            print ( "AFTER:", di.GetNTrees("Background"))
+            print ( "AFTER:", di.GetSignalEntries() )
+            
+            print ( "AFTER....")
+            
             for m in self.methods :
                 bo = m[2].split(':')
                 bo.sort() 
