@@ -1811,10 +1811,27 @@ class Trainer(object):
             print ( "INPUT:")
             di.Print('vvv')
             
-            print ( "AFTER:", di.GetNTrees("Signal"))
-            print ( "AFTER:", di.GetNTrees("Background"))
-            print ( "AFTER:", di.GetSignalEntries() )
+            print ( "AFTER:", di.GetNTrees("Signal")     , ' #sig-trees' )
+            print ( "AFTER:", di.GetNTrees("Background") , ' #bkg-trees' )
             
+            ns = di.GetEntries('Signal')
+            for i in range ( ns ) :
+                si = di.GetSignalTreeInfo ( i ) 
+                print  ( 'signal-info', i , ns , si )
+            
+            nb = di.GetEntries('Background')
+            for i in range ( nb ) :
+                bi = di.GetBackgroundTreeInfo ( i ) 
+                print  ( 'signal-info', i , nb , bi )
+            
+            print ( "AFTER ---- ")
+             
+            print ( "AFTER:", di.GetSignalEntries()      , ' signal entries')
+            print ( "AFTER:", di.GetBackgroundEntries()  , ' bkgentries/1')
+            print ( "AFTER:", di.GetEntries('Signal')    , ' signal entries')
+            print ( "AFTER:", di.GetEntries('Bakground') , ' bkgentries/2')
+           
+            self.__loader = dataloader
             print ( "AFTER....")
             
             for m in self.methods :
