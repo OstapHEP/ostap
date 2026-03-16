@@ -142,10 +142,12 @@ def test_tmva2() :
             ## ( ROOT.TMVA.Types.kKNN        , "KNN"         , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ] ,
             variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
-            signal         = tSignal                  , ## ``Signal'' sample
-            background     = tBkg                     , ## ``Background'' sample         
-            verbose        = True                     , 
-            workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
+            signal          = tSignal                  , ## ``Signal'' sample
+            background      = tBkg                     , ## ``Background'' sample       
+            signal_cuts     = "-1.e+90<var1" , 
+            background_cuts = "-1.e+90<var1" ,   
+            verbose         = True                     , 
+            workdir         = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
         
         with timing ( 'for TMVA training' , logger ) : 
             weights_files = trainer.train ()            
@@ -166,7 +168,8 @@ def test_tmva2() :
         tSignal = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         addTMVAResponse ( tSignal ,
                           inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
+                          weights_files = tar_file    ,
+                          progress      = True        ,
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
         
@@ -174,7 +177,8 @@ def test_tmva2() :
         tBkg    = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
         addTMVAResponse ( tBkg    ,
                           inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
+                          weights_files = tar_file    ,
+                          progress      = True        , 
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
         
@@ -197,29 +201,36 @@ def test_tmva2() :
 
     with timing ( "Add TMVA response during TTree->RooDatSet transforomation (signal)"     , logger =logger ) : 
         tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
-        ds_S1, _  = tSignal.fill_dataset ( variables )
+        ds_S1, _  = tSignal.fill_dataset ( variables , progress = True )
     with timing ( "Add TMVA response during TTree->RooDatSet transforomation (background)" , logger =logger ) : 
         tBkg      = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
-        ds_B1, _  = tBkg   .fill_dataset ( variables )
+        ds_B1, _  = tBkg   .fill_dataset ( variables , progress = True )
         
+    ROOT.SetOwnership ( ds_S1 , True )
+    ROOT.SetOwnership ( ds_B1 , True )
+    
     logger.info ( 'Created signal     dataset\n%s' %  ds_S1.table ( prefix = '# ' ) )
     logger.info ( 'Created background dataset\n%s' %  ds_B1.table ( prefix = '# ' ) )
 
+    methods = reader.methods[:]
+    
     # ===============================================================================
     ## (3) Add TMVA decision directly into existing RooDataSet (fast)  
     # ===============================================================================
     logger.info ( '(3) Add TMVA decision directly into existing RooDataSet (fast)' ) 
     with timing ( "Add TMVA response to signal RooDataSet" , logger =logger ) : 
         addTMVAResponse ( ds_S1  ,
-                          inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
-                          prefix        = 'tmva2_'     ,
+                          inputs        = ( 'var1'    ,  'var2' , 'var3' ) ,
+                          weights_files = tar_file    ,
+                          progress      = True        , 
+                          prefix        = 'tmva2_'    ,
                           suffix        = '_response' )
         
     with timing ( "Add TMVA response to background TTree" , logger =logger ) :     
         addTMVAResponse ( ds_B1   ,
                           inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          weights_files = tar_file ,
+                          weights_files = tar_file    ,
+                          progress      = True        ,
                           prefix        = 'tmva2_'    ,
                           suffix        = '_response' )
         
@@ -233,9 +244,8 @@ def test_tmva2() :
     with timing ( "TMVA response via explicit loop over signal TTree" , logger =logger ) :
         tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         counters  = {}
-        methods   = reader.methods[:] 
         for m in methods : counters[m] = SE() 
-        for evt in tSignal :
+        for evt in progress_bar  ( tSignal ) :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Signal     response (TTree)'
         table = table_counters ( counters , title = title , prefix = '# ' )
@@ -244,38 +254,39 @@ def test_tmva2() :
     with timing ( "TMVA response via explicit loop over background TTree" , logger =logger ) :
         tBkg      = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
         counters  = {}
-        methods   = reader.methods[:] 
         for m in methods : counters[m] = SE() 
-        for evt in tBkg :
+        for evt in progress_bar ( tBkg ) :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Background response (TTree)'
         table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
 
+    del reader
     # ===============================================================================
     ## (5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (slow)
     # ===============================================================================
     logger.info ( '(5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (can be slow)')
     with timing ( "TMVA response via explicit loop over signal     RooDataSet" , logger =logger ) :
         counters  = {}
-        methods   = reader.methods[:] 
         for m in methods : counters[m] = SE() 
-        for evt, _ in ds_S1 :
+        for evt, _ in progress_bar ( ds_S1 ) :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Signal     response (RooDataSet)'
         table = table_counters ( counters , title = title , prefix = '# ' )
-        logger.info ( '%s\n%s' % ( title , table ) )
-            
+        logger.info ( '%s:\n%s' % ( title , table ) )
+        del ds_S1
+        
     with timing ( "TMVA response via explicit loop over background RooDataSet" , logger = logger ) :        
         counters  = {}
         methods   = reader.methods[:] 
         for m in methods : counters[m] = SE() 
-        for evt, _ in ds_B1 :
+        for evt, _ in progress_bar ( ds_B1 ) :
             for method in methods : counters[method] += reader ( method , evt )
         title = 'Background response (RooDataSet)'
         table = table_counters ( counters , title = title , prefix = '# ' )
-        logger.info ( '%s\n%s' % ( title , table ) )
-    
+        logger.info ( '%s:\n%s' % ( title , table ) )
+        del ds_B1 
+        
 # =============================================================================
 if '__main__' == __name__ :
 

@@ -1766,24 +1766,28 @@ def fill_dataset2 ( self              ,
                                                       cuts     = selector.morecuts ,
                                                       roo_cuts = selector.roo_cuts , 
                                                       name     = selector.name     ,
+                                                      progress = selector.progress , 
                                                       tree     = tree              , 
                                                       fullname = selector.fullname ,
                                                       silence  = selector.silence  )
                     
                     if not silent : logger.info ( 'Redirect to (re)processing' )
                     
-                    result       = fill_dataset2 ( tree                ,
-                                                   new_selector        ,
-                                                   nevents   = -1      ,
-                                                   first     =  0      ,
-                                                   shortcut  = True    ,
-                                                   silent    = silent  ,
-                                                   use_frame = -1      )
+                    result       = fill_dataset2 ( tree                 ,
+                                                   new_selector         ,
+                                                   nevents   = -1       ,
+                                                   first     =  0       ,
+                                                   shortcut  = True     ,
+                                                   silent    = silent   ,
+                                                   use_frame = -1       )
                     
                     selector.data           = new_selector.data
                     selector.stat.total     = total_0
                     selector.stat.processes = new_selector.stat.processed 
                     selector.stat.skiped    = new_selector.stat.skipped 
+                    
+                    new_selector.data       = None
+                    
                     del new_selector
 
                     return result
@@ -1867,7 +1871,7 @@ def fill_dataset1 ( tree                 ,
                     use_frame    = 50000 ,
                     progress     = True  , 
                     silent       = False ) :
-    """Create the dataset from the tree
+    """ Create the dataset from the tree
     >>> tree = ...
     >>> ds = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
     """
@@ -1878,6 +1882,7 @@ def fill_dataset1 ( tree                 ,
                                   tree      = tree      , 
                                   name      = name      ,
                                   fullname  = title     , 
+                                  progress  = progress  , 
                                   silence   = silent    ) 
     tree.fill_dataset2 ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
     data = selector.data

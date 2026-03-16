@@ -22,9 +22,6 @@ from   ostap.logger.colorized import attention, allright
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
 from   ostap.utils.cleanup    import CleanUp
-from   ostap.logger.symbols   import iteration
-from   ostap.utils.memory     import memory_usage
-from   ostap.utils.progress_bar import progress_bar 
 import ostap.io.zipshelve     as     DBASE
 import ostap.logger.table     as     T 
 import ostap.logger.table     as     T 
@@ -36,7 +33,7 @@ import ROOT, random, math, os, time
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_reweight4' )
+    logger = getLogger ( 'ostap.test_tools_reweight3' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    
@@ -272,23 +269,20 @@ plots  = [
     WeightingPlot ( 'r1,r2,r3' , 'weight' , 'r-reweight'   , hr_data  , mc_r   ) ,   
     ]
 
-memory_init = memory_usage() 
-converged   = False 
+converged = False 
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
 
-    tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
-    mem = ''
-    if 1 < iter : mem = ' Memory:%+.2f[MB]' % ( memory_usage () - memory_init )
-    logger.info ( allright ( tag + mem ) )
+    tag = 'Reweighting iteration #%d' % iter
+    logger.info ( allright ( tag ) ) 
     
     # =========================================================================
     ## 0) The weighter object
     weighter = Weight ( dbname , weightings )
     ## 1a) create new "weighted" mcdataset
     mcds = mcds_.Clone()
-    ## ROOT.SetOwnership ( mcds , True ) 
+    ROOT.SetOwnership ( mcds , True ) 
     
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================
@@ -338,7 +332,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             dbname                 , ## DBASE with reweighting constant 
             delta      = 0.05      , ## stopping criteria
             minmax     = 0.10      , ## stopping criteria  
-            maxchi2    = 2.0       , ## stopping criteria 
+            maxchi2    = 1.5s       , ## stopping criteria 
             power      = power     , ## tune: effective power
             wtruncate  = wtruncate , ## truncate weights 
             make_plots = True      , ## make control plots 
@@ -348,9 +342,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         converged = True 
         break
-
-    ## explicitely clear and delete dataset
-    ## mcds.clear()
+    
     del mcds
     
 else :
@@ -358,8 +350,6 @@ else :
     converged = False 
     logger.error ( "No convergency!" )
     
-# ===========================================================================
-logger.attention ( 'Memory:%+.2f[MB]' % ( memory_usage () - memory_init ) )                            
 # ===========================================================================
 title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
@@ -379,6 +369,7 @@ if converged : # ==============================================================
         mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
         weighter = Weight ( dbname , weightings )
         mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
+        mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
 
     # =======================================================================
     ## compare DATA  and MC before and after reweighting
@@ -420,9 +411,9 @@ if converged : # ==============================================================
 
 
 # ===========================================================================
-## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
-## root_file = backup_to_ROOT    ( dbname     )
-## new_db    = restore_from_ROOT ( root_file  )
+from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
+root_file = backup_to_ROOT    ( dbname     )
+new_db    = restore_from_ROOT ( root_file  )
     
 # =============================================================================
 ##                                                                      The END 
