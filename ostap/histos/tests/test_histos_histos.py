@@ -297,6 +297,7 @@ def test_efficiency() :
     geff_12 = hA.eff_agresti_coull           ( hR )
     geff_13 = hA.eff_jeffreys                ( hR )
     geff_14 = hA.eff_clopper_pearson         ( hR )
+    geff_15 = hA.eff_bayes                   ( hR )
 
     with use_canvas ( 'Intervals' , wait = 5 ) :
 
@@ -318,9 +319,9 @@ def test_efficiency() :
                      ( geff_11 , 'Binomial: Arcsin interval'                  ) ,
                      ( geff_12 , 'Binomial: Agresti-Coull interval'           ) ,
                      ( geff_13 , 'Binomial: Jeffreys interval'                ) , 
-                     ( geff_14 , 'Binomial: Clopper-Pearson interval'         ) ] :
+                     ( geff_14 , 'Binomial: Clopper-Pearson interval'         ) , 
+                     ( geff_15 , 'Binomial: Bayes interval'                   ) ] :
             
-
             if isinstance ( e , ROOT.TH1 ) : e.draw ( 'same' )
             else                           : e.draw ( 'p'    ) 
                 

@@ -89,7 +89,8 @@ __all__     = (
     'exclusive_or'        ,  
     'difference'          ,
     ## 
-    'iteration'           , 
+    'iteration'           ,
+    'efficiency'          , 
     ##    
     'labels'               
 )
@@ -282,10 +283,15 @@ greek_upper_chi       = '\U000003A7'  if show else 'X'
 greek_upper_psi       = '\U000003A8'  if show else 'Psi'
 greek_upper_omega     = '\U000003A9'  if show else 'Omega'
 
+
+
+## use epsilon symbol for efficiency
+efficiency       = greek_lower_epsilon if show else 'eff'
+
 ## toys = teddy bear 
 toys                  = '\U0000F9F8'  if show else 'toys'
 
-## star/convolution oprator
+## star/convolution operator
 asterisk         = '\U00002731'           if show else '*'
 # ==================================================
 def the_sum  ( what ) : return '%s%s'   % ( sum_symbol , what ) 
