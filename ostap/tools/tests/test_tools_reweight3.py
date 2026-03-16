@@ -14,16 +14,19 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2023-01-20"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.pyrouts     import Ostap 
-from   ostap.histos.histos    import h1_axis, h2_axes, h3_axes 
-from   ostap.utils.timing     import timing
-from   ostap.logger.colorized import attention, allright
-from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.root_utils import batch_env 
-from   ostap.utils.cleanup    import CleanUp
-import ostap.io.zipshelve     as     DBASE
-import ostap.logger.table     as     T 
-import ostap.logger.table     as     T 
+from   ostap.core.pyrouts       import Ostap 
+from   ostap.histos.histos      import h1_axis, h2_axes, h3_axes 
+from   ostap.utils.timing       import timing
+from   ostap.logger.colorized   import attention, allright
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.root_utils   import batch_env 
+from   ostap.utils.cleanup      import CleanUp
+from   ostap.logger.symbols     import iteration
+from   ostap.utils.memory       import memory_usage
+from   ostap.utils.progress_bar import progress_bar 
+import ostap.io.zipshelve       as     DBASE
+import ostap.logger.table       as     T 
+import ostap.logger.table       as     T 
 import ostap.io.root_file 
 import ostap.parallel.kisa
 import ROOT, random, math, os, time 
@@ -141,7 +144,7 @@ def prepare_data ( ) :
             
             datatree.Fill()
 
-        for i in range ( NDATA2 ) :
+        for i in progress_bar ( range ( NDATA2 ) ) :
             
             x , y, z  = -1, -1, -1 
 
@@ -165,7 +168,7 @@ def prepare_data ( ) :
             
             datatree.Fill()
 
-        for i in range ( NDATA3 ) :
+        for i in progress_bar ( range ( NDATA3 ) ) :
             
             x , y, z  = -1, -1, -1 
 
@@ -216,7 +219,7 @@ def prepare_data ( ) :
         mctree.Branch ( 'y' , yvar , 'y/F' )
         mctree.Branch ( 'z' , zvar , 'z/F' )
         
-        for i in  range ( NMC ) :
+        for i in progress_bar (  range ( NMC ) ) :
 
             xv = random.uniform  ( 0 , xmax )
             yv = random.uniform  ( 0 , ymax )
@@ -343,19 +346,23 @@ plots  = [
     ]
 
 
-converged = False 
+memory_init = memory_usage() 
+converged   = False 
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
-
-    tag = 'Reweighting iteration #%d' % iter
-    logger.info ( allright ( tag ) ) 
+    
+    tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
+    mem = ''
+    if 1 < iter : mem = ' Memory:%+.2f[MB]' % ( memory_usage () - memory_init )
+    logger.info ( allright ( tag + mem ) )
     
     # =========================================================================
     ## 0) The weighter object
     weighter = Weight ( dbname , weightings )
     ## 1a) create new "weighted" mcdataset
     mcds = mcds_.Clone()
+    ## ROOT.SetOwnership ( mcds , True )
     
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================
@@ -412,14 +419,17 @@ for iter in range ( 1 , maxIter + 1 ) :
         converged = True 
         break
     
-    mcds.clear()
+    ## explicitely clear and delete dataset
+    ## mcds.clear()
     del mcds
     
 else :
     
     converged = False 
     logger.error ( "No convergency!" )
-    
+
+# ===========================================================================
+logger.attention ( 'Memory:%+.2f[MB]' % ( memory_usage () - memory_init ) )                            
 # ===========================================================================
 title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
@@ -481,9 +491,9 @@ if converged : # ==============================================================
 
 
 # ===========================================================================
-from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
-root_file = backup_to_ROOT    ( dbname     )
-new_db    = restore_from_ROOT ( root_file  )
+## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
+## root_file = backup_to_ROOT    ( dbname     )
+## new_db    = restore_from_ROOT ( root_file  )
     
 # =============================================================================
 ##                                                                      The END 

@@ -1543,7 +1543,7 @@ def data_add_reweighting ( data                ,
     wfun = W2Data ( weighter )
 
     ## regular sequential processing 
-    return data.add_new_var ( name , wfun , progress = progress ) 
+    return data.add_new_var ( name , wfun , progress = progress , report = report ) 
 
 # ===========================================================================
 ## Add reweighting to very large RooDataSet by splitting it into chunks and
@@ -1557,7 +1557,7 @@ def parallel_data_add_reweighting ( dataset          ,
      processing the chunks in parallel 
     """
     assert isinstance( dataset , ROOT.RooDataSet ) , \
-        "Invald type for `dataset` : %s" % typename ( dataset ) 
+        "Invalid type for `dataset` : %s" % typename ( dataset ) 
     
     if numcpu() < 2 : return data_add_reweighting ( dataset  ,
                                                     weighter ,
@@ -1566,68 +1566,8 @@ def parallel_data_add_reweighting ( dataset          ,
                                                     report   = report   , 
                                                     parallel = False    ) 
 
-    ## list of branches 
-    branches = set ( dataset.branches() ) if report else set() 
 
-    ## create the weighting function 
-    wfun = W2Data ( weighter  )
-
-    from ostap.parallel.parallel import Checker, WorkManager
     
-    checker = Checker()
-    if not checker.pickles ( weighter , wfun ) :
-        return data_add_reweighting ( dataset , 
-                                     weighter , 
-                                     name     = name     , 
-                                     progress = progress ,
-                                     report   = report   , 
-                                     parallel = False    ) 
-
-
-    nchunks  = 3 * numcpu ()
-        
-    nevents = len ( dataset )
-    ## split dataset into `nchunks` chunks:
-    from ostap.utils.utils       import split_n_range
-    chunks = ( dataset [ i : j ] for i , j in split_n_range ( 0 , len ( dataset ) , nchunks ) )
-
-    ## Task to add new variable
-    from ostap.parallel.parallel_add_branch import AddNewVar 
-    task     = AddNewVar   ( name  ,  wfun    )
-
-    silent   = kwargs.pop ( 'silent'  , not progress )    
-    wmgr     = WorkManager ( silent = silent , progress = progress , **kwargs )
-    
-    ## start processing 
-    wmgr.process ( task , chunks )
-
-    ## gettresult
-    results = task.results() 
-    
-    nn = sum ( len( r ) for _ , r in results.items() )
-    assert nEvents == nn , "Mismatch in dataset sizes: %dvs %d" % ( nn , nEvents )
-
-# ===========================================================================
-## Add reweighting to very large RooDataSet by splitting it into chunks and
-#  processing the chunks in parallel 
-def parallel_data_add_reweighting ( dataset          ,
-                                    weighter         , 
-                                    name             ,                                    
-                                    progress = True  ,                                    
-                                    report   = True  , **kwargs ) :
-    """ Add reweighting to very large RooDataSet by splititng it into chunks and
-     processing the chunks in parallel 
-    """
-    assert isinstance( dataset , ROOT.RooDataSet ) , \
-        "Invald type for `dataset` : %s" % typename ( dataset ) 
-    
-    if numcpu() < 2 : return data_add_reweighting ( dataset  ,
-                                                    weighter ,
-                                                    name     = name     ,
-                                                    progress = progress ,
-                                                    report   = report   , 
-                                                    parallel = False    ) 
-
     ## list of branches 
     branches = set ( dataset.branches() ) if report else set() 
 
@@ -1666,7 +1606,7 @@ def parallel_data_add_reweighting ( dataset          ,
     results = task.results()
     
     ## sum of sizes for the resultinng datasets 
-    nn = sum ( len ( d ) for j,d in results.items() )
+    nn = sum ( len ( d ) for j , d in results.items() )
     assert nn == nEvents , "Mismath in input/output dataset sizes: %d vs %d" % ( nEvents , nn )
 
     ## add fake weight 
@@ -1674,10 +1614,12 @@ def parallel_data_add_reweighting ( dataset          ,
     dataset.clear ()
 
     for jobid in sorted ( results ) :
-        ds = results [ jobid ]
+        ds = results.pop ( jobid )
         dataset.append ( ds ) 
         ds.clear()
-        
+        ds.__destruct__ ()
+        del ds
+                
     del results 
     del task 
                
@@ -1691,10 +1633,8 @@ def parallel_data_add_reweighting ( dataset          ,
             logger.info ( '%s:\n%s' % ( title , table ) )
             
         else : logger.error ( "No variables are added to RooDataSet(%s)" %  dataset.GetName () )
-    
-    
-    return dataset
 
+    return dataset
 
 ##    del dataset
 ##    del task    

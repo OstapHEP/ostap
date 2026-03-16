@@ -19,10 +19,11 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2013-02-10"
 # =============================================================================
 __all__     = (
-    'virtualMemory'  , # context manager to count virtual memory increase 
-    'memory'         , # ditto
-    'Memory'         , # ditto
-    'memory_usage'   , # report current memory usage 
+    'virtualMemory'  , ## context manager to count virtual memory increase 
+    'memory'         , ## ditto
+    'Memory'         , ## ditto
+    'memory_usage'   , ## report current memory usage 
+    'delta_ram'      , ## symbol for delta-RAM
     )
 # =============================================================================
 from   ostap.logger.symbols import ram          as ram_symbol
@@ -35,6 +36,8 @@ else                       : logger = getLogger( __name__             )
 del getLogger
 # =============================================================================
 ram_symbol = ram_symbol + ' ' if ram_symbol else ''
+# =============================================================================
+delta_ram  = '%s%s' % ( delta_symbol , ram_symbol ) 
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
@@ -118,7 +121,7 @@ def memory_enough () :
 #
 #  with Memory() as Q :
 #     whatever action is here 
-#     at the exit it prints the chaneg in virtual memory
+#     at the exit it prints the change in virtual memory
 #
 #  print Q.delta 
 # 

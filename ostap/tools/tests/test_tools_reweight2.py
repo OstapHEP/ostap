@@ -14,15 +14,18 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-05-10"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-from   ostap.core.core        import Ostap 
-from   ostap.utils.timing     import timing
-from   ostap.logger.colorized import attention, allright  
-from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.cleanup    import CleanUp
-from   ostap.utils.root_utils import batch_env
-from   ostap.histos.histos    import h1_axis, h2_axes 
-import ostap.io.zipshelve     as     DBASE
-import ostap.logger.table     as     T
+from   ostap.core.core          import Ostap 
+from   ostap.utils.timing       import timing
+from   ostap.logger.colorized   import attention, allright  
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.cleanup      import CleanUp
+from   ostap.utils.root_utils   import batch_env
+from   ostap.histos.histos      import h1_axis, h2_axes
+from   ostap.logger.symbols     import iteration
+from   ostap.utils.memory       import memory_usage
+from   ostap.utils.progress_bar import progress_bar 
+import ostap.io.zipshelve       as     DBASE
+import ostap.logger.table       as     T
 import  ostap.core.pyrouts    
 import ROOT, random, math, os, time 
 # =============================================================================
@@ -96,7 +99,7 @@ def prepare_data ( ) :
         datatree.Branch ( 'x' , xvar , 'x/F' )
         datatree.Branch ( 'y' , yvar , 'y/F' )
     
-        for i in  range ( N1 ) :
+        for i in  progress_bar ( range ( N1 ) ) :
 
             x , y = -1, -1
 
@@ -118,7 +121,7 @@ def prepare_data ( ) :
             datatree.Fill()
 
             
-        for i in  range ( N1 ) :
+        for i in  progress_bar ( range ( N1 ) ) :
 
             x , y = -1 , -1
 
@@ -140,7 +143,7 @@ def prepare_data ( ) :
             datatree.Fill()
 
             
-        for i in  range ( N1 ) :
+        for i in progress_bar (  range ( N1 ) ) :
 
             x , y = -1 , -1
 
@@ -162,7 +165,7 @@ def prepare_data ( ) :
             datatree.Fill()
 
 
-        for i in range ( 0 ,  4 * N1 ) :
+        for i in progress_bar ( range ( 0 ,  4 * N1 ) ) :
             
             x = random.uniform ( 0 , xmax ) 
             y = random.uniform ( 0 , ymax )
@@ -192,7 +195,7 @@ def prepare_data ( ) :
         mctree.Branch ( 'x' , xvar , 'x/F' )
         mctree.Branch ( 'y' , yvar , 'y/F' )
 
-        for i in  range ( 2 * N2 ) :
+        for i in  progress_bar ( range ( 2 * N2 ) ) :
 
             xv = random.uniform ( 0 , xmax ) 
             yv = random.uniform ( 0 , ymax ) 
@@ -206,7 +209,7 @@ def prepare_data ( ) :
         fy = lambda y : ( y/ 7.5-1 ) ** 2
         
 
-        for i in  range ( N2 ) :
+        for i in  progress_bar ( range ( N2 ) ) :
             
             while True : 
                 xv = random.uniform ( 0 , xmax )
@@ -333,12 +336,15 @@ trow = ( '%d'    % 0 ,
 glob_stat.append ( trow )
 # =============================================================================
 
+memory_init = memory_usage() 
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
-
-    tag = 'Reweighting iteration #%d' % iter
-    logger.info ( allright ( tag ) ) 
+    
+    tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
+    mem = ''
+    if 1 < iter : mem = ' Memory:%+.2f[MB]' % ( memory_usage () - memory_init )
+    logger.info ( allright ( tag + mem ) )
     
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
         # =========================================================================
@@ -348,10 +354,11 @@ for iter in range ( 1 , maxIter + 1 ) :
         # =========================================================================
         ## 1a) create new "weighted" mcdataset
         mcds = mcds_.Clone()
-
+        ## ROOT.SetOwnership ( mcds , True )
+        
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 
-        mcds = mcds.add_reweighting ( weighter ,  name = 'weight' ) 
+        mcds = mcds.add_reweighting ( weighter ,  name = 'weight' , parallel = True ) 
         if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) %  mcds )
     
     # =========================================================================
@@ -420,23 +427,28 @@ for iter in range ( 1 , maxIter + 1 ) :
         logger.info  ( tag + ': x/y correlation DATA (unbinned): %+.2f' % datastat.correlation () ) 
         logger.info  ( tag + ': x/y correlation MC   (unbinned): %+.2f' %   mcstat.correlation () )
 
-    if not active and 3 < iter : 
-        logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
+    if not active and 3 < iter :
+        logger.info    ( allright ( 'No more iterations, converged after #%d%s' % ( iter , iteration ) ) ) 
         title = 'Reweighted dataset after #%d iterations' % iter 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' ] ,
                                                           title     = title    ,
                                                           cuts      = 'weight' , 
                                                           prefix    = '# '     ) ) )
+        converged = True 
         break
-    
-    mcds.clear()
+
+
+    ## explicitely clear and delete dataset
+    ## mcds.clear()
     del mcds
     
 else :
 
+    converged = False 
     logger.error ( "No convergency!" )
 
-
+# ===========================================================================
+logger.attention ( 'Memory:%+.2f[MB]' % ( memory_usage () - memory_init ) )                    
 # ===========================================================================
 title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
@@ -449,15 +461,12 @@ for key in graphs :
         graph.draw ( 'a' )
 # =============================================================================
     
-with ROOT.TFile.open ( testdata , 'r' ) as dbroot : 
-    logger.info ( 'Test data is picked from DBASE "%s" for reweighting' % testdata )   
-    dbroot.ls()
-    mctree   = dbroot [ tag_mc ]    
-    ## 0) The weighter object
-    with timing ( "Add weight column to MC-tree" , logger = logger ) : 
-        weighter = Weight ( dbname , weightings )
-        mctree.add_reweighting ( weighter ,  name = 'weight' )
-
+## 0) The weighter object
+with timing ( "Add weight column to MC-tree" , logger = logger ) : 
+    weighter = Weight ( dbname , weightings )
+    mctree   = ROOT.TChain ( tag_mc ) ; mctree.Add ( testdata )
+    mctree.add_reweighting ( weighter ,  name = 'weight' )
+    
 # =============================================================================
 data_tree = ROOT.TChain  ( 'DATA_tree' ) ; data_tree.Add ( testdata ) 
 mc_tree   = ROOT.TChain  ( tag_mc      ) ;   mc_tree.Add ( testdata ) 
@@ -495,9 +504,9 @@ logger.info ( '%s:\n%s' % ( title , mc_tree.table2   ( variables = [ 'x' , 'y' ]
                                                        prefix    = '# '     ) ) )
 
 # =============================================================================
-from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
-root_file = backup_to_ROOT    ( dbname     )
-new_db    = restore_from_ROOT ( root_file  )
+## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
+## root_file = backup_to_ROOT    ( dbname     )
+## new_db    = restore_from_ROOT ( root_file  )
 
 
 

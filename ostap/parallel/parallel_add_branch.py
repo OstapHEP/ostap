@@ -124,7 +124,7 @@ class AddNewVar(Task) :
     def merge_results( self , result , jobid ) :
         
         if not self.__output : self.__output = result
-        else                 :
+        else                 :            
             self.__output.update ( result )
             del result
             

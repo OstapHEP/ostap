@@ -234,10 +234,10 @@ def _h2_cmp_chi2_ ( h1              ,
     """
     
     assert isinstance ( h1 , ROOT.TH2 ) and 2 == h1.dim () , \
-           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
+           "cmp_chi2: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
     
     if isinstance ( h2 , ROOT.TH1 ) :
-        assert 2 == h2.dim () , "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+        assert 2 == h2.dim () , "cmp_chi2: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
         
     if density : 
         h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1
@@ -277,10 +277,10 @@ def _h3_cmp_chi2_ ( h1              ,
     """
     
     assert isinstance ( h1 , ROOT.TH3 ) and 3 == h1.dim () , \
-           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
+           "cmp_chi2: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
     
     if isinstance ( h2 , ROOT.TH1 ) :
-        assert 3 == h2.dim () , "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+        assert 3 == h2.dim () , "cmp_chi2: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
         
     if density : 
         h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1
@@ -826,7 +826,6 @@ ROOT.TH3F.cmp_dist = _h3_cmp_dist_
 ROOT.TH3D.cmp_dist = _h3_cmp_dist_
 
 
-
 # =============================================================================
 ## calculate the "discrete distance" for two scaled histograms or function-like objects
 # Distance is defined as  
@@ -1075,7 +1074,7 @@ def _h1_cmp_minmax_ ( h1                         ,
     mn_val = None
     mx_val = None
 
-    ## loop over  bnis in the first histo 
+    ## loop over  bins in the first histo 
     for i , x , v in h1.items() :
         
         dv = diff ( v , h2 ( x , **kwargs ) ) ## NOTE  THE ARGUMENTS! 
@@ -1499,8 +1498,8 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                          ##
                          distance        = s_Delta      ,
                          ddistance       = s_Delta      ,
-                         diffneg         = '%s(-)'   % s_delta ,
-                         diffpos         = '%s(+)'   % s_delta ,
+                         diffneg         = '%s (-)'   % s_delta ,
+                         diffpos         = '%s (+)'   % s_delta ,
                          angle           =  s_angle     ,
                          dangle          =  s_angle     ,
                          chi2ndf         =  s_chi2ndf   ,
@@ -1537,7 +1536,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                                    prefix    = prefix    ) 
         return cmp
 
-    rows = [ ('Quantity' , '' , 'value' ) ]
+    rows = [ ( 'Quantity' , 'Value' , '' , 'Comment') ]
 
     histo2 = isinstance ( h2 , ROOT.TH1 ) and 1 == h2.dim() 
 
@@ -1546,19 +1545,19 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
     if distance :
         value = h1.cmp_dist ( h2 , density = density )
         v , n = pretty_float ( value  )
-        row   = distance  , '[10^%d]' %n if  n  else  '' , v 
+        row   = distance  , v , '[10^%d]' %n if  n  else  '' , 'sqrt ( integral[L,H] ( h1* - f2* )^2 / (H - L) )'
         rows.append ( row  )
         
     if ddistance :
         value = VE ( h1.cmp_ddist ( h2 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = ddistance + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance + ' [1 %s 2]' % rightarrow, v , '[10^%d]' %n if  n  else  '' , '~ sqrt ( Sum ( h1* - f2* )^2 )'
         rows.append ( row  )
 
     if ddistance and histo2 :
         value = VE ( h2.cmp_ddist ( h1 , density = density ) ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = ddistance + ' [2 %s 1]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
+        row   = ddistance + ' [2 %s 1]' % rightarrow , v , '[10^%d]' %n if  n  else  '' , '~ sqrt ( Sum ( h2* - f1* )^2 )'
         rows.append ( row  )
 
     def fmt (  v  ) :
@@ -1573,7 +1572,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                                   diff    = lambda a , b : 2 * a.asym ( b ) )        
         value = dmn [ -1 ] * 1 
         v , n = value.pretty_print ( parentheses = False )
-        row   = diffneg   , '[10^%+d]' % n if n else '' , v 
+        row   = diffneg   , v , '[10^%+d]' % n if n else ''  , ' ~ min ( ( f1 - f2 ) / ( f1 + f2 ) )'
         rows.append ( row  )
         
     if diffpos :        
@@ -1582,7 +1581,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
                                    diff    = lambda a , b : 2 * a.asym ( b ) )         
         value = dmx [ -1 ]  * 1
         v , n = value.pretty_print ( parentheses = False )
-        row   = diffpos  , '[10^%+d]' % n if n else '' , v 
+        row   = diffpos  , v , '[10^%+d]' % n if n else '' , ' ~ max ( ( f1 - f2 ) / ( f1 + f2 ) )'
         rows.append ( row  )
 
     acos = lambda x : MVE.acos ( max ( min ( x , 1.0 ) , -1.0 ) )  
@@ -1591,28 +1590,28 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         value = VE ( h1.cmp_cos ( h2 , density = density ) ) 
         value = MVE.acos    ( value )
         v , n = value.pretty_print ( parentheses = False )
-        row   = angle , '[10^%d]' %n if  n  else  '' , v 
+        row   = angle , v , '[10^%d]' %n if  n  else  ''  , 'acos ( integral(f1*f2)/(|f1|*|f2| )'
         rows.append ( row  )
 
     if dangle :
         value = VE ( h1.cmp_dcos ( h2 , density = density ) ) 
         value = MVE.acos  ( value )
         v , n = value.pretty_print ( parentheses = False )
-        row   = dangle + ' [1 %s 2]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle + ' [1 %s 2]' % rightarrow , v , '[10^%d]' %n if  n  else  ''  , '~acos ( Sum (h1*f2)/(|h1|*|f2| )'
         rows.append ( row  )
 
     if dangle and histo2 :
         value = VE ( h2.cmp_dcos ( h1 , density = density ) ) 
         value = MVE.acos ( value ) 
         v , n = value.pretty_print ( parentheses = False )
-        row   = dangle + ' [2 %s 1]' % rightarrow  , '[10^%d]' %n if  n  else  '' , v 
+        row   = dangle + ' [2 %s 1]' % rightarrow  , v , '[10^%d]' %n if  n  else  '' , '~acos ( Sum (h2*f1)/(|h2|*|f1| )'
         rows.append ( row  )
 
     if chi2ndf :
         chi2, prob = h1.cmp_chi2 ( h2 , density = density )
         value = chi2
         v , n = pretty_float ( value )
-        row   = chi2ndf + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf + ' [1 %s 2]' % rightarrow, v , '[10^%d]' %n if  n  else  '' , '~ Sum_i chi2_i (h1*-f2*) '
         rows.append ( row  )
 
     if chi2ndf and histo2 :
@@ -1621,7 +1620,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = chi2
         v , n = pretty_float ( value )
-        row   = chi2ndf+ ' [2 %s 1]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
+        row   = chi2ndf+ ' [2 %s 1]' % rightarrow , v , '[10^%d]' %n if  n  else  '' , '~ Sum_i chi2_i (h2*-f1*) '
         rows.append ( row  )        
         
     val_prchi_1 = -1 
@@ -1630,7 +1629,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 
         value = prob 
         v , n = pretty_float ( value )
-        row   = probchi2 + ' [1 %s 2]' % rightarrow , '[10^%d]' % n if  n  else  '' , v 
+        row   = probchi2 + ' [1 %s 2]' % rightarrow , v , '[10^%d]' % n if  n  else  ''  , 'Probability chi2(h1,f2)'
         rows.append ( row  )
         val_prchi_1 = prob  
 
@@ -1640,7 +1639,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = prob 
         v , n = pretty_float ( value )
-        row   = probchi2 + ' [2 %s 1]' % rightarrow , '[10^%d]' %n if  n  else  '' , v 
+        row   = probchi2 + ' [2 %s 1]' % rightarrow , v , '[10^%d]' %n if  n  else  '' , 'Probability chi2(h2,f1)'
         rows.append ( row  )        
         val_prchi_2 = prob  
 
@@ -1651,7 +1650,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = prob
         v , n = pretty_float ( value )
-        row   = probfit + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
+        row   = probfit + ' [1 %s 2]' % rightarrow, v , '[10^%d]' %n if  n  else  '' , 'Fit probability f2.Fit (h1) '
         rows.append ( row  )                
         
         rf2   = h2.cmp_fit ( h1 , density = density ) 
@@ -1659,11 +1658,12 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         
         value = prob 
         v , n = pretty_float ( value )
-        row   = probfit + ' [1 %s 2]' % rightarrow, '[10^%d]' %n if  n  else  '' , v 
+        row   = probfit + ' [1 %s 2]' % rightarrow, v , '[10^%d]' %n if  n  else  '' , 'Fit probability f1.Fit (h2) '
         rows.append ( row  )
         
     import ostap.logger.table as T
-    return T.table ( rows , title =  title , prefix = prefix , alignment = 'lcl' )
+    rows  = T.remove_empty_columns ( rows ) 
+    return T.table ( rows , title =  title , prefix = prefix , alignment = 'lcllll' )
 
 ROOT.TH1D.cmp_diff_prnt = _h1_cmp_diff_prnt_
 ROOT.TH1F.cmp_diff_prnt = _h1_cmp_diff_prnt_ 

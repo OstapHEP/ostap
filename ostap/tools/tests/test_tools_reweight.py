@@ -9,15 +9,17 @@
 """Test for reweighting machinery in  Ostap
 """
 # =============================================================================
-from   ostap.utils.timing     import timing
-from   ostap.core.core        import Ostap 
-from   ostap.logger.colorized import attention, allright
-from   ostap.plotting.canvas  import use_canvas
-from   ostap.utils.root_utils import batch_env 
-from   ostap.utils.cleanup    import CleanUp
-from   ostap.histos.histos    import h1_axis
-from   ostap.logger.symbols   import iteration 
-import ostap.io.zipshelve     as     DBASE
+from   ostap.utils.timing       import timing
+from   ostap.core.core          import Ostap 
+from   ostap.logger.colorized   import attention, allright
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.root_utils   import batch_env 
+from   ostap.utils.cleanup      import CleanUp
+from   ostap.utils.memory       import memory_usage 
+from   ostap.histos.histos      import h1_axis
+from   ostap.logger.symbols     import iteration
+from   ostap.utils.progress_bar import progress_bar 
+import ostap.io.zipshelve       as     DBASE
 import ostap.io.root_file
 import ostap.trees.trees
 import ostap.parallel.kisa 
@@ -61,12 +63,12 @@ N1 = 500000
 N2 = 500000
 N3 = 400000
 
-for i in range( 0, N1 ) :
+for i in progress_bar ( range( 0, N1 ) ) :
     v = 100 + random.expovariate ( -1.0/60 ) 
     while v <   0 : v +=100
     while v > 100 : v -=100        
     hdata.Fill(v)
-for i in range( 0, N2 ) :
+for i in progress_bar ( range( 0, N2 ) ) :
     v = random.gauss(50,10) 
     while v <   0 : v +=100
     while v > 100 : v -=100        
@@ -83,7 +85,7 @@ with ROOT.TFile.Open( testdata ,'recreate') as mc_file:
     xvar = array  ( 'f', [0])
     mctree.Branch ( 'x' , xvar , 'x/F' )
     
-    for i in range ( N3 ) : 
+    for i in progress_bar ( range ( N3 ) ) : 
         xvar[0] = random.expovariate(1.0/80)            
         mctree.Fill()
         
@@ -128,14 +130,17 @@ variables = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 
 plots      = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
 
-converged = False
-active    = len ( plots )
+converged   = False
+active      = len ( plots )
+memory_init = memory_usage () 
 # =============================================================================
 ## start iterations:
 for iter in range ( 1 , maxIter + 1  ) :    
     
-    tag = 'Reweighting iteration #%d%s' %  ( iter , iteration ) 
-    logger.info ( allright ( tag ) ) 
+    tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
+    mem = ''
+    if 1 < iter : mem = ' Memory:%+.2f[MB]' % ( memory_usage () - memory_init )
+    logger.info ( allright ( tag + mem ) )
 
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
 
@@ -150,13 +155,12 @@ for iter in range ( 1 , maxIter + 1  ) :
         mcds , _ = mctree.make_dataset ( variables = variables      ,
                                          selection = '0<x && x<100' , 
                                          silent    = True           ) 
-        
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
       
         ## 1b) add "weight" variable to the dataset
         mcds = mcds.add_reweighting ( weighter , name = 'weight' , progress = True , report = False )
         if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) % mcds )
-        
+
     with timing ( tag + ': make the actual reweighting:' , logger = logger ) :
         # ==============================================================================
         ## 2) update weights
@@ -207,14 +211,18 @@ for iter in range ( 1 , maxIter + 1  ) :
         converged = True 
         break
 
-    ## delete the dataset 
-    mcds.clear() 
-
+    ## explicitely delete the dataset 
+    ## mcds.clear() 
+    del mcds
+    
 else :
 
     converged = False 
     logger.error ( "No convergency!" )
 
+# ===========================================================================
+logger.attention ( 'Memory:%+.2f[MB]' % ( memory_usage () - memory_init ) )                    
+    
 # ===========================================================================
 title = 'Weighter object'
 logger.info ( '%s:\n%s' % ( title , weighter.table ( prefix = '# ' ) ) )
@@ -231,22 +239,23 @@ for key in graphs :
 # =============================================================================
 if converged :
     with timing ( "Add reweighting results to original MC-tree" , logger = logger ) :
-        mctree.add_reweighting ( weighter , name = 'weight' )
+        mctree = ROOT.TChain ( tag_mc ) ; mctree.Add ( testdata )         
+        mctree = mctree.add_reweighting ( weighter , name = 'weight' )
     title = 'MC-tree with weights'
     logger.info ( '%s:\n%s' % ( title , mctree.table ( title = title , prefix = '# ') ) ) 
         
-# ===========================================================================
+# =============================================================================
 with DBASE.open   ( dbname , 'r' ) as db :
     logger.info("(Reweighting database %s " % dbname ) 
     db.ls ()
 
-# ===========================================================================
+# =============================================================================
 ## convert to ROOT and back
-from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
-root_file = backup_to_ROOT    ( dbname     )
-new_db    = restore_from_ROOT ( root_file  )
+## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
+## root_file = backup_to_ROOT    ( dbname     )
+## new_db    = restore_from_ROOT ( root_file  )
 
-# ============================================================================
+# =============================================================================
 
 # =============================================================================
 ##                                                                      The END 
