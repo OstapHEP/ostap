@@ -368,7 +368,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         # =========================================================================
         ## 1b) add  "weight" variable to dataset 
         mcds  = mcds.add_reweighting ( weighter ,  name = 'weight' , progress = True )
-        title = 'Reweighted dataset at iteration #%d' % iter 
+        title = 'Reweighted dataset at iteration #%d%s' %  ( iter , iteration ) 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' , 'z' ] ,
                                                           title     = title    ,
                                                           cuts      = 'weight' , 
@@ -396,7 +396,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     elif iter < 4 : the_plots = plots [ : 4 ]
     else          : the_plots = plots
 
-    ## weigth truncation: avoid very large change of weights for  single iteration 
+    ## weight truncation: avoid very large change of weights for  single iteration 
     wtruncate = ( 0.1 , 10 ) if iter < 4 else ( 0.5 , 2.0 )  
     
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :

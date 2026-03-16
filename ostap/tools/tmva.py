@@ -1706,14 +1706,14 @@ class Trainer(object):
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
 
             ## ATTENTION!!! check it later
-            outFile.cd() 
+            ## outFile.cd() 
             
             Ostap.Tmva.disable_scatter_plots ()
             
             factory = ROOT.TMVA.Factory (                
-                self.name             ,
-                outFile               ,
-                "" ) ## self.bookingoptions   )
+                self.name           ,
+                outFile             ,
+                self.bookingoptions )
 
             ##factory.SetVerbose( self.verbose )
             factory.SetVerbose( True )
@@ -1800,10 +1800,9 @@ class Trainer(object):
 
             self.logger.info     ( "Configuration    : '%s'" % str ( self.configuration ) )
             dataloader.PrepareTrainingAndTestTree(
-                ROOT.TCut ( self.signal_cuts     ) ,
-                ROOT.TCut ( self.background_cuts ) ,
-                "" ) ## self.configuration            )
-            #
+                ROOT.TCut ( self.signal_cuts     ) if self.signal_cuts     else ROOT.TCut ( '1' ) ,
+                ROOT.TCut ( self.background_cuts ) if self.background_cuts else ROOT.TCut ( '1' ) ,
+                self.configuration               )
             
             print ( 'CONFIGURATION ', self.configuration   )
             print ( 'BOOKING '      , self.bookingoptions  )

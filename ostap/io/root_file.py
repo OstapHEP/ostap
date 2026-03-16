@@ -205,9 +205,13 @@ else : # =================================================
             cwd = ROOT.TDirectory.CurrentDirectory().load()
             if valid_pointer ( cwd ) and isinstance ( cwd , ROOT.TDirectoryFile ) :
                 fdir = cwd.GetFile ()
-                if valid_pointer ( fdir ) and not fdir.IsOpen() :
+                if not valid_pointer ( fdir ) or not fdir.IsOpen() :
                     groot = ROOT.ROOT.GetROOT ()
-                    groot.cd ()                            
+                    groot.cd ()
+            elif not valid_pointer ( cwd ) :
+                groot = ROOT.ROOT.GetROOT ()
+                groot.cd ()
+                
             return result
     
     # ========================================================================
@@ -1135,11 +1139,6 @@ ROOT.TDirectory.as_table     = _rd_table_
 
 ROOT.TDirectory.rm           = _rd_rm_
 
-## if hasattr ( ROOT.TFile , '__enter__' ) and hasattr ( ROOT.TFile , '__exit__' ) : pass
-## else :
-ROOT.TFile.__enter__ = _rf_enter_
-ROOT.TFile.__exit__  = _rf_exit_
-
 ROOT.TDirectory.make_tree = _rd_make_tree_
 ROOT.TDirectory.show_tree = _rd_show_tree_
 ROOT.TDirectory.ls_tree   = _rd_ls_tree_
@@ -1279,6 +1278,8 @@ open = _rf_new_open_
 if hasattr ( ROOT.TFile , '_new_init_' ) and hasattr ( ROOT.TFile , '_old_init_' ) : pass
 else :
 
+    ## pass
+
     if ROOT.TFile.__init__.__doc__ :
         _rf_new_init_.__doc__  += '\n' + ROOT.TFile.__init__.__doc__
 
@@ -1289,6 +1290,8 @@ else :
 # =============================================================================
 if hasattr ( ROOT.TFile , '_new_open_' ) and hasattr ( ROOT.TFile , '_old_open_' ) : pass
 else :
+
+    ## pass
 
     if ROOT.TFile.Open.__doc__ : 
         _rf_new_open_.__doc__  += '\n' + ROOT.TFile.Open.__doc__
@@ -1304,6 +1307,8 @@ else :
 if hasattr ( ROOT.TFile , '_new_close_' ) and hasattr ( ROOT.TFile , '_old_close_' ) : pass
 else :
 
+    ## pass 
+    
     if ROOT.TFile.Close.__doc__ : 
         _rf_new_close_.__doc__  += '\n' + ROOT.TFile.Close.__doc__
         
@@ -1311,6 +1316,14 @@ else :
     ROOT.TFile._new_close_   = _rf_new_close_ 
     ROOT.TFile.Close         = _rf_new_close_
     ROOT.TFile.close         = _rf_new_close_
+
+
+if hasattr ( ROOT.TFile , '__enter__' ) and hasattr ( ROOT.TFile , '__exit__' ) : pass
+else :
+    pass
+
+ROOT.TFile.__enter__ = _rf_enter_
+ROOT.TFile.__exit__  = _rf_exit_
     
 # ==============================================================================
 ## get a full path of the directory

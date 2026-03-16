@@ -73,50 +73,57 @@ data_file = prepare_data ( nB = 10000 , nS = 10000 )
 tSignal = ROOT.TChain ( 'S' ) ; tSignal.Add ( data_file )
 tBkg    = ROOT.TChain ( 'B' ) ; tBkg   .Add ( data_file )
 
-CONFIGURATION = "nTrain_Background=8500:nTrain_Signal=8500:SplitMode=Random:NormMode=NumEvents"
-BOOKING       = "Transformations=I;D;P;G,D:AnalysisType=Classification:V:!Silent:DrawProgressBar:Color:"
+CONFIGURATION = "nTrain_Background=5000:nTrain_Signal=5000:SplitMode=Random:NormMode=NumEvents"
+BOOKING       = "Transformations=I;D;P;G,D,G,D,G,D:AnalysisType=Classification:V:!Silent:DrawProgressBar:Color:"
 
 variables = ( 'var1' , 'var2' , 'var3' )
 
 method = ROOT.TMVA.Types.kMLP , "MLP" , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" 
 
+tSignal.Print ( 'vvv' )
+tBkg   .Print ( 'vvv' )
 
-name = 'TMVA-test'
+import ostap.trees.trees
+print ( tSignal.table() )
+print ( tSignal.table() )
 
-out_file = ROOT.TFile.Open(  get_name() , 'NEW' )
-out_file.cd ()
-factory = ROOT.TMVA.Factory ( name , out_file , BOOKING )
+name = 'TBkg-test'
 
-factory.SetVerbose( True )
-             
-dataloader = ROOT.TMVA.DataLoader ( name )
-for v in variables : dataloader.AddVariable ( v, 'F')
+with ROOT.TFile.Open(  get_name() , 'NEW' ) as out_file :
+    
+    out_file.cd ()
+    
+    factory = ROOT.TMVA.Factory ( name , out_file , BOOKING )
+    
+    factory.SetVerbose( True )
+    
+    dataloader = ROOT.TMVA.DataLoader ( name )
+    for v in variables : dataloader.AddVariable ( v, 'F')
+    
+    dataloader.AddTree ( tSignal  , 'Signal'     , 1.0 , "" ) 
+    dataloader.AddTree ( tBkg     , 'Background' , 1.0 , "" )
+    
+    dataloader.PrepareTrainingAndTestTree( "-1.e+30<var1" , "-1.e+30<var1" , CONFIGURATION )
+    
+    di = dataloader.DataInput()
+    
+    
+    print ( "AFTER:", di.GetNTrees("Signal")     , ' #sig-trees' )
+    print ( "AFTER:", di.GetNTrees("Background") , ' #bkg-trees' )
+    
+    
+    print ( "AFTER:", di.GetSignalEntries()      ,  ' signal entries/1')
+    print ( "AFTER:", di.GetBackgroundEntries()   , ' bkgentries/1')
+    
+    print ( "AFTER:", di.GetEntries('Signal')     , ' signal entries/2')
+    print ( "AFTER:", di.GetEntries('Background') , ' bkgentries/2')
+    
+    factory.BookMethod ( dataloader , *method )
+    
+    factory.TrainAllMethods    ()
+    factory.TestAllMethods     ()
+    factory.EvaluateAllMethods ()
 
-dataloader.AddTree ( tSignal  , 'Signal'     , 1.0 , "" ) 
-dataloader.AddTree ( tBkg     , 'Background' , 1.0 , "" )
-
-dataloader.PrepareTrainingAndTestTree( "" , "" , CONFIGURATION )
-      
-di = dataloader.DataInput()
-        
-            
-print ( "AFTER:", di.GetNTrees("Signal")     , ' #sig-trees' )
-print ( "AFTER:", di.GetNTrees("Background") , ' #bkg-trees' )
-            
-           
-print ( "AFTER:", di.GetSignalEntries()      , ' signal entries')
-print ( "AFTER:", di.GetBackgroundEntries()  , ' bkgentries/1')
-print ( "AFTER:", di.GetEntries('Signal')    , ' signal entries')
-print ( "AFTER:", di.GetEntries('Bakground') , ' bkgentries/2')
-             
-           
-factory.BookMethod ( dataloader , *method )
-
-factory.TrainAllMethods    ()
-factory.TestAllMethods     ()
-factory.EvaluateAllMethods ()
- 
+    
 ## the rest is irrelevannt, crush is above
 
-out_file.Close()
-ROOT.gROOT.cd()

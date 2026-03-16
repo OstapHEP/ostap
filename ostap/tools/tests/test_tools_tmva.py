@@ -160,12 +160,15 @@ def test_tmva () :
             ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS' , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
             ## ( ROOT.TMVA.Types.kKNN        , 'KNN'   , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ##
-        ][:1] ,
+        ][:5] ,
         ## 
         variables = input_vars , ## Variables for training
         ## 
         signal                    = tSignal                  , ## `Signal' sample
         background                = tBkg                     , ## `Background' sample
+        ## 
+        signal_cuts     = '-1.e+30<var1' ,
+        background_cuts = '-1.e+30<var1' ,        
         ##
         ## more_signals = [ tSignal, tSignal, tSignal ] ,
         ##
