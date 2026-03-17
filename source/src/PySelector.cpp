@@ -37,6 +37,7 @@ ClassImp(Ostap::Selector) ;
 // ============================================================================
 // constructor 
 // ============================================================================
+#include <iostream> 
 Ostap::Selector::Selector
 ( TTree*                            tree     , 
   const Ostap::Utils::ProgressConf& progress )
@@ -46,6 +47,7 @@ Ostap::Selector::Selector
   , m_progress ( progress )
 {
   set_tree ( tree ) ;
+  std::cerr << "PROGRESS ENABLED:" << m_progress.enabled() << std::endl ; 
 }
 // ============================================================================
 // constructor 
@@ -109,6 +111,8 @@ Bool_t Ostap::Selector::Process ( Long64_t entry )
   // increment number of processed events  and advance the progress bar 
   increment_event() ;
   // 
+  std::cerr << "PROCESS::" << m_progress.enabled() << std::endl ; 
+
   if ( Ostap::Selector::GetEntry ( entry ) <= 0 ) 
     {
       Abort ( "" , TSelector::kAbortFile ) ;

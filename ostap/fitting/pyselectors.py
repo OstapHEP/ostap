@@ -134,13 +134,13 @@ class Selector ( Ostap.Selector ) :
     """ Useful intermediate class for implementation of (py)selectors     
     """
     ## constructor 
-    def __init__ ( self , tree = None , silence = False , progress = True  ) :
+    def __init__ ( self , tree = None , progress = True  ) :
         """ Standart constructor
         """
         if isinstance ( tree , Chain ) : tree = tree.chain 
         if tree is None : tree = ROOT.nullptr
         ## initialize the base
-        super (Selector, self).__init__ ( tree , progress_conf ( progress or not silent ) )
+        super (Selector, self).__init__ ( tree , progress_conf ( progress ) )
                                       
     @property 
     def tree ( self ) :
@@ -181,6 +181,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         if   isinstance ( tree , Chain ) : tree = tree.chain 
         elif tree is None : tree = ROOT.nullptr
         
+        print  ( 'SEL-WITH-CUTS' , progress , progress or not silence )
         self.__silence  = True if silence else False 
         self.__progress = progress or not self.__silence 
         self.__logger   = logger
@@ -191,11 +192,13 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         ## initialize the base
         super ( SelectorWithCuts , self ).__init__ ( self.selection ,
                                                      tree           ,
-                                                     progress_conf ( self.progress ) ) 
+                                                      progress_conf ( self.progress ) ) 
                                                      
         if self.cuts () and not self.silence :
             self.logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
-
+            
+        print ( 'SELECTOR WITH CUTS' , self.progress , self.progress_enabled () )
+    
     @property
     def silence ( self ) :
         """'silence'  : silent processing?"""
@@ -742,10 +745,11 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         ## instantiate the base class
         # 
+        print  ( 'SEL-WITH-VARS' , progress , progress or not silence )
         SelectorWithCuts.__init__ ( self ,
                                     selection = selection ,
                                     silence   = silence   ,
-                                    progress  = progress  , 
+                                    progress  = progress or not silence , 
                                     tree      = tree      ,
                                     logger    = logger    ) ## initialize the base
         
@@ -850,6 +854,8 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__notifier = None
         self.__stat     = SelStat() 
         self.__last     = -1
+        
+        print ( 'SELECTOR WITH VARS:', self.progress , self.progress_enabled() )
         
     @property 
     def name ( self ) :
@@ -1427,6 +1433,7 @@ def make_dataset ( tree              ,
                    roo_cuts  = ''    , ## Roo-Fit selection  
                    name      = ''    , 
                    title     = ''    ,
+                   progress  = True  , 
                    silent    = False ) :
     """ Create the dataset from the tree via intermediate Frame 
     >>> tree = ...
@@ -1440,10 +1447,10 @@ def make_dataset ( tree              ,
     import ostap.fitting.roofit
 
     from ostap.frames.frames import DataFrame, report_print, frame_columns   
-    frame = DataFrame ( tree , progress = not silent )
+    total = len ( tree ) 
+    frame = DataFrame ( tree , progress = total if progress or not silent else False )
 
-    total = len ( tree )
-    
+
     columns = set ( frame_columns ( frame  ) )
 
     scuts  = [] 
@@ -1561,7 +1568,7 @@ def fill_dataset2 ( self              ,
                     selector          ,
                     nevents   = -1    ,
                     first     =  0    ,
-                    shortcut  = True  ,
+                    shortcut  = True  , 
                     silent    = False ,
                     use_frame = 50000 ) :
     """ 'Process' the tree/chain with proper TPySelector :
@@ -1571,7 +1578,7 @@ def fill_dataset2 ( self              ,
     >>> chain    = ...
     >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase 'process' here !!!    
     """
-
+    
     ## process all events? 
     all = ( 0 == first ) and ( nevents < 0 or len ( self ) <= nevents )
 
@@ -1590,6 +1597,7 @@ def fill_dataset2 ( self              ,
                                                 roo_cuts  = selector.roo_cuts   ,
                                                 name      = selector.data.name  , 
                                                 title     = selector.data.title , 
+                                                progress  = selector.progress   , 
                                                 silent    = silent              )
             selector.data = ds
             selector.stat = stat
@@ -1613,9 +1621,9 @@ def fill_dataset2 ( self              ,
             from ostap.utils.root_utils import ImplicitMT 
             from ostap.frames.frames    import DataFrame, frame_columns 
             
-            total  = len ( self )
-
-            frame      = DataFrame ( self , enable = True , progress = len ( self ) if progress else False )
+            total      = len ( self )
+            progress   = selector.progress 
+            frame      = DataFrame ( self , enable = True , progress = total if progress or not silent else False )
 
             frame_main = frame
 
@@ -1666,7 +1674,6 @@ def fill_dataset2 ( self              ,
                     hcut = "(%s <= %.16g)" % ( v.name , mx     )
                     if silent : scuts.append ( hcut )
                     else      : ranges.append ( ( hcut , 'RANGE(%s,high)' % v.name ) )
-
 
             if selection :  
                 frame  = frame.Filter ( selection , 'SELECTION' )
@@ -1868,6 +1875,7 @@ def fill_dataset1 ( tree                 ,
     >>> tree = ...
     >>> ds = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
     """
+    print ( 'FILL_DATASET-1', progress )
     selector = SelectorWithVars ( variables ,
                                   selection = selection ,
                                   cuts      = cuts      , 
@@ -1900,6 +1908,7 @@ def fill_dataset ( tree      ,
     - see `ROOT.TTree.fill_dataset1`
     - see `ROOT.TTree.fill_dataset2`
     """
+    print ( 'FILL DATASET', kwargs )
     if isinstance ( variables , SelectorWithVars ) :
         selector = variables 
         return fill_dataset2 ( tree , selector , **kwargs )
