@@ -108,12 +108,9 @@ def test_tmva () :
     
     logger.info('Prepare data for training/testing')
 
-    nB = 1000
-    nS = 1000
+    nB = 2000
+    nS = 2000
 
-    nB = 200
-    nS = 200
-    
     data_file = prepare_data ( nB , nS )
     
     logger.info('Create and train TMVA')
