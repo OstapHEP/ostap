@@ -68,7 +68,7 @@ def prepare_data ( nB = 10000 , nS = 10000 ) :
         treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
         
         ## fill background tuple: 
-        for i in range ( nB ) : 
+        for i in progress_bar ( range ( nB ) ) : 
             
             x = random.uniform ( -2.0 , 2.0 )
             y = random.uniform ( -2.0 , 2.0 )
@@ -81,7 +81,7 @@ def prepare_data ( nB = 10000 , nS = 10000 ) :
             treeBkg.Fill()
             
         ## fill signal tuple: 
-        for i in range ( nS ) : 
+        for i in progress_bar ( range ( nS ) ) : 
             
             x = random.gauss  (  0.0 , 0.1 )
             y = random.gauss  (  0.0 , 0.2 )
@@ -141,11 +141,12 @@ def test_tmva2() :
             ## ( ROOT.TMVA.Types.kPDERS      , "PDERS"       , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
             ## ( ROOT.TMVA.Types.kKNN        , "KNN"         , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ] ,
-            variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
+            ## 
+            variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training
+            ##
             signal          = tSignal                  , ## ``Signal'' sample
-            background      = tBkg                     , ## ``Background'' sample       
-            signal_cuts     = "-1.e+90<var1" , 
-            background_cuts = "-1.e+90<var1" ,   
+            background      = tBkg                     , ## ``Background'' sample
+            ##
             verbose         = True                     , 
             workdir         = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
         
@@ -163,7 +164,7 @@ def test_tmva2() :
     # =============================================================================
     ## (1) the most efficient way: add TMVA decisions directly into TTree (fast)
     # =============================================================================
-    logger.info ( '(1) Add TMVA decision directly into existing TTree (fast)' ) 
+    logger.info ( '(1) Add TMVA decision directly into existing TTree (FAST)' ) 
     with timing ( "Add TMVA response to signal TTree" , logger =logger ) : 
         tSignal = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         addTMVAResponse ( tSignal ,
@@ -185,7 +186,7 @@ def test_tmva2() :
     # ===============================================================================
     ## (2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)
     # ===============================================================================
-    logger.info ( '(2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)')
+    logger.info ( '(2) Add TMVA decision during TTree -> RooDataSet transformation (CAN BE SLOW)')
     variables = [ 'var1' , 'var2' , 'var3' ]
     
     ## (2.1) Create TMVA reader
@@ -217,7 +218,7 @@ def test_tmva2() :
     # ===============================================================================
     ## (3) Add TMVA decision directly into existing RooDataSet (fast)  
     # ===============================================================================
-    logger.info ( '(3) Add TMVA decision directly into existing RooDataSet (fast)' ) 
+    logger.info ( '(3) Add TMVA decision directly into existing RooDataSet (FAST)' ) 
     with timing ( "Add TMVA response to signal RooDataSet" , logger =logger ) : 
         addTMVAResponse ( ds_S1  ,
                           inputs        = ( 'var1'    ,  'var2' , 'var3' ) ,
@@ -240,7 +241,7 @@ def test_tmva2() :
     # ===============================================================================
     ## (4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (slow)
     # ===============================================================================
-    logger.info ( '(4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (can be slow)')
+    logger.info ( '(4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (CAN BE SLOW)')
     with timing ( "TMVA response via explicit loop over signal TTree" , logger =logger ) :
         tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         counters  = {}
@@ -261,11 +262,10 @@ def test_tmva2() :
         table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
 
-    del reader
     # ===============================================================================
     ## (5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (slow)
     # ===============================================================================
-    logger.info ( '(5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (can be slow)')
+    logger.info ( '(5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (CAN BE SLOW)')
     with timing ( "TMVA response via explicit loop over signal     RooDataSet" , logger =logger ) :
         counters  = {}
         for m in methods : counters[m] = SE() 
@@ -278,7 +278,6 @@ def test_tmva2() :
         
     with timing ( "TMVA response via explicit loop over background RooDataSet" , logger = logger ) :        
         counters  = {}
-        methods   = reader.methods[:] 
         for m in methods : counters[m] = SE() 
         for evt, _ in progress_bar ( ds_B1 ) :
             for method in methods : counters[method] += reader ( method , evt )
@@ -286,7 +285,7 @@ def test_tmva2() :
         table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s:\n%s' % ( title , table ) )
         del ds_B1 
-        
+
 # =============================================================================
 if '__main__' == __name__ :
 

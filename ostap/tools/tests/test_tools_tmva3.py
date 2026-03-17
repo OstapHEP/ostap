@@ -172,14 +172,16 @@ def test_tmva3 () :
             ( ROOT.TMVA.Types.kKNN        , "KNN"         , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ] ,
             #
-            ## common variablss:
+            ## common variables:
             variables       = [ 'var2' , 'var1' ,  'var3' ] , ## Variables for training
+            ## specific signal     variables 
             signal_vars     = { 'VAR1' : 'VARS1' , 'VAR2' : 'VARS2' } , 
+            ## specific background variables 
             background_vars = { 'VAR1' : 'VARB1' , 'VAR2' : 'VARB2' } , 
             ##                         
             signal         = tSignal                  , ## `Signal' sample
             background     = tBkg                     , ## `Background' sample
-            ##
+            ##            
             verbose        = True                     , 
             workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva3-workdir-' ) ) ##  working directory 
         
@@ -200,12 +202,13 @@ def test_tmva3 () :
     # =============================================================================
     ## (1) the most efficient way: add TMVA decisions directly into TTree (fast)
     # =============================================================================
-    logger.info ( '(1) Add TMVA decision directly into existing TTree (fast)' ) 
+    logger.info ( '(1) Add TMVA decision directly into existing TTree (FAST)' ) 
     with timing ( "Add TMVA response to signal TTree" , logger =logger ) : 
         tSignal = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         addTMVAResponse ( tSignal ,
                           inputs        = signal_inputs , 
                           weights_files = tar_file      ,
+                          progress      = True          , 
                           prefix        = 'tmva_'       ,
                           suffix        = '_response'   )
         
@@ -214,6 +217,7 @@ def test_tmva3 () :
         addTMVAResponse ( tBkg    ,
                           inputs        = background_inputs , 
                           weights_files = tar_file    ,
+                          progress      = True        , 
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
         

@@ -867,7 +867,7 @@ class SelectorWithVars(SelectorWithCuts) :
         return self.__data
     @data.setter
     def data ( self , dataset ) :
-        assert isinstance ( dataset , ROOT.RooAbsData ), \
+        assert dataset is None or isinstance ( dataset , ROOT.RooAbsData ) , \
                "Incorrect type of data %s/%s " % ( dataset ,   type ( dataset ) )
         self.logger.debug ("Selector(%s), add dataset %s" % (  self.__name , dataset ) )
         self.__data = dataset 
@@ -1583,7 +1583,7 @@ def fill_dataset2 ( self              ,
             ## if selector.really_trivial and not selector.morecuts ) and \
             ##    ( not '[' in selector.selection ) : 
             
-            if not silent : logger.info ( "Make try to use the *SHORTCUT*!" )
+            if not silent : logger.info ( "Try to use the *SHORTCUT*!" )
             variables     = selector.variables 
             ds , stat     = self.make_dataset ( variables = variables           ,
                                                 selection = selector.selection  ,
@@ -1606,7 +1606,7 @@ def fill_dataset2 ( self              ,
         
         if isinstance ( selector , SelectorWithVars ) and selector.selection :
 
-            if not silent : logger.info ( "Make try to use the intermediate DataFrame!" )
+            if not silent : logger.info ( "Try to use the intermediate DataFrame!" )
 
             selection = selector.selection
             
@@ -1615,16 +1615,9 @@ def fill_dataset2 ( self              ,
             
             total  = len ( self )
 
-            frame  = DataFrame ( self , enable = True )
+            frame      = DataFrame ( self , enable = True , progress = len ( self ) if progress else False )
 
             frame_main = frame
-            
-            if ( 6 , 29 ) <= root_info :
-                from   ostap.frames.frames import frame_progress2
-                cnt = frame_progress2 ( frame )
-            else                   :
-                from   ostap.frames.frames import frame_progress
-                cnt = frame_progress  ( frame , total )
 
             columns = set ( frame_columns ( frame ) )  
             

@@ -112,7 +112,15 @@ class Batch(object) :
         groot = ROOT.ROOT.GetROOT()
         if groot and self.__old_state != groot.IsBatch() :
             groot.SetBatch( self.__old_state ) 
-            
+
+    ## get the current batch status
+    @property
+    def batch ( self ) :
+        """`batch`: current batch status ROOT.GetROOT().IsBatch
+        """
+        groot = ROOT.ROOT.GetROOT()
+        return groot.IsBatch() if  groot else False 
+
 # =============================================================================
 ## check the batch from configuraiton, set it and issue the message
 def batch_env  ( logger = logger ) :

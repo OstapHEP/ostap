@@ -110,6 +110,9 @@ def test_tmva () :
 
     nB = 1000
     nS = 1000
+
+    nB = 200
+    nS = 200
     
     data_file = prepare_data ( nB , nS )
     
@@ -160,31 +163,30 @@ def test_tmva () :
             ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS' , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
             ## ( ROOT.TMVA.Types.kKNN        , 'KNN'   , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
             ##
-        ][:5] ,
+        ] ,
         ## 
         variables = input_vars , ## Variables for training
         ## 
         signal                    = tSignal                  , ## `Signal' sample
         background                = tBkg                     , ## `Background' sample
         ## 
-        signal_cuts     = '-1.e+30<var1' ,
-        background_cuts = '-1.e+30<var1' ,        
-        ##
         ## more_signals = [ tSignal, tSignal, tSignal ] ,
         ##
-        ## control_plots_signal      = [
-        ##    ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var1' ) ,
-        ##    ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var2' ) ,
-        ##    ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var3' ) ,                
-        ##] ,
-        ##control_plots_background  = [
-        ##    ( ROOT.TH2F ( hID() , '' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
-        ##] , 
+        control_plots_signal      = [
+            ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var1' ) ,
+            ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var2' ) ,
+            ( ROOT.TH1F ( hID() , '' , 100 , -3 , 3 ) , 'var3' ) ,                
+        ] ,
+        ## 
+        control_plots_background  = [
+            ( ROOT.TH2F ( hID() , '' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
+        ] , 
         ## 
         verbose                   = True                     ,
         signal_train_fraction     = 0.85                     ,        
         background_train_fraction = 0.85                     ,
-        ## workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ,
+        ##
+        workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ,
         ## 
     )   ##  working directory 
     
@@ -200,26 +202,26 @@ def test_tmva () :
     ## Use TMVA for classification 
     # =============================================================================
     logger.info('Five ways to use TMVA for classification')
-
+    
     # =============================================================================
     ## (1) the most efficient way: add TMVA decisions directly into TTree (fast)
     # =============================================================================
-    logger.info ( '(1) Add TMVA decision directly into existing TTree (fast)' ) 
+    logger.info ( '(1) Add TMVA decision directly into existing TTree (FAST)' ) 
     with timing ( "Add TMVA response to signal TTree" , logger =logger ) : 
         tSignal = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         addTMVAResponse ( tSignal ,
-                          ## inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
                           inputs        = input_vars  ,
                           weights_files = tar_file    ,
+                          progress      = True        ,
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
         
     with timing ( "Add TMVA response to background TTree" , logger =logger ) :     
         tBkg    = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
         addTMVAResponse ( tBkg    ,
-                          ## inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                          inputs        = input_vars ,
-                          weights_files = tar_file  ,
+                          inputs        = input_vars  ,
+                          weights_files = tar_file    ,
+                          progress      = True        , 
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
 
@@ -227,7 +229,8 @@ def test_tmva () :
     ## (2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)
     # ===============================================================================
     
-    logger.info ( '(2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)')
+
+    logger.info ( '(2) Add TMVA decision during TTree -> RooDataSet transformation (CAN BE SLOW)')
     variables = [ 'var1' , 'var2' , 'var3' ]
     
     ## (2.1) Create TMVA reader
@@ -243,19 +246,15 @@ def test_tmva () :
 
     with timing ( "Add TMVA response during TTree->RooDataSet transformation (signal)"     , logger =logger ) : 
         tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
-        ds_S1, _  = tSignal.fill_dataset ( variables )
+        ds_S1, _  = tSignal.fill_dataset ( variables , progress = True )
         
     with timing ( "Add TMVA response during TTree->RooDataSet transformation (background)" , logger =logger ) : 
         tBkg      = ROOT.TChain ( 'B' ) ;  tBkg.Add    ( data_file )
-        ds_B1, _  = tBkg   .fill_dataset ( variables )
+        ds_B1, _  = tBkg   .fill_dataset ( variables , progress = True )
         
     logger.info ( 'Created signal     dataset\n%s' %  ds_S1.table ( prefix = '# ' ) )
     logger.info ( 'Created background dataset\n%s' %  ds_B1.table ( prefix = '# ' ) )
     
-    del ds_S1
-    del ds_B1 
-    
-    """
     
     # ===============================================================================
     ## (3) Add TMVA decision directly into existing RooDataSet (fast)  
@@ -330,8 +329,6 @@ def test_tmva () :
         title = 'Background response (RooDataSet)'
         table = table_counters ( counters , title = title , prefix = '# ' )
         logger.info ( '%s\n%s' % ( title , table ) )
-
-"""
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -31,12 +31,12 @@ namespace Ostap
   /** @var FirstEvent
    *     Index for the first event in the loop
    */
-  const EventIndex FirstEvent { 0 } ;
+  constexpr EventIndex FirstEvent { 0 } ;
   // ==========================================================================
   /** @var LastEvent
    *  Index for the last (exclusive) event in the loop
    */   
-  const EventIndex LastEvent { std::numeric_limits<EventIndex>::max() } ; 
+  constexpr EventIndex LastEvent { std::numeric_limits<EventIndex>::max() } ; 
   // ==========================================================================
   /// the data type for ranges 
   typedef double DataType ;
@@ -44,12 +44,12 @@ namespace Ostap
   /** @var MinValue 
    *  minimal value for various ranges 
    */
-  const DataType MinValue { -std::numeric_limits<DataType>::max () } ; 
+  constexpr DataType MinValue { -std::numeric_limits<DataType>::max () } ; 
   // ==========================================================================
   /** @var MaxValue 
    *  minimal value for varioys ranges 
    */
-  const DataType MaxValue {  std::numeric_limits<DataType>::max () } ; 
+  constexpr DataType MaxValue {  std::numeric_limits<DataType>::max () } ; 
   // ==========================================================================
   /// Types for keys 
   using Key        = std::string ; 

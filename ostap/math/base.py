@@ -113,7 +113,11 @@ __all__     = (
     'FIRST_ENTRY'    , ## the first entryfor evetn loops
     'LAST_ENTRY'     , ## the last entry for event loops 
     'evt_range'      , ## get the actual range of entries
-    'all_entries'    , ## Are all entreis required to process? 
+    'all_entries'    , ## Are all entreis required to process?
+    ## 
+    'MIN_VALUE'      , ## minimal float/double
+    'MAX_VALUE'      , ## maxinam float/double 
+    'epsilon'        , ## float/double-epsilon
     ##
     'np2raw'         , ## numpy array to raw C++ buffer 
     ) 
@@ -121,7 +125,7 @@ __all__     = (
 from   ostap.core.meta_info    import python_info
 from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types
 from   ostap.core.base         import cpp, std, Ostap 
-import ROOT, math, ctypes, array, numpy    
+import ROOT, sys, math, ctypes, array, numpy    
 # =============================================================================
 
 # =============================================================================
@@ -944,8 +948,10 @@ def round_N ( value , N ) :
 # ============================================================================
 ## The first entry for event loops
 FIRST_ENTRY = Ostap.FirstEvent 
+FIRST_EVENT = Ostap.FirstEvent 
 ## The last entry for event loops 
 LAST_ENTRY  = Ostap.LastEvent
+LAST_EVENT  = Ostap.LastEvent
 # ============================================================================
 assert isinstance ( FIRST_ENTRY , int ) , "Invalid First Entry type!"
 assert isinstance ( LAST_ENTRY  , int ) , "Invalid Last  Entry type!"
@@ -955,9 +961,10 @@ assert 0 <= FIRST_ENTRY < LAST_ENTRY    , "Invalid First/Last entries!"
 # ============================================================================
 MIN_VALUE   = Ostap.MinValue 
 MAX_VALUE   = Ostap.MaxValue 
-assert isinstance ( MIN_VALUE , float ) , "Invalid MinValue"
-assert isinstance ( MAX_VALUE , float ) , "Invalid MaxValue"
+assert isinstance ( MIN_VALUE , float ) and MIN_VALUE == -sys.float_info.max , "Invalid MinValue!"
+assert isinstance ( MAX_VALUE , float ) and MAX_VALUE ==  sys.float_info.max , "Invalid MaxValue!"
 assert MIN_VALUE < MAX_VALUE            , "Invaild Min/Max values"
+epsilon     = sys.float_info.epsilon 
 # ============================================================================
 ## Get the actual range of entries
 #  @code

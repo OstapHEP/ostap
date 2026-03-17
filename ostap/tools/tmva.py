@@ -371,6 +371,7 @@ class Trainer(object):
     def __init__(  self                           ,
                    methods                        ,
                    variables                      ,  ## list of variables
+                   ## 
                    signal                         ,  ## signal sample/tree
                    background                     ,  ## background sample/tree
                    ##
@@ -907,8 +908,15 @@ class Trainer(object):
 
     @property
     def show_plots ( self ) :
-        """'show_plots': show plots?"""
-        return self.verbose and ( self.category in ( 0 , -1 ) )
+        """'show_plots': show the plots? Plots are shown:
+        - verbose regime
+        - only for the `main` category (plain tmva) or first categroy (chopping)
+        - only not in batch
+        """
+        if   not self.verbose                : return False 
+        elif not self.category in ( 0 , -1 ) : return False
+        groot = ROOT.ROOT.GetROOT()
+        return groot and not groot.IsBatch () 
 
     @property
     def control_plots_signal     ( self ) :
@@ -1339,10 +1347,6 @@ class Trainer(object):
             if isinstance ( vv , str ) : vv = ( vv , 'F' )
             all_vars.append ( vv [ 0 ] )
             
-        ## if self.prefilter         : all_vars.append ( self.prefilter         )                
-        ## if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
-        ## if self.background_cuts   : all_vars.append ( self.background_cuts   )
-
         if self.signal_weight :
             assert self.signal    .good_variables ( self.signal_weight )  or self.signal_add_vars        , \
                 "Do no know how to treat `signal_weight`: %s" %  self.signal_weight
@@ -1355,9 +1359,6 @@ class Trainer(object):
             assert self.background.good_variables ( self.background_weight ) or self.background_add_vars , \
                 "Do no know how to treat `background_weight`: %s" %  self.background_weight
             
-        ## if self.signal_weight     : all_vars.append ( self.signal_weight     )                        
-        ## if self.background_weight : all_vars.append ( self.background_weight )
-        
         # =====================================================================
         ## prefilter/prescale signal if required
         # =====================================================================
@@ -1386,7 +1387,7 @@ class Trainer(object):
             if self.prefilter_signal : scuts.update ( { 'PreFilter/Signal' : self.prefilter_signal } )                    
             if self.prefilter        : scuts.update ( { 'PreFilter/Common' : self.prefilter        } )
             if self.signal_cuts      : scuts.update ( { 'Signal'           : self.signal_cuts      } )
-            
+
             import ostap.frames.frames 
             import ostap.frames.tree_reduce       as TR
             
@@ -1409,7 +1410,7 @@ class Trainer(object):
             files = ()
             for rs in self.__RS : files += rs.files
             self.__SigTR  = Chain ( name = 'SIGNAL' , files = files )                 
-            
+            ## 
             self.__signal          = self.__SigTR
             self.__signal_cuts     = ROOT.TCut()
             self.__more_signals    = ()
@@ -1470,11 +1471,11 @@ class Trainer(object):
                                                 new_vars  = new_vars                 , 
                                                 prescale  = self.prescale_background ,  
                                                 silent    = silent ) for i in inputs )
-            ## merge signals 
+            ## merge backgrounds 
             files = ()
             for rb in self.__RB : files += rb.files
-            self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files ) 
-                        
+            self.__BkgTR  = Chain ( name = 'BACKGROUND' , files = files )
+            ## 
             self.__background          = self.__BkgTR
             self.__background_cuts     = ROOT.TCut()
             self.__more_backgrounds    = () 
@@ -1482,7 +1483,7 @@ class Trainer(object):
             
         missvars = [ v for v in self.background_vars if not v in self.background ]
         assert not missvars , "Variables %s are not in background sample!" % missvars                         
-                         
+
         assert not self.signal_weight     or self.background.good_variables ( self.signal_weight     ) , \
             "The weight %s is not accessible in background sample!" % self.signal_weight 
         assert not self.background_weight or self.background.good_variables ( self.background_weight ) , \
@@ -1525,7 +1526,6 @@ class Trainer(object):
                 for m in self.methods :
                     if not m [ 0 ] in good_for_negative :
                         self.logger.error ( "Method '%s' does not support negative (background) weights" % m[1] )
-
                         
         # =====================================================================
         ## Control plots for signal and background 
@@ -1715,8 +1715,7 @@ class Trainer(object):
                 outFile             ,
                 self.bookingoptions )
 
-            ##factory.SetVerbose( self.verbose )
-            factory.SetVerbose( True )
+            factory.SetVerbose( self.verbose )
          
             ## 
             dataloader = ROOT.TMVA.DataLoader ( self.name )
@@ -1729,7 +1728,7 @@ class Trainer(object):
             all_vars = [] 
             ## for v in self.variables :
             self.__vartable = [ ( '#', 'Label' , 'Variable' ) ]
-            for i,v in enumerate ( avars ) :
+            for i , v in enumerate ( avars ) :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 all_vars.append ( vv [ 0 ] )
@@ -1750,7 +1749,7 @@ class Trainer(object):
                 elif not a : a = b                
                 self.__vartable.append ( ( '%d' % i , a.strip() , b.strip() ) ) 
                 dataloader.AddVariable  ( vv , qq )
-
+                
             ##
             import ostap.logger.table as T
             title = "TMVA Inputs"
@@ -1763,22 +1762,22 @@ class Trainer(object):
                 all_vars.append ( vv[0] ) 
                 dataloader.AddSpectator ( *vv )
 
-            print ( "LOADER")
-            dataloader.Print('vvvv')
-            
-            
-            
-            print ( 'SIGNAL' , typename ( self.signal ) )
-            self.signal.Print ( 'vvv' )
-            print ( 'BACKGROUND' , typename ( self.background ) ) 
-            self.background.Print ( 'vvv' )
-            
+            sig_cuts = ROOT.TCut ( self.    signal_cuts )
+            bkg_cuts = ROOT.TCut ( self.background_cuts )
+            if ( 6 , 39 ) <= root_info :
+                if not sig_cuts :
+                    sig_cuts = ROOT.TCut ( "1" )
+                    self.logger.warning ( "Signal     cuts: %s -> %s" % ( self.signal_cuts     , sig_cuts ) ) 
+                if not bkg_cuts : 
+                    bkg_cuts = ROOT.TCut ( "1" )
+                    self.logger.warning ( "Background cuts: %s -> %s" % ( self.background_cuts , bkg_cuts ) ) 
+                    
             if self.verbose : self.logger.info ( "Loading 'Signal'     sample" ) 
-            dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
+            dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , sig_cuts )
             
             if self.verbose : self.logger.info ( "Loading 'Background' sample" )             
-            dataloader.AddTree ( self.background , 'Background' , 1.0 , ROOT.TCut ( self.background_cuts ) )
-            #
+            dataloader.AddTree ( self.background , 'Background' , 1.0 , bkg_cuts )
+            
             if self.signal_weight :
                 dataloader.SetSignalWeightExpression     ( self.signal_weight     )
                 self.logger.info ( "Signal     weight: '%s'" % ( attention ( self.signal_weight     ) ) )
@@ -1786,56 +1785,8 @@ class Trainer(object):
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
                 self.logger.info ( "Background weight: '%s'" % ( attention ( self.background_weight ) ) )
                 
-                
-            print ( "LOADER2")
-            dataloader.Print('vvvv')
-            
-            di = dataloader.DataInput()
-            print ( "INPUT:")
-            di.Print('vvv')
-            print ( "AFTER.")
-            
-            ## disable scatter plots...???
-            ###  Ostap.Tmva.disable_scatter_plots ()
-
-            self.logger.info     ( "Configuration    : '%s'" % str ( self.configuration ) )
-            dataloader.PrepareTrainingAndTestTree(
-                ROOT.TCut ( self.signal_cuts     ) if self.signal_cuts     else ROOT.TCut ( '1' ) ,
-                ROOT.TCut ( self.background_cuts ) if self.background_cuts else ROOT.TCut ( '1' ) ,
-                self.configuration               )
-            
-            print ( 'CONFIGURATION ', self.configuration   )
-            print ( 'BOOKING '      , self.bookingoptions  )
-            
-            print ( "LOADER3")
-            dataloader.Print('vvvv')
-            
-            di = dataloader.DataInput()
-            print ( "INPUT:")
-            di.Print('vvv')
-            
-            print ( "AFTER:", di.GetNTrees("Signal")     , ' #sig-trees' )
-            print ( "AFTER:", di.GetNTrees("Background") , ' #bkg-trees' )
-            
-            ## ns = di.GetEntries('Signal')
-            ## for i in range ( ns ) :
-            ##    si = di.GetSignalTreeInfo ( i ) 
-            ##    print  ( 'signal-info', i , ns , si )
-            
-            ##nb = di.GetEntries('Background')
-            ##for i in range ( nb ) :
-            ##    bi = di.GetBackgroundTreeInfo ( i ) 
-            ##    print  ( 'signal-info', i , nb , bi )
-            
-            print ( "AFTER ---- ")
-             
-            ## print ( "AFTER:", di.GetSignalEntries()      , ' signal entries')
-            ## print ( "AFTER:", di.GetBackgroundEntries()  , ' bkgentries/1')
-            ## print ( "AFTER:", di.GetEntries('Signal')    , ' signal entries')
-            ## print ( "AFTER:", di.GetEntries('Bakground') , ' bkgentries/2')
-           
-            self.__loader = dataloader
-            print ( "AFTER....")
+            self.logger.info     ( "Configuration    : '%s'" % str ( self.configuration ) )                    
+            dataloader.PrepareTrainingAndTestTree ( sig_cuts , bkg_cuts , self.configuration )
             
             for m in self.methods :
                 bo = m[2].split(':')
@@ -1844,7 +1795,6 @@ class Trainer(object):
                 else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
                 mm    = [ i for i in m ]
                 mm[0] = int ( mm [ 0 ] )  
-                print ( 'BOOK METHODS' , [ i for i in mm ] )
                 factory.BookMethod ( dataloader , *mm )
 
             # ==========================================================================
@@ -1871,7 +1821,7 @@ class Trainer(object):
             # ==========================================================================
             ## prepare ROC curves & save them int the output file 
             # ==========================================================================
-            if ( self.make_plots or self.verbose ) :
+            if self.make_plots or self.verbose :
 
                 multigraph = factory.GetROCCurveAsMultiGraph ( self.name , 0 )
                 if not multigraph : self.logger.erorr ( 'Invalid ROC-curves multi-graph!' ) 
@@ -1880,7 +1830,8 @@ class Trainer(object):
                     invisible = not self.show_plots 
                     with use_canvas ( '%s ROC curves' % self.name ,
                                       invisible = invisible       ,
-                                      keep      = self.show_plots ) as cnvroc :
+                                      keep      = self.show_plots ,
+                                     ) as cnvroc :
                         
                         multigraph.draw( 'AL' , copy = True )
                         ax = multigraph.GetXaxis ()
@@ -1912,6 +1863,8 @@ class Trainer(object):
 
         del dataloader
         del factory 
+
+        outFile.SaveSelf()
         
         if  self.make_plots :
             self.makePlots ()                
@@ -2084,11 +2037,15 @@ class Trainer(object):
             if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
                 plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
     
-        ## change to some temporary directory
-        
+        # ==============================================================================
+        tag  = "Plots for VARIABLES"
+        with timing ( tag , logger = self.logger ) : 
+            plot_variables ( name , output , invisible = not self.show_plots , prefix = '%s/' % name )
+               
         from ostap.utils.root_utils import batch
         from ostap.plotting.style   import useStyle
-        from ostap.core.core        import rootException, rootError 
+        from ostap.core.core        import rootException, rootError
+        
         with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , useStyle () , rootError() , rootException () :
             
             for fun, args, kwargs in plots :
@@ -2096,14 +2053,10 @@ class Trainer(object):
                 with timing ( tag , logger = self.logger ) :
                     if kwargs : fun ( *args , **kwargs )
                     else      : fun ( *args )
-
+ 
         #
         ## local plots :
         #
-        ## tag  = "Plots for VARIABLES"
-        with timing ( tag , logger = self.logger ) : 
-            plot_variables ( name , output , invisible = not self.show_plots , prefix = '%s/' % name )
-        
 # ========================================================================================
 ## Simple wrapper for `ROOT.TMVA.variables` macro
 def show_variables ( name , output , tmva_style = False ) :
@@ -2554,10 +2507,7 @@ class Reader(object)  :
         for v in self.__variables  : self.__reader.AddVariable  ( v [ 0 ] , v [ 2 ] )
         for v in self.__spectators : self.__reader.AddSpectator ( v [ 0 ] , v [ 2 ] )
 
-        ##  datainfo = self.__reader.DataInfo()
-        ##  lvars = datainfo.GetListOfVariables() 
-        ## print ( 'VARIABLS' , [ v for v in lvars ] ) 
-        
+        ##
         self.__methods = self.weights.methods
         
         for method , xml in  items_loop ( self.weights.files ) :
@@ -3192,7 +3142,7 @@ def plot_variables ( name              ,
     """ Make plots for variables using the tree from the  output TMVA file
     - due to some mistic reasons the standard macro `ROOT.TMVA.variables` often crashes
      
-    This function is a ligthweigth replacement
+    This function is a ligthweight replacement
     - see `ROOT.TMVA.variables`
 
     >>> plot_variables ( tmva_name , file_name , skipvars = [ 'BDTG' ] ) 
@@ -3214,7 +3164,7 @@ def plot_variables ( name              ,
     ## temporary storage of histograms 
     histos = []
 
-    chain = ROOT.TChain ( '%s/TrainTree' % name )
+    chain  = ROOT.TChain ( '%s/TrainTree' % name )
     chain.Add ( tmva_file )
     
     vars = set ( chain.branches () ) | set ( chain.leaves() )        
@@ -3223,7 +3173,7 @@ def plot_variables ( name              ,
     chunks     = chunked ( vars , 6 )
     stats      = chain.statVars ( vars , 'weight' , as_weight = True , use_frame = True , progress = progress ) 
     
-    wcut       = ROOT.TCut ( 'weight' )
+    wcut       = ROOT.TCut ( 'weight'     )
     signal     = ROOT.TCut ( 'classID==0' ) * wcut 
     background = ROOT.TCut ( 'classID==1' ) * wcut 
 

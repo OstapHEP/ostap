@@ -274,10 +274,12 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     groot  = ROOT.ROOT.GetROOT()
     if groot :
         cnvlst = groot.GetListOfCanvases()
-        if cnvlst : cnv = cnvlst.get ( name , None )
-        
+        if cnvlst : cnv = cnvlst.get  ( name , None   )
+
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
-        set_pad   ( cnv         , **kwargs )
+        ## ATTENTION! 
+        ## ROOT.SetOwnership ( cnv  , False  )           ## ATTENTION 
+        set_pad   ( cnv          , **kwargs )
         return cnv 
 
     ## create new canvas
@@ -292,7 +294,7 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
     cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
 
-    ROOT.SetOwnership ( cnv , True )
+    ROOT.SetOwnership   ( cnv , True )
     ## ROOT.SetOwnership ( cnv , False  )
     
     ## adjust newly created canvas
@@ -312,7 +314,11 @@ import atexit
 @atexit.register 
 def clean_canvases () :
     ## global _keep_canvas
-    while _keep_canvas : _keep_canvas.pop()
+    while _keep_canvas :
+        c = _keep_canvas.pop()
+        ROOT.SetOwnership ( c , False )
+        del c 
+    
 # =============================================================================
 all_extensions = (
     'pdf'  , 'png'  , 'gif' ,
@@ -1389,9 +1395,9 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         UsePad.__enter__ ( self )
         
         ## (5) keep it open ? 
-        if self.__keep : ## and not self.__cnv in _keep_canvas :
+        if self.__keep and not self.__invisible : ## and not self.__cnv in _keep_canvas :
             _keep_canvas.append ( self.__cnv ) 
-
+            
         return self.__cnv  ## return the current canvas 
 
     # =================================================================
