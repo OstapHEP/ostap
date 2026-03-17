@@ -21,8 +21,8 @@
 namespace Ostap
 {
   // ==========================================================================
-  /** the tupe for Event  Index (for TTtee/RooAbsData looping
-   * IT should be in agreement with TTree::kMaxEntries 
+  /** the type for Event  Index (for TTtee/RooAbsData looping
+   * It should be in agreement with TTree::kMaxEntries 
    * @see TTree::kMaxEntries
    * @see TVirtualTreePlayer::kMaxEntries 
    */   
@@ -40,7 +40,7 @@ namespace Ostap
   // ==========================================================================
   /// the data type for ranges 
   typedef double DataType ;
-  // ==========================================================================
+  // ========================================================================== 
   /** @var MinValue 
    *  minimal value for various ranges 
    */

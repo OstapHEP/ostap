@@ -118,8 +118,8 @@ namespace Ostap
      *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT) low  limit for expressoon 
-     *  @param xmax       (INPUT) high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expression 
+     *  @param xmax       (INPUT) high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics
      *  @attention selection is treated as boolean 
@@ -144,8 +144,8 @@ namespace Ostap
      *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics
      *  @attention selection/cut is treated as weight!
@@ -230,10 +230,10 @@ namespace Ostap
      *  @param cut_range  (INPUT) if non empty: use events only forn this range!
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT) low  limit for expressoon 
-     *  @param xmax       (INPUT) high limit for expressoon 
-     *  @param ymin       (INPUT) low  limit for expressoon 
-     *  @param ymax       (INPUT) high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expression
+     *  @param xmax       (INPUT) high limit for expression 
+     *  @param ymin       (INPUT) low  limit for expression 
+     *  @param ymax       (INPUT) high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics2
      *  @attention selection is treated as boolean 
@@ -295,12 +295,12 @@ namespace Ostap
      *  @param selection  (INPUT) selection/cut (treated as boolean!)
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression
+     *  @param xmax       (INPUT)  high limit for expression 
+     *  @param ymin       (INPUT)  low  limit for expression 
+     *  @param ymax       (INPUT)  high limit for expression 
+     *  @param zmin       (INPUT)  low  limit for expression 
+     *  @param zmax       (INPUT)  high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::Statistics3
      *  @attention selection/cut is treated as boolean!
@@ -330,12 +330,12 @@ namespace Ostap
      *  @param selection  (INPUT) selection/cut (treated as weight!)
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
+     *  @param ymin       (INPUT)  low  limit for expression 
+     *  @param ymax       (INPUT)  high limit for expression 
+     *  @param zmin       (INPUT)  low  limit for expression 
+     *  @param zmax       (INPUT)  high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics3
      *  @attention selection/cut is treated as weight!
@@ -366,12 +366,12 @@ namespace Ostap
      *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT) low  limit for expressoon 
-     *  @param xmax       (INPUT) high limit for expressoon 
-     *  @param ymin       (INPUT) low  limit for expressoon 
-     *  @param ymax       (INPUT) high limit for expressoon 
-     *  @param zmin       (INPUT) low  limit for expressoon 
-     *  @param zmax       (INPUT) high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expression
+     *  @param xmax       (INPUT) high limit for expression 
+     *  @param ymin       (INPUT) low  limit for expression 
+     *  @param ymax       (INPUT) high limit for expression 
+     *  @param zmin       (INPUT) low  limit for expression 
+     *  @param zmax       (INPUT) high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics3
      *  @attention selection is treated as boolean 
@@ -404,12 +404,12 @@ namespace Ostap
      *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
+     *  @param ymin       (INPUT)  low  limit for expression 
+     *  @param ymax       (INPUT)  high limit for expression 
+     *  @param zmin       (INPUT)  low  limit for expression 
+     *  @param zmax       (INPUT)  high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics3
      *  @attention selection/cut is treated as weight!
@@ -443,14 +443,14 @@ namespace Ostap
      *  @param selection  (INPUT) selection/cut (treated as boolean!)
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
-     *  @param tmin       (INPUT)  low  limit for expressoon 
-     *  @param tmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expressino 
+     *  @param xmax       (INPUT)  high limit for expression 
+     *  @param ymin       (INPUT)  low  limit for expression 
+     *  @param ymax       (INPUT)  high limit for expression 
+     *  @param zmin       (INPUT)  low  limit for expression 
+     *  @param zmax       (INPUT)  high limit for expression 
+     *  @param tmin       (INPUT)  low  limit for expression 
+     *  @param tmax       (INPUT)  high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::Statistics4
      *  @attention selection/cut is treated as boolean!
@@ -484,14 +484,14 @@ namespace Ostap
      *  @param selection  (INPUT) selection/cut (treated as weight!)
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
-     *  @param tmin       (INPUT)  low  limit for expressoon 
-     *  @param tmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression
+     *  @param xmax       (INPUT)  high limit for expression 
+     *  @param ymin       (INPUT)  low  limit for expression 
+     *  @param ymax       (INPUT)  high limit for expression 
+     *  @param zmin       (INPUT)  low  limit for expression 
+     *  @param zmax       (INPUT)  high limit for expression 
+     *  @param tmin       (INPUT)  low  limit for expression 
+     *  @param tmax       (INPUT)  high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics4
      *  @attention selection/cut is treated as weight!
@@ -526,14 +526,14 @@ namespace Ostap
      *  @param cut_range  (INPUT) if non empty: use events only from this range 
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT) low  limit for expressoon 
-     *  @param xmax       (INPUT) high limit for expressoon 
-     *  @param ymin       (INPUT) low  limit for expressoon 
-     *  @param ymax       (INPUT) high limit for expressoon 
-     *  @param zmin       (INPUT) low  limit for expressoon 
-     *  @param zmax       (INPUT) high limit for expressoon 
-     *  @param tmin       (INPUT) low  limit for expressoon 
-     *  @param tmax       (INPUT) high limit for expressoon 
+     *  @param xmin       (INPUT) low  limit for expression 
+     *  @param xmax       (INPUT) high limit for expression 
+     *  @param ymin       (INPUT) low  limit for expression 
+     *  @param ymax       (INPUT) high limit for expression 
+     *  @param zmin       (INPUT) low  limit for expression 
+     *  @param zmax       (INPUT) high limit for expression 
+     *  @param tmin       (INPUT) low  limit for expression 
+     *  @param tmax       (INPUT) high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::Statistics4
      *  @attention selection is treated as boolean 
@@ -570,14 +570,14 @@ namespace Ostap
      *  @param cut_range  (INPUT) if non empty: use events only from this range      
      *  @param first      (INPUT) the first event to process (inclusibe) 
      *  @param last       (INPUT) the last event to process (exclusive) 
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
-     *  @param ymin       (INPUT)  low  limit for expressoon 
-     *  @param ymax       (INPUT)  high limit for expressoon 
-     *  @param zmin       (INPUT)  low  limit for expressoon 
-     *  @param zmax       (INPUT)  high limit for expressoon 
-     *  @param tmin       (INPUT)  low  limit for expressoon 
-     *  @param tmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
+     *  @param ymin       (INPUT)  low  limit for expression 
+     *  @param ymax       (INPUT)  high limit for expression 
+     *  @param zmin       (INPUT)  low  limit for expression 
+     *  @param zmax       (INPUT)  high limit for expression 
+     *  @param tmin       (INPUT)  low  limit for expression 
+     *  @param tmax       (INPUT)  high limit for expression 
      *  @return status code 
      *  @see Ostap::Math::WStatistics4
      *  @attention selection/cut is treated as weight!
@@ -663,8 +663,8 @@ namespace Ostap
      *  @param expression (INPUT) the expression
      *  @param first      (INPUT) the first entry 
      *  @param last       (INPUT) the last entry      *
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
      *
      *  @code
      *  tree = ... 
@@ -688,8 +688,8 @@ namespace Ostap
      *  @param selection  (INPUT) selection/ (as boolean) 
      *  @param first      (INPUT) the first entry 
      *  @param last       (INPUT) the last entry      *
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
      *
      *  @code
      *  tree = ... 
@@ -714,8 +714,8 @@ namespace Ostap
      *  @param selection  (INPUT) selection/weight 
      *  @param first      (INPUT) the first entry 
      *  @param last       (INPUT) the last entry      *
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
      *
      *  @code
      *  tree = ... 
@@ -741,8 +741,8 @@ namespace Ostap
      *  @param cut_range  (INPUT) cut-range 
      *  @param first      (INPUT) the first entry 
      *  @param last       (INPUT) the last entry      *
-     *  @param xmin       (INPUT)  low  limit for expressoon 
-     *  @param xmax       (INPUT)  high limit for expressoon 
+     *  @param xmin       (INPUT)  low  limit for expression 
+     *  @param xmax       (INPUT)  high limit for expression 
      *
      *  @code
      *  data = ... 
@@ -834,10 +834,10 @@ namespace Ostap
      *  @param selection 
      *  @param first (INPUT)  the first  event to process (inclusive) 
      *  @param last  (INPUT)  the last   event to process (exc;usive) 
-     *  @param xmin  (INPUT)  low  limit for expressoon 
-     *  @param xmax  (INPUT)  high limit for expressoon 
-     *  @param ymin  (INPUT)  low  limit for expressoon 
-     *  @param ymax  (INPUT)  high limit for expressoon 
+     *  @param xmin  (INPUT)  low  limit for expression 
+     *  @param xmax  (INPUT)  high limit for expression 
+     *  @param ymin  (INPUT)  low  limit for expression 
+     *  @param ymax  (INPUT)  high limit for expression 
      *  @return Covariance 
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22-
@@ -862,10 +862,10 @@ namespace Ostap
      *  @param selection 
      *  @param first (INPUT)  the first  event to process (inclusive) 
      *  @param last  (INPUT)  the last   event to process (exc;usive) 
-     *  @param xmin  (INPUT)  low  limit for expressoon 
-     *  @param xmax  (INPUT)  high limit for expressoon 
-     *  @param ymin  (INPUT)  low  limit for expressoon 
-     *  @param ymax  (INPUT)  high limit for expressoon 
+     *  @param xmin  (INPUT)  low  limit for expression 
+     *  @param xmax  (INPUT)  high limit for expression 
+     *  @param ymin  (INPUT)  low  limit for expression 
+     *  @param ymax  (INPUT)  high limit for expression 
      *  @return Covariance 
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22-
@@ -890,10 +890,10 @@ namespace Ostap
      *  @param selection 
      *  @param first (INPUT)  the first  event to process (inclusive) 
      *  @param last  (INPUT)  the last   event to process (exc;usive) 
-     *  @param xmin  (INPUT)  low  limit for expressoon 
-     *  @param xmax  (INPUT)  high limit for expressoon 
-     *  @param ymin  (INPUT)  low  limit for expressoon 
-     *  @param ymax  (INPUT)  high limit for expressoon 
+     *  @param xmin  (INPUT)  low  limit for expression 
+     *  @param xmax  (INPUT)  high limit for expression 
+     *  @param ymin  (INPUT)  low  limit for expression 
+     *  @param ymax  (INPUT)  high limit for expression 
      *  @return Covariance 
      *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
      *  @date   2024-07-22-
@@ -928,7 +928,7 @@ namespace Ostap
     ( TTree*                          data       , 
       Ostap::Math::Covariances&       stats      , 
       const Ostap::Strings&           exressions , 
-      const std::string&              sekection  = ""                ,
+      const std::string&              selection  = ""                ,
       const Ostap::EventIndex         first      = Ostap::FirstEvent ,
       const Ostap::EventIndex         last       = Ostap::LastEvent  ) const ;
     // ========================================================================
@@ -946,12 +946,12 @@ namespace Ostap
     ( TTree*                          data        , 
       Ostap::Math::WCovariances&      stats       , 
       const Ostap::Strings&           expressions , 
-      const std::string&              sekection   = ""                ,
+      const std::string&              selection   = ""                ,
       const Ostap::EventIndex         first       = Ostap::FirstEvent ,
       const Ostap::EventIndex         last        = Ostap::LastEvent  ) const ;          
     // =========================================================================
     /** calculate the covariance of several expressions 
-     *  @param data        (INPUT)  the inpout tree 
+     *  @param data        (INPUT)  the input tree 
      *  @param stats       (UPDATE) the statistics 
      *  @param cov2        (UPDATE) the covariance matrix 
      *  @param expressions (INPUT)  expressions 
@@ -965,7 +965,7 @@ namespace Ostap
     ( const RooAbsData*               data        , 
       Ostap::Math::WCovariances&      stats       , 
       const Ostap::Strings&           expressions , 
-      const std::string&              sekection   = ""                ,
+      const std::string&              selection   = ""                ,
       const std::string&              cut_range   = ""                , 
       const Ostap::EventIndex         first       = Ostap::FirstEvent ,
       const Ostap::EventIndex         last        = Ostap::LastEvent  ) const ;          

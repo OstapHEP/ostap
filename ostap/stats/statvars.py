@@ -132,6 +132,7 @@ def good_for_frame    ( data , *args ,
 
     ## check number of events 
     first, last = evt_range ( data , *args[:2] )
+    
     ## dataset is too small
     return 0 <= first < last and min_events <= ( last - first ) and all_entries ( data , first , last ) 
 
@@ -860,21 +861,27 @@ def data_statvector ( data        ,
     """ Get the effective vector of mean-values with covariances for the dataset
     >>> vct = data_statvct ( data , 'a,y,z' , cuts = 'w' ) 
     """
-    
+
+    print ( 'STATVECTOR/1' , expressions , cuts ) 
     ## decode expressions & cuts
     var_lst , cuts, input_string = vars_and_cuts ( expressions , cuts )
     N = len ( var_lst )
     
+    print ( 'STATVECTOR/2' , expressions , cuts , var_lst ) 
+
     assert 2 <= N , "At least two variables are needed!"
         
-    covs = data_covariance ( data       , var_lst   ,
-                             cuts       , *args     , 
-                             cut_range  = cut_range ,                             
-                             as_weight  = as_weight ,  
-                             progress   = progress  , 
-                             use_frame  = use_frame ,
-                             parallel   = parallel  )
+    covs = data_covariance ( data                    ,
+                             expressions = var_lst   ,
+                             cuts        = cuts      , 
+                             cut_range   = cut_range ,                             
+                             as_weight   = as_weight ,  
+                             progress    = progress  , 
+                             use_frame   = use_frame ,
+                             parallel    = parallel  )
     
+    print ( 'STATVECTOR/3' , var_lst , cuts , covs  ) 
+
     ## some linear algebra manipulations are here 
     import ostap.math.linalg
 

@@ -150,13 +150,13 @@ Ostap::Math::SVectorWithError<N,SCALAR>::fillStream ( std::ostream& s ) const
 // ============================================================================
 template <unsigned int N, class SCALAR>
 inline SCALAR Ostap::Math::SVectorWithError<N,SCALAR>::corr 
-( unsigned int i , 
-  unsigned int j ) const 
+( const unsigned int i , 
+  const unsigned int j ) const 
 {
   static const SCALAR s_bad = -10000 ;
   //
-  const SCALAR sii = this->cov2( i , i ) ;
-  const SCALAR sjj = this->cov2( j , j ) ;
+  const SCALAR sii = this->cov2 ( i , i ) ;
+  const SCALAR sjj = this->cov2 ( j , j ) ;
   //
   if ( 0 >= sii || 0 >= sjj ) { return s_bad ; }                      // RETURN  
   //

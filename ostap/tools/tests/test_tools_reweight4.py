@@ -33,7 +33,7 @@ import ROOT, random, math, os, time
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_reweight3' )
+    logger = getLogger ( 'ostap.test_tools_reweight4' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================    
@@ -249,7 +249,9 @@ logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'r1' , 'r2' 
                                                       prefix    = '# '     ) ) )
 
 vct_data  = datatree.statVct ( 'r1,r2,r3' )
-n_data    = len ( datatree ) 
+print ( 'VECTOR DATA\n' , vct_data ) 
+n_data    = len ( datatree )
+# =============================================================================
 ## table of global statistics 
 glob_stat = [ ( '#' , 'Mahalanobis' , 'Hotelling' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
 # =============================================================================
@@ -332,7 +334,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             dbname                 , ## DBASE with reweighting constant 
             delta      = 0.05      , ## stopping criteria
             minmax     = 0.10      , ## stopping criteria  
-            maxchi2    = 1.5s       , ## stopping criteria 
+            maxchi2    = 1.20      , ## stopping criteria 
             power      = power     , ## tune: effective power
             wtruncate  = wtruncate , ## truncate weights 
             make_plots = True      , ## make control plots 
@@ -368,7 +370,11 @@ if converged : # ==============================================================
     with timing ( "Add weight column to initial MC-tree" , logger = logger ) : 
         mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
         weighter = Weight ( dbname , weightings )
-        mctree   = mctree.add_reweighting ( weighter ,  name = 'weight' )
+        mctree   = mctree.add_reweighting ( weighter            ,
+                                            name     = 'weight' ,
+                                            report   = True     ,
+                                            progress = True     , 
+                                            parallel = 5000 < len ( mctree ) )
         mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
 
     # =======================================================================
@@ -385,7 +391,7 @@ if converged : # ==============================================================
     # =============================================================================
     title = 'MC-tree before reweighting' 
     logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'r1' , 'r2' , 'r3' ] ,
-                                                        title     = title    ,
+                                                          title     = title    ,
                                                           prefix    = '# '     ) ) )
     # =============================================================================
     title = 'MC-tree after reweighting' 
@@ -411,9 +417,9 @@ if converged : # ==============================================================
 
 
 # ===========================================================================
-from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
-root_file = backup_to_ROOT    ( dbname     )
-new_db    = restore_from_ROOT ( root_file  )
+## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
+## root_file = backup_to_ROOT    ( dbname     )
+## new_db    = restore_from_ROOT ( root_file  )
     
 # =============================================================================
 ##                                                                      The END 

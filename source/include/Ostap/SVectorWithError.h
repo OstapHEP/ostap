@@ -58,8 +58,16 @@ namespace Ostap
         : m_value ( value ) 
         , m_cov2  ( cov2  ) 
       {}
+      /// full constructor from vector and covariance matrix 
+      SVectorWithError 
+      ( const Covariance& cov2  , 
+	const Value&      value )
+        : m_value ( value ) 
+        , m_cov2  ( cov2  ) 
+      {}
       /// full constructor from covariance matrix 
-      SVectorWithError ( const Covariance& cov2 ) 
+      SVectorWithError
+      ( const Covariance& cov2 ) 
         : m_value (       ) 
         , m_cov2  ( cov2  ) 
       {}
@@ -104,13 +112,13 @@ namespace Ostap
       // ======================================================================
     public: // trivial accessors 
       // ======================================================================
-      const  Value&      value       () const { return m_value      ; }
-      const  Covariance& cov2        () const { return m_cov2       ; }
-      const  Covariance& covariance  () const { return this->cov2() ; }
+      inline const  Value&      value       () const { return m_value      ; }
+      inline const  Covariance& cov2        () const { return m_cov2       ; }
+      inline const  Covariance& covariance  () const { return this->cov2() ; }
       // ======================================================================
-      inline Value&      value       ()       { return m_value      ; }
-      inline Covariance& cov2        ()       { return m_cov2       ; }      
-      inline Covariance& covariance  ()       { return this->cov2() ; }
+      inline        Value&      value       ()       { return m_value      ; }
+      inline        Covariance& cov2        ()       { return m_cov2       ; }      
+      inline        Covariance& covariance  ()       { return this->cov2() ; }
       // ======================================================================
       const  SCALAR& value
       ( unsigned int i ) const  { return m_value ( i )     ; }
@@ -126,36 +134,36 @@ namespace Ostap
       // ======================================================================
     public:  // finally it is just a vector 
       // ======================================================================
-      const  SCALAR& operator()
-        ( unsigned int i ) const { return m_value(i) ; }
-      inline SCALAR& operator()
-        ( unsigned int i )       { return m_value(i) ; }
-      const  SCALAR& operator[]
-      ( unsigned int i ) const   { return m_value[i] ; }
-      inline SCALAR& operator[]
-      ( unsigned int i )         { return m_value[i] ; }
-      const  SCALAR& operator()
-        ( unsigned int i ,
-          unsigned int j ) const { return m_cov2(i,j) ; }
-      inline SCALAR& operator()
-        ( unsigned int i ,
-          unsigned int j )       { return m_cov2(i,j) ; }      
+      inline const  SCALAR& operator()
+      ( unsigned int i ) const { return m_value ( i ) ; ; }
+      inline        SCALAR& operator()
+      ( unsigned int i )       { return m_value ( i ) ; }
+      inline const  SCALAR& operator[]
+      ( unsigned int i ) const { return m_value [ i ] ; }
+      inline        SCALAR& operator[]
+      ( unsigned int i )       { return m_value [ i ] ; }
+      inline const  SCALAR& operator()
+      ( unsigned int i ,
+	unsigned int j ) const { return m_cov2 ( i , j ) ; }
+      inline        SCALAR& operator()
+      ( unsigned int i ,
+	unsigned int j )       { return m_cov2 ( i , j ) ; }      
       // ======================================================================
     public: // 
       // ======================================================================
       /// set value 
-      void setValue
+      inline void setValue
       ( const unsigned int i     ,
         const SCALAR       value ) { m_value ( i )   = value ; }
-      void setCov2
+      inline void setCov2
       ( const unsigned int i     ,
         const unsigned int j     ,
         const SCALAR       value ) { m_cov2 ( i , j ) = value ; }
       /// set value 
-      void set
+      inline void set
       ( const unsigned int i     ,
         const SCALAR       value ) { setValue ( i , value ) ; }
-      void set
+      inline void set
       ( const unsigned int i     ,
         const unsigned int j     ,
         const SCALAR       value ) { setCov2 ( i , j , value ) ; }
@@ -168,34 +176,37 @@ namespace Ostap
        *  @param j the second index 
        *  @return correlation coefficient 
        */
-      inline SCALAR  corr  ( unsigned int i  , unsigned int j  ) const ;
+      inline SCALAR  corr
+      ( const unsigned int i  ,
+	const unsigned int j  ) const ;
       /** get the full correlation matrix 
        *  @return false for invalid setup 
        */
-      inline bool    corr  ( Covariance& corrm ) const ;
+      inline bool    corr
+      ( Covariance& corrm ) const ;
       // ======================================================================
     public: // setters 
       // ======================================================================
-      void setValue      ( const Value&      v ) { m_value = v ; }
-      void setCovariance ( const Covariance& c ) { m_cov2  = c ; }
-      void setCov2       ( const Covariance& c ) { m_cov2  = c ; }
+      inline void setValue      ( const Value&      v ) { m_value = v ; }
+      inline void setCovariance ( const Covariance& c ) { m_cov2  = c ; }
+      inline void setCov2       ( const Covariance& c ) { m_cov2  = c ; }
       // ======================================================================
       template <class B>
-      void setValue       ( const ROOT::Math::VecExpr<B,SCALAR,N>&  v ) 
+      inline void setValue       ( const ROOT::Math::VecExpr<B,SCALAR,N>&  v ) 
       { m_value = v ; }
       template <class B, class R>
-      void setCovariance  ( const ROOT::Math::Expr<B,SCALAR,N,N,R>& c ) 
+      inline void setCovariance  ( const ROOT::Math::Expr<B,SCALAR,N,N,R>& c ) 
       { m_cov2 = c ; }
       template <class B, class R>
-      void setCov2        ( const ROOT::Math::Expr<B,SCALAR,N,N,R>& c ) 
+      inline void setCov2        ( const ROOT::Math::Expr<B,SCALAR,N,N,R>& c ) 
       { m_cov2 = c ; }
       // ======================================================================
     public: // cast:
       // ======================================================================
-      operator const Value&      () const { return value () ; }
-      operator       Value&      ()       { return value () ; }
-      operator const Covariance& () const { return cov2  () ; }
-      operator       Covariance& ()       { return cov2  () ; }
+      inline operator const Value&      () const { return value () ; }
+      inline operator       Value&      ()       { return value () ; }
+      inline operator const Covariance& () const { return cov2  () ; }
+      inline operator       Covariance& ()       { return cov2  () ; }
       // ======================================================================
     public: //  operators
       // ======================================================================
@@ -213,10 +224,10 @@ namespace Ostap
       { m_value /= s             ; m_cov2 /= (s*s)        ; return *this ; }
       // ======================================================================
       template <class B>
-      Self&  operator+= ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) 
+      inline Self&  operator+= ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) 
       { m_value += right ; return *this ; }
       template <class B>
-      Self&  operator-= ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) 
+      inline Self&  operator-= ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) 
       { m_value -= right ; return *this ; }
       // ======================================================================
       // unary- 
@@ -224,10 +235,10 @@ namespace Ostap
       // ======================================================================
     public: //  chi2 distances
       // ======================================================================
-      double chi2 ( const Self&  right ) const ;
-      double chi2 ( const Value& right ) const ;      
+      inline double chi2 ( const Self&  right ) const ;
+      inline double chi2 ( const Value& right ) const ;      
       template <class B>
-      double chi2 ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) const ;
+      inline double chi2 ( const ROOT::Math::VecExpr<B,SCALAR,N>&  right ) const ;
       // ======================================================================
     public:  // more functions 
       // ======================================================================
@@ -244,7 +255,7 @@ namespace Ostap
        *  @see Ostap::Math::kullback_leibler 
        *  @return symmetrised KL-divergency (-1 in case of error)
        */
-      double kullback_leibler 
+      inline double kullback_leibler 
       ( const SVectorWithError& a ) const ;
       // ========================================================================
       /** Get asymmetric Kullback-Leibler divergency for two objects 
@@ -252,7 +263,7 @@ namespace Ostap
        *  @see Ostap::Math::asymmetric_kullback_leibler 
        *  @return KL-divergency (-1 in case of error)
        */
-      double asymmetric_kullback_leibler 
+      inline double asymmetric_kullback_leibler 
       ( const SVectorWithError& a ) const ;
       // ========================================================================
     public:
@@ -261,14 +272,14 @@ namespace Ostap
        *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
        *  @return Mahalanobis distance (-1 in case of error)
        */
-      double mahalanobis 
+      inline double mahalanobis 
       ( const SVectorWithError& a ) const ;
       // ========================================================================
       /** get Mahalanobis distance 
        *  https://en.wikipedia.org/wiki/Mahalanobis_distance  
        *  @return Mahalanobis distance (-1 in case of error)
        */
-      double mahalanobis 
+      inline double mahalanobis 
       ( const Value& a ) const ;
       // ========================================================================
     public:
@@ -277,14 +288,14 @@ namespace Ostap
        *  \f[ r = \sum_i v_i w_i \f]
        *  @param weigths (INPUT) vector of weights 
        */ 
-      Ostap::Math::ValueWithError
+      inline Ostap::Math::ValueWithError
       dot ( const SVectorWithError& weights ) const ;
       // ========================================================================
       /** get the (unnormalized) weighted sum with set of weights 
        *  \f[ r = \sum_i v_i w_i \f]
        *  @param weigths (INPUT) vector of weights 
        */ 
-      Ostap::Math::ValueWithError
+      inline Ostap::Math::ValueWithError
       dot ( const Value&            weights ) const ;
       // ========================================================================
     public:
@@ -293,47 +304,47 @@ namespace Ostap
        *  \f[ r = \frac{\sum_i v_i w_i}{ \sum_i w_i } \f]
        *  @param weigths (INPUT) vector of weights 
        */ 
-      Ostap::Math::ValueWithError
+      inline Ostap::Math::ValueWithError
       weighted_sum ( const SVectorWithError& weights ) const ;
       // ========================================================================
       /** get the (normalized) weighted sum with set of weights 
        *  \f[ r = \frac{\sum_i v_i w_i}{ \sum_i w_i } \f]
        *  @param weigths (INPUT) vector of weights 
        */ 
-      Ostap::Math::ValueWithError
+      inline Ostap::Math::ValueWithError
       weighted_sum ( const Value&            weights ) const ;
       // ========================================================================
     public: //  helper functions for pythonizations
       // ======================================================================
-      Self  __add__     ( const Self&  right ) const ;
-      Self  __sub__     ( const Self&  right ) const ;      
-      Self  __add__     ( const Value& right ) const ;
-      Self  __sub__     ( const Value& right ) const ;      
-      Self  __radd__    ( const Value& right ) const ;
-      Self  __rsub__    ( const Value& right ) const ;
+      inline Self  __add__     ( const Self&  right ) const ;
+      inline Self  __sub__     ( const Self&  right ) const ;      
+      inline Self  __add__     ( const Value& right ) const ;
+      inline Self  __sub__     ( const Value& right ) const ;      
+      inline Self  __radd__    ( const Value& right ) const ;
+      inline Self  __rsub__    ( const Value& right ) const ;
       // ======================================================================
-      Self  __mul__     ( const double v     ) const { return (*this) *  v ; }
-      Self  __truediv__ ( const double v     ) const { return (*this) /  v ; }
-      Self  __div__     ( const double v     ) const { return (*this) /  v ; }
-      Self  __rmul__    ( const double v     ) const { return (*this) *  v ; }
+      inline Self  __mul__     ( const double v     ) const { return (*this) *  v ; }
+      inline Self  __truediv__ ( const double v     ) const { return (*this) /  v ; }
+      inline Self  __div__     ( const double v     ) const { return (*this) /  v ; }
+      inline Self  __rmul__    ( const double v     ) const { return (*this) *  v ; }
       // ======================================================================
-      Self& __imul__    ( const double v     )       { return (*this) *= v ; }
-      Self& __idiv__    ( const double v     )       { return (*this) /= v ; }
-      Self& __iadd__    ( const double v     )       { return (*this) += v ; }
-      Self& __isub__    ( const double v     )       { return (*this) -= v ; }
-      Self& __iadd__    ( const Self&  v     )       { return (*this) += v ; }
-      Self& __isub__    ( const Self&  v     )       { return (*this) -= v ; }
-      Self& __iadd__    ( const Value& v     )       { return (*this) += v ; }
-      Self& __isub__    ( const Value& v     )       { return (*this) -= v ; }
+      inline Self& __imul__    ( const double v     )       { return (*this) *= v ; }
+      inline Self& __idiv__    ( const double v     )       { return (*this) /= v ; }
+      inline Self& __iadd__    ( const double v     )       { return (*this) += v ; }
+      inline Self& __isub__    ( const double v     )       { return (*this) -= v ; }
+      inline Self& __iadd__    ( const Self&  v     )       { return (*this) += v ; }
+      inline Self& __isub__    ( const Self&  v     )       { return (*this) -= v ; }
+      inline Self& __iadd__    ( const Value& v     )       { return (*this) += v ; }
+      inline Self& __isub__    ( const Value& v     )       { return (*this) -= v ; }
       // ======================================================================
     public:
       // ======================================================================
-      /** "transform" vector withj uncertaintie susnig matrix 
+      /** "transform" vector with uncertainties using matrix 
        *   @param M (INPUT)
        *   @return transformed vector
        */
       template <unsigned int K, typename R> 
-      SVectorWithError<K,SCALAR>
+      inline SVectorWithError<K,SCALAR>
       __rmul__ 
       ( const ROOT::Math::SMatrix<SCALAR,K,N,R>& M ) const ;
       // ======================================================================
@@ -347,10 +358,10 @@ namespace Ostap
       // ======================================================================      
     public: //  printout 
       // ======================================================================
-      /// printpout 
-      std::ostream& fillStream ( std::ostream& s ) const ;         // printpout 
+      /// printout 
+      inline std::ostream& fillStream ( std::ostream& s ) const ;         // printpout 
       /// conversion to string
-      std::string   toString   () const ;               // conversion to string
+      inline std::string   toString   () const ;               // conversion to string
       // ======================================================================
     private:
       // ======================================================================

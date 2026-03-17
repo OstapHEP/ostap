@@ -951,6 +951,14 @@ assert isinstance ( FIRST_ENTRY , int ) , "Invalid First Entry type!"
 assert isinstance ( LAST_ENTRY  , int ) , "Invalid Last  Entry type!"
 assert 0 <= FIRST_ENTRY < LAST_ENTRY    , "Invalid First/Last entries!"
 # ============================================================================
+## The minimal valeu for datatype @see Ostap.MinValue 
+# ============================================================================
+MIN_VALUE   = Ostap.MinValue 
+MAX_VALUE   = Ostap.MaxValue 
+assert isinstance ( MIN_VALUE , float ) , "Invalid MinValue"
+assert isinstance ( MAX_VALUE , float ) , "Invalid MaxValue"
+assert MIN_VALUE < MAX_VALUE            , "Invaild Min/Max values"
+# ============================================================================
 ## Get the actual range of entries
 #  @code
 #  tree  = 

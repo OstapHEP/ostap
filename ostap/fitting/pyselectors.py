@@ -20,7 +20,7 @@
 #
 #      def __init__ ( self ) :
 #
-#           return Selector ( self )
+#           Selector.__init__ ( self )
 #
 #      def Process  ( self , entry ) :
 #           # == getting the next entry from the tree
@@ -60,7 +60,8 @@ The module provides the 'recovery' for missing methods
 # class MySelector ( Selector ) :
 #
 #    def __init__ ( self ) :
-#       return Selector ( self )
+#       Selector.__init__ ( self )
+#
 #    def Process  ( self , entry ) :
 #        # == getting the next entry from the tree
 #        if self.GetEntry ( entry ) <= 0 : return 0             ## RETURN 
@@ -73,7 +74,6 @@ The module provides the 'recovery' for missing methods
 #        if not 1 <= tree.pt  <=  10.0  : return 0               ## RETURN
 #    
 #        return 1
-#
 #
 # selector = MySelector()
 # 
@@ -436,7 +436,7 @@ class Variable(object) :
 ## @class Variables
 #  Helper structure to manage/keep/check list of variables
 class Variables(object) :
-    """Helper structure to manage/keep/check list of variables
+    """ Helper structure to manage/keep/check list of variables
     """
     def __init__ ( self , variables , tree = None ) :
 
@@ -509,7 +509,7 @@ class Variables(object) :
     # =========================================================================
     ## check if variable (or index) is already in the list 
     def __contains__ ( self , item ) :
-        """Check if variable (or index) is already in the list
+        """ Check if variable (or index) is already in the list
         """
         
         if isinstance ( item , int ) :
@@ -531,13 +531,13 @@ class Variables(object) :
 
     ## reduce the object 
     def __reduce__ ( self ) :
-        ## redcue the object 
+        """ Reduce the object """
         return root_factory , ( type ( self ) , self.variables  ) 
   
 # =============================================================================
 ## Is this expression corresponds to a valid RooFit formula?
 def valid_formula ( expression , varset ) :
-    """Is this expression corresponds to a valid RooFit formula?
+    """ Is this expression corresponds to a valid RooFit formula?
     """
 
     if isinstance ( expression , ROOT.TCut ) : expression =  str ( expression )
@@ -562,7 +562,7 @@ class SelStat(object) :
     """
     def __init__ ( self ,  total = 0 , processed = 0 , skipped = 0 ) :
 
-        assert 0<= total and 0 <= processed and 0 <= skipped , \
+        assert 0 <= total and 0 <= processed and 0 <= skipped , \
                "Invalid counters: %s/%s/%s" % ( total, processed , skipped)
         
         self.__total     = total
