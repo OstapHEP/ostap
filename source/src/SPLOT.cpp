@@ -58,7 +58,8 @@ Ostap::Utils::SPLOT::SPLOT
                   INVALID_PDF , __FILE__ , __LINE__  ) ;
   /// get original fractions 
   bool recursive ;
-  m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive ) ) ;
+  bool last      ;
+  m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive , last ) ) ;
   Ostap::Assert ( ::size ( *m_cmps ) == ::size ( *m_coefs )  ,
 		  "Mismatch in components/coefficients size" ,
 		  "Ostap::Utils::COWs"                       , 
@@ -164,7 +165,8 @@ Ostap::Utils::SPLOT::SPLOT
 {
   /// get original fractios 
   bool recursive ;
-  m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive ) ) ;
+  bool last      ;
+  m_coefs = std::make_unique<RooArgList> ( Ostap::MoreRooFit::fractions ( pdf () , recursive , last ) ) ;
 }
 // ============================================================================
 // destructor 

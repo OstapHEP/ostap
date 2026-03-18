@@ -739,7 +739,7 @@ class APDF1 ( Components ) :
                 # ========================================================
                 ## convert ROOT errors to exceptions and ROOT warnings to warnings  
                 with rootException() , warnings.catch_warnings ( **kw ) :
-                    warnings.simplefilter ( 'always' , RuntimeWarning ) 
+                    warnings.simplefilter ( 'always' , RuntimeWarning )
                     return Ostap.MoreRooFit.fitTo ( model , data , *options )                    
                 # ========================================================                
             except Exception : # =========================================

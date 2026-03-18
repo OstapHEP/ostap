@@ -34,7 +34,7 @@ import ROOT, sys, os, random, time
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_parallel_toys' )
+    logger = getLogger ( 'ostap.test_parallel_toys' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

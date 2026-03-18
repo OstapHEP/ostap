@@ -409,7 +409,8 @@ def _raddpdf_fractions ( radd ) :
     >>> fractions , recursive = addpdf.orig_fracs() 
     """
     rec   = ctypes.c_bool ()
-    fracs = Ostap.MoreRooFit.fractions ( radd , rec )
+    last  = ctypes.c_bool () 
+    fracs = Ostap.MoreRooFit.fractions ( radd , rec , last )
     return fracs, rec.value
     
 # ==========================================================================--
@@ -420,29 +421,28 @@ _new_methods_ += [ ROOT.RooAddPdf  .orig_fracs ]
 # ==========================================================================--
 ## deserialize RooAddPdf object 
 def _raddpdf_factory_ ( klass , *content ) :
-    """ deserialize `RooAddPdf` object"""
-    
-    last = content[-1] 
-    if isinstance ( last , ROOT.RooArgSet  ) : 
-        result = root_store_factory ( klass , *content[:-1] ) 
-        result.fixCoefNormalization ( last ) 
-    else : 
-        result = root_store_factory ( klass , *content )
+    """ deserialize `RooAddPdf` object
+    """
+    ## 
+    result = root_store_factory ( klass , *content[:-1] )
+    last   = content[ -1]
+    ## 
+    if last : result.fixCoefNormalization ( last )
     return result 
 
 
 # ==========================================================================--
 ## reduce  RooAddPdf object 
 def _raddpdf_reduce_ ( pdf ) :
-    """ Reduce `RooAddPdf` object"""
+    """ Reduce `RooAddPdf` object
+    """
+    ##
     content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
-    pars    = pdf.coefList ()
-    if 1 <= len ( pars ) :
-        content   = content + pdf.orig_fracs () 
-    
-    norms = pdf.getCoefNormalization()
-    if norms : content = content + ( norms , ) 
-    
+    content = content + pdf.orig_fracs () 
+    ##
+    norms   = pdf.getCoefNormalization()
+    content = content + ( norms , ) 
+    ##
     return _raddpdf_factory_ , content
 
 ROOT.RooAddPdf.__reduce__ = _raddpdf_reduce_ 

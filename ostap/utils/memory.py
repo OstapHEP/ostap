@@ -146,7 +146,7 @@ class Memory(object):
     _logger  = logger     
     _printed = False
     
-    def __init__  ( self , name = '' , logger = None , format = 'Memory %%-30s %s=%%+.2fMB %s=%%.2fGB' % ( delta_symbol , sum_symbol ) ) :
+    def __init__  ( self , name = '' , logger = None , format = 'Memory %%-30s %s=%%+.2fMB %s=%%.2fGB' % ( delta_ram , sum_symbol ) ) :
         self.name   = name
         self.logger = logger if logger else self._logger 
         self.format = format
@@ -178,7 +178,7 @@ class Memory(object):
             # ================================================================
         except TypeError : # =================================================
             # ================================================================
-            message = 'Memory %-30s %s=%+.2fMB %s=%.2fGB'% ( self.name , delta_symbol , self.delta , sum_symbol , total  )
+            message = 'Memory %-30s %s=%+.2fMB %s=%.2fGB'% ( self.name , delta_ram , self.delta , sum_symbol , total  )
             # ================================================================
         self.logger.info ( ram_symbol + message )
 

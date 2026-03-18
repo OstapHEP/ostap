@@ -51,10 +51,12 @@ nominal_F       = float ( nominal_S ) / ( nominal_S + nominal_B )
 mass            = ROOT.RooRealVar  ( 'mass' , '', 0 , 1 )  
 gen_gauss       = Models.Gauss_pdf ( 'GG' , xvar = mass )
 fit_gauss       = Models.Gauss_pdf ( 'FG' , xvar = mass )
+
 gen_gauss.mean  = nominal_mean
-gen_gauss.sigma = nominal_sigma 
-model           = Models.Fit1D ( signal     = gen_gauss , background = 'flat'  )
-model_NE        = Models.Fit1D ( signal     = gen_gauss , background = 'flat'  , extended = False )
+gen_gauss.sigma = nominal_sigma
+
+model           = Models.Fit1D ( signal     = gen_gauss , background = 'flat'  ,                     suffix = 'EXTEND' )
+model_NE        = Models.Fit1D ( signal     = gen_gauss , background = 'flat'  , extended = False  , suffix = 'NONEXT' )
 
 model.S         = nominal_S 
 model.B         = nominal_B
@@ -307,7 +309,7 @@ def test_jackknife_NE1 ( ) :
                   
     pdf = model_NE
 
-
+    
     fit_pars  = { 'F'        : nominal_F     ,
                   'sigma_GG' : nominal_sigma ,
                   'mean_GG'  : nominal_mean  }

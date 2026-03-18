@@ -21,10 +21,12 @@ __all__     = (
     ##
     )
 # =============================================================================
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap , VE , valid_pointer, roo_silent 
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
-                                         list_types     , all_numerics   ) 
+                                         list_types     , all_numerics   )
+from   ostap.utils.basic        import typename 
 from   ostap.fitting.funbasic   import FUN1
 from   ostap.fitting.fithelpers import Shift, Scale  
 from   ostap.fitting.pdfbasic   import PDF1, APDF1, Sum1D
@@ -488,7 +490,7 @@ class RESOLUTION(PEAK) :
 #  @param combine_others        combine all other components into single COMPONENT?
 #  @param recursive             use recursive fractions for compound PDF
 #  @param recursive_signals     use recursive fractions for compound signal
-#  @param recursive_backgriunds use recursive fractions for compound background
+#  @param recursive_backgrounds use recursive fractions for compound background
 #  @param recursive_others      use recursive fractions for compound others
 #  @param S                     yields of signal components 
 #  @param B                     yields of background components 
@@ -523,32 +525,41 @@ class Fit1D (PDF1) :
     >>> gauss = Gauss_pdf( ... ) 
     >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background 
     """
-    def __init__ ( self                            , 
+    def __init__ ( self                            ,
+                   ##
                    signal                = None    ,    ## the main signal 
-                   background            = None    ,    ## the main background 
+                   background            = None    ,    ## the main background
+                   ##
                    othersignals          = ()      ,    ## additional signal         components
                    otherbackgrounds      = ()      ,    ## additional background     components
+                   ##
                    others                = ()      ,    ## additional non-classified components
                    signals               = ()      ,    ## alternative : all signals 
-                   backgrounds           = ()      ,    ## alternative : all backgrounds  
+                   backgrounds           = ()      ,    ## alternative : all backgrounds
+                   ##
                    suffix                = ''      ,    ## the suffix 
                    name                  = ''      ,    ## the name
                    xvar                  = None    ,    ## x-variable 
                    extended              = True    ,    ## extended fits ?
+                   ##
                    combine_signals       = False   ,    ## combine signal     components into single "SIGNAL"     ? 
                    combine_backgrounds   = False   ,    ## combine background components into single "BACKGROUND" ?            
-                   combine_others        = False   ,    ## combine other      components into single "COMPONENT"  ?             
-                   recursive             = True    ,    ## recursive fractions for NON-extended models?
-                   recursive_signals     = True    ,    ## recursive fractions for combined signal?
-                   recursive_backgrounds = True    ,    ## recursive fractions for combined background?
-                   recursive_others      = True    ,    ## recursive fractions for combined other components?
+                   combine_others        = False   ,    ## combine other      components into single "COMPONENT"  ?
+                   ##
+                   recursive             = True    ,    ## use recursive fractions for NON-extended models?
+                   recursive_signals     = True    ,    ## use recursive fractions for combined signal?
+                   recursive_backgrounds = True    ,    ## use recursive fractions for combined background?
+                   recursive_others      = True    ,    ## use recursive fractions for combined other components?
+                   ##
                    S                     = ()      ,    ## yields for 'signals'
                    B                     = ()      ,    ## yields for 'background'
                    C                     = ()      ,    ## yields for 'components'
-                   F                     = ()      ,    ## fractions for noin-extended fit 
-                   fS                    = ()      ,    ## fraction for combined signal
-                   fB                    = ()      ,    ## fraction for combined background
-                   fC                    = ()      ,    ## fraction for combined components
+                   F                     = ()      ,    ## fractions for non-extended fit
+                   ##
+                   fS                    = ()      ,    ## fractions for combined signal
+                   fB                    = ()      ,    ## fractions for combined background
+                   fC                    = ()      ,    ## fractions for combined components
+                   ## 
                    fix_norm              = False   ,    ## SetCoefNoralization.getCoefNormalization
                    **kwargs                        ) :  ## other arguments (e.g. drawing)
 
@@ -560,7 +571,9 @@ class Fit1D (PDF1) :
         self.__combine_backgrounds   = True if combine_backgrounds   else False
         self.__combine_others        = True if combine_others        else False
 
-        self.__recursive             = True if recursive             else False
+        ## extended implies not recursive! 
+        self.__recursive             = True if recursive and not self.extended else False
+        
         self.__recursive_signals     = True if recursive_signals     else False
         self.__recursive_backgrounds = True if recursive_backgrounds else False
         self.__recursive_others      = True if recursive_others      else False
@@ -585,14 +598,13 @@ class Fit1D (PDF1) :
             s , xvar = self.make_PDF1 ( signal , xvar , prefix = "Sig%d_" % i , suffix = self.suffix )
             pdfs.append ( s )
 
-
         ## sinal components 
         self.__signal_components  = tuple ( pdfs )
         
         # =====================================================================
         ## initialize the base class
         # =====================================================================
-        name = name if name else self.generate_name ( prefix = 'Fit%s' % self.signal_components[0].name , suffix = self.suffix ) 
+        if not name : name = self.generate_name ( prefix = 'Fit1D', suffix = self.suffix )
         PDF1.__init__ ( self , name , xvar , **kwargs ) 
                             
         # =====================================================================
@@ -645,35 +657,35 @@ class Fit1D (PDF1) :
         bkgs = list ( self.background_components ) 
         cmps = list ( self.other_components      ) 
         
-        if combine_signals     and 2 <= len ( self.signal_components     ) :            
-            combined = Sum1D ( self.signal_components ,
-                               xvar      = self.xvar     , 
-                               prefix    = 'fS'          ,
-                               suffix    = suffix        ,
-                               recursive = recursive     ,                                              
-                               fractions = fS            ) ## read  fS from arguments
+        if combine_signals     and 2 <= len ( self.signal_components  ) :            
+            combined = Sum1D ( self.signal_components                 ,
+                               xvar      = self.xvar                  , 
+                               prefix    = 'fS'                       ,
+                               suffix    = suffix                     , 
+                               recursive = self.recursive_signals     ,                                              
+                               fractions = fS                         ) ## read  fS from arguments
             
             self.__combined_signal = combined 
             sigs = [ combined ] 
             
         if combine_backgrounds and 2 <= len ( self.background_components ) :                
-            combined = Sum1D ( self.background_components ,
-                               xvar      = self.xvar      , 
-                               prefix    = 'fB'           ,
-                               suffix    = suffix         ,
-                               recursive = recursive      ,                                             
-                               fractions = fB             ) ## read fB from arguments 
+            combined = Sum1D ( self.background_components             ,
+                               xvar      = self.xvar                  , 
+                               prefix    = 'fB'                       ,
+                               suffix    = suffix                     ,
+                               recursive = self.recursive_backgrounds ,                                             
+                               fractions = fB                         ) ## read fB from arguments 
             
             self.__combined_background = combined
             bkgs = [ combined ]  
             
-        if combine_others      and 2 <= len ( self.other_components           ) :                        
-            combined = Sum1D ( self.other_components     ,
-                               xvar      = self.xvar     , 
-                               prefix    = 'fC'          ,
-                               suffix    = suffix        ,
-                               recursive = recursive     ,                                              
-                               fractions = fC            ) ## read fC from arguments 
+        if combine_others      and 2 <= len ( self.other_components   ) :                        
+            combined = Sum1D ( self.other_components                  ,
+                               xvar      = self.xvar                  , 
+                               prefix    = 'fC'                       ,
+                               suffix    = suffix                     ,
+                               recursive = self.recursive_others      ,                                              
+                               fractions = fC                         ) ## read fC from arguments 
             
             self.__combined_others = combined
             cmps = [ combined ] 
@@ -722,7 +734,7 @@ class Fit1D (PDF1) :
         else :
             
             assert 1 < len ( self.fit_components ) ,\
-                   'Fot1D: At least two components are required to build proper non-extended PDF!'
+                   'Fit1D: At least two components are required to build proper non-extended PDF!'
 
             nt       = len ( self.fit_components )
             nf       = nt - 1 
@@ -736,16 +748,30 @@ class Fit1D (PDF1) :
             assert len ( self.alist2 ) + 1 == len ( self.alist1 ) ,\
                    'Fit1D: inconsistent parameters for ROOT.RooAddPdf' 
 
-        ## now we finally can create PDF    
-        pdf_name  = self.new_roo_name ( 'fit1d' , suffix ) 
-        pdf_title = "Fit1D %s" % self.name
+        ## now we finally can create PDF
+        if self.suffix and self.suffix in self.name : pdf_name  = self.new_roo_name ( 'fit1d' ) 
+        else                                        : pdf_name  = self.new_roo_name ( 'fit1d' , suffix = self.suffix )
+        ## 
+        if self.suffix and self.suffix in self.name : pdf_title = "Fit1D %s"    % self.name
+        else                                        : pdf_title = "Fit1D %s/%s" %  ( self.name , self.suffix ) 
+        ## 
         pdf_args  = pdf_name , pdf_title , self.alist1 , self.alist2
 
         if not self.extended :
-            pdf_args = pdf_args + ( True if recursive else False , ) ## RECURSIVE ?
-            
-        self.pdf = ROOT.RooAddPdf     ( *pdf_args )
-        
+            recursive = self.recursive and len ( self.alist2 ) + 1 == len ( self.alist1 )
+
+            if recursive and ( 6, 39 ) <= root_info :
+                ## https://github.com/root-project/root/issues/21635
+                self.warning ( "TEMPORARY DISABLE RECURSIVE FRACTIOONS!" )
+                recursive = False
+                
+            pdf_args  = pdf_args + ( recursive , ) ## RECURSIVE ?
+
+        ## final pdf 
+        self.pdf = ROOT.RooAddPdf ( *pdf_args )
+
+        self.__recursive = Ostap.MoreRooFit.recursive ( self.pdf ) 
+                
         if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         ## sanity checks
@@ -883,7 +909,7 @@ class Fit1D (PDF1) :
         return () if not self.combined_others else self.combined_others.F
     @fC.setter
     def fC ( self , value ) :
-        assert  self.combined_others, "'fC'': no combined 'others'' is defined!"
+        assert  self.combined_others, "'fC': no combined 'others' is defined!"
         self.combined_others.F = value
 
     @property
@@ -984,7 +1010,7 @@ class Fit1D (PDF1) :
 
     @property 
     def F ( self ) :
-        """Get fit fractions for non-expended fits (empty for extended fits)
+        """ Get fit fractions for non-extended fits (empty for extended fits)
         For single fraction (2 fit components):
         >>> print pdf.F           ## read the single fraction 
         >>> pdf.F = 0.1           ## assign to it 

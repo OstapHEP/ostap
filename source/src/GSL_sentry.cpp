@@ -141,7 +141,6 @@ namespace
   Cache s_cache ;
   // ==========================================================================
 
-
   // ==========================================================================
   /// print errors  
   void GSL_print_error
@@ -208,7 +207,7 @@ Ostap::Utils::GslError::GslError
   //
   if ( m_previous && !m_force ) { gsl_set_error_handler ( m_previous ) ; }
   static_assert( std::is_same<handler,gsl_error_handler_t>::value  ,
-                 "``handler'' type is not ``gsl_error_handler_t''" ) ;
+                 "`handler' type is not `gsl_error_handler_t'" ) ;
 }
 // ============================================================================
 // destructor: stop using the error  handler 
@@ -219,13 +218,15 @@ Ostap::Utils::GslError::~GslError() { gsl_set_error_handler ( m_previous ) ; }
 // ============================================================================
 Ostap::Utils::GslError::GslError 
 ( const bool force ) 
-  : GslError ( &GSL_print_error , force  ) {}
+  : GslError ( &GSL_print_error , force  )
+{}
 // ============================================================================
 // constructor: make use of Gsl Error Handler: print error to stderr 
 // ============================================================================
 Ostap::Utils::GslIgnore::GslIgnore 
 ( const bool force ) 
-  : GslError( &GSL_ignore_error , force  ) {}
+  : GslError( &GSL_ignore_error , force  )
+{}
 // ============================================================================
 // constructor: make use of Gsl Error Handler: print error to stderr 
 // ============================================================================
@@ -255,7 +256,8 @@ Ostap::Utils::GslCount::table()
 // ============================================================================
 Ostap::Utils::GslException::GslException
 ( const bool force ) 
-  : GslError( &GSL_exception_error , force ) {}
+  : GslError( &GSL_exception_error , force )
+{}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

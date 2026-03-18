@@ -162,6 +162,7 @@ const Ostap::Utils::CanvasContext&
 Ostap::Utils::CanvasContext::enter ()
 {
   m_saved = get_canvas () ;
+  if ( m_saved  && m_saved -> IsModified() ) { m_saved->Update() ; } 
   return *this ;
 } 
 // ============================================================================
@@ -188,6 +189,7 @@ Ostap::Utils::CanvasContext::exit  ()
 	if ( obj && obj == m_saved )
 	{
 	  m_saved -> cd ()   ;
+	  if ( m_saved -> IsModified() ) { m_saved->Update() ; } 
 	  m_saved =  nullptr ;
 	  return *this       ;	               // RETURN 
 	}  // valid canvas is found in  the list 
@@ -198,7 +200,11 @@ Ostap::Utils::CanvasContext::exit  ()
   /// otherwise switch to the current canvas if valid 
   m_saved      = nullptr ;
   TCanvas* cnv = get_canvas () ;
-  if ( cnv ) { cnv -> cd () ; } 
+  if ( cnv )
+  {
+    cnv -> cd () ;
+    if ( cnv -> IsModified() ) { cnv->Update() ; }
+  } 
   return *this ;
 }
 // ============================================================================

@@ -4453,13 +4453,6 @@ namespace Ostap
       // ======================================================================
     }; //                            The end of clas Ostap::MoreRooFit::WrapPdf 
     // ========================================================================
-    /** get the original fractions from the <code>RooAddPdf</code>
-     *  @see RooAddPdf
-     */
-    RooArgList fractions
-    ( const RooAddPdf&  pdf       , 
-      bool&             recursive ) ;  
-    // ========================================================================
     /** assign RooAbsCollection
      *  @see RooAbsCollection
      *  @see RooAbsDataStore 
@@ -4505,21 +4498,28 @@ namespace Ostap
     // ========================================================================
 #endif
     // ========================================================================
-    // mor ehelper functions 
+    // more helper functions 
     // ========================================================================
     /** Helper method to check if recursive fractions were 
      *  used for creation of RooAddPdf object
-     *  @see RooAddPdf 
+     *  @see RooAddPdf:_recursive 
      */
     bool       recursive 
+    ( const RooAddPdf& pdf ) ;
+    // ========================================================================
+    /** Helper method to check if the last coefficieint supplied 
+     *  @see RooAddPdf:_haveLastCoef 
+     */
+    bool       haveLastCoef  
     ( const RooAddPdf& pdf ) ;
     // ========================================================================
     /** get the original fractions from the <code>RooAddPdf</code>
      *  @see RooAddPdf
      */
     RooArgList fractions
-    ( const RooAddPdf&  pdf       , 
-      bool&             recursive ) ;  
+    ( const RooAddPdf&  pdf          , 
+      bool&             recursive    ,
+      bool&             haveLastCoef ) ;  
     // ========================================================================
     /** get the original fractions from the <code>RooAddPdf</code>
      *  @see RooAddPdf

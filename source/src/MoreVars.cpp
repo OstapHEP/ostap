@@ -73,7 +73,7 @@ namespace
       ::copy_real ( _list , result ) ;
       return result ;
     }
-    // ======================================================================
+    // ======================================================================    
   } ;
   // ========================================================================
   /** get the original fractions form the <code>RooRecursiveFraction</code>
@@ -102,16 +102,22 @@ namespace
   public: 
     // ========================================================================
     /// were recursive fractions used for creation ?
-    bool recursive () const { return _recursive ; }
+    bool recursive     () const { return _recursive ; }
+    /// w
+    bool haveLastCoef  () const { return _haveLastCoef ; }
     /// get the original fractions 
-    RooArgList fractions ( bool& resursive )  const 
+    RooArgList fractions
+    ( bool& resursive    ,
+      bool& haveLastCoef )  const 
     {
-      resursive = _recursive ;
+      resursive    = _recursive    ;
+      haveLastCoef = _haveLastCoef ;
+      //
       if ( !_recursive || ::size( _coefList ) <= 1 ) { return _coefList ; }
       //
       RooArgList result {} ;
       //
-      // get the last coefficienct 
+      // get the last coefficient 
       //
       const int index_last  = ::size ( _coefList ) - 1 ;
       const RooAbsArg* last = _coefList.at ( index_last )  ;
@@ -131,7 +137,7 @@ namespace
                        "Ostap::MoreRooFit::fractions" ) ;
       //
       for  ( int i = index_last ; 1<= i ; --i ) 
-      { result.add ( *tmp.at ( i ) ) ; }
+	{ result.add ( *tmp.at ( i ) ) ; }
       //
       return result ;
     }
@@ -1021,7 +1027,6 @@ Ostap::MoreRooFit::Histo1D::clone ( const char* name ) const
 { return new Ostap::MoreRooFit::Histo1D ( *this , name ) ; }
 // =============================================================================
 
-
 // ============================================================================
 /*  Helper method to check if recursive fractions were 
  *  used for creation of RooAddPdf object
@@ -1034,16 +1039,28 @@ bool Ostap::MoreRooFit::recursive ( const RooAddPdf& pdf )
   return fake->recursive() ; 
 }
 // ============================================================================
+/** Helper method to check if the last coefficieint supplied 
+ *  @see RooAddPdf:_haveLastCoef 
+ */
+// ============================================================================
+bool Ostap::MoreRooFit::haveLastCoef  
+( const RooAddPdf& pdf )
+{
+  std::unique_ptr<::FakeAddPdf> fake { new ::FakeAddPdf ( pdf ) } ;
+  return fake->haveLastCoef () ; 
+}  
+// ============================================================================
 /*  get the original fractions from the <code>RooAddPdf</code>
  *  @see RooAddPdf
  */
 // ============================================================================
 RooArgList Ostap::MoreRooFit::fractions
-( const RooAddPdf& pdf       , 
-  bool&            recursive )
+( const RooAddPdf& pdf          , 
+  bool&            recursive    , 
+  bool&            haveLastCoef ) 
 {
   std::unique_ptr<::FakeAddPdf> fake { new ::FakeAddPdf ( pdf ) } ;
-  return fake->fractions ( recursive ) ; 
+  return fake->fractions ( recursive , haveLastCoef ) ; 
 }
 // ============================================================================
 /*  get the original fractions from the <code>RooAddPdf</code>
@@ -1053,8 +1070,9 @@ RooArgList Ostap::MoreRooFit::fractions
 RooArgList Ostap::MoreRooFit::fractions
 ( const RooAddPdf& pdf ) 
 {
-  bool recursive ;
-  return fractions ( pdf , recursive ) ;
+  bool recursive     ;
+  bool haveLastCoef  ;  
+  return fractions ( pdf , recursive , haveLastCoef ) ;
 }
 // ============================================================================
 /* get x-observable
@@ -1249,8 +1267,6 @@ Ostap::MoreRooFit::get_offset
   return fake->get_offset () ;  
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // constructor
