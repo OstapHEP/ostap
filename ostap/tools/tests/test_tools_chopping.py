@@ -159,7 +159,7 @@ trainer = Trainer (
     verbose          = True     ,
     make_plots       = True     ,   
     logging          = True     ,  ## produce  log-files 
-    parallel         = True     ,  ## parallel training
+    parallel         = False , ## True     ,  ## parallel training
     prefilter        = 'var1>-1.8'  ,
     ## 
     chop_signal      = True ,
