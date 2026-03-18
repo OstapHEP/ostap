@@ -20,7 +20,6 @@ namespace Ostap
   {
     // ========================================================================
     /** get the (current) pad
-     *  @see TROOT::GetSelectedPad 
      *  @see TVirtualPad::Pad 
      */
     TVirtualPad* get_pad    () ;
@@ -76,9 +75,45 @@ namespace Ostap
       /// =====================================================================
     private:
       // ======================================================================
-      bool         m_active      { false   } ;
-      bool         m_interactive { true    } ;
-      TVirtualPad* m_saved       { nullptr } ;
+      /// active context? (between enter and exit) 
+      bool         m_active      { false   } ; // active context? (between enter and exit)
+      /// interactive ?
+      bool         m_interactive { true    } ; // interactive
+      /// saved  pad 
+      TVirtualPad* m_saved       { nullptr } ; // saved  pad 
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class CanvasContext 
+     *  @see TVirtualPad::TContext 
+     */
+    class CanvasContext
+    {
+    public:
+      // ======================================================================
+      /// default constructor, catch the current canvas 
+      CanvasContext  () ;
+      /// destructor
+      ~CanvasContext () ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// get the saved canvas 
+      inline TCanvas* saved  () const { return m_saved  ; }
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// CONTEXT MANAGER: (re-catch the curent canvas)
+      const CanvasContext& enter  () ;
+      /// CONTEXT MANAGER: exit  
+      const CanvasContext& exit   () ; 
+      /// Is the context active (keep some vaild canvas)
+      inline bool          active () const { return m_saved ; } 
+      /// =====================================================================
+    private:
+      // ======================================================================
+      /// saved canvas 
+      TCanvas* m_saved       { nullptr } ; // saved canvas 
       // ======================================================================
     } ;
     // ========================================================================

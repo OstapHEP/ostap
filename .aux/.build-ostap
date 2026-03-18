@@ -224,8 +224,8 @@ then
     then
 	echo -e "${prefix1_error}"' [1/7] failure: Cannot clean OSTAP_INSTALL' ${sc} ${OSTAP_INSTALL}
 	## 
-	unset OSTAP_BUILD OSTAP_INSTALL		
-	return ${sc}
+	## unset OSTAP_BUILD OSTAP_INSTALL		
+	## return ${sc}
     fi
 fi
 

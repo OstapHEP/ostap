@@ -159,9 +159,13 @@ class KeepCanvas(Wait) :
         """
         
         Wait.__enter__ ( self )
-        ## 
-        self.__context = Ostap.Utils.PadContext()
+        ##
+        print ('KeepCanvas:ENTER/1') 
+        ## self.__context = Ostap.Utils.PadContext()
+        self.__context = Ostap.Utils.CanvasContext()
+        print ('KeepCanvas:ENTER/2') 
         self.__context.enter() 
+        print ('KeepCanvas:ENTER/3') 
         ## 
         return self
     
@@ -169,10 +173,16 @@ class KeepCanvas(Wait) :
     def __exit__  ( self , *_ ) :
         """ CONTEXT MANAGER: exit 
         """
+        print ('KeepCanvas:EXIT/1') 
         Wait.__exit__ ( self , *_ )
+        print ('KeepCanvas:EXIT/2') 
         if self.__context :
+            print ('KeepCanvas:EXIT/3')             
             self.__context.exit() 
+            print ('KeepCanvas:EXIT/4')             
             self.__context = None             
+            print ('KeepCanvas:EXIT/5')             
+        print ('KeepCanvas:EXIT/6')             
 
     @property
     def old_canvas ( self ) :

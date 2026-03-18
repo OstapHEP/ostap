@@ -5,7 +5,9 @@
 // ROOT 
 // ============================================================================
 #include "RVersion.h"
+#include "TList.h"
 #include "TVirtualPad.h"
+#include "TCanvas.h"
 #include "TROOT.h"
 // ============================================================================
 // Ostap
@@ -13,7 +15,6 @@
 #include "Ostap/Misc.h"
 // ============================================================================
 /** get the (current) pad
- *  @see TROOT::GetSelectedPad 
  *  @see TVirtualPad::Pad 
  */
 // ============================================================================
@@ -138,9 +139,68 @@ Ostap::Utils::PadContext::exit  ()
   //
   return *this ;
 }
+// ============================================================================
 
-
-
+// ============================================================================
+// default constructor
+// ============================================================================
+Ostap::Utils::CanvasContext::CanvasContext ()
+  : m_saved ( nullptr )
+{}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Utils::CanvasContext::~CanvasContext()
+{
+  if ( m_saved ) { exit () ; }
+  m_saved = nullptr ;
+}
+// ============================================================================
+// CONTEXT MANAGER: (re)catch the current canvas 
+// ============================================================================
+const Ostap::Utils::CanvasContext&
+Ostap::Utils::CanvasContext::enter ()
+{
+  m_saved = get_canvas () ;
+  return *this ;
+} 
+// ============================================================================
+// CONTEXT MANAGER: exit  
+// ============================================================================
+const Ostap::Utils::CanvasContext&
+Ostap::Utils::CanvasContext::exit  ()
+{
+  // nothing to do..
+  if ( !m_saved ) { return *this ; }
+  //
+  // check the saved canvas  is existig valid TCanvas and make at active
+  // otherwise switch to the current_canvas if valid 
+  //  
+  TROOT* groot = ROOT::GetROOT ()  ;
+  if ( groot )
+  {
+    /// get the list of all alived canvasee
+    TSeqCollection* all_canvases = groot->GetListOfCanvases() ;
+    if ( all_canvases )
+    {
+      for ( const TObject* obj : *all_canvases )
+      {
+	if ( obj && obj == m_saved )
+	{
+	  m_saved -> cd ()   ;
+	  m_saved =  nullptr ;
+	  return *this       ;	               // RETURN 
+	}  // valid canvas is found in  the list 
+      }	// list of all canvas 
+    } // valid collection of all canvases 
+  } // valid TROOT 
+  /// 
+  /// otherwise switch to the current canvas if valid 
+  m_saved      = nullptr ;
+  TCanvas* cnv = get_canvas () ;
+  if ( cnv ) { cnv -> cd () ; } 
+  return *this ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
