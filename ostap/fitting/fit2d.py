@@ -6,7 +6,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2011-07-25
 # =============================================================================
-"""Set of useful basic utilities to build various 2D-fit models"""
+""" Set of useful basic utilities to build various 2D-fit models"""
 # =============================================================================
 __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -20,12 +20,11 @@ __all__     = (
     ##
     )
 # =============================================================================
-from   ostap.core.core          import Ostap , valid_pointer, roo_silent 
-from   ostap.core.ostap_types   import integer_types, num_types, list_types, iterable_types   
-from   ostap.fitting.funbasic   import FUN2
-from   ostap.fitting.pdfbasic   import PDF2, APDF2, Generic2D_pdf, Constrained, Flat1D   
+from   ostap.core.meta_info     import root_info 
+from   ostap.core.core          import valid_pointer    
+from   ostap.fitting.pdfbasic   import PDF2, Generic2D_pdf, Flat1D   
 from   ostap.fitting.utils      import component_similar , component_clone 
-import ROOT, random
+import ROOT
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )
@@ -427,6 +426,11 @@ class Fit2D (PDF2) :
         pdfname  = self.new_roo_name ( 'fit2d' , suffix ) 
         pdftitle = "Fit2D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        
+        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
+            self.warning ( "RooAddPdf: set recursive to be False" )
+            pdfargs = pdfargs + ( False , )
+            
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
         if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
@@ -895,6 +899,11 @@ class Fit2DSym (PDF2) :
         pdfname  = self.new_roo_name ( 'fit2ds' , suffix ) 
         pdftitle = "Fit2Dsym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        
+        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
+            self.warning ( "RooAddPdf: set recursive to be False" )
+            pdfargs = pdfargs + ( False , )
+            
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
         if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 

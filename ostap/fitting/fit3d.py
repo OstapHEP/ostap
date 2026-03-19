@@ -21,12 +21,12 @@ __all__     = (
     ##
     )
 # =============================================================================
-from   ostap.core.core          import Ostap , valid_pointer, roo_silent 
-from   ostap.core.ostap_types   import integer_types
+from   ostap.core.meta_info     import root_info 
+from   ostap.core.core          import valid_pointer 
 from   ostap.fitting.utils      import component_similar , component_clone
 from   ostap.fitting.fit2d      import Model2D 
-from   ostap.fitting.pdfbasic   import PDF2,PDF3, APDF3,Generic3D_pdf, Flat1D 
-import ROOT, random
+from   ostap.fitting.pdfbasic   import PDF2, PDF3, Generic3D_pdf, Flat1D 
+import ROOT
 # =============================================================================
 from   ostap.logger.logger  import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit3d' )
@@ -603,6 +603,11 @@ class Fit3D (PDF3) :
         pdfname  = self.new_roo_name ( "fit3d" , suffix )
         pdftitle = "Fit3D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        
+        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
+            self.warning ( "RooAddPdf: set recursive to be False" )
+            pdfargs = pdfargs + ( False , )
+            
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
         if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
@@ -1333,6 +1338,11 @@ class Fit3DSym (PDF3) :
         pdfname  = self.new_roo_name ( "fit3ds" , suffix ) 
         pdftitle = "Fit3DSym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        
+        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
+            self.warning ( "RooAddPdf: set recursive to be False" )
+            pdfargs = pdfargs + ( False , )
+            
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
         if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
@@ -2167,6 +2177,11 @@ class Fit3DMix (PDF3) :
         pdfname  = self.new_roo_name ( "fit3dm" , suffix  ) 
         pdftitle = "Fit3DMix %s " % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        
+        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
+            self.warning ( "RooAddPdf: set recursive to be False" )
+            pdfargs = pdfargs + ( False , )
+            
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
         if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
