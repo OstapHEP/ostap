@@ -243,8 +243,8 @@ then
     then
 	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
 	## 
-	unset OSTAP_BUILD OSTAP_INSTALL		
-	return ${sc}
+	## unset OSTAP_BUILD OSTAP_INSTALL		
+	## return ${sc}
     fi
     
 elif [[ -f ${OSTAP_BUILD}/Makefile && "${make_command}" != "ninja" ]]
@@ -259,8 +259,8 @@ then
     then
 	echo -e "${prefix1_error}"' [2/7] failure: Cannot clean OSTAP_BUILD' ${sc} ${OSTAP_BUILD}
 	## 
-	unset OSTAP_BUILD OSTAP_INSTALL		
-	return ${sc}
+	## unset OSTAP_BUILD OSTAP_INSTALL		
+	## return ${sc}
     fi
     
 fi
@@ -277,8 +277,8 @@ if [[ ${sc} -ne 0 ]]
 then
     echo -e "${prefix1_error}"' [3/7] failure: Cannot remove OSTAP_BUILD ramnants&garbage' ${sc} ${OSTAP_BUILD}
     ## 
-    unset OSTAP_BUILD OSTAP_INSTALL		
-    return ${sc}
+    ## unset OSTAP_BUILD OSTAP_INSTALL		
+    ## return ${sc}
 fi
 
 # ==========================================================================

@@ -304,10 +304,10 @@ def _rd_setitem_ ( rdir , name , tobj ) :
     >>> rfile['MyDir/MyHisto'] = h2
     """
     ##
-    if   not rdir              :
-        raise IOError("TDirectory is invalid")
-    elif not rdir.IsWritable() :
-        raise IOError("TDirectory '%s' is not writable" % rdir.GetPath() ) 
+    if   not valid_pointer   ( rdir ) :
+        raise IOError ( "TDirectory is invalid")
+    elif not rdir.IsWritable () :
+        raise IOError ( "TDirectory '%s' is not writable" % rdir.GetPath() ) 
     ##
     with ROOTCWD() :
         ##

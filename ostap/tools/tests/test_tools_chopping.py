@@ -41,22 +41,25 @@ if not os.path.exists( data_file ) :
     nB = 20000
     nS = 10000
 
+    nB = 2000
+    nS = 1000
+    
     s_evt_per_run = 927
     b_evt_per_run = 511
     
     logger.info('Prepare input ROOT file with data %s' % data_file )
-    with ROOT.TFile( data_file ,'recreate') as test_file:
+    with ROOT.TFile ( data_file ,'recreate') as test_file:
         
         treeSignal = ROOT.TTree('S','signal     tree')
         treeBkg    = ROOT.TTree('B','background tree')
         treeSignal.SetDirectory ( test_file ) 
         treeBkg   .SetDirectory ( test_file ) 
         
-        var1 = array.array ( 'd', [0] )
-        var2 = array.array ( 'd', [0] )
-        var3 = array.array ( 'd', [0] )
-        vevt = array.array ( 'i', [0] )
-        vrun = array.array ( 'i', [0] )
+        var1 = array.array ( 'd', [ 0 ]  )
+        var2 = array.array ( 'd', [ 0 ] )
+        var3 = array.array ( 'd', [ 0 ] )
+        vevt = array.array ( 'i', [ 0 ] )
+        vrun = array.array ( 'i', [ 0 ] )
         
         treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
         treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
@@ -73,8 +76,7 @@ if not os.path.exists( data_file ) :
         ievt = 0
         irun = 1 
         ## fill background tuple: 
-        #for i in progress_bar ( range ( nB ) ) : 
-        for i in range ( nB ) : 
+        for i in progress_bar ( range ( nB ) ) : 
             
             x = random.uniform ( -2.0 , 2.0 )
             y = random.uniform ( -2.0 , 2.0 )
@@ -95,10 +97,10 @@ if not os.path.exists( data_file ) :
             treeBkg.Fill()
             
         ievt = 0
-        irun = 1 
+        irun = 1
+        
         ## fill signal tuple: 
-        #for i in progress_bar ( range ( nS ) ) : 
-        for i in range ( nS ) : 
+        for i in progress_bar ( range ( nS ) ) : 
             
             x = random.gauss  (  0.0 , 0.1 )
             y = random.gauss  (  0.0 , 0.2 )
@@ -127,7 +129,7 @@ if not os.path.exists( data_file ) :
 # ===========================================================================
 ##   number of    categories 
 N  = 7
-logger.info('Create and train TMVA')
+logger.info ( 'Create and train TMVA' )
 
 # ============================================================================
 ## Train TMVA
@@ -140,7 +142,7 @@ from ostap.tools.chopping import Trainer
 trainer = Trainer (
     N        = N                 , ## ATTENTION! 
     category = "137*evt+813*run" , ## ATTENTION!
-    ## other  arguments as for ``plain'' TMVA
+    ## other  arguments as for `plain' TMVA
     name    = 'TestChopping' ,   
     methods = [ # type               name   configuration
     ( ROOT.TMVA.Types.kMLP        , "MLP1"       , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=400:HiddenLayers=N+1:TestRate=5:!UseRegulator" ) ,
@@ -158,8 +160,9 @@ trainer = Trainer (
     ##
     verbose          = True     ,
     make_plots       = True     ,   
-    logging          = True     ,  ## produce  log-files 
-    parallel         = False , ## True     ,  ## parallel training
+    logging          = True     ,  ## produce  log-files
+    ## 
+    parallel         = True     ,  ## parallel training
     prefilter        = 'var1>-1.8'  ,
     ## 
     chop_signal      = True ,
@@ -176,12 +179,10 @@ trainer = Trainer (
     control_plots_background  = [
         ( ROOT.TH2F ( hID() , '' , 30 , -3, 3 , 30 , -3, 3 ) , 'var1,var2' )
     ] , 
-    ##     
     ##
     workdir        = CleanUp.tempdir ( prefix = 'ostap-chopping-workdir-' ) , ##  working directory 
     ## parallel_conf  = { 'ncpus' : 0 , 'ppservers' : 'auto' }
     )
-
 
 # train it!  
 with timing ( 'for TMVA/Chopping training' , logger ) :

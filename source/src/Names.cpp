@@ -122,7 +122,7 @@ bool Ostap::trivial ( const std::string& selection )
 std::string Ostap::strip ( const std::string& s )
 {
   //
-  // position of the first non-empty (spaxe)  symbol 
+  // position of the first non-empty (space)  symbol 
   const std::string::size_type s1 =
     std::find_if ( s.begin  () , s.end  ()      , s_GOOD_SYMBOL ) - s.begin  () ;
   // position on of the last no-empty (space) symbol
@@ -132,15 +132,29 @@ std::string Ostap::strip ( const std::string& s )
   return s.substr ( s1 , s.size() - s2 ) ;
 }
 // ===============================================================================
-// convert the name to somethig that can be used as ROOT-name
+/* Convert the name to something that can be used as good ROOT-name,
+ *  replacing of all problematic or empty-space symbol with "_"
+ *  @param name input expression
+ *  @return good name or empty string
+ */
 // ===============================================================================
-// std::string Ostap::rootify
-// ( const std::string& name )
-// {
-//  if ( name.empty() ) { return name ; }
-//  std::string _name { strip ( name ) } ;
-//  
-// }
+#include <iostream>
+std::string Ostap::rootify
+( const std::string& name )
+{
+  if ( name.empty     () ) { return "" ;}
+  std::string the_name { strip ( name ) } ;
+  if ( the_name.empty () ) { return "" ; }
+  //
+  const std::string::size_type N { the_name.size () } ;
+  for ( std::string::size_type i = 0 ; i < N ; ++ i )
+  {
+    auto c = the_name [ i ] ;
+    if ( std::string::npos != s_FORMULA.find ( c ) ) { the_name [ i ] = '_' ; }
+  }
+  //
+  return the_name ; 
+}
 // ===============================================================================
 // convert to lower case
 // ===============================================================================

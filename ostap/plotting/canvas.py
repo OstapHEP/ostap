@@ -156,8 +156,7 @@ class KeepCanvas(Wait) :
     ## CONTEXT MANAGER: enter 
     def __enter__ ( self ) :
         """ CONTEXT MANAGER: enter 
-        """
-        
+        """        
         Wait.__enter__ ( self )
         ##
         print ('KeepCanvas:ENTER/1') 
@@ -278,18 +277,25 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """
     name = name.strip ()
-    if not name : name = 'glCanvas'
-        
+    if title and not name : name = title.strip ()
+
+    ## valid name ? 
+    name   = name.replace ( ' ' , '_' ).replace ( '/' , '_' ).replace ( '__' , '_' )
+    
     cnv    = None 
     groot  = ROOT.ROOT.GetROOT()
-    if groot :
+
+    if groot and not name : 
+        cnvlst = groot.GetListOfCanvases()
+        name = 'glCanvas_%d' % len ( cnvlst )
+        
+    if groot and name :
         cnvlst = groot.GetListOfCanvases()
         if cnvlst : cnv = cnvlst.get  ( name , None   )
-
+        
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
         ## ATTENTION! 
-        ## ROOT.SetOwnership ( cnv  , False  )           ## ATTENTION 
-        set_pad   ( cnv          , **kwargs )
+        set_pad   ( cnv , **kwargs )
         return cnv 
 
     ## create new canvas
@@ -302,9 +308,11 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     title = title.strip ()
     
     ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
-    cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
+    groot = ROOT.ROOT.GetROOT()
+    if groot.IsBatch() : cnv = ROOT.TCanvas ( name , title , width , height )
+    else               : cnv = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
 
-    ROOT.SetOwnership   ( cnv , True )
+    ROOT.SetOwnership ( cnv , True )
     ## ROOT.SetOwnership ( cnv , False  )
     
     ## adjust newly created canvas
@@ -1305,9 +1313,14 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         name  = name .strip()
         title = title.strip()
         
+        if title and not name : name = title
+
+        if name : name   = Ostap.rootify ( name )
+        self.__name = name 
+            
         ## attention here:  SWAP! 
-        if name and not title and not self.existing_canvas ( name ) :
-            name , title = title , name 
+        ## if name and not title and not self.existing_canvas ( name ) :
+        ##    name , title = title , name 
             
         self.__name   = name
         self.__title  = title 
@@ -1325,7 +1338,6 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
             groot = ROOT.ROOT.GetROOT()
             if groot : self.__invisible = groot.IsBatch() 
             
-
         ##
         style_conf = {}
         pad_conf   = {}
@@ -1355,7 +1367,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         for c in cnvlst :
             if   not isinstance ( c , ROOT.TCanvas ) : continue  ## CONTINUE 
             elif c.GetName() == name                 : return c  ## RETURN
-        return False                                             ## RETURN 
+        return None                                              ## RETURN 
         
     # =================================================================
     ## Context manager: ENTER
@@ -1378,7 +1390,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         KeepCanvas.__enter__ ( self )
         UseStyle  .__enter__ ( self ) 
         Batch     .__enter__ ( self )
-
+        
         if not self.__name :
             self.__name = 'glOstap'
             while self.existing_canvas ( self.__name ) :

@@ -313,6 +313,11 @@ def _rad_contains_ ( self , aname ) :
 
 # =============================================================================
 ## merge/append two datasets into a single one
+# ATTENTION: two datasets must have *compatible* structure:
+# - both             weighted or non-weighted 
+# - both non-Poisson-weighted or non-weighted 
+# - ds2 must contain all vars from ds1
+# - only variables in ds1 are copied from ds2 
 # @code
 # dset1  = ...
 # dset2  = ...
@@ -320,7 +325,13 @@ def _rad_contains_ ( self , aname ) :
 # @endcode 
 def _rad_iadd_ ( ds1 , ds2 ) :
     """ Merge/append two datasets into a single one
-    - two datasets must have identical structure 
+    ATTENTION: two datasets must have compatible structure:
+    - both             weighted or non-weighted
+    - both non-Poisson-weighted or non-weighted 
+    - either weighted or non-weighted (simultaneously)
+    - either no-Poisson-weighted or non-weighted (simultaneously)
+    - ds2 must containt all vars from ds1
+    - only variables in ds1 are copied from ds2 
     >>> dset1  = ...
     >>> dset2  = ...
     >>> dset1 += dset2
@@ -334,17 +345,23 @@ def _rad_iadd_ ( ds1 , ds2 ) :
         elif w1        : return NotImplemented 
         elif w2        : return NotImplemented 
         ##        
-        npw1 = ds1.isNonPoissonWeighted()
-        npw2 = ds2.isNonPoissonWeighted()
+        npw1 = w1 and ds1.isNonPoissonWeighted ()
+        npw2 = w2 and ds2.isNonPoissonWeighted ()
         ##
         if   npw1 and npw2 : pass
         elif npw1          : return NotImplemented 
         elif npw2          : return NotImplemented 
-        ## 
+        ##
         vs1 = set ( v.name for v in ds1.get() )
         vs2 = set ( v.name for v in ds2.get() )
+        ##
+        ## variables  in ds1 but not in ds2
+        dv1 = vs1 - vs2 
+        ## variables  in ds2 but not in ds1
+        dv2 = vs2 - vs1        
         ## 
-        if vs1 != vs2  : return NotImplemented
+        if   dv1 : return NotImplemented 
+        elif dv2 : logger.info ( 'iadd: %d variables will not be appended: [%s]' % ( len ( dv2 ) ,  ', '.join ( v for v in dv2 ) ) ) 
         ## 
         ds1.append ( ds2 )
         return ds1 
@@ -636,7 +653,7 @@ def _rds_remvar_ ( dataset , variables ) :
     for v in varset :
         if not v.name in vars : newvars.add ( v )
     ## 
-    result = dataset.reduce (  ROOT.RooFit.SelectVars ( newvars ) )
+    result = dataset.reduce ( ROOT.RooFit.SelectVars ( newvars ) )
     ROOT.SetOwnership ( result , True )
     return result 
 

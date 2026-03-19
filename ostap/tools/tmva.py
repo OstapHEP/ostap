@@ -32,14 +32,15 @@ __all__     = (
     "Reader"          , ## the basic TMVA reader
     "addTMVAResponse" , ## add TMVA response to RooDataSet/TTree/TChain
     "tmvaGUI"         , ##
-    "plot_variables"  , ## helper function to plto variables 
+    "plot_variables"  , ## helper function to plots variables
+    "make_Plots"      , ## make standars TMVA plots 
     )
 # =============================================================================
 from   ostap.core.meta_info      import python_info, root_info  
 from   ostap.core.ostap_types    import ( num_types      , integer_types  ,
                                           dictlike_types , sized_types    , 
                                           string_types   , sequence_types ) 
-from   ostap.core.base           import rootWarning
+from   ostap.core.base           import rootWarning, valid_pointer 
 from   ostap.core.core           import Ostap, WSE, VE
 from   ostap.math.base           import strings 
 from   ostap.utils.cleanup       import CleanUp
@@ -630,7 +631,7 @@ class Trainer(object):
         
         self.__control_plots_signal     = control_plots_signal 
         self.__control_plots_background = control_plots_background 
-        
+
         ##
         ## minor adjustment
         ##        
@@ -1528,55 +1529,6 @@ class Trainer(object):
                         self.logger.error ( "Method '%s' does not support negative (background) weights" % m[1] )
                         
         # =====================================================================
-        ## Control plots for signal and background 
-        # =====================================================================
-        local_canvas = []
-        for i, item in enumerate ( self.control_plots_signal , start = 1 ) :
-            histo , what = item
-            how = self.signal_cuts * self.signal_weight if self.signal_weight else self.signal_cuts 
-            self.signal.project ( histo , what , cuts = how , use_frame = True )
-
-            if not histo.GetTitle() :
-                from ostap.trees.cuts import vars_and_cuts 
-                vars , _ , _ = vars_and_cuts ( what , how )
-                title = '%s Control plot SIGNAL_%d' %  ( self.name , i ) , 
-                title = title + vars
-                title = ';'.join ( title  )
-                histo.SetTitle ( title  )
-                
-            style = 'Z' if 2 == histo.dim() else ''            
-            with use_canvas ( '%s Control plot SIGNAL_%d' %  ( self.name , i ) ,
-                              invisible = not self.show_plots ,
-                              keep      =     self.show_plots ,
-                              style     = style               ) as cnvs :
-                if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
-                else                : histo.draw (          copy = True )
-                cnvs >> ( "%s/plots/CONTROL_PLOT_SIGNAL_%s" % ( self.dirname , i ) ) 
-                ## local_canvas.append ( cnvs )
-                
-        for i , item in enumerate ( self.control_plots_background , start = 1 ) :  
-            histo , what = item 
-            how = self.background_cuts * self.background_weight if self.background_weight else self.background_cuts 
-            self.background.project ( histo , what , cuts = how , use_frame = True )
-            if not histo.GetTitle() :
-                from ostap.trees.cuts import vars_and_cuts 
-                vars , _ , _ = vars_and_cuts ( what , how )
-                title = '%s Control plot BACKGROUND_%d' %  ( self.name , i ) , 
-                title = title + vars
-                title = ';'.join ( title ) 
-                histo.SetTitle ( title  )
-
-            style = 'Z' if 2 == histo.dim() else ''            
-            with use_canvas ( '%s Control plot BACKGROUND_%d' % ( self.name , i ),
-                              invisible = not self.show_plots ,
-                              keep      =     self.show_plots ,
-                              style     = style               ) as cnvb :
-                if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
-                else                : histo.draw (          copy = True ) 
-                cnvb >> ( "%s/plots/CONTROL_PLOT_BACKGROUND_%d" % ( self.dirname , i ) )
-                ## local_canvas.append ( cnvb )
-
-        # =====================================================================
         ## some statistic
         # =====================================================================
         
@@ -1698,6 +1650,11 @@ class Trainer(object):
             table = T.table ( rows , prefix = '# ' , title = title , alignment = "lccc" )
             self.logger.info ( '%s:\n%s' % ( title , table ) ) 
 
+        # =================================================================
+        ## Control plots for signal and background 
+        # =================================================================
+        self.makeControlPlots ()
+        
         # =====================================================================
         ## open the output ROOT file ...
         # =====================================================================
@@ -1706,8 +1663,11 @@ class Trainer(object):
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
 
             ## ATTENTION!!! check it later
-            ## outFile.cd() 
+            ## outFile.cd () 
+
+            print ( 'DIRECTORY IS WRITABLE?' , outFile.IsWritable() ) 
             
+            ## 
             Ostap.Tmva.disable_scatter_plots ()
             
             factory = ROOT.TMVA.Factory (                
@@ -1822,16 +1782,14 @@ class Trainer(object):
             ## prepare ROC curves & save them int the output file 
             # ==========================================================================
             if self.make_plots or self.verbose :
-
+                
                 multigraph = factory.GetROCCurveAsMultiGraph ( self.name , 0 )
                 if not multigraph : self.logger.erorr ( 'Invalid ROC-curves multi-graph!' ) 
-                else : 
-
+                else :                    
                     invisible = not self.show_plots 
                     with use_canvas ( '%s ROC curves' % self.name ,
                                       invisible = invisible       ,
-                                      keep      = self.show_plots ,
-                                     ) as cnvroc :
+                                      keep      = self.show_plots ) as cnvroc :
                         
                         multigraph.draw( 'AL' , copy = True )
                         ax = multigraph.GetXaxis ()
@@ -1853,29 +1811,56 @@ class Trainer(object):
                     del cnvroc                    
                     outFile [ '%s/ROC_CURVES' % self.name ] = multigraph
                     
-        # =====================================================================
-        ## Calculate AUCs for ROC curves
-        # =====================================================================
-        for m in self.methods :
-            mname = m [ 1 ]
-            auc = factory.GetROCIntegral ( self.name , mname )
-            self.__AUC [ mname ] = auc
+            # =====================================================================
+            ## Calculate AUCs for ROC curves
+            # =====================================================================
+            for m in self.methods :
+                mname = m [ 1 ]
+                auc = factory.GetROCIntegral ( self.name , mname )
+                self.__AUC [ mname ] = auc
+                
+         
+            del dataloader
+            del factory 
 
-        del dataloader
-        del factory 
-
-        outFile.SaveSelf()
-        
-        if  self.make_plots :
-            self.makePlots ()                
+            ## save control plots into output file 
+            for i, item in enumerate ( self.control_plots_signal , start = 1 ) :
+                histo , _ = item
+                outFile ['%s/CONTROL_PLOT_SIGNAL_%d' % ( self.name , i ) ] = histo
+                
+            ## save control plots into output file 
+            for i , item in enumerate ( self.control_plots_background , start = 1 ) :  
+                histo , _ = item
+                outFile ['%s/CONTROL_PLOT_BACKGROUND_%d' % ( self.name , i ) ] = histo 
             
-        import glob, os 
+        ## close outfile     
+        ## save/sync the output file 
+        ## outFile.SaveSelf()
+
+        if  self.make_plots :
+            from ostap.utils.root_utils import batch
+            groot     = ROOT.ROOT.GetROOT()
+            the_batch = groot.IsBatch () or not self.show_plots          
+            tag       = "Plots for VARIABLES"
+            with timing ( tag , logger = self.logger ) , batch ( the_batch ) :                 
+                plot_variables ( self.name                     ,
+                                 tmva_file = self.output_file  ,
+                                 invisible = the_batch         ,
+                                 prefix    = '%s/' % self.name )
+            ## standard plots
+            with batch ( the_batch ) :                 
+                make_Plots ( self.name                   , 
+                             self.output_file            ,
+                             methods     = self.methods  , 
+                             show_plots  = not the_batch ,
+                             tmva_style  = False         , 
+                             logger      = self.logger   )                
+            
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
         self.__class_files   = tuple ( [ f for f in glob.glob ( self.__pattern_C     ) ] ) 
         self.__plots         = tuple ( [ f for f in glob.glob ( self.__pattern_plots ) ] )
 
         # rename plots
-        import shutil 
         for p in self.__plots : 
             head, tail = os.path.split ( p )
             if not tail.startswith ( self.name ) : 
@@ -1884,7 +1869,7 @@ class Trainer(object):
                 shutil.move ( p , new_plot )
             
         self.__plots         = tuple ( sorted ( [ f for f in glob.glob ( self.__pattern_plots ) ] ) ) 
-            
+    
         tfile = make_tarfile ( output  = '.'.join ( [ self.name , 'tgz'] ) ,
                                files   = self.weights_files + self.class_files + self.plots + ( self.log_file , ) ,
                                verbose = self.verbose  ,
@@ -1893,11 +1878,12 @@ class Trainer(object):
         self.__weights_files = tuple ( [ os.path.abspath ( f ) for f in self.weights_files ] ) 
         self.__class_files   = tuple ( [ os.path.abspath ( f ) for f in self.class_files   ] ) 
         self.__plots         = tuple ( [ os.path.abspath ( f ) for f in self.__plots       ] ) 
-
+    
         # =====================================================================
         ## Check tar-file
         # =====================================================================
-        if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :            
+        if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) : # =======
+            # =================================================================
             if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
                 # =============================================================
                 try : # =======================================================
@@ -1909,16 +1895,17 @@ class Trainer(object):
                 except : # ====================================================
                     # =========================================================
                     pass 
-            self.__tar_file = os.path.abspath ( tfile ) 
+                self.__tar_file = os.path.abspath ( tfile ) 
 
-        self.__add_decision = True 
+        self.__add_decision = True
+    
         # =====================================================================
         ## Check the output ROOT file
         # =====================================================================
-        if os.path.exists ( self.output_file ) :
-
+        if os.path.exists ( self.output_file ) : # ============================
+            # =================================================================
             import ostap.trees.trees 
-            
+        
             if self.verbose                         and \
                os.path.exists     ( self.tar_file ) and \
                tarfile.is_tarfile ( self.tar_file ) :
@@ -1926,137 +1913,90 @@ class Trainer(object):
                 for ch in ( 'TrainTree' , 'TestTree' ) :
                     chain = ROOT.TChain ( '%s/%s' % ( self.name , ch ) )
                     chain.Add ( self.output_file )
-
+                    
                     title = chain.fullpath 
                     table = chain.table ( title = title , prefix = '# ' )
                     self.logger.info ( '%s:\n%s' % ( title , table ) )
-                    
-            if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
-                
-                import shutil
-                # =============================================================
-                try : # =======================================================
-                    # =========================================================
-                    shutil.move ( self.output_file , self.dirname )                    
-                    noof = os.path.join ( self.dirname , os.path.basename ( self.output_file ) )
-                    noof = os.path.abspath ( noof ) 
-                    if os.path.exists ( noof ) : self.__output_file = noof
-                    # =========================================================
-                except : # ====================================================
-                    # =========================================================
-                    pass
-            # ================================================================
-            try : # ==========================================================
-                # ============================================================
-                with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile :
-                    if self.verbose :
-                        table = outFile.ls_table ( prefix = '# ' )
-                        self.logger.info ( 'Output ROOT file:%s' % table )
+
+        # ================================================================
+        if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
+            # =============================================================
+            try : # =======================================================
+                # =========================================================
+                shutil.move ( self.output_file , self.dirname )                    
+                noof = os.path.join ( self.dirname , os.path.basename ( self.output_file ) )
+                noof = os.path.abspath ( noof ) 
+                if os.path.exists ( noof ) : self.__output_file = noof
+                # =========================================================
+            except : # ====================================================
+                # =========================================================
+                pass            
+        # ================================================================
+        try : # ==========================================================
+            # ============================================================
+            with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile :
+                if self.verbose :
+                    table = outFile.ls_table ( prefix = '# ' )
+                    self.logger.info ( 'Output ROOT file:%s' % table )
                 # ===========================================================
-            except : # ======================================================
-                # ===========================================================
-                pass
-                    
+        except : # ======================================================
+            # ===========================================================
+            pass
+        
         return self.tar_file 
 
     # =========================================================================
-    ## make selected standard TMVA plots 
-    def makePlots ( self , name = None , output = None , tmva_style = False ) :
-        """ Make selected standard TMVA plots"""
+    ## Make control plots for input signal/backgound samples 
+    def makeControlPlots ( self ) :
+        """ Make control plots for input signal/backgound samples 
+        """
         
-        ## self.logger.warning ( "makePlots: method is (temporarily?) disabled!" )
-        ## return 
-
-        name   = name   if name   else self.name
-        output = output if output else self.output_file
-        
-        if not output :
-            self.logger.warning ('No output file is specified!')
-            return 
-        if not os.path.exists ( output ) or not os.path.isfile ( output ) :
-            self.logger.error   ('No output file %s is found !' % output )
-            return
-        
-        # =====================================================================
-        try : # ===============================================================
-            # =================================================================
-            import ostap.io.root_file
-            with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
-                pass
-            # =================================================================
-        except IOError : # ====================================================
-            # =================================================================
-            self.logger.error ("Output file %s can't be opened!"   % output )
-            return
-
-        #
-        ## make the plots in TMVA  style
-        #
-
-        style = { 'tmva_style' : tmva_style } 
-        plots = [
-            ##
-            ## ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
-            ## ( show_variables     , ( name , output     ) , style ) ,  
-            ( show_correlations  , ( name , output     ) , style ) ,  
-            ##
-            ( show_mvas          , ( name , output , 0 ) , style ) ,  
-            ( show_mvas          , ( name , output , 1 ) , style ) ,  
-            ( show_mvas          , ( name , output , 2 ) , style ) ,  
-            ( show_mvas          , ( name , output , 3 ) , style ) ,  
-            ##
-            ( show_efficiencies  , ( name , output , 0 ) , style ) ,
-            ( show_efficiencies  , ( name , output , 1 ) , style ) ,
-            ( show_efficiencies  , ( name , output , 2 ) , style ) ,
-            ( show_efficiencies  , ( name , output , 3 ) , style ) ,
-            ##
-            ## ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
-            ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) , style  ) , 
-            ]
-
-        
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
-            plots.append ( ( ROOT.TMVA.likelihoodrefs         , ( name , output ) , {} ) )
-
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBDT ] :            
-            if hasattr ( ROOT.TMVA , 'BDT'                    ) :
-                self.logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDT'" )                 
-                ## plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) , {} ) )
-                
-            if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
-                self.logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDTControlPlots'" ) 
-                ## plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) , {} ) )
-
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
-            if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
-                plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) , {} ) )
-                
-        if [ m for m in self.methods if m[0] == ROOT.TMVA.Types.kMLP ] :
-            if hasattr ( ROOT.TMVA , 'network' ) :
-                plots.append ( ( show_network  , ( name , output ) , {} ) )            
-            if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
-                plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
-    
-        # ==============================================================================
-        tag  = "Plots for VARIABLES"
-        with timing ( tag , logger = self.logger ) : 
-            plot_variables ( name , output , invisible = not self.show_plots , prefix = '%s/' % name )
-               
-        from ostap.utils.root_utils import batch
-        from ostap.plotting.style   import useStyle
-        from ostap.core.core        import rootException, rootError
-        
-        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , useStyle () , rootError() , rootException () :
+        for i, item in enumerate ( self.control_plots_signal , start = 1 ) :
             
-            for fun, args, kwargs in plots :
-                tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
-                with timing ( tag , logger = self.logger ) :
-                    if kwargs : fun ( *args , **kwargs )
-                    else      : fun ( *args )
- 
-        #
-        ## local plots :
-        #
+            histo , what = item
+            how = self.signal_cuts * self.signal_weight if self.signal_weight else self.signal_cuts 
+            self.signal.project ( histo , what , cuts = how , use_frame = True )
+            
+            if not histo.GetTitle() :
+                from ostap.trees.cuts import vars_and_cuts 
+                vars , _ , _ = vars_and_cuts ( what , how )
+                title = '%s Control plot SIGNAL_%d: %s' %  ( self.name , i , ' vs '.join ( v for v in vars ) ) 
+                histo.SetTitle   ( title  )
+
+            style = 'Z' if 2 == histo.dim() else ''            
+            with use_canvas ( '%s Control plot SIGNAL_%d' %  ( self.name , i ) ,
+                              invisible = not self.show_plots ,
+                              keep      =     self.show_plots ,
+                              style     = style               ) as cnvs :
+                
+                if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
+                else                : histo.draw (          copy = True )
+                cnvs >> ( "%s/plots/CONTROL_PLOT_SIGNAL_%s" % ( self.dirname , i ) ) 
+                ## local_canvas.append ( cnvs )
+                
+        for i , item in enumerate ( self.control_plots_background , start = 1 ) :  
+            histo , what = item 
+            how = self.background_cuts * self.background_weight if self.background_weight else self.background_cuts 
+            self.background.project ( histo , what , cuts = how , use_frame = True )
+            if not histo.GetTitle() :
+                from ostap.trees.cuts import vars_and_cuts 
+                vars , _ , _ = vars_and_cuts ( what , how )
+                title = '%s Control plot BACKGROUND_%d: %s' %  ( self.name , i , ' vs '.join ( v for v in vars ) ) 
+                histo.SetTitle ( title  )
+                
+            style = 'Z' if 2 == histo.dim() else ''            
+            with use_canvas ( '%s Control plot BACKGROUND_%d' % ( self.name , i ),
+                              invisible = not self.show_plots ,
+                              keep      =     self.show_plots ,
+                              style     = style               ) as cnvb :
+                
+                if 2 == histo.dim() : histo.draw ( 'colz' , copy = True )
+                else                : histo.draw (          copy = True ) 
+                cnvb >> ( "%s/plots/CONTROL_PLOT_BACKGROUND_%d" % ( self.dirname , i ) )
+                ## local_canvas.append ( cnvb )
+                        
+    # =========================================================================
+                    
 # ========================================================================================
 ## Simple wrapper for `ROOT.TMVA.variables` macro
 def show_variables ( name , output , tmva_style = False ) :
@@ -2093,7 +2033,7 @@ def show_network ( name , output , tmva_style = False ) :
     """
     return ROOT.TMVA.network ( name , output , True ) ## , tmva_style )
 
-# =========================================================================================
+# ============================================================================
 ## Simple wrapper for `ROOT.TMVA.annconvergencetest` macro
 def show_annconvergencetest ( name , output , tmva_style = False ) :
     """ Simple wrapper for `ROOT.TMVA.annconvergencetest` macro
@@ -2103,12 +2043,13 @@ def show_annconvergencetest ( name , output , tmva_style = False ) :
 
 # =============================================================================
 ## make selected standard TMVA plots 
-def make_Plots ( name , output , show_plots = True ) :
+def make_Plots ( name                ,
+                 output              , * , 
+                 show_plots = True   ,
+                 tmva_style = False  ,
+                 methods    = []     , 
+                 logger     = logger ) :
     """ Make selected standard TMVA plots"""
-
-    ## if (6,29) <= root_info :
-    ##    logger.warning ("function is disabled")
-    ##    return 
     
     if not output :
         logger.warning ('No output file is specified!')
@@ -2117,104 +2058,80 @@ def make_Plots ( name , output , show_plots = True ) :
         logger.error   ('No output file %s is found !' % output )
         return
 
-    try :
-        import ostap.io.root_file
-        with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
-            pass   
-    except IOError :
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o : pass
+        # =====================================================================
+    except ( OSError , IOError ) : # ==========================================
+        # =====================================================================
         logger.error ("Output file %s can't be opened!"   % output )
         return
+
+    output = os.path.abspath ( output )    
+    style  = { 'tmva_style' : tmva_style } 
+    plots  = [
+        ##
+        ## ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
+        ( show_variables     , ( name , output     ) , style ) ,  
+        ( show_correlations  , ( name , output     ) , style ) ,  
+        ##
+        ( show_mvas          , ( name , output , 0 ) , style ) ,  
+        ( show_mvas          , ( name , output , 1 ) , style ) ,  
+        ( show_mvas          , ( name , output , 2 ) , style ) ,  
+        ( show_mvas          , ( name , output , 3 ) , style ) ,  
+        ##
+        ( show_efficiencies  , ( name , output , 0 ) , style ) ,
+        ( show_efficiencies  , ( name , output , 1 ) , style ) ,
+        ( show_efficiencies  , ( name , output , 2 ) , style ) ,
+        ( show_efficiencies  , ( name , output , 3 ) , style ) ,
+        ##
+        ## ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
+        ## ( ROOT.TMVA.mvaeffs        ,  ( name , output     ) , style  ) , 
+    ]
+    
+    if [ m for m in methods if m[0] == ROOT.TMVA.Types.kLikelihood ] :
+        plots.append ( ( ROOT.TMVA.likelihoodrefs         , ( name , output ) , {} ) )
         
-    output = os.path.abspath ( output )
+    if [ m for m in methods if m[0] == ROOT.TMVA.Types.kBDT ] :
         
-    ## make the plots in TMVA  style
-    #
-    logger.info ('make_Plots: Making the standard TMVA plots') 
+        if hasattr ( ROOT.TMVA , 'BDT'                    ) :
+            logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDT'" )                 
+            ## plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) , {} ) )
+            
+        if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
+            logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDTControlPlots'" ) 
+            ## plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) , {} ) )
+            
+    if [ m for m in methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
+        if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
+            plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) , {} ) )
+            
+    if [ m for m in methods if m[0] == ROOT.TMVA.Types.kMLP ] :
+        if hasattr ( ROOT.TMVA , 'network' ) :
+            plots.append ( ( show_network  , ( name , output ) , {} ) )            
+        if hasattr ( ROOT.TMVA , 'annconvergencetest'    ) :
+            plots.append ( ( show_annconvergencetest , ( name , output ) , style ) )
+
     from ostap.utils.root_utils import batch
-    from ostap.utils.utils      import cmd_exists
+    from ostap.plotting.style   import useStyle
+    from ostap.core.core        import rootException, rootError
 
-    plots = [
-        ##
-        ( ROOT.TMVA.variables      ,  ( name , output     ) ) ,
-        ( ROOT.TMVA.correlations   ,  ( name , output     ) ) ,
-        ##
-        ( ROOT.TMVA.mvas           ,  ( name , output , 0 ) ) ,
-        ( ROOT.TMVA.mvas           ,  ( name , output , 1 ) ) ,
-        ( ROOT.TMVA.mvas           ,  ( name , output , 2 ) ) ,
-        ( ROOT.TMVA.mvas           ,  ( name , output , 3 ) ) ,
-        ##
-        ( ROOT.TMVA.efficiencies   ,  ( name , output , 0 ) ) ,
-        ( ROOT.TMVA.efficiencies   ,  ( name , output , 1 ) ) ,
-        ( ROOT.TMVA.efficiencies   ,  ( name , output , 2 ) ) ,
-        ( ROOT.TMVA.efficiencies   ,  ( name , output , 3 ) ) ,
-        ##
-        ( ROOT.TMVA.paracoor       ,  ( name , output     ) ) ,
-        ## 
-        ## ( ROOT.TMVA.likelihoodrefs ,  ( name , output     ) ) ,
-        ]
-    
-    ##    plots.append   ( ( ROOT.TMVA.mvaeffs            , ( name , output ) ) )
-    logger.warning ( 'make_Plots: Skip    macro ROOT.TMVA.%s%s' % ( 'mvaeffs'  , str ( ( name , output ) ) ) ) 
-            
-        
-    if hasattr ( ROOT.TMVA , 'network'                ) :
-        plots.append ( ( ROOT.TMVA.network            , ( name , output ) ) ) 
-    if hasattr ( ROOT.TMVA , 'nannconvergencetest'    ) :
-        plots.append ( ( ROOT.TMVA.annconvergencetest , ( name , output ) ) )
-
-    if hasattr ( ROOT.TMVA , 'BDT'                    ) :
-        plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) ) )
-        
-    if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
-        plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) ) )
-        
-    if hasattr ( ROOT.TMVA , 'BoostControlPlots'      ) :
-        plots.append ( ( ROOT.TMVA.BoostControlPlots  , ( name , output ) ) ) 
-        
-    workdir = CleanUp.tempdir ( prefix = 'ostap-tmva-%s-plots' % name  )
-    from   ostap.utils.utils import keepCWD
-    import glob 
-    with keepCWD ( workdir ) :
-
-        os.makedirs ( '%s/plots' % name , exist_ok=True )
-        
-        logger.info ( "Use temporary working directory:'%s'" % os.getcwd() )
-        
-        for fun, args  in plots :
-            
-            with batch ( ROOT.ROOT.GetROOT().IsBatch () or not show_plots ) , rootWarning ()  :            
-                logger.info ( 'make_Plots: Execute macro ROOT.TMVA.%s%s' % ( fun.__name__ , str ( args ) ) )
-                fun ( *args )
-
-        plots = tuple ( [ f for f in glob.glob ( pattern_PLOTS % name ) ] )
-        
-        import shutil 
-        for p in plots : 
-            head, tail = os.path.split ( p ) 
-            new_tail = '%s_%s' % ( self.name , tail )
-            new_plot = os.path.join ( head , new_tail )
-            shutil.move ( p , new_plot )
-            
-        plots = tuple ( [ f for f in glob.glob ( pattern_PLOTS % name ) ] )
-                    
-        if plots :
-            
-            ## tarfile with plots 
-            tfile = make_tarfile ( output  = '.'.join ( [ '%s_plots' % name , 'tgz' ] ) ,
-                                   files   = plots        ,
-                                   tmp     = True         ) 
-            logger.info ( "Tarfile with plots: '%s'" % tfile )
-            return tfile 
-                
-        return '' 
-    
+    use_batch = ROOT.ROOT.GetROOT().IsBatch() or not show_plots 
+    with batch ( use_batch ) , useStyle () , rootError() , rootException () :        
+        for fun, args, kwargs in plots :
+            tag  = "Execute macro %s%s" % ( fun.__name__ , str ( args ) ) 
+            with timing ( tag , logger = logger ) :
+                if kwargs : fun ( *args , **kwargs )
+                else      : fun ( *args )
+                            
 # =============================================================================
 ## Decode the varibales
 #  - 'varname'
 #  - 'nlabel := long_expression'
 #  - 'var    : expression4signal ? expression_for_backgroud'
 def decode_vars ( variables ) :
-    """ Decode the varibales
+    """ Decode the variables
     - 'varname'
     - 'nlabel := long_expression'
     - 'var    : expression4signal ? expression_for_backgroud'        

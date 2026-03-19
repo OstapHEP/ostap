@@ -72,6 +72,12 @@ namespace  Ostap
   std::string tolower ( const std::string& name ) ;
   /// convert to upper case 
   std::string toupper ( const std::string& name ) ;
+  /** Convert the name to something that can be used as good ROOT-name,
+   *  replacing of all problematic or empty-space symbol with "_"
+   *  @param name input expression
+   *  @return good name or empty string
+   */
+  std::string rootify ( const std::string& name ) ;
   // ==========================================================================
   /** @fn class_name
    *  Get the de-mangled class name
