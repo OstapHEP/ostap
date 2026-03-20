@@ -1454,8 +1454,8 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
 #  with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
 #  ... 
 #  @endcode
-def use_canvas ( name      = ''            ,
-                 title     = ''            ,
+def use_canvas ( title     = ''            ,
+                 name      = ''            ,
                  width     = canvas_width  ,   ## canvas width
                  height    = canvas_height ,   ## canvas height
                  wait      = 0             ,   ## pause before exit

@@ -20,7 +20,7 @@ import ostap.logger.table       as     T
 import ostap.math.kinematic
 import ostap.math.dalitz
 import ostap.histos.histos 
-import ROOT, random, time, math  
+import ROOT, math  
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -62,7 +62,7 @@ d7 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0.2 , 0.2 )
 
 plots = d0 , d1 , d2 , d3 , d4 , d5 , d6 , d7 
 
-graphs = set() 
+graphs = []
 # =============================================================================
 def test_dalitz1 () : 
 
@@ -277,9 +277,9 @@ def test_dalitz5 () :
         with use_canvas( 'test_dalitz5 Dalitz(x2,x1)'          , wait = 2 ) : h2.colz ()
         with use_canvas( 'test_dalitz5 Dalitz(x2,x1) weighted' , wait = 2 ) : h3.colz ()
         
-    graphs.add ( h1 )
-    graphs.add ( h2 )
-    graphs.add ( h3 )
+    graphs.append ( h1 )
+    graphs.append ( h2 )
+    graphs.append ( h3 )
 
 
 # =============================================================================
@@ -323,10 +323,10 @@ def test_dalitz6 () :
         with use_canvas( 'test_dalitz6 Dalitz(s2,s1)'          , wait = 1 ) : h3.colz ()
         with use_canvas( 'test_dalitz6 Dalitz(s2,s1) weighted' , wait = 1 ) : h4.colz ()
         
-    graphs.add ( h1 )
-    graphs.add ( h2 )
-    graphs.add ( h3 )
-    graphs.add ( h4 )
+    graphs.append ( h1 )
+    graphs.append ( h2 )
+    graphs.append ( h3 )
+    graphs.append ( h4 )
 
 
 
@@ -368,9 +368,9 @@ def test_dalitz7 () :
         with use_canvas( 'test_dalitz7 Dalitz(z2,z1)'          , wait = 1 ) : h2.colz ()
         with use_canvas( 'test_dalitz7 Dalitz(z2,z1) weighted' , wait = 1 ) : h3.colz ()
         
-    graphs.add ( h1 )
-    graphs.add ( h2 )
-    graphs.add ( h3 )
+    graphs.append ( h1 )
+    graphs.append ( h2 )
+    graphs.append ( h3 )
 
 # =============================================================================
 def test_dalitz8 () :
@@ -413,11 +413,10 @@ def test_dalitz8 () :
         with use_canvas( 'test_dalitz8 Dalitz(s2,s1)'          , wait = 1 ) : h3.colz ()
         with use_canvas( 'test_dalitz8 Dalitz(s2,s1) weighted' , wait = 1 ) : h4.colz ()
         
-    graphs.add ( h1 )
-    graphs.add ( h2 )
-    graphs.add ( h3 )
-    graphs.add ( h4 )
-
+    graphs.append ( h1 )
+    graphs.append ( h2 )
+    graphs.append ( h3 )
+    graphs.append ( h4 )
 
 # =============================================================================
 def test_dalitz9 () :
@@ -503,9 +502,9 @@ def test_dalitz9 () :
             for h1,h2 in histos[1:] : 
                 h2.draw ( 'box same' )
                 
-    graphs.add ( histos )
-    graphs.add ( g1     )
-    graphs.add ( g2     )
+    graphs.append ( histos )
+    graphs.append ( g1     )
+    graphs.append ( g2     )
 
     
 # =============================================================================
@@ -591,9 +590,9 @@ def test_dalitz10 () :
             for h1,h2 in histos[1:] : 
                 h2.draw ( 'box same' )
                 
-    graphs.add ( histos )
-    graphs.add ( g1     )
-    graphs.add ( g2     )
+    graphs.append ( histos )
+    graphs.append ( g1     )
+    graphs.append ( g2     )
 
 # =============================================================================
 if '__main__' == __name__ :
