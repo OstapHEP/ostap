@@ -2500,7 +2500,6 @@ class APDF1 ( Components ) :
         
     # ==========================================================================
     ## make 2D-contours
-    # ==========================================================================
     def contours ( self              ,
                    var1              ,
                    var2              ,
@@ -2692,7 +2691,89 @@ class APDF1 ( Components ) :
     def cmp_alist ( self )  :
         """ List/tuple of structural components from `self.alist1`"""
         return tuple ( Generic1D_pdf ( p , xvar = self.xvar ) for p in self.alist1 )
+
+    # =========================================================================
+    ## create RooAddPdf
+    #  @see RooAddPdf 
+    def make_add_pdf ( self       ,
+                       pdf_list   ,
+                       num_list   , *     , 
+                       recursive  = True  ,
+                       fix_norm   = False , 
+                       pdf_name   = ''    ,
+                       pdf_title  = ''    ) :
+        """ Create `ROOT.RooAddPdf` from components
+        """
+        if num_list is None : pdf_list = self.alist1
         
+        
+        
+        if not isinstance ( pdf_list , ROOT.RooArgList ) : 
+            assert isinstance ( pdf_list , sequence_types ) , \
+                "Invalid type of `pdf_ilst':%s" % typename ( pdf_list )
+            assert all ( isinstance ( pdf , ROOT.RooAbsArg ) for pdf in pdf_list ) , \
+                "Invalid content of `pdf_list'"
+            
+            lst1 = ROOT.RooArgList ()
+            for pdf in pdf_list : lst1.add ( pdf ) 
+            pdf_list = lst1
+
+        len1 = len ( pdf_list )
+        assert 2 <= len1 , "At least two PDFs are needed to create RooAddPdf  %d" % len1 
+        
+        if not isinstance ( num_list , ROOT.RooArgList ) : 
+            assert isinstance ( num_list , sequence_types ) , \
+                "Invalid type of `num_list':%s" % typename ( pdf_list )
+            assert all ( isinstance ( pdf , ROOT.RooAbsArg ) for pdf in pdf_list ) , \
+                "Invalid content of `num_list'"
+            
+            lst2 = ROOT.RooArgList ()
+            for pdf in num_list : lst2.add ( pdf ) 
+            num_list = lst2
+
+        len2 = len ( num_list )
+
+        extended = len1 == len2
+        
+        assert extended or len1 == len2 + 1 , \
+            "Inconsistent sizes of PDF/num-list  %d/%d" % ( len1 , len2 ) 
+            
+        assert all ( isinstance ( pdf , ROOT.RooAbsPdf ) for pdf in pdf_list ) , \
+            "Invalid content of `pdf_list'"
+
+        assert all ( isinstance ( c , ROOT.RooAbsReal ) for c in num_list ) , \
+            "Invalid content of `num_list'"
+        
+        ## keep them 
+        self.aux_keep.append ( pdf_list )
+        self.aux_keep.append ( num_list )
+
+        pdf_name  = pdf_name .strip()
+        pdf_title = pdf_title.strip()
+        
+        if not pdf_name  : pdf_name  = self.roo_name ( prefix = 'add' , name = self.name )
+        if not pdf_title : pdf_title = "Sum: %s " % ( ' + '.join ( [ pdf.name for pdf in pdf_list] ) ) 
+
+        pdf_args = pdf_name , pdf_title , pdf_list , num_list
+        
+        if not extended : 
+            if ( 6 , 39 ) <= root_info and recursive :
+                recursive = False 
+                self.warning ( "(TEMPORARY): set `recursive' to be %s" % recursive ) 
+            pdf_args = pdf_args + ( recursive , )
+
+        result = ROOT.RooAddPdf ( *pdf_args )
+        
+        ## keep result 
+        self.aux_keep.append ( result )
+
+        ## attention!
+        if fix_norm : result.SetCoefNormalization ( self.vars )
+
+        ## 
+        return result 
+                    
+
 # =============================================================================
 ## @class PDF1
 #  The main helper base class for implementation of various 1D PDF-wrappers 
@@ -5596,7 +5677,6 @@ class Generic3D_pdf(PDF3) :
             for p in self.pdf.pdfList    ()    : self.alist1.add ( p )
             for f in self.pdf.orig_fracs ()[0] : self.alist2.add ( f )
             
-
         ## add it to the list of signal components ?
         self.__add_to_signals = True if add_to_signals else False
         
@@ -6696,25 +6776,24 @@ class Sum1D (PDF1,Fractions) :
         name    = name if name else self.new_name ( patname ) 
         
         ## ininialize the base class
-        PDF1.__init__ ( self , name , xvar ) 
-        Fractions.__init__ ( self , pdf_list       ,
-                             prefix    = prefix    ,
-                             suffix    = suffix    ,
-                             recursive = recursive ,
-                             fractions = fractions ) 
+        PDF1     .__init__ ( self      , name = name , xvar = xvar ) 
+        Fractions.__init__ ( self      , pdf_list    ,
+                             prefix    = prefix      ,
+                             suffix    = suffix      ,
+                             recursive = recursive   ,
+                             fractions = fractions   ) 
 
         for p in self.pdfs      : self.alist1.add ( p.pdf )
         for f in self.frac_list : self.alist2.add ( f     )
         
-        ## finally build PDF
-        self.pdf = ROOT.RooAddPdf ( self.new_roo_name ( patname , suffix ) , 
-                                    patname        ,
-                                    self.alist1    ,
-                                    self.alist2    ,
-                                    self.recursive )
-        
-        ## attention!
-        if fix_norm : self.pdf.SetCoefNormalization ( self.vars )
+        ## finally build the PDF
+        rname    = self.roo_name ( prefix = 'sum1d' , name = self.name )
+        self.pdf = self.make_add_pdf ( pdf_list  = self.alist1    ,
+                                       num_list  = self.alist2    ,
+                                       recursive = self.recursive ,
+                                       fix_norm  = fix_norm       , 
+                                       pdf_name  = rname          ,
+                                       pdf_title = patname        )
             
         self.config = {
             'pdfs'      : self.pdfs      ,
@@ -6803,15 +6882,14 @@ class Sum2D (PDF2,Fractions) :
         for f in self.frac_list : self.alist2.add ( f     )
         
         ## finally build PDF
-        self.pdf = ROOT.RooAddPdf ( self.new_roo_name ( patname , suffix ) , 
-                                    patname        ,
-                                    self.alist1    ,
-                                    self.alist2    ,
-                                    self.recursive )
+        rname    = self.roo_name ( prefix = 'sum1d' , name = self.name )
+        self.pdf = self.make_add_pdf ( pdf_list  = self.alist1    ,
+                                       num_list  = self.alist2    ,
+                                       recursive = self.recursive ,
+                                       fix_norm  = fix_norm       , 
+                                       pdf_name  = rname          ,
+                                       pdf_title = patname        )
 
-        ## attention!
-        if fix_norm : self.pdf.SetCoefNormalization ( self.vars )
-        
         self.config = {
             'pdfs'      : self.pdfs      ,
             'xvar'      : self.xvar      ,
@@ -6899,16 +6977,15 @@ class Sum3D (PDF3,Fractions) :
 
         for p in self.pdfs      : self.alist1.add ( p.pdf )
         for f in self.frac_list : self.alist2.add ( f     )
-        
-        ## finally build PDF
-        self.pdf = ROOT.RooAddPdf ( self.new_roo_name ( patname , suffix ) , 
-                                    patname        ,
-                                    self.alist1    ,
-                                    self.alist2    ,
-                                    self.recursive )
 
-        ## attention!
-        if fix_norm : self.pdf.SetCoefNormalization ( self.vars )
+        ## finally build the PDF
+        rname    = self.roo_name     ( prefix    = 'sum1d' , name = self.name )
+        self.pdf = self.make_add_pdf ( pdf_list  = self.alist1    ,
+                                       num_list  = self.alist2    ,
+                                       recursive = self.recursive ,
+                                       fix_norm  = fix_norm       , 
+                                       pdf_name  = rname          ,
+                                       pdf_title = patname        )
 
         self.config = {
             'pdfs'      : self.pdfs      ,

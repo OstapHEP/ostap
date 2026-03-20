@@ -423,17 +423,15 @@ class Fit2D (PDF2) :
         #
         ## build the final PDF 
         # 
-        pdfname  = self.new_roo_name ( 'fit2d' , suffix ) 
-        pdftitle = "Fit2D %s" % self.name
-        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
-        
-        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
-            self.warning ( "RooAddPdf: set recursive to be False" )
-            pdfargs = pdfargs + ( False , )
-            
-        self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+        pdf_name  = self.new_roo_name ( 'fit2d' , suffix ) 
+        pdf_title = "Fit2D %s" % self.name
 
-        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        ## make final PDF 
+        self.pdf = self.make_add_pdf ( pdf_list  = self.alist1 ,
+                                       num_list  = self.alist2 ,
+                                       fix_norm  = fix_norm    , 
+                                       pdf_name  = pdf_name    ,
+                                       pdf_title = pdf_title   )
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
@@ -896,17 +894,15 @@ class Fit2DSym (PDF2) :
         #
         ## build the final PDF 
         #
-        pdfname  = self.new_roo_name ( 'fit2ds' , suffix ) 
-        pdftitle = "Fit2Dsym %s" % self.name
-        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
-        
-        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
-            self.warning ( "RooAddPdf: set recursive to be False" )
-            pdfargs = pdfargs + ( False , )
-            
-        self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+        pdf_name  = self.new_roo_name ( 'fit2ds' , suffix ) 
+        pdf_title = "Fit2Dsym %s" % self.name
 
-        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        ## create RooAddPdf 
+        self.pdf  = self.make_add_pdf ( pdf_list  = self.alist1 , 
+                                        num_list  = self.alist2 ,
+                                        fix_norm  = fix_norm    , 
+                                        pdf_name  = pdf_name    , 
+                                        pdf_title = pdf_title   ) 
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )

@@ -38,7 +38,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-##  helper utilities to imlement resolution models.
+##  helper utilities to implement resolution models.
 # =============================================================================
 class _CHECKMEAN(object) : check = True
 def checkMean() :
@@ -754,25 +754,17 @@ class Fit1D (PDF1) :
         ## 
         if self.suffix and self.suffix in self.name : pdf_title = "Fit1D %s"    % self.name
         else                                        : pdf_title = "Fit1D %s/%s" %  ( self.name , self.suffix ) 
-        ## 
-        pdf_args  = pdf_name , pdf_title , self.alist1 , self.alist2
+        ##
 
-        if not self.extended :
-            recursive = self.recursive and len ( self.alist2 ) + 1 == len ( self.alist1 )
-
-            if recursive and ( 6, 39 ) <= root_info :
-                ## https://github.com/root-project/root/issues/21635
-                self.warning ( "TEMPORARY DISABLE RECURSIVE FRACTIOONS!" )
-                recursive = False
-                
-            pdf_args  = pdf_args + ( recursive , ) ## RECURSIVE ?
-
-        ## final pdf 
-        self.pdf = ROOT.RooAddPdf ( *pdf_args )
-
+        ## create RooAddPdf 
+        self.pdf = self.make_add_pdf ( pdf_list  = self.alist1    ,
+                                       num_list  = self.alist2    ,
+                                       recursive = self.recursive ,
+                                       fix_norm  = fix_norm       , 
+                                       pdf_name  = pdf_name       ,
+                                       pdf_title = pdf_title      )
+        
         self.__recursive = Ostap.MoreRooFit.recursive ( self.pdf ) 
-                
-        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
 
         ## sanity checks
 

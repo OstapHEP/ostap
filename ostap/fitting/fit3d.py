@@ -600,17 +600,15 @@ class Fit3D (PDF3) :
         #
         ## build the final PDF 
         #
-        pdfname  = self.new_roo_name ( "fit3d" , suffix )
-        pdftitle = "Fit3D %s" % self.name
-        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        pdf_name  = self.new_roo_name ( "fit3d" , suffix )
+        pdf_title = "Fit3D %s" % self.name
         
-        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
-            self.warning ( "RooAddPdf: set recursive to be False" )
-            pdfargs = pdfargs + ( False , )
-            
-        self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-
-        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        ## create RooAddPdf 
+        self.pdf  = self.make_add_pdf ( pdf_list  = self.alist1 ,
+                                        num_list  = self.alist2 ,
+                                        fix_norm  = fix_norm    , 
+                                        pdf_name  = pdf_name    ,
+                                        pdf_title = pdf_title   ) 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -1335,17 +1333,15 @@ class Fit3DSym (PDF3) :
         #
         ## build the final PDF 
         #
-        pdfname  = self.new_roo_name ( "fit3ds" , suffix ) 
-        pdftitle = "Fit3DSym %s" % self.name
-        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
-        
-        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
-            self.warning ( "RooAddPdf: set recursive to be False" )
-            pdfargs = pdfargs + ( False , )
-            
-        self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+        pdf_name  = self.new_roo_name ( "fit3ds" , suffix ) 
+        pdf_title = "Fit3DSym %s" % self.name
 
-        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        ## create RooAddPdf 
+        self.pdf  = self.make_add_pdf ( pdf_list  = self.alist1 ,
+                                        num_list  = self.alist2 ,
+                                        fix_norm  = fix_norm    , 
+                                        pdf_name  = pdf_name    ,
+                                        pdf_title = pdf_title   ) 
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -2174,17 +2170,15 @@ class Fit3DMix (PDF3) :
         #
         ## build the final PDF 
         # 
-        pdfname  = self.new_roo_name ( "fit3dm" , suffix  ) 
-        pdftitle = "Fit3DMix %s " % self.name
-        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        pdf_name  = self.new_roo_name ( "fit3dm" , suffix  ) 
+        pdf_title = "Fit3DMix %s " % self.name
         
-        if ( 6 , 39 ) <= root_info and len ( self.alist1 ) == len ( self.alist2 ) + 1 :
-            self.warning ( "RooAddPdf: set recursive to be False" )
-            pdfargs = pdfargs + ( False , )
-            
-        self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-
-        if fix_norm : self.pdf.fixCoefNormalization ( self.vars ) ## VB: added 10/10/2024 to suppress warnings 
+        ## create RooAddPdf 
+        self.pdf  = self.make_add_pdf ( pdf_list  = self.alist1 ,
+                                        num_list  = self.alist2 ,
+                                        fix_norm  = fix_norm    , 
+                                        pdf_name  = pdf_name    ,
+                                        pdf_title = pdf_title   )
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
