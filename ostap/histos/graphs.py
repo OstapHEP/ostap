@@ -36,7 +36,7 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-from   ostap.core.core                import cpp, VE, grID
+from   ostap.core.core                import VE
 from   ostap.utils.basic              import typename 
 from   ostap.math.base                import isint, pos_infinity, neg_infinity 
 from   ostap.core.ostap_types         import ( num_types   , integer_types ,
@@ -48,7 +48,7 @@ from   ostap.utils.valerrors          import ( AsymErrors         ,
                                                ValWithErrors      ,
                                                ValWithMultiErrors )
 
-import ROOT, ctypes, array 
+import ROOT, ctypes
 # =============================================================================
 # logging 
 # =============================================================================
@@ -3314,6 +3314,7 @@ def _rplot_add_ ( plot1 , plot2 ) :
     if len ( plot1 ) !=  len ( plot2 ) : return NotImplemented
 
     result = ROOT.RooPlot ( plot1.GetXaxis().GetXmin() , plot1.GetXaxis().GetXmax() )
+    
     result.SetMinimum ( plot1.GetMinimum () + plot2.GetMinimum () )
     result.SetMaximum ( plot1.GetMaximum () + plot2.GetMaximum () ) 
 
@@ -3324,11 +3325,10 @@ def _rplot_add_ ( plot1 , plot2 ) :
             if not isint ( y ) : return False            
         return True
         
-    iii = 0 
-    for item1,item2 in zip ( plot1.items() , plot2.items() ) : 
+    for item1 , item2 in zip ( plot1.items () , plot2.items () ) : 
 
         obj1 , options1 , invisible1 = item1
-        obj2 , options2 , invisible2 = item2
+        obj2 , _        , _          = item2
 
         if isinstance ( obj1 , ROOT.RooHist ) and isinstance ( obj2 , ROOT.RooHist ) :
             
@@ -3337,21 +3337,21 @@ def _rplot_add_ ( plot1 , plot2 ) :
             ints1  = all_ints ( obj1 )
             ints2  = all_ints ( obj2 )
 
-            errors = ROOT.RooAbsData.Poisson if ( ints1 and ints1 ) else ROOT.RooAbsData.SumW2
+            errors = ROOT.RooAbsData.Poisson if ( ints1 and ints2 ) else ROOT.RooAbsData.SumW2
             
             plot   = ROOT.RooHist ( obj1 , obj2 , 1.0 , 1.0 , errors , 1.0 )
 
-            result.addPlotable ( plot , options1 , invisible1 )  
+            ## result.addPlotable ( plot , options1 , invisible1 )  
+            result.add_copy ( plot , options1 , invisible1 )  
             
         elif isinstance ( obj1 , ROOT.RooCurve ) and isinstance ( obj2 , ROOT.RooCurve ) :
 
             plot = ROOT.RooCurve ( obj2 )
 
             plot += obj1 
-            ## for i, X, Y in plot.items() :
-            ##    plot[i] = X , Y + obj1 ( X ) 
-
-            result.addPlotable ( plot , options1 , invisible1 )
+            
+            ##  result.addPlotable ( plot , options1 , invisible1 )
+            result.add_copy ( plot , options1 , invisible1 )
             
         else :
             
