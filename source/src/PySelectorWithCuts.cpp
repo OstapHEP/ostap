@@ -173,10 +173,10 @@ void Ostap::SelectorWithCuts::SlaveBegin ( TTree* tree )
 bool Ostap::SelectorWithCuts::good_entry  ( Long64_t entry ) 
 {
   if ( Ostap::Selector::GetEntry ( entry ) < 0 ) 
-    {
-      Ostap::Selector::Abort ( "" , TSelector::kAbortFile ) ;
-      return false ; 
-    }
+  {
+    Ostap::Selector::Abort ( "" , TSelector::kAbortFile ) ;
+    return false ; 
+  }
   //
   if ( !m_cuts.empty() && m_formula && m_formula->GetNdim() && !m_formula ->evaluate() )
     { return false ; }
@@ -190,16 +190,17 @@ Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry )
 { 
   //
   if ( !good_entry ( entry ) ) 
-    {
-      increment_event () ;
-      return false       ;   // RETURN 
-    }
+  {
+    increment_event () ;
+    return false       ;   // RETURN 
+  }
   //
   // increment the event counter for good events 
   ++m_good  ;
   //
   // total event counter 
   increment_event () ;
+  //
   return process_entry () ;
   // ==========================================================================
 }
@@ -208,7 +209,7 @@ Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry )
 // ============================================================================
 void Ostap::SelectorWithCuts::SlaveTerminate () 
 { return Ostap::Selector::SlaveTerminate() ; }
-// ============================================================================
+// ===========================================================================
 // terminate
 // ============================================================================
 void Ostap::SelectorWithCuts::Terminate      ()
@@ -247,8 +248,6 @@ void Ostap::SelectorWithCuts::set_cuts  ( const std::string& cuts )
   m_formula.reset() ;
   m_cuts = strip ( cuts ) ;
 }
-
-
 // ============================================================================
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,36,0)
 // ============================================================================

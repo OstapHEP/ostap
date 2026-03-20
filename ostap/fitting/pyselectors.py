@@ -181,7 +181,6 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         if   isinstance ( tree , Chain ) : tree = tree.chain 
         elif tree is None : tree = ROOT.nullptr
         
-        print  ( 'SEL-WITH-CUTS' , progress , progress or not silence )
         self.__silence  = True if silence else False 
         self.__progress = progress or not self.__silence 
         self.__logger   = logger
@@ -197,8 +196,6 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         if self.cuts () and not self.silence :
             self.logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
             
-        print ( 'SELECTOR WITH CUTS' , self.progress , self.progress_enabled () )
-    
     @property
     def silence ( self ) :
         """'silence'  : silent processing?"""
@@ -745,7 +742,6 @@ class SelectorWithVars(SelectorWithCuts) :
         #
         ## instantiate the base class
         # 
-        print  ( 'SEL-WITH-VARS' , progress , progress or not silence )
         SelectorWithCuts.__init__ ( self ,
                                     selection = selection ,
                                     silence   = silence   ,
@@ -854,8 +850,6 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__notifier = None
         self.__stat     = SelStat() 
         self.__last     = -1
-        
-        print ( 'SELECTOR WITH VARS:', self.progress , self.progress_enabled() )
         
     @property 
     def name ( self ) :
@@ -1875,7 +1869,6 @@ def fill_dataset1 ( tree                 ,
     >>> tree = ...
     >>> ds = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
     """
-    print ( 'FILL_DATASET-1', progress )
     selector = SelectorWithVars ( variables ,
                                   selection = selection ,
                                   cuts      = cuts      , 
@@ -1908,7 +1901,6 @@ def fill_dataset ( tree      ,
     - see `ROOT.TTree.fill_dataset1`
     - see `ROOT.TTree.fill_dataset2`
     """
-    print ( 'FILL DATASET', kwargs )
     if isinstance ( variables , SelectorWithVars ) :
         selector = variables 
         return fill_dataset2 ( tree , selector , **kwargs )

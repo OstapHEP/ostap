@@ -37,17 +37,15 @@ ClassImp(Ostap::Selector) ;
 // ============================================================================
 // constructor 
 // ============================================================================
-#include <iostream> 
 Ostap::Selector::Selector
 ( TTree*                            tree     , 
   const Ostap::Utils::ProgressConf& progress )
-  : TSelector ()
+  : TSelector  ()
   , m_event    { 0        }
   , m_tree     ( tree     )
   , m_progress ( progress )
 {
   set_tree ( tree ) ;
-  std::cerr << "PROGRESS ENABLED:" << m_progress.enabled() << std::endl ; 
 }
 // ============================================================================
 // constructor 
@@ -80,7 +78,7 @@ void   Ostap::Selector::Init
 ( TTree*   tree       )
 {
   set_tree ( tree ) ;
-  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; }
+  if ( tree ) { m_progress.reset ( tree->GetEntries () ) ; }
   TSelector::Init ( m_tree ) ;
 }
 // ============================================================================
@@ -90,7 +88,7 @@ void   Ostap::Selector::Begin
 ( TTree*   tree       )
 {
   set_tree ( tree ) ;
-  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; } 
+  if ( tree ) { m_progress.reset ( tree->GetEntries () ) ; } 
   TSelector::Begin ( m_tree ) ;
 }
 // ============================================================================
@@ -100,7 +98,7 @@ void   Ostap::Selector::SlaveBegin
 ( TTree*   tree       ) 
 {
   set_tree ( tree ) ;
-  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; } 
+  if ( tree ) { m_progress.reset ( tree->GetEntries () ) ; } 
   TSelector::SlaveBegin ( m_tree ) ;
 } 
 // ============================================================================
@@ -111,13 +109,11 @@ Bool_t Ostap::Selector::Process ( Long64_t entry )
   // increment number of processed events  and advance the progress bar 
   increment_event() ;
   // 
-  std::cerr << "PROCESS::" << m_progress.enabled() << std::endl ; 
-
   if ( Ostap::Selector::GetEntry ( entry ) <= 0 ) 
-    {
-      Abort ( "" , TSelector::kAbortFile ) ;
-      return false ; 
-    }
+  {
+    Abort ( "" , TSelector::kAbortFile ) ;
+    return false ; 
+  }
   //
   return process_entry () ;
 }
@@ -155,7 +151,7 @@ Int_t Ostap::Selector::Version()const
 void Ostap::Selector::set_tree  ( TTree* tree )
 {
   m_tree = tree ;
-  if ( tree && m_progress ) { m_progress.reset ( tree->GetEntries () ) ; }
+  if ( m_tree ) { m_progress.reset ( tree->GetEntries () ) ; }
 }
 // ============================================================================
 /// reset the progress bar (and use new  max-count) 
@@ -164,8 +160,7 @@ void Ostap::Selector::reset
 ( const unsigned long long maxevents )
 {
   m_event = 0 ;
-  if ( m_tree && m_progress )
-    { m_progress.reset ( maxevents ? maxevents : m_tree -> GetEntries () ) ; } 
+  if ( m_tree ) { m_progress.reset ( maxevents ? maxevents : m_tree -> GetEntries () ) ; } 
 }
 // ============================================================================
 // process an entry 

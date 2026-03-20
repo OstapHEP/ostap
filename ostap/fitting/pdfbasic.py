@@ -2766,10 +2766,10 @@ class APDF1 ( Components ) :
         
         ## keep result 
         self.aux_keep.append ( result )
-
+        
         ## attention!
-        if fix_norm : result.SetCoefNormalization ( self.vars )
-
+        if   fix_norm and isinstance ( fix_norm , ROOT.RooArgSet ) : result.fixCoefNormalization ( fix_norm  )
+        elif fix_norm                                              : result.fixCoefNormalization ( self.vars )
         ## 
         return result 
                     

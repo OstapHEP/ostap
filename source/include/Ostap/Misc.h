@@ -40,50 +40,6 @@ namespace Ostap
      */
     TVirtualPad* pad_update_async ( TVirtualPad* pad = nullptr ) ;
     // ========================================================================
-    /** @class PadContext 
-     *  @see TVirtualPad::TContext 
-     */
-    class PadContext
-    {
-    public:
-      // ======================================================================
-      /// default constructor
-      PadContext ( ) ;
-      /// constructor with flag 
-      PadContext ( const bool interactive ) ;
-      /// full constructor 
-      PadContext
-      ( TVirtualPad* pad                 ,
-	const bool   interactive = false ,
-	const bool   not_null    = false );
-      /// destructor
-      ~PadContext () ;
-      // =====================================================================
-    public:
-      // =====================================================================
-      /// get the saved pad 
-      inline TVirtualPad* saved  () const { return m_saved  ; }
-      /// Is the context active ?
-      inline bool         active () const { return m_active ; } 
-      // =====================================================================
-    public:
-      // =====================================================================
-      /// CONTEXT MANAGER: (fake) enter
-      const PadContext& enter () ;
-      /// CONTEXT MANAGER: exit  
-      const PadContext& exit  () ; 
-      /// =====================================================================
-    private:
-      // ======================================================================
-      /// active context? (between enter and exit) 
-      bool         m_active      { false   } ; // active context? (between enter and exit)
-      /// interactive ?
-      bool         m_interactive { true    } ; // interactive
-      /// saved  pad 
-      TVirtualPad* m_saved       { nullptr } ; // saved  pad 
-      // ======================================================================
-    } ;
-    // ========================================================================
     /** @class CanvasContext 
      *  @see TVirtualPad::TContext 
      */
@@ -104,11 +60,11 @@ namespace Ostap
     public:
       // =====================================================================
       /// CONTEXT MANAGER: (re-catch the curent canvas)
-      const CanvasContext& enter  () ;
+      bool        enter  () ;
       /// CONTEXT MANAGER: exit  
-      const CanvasContext& exit   () ; 
+      bool        exit   () ; 
       /// Is the context active (keep some vaild canvas)
-      inline bool          active () const { return m_saved ; } 
+      inline bool active () const { return m_saved ; } 
       /// =====================================================================
     private:
       // ======================================================================

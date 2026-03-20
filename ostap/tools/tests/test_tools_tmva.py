@@ -225,8 +225,6 @@ def test_tmva () :
     # ===============================================================================
     ## (2) Add TMVA decision during TTree -> RooDataSet transformation (can be slow)
     # ===============================================================================
-    
-
     logger.info ( '(2) Add TMVA decision during TTree -> RooDataSet transformation (CAN BE SLOW)')
     variables = [ 'var1' , 'var2' , 'var3' ]
     
@@ -251,12 +249,11 @@ def test_tmva () :
         
     logger.info ( 'Created signal     dataset\n%s' %  ds_S1.table ( prefix = '# ' ) )
     logger.info ( 'Created background dataset\n%s' %  ds_B1.table ( prefix = '# ' ) )
-    
-    
+        
     # ===============================================================================
     ## (3) Add TMVA decision directly into existing RooDataSet (fast)  
     # ===============================================================================
-    logger.info ( '(3) Add TMVA decision directly into existing RooDataSet (fast)' ) 
+    logger.info ( '(3) Add TMVA decision directly into existing RooDataSet (FAST)' ) 
     with timing ( "Add TMVA response to signal RooDataSet" , logger =logger ) : 
         addTMVAResponse ( ds_S1  ,
                           ## inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
@@ -280,7 +277,7 @@ def test_tmva () :
     # ===============================================================================
     ## (4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (slow)
     # ===============================================================================
-    logger.info ( '(4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (can be slow)')
+    logger.info ( '(4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (CAN BE SLOW)')
     with timing ( "TMVA response via explicit loop over signal TTree" , logger =logger ) :
         tSignal   = ROOT.TChain ( 'S' ) ;  tSignal.Add ( data_file )
         counters  = {}
@@ -306,7 +303,7 @@ def test_tmva () :
     # ===============================================================================
     ## (5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (slow)
     # ===============================================================================
-    logger.info ( '(5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (can be slow)')
+    logger.info ( '(5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (CAN BE SLOW)')
     with timing ( "TMVA response via explicit loop over signal     RooDataSet" , logger =logger ) :
         counters  = {}
         methods   = reader.methods[:] 

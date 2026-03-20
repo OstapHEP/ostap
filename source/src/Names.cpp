@@ -138,7 +138,6 @@ std::string Ostap::strip ( const std::string& s )
  *  @return good name or empty string
  */
 // ===============================================================================
-#include <iostream>
 std::string Ostap::rootify
 ( const std::string& name )
 {

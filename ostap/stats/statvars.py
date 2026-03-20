@@ -565,7 +565,7 @@ def data_statistic ( data               ,
                      cuts       = ''    , *args , 
                      cut_range  = ''    ,
                      progress   = False , 
-                     as_weight  = True  , ## interpret cuts as weiggt 
+                     as_weight  = True  , ## interpret cuts as weight
                      use_frame  = False ,
                      parallel   = False ) :     
     """ Get statistics from data 
@@ -579,7 +579,6 @@ def data_statistic ( data               ,
     ## decode expressions & cuts
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
     assert var_lst , "Invalid expressions!"
-
 
     ## Use frames? 
     if use_frame and good_for_frame ( data , *args ) : 
@@ -601,7 +600,7 @@ def data_statistic ( data               ,
                                     use_frame   = use_frame  )
 
     
-    ##  diplay progress ? 
+    ## display progress bar? 
     progress = progress_conf ( progress )
 
     ## create the driver 

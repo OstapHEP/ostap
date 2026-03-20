@@ -46,11 +46,6 @@ namespace Ostap
         const bool               use_timer = true   ,
         const bool               atty      = true   ) ;
       // ======================================================================
-      /** onstructor
-       *  @param show show default progress bar? 
-       */
-      // ProgressConf ( const bool show = true ) ;         
-      // ======================================================================
     public: // ghetters 
       // ======================================================================
       /// "done" symbol 
@@ -85,7 +80,7 @@ namespace Ostap
       /// use timer ? 
       void setUseTimer ( const bool           value ) ;
       // ======================================================================
-    private:
+    private :
       // ======================================================================
       /// the width (zero width disables the progress bar!)
       unsigned int       m_width      { 80   } ;

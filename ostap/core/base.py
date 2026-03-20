@@ -30,6 +30,7 @@ __all__     = (
     'rootID'              , ## global unique ID for ROOT/RooFit objects 
     'usedRootID'          , ## used by ROOT/RooFit ?  
     'valid_pointer'       , ## valid C++ pointer?
+    ##
 )
 # =============================================================================
 import ostap.fixes.fixes 
@@ -348,6 +349,19 @@ def valid_pointer ( obj ) :
     r = _valid_pointer_ ( obj )
     return True if r else False
 
+# ============================================================================
+## Convert the name to something that can be used as good ROOT-name,
+#  replacing of all problematic or empty-space symbol with "_"
+#  @param name input expression
+#  @return good name or empty string
+#  @see Ostap::rooftify 
+def rootify ( name ) :
+    """ Convert the name to something that can be used as good ROOT-name,
+     replacing of all problematic or empty-space symbol with "_"
+    - return good name or empty string
+    - see `Ostap::rooftify`
+    """
+    return str ( Ostap.roofity ( name ) )
 
 # ============================================================================
 ## Brutally kill  object

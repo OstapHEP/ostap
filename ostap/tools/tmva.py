@@ -433,8 +433,11 @@ class Trainer(object):
         - For more detailes
         see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
         """
-
-        self.__name      = name 
+        
+        from ostap.utils.strings import rootify 
+        self.__name      = rootify ( name )
+        if not self.name : self.__name = "TMVA"
+        
         self.__logger    = logger if logger else getLogger ( self.name )
 
         if isinstance ( maxvarlen , integer_types ) and 0 < maxvarlen :
@@ -1665,8 +1668,6 @@ class Trainer(object):
             ## ATTENTION!!! check it later
             ## outFile.cd () 
 
-            print ( 'DIRECTORY IS WRITABLE?' , outFile.IsWritable() ) 
-            
             ## 
             Ostap.Tmva.disable_scatter_plots ()
             
@@ -1760,12 +1761,12 @@ class Trainer(object):
             # ==========================================================================
             Ostap.Tmva.disable_scatter_plots ()
             # Train MVAs
-            ms = self.method_names
-            with timing ( "Train    all methods %s " % str ( ms ) , logger = self.logger ) : factory.TrainAllMethods    ()
+            ms = ','.join ( m for m in self.method_names  ) 
+            with timing ( "Train    all methods: %s" % ms , logger = self.logger ) : factory.TrainAllMethods    ()
             ## Test MVAs
-            with timing ( "Test     all methods %s " % str ( ms ) , logger = self.logger ) : factory.TestAllMethods     ()
+            with timing ( "Test     all methods: %s" % ms , logger = self.logger ) : factory.TestAllMethods     ()
             # Evaluate MVAs
-            with timing ( "Evaluate all methods %s " % str ( ms ) , logger = self.logger ) : factory.EvaluateAllMethods ()
+            with timing ( "Evaluate all methods: %s" % ms , logger = self.logger ) : factory.EvaluateAllMethods ()
 
             # ============================================================================
             ## save control plots to the file
@@ -1787,7 +1788,7 @@ class Trainer(object):
                 if not multigraph : self.logger.erorr ( 'Invalid ROC-curves multi-graph!' ) 
                 else :                    
                     invisible = not self.show_plots 
-                    with use_canvas ( '%s ROC curves' % self.name ,
+                    with use_canvas ( title     = '%s ROC curves' % self.name ,
                                       invisible = invisible       ,
                                       keep      = self.show_plots ) as cnvroc :
                         
@@ -1818,8 +1819,7 @@ class Trainer(object):
                 mname = m [ 1 ]
                 auc = factory.GetROCIntegral ( self.name , mname )
                 self.__AUC [ mname ] = auc
-                
-         
+                         
             del dataloader
             del factory 
 
@@ -1832,6 +1832,8 @@ class Trainer(object):
             for i , item in enumerate ( self.control_plots_background , start = 1 ) :  
                 histo , _ = item
                 outFile ['%s/CONTROL_PLOT_BACKGROUND_%d' % ( self.name , i ) ] = histo 
+
+            outFile.ls_tree()
             
         ## close outfile     
         ## save/sync the output file 
@@ -1964,7 +1966,7 @@ class Trainer(object):
                 histo.SetTitle   ( title  )
 
             style = 'Z' if 2 == histo.dim() else ''            
-            with use_canvas ( '%s Control plot SIGNAL_%d' %  ( self.name , i ) ,
+            with use_canvas ( title     = '%s Control plot SIGNAL_%d' %  ( self.name , i ) ,
                               invisible = not self.show_plots ,
                               keep      =     self.show_plots ,
                               style     = style               ) as cnvs :
@@ -1985,7 +1987,7 @@ class Trainer(object):
                 histo.SetTitle ( title  )
                 
             style = 'Z' if 2 == histo.dim() else ''            
-            with use_canvas ( '%s Control plot BACKGROUND_%d' % ( self.name , i ),
+            with use_canvas ( title     = '%s Control plot BACKGROUND_%d' % ( self.name , i ),
                               invisible = not self.show_plots ,
                               keep      =     self.show_plots ,
                               style     = style               ) as cnvb :
@@ -3081,23 +3083,28 @@ def plot_variables ( name              ,
     ## temporary storage of histograms 
     histos = []
 
+    ## check the existence and readability of the tmva file 
+    with ROOT.TFile.Open ( tmva_file , 'read' , exception = True ) as rf : pass
+        
     chain  = ROOT.TChain ( '%s/TrainTree' % name )
     chain.Add ( tmva_file )
-    
-    vars = set ( chain.branches () ) | set ( chain.leaves() )        
-    vars = tuple ( sorted ( vars - set ( [ 'weight' , 'classID' , 'className' ] ) - set ( skipvars ) ) )
-    
+
+    vars       = set ( chain.branches () ) | set ( chain.leaves() )
+    weight     = 'weight' if 'weight' in vars else ''
+
+    vars       = tuple   ( sorted ( vars - set ( [ 'weight' , 'classID' , 'className' ] ) - set ( skipvars ) ) )    
     chunks     = chunked ( vars , 6 )
-    stats      = chain.statVars ( vars , 'weight' , as_weight = True , use_frame = True , progress = progress ) 
+
+    stats      = chain.statVars ( vars , weight , as_weight = True , use_frame = True , progress = progress ) 
     
-    wcut       = ROOT.TCut ( 'weight'     )
+    wcut       = ROOT.TCut (  weight      )
     signal     = ROOT.TCut ( 'classID==0' ) * wcut 
     background = ROOT.TCut ( 'classID==1' ) * wcut 
-
+    
     cnvlist = [] 
     for i, chunk in enumerate ( chunks , start = 1 ) :
         cname =  '%s%s_VARIABLES_p%i' % ( prefix , name , i )
-        with use_canvas ( cname                     ,
+        with use_canvas ( title     = cname         ,
                           width     = width         ,
                           height    = height        ,
                           style     = style         ,

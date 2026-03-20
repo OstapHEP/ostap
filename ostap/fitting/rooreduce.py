@@ -430,18 +430,17 @@ def _raddpdf_factory_ ( klass , *content ) :
     if last : result.fixCoefNormalization ( last )
     return result 
 
-
 # ==========================================================================--
 ## reduce  RooAddPdf object 
 def _raddpdf_reduce_ ( pdf ) :
     """ Reduce `RooAddPdf` object
     """
     ##
-    content = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
-    content = content + pdf.orig_fracs () 
+    content  = type ( pdf ) , pdf.name , pdf.title , pdf.pdfList()
+    content  = content + pdf.orig_fracs () 
     ##
-    norms   = pdf.getCoefNormalization()
-    content = content + ( norms , ) 
+    normcoef = pdf.getCoefNormalization()
+    content  = content + ( normcoef , ) 
     ##
     return _raddpdf_factory_ , content
 

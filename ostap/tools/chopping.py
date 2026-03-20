@@ -223,7 +223,7 @@ class Trainer(object) :
                    signal_add_vars      = {}      , ## add signal     vars, presumably fake/misisng  vars 
                    background_add_vars  = {}      , ## add backgriund vars, presumably fake/misisng  vars 
                    ##                    
-                   name              = 'TMVAChopper'         ,   # the name 
+                   name              = 'TChopper'            ,   # the name 
                    verbose           = False                 ,   # verbose ? 
                    chop_signal       = False                 ,   # chop the signal     ?
                    chop_background   = True                  ,   # chop the background ?
@@ -262,7 +262,10 @@ class Trainer(object) :
         
         assert isinstance ( N , integer_types ) and 1 < N , "Invalid number of categories"
 
-        self.__name   = name
+        from ostap.utils.strings import rootify 
+        self.__name = rootify ( name )
+        if not self.name : self.__name = "TMVAChopper"
+        
         self.__logger = logger if logger else getLogger ( self.name )
 
         self.__verbose         = True if verbose    else False 

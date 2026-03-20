@@ -76,70 +76,6 @@ TVirtualPad* Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
 // ============================================================================
 
 
-// ============================================================================
-// default contructor
-// ============================================================================
-Ostap::Utils::PadContext::PadContext ()
-  : PadContext ( ROOT::GetROOT() && !ROOT::GetROOT()->IsBatch() ? true : false )
-{}
-// ============================================================================
-// contructor with interactive flag 
-// ============================================================================
-Ostap::Utils::PadContext::PadContext
-( const bool interactive )
-  : m_active      ( true        )
-  , m_interactive ( interactive )
-  , m_saved       ( TVirtualPad::Pad() ) 
-{}
-// ============================================================================
-// full contructor
-// ============================================================================
-Ostap::Utils::PadContext::PadContext
-( TVirtualPad* pad         ,
-  const bool   interactive ,
-  const bool   not_null    )
-  : m_active      ( true        )
-  , m_interactive ( interactive )
-  , m_saved       ( TVirtualPad::Pad() ) 
-{
-
-  if ( pad ) { pad->cd () ; } 
-
-  // if       ( pad && m_interactive ) { pad->cd() ; }
-  // else if  ( pad || !not_null     ) { TVirtualPad::Pad() = pad ; }
-}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Utils::PadContext::~PadContext()
-{
-  exit () ;
-  m_saved = nullptr ;
-}
-// ============================================================================
-// CONTEXT MANAGER: (fake) enter
-// ============================================================================
-const Ostap::Utils::PadContext&
-Ostap::Utils::PadContext::enter () { return *this ; } 
-// ============================================================================
-// CONTEXT MANAGER: exit  
-// ============================================================================
-const Ostap::Utils::PadContext&
-Ostap::Utils::PadContext::exit  ()
-{
-  /// avoid multiple exit
-  if ( !m_active ) { return *this ; }
-  //
-  if ( m_saved ) { m_saved->cd () ; }
-  //
-  // if      ( !m_interactive || !m_saved ) { TVirtualPad::Pad() = m_saved ; }
-  // else if ( m_saved ) { m_saved->cd () ; } 
-  //
-  m_active = false ;
-  //
-  return *this ;
-}
-// ============================================================================
 
 // ============================================================================
 // default constructor
@@ -158,29 +94,27 @@ Ostap::Utils::CanvasContext::~CanvasContext()
 // ============================================================================
 // CONTEXT MANAGER: (re)catch the current canvas 
 // ============================================================================
-const Ostap::Utils::CanvasContext&
-Ostap::Utils::CanvasContext::enter ()
+bool Ostap::Utils::CanvasContext::enter ()
 {
   m_saved = get_canvas () ;
   if ( m_saved  && m_saved -> IsModified() ) { m_saved->Update() ; } 
-  return *this ;
+  return active () ;
 } 
 // ============================================================================
 // CONTEXT MANAGER: exit  
 // ============================================================================
-const Ostap::Utils::CanvasContext&
-Ostap::Utils::CanvasContext::exit  ()
+bool Ostap::Utils::CanvasContext::exit  ()
 {
   // nothing to do..
-  if ( !m_saved ) { return *this ; }
+  if ( !m_saved ) { return active () ; }
   //
-  // check the saved canvas  is existig valid TCanvas and make at active
-  // otherwise switch to the current_canvas if valid 
+  // check the saved canvas is existing valid TCanvas and make at active
+  // otherwise switch to the current_canvas if it is valid 
   //  
   TROOT* groot = ROOT::GetROOT ()  ;
   if ( groot )
   {
-    /// get the list of all alived canvasee
+    /// get the list of all alived canvases
     TSeqCollection* all_canvases = groot->GetListOfCanvases() ;
     if ( all_canvases )
     {
@@ -189,10 +123,11 @@ Ostap::Utils::CanvasContext::exit  ()
 	if ( obj && obj == m_saved )
 	{
 	  m_saved -> cd ()   ;
-	  if ( m_saved -> IsModified() ) { m_saved->Update() ; } 
+	  if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
 	  m_saved =  nullptr ;
-	  return *this       ;	               // RETURN 
-	}  // valid canvas is found in  the list 
+	  return active ()   ;	               // RETURN
+	  // ==================================================================
+	} // valid canvas is found in  the list 
       }	// list of all canvas 
     } // valid collection of all canvases 
   } // valid TROOT 
@@ -203,9 +138,10 @@ Ostap::Utils::CanvasContext::exit  ()
   if ( cnv )
   {
     cnv -> cd () ;
-    if ( cnv -> IsModified() ) { cnv->Update() ; }
-  } 
-  return *this ;
+    if ( cnv -> IsModified() ) { cnv -> Update () ; }
+  }
+  //
+  return active ();
 }
 // ============================================================================
 //                                                                      The END 

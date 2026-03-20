@@ -77,7 +77,7 @@ namespace  Ostap
    *  @param name input expression
    *  @return good name or empty string
    */
-  std::string rootify ( const std::string& name ) ;
+  std::string rootify     ( const std::string& name ) ;
   // ==========================================================================
   /** @fn class_name
    *  Get the de-mangled class name

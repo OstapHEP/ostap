@@ -114,7 +114,8 @@ if root_info < ( 6, 29 ) : # ==================================================
             
         ## context manager ENTER 
         def __enter__ ( self ) :
-            "Save current working directory"
+            """ Save current working directory
+            """
             self._dir = None
             
             ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
@@ -182,7 +183,7 @@ elif root_info < ( 6 , 37 ) : # ==============================================
             return result
 
     # ========================================================================
-else : # =================================================
+else : # =====================================================================
     # ========================================================================
     class ROOTCWD(object) :
         """ Context manager to preserve current directory
@@ -276,9 +277,11 @@ def top_dir ( rdir ) :
         else                                       : return None 
             
         while top : ## and hasattr ( top , 'GetMotherDir' ) : 
+            
             moth = top.GetMotherDir()
-            if not moth : return top  
+            if not moth : return top            
             top  = moth
+            
         else :
             return None 
 
@@ -876,44 +879,6 @@ def _rd_walk_ ( rdir , topdown = True ) :
         yield rdir.GetName(), _subdirs, _objects 
         
 # =============================================================================
-## use ROOT-file with context-manager
-#  @code
-#  with ROOT.TFile('ququ.root') as f : f.ls() 
-#  @endcode
-def _rf_enter_ ( self      ) :
-    """ Use ROOT-file with the context manager
-    >>> with ROOT.TFile('ququ.root') as f : f.ls() 
-    """
-    return self
-
-# =============================================================================
-## use ROOT-file with context-manager 
-#  @code
-#  with ROOT.TFile('ququ.root') as f : f.ls() 
-#  @endcode
-def _rf_exit_  ( self , *_ ) :
-    """ Use ROOT-file with the context manager    
-    >>> with ROOT.TFile('ququ.root') as f : f.ls()
-    """
-    # =======================================================================
-    try: # ==================================================================
-        # ===================================================================
-        delattr( self , "_cached_items" )
-        # ===================================================================
-    except AttributeError: # ================================================
-        # ===================================================================
-        pass
-    # =======================================================================
-    try : # =================================================================
-        # ===================================================================
-        if valid_pointer ( self ) and self.IsOpen() and not self.IsZombie () : self.Close()
-        # ===================================================================
-    except: # ===============================================================
-        #  ==================================================================
-        pass
-    return False 
-
-# =============================================================================
 ## Create the graphical representation of the directory structure as tree 
 #  @code
 #  rdir = ...
@@ -1214,14 +1179,14 @@ def _rf_new_open_ ( fname , mode = '' , *args , exception = False ) :
     >>> print ROOT.gROOT.CurrentDirectory()
     ATTENTION: No exceptions are raised for invalid file/open_mode, unless specified 
     """
-    print ( 'I AM NEW OPEN/1')
-    with ROOTCWD() :
+    # ==========================================================================
+    with ROOTCWD() : # =========================================================
+        # ======================================================================
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
         # ======================================================================
         try : # ================================================================
             # ==================================================================
             with rootException () : 
-                print ( 'CALL FOR OLD_OPEN')
                 fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )            
             # ==================================================================
         except ( OSError, IOError ) : # ========================================
@@ -1244,7 +1209,6 @@ def _rf_new_open_ ( fname , mode = '' , *args , exception = False ) :
             if  exception : raise IOError ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
             logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
         
-        print ( 'I AM NEW OPEN/2')
         return fopen
         
 # =============================================================================
@@ -1263,13 +1227,43 @@ def _rf_new_close_ ( rfile , option = '' ) :
     >>> f.Close()
     >>> print ROOT.gROOT.CurrentDirectory()
     """
-    print ( 'I AM NEW CLOSE/1/' )
+    # =======================================================================
     if valid_pointer ( rfile ) and rfile.IsOpen() and not rfile.IsZombie () :
-        ## with ROOTCWD() :
+        # ===================================================================
         logger.debug ( "Close ROOT file %s" % rfile.GetName() ) 
-        print ( 'I AM NEW CLOSE/2' )
         return rfile._old_close_ ( option )
-            
+
+# =============================================================================
+## use ROOT-file with context-manager
+#  @code
+#  with ROOT.TFile('ququ.root') as f : f.ls() 
+#  @endcode
+def _rf_enter_ ( self      ) :
+    """ Use ROOT-file with the context manager
+    >>> with ROOT.TFile('ququ.root') as f : f.ls() 
+    """
+    return self
+
+# =============================================================================
+## use ROOT-file with context-manager 
+#  @code
+#  with ROOT.TFile('ququ.root') as f : f.ls() 
+#  @endcode
+def _rf_exit_  ( self , *_ ) :
+    """ Use ROOT-file with the context manager    
+    >>> with ROOT.TFile('ququ.root') as f : f.ls()
+    """
+    # =======================================================================
+    try : # =================================================================
+        # ===================================================================
+        if valid_pointer ( self ) and self.IsOpen() and not self.IsZombie () : self.Close()
+        # ===================================================================
+    except: # ===============================================================
+        #  ==================================================================
+        pass
+    
+    return False 
+
 # =============================================================================
 ## another name, just for convinince
 open = _rf_new_open_
@@ -1277,8 +1271,6 @@ open = _rf_new_open_
 # =============================================================================
 if hasattr ( ROOT.TFile , '_new_init_' ) and hasattr ( ROOT.TFile , '_old_init_' ) : pass
 else :
-
-    ## pass
 
     if ROOT.TFile.__init__.__doc__ :
         _rf_new_init_.__doc__  += '\n' + ROOT.TFile.__init__.__doc__
@@ -1290,8 +1282,6 @@ else :
 # =============================================================================
 if hasattr ( ROOT.TFile , '_new_open_' ) and hasattr ( ROOT.TFile , '_old_open_' ) : pass
 else :
-
-    ## pass
 
     if ROOT.TFile.Open.__doc__ : 
         _rf_new_open_.__doc__  += '\n' + ROOT.TFile.Open.__doc__
@@ -1307,20 +1297,12 @@ else :
 if hasattr ( ROOT.TFile , '_new_close_' ) and hasattr ( ROOT.TFile , '_old_close_' ) : pass
 else :
 
-    ## pass 
-    
     if ROOT.TFile.Close.__doc__ : 
         _rf_new_close_.__doc__  += '\n' + ROOT.TFile.Close.__doc__
         
     ROOT.TFile._old_close_   = ROOT.TFile.Close
     ROOT.TFile._new_close_   = _rf_new_close_ 
     ROOT.TFile.Close         = _rf_new_close_
-    ROOT.TFile.close         = _rf_new_close_
-
-
-if hasattr ( ROOT.TFile , '__enter__' ) and hasattr ( ROOT.TFile , '__exit__' ) : pass
-else :
-    pass
 
 ROOT.TFile.__enter__ = _rf_enter_
 ROOT.TFile.__exit__  = _rf_exit_
@@ -1329,7 +1311,7 @@ ROOT.TFile.__exit__  = _rf_exit_
 ## get a full path of the directory
 #  @code
 #  rdir = ...
-#  path = rdirt.full_path 
+#  path = rdir.full_path 
 #  @endcode
 def full_path ( rdir ) :
     """ Get a full path of the directory
@@ -1370,7 +1352,7 @@ class REOPEN(object) :
         assert rfile and self.tfile and isinstance ( self.tfile , ROOT.TFile ),\
                'Invalid file directory %s' % ( rfile.GetName() if rfile else 'INVALID' )
 
-    ##  enter the context: try to ReOpen fiel with <code>ReOpen('UPDATE')</code>
+    ##  enter the context: try to ReOpen file with <code>ReOpen('UPDATE')</code>
     def __enter__ ( self ) :
         """ Enter the context: make a try to reopen the file with `ReOpen('UPDATE')`
         """

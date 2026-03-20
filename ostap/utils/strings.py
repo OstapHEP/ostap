@@ -23,6 +23,7 @@ __all__     = (
     'has_symbol'           , ## Has any of the symbols?
     'is_formula'           , ## Is this string expression represent math formula?
     ##
+    'rootify'              , ## conver expression to "good" ROOT name 
     'truncate_middle'      , ## truncate long string from the mddle 
     # =========================================================================
 ) # ===========================================================================
@@ -35,7 +36,7 @@ var_separators = ',:;'
 ## rx_separators  = re.compile ( r'[,:;]\s*(?![^()]*\))' )
 ## rx_separators  = re.compile ( '[ ,:;](?!(?:[^(]*\([^)]*\))*[^()]*\))')
 # =============================================================================
-## mark for double columns: double column is a special for C++ namespaces 
+## mark for double columns: double column is a *very* special for C++ namespaces 
 dc_mark = '_SSPPLLIITT_'
 # =============================================================================
 ## split string using separators and respecting the (),[] and {} groups.
@@ -178,6 +179,32 @@ def truncate_middle ( text , N ) :
     n2 =   N - _Ne - n1
     
     return text [ : n1 ] + _ellipsis +  ( text [ -n2 : ] if n2 else '' ) 
+
+
+# ==============================================================================
+_bad_symbols = " ~`!@#$%^&*/()-+={}[]|\\;:\"\'<>?,./\n\t\v\r'"
+# =============================================================================
+## Convert the name to something that can be used as good ROOT-name,
+#  replacing of all problematic or empty-space symbol with "_"
+#  @param name input expression
+#  @return good name or empty string
+#  @see Ostap::rooftify 
+def rootify ( name ) :
+    """ Convert the name to something that can be used as good ROOT-name,
+     replacing of all problematic or empty-space symbol with "_"
+    - return good name or empty string
+    - see `Ostap::rooftify`
+    """
+    if not name : return ""
+    name = name.replace ( "'"  , '_' )
+    name = name.replace ( '"'  , '_' )
+    name = name.replace ( ' '  , '_' )
+    for s in _bad_symbols : name = name.replace ( s , '_' )
+    name = name.replace ( '__' , '_' )
+    name = name.replace ( '__' , '_' )
+    return name 
+
+# =============================================================================
 
 # =============================================================================
 if '__main__' == __name__ :
