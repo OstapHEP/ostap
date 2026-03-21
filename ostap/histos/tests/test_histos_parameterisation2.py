@@ -20,7 +20,7 @@ from   ostap.math.integral    import Integral
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-import ROOT, random
+import ROOT, random, numpy, scipy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -34,16 +34,6 @@ logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 ## set batch form environment 
 batch_env ( logger )
-# =============================================================================
-try : # =======================================================================
-    # =========================================================================
-    import numpy, scipy  
-    use_scipy = True
-    # =========================================================================
-except ImportError : # ========================================================
-    # =========================================================================
-    use_scipy = False 
-    logger.warning ("Numpy/scipy-dependent are disabled!")
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum
 from ostap.core.core    import hID, fID 
@@ -316,10 +306,6 @@ def test_fourier () :
     
     logger =   getLogger("test_fourier")
     
-    if not use_scipy :
-        logger.warning("No numpy/scipy is avilable, skip 'fourier' test")
-        return
-    
     my_histos  = [ h for h in histos if hasattr ( h , 'fourier' ) ]
     with timing ( 'Fourier [6]' , logger ) :
         params = [ h.fourier ( 6 ) for h in  my_histos ]
@@ -336,9 +322,6 @@ def test_fourier () :
 def test_cosine() :
     
     logger =   getLogger("test_cosine")
-    if not use_scipy :
-        logger.warning("No numpy/scipy is avilable, skip 'cosine' test")
-        return
     
     my_histos  = [ h for h in histos if hasattr ( h , 'cosine' ) ] 
     with timing ( 'Cosine [4]' , logger ) :

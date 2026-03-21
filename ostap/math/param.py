@@ -71,12 +71,14 @@ __all__     = (
     ## several stand-alone function for parameteriztaion of of functions 
     'legendre_sum'      , ## Legendre         sum for the given function/object 
     'chebyshev_sum'     , ## Chebyshev        sum for the given function/object
+    'fourier_sum'       , ## Fourier sum for the given function/object 
+    'cosine_sum'        , ## Cosine Fourier sum for the given function/object 
     'bezier_sum'        , ## Bezier/Bernstein sum for the given function/object
     'bernstein_sum'     , ## - ditto -
     'beziereven_sum'    , ## even Bezier/Bernstein sum for the given function/object
     'bernsteineven_sum' , ## - ditto -
-    'rational_fun'      , ## Rational (a'la Floater-Hormann's interpolant) parameterisaton 
-    ) 
+    'rational_fun'      , ## Rational (a'la Floater-Hormann's interpolant) parameterisaton
+    )
 # =============================================================================
 from   ostap.core.core         import cpp, Ostap
 from   ostap.core.ostap_types  import is_integer, num_types
@@ -91,9 +93,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.math.param' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some parameterization utilities')
-# =============================================================================
-inf_pos =  float('inf') ## positive infinity
-inf_neg = -float('inf') ## negative infinity
 # =============================================================================
 ## helper function to catch xmin/xmax from histogram/function 
 def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
@@ -239,138 +238,125 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     return csum
 
 # =============================================================================
-if numpy : 
-    # =========================================================================
-    ## make a function representation in terms of Fourier series
-    #  @code 
-    #  func = lambda x : x * x
-    #  fsum = fourier_sum ( func , 4 , -1 , 1 )
-    #  print fsum
-    #  x = ...
-    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    #  @endcode 
-    #  @see Ostap::Math::FourierSum
-    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-    #  @date 2015-07-26
-    def fourier_sum ( func , N , xmin , xmax ) :
-        """ Make a function/histogram representation in terms of Fourier series
-        >>> func = lambda x : x * x
-        >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
-        >>> print fsum
-        >>> x = ...
-        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-        """
-        assert is_integer ( N ) and 0 <= N , "fourier_sum: invalid N %s " % N 
-        
-        xmin , xmax = _get_xminmax_ ( func , xmin , xmax , 'fourier_sum' )
-        
-        ## 0) check the type of return value in the mid point
-        xmid = 0.5 * ( xmin + xmax )
-        fval = func ( xmid )
-        #
-        if isinstance ( fval , num_types ) : the_fun = func
-        else : the_fun = lambda x : float ( func ( x ) ) 
-        
-        ## 1) vectorize the function
-        vfunc = numpy.vectorize ( the_fun ) 
-        
-        ## prepare sampling 
-        f_sample = 2 * N
-        t, dt    = numpy.linspace ( xmin , xmax , f_sample + 2, endpoint=False , retstep=True )
-        
-        ## make Fast Fourier Transform 
-        y  = numpy.fft.rfft ( vfunc ( t ) ) ## / t.size
-        y *= 2.0 / t.size
-        
-        #
-        ## decode the results:
-        #
-        
-        a0 = y[0   ].real
-        a  = y[1:-1].real
-        b  = y[1:-1].imag
-        
-        #
-        ## prepare the output
-        #
-        fsum = Ostap.Math.FourierSum ( N , xmin , xmax )
-        
-        #
-        ## fill it!
-        #
-        fsum.setPar( 0, a0 )
-        for i in range ( 1 , N + 1 ) :
-            
-            if 0 == i % 2 :
-                fsum.setA ( i ,  a[i-1] )
-                fsum.setB ( i , -b[i-1] )
-            else          :
-                fsum.setA ( i , -a[i-1] )
-                fsum.setB ( i ,  b[i-1] )
-                
-        return fsum
+## make a function representation in terms of Fourier series
+#  @code 
+#  func = lambda x : x * x
+#  fsum = fourier_sum ( func , 4 , -1 , 1 )
+#  print fsum
+#  x = ...
+#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+#  @endcode 
+#  @see Ostap::Math::FourierSum
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2015-07-26
+def fourier_sum ( func , N , xmin , xmax ) :
+    """ Make a function/histogram representation in terms of Fourier series
+    >>> func = lambda x : x * x
+    >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
+    >>> print fsum
+    >>> x = ...
+    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    """
+    assert is_integer ( N ) and 0 <= N , "fourier_sum: invalid N %s " % N 
+    
+    xmin , xmax = _get_xminmax_ ( func , xmin , xmax , 'fourier_sum' )
+    
+    ## 0) check the type of return value in the mid point
+    xmid = 0.5 * ( xmin + xmax )
+    fval = func ( xmid )
+    #
+    if isinstance ( fval , num_types ) : the_fun = func
+    else : the_fun = lambda x : float ( func ( x ) ) 
+    
+    ## 1) vectorize the function
+    vfunc = numpy.vectorize ( the_fun ) 
+    
+    ## prepare sampling 
+    f_sample = 2 * N
+    t, dt    = numpy.linspace ( xmin , xmax , f_sample + 2, endpoint=False , retstep=True )
 
-    __all__ = __all__ + (
-        'fourier_sum' , ## Fourier        sum for the given function/object
-        )    
-    # =========================================================================
+    ## make Fast Fourier Transform 
+    y  = numpy.fft.rfft ( vfunc ( t ) ) ## / t.size
+    y *= 2.0 / t.size
+    
+    #
+    ## decode the results:
+    #
+    
+    a0 = y[0   ].real
+    a  = y[1:-1].real
+    b  = y[1:-1].imag
+    
+    #
+    ## prepare the output
+    #
+    fsum = Ostap.Math.FourierSum ( N , xmin , xmax )
+    
+    #
+    ## fill it!
+    #
+    fsum.setPar( 0, a0 )
+    for i in range ( 1 , N + 1 ) :
+        
+        if 0 == i % 2 :
+            fsum.setA ( i ,  a[i-1] )
+            fsum.setB ( i , -b[i-1] )
+        else          :
+            fsum.setA ( i , -a[i-1] )
+            fsum.setB ( i ,  b[i-1] )
+            
+    return fsum
 
 # =============================================================================
-if scipy and numpy : 
-    # =========================================================================
-    from   scipy.fftpack import dct as _scipy_fftpack_dct 
-    # =========================================================================
-    ## make a function representation in terms of cosine Fourier series
-    #  @code 
-    #  func = lambda x : x * x
-    #  fsum = cosine_sum ( func , 4 , -1 , 1 )
-    #  print fsum.pars()
-    #  x = ...
-    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) )
-    #  @endcode 
-    #  @see Ostap::Math::CosineSum
-    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-    #  @date 2015-07-26
-    def cosine_sum ( func , N , xmin , xmax ) :
-        """ Make a function/histiogram representation in terms of Fourier series
-        >>> func = lambda x : x * x
-        >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
-        >>> print fsum
-        >>> x = ...
-        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-        """
-        assert is_integer ( N ) and 0 <= N , "cosine_sum: invalid N %s " % N 
-        
-        xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'cosine_sum' )
+from   scipy.fftpack import dct as _scipy_fftpack_dct 
+# =========================================================================
+## make a function representation in terms of cosine Fourier series
+#  @code 
+#  func = lambda x : x * x
+#  fsum = cosine_sum ( func , 4 , -1 , 1 )
+#  print fsum.pars()
+#  x = ...
+#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) )
+#  @endcode 
+#  @see Ostap::Math::CosineSum
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2015-07-26
+def cosine_sum ( func , N , xmin , xmax ) :
+    """ Make a function/histiogram representation in terms of Fourier series
+    >>> func = lambda x : x * x
+    >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
+    >>> print fsum
+    >>> x = ...
+    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    """
+    assert is_integer ( N ) and 0 <= N , "cosine_sum: invalid N %s " % N 
+    
+    xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'cosine_sum' )
+    
+    #  0) check the functon type at the misdpoint
+    xmid = 0.5 * ( xmin + xmax )
+    fval = func ( xmid )
+    
+    if isinstance ( fval , num_types ) : the_fun = func
+    else : the_fun = lambda x : float ( func ( x ) ) 
+    
+    ## 1) prepare sampling
+    t     = numpy.linspace ( xmin , xmax , N + 1 , endpoint=True )
+    
+    ## 2) vectorize the function
+    vfunc = numpy.vectorize ( the_fun )
 
-        #  0) check the functon type at the misdpoint
-        xmid = 0.5 * ( xmin + xmax )
-        fval = func ( xmid )
-        
-        if isinstance ( fval , num_types ) : the_fun = func
-        else : the_fun = lambda x : float ( func ( x ) ) 
-        
-        ## 1) prepare sampling
-        t     = numpy.linspace ( xmin , xmax , N + 1 , endpoint=True )
-                
-        ## 2) vectorize the function
-        vfunc = numpy.vectorize ( the_fun )
-        
-        ## make cosine fourier transform 
-        r = _scipy_fftpack_dct ( vfunc ( t ) , 1 ) / N 
-        
-        #
-        ## decode the results & prepare the output
-        #
-        csum = Ostap.Math.CosineSum ( N, xmin , xmax )
-        for i in range ( 0 , N + 1 ) : csum.setPar ( i , r[i] )
-        
-        return csum
+    ## make cosine fourier transform 
+    r = _scipy_fftpack_dct ( vfunc ( t ) , 1 ) / N 
     
-    __all__ = __all__ + (
-        'cosine_sum' , ## Cosine Fourier sum for the given function/object 
-        )
+    #
+    ## decode the results & prepare the output
+    #
+    csum = Ostap.Math.CosineSum ( N, xmin , xmax )
+    for i in range ( 0 , N + 1 ) : csum.setPar ( i , r[i] )
     
+    return csum
+
 # =============================================================================
 ## make a function representation in terms of Bezier sum
 #  (sum over Bernstein polynomials)
@@ -580,11 +566,6 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    if not 'fourier_sum' in __all__ :
-        logger.warning ( "Since numpy is not available, fourier_sum is disabled") 
-    if not 'cosine_sum'  in __all__ :
-        logger.warning ( "Since scipy is not available, cosine_sum is disabled")
-        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

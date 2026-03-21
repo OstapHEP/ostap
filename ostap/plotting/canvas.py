@@ -284,8 +284,10 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
         if cnvlst : cnv = cnvlst.get  ( name , None   )
         
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
-        ## ATTENTION! 
+        ## ATTENTION!
+        print ( 'EXISTINGT CANVAS IS RE-USED' , cnv.GetName()  )        
         set_pad   ( cnv , **kwargs )
+        ROOT.SetOwnership ( cnv , False )
         return cnv 
 
     ## create new canvas
@@ -298,10 +300,12 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     title = title.strip ()
     
     ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
-    groot = ROOT.ROOT.GetROOT()
-    if groot.IsBatch() : cnv = ROOT.TCanvas ( name , title , width , height )
-    else               : cnv = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
+    ## groot = ROOT.ROOT.GetROOT()
+    ## if groot.IsBatch() : cnv = ROOT.TCanvas ( name , title , width , height )
+    cnv = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
 
+    print ( 'NEW CANVAS IS CREATED' , cnv.GetName()  )
+    
     ROOT.SetOwnership ( cnv , True )
     ## ROOT.SetOwnership ( cnv , False  )
     
@@ -1307,7 +1311,6 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         
         if name : name   = Ostap.rootify ( name )
         self.__name   = name 
-
         
         self.__title  = title 
         self.__width  = width
@@ -1349,7 +1352,9 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         - return existing canvas with given name, `False` otherwise
         """
         groot  = ROOT.ROOT.GetROOT()
+        if not groot : return None 
         cnvlst = groot.GetListOfCanvases()
+        if not cnvlst : return None 
         for c in cnvlst :
             if   not isinstance ( c , ROOT.TCanvas ) : continue  ## CONTINUE 
             elif c.GetName() == name                 : return c  ## RETURN
