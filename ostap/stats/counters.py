@@ -367,7 +367,7 @@ NSE  .__str__  = lambda s : table_counters ( { '' : s } , title = 'Counter' )
 
 # ============================================================================
 ## nice print for EffEntity 
-def _ee_table_ ( cnt ,
+def _ee_table_ ( cnt              ,
                  title     = ''   ,
                  prefix    = ''   ,
                  precision = 4    ,
@@ -538,7 +538,7 @@ class EffCounter(object):
 
 # ============================================================================
 ## nice print for EffEntity 
-def _ec_table_ ( cnt ,
+def _ec_table_ ( cnt              ,
                  title     = ''   ,
                  prefix    = ''   ,
                  precision = 4    ,
@@ -567,11 +567,85 @@ EffCounter.table    = _ec_table_
 EffCounter.__str__  = _ec_table_
 EffCounter.__repr__ = _ec_table_
 
-
 _new_methods_ += [
     EffCounter.table     , 
     EffCounter.__str__   , 
     EffCounter.__repr__  ] 
+
+# ==============================================================================
+## Prints for Ostap.Math.(W)Covariance(s)
+# ==============================================================================
+## Print Ostap.Math.(W)Covariance as table
+def _cov_table_ ( cov , title = '' , prefix = '' , style = None ) :
+    """" Print Ostap.Math.(W)Covariance as table
+    """
+    title    = title if title else typename ( cov ) 
+    title1   = '%s:Counters'   % title 
+    title2   = '%s:Covariance' % title 
+    counters = cov.counter1() , cov.counter2 () 
+    table1   = table_counters ( counters , title = title1 , prefix = prefix , style = style )
+    ##
+    import ostap.math.linalg
+    cov2      = cov.cov2() 
+    table2, expo = cov2.pretty_print ( prefix = prefix , style = style , title = title2 )
+    ##
+    ## merge two tables
+    return '%s\n%s' % ( table1 , table2 )
+
+# ==============================================================================
+## Print Ostap.Math.(W)Covariance as table
+def _covs_table_ ( cov , title = '' , prefix = '' , style = None ) :
+    """" Print Ostap.Math.(W)Covariances as table
+    """
+    title    = title if title else typename ( cov ) 
+    title1   = '%s:Counters'   % title 
+    title2   = '%s:Covariance' % title 
+    counters = tuple ( c for c in cov.counters() ) 
+    table1   = table_counters ( counters , title = title1 , prefix = prefix , style = style )
+    ##
+    import ostap.math.linalg
+    cov2      = cov.cov2() 
+    table2, expo = cov2.pretty_print ( prefix = prefix , style = style , title = title2 )
+    ##
+    ## merge two tables
+    return '%s\n%s' % ( table1 , table2 )
+# ==============================================================================
+
+Ostap.Math.Covariance.table      = _cov_table_
+Ostap.Math.Covariance.__str__    = _cov_table_
+Ostap.Math.Covariance.__repr__   = _cov_table_
+
+Ostap.Math.WCovariance.table     = _cov_table_
+Ostap.Math.WCovariance.__str__   = _cov_table_
+Ostap.Math.WCovariance.__repr__  = _cov_table_
+
+
+Ostap.Math.Covariances.table     = _covs_table_
+Ostap.Math.Covariances.__str__   = _covs_table_
+Ostap.Math.Covariances.__repr__  = _covs_table_
+
+Ostap.Math.WCovariances.table    = _covs_table_
+Ostap.Math.WCovariances.__str__  = _covs_table_
+Ostap.Math.WCovariances.__repr__ = _covs_table_
+
+
+_new_methods_ += [
+    Ostap.Math.Covariance.table      ,
+    Ostap.Math.Covariance.__str__    ,
+    Ostap.Math.Covariance.__repr__   ,
+    ## 
+    Ostap.Math.WCovariance.table     ,
+    Ostap.Math.WCovariance.__str__   ,
+    Ostap.Math.WCovariance.__repr__  , 
+    ## 
+    Ostap.Math.Covariances.table     , 
+    Ostap.Math.Covariances.__str__   , 
+    Ostap.Math.Covariances.__repr__  , 
+    ## 
+    Ostap.Math.WCovariances.table    , 
+    Ostap.Math.WCovariances.__str__  , 
+    Ostap.Math.WCovariances.__repr__ ,
+]
 
 # ==============================================================================
 ## REDUCE 
@@ -635,6 +709,54 @@ _new_methods_ += [
 ]
 
 # ==============================================================================
+## reduce vectors of counters
+def _vse_reduce_ ( cnts ) :
+    """ Reduce vector of counters 
+    """
+    content = ( type ( cnts ) , ) + tuple ( c for c in cnts )
+    return root_factory, content 
+
+VSE .__reduce__ = _vse_reduce_
+VWSE.__reduce__ = _vse_reduce_
+
+_new_methods_ += [
+    VSE .__reduce__ , 
+    VWSE.__reduce__ , 
+]
+
+# ===============================================================================
+## reduce covariance counters 
+def _cov_reduce_ ( cov ) :
+    """ Reduce covariance counters  
+    """
+    return root_factory, ( type ( cov )       ,
+                           cov.counter1    () ,
+                           cov.counter2    () ,
+                           cov.correlation () )
+
+# ===============================================================================
+## reduce covariance counters 
+def _covs_reduce_ ( cov ) :
+    """ Reduce covariance counters  
+    """
+    import ostap.math.linalg
+    return root_factory, ( type ( cov )     ,
+                           covs.counters () , 
+                           covs.cov2     () )
+
+Ostap.Math.Covariance   .__reduce__ = _cov_reduce_
+Ostap.Math.WCovariance  .__reduce__ = _cov_reduce_
+Ostap.Math.Covariances  .__reduce__ = _covs_reduce_
+Ostap.Math.WCovariances .__reduce__ = _covs_reduce_
+
+_new_methods_ += [
+    Ostap.Math.Covariance   .__reduce__ , 
+    Ostap.Math.WCovariance  .__reduce__ ,
+    Ostap.Math.Covariances  .__reduce__ , 
+    Ostap.Math.WCovariances .__reduce__ ,
+]
+
+# ==============================================================================
 _new_methods_ = tuple ( _new_methods_ )
 
 # =============================================================================
@@ -642,7 +764,11 @@ _decorated_classes_ = (
     SE  ,
     WSE ,
     NSE ,
-    EE  , 
+    EE  ,
+    Ostap.Math.Covariance   ,
+    Ostap.Math.WCovariance  ,
+    Ostap.Math.Covariances  ,
+    Ostap.Math.WCovariances ,    
     )
 
 # =============================================================================

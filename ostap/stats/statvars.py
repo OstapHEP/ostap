@@ -96,7 +96,7 @@ from   ostap.trees.cuts                import expression_types, vars_and_cuts
 from   ostap.utils.basic               import loop_items, typename, numcpu
 from   ostap.utils.progress_conf       import progress_conf
 import ostap.frames.frames             as     F 
-import ostap.parallel.parallel_statvar as P 
+import ostap.parallel.parallel_statvar as     P 
 import ostap.logger.table              as     T
 import ostap.stats.counters 
 import ostap.stats.moment 
@@ -811,8 +811,8 @@ def data_covariance ( data        ,
             logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
 
         with rootException() :
-            if 2 == N : sc = sv.statCov ( data , result , var_lst[0] , var_lst[1] , cuts , cut_range , *args )
-            else      : sc = sv.statCov ( data , result , vnames                  , cuts , cut_range , *args )
+            if 2 == N : sc = sv.statCov ( data , result , var_lst [ 0 ] , var_lst [ 1 ] , cuts , cut_range , *args )
+            else      : sc = sv.statCov ( data , result , vnames                        , cuts , cut_range , *args )
             assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
             return result 
         
@@ -861,13 +861,10 @@ def data_statvector ( data        ,
     >>> vct = data_statvct ( data , 'a,y,z' , cuts = 'w' ) 
     """
 
-    print ( 'STATVECTOR/1' , expressions , cuts ) 
     ## decode expressions & cuts
     var_lst , cuts, input_string = vars_and_cuts ( expressions , cuts )
     N = len ( var_lst )
     
-    print ( 'STATVECTOR/2' , expressions , cuts , var_lst ) 
-
     assert 2 <= N , "At least two variables are needed!"
         
     covs = data_covariance ( data                    ,
@@ -879,7 +876,6 @@ def data_statvector ( data        ,
                              use_frame   = use_frame ,
                              parallel    = parallel  )
     
-    print ( 'STATVECTOR/3' , var_lst , cuts , covs  ) 
 
     ## some linear algebra manipulations are here 
     import ostap.math.linalg
@@ -889,13 +885,14 @@ def data_statvector ( data        ,
         cov2 = Ostap.Math.covariance ( covs )
         vct  = VCT ( cov2 )
         vct.setValue ( 0 , covs.counter1().mean() ) 
-        vct.setValue ( 1 , covs.counter2().mean() ) 
+        vct.setValue ( 1 , covs.counter2().mean() )
         return vct
     
     cov2 = covs.cov2    ()
     cov2 = cov2.smatrix () 
     vct  = VCT ( cov2 )    
     for i in range ( N ) : vct.setValue ( i , covs.counters()[i].mean() )
+
     return vct
 
 # ==============================================================================

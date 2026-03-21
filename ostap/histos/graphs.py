@@ -1611,11 +1611,15 @@ ROOT.TGraph.__probit__ = lambda g : g.transform ( fun = lambda x, y : mve.probit
 ROOT.TGraph.__pow__    = lambda g , *o : g.transform ( fun = lambda x, y : mve.pow ( y , *o ) )
 
 # =============================================================================
+markers_dots         =  1 , 6 , 7 , 9 , 10 , 11 , 12 , 13 , 14 , 15 
 markers_large_filled =  8 , 20 , 21 , 
 markers_small_filled = 22 , 23 , 29 , 33 , 34 , 39 , 41 , 43 , 45 , 47 , 48 , 49 
 markers_large_open   =  4 , 24 , 25
-markers_small_open   =  2 , 3 , 5 , 26 , 27 , 28 , 30 , 31 , 32 , 35 , 36 , 37 , 38 , 40 , 42 , 44 , 48 
-
+markers_small_open   =  2 , 3 , 5  , 26 , 27 , 28 , 30 , 31 , 32 , 35 , 36 , 37 , 38 , 40 , 42 , 44 , 48 
+markers_open = { 2  : 50 ,  3 : 51 ,  4 : 53 ,  5 : 52 ,
+                 24 : 53 , 25 : 54 , 26 : 55 ,
+                 27 : 56 , 28 : 57 , 30 : 58 , 31 : 51 , 32 : 59 ,
+                 35 : 60 , 36 : 61 , 37 : 62 , 38 : 63 , 40 : 64 , 42 : 65 , 44 : 66 , 46 : 67 }
 # =============================================================================
 ## set color attributes  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1637,6 +1641,8 @@ def _color_ ( self ,
     if hasattr ( self , 'SetMarkerColor'    ) : self.SetMarkerColor ( color  )
     if hasattr ( self , 'SetMarkerStyle'    ) : self.SetMarkerStyle ( marker )
     
+    if hasattr ( self , 'GetMarkerStyle'    ) : marker = self.GetMarkerStyle() 
+
     if hasattr ( self , 'SetFillStyle'      ) :
         if   fill is True  : self.SetFillStyle ( 1001 )        
         elif fill is False : self.SetFillStyle (    0 )        
@@ -1652,16 +1658,20 @@ def _color_ ( self ,
                     if fc : self.SetFillColorAlpha ( fc  , opacity )
                                                              
     ##
-    if 0 > size and hasattr ( self , 'GetMarkerSize' ) and not marker in ( 1 , 6 , 7 ) :
+    if 0 > size and hasattr ( self , 'GetMarkerSize' ) and not marker in markers_dots :
         size = self.GetMarkerSize()
-        if   marker in markers_large_filled : size *= 1.5 ## large filled objects
-        elif marker in markers_small_filled : size *= 2.0 ## small filled objects
-        elif marker in markers_large_open   : size *= 2.0 ## large filled objects
-        elif marker in markers_small_open   : size *= 2.5 ## small filled objects
+        if   marker in markers_large_filled : size *= 1.3 ## large filled objects
+        elif marker in markers_small_filled : size *= 1.5 ## small filled objects
+        elif marker in markers_large_open   : size *= 1.5 ## large open   objects
+        elif marker in markers_small_open   : size *= 1.8 ## small open   objects
     ##
     if isinstance ( width , integer_types ) and 1 <= width and hasattr ( self , 'SetLineWidth' ) :
         self.SetLineWidth ( width )
-            
+        if 2 <= width and marker in markers_open and hasattr ( self , 'SetMarkerStyle'    ) :
+            new_marker = markers_open.get ( marker , marker )
+            if new_marker != marker and 2 < width : new_marker += 18 * ( width - 2 ) 
+            if new_marker != marker : self.SetMarkerStyle ( new_marker )
+
     if 0 < size and hasattr ( self , 'SetMarkerSize' ) :
         self.SetMarkerSize ( size )
     #

@@ -43,7 +43,6 @@ logger.info ( 'Test for ND-Reweighting machinery')
 batch_env ( logger )
 # =============================================================================
 
-
 if 4 <= numcpu () : 
     
     NDATA  =  500000
@@ -75,7 +74,6 @@ def prepare_data ( ) :
     random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
-
 
     ## X,Y,Z histogramss
     
@@ -128,6 +126,7 @@ def prepare_data ( ) :
             datatree.Fill()
             nentries += 1 
             
+        datatree.Write()
 
         ## write the histogram 
     
@@ -153,7 +152,6 @@ def prepare_data ( ) :
         
         nentries = 0 
         while nentries <  NMC :
-
 
             r1 = random.gauss ( 0.5  * rmax , 0.40 * rmax )
             if r1 < 0 or  rmax < r1 : continue
@@ -243,7 +241,7 @@ variables  = [
 
 # =============================================================================
 datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
-title      = 'Data/target dataset'
+title      = 'Data/target dataset %d' % len ( datatree ) 
 logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'r1' , 'r2' , 'r3' ] ,
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )

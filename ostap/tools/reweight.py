@@ -34,7 +34,9 @@ from   ostap.utils.utils      import CallThem, AttrGetter
 from   ostap.utils.strings    import is_formula
 from   ostap.utils.basic      import typename, numcpu  
 from   ostap.math.reduce      import root_factory
-from   ostap.logger.symbols   import plus_minus, thumb_up , checked_no, checked_yes, number, chi2ndf   
+from   ostap.logger.symbols   import ( plus_minus , thumb_up    ,
+                                       checked_no , checked_yes ,
+                                       number     , chi2ndf     , arrow_right )
 from   ostap.logger.colorized import allright , attention
 import ostap.io.zipshelve     as     DBASE              ## needed to store the weights&histos
 import ostap.logger.table     as     T 
@@ -1666,8 +1668,10 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
     if not root_file :
         from   ostap.utils.cleanup    import CleanUp        
         root_file = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-reweight-' )
+
         
-    ## (re) create ROOT TFile 
+    from ostap.io.root_file import ROOTCWD
+    ## (re) create ROOT TFile is needed 
     with ROOT.TFile ( root_file , 'c' ) : pass
 
     skip = [] 
@@ -1696,9 +1700,15 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
                 logger.warning ( 'Record %s not callable TObject or sequence of callable TObjects skip!  %s' % ( r , typename ( rw ) ) ) 
                 skip.append ( r ) 
                 continue
-            
-            with ROOT.TFile ( root_file , 'u' ) as rf : 
-                for i , o in enumerate ( rw ) : rf [ '%s/%d' %  ( r , i ) ] = o 
+
+            with ROOTCWD () : 
+                with ROOT.TFile ( root_file , 'u' ) as rf :
+                    rf.cd() 
+                    for i , o in enumerate ( rw ) :
+                        address = '%s/%d' % ( r , i )
+                        print ( 'WRITE ' , address , typename ( o ) )
+                        if hasattr ( o , 'SetDirectory' ) : o.SetDirectory ( ROOT.nullptr )
+                        rf [ address ] = o 
                 
             good.append ( r )
             
@@ -1709,7 +1719,7 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
 
     if skip : logger.warning ( 'Record that are *NOT* converted: %s' % ( ';'.join ( r for r in skip ) ) ) 
         
-    title = 'Reweighting DB -> ROOT'
+    title = 'Reweighting DB %s ROOT' % arrow_right 
     with ROOT.TFile ( root_file , 'u' ) as rf :
         rf [ tag_reweightings ] = tlst
         table = rf.ls_table ( title = title , prefix = '# ' )        
@@ -1785,7 +1795,7 @@ def restore_from_ROOT ( root_file , dbname = '' , * , reweightings = () ) :
         db [ tag_reweightings ] = tuple ( sorted ( rr ) )  
 
     ## finally show the content of converted DBASE
-    logger.info ( 'Reweighting DB from ROOT: %s -> %s' % ( root_file , dbname ) )     
+    logger.info ( 'Reweighting DB from ROOT: %s %s %s' % ( root_file , arrow_right , dbname ) )     
     with DBASE.open ( dbname , 'r' ) as db :
         db.ls()
         rw = db.get ( tag_reweightings , () )
