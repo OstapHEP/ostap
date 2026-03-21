@@ -171,7 +171,7 @@ class KeepCanvas(Wait) :
         Wait.__exit__ ( self , *_ )
         if self.__context :
             self.__context.exit() 
-            self.__context = None             
+            del self.__context 
 
     @property
     def old_canvas ( self ) :
@@ -282,7 +282,7 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     if groot and name :
         cnvlst = groot.GetListOfCanvases()
         if cnvlst : cnv = cnvlst.get  ( name , None   )
-        
+
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
         ## ATTENTION!
         print ( 'EXISTINGT CANVAS IS RE-USED' , cnv.GetName()  )        
@@ -1356,8 +1356,9 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         cnvlst = groot.GetListOfCanvases()
         if not cnvlst : return None 
         for c in cnvlst :
-            if   not isinstance ( c , ROOT.TCanvas ) : continue  ## CONTINUE 
-            elif c.GetName() == name                 : return c  ## RETURN
+            if   not isinstance ( c , ROOT.TCanvas ) : continue  ## CONTINUE
+            elif c.GetName () == name                : return c  ## RETURN
+        ## 
         return None                                              ## RETURN 
         
     # =================================================================

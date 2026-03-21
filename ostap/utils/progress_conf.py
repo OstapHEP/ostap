@@ -40,24 +40,16 @@ def progress_conf ( show = True , timer = True , description = 'Entries:' ) :
     - see `Ostap.Utils.ProgressBar` 
     """
     
-    print ( 'progress conf/1' , show )
-    
     PC = Ostap.Utils.ProgressConf 
     if   isinstance ( show , PC )  : return show
     elif not show                  : return PC ( 0 )
 
-    print ( 'progress conf/2' , show )
-    
     tty    = isatty ()
     if  show is True : show = terminal_size() [ 0 ] if tty else 100
 
-    print ( 'progress conf/3' , show )
-    
     if isinstance ( show , integer_types ) and 40 <= show <= 512 : twidth = show 
     else  : twidth = terminal_size() [ 0 ] if tty else 105
 
-    print ( 'progress conf/4' , show , twidth )
-    
     done   = '#'
     notyet = ' '
     assert len ( done ) == len ( notyet ) , "Mismatch in symbol lengths"

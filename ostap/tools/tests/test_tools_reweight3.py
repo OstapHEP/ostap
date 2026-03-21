@@ -492,8 +492,8 @@ if converged : # ==============================================================
 
 # ===========================================================================
 ## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
-## root_file = backup_to_ROOT    ( dbname     )
-## new_db    = restore_from_ROOT ( root_file  )
+root_file = backup_to_ROOT    ( dbname     )
+new_db    = restore_from_ROOT ( root_file  )
     
 # =============================================================================
 ##                                                                      The END 

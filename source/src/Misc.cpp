@@ -63,19 +63,17 @@ TVirtualPad* Ostap::Utils::pad_update_async  ( TVirtualPad* pad )
   if ( nullptr == pad ) { pad = get_pad () ; }
   // call for Update 
   if ( nullptr != pad && pad -> IsModified() )
-    {
+  {   
 #if ROOT_VERSION(6,30,0)<=ROOT_VERSION_CODE
-      pad -> UpdateAsync () ;
+    pad -> UpdateAsync () ;
 #else
-      pad -> Update      () ;
+    pad -> Update      () ;
 #endif      
-    }
+  }
   //
   return pad ;
 }
 // ============================================================================
-
-
 
 // ============================================================================
 // default constructor
@@ -97,7 +95,7 @@ Ostap::Utils::CanvasContext::~CanvasContext()
 bool Ostap::Utils::CanvasContext::enter ()
 {
   m_saved = get_canvas () ;
-  if ( m_saved  && m_saved -> IsModified() ) { m_saved->Update() ; } 
+  // if ( m_saved  && m_saved -> IsModified() ) { m_saved->Update() ; } 
   return active () ;
 } 
 // ============================================================================
@@ -123,7 +121,7 @@ bool Ostap::Utils::CanvasContext::exit  ()
 	if ( obj && obj == m_saved )
 	{
 	  m_saved -> cd ()   ;
-	  if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
+	  /// if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
 	  m_saved =  nullptr ;
 	  return active ()   ;	               // RETURN
 	  // ==================================================================
@@ -138,7 +136,7 @@ bool Ostap::Utils::CanvasContext::exit  ()
   if ( cnv )
   {
     cnv -> cd () ;
-    if ( cnv -> IsModified() ) { cnv -> Update () ; }
+    // if ( cnv -> IsModified() ) { cnv -> Update () ; }
   }
   //
   return active ();

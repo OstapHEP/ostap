@@ -2054,10 +2054,10 @@ def make_Plots ( name                ,
     """ Make selected standard TMVA plots"""
     
     if not output :
-        logger.warning ('No output file is specified!')
+        logger.warning ( 'No output file is specified!')
         return 
     if not os.path.exists ( output ) or not os.path.isfile ( output ) :
-        logger.error   ('No output file %s is found !' % output )
+        logger.error   ( 'No output file %s is found !' % output )
         return
 
     # =========================================================================
@@ -2067,7 +2067,7 @@ def make_Plots ( name                ,
         # =====================================================================
     except ( OSError , IOError ) : # ==========================================
         # =====================================================================
-        logger.error ("Output file %s can't be opened!"   % output )
+        logger.error ( "Output file %s can't be opened!"   % output )
         return
 
     output = os.path.abspath ( output )    
@@ -2098,11 +2098,11 @@ def make_Plots ( name                ,
     if [ m for m in methods if m[0] == ROOT.TMVA.Types.kBDT ] :
         
         if hasattr ( ROOT.TMVA , 'BDT'                    ) :
-            logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDT'" )                 
+            logger.warning ( "make_Plots: Disable ROOT macro `TMVA.BDT'" )                 
             ## plots.append ( ( ROOT.TMVA.BDT                , ( name , output ) , {} ) )
             
         if hasattr ( ROOT.TMVA , 'BDTControlPlots'        ) :
-            logger.warning ( "makePlots: Disable ROOT macro `TMVA.BDTControlPlots'" ) 
+            logger.warning ( "make_Plots: Disable ROOT macro `TMVA.BDTControlPlots'" ) 
             ## plots.append ( ( ROOT.TMVA.BDTControlPlots    , ( name , output ) , {} ) )
             
     if [ m for m in methods if m[0] == ROOT.TMVA.Types.kBoost ] :                
@@ -2128,7 +2128,7 @@ def make_Plots ( name                ,
                 else      : fun ( *args )
                             
 # =============================================================================
-## Decode the varibales
+## Decode the varibale
 #  - 'varname'
 #  - 'nlabel := long_expression'
 #  - 'var    : expression4signal ? expression_for_backgroud'

@@ -828,7 +828,6 @@ def _cmp_draw_ ( self ) :
         
     adjust_histo_range ( hw )
 
-    
     if   isinstance ( hw , ROOT.TH3 ) and 3 == hw.dim () :
 
         hw.draw  ( copy = True )
@@ -913,7 +912,7 @@ def _cmp_draw_ ( self ) :
 
     elif isinstance ( hw , ROOT.TH1 ) and 1 == hw.dim () :
         
-        if hasattr ( hw , 'yellow' ) : hw .yellow ()         
+        if hasattr ( hw , 'gold' ) : hw .gold ( size = 2 )
 
         hw.draw  ( copy = True )
         hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed  )
@@ -1668,9 +1667,10 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
         from   ostap.utils.cleanup    import CleanUp        
         root_file = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-reweight-' )
         
-    ## (re)create ROOT TFile 
+    ## (re) create ROOT TFile 
     with ROOT.TFile ( root_file , 'c' ) : pass
-    
+
+    skip = [] 
     with DBASE.open ( dbase , 'r' ) as db : ## READONLY
         
         rws  = db.get ( tag_reweightings , () )
@@ -1693,20 +1693,22 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
             if isinstance ( rw , ROOT.TObject ) : rw = [ rw ]
             
             if not all ( isinstance ( o , ROOT.TObject ) and callable ( o )  for o in rw ) : 
-                logger.warning ( 'Record %s not callable TObject or sequence of callable TObjects, skip!' % r )  
+                logger.warning ( 'Record %s not callable TObject or sequence of callable TObjects skip!  %s' % ( r , typename ( rw ) ) ) 
+                skip.append ( r ) 
                 continue
             
             with ROOT.TFile ( root_file , 'u' ) as rf : 
                 for i , o in enumerate ( rw ) : rf [ '%s/%d' %  ( r , i ) ] = o 
                 
             good.append ( r )
-
             
         tlst = ROOT.TList()
         for r in good :
             tstr = ROOT.TObjString ( r )
             tlst.Add  ( tstr ) 
 
+    if skip : logger.warning ( 'Record that are *NOT* converted: %s' % ( ';'.join ( r for r in skip ) ) ) 
+        
     title = 'Reweighting DB -> ROOT'
     with ROOT.TFile ( root_file , 'u' ) as rf :
         rf [ tag_reweightings ] = tlst
