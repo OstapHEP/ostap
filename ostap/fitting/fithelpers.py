@@ -78,6 +78,7 @@ from   ostap.utils.basic       import typename , items_loop
 from   ostap.utils.valerrors   import VAE 
 from   ostap.logger.symbols    import times, arrow_right
 import ostap.logger.table      as     T 
+import ostap.histos.axes 
 import ROOT, sys, random, math
 # =============================================================================
 from   ostap.logger.logger   import getLogger
@@ -87,7 +88,7 @@ else                       : logger = getLogger ( __name__                  )
 try                : from string import            ascii_letters
 except ImportError : from string import letters as ascii_letters
 # =============================================================================
-## possible numericla types for variables 
+## possible numerical types for variables 
 numvar_types = num_types + ( VE , )
 # =============================================================================
 ## @class NameDuplicates
@@ -392,7 +393,18 @@ class VarMaker (object) :
         v = self.make_var ( None , 'myvar' , 'mycomment' , 10 , 0 , -1 , 1 )
         v = self.make_var ( v    , 'myvar' , 'mycomment' , 10 )        
         """
-        
+
+        ## if 1D-histogram is given: take the axis 
+        if isinstance ( var , ROOT.TH1 ) and 1 == var.GetDimension () : var = var.GetXaxis()
+
+        ## if TAxis is given: convert to variable 
+        if isinstance ( var , ROOT.TAxis ) :            
+            assert name and isinstance ( name , string_types ) , "make_var: proper name is not specified! "
+            binning = var.roo_binning ()
+            vtitle  = title if title and isinstance ( title , string_types ) else "Variable from TAxis"
+            var     = ROOT.RooRealVar ( name , vtitle , var.GetXmin() , var.GetXmax() )
+            var.setBinning ( binning )
+
         ## expand args [ 0 ] 
         if args and isinstance ( args [ 0 ] , sequence_types ) :
             args0 = tuple ( args [ 0 ] ) 

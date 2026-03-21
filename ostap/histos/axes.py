@@ -277,16 +277,17 @@ def _axis_edges_ ( axis ) :
     """
     nbins = axis.GetNbins ()
     bins  = axis.GetXbins ()
-
-    if bins :
-        
+    # ==========================================================================
+    if bins : # ================================================================
+        # ======================================================================
         for edge in bins : yield edge 
-        
-    else :
-        
+        # ======================================================================
+    else : # ===================================================================
+        # ======================================================================
         yield axis.GetXmin()        
         for i in range ( 1 , nbins ) : yield axis.GetBinUpEdge ( i )        
         yield axis.GetXmax()
+        # ======================================================================
 
 # ==============================================================================
 ## Uniform bining ?
@@ -1039,7 +1040,7 @@ def _axis_matmul_ ( axis , another ) :
     return NotImplemented
 
 # =============================================================================
-## Create 2D or 3D historgam from axes
+## Create 2D or 3D histogram from axes
 #  @code
 #  xaxis = ...
 #  yaxis = ...
@@ -1064,6 +1065,34 @@ def _axis_rmatmul_ ( axis , another ) :
     elif isinstance ( another , ROOT.TAxis ) : return h2_axes ( another , axis )
     ## 
     return NotImplemented
+
+
+# ===========================================================================
+## Create RooBinning from the axis
+#  @code
+#  axis = ...
+#  roobins = axis.make_binning ()
+#  roobins = axis.roo_binning  ()  ## ditto 
+#  @endcode
+#  @see RooBinning 
+def _axis_roobinning_ ( axis , name = '' ) :
+    """ Create RooBinning from the axis
+    - see `ROOT.RooBinning`
+    >>> axis = ...
+    >>> roobins = axis.make_binning ()
+    >>> roobins = axis.roo_binning  ()  ## ditto 
+    """
+    ## nmber of bins  
+    nbins = axis.GetNbins ()
+    ## the bins 
+    bins  = axis.GetXbins ()
+    ##
+    if   bins and name : return ROOT.RooBinning ( nbins , bins , name )
+    elif bins          : return ROOT.RooBinning ( nbins , bins  )
+    ## 
+    xmin, xmax = axis.GetXmin() , axis.GetXmax()
+    return ROOT.RooBinning ( nbins , xmin , xmax , name ) if name else ROOT.RooBinning ( nbins , xmin , xmax )
+
 
 ROOT.TAxis .from_edges     = staticmethod ( axis_from_edges )
 ROOT.TAxis .from_bins      = staticmethod ( axis_from_edges )
@@ -1155,7 +1184,9 @@ ROOT.TAxis.mean_binwidth = property ( _axis_meanbinw_  , None  , None ,  _axis_m
 ROOT.TAxis.binwidths     = property ( _axis_binwidths_ , None  , None ,  _axis_binwidths_ . __doc__ )
 
 
-
+ROOT.TAxis.make_binning = _axis_roobinning_
+ROOT.TAxis.roo_binning  = _axis_roobinning_
+ROOT.TAxis.roobinning   = _axis_roobinning_
 
 _decorated_classes_ = (
     ROOT.TAxis  ,
@@ -1250,10 +1281,11 @@ _new_methods_  = (
     ROOT.TAxis.mean_binwidth   ,
     ROOT.TAxis.binwidths       , 
     ##
+    ROOT.TAxis.make_binning    , 
+    ROOT.TAxis.roo_binning     , 
+    ROOT.TAxis.roobinning      , 
     )
 # =============================================================================
-
-
 
 if '__main__' == __name__ :
             
