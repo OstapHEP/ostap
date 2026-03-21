@@ -106,25 +106,22 @@ def test_tmva2() :
 
     logger = getLogger ( 'test_tmva2' )
 
-    nB = 10000
-    nS = 10000
+    nB = 2000
+    nS = 2000
     
     data_file = prepare_data ( nB , nS ) 
     
-    logger.info('Create and train TMVA')
+    logger.info( 'Create and train TMVA' )
     
-    with ROOT.TFile.Open( data_file ,'READ') as datafile : 
-        datafile.ls()
-        tSignal  = datafile['S']
-        tBkg     = datafile['B']
-        
-        #
-        ## book TMVA trainer
-        #
-        from ostap.tools.tmva import Trainer 
-        trainer = Trainer (
-            name    = 'TestTMVA2' ,   
-            methods = [ # type               name   configuration
+    tSignal = ROOT.TChain ( 'S' ) ; tSignal.Add ( data_file )
+    tBkg    = ROOT.TChain ( 'B' ) ; tSignal.Add ( data_file )
+
+    #
+    ## book TMVA trainer
+    from ostap.tools.tmva import Trainer 
+    trainer = Trainer (
+        name    = 'TestTMVA2' ,   
+        methods = [ # type               name   configuration
             ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
             ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=2" ) , 
             ( ROOT.TMVA.Types.kBDT        , "BDTB"        , "H:!V:NTrees=1000:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20" )  , 
@@ -140,22 +137,22 @@ def test_tmva2() :
             ( ROOT.TMVA.Types.kRuleFit    , "RuleFit"     , "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" ),
             ## ( ROOT.TMVA.Types.kPDERS      , "PDERS"       , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
             ## ( ROOT.TMVA.Types.kKNN        , "KNN"         , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
-            ] ,
-            ## 
-            variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training
-            ##
-            signal          = tSignal                  , ## ``Signal'' sample
-            background      = tBkg                     , ## ``Background'' sample
-            ##
-            verbose         = True                     , 
-            workdir         = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
+        ] ,
+        ## 
+        variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training
+        ##
+        signal          = tSignal                  , ## ``Signal'' sample
+        background      = tBkg                     , ## ``Background'' sample
+        ##
+        verbose         = True                     , 
+        workdir         = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
+    
+    with timing ( 'for TMVA training' , logger ) : 
+        weights_files = trainer.train ()            
+        tar_file      = trainer.tar_file
+        trainer_name  = trainer.name
+        tmva_output   = trainer.output_file
         
-        with timing ( 'for TMVA training' , logger ) : 
-            weights_files = trainer.train ()            
-            tar_file      = trainer.tar_file
-            trainer_name  = trainer.name
-            tmva_output   = trainer.output_file
-            
     # =============================================================================
     ## Use TMVA for classification 
     # =============================================================================

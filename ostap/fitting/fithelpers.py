@@ -394,10 +394,33 @@ class VarMaker (object) :
         v = self.make_var ( v    , 'myvar' , 'mycomment' , 10 )        
         """
 
-        ## if 1D-histogram is given: take the axis 
+        ## tweaks with args: (a,b,c,b)
+
+        ## (a) None ? 
+        if args and args [ 0 ] is None : args = args [ 1 : ] 
+
+        ## (b) args = name , title , *args 
+        if args and isinstance ( args [ 0 ] , string_types ) :            
+            if args [ 0 ] and not name  : name = str ( args  [ 0 ] ) 
+            args = args [ 1: ]
+            
+        ## (c) args = name , title , *args 
+        if args and isinstance ( args [ 0 ] , string_types ) :
+            if args [ 0 ] and not title : title = str ( args  [ 0 ] )  
+            args = args [ 1: ]
+
+        ## (d) expand args [ 0 ] 
+        if args and isinstance ( args [ 0 ] , sequence_types ) :
+            args0 = tuple ( args [ 0 ] ) 
+            args  = args0 + args [ 1 : ] 
+
+            
+        ## tweaks with var: (A,B)
+        
+        ## (A) if 1D-histogram is given: take the axis 
         if isinstance ( var , ROOT.TH1 ) and 1 == var.GetDimension () : var = var.GetXaxis()
 
-        ## if TAxis is given: convert to variable 
+        ## (B) if TAxis is given: convert to variable 
         if isinstance ( var , ROOT.TAxis ) :            
             assert name and isinstance ( name , string_types ) , "make_var: proper name is not specified! "
             binning = var.roo_binning ()
@@ -405,24 +428,7 @@ class VarMaker (object) :
             var     = ROOT.RooRealVar ( name , vtitle , var.GetXmin() , var.GetXmax() )
             var.setBinning ( binning )
 
-        ## expand args [ 0 ] 
-        if args and isinstance ( args [ 0 ] , sequence_types ) :
-            args0 = tuple ( args [ 0 ] ) 
-            args  = args0 + args [ 1 : ] 
-
-        ## None ? 
-        if args and args [ 0 ] is None : args = args [ 1 : ] 
-
-        ## args = name , title , *args 
-        if args and isinstance ( args [ 0 ] , string_types ) :            
-            if args [ 0 ] and not name  : name = str ( args  [ 0 ] ) 
-            args = args [ 1: ]
             
-        ## args = name , title , *args 
-        if args and isinstance ( args [ 0 ] , string_types ) :
-            if args [ 0 ] and not title : title = str ( args  [ 0 ] )  
-            args = args [ 1: ]
-
         ## (1) Try to resolve ambiguity when two variables are specified:
         
         v1 =          isinstance ( var        , ROOT.RooAbsReal )
@@ -440,6 +446,8 @@ class VarMaker (object) :
         assert var or var is None                or \
             isinstance ( var , numvar_types    ) or \
             isinstance ( var , ROOT.RooAbsReal ) , "Invalid vaiable type %s" % typename ( var )  
+
+        ## (1) RooAbsReal is provided (or just created)
         
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif var is None : 
@@ -452,8 +460,8 @@ class VarMaker (object) :
                 "make_var: `name' *must* be specified when `var' is numerical type!"
             name = str ( name )            
             var  = name , title if title else "The %s-variable" % name , float ( var )
-            
-        ## convert sequence of values 
+
+        ## (2) convert sequence of values 
         if   isinstance ( var , ROOT.RooAbsReal ) : pass 
         elif isinstance ( var , sequence_types  ) : var = tuple ( var )
 
