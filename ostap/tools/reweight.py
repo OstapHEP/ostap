@@ -1706,7 +1706,6 @@ def backup_to_ROOT ( dbase , root_file = '' , * , reweightings = () ) :
                     rf.cd() 
                     for i , o in enumerate ( rw ) :
                         address = '%s/%d' % ( r , i )
-                        print ( 'WRITE ' , address , typename ( o ) )
                         if hasattr ( o , 'SetDirectory' ) : o.SetDirectory ( ROOT.nullptr )
                         rf [ address ] = o 
                 

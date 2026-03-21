@@ -90,12 +90,14 @@ def prepare_data ( nB = 10000 , nS = 10000 ) :
             var1[0] =  x
             var2[0] =  y  
             var3[0] =  z 
+            
             treeSignal.Fill()
             
-        test_file.Write()
+        treeSignal.Write() 
+        treeBkg   .Write() 
+        test_file .Write() 
+        
         test_file.ls()
-        treeSignal = None
-        treeBkg    = None
         
     return data_file
 
@@ -114,7 +116,7 @@ def test_tmva2() :
     logger.info( 'Create and train TMVA' )
     
     tSignal = ROOT.TChain ( 'S' ) ; tSignal.Add ( data_file )
-    tBkg    = ROOT.TChain ( 'B' ) ; tSignal.Add ( data_file )
+    tBkg    = ROOT.TChain ( 'B' ) ; tBkg   .Add ( data_file )
 
     #
     ## book TMVA trainer
