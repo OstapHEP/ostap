@@ -1,3 +1,6 @@
+# v3.6.9.10
+
+  Test/intermediate release 
 
 ## New features
 
@@ -9,14 +12,13 @@
   1. make use of new `RooPlot::hist`  accessor (for copy `RooPlot` objects)
   1. improve memory management for `RooDataSet.bootstrap` and `RooDataSet.jackknife`
   1. insert `ROOT.SetOwnership ( ... , True )` for all implicit&explicit call for `RooAbsData::reduce`
-  
+  1. more adjustments & poilshing for treatment of the TCanvas ownership 
+
 ## Bug fixes
 
 ## Backward incompatible
 
   1. remove `delete_data`  & `reset_data` functions 
-
-# v3.7.0.0 
 
 # v3.6.6.9 
 

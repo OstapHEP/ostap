@@ -55,8 +55,10 @@ Ostap::Math::Covariances&
 Ostap::Math::Covariances::add 
 ( const std::vector<double>& input )
 {
+  // (0) empty vector? No actiona
+  if ( input.empty () ) { return *this ; }
   // (1) check input 
-  const std::size_t NN  = N() ;
+  const std::size_t NN  = N () ;
   Ostap::Assert ( NN == input.size() , 
                   "Invalid size of input da ta "        ,
                   "Ostap::Math::NCovarianceL  Ladd"      ,
@@ -73,22 +75,22 @@ Ostap::Math::Covariances::add
   //
   /// update the matrix 
   if ( nn )
+  {
+    m_delta.resize ( NN ) ;
+    for ( std::size_t i = 0 ; i < NN ; ++i )
     {
-      m_delta.resize ( NN ) ;
-      for ( std::size_t i = 0 ; i < NN ; ++i )
-        {
-          const double di =  input [ i ] - m_counters [ i ] .mean() ;
-          m_delta [ i ] = di ;
-          for ( std::size_t j = 0 ; j <= i ; ++j )
-            {
-              const double dj = m_delta [ j ] ;  
-              m_cov2 ( j , i ) += di * nn * dj / ( nn + 1 ) ;
-              // Strange feature of ROOT: TMatrix needs to be symmetrized manually
-              if ( i != j )  { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; } 
-            }
-        }
+      const double di =  input [ i ] - m_counters [ i ] .mean() ;
+      m_delta [ i ] = di ;
+      for ( std::size_t j = 0 ; j <= i ; ++j )
+      {
+	const double dj = m_delta [ j ] ;  
+	m_cov2 ( j , i ) += di * nn * dj / ( nn + 1 ) ;
+	// Strange feature of ROOT: TMatrix needs to be symmetrized manually
+	if ( i != j )  { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; } 
+      }
     }
-  /// update the counters 
+  }
+/// update the counters 
   for ( std::size_t i = 0 ; i < NN ; ++i ) { m_counters [ i ] += input [ i ] ; }
   //
   return *this ;
@@ -116,19 +118,19 @@ Ostap::Math::Covariances::add
   const double      WW =  wA * wB / ( wA + wB ) ;
   //
   for ( std::size_t i = 0 ; i < NN ; ++i )
+  {
+    const double xA =       m_counters[i].mean() ; 
+    const double xB = right.m_counters[i].mean() ;
+    for ( std::size_t j = i ; j < NN ; ++j )
     {
-      const double xA =       m_counters[i].mean() ; 
-      const double xB = right.m_counters[i].mean() ;
-      for ( std::size_t j = i ; j < NN ; ++j )
-        {
-          const double yA =       m_counters[j].mean() ; 
-          const double yB = right.m_counters[j].mean() ;
-          //
-          m_cov2 ( j , i ) += right.m_cov2 ( i, j ) * ( xB - xA ) * ( yB - yA ) * WW ;
-          // Strange feature of ROOT: TMatrix needs to be symmetrized manually
-          if ( i != j ) { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; }           
-        }      
-    }
+      const double yA =       m_counters[j].mean() ; 
+      const double yB = right.m_counters[j].mean() ;
+      //
+      m_cov2 ( j , i ) += right.m_cov2 ( i, j ) * ( xB - xA ) * ( yB - yA ) * WW ;
+      // Strange feature of ROOT: TMatrix needs to be symmetrized manually
+      if ( i != j ) { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; }           
+    }      
+  }
   /// update the counters 
   for ( std::size_t i = 0 ; i < NN ; ++i )
     { m_counters [ i ] += right.m_counters[ i ] ; }
@@ -147,7 +149,6 @@ void Ostap::Math::Covariances::swap
 }
 // ============================================================================
 
-
 // ============================================================================
 // Constructor from the dimensions
 // ============================================================================
@@ -157,7 +158,7 @@ Ostap::Math::WCovariances::WCovariances
   , m_cov2     ( N )
   , m_delta    ( N )
 {
-  Ostap::Assert ( 2 <= N                 , 
+  Ostap::Assert ( 2 <= N                               , 
                   "At least two variables are requred" , 
                   "Ostap::Math::WCovariances"          ,  
                   INVALID_SIZE , __FILE__ , __LINE__   ) ; 
@@ -187,6 +188,8 @@ Ostap::Math::WCovariances::add
 ( const std::vector<double>& input  , 
   const double               weight )
 {
+  // (0) no action for empty vector or zero weight 
+  if ( input.empty () || !weight ) { return *this ; }
   // (1) check input 
   const std::size_t NN  = N() ;
   Ostap::Assert ( NN == input.size() , 
@@ -208,22 +211,22 @@ Ostap::Math::WCovariances::add
   //
   /// update the matrix 
   if ( ww && tw )
+  {
+    const double nw = ww * weight / tw ;  
+    m_delta.resize ( NN ) ;
+    for ( std::size_t i = 0 ; i < NN ; ++i )
     {
-      const double nw = ww * weight / tw ;  
-      m_delta.resize ( NN ) ;
-      for ( std::size_t i = 0 ; i < NN ; ++i )
-        {
-          const double di =  input [ i ] - m_counters [ i ] .mean() ;
-          m_delta [ i ] = di ;
-          for ( std::size_t j = 0 ; j <= i ; ++j )
-            {
-              const double dj = m_delta [ j ] ;  
-              m_cov2 ( j , i ) += di * nw * dj ;
-              // Strange feature of ROOT: TMatrix needs to be symmetrized manually
-              if ( i != j )  { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; } 
-            }
-        }
+      const double di =  input [ i ] - m_counters [ i ] .mean() ;
+      m_delta [ i ] = di ;
+      for ( std::size_t j = 0 ; j <= i ; ++j )
+      {
+	const double dj = m_delta [ j ] ;  
+	m_cov2 ( j , i ) += di * nw * dj ;
+	// Strange feature of ROOT: TMatrix needs to be symmetrized manually
+	if ( i != j )  { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; } 
+      }
     }
+  }
   /// update the counters 
   for ( std::size_t i = 0 ; i < NN ; ++i ) { m_counters [ i ].add ( input [ i ] , weight ) ; }
   //
@@ -254,19 +257,19 @@ Ostap::Math::WCovariances::add
   const double      WW =  wA * wB / ( wA + wB ) ;  
   //
   for ( std::size_t i = 0 ; i < NN ; ++i )
+  {
+    const double xA =       m_counters[i].mean() ; 
+    const double xB = right.m_counters[i].mean() ;
+    for ( std::size_t j = i ; j < NN ; ++j )
     {
-      const double xA =       m_counters[i].mean() ; 
-      const double xB = right.m_counters[i].mean() ;
-      for ( std::size_t j = i ; j < NN ; ++j )
-        {
-          const double yA =       m_counters[j].mean() ; 
-          const double yB = right.m_counters[j].mean() ;
-          /// 
-          m_cov2 ( j , i ) += right.m_cov2 ( i, j ) * ( xB - xA ) * ( yB - yA ) * WW ;
-          // Strange feature of ROOT: TMatrix needs to be symmetrized manually
-          if ( i != j ) { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; }           
-        }      
-    }
+      const double yA =       m_counters[j].mean() ; 
+      const double yB = right.m_counters[j].mean() ;
+      /// 
+      m_cov2 ( j , i ) += right.m_cov2 ( i, j ) * ( xB - xA ) * ( yB - yA ) * WW ;
+      // Strange feature of ROOT: TMatrix needs to be symmetrized manually
+      if ( i != j ) { m_cov2 ( i , j ) = m_cov2 ( j , i ) ; }           
+    }      
+  }
   /// update the counters 
   for ( std::size_t i = 0 ; i < NN ; ++i )
     { m_counters [ i ] += right.m_counters[ i ] ; }

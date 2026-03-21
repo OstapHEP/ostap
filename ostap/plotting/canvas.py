@@ -285,7 +285,6 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
 
     if cnv and isinstance ( cnv , ROOT.TCanvas ) :
         ## ATTENTION!
-        print ( 'EXISTINGT CANVAS IS RE-USED' , cnv.GetName()  )        
         set_pad   ( cnv , **kwargs )
         ROOT.SetOwnership ( cnv , False )
         return cnv 
@@ -304,8 +303,6 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     ## if groot.IsBatch() : cnv = ROOT.TCanvas ( name , title , width , height )
     cnv = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
 
-    print ( 'NEW CANVAS IS CREATED' , cnv.GetName()  )
-    
     ROOT.SetOwnership ( cnv , True )
     ## ROOT.SetOwnership ( cnv , False  )
     

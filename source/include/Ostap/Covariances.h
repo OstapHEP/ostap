@@ -66,17 +66,17 @@ namespace Ostap
       /// update the correlation counter 
       Covariances& add ( const std::vector<double>& input ) ; 
       // ======================================================================
-    public: // add to conuters of the sam size 
+    public: // add two counters of the same size 
       // ======================================================================
       Covariances& add
       ( const Covariances& right ) ;
       // ======================================================================
-      Covariances& operator+=( const Covariances& right )
+      inline Covariances& operator+=( const Covariances& right )
       { return add ( right ) ; }
       // ======================================================================      
     public:
       // ======================================================================
-      Covariances& __iadd__ ( const Covariances& right )
+      inline Covariances& __iadd__ ( const Covariances& right )
       { return add ( right ) ; }
       // ======================================================================
       Covariances  __add__  ( const Covariances& right ) const
@@ -101,8 +101,8 @@ namespace Ostap
     } ;
     // ========================================================================      
     /// external operator for addition of two covariance objects
-    inline Covariances operator+( Covariances a , const Covariances& b ) 
-    { a += b ; return a ; }
+    inline Covariances operator+( const Covariances a , const Covariances& b ) 
+    { Covariances c { a } ; c += b ; return c ; }
     // ========================================================================
     /// swap two objects 
     inline void swap
@@ -165,15 +165,15 @@ namespace Ostap
       WCovariances& add
       ( const WCovariances& right ) ;
       // ======================================================================
-      WCovariances& operator+=( const WCovariances& right )
+      inline WCovariances& operator+=( const WCovariances& right )
       { return add ( right ) ; }
       // ======================================================================      
     public:
       // ======================================================================
-      WCovariances& __iadd__ ( const WCovariances& right )
+      inline WCovariances& __iadd__ ( const WCovariances& right )
       { return add ( right ) ; }
       // ======================================================================
-      WCovariances  __add__  ( const WCovariances& right ) const
+      inline WCovariances  __add__  ( const WCovariances& right ) const
       { WCovariances result { *this } ; result.add ( right ) ; return result ; }      
       // ======================================================================
     public:
@@ -195,8 +195,8 @@ namespace Ostap
     } ;
     // ========================================================================
     /// external operator for addition of two covariance objects
-    inline WCovariances operator+( WCovariances a , const WCovariances& b ) 
-    { a += b ; return a ; }
+    inline WCovariances operator+( const WCovariances a , const WCovariances& b ) 
+    { WCovariances c { a } ; c += b ; return c ; }
     // ========================================================================
     /// swap two objects 
     inline void swap

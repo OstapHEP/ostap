@@ -377,8 +377,9 @@ for iter in range ( 1 , maxIter + 1 ) :
             mcds               , ## what to be reweighted
             plots              , ## reweighting plots/setup
             dbname             , ## DBASE with reweigting constant 
-            delta      = 0.02  , ## stopping criteria
-            minmax     = 0.10  , ## stopping criteria  
+            delta      = 0.05  , ## stopping criteria
+            minmax     = 0.10  , ## stopping criteria
+            maxchi2    = 0.50  , ## stopping criteria             
             power      = power , ## tune: effective power
             make_plots = True  , 
             tag        = tag   ) ## tag for printout

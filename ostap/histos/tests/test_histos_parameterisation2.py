@@ -309,8 +309,7 @@ def test_fourier () :
     my_histos  = [ h for h in histos if hasattr ( h , 'fourier' ) ]
     with timing ( 'Fourier [6]' , logger ) :
         params = [ h.fourier ( 6 ) for h in  my_histos ]
-        ## params = [ h5.fourier ( 4 ) , 
-        ##h6.fourier ( 6 ) ] 
+
         
     for h , f in zip  ( my_histos , params ) :
         with use_canvas ( 'test_fourier: %s' % h.GetTitle () , wait = 2 ) : 
@@ -321,8 +320,7 @@ def test_fourier () :
 # =============================================================================
 def test_cosine() :
     
-    logger =   getLogger("test_cosine")
-    
+    logger     =   getLogger("test_cosine")    
     my_histos  = [ h for h in histos if hasattr ( h , 'cosine' ) ] 
     with timing ( 'Cosine [4]' , logger ) :
         params = [ h.cosine ( 4 ) for h in my_histos ]
@@ -332,7 +330,6 @@ def test_cosine() :
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
 
 # =============================================================================
 def test_positive_spline () :
@@ -499,35 +496,35 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
 
-    test_bernstein              ()
+    test_bernstein          ()
 
-    test_legendre               ()
-    test_chebyshev              ()
-    test_monomial               ()
+    test_legendre           ()
+    test_chebyshev          ()
+    test_monomial           ()
 
-    test_positive               ()
-    test_monotonic              () 
-    test_convex                 () 
-    test_convex_poly            ()
+    test_fourier            ()
+    test_cosine             ()
 
-    test_rational               ()
-    test_brational              ()
+    test_positive           ()
+    test_monotonic          () 
+    test_convex             () 
+    test_convex_poly        ()
+
+    test_rational           ()
+    test_brational          ()
+
+    test_positive_spline    ()
+    test_monotonic_spline   ()
+    test_convex_spline      ()
+    test_convex_only_spline ()
+
+    test_karlin_shapley     ()
+    test_karlin_studden     ()
     
-    test_fourier                ()
-    test_cosine                 ()
+    test_legendre_fast      ()
+    test_legendre2_fast     ()
+    test_legendre3_fast     ()
 
-    test_positive_spline        ()
-    test_monotonic_spline       ()
-    test_convex_spline          ()
-    test_convex_only_spline     ()
-
-    test_karlin_shapley         ()
-    test_karlin_studden         ()
-    
-
-    test_legendre_fast          ()
-    test_legendre2_fast         ()
-    test_legendre3_fast         ()
     
 # =============================================================================
 ##                                                                      The END 

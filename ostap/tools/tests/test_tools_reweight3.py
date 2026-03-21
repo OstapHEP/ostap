@@ -407,8 +407,9 @@ for iter in range ( 1 , maxIter + 1 ) :
             mcds                   , ## what to be reweighted
             the_plots              , ## reweighting plots/setup
             dbname                 , ## DBASE with reweighting constant 
-            delta      = 0.02      , ## stopping criteria
-            minmax     = 0.08      , ## stopping criteria  
+            delta      = 0.05      , ## stopping criteria
+            minmax     = 0.10      , ## stopping criteria
+            maxchi2    = 0.50      , ## stopping criteria             
             power      = power     , ## tune: effective power
             wtruncate  = wtruncate , ## truncate weights 
             make_plots = True      , ## make control plots 
@@ -491,7 +492,7 @@ if converged : # ==============================================================
 
 
 # ===========================================================================
-## from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
+from   ostap.tools.reweight import backup_to_ROOT, restore_from_ROOT
 root_file = backup_to_ROOT    ( dbname     )
 new_db    = restore_from_ROOT ( root_file  )
     

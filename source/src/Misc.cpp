@@ -136,7 +136,7 @@ bool Ostap::Utils::CanvasContext::exit  ()
   if ( cnv )
   {
     cnv -> cd () ;
-    // if ( cnv -> IsModified() ) { cnv -> Update () ; }
+    if ( cnv -> IsModified () ) { cnv -> Update () ; }
   }
   //
   return active ();

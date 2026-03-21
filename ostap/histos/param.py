@@ -794,14 +794,14 @@ def _h1_fourier_sum_ ( h1 , N , **kwargs ) :
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
 def _h1_fourier_ ( h1 ,  
-                   degree           ,
-                   option = 'SQ0'   ,
+                   degree                ,
+                   option = 'SQ0'        ,
                    xmin   = neg_infinity ,
                    xmax   = pos_infinity ,
-                   fixes  = ()      ,
-                   params = ()      ,
-                   limits = ()      , 
-                   refit  = 1       ) :
+                   fixes  = ()           ,
+                   params = ()           ,
+                   limits = ()           , 
+                   refit  = 1            ) :
     
     """ Represent histo as Fourier sum 
         

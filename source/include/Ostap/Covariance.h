@@ -50,9 +50,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// the first counter 
-      const Counter& counter1   () const { return m_cnt1   ; }
+      inline const Counter& counter1   () const { return m_cnt1   ; }
       /// the second counter 
-      const Counter& counter2   () const { return m_cnt2   ; }
+      inline const Counter& counter2   () const { return m_cnt2   ; }
       // ======================================================================
       /// get the moment \f$ \sum_i (x_i - \bar{x} ) ( y_i - \bar{y}) \f$
       inline double cov2m       () const  { return m_cov2m ; }
@@ -86,7 +86,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// add x,y
-      void update
+      inline void update
       ( const double x ,
         const double y ) override { add ( x , y ) ; }
       // ======================================================================
@@ -95,9 +95,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      Covariance& __iadd__ ( const Covariance& right ) { return add ( right ) ; }
+      inline Covariance& __iadd__ ( const Covariance& right ) { return add ( right ) ; }
       // ======================================================================
-      Covariance  __add__  ( const Covariance& right ) const
+      inline Covariance  __add__  ( const Covariance& right ) const
       { Covariance result { *this } ; result.add ( right ) ; return result ; }      
       // ======================================================================
     public :
@@ -115,8 +115,8 @@ namespace Ostap
     };
     // ========================================================================      
     /// external operator for addition of two covariance objects
-    inline Covariance operator+ ( Covariance a , const Covariance& b ) 
-    { a += b ; return a ; }
+    inline Covariance operator+ ( const Covariance a , const Covariance& b ) 
+    { Covariance c { a } ; c += b ; return c ; }
     // ========================================================================
     /// get the covariance matrix
     Covariance::Matrix   covariance   ( const Covariance& ) ;
@@ -154,9 +154,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// the first counter 
-      const Counter& counter1   () const { return m_cnt1   ; }
+      inline const Counter& counter1   () const { return m_cnt1   ; }
       /// the second counter 
-      const Counter& counter2   () const { return m_cnt2   ; }
+      inline const Counter& counter2   () const { return m_cnt2   ; }
       // ======================================================================
       /// get the moment \f$ \sum_i (x_i - \bar{x} ) ( y_i - \bar{y}) \f$
       inline double cov2m       () const  { return m_cov2m ; }
@@ -205,9 +205,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      WCovariance& __iadd__ ( const WCovariance& right ) { return add ( right ) ; }
+      inline WCovariance& __iadd__ ( const WCovariance& right ) { return add ( right ) ; }
       // ======================================================================
-      WCovariance  __add__  ( const WCovariance& right ) const
+      inline WCovariance  __add__  ( const WCovariance& right ) const
       { WCovariance result { *this } ; result.add ( right ) ; return result ; }      
       // ======================================================================
     public:
@@ -225,8 +225,8 @@ namespace Ostap
     };
     // ========================================================================      
     /// external operator for addition of two covariance objects
-    inline WCovariance operator+ ( WCovariance a , const WCovariance& b ) 
-    { a += b ; return a ; }
+    inline WCovariance operator+ ( const WCovariance a , const WCovariance& b ) 
+    { WCovariance c { a } ; c += b ; return c ; }
     // ========================================================================
     /// get the covariance matrix
     WCovariance::Matrix    covariance   ( const WCovariance& ) ;

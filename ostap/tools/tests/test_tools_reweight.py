@@ -167,8 +167,9 @@ for iter in range ( 1 , maxIter + 1  ) :
         active , _ = makeWeights ( mcds               ,
                                    plots              ,
                                    dbname             ,
-                                   delta      = 0.001 ,
-                                   minmax     = 0.002 ,
+                                   delta      = 0.01  , ## stopping criteria             
+                                   minmax     = 0.02  , ## stopping criteria             
+                                   maxchi2    = 0.10  , ## stopping criteria             
                                    power      = 1.05  , ## tiny `overreweighting'
                                    make_plots = True  ,
                                    wtruncate  = ()    , 
