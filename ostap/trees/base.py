@@ -25,7 +25,7 @@ __all__     = (
     'tree_leaf'     , ## get the leaf by name 
 ) 
 # =============================================================================
-from   ostap.core.ostap_types import string_types 
+from   ostap.core.ostap_types import string_types, sequence_types  
 from   ostap.core.base        import valid_pointer
 import ROOT 
 # =============================================================================
@@ -269,6 +269,140 @@ def tree_branch( tree , branch ) :
 
 ROOT.TTree.branch = tree_branch
 
+
+## vaild types 
+add_chain_types = ( ROOT.TChain , ) + string_types
+# =============================================================================
+## extending the existing chain 
+def _tc_iadd_ ( self ,  other ) :
+    """ Add elements (files,  chains) to existing chain
+    >>>  chain  = ...
+    >>>  chain += 'myfile.root'
+    >>>  chain += ( 'myfile1.root' , 'myfile2.root' )    
+    """
+    
+    if isinstance ( other , ROOT.TChain ) :
+
+        ## no self-duplication 
+        if other is self : return self 
+        return _tc_iadd_ ( self , other.files )
+    
+    elif isinstance ( other , string_types ) :        
+        return _tc_iadd_ ( self , [ other ] ) 
+
+    elif isinstance ( other , sequence_types ) and all ( isinstance ( o , add_chain_types ) for o in other ) :
+        
+        _files = set ( f for f in self.files )         
+        for f in other :
+            if   isinstance ( f , ROOT.TChain ) : _tc_iadd_ ( self , f )
+            elif not f in _files                : self.Add  ( f ) 
+        return  self
+    
+    elif isinstance ( other , sequence_types ) and not other :
+        return self
+    
+    return NotImplemented 
+
+# =============================================================================
+## summing two existing chains
+def _tc_add_ ( self ,  other ) :
+    """ Add two  chains together 
+    >>>  chain1 = ...
+    >>>  chain2 = ...
+    >>>  chain3 =  chain1         + chain2
+    >>>  chain4 =  chain1         + 'my_file.root'
+    >>>  chain5 =  chain1         + ( 'my_file1.root' , 'my_file2.root' )
+    >>>  chain5 =  'my_file.root' + chain2 
+    """
+    left  = ROOT.TChain ( self.GetName() )
+    left += self
+    left += other 
+    return  left
+
+ROOT.TChain.__iadd__ = _tc_iadd_
+ROOT.TChain.__add__  = _tc_add_
+ROOT.TChain.__radd__ = _tc_add_
+
+
+
+# =============================================================================
+## get the chain of reduced size (in terms of number of input files)
+#  @code
+#  chain = ...
+#  new_chain = chain[1:3] ## keep only files 1-3
+#  print len(chain), len(new_chain)
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2016-03-17
+def _rc_getslice_ ( self , start , stop , step = 1 ) :
+    """ Get the chain of reduced size (in terms of number of input files) 
+    >>> chain = ...
+    >>> new_chain = chain[1:3] ## keep only files 1-3
+    >>> print len(chain), len(new_chain)
+    """
+    _files = self.files
+    ## get slice 
+    _files = _files [ slice ( start , stop , step ) ] 
+    _chain = ROOT.TChain ( self.GetName() , self.GetTitle() )
+    for _f in _files : _chain.Add ( _f )
+    return _chain
+
+ROOT.TChain.__getslice__ = _rc_getslice_
+
+# =============================================================================
+## Get the chain corresponding to the subset of files
+#  @code
+#  chain  = ...
+#  chain1 = chain[2 ] ## the third file only  
+#  chain2 = chain[:2] ## the first three files  
+#  chain3 = chain[-1] ## the last file 
+#  chain4 = chain[0:-1:2] ## every 2nd file 
+#  @endcode
+def _rc_getitem_ ( self , index ) :
+    """ Get the chain corresponding to the subset of files
+    >>> chain = ...
+    >>> chain1 = chain[2 ] ## the third file only  
+    >>> chain2 = chain[:2] ## the first three files  
+    >>> chain3 = chain[-1] ## the last file 
+    >>> chain4 = chain[0:-1:2] ## every 2nd file 
+    """
+    
+    _files = self.files
+    
+    if isinstance ( index , integer_types ) :
+        
+        assert 0 <= index < len ( _files ), "Invalid index %s" % index
+        _c = ROOT.TChain( self.GetName() , self.GetTitle() )
+        _c.Add ( _files[ index] )
+        return _c 
+        
+    if isinstance ( index , slice ) :
+        _fs = _files [ index ] 
+        _c  = ROOT.TChain( self.GetName() , self.GetTitle() )
+        for _f in _fs :_c.Add ( _f  )
+        return _c 
+
+    raise TypeError ( "Invalid index type %s/%s" % ( index  , type ( index ) ) )
+
+ROOT.TChain.__getitem__ = _rc_getitem_
+
+# ===============================================================================
+## Updated constructor for ROOT.TChain with the list of input files
+#  @code
+#  ch = ROOT.TChain ( 'S' , files = ( 'a.root' , 'b.root' ) ) 
+#  @endcode 
+def _rc_init_ ( chain , *args , files = () , **kwargs ) :
+    """ Updated constructor for ROOT.TChain with the list of input files
+    >>> chain = ROOT.TChain ( 'S' , files = ( 'a.root' , 'b.root' ) )
+    """
+    chain._old_init_ ( *args , **kwargs )
+    if files : chain += files
+    
+if not hasattr ( ROOT.TChain , '_old_init_' ) :
+    ROOT.TChain._old_init_ = ROOT.TChain.__init__
+    ROOT.TChain._new_init_ = _rc_init_
+    ROOT.TChain.__init__   = _rc_init_
+
 # ===============================================================================
 _decorated_classes_ = (
     ROOT.TTree  ,
@@ -304,6 +438,13 @@ _new_methods_ = (
     ROOT.TTree.leaves       ,
     ROOT.TTree.branch       ,
     ROOT.TTree.leaf         ,
+    ## 
+    ROOT.TChain.__iadd__     , 
+    ROOT.TChain.__add__      , 
+    ROOT.TChain.__radd__     , 
+    ROOT.TChain.__getitem__  , 
+    ROOT.TChain.__getslice__ ,     
+    ## 
 )
 # =============================================================================
 if '__main__' == __name__ :

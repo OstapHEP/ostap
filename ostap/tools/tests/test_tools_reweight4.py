@@ -22,6 +22,8 @@ from   ostap.logger.colorized import attention, allright
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.root_utils import batch_env 
 from   ostap.utils.cleanup    import CleanUp
+from   ostap.utils.memory     import memory_usage, delta_ram
+from   ostap.logger.symbols   import iteration
 import ostap.io.zipshelve     as     DBASE
 import ostap.logger.table     as     T 
 import ostap.logger.table     as     T 
@@ -43,17 +45,19 @@ logger.info ( 'Test for ND-Reweighting machinery')
 batch_env ( logger )
 # =============================================================================
 
-if 4 <= numcpu () : 
+if 8 <= numcpu () : 
     
     NDATA  =  500000
     NMC    = 1000000
+
+    NDATA  =  5000
+    NMC    = 10000
     
 else :
      
-    NDATA  =   10000
-    NMC    =   10000
+    NDATA  =   2000
+    NMC    =   2000
 
-testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight4-' )
 
 tag_data_r   = 'DATA_R_histogram'
 tag_data_r1  = 'DATA_R1_histogram'
@@ -67,132 +71,162 @@ dbname       = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-rew
 
 rmax = 20 
 
-def prepare_data ( ) : 
-    #
+def prepare_data ( nF = 5 ) :
+    ## 
+    assert 1 <= nF , "Invalid number of files is specified!"
         
     seed =  1234567890 
     random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
 
-    ## X,Y,Z histogramss
-    
+    ## X,Y,Z histograms
+
+
     ir = 100 
     hr1_histo  = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
     hr2_histo  = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
     hr3_histo  = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
     hr_histo   = h1_axis ( [ rmax/ir*i for i in range ( ir + 1 ) ] )
 
-    with ROOT.TFile.Open ( testdata ,'recreate') as mc_file :
-               
-        mc_file.cd() 
-        
-        datatree  = ROOT.TTree ( tag_data , 'data-tree' )
-        datatree .SetDirectory ( mc_file ) 
-        
-        from array import array 
-        r1var = array    ( 'f', [0])
-        r2var = array    ( 'f', [0])
-        r3var = array    ( 'f', [0])
-        
-        datatree.Branch ( 'r1' , r1var , 'r1/F' )
-        datatree.Branch ( 'r2' , r2var , 'r2/F' )
-        datatree.Branch ( 'r3' , r3var , 'r3/F' )
+    ND1 = 1 + NDATA // nF 
+    NM1 = 1 + NMC   // nF
 
-        ## Gaussian 3D-component with correlations 
-               
-        nentries = 0  
-        while nentries <  NDATA :
-            
-            r1 = random.uniform ( 0 , rmax ) 
-            r2 = random.uniform ( 0 , rmax ) 
-            r3 = random.uniform ( 0 , rmax ) 
-            
-            if 0.75 < random.uniform ( 0 , 1 ) : 
-                rr1 = min ( r1 , r2 , r3 ) 
-                rr2 =     ( r1 + r2 + r3 ) / 3 
-                rr3 = max ( r1 , r2 , r3 ) 
-                r1, r2 , r3 = rr1  , rr2  , rr3 
-                
-                
-            hr1_histo.Fill ( r1 ) 
-            hr2_histo.Fill ( r2 ) 
-            hr3_histo.Fill ( r3 ) 
-                        
-            r1var [ 0 ] = rr1 
-            r2var [ 0 ] = rr2 
-            r3var [ 0 ] = rr3 
-            
-            datatree.Fill()
-            nentries += 1 
-            
-        datatree.Write()
-
-        ## write the histogram 
+    files = []
     
-        mc_file [ tag_data_r1 ] = hr1_histo
-        mc_file [ tag_data_r2 ] = hr2_histo
-        mc_file [ tag_data_r3 ] = hr3_histo
+    for f in range ( nF ) :
+        
+        testfile   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight4-' )        
+        with ROOT.TFile.Open ( testfile ,'recreate') as mc_file :
+            
+            mc_file.cd() 
+            
+            datatree  = ROOT.TTree ( tag_data , 'data-tree' )
+            datatree .SetDirectory ( mc_file ) 
+            
+            from array import array 
+            r1var = array    ( 'f', [0])
+            r2var = array    ( 'f', [0])
+            r3var = array    ( 'f', [0])
+            
+            datatree.Branch ( 'r1' , r1var , 'r1/F' )
+            datatree.Branch ( 'r2' , r2var , 'r2/F' )
+            datatree.Branch ( 'r3' , r3var , 'r3/F' )
+            
+            ## Gaussian 3D-component with correlations 
+            
+            nentries = 0  
+            while nentries <  ND1 :
                 
-        mc_file [ tag_data_r  ] = hr1_histo + hr2_histo + hr3_histo
+                r1 = random.uniform ( 0 , rmax ) 
+                r2 = random.uniform ( 0 , rmax ) 
+                r3 = random.uniform ( 0 , rmax ) 
+                
+                if 0.75 < random.uniform ( 0 , 1 ) : 
+                    rr1 = min ( r1 , r2 , r3 ) 
+                    rr2 =     ( r1 + r2 + r3 ) / 3 
+                    rr3 = max ( r1 , r2 , r3 ) 
+                    r1, r2 , r3 = rr1  , rr2  , rr3 
+                    
+                
+                hr1_histo.Fill ( r1 ) 
+                hr2_histo.Fill ( r2 ) 
+                hr3_histo.Fill ( r3 ) 
+                
+                r1var [ 0 ] = rr1 
+                r2var [ 0 ] = rr2 
+                r3var [ 0 ] = rr3 
+                
+                datatree.Fill()
+                nentries += 1 
+            
+            datatree.Write()
 
-        ## 
-        mctree  = ROOT.TTree ( tag_mc , 'mc-tree' )
-        mctree .SetDirectory ( mc_file ) 
-        
-        from array import array 
+            ## write the histogram 
+            
+            mc_file [ tag_data_r1 ] = hr1_histo
+            mc_file [ tag_data_r2 ] = hr2_histo
+            mc_file [ tag_data_r3 ] = hr3_histo
+            
+            mc_file [ tag_data_r  ] = hr1_histo + hr2_histo + hr3_histo
+            
+            ## 
+            mctree  = ROOT.TTree ( tag_mc , 'mc-tree' )
+            mctree .SetDirectory ( mc_file ) 
+            
+            from array import array 
 
-        r1var = array  ( 'f', [ 0.0 ] )
-        r2var = array  ( 'f', [ 0.0 ] )
-        r3var = array  ( 'f', [ 0.0 ] )
+            r1var = array  ( 'f', [ 0.0 ] )
+            r2var = array  ( 'f', [ 0.0 ] )
+            r3var = array  ( 'f', [ 0.0 ] )
+            
+            mctree.Branch ( 'r1' , r1var , 'r1/F' )
+            mctree.Branch ( 'r2' , r2var , 'r2/F' )
+            mctree.Branch ( 'r3' , r3var , 'r3/F' )
+            
+            nentries = 0 
+            while nentries <  NM1 :
+                
+                r1 = random.gauss ( 0.5  * rmax , 0.40 * rmax )
+                if r1 < 0 or  rmax < r1 : continue
+                
+                r2 = random.gauss ( 0.5  * rmax , 0.40 * rmax )
+                if r2 < 0 or  rmax < r2 : continue
+                
+                r3 = random.gauss ( 0.5  * rmax , 0.40 * rmax )
+                if r3 < 0 or  rmax < r3 : continue
+                
+                rrr = r1 , r2  , r3 
+                
+                if 0.75 < random.uniform ( 0 , 1 ) : rrr = sorted ( rrr )
+                
+                r1var [ 0 ] = rrr[0] 
+                r2var [ 0 ] = rrr[1]
+                r3var [ 0 ] = rrr[2]
+                
+                mctree.Fill()                
+                nentries += 1 
+                
+            mctree .Write()
+            mc_file.Write() 
 
-        mctree.Branch ( 'r1' , r1var , 'r1/F' )
-        mctree.Branch ( 'r2' , r2var , 'r2/F' )
-        mctree.Branch ( 'r3' , r3var , 'r3/F' )
-        
-        nentries = 0 
-        while nentries <  NMC :
+        files.append ( testfile )
 
-            r1 = random.gauss ( 0.5  * rmax , 0.40 * rmax )
-            if r1 < 0 or  rmax < r1 : continue
-            
-            r2 = random.gauss ( 0.5  * rmax , 0.40 * rmax )
-            if r2 < 0 or  rmax < r2 : continue
+    return files
 
-            r3 = random.gauss ( 0.5  * rmax , 0.40 * rmax )
-            if r3 < 0 or  rmax < r3 : continue
-            
-            rrr = r1 , r2  , r3 
-            
-            if 0.75 < random.uniform ( 0 , 1 ) : rrr = sorted ( rrr )
-            
-            r1var [ 0 ] = rrr[0] 
-            r2var [ 0 ] = rrr[1]
-            r3var [ 0 ] = rrr[2]
-            
-            mctree.Fill()
-            
-            nentries += 1 
-            
-        mctree.Write()
 
-if not os.path.exists( testdata ) :
-    with timing ( "Prepare input data" , logger = logger ) :
-        prepare_data ()
-        
+## list of test-files 
+testdata = prepare_data ( nF = 5 )
+    
 # =============================================================================
 ## Read data from DB
 # =============================================================================
-with ROOT.TFile.open ( testdata , 'r' ) as dbroot :
-    
-    logger.info ( 'Test data is fetched from DBASE "%s"' % testdata )   
-    dbroot.ls_table ()
-    
-    hr1_data  = dbroot [ tag_data_r1  ] . clone()
-    hr2_data  = dbroot [ tag_data_r2  ] . clone()
-    hr3_data  = dbroot [ tag_data_r3  ] . clone()
-    hr_data   = dbroot [ tag_data_r   ] . clone()
+hr1_data  = None 
+hr2_data  = None 
+hr3_data  = None 
+hr_data   = None
 
+for test_file in testdata :
+    
+    with ROOT.TFile.open ( test_file , 'r' ) as dbroot :
+
+        hr1 = dbroot [ tag_data_r1 ]
+        hr2 = dbroot [ tag_data_r2 ]
+        hr3 = dbroot [ tag_data_r3 ]
+        hr  = dbroot [ tag_data_r ]
+        
+        if not hr1_data : hr1_data  = hr1.clone()
+        else            : hr1_data += hr1
+
+        if not hr2_data : hr2_data  = hr2.clone()
+        else            : hr2_data += hr2
+        
+        if not hr3_data : hr3_data  = hr3.clone()
+        else            : hr3_data += hr3
+
+        if not hr_data  : hr_data   = hr.clone()
+        else            : hr_data  += hr
+        
 # =============================================================================
 ## prebook MC histograms
 # =============================================================================
@@ -240,21 +274,20 @@ variables  = [
     ]
 
 # =============================================================================
-datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
+datatree   = ROOT.TChain ( tag_data , files = testdata )  
 title      = 'Data/target dataset %d' % len ( datatree ) 
 logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'r1' , 'r2' , 'r3' ] ,
                                                       title     = title    ,
                                                       prefix    = '# '     ) ) )
 
 vct_data  = datatree.statVct ( 'r1,r2,r3' )
-print ( 'VECTOR DATA\n' , vct_data ) 
 n_data    = len ( datatree )
 # =============================================================================
 ## table of global statistics 
 glob_stat = [ ( '#' , 'Mahalanobis' , 'Hotelling' , 'KL/DATA-MC' , 'KL/MC-DATA' , 'KL-sym' ) ] 
 # =============================================================================
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
-    mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )
+    mctree    = ROOT.TChain ( tag_mc , files = testdata )
     ## fill dataset from input MC tree
     mcds_ , _ = mctree.make_dataset ( variables = variables ,
                                       selection = '0<=r1 && r1<%s && 0<=r2 && r2<%s && 0<=r3 && r3<%s' % ( rmax , rmax, rmax ) )
@@ -269,20 +302,22 @@ plots  = [
     WeightingPlot ( 'r1,r2,r3' , 'weight' , 'r-reweight'   , hr_data  , mc_r   ) ,   
     ]
 
+memory_init = memory_usage() 
 converged = False 
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
 
-    tag = 'Reweighting iteration #%d' % iter
-    logger.info ( allright ( tag ) ) 
+    tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
+    mem = ''
+    if 1 < iter : mem = ' Memory: %s=%+.2f[MB]' % ( delta_ram , memory_usage () - memory_init )
+    logger.info ( allright ( tag + mem ) )
     
     # =========================================================================
     ## 0) The weighter object
-    weighter = Weight ( dbname , weightings )
+    weighter = Weight ( dbname , weightings )    
     ## 1a) create new "weighted" mcdataset
-    mcds = mcds_.Clone()
-    ROOT.SetOwnership ( mcds , True ) 
+    mcds = mcds_.copy() 
     
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================
@@ -296,12 +331,12 @@ for iter in range ( 1 , maxIter + 1 ) :
         ## get MC data in a form of vector 
         vct_mc = mcds.statVct ( 'r1,r2,r3', 'weight' )
         n_mc   = int ( mcds.nEff ( 'weight' ) )  
-        trow   = ( '%d'   % iter ,
-                   '%.4g' % vct_mc  .mahalanobis                 ( vct_data ) ,
-                   '%.4g' % Ostap.Math.hotelling ( vct_mc , n_mc , vct_data , n_data ) ,                 
-                   '%.4g' % vct_mc  .asymmetric_kullback_leibler ( vct_data ) , 
-                   '%.4g' % vct_data.asymmetric_kullback_leibler ( vct_mc   ) , 
-                   '%.4g' % vct_data.           kullback_leibler ( vct_mc   ) )
+        trow   = ( '%d'    % iter ,
+                   '%+.4g' % vct_mc  .mahalanobis                 ( vct_data ) ,
+                   '%+.4g' % Ostap.Math.hotelling ( vct_mc , n_mc , vct_data , n_data ) ,                 
+                   '%+.4g' % vct_mc  .asymmetric_kullback_leibler ( vct_data ) , 
+                   '%+.4g' % vct_data.asymmetric_kullback_leibler ( vct_mc   ) , 
+                   '%+.4g' % vct_data.           kullback_leibler ( vct_mc   ) )
         glob_stat.append ( trow )
         ## title = 'MC-data as vector at #%s' % iter
         ## logger.info ( '%s\n%s' % ( title , vct_mc.table ( title = title , prefix = '# ' , correlations =True ) ) ) 
@@ -332,7 +367,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             dbname                 , ## DBASE with reweighting constant 
             delta      = 0.05      , ## stopping criteria
             minmax     = 0.10      , ## stopping criteria  
-            maxchi2    = 1.20      , ## stopping criteria 
+            maxchi2    = 1.50      , ## stopping criteria 
             power      = power     , ## tune: effective power
             wtruncate  = wtruncate , ## truncate weights 
             make_plots = True      , ## make control plots 
@@ -365,34 +400,34 @@ for key in graphs :
 # =============================================================================
 if converged : # ==============================================================
     # =========================================================================
-    with timing ( "Add weight column to initial MC-tree" , logger = logger ) : 
-        mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+    with timing ( "Add weight column to initial MC-tree/chain" , logger = logger ) : 
+        mctree   = ROOT.TChain ( tag_mc   , files = testdata )  
         weighter = Weight ( dbname , weightings )
         mctree   = mctree.add_reweighting ( weighter            ,
                                             name     = 'weight' ,
                                             report   = True     ,
                                             progress = True     , 
                                             parallel = 5000 < len ( mctree ) )
-        mctree   = ROOT.TChain ( tag_mc   ) ; mctree   .Add ( testdata )  
+        mctree   = ROOT.TChain ( tag_mc   , files = testdata )  
 
     # =======================================================================
     ## compare DATA  and MC before and after reweighting
     # ========================================================================
 
-    datatree   = ROOT.TChain ( tag_data ) ; datatree.Add ( testdata )  
-    mctree     = ROOT.TChain ( tag_mc   ) ; mctree  .Add ( testdata )  
+    datatree   = ROOT.TChain ( tag_data , files = testdata )  
+    mctree     = ROOT.TChain ( tag_mc   , files = testdata )  
     # ========================================================================
     title = 'Data/target dataset'
     logger.info ( '%s:\n%s' % ( title , datatree.table2 ( variables = [ 'r1' , 'r2' , 'r3' ] ,
                                                           title     = title    ,
                                                           prefix    = '# '     ) ) )
     # =============================================================================
-    title = 'MC-tree before reweighting' 
+    title = 'MC-tree/chain before reweighting' 
     logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'r1' , 'r2' , 'r3' ] ,
                                                           title     = title    ,
                                                           prefix    = '# '     ) ) )
     # =============================================================================
-    title = 'MC-tree after reweighting' 
+    title = 'MC-tree/chain after reweighting' 
     logger.info ( '%s:\n%s' % ( title , mctree.table2   ( variables = [ 'r1' , 'r2' , 'r3' ] ,
                                                           title     = title    ,
                                                           cuts      = 'weight' , 
@@ -402,8 +437,8 @@ if converged : # ==============================================================
     vct_final = mctree.statVct ( 'r1,r2,r3' , 'weight' )
     n_mc = int ( mctree.nEff('weight')  )
     trow = ( '*' ,
-             '%.4g'  % vct_final .mahalanobis                 ( vct_data  ) , 
-             '%.4g'  % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
+             '%+.4g' % vct_final .mahalanobis                 ( vct_data  ) , 
+             '%+.4g' % Ostap.Math.hotelling ( vct_final , n_mc ,  vct_data  , n_data ) ,         
              '%+.4g' % vct_final .asymmetric_kullback_leibler ( vct_data  ) , 
              '%+.4g' % vct_data  .asymmetric_kullback_leibler ( vct_final ) , 
              '%+.4g' % vct_data  .           kullback_leibler ( vct_final ) )

@@ -16,13 +16,14 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 from   ostap.core.core          import Ostap 
 from   ostap.utils.timing       import timing
+from   ostap.utils.basic        import numcpu 
 from   ostap.logger.colorized   import attention, allright  
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.root_utils   import batch_env
 from   ostap.histos.histos      import h1_axis, h2_axes
 from   ostap.logger.symbols     import iteration
-from   ostap.utils.memory       import memory_usage
+from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.progress_bar import progress_bar 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T
@@ -56,9 +57,18 @@ if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
 import ostap.parallel.kisa
 
+if 8 <= numcpu () : 
 
-N1 = 1000000
-N2 = 50000
+    N1 = 1000000
+    N2 =   50000
+
+    N1 = 10000
+    N2 =  5000
+    
+else :
+    
+    N1 = 2000 
+    N2 = 2000 
 
 xmax     = 20.0
 ymax     = 15.0 
@@ -302,7 +312,7 @@ variables  = [
 
 with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
 
-    mctree    = ROOT.TChain ( tag_mc      ) ; mctree.Add   ( testdata ) 
+    mctree    = ROOT.TChain ( tag_mc  , files = testdata ) 
     mcds_ , _ = mctree.make_dataset ( variables = variables      ,
                                       selection = '0<x && x<20 && 0<y && y<20' ,
                                       silent    = True           ) 
@@ -343,7 +353,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     
     tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
     mem = ''
-    if 1 < iter : mem = ' Memory:%+.2f[MB]' % ( memory_usage () - memory_init )
+    if 1 < iter : mem = ' Memory:%s=%+.2f[MB]' % ( delta_ram , memory_usage () - memory_init )
     logger.info ( allright ( tag + mem ) )
     
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
@@ -353,9 +363,8 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         # =========================================================================
         ## 1a) create new "weighted" mcdataset
-        mcds = mcds_.Clone()
-        ## ROOT.SetOwnership ( mcds , True )
-        
+        mcds = mcds_.copy() 
+
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 
         mcds = mcds.add_reweighting ( weighter ,  name = 'weight' , parallel = True ) 

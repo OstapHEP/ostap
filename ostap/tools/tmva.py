@@ -49,7 +49,8 @@ from   ostap.utils.basic         import items_loop, typename
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.timing        import timing
-from   ostap.plotting.canvas     import use_canvas 
+from   ostap.plotting.canvas     import use_canvas
+import ostap.trees.base 
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools
 # =============================================================================
@@ -206,7 +207,8 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
     
     assert not os.path.exists ( output ) or os.path.isfile ( output ) , \
            "Invalid destination for output tar-file: `%s'" % output
-    
+
+    # ===========================================================================
     if os.path.exists ( output ) and os.path.isfile ( output ) :
         # =======================================================================
         try : # =================================================================
@@ -217,9 +219,9 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
             # ===================================================================
             pass
 
-    
-    if tmp :
-        
+    # ===========================================================================
+    if tmp : # ==================================================================
+        # =======================================================================        
          # 1) create & fill the temporary tar-file
          tmptar = CleanUp.tempfile ( prefix = 'ostap-tmp-tarfile-' , suffix = '.tgz' )         
          with tarfile.open ( tmptar , 'w:gz' ) as tar :
@@ -231,9 +233,9 @@ def make_tarfile ( output , files , verbose = False , tmp = False ) :
                 'Non-existing or invalid temporary tar-file!'
          # 3) move to the final destination 
          shutil.move ( tmptar , output )
-         
-    else :
-
+         # =====================================================================
+    else : # ===================================================================
+        # ======================================================================
         ## create & fill the tar-file
         with tarfile.open ( output, 'w:gz' ) as tar :
             for x in files : 
@@ -1534,49 +1536,45 @@ class Trainer(object):
         # =====================================================================
         ## some statistic
         # =====================================================================
+
+        from ostap.stats.statvars import data_statistic
+        cnf = {'use_frame' : True, 'parallel' : True , 'progress' : self.verbose }
+        sc = ROOT.TCut      ( self.    signal_cuts )
+        bc = ROOT.TCut      ( self.background_cuts )
+        ss = data_statistic ( self.signal     , '1' , cuts = sc , **cnf )
+        sb = data_statistic ( self.background , '1' , cuts = bc , **cnf )
+        NS = ss.nEntries ()
+        NB = sb.nEntries ()
+
+        assert 0 < NS , "No signal     events! [cut:%s]" % sc
+        assert 0 < NB , "No background events! [cut:%s]" % bc
         
-        NS  = -1
-        NB  = -1
         SW  = None
         BW  = None
         ES  = None #effective entries 
         EB  = None #effective entries 
-        cnf = {'use_frame' : True, 'parallel' : True , 'progress' :  False }
-            
-        if 0 <= self.signal_train_fraction     < 1 or \
-           0 <= self.background_train_fraction < 1 or \
-           self.signal_weight                      or \
-           self.background_weight                  or self.verbose :
-            
-            from ostap.stats.statvars import data_statistic
-            sc = ROOT.TCut      ( self.    signal_cuts )
-            bc = ROOT.TCut      ( self.background_cuts )
-            ss = data_statistic ( self.signal     , '1' , cuts = sc , **cnf )
-            sb = data_statistic ( self.background , '1' , cuts = bc , **cnf )
-            NS = ss.nEntries()
-            NB = sb.nEntries()
             
         if self.    signal_weight :
-            from ostap.stats.statvars import data_statistic
             scw  = sc * self.    signal_weight
             sw   = data_statistic ( self.signal , '1' , cuts = scw , **cnf )
             sw   = WSE ( sw ) 
-            ES   = sw.nEff () 
+            ES   = sw.nEff ()
             SW   = VE  ( sw.sumw () , sw.sumw2() )
+            assert 0 < ES , "Invalid signal     effective entries %s [cut*weight=%s]" %  ( ES , scw )
             
         if self.background_weight :
-            from ostap.stats.statvars import data_statistic
             bcw  = bc * self.background_weight                    
             bw   = data_statistic ( self.background  , '1' , cuts = bcw , **cnf )
             bw   = WSE ( bw ) 
             EB   = bw.nEff () 
             BW   = VE  ( bw.sumw () , bw.sumw2() ) 
+            assert 0 < EB , "Invalid background effective entries %s [cut*weight=%s]" %  ( EB , bcw )
             
         if 0 < self.signal_train_fraction < 1 :
             nt = math.ceil ( NS * self.signal_train_fraction )
             bo = self.configuration.split ( ':' )
-            bo = [ b for b in bo if not b.startswith('nTrain_Signal') ]
-            bo = [ b for b in bo if not b.startswith('nTest_Signal' ) ]
+            bo = [ b for b in bo if not b.startswith ( 'nTrain_Signal' ) ]
+            bo = [ b for b in bo if not b.startswith ( 'nTest_Signal'  ) ]
             nt =  'nTrain_Signal=%s' % nt
             self.__configuration = ':'.join ( [ nt ] + bo ) 
             self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
@@ -1591,7 +1589,7 @@ class Trainer(object):
             self.logger.info ( "Extend TMVA configuration for '%s'" % nt ) 
             
         # =================================================================
-        # The table
+        # The tables..
         # =================================================================            
         
         if self.verbose :
@@ -1649,7 +1647,7 @@ class Trainer(object):
 
             import ostap.logger.table as T
             rows  = T.remove_empty_columns ( rows ) 
-            title = "Training samples"
+            title = "TMVA Training samples"
             table = T.table ( rows , prefix = '# ' , title = title , alignment = "lccc" )
             self.logger.info ( '%s:\n%s' % ( title , table ) ) 
 
@@ -2763,8 +2761,7 @@ def _weights2map_ ( weights ) :
 
 # =============================================================================
 ## Add TMVA response to TTree 
-def _add_response_tree_ ( tree       ,
-                          *          ,                          
+def _add_response_tree_ ( tree       , *          ,                          
                           inputs     ,
                           weights    ,
                           options    ,
@@ -2865,8 +2862,7 @@ def _add_response_tree_ ( tree       ,
     return chain
 
 # =============================================================================
-def _add_response_chain_ ( chain      ,
-                           *          ,
+def _add_response_chain_ ( chain      , *          ,
                            inputs     ,
                            weights    , 
                            options    ,
@@ -2897,7 +2893,7 @@ def _add_response_chain_ ( chain      ,
                                      report     = report     ,
                                      progress   = progress   ) 
     
-    branches = set ( tree.branches() ) | set ( tree.leaves () ) if report else set() 
+    branches = set ( chain.branches() ) | set ( chain.leaves () ) if report else set() 
     
     files    = chain.files 
     treepath = chain.full_path

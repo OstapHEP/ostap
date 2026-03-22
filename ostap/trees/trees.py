@@ -92,7 +92,12 @@ logger.debug ( 'Some useful decorations for Tree/Chain objects')
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = False , active = () ) :
+def _iter_cuts_ ( tree                   ,
+                  cuts     = ''          ,
+                  first    = FIRST_ENTRY ,
+                  last     = LAST_ENTRY  ,
+                  progress = False       ,
+                  active   = ()          ) :
     """ Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
@@ -150,12 +155,10 @@ def _iter_cuts_ ( tree , cuts = '' , first = 0 , last = LAST_ENTRY , progress = 
     ievt = tree.GetEntryNumber ( 0 )
     if 0 <= ievt : tree.GetEntry ( ievt )
 
-    
 ROOT.TTree .withCuts  = _iter_cuts_ 
 ROOT.TChain.withCuts  = _iter_cuts_ 
 
 ROOT.TTree. __len__   = lambda s : s.GetEntries()
-
 
 # =============================================================================
 ## Iterator over `good events' in TTree/TChain:
@@ -167,7 +170,12 @@ ROOT.TTree. __len__   = lambda s : s.GetEntries()
 #  @see Ostap::Formula
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _tc_call_ ( tree , first = 0 , last = LAST_ENTRY  , cuts = None , progress = False , active = () ) :
+def _tc_call_ ( tree                   ,
+                first    = FIRST_ENTRY ,
+                last     = LAST_ENTRY  ,
+                cuts     = None        ,
+                progress = False       ,
+                active   = ()          ) :
     """ Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
@@ -243,6 +251,7 @@ else : # ======================================================================
     # =========================================================================
     def get_result ( vct ) : return array.array ( 'd' , vct )
     # =========================================================================
+    
 # =============================================================================
 ##  Iterate over tree entries and get a row/array of values for each good entry
 #   @code
@@ -250,8 +259,8 @@ else : # ======================================================================
 #   for row, weight  in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
 #      print ( row , weight ) 
 #   @code 
-def _tt_rows_ ( tree     , 
-               variables , 
+def _tt_rows_ ( tree                   , 
+               variables               , 
                cuts      = ''          , 
                first     = FIRST_ENTRY , 
                last      = LAST_ENTRY  , 
@@ -679,8 +688,6 @@ ROOT.TTree .__contains__ = _rt_contains_
 ROOT.TChain.__contains__ = _rt_contains_
 
 # =============================================================================
-
-
 
 # =============================================================================
 ## simplified printout for TTree/TChain
@@ -1183,87 +1190,6 @@ ROOT.TTree.table    = _rt_table_
 ROOT.TTree.table2   = _rt_table2_ 
 
 # =============================================================================
-## get the chain of reduced size (in terms of number of input files)
-#  @code
-#  chain = ...
-#  new_chain = chain[1:3] ## keep only files 1-3
-#  print len(chain), len(new_chain)
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2016-03-17
-def _rc_getslice_ ( self , start , stop , *step ) :
-    """ Get the chain of reduced size (in terms of number of input files) 
-    >>> chain = ...
-    >>> new_chain = chain[1:3] ## keep pnly files 1-3
-    >>> print len(chain), len(new_chain)
-    """
-    _files = self.files()
-    ## get slice 
-    _files = _files[ slice(start,stop,*step) ] 
-    _chain = ROOT.TChain( self.GetName() , self.GetTitle() )
-    for _f in _files : _chain.Add ( _f )
-    return _chain
-
-ROOT.TChain.__getslice__ = _rc_getslice_
-
-# =============================================================================
-## iterator over individual trees in the chain
-#  @code
-#  chain = ...
-#  for tree in  chain.trees ()  :
-#       print len(tree)
-#  @endcode 
-def _rc_itrees_   ( self ) :
-    """ Iterator over individual trees in the echain
-    >>> chain = ...
-    >>> for tree in  chain.trees ()  :
-    ...     print len(tree)
-    """
-
-    _files = self.files()
-    for _f in _files :
-        c = ROOT.TChain ( self.GetName() )
-        c.Add ( _f )
-        yield c
-            
-# =============================================================================
-## Get the chain corresponding to the subset of files
-#  @code
-#  chain  = ...
-#  chain1 = chain[2 ] ## the third file only  
-#  chain2 = chain[:2] ## the first three files  
-#  chain3 = chain[-1] ## the last file 
-#  chain4 = chain[0:-1:2] ## every 2nd file 
-#  @endcode
-def _rc_getitem_ ( self , index ) :
-    """ Get the chain corresponding to the subset of files
-    >>> chain = ...
-    >>> chain1 = chain[2 ] ## the third file only  
-    >>> chain2 = chain[:2] ## the first three files  
-    >>> chain3 = chain[-1] ## the last file 
-    >>> chain4 = chain[0:-1:2] ## every 2nd file 
-    """
-    
-    _files = self.files()
-    
-    if isinstance ( index , integer_types ) :
-        
-        assert 0 <= index < len ( _files ), "Invalid index %s" % index
-        _c = ROOT.TChain( self.GetName() , self.GetTitle() )
-        _c.Add ( _files[ index] )
-        return _c 
-        
-    if isinstance ( index , slice ) :
-        _fs = _files [ index ] 
-        _c  = ROOT.TChain( self.GetName() , self.GetTitle() )
-        for _f in _fs :_c.Add ( _f  )
-        return _c 
-
-    raise TypeError("Invalid index type %s/%s" % ( index  , type ( index ) ) )
-
-ROOT.TChain.__getitem__ = _rc_getitem_
-
-# =============================================================================
 ## get "slice" from TTree in a form of numpy.array
 #  @code
 #  tree = ...
@@ -1377,49 +1303,6 @@ def tree_slice ( tree                     ,
 
 ROOT.TTree .slice  = tree_slice
 ROOT.TTree .slices = tree_slice
-
-# =============================================================================
-## extending the existing chain 
-def _tc_iadd_ ( self ,  other ) :
-    """ Add elements (files,  chains) to existing chain
-    >>>  chain  = ...
-    >>>  chain += 'myfile.root'
-    >>>  chain += ( 'myfile1.root' , 'myfile2.root' )    
-    """
-    if   self == other                             : return self
-    
-    elif isinstance ( other , ROOT.TChain ) :
-        return _tc_iadd_ ( self , other.files() ) 
-    
-    elif isinstance ( other , strint_types ) :        
-        if not other in self.files () : self.Add ( other )
-        return self
-
-    elif isinstance ( o , ( list , tuple , set ) ) :        
-        for f in other : _tc_iadd_ ( self , f )
-        return  self
-        
-    return NotImplemented 
-
-# =============================================================================
-## summing two existing chains
-def _tc_add_ ( self ,  other ) :
-    """ Add two  chains together 
-    >>>  chain1 = ...
-    >>>  chain2 = ...
-    >>>  chain3 =  chain1         + chain2
-    >>>  chain4 =  chain1         + 'my_file.root'
-    >>>  chain5 =  chain1         + ( 'my_file1.root' , 'my_file2.root' )
-    >>>  chain5 =  'my_file.root' + chain2 
-    """
-    left  = ROOT.TChain ( self.GetName() )
-    left += self
-    left += other 
-    return  left
-
-ROOT.TChain.__iadd__ = _tc_iadd_
-ROOT.TChain.__add__  = _tc_add_
-ROOT.TChain.__radd__ = _tc_add_
 
 # =============================================================================
 ## get all variables needed to evaluate the expressions for the given tree
@@ -2770,7 +2653,6 @@ _new_methods_  += (
     #
     ROOT.TTree .withCuts  ,
     ROOT.TChain.withCuts  ,
-    ROOT.TTree. __len__   ,
     #
     ROOT.TTree. rows      ,
     #
@@ -2788,9 +2670,6 @@ _new_methods_  += (
     ## 
     ROOT.TTree .__repr__     , 
     ROOT.TTree .__str__      ,
-    #
-    ROOT.TChain.files        ,
-    ROOT.TChain.__getslice__ ,
     #
     ROOT.TTree.slice        ,
     ROOT.TTree.slices       ,

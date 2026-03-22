@@ -22,7 +22,7 @@ from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.logger.symbols     import iteration
-from   ostap.utils.memory       import memory_usage
+from   ostap.utils.memory       import memory_usage, delta_ram
 from   ostap.utils.progress_bar import progress_bar 
 import ostap.io.zipshelve       as     DBASE
 import ostap.logger.table       as     T 
@@ -354,15 +354,14 @@ for iter in range ( 1 , maxIter + 1 ) :
     
     tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
     mem = ''
-    if 1 < iter : mem = ' Memory:%+.2f[MB]' % ( memory_usage () - memory_init )
+    if 1 < iter : mem = ' Memory:%s=%+.2f[MB]' % ( delta_ram , memory_usage () - memory_init )
     logger.info ( allright ( tag + mem ) )
     
     # =========================================================================
     ## 0) The weighter object
     weighter = Weight ( dbname , weightings )
     ## 1a) create new "weighted" mcdataset
-    mcds = mcds_.Clone()
-    ## ROOT.SetOwnership ( mcds , True )
+    mcds = mcds_.copy()
     
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         # =========================================================================

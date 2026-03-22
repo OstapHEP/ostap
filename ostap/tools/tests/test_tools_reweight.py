@@ -15,7 +15,7 @@ from   ostap.logger.colorized   import attention, allright
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.utils.memory       import memory_usage 
+from   ostap.utils.memory       import memory_usage, delta_ram 
 from   ostap.histos.histos      import h1_axis
 from   ostap.logger.symbols     import iteration
 from   ostap.utils.progress_bar import progress_bar 
@@ -130,6 +130,13 @@ variables = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 
 plots      = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
 
+
+## once... 
+with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
+    mcds_ , _ = mctree.make_dataset ( variables = variables ,
+                                      selection = '0<x && x<100' , 
+                                      silent    = True      ) 
+    
 converged   = False
 active      = len ( plots )
 memory_init = memory_usage () 
@@ -139,7 +146,7 @@ for iter in range ( 1 , maxIter + 1  ) :
     
     tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
     mem = ''
-    if 1 < iter : mem = ' Memory:%+.2f[MB]' % ( memory_usage () - memory_init )
+    if 1 < iter : mem = ' Memory:%s=%+.2f[MB]' % ( delta_ram , memory_usage () - memory_init )
     logger.info ( allright ( tag + mem ) )
 
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
@@ -152,9 +159,8 @@ for iter in range ( 1 , maxIter + 1  ) :
         ## 1a) create MC-dataset
         
         ## fill dataset from input CONTROL tree
-        mcds , _ = mctree.make_dataset ( variables = variables      ,
-                                         selection = '0<x && x<100' , 
-                                         silent    = True           ) 
+        mcds = mcds_.copy()  
+        
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
       
         ## 1b) add "weight" variable to the dataset

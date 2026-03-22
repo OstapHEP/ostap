@@ -4018,6 +4018,24 @@ _new_methods_ += [
 ]
 
 # ============================================================================
+## Copy dataset/call for copy-constuctor
+#  @code
+#  dataset = ...
+#  copy    =  dataset.copy () 
+#  @endcode 
+def _ds_copy_ ( dataset , name = None ) :
+    """" Copy dataset/call for copy-constuctor
+    >>> dataset = ...
+    >>> copied  =  dataset.copy ()
+    """
+    the_type = type ( dataset )
+    if name : c = the_type ( dataset , name )
+    else    : c = the_type ( dataset )
+    return c
+
+ROOT.RooAbsData.copy         = _ds_copy_
+ROOT.RooAbsData.__copy__     = _ds_copy_
+ROOT.RooAbsData.__deepcopy__ = _ds_copy_
 
 _new_methods_ += list ( data_decorate ( ROOT.RooAbsData ) )
 del data_decorate
