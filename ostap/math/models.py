@@ -144,7 +144,7 @@ def tf1  ( self , **kwargs  ) :
     fun  = ROOT.TF1 ( funID ()  , _wo , xmin , xmax , **conf )
     ## 
     ## ATTENTION!
-    if ROOT.TF1.EAddToList.kAdd  == addToGlobList : ROOT.SetOwnership ( fun , false ) 
+    if ROOT.TF1.EAddToList.kAdd  == addToGlobList : ROOT.SetOwnership ( fun , False ) 
     ## 
     if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
     else : logger.warning ( "tf1: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 
@@ -243,7 +243,7 @@ def tf2 ( self , **kwargs ) :
     fun  = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , **conf )
     ##
     ## ATTENTION!
-    if ROOT.TF1.EAddToList.kAdd == addToGlobList : ROOT.SetOwnership ( fun , false ) 
+    if ROOT.TF1.EAddToList.kAdd == addToGlobList : ROOT.SetOwnership ( fun , False ) 
     ##
     if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
     else : logger.warning ( "tf2: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 
@@ -352,7 +352,7 @@ def tf3 ( self , **kwargs ) :
     fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , **conf  )
     ##
     ## ATTENTION!
-    if ROOT.TF1.EAddToList.kAdd  == addToGlobList : ROOT.SetOwnership ( fun , false ) 
+    if ROOT.TF1.EAddToList.kAdd  == addToGlobList : ROOT.SetOwnership ( fun , False ) 
     ## 
     if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
     else : logger.warning ( "tf3: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 

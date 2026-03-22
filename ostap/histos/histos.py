@@ -2802,7 +2802,7 @@ class FUNC_F1(FUNCX) :
     def __call__ ( self , x    , *args , **kwargs ) : return self.func ( float ( x ) , *args , **kwargs )  
     def integral ( self ,
                    xmin , xmax , *args , **kwargs ) :
-        i1 = Integral ( self , func , args = args , kwargs = kwargs , err = false )
+        i1 = Integral ( self , func , args = args , kwargs = kwargs , err = False )
         return i1.integral ( xmin , xmax )
     
 # ==============================================================================
@@ -2813,7 +2813,7 @@ class FUNC_F2(FUNCX) :
     def integral ( self ,
                    xmin , xmax ,
                    ymin , ymax , *args , **kwargs ) :
-        i2 = Integral2 ( self , func , args = args , kwargs = kwargs , err = false )
+        i2 = Integral2 ( self , func , args = args , kwargs = kwargs , err = False )
         return i2.integral ( xmin , xmax ,
                              ymin , ymax )
     
@@ -2828,7 +2828,7 @@ class FUNC_F3(FUNCX) :
                    xmin , xmax ,
                    ymin , ymax , 
                    zmin , zmax , *args , **kwargs ) :
-        i3 = Integral3 ( self , func , args = args , kwargs = kwargs , err = false )
+        i3 = Integral3 ( self , func , args = args , kwargs = kwargs , err = False )
         return i3.integral ( xmin , xmax ,
                              ymin , ymax , 
                              zmin , zmax )

@@ -124,7 +124,7 @@ bool Ostap::Utils::CanvasContext::exit  ()
 	if ( obj && obj == m_saved )
 	{
 	  m_saved -> cd ()   ;
-	  if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
+	  // if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
 	  m_saved =  nullptr ;
 	  return active ()   ;	               // RETURN
 	  // ==================================================================
@@ -143,7 +143,7 @@ bool Ostap::Utils::CanvasContext::exit  ()
   if ( cnv )
   {
     cnv -> cd () ;
-    if ( cnv -> IsModified () ) { cnv -> Update () ; }
+    // if ( cnv -> IsModified () ) { cnv -> Update () ; }
   }
   //
   return active ();
