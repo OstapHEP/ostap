@@ -20,7 +20,7 @@ from   ostap.math.integral    import Integral
 import ostap.histos.param
 import ostap.histos.histos
 import ostap.fitting.funcs
-import ROOT, random, numpy, scipy 
+import ROOT, random, numpy, scipy, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -39,6 +39,8 @@ from ostap.histos.param import legendre_sum, chebyshev_sum
 from ostap.core.core    import hID, fID 
 from ostap.utils.timing import timing
 
+fconf = { 'addToGlobList' : ROOT.TF1.EAddToList.kAdd }
+
 h1   = ROOT.TH1F ( hID () , 'decreasing convex ' , 100 , 0 , 1 ) ; h1.Sumw2 () 
 h2   = ROOT.TH1F ( hID () , 'increasing convex ' , 100 , 0 , 1 ) ; h2.Sumw2 () 
 h3   = ROOT.TH1F ( hID () , 'increasing concave' , 100 , 0 , 1 ) ; h3.Sumw2 () 
@@ -46,18 +48,21 @@ h4   = ROOT.TH1F ( hID () , 'decreasing concave' , 100 , 0 , 1 ) ; h4.Sumw2 ()
 h5   = ROOT.TH1F ( hID () , 'symmetric  convex ' , 100 , 0 , 1 ) ; h5.Sumw2 () 
 h6   = ROOT.TH1F ( hID () , 'symmetric  concave' , 100 , 0 , 1 ) ; h6.Sumw2 () 
 
-f1   = ROOT.TF1  ( fID() , '(x-1)**2'         , 0 , 1 )
-f2   = ROOT.TF1  ( fID() , 'x**2'             , 0 , 1 )
-f3   = ROOT.TF1  ( fID() , '1-(x-1)**2'       , 0 , 1 )
-f4   = ROOT.TF1  ( fID() , '1-x**2'           , 0 , 1 )
-f5   = ROOT.TF1  ( fID() , '4*(x-0.5)**2'     , 0 , 1 )
-f6   = ROOT.TF1  ( fID() , '1-4*(x-0.5)**2'   , 0 , 1 )
+f1   = ROOT.TF1  ( fID () , '(x-1)**2'         , 0 , 1 , **fconf )
+f2   = ROOT.TF1  ( fID () , 'x**2'             , 0 , 1 , **fconf )
+f3   = ROOT.TF1  ( fID () , '1-(x-1)**2'       , 0 , 1 , **fconf )
+f4   = ROOT.TF1  ( fID () , '1-x**2'           , 0 , 1 , **fconf )
+f5   = ROOT.TF1  ( fID () , '4*(x-0.5)**2'     , 0 , 1 , **fconf )
+f6   = ROOT.TF1  ( fID () , '1-4*(x-0.5)**2'   , 0 , 1 , **fconf )
 
-f_2  = ROOT.TF2  ( fID() , 'x*x+y*y'     , -1 , 1 , 0 , 2          )
-f_3  = ROOT.TF3  ( fID() , 'x*x+y*y+z*z' , -1 , 1 , 0 , 2 , -1 , 2 )
+f_2  = ROOT.TF2  ( fID () , 'x*x+y*y'     , -1 , 1 , 0 , 2          ) ##  **fconf )
+f_3  = ROOT.TF3  ( fID () , 'x*x+y*y+z*z' , -1 , 1 , 0 , 2 , -1 , 2 ) ##  **fconf )
 
-h_2  = ROOT.TH2F ( hID() , '' , 50 , -1 , 1 , 50 , 0 , 2 )
-h_3  = ROOT.TH3F ( hID() , '' , 20 , -1 , 1 , 20 , 0 , 2 , 20 , -1 , 2 ) 
+f_2.AddToGlobalList ( True )
+f_3.AddToGlobalList ( True )
+
+h_2  = ROOT.TH2F ( hID () , '' , 50 , -1 , 1 , 50 , 0 , 2               )
+h_3  = ROOT.TH3F ( hID () , '' , 20 , -1 , 1 , 20 , 0 , 2 , 20 , -1 , 2 ) 
 
 h_2 += f_2
 h_3 += f_3
@@ -91,12 +96,11 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
     _fund_  = lambda x : ( float ( fun1 ( x ) ) - float ( fun2 ( x ) ) ) ** 2 
                               
     conf = { 'epsrel' : 1.e-5 , 'epsabs' : 1.e-6 , 'integrator' : 'boole' }
-    
+
     d1 = Integral ( _fun1_ , **conf ).integral ( xmin , xmax )
     d2 = Integral ( _fun2_ , **conf ).integral ( xmin , xmax )    
     dd = Integral ( _fund_ , **conf ).integral ( xmin , xmax )   
         
-    import math
     return "%.4e" % ( dd / math.sqrt ( d1 * d2 ) ) 
  
 ## make a quadratic difference between histogram and function 
@@ -115,7 +119,7 @@ def diff2 ( func , histo ) :
     
     _fun1  = lambda x : float ( norm * funobj ( x ) ) 
     _fun2  = lambda x : float (        histo  ( x ) )
-        
+
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
 
@@ -160,11 +164,11 @@ def test_bernstein() :
         params = [ h.bernstein ( 4 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_bernstein %s' % h.GetTitle()  , wait = 2 ) : 
+        with use_canvas ( 'test_bernstein %s' % h.GetTitle() ) :
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw ( 'same'   )
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-            
+
 # =============================================================================
 def test_chebyshev() :
     
@@ -173,9 +177,10 @@ def test_chebyshev() :
         params = [ h.chebyshev ( 4 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_chebyshev %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_chebyshev %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
                 
 # =============================================================================
@@ -186,9 +191,10 @@ def test_legendre() :
         params = [ h.legendre ( 4 ) for h in  histos ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_legendre %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_legendre %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')                        
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
@@ -199,9 +205,10 @@ def test_monomial() :
         params = [ h.polynomial ( 4 ) for h in  histos ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_monomial %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_monomial %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
@@ -212,9 +219,10 @@ def test_positive() :
         params = [ h.positive ( 4 ) for h in  histos ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_positive %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_positive %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 
@@ -229,9 +237,10 @@ def test_monotonic() :
                    h4.monotonic ( 4 , increasing = False ) ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_monotonic %s' % h.GetTitle() , wait = 2) : 
+        with use_canvas ( 'test_monotonic %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
             
 # =============================================================================
@@ -245,9 +254,10 @@ def test_convex () :
                    h4.convex ( 4 , increasing = False , convex = False ) ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_convex %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_convex %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
             
 # =============================================================================
@@ -263,9 +273,10 @@ def test_convex_poly () :
                    h6.concavepoly ( 4 ) ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_convex_poly %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_convex_poly %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same' , copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 
@@ -273,32 +284,34 @@ def test_convex_poly () :
 def test_rational () :
 
     p    = 2
-    funs = set() 
+    funs = [] 
     logger =   getLogger("test_rational")
     for h in  ( h1 , h2 , h3 , h4 ) :
          for d in range ( 0 , p + 3 ) : 
             with timing ( 'Rational [%d/%d]' % ( p , d )  , logger ) :
-                with use_canvas ( 'test_rational [%d/%d] %s' % ( p , d , h.GetTitle() ) , wait = 2 ) :  
+                with use_canvas ( 'test_rational [%d/%d] %s' % ( p , d , h.GetTitle() ) ) :  
                     h.draw()
                     f = h.rational ( p = p , d = d )
-                    f.tf1.draw('same', color = d + 1 )
-                    funs.add ( f ) 
+                    f.tf1.draw('same', color = d + 1 , copy=True)
+                    h.draw('same')            
+                    funs.append ( f ) 
                     logger.info ( "%-25s : [%d/%d] difference %s" %  ( h.title , p , d , diff2 ( f , h ) ) )
 
 # =============================================================================
 def test_brational () :
 
-    n    = 3
-    funs = set() 
-    logger =   getLogger("test_brational")
+    n      = 3
+    funs   = [] 
+    logger = getLogger("test_brational")
     with timing ( 'BRational [%s]' % n , logger ) :
         for h in  ( h1 , h2 , h3 , h4 ) :
-            with use_canvas ( 'test_brational %s' % h.GetTitle() , wait = 2 ) :  
+            with use_canvas ( 'test_brational %s' % h.GetTitle() ) :  
                 h.draw()
                 for d in range ( 2 , n + 2 ) : 
                     f = h.brational ( n = n , d = d )
-                    f.tf1.draw('same', color = d + 1 )
-                    funs.add ( f ) 
+                    f.tf1.draw('same', color = d + 1 , copy=True)
+                    h.draw('same')            
+                    funs.append ( f ) 
                     logger.info ( "%-25s : [%d] difference %s" %  ( h.title , d , diff2 ( f , h ) ) )
                                         
 # =============================================================================
@@ -307,14 +320,14 @@ def test_fourier () :
     logger =   getLogger("test_fourier")
     
     my_histos  = [ h for h in histos if hasattr ( h , 'fourier' ) ]
-    with timing ( 'Fourier [6]' , logger ) :
-        params = [ h.fourier ( 6 ) for h in  my_histos ]
+    with timing ( 'Fourier [8]' , logger ) :
+        params = [ h.fourier ( 8 ) for h in  my_histos ]
 
-        
     for h , f in zip  ( my_histos , params ) :
-        with use_canvas ( 'test_fourier: %s' % h.GetTitle () , wait = 2 ) : 
+        with use_canvas ( 'test_fourier: %s' % h.GetTitle () ) : 
             h    .draw  ()
-            f.tf1.draw  ('same')
+            f.tf1.draw  ('same', copy=True)
+            h    .draw('same')                        
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
@@ -322,13 +335,14 @@ def test_cosine() :
     
     logger     =   getLogger("test_cosine")    
     my_histos  = [ h for h in histos if hasattr ( h , 'cosine' ) ] 
-    with timing ( 'Cosine [4]' , logger ) :
-        params = [ h.cosine ( 4 ) for h in my_histos ]
+    with timing ( 'Cosine [6]' , logger ) :
+        params = [ h.cosine ( 6 ) for h in my_histos ]
         
     for h , f in zip ( my_histos , params ) :
-        with use_canvas ( 'test_cosine: %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_cosine: %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
@@ -339,9 +353,10 @@ def test_positive_spline () :
         params = [ h.pSpline ( degree = 2 , knots = 3 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_positive_spline: %s' % h.GetTitle() , wait = 2) : 
+        with use_canvas ( 'test_positive_spline: %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same', copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
         
 # =============================================================================
@@ -355,9 +370,9 @@ def test_monotonic_spline () :
                    h4.mSpline ( degree = 2 , knots = 3 , increasing = False ) ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_monotonic_spline %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_monotonic_spline %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same', copy=True)
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 
@@ -372,9 +387,10 @@ def test_convex_spline () :
                    h4.cSpline ( degree = 2 , knots = 3 , increasing = False , convex = False ) ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_convex_spline %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_convex_spline %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same', copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 
@@ -391,7 +407,7 @@ def test_convex_only_spline () :
                    h6.concaveSpline ( degree = 2 , knots = 3 ) ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_convex_only_spline %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_convex_only_spline %s' % h.GetTitle() ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
@@ -406,9 +422,10 @@ def test_karlin_shapley () :
         params = [ h.karlin_shapley ( 4 ) for h in  histos[:2] ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_karlin_shapley %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_karlin_shapley %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
             
 
@@ -422,9 +439,10 @@ def test_karlin_studden () :
         params = [ h.karlin_studden ( 4 ) for h in  histos[:2] ]
         
     for h , f in zip ( histos , params ) :
-        with use_canvas ( 'test_karlin_studden %s' % h.GetTitle() , wait = 2 ) : 
+        with use_canvas ( 'test_karlin_studden %s' % h.GetTitle() ) : 
             h    .draw()
-            f.tf1.draw('same')
+            f.tf1.draw('same',copy=True)
+            h    .draw('same')            
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
             
 
@@ -524,7 +542,7 @@ if '__main__' == __name__ :
     test_legendre_fast      ()
     test_legendre2_fast     ()
     test_legendre3_fast     ()
-
+    
     
 # =============================================================================
 ##                                                                      The END 

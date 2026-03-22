@@ -233,7 +233,7 @@ def _h1_param_sum_ ( h1               ,
                 
     if not option                : option  = 'S'
     if not 'S' in option.upper() : option += 'S'
-    
+
     if ( len ( h1 ) < 100 or h1.GetXaxis().IsVariableBinSize() ) and not 'I' in opion.upper() :
         logger.info ( "param_sum: add fitting option 'I'" ) 
         option += 'I'
@@ -272,7 +272,7 @@ def _h1_param_sum_ ( h1               ,
 
     ## see ROOT issue #21080 https://github.com/root-project/root/issues/21080
     r = fun.Fit ( h1 , *fopts )
-
+    
     if isinstance ( refit , integer_types ) : refit = max ( 0 , refit )
     else                                    : refit = 1 if refit else 0 
 

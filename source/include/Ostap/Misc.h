@@ -24,7 +24,8 @@ namespace Ostap
      */
     TVirtualPad* get_pad    () ;
     // ========================================================================
-    /** get the (current) canvas 
+    /** get the (current) canvas
+     *  - current canvas is a canvas associated with current pad 
      *  @see TCanvas 
      */
     TCanvas*     get_canvas () ;

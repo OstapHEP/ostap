@@ -6,7 +6,8 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2011-12-01
 # =============================================================================
-"""Module with some useful fit-models"""
+""" Module with some useful fit-models
+"""
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
@@ -30,7 +31,8 @@ from    ostap.math.base        import  ( pos_infinity     ,
                                          vct2_call_method ,
                                          vct3_call_method )
                                          
-from    ostap.utils.cidict     import cidict, cidict_fun 
+from    ostap.utils.cidict     import cidict, cidict_fun
+from    ostap.plotting.color   import Gold 
 import  ostap.math.derivative  as     D
 import  ostap.math.polynomials 
 import  ostap.math.reduce   
@@ -96,9 +98,11 @@ def tf1  ( self , **kwargs  ) :
     callme = kwargs.pop ( 'callable' , self  ) 
     title  = kwargs.pop ( 'title'    , None  )
     ##
-    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kNo ) 
+    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kAdd ) 
     ##
-    if   ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
+    if   addToGlobList is True  : addToGlobList = ROOT.TF1.EAddToList.kAdd
+    elif addToGlobList is False : addToGlobList = ROOT.TF1.EAddToList.kNo 
+    elif ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
     elif ROOT.TF1.EAddToList.kAdd     == addToGlobList : pass 
     elif ROOT.TF1.EAddToList.kNo      == addToGlobList : pass 
     else :
@@ -138,9 +142,9 @@ def tf1  ( self , **kwargs  ) :
     _wo  = self._wo1
     conf = { 'npar' : npar , 'ndim' : ndim , 'addToGlobList' : addToGlobList } 
     fun  = ROOT.TF1 ( funID ()  , _wo , xmin , xmax , **conf )
-    ##
-    ## ATTENTION! 
-    ROOT.SetOwnership ( fun , ROOT.TF1.EAddToList.kNo == addToGlobList ) 
+    ## 
+    ## ATTENTION!
+    if ROOT.TF1.EAddToList.kAdd  == addToGlobList : ROOT.SetOwnership ( fun , false ) 
     ## 
     if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
     else : logger.warning ( "tf1: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 
@@ -148,6 +152,12 @@ def tf1  ( self , **kwargs  ) :
     if title is None : title = str ( self )            
     fun.SetTitle ( title ) 
     ##
+    line_color = kwargs.pop ( 'line_color' , kwargs.pop ( 'color' , Gold ) )
+    line_width = kwargs.pop ( 'line_width' , kwargs.pop ( 'width' , 3    ) )
+    
+    fun.SetLineColor ( line_color ) 
+    fun.SetLineWidth ( line_width )
+    
     if kwargs :
         from ostap.core.core import remove_draw_args
         kw     = remove_draw_args ( kwargs )
@@ -178,9 +188,11 @@ def tf2 ( self , **kwargs ) :
     callme   = kwargs.pop ( 'callable' , self  ) 
     title    = kwargs.pop ( 'title'    , None  )
     ##
-    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kNo ) 
+    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kAdd ) 
     ##
-    if   ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
+    if   addToGlobList is True  : addToGlobList = ROOT.TF1.EAddToList.kAdd
+    elif addToGlobList is False : addToGlobList = ROOT.TF1.EAddToList.kNo 
+    elif ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
     elif ROOT.TF1.EAddToList.kAdd     == addToGlobList : pass 
     elif ROOT.TF1.EAddToList.kNo      == addToGlobList : pass 
     else :
@@ -226,11 +238,12 @@ def tf2 ( self , **kwargs ) :
     assert ymin < ymax         , "Invalid `ymin/ymax=%s/%s` setting!" % ( ymin , ymax ) 
     ##
     _wo = self._wo2
+    ## 
     conf = { 'npar' : npar , 'ndim' : ndim , 'addToGlobList' : addToGlobList } 
     fun  = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , **conf )
     ##
-    ## ATTENTION! 
-    ROOT.SetOwnership ( fun , ROOT.TF1.EAddToList.kNo == addToGlobList )
+    ## ATTENTION!
+    if ROOT.TF1.EAddToList.kAdd == addToGlobList : ROOT.SetOwnership ( fun , false ) 
     ##
     if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
     else : logger.warning ( "tf2: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 
@@ -269,7 +282,16 @@ def tf3 ( self , **kwargs ) :
     npar     = kwargs.pop ( 'npar '    , 0             )
     callme   = kwargs.pop ( 'callable' , self          ) 
     title    = kwargs.pop ( 'title'    , '3D-function' )
-    ##  
+    ##
+    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kAdd ) 
+    ##
+    if   ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
+    elif ROOT.TF1.EAddToList.kAdd     == addToGlobList : pass 
+    elif ROOT.TF1.EAddToList.kNo      == addToGlobList : pass 
+    else :
+        logger.warning ( "tf2: Unknown `addToGloList` %s, switch to %s" % ( addToGlobList , ROOT.TF1.EAddToList.kNo ) )
+        addToGlobList = ROOT.TF1.EAddToList.kNo
+    ## 
     npx      = kwargs.pop ( 'npx'   , kwargs.pop   ( 'npoints'  , 25 ) )
     npy      = kwargs.pop ( 'npy'      , 25            )
     npz      = kwargs.pop ( 'npz'      , 25            )
@@ -328,9 +350,9 @@ def tf3 ( self , **kwargs ) :
     _wo = self._wo3
     conf = { 'npar' : npar , 'ndim' : ndim , 'addToGlobList' : addToGlobList }
     fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , **conf  )
-    ## 
-    ## ATTENTION! 
-    ROOT.SetOwnership ( fun , ROOT.TF1.EAddToList.kNo == addToGlobList ) 
+    ##
+    ## ATTENTION!
+    if ROOT.TF1.EAddToList.kAdd  == addToGlobList : ROOT.SetOwnership ( fun , false ) 
     ## 
     if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
     else : logger.warning ( "tf3: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 

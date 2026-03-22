@@ -2879,7 +2879,7 @@ def _add_response_chain_ ( chain      , *          ,
     from   ostap.core.core   import   valid_pointer
     
     assert isinstance ( chain , ROOT.TTree ) and valid_pointer ( chain ) , \
-        "Ivnalid TTree/TChain object!"
+        "Invalid TTree/TChain object!"
 
     if not isinstance ( chain , ROOT.TChain ) or chain.nFiles <= 1 :
         return _add_response_tree_ ( chain      ,
@@ -2898,7 +2898,7 @@ def _add_response_chain_ ( chain      , *          ,
     files    = chain.files 
     treepath = chain.full_path
 
-    tree_progress  = progrees and      len ( files ) < 5
+    tree_progress  = progress and      len ( files ) < 5
     chain_progress = progress and 5 <= len ( files )
 
     nfiles = 0 

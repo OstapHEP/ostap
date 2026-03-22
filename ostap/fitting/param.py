@@ -20,7 +20,8 @@ __all__     = (
 from   ostap.core.core        import Ostap, funID
 from   ostap.core.ostap_types import num_types, integer_types
 from   ostap.utils.basic      import typename
-from   ostap.histos.histos    import histo_fit 
+from   ostap.histos.histos    import histo_fit
+from   ostap.plotting.color   import Gold 
 import ostap.fitting.fitresult 
 import ROOT, abc 
 # =============================================================================
@@ -44,9 +45,18 @@ class C1Fun(object) :
         self.__fun  = fun 
         self.__xmin = min ( xmin , xmax )
         self.__xmax = max ( xmin , xmax )
-
-        self.__tf1  = ROOT.TF1 ( funID () , self , self.xmin , self.xmax , ndim = 1 , npar = 3 )
         
+        self.__tf1  = ROOT.TF1 ( funID ()  ,
+                                 self      ,
+                                 self.xmin ,
+                                 self.xmax ,
+                                 npar  = 3 ,
+                                 addToGlobList = ROOT.TF1.EAddToList.kAdd )
+        ROOT.SetOwnership ( self.__tf1 , False )
+        
+        self.__tf1.SetLineColor ( Gold ) 
+        self.__tf1.SetLineWidth ( 3    )
+
         self.__tf1.SetParNames (
             'Norm'  ,
             'Bias'  ,
@@ -214,10 +224,13 @@ class H_fit(HFIT) :
 
         ## create function
         npar = hfit.npars ()     ## NB:  +1 HERE!
-        conf = { 'npar' : npar , 'ndim' : 1, 'addToGlobList' : ROOT.TF1.EAddToList.kNo }
+        conf = { 'npar' : npar , 'ndim' : 1, 'addToGlobList' : ROOT.TF1.EAddToList.kAdd }
         tf1  = ROOT.TF1 ( funID() , self , xmin , xmax , **conf )
-        ROOT.SetOwnership ( tf1 , True ) 
+        ROOT.SetOwnership ( tf1 , False ) 
         
+        tf1.SetLineColor ( Gold ) 
+        tf1.SetLineWidth ( 3    )
+
         ## initialize the base 
         super ( H_fit , self ).__init__ ( hfit , tf1 ) 
     #
@@ -255,9 +268,12 @@ class H_Nfit (HFIT) :
         
         ## create function
         npar = hfit.npars () + 1  ## NB:  +1 HERE!
-        conf = { 'npar' : npar , 'ndim' : 1, 'addToGlobList' : ROOT.TF1.EAddToList.kNo }         
+        conf = { 'npar' : npar , 'ndim' : 1, 'addToGlobList' : ROOT.TF1.EAddToList.kAdd }         
         tf1  = ROOT.TF1 ( funID() , self , xmin , xmax , **conf )
-        ROOT.SetOwnership ( tf1 , True ) 
+        ROOT.SetOwnership ( tf1 , False ) 
+        
+        tf1.SetLineColor ( Gold ) 
+        tf1.SetLineWidth ( 3    )
         
         ## initialize the base 
         super(H_Nfit,self).__init__ ( hfit , tf1 )
@@ -339,7 +355,20 @@ class H1Func(object) :
             
             mn = self._histo.xmin  ()
             mx = self._histo.xmax  ()
-            self._tf1 =  ROOT.TF1  ( funID() , self , mn , mx , ndim = 1 , npar = 3 )
+            
+            self._tf1 = ROOT.TF1  ( funID () ,
+                                    self     ,
+                                    mn       ,
+                                    mx       ,
+                                    ndim = 1 ,
+                                    npar = 3 ,
+                                    addToGlobList = ROOT.TF1.EAddToList.kAdd )
+            
+            ROOT.SetOwnership ( self.__tf1 , False  )
+
+            self.__tf1.SetLineColor ( Gold ) 
+            self.__tf1.SetLineWidth ( 3    )
+
             ## 
             self._tf1.SetParNames  ( 'Norm'  , 'Bias'  , 'Scale' )
             self._tf1.FixParameter ( 0 , 1 )
