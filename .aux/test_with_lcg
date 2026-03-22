@@ -9,5 +9,5 @@ cd build
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
-  OSTAP_BATCH=True COLUMNS=180 ctest -j4 -R '(ts_2D|models6|260|pdfop|constra)' --output-on-failure --test-output-size-failed 5000000 )
+  OSTAP_BATCH=True COLUMNS=180 ctest -j4 --output-on-failure --test-output-size-failed 5000000 )
 

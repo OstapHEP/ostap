@@ -179,6 +179,12 @@ then
     
     OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
     echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
+
+elif [[   ${OSTAP_BUILD} && `echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]'` == "TMP" ]]
+then
+    
+    OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
+    echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
     
 elif [[ -d ${OSTAP_SOURCE}/build &&
 	-w ${OSTAP_SOURCE}/build ]]
