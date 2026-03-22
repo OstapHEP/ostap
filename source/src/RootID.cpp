@@ -57,19 +57,24 @@ std::string Ostap::Utils::rootID
   //
   TROOT* root = ROOT::GetROOT() ;
   if ( !root ) { return prefix + "0000" + suffix ; }
+  // 
+  /// lock it...
+  R__LOCKGUARD(gROOTMutex) ;    
   //
   static const unsigned long N = std::numeric_limits<unsigned long>::max ()  ; 
   for ( unsigned long label = 1001 ; label < N ; ++label )
   {
     const std::string tag { prefix +
-      Ostap::format ( ( label <   10000 ) ? "%04u" :
-		      ( label < 1000000 ) ? "%06u" : "%u" , label ) + suffix } ;      
+			    Ostap::format ( ( label <   10000 ) ? "%04u" :
+					    ( label <  100000 ) ? "%05u" :
+					    ( label < 1000000 ) ? "%06u" : "%u" , label ) + suffix } ;      
     /// check ROOT & ROOT/RooFit 
     if      ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
     else if ( nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
     /// 
     return tag ;
   }
+  //
   return prefix + "XXXX" + suffix ;
 }
 // ============================================================================
@@ -84,6 +89,8 @@ bool Ostap::Utils::usedRootID
 {
   TROOT* root = ROOT::GetROOT() ;
   if ( !root ) { return false ; }
+  /// lock it...
+  R__LOCKGUARD(gROOTMutex) ;
   //
   return
     ( nullptr != RooNameReg::known ( name.c_str() ) ) || 

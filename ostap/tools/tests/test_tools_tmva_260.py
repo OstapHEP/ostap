@@ -6,9 +6,8 @@ def  get_name () :
     the_file.close()
     os.unlink ( the_file.name )
     return the_file.name 
-    
-    
-def prepare_data (  nB =  1000 , nS = 1000 ) : 
+        
+def prepare_data ( nB =  1000 , nS = 1000 ) : 
 
     data_file = get_name() 
     
@@ -58,10 +57,15 @@ def prepare_data (  nB =  1000 , nS = 1000 ) :
             
         treeSignal.Fill()
             
-    test_file.Write()
+    treeSignal.Write ()
+    treeBkg   .Write ()
+    test_file .Write ()
+    
     test_file.ls()
     test_file.Close()
-    ROOT.gROOT.cd() 
+    
+    ROOT.gROOT.cd()
+    
     return data_file 
 
 
@@ -99,14 +103,14 @@ with ROOT.TFile.Open(  get_name() , 'NEW' ) as out_file :
     
     dataloader = ROOT.TMVA.DataLoader ( name )
     for v in variables : dataloader.AddVariable ( v, 'F')
+
+    the_cut = ROOT.TCut() 
+    dataloader.AddTree ( tSignal  , 'Signal'     , 1.0 , the_cut ) 
+    dataloader.AddTree ( tBkg     , 'Background' , 1.0 , the_cut )
     
-    dataloader.AddTree ( tSignal  , 'Signal'     , 1.0 , "" ) 
-    dataloader.AddTree ( tBkg     , 'Background' , 1.0 , "" )
-    
-    dataloader.PrepareTrainingAndTestTree( "-1.e+30<var1" , "-1.e+30<var1" , CONFIGURATION )
+    dataloader.PrepareTrainingAndTestTree( the_cut , the_cut , CONFIGURATION )
     
     di = dataloader.DataInput()
-    
     
     print ( "AFTER:", di.GetNTrees("Signal")     , ' #sig-trees' )
     print ( "AFTER:", di.GetNTrees("Background") , ' #bkg-trees' )

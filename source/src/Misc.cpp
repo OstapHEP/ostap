@@ -21,15 +21,16 @@
 TVirtualPad* Ostap::Utils::get_pad ()
 {
   // TVirtualPad* pad  = nullptr ; 
-  // const TROOT* groot = ROOT::GetROOT() ;
+  // const TROOT* root = ROOT::GetROOT() ;
   // (1) current` pad?
-  // if ( nullptr != groot ) { pad = groot->GetSelectedPad() ; }
+  // if ( nullptr != root ) { pad = root->GetSelectedPad() ; }
   // (2) global  pad? 
   // if ( nullptr != pad   ) { return pad ; }
   return TVirtualPad::Pad() ;
 }
 // ============================================================================
-/* get the (current) canvas 
+/*  get the (current) canvas 
+ *  - current canvas is a canvas associated with current pad 
  *  @see TCanvas 
  */
 // ============================================================================
@@ -109,11 +110,13 @@ bool Ostap::Utils::CanvasContext::exit  ()
   // check the saved canvas is existing valid TCanvas and make at active
   // otherwise switch to the current_canvas if it is valid 
   //  
-  TROOT* groot = ROOT::GetROOT ()  ;
-  if ( groot )
+  TROOT* root = ROOT::GetROOT ()  ;
+  if ( root )
   {
+    /// lock it...
+    R__LOCKGUARD(gROOTMutex) ;
     /// get the list of all alived canvases
-    TSeqCollection* all_canvases = groot->GetListOfCanvases() ;
+    TSeqCollection* all_canvases = root->GetListOfCanvases() ;
     if ( all_canvases )
     {
       for ( const TObject* obj : *all_canvases )
@@ -121,14 +124,18 @@ bool Ostap::Utils::CanvasContext::exit  ()
 	if ( obj && obj == m_saved )
 	{
 	  m_saved -> cd ()   ;
-	  /// if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
+	  if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
 	  m_saved =  nullptr ;
 	  return active ()   ;	               // RETURN
 	  // ==================================================================
-	} // valid canvas is found in  the list 
-      }	// list of all canvas 
-    } // valid collection of all canvases 
-  } // valid TROOT 
+	} //                                 Valid canvas is found in  the list
+	// ====================================================================
+      }	//                                                 List of all canvases
+      // ======================================================================
+    } //                                       Valid collection of all canvases
+    // ========================================================================
+  } //                                                              Valid TROOT
+  // ==========================================================================
   /// 
   /// otherwise switch to the current canvas if valid 
   m_saved      = nullptr ;
