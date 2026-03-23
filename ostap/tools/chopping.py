@@ -2008,8 +2008,6 @@ class Reader(object) :
                "Invalid `category' %s/%s" % ( category ,  type ( category ) )
         return self.__readers[ category ].evaluate ( method , *args ) 
                                 
-
-
 # =============================================================================
 ## Specific action to ROOT.TTree
 def _add_response_tree_ ( tree , * , 
@@ -2131,7 +2129,6 @@ def _add_response_tree_ ( tree , * ,
             chain.Add  ( filename )     
             
     return chain
-
         
 # =============================================================================d
 ## Specific action to ROOT.TChain
@@ -2200,9 +2197,8 @@ def _add_response_chain_ ( chain      , * ,
                               progress   = tree_progress ) 
         
         
-    chain = ROOT.TChain ( treepath )
-    chain.Add  ( filename )
-
+    chain  = ROOT.TChain ( treepath , files = files )
+    
     if report :
         new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
         if new_branches :
@@ -2211,8 +2207,7 @@ def _add_response_chain_ ( chain      , * ,
             else      : title = "Added %s branches to TChain(%s)" % ( n , treepath )  
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-            chain = ROOT.TChain ( treepath )
-            chain.Add  ( filename )     
+            chain  = ROOT.TChain ( treepath , files = files )
             
     return chain
   

@@ -20,6 +20,7 @@ from   ostap.utils.root_utils   import batch_env
 from   ostap.utils.cleanup      import CleanUp
 import ostap.core.core        
 import ostap.io.root_file
+import ostap.trees.trees
 import ROOT, os, array, random  
 # =============================================================================
 # logging 
@@ -38,7 +39,7 @@ batch_env ( logger )
 ## Prepare trainig and testing data for TMVA 
 def prepare_data ( nB = 2000 , nS = 1000 , nF = 5 ) :
     
-    assert 1 <= nF , "Invalid numbver of files is specified!"
+    assert 1 <= nF , "Invalid number of files is specified!"
     
     files = []
 
@@ -162,7 +163,8 @@ logger.info('Create and train TMVA')
 # ============================================================================
 cSignal = ROOT.TChain ( 'S' , files = data_files )
 cBkg    = ROOT.TChain ( 'B' , files = data_files )
-# 
+#
+
 ## book TMVA trainer
 from ostap.tools.chopping import Trainer 
 trainer = Trainer (
@@ -192,7 +194,8 @@ trainer = Trainer (
     spectators     = ( 'VARA', )              , ## spectator
     ## 
     signal         = cSignal                  , ## `Signal' sample
-    background     = cBkg                     , ## `Background' sample         
+    background     = cBkg                     , ## `Background' sample
+    ##
     verbose        = True                     ,
     make_plots     = True                     ,   
     logging        = True                     ,  ## produce  log-files 

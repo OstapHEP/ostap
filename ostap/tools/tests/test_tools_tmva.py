@@ -26,7 +26,8 @@ from   ostap.stats.counters     import table_counters
 from   ostap.utils.progress_bar import progress_bar 
 from   ostap.tools.tmva         import Reader, addTMVAResponse
 from   ostap.utils.cleanup      import CleanUp
-from   ostap.utils.root_utils   import batch_env 
+from   ostap.utils.root_utils   import batch_env
+import ostap.trees.trees 
 import ostap.io.root_file 
 import ROOT, os, random 
 # =============================================================================
@@ -249,11 +250,11 @@ def test_tmva () :
     for m in reader.methods[:] :
         variables += [ Variable ( 'tmva1_%s_response' % m , 'TMVA(%s)' % m , accessor = reader[m] ) ]
 
-    with timing ( "Add TMVA response during TTree->RooDataSet transformation (signal)"     , logger =logger ) : 
+    with timing ( "Add TMVA response during TTree -> RooDataSet transformation (signal)"     , logger =logger ) : 
         tSignal   = ROOT.TChain ( 'S' , files = data_files )
         ds_S1, _  = tSignal.fill_dataset ( variables , progress = True )
         
-    with timing ( "Add TMVA response during TTree->RooDataSet transformation (background)" , logger =logger ) : 
+    with timing ( "Add TMVA response during TTree -> RooDataSet transformation (background)" , logger =logger ) : 
         tBkg      = ROOT.TChain ( 'B' , files = data_files ) 
         ds_B1, _  = tBkg   .fill_dataset ( variables , progress = True )
         
@@ -287,7 +288,7 @@ def test_tmva () :
     # ===============================================================================
     ## (4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (slow)
     # ===============================================================================
-    logger.info ( '(4) Calcuate TMVA decision on-fly via the explict loop over TTree entries (CAN BE SLOW)')
+    logger.info ( '(4) Calculate TMVA decision on-fly via the explict loop over TTree entries (CAN BE SLOW)')
     with timing ( "TMVA response via explicit loop over signal TTree" , logger =logger ) :
         tSignal   = ROOT.TChain ( 'S' , files = data_files  )
         counters  = {}
@@ -313,7 +314,7 @@ def test_tmva () :
     # ===============================================================================
     ## (5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (slow)
     # ===============================================================================
-    logger.info ( '(5) Calcuate TMVA decision on-fly via the explict loop over RooDataSet entries (CAN BE SLOW)')
+    logger.info ( '(5) Calculate TMVA decision on-fly via the explict loop over RooDataSet entries (CAN BE SLOW)')
     with timing ( "TMVA response via explicit loop over signal     RooDataSet" , logger =logger ) :
         counters  = {}
         methods   = reader.methods[:] 

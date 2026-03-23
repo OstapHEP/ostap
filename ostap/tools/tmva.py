@@ -2916,8 +2916,7 @@ def _add_response_chain_ ( chain      , *          ,
                               progress   = tree_progress  ,
                               report     = False          )
         
-    chain  = ROOT.TChain ( treepath )
-    chain += files 
+    chain  = ROOT.TChain ( treepath , files = files )
 
     if report :
         new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
@@ -2927,8 +2926,7 @@ def _add_response_chain_ ( chain      , *          ,
             else      : title = "Added %s branches to TTree(%s)" % ( n , treepath )  
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-            chain  = ROOT.TChain ( treepath )
-            chain += files 
+            chain  = ROOT.TChain ( treepath , files = files )
             
     return chain
         

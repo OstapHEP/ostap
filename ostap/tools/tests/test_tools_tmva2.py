@@ -23,6 +23,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.cleanup      import CleanUp
 from   ostap.tools.tmva         import Reader, addTMVAResponse
 from   ostap.utils.root_utils   import batch_env 
+import ostap.trees.trees 
 import ostap.io.root_file 
 import ROOT, array, os, random 
 # =============================================================================

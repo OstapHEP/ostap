@@ -387,28 +387,22 @@ def _rc_getitem_ ( self , index ) :
 ROOT.TChain.__getitem__ = _rc_getitem_
 
 # ===============================================================================
-## Updated constructor for ROOT.TChain with the list of input files
+## Updated constructor for ROOT.TChain with (optional) list of input files
 #  @code
 #  ch = ROOT.TChain ( 'S' , files = ( 'a.root' , 'b.root' ) ) 
 #  @endcode 
 def _rc_init_ ( chain , *args , files = () , **kwargs ) :
-    """ Updated constructor for ROOT.TChain with the list of input files
+    """ Updated constructor for ROOT.TChain with (optional)  list of input files
     >>> chain = ROOT.TChain ( 'S' , files = ( 'a.root' , 'b.root' ) )
     """
     print ( 'TCHAIN/INIT:', args , kwargs , files ) 
     chain._old_init_ ( *args , **kwargs )
     if files : chain += files
 
-for i in range ( 20 ) :
-    print ( 'TCHAIN-INIT-BEFORE' , i )
-    
 if not hasattr ( ROOT.TChain , '_old_init_' ) :
-    print ( 'TCHAIN-INIT-INSIDE' ) 
     ROOT.TChain._old_init_ = ROOT.TChain.__init__
     ROOT.TChain._new_init_ = _rc_init_
     ROOT.TChain.__init__   = _rc_init_
-
-print ( 'TCHAIN-INIT-AFTER' , ROOT.TChain.__init__ ) 
 
 # ===============================================================================
 _decorated_classes_ = (

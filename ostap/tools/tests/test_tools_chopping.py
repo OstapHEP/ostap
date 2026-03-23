@@ -19,6 +19,7 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing
 from   ostap.utils.root_utils   import batch_env 
 from   ostap.utils.cleanup      import CleanUp
+import ostap.trees.trees   
 import ostap.io.root_file
 import ROOT, os, array, random  
 # =============================================================================
