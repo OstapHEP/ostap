@@ -15,7 +15,7 @@ from   ostap.core.core        import Ostap
 from   ostap.utils.basic      import typename
 from   ostap.utils.root_utils import batch_env
 import ostap.logger.table     as     T 
-from   ostap.math.math_base   
+import ostap.math.math_base   
 import ROOT, array, random, numpy    
 # ============================================================================= 
 # logging 

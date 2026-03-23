@@ -29,7 +29,7 @@ from   ostap.histos.histos    import histo_fit
 import ostap.math.math_ve     as     MVE 
 import ostap.histos.param
 import ostap.fitting.param 
-import ROOT, math 
+import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
@@ -110,7 +110,7 @@ def _h1_cmp_fit_ ( h1              ,
     f2.fix        ( 2 , 1 )
 
     while 100 < len ( __fun_cache ) :
-        __fun_cache.pop ()   
+        __fun_cache.pop ( 0 )   
     __fun_cache.insert ( 0 , ( f2 , h1 , h2 ) )
 
     ## from ostap.plotting.canvas import use_canvas
@@ -123,9 +123,9 @@ def _h1_cmp_fit_ ( h1              ,
     option = option if 'S' in option else option + 'S'
     
     rf = f2.Fit ( h1 , option )
-    if 0 == rf.Status() and not '0' in option and not 'N' in option :
-        cnv = Ostap.Utils.get_canvas () 
-        if cnv : cnv.Update()
+    ## if 0 == rf.Status() and not '0' in option and not 'N' in option :
+    ##    cnv = Ostap.Utils.get_canvas () 
+    ##    if cnv : cnv.Update()
         
     if 0 != rf.Status() :
         logger.error ( "Can't fit with function " % rf.Status() )
