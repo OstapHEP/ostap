@@ -30,7 +30,7 @@ __all__     = (
     'run_py'           , ## function to run/import python scripts
 )
 # ============================================================================= 
-from   ostap.core.base        import rootException 
+from   ostap.core.core_base   import rootException 
 import ostap.core.config      as     config 
 import ostap.core.build_dir
 import ostap.core.cache_dir

@@ -15,7 +15,8 @@ __date__    = "2020-02-28"
 __all__     = (
     )
 # =============================================================================
-from   ostap.math.base import scipy, numpy, numpy_version 
+from   ostap.math.math_base import numpy_version
+import numpy, scipy 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_interpolation' )

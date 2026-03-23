@@ -14,9 +14,9 @@ from   ostap.math.linalg      import checkops, gsl_info
 from   ostap.core.core        import Ostap
 from   ostap.utils.basic      import typename
 from   ostap.utils.root_utils import batch_env
-from   ostap.math.base        import numpy 
 import ostap.logger.table     as     T 
-import ROOT, array, random   
+from   ostap.math.math_base   
+import ROOT, array, random, numpy    
 # ============================================================================= 
 # logging 
 # =============================================================================

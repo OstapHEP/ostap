@@ -33,7 +33,7 @@ __date__    = "2020-06-08"
 __all__     = ()
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
-from   ostap.math.base        import isfinite, isequal
+from   ostap.math.math_base   import isfinite, isequal
 from   ostap.core.core        import Ostap, VE
 from   ostap.logger.pretty    import pretty_float
 from   ostap.logger.symbols   import times, sum_symbol 

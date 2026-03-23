@@ -80,7 +80,7 @@ __all__     = (
 # =============================================================================
 from    ostap.core.core        import Ostap , funID
 from    ostap.core.ostap_types import is_integer, sequence_types, num_types 
-from    ostap.math.base        import iszero, isequal, signum
+from    ostap.math.math_base   import iszero, isequal, signum
 import  ostap.math.reduce 
 import  ROOT, math  
 # =============================================================================
@@ -948,7 +948,7 @@ def _p_new_init_ ( t ,  *args )  :
     - std::vector<double> 
     - or std::vector<std::complex<double>>
     """
-    from ostap.math.base        import doubles , complexes, VCT_TYPES 
+    from ostap.math.math_base   import doubles , complexes, VCT_TYPES 
     from ostap.core.ostap_types import Generator, Sequence, list_types  
     
     largs = list ( args )

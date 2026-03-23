@@ -23,8 +23,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.geometry' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 from ostap.core.ostap_types import num_types
-from ostap.math.base        import Ostap
-
+from ostap.math.math_base   import Ostap
 
 ## ROOT::Math namespace
 _RM = ROOT.ROOT.Math
@@ -50,12 +49,10 @@ Ostap.XYZLine             = Ostap.Math.XYZLine
 Ostap.Line3D              = Ostap.Math.XYZLine
 Ostap.Math.Line3D         = Ostap.Math.XYZLine
 
-
 ## Ostap.LorentzVector       = _RM.PxPyPzEVector
 ## ============================================================================
 ## some useful decoration:
 ## ============================================================================
-
 
 ## 3-vectors 
 _P3D = Ostap.XYZPoint

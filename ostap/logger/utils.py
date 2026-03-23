@@ -47,7 +47,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types, string_types  
 from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning, logError
-from   ostap.math.base        import isfinite, iszero, frexp10
+from   ostap.math.math_base   import isfinite, iszero, frexp10
 from   ostap.logger.mute      import ( mute   , mute_py ,
                                        tee_py , tee_cpp ,
                                        output , silence , silence_py ,

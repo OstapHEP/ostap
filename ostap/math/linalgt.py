@@ -16,7 +16,7 @@ __version__ = ""
 __all__     = ( )
 # =============================================================================
 from   sys                    import version_info as python_version
-from   ostap.math.base        import isequal , iszero , std, Ostap
+from   ostap.math.math_base   import isequal , iszero , std, Ostap
 from   ostap.core.ostap_types import num_types, integer_types
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.utils.gsl        import gsl_info  

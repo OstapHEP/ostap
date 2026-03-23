@@ -24,7 +24,7 @@
 ## sys.modules['gdbm'  ] = None
 ## ##  sys.modules['dbm'   ] = None
 # =============================================================================
-from   ostap.math.base       import iszero
+from   ostap.math.math_base  import iszero
 from   ostap.core.pyrouts    import VE, hID 
 from   ostap.utils.timing    import timing
 from   ostap.utils.utils     import random_name 

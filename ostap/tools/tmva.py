@@ -40,9 +40,9 @@ from   ostap.core.meta_info      import python_info, root_info
 from   ostap.core.ostap_types    import ( num_types      , integer_types  ,
                                           dictlike_types , sized_types    , 
                                           string_types   , sequence_types ) 
-from   ostap.core.base           import rootWarning, valid_pointer 
+from   ostap.core.core_base      import rootWarning, valid_pointer 
 from   ostap.core.core           import Ostap, WSE, VE
-from   ostap.math.base           import strings 
+from   ostap.math.math_base      import strings 
 from   ostap.utils.cleanup       import CleanUp
 from   ostap.utils.root_utils    import ImplicitMT 
 from   ostap.utils.basic         import items_loop, typename  
@@ -50,7 +50,7 @@ from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.timing        import timing
 from   ostap.plotting.canvas     import use_canvas
-import ostap.trees.base 
+import ostap.trees.trees_base 
 import ostap.io.root_file
 import ROOT, os, glob, math, tarfile, shutil, itertools
 # =============================================================================
@@ -2672,7 +2672,7 @@ class Reader(object)  :
         if l1 == l2 + 1 : cut_efficiency = float ( args[-1] ) 
 
         ## vector of doubles 
-        from ostap.math.base import vDoubles
+        from ostap.math.math_base import vDoubles
         
         ## vector of doubles 
         vd = vDoubles ( l2  )  
@@ -2816,7 +2816,7 @@ def _add_response_tree_ ( tree       , *          ,
     progress = progress_conf ( progress )
     adder    = Ostap.AddTMVA ( progress ) 
 
-    from ostap.math.base import strings
+    from ostap.math.math_base import strings
     if isinstance ( spectators , string_types ) : spectators = spectators,    
     _spectators = strings ( *spectators ) 
     
@@ -2916,8 +2916,8 @@ def _add_response_chain_ ( chain      , *          ,
                               progress   = tree_progress  ,
                               report     = False          )
         
-    chain = ROOT.TChain ( treepath )
-    chain.Add  ( filename )
+    chain  = ROOT.TChain ( treepath )
+    chain += files 
 
     if report :
         new_branches = sorted ( ( set ( chain.branches () ) | set ( chain.leaves () ) ) - branches )
@@ -2927,8 +2927,8 @@ def _add_response_chain_ ( chain      , *          ,
             else      : title = "Added %s branches to TTree(%s)" % ( n , treepath )  
             table = chain.table ( new_branches , title = title , prefix = '# ' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-            chain = ROOT.TChain ( treepath )
-            chain.Add  ( filename )     
+            chain  = ROOT.TChain ( treepath )
+            chain += files 
             
     return chain
         
@@ -3001,7 +3001,7 @@ def addTMVAResponse ( dataset                     ,   ## input dataset to be upd
         progress = progress_conf ( progress )
         adder    = Ostap.AddTMVA ( progress ) 
         
-        from ostap.math.base import strings
+        from ostap.math.math_base import strings
         if isinstance ( spectators , string_types ) : spectators = spectators,    
         _spectators = strings ( *spectators ) 
         
@@ -3065,7 +3065,7 @@ def plot_variables ( name              ,
     
     from   ostap.core.core       import hID 
     from   ostap.utils.utils     import chunked
-    from   ostap.math.base       import axis_range
+    from   ostap.math.math_base  import axis_range
     
     import ostap.io.root_file
     import ostap.trees.trees 

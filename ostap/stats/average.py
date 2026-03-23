@@ -32,8 +32,8 @@ __all__     = (
     'jeffreys_average'       , ## Jeffrey limit  average
 )
 # =============================================================================
-from   ostap.math.ve          import VE
-from   ostap.math.base        import iszero
+from   ostap.math.ve        import VE
+from   ostap.math.math_base import iszero
 import ROOT, math, abc 
 # =============================================================================
 # logging 

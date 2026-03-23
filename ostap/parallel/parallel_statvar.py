@@ -26,7 +26,7 @@ __all__     = (
     'MAX_FILES'           , ## maximal number of files
 ) 
 # =============================================================================
-from   ostap.math.base         import ( FIRST_ENTRY ,
+from   ostap.math.math_base    import ( FIRST_ENTRY ,
                                         LAST_ENTRY  , 
                                         evt_range   ,
                                         all_entries )

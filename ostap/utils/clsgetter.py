@@ -39,11 +39,11 @@ __all__     = (
     'classgetter' , ## classmethof proeprty-=getter 
     )
 # =============================================================================
-from ostap.math.base        import isequal , iszero , std, Ostap
 from ostap.core.ostap_types import num_types, integer_types
+from ostap.math.math_base   import isequal , iszero , std, Ostap
 # =============================================================================
 
-# ============================================================================
+# =============================================================================
 ## Property-getter for classmethod 
 #  @code
 #  class A(object) : pass

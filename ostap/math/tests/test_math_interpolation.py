@@ -12,7 +12,7 @@
 from   ostap.math.interpolation import ( interpolate , points  ,
                                          interpolate_bernstein ,
                                          interpolate_bspline   )
-from   ostap.math.base          import doubles 
+from   ostap.math.math_base     import doubles 
 from   ostap.core.core          import Ostap,  SE
 from   ostap.math.models        import f1_draw 
 from   ostap.utils.root_utils   import batch_env 

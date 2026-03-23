@@ -135,7 +135,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core          import Ostap, VE 
-from   ostap.math.base          import isfinite, pos_infinity, neg_infinity 
+from   ostap.math.math_base     import isfinite, pos_infinity, neg_infinity 
 from   ostap.fitting.pdfbasic   import PDF1, PDF2
 from   ostap.fitting.fithelpers import ( ShiftAndScale , Shift    , Scale   ,
                                          Alpha , Beta  , LogAlpha , LogBeta , 

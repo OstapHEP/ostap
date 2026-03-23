@@ -35,7 +35,7 @@ from   ostap.core.core               import ( Ostap         , hID ,
                                               valid_pointer ,
                                               roo_silent    ,                                              
                                               rootWarning   )
-from   ostap.math.base               import ( iszero , isequal ,
+from   ostap.math.math_base          import ( iszero , isequal ,
                                               vct1_call_method ,
                                               vct2_call_method ,
                                               vct3_call_method ) 

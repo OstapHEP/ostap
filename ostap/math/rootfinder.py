@@ -78,7 +78,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import num_types  
-from   ostap.math.base        import samesign, iszero, isequal, isfinite, signum, Ostap     
+from   ostap.math.math_base   import samesign, iszero, isequal, isfinite, signum, Ostap     
 from   ostap.utils.basic      import counted
 from   ostap.stats.counters   import SE, EffCounter
 from   ostap.logger.pretty    import pretty_float, fmt_pretty_values 

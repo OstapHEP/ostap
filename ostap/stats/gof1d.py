@@ -31,7 +31,7 @@ from   ostap.core.ostap_types   import string_types
 from   ostap.fitting.funbasic   import AFUN1
 from   ostap.fitting.pdfbasic   import PDF1
 from   ostap.core.core          import VE, Ostap, hID 
-from   ostap.math.base          import axis_range, np2raw    
+from   ostap.math.math_base     import axis_range, np2raw    
 from   ostap.math.models        import f1_draw
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.utils.basic        import loop_items, typename   

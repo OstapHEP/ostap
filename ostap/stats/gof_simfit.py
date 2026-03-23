@@ -23,7 +23,7 @@ __all__     = (
 from   ostap.core.ostap_types   import string_types, dictlike_types 
 from   ostap.fitting.pdfbasic   import PDF1, APDF1
 from   ostap.core.core          import VE, Ostap
-from   ostap.math.base          import axis_range
+from   ostap.math.math_base     import axis_range
 from   ostap.utils.cidict       import cidict_fun
 from   ostap.utils.basic        import loop_items, typename   
 from   ostap.stats.counters     import SE, EffCounter 

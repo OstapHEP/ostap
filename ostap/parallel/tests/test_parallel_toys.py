@@ -21,7 +21,7 @@ from   ostap.plotting.canvas        import use_canvas
 from   ostap.utils.root_utils       import batch_env 
 from   ostap.utils.basic            import numcpu 
 from   ostap.fitting.toys           import pull_var
-from   ostap.math.base              import num_range
+from   ostap.math.math_base         import num_range
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.logger.symbols         import times 
 import ostap.parallel.parallel_toys as     Toys

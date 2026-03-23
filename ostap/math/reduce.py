@@ -11,7 +11,7 @@ __all__     = (
     'root_factory' , ## a simple factory to generic deseroialisarion
     )
 # =============================================================================
-from    ostap.math.base        import Ostap, doubles, complexes  
+from    ostap.math.math_base   import Ostap, doubles, complexes  
 from    ostap.core.ostap_types import sequence_types 
 import  array 
 # =============================================================================
@@ -530,7 +530,7 @@ def _new_init_ ( t ,  *args )  :
     Lists and tuples are  converted on flight to :
     - std::vector<double> 
     """
-    from ostap.math.base        import doubles  , VCT_TYPES 
+    from ostap.math.math_base   import doubles  , VCT_TYPES 
     from ostap.core.ostap_types import Generator, Sequence, list_types  
     
     largs = list (  args )

@@ -80,7 +80,7 @@ from   ostap.core.core        import VE , hID
 from   ostap.utils.basic      import typename 
 from   ostap.utils.cidict     import cidict , cidict_fun 
 from   ostap.utils.valerrors  import VAE 
-from   ostap.math.base        import pos_infinity, neg_infinity, axis_range 
+from   ostap.math.math_base   import pos_infinity, neg_infinity, axis_range 
 from   ostap.logger.utils     import map2table 
 import ostap.histos.graphs  
 import ROOT

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/core/base.py
+## @file ostap/core/core_base.py
 #  Some base objects for ostap 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -387,7 +387,7 @@ def _report_strange_( symbols ) :
     """
     if not symbols : return    
     from ostap.logger.logger import getLogger 
-    logger = getLogger( 'ostap.core.base' )
+    logger = getLogger( 'ostap.core.core_base' )
     ns     = len ( symbols ) 
     logger.warning ( "Strange/truncated symbols in namespace Ostap: #%d" % ns  )
     logger.warning ( "[see https://github.com/root-project/root/issues/21536]" )
@@ -400,7 +400,7 @@ atexit.register ( _report_strange_  , __strange__ )
 if '__main__' == __name__ :
 
     from ostap.logger.logger import getLogger 
-    logger = getLogger( 'ostap.core.base' )
+    logger = getLogger( 'ostap.core.core_base' )
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )

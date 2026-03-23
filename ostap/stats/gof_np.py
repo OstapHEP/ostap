@@ -32,7 +32,7 @@ from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu, typename  
 from   ostap.stats.gof          import AGoFnp
 from   ostap.utils.memory       import memory, memory_enough
-import ostap.math.base           
+import ostap.math.math_base           
 import ROOT, os, abc, numpy, scipy 
 # =============================================================================
 # logging 

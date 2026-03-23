@@ -25,7 +25,7 @@ __all__     = (
     'VVE' ,  # vector of values with errors
     )
 # ============================================================================= 
-from   ostap.math.base       import Ostap, std , iszero, isequal
+from   ostap.math.math_base  import Ostap, std , iszero, isequal
 from   ostap.utils.basic     import typename 
 from   ostap.logger.symbols  import plus_minus, times 
 from   ostap.math.random_ext import poisson as _poisson 

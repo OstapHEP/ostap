@@ -45,7 +45,8 @@ def prepare_data ( nB = 10000 , nS = 10000 , nF = 5 ) :
     assert 1 <= nF , "Invalid numbver of files is specified!"
     
     logger = getLogger ( 'test_tmva2:prepare_data' )
-    
+
+    files = [] 
     for f in range ( nF ) :
         
         data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva2-' )
@@ -106,7 +107,7 @@ def prepare_data ( nB = 10000 , nS = 10000 , nF = 5 ) :
 
         files.append ( data_file )
         
-    return files 
+    return tuple ( files ) 
 
 # =============================================================================
 ## Run TMVA test 

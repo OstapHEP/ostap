@@ -1259,7 +1259,7 @@ class FrequentistCalculator (Calculator) :
             s1 = ds1.statVars ( vars1 )
             s2 = ds2.statVars ( vars1 )
 
-            from ostap.math.base import isequal
+            from ostap.math.math_base import isequal
             
             diffs = [] 
             for k in s1 :

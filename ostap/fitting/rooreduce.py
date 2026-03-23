@@ -18,7 +18,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info         import root_info 
-from   ostap.math.base              import doubles
+from   ostap.math.math_base         import doubles
 from   ostap.core.core              import Ostap
 from   ostap.math.reduce            import root_factory
 from   pickle                       import PicklingError, UnpicklingError 

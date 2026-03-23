@@ -116,7 +116,7 @@ __all__     = (
     ) 
 # =============================================================================
 from ostap.core.ostap_types import integer_types, num_types, sequence_types 
-from ostap.math.base        import pos_infinity, neg_infinity
+from ostap.math.math_base   import pos_infinity, neg_infinity
 from ostap.utils.basic      import typename 
 from ostap.stats.funstats   import FunBASE1D 
 # =============================================================================
@@ -1202,7 +1202,7 @@ class CL_asymm(object) :
         normL = _integral_ ( func , xmin  , xmode )
         normR = _integral_ ( func , xmode , xmax  )
 
-        from ostap.math.base import isequal, iszero
+        from ostap.math.math_base import isequal, iszero
         
         ## solve equation f(x)=a 
         def _solve_  ( func , fval , xmn , xmx , *args ) :

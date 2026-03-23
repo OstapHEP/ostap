@@ -15,7 +15,8 @@ __date__    = "2020-02-28"
 __all__     = ()
 # =============================================================================
 from   ostap.math.operations import Function
-from   ostap.math.base       import numpy, scipy, numpy_version
+import ostap.math.math_base
+import numpy, scipy
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_convolution' )

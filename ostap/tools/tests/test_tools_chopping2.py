@@ -34,123 +34,134 @@ else :
 batch_env ( logger )
 # =============================================================================
 
-data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-chopping-' ) 
-
-if not os.path.exists( data_file ) :
+# =============================================================================
+## Prepare trainig and testing data for TMVA 
+def prepare_data ( nB = 2000 , nS = 1000 , nF = 5 ) :
     
-    nB = 20000
-    nS = 10000
+    assert 1 <= nF , "Invalid numbver of files is specified!"
+    
+    files = []
 
     s_evt_per_run = 927
     b_evt_per_run = 511
     
-    logger.info('Prepare input ROOT file with data %s' % data_file )
-    with ROOT.TFile( data_file ,'recreate') as test_file:
+    for f in range ( nF ) :
         
-        treeSignal = ROOT.TTree('S','signal     tree')
-        treeBkg    = ROOT.TTree('B','background tree')
-        treeSignal.SetDirectory ( test_file ) 
-        treeBkg   .SetDirectory ( test_file ) 
+        data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-chopping2-' )
         
-        var0 = array.array ( 'd',  [ 0 ] )
-        var1 = array.array ( 'd',  [ 0 ] )
-        var2 = array.array ( 'd',  [ 0 ] )
-        var3 = array.array ( 'd',  [ 0 ] )
-        var4 = array.array ( 'd',  [ 0 ] )
-        var5 = array.array ( 'd',  [ 0 ] )
-        vevt = array.array ( 'i',  [ 0 ] )
-        vrun = array.array ( 'i',  [ 0 ] )
+        logger.info('Prepare input ROOT file %s with data %s' % ( f , data_file )  )
+        with ROOT.TFile( data_file ,'recreate') as test_file:
         
-        treeSignal.Branch ( 'var0' , var1 , 'var0/D' )
-        treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
-        treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
-        treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
-        treeSignal.Branch ( 'VARS' , var4 , 'VARS/D' )
-        treeSignal.Branch ( 'VARA' , var5 , 'VARA/D' )
-        
-        treeSignal.Branch ( 'evt'  , vevt , 'evt/I'  )
-        treeSignal.Branch ( 'run'  , vrun , 'run/I'  )
-        
-        treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
-        treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
-        treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
-        treeBkg   .Branch ( 'VARB' , var4 , 'VARB/D' )
-        treeBkg   .Branch ( 'evt'  , vevt , 'evt/I'  )
-        treeBkg   .Branch ( 'run'  , vrun , 'run/I'  )
-        treeBkg   .Branch ( 'VARA' , var5 , 'VARA/D' )
-        
-        ievt = 0
-        irun = 1 
-        ## fill background tuple: 
-        #for i in progress_bar ( range ( nB ) ) : 
-        for i in range ( nB ) : 
+            treeSignal = ROOT.TTree('S','signal     tree')
+            treeBkg    = ROOT.TTree('B','background tree')
+            treeSignal.SetDirectory ( test_file ) 
+            treeBkg   .SetDirectory ( test_file ) 
             
-            x = random.uniform ( -2.0 , 2.0 )
-            y = random.uniform ( -2.0 , 2.0 )
-            z = random.gauss   (   .0 , 0.5 )
-            w = random.gauss   (   .2 , 0.5 )
+            var0 = array.array ( 'd',  [ 0 ] )
+            var1 = array.array ( 'd',  [ 0 ] )
+            var2 = array.array ( 'd',  [ 0 ] )
+            var3 = array.array ( 'd',  [ 0 ] )
+            var4 = array.array ( 'd',  [ 0 ] )
+            var5 = array.array ( 'd',  [ 0 ] )
+            vevt = array.array ( 'i',  [ 0 ] )
+            vrun = array.array ( 'i',  [ 0 ] )
+        
+            treeSignal.Branch ( 'var0' , var1 , 'var0/D' )
+            treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
+            treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
+            treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
+            treeSignal.Branch ( 'VARS' , var4 , 'VARS/D' )
+            treeSignal.Branch ( 'VARA' , var5 , 'VARA/D' )
             
-            var1[0] =  x + 0.1 * y  
-            var2[0] =  x - 0.1 * y  
-            var3[0] = -x +       z
-            var4[0] =  w
-            var5[0] = random.gauss ( 0 , 1 ) - 1 
+            treeSignal.Branch ( 'evt'  , vevt , 'evt/I'  )
+            treeSignal.Branch ( 'run'  , vrun , 'run/I'  )
+        
+            treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
+            treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
+            treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
+            treeBkg   .Branch ( 'VARB' , var4 , 'VARB/D' )
+            treeBkg   .Branch ( 'evt'  , vevt , 'evt/I'  )
+            treeBkg   .Branch ( 'run'  , vrun , 'run/I'  )
+            treeBkg   .Branch ( 'VARA' , var5 , 'VARA/D' )
+        
+            ievt = 0
+            irun = 1
             
-            ievt += 1
-            if 0 ==  ( ievt % b_evt_per_run ) :
-                irun += 1
-                ievt  = 1 
+            ## fill background tuple: 
+            for i in progress_bar ( range ( nB ) ) : 
+                
+                x = random.uniform ( -2.0 , 2.0 )
+                y = random.uniform ( -2.0 , 2.0 )
+                z = random.gauss   (   .0 , 0.5 )
+                w = random.gauss   (   .2 , 0.5 )
+                
+                var1[0] =  x + 0.1 * y  
+                var2[0] =  x - 0.1 * y  
+                var3[0] = -x +       z
+                var4[0] =  w
+                var5[0] = random.gauss ( 0 , 1 ) - 1 
+                
+                ievt += 1
+                if 0 ==  ( ievt % b_evt_per_run ) :
+                    irun += 1
+                    ievt  = 1 
+                    
+                vevt[0] = ievt
+                vrun[0] = irun
 
-            vevt[0] = ievt
-            vrun[0] = irun
-
-            treeBkg.Fill()
+                treeBkg.Fill()
             
-        ievt = 0
-        irun = 1 
-        ## fill signal tuple: 
-        #for i in progress_bar ( range ( nS ) ) : 
-        for i in range ( nS ) : 
+            treeBkg.Write()
+            ievt = 0
+            irun = 1 
+            ## fill signal tuple: 
+            for i in progress_bar ( range ( nS ) ) : 
             
-            x = random.gauss  (  0.0 , 0.1 )
-            y = random.gauss  (  0.0 , 0.2 )
-            z = random.gauss  (  0.5 , 0.5 )
-            w = random.gauss  ( -0.2 , 0.5 )
-            u = random.gauss  (  0.0 , 1.0 )
+                x = random.gauss  (  0.0 , 0.1 )
+                y = random.gauss  (  0.0 , 0.2 )
+                z = random.gauss  (  0.5 , 0.5 )
+                w = random.gauss  ( -0.2 , 0.5 )
+                u = random.gauss  (  0.0 , 1.0 )
+                
+                var1[0] =  x
+                var2[0] =  y  
+                var3[0] =  z
+                var4[0] =  w
+                var0[0] =  u
+                var5[0] = random.gauss ( 0 , 1 ) + 1 
             
-            var1[0] =  x
-            var2[0] =  y  
-            var3[0] =  z
-            var4[0] =  w
-            var0[0] =  u
-            var5[0] = random.gauss ( 0 , 1 ) + 1 
+                ievt += 1
+                if 0 == ( ievt % s_evt_per_run ) :
+                    irun += 1
+                    ievt  = 1 
+                
+                vevt[0] = ievt
+                vrun[0] = irun
             
-            ievt += 1
-            if 0 == ( ievt % s_evt_per_run ) :
-                irun += 1
-                ievt  = 1 
-
-            vevt[0] = ievt
-            vrun[0] = irun
-            
-            treeSignal.Fill()
+                treeSignal.Fill()
              
-            
-        test_file.Write()
-        test_file.ls()
-        treeSignal = None
-        treeBkg    = None
+            treeSignal.Write ()                         
+            test_file .Write()
+
+        files.append ( data_file )
+
+    return tuple ( files ) 
+
+
+
+data_files = prepare_data ()
 
 # ===========================================================================
 ##   number of    categories 
 N  = 7
 logger.info('Create and train TMVA')
 
+
 # ============================================================================
 ## Train TMVA
 # ============================================================================
-cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
-cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
+cSignal = ROOT.TChain ( 'S' , files = data_files )
+cBkg    = ROOT.TChain ( 'B' , files = data_files )
 # 
 ## book TMVA trainer
 from ostap.tools.chopping import Trainer 
@@ -226,8 +237,8 @@ for f in trainer.output_files :
 # =============================================================================
 with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as time_A :
     
-    cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
-    cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
+    cSignal = ROOT.TChain ( 'S' , files = data_files )
+    cBkg    = ROOT.TChain ( 'B' , files = data_files )
     
     signal_inputs      = ( 'var1' ,  'var2' , 'var3' , 'VARX : VARS' ) 
     background_inputs  = ( 'var1' ,  'var2' , 'var3' , 'VARX : VARB' )   
@@ -244,8 +255,8 @@ with timing ( "Add TMVA/Chopping response to input TTree" , logger = logger ) as
     addChoppingResponse ( cSignal  , inputs = signal_inputs     , **config ) 
     addChoppingResponse ( cBkg     , inputs = background_inputs , **config )
 
-    cSignal = ROOT.TChain ( 'S' ) ; cSignal.Add ( data_file )
-    cBkg    = ROOT.TChain ( 'B' ) ; cBkg   .Add ( data_file )
+    cSignal = ROOT.TChain ( 'S' , files = data_files )
+    cBkg    = ROOT.TChain ( 'B' , files = data_files )
 
     logger.info ('TTree   SIG (with TMVA decisions):\n%s' % cSignal.table ( prefix = '# ') ) 
     logger.info ('TTree   BKG (with TMVA decisions):\n%s' % cBkg   .table ( prefix = '# ') ) 

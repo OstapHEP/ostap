@@ -14,7 +14,7 @@
 #
 #  @code
 #
-#  import ostap.math.base
+#  import ostap.math.math_base
 #
 #  @endcode
 #
@@ -22,7 +22,7 @@
 #
 #  @code
 #
-#  import ostap.math.base 
+#  import ostap.math.math_base 
 #
 #  import cppyy
 #  cpp   = cppyy.gbl                           ## global C++ namespace 
@@ -48,7 +48,7 @@
 
   The usage is fairly trivial:
 
-  >>> import ostap.math.base 
+  >>> import ostap.math.math_base 
 
   Important: All types are defined in corresponding
                C++ namespaces: Ostap & Ostap::Math

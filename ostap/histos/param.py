@@ -136,7 +136,7 @@ __all__     = () ## nothing to import
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
 from   ostap.core.core        import cpp, VE, funID, Ostap
-from   ostap.math.base        import pos_infinity, neg_infinity
+from   ostap.math.math_base   import pos_infinity, neg_infinity, doubles 
 from   ostap.math.param       import ( legendre_sum      ,
                                        chebyshev_sum     ,
                                        bezier_sum        ,
@@ -1047,7 +1047,6 @@ def _h1_bspline_ ( h1               ,
     if isinstance ( knots , integer_types ) and 0 <= knots :
         func = Ostap.Math.BSpline ( xmin , xmax , knots , degree )
     else :
-        from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
         func = Ostap.Math.BSpline ( _knots , degree )
@@ -1454,7 +1453,6 @@ def _h1_pspline_ ( h1               ,
     if isinstance ( knots , integer_types ) and 0 <= knots :
         func = Ostap.Math.PositiveSpline ( xmin , xmax , knots , degree  )
     else :
-        from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
         func = Ostap.Math.PositiveSpline ( _knots , degree )
@@ -1525,7 +1523,6 @@ def _h1_mspline_ ( h1                   ,
     if isinstance ( knots , integer_types ) and 0 <= knots :
         func = Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
     else :
-        from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
         func = Ostap.Math.MonotonicSpline ( knots , degree , increasing )
@@ -1593,7 +1590,6 @@ def _h1_cspline_ ( h1                   ,
     if isinstance ( knots , integer_types ) and 0 <= knots :
         func = Ostap.Math.ConvexSpline ( xmin , xmax , knots , degree , increasing , convex  )
     else :
-        from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
         func   = Ostap.Math.ConvexSpline ( _knots , order , increasing , convex )
@@ -1659,7 +1655,6 @@ def _h1_convexspline_ ( h1                   ,
     if isinstance ( knots , integer_types ) and 0 <= knots :
         func = Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , True )
     else :
-        from ostap.math.base import doubles
         _knots = doubles ( mn , mx ) 
         for k in knots : _knots.push_back( k )
         func   = Ostap.Math.ConvexOnlySpline ( _knots , order , True )
@@ -1726,7 +1721,6 @@ def _h1_concavespline_ ( h1                   ,
     if isinstance ( knots , integer_types ) :
         func = Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , False )
     else :
-        from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
         func   = Ostap.Math.ConvexOnlySpline ( _knots , order , False )

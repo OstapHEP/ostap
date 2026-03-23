@@ -19,11 +19,11 @@ from   ostap.math.derivative  import ( Derivative  , iszero      , Eval2VE     ,
 from   ostap.math.finitediffs import CentralRule, ForwardOpen, BackwardOpen  
 from   ostap.stats.counters   import SE
 from   ostap.utils.timing     import timing
-import ostap.logger.table     as     T
 from   ostap.math.ve          import pretty_ve
 from   ostap.utils.root_utils import batch_env 
 from   ostap.plotting.canvas  import use_canvas
 from   math                   import exp, sin, cos, pi, tanh
+import ostap.logger.table     as     T
 import ROOT, random, math 
 # ============================================================================= 
 # logging 
@@ -331,8 +331,8 @@ def make_forward_diffs ( order ) :
     """
     
     import findiff
-    from   ostap.math.base import lcm 
-    from   math            import fsum, sqrt 
+    from   ostap.math.math_base   import lcm 
+    from   math                   import fsum, sqrt 
     from   ostap.math.finitediffs import calc_dot 
     
     def fact ( n ) :
@@ -375,8 +375,8 @@ def make_backward_diffs ( order ) :
     """
     
     import findiff
-    from   ostap.math.base import lcm 
-    from   math            import fsum, sqrt 
+    from   ostap.math.math_base   import lcm 
+    from   math                   import fsum, sqrt 
     from   ostap.math.finitediffs import calc_dot 
     
     def fact ( n ) :
@@ -420,7 +420,7 @@ def make_central_diffs ( order ) :
     """
     
     import findiff
-    from   ostap.math.base        import lcm 
+    from   ostap.math.math_base   import lcm 
     from   math                   import fsum, sqrt 
     from   ostap.math.finitediffs import calc_dot 
 

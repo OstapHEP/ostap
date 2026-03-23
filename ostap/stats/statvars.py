@@ -84,7 +84,7 @@ __all__     = (
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
-from   ostap.math.base                import ( isequal     , iszero    ,
+from   ostap.math.math_base            import ( isequal     , iszero    ,
                                                axis_range  ,
                                                strings     , doubles   ,  
                                                all_entries , evt_range )      

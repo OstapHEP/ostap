@@ -31,7 +31,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core          import cpp, Ostap
-from   ostap.math.base          import iszero
+from   ostap.math.math_base     import iszero
 from   ostap.fitting.fithelpers import Phases
 from   ostap.fitting.pdfbasic   import PDF3, Flat3D
 import ostap.fitting.fit3d      

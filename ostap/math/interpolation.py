@@ -144,7 +144,7 @@ from    ostap.core.ostap_types import ( is_integer     ,
                                         integer_types  ,
                                         dictlike_types )  
 from    ostap.core.core        import cpp, Ostap
-from    ostap.math.base        import iszero, isequal, doubles 
+from    ostap.math.math_base   import iszero, isequal, doubles 
 from    ostap.utils.basic      import typename 
 from    ostap.utils.ranges     import vrange
 from    collections.abc        import Iterable, Mapping
@@ -694,7 +694,7 @@ def lagrange ( func , abscissas  = None ) :
     else :
         raise TypeError("Can't treat ``func''=%s"  %  func )
     ##
-    from ostap.math.base import doubles
+    from ostap.math.math_base import doubles
     if _A : return Ostap.Math.Barycentric ( abscissas , doubles ( func ) )
     ##
     return Ostap.Math.Barycentric ( doubles ( abscissas ) , doubles ( func ) )
@@ -778,14 +778,11 @@ def points ( func , abscissas  = None ) :
     else :
         raise TypeError("Can't treat ``func''=%s"  %  func )
     ##
-    from ostap.math.base import doubles
+    from ostap.math.math_base import doubles
     ##
-
     if _A : return Ostap.Math.Interpolation.Table (   abscissas   , doubles ( func ) )
     ##
     return Ostap.Math.Interpolation.Table ( doubles ( abscissas ) , doubles ( func ) )
-
-
 
 # =============================================================================
 ## get all weigths from Berrut1st and Berrut2nd interpolants

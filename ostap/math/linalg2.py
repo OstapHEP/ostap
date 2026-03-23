@@ -20,12 +20,12 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.ostap_types import num_types , integer_types
-from   ostap.math.base        import isequal   , iszero, std , Ostap, numpy
+from   ostap.math.math_base   import isequal   , iszero, std , Ostap, numpy
 from   ostap.core.core        import hID 
 from   ostap.utils.basic      import typename 
 from   ostap.utils.clsgetter  import classgetter
 from   ostap.logger.pretty    import fmt_pretty_float, fmt_pretty_error 
-from   ostap.math.base        import pretty_array
+from   ostap.math.math_base   import pretty_array
 from   ostap.logger.colorized import infostr, attstr, warning_info 
 from   ostap.utils.gsl        import gsl_info
 from   ostap.logger.symbols   import ditto, times, labels 

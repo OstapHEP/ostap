@@ -33,7 +33,7 @@ from   ostap.core.ostap_types       import ( integer_types , string_types   ,
                                              num_types     , sequence_types ,
                                              sized_types   , dictlike_types )
 from   ostap.utils.basic            import loop_items  , typename            
-from   ostap.math.base              import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint  
+from   ostap.math.math_base         import std, evt_range, FIRST_ENTRY, LAST_ENTRY, isint  
 from   ostap.utils.random_seed      import random_seed
 from   ostap.fitting.variables      import valid_formula, make_formula 
 from   ostap.trees.cuts             import expression_types, vars_and_cuts, order_warning
@@ -3693,7 +3693,6 @@ def ds_equal ( ds1 , ds2 ) :
         logger.debug ("compare datasets: different vars") 
         return False
 
-    from ostap.math.base import isequal, isequalf  
     for k in keys1 :
 
         s1 = st1 [ k ]

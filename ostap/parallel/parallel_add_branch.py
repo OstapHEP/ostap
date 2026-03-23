@@ -19,7 +19,7 @@ __all__     = (
 from   ostap.core.core                 import valid_pointer 
 from   ostap.utils.basic               import loop_items 
 from   ostap.parallel.parallel         import Task, WorkManager, Checker
-import ostap.trees.base 
+import ostap.trees.trees_base 
 import ROOT
 # =============================================================================
 # logging 
@@ -42,8 +42,8 @@ class AddNewBranch(Task) :
     def initialize_remote ( self , jobid = -1   ) : self.__output = () 
     def process           ( self , jobid , tree ) :
         
-        from ostap.trees.trees import push_2chain
-        from ostap.math.base   import all_entries
+        from ostap.trees.trees    import push_2chain
+        from ostap.math.math_base import all_entries
         
         files = []
         chain = tree.chain
@@ -143,7 +143,7 @@ def add_new_branch ( chain           ,
                      progress = True ,
                      report   = True ,
                      backup   = True , **kwargs ) :
-    """ Add new branch for loong chain in parallel
+    """ Add new branch for loooooong chain in parallel
     - see ROOT.TTree.add_new_branch
     >>> chain = ....
     >>> chain.padd_new_branch ( 'new_branch' , 'px*py' )     

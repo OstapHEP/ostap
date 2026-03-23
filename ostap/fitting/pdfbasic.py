@@ -59,7 +59,7 @@ from   ostap.core.meta_info     import root_info, python_info
 from   ostap.core.ostap_types   import ( is_integer     , string_types   , 
                                          integer_types  , num_types      ,
                                          list_types     , all_numerics   ) 
-from   ostap.math.base          import ( iszero , isfinite , isequal , frexp10 ,  
+from   ostap.math.math_base     import ( iszero , isfinite , isequal , frexp10 ,  
                                          vct1_call_method ,
                                          vct2_call_method ,
                                          vct3_call_method ) 

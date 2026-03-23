@@ -38,7 +38,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.core                import VE
 from   ostap.utils.basic              import typename 
-from   ostap.math.base                import isint, pos_infinity, neg_infinity 
+from   ostap.math.math_base           import isint, pos_infinity, neg_infinity 
 from   ostap.core.ostap_types         import ( num_types   , integer_types ,
                                                sized_types , string_types  )   
 from   ostap.plotting.draw_attributes import copy_graph_attributes

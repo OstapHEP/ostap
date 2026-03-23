@@ -23,7 +23,7 @@ from   ostap.utils.valerrors    import ValWithErrors, AsymErrors
 from   ostap.logger.colorized   import allright, attention, attstr 
 from   ostap.logger.pretty      import pretty_float, pretty_error2, fmt_pretty_values
 from   ostap.math.ve            import fmt_pretty_ves
-from   ostap.math.base          import isequal 
+from   ostap.math.math_base     import isequal 
 from   ostap.logger.symbols     import show, same, chisq   
 import ostap.math.linalg        as     LA
 import ostap.logger.table       as     T 

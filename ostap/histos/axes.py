@@ -30,7 +30,7 @@ from   ostap.core.ostap_types         import ( sequence_types  , sized_types   ,
                                                num_types       , integer_types )
 from   ostap.utils.basic              import typename 
 from   ostap.core.core                import hID , Ostap, valid_pointer, rootException
-from   ostap.math.base                import isequal, isfinite  
+from   ostap.math.math_base           import isequal, isfinite  
 from   ostap.utils.ranges             import vrange
 from   ostap.logger.pretty            import fmt_pretty_values   
 from   ostap.logger.symbols           import times, ellipsis

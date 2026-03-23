@@ -46,7 +46,7 @@ __all__ = (
     'pdg_format'   , ## format value+2errors according to PDG
     )
 # ===============================================================================
-from   ostap.math.base        import frexp10
+from   ostap.math.math_base   import frexp10
 from   ostap.core.ostap_types import integer_types, string_types
 from   ostap.logger.pretty    import pretty_float 
 from   ostap.logger.symbols   import times, plus_minus

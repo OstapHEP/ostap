@@ -14,7 +14,7 @@ __date__    = "2014-06-08"
 __all__     = ( 'Corr2D', )
 # =============================================================================
 from   ostap.core.core      import cpp , WSE, Ostap 
-from   ostap.math.base      import iszero 
+from   ostap.math.math_base import iszero 
 from   ostap.trees.cuts     import expression_types
 from   ostap.stats.statvars import data_covariance 
 import ostap.math.linalg

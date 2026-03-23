@@ -17,7 +17,7 @@ __date__    = "2011-12-01"
 __all__     = ()
 # =============================================================================
 from    ostap.core.ostap_types import num_types 
-from    ostap.math.base        import Ostap
+from    ostap.math.math_base   import Ostap
 from    ostap.stats.funstats   import FunMNMX
 import  ostap.math.reduce
 # =============================================================================

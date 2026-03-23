@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/math/base.py
+## @file ostap/math/math_base.py
 #
 #  Simple file to provide "easy" access in python for the basic ROOT::Math classes
 #  @see Ostap/Point3DTypes.h
@@ -13,7 +13,7 @@
 #
 #  @code
 #
-#  import ostap.math.base
+#  import ostap.math.math_base
 #
 #  @endcode
 #
@@ -21,7 +21,7 @@
 #
 #  @code
 #
-#  import ostap.math.base 
+#  import ostap.math.math_base 
 #
 #  import cppyy
 #  cpp   = cppyy.gbl                           ## global C++ namespace 
@@ -47,7 +47,7 @@
 
   The usage is fairly trivial:
 
-  >>> import ostap.math.base 
+  >>> import ostap.math.math_base 
 
   Important: All types are defined in corresponding
                C++ namespaces: Ostap & Ostap::Math
@@ -124,7 +124,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info    import python_info
 from   ostap.core.ostap_types  import sequence_types, sized_types, integer_types
-from   ostap.core.base         import cpp, std, Ostap 
+from   ostap.core.core_base    import cpp, std, Ostap 
 import ROOT, sys, math, ctypes, array, numpy    
 # =============================================================================
 
@@ -1211,7 +1211,7 @@ if not '__main__' == __name__ : # =============================================
 if '__main__' == __name__ :
 
     from ostap.logger.logger import getLogger
-    logger = getLogger ( 'ostap.math.base' )
+    logger = getLogger ( 'ostap.math.math_base' )
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )

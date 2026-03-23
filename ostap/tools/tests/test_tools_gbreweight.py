@@ -16,7 +16,7 @@ __all__     = ()  ## nothing to be imported
 # =============================================================================
 from   ostap.core.pyrouts     import hID
 from   ostap.histos.histos    import h1_axis, h2_axes 
-from   ostap.math.base        import axis_range
+from   ostap.math.math_base   import axis_range
 from   ostap.utils.ranges     import vrange
 from   ostap.utils.root_utils import batch_env 
 from   ostap.utils.timing     import timing

@@ -11,10 +11,10 @@
 # ============================================================================= 
 from   ostap.math.linalg      import checkops, gsl_info 
 from   ostap.core.core        import Ostap
-from   ostap.math.base        import numpy
 from   ostap.plotting.canvas  import use_canvas 
 from   ostap.utils.root_utils import batch_env 
-import math, random  
+import ostap.math.math_base       
+import math, random, numpy   
 # =============================================================================
 # logging 
 # =============================================================================

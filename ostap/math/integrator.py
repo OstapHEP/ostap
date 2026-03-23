@@ -22,7 +22,7 @@ __all__     = (
 )
 # =============================================================================
 from ostap.core.ostap_types import num_types 
-from ostap.math.base        import Ostap, isfinite
+from ostap.math.math_base   import Ostap, isfinite
 from ostap.math.ve          import VE 
 # =============================================================================
 # logging 

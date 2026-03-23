@@ -109,7 +109,7 @@ def prepare_data ( nB = 1000 , nS = 1000 , nF = 5 )  :
             
         files.append ( data_file )
 
-    return files 
+    return tuple ( files ) 
 
 # =============================================================================
 def test_tmva () :

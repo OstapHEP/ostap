@@ -24,7 +24,7 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.core.core      import Ostap, fID 
-import ostap.math.base
+from   ostap.math.math_base import isequal
 import ostap.math.reduce 
 import ostap.histos.graphs  
 import ostap.math.kinematic
@@ -127,8 +127,6 @@ def _dp0_points_ ( dp , M , npoints = 250 ) :
 
     ## collect, eliminate the duplicates and ogranize all points according to phi
         
-    from   ostap.math.base      import isequal
-    
     points = set ()
     for p in pnts :
         x , y = p 

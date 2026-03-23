@@ -23,7 +23,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types
-from   ostap.math.base        import pos_infinity, neg_infinity, isequal
+from   ostap.math.math_base   import pos_infinity, neg_infinity, isequal
 from   ostap.utils.basic      import typename
 import math 
 # =============================================================================

@@ -20,7 +20,7 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types import num_types 
-from   ostap.math.base        import Ostap
+from   ostap.math.math_base   import Ostap
 from   ostap.utils.gsl        import gsl_info 
 import ostap.math.linalg      as     LA 
 # =============================================================================

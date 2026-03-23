@@ -27,7 +27,7 @@ from   ostap.core.ostap_types       import string_types, dictlike_types, sized_t
 from   ostap.core.core              import Ostap
 from   ostap.utils.basic            import loop_items, typename  
 from   ostap.utils.utils            import split_range
-from   ostap.math.base              import doubles
+from   ostap.math.math_base         import doubles
 from   ostap.fitting.dataset        import useStorage
 from   ostap.fitting.funbasic       import AFUN1 
 from   ostap.utils.progress_bar     import progress_bar

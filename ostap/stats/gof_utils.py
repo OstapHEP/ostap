@@ -23,7 +23,7 @@ from   ostap.core.meta_info     import root_info
 from   ostap.core.core          import VE, Ostap
 from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types 
-from   ostap.math.base          import doubles, axis_range
+from   ostap.math.math_base     import doubles, axis_range
 from   ostap.math.math_ve       import significance
 from   ostap.math.ve            import fmt_pretty_ve 
 from   ostap.stats.counters     import SE, WSE, EffCounter

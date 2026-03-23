@@ -35,7 +35,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
-from   ostap.math.base        import Ostap , COMPLEX 
+from   ostap.math.math_base   import Ostap , COMPLEX 
 from   ostap.core.ostap_types import num_types
 # =============================================================================
 # logging 

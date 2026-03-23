@@ -1341,22 +1341,14 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
     ## Does the canvas with given name exists?
     #  - Look up in the list of regustered canvas
     #  @param name the name ot be tested
-    #  @return existing canvas with the given name, False otherwise
-    def existing_canvas ( self , name ) :
+    #  @return True if there is canvas with this name, False otherwise 
+    def has_canvas ( self , name ) :
         """ Does the canvas with given name exists?
         Look up in the list of regustered canvas
         - name : the name ot be tested
-        - return existing canvas with given name, `False` otherwise
+        - return True if there is canvas with this name, False otherwise 
         """
-        groot  = ROOT.ROOT.GetROOT()
-        if not groot : return None 
-        cnvlst = groot.GetListOfCanvases()
-        if not cnvlst : return None 
-        for c in cnvlst :
-            if   not isinstance ( c , ROOT.TCanvas ) : continue  ## CONTINUE
-            elif c.GetName () == name                : return c  ## RETURN
-        ## 
-        return None                                              ## RETURN 
+        return Ostap.Utils.has_canvas ( name )
         
     # =================================================================
     ## Context manager: ENTER
@@ -1382,7 +1374,7 @@ class Canvas(KeepCanvas,UseStyle,UsePad,Batch) :
         
         if not self.__name :
             self.__name = 'glOstap'
-            while self.existing_canvas ( self.__name ) :
+            while self.has_canvas ( self.__name ) :
                 index = self.__name , self.__title , self.__width , self.__height , id ( self ) 
                 index = hash ( index ) % 100000 
                 self.__name = 'glOstap_%05d' % index 

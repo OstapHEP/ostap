@@ -27,11 +27,11 @@ from   collections            import namedtuple
 from   itertools              import accumulate 
 from   ostap.core.ostap_types import string_types, integer_types, path_types  
 from   ostap.utils.cleanup    import CleanUp
-from   ostap.core.base        import valid_pointer, rootException
-from   ostap.math.base        import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
+from   ostap.core.core_base   import valid_pointer, rootException
+from   ostap.math.math_base   import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.io.utils         import file_info
 from   ostap.utils.utils      import split_range 
-import ostap.trees.base   
+import ostap.trees.trees_base   
 import ROOT, os 
 # =============================================================================
 # logging 

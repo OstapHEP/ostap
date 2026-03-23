@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file ostap/trees/base.py
+## @file ostap/trees/trees_base.py
 #  Couple of simple utilities forTTree/TChain
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -26,13 +26,13 @@ __all__     = (
 ) 
 # =============================================================================
 from   ostap.core.ostap_types import string_types, sequence_types  
-from   ostap.core.base        import valid_pointer
+from   ostap.core.core_base   import valid_pointer
 import ROOT 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.base' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.trees.trees_base' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Couple of simple basic utilities for TTree/TChain')
@@ -395,13 +395,20 @@ def _rc_init_ ( chain , *args , files = () , **kwargs ) :
     """ Updated constructor for ROOT.TChain with the list of input files
     >>> chain = ROOT.TChain ( 'S' , files = ( 'a.root' , 'b.root' ) )
     """
+    print ( 'TCHAIN/INIT:', args , kwargs , files ) 
     chain._old_init_ ( *args , **kwargs )
     if files : chain += files
+
+for i in range ( 20 ) :
+    print ( 'TCHAIN-INIT-BEFORE' , i )
     
 if not hasattr ( ROOT.TChain , '_old_init_' ) :
+    print ( 'TCHAIN-INIT-INSIDE' ) 
     ROOT.TChain._old_init_ = ROOT.TChain.__init__
     ROOT.TChain._new_init_ = _rc_init_
     ROOT.TChain.__init__   = _rc_init_
+
+print ( 'TCHAIN-INIT-AFTER' , ROOT.TChain.__init__ ) 
 
 # ===============================================================================
 _decorated_classes_ = (
@@ -445,6 +452,7 @@ _new_methods_ = (
     ROOT.TChain.__getitem__  , 
     ROOT.TChain.__getslice__ ,     
     ## 
+    ROOT.TChain.__init__     , 
 )
 # =============================================================================
 if '__main__' == __name__ :

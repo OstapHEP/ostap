@@ -55,6 +55,72 @@ TVirtualPad* Ostap::Utils::pad_update  ( TVirtualPad* pad )
   return pad ;
 }
 // ============================================================================
+/* get existing canvas by name 
+ *  @param name   Canvas name
+ *  @return canvas or nullptr 
+ */
+// ============================================================================
+TCanvas*  Ostap::Utils::get_canvas
+( const std::string& name )
+{
+  TROOT* root = ROOT::GetROOT ()  ;
+  if ( root )
+    {
+      /// lock it...
+      R__LOCKGUARD(gROOTMutex) ;
+      /// get the list of all alived canvases
+      TSeqCollection* all_canvases = root->GetListOfCanvases() ;
+      if ( all_canvases )
+      {
+	for ( TObject* obj : *all_canvases )
+	{
+	  if ( !obj ) { continue ; }
+	  TCanvas* cnv = dynamic_cast<TCanvas*> ( obj ) ;
+	  if ( !cnv ) { continue ; }
+	  if ( cnv -> GetName() == name ) { return cnv ; }
+	}
+	// ====================================================================     
+      }
+      // ======================================================================
+    }
+  // ==========================================================================
+  return nullptr ; 
+  // ==========================================================================
+}
+// ============================================================================
+/* check existing canvas by name 
+ *  @param name   Canvas name
+ *  @return canvas or nullptr 
+ */
+// ============================================================================
+bool Ostap::Utils::has_canvas
+( const std::string& name )
+{
+  TROOT* root = ROOT::GetROOT ()  ;
+  if ( root )
+    {
+      /// lock it...
+      R__LOCKGUARD(gROOTMutex) ;
+      /// get the list of all alived canvases
+      TSeqCollection* all_canvases = root->GetListOfCanvases() ;
+      if ( all_canvases )
+      {
+	for ( const TObject* obj : *all_canvases )
+	{
+	  if ( !obj ) { continue ; }
+	  const TCanvas* cnv = dynamic_cast<const TCanvas*> ( obj ) ;
+	  if ( !cnv ) { continue ; }
+	  if ( cnv -> GetName() == name ) { return true; }
+	}
+	// ====================================================================     
+      }
+      // ======================================================================
+    }
+  // ==========================================================================
+  return false ;
+  // ==========================================================================
+}
+// ============================================================================
 /*  call for TVirtualPad::UpdateAsync 
  *  @see TVirtualPad::UpdateAsync 
  */
@@ -124,6 +190,7 @@ bool Ostap::Utils::CanvasContext::exit  ()
 	if ( obj && obj == m_saved )
 	{
 	  m_saved -> cd ()   ;
+ 
 	  // if ( m_saved -> IsModified() ) { m_saved -> Update() ; } 
 	  m_saved =  nullptr ;
 	  return active ()   ;	               // RETURN

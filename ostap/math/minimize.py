@@ -26,7 +26,7 @@ __all__     = (
 # =============================================================================
 from   ostap.math.local_minimize import scalar_minimize
 from   scipy.optimize            import minimize_scalar        
-import ostap.math.base 
+import ostap.math.math_base 
 import math, numpy, scipy 
 # =============================================================================
 # logging 

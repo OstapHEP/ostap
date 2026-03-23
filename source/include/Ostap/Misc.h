@@ -30,16 +30,32 @@ namespace Ostap
      */
     TCanvas*     get_canvas () ;
     // ========================================================================
+    /** get existing canvas by name 
+     *  @param name   Canvas name
+     *  @return canvas or nullptr 
+     */
+    TCanvas*     get_canvas
+    ( const std::string& name ) ; 
+    // ========================================================================
+    /** check existing canvas by name 
+     *  @param name   Canvas name
+     *  @return canvas or nullptr 
+     */
+    bool         has_canvas
+    ( const std::string& name )  ;
+    // ========================================================================
     /** call for TVirtualPad::Update 
      *  @see TVirtualPad::Update 
      */
-    TVirtualPad* pad_update       ( TVirtualPad* pad = nullptr ) ;
+    TVirtualPad* pad_update
+    ( TVirtualPad* pad = nullptr ) ;
     // ========================================================================
     /** call for TVirtualPad::UpdateAsync 
      *  @see TVirtualPad::Update
      *  @see TVirtualPad::UpdateAsync 
      */
-    TVirtualPad* pad_update_async ( TVirtualPad* pad = nullptr ) ;
+    TVirtualPad* pad_update_async
+    ( TVirtualPad* pad = nullptr ) ;
     // ========================================================================
     /** @class CanvasContext 
      *  @see TVirtualPad::TContext 

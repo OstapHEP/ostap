@@ -25,7 +25,7 @@ __all__     = (
 # =============================================================================
 from   ostap.core.meta_info   import root_info 
 from   ostap.core.pyrouts     import VE, SE, Ostap, hID  
-from   ostap.math.base        import iszero, axis_range 
+from   ostap.math.math_base   import iszero, axis_range 
 from   ostap.utils.strings    import split_string 
 from   ostap.core.ostap_types import string_types, list_types, num_types, sized_types, sequence_types    
 from   ostap.math.operations  import Mul  as MULT       ## needed for proper abstract multiplication

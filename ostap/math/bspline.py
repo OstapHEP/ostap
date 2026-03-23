@@ -47,7 +47,7 @@ __all__     = (
 # =============================================================================
 from    ostap.core.ostap_types import is_integer, integer_types
 from    ostap.core.core        import Ostap, funID
-from    ostap.math.base        import iszero, isequal, signum, doubles
+from    ostap.math.math_base   import iszero, isequal, signum, doubles
 import  ostap.math.reduce 
 import  ostap.math.bernstein 
 import  ostap.math.polynomials
@@ -574,7 +574,7 @@ def _new_init_ ( t ,  *args )  :
     Lists and tuples are  converted on flight to :
     - std::vector<double> 
     """
-    from ostap.math.base import doubles, complexes
+    from ostap.math.math_base import doubles, complexes
     
     largs = list (  args )
     alen  = len  ( largs )

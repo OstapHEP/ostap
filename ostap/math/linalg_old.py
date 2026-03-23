@@ -18,8 +18,8 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   ostap.math.base        import isequal,iszero
 from   ostap.core.ostap_types import num_types, is_integer
+from   ostap.math.math_base   import isequal,iszero
 import ROOT, cppyy 
 # =============================================================================
 # logging 

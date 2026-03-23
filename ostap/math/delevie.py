@@ -48,7 +48,7 @@ __all__     = (
     'ComplexDerivative'  , ## evaluate a complex derivatibe for analytical funtion (as object) 
     ) 
 # =============================================================================
-from   ostap.math.base        import Ostap , iszero  , isequal
+from   ostap.math.math_base   import Ostap , iszero  , isequal
 from   ostap.math.ve          import VE 
 from   ostap.math.finitediffs import Rule  , the_dot , darray , delta 
 from   ostap.utils.utils      import classprop 

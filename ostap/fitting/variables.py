@@ -71,7 +71,7 @@ __all__     = (
     ) 
 # =============================================================================
 from   ostap.core.meta_info     import root_info 
-from   ostap.math.base          import doubles, iszero, isequal 
+from   ostap.math.math_base     import doubles, iszero, isequal 
 from   ostap.core.core          import VE, hID, Ostap, valid_pointer 
 from   ostap.math.reduce        import root_factory 
 from   ostap.core.ostap_types   import ( num_types      , list_types     ,

@@ -45,6 +45,8 @@ def prepare_data ( nB = 1000 , nS = 1000 , nF = 5 ) :
     """
     assert 1 <= nF , "Invalid number of files is specified!"
 
+    files = []
+    
     for f in range ( nF ) :
         
         logger = getLogger ( 'test_tmva3:prepare_data' )
@@ -120,7 +122,7 @@ def prepare_data ( nB = 1000 , nS = 1000 , nF = 5 ) :
 
         files.append ( data_file)
         
-    return tiles 
+    return tuple ( files ) 
 
 # =============================================================================
 ## Run TMVA test 
@@ -143,7 +145,7 @@ def test_tmva3 () :
     #
     ## book TMVA trainer
     #
-    1from ostap.tools.tmva import Trainer 
+    from ostap.tools.tmva import Trainer 
     trainer = Trainer (
         name    = 'TestTMVA3' ,   
         methods = [ # type               name   configuration

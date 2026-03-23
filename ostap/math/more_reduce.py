@@ -9,8 +9,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
 __all__     = ()
 # =============================================================================
-from    ostap.math.base        import Ostap 
-from    ostap.math.reduce      import root_factory, poly_factory  
+from    ostap.math.math_base import Ostap 
+from    ostap.math.reduce    import root_factory, poly_factory  
 import  array 
 # =============================================================================
 

@@ -87,7 +87,7 @@ def fmt_pretty_values ( *values             ,
     
     av = max ( abs ( float ( v )  ) for v in values )
 
-    from ostap.math.base import iszero, frexp10
+    from ostap.math.math_base import iszero, frexp10
     the_format =  '%%+%d.%df' if with_sign else '%%%d.%df'
     
     if   100 <= av < 1000 and 2 <= precision : return the_format % ( width , precision - 2 ) , 0 
@@ -126,7 +126,7 @@ def the_expo ( value , *values ) :
     av = abs ( value )
     for v in values : av = max ( av , abs ( v ) )
     ##
-    from ostap.math.base import iszero, frexp10
+    from ostap.math.math_base import iszero, frexp10
     ## 
     if   0.1 <= av < 1000        : return 0 
     elif not av or iszero ( av ) : return 0 
@@ -164,7 +164,7 @@ def fmt_pretty_errors ( value               ,
     assert isinstance ( value , num_types ) and errors and \
         all ( isinstance ( e , num_types ) for e in errors ) , "Invalid value/errors!"
     
-    from ostap.math.base import iszero, frexp10 
+    from ostap.math.math_base import iszero, frexp10 
 
     v = float ( value ) 
     e = max   ( abs ( float ( q ) ) for q in errors ) if errors else abs ( v ) 
@@ -175,7 +175,6 @@ def fmt_pretty_errors ( value               ,
     vformat = '%%+%d.%df' if with_sign else '%%%d.%df'
     eformat = '%%-%d.%df'
 
-    from ostap.math.base import iszero, isequal 
     if iszero ( av ) :        
         fmtv  = vformat % ( width  , precision )
         fmte  = eformat % ( width  , precision )        

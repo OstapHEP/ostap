@@ -489,14 +489,14 @@ class BSplineFun(FUN1,ParamsPoly) :
     """
     def __init__ ( self , name , xvar , knots , power  , pars = None ) :
         
-        from ostap.math.base import isint as _isint 
+        from ostap.math.math_base import isint as _isint 
         assert pars or ( ( isinstance ( power, integer_types ) or _isint ( power ) ) and 0 <= power ) ,\
                "BSplineFun: Inconsistent 'power' setting!"
  
         ## initialize the first base class 
         FUN1      .__init__ ( self  , name  , xvar = xvar )
 
-        from ostap.math.base import doubles 
+        from ostap.math.math_base import doubles 
         knots = doubles ( knots ) 
         assert 2 <= len ( knots ) , "BSplineFun: invalid size of 'knots'!"
 

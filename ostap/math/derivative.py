@@ -60,7 +60,7 @@ __all__     = (
     ) 
 # =============================================================================
 from sys                    import float_info
-from ostap.math.base        import Ostap, iszero , isequal
+from ostap.math.math_base   import Ostap, iszero , isequal
 from ostap.core.ostap_types import num_types , is_integer
 from ostap.math.ve          import VE 
 from ostap.math.finitediffs import ( Rule , the_dot , darray ,

@@ -60,7 +60,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.math.ve          import VE
-from   ostap.math.base        import Ostap, iszero, isequal, complex_types 
+from   ostap.math.math_base   import Ostap, iszero, isequal, complex_types 
 from   ostap.core.ostap_types import num_types, is_integer, integer_types  
 import ROOT, math, cmath 
 # =============================================================================

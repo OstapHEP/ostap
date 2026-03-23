@@ -49,7 +49,7 @@ from   ostap.core.core                import ( cpp      , Ostap     ,
                                                natural_entry        ,
                                                natural_number       ,
                                                valid_pointer        )
-from   ostap.math.base                import ( frexp10      , isequalf      ,
+from   ostap.math.math_base           import ( frexp10      , isequalf      ,
                                                pos_infinity , neg_infinity ,
                                                vct1_call    , vct2_call    ,
                                                vct3_call    , axis_range   ) 

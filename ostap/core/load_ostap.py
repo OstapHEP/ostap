@@ -29,9 +29,9 @@ from ostap.utils.progress_bar import progress_bar
 # ============================================================================= 
     
 # =============================================================================
-from ostap.core.core    import cpp, Ostap, VE, SE, WSE, hID, fID, dsID, funID 
-from ostap.math.base    import doubles, strings
-from ostap.io.root_file import ROOTCWD 
+from ostap.core.core      import cpp, Ostap, VE, SE, WSE, hID, fID, dsID, funID 
+from ostap.math.math_base import doubles, strings
+from ostap.io.root_file   import ROOTCWD 
 # =============================================================================
 if '__main__' == __name__ :
 

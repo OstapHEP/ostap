@@ -2083,7 +2083,7 @@ def _add_response_tree_ ( tree , * ,
     progress = progress_conf ( progress )
     adder    = Ostap.AddTMVA ( progress ) 
 
-    from ostap.math.base import strings
+    from ostap.math.math_base import strings
     if isinstance ( spectators , string_types ) : spectators = spectators,    
     _spectators = strings ( *spectators ) 
     
@@ -2345,7 +2345,7 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     progress = progress_conf ( progress )
     adder    = Ostap.AddTMVA ( progress )
     
-    from ostap.math.base import strings
+    from ostap.math.math_base import strings
     if isinstance ( spectators , string_types ) : spectators = spectators,    
     _spectators = strings ( *spectators ) 
     

@@ -31,7 +31,7 @@ __all__     = (
 from   ostap.core.ostap_types   import num_types 
 from   ostap.stats.gof          import AGoF
 from   ostap.core.core          import Ostap, VE 
-from   ostap.math.base          import axis_range
+from   ostap.math.math_base     import axis_range
 from   ostap.fitting.ds2numpy   import ds2numpy
 from   ostap.stats.counters     import EffCounter 
 from   ostap.utils.progress_bar import progress_bar

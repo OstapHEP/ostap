@@ -68,7 +68,7 @@ __all__     = (
     ##
 )
 # =============================================================================
-from   ostap.core.base        import ( rootID              ,
+from   ostap.core.core_base   import ( rootID              ,
                                        usedRootID          , 
                                        ROOTIgnore          ,
                                        RooSilent           ,
@@ -80,7 +80,7 @@ from   ostap.core.base        import ( rootID              ,
                                        rootError           ,
                                        rootWarning         ) 
 from   ostap.core.meta_info   import root_info
-from   ostap.math.base        import ( Ostap    , std      , cpp ,
+from   ostap.math.math_base   import ( Ostap    , std      , cpp ,
                                        iszero   , isequal  ,
                                        isint    , islong   ,
                                        inrange  , strings  , 

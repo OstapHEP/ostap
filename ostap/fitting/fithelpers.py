@@ -3320,7 +3320,7 @@ class ParamsPoly(object) :
     """
     def __init__ ( self , npars = 1 , pars = None , limits = ( 0 , -1.e+6 , 1.e+6 ) ) :
         
-        from ostap.math.base import isint as _isint 
+        from ostap.math.math_base import isint as _isint 
         assert pars or ( ( isinstance ( npars , integer_types ) or _isint ( npars ) ) and 0 <= npars ) ,\
                "ParamsPoly: Inconsistent 'npars' setting"
         
@@ -3413,7 +3413,7 @@ class Phases(object) :
         """Create vector of phases (needed for various polynomial forms)
         """
 
-        from ostap.math.base import isint as _isint 
+        from ostap.math.math_base import isint as _isint 
         ## check  the arguments 
         assert ( isinstance ( power , integer_types ) or _isint ( power ) ) and 0 <= power, \
                "Phases: invalid type/value for 'power'-parameter: %s/%s"  % (  power , type ( power ) ) 

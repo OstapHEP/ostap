@@ -26,7 +26,7 @@ from   ostap.core.ostap_types    import ( integer_types      , long_type      ,
                                           string_types       , sequence_types ,
                                           sized_types        , num_types      ,
                                           dictlike_types     , list_types     )
-from   ostap.core.base           import ( std , Ostap   ,
+from   ostap.core.core_base      import ( std , Ostap   ,
                                           valid_pointer , 
                                           rootException , rootError ) 
 from   ostap.core.core           import ( VE  , WSE ,
@@ -46,8 +46,7 @@ from   ostap.utils.cidict        import cidict, cidict_fun
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.utils.progress_conf import progress_conf
 from   ostap.utils.utils         import chunked
-from   ostap.math.base           import np2raw  
-from   ostap.math.base           import FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
+from   ostap.math.math_base      import np2raw, FIRST_ENTRY, LAST_ENTRY, evt_range, all_entries
 from   ostap.trees.utils         import Tree, Chain
 from   ostap.logger.symbols      import tree           as tree_symbol
 from   ostap.logger.symbols      import branch         as branch_symbol
@@ -55,7 +54,7 @@ from   ostap.logger.symbols      import leaves         as leaves_symbol
 from   ostap.logger.symbols      import tape_cartridge as files_symbol
 from   ostap.io.root_file        import ROOTCWD 
 # 
-import ostap.trees.base 
+import ostap.trees.trees_base 
 import ostap.trees.treereduce 
 import ostap.trees.param
 import ostap.trees.funcs 
