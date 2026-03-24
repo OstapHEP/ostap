@@ -84,17 +84,27 @@ std::string Ostap::Utils::rootID
  *  @see RooNameReg 
  */
 // ============================================================================
+#include <iostream> 
 bool Ostap::Utils::usedRootID
 ( const std::string& name )
 {
+  std::cerr  << "usedRootID/1  " << name << std::endl ;
   TROOT* root = ROOT::GetROOT() ;
+  std::cerr  << "usedRootID/2  " << name << std::endl ;
   if ( !root ) { return false ; }
+  //
+  std::cerr  << "usedRootID/3  " << name << std::endl ;
+
+  //
+  if ( nullptr != RooNameReg::known ( name.c_str() ) ) { return true ; }
+
+   std::cerr  << "usedRootID/4  " << name << std::endl ;
   /// lock it...
   R__LOCKGUARD(gROOTMutex) ;
-  //
-  return
-    ( nullptr != RooNameReg::known ( name.c_str() ) ) || 
-    ( nullptr != root->FindObject  ( name.c_str() ) ) ;
+
+  std::cerr  << "usedRootID/5  " << name << std::endl ;
+  
+  return  ( nullptr != root->FindObject  ( name.c_str() ) ) ;
   //
 }
 // ============================================================================
