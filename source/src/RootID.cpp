@@ -70,7 +70,9 @@ std::string Ostap::Utils::rootID
 					    ( label < 1000000 ) ? "%06u" : "%u" , label ) + suffix } ;      
     /// check ROOT & ROOT/RooFit 
     if      ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
-    else if ( nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
+    /// lock it...
+    R__LOCKGUARD(gROOTMutex) ;    
+    if ( root && nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
     /// 
     return tag ;
   }
@@ -84,26 +86,17 @@ std::string Ostap::Utils::rootID
  *  @see RooNameReg 
  */
 // ============================================================================
-#include <iostream> 
 bool Ostap::Utils::usedRootID
 ( const std::string& name )
 {
-  std::cerr  << "usedRootID/1  " << name << std::endl ;
-  TROOT* root = ROOT::GetROOT() ;
-  std::cerr  << "usedRootID/2  " << name << std::endl ;
-  if ( !root ) { return false ; }
-  //
-  std::cerr  << "usedRootID/3  " << name << std::endl ;
-
   //
   if ( nullptr != RooNameReg::known ( name.c_str() ) ) { return true ; }
-
-   std::cerr  << "usedRootID/4  " << name << std::endl ;
+  //
+  TROOT* root = ROOT::GetROOT() ;
+  if ( !root ) { return false ; }
+  //
   /// lock it...
   R__LOCKGUARD(gROOTMutex) ;
-
-  std::cerr  << "usedRootID/5  " << name << std::endl ;
-  
   return  ( nullptr != root->FindObject  ( name.c_str() ) ) ;
   //
 }
