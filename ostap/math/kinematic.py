@@ -451,15 +451,16 @@ class _WF1(object) :
 # =============================================================================
 ## convert the objects to the functions 
 def _as_TF1_ ( obj , xmin , xmax ) :
-    """Convert the objects to the functions"""
-
-    from  ostap.core.core import funID
+    """ Convert the objects to the functions
+    """
+    
+    from  ostap.fitting.funcs import make_tf1
     
     fobj     = _WF1( obj ) 
-    fun      = ROOT.TF1( funID() , fobj , xmin , xmax ) 
+    fun      = make_tf1 ( fobj , xmin , xmax ) 
     fun._obj = fobj
     
-    fun.SetNpx(500)
+    fun.SetNpx ( 500 )
     
     return fun
 

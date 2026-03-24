@@ -14,8 +14,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
-from   ostap.core.core        import cpp, Ostap, VE, funID
-from   ostap.core.ostap_types import num_types , integer_types
+from   ostap.core.meta_info   import root_info 
+from   ostap.core.core        import cpp, Ostap, VE, funID, usedRootID
+from   ostap.core.ostap_types import num_types, integer_types, string_types 
+from   ostap.utils.basic      import typename 
 import ROOT, ctypes 
 # =============================================================================
 # logging 
@@ -25,6 +27,52 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.funcs' )
 else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( 'Tiny decoration for ROOT.TF(1,2,3) objects')
+# =============================================================================
+## helper function to create ROOT.TF1 object
+def make_tf1 ( func  ,
+               xmin  ,
+               xmax  , *   , 
+               npar  = 0   ,                
+               name  = ''  ) : 
+    
+    assert isinstance ( func  , string_types ) or callable ( func ) , \
+        "make_tf1: invalid `fun': %s" % typename ( func )
+    
+    assert isinstance ( xmin , num_types ) and isinstance ( xmin , num_types ) and xmin < xmax , \
+        "make_tf1: Invalid `xmin/xmax': %s/%s" % ( xmin , xmax )
+    
+    xmin = float ( xmin )
+    xmax = float ( xmax )
+    
+    assert isinstance ( npar , integer_types ) and 0 <= npar , \
+        "make_tf1: Invalid `npar': %s" % npar 
+    
+    if not name or usedRootID ( name ) : name  = funID ()
+
+    if ( 6 , 32 ) <= root_info :
+        
+        addToGlobList = int ( ROOT.TF1.EAddToList.kAdd ) 
+        ownership     = False
+        
+        tf1 = ROOT.TF1 ( name ,
+                         func ,
+                         xmin ,
+                         xmax ,
+                         npar = npar ,
+                         addToGlobList = addToGlobList )
+        
+        ROOT.SetOwnership ( tf1, ownership  )
+        
+    else :
+        
+        tf1 = ROOT.TF1 ( name , 
+                         func ,
+                         xmin ,
+                         xmax ,
+                         npar = npar )
+    
+    return tf1
+
 # =============================================================================
 ## Generate random tuple according to TF2
 #  @code

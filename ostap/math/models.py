@@ -98,17 +98,6 @@ def tf1  ( self , **kwargs  ) :
     callme = kwargs.pop ( 'callable' , self  ) 
     title  = kwargs.pop ( 'title'    , None  )
     ##
-    addToGlobList = kwargs.pop ( 'addToGlobList' , ROOT.TF1.EAddToList.kAdd ) 
-    ##
-    if   addToGlobList is True  : addToGlobList = ROOT.TF1.EAddToList.kAdd
-    elif addToGlobList is False : addToGlobList = ROOT.TF1.EAddToList.kNo 
-    elif ROOT.TF1.EAddToList.kDefault == addToGlobList : pass 
-    elif ROOT.TF1.EAddToList.kAdd     == addToGlobList : pass 
-    elif ROOT.TF1.EAddToList.kNo      == addToGlobList : pass 
-    else :
-        logger.warning ( "tf1: Unknown `addToGloList` %s, switch to %s" % ( addToGlobList , ROOT.TF1.EAddToList.kNo ) )
-        addToGlobList = ROOT.TF1.EAddToList.kNo
-    ## 
     npx    = kwargs.pop ( 'npx'   , kwargs.pop   ( 'npoints'  , 250 ) )
     xmin   = kwargs.pop ( 'xmin'  , neg_infinity )
     xmax   = kwargs.pop ( 'xmax'  , pos_infinity )
@@ -139,12 +128,8 @@ def tf1  ( self , **kwargs  ) :
     assert xmin < xmax        , "Invalid `xmin/xmax=%s/%s` setting!" % ( xmin , xmax ) 
     ##
     ## create TF1 
-    _wo  = self._wo1
-    conf = { 'npar' : npar , 'ndim' : ndim , 'addToGlobList' : addToGlobList } 
-    fun  = ROOT.TF1 ( funID ()  , _wo , xmin , xmax , **conf )
-    ## 
-    ## ATTENTION!
-    if ROOT.TF1.EAddToList.kAdd  == addToGlobList : ROOT.SetOwnership ( fun , False ) 
+    from ostap.fitting.funcs import make_tf1
+    fun  = make_tf1 ( self._wo1 , xmin , xmax , npar = npar )    
     ## 
     if   isinstance ( npx   , integer_types ) and 1 < npx : fun.SetNpx ( npx     )
     else : logger.warning ( "tf1: invalid `npx` : %s/%s" % ( npx , typename ( npx ) ) ) 

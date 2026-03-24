@@ -47,7 +47,7 @@ s_probchi2 = 'Prob(%s)' % s_chi2
 #  print 'Is constant? %s ' % histo.is_constant( prob = 0.01 )
 #  @endcode 
 def _h1_constant_ ( h1 , prob = 0.10 , option = 'SNQ' , goption = '' , density = False ) :
-    """Can  1D-histogram be considered as constant ?
+    """ Can  1D-histogram be considered as a constant ?
     >>> histo = ...
     >>> print 'Is constant? %s ' % histo.is_constant( prob = 0.01 ) 
     """
@@ -104,6 +104,7 @@ def _h1_cmp_fit_ ( h1              ,
     f2 = C1Fun    ( h2 , *h1.xminmax() ) 
     f2.release    ( 0     )
     c  = float    ( h1.integral () ) / float ( h2.integral () )
+    
     f2.set        ( 0 , c , 0.1 * c )
     f2.set_limits ( 0 , 1.e-6 * c , 1.e+3 * c ) 
     f2.fix        ( 1 , 0 )

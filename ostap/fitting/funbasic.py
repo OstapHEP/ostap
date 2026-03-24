@@ -1638,8 +1638,9 @@ class FUN1(AFUN1,F1AUX) :
         from ostap.core.core import fID
         def _aux_fun_ ( x , pars = [] ) : return self ( x[0]  )
         self.aux_keep.append ( _aux_fun_ )
-        
-        return ROOT.TF1 ( fID() , _aux_fun_ , xmin , xmax ) 
+        ## 
+        from ostap.fitting.funcs import make_tf1        
+        return make_tf1 ( _aux_fun_ , xmin , xmax )
 
     # =========================================================================
     ## operations with FUN1 object: self (op) fun2 
