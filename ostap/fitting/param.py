@@ -51,7 +51,7 @@ class C1Fun(object) :
                                  self.xmin ,
                                  self.xmax ,
                                  npar  = 3 ,
-                                 addToGlobList = ROOT.TF1.EAddToList.kAdd )
+                                 addToGlobList = int ( ROOT.TF1.EAddToList.kAdd ) )
         ROOT.SetOwnership ( self.__tf1 , False )
         
         self.__tf1.SetLineColor ( Gold ) 

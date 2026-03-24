@@ -346,16 +346,21 @@ trow = ( '%d'    % 0 ,
 glob_stat.append ( trow )
 # =============================================================================
 
+print ( 'BEFORE LOOP') 
+
 memory_init = memory_usage() 
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
-    
+
+    print ( 'IN LOOP/0') 
+
     tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
     mem = ''
     if 1 < iter : mem = ' Memory:%s=%+.2f[MB]' % ( delta_ram , memory_usage () - memory_init )
     logger.info ( allright ( tag + mem ) )
     
+    print ( 'IN LOOP/1') 
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
         # =========================================================================
         ## 0) The weighter object
@@ -365,11 +370,13 @@ for iter in range ( 1 , maxIter + 1 ) :
         ## 1a) create new "weighted" mcdataset
         mcds = mcds_.copy() 
 
+    print ( 'IN LOOP/2') 
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 
         mcds = mcds.add_reweighting ( weighter ,  name = 'weight' , parallel = True ) 
         if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) %  mcds )
     
+    print ( 'IN LOOP/3') 
     # =========================================================================
     ## 2) update weights
     
@@ -378,6 +385,7 @@ for iter in range ( 1 , maxIter + 1 ) :
     elif  iter <= 15 : power = lambda nactive : 1.3 / nactive if 1 < nactive else 1.05 
     else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 1.05 
     
+    print ( 'IN LOOP/4') 
     with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         
         # =========================================================================
@@ -393,6 +401,7 @@ for iter in range ( 1 , maxIter + 1 ) :
             make_plots = True  , 
             tag        = tag   ) ## tag for printout
         
+    print ( 'IN LOOP/5') 
     with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
         # =========================================================================
         ## 3) make MC-histograms  
@@ -411,8 +420,11 @@ for iter in range ( 1 , maxIter + 1 ) :
                  '%+.4g' % vct_data.           kullback_leibler ( vct_i    ) )
         glob_stat.append ( trow )
   
+    print ( 'IN LOOP/6') 
     rows = [] 
     with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :
+
+        print ( 'IN LOOP/6.1') 
         
         # ==============================================================================
         ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
@@ -420,9 +432,17 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis&moments
         logger.info ( tag + ': DATA(x)   vs MC(x)  comparison:\n%s'  % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ' , density = True ) )
-        logger.info ( tag + ': DATA(y)   vs MC(y)  comparison:\n%s'  % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ' , density = True ) )        
+
+        print ( 'IN LOOP/6.1.1') 
+        
+        logger.info ( tag + ': DATA(y)   vs MC(y)  comparison:\n%s'  % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ' , density = True ) )
+
+        print ( 'IN LOOP/6.1.2') 
+
         logger.info ( tag + ': DATA(x,y) vs MC(x,y) comparison:\n%s' % hdata .cmp_prnt ( hmc  , 'DATA' , 'MC' , 'DATA(xy) vs MC(xy)' , prefix = '# ' , density = True ) )
-                
+
+        print ( 'IN LOOP/6.2') 
+        
         title = tag + ': DATA(x)   vs MC(x) difference'
         logger.info ( '%s:\n%s' % ( title , hxdata.cmp_diff_prnt ( hmcx , density = True , title = title , prefix = '# ' ) ) )
         
@@ -431,14 +451,19 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         title = tag + ': DATA(x,y) vs MC(x,y) difference'
         logger.info ( '%s:\n%s' % ( title , hdata .cmp_diff_prnt ( hmc  , density = True , title = title , prefix = '# ' ) ) )
+
+        print ( 'IN LOOP/6.3')
         
         ## 4e) 2D-statistics
         mcstat = mcds    .statCov ( [ 'x' , 'y'] , cuts = 'weight' )
         logger.info  ( tag + ': x/y correlation DATA (unbinned): %+.2f' % datastat.correlation () ) 
         logger.info  ( tag + ': x/y correlation MC   (unbinned): %+.2f' %   mcstat.correlation () )
+        
+        print ( 'IN LOOP/6.4') 
 
+    print ( 'IN LOOP/7') 
     if not active and 3 < iter :
-        logger.info    ( allright ( 'No more iterations, converged after #%d%s' % ( iter , iteration ) ) ) 
+        logger.info ( allright ( 'No more iterations, converged after #%d%s' % ( iter , iteration ) ) ) 
         title = 'Reweighted dataset after #%d iterations' % iter 
         logger.info ( '%s:\n%s' % ( title , mcds.table2 ( variables = [ 'x' , 'y' ] ,
                                                           title     = title    ,
@@ -447,11 +472,12 @@ for iter in range ( 1 , maxIter + 1 ) :
         converged = True 
         break
 
-
+    print ( 'IN LOOP/8') 
     ## explicitely clear and delete dataset
     ## mcds.clear()
     del mcds
-    
+    print ( 'IN LOOP/9') 
+
 else :
 
     converged = False 

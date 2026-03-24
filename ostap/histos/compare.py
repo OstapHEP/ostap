@@ -80,7 +80,7 @@ def _h1_cmp_fit_ ( h1              ,
                    h2              ,
                    density = False ,  
                    option  = '0Q'  ) :
-    """Compare histograms by refit of the first with functions,
+    """ Compare histograms by refit of the first with function,
     extracted from the second one
 
     >>> h1 = ... ## the first histo
@@ -109,8 +109,9 @@ def _h1_cmp_fit_ ( h1              ,
     f2.fix        ( 1 , 0 )
     f2.fix        ( 2 , 1 )
 
-    while 100 < len ( __fun_cache ) :
-        __fun_cache.pop ( 0 )   
+    ## while 100 < len ( __fun_cache ) :
+    ##    __fun_cache.pop ( 0 )
+    
     __fun_cache.insert ( 0 , ( f2 , h1 , h2 ) )
 
     ## from ostap.plotting.canvas import use_canvas
