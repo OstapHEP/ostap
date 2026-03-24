@@ -13,10 +13,12 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
+    'C1Fun'  ,
     'H_fit'  ,
     'H_Nfit' ,
-    ) 
+    )
 # =============================================================================
+from   ostap.core.meta_info   import root_info 
 from   ostap.core.core        import Ostap, funID
 from   ostap.core.ostap_types import num_types, integer_types
 from   ostap.utils.basic      import typename
