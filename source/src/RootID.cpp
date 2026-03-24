@@ -8,6 +8,7 @@
 // ============================================================================
 // ROOT 
 // ============================================================================
+#include "RVersion.h"
 #include "TROOT.h"
 #include "TObject.h"
 #include "TNamed.h"
@@ -59,7 +60,9 @@ std::string Ostap::Utils::rootID
   if ( !root ) { return prefix + "0000" + suffix ; }
   // 
   /// lock it...
+#if ROOT_VERSION(6,32,0) <- ROOT_VERSION_CODE
   R__LOCKGUARD(gROOTMutex) ;    
+#endif 
   //
   static const unsigned long N = std::numeric_limits<unsigned long>::max ()  ; 
   for ( unsigned long label = 1001 ; label < N ; ++label )
@@ -72,7 +75,9 @@ std::string Ostap::Utils::rootID
     if      ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
     /// lock it...
     {
+#if ROOT_VERSION(6,32,0) <- ROOT_VERSION_CODE
     R__LOCKGUARD(gROOTMutex) ;    
+#endif 
     if ( root && nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
     }
     /// 
@@ -98,7 +103,9 @@ bool Ostap::Utils::usedRootID
   if ( !root ) { return false ; }
   //
   /// lock it...
+#if ROOT_VERSION(6,32,0) <- ROOT_VERSION_CODE
   R__LOCKGUARD(gROOTMutex) ;
+#endif
   return  ( nullptr != root->FindObject  ( name.c_str() ) ) ;
   //
 }

@@ -67,7 +67,9 @@ TCanvas*  Ostap::Utils::get_canvas
   if ( root )
     {
       /// lock it...
+#if ROOT_VERSION(6,32,0) <- ROOT_VERSION_CODE
       R__LOCKGUARD(gROOTMutex) ;
+#endif 
       /// get the list of all alived canvases
       TSeqCollection* all_canvases = root->GetListOfCanvases() ;
       if ( all_canvases )
@@ -100,7 +102,9 @@ bool Ostap::Utils::has_canvas
   if ( root )
     {
       /// lock it...
+#if ROOT_VERSION(6,32,0) <- ROOT_VERSION_CODE
       R__LOCKGUARD(gROOTMutex) ;
+#endif 
       /// get the list of all alived canvases
       TSeqCollection* all_canvases = root->GetListOfCanvases() ;
       if ( all_canvases )
@@ -180,7 +184,9 @@ bool Ostap::Utils::CanvasContext::exit  ()
   if ( root )
   {
     /// lock it...
+#if ROOT_VERSION(6,32,0) <- ROOT_VERSION_CODE
     R__LOCKGUARD(gROOTMutex) ;
+#endif 
     /// get the list of all alived canvases
     TSeqCollection* all_canvases = root->GetListOfCanvases() ;
     if ( all_canvases )
