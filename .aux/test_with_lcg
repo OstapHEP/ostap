@@ -9,5 +9,5 @@ cd build
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
   cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL &&
-  OSTAP_BATCH=True COLUMNS=180 ctest -j4 --output-on-failure --test-output-size-failed 5000000 )
+  OSTAP_BATCH=True COLUMNS=180 ctest -j4 -R '(constra|components_2D|gof_simfit|gaudi)' --repeat-until-fail 10 --output-on-failure --test-output-size-failed 5000000 )
 

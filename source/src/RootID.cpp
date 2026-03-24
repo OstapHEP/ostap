@@ -71,8 +71,10 @@ std::string Ostap::Utils::rootID
     /// check ROOT & ROOT/RooFit 
     if      ( nullptr != RooNameReg::known ( tag.c_str () ) ) { continue ; }
     /// lock it...
+    {
     R__LOCKGUARD(gROOTMutex) ;    
     if ( root && nullptr != root->FindObject  ( tag.c_str () ) ) { continue ; }    
+    }
     /// 
     return tag ;
   }
