@@ -34,6 +34,7 @@ __all__     = (
     ##
     )
 # =============================================================================
+from   ostap.core.meta_info      import root_info
 from   ostap.core.ostap_types    import ordered_dict 
 from   ostap.utils.cidict        import cidict, cidict_fun 
 from   ostap.core.core           import rootWarning, Ostap 
@@ -303,7 +304,9 @@ def getCanvas ( name   = 'glOstap'      ,   ## canvas name
     ## if groot.IsBatch() : cnv = ROOT.TCanvas ( name , title , width , height )
     cnv = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
 
-    ROOT.SetOwnership ( cnv , True )
+    ownership = ( 6 , 32  ) <= root_info 
+    ROOT.SetOwnership ( cnv , ownership  )
+    
     ## ROOT.SetOwnership ( cnv , False  )
     
     ## adjust newly created canvas
