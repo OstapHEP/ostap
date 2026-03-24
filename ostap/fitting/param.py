@@ -45,14 +45,22 @@ class C1Fun(object) :
         self.__fun  = fun 
         self.__xmin = min ( xmin , xmax )
         self.__xmax = max ( xmin , xmax )
-        
-        self.__tf1  = ROOT.TF1 ( funID ()  ,
-                                 self      ,
-                                 self.xmin ,
-                                 self.xmax ,
-                                 npar  = 3 ,
-                                 addToGlobList = int ( ROOT.TF1.EAddToList.kAdd ) )
-        ROOT.SetOwnership ( self.__tf1 , False )
+
+        if ( 6, 32 ) <= root_info : 
+            self.__tf1  = ROOT.TF1 ( funID ()  ,
+                                     self      ,
+                                     self.xmin ,
+                                     self.xmax ,
+                                     npar  = 3 ,
+                                     addToGlobList = int ( ROOT.TF1.EAddToList.kAdd ) )
+            ROOT.SetOwnership ( self.__tf1 , False )
+        else :
+            self.__tf1  = ROOT.TF1 ( funID ()  ,
+                                     self      ,
+                                     self.xmin ,
+                                     self.xmax ,
+                                     npar  = 3 )
+            
         
         self.__tf1.SetLineColor ( Gold ) 
         self.__tf1.SetLineWidth ( 3    )

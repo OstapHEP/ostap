@@ -353,14 +353,14 @@ memory_init = memory_usage()
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
 
-    print ( 'IN LOOP/0') 
+    print ( 'IN LOOP/0' , iter ) 
 
     tag = 'Reweighting iteration #%d%s' %  ( iter , iteration )
     mem = ''
     if 1 < iter : mem = ' Memory:%s=%+.2f[MB]' % ( delta_ram , memory_usage () - memory_init )
     logger.info ( allright ( tag + mem ) )
     
-    print ( 'IN LOOP/1') 
+    print ( 'IN LOOP/1' , tag ) 
     with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
         # =========================================================================
         ## 0) The weighter object
