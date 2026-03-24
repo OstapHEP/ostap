@@ -28,7 +28,7 @@ __all__     = (
     'KeepCanvas'         , ## context manager to keep/preserve currect canvas 
     'InvisibleCanvas'    , ## context manager to keep/preserve currect canvas 
     'Canvas'             , ## context manager to create currect canvas
-    'use_canvas'         , ## context manager to create currect canvas
+    'use_canvas'         , ## context manager to create currect scanvas
     'keepCanvas'         , ## context manager to keep the current ROOT canvas
     'invisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     ##
