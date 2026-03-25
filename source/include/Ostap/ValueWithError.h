@@ -360,6 +360,10 @@ namespace Ostap
       ValueWithError __Cl__     ( const unsigned int n ) const ;
       /// Clausen function Sl
       ValueWithError __Sl__     ( const unsigned int n ) const ;
+      /// Dixon elliptic cm 
+      ValueWithError __cm__     () const ;
+      /// Dixon elliptic sm 
+      ValueWithError __sm__     () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1373,9 +1377,23 @@ namespace Ostap
     /* Dilogarithm function (real case) 
      *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
      */
-    // ============================================================================
+    // ========================================================================
     ValueWithError dilog
     ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** Dixon (or Dixonian) elliptic function cm
+     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+     *  @param x argument
+     *  @return value of Dixon elliptic function cm
+     */
+    ValueWithError cm ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** Dixon (or Dixonian) elliptic function sm 
+     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+     *  @param x argument
+     *  @return value of Dixon elliptic function sm
+     */
+    ValueWithError sm ( const ValueWithError& x ) ;
     // ========================================================================
     /** Clausen function \f$ Cl_n \f$ 
      *  \f[ \begin{array}{lcc}

@@ -928,7 +928,18 @@ Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__Sl__  ( const unsigned int n ) const 
 { return Sl ( n  , *this ) ; }
 // ============================================================================
-
+// Dixon elliptic cm 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__cm__  () const 
+{ return cm ( *this ) ; }
+// ============================================================================
+// Dixon elliptic sm 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__sm__  () const 
+{ return sm ( *this ) ; }
+// ============================================================================
 
 // ============================================================================
 /* Does this object represent natural number?
@@ -2173,6 +2184,48 @@ Ostap::Math::dilog
     std::log ( std::abs ( 1 - xv ) ) / xv   ;
   //
   return ValueWithError ( r , c2 * dFdX ) ;
+}
+// ========================================================================
+/* Dixon (or Dixonian) elliptic function cm
+ *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+ *  @param x argument
+ *  @return value of Dixon elliptic function cm
+ */
+// ========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::cm 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  if ( c2 <= 0 || s_zero ( c2 ) ) { return cm ( xv ) ; }
+
+  const double r = cm ( xv ) ;
+  //
+  const double d2 = std::pow ( sm ( xv ) , 4 ) ;
+  //
+  return ValueWithError ( r , c2 * d2 ) ;
+}
+// ==========================================================================
+/* Dixon (or Dixonian) elliptic function sm 
+ *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+ *  @param x argument
+ *  @return value of Dixon elliptic function sm
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::sm 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  if ( c2 <= 0 || s_zero ( c2 ) ) { return sm ( xv ) ; }
+
+  const double r = sm ( xv ) ;
+  //
+  const double d2 = std::pow ( cm ( xv ) , 4 ) ;
+  //
+  return ValueWithError ( r , c2 * d2 ) ;
 }
 // ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 

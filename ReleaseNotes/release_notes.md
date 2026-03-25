@@ -3,6 +3,7 @@
 
   1. Add Dixon ellipic functions sm and cm
   1. Add Jacobi ellipic functions sn, cm and dm for complex argument 
+  1. Add Dixon elliptoc functions to `ostap.math.math_ve`
 
 # v3.6.9.12
 

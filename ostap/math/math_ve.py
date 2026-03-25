@@ -44,6 +44,7 @@ __all__     = (
     'am'           , 'dn'         ,             ## elliptic functions 
     'sn'           , 'cn'         , 'sc'      , ## elliptic functions
     'elliptic_K'   , 'elliptic_K' ,             ## elliptic integrals
+    'cm'           , 'sm'         ,             ## Dixon elliptic functions 
     'dilog'        ,
     'zeta'         , 'zetam1'     , 'eta'        , 
     'hurwitz'      , 'hzeta'      ,
@@ -1028,7 +1029,6 @@ def cn ( u , m  ) :
     if fun : return fun ( m )
     return _cn_ ( u , m  )
 
-
 # =============================================================================
 _sc_ = Ostap.Math.sc
 # =============================================================================
@@ -1068,6 +1068,36 @@ def elliptic_E ( k ) :
     fun = getattr ( k , '__E__' , None )
     if fun : return fun (   )
     return _elliptic_E_ ( k )
+
+# =============================================================================
+_cm_ = Ostap.Math.cm
+# =============================================================================
+## Dixon (or Dixonian) elliptic function cm
+#  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+#  @see  Ostap::Math::cm
+def cm ( x ) : 
+    """ Dixon (or Dixonian) elliptic function cm
+    - see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+    - see `Ostap.Math.cm`
+    """
+    fun = getattr ( x , '__cm__' , None )
+    if fun : return fun (   )
+    return _cm_ ( x )
+
+# =============================================================================
+_sm_ = Ostap.Math.sm
+# =============================================================================
+## Dixon (or Dixonian) elliptic function sm
+#  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+#  @see  Ostap::Math::sm
+def sm ( x ) : 
+    """ Dixon (or Dixonian) elliptic function sm
+    - see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+    - see `Ostap.Math.sm`
+    """
+    fun = getattr ( x , '__sm__' , None )
+    if fun : return fun (   )
+    return _sm_ ( x )
 
 # =============================================================================
 _dilog_ = Ostap.Math.dilog

@@ -240,6 +240,28 @@ namespace Ostap
     ( const unsigned short n ,
       const unsigned short k ) ;
     // ========================================================================
+    /** Eulerian number A(n,k)
+     *  @see https://en.wikipedia.org/wiki/Eulerian_number
+     *  @param n   \f$ 0 \le n \f$
+     *  @param k   \f$ 0 \le k \le n \f$ 
+     *  @return euleria number A(n,k)  
+     */
+    unsigned long long 
+    eulerian 
+    ( const unsigned short n , 
+      const unsigned short k ) ;
+    // ========================================================================
+    /** Eulerian number A(n,k)
+     *  @see https://en.wikipedia.org/wiki/Eulerian_number
+     *  @param n   \f$ 0 \le n \f$
+     *  @param k   \f$ 0 \le k \le n \f$ 
+     *  @return euleria number A(n,k)  
+     */
+     double 
+     eulerian_double 
+     ( const unsigned short n , 
+       const unsigned short k ) ; 
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

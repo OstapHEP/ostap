@@ -436,8 +436,100 @@ double Ostap::Math::stirling1_double
 ( const unsigned short n ,
   const unsigned short k ) 
 { return _stirling_double_ ( n , k ) ; }  
-// ========================================================================
+// ============================================================================
 
+// ============================================================================
+/* Eulerian number A(n,k)
+ *  @see https://en.wikipedia.org/wiki/Eulerian_number
+ *  @param n   \f$ 0 \le n \f$
+ *  @param k   \f$ 0 \le k \le n \f$ 
+ *  @return euleria number A(n,k)  
+ */
+// ==========================================================================
+unsigned long long 
+Ostap::Math::eulerian 
+( const unsigned short n , 
+  const unsigned short k ) 
+{
+  if      ( !n && !k               ) { return 1 ; }
+  else if (  n <=  k               ) { return 0 ; }
+  else if (  1 ==  k || n == k + 1 ) { return 1 ; }
+  //
+  typedef std::pair<unsigned short,unsigned short> KEY    ;
+  typedef unsigned long long                       RESULT ;
+  typedef std::map<KEY,RESULT>                     MAP    ;
+  typedef SyncedCache<MAP>                         CACHE  ;
+  /// the cache
+  static CACHE                        s_CACHE     {} ; // the cache
+  static const std::size_t            s_MAX_CACHE { 10000 } ;
+  //
+  const KEY key { n , k } ;
+  // 
+  { // (1) check a value already calculated
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) calculate it!
+  const RESULT A1     = eulerian ( n - 1 , k - 1 ) ;
+  const RESULT A2     = eulerian ( n - 1 , k     ) ;
+  const RESULT result = ( n - k ) * A1 + ( k + 1 ) * A2 ;
+  //
+  { // (3) add calculated value into the cache
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }  
+  //
+  return result ;
+}
+// ============================================================================
+/* Eulerian number A(n,k)
+ *  @see https://en.wikipedia.org/wiki/Eulerian_number
+ *  @param n   \f$ 0 \le n \f$
+ *  @param k   \f$ 0 \le k \le n \f$ 
+ *  @return euleria number A(n,k)  
+ */
+// ==========================================================================
+double
+Ostap::Math::eulerian_double 
+( const unsigned short n , 
+  const unsigned short k )
+{
+  if      ( !n && !k               ) { return 1 ; }
+  else if (  n <=  k               ) { return 0 ; }
+  else if (  1 ==  k || n == k + 1 ) { return 1 ; }
+  //
+  typedef std::pair<unsigned short,unsigned short> KEY    ;
+  typedef double                                   RESULT ;
+  typedef std::map<KEY,RESULT>                     MAP    ;
+  typedef SyncedCache<MAP>                         CACHE  ;
+  /// the cache
+  static CACHE                        s_CACHE     {} ; // the cache
+  static const std::size_t            s_MAX_CACHE { 10000 } ;
+  //
+  const KEY key { n , k } ;
+  // 
+  { // (1) check a value already calculated
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // (2) calculate it!
+  const RESULT A1     = eulerian_double ( n - 1 , k - 1 ) ;
+  const RESULT A2     = eulerian_double ( n - 1 , k     ) ;
+  const RESULT result = ( n - k ) * A1 + ( k + 1 ) * A2 ;
+  //
+  { // (3) add calculated value into the cache
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+  }  
+  //
+  return result ;
+}
 // ============================================================================
 // The END 
 // ============================================================================
