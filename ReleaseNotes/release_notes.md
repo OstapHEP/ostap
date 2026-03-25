@@ -1,3 +1,8 @@
+## New features
+
+  1. Add Dixon ellipic functions sm and cm
+  1. Add Jacobi ellipic functions sn, cm and dm for complex argument 
+
 # v3.6.9.12
 
 ## New features

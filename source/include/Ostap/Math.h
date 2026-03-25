@@ -1576,7 +1576,7 @@ namespace Ostap
      *  double x , n ;
      *  std::tie ( x , n ) = reduce ( xx , -5. , 5. ) ;
      *  @endcode  
-     *  - Suitable for reductuon of 
+     *  - Suitable for reduction of 
      *    periodic functions with period \f$ L = high-low \f4 
      */
     template <class TYPE=double>

@@ -1478,15 +1478,17 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    // Jacobi elliptic functions
+    // Jacobi elliptic functions (real argument)
+    // ========================================================================
+
     // ========================================================================
     /** Elliptic amplitude \f$ \mathrm{am}(u,m)=\phi\f$, where 
      *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
      *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
      */
     double am
-      ( const double u ,
-	const double m ) ;
+    ( const double u ,
+      const double m ) ;
     // ========================================================================
     /** Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
      *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
@@ -1501,8 +1503,8 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
      */
     double sn
-      ( const double u ,
-	const double m ) ;
+    ( const double u ,
+      const double m ) ;
     // ========================================================================
     /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
      *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
@@ -1525,10 +1527,71 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
      */ 
     double sc
-     ( const double u ,
-       const double m ) ;
+    ( const double u ,
+      const double m ) ;
+    // ========================================================================
+
+
+    // ========================================================================
+    // Jacobi elliptic functions (complex argument)
+    // ========================================================================
+    /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    std::complex<double> sn
+    ( const std::complex<double>& u ,
+      const double                m ) ;
+    // ========================================================================
+    /** Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    std::complex<double> cn
+    ( const std::complex<double>& u ,
+      const double                m ) ;    
+    // ========================================================================
+    /** Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
+     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */
+    std::complex<double> dn
+    ( const std::complex<double>& u ,
+      const double                m ) ;
     // ========================================================================
     
+    // ========================================================================
+    // Dixon elliptic functions 
+    // ========================================================================
+    /** Dixon (or Dixonian) elliptic function cm for real argument 
+     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+     *  @param x argument 
+     *  @return value of Dixon elliptic function cm 
+     */
+    double cm ( const double x ) ;
+    // ========================================================================
+    /** Dixon (or Dixonian) elliptic function sm for real arguemnt 
+     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
+     *  @param x argument
+     *  @return value of Dixon elliptic function sm 
+     */
+    double sm ( const double x ) ;
+    // ========================================================================
+    /** Dixon (or Dixonian) elliptic function cm for complex argument 
+     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
+     *  @param z argument
+     *  @return value of Dixon elliptic function sm 
+     */
+    std::complex<double> cm ( const std::complex<double>& z ) ;
+    // ========================================================================
+    /** Dixon (or Dixonian) elliptic function sm for complex argument 
+     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
+     *  @param z argument
+     *  @return value of Dixon elliptic function sm 
+     */
+    std::complex<double> sm ( const std::complex<double>& z ) ;
+    // ========================================================================
+
     // ========================================================================
     /** Dilogarith function (real case) 
      *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 

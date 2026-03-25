@@ -3709,11 +3709,11 @@ double Ostap::Math::am
   long double phi = a * u * std::pow ( 2 , NN ) ;
   //
   for ( CRI it = items.rbegin() ; it != items.rend() ; ++it )
-    {
-      a = std::get<0>(*it) ;
-      c = std::get<2>(*it) ;
-      phi = 0.5L * ( phi + std::asin ( c * std::sin ( phi ) / a ) ) ;
-    }
+  {
+    a = std::get<0>(*it) ;
+    c = std::get<2>(*it) ;
+    phi = 0.5L * ( phi + std::asin ( c * std::sin ( phi ) / a ) ) ;
+  }
   //
   return phi ;
 }
@@ -3737,26 +3737,26 @@ double Ostap::Math::sn
   //
   // reduce the argument
   if ( s_pi_2 < u ) 
-    {
-      const long double KK = elliptic_Km ( m ) ;
-      if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
-      else if ( s_equal ( u , 4 * KK ) ) { return u - 4 * KK ; }
-      else if ( 4 * KK < u )
-	{      
-	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
-	  return sn ( uk , m ) ;
-	}
-      else if ( 2 * KK < u )
-	{      
-	  const double uk = 4 * KK - u ;
-	  return - sn ( uk , m ) ;
-	}
-      else if ( KK < u )
-	{
-	  const double uk = 2 * KK - u ;
-	  return sn ( uk , m ) ;      
-	}
+  {
+    const long double KK = elliptic_Km ( m ) ;
+    if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
+    else if ( s_equal ( u , 4 * KK ) ) { return u - 4 * KK ; }
+    else if ( 4 * KK < u )
+    {      
+      const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
+      return sn ( uk , m ) ;
     }
+    else if ( 2 * KK < u )
+    {      
+      const double uk = 4 * KK - u ;
+      return - sn ( uk , m ) ;
+    }
+    else if ( KK < u )
+    {
+      const double uk = 2 * KK - u ;
+      return sn ( uk , m ) ;      
+    }
+  }
   //
   typedef std::array<long double,3>     ITEM  ;
   typedef std::vector<ITEM>             ITEMS ;
@@ -3770,31 +3770,30 @@ double Ostap::Math::sn
   long double c = a - b ;
   //
   for  ( unsigned short n = 0 ; n < NR ; ++n )
-    {
-      long double a1 = 0.5L *    ( a + b ) ;
-      long double b1 = std::sqrt ( a * b ) ;
-      long double c1 = 0.5  *    ( a - b ) ;
-      //
-      a = a1 ;
-      b = b1 ;
-      c = c1 ;
-      //
-      items.push_back ( ITEM { a , b , c } ) ;
-      //
-      if      ( 3 <= n && s_zero  ( c1 * 1000 ) ) { break ; }
-      else if ( 5 <= n && s_equal ( a , b     ) ) { break ; }
-      if ( 5 <= n && s_zero  ( b * 1000 ) ) { break ; }
-    }
+  {
+    long double a1 = 0.5L *    ( a + b ) ;
+    long double b1 = std::sqrt ( a * b ) ;
+    long double c1 = 0.5  *    ( a - b ) ;
+    //
+    a = a1 ;
+    b = b1 ;
+    c = c1 ;
+    //
+    items.push_back ( ITEM { a , b , c } ) ;
+    //
+    if      ( 3 <= n && s_zero  ( c1 * 1000 ) ) { break ; }
+    else if ( 5 <= n && s_equal ( a , b     ) ) { break ; }
+    if ( 5 <= n && s_zero  ( b * 1000 ) ) { break ; }
+  }
   const unsigned short NN = items.size() ;
   //
   long double y = a / std::sin ( a * u ) ;
   //
   for ( CRI it = items.rbegin() ; it != items.rend() ; ++it )
-    {
-      a = std::get<0>(*it) ;
-      c = std::get<2>(*it) ;
-      y = y + a * c / y    ;
-      
+  {
+    a = std::get<0>(*it) ;
+    c = std::get<2>(*it) ;
+    y = y + a * c / y    ;    
     }
   //
   return 1.0 / y ;
@@ -3819,26 +3818,26 @@ double Ostap::Math::sn_
   //
   // reduce the argument
   if ( s_pi_2  < u ) 
-    {
-      const long double KK = elliptic_Km ( m ) ;
-      if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
-      else if ( s_equal ( u , 4 * KK ) ) { return u - 4 * KK ; }
-      else if ( 4 * KK < u )
-	{      
-	  const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
-	  return sn ( uk , m ) ;
-	}
-      else if ( 2 * KK < u )
-	{      
-	  const double uk = 4 * KK - u ;
-	  return - sn ( uk , m ) ;
-	}
-      else if ( KK < u )
-	{
-	  const double uk = 2 * KK - u ;
-	  return sn ( uk , m ) ;      
-	}
+  {
+    const long double KK = elliptic_Km ( m ) ;
+    if      ( s_equal ( u , 2 * KK ) ) { return 2 * KK - u ; }
+    else if ( s_equal ( u , 4 * KK ) ) { return u - 4 * KK ; }
+    else if ( 4 * KK < u )
+    {      
+      const double uk = u - 4 * KK * ( std::floor ( u * 0.25L / KK ) + 1 ) ;
+      return sn ( uk , m ) ;
     }
+    else if ( 2 * KK < u )
+    {      
+      const double uk = 4 * KK - u ;
+      return - sn ( uk , m ) ;
+    }
+    else if ( KK < u )
+    {
+      const double uk = 2 * KK - u ;
+      return sn ( uk , m ) ;      
+    }
+  }
   //
   typedef std::array<long double,2>     ITEM  ;
   typedef std::vector<ITEM>             ITEMS ;
@@ -3968,6 +3967,102 @@ double Ostap::Math::sc
   const double a = am ( u , m ) ;
   //
   return std::tan ( a ) ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/* Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::sn
+( const std::complex<double>& u ,
+  const double                m )
+{
+  //
+  if      (  m < 0 || 1 < m     ) { return std::numeric_limits<double>::quiet_NaN(); }
+  else if ( s_zero ( u.imag() ) ) { return sn ( u.real() , m ) ; }
+  //
+  const double x = u.real () ;
+  const double y = u.imag () ;
+  //
+  const double m_prime     = 1 - m ;
+  //
+  const long double snx    = sn ( x , m ) ;
+  const long double cnx    = cn ( x , m ) ;
+  const long double dnx    = dn ( x , m ) ;
+  //
+  const long double cny_mp = cn ( y , m_prime ) ;
+  const long double sny_mp = sn ( y , m_prime ) ;
+  const long double dny_mp = dn ( y , m_prime ) ;
+  //
+  const double dd =  cny_mp * cny_mp  + m * snx * snx * sny_mp * sny_mp ;
+  return std::complex<double> ( snx    * dny_mp * cny_mp , m * cnx * dnx * sny_mp ) / dd ;
+}
+// ============================================================================
+/* Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::cn
+( const std::complex<double>& u ,
+  const double                m )
+{
+  //
+  if      (  m < 0 || 1 < m     ) { return std::numeric_limits<double>::quiet_NaN(); }
+  else if ( s_zero ( u.imag() ) ) { return cn ( u.real() , m ) ;}
+  //
+  const double x = u.real () ;
+  const double y = u.imag () ;
+  //
+  const double m_prime = 1 - m ;
+  //
+  const long double snx    = sn ( x , m ) ;
+  const long double cnx    = cn ( x , m ) ;
+  const long double dnx    = dn ( x , m ) ;
+  //
+  const long double cny_mp = cn ( y , m_prime ) ;
+  const long double sny_mp = sn ( y , m_prime ) ;
+  const long double dny_mp = dn ( y , m_prime ) ;
+  //
+  const double dd =  cny_mp * cny_mp  + m * snx * snx * sny_mp * sny_mp ;
+  return std::complex<double> ( cnx    * cny_mp  , -1 * m * snx * dnx * sny_mp * dny_mp) / dd ; 
+}
+// ============================================================================
+/* Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
+ *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::dn
+( const std::complex<double>& u ,
+  const double                m )
+{
+  //
+  if      (  m < 0 || 1 < m     ) { return std::numeric_limits<double>::quiet_NaN(); }
+  else if ( s_zero ( u.imag() ) ) { return dn ( u.real() , m ) ; }
+  //
+  const double x = u.real () ;
+  const double y = u.imag () ;
+  //
+  const double      m_prime = 1 - m ;
+  //
+  const long double snx     = sn ( x , m ) ;
+  const long double cnx     = cn ( x , m ) ;
+  const long double dnx     = dn ( x , m ) ;
+  //
+  const long double cny_mp  = cn ( y , m_prime ) ;
+  const long double sny_mp  = sn ( y , m_prime ) ;
+  const long double dny_mp  = dn ( y , m_prime ) ;
+  //
+  const double dd =  cny_mp * cny_mp  + m * snx * snx * sny_mp * sny_mp ;
+  return std::complex<double> ( dnx    * cny_mp * dny_mp , -1 * m * snx * cnx * sny_mp ) / dd ;
 }
 // ============================================================================
 
@@ -7199,6 +7294,242 @@ double Ostap::Math::pow_ratio_a2
   return 1 / ( 1 + p ) ;
 }
 // ============================================================================
+
+
+// ============================================================================
+// Dixon elliptic functions 
+// ============================================================================
+namespace
+{
+  // ==========================================================================
+  /// omega for Dixon elliptic functions        : exp ( i2pi/3 ) 
+  const std::complex<long double> s_dixon_omega  { -0.5L ,  0.5L * std::sqrt ( 3.0L ) } ;
+  /// squared Omega for Dixon elliptic functions: exp ( i4pi/3 ) 
+  const std::complex<long double> s_dixon_omega2 { -0.5L , -0.5L * std::sqrt ( 3.0L ) } ;
+  // ==========================================================================
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_special_functions ) && ( 201603L <= __cpp_lib_math_special_functions )
+  // ==========================================================================
+  /// Pi3 constant for Dixon elliptic functions
+  const long double s_dixon_pi3 = std::beta ( 1.0L/3.0 , 1.0L/3.0 ) ;
+  // ==========================================================================
+#else //
+  // ==========================================================================
+  /// Pi3 constant for Dixon elliptic functions
+  const long double s_dixon_pi3 = std::sqrt ( 3.0L ) * s_1_2pi * std::pow ( std::tgamma ( 1.0L/3 ) , 3 ) ;
+  // ==========================================================================
+#endif // =====================================================================
+  // ==========================================================================
+  /// Pi3 / 2 
+  const long double s_dixon_pi3_2 = 0.5L * s_dixon_pi3 ;
+  // ==========================================================================
+  // static_assert ( 0.1L < s_dixon_pi3 / 3 , "Incorrect Dixon's pi3 constant!" ) ;
+  // ==========================================================================
+  /** Taylor expansion of Dixon elliptic function cm
+   *  @see https://oeis.org/A104134
+   */
+  const std::array<long double,13> s_cm {
+    +1                             / 1.0L   ,                  //  0! 
+    -2                             / std::tgamma (  4.0L ) ,   //  3! 
+    +40                            / std::tgamma (  7.0L ) ,   //  6! 
+    -3680                          / std::tgamma ( 10.0L ) ,   //  9!
+    +880000                        / std::tgamma ( 13.0L ) ,   // 12! 
+    -435776000                     / std::tgamma ( 16.0L ) ,   // 15!
+    +386949376000                  / std::tgamma ( 19.0L ) ,   // 18! 
+    -560034421760000               / std::tgamma ( 22.0L ) ,   // 21!
+    +1233482823823360000           / std::tgamma ( 25.0L ) ,   // 24! 
+    -39261508773318656.e+5L        / std::tgamma ( 28.0L ) ,   // 27! // 000 00,
+    +17346066637844488192.e+6L     / std::tgamma ( 31.0L ) ,   // 30! // 000 000,
+    -102987227337891283042304.e+6L / std::tgamma ( 34.0L ) ,   // 33! // 000 000,
+    +800183462504065339211776.e+9L / std::tgamma ( 37.0L ) } ; // 36! // 000 000 000
+  // ==========================================================================
+  /** Taylor expansion of Dixon elliptic function cm
+   *  @see https://oeis.org/A104133
+   */
+  const std::array<long double,13> s_sm {
+    +1                                 ,                           //  1!
+    -4                                 / std::tgamma (  5.0L ) ,   //  4! 
+    +160                               / std::tgamma (  8.0L ) ,   //  7! 
+    -20800                             / std::tgamma ( 11.0L ) ,   // 10!
+    +6476800                           / std::tgamma ( 14.0L ) ,   // 13!  
+    -3946624000                        / std::tgamma ( 17.0L ) ,   // 16! 
+    +4161608704000                     / std::tgamma ( 20.0L ) ,   // 19! 
+    -6974121256960000                  / std::tgamma ( 23.0L ) ,   // 22! 
+    +174552222220288.e+5L              / std::tgamma ( 26.0L ) ,   // 25!  // 000 00,
+    -622267704323448832.e+5L           / std::tgamma ( 29.0L ) ,   // 28!  // 000 00,
+    +304379186781653598208.e+6L        / std::tgamma ( 32.0L ) ,   // 31!  // 000 000,
+    -198204965707722331291648.e+7L     / std::tgamma ( 35.0L ) ,   // 34!  // 000 000 0,
+    +1675882412756413547934121984.e+7L / std::tgamma ( 38.0L ) } ; // 37!  // 000 000 0 } ; 
+  // ==========================================================================  
+}
+// ============================================================================
+/* Dixon (or Dixonian) elliptic function cm for complex argument 
+ *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
+ *  @param z argument
+ *  @return value of Dixon elliptic function sm 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::cm ( const std::complex<double>& z )
+{
+  // real value ? 
+  if ( s_zero ( z.imag() ) ) { return cm ( z.real() ) ; } 
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
+  const long double smx = sm ( x ) ;
+  const long double cmx = cm ( x ) ;
+  const long double smy = sm ( y ) ;
+  const long double cmy = cm ( y ) ;
+  //
+  return std::complex<double>
+    ( ( smx * cmx       - s_dixon_omega * smy * cmy       ) / 
+      ( smx * cmy * cmy - s_dixon_omega * cmx * cmx * smy ) ) ;
+}
+// ============================================================================
+/*  Dixon (or Dixonian) elliptic function sm for complex argument 
+ *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
+ *  @param z argument
+ *  @return value of Dixon elliptic function sm 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::sm ( const std::complex<double>& z )
+{
+  // real value ? 
+  if ( s_zero ( z.imag() ) ) { return sm ( z.real() ) ; } 
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
+  const long double smx = sm ( x ) ;
+  const long double cmx = cm ( x ) ;
+  const long double smy = sm ( y ) ;
+  const long double cmy = cm ( y ) ;
+  //  
+  return std::complex<double>
+    ( ( smx * smx * cmy - s_dixon_omega2 * cmx * smy * smy ) / 
+      ( smx * cmy * cmy - s_dixon_omega  * cmx * cmx * smy ) ) ;
+}
+// =============================================================================
+/*  Dixon (or Dixonian) elliptic function cm for real argument 
+ *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+ *  @param x argument 
+ *  @return value of Dixon elliptic function cm 
+ */
+// =============================================================================
+double Ostap::Math::cm ( const double x )
+{
+  //
+  // (1) for large arguments, reduce to  [-pi3/2,+pi3/2] range:
+  const double ax = std::abs ( x ) ;
+  if ( s_dixon_pi3_2 < ax )
+  {
+    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_dixon_pi3_2 , s_dixon_pi3_2 ) ;
+    return cm ( r.first ) ;
+  }
+  //
+  // (2) for small arguments use Taylor's expansion   
+  if ( ax < 0.1 )
+  {
+    const long double z3 = x * x * x ;
+    //
+    long double result   = 0 ;
+    long double term     = 1 ;
+    //
+    // require two subsequent small terms 
+    bool prev_small = false ;
+    for ( std::size_t i = 0 ; i < s_cm.size() ; ++i )
+    {
+      const long double delta       = term * s_cm [ i ] ;
+      const bool        small_term  = s_zero ( delta ) || s_equal ( result , result + delta ) ;
+      //
+      /// update result 
+      result     += delta ;
+      /// require two subsequent small terms 
+      if ( prev_small && small_term ) { return result ; }
+      //
+      prev_small  = small_term ;
+      term       *= z3 ;      
+    }
+    //
+    return result ;
+  }
+  //
+  // (3) use triplication formula 
+  const double        u = x / 3 ;
+  //
+  const long double cmu = cm ( u ) ;
+  //
+  const long double cmu3 = std::pow ( cmu , 3 ) ;
+  const long double cmu6 = cmu3 * cmu3 ;
+  const long double cmu9 = cmu6 * cmu3 ;
+  //
+  return
+    ( cmu9 - 6 * cmu6 + 3 * cmu3 + 1 ) /
+    ( cmu9 + 3 * cmu6 - 6 * cmu3 + 1 ) ;    
+}
+// =============================================================================
+/*  Dixon (or Dixonian) elliptic function sm for real argument 
+ *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
+ *  @param  x argument 
+ *  @return value of Dixon elliptic function sm 
+ */
+// =============================================================================
+double Ostap::Math::sm ( const double x )
+{
+  //
+  const double ax = std::abs ( x ) ;
+  //
+  // (1) for large arguments, reduce to  [-pi3/2,+pi3/2] range:
+  if ( s_dixon_pi3_2 < ax )
+  {
+    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_dixon_pi3_2 , s_dixon_pi3_2 ) ;
+    return sm ( r.first ) ;
+  }
+  //
+  // (2) for small arguments use Taylor's expansion   
+  if ( ax < 0.1 )
+  {
+    const long double z3 = x * x * x ;
+    //
+    long double result   = 0 ;
+    long double term     = 1 ;
+    //
+    // require two subsequent small terms 
+    bool prev_small = false ;
+    for ( std::size_t i = 0 ; i < s_sm.size() ; ++i )
+    {
+      const long double delta = term * s_sm [ i ] ;
+      const bool small_term   = s_zero ( delta ) || s_equal ( result , result + delta ) ;
+      // update result 
+      result     += delta ;
+      // require two subsequent small terms 
+      if ( prev_small && small_term ) { return x * result ; }
+      //
+      prev_small  = small_term ;
+      term       *= z3 ;      
+    }
+    //
+    return x * result ;
+  }
+  //
+  // (3) use triplication formula 
+  const double      u   = x / 3 ;
+  //
+  const long double cmu = cm ( u ) ;
+  const long double smu = sm ( u ) ;
+  //
+  const long double cmu3 = std::pow ( cmu , 3 ) ;
+  const long double smu3 = std::pow ( smu , 3 ) ;
+  //
+  const long double cmu6 = cmu3 * cmu3 ;
+  const long double cmu9 = cmu6 * cmu3 ;
+  //
+  return
+    3 * smu * cmu * ( smu3 * cmu3 - 1 ) /
+    ( cmu9 + 3 * cmu6 - 6 * cmu3 + 1 ) ;    
+}
 
 // ============================================================================
 //                                                                      The END 
