@@ -7359,8 +7359,27 @@ namespace
     +304379186781653598208.e+6L        / std::tgamma ( 32.0L ) ,   // 31!  // 000 000,
     -198204965707722331291648.e+7L     / std::tgamma ( 35.0L ) ,   // 34!  // 000 000 0,
     +1675882412756413547934121984.e+7L / std::tgamma ( 38.0L ) } ; // 37!  // 000 000 0 } ; 
-  // ==========================================================================  
-}
+  // ==========================================================================
+  // Lemniscate 
+  // ==========================================================================
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_special_functions ) && ( 201603L <= __cpp_lib_math_special_functions )
+  // ==========================================================================
+  /** Lemniscate constant "pi"
+   *  @see https://en.wikipedia.org/wiki/Lemniscate_constant
+   */
+  const long double s_lemniscate_pi = 0.5L * std::beta ( 0.25L , 0.5L ) ;
+  // ==========================================================================
+#else //
+  // ==========================================================================
+  /** Lemniscate constant "pi"
+   *  @see https://en.wikipedia.org/wiki/Lemniscate_constant
+   */
+  const long double s_lemniscate_pi = 0.5L * std::pow ( std::tgamma ( 0.25L ) , 2 ) * s_sqrt_1_2pi ;
+  // ==========================================================================
+#endif // =====================================================================
+  // ==========================================================================
+  // ==========================================================================
+} //                                       The end of local anonymous namespace 
 // ============================================================================
 /* Dixon (or Dixonian) elliptic function cm for complex argument 
  *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
@@ -7369,13 +7388,14 @@ namespace
  */
 // ============================================================================
 std::complex<double>
-Ostap::Math::cm ( const std::complex<double>& z )
+Ostap::Math::cm
+( const std::complex<double>& z )
 {
-  // real value ? 
-  if ( s_zero ( z.imag() ) ) { return cm ( z.real() ) ; } 
   //
   const double x = z.real () ;
   const double y = z.imag () ;
+  // real value ? 
+  if ( !y || s_zero ( y ) ) { return cm ( x ) ; } 
   //
   const long double smx = sm ( x ) ;
   const long double cmx = cm ( x ) ;
@@ -7394,13 +7414,14 @@ Ostap::Math::cm ( const std::complex<double>& z )
  */
 // ============================================================================
 std::complex<double>
-Ostap::Math::sm ( const std::complex<double>& z )
+Ostap::Math::sm
+( const std::complex<double>& z )
 {
-  // real value ? 
-  if ( s_zero ( z.imag() ) ) { return sm ( z.real() ) ; } 
   //
   const double x = z.real () ;
   const double y = z.imag () ;
+  // real value ? 
+  if ( !y || s_zero ( y ) ) { return sm ( x ) ; } 
   //
   const long double smx = sm ( x ) ;
   const long double cmx = cm ( x ) ;
@@ -7425,7 +7446,7 @@ double Ostap::Math::cm ( const double x )
   const double ax = std::abs ( x ) ;
   if ( s_dixon_pi3_2 < ax )
   {
-    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_dixon_pi3_2 , s_dixon_pi3_2 ) ;
+    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_dixon_pi3_2 , +s_dixon_pi3_2 ) ;
     return cm ( r.first ) ;
   }
   //
@@ -7484,7 +7505,7 @@ double Ostap::Math::sm ( const double x )
   // (1) for large arguments, reduce to  [-pi3/2,+pi3/2] range:
   if ( s_dixon_pi3_2 < ax )
   {
-    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_dixon_pi3_2 , s_dixon_pi3_2 ) ;
+    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_dixon_pi3_2 , +s_dixon_pi3_2 ) ;
     return sm ( r.first ) ;
   }
   //
@@ -7530,6 +7551,112 @@ double Ostap::Math::sm ( const double x )
     3 * smu * cmu * ( smu3 * cmu3 - 1 ) /
     ( cmu9 + 3 * cmu6 - 6 * cmu3 + 1 ) ;    
 }
+
+
+
+// ============================================================================
+/*  Lemniscate elliptic function cl for real argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function cl
+ */
+// ============================================================================
+double Ostap::Math::cl ( const double x )
+{
+  // (1) for large arguments, reduce to  [-lem_pi,+lem_pi] range:
+  const double ax = std::abs ( x ) ;
+  if ( s_lemniscate_pi  < ax )
+  {
+    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_lemniscate_pi , +s_lemniscate_pi ) ;
+    return cl ( r.first ) ;
+  }
+  // (2) for small arguments use Taylor's expansion   
+  if ( ax < 0.1 )
+  {
+    return -1000 ;
+  }
+  //
+  // (3) use triplication formula
+  
+  return -1000; 
+}
+// ============================================================================
+/*  Lemniscate elliptic function sl for real argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function sl
+ */
+// ============================================================================
+double Ostap::Math::sl ( const double x )
+{
+  // (1) for large arguments, reduce to  [-lem_pi,+lem_pi] range:
+  const double ax = std::abs ( x ) ;
+  if ( s_lemniscate_pi  < ax )
+  {
+    const auto r = Ostap::Math::reduce ( 1.0L * x , -s_lemniscate_pi , +s_lemniscate_pi ) ;
+    return sl ( r.first ) ;
+  }
+  // (2) for small arguments use Taylor's expansion   
+  if ( ax < 0.1 )
+  {
+    return -1000 ;
+  }
+  //
+  return -1000; 
+}
+// ============================================================================
+/*  Lemniscate elliptic function cl for complex argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function cl
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::cl
+( const std::complex<double>& z )
+{
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
+  if ( !y || s_zero ( y ) ) { return cl ( x ) ; }  
+  //
+  const double clx = cl ( x ) ;
+  const double slx = sl ( x ) ;
+  const double cly = cl ( y ) ;
+  const double sly = sl ( y ) ;
+  //
+  return
+    ( clx - s_j * slx * sly * cly ) /
+    ( cly + s_j * slx * clx * sly ) ;
+}
+// ============================================================================
+/*  Lemniscate elliptic function sl for complex argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function sl
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::sl
+( const std::complex<double>& z )
+{
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
+  if ( !y || s_zero ( y ) ) { return sl ( x ) ; }
+  //
+  const double clx = cl ( x ) ;
+  const double slx = sl ( x ) ;
+  const double cly = cl ( y ) ;
+  const double sly = sl ( y ) ;
+  //
+  return
+    ( slx + s_j * clx * clx * cly ) /
+    ( cly - s_j * slx * clx * sly ) ;
+}
+
 
 // ============================================================================
 //                                                                      The END 

@@ -1593,6 +1593,36 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
+    /** Lemniscate elliptic function cl for real argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x the argument
+     *  @return the value of lemniscate elliptic functinon cl
+     */
+    double cl ( const double x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic function sl for real argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x the argument
+     *  @return the value of lemniscate elliptic function sl
+     */
+    double sl ( const double x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic function cl for complex argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x the argument
+     *  @return the value of lemniscate elliptic function cl
+     */
+    std::complex<double> cl ( const std::complex<double>& z ) ;  
+    // ========================================================================
+    /** Lemniscate elliptic function sl for complex argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param  z the argument
+     *  @return the value of lemniscate elliptic function sl
+     */
+    std::complex<double> sl ( const std::complex<double>& z ) ;  
+    // ========================================================================
+
+    // ========================================================================
     /** Dilogarith function (real case) 
      *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
      */
