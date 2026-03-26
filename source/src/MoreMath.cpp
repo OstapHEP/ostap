@@ -7712,7 +7712,6 @@ Ostap::Math::sl
 }
 // ============================================================================
 
-
 // ============================================================================
 /*  Lemniscate elliptic hyperbolic cosine function clh for real argument 
  *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
