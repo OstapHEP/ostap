@@ -45,6 +45,8 @@ __all__     = (
     'sn'           , 'cn'         , 'sc'      , ## elliptic functions
     'elliptic_K'   , 'elliptic_K' ,             ## elliptic integrals
     'cm'           , 'sm'         ,             ## Dixon elliptic functions 
+    'cl'           , 'sl'         ,             ## Lemniscate elliptic functions 
+    'clh'          , 'slh'        ,             ## Lemniscate elliptic functions 
     'dilog'        ,
     'zeta'         , 'zetam1'     , 'eta'        , 
     'hurwitz'      , 'hzeta'      ,
@@ -971,8 +973,6 @@ def bring ( x ) :
 # =============================================================================
 BR = bring
 
-
-
 # =============================================================================
 _am_ = Ostap.Math.am
 # =============================================================================
@@ -1099,6 +1099,59 @@ def sm ( x ) :
     if fun : return fun (   )
     return _sm_ ( x )
 
+
+_cl_ , _sl_ = Ostap.Math.cl , Ostap.Math.sl 
+# =============================================================================
+## Lemniscate elliptic cosine function cl
+#  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+#  @see  Ostap::Math::cl
+def cl ( x ) : 
+    """ Lemniscate elliptic cosine function cl
+    - see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+    - see `Ostap.Math.cl`
+    """
+    fun = getattr ( x , '__cl__' , None )
+    if fun : return fun (   )
+    return _cl_ ( x )
+# =============================================================================
+## Lemniscate elliptic sine function sl
+#  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+#  @see  Ostap::Math::sl
+def sl ( x ) : 
+    """ Lemniscate elliptic sine function sl
+    - see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+    - see `Ostap.Math.cl`
+    """
+    fun = getattr ( x , '__sl__' , None )
+    if fun : return fun (   )
+    return _sl_ ( x )
+
+_clh_ , _slh_ = Ostap.Math.clh , Ostap.Math.slh 
+# =============================================================================
+## Lemniscate elliptic hyperbolic cosine function clh
+#  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+#  @see  Ostap::Math::clh
+def clh ( x ) : 
+    """ Lemniscate elliptic hyperbolic cosine function cl
+    - see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+    - see `Ostap.Math.clh`
+    """
+    fun = getattr ( x , '__clh__' , None )
+    if fun : return fun (   )
+    return _clh_ ( x )
+# =============================================================================
+## Lemniscate elliptic hyperbolic sine function slh
+#  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+#  @see  Ostap::Math::slh
+def slh ( x ) : 
+    """ Lemniscate elliptic hyperbolic sine function slh
+    - see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+    - see `Ostap.Math.clh`
+    """
+    fun = getattr ( x , '__slh__' , None )
+    if fun : return fun (   )
+    return _slh_ ( x )
+
 # =============================================================================
 _dilog_ = Ostap.Math.dilog
 # =============================================================================
@@ -1162,11 +1215,9 @@ def eta ( x ) :
     if fun : return fun (   )
     return _eta_ ( x )
 
-
 _Cl_n_    = Ostap.Math.Cl
 _Sl_n_    = Ostap.Math.Sl
 _clausen_ = Ostap.Math.clausen
-
 
 # =============================================================================
 ## Standard Clausen functions
@@ -1211,7 +1262,6 @@ def clausen ( x ) :
     fun = getattr ( x , '__clausen__' , None )
     if fun : return fun ()
     return _clausen_ ( x )
-
 
 _hyperg_M   = Ostap.Math.hyperg_M
 _hyperg_U   = Ostap.Math.hyperg_U 

@@ -4065,6 +4065,22 @@ Ostap::Math::dn
   return std::complex<double> ( dnx    * cny_mp * dny_mp , -1 * m * snx * cnx * sny_mp ) / dd ;
 }
 // ============================================================================
+/*  elliptic function 
+ *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
+ *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+ */ 
+// ============================================================================
+std::complex<double>
+Ostap::Math::sc
+( const std::complex<double>& u ,
+  const double                m )
+{ 
+  if      (  m < 0 || 1 < m     ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  const double y = u.imag() ;
+  const double x = u.real() ;  
+  if ( !y ||s_zero ( y ) )  { return sc ( x , m ) ; } 
+  return sn ( u , m ) / cn ( u , m ) ; 
+}
 
 // ============================================================================
 /* Dilogarithm function (real case) 
@@ -7378,6 +7394,22 @@ namespace
   // ==========================================================================
 #endif // =====================================================================
   // ==========================================================================
+  /** Taylor expansion of Lemniscate elliption function sl
+   * @see https://oeis.org/A104203
+   */
+  const std::array<long double,10> s_sl {
+  +1                                                                ,   //  1!  
+  -12                                       / std::tgamma (  6.0L ) ,   //  5!                            
+  +3024                                     / std::tgamma ( 10.0L ) ,   //  9! 
+  -4390848                                  / std::tgamma ( 14.0L ) ,   // 13! 
+  +21224560896                              / std::tgamma ( 18.0L ) ,   // 17! 
+  -257991277243392                          / std::tgamma ( 22.0L ) ,   // 21!
+  +6628234834692624384                      / std::tgamma ( 26.0L ) ,   // 25! 
+  -31972908084626.0095008768e+10L           / std::tgamma ( 30.0L ) ,   // 29! 
+  +2657174746379813433.4265819136e+10L      / std::tgamma ( 34.0L ) ,   // 33! 
+  -356420284775228965951390.2717468672e+10L / std::tgamma ( 38.0L ) } ; // 37! 
+  // 
+  // ==========================================================================
   // ==========================================================================
 } //                                       The end of local anonymous namespace 
 // ============================================================================
@@ -7551,7 +7583,7 @@ double Ostap::Math::sm ( const double x )
     3 * smu * cmu * ( smu3 * cmu3 - 1 ) /
     ( cmu9 + 3 * cmu6 - 6 * cmu3 + 1 ) ;    
 }
-
+// ============================================================================
 
 
 // ============================================================================
@@ -7570,15 +7602,9 @@ double Ostap::Math::cl ( const double x )
     const auto r = Ostap::Math::reduce ( 1.0L * x , -s_lemniscate_pi , +s_lemniscate_pi ) ;
     return cl ( r.first ) ;
   }
-  // (2) for small arguments use Taylor's expansion   
-  if ( ax < 0.1 )
-  {
-    return -1000 ;
-  }
   //
-  // (3) use triplication formula
-  
-  return -1000; 
+  static const long double lempi_2 = 0.5L * s_lemniscate_pi ;
+  return 0 < x ? -sl ( x - lempi_2 ) : sl ( x + lempi_2 ) ; 
 }
 // ============================================================================
 /*  Lemniscate elliptic function sl for real argument 
@@ -7599,10 +7625,38 @@ double Ostap::Math::sl ( const double x )
   // (2) for small arguments use Taylor's expansion   
   if ( ax < 0.1 )
   {
-    return -1000 ;
+    const long double z4 = std::pow ( x , 4 ) ;
+    //
+    long double result   = 0 ;
+    long double term     = 1 ;
+    //
+    // require two subsequent small terms 
+    bool prev_small = false ;
+    for ( std::size_t i = 0 ; i < s_sl.size() ; ++i )
+    {
+      const long double delta       = term * s_sl [ i ] ;
+      const bool        small_term  = s_zero ( delta ) || s_equal ( result , result + delta ) ;
+      //
+      /// update result 
+      result     += delta ;
+      /// require two subsequent small terms 
+      if ( prev_small && small_term ) { return x * result ; }
+      //
+      prev_small  = small_term ;
+      term       *= z4 ;
+    }
+    return x * result ;       
   }
   //
-  return -1000; 
+  // (3) use triplication formula
+  //
+  const double z = x / 3 ;
+  // 
+  const long double slz = sl ( z ) ;
+  const long double sl4 = std::pow( slz , 4 ) ;
+  const long double sl8 = sl4 * sl4 ;
+  //
+  return slz * ( 3 - 6 * sl4 - sl8 ) / ( 1 + 6 * sl4 - 3 * sl8 ) ; 
 }
 // ============================================================================
 /*  Lemniscate elliptic function cl for complex argument 
@@ -7653,10 +7707,95 @@ Ostap::Math::sl
   const double sly = sl ( y ) ;
   //
   return
-    ( slx + s_j * clx * clx * cly ) /
+    ( slx + s_j * clx * cly * sly ) /
     ( cly - s_j * slx * clx * sly ) ;
 }
+// ============================================================================
 
+
+// ============================================================================
+/*  Lemniscate elliptic hyperbolic cosine function clh for real argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function clh
+ */
+// ============================================================================
+double Ostap::Math::clh ( const double x )
+{
+  const double z = s_1_sqrt2 * x ;
+  //
+  const long double clz = cl ( z ) ;
+  const long double slz = sl ( z ) ; 
+  //
+  return s_1_sqrt2 * ( 1 + slz * slz  ) * clz / slz ;
+}
+// ============================================================================
+/*  Lemniscate elliptic hyperbolic sine function slh for real argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function slh
+ */
+// ============================================================================
+double Ostap::Math::slh ( const double x )
+{
+  const double z = s_1_sqrt2 * x ;
+  //
+  const long double clz = cl ( z ) ;
+  const long double slz = sl ( z ) ; 
+  //
+  return s_1_sqrt2 * ( 1 + clz * clz  ) * slz / clz ;
+}
+
+// ============================================================================
+/*  Lemniscate elliptic hyperbolic cosine function clh for complex argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function clh
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::clh
+( const std::complex<double>& z )
+{
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
+  if ( !y || s_zero ( y ) ) { return clh ( x ) ; }
+  //
+  std::complex<double> zz { z } ;
+  zz *= s_1_sqrt2 ;
+  //
+  const std::complex<long double> clz = cl ( zz ) ;
+  const std::complex<long double> slz = sl ( zz ) ;
+  //
+  return std::complex<double> ( s_1_sqrt2 * ( 1.0L + slz * slz  ) * clz / slz ) ;
+}
+// ============================================================================
+/*  Lemniscate elliptic hyperbolic sine function clh for complex argument 
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x the argument
+ *  @return the value of lemniscate elliptic function slh
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::slh
+( const std::complex<double>& z )
+{
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
+  if ( !y || s_zero ( y ) ) { return clh ( x ) ; }
+  //
+  std::complex<double> zz { z } ;
+  zz *= s_1_sqrt2 ;
+  //
+  const std::complex<long double> clz = cl ( zz ) ;
+  const std::complex<long double> slz = sl ( zz ) ;
+  //
+  return std::complex<double> ( s_1_sqrt2 * ( 1.0L + clz * clz  ) * slz / clz ) ;
+}
 
 // ============================================================================
 //                                                                      The END 

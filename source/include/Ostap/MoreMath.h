@@ -1531,7 +1531,6 @@ namespace Ostap
       const double m ) ;
     // ========================================================================
 
-
     // ========================================================================
     // Jacobi elliptic functions (complex argument)
     // ========================================================================
@@ -1559,7 +1558,16 @@ namespace Ostap
     ( const std::complex<double>& u ,
       const double                m ) ;
     // ========================================================================
-    
+    /** elliptic function 
+     *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
+     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
+     */ 
+    std::complex<double> sc
+    ( const std::complex<double>& u ,
+      const double                m ) ;
+    // ========================================================================
+
+
     // ========================================================================
     // Dixon elliptic functions 
     // ========================================================================
@@ -1620,6 +1628,36 @@ namespace Ostap
      *  @return the value of lemniscate elliptic function sl
      */
     std::complex<double> sl ( const std::complex<double>& z ) ;  
+    // ========================================================================
+
+    // ========================================================================
+    /** Lemniscate elliptic function hyperbolic cosine clh for real argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x the argument
+     *  @return the value of lemniscate elliptic functinon clh
+     */
+    double clh ( const double x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic function hyperbolic sine slh for real argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x the argument
+     *  @return the value of lemniscate elliptic functinon slh
+     */
+    double slh ( const double x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic hyperboilic cosine function clh for complex argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x the argument
+     *  @return the value of lemniscate elliptic function clh
+     */
+    std::complex<double> clh ( const std::complex<double>& z ) ;  
+    // ========================================================================
+    /** Lemniscate elliptic hyperbolic sine function slh for complex argument 
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param  z the argument
+     *  @return the value of lemniscate elliptic function slh
+     */
+    std::complex<double> slh ( const std::complex<double>& z ) ;  
     // ========================================================================
 
     // ========================================================================

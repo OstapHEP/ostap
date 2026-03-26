@@ -364,6 +364,14 @@ namespace Ostap
       ValueWithError __cm__     () const ;
       /// Dixon elliptic sm 
       ValueWithError __sm__     () const ;
+      /// Lemniscate elliptic cosine cl 
+      ValueWithError __cl__     () const ;
+      /// Lemniscate elliptic  sine sl 
+      ValueWithError __sl__     () const ;
+       /// Lemniscate elliptic hyperbolic cosine cl 
+      ValueWithError __clh__    () const ;
+      /// Lemniscate elliptic  hyperbolic sine sm 
+      ValueWithError __slh__    () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1394,6 +1402,34 @@ namespace Ostap
      *  @return value of Dixon elliptic function sm
      */
     ValueWithError sm ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic cosine function cl
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x argument
+     *  @return value of Lemniscate elliptic cosine function cl
+     */
+    ValueWithError cl ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic sine function sl
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x argument
+     *  @return value of Lemniscate elliptic sine function sl
+     */
+    ValueWithError sl ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic hyperbolic cosine function clh
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x argument
+     *  @return value of Lemniscate elliptic cosine function clh
+     */
+    ValueWithError clh ( const ValueWithError& x ) ;
+    // ========================================================================
+    /** Lemniscate elliptic hyperbolic sine function sl
+     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+     *  @param x argument
+     *  @return value of Lemniscate hyperbolic elliptic sine function slh
+     */
+    ValueWithError slh ( const ValueWithError& x ) ;
     // ========================================================================
     /** Clausen function \f$ Cl_n \f$ 
      *  \f[ \begin{array}{lcc}

@@ -940,6 +940,30 @@ Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__sm__  () const 
 { return sm ( *this ) ; }
 // ============================================================================
+// Lemniscate elliptic cl 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__cl__  () const 
+{ return cl ( *this ) ; }
+// ============================================================================
+// Lemniscate elliptic sl 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__sl__  () const 
+{ return sl ( *this ) ; }
+// ============================================================================
+// Lemniscate elliptic clh 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__clh__ () const 
+{ return clh ( *this ) ; }
+// ============================================================================
+// Lemniscate elliptic slh
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__slh__ () const 
+{ return slh ( *this ) ; }
+// ============================================================================
 
 // ============================================================================
 /* Does this object represent natural number?
@@ -2220,13 +2244,101 @@ Ostap::Math::sm
   const double c2 = x .cov2() ;
   const double xv = x.value() ;
   if ( c2 <= 0 || s_zero ( c2 ) ) { return sm ( xv ) ; }
-
+  // 
   const double r = sm ( xv ) ;
   //
   const double d2 = std::pow ( cm ( xv ) , 4 ) ;
   //
   return ValueWithError ( r , c2 * d2 ) ;
 }
+// ===========================================================================
+/* Lemniscate elliptic cosine function cl
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x argument
+ *  @return value of Lemniscate elliptic cosine function cl
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::cl 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  if ( c2 <= 0 || s_zero ( c2 ) ) { return cl ( xv ) ; }
+  // 
+  const double r = cl ( xv ) ;
+  //
+  const double d2 = 1 - std::pow ( r , 4 ) ;
+  //
+  return ValueWithError ( r , c2 * d2 ) ;
+}
+// ===========================================================================
+/* Lemniscate elliptic sine function sl
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x argument
+ *  @return value of Lemniscate elliptic sine function sl
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::sl 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  if ( c2 <= 0 || s_zero ( c2 ) ) { return sl ( xv ) ; }
+  // 
+  const double r = sl ( xv ) ;
+  //
+  const double d2 = 1 - std::pow ( r , 4 ) ;
+  //
+  return ValueWithError ( r , c2 * d2 ) ;
+}
+// ===========================================================================
+/* Lemniscate elliptic hyperbolic cosine function cl
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x argument
+ *  @return value of Lemniscate elliptic hyperbolic cosine function clh
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::clh 
+( const Ostap::Math::ValueWithError& x ) 
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  if ( c2 <= 0 || s_zero ( c2 ) ) { return clh ( xv ) ; }
+  // 
+  const double r = clh ( xv ) ;
+  //
+  const double d2 = 1 + std::pow ( r , 4 ) ;
+  //
+  return ValueWithError ( r , c2 * d2 ) ;
+}
+// ===========================================================================
+/* Lemniscate elliptic hyperbolic sine function slh
+ *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
+ *  @param x argument
+ *  @return value of Lemniscate elliptic hyperbolic sine function slh
+ */
+// ===========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::slh
+( const Ostap::Math::ValueWithError& x ) 
+{
+  const double c2 = x .cov2() ;
+  const double xv = x.value() ;
+  if ( c2 <= 0 || s_zero ( c2 ) ) { return slh ( xv ) ; }
+  // 
+  const double r = slh ( xv ) ;
+  //
+  const double d2 = 1 + std::pow ( r , 4 ) ;
+  //
+  return ValueWithError ( r , c2 * d2 ) ;
+}
+
+ 
+
+
 // ============================================================================
 /* evaluate fma(x,y,z) = x*y+x 
  *  @param y    (INPUT) the parameter 
