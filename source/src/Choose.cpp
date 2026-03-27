@@ -531,5 +531,51 @@ Ostap::Math::eulerian_double
   return result ;
 }
 // ============================================================================
+
+// ============================================================================
+/* Get a row of Eulerian numbers for given N
+ *  @see https://en.wikipedia.org/wiki/Eulerian_number
+ *  @param n   \f$ 0 \le n \f$
+ *  @param k   \f$ 0 \le k \le n \f$ 
+ *  @return euleria number A(n,k)  
+ */
+// ============================================================================
+/**
+const std::vector<double>&
+Ostap::Math::eulerian
+( const unsigned short n )
+{
+  //
+  typedef unsigned short         KEY    ;
+  typedef std::vector<double>    RESULT ;
+  typedef std::map<KEY,RESULT>   MAP    ;
+  typedef SyncedCache<MAP>       CACHE  ;
+  /// the cache
+  static CACHE                   s_CACHE = { { 0 , { 1.0 } } } ; // the cache
+  static const std::size_t       s_MAX_CACHE { 1000 } ;
+  //
+  const KEY key { n } ;
+  //
+  { // (1) check a value already calculated
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    auto it = s_CACHE->find ( key ) ;
+    if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+  }
+  //
+  // calculate the row 
+  RESULT result ; result.reserve ( n + 1 ) ;
+  //
+  //
+  { // (3) add calculated value into the cache
+    CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+    s_CACHE->insert ( std::make_pair ( key , result ) ) ;    
+  }  
+  //
+  return result ;
+}
+*/
+
+// ============================================================================
 // The END 
 // ============================================================================

@@ -7,6 +7,7 @@
 // STD&STL
 // ============================================================================
 #include <array>
+#include <vector>
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -172,7 +173,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** Compile-time generation of the sequence of Stirling numbers of 1st kind 
-     *  useful for implementatinoof Pochhammer symbols 
+     *  useful for implementation of Pochhammer symbols 
      *  @code
      *  std::array<double,7> p7 = stirling_array<double,6>() ;
      *  @endcode 
@@ -262,6 +263,20 @@ namespace Ostap
      ( const unsigned short n , 
        const unsigned short k ) ; 
     // ========================================================================
+    /** Get a row of Eulerian numbers for given N
+     *  @see https://en.wikipedia.org/wiki/Eulerian_number
+     *  @param n   \f$ 0 \le n \f$
+     *  @param k   \f$ 0 \le k \le n \f$ 
+     *  @return euleria number A(n,k)  
+     */
+
+    
+    // const std::vector<double>&
+    // eulerian
+    // ( const unsigned short n ) ;
+
+    
+    // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

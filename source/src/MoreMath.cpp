@@ -4145,15 +4145,17 @@ Ostap::Math::dilog ( const std::complex<double>& z )
  *  @see Ostap::Math::Li 
  *  @param n parameter
  *  @param x argument
- *  @return value of polylogarithm function \f$ Li_n(x) \f$
+ *  @return Imaginary part of polylogarithm function \f$ Li_n(x) \f$
  */
 // ============================================================================
 double Ostap::Math::ImLi
 ( const short  n , 
   const double x )
 {
-  if      ( x <= 1 || s_equal ( x , 1 ) ) { return  0    ; } 
-  else if ( 1 == n                      ) { return -s_pi ; } 
+  //
+  if      ( n <  0 || x <= 1 || s_equal ( x , 1 ) ) { return  0    ; } 
+  else if ( 1 == n                                ) { return -s_pi ; }
+  //
   const double u = std::log ( x ) ;
   return - s_pi * std::pow ( u , n - 1 ) * igamma ( n ) ;
 }
@@ -4168,7 +4170,7 @@ double Ostap::Math::ImLi
  *  @see Ostap::Math::Li 
  *  @param s parameter
  *  @param x argument
- *  @return value of polylogarithm function \f$ Li_s(x) \f$
+ *  @return Imaginary part of polylogarithm function \f$ Li_s(x) \f$
  */
 // ============================================================================
 double Ostap::Math::ImLi
@@ -4183,8 +4185,8 @@ double Ostap::Math::ImLi
     return ImLi ( n , x ) ;
   }
   //
-  const long double u = std::log ( x ) ;
-  return - s_pi * std::pow ( u , s - 1.0L ) * igamma ( s ) ;
+  const long double u = std::log ( x * 1.0L ) ;
+  return -s_pi * std::pow ( u , s - 1.0L ) * igamma ( s ) ;
 }
 // ============================================================================
 /* polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
@@ -4216,6 +4218,12 @@ double Ostap::Math::Li
   
   if       ( -1 == n  ) { return x                / std::pow ( 1.0L - x , 2 ) ; } // Eq.(6.2)
   else if  ( -2 == n  ) { return x * ( x + 1.0L ) / std::pow ( 1.0L - x , 3 ) ; } // Eq.(6.2)
+  //
+  // Rational case 
+  if ( -100 <= n && n < 0 )
+  {
+      
+  }
   //
   
   Ostap::Assert ( false ,
