@@ -1567,7 +1567,6 @@ namespace Ostap
       const double                m ) ;
     // ========================================================================
 
-
     // ========================================================================
     // Dixon elliptic functions 
     // ========================================================================
@@ -1671,6 +1670,69 @@ namespace Ostap
      */
     std::complex<double> dilog ( const std::complex<double>& z ) ;  
     // ========================================================================
+
+    // ========================================================================
+    // Polylogaritm & friends    
+    // ========================================================================
+    /** Imaginary part of polylogarithm function \f$ Im Li_n(x) f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     *  @see David Wood, "The computation of polylogarithms",
+     *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
+     *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+     *  @see Eq (3.1) in Wood
+     *  @see Ostap::Math::Li 
+     *  @param n parameter
+     *  @param x argument
+     *  @return Imaginary part of polylogarithm function \f$ Li_n(x) \f$
+     */
+    double ImLi
+    ( const short  n , 
+      const double x ) ;
+    // ========================================================================
+    /** Imaginary part of polylogarithm function \f$ Im Li_n(x) f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     *  @see David Wood, "The computation of polylogarithms",
+     *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
+     *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+     *  @see Eq (3.1) in Wood
+     *  @see Ostap::Math::Li 
+     *  @param s parameter
+     *  @param x argument
+     *  @return Imaginary part of polylogarithm function \f$ Li_s(x) \f$
+     */
+    double ImLi
+    ( const double s , 
+      const double x ) ;    
+    // ========================================================================
+    /** polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     *  @see David Wood, "The computation of polylogarithms",
+     *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
+     *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+     *  @param n parameter
+     *  @param x argument
+     *  @return value of polylogarithm function \f$ Li_n(x) \f$
+     *  @attention for \$ 1 < x \f$ the real part is returned, for imaginary part see      
+     *  @see  Ostap::Math::ImLi
+     */
+    double Li
+    ( const short  n ,
+      const double x ) ;
+    // ========================================================================
+    /** polylogarithm function  \f$ Li_s(x)  = \sum \frac{x^k}{k^s} f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     *  @see David Wood, "The computation of polylogarithms",
+     *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
+     *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+     *  @param s parameter
+     *  @param x argument
+     *  @return value of polylogarithm function \f$ Li_n(x) \f$
+     *  @attention for \$ 1 < x \f$ the real part is returned, for imaginary part see      
+     *  @see  Ostap::Math::ImLi
+     */
+    double Li
+    ( const double s ,
+      const double x ) ;
     
     // ========================================================================
     /** Riemann's Zeta function \f$ n \ne 1\f$:
@@ -2129,7 +2191,7 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
-    /** Laguerre polynomila of non-integher order 
+    /** Laguerre polynomial of non-integher order 
      *  \f$ L_{q}(x) = {}_1F_1(-1; 1; x ) \f$, where 
      *  \f$ {}_1F_1(-1; 1; x ) \f$ is a confluent hypergeometrical function 
      */
@@ -2257,6 +2319,7 @@ namespace Ostap
     /** get Clausen function \f$ Cl_2 \f$ 
      *  @param x argument 
      *  @return value of clausen fnction \f$ Cl_2 \f$
+     *  @see Ostap::Math::Cl
      */
     double clausen ( const double x ) ; 
     // ========================================================================
@@ -2265,6 +2328,7 @@ namespace Ostap
      *      Cl_{2m+2} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+2}}& \\ 
      *      Cl_{2m+1} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+1}}& \\ 
      *      \end{array}   \f] 
+     *  @see Ostap::Math::Sl
      */
     double Cl
     ( const unsigned short n , 
@@ -2275,6 +2339,7 @@ namespace Ostap
      *      Sl_{2m+2} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+2}}& \\ 
      *      Sl_{2m+1} ( x ) & = \sum_k \frac{ \sin kx }{k^{2m+1}}& \\ 
      *      \end{array}   \f] 
+     *  @see Ostap::Math::Cl
      */
     double Sl
     ( const unsigned short n , 
@@ -2307,6 +2372,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Lambert_W_function
      */
     double lambert_Wm1 ( const double x ) ;
+    // ========================================================================
     
     // ========================================================================
     /** complete Fermi-Dirac integral 
@@ -2995,7 +3061,6 @@ namespace Ostap
     ( const double x ,
       const double a ) ;
     // ========================================================================
-
     
     // ========================================================================
   } //                                             end of namespace Ostap::Math 

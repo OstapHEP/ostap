@@ -936,7 +936,6 @@ Ostap::Math::gamma
   //
   return std::exp ( Ostap::Math::lgamma ( x ) ) ;
 }
-
 // ===========================================================================
 /*  Gamma function of complex argument 
  *  \f$ \Gamma ( x ) \f$ 
@@ -952,7 +951,6 @@ Ostap::Math::tgamma
   //
   return std::exp ( Ostap::Math::lgamma ( x ) ) ;
 }
-
 // ============================================================================
 /*  compute psi function 
  *  \$f f(x) = \frac{d}{dx}\ln \Gamma(x)\f$
@@ -967,11 +965,11 @@ double Ostap::Math::psi ( const double x )
   gsl_sf_result result ;
   const int ierror = gsl_sf_psi_e ( x , &result ) ;
   if ( ierror ) 
-    {
-      gsl_error ( "Error from gsl_sf_psi_e" , __FILE__ , __LINE__ , ierror ) ;
-      if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-        { return std::numeric_limits<double>::quiet_NaN(); }
-    }
+  {
+    gsl_error ( "Error from gsl_sf_psi_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN(); }
+  }
   //
   return result.val ;
 }
@@ -4135,15 +4133,138 @@ Ostap::Math::dilog ( const std::complex<double>& z )
 // ============================================================================
 
 // ============================================================================
+// Polylogaritm & friends    
+// ============================================================================
+/* Imaginary part of polylogarithm function \f$ Im Li_n(x) f\$
+ *  @see Ostap::Math::Li
+ *  @see https://en.wikipedia.org/wiki/Polylogarithm
+ *  @see David Wood, "The computation of polylogarithms",
+ *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
+ *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+ *  @see Eq (3.1) in Wood
+ *  @see Ostap::Math::Li 
+ *  @param n parameter
+ *  @param x argument
+ *  @return value of polylogarithm function \f$ Li_n(x) \f$
+ */
+// ============================================================================
+double Ostap::Math::ImLi
+( const short  n , 
+  const double x )
+{
+  if      ( x <= 1 || s_equal ( x , 1 ) ) { return  0    ; } 
+  else if ( 1 == n                      ) { return -s_pi ; } 
+  const double u = std::log ( x ) ;
+  return - s_pi * std::pow ( u , n - 1 ) * igamma ( n ) ;
+}
+// ============================================================================
+/* Imaginary part of polylogarithm function \f$ Im Li_s(x) f\$
+ *  @see Ostap::Math::Li
+ *  @see https://en.wikipedia.org/wiki/Polylogarithm
+ *  @see David Wood, "The computation of polylogarithms",
+ *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
+ *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+ *  @see Eq (3.1) in Wood
+ *  @see Ostap::Math::Li 
+ *  @param s parameter
+ *  @param x argument
+ *  @return value of polylogarithm function \f$ Li_s(x) \f$
+ */
+// ============================================================================
+double Ostap::Math::ImLi
+( const double s , 
+  const double x )
+{
+  if ( x <= 1 || s_equal ( x , 1 ) ) { return 0 ; } ;
+  //
+  if ( isshort ( s ) )
+  {
+    const short n = round ( s ) ;
+    return ImLi ( n , x ) ;
+  }
+  //
+  const long double u = std::log ( x ) ;
+  return - s_pi * std::pow ( u , s - 1.0L ) * igamma ( s ) ;
+}
+// ============================================================================
+/* polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
+ *  @see https://en.wikipedia.org/wiki/Polylogarithm
+ *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+ *  @param n parameter
+ *  @param x argument
+ *  @return the value of polylogarithm function \f$ \f$
+ *  @attention for \$ 1 < x \f$ the real part is returned, for imaginary part see      
+ *  @see  Ostap::Math::ImLi
+ */
+// ============================================================================
+double Ostap::Math::Li
+( const short  n ,
+  const double x )
+{
+  if       ( !x || s_zero ( x ) ) { return 0          ; }
+  else if  ( s_equal ( x ,  1 ) ) { return zeta ( n ) ; } 
+  else if  ( s_equal ( x , -1 ) ) { return -eta ( n ) ; }
+
+  //
+  if       ( 1  == n ) { return - std::log ( 1.0L - std::abs ( x ) ) ; }  // Eq (6.1)  
+  else if  ( 0  == n ) { return x /        ( 1.0L - x )              ; } // Eq.(6.2)
+  //
+  
+  // use Eq (10.3)
+  if ( 1 < std::abs ( x ) && n < 0 ) { return ( n % 2 ? -1 : +1 ) * Li ( n , 1 / x ) ; } // Eq. (10.3)
+  //
+  
+  if       ( -1 == n  ) { return x                / std::pow ( 1.0L - x , 2 ) ; } // Eq.(6.2)
+  else if  ( -2 == n  ) { return x * ( x + 1.0L ) / std::pow ( 1.0L - x , 3 ) ; } // Eq.(6.2)
+  //
+  
+  Ostap::Assert ( false ,
+		  "Not yet implemented!" ,
+		  "Ostap::Math::Li"      ,
+		  NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
+  
+  // not yet ;
+
+  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+
+  return std::numeric_limits<double>::quiet_NaN() ; 
+  
+}
+// ============================================================================
+/* polylogarithm function  \f$ Li_s(x)  = \sum \frac{x^k}{k^s} f\$
+ *  @see https://en.wikipedia.org/wiki/Polylogarithm
+ *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
+ *  @param s parameter
+ *  @param x argument
+ *  @return the value of polylogarithm function \f$ \f$
+ *  @attention for \$ 1 < x \f$ the real part is returned, for imaginary part see      
+ *  @see  Ostap::Math::ImLi
+ */
+// ============================================================================
+double Ostap::Math::Li
+( const double s ,
+  const double x )
+{
+  if       ( !x || s_zero ( x ) ) { return 0             ; }
+  //  
+  Ostap::Assert ( false ,
+		  "Not yet implemented!" ,
+		  "Ostap::Math::Li"      ,
+		  NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
+  
+  return std::numeric_limits<double>::quiet_NaN() ;   
+}
+
+// ============================================================================
 /*  Riemann's Zeta function \f$ n\ne 1\f$:
  *  \f$ \zeta ( n ) = \sum_k k^{-n}\f$ 
  */
 // ============================================================================
 double Ostap::Math::zeta ( const int n  )
 {
-  // if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
   // use Cauchi principal value: 
-  if      (  1 == n ) { return s_Mascheroni ; }
+  // if      (  1 == n ) { return s_Mascheroni ; }
   else if (  0 == n ) { return -0.5         ; }
   else if ( -1 == n ) { return -1.0/12      ; }  
   // trivial zeroes ?
@@ -4155,8 +4276,7 @@ double Ostap::Math::zeta ( const int n  )
   static CACHE                 s_CACHE {} ; // the cache
   static const std::size_t s_MAX_CACHE { 10000 } ; 
   //
-  // (1) check a value already calculated 
-  { 
+  { // (1) check a value already calculated 
     CACHE::Lock lock { s_CACHE.mutex () } ;
     auto it = s_CACHE->find ( n ) ;
     if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
@@ -4174,8 +4294,7 @@ double Ostap::Math::zeta ( const int n  )
       { return std::numeric_limits<double>::quiet_NaN() ; }
   }
   //
-  // (2) add calculated value into the cache 
-  { 
+  { // (2) add calculated value into the cache 
     CACHE::Lock lock { s_CACHE.mutex () } ;
     if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
     s_CACHE->insert ( std::make_pair ( n , result.val ) ) ;
@@ -4217,7 +4336,8 @@ double Ostap::Math::zeta ( const double s   )
 // ============================================================================
 double Ostap::Math::zetam1 ( const int n  )
 {
-  if      (  1 == n )  { return s_Mascheroni -1 ; } // use Cauchi principal value: 
+  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  // if   (  1 == n )  { return s_Mascheroni -1 ; } // use Cauchi principal value: 
   else if (  0 == n )  { return -0.5         -1 ; }
   else if ( -1 == n )  { return -1.0/12      -1 ; }  
   // trivial zeroes ?
@@ -4229,14 +4349,13 @@ double Ostap::Math::zetam1 ( const int n  )
   static CACHE                 s_CACHE {} ; // the cache
   static const std::size_t s_MAX_CACHE { 10000 } ; 
   //
-  // (1) check a value already calculated 
-  { 
+  { // (1) check a value already calculated 
     CACHE::Lock lock { s_CACHE.mutex () } ;
     auto it = s_CACHE->find ( n ) ;
     if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
   }  
   //
-  // use GSL: 
+  // (2) use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   gsl_sf_result result ;
@@ -4248,8 +4367,7 @@ double Ostap::Math::zetam1 ( const int n  )
     { return std::numeric_limits<double>::quiet_NaN() ; }
   }
   //
-  // add calculated value into the cache 
-  { 
+  { // (3) add calculated value into the cache 
     CACHE::Lock lock { s_CACHE.mutex () } ;
     if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
     s_CACHE->insert ( std::make_pair ( n , result.val ) ) ;
@@ -4297,8 +4415,7 @@ double Ostap::Math::hurwitz
 ( const double s ,
   const double q )
 {
-  if ( s <= 1 || q <= 0 )
-  { return std::numeric_limits<double>::quiet_NaN() ; }
+  if ( s <= 1 || q <= 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }
   //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -4331,14 +4448,13 @@ double Ostap::Math::eta ( const int n  )
   static CACHE                 s_CACHE {} ; // the cache
   static const std::size_t s_MAX_CACHE { 10000 } ;
   //
-  // (1) check a value already calculated 
-  { 
+  { // (1) check a value already calculated 
     CACHE::Lock lock { s_CACHE.mutex () } ;
     auto it = s_CACHE->find ( n ) ;
     if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
   }
   //  
-  // use GSL: 
+  //(2)  use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
   gsl_sf_result result ;
@@ -4350,8 +4466,7 @@ double Ostap::Math::eta ( const int n  )
       { return std::numeric_limits<double>::quiet_NaN() ; }
   }
   //
-  // (2) add calculated value into the cache 
-  { 
+  { // (3) add calculated value into the cache 
     CACHE::Lock lock { s_CACHE.mutex () } ;
     if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
     s_CACHE->insert ( std::make_pair ( n , result.val ) ) ;
