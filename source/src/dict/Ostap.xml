@@ -43,7 +43,7 @@
   
   <exclusion>
      
-    <class pattern   = "std::array<*double*>"      />
+    <class pattern   = "std::array<*>"      />
     
     <class name    = "Ostap::StatVar::Interval"     />
     <class name    = "Ostap::Math::Interpolation::DATAVCT" />    
