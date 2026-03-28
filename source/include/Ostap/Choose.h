@@ -50,6 +50,9 @@ namespace Ostap
 	      unsigned short K>
     struct Choose_ : public std::enable_if<(0<K)&&(K<N)&&(N<=N_CHOOSE_MAX),void>
     {
+      // ======================================================================
+      static_assert( N<=N_CHOOSE_MAX , "Choose: argument is too large" ) ;
+      // ======================================================================
       enum _ : std::uintmax_t { value = Choose_<N,K-1>::value * ( N + 1 - K ) / K } ;
     } ;
     // ========================================================================
@@ -59,6 +62,8 @@ namespace Ostap
     template <unsigned short N>
     struct Pascal_ : public std::enable_if<(N<=N_CHOOSE_MAX)>
     {
+      // ======================================================================
+      static_assert( N<=N_CHOOSE_MAX , "Pascal's triange: argument is too large" ) ;
       // ======================================================================
       /// the actual type of the row in trianlge
       typedef std::array<std::uintmax_t,N+1>  Row ;
@@ -72,15 +77,15 @@ namespace Ostap
       { return Pascal_<N>::choose_array ( std::make_index_sequence<N+1> {} ) ; }
       // ======================================================================
       /// get the row of coefficients 
-      static constexpr Row row { choose_array () } ;
+      static constexpr const Row row { choose_array () } ;
       // ======================================================================
     } ;
     // ========================================================================
-    /** get the row in Pascal's triangle - the row ob binomial coefficients 
+    /** get the row in Pascal's triangle - the row of binomial coefficients 
      *  @see Pascal_
      */
     template<unsigned short N>
-    inline constexpr const typename Pascal_<N>::Row& choose_array() { return Pascal_<N>::row ; }
+    inline constexpr const auto& choose_array() { return Ostap::Math::Pascal_<N>::row ; }
     // ========================================================================
     /** calculate the binomial coefficient C(n,k) = n!/((n-k)!*k!)
      *  the result is exact for all n,k<=67

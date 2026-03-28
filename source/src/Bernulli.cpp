@@ -53,45 +53,10 @@ namespace
   static_assert ( std::numeric_limits<unsigned long long>::is_specialized      ,
                   "std::numeric_limits<unsigned long long> is not specialized" ) ;
   // =========================================================================
-  const std::array<long double ,36> s_B { 
-    +1 *1.0L / 1, 
-    -1 *1.0L / 2, 
-    +1 *1.0L / 6, 
-    +0 *1.0L / 1, 
-    -1 *1.0L / 30, 
-    +0 *1.0L / 1, 
-    +1 *1.0L / 42, 
-    +0 *1.0L / 1, 
-    -1 *1.0L / 30, 
-    +0 *1.0L / 1, 
-    +5 *1.0L / 66, 
-    +0 *1.0L / 1, 
-    -691 *1.0L / 2730, 
-    +0 *1.0L / 1, 
-    +7 *1.0L / 6, 
-    +0 *1.0L / 1, 
-    -3617 *1.0L / 510, 
-    +0 *1.0L / 1, 
-    +43867 *1.0L / 798, 
-    +0 *1.0L / 1, 
-    -174611 *1.0L / 330, 
-    +0 *1.0L / 1, 
-    +854513 *1.0L / 138, 
-    +0 *1.0L / 1, 
-    -236364091 *1.0L / 2730, 
-    +0 *1.0L / 1, 
-    +8553103 *1.0L / 6, 
-    +0 *1.0L / 1, 
-    -23749461029 *1.0L / 870, 
-    +0 *1.0L / 1, 
-    +8615841276005 *1.0L / 14322, 
-    +0 *1.0L / 1, 
-    -7709321041217 *1.0L / 510, 
-    +0 *1.0L / 1, 
-    +2577687858367 *1.0L / 6, 
-    +0 *1.0L / 1 } ;
+  /// list of bernulli numbers up to N=40 inclusive 
+  const std::array<long double,41> s_B { Ostap::Math::bernulli<40>() } ;
   // ==========================================================================
-  // Coefficients of Bernulli polynoilas of order N 
+  // Coefficients of Bernulli polynomilas of order N 
   const std::vector<long double>&
   bernulli_poly
   ( const unsigned short N )
@@ -122,7 +87,7 @@ namespace
     VALUES values {} ; values.reserve ( N + 1 ) ;
     for ( std::size_t k = 0 ; k <= N ; ++k )
       {
-        long double value = Ostap::Math::bernulli( k ) ;
+        long double value = Ostap::Math::bernulli ( k ) ;
         if ( k < 30 ) { value *= Ostap::Math::choose        ( N , k ) ; }
         else          { value *= Ostap::Math::choose_double ( N , k ) ; }
         values.push_back ( value ) ;
@@ -147,9 +112,9 @@ namespace
       return it->second ;
     }
     // ========================================================================
-  } // The end of helper function 
+  } //                                               The end of helper function 
   // ==========================================================================
-} // The end of anonymous namespace
+} //                                             The end of anonymous namespace
 // ============================================================================
 /** Get Bernulli number 
  *  - \f$ B_0 = 1 \f$ 
@@ -159,8 +124,8 @@ namespace
 // ============================================================================
 double Ostap::Math::bernulli ( const unsigned short n )
 {
-  if ( n < s_B.size() ) { return s_B [ n ] ; }
-  if ( 1 == n % 2     ) { return 0.0       ; }
+  if      ( n < s_B.size() ) { return s_B [ n ] ; }
+  else if ( 1 == n % 2     ) { return 0.0       ; }
   // =
   typedef std::map<unsigned short,double> MAP   ;
   typedef SyncedCache<MAP>                STORE ;
@@ -175,7 +140,13 @@ double Ostap::Math::bernulli ( const unsigned short n )
     // ========================================================================
   } // ========================================================================
   // ==========================================================================
-  const double result = -n * Ostap::Math::zeta ( 1 - n ) ;
+  double result = 0 ; 
+  if ( N_CHOOSE_MAX <= n  ) { result = -n * Ostap::Math::zeta ( 1 - n ) ; }
+  else
+  { // use explicit formulae     
+    for ( unsigned short k = 0 ; k < n ; ++ k )
+      { result -= bernulli ( k ) * choose ( n , k ) / ( n + 1 - k ) ; }
+  }
   // ==========================================================================
   { // update the store
     // ========================================================================
@@ -226,10 +197,8 @@ double Ostap::Math::Bernulli::integral
 }
 // ============================================================================
 
-
-
 // ============================================================================
-// convert Bernulli polynomila into regular polynomial
+// convert Bernulli polynomials into "regular" polynomial
 // ============================================================================
 Ostap::Math::Polynomial::Polynomial
 ( const Ostap::Math::Bernulli& bp )
@@ -237,7 +206,7 @@ Ostap::Math::Polynomial::Polynomial
 {
   const std::vector<long double>& C = bernulli_poly ( bp.degree () ) ;
   Ostap::Assert ( m_pars.size() == C.size()           ,
-                  "Invalid static sstructure"         ,
+                  "Invalid static structure"         ,
                   "Ostap::Math::Bernulli"             , 
                   INVALID_CACHE , __FILE__ , __LINE__ ) ;
   //

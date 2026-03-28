@@ -213,7 +213,8 @@ namespace  Ostap
       // ======================================================================
       /// helper array of binomial coefficients 
       // static const std::array<std::uintmax_t,1> s_Ck ;
-      static const typename Ostap::Math::Pascal_<0>::Row s_Ck ;
+      // static consexpr const typename Ostap::Math::Pascal_<0>::Row& s_Ck = Ostap::Math::Pascal_<0>::row ; 
+      static constexpr const auto& s_Ck = Ostap::Math::Pascal_<0>::row ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -454,7 +455,8 @@ namespace  Ostap
     private:
       // ======================================================================
       /// array of binomial coefficients 
-      static const std::array<std::uintmax_t,2> s_Ck ;
+      // static const std::array<std::uintmax_t,2> s_Ck ;
+      static constexpr const auto& s_Ck = Ostap::Math::Pascal_<1>::row ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -898,7 +900,8 @@ namespace  Ostap
       /// helper array of binomial coefficients 
       /// static const std::array<std::uintmax_t,N+1> s_Ck ;
       /// static const typename Ostap::Math::Pascal_<N>::Row  s_Ck ;
-      static constexpr const typename Ostap::Math::Pascal_<N>::Row  s_Ck { Ostap::Math::Pascal_<N>::row } ; 
+      /// static constexpr const typename Ostap::Math::Pascal_<N>::Row  s_Ck { Ostap::Math::Pascal_<N>::row } ;
+      static constexpr const auto& s_Ck = Ostap::Math::Pascal_<N>::row ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -961,12 +964,12 @@ namespace  Ostap
       data_type d = 1 ;
       //
       for ( unsigned short k = 1 ; k + 2 <= N ; ++k )
-	    {
-	      a   *= a_n   ;
-	      b   *= b_n   ;
-	      d   *= delta ;        
-	      m_M += s_Ck [ k ] * d * ( this-> M ( N -k ) * b + x. M ( N - k ) * a ) ;
-	    }
+      {
+	a   *= a_n   ;
+	b   *= b_n   ;
+	d   *= delta ;        
+	m_M += s_Ck [ k ] * d * ( this-> M ( N -k ) * b + x. M ( N - k ) * a ) ;
+      }
       /// update previous 
       this->m_prev += x.m_prev ; // update previous
       //
@@ -1255,7 +1258,8 @@ namespace  Ostap
     private:
       // ======================================================================
       /// helper array of binomial coefficients 
-      static const std::array<std::uintmax_t,1> s_Ck ;
+      // static const std::array<std::uintmax_t,1> s_Ck ;
+      static constexpr const auto& s_Ck = Ostap::Math::Pascal_<0>::row ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -1515,7 +1519,8 @@ namespace  Ostap
     private:
       // ======================================================================
       /// array of binomial coefficients 
-      static const std::array<std::uintmax_t,2> s_Ck ;
+      // static const std::array<std::uintmax_t,2> s_Ck ;
+      static constexpr const auto& s_Ck = Ostap::Math::Pascal_<1>::row ; 
       // ======================================================================
     } ;
     // ========================================================================
@@ -1827,10 +1832,10 @@ namespace  Ostap
         data_type result = 0 ;
         data_type deltai = 1 ; //  == delta**i 
         for ( unsigned short i = 0 ; i <= N ; ++i )
-          {
-            result += s_Ck [ i ] * deltai *  this->moment ( N - i ) ;
-            deltai *= delta ; 
-          }
+        {
+	  result += s_Ck [ i ] * deltai *  this->moment ( N - i ) ;
+	  deltai *= delta ; 
+	}
         return result ;  
       } 
        // ======================================================================
@@ -1851,7 +1856,8 @@ namespace  Ostap
       // ======================================================================
       /// helper array of binomial coefficients 
       /// static const std::array<unsigned long long,N+1> s_Ck ;      
-      static constexpr const typename Ostap::Math::Pascal_<N>::Row  s_Ck { Ostap::Math::Pascal_<N>::row } ; 
+      /// static constexpr const typename Ostap::Math::Pascal_<N>::Row  s_Ck { Ostap::Math::Pascal_<N>::row } ;
+      static constexpr const auto& s_Ck = Ostap::Math::Pascal_<N>::row ; 
       // ======================================================================
     } ;
     // ========================================================================
