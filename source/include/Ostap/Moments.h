@@ -212,7 +212,8 @@ namespace  Ostap
     private:
       // ======================================================================
       /// helper array of binomial coefficients 
-      static const std::array<unsigned long long,1> s_Ck ;
+      // static const std::array<std::uintmax_t,1> s_Ck ;
+      static const typename Ostap::Math::Pascal_<0>::Row s_Ck ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -453,7 +454,7 @@ namespace  Ostap
     private:
       // ======================================================================
       /// array of binomial coefficients 
-      static const std::array<unsigned long long,2> s_Ck ;
+      static const std::array<std::uintmax_t,2> s_Ck ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -895,14 +896,17 @@ namespace  Ostap
     private:
       // ======================================================================
       /// helper array of binomial coefficients 
-      static const std::array<unsigned long long,N+1> s_Ck ;
+      /// static const std::array<std::uintmax_t,N+1> s_Ck ;
+      /// static const typename Ostap::Math::Pascal_<N>::Row  s_Ck ;
+      static constexpr const typename Ostap::Math::Pascal_<N>::Row  s_Ck { Ostap::Math::Pascal_<N>::row } ; 
       // ======================================================================
     } ;
     // ========================================================================
     /// initialize the helper array of binomial coefficients
-    template <unsigned short N>
-    constexpr std::array<unsigned long long,N+1> 
-    Moment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
+    // template <unsigned short N>
+    // constexpr std::array<std::uintmax_t,N+1> 
+    // constexpr typename Ostap::Math::Pascal_<N>::Row 
+    // Moment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
     // ========================================================================
     /// increment with some value
     template <unsigned short N>
@@ -1251,7 +1255,7 @@ namespace  Ostap
     private:
       // ======================================================================
       /// helper array of binomial coefficients 
-      static const std::array<unsigned long long,1> s_Ck ;
+      static const std::array<std::uintmax_t,1> s_Ck ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -1511,7 +1515,7 @@ namespace  Ostap
     private:
       // ======================================================================
       /// array of binomial coefficients 
-      static const std::array<unsigned long long,2> s_Ck ;
+      static const std::array<std::uintmax_t,2> s_Ck ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -1846,13 +1850,14 @@ namespace  Ostap
     private:
       // ======================================================================
       /// helper array of binomial coefficients 
-      static const std::array<unsigned long long,N+1> s_Ck ;
+      /// static const std::array<unsigned long long,N+1> s_Ck ;      
+      static constexpr const typename Ostap::Math::Pascal_<N>::Row  s_Ck { Ostap::Math::Pascal_<N>::row } ; 
       // ======================================================================
     } ;
     // ========================================================================
     /// initialize the helper array of binomial coefficients
-    template <unsigned short N>
-    constexpr std::array<unsigned long long,N+1> WMoment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
+    // template <unsigned short N>
+    // constexpr std::array<unsigned long long,N+1> WMoment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
     // ========================================================================
     /// increment with some value
     template <unsigned short N>

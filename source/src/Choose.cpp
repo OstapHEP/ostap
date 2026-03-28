@@ -4,6 +4,7 @@
 // ============================================================================
 // STD/STL 
 // ============================================================================
+#include <cstdint>
 #include <cmath>
 #include <map>
 #include <climits>
@@ -27,21 +28,36 @@
 // ============================================================================
 namespace 
 {
-  // ===================================================================
-  typedef std::numeric_limits<unsigned long long> ULLTYPE ;
-  static_assert ( ULLTYPE::is_specialized, "numeric_limits<unsigned long long> is not specialzaed!" ) ;
-  const unsigned long long s_ULLMAX = ULLTYPE::max () - 1 ;
-  const long double        s_emax   = std::log ( 0.4L * ( s_ULLMAX / 2 ) ) ;
-  // ======================================================================
-  /** calculate the binomial coefficient C(k,n) = n!/((n-k)!*k!)
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::uintmax_t>::is_specialized,
+		  "numeric_limits<std::uintmax_t> is not specialzaed!" ) ;
+  static_assert ( std::numeric_limits<std::size_t>::is_specialized,
+		  "numeric_limits<std::size_t> is not specialzaed!" ) ;
+  static_assert ( std::numeric_limits<unsigned long long>::is_specialized,
+		  "numeric_limits<usigned long long> is not specialzaed!" ) ;
+  static_assert ( std::numeric_limits<unsigned long>::is_specialized,
+		  "numeric_limits<usigned long> is not specialzaed!" ) ;
+  static_assert ( std::numeric_limits<unsigned int>::is_specialized,
+		  "numeric_limits<usigned int> is not specialzaed!" ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned int>::max ()       <= std::numeric_limits<unsigned long>::max ()      && 		  
+		  std::numeric_limits<unsigned long>::max ()      <= std::numeric_limits<unsigned long long>::max () &&  
+		  std::numeric_limits<unsigned long long>::max () <= std::numeric_limits<std::uintmax_t>::max ()     && 
+		  std::numeric_limits<std::size_t>::max ()        <= std::numeric_limits<std::uintmax_t>::max () ,
+		  "Invalid std::numeric_limits<*UINT*>::max () hierarchy!" ) ;
+  // ==========================================================================================================
+  const std::uintmax_t s_ULLMAX = std::numeric_limits<std::uintmax_t>::max () - 1 ;
+  const long double    s_emax   = std::log ( 0.4L * ( s_ULLMAX / 2 ) ) ;
+  // ==========================================================================
+  /** calculate the binomial coefficient C(k,n) =  n!/((n-k)!*k!)
    *  In case of overflow std::numeric_limits<unsigned long long>::max is returned 
    */
-  inline unsigned long long choose 
+  inline std::uintmax_t choose 
   ( unsigned short n , 
     unsigned short k ) 
   {
     //
-    // ====================================================================
+    // =========================================================================
     //
     if      ( k > n                ) { return 0 ; }
     else if ( 0 == k || n == k     ) { return 1 ; }
@@ -50,8 +66,8 @@ namespace
     //
     k = std::min ( k , (unsigned short) ( n - k ) ) ;
     //
-    unsigned long long       r = 1  ;
-    const unsigned long long L = s_ULLMAX / n ; 
+    std::uintmax_t r = 1  ;
+    const std::uintmax_t L = s_ULLMAX / n ; 
     for ( unsigned short d = 1 ; d <= k  ; ++d , --n ) 
     {
       // if ( r > s_ULLMAX / n * d ) { return s_ULLMAX ; }  //  RETURN
@@ -175,7 +191,7 @@ namespace
  * @date 2015-03-08
  */
 // ============================================================================
-unsigned long long  
+std::uintmax_t
 Ostap::Math::choose 
 ( const unsigned short n , 
   const unsigned short k ) 
@@ -186,6 +202,7 @@ Ostap::Math::choose
   else if ( 1 == k || n == k + 1 ) { return n ; }
   else if ( 2 == k || n == k + 2 ) { return 1ull * n * ( n - 1 ) / 2 ; }
   //
+  
   const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
   //
   typedef std::pair<unsigned short,unsigned short> KEY    ;
@@ -194,7 +211,7 @@ Ostap::Math::choose
   typedef SyncedCache<MAP>                         CACHE  ;
   /// the cache
   static CACHE                        s_CACHE     {} ; // the cache
-  static const std::size_t            s_MAX_CACHE { 4000 } ;
+  static const std::size_t            s_MAX_CACHE { 2500 } ;
   //
   // 
   const KEY key { n , m } ;
@@ -422,7 +439,7 @@ double Ostap::Math::log_choose
  *  @date 2015-03-08
  */
 // ============================================================================
-unsigned long long Ostap::Math::stirling1 
+std::uintmax_t Ostap::Math::stirling1 
 ( const unsigned short n ,
   const unsigned short k ) 
 { return _stirling_ ( n , k ) ; }
@@ -446,7 +463,7 @@ double Ostap::Math::stirling1_double
  *  @return euleria number A(n,k)  
  */
 // ==========================================================================
-unsigned long long 
+std::uintmax_t
 Ostap::Math::eulerian 
 ( const unsigned short n , 
   const unsigned short k ) 
@@ -456,7 +473,7 @@ Ostap::Math::eulerian
   else if (  1 ==  k || n == k + 1 ) { return 1 ; }
   //
   typedef std::pair<unsigned short,unsigned short> KEY    ;
-  typedef unsigned long long                       RESULT ;
+  typedef std::uintmax_t                           RESULT ;
   typedef std::map<KEY,RESULT>                     MAP    ;
   typedef SyncedCache<MAP>                         CACHE  ;
   /// the cache

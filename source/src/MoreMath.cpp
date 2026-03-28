@@ -7867,7 +7867,6 @@ double Ostap::Math::slh ( const double x )
   //
   return s_1_sqrt2 * ( 1 + clz * clz  ) * slz / clz ;
 }
-
 // ============================================================================
 /*  Lemniscate elliptic hyperbolic cosine function clh for complex argument 
  *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
