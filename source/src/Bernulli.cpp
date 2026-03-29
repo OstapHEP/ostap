@@ -171,18 +171,50 @@ Ostap::Math::Bernulli::Bernulli
 double Ostap::Math::Bernulli::evaluate
 ( const double x ) const
 {
+  //
+  if ( 1 != m_N && s_equal ( x , 1 ) ) { return evaluate ( 0 ) ; }
+  //
   const std::vector<long double>& C = bernulli_poly ( m_N ) ;
   return Ostap::Math::Clenshaw::monomial_sum ( C.begin() , C.end() , x ).first ;
 }
 // ============================================================================
-// derivative 
+// evaluate the polynomial
+// ============================================================================
+std::complex<double>
+Ostap::Math::Bernulli::evaluate 
+( const std::complex<double>& z ) const 
+{
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  if ( !y || s_zero ( y ) ) { return evaluate ( x ) ; }
+  //
+  const std::vector<long double>& C = bernulli_poly ( m_N ) ;
+  return Ostap::Math::Clenshaw::monomial_sum ( C.begin() , C.end() , x ).first ;
+}
+// ============================================================================
+// derivative @ real point x 
 // ============================================================================
 double Ostap::Math::Bernulli::derivative
 ( const double x ) const
 {
   if ( 0 == m_N ) { return 0 ; }
-  const Bernulli D ( m_N - 1 ) ;
-  return m_N * D ( x ) ;
+  const std::vector<long double>& C = bernulli_poly ( m_N ) ;
+  return Ostap::Math::Clenshaw::monomial_sum ( C.begin() , C.end() , x ).second;
+}
+// ============================================================================
+// derivative @ complex point z 
+// ============================================================================
+std::complex<double>
+Ostap::Math::Bernulli::derivative 
+( const std::complex<double>& z ) const 
+{
+  if ( 0 == m_N ) { return 0 ; }  
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  if ( !y || s_zero ( y ) ) { return derivative ( x ) ; }
+  //
+  const std::vector<long double>& C = bernulli_poly ( m_N ) ;
+  return Ostap::Math::Clenshaw::monomial_sum ( C.begin() , C.end() , x ).second ;
 }
 // ============================================================================
 // integral 

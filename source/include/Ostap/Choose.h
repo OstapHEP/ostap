@@ -25,16 +25,53 @@ namespace Ostap
   {    
     // ========================================================================
     /** @var N_CHOOSE_MAX
-     *  maximal valeu of n, fo which all  \f$ C^n_k \f$ fit into 64 bit integer
+     *  maximal value of n scuh that for all k the \f$ C^n_k \f$ fits into 64 bit integer
      */	
-    inline constexpr unsigned short N_CHOOSE_MAX = 68 ;
+    inline constexpr unsigned short N_CHOOSE_MAX = 67 ;
+    /// Use this type for Binomial coeffients 
+    template <unsigned int N>
+    using Choose_t = typename std::conditional<(N<=N_CHOOSE_MAX),std::uintmax_t,long double>::type ;    
+    // ========================================================================
+    template <unsigned short N,
+	      unsigned short K>
+    struct Choose_ ;
+    // ========================================================================
+    namespace details
+    {      
+      // ======================================================================
+      template <unsigned short N ,
+		unsigned short K ,
+		bool           A ,  // N is not *too* large 
+		bool           B >  //  K <= N 
+      struct _Choose ;
+      // ======================================================================
+      template <unsigned short N,
+		unsigned short K>
+      struct _Choose<N,K,true,true>
+      {
+	typedef std::uintmax_t type ;
+	enum _ : std::uintmax_t { value =
+				  std::uintmax_t ( Ostap::Math::Choose_<N-1,K-1>::value ) +
+				  std::uintmax_t ( Ostap::Math::Choose_<N-1,K>::value   ) } ; 
+      } ;
+      // ======================================================================
+      template <unsigned short N,
+		unsigned short K>
+      struct _Choose<N,K,false,true>
+      {
+	typedef Ostap::Math::Choose_t<N> type ;
+	inline static constexpr type value { 1.0L * type ( Ostap::Math::Choose_<N,K-1>::value ) * ( N + 1 - K ) / K } ; 	  
+      } ;
+    // ========================================================================
+    }
     // ========================================================================
     /** @struct Choose_
      *  Binomial coefficient \f$ C^n_k = \left(\begin{array}{c}n \\ k \end{array}\rght) = \frac{n!}{k!(n-k)!}\f$
      */
     template <unsigned short N,
 	      unsigned short K>
-    struct Choose_ ;
+    struct Choose_ : public details::_Choose<N,K,N<=N_CHOOSE_MAX,(K<=N)>
+    {} ; 
     // ========================================================================
     // various template specializations:  \f$ C^0_0 = 1\f$ 
     template <>
@@ -46,27 +83,19 @@ namespace Ostap
     template <unsigned short N>
     struct Choose_<N,N>   { enum _ { value = 1 } ; } ; 
     //
-    template <unsigned short N,
-	      unsigned short K>
-    struct Choose_ : public std::enable_if<(0<K)&&(K<N)&&(N<=N_CHOOSE_MAX),void>
-    {
-      // ======================================================================
-      static_assert( N<=N_CHOOSE_MAX , "Choose: argument is too large" ) ;
-      // ======================================================================
-      enum _ : std::uintmax_t { value = Choose_<N,K-1>::value * ( N + 1 - K ) / K } ;
-    } ;
     // ========================================================================
     /** @class Pascal
      *  The row in Pascal triangle
      */  
     template <unsigned short N>
-    struct Pascal_ : public std::enable_if<(N<=N_CHOOSE_MAX)>
+    struct Pascal_
     {
-      // ======================================================================
-      static_assert( N<=N_CHOOSE_MAX , "Pascal's triange: argument is too large" ) ;
+      /// the actual type fof elements in the row 
+      // typedef typename std::conditional<(N<=N_CHOOSE_MAX),std::uintmax_t,long double>::type the_type ;
+      typedef Choose_t<N> the_type ;
       // ======================================================================
       /// the actual type of the row in trianlge
-      typedef std::array<std::uintmax_t,N+1>  Row ;
+      typedef std::array<the_type,N+1>  Row ;
       /// get the row of coefficients 
       template <std::size_t... i>
       inline static constexpr Row choose_array ( std::index_sequence<i...> )
@@ -142,31 +171,36 @@ namespace Ostap
     ( const int            n ,
       const unsigned short k ) ;
     // ========================================================================    
+
+    // ========================================================================
+    // Stirling numbers 
+    // ========================================================================    
     /** @class Stirling1
-     *  unsigned Stirling numbers of 1st kind 
+     *  Unsigned Stirling numbers of 1st kind 
      *  @see https://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
      */
     template <unsigned short N, unsigned short K>
-    struct Stirling1 ;
+    struct Stirling1_ ;
     // ========================================================================
     /// stop recursion: \f$ S^0_0 = 1 \f$
     template <>
-    struct Stirling1<0,0> { enum _ : std::uintmax_t { value = 1 } ; } ;    
+    struct Stirling1_<0,0> { enum _ : std::uintmax_t { value = 1 } ; } ;    
     // ========================================================================
     /// stop recursion \f$ S^n_0 = 0 \f$
     template <unsigned short N>
-    struct Stirling1<N,0> { enum _ : std::uintmax_t { value = 0 } ; } ;    
+    struct Stirling1_<N,0> { enum _ : std::uintmax_t { value = 0 } ; } ;    
     // ========================================================================
     /// stop recursion \f$ S^0_s = 0 \f$
     template <unsigned short K>
-    struct Stirling1<0,K> { enum _ : std::uintmax_t { value = 0 } ; } ;
+    struct Stirling1_<0,K> { enum _ : std::uintmax_t { value = 0 } ; } ;
     /// start recursion  \f$ S^{n+1}_k = n S^n_k + S^n_{k-1}\f$ 
-    template <unsigned short N, unsigned short K>
-    struct Stirling1 
+    template <unsigned short N,
+	      unsigned short K>
+    struct Stirling1_ 
     {
       enum _ : std::uintmax_t { value =  
-          Stirling1<N-1,K  >::value * ( N - 1 ) +
-          Stirling1<N-1,K-1>::value } ;
+				Stirling1_<N-1,K  >::value * ( N - 1 ) +
+				Stirling1_<N-1,K-1>::value } ;
     } ;
     // ========================================================================
     /** Compile-time generation of the sequence of Stirling numbers of 1st kind 
@@ -177,10 +211,10 @@ namespace Ostap
      */
     template<class TYPE,unsigned short N,size_t... i>
     constexpr auto stirling1_array ( std::index_sequence<i...> )
-    { return std::array<TYPE,N+1>{{Stirling1<N,N-i>::value...}}; }
+    { return std::array<TYPE,N+1> { { Stirling1_<N,N-i>::value... } } ; }
     template<class TYPE,unsigned short N>
     constexpr auto stirling1_array() 
-    { return stirling1_array<TYPE,N>(std::make_index_sequence<N+1>{}); }
+    { return stirling1_array<TYPE,N> ( std::make_index_sequence<N+1> { } ) ; }
     // ========================================================================
     /** @class Pochhammer_ 
      *  Pochhammer symbols as polynomials 
@@ -238,17 +272,131 @@ namespace Ostap
     ( const unsigned short n ,
       const unsigned short k ) ;
     // ========================================================================
+
+    /** @class Stirling2
+     *  Unsigned Stirling numbers of 2nd kind
+     *  @see https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+     */
+    template <unsigned short N,
+	      unsigned short K>
+    struct Stirling2_ ;
+    // ========================================================================
+    /// stop recursion: \f$ S^0_0 = 1 \f$
+    template <>
+    struct Stirling2_<0,0> { enum _ { value = 1 } ; } ;    
+    // ========================================================================
+    /// stop recursion: \f$ S^n_n = 1 \f$
+    template <unsigned short N>
+    struct Stirling2_<N,N> { enum _ { value = 1 } ; } ;    
+    // ========================================================================
+    /// stop recursion \f$ S^n_0 = 0 \f$
+    template <unsigned short N>
+    struct Stirling2_<N,0> { enum _ { value = 0 } ; } ;    
+    // ========================================================================
+    /// start recursion  \f$ S^{n+1}_k = n S^n_k + S^n_{k-1}\f$
+    template <unsigned short N,
+	      unsigned short K>
+    struct Stirling2_
+    {
+      enum _ : std::uintmax_t { value =  
+				Stirling2_<N-1,K  >::value * K +
+				Stirling2_<N-1,K-1>::value     } ;
+    } ;
+    // ========================================================================
+    
+    // ========================================================================
+    /** @var N_EULERIAN_MAX
+     *  maximal value of n such that for all k the \f$ A(n,k) \f$ fits into 64 bit integer
+     */	
+    inline constexpr unsigned short N_EULERIAN_MAX = 20 ;    
+    // ========================================================================
+    /// Use this type for Eulerian numbers 
+    template <unsigned int N>
+    using Eulerian_t = typename std::conditional<(N<=N_EULERIAN_MAX),std::uintmax_t,long double>::type ;    
+    // ========================================================================
     /** @struct Eulerian_
      *  Eulerian numbers A(n,k)
-     *  @see https://en.wikipedia.org/wiki/Eulerian_number     
+     *  @see https://en.wikipedia.org/wiki/Eulerian_number
+     *  - we need it for polylogarithms 
      */
     template <unsigned short N,
               unsigned short K>
-    struct Eulerian_
-    {
-      // enum : unsigned long long 
-    };
+    struct Eulerian_ ;
+    // =========================================================================
+    namespace details
+    {      
+      // ======================================================================
+      template <unsigned short N ,
+		unsigned short K ,
+		bool           A ,  // N is not *too* large 
+		bool           B >  //  K <= N 
+      struct _Eulerian ;
+      // ======================================================================
+      template <unsigned short N,
+		unsigned short K>
+      struct _Eulerian<N,K,true,true>
+      {
+	typedef std::uintmax_t type ;
+	enum _ : std::uintmax_t { value =
+				  std::uintmax_t ( Ostap::Math::Eulerian_<N-1,K-1>::value ) * ( N - K ) +
+				  std::uintmax_t ( Ostap::Math::Eulerian_<N-1,K>::value   ) * ( K + 1 ) } ; 
+      } ;
+      // ======================================================================
+      template <unsigned short N,
+		unsigned short K>
+      struct _Eulerian<N,K,false,true>
+      {
+	typedef Ostap::Math::Eulerian_t<N> type ;
+	inline static constexpr type value { type ( Ostap::Math::Eulerian_<N-1,K-1>::value ) * ( N - K ) +
+					     type ( Ostap::Math::Eulerian_<N-1,K>::value   ) * ( K + 1 ) } ;
+      } ;
+      // ========================================================================
+    }
+    // =========================================================================    
+    template <unsigned short N,
+	      unsigned short K>
+    struct Eulerian_ : public details::_Eulerian<N,K,N<=N_EULERIAN_MAX,(K<=N)>
+    {} ; 
+    template <>
+    struct Eulerian_<0,0>   { enum _ { value = 1 } ; } ;    
+    template <unsigned short N>
+    struct Eulerian_<N,0>   { enum _ { value = 1 } ; } ;
+    template <unsigned short N>
+    struct Eulerian_<N+1,N> { enum _ { value = 1 } ; } ;
+    template <unsigned short N>
+    struct Eulerian_<N,N>   { enum _ { value = 0 } ; } ;
     // ========================================================================
+    /** @class EulerianRaw
+     *  The row in Euler Triangle triangle
+     */  
+    template <unsigned short N>
+    struct EulerianRow_
+    {
+      /// the actual type fof elements in the row 
+      typedef Eulerian_t<N> the_type ;
+      // ======================================================================
+      /// the actual type of the row in trianlge
+      typedef std::array<the_type,N+1>  Row ;
+      /// get the row of coefficients 
+      template <std::size_t... i>
+      inline static constexpr Row eulerian_array ( std::index_sequence<i...> )
+      { return Row { { Eulerian_<N,i>::value... } } ; }
+      // ======================================================================
+      /// get the row of coefficients 
+      inline static constexpr Row eulerian_array ()
+      { return EulerianRow_<N>::eulerian_array ( std::make_index_sequence<N+1> {} ) ; }
+      // ======================================================================
+      /// get the row of coefficients 
+      static constexpr const Row row { eulerian_array () } ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** get the row in Euelr's triangle - the row of Eulrelian numebrs coefficients 
+     *  @see EulerianRow_
+     */
+    template<unsigned short N>
+    inline constexpr const auto& eulerian_array() { return Ostap::Math::EulerianRow_<N>::row ; }
+    // ========================================================================    
     /** Eulerian number A(n,k)
      *  @see https://en.wikipedia.org/wiki/Eulerian_number
      *  @param n   \f$ 0 \le n \f$

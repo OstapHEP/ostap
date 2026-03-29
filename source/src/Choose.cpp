@@ -19,6 +19,7 @@
 //  local 
 // ============================================================================
 #include "syncedcache.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file 
  *  Calculaate binbomial coefficients and related quantities 
@@ -202,7 +203,12 @@ Ostap::Math::choose
   else if ( 1 == k || n == k + 1 ) { return n ; }
   else if ( 2 == k || n == k + 2 ) { return 1ull * n * ( n - 1 ) / 2 ; }
   //
-  
+  //
+  Ostap::Assert ( n <= N_CHOOSE_MAX ,
+		  "`n' is too large to fit result into 64-bit integer, use `choose_double'" ,
+		  "Ostap::Math::choose" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+  //
   const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
   //
   typedef std::pair<unsigned short,unsigned short> KEY    ;
@@ -302,6 +308,8 @@ Ostap::Math::choose_double
   if      ( k > n            ) { return 0 ; }
   else if ( 0 == k || n == k ) { return 1 ; }
   else if ( n <= 67          ) { return Ostap::Math::choose ( n , k ) ; }
+  //
+  if ( n <= N_CHOOSE_MAX ) { return choose ( n , k ) ; }
   //
   const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
   //
@@ -470,7 +478,12 @@ Ostap::Math::eulerian
 {
   if      ( !n && !k               ) { return 1 ; }
   else if (  n <=  k               ) { return 0 ; }
-  else if (  1 ==  k || n == k + 1 ) { return 1 ; }
+  else if (  0 ==  k || n == k + 1 ) { return 1 ; }
+  //
+  Ostap::Assert ( n <= N_EULERIAN_MAX ,
+		  "`n' is too larger to fit result into 64-bit integer, use `eurelian_double'" ,
+		  "Ostap::Math::eurelian" ,
+		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
   typedef std::pair<unsigned short,unsigned short> KEY    ;
   typedef std::uintmax_t                           RESULT ;
@@ -502,7 +515,7 @@ Ostap::Math::eulerian
   return result ;
 }
 // ============================================================================
-/* Eulerian number A(n,k)
+/*  Eulerian number A(n,k)
  *  @see https://en.wikipedia.org/wiki/Eulerian_number
  *  @param n   \f$ 0 \le n \f$
  *  @param k   \f$ 0 \le k \le n \f$ 
@@ -516,7 +529,10 @@ Ostap::Math::eulerian_double
 {
   if      ( !n && !k               ) { return 1 ; }
   else if (  n <=  k               ) { return 0 ; }
-  else if (  1 ==  k || n == k + 1 ) { return 1 ; }
+  else if (  0 ==  k || n == k + 1 ) { return 1 ; }
+  //
+  // ATTENTION! 
+  if ( n <= N_EULERIAN_MAX ) { return eulerian ( n , k ) ; }
   //
   typedef std::pair<unsigned short,unsigned short> KEY    ;
   typedef double                                   RESULT ;
