@@ -229,17 +229,19 @@ namespace Ostap
       {
         if ( first == last ) { return std::make_pair(0,0) ; }
         //
-        typename std::complex<TYPE> p = *first  ;
-        typename std::complex<TYPE> q { 0 , 0 } ;
+	std::complex<long double> xx { x }     ;
+        std::complex<long double> p = *first   ;
+        std::complex<long double> q  { 0 , 0 } ;
         while ( ++first != last ) 
-          {
-            // q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
-            // p = std::fma ( x , p , *first ) ; // x * p + *first  ;
-            q = x * q + p ;
-            p = x * p + std::complex<TYPE> ( *first );
-          }
+        {
+	  // q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
+	  // p = std::fma ( x , p , *first ) ; // x * p + *first  ;
+	  q = xx * q + p ;
+	  p = xx * p + std::complex<long double> ( *first );
+	}
         //
-        return std::make_pair ( p , q ) ;
+        return std::make_pair ( std::complex<TYPE> { p }  ,
+				std::complex<TYPE> { q } ) ;
       }
       // ======================================================================
       /// Clenshaw algorithm for summation of monomial series (aka "Horner's rule")
