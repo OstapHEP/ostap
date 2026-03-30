@@ -123,10 +123,6 @@ namespace
     if      ( k <= 1 || k >= n ) { return 0 ; } //
     else if ( n <= 67 )          { return std::log ( 1.0L * Ostap::Math::choose ( n , k ) ) ; }
     //
-    const unsigned  short k1 = 2*k < n ? k : n - k ;
-    if ( k1 * std::log2 ( M_E * n / k1 ) < 63 ) 
-      { return std::log ( 1.0L * Ostap::Math::choose ( n , k ) ) ; }
-    // 
     return 
       std::lgamma ( 1.0L + n     ) - 
       std::lgamma ( 1.0L + k     ) - 
@@ -141,20 +137,22 @@ namespace
     //
     // ====================================================================
     //
-    if      ( k > n            ) { return 0 ; }
-    else if ( 0 == k || n == k ) { return 1 ; }
-    else if ( n <= 67          ) { return 1.0L * Ostap::Math::choose ( n , k ) ; }
+    if      ( k > n                ) { return 0 ; }
+    else if ( 0 == k || n == k     ) { return 1 ; }
+    else if ( 0 == k || n == k     ) { return 1 ; }
+    else if ( 1 == k || n == k + 1 ) { return n ; }
+    else if ( 2 == k || n == k + 2 ) { return 1.0L * n * ( n - 1 )                                     /   2 ; }
+    else if ( 3 == k || n == k + 3 ) { return 1.0L * n * ( n - 1 ) * ( n - 2 )                         /   6 ; }
+    else if ( 4 == k || n == k + 4 ) { return 1.0L * n * ( n - 1 ) * ( n - 2 ) * ( n - 3 )             /  24 ; }
+    else if ( 5 == k || n == k + 5 ) { return 1.0L * n * ( n - 1 ) * ( n - 2 ) * ( n - 3 ) * ( n - 4 ) / 120 ; }
+    //
+    else if ( n <= Ostap::Math::N_CHOOSE_MAX ) { return 1.0L * Ostap::Math::choose ( n , k ) ; }
     //
     const unsigned  short k1 =  2 * k < n ? k : n - k ;
-    if ( k1 * std::log2 ( M_E * n / k1 ) < 63 )
-      { return Ostap::Math::choose ( n , k1 ) ; }
     //
-    long double a = std::lgamma ( ( long double )     n + 1 )  ;
-    if ( a < s_emax ) { return Ostap::Math::choose ( n , k1 ) ; }
-    a            -= std::lgamma ( ( long double ) n - k + 1 ) ;
-    if ( a < s_emax ) { return Ostap::Math::choose ( n , k1 ) ; }
-    a            -= std::lgamma ( ( long double )     k + 1 ) ;
-    if ( a < s_emax ) { return Ostap::Math::choose ( n , k1 ) ; }
+    long double a = std::lgamma ( 1.0L + n     ) ;
+    a            -= std::lgamma ( 1.0L + n - k ) ;
+    a            -= std::lgamma ( 1.0L + k     ) ; 
     //
     return std::exp ( a ) ;
   }
@@ -201,11 +199,12 @@ Ostap::Math::choose
   if      ( k > n                ) { return 0 ; }
   else if ( 0 == k || n == k     ) { return 1 ; }
   else if ( 1 == k || n == k + 1 ) { return n ; }
-  else if ( 2 == k || n == k + 2 ) { return 1ull * n * ( n - 1 ) / 2 ; }
-  //
+  else if ( 2 == k || n == k + 2 ) { return 1ull * n * ( n - 1 )                                     /  2 ; }
+  else if ( 3 == k || n == k + 3 ) { return 1ull * n * ( n - 1 ) * ( n - 2 )                         /  6 ; }
+  else if ( 4 == k || n == k + 4 ) { return 1ull * n * ( n - 1 ) * ( n - 2 ) * ( n - 3 )             / 24 ; }
   //
   Ostap::Assert ( n <= N_CHOOSE_MAX ,
-		  "`n' is too large to fit result into 64-bit integer, use `choose_double'" ,
+		  "choose: `n' is too large to fit result into 64-bit integer, use `choose_double'" ,
 		  "Ostap::Math::choose" ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
   //
@@ -305,11 +304,15 @@ Ostap::Math::choose_double
   const unsigned short k ) 
 {
   //
-  if      ( k > n            ) { return 0 ; }
-  else if ( 0 == k || n == k ) { return 1 ; }
-  else if ( n <= 67          ) { return Ostap::Math::choose ( n , k ) ; }
+  if      ( k > n                ) { return 0 ; }
+  else if ( 0 == k || n == k     ) { return 1 ; }
+  else if ( 1 == k || n == k + 1 ) { return n ; }
+  else if ( 2 == k || n == k + 2 ) { return 1.0L * n * ( n - 1 )                                     /   2 ; }
+  else if ( 3 == k || n == k + 3 ) { return 1.0L * n * ( n - 1 ) * ( n - 2 )                         /   6 ; }
+  else if ( 4 == k || n == k + 4 ) { return 1.0L * n * ( n - 1 ) * ( n - 2 ) * ( n - 3 )             /  24 ; }
+  else if ( 5 == k || n == k + 5 ) { return 1.0L * n * ( n - 1 ) * ( n - 2 ) * ( n - 3 ) * ( n - 4 ) / 120 ; }
   //
-  if ( n <= N_CHOOSE_MAX ) { return choose ( n , k ) ; }
+  else if ( n <= N_CHOOSE_MAX    ) { return choose ( n , k ) ; }
   //
   const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
   //
@@ -405,7 +408,7 @@ double Ostap::Math::choose_half
  *  @date 2015-03-08
  */
 // ============================================================================
-double Ostap::Math::log_choose 
+long double Ostap::Math::log_choose 
 ( const unsigned short n ,
   const unsigned short k ) 
 {
@@ -414,7 +417,7 @@ double Ostap::Math::log_choose
   const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
   //
   typedef std::pair<unsigned short,unsigned short> KEY    ;
-  typedef double                                   RESULT ;
+  typedef long double                              RESULT ;
   typedef std::map<KEY,RESULT>                     MAP    ;
   typedef SyncedCache<MAP>                         CACHE  ;
   /// the cache

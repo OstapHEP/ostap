@@ -140,7 +140,8 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
      */
-    double log_choose
+    long double
+    log_choose
     ( const unsigned short n ,
       const unsigned short k ) ;
     // ========================================================================

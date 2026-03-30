@@ -69,10 +69,10 @@ double  Ostap::Math::Bernstein::Basic::evaluate
   const unsigned short kk =     k ;
   const unsigned short nk = N - k ;
   //
-  const double p1 = Ostap::Math::POW ( 0.0L + x  , kk ) ;
-  const double p2 = Ostap::Math::POW ( 1.0L - x  , nk ) ;
+  const long double p1 = Ostap::Math::POW ( 0.0L + x  , kk ) ;
+  const long double p2 = Ostap::Math::POW ( 1.0L - x  , nk ) ;
   //
-  return N < 60 ?
+  return N + 5 < N_CHOOSE_MAX ?
     Ostap::Math::choose        ( N , k ) * p1 * p2 : 
     Ostap::Math::choose_double ( N , k ) * p1 * p2 ;
 }
@@ -1236,7 +1236,7 @@ namespace
     const unsigned short k ) 
   {
     return 
-      n < 63 ? 
+      n < Ostap::Math::N_CHOOSE_MAX ? 
       Ostap::Math::choose        ( n , k ) : 
       Ostap::Math::choose_double ( n , k ) ;  
   }
@@ -1474,7 +1474,7 @@ Ostap::Math::Bernstein::multiply
 ( const Ostap::Math::Bernstein::Basic& b ) const 
 {
   Bernstein   result ( multiply ( b.k() , b.N() - b.k() ) ) ;
-  Ostap::Math::scale ( result.m_pars , Ostap::Math::choose ( b.N() , b.k() ) ) ;
+  Ostap::Math::scale ( result.m_pars , Ostap::Math::choose_double ( b.N() , b.k() ) ) ;
   return result ;
 }
 // ============================================================================
@@ -1501,8 +1501,8 @@ Ostap::Math::Bernstein::multiply
     if ( imin <= i1 && i1 <= imax ) 
     {
       result.m_pars [ k ] = m_pars[k - i1] * 
-        Ostap::Math::choose (     n , k - i1 ) / 
-        Ostap::Math::choose ( m + n , k      ) ;      
+        Ostap::Math::choose_double (     n , k - i1 ) / 
+        Ostap::Math::choose_double ( m + n , k      ) ;      
     }
   }
   return result ;
@@ -1858,9 +1858,10 @@ namespace
    *  @see http://www.sciencedirect.com/science/article/pii/S0377042700003769 eq.20 
    */
   inline 
-  double l2b_mtrx ( const unsigned short j , 
-                    const unsigned short k ,
-                    const unsigned short n ) 
+  double l2b_mtrx
+  ( const unsigned short j , 
+    const unsigned short k ,
+    const unsigned short n ) 
   {
     //
     const unsigned short imin = std::max ( 0 , j + k - n ) ;
@@ -1870,25 +1871,26 @@ namespace
     {
       0 == ( k + i ) % 2 ? 
         r +=
-        Ostap::Math::choose ( j     , i     ) * 
-        Ostap::Math::choose ( k     , i     ) * 
-        Ostap::Math::choose ( n - j , k - i ) :
+        Ostap::Math::choose_double ( j     , i     ) * 
+        Ostap::Math::choose_double ( k     , i     ) * 
+        Ostap::Math::choose_double ( n - j , k - i ) :
         r -=
-        Ostap::Math::choose ( j     , i     ) * 
-        Ostap::Math::choose ( k     , i     ) * 
-        Ostap::Math::choose ( n - j , k - i ) ;
+        Ostap::Math::choose_double ( j     , i     ) * 
+        Ostap::Math::choose_double ( k     , i     ) * 
+        Ostap::Math::choose_double ( n - j , k - i ) ;
     }
     //
-    return r / double ( Ostap::Math::choose ( n , k ) ) ;
+    return r / Ostap::Math::choose_double ( n , k ) ;
   }
   // ==========================================================================
   /** transformation matrix from chebyshev to bernstein basis 
    *  http://www.degruyter.com/view/j/cmam.2003.3.issue-4/cmam-2003-0038/cmam-2003-0038.xml  eq. 15
    */
   inline 
-  long double c2b_mtrx ( const unsigned short j , 
-                         const unsigned short k ,
-                         const unsigned short n ) 
+  long double c2b_mtrx
+  ( const unsigned short j , 
+    const unsigned short k ,
+    const unsigned short n ) 
   {
     const unsigned short imin = std::max ( 0 , j + k - n ) ;
     const unsigned short imax = std::min ( j ,     k     ) ;
@@ -1897,11 +1899,11 @@ namespace
     {
       0 == ( k - i ) % 2 ? 
         r +=
-        Ostap::Math::choose ( 2 * k , 2 * i ) * 
-        Ostap::Math::choose ( n - k , j - i ) :
+        Ostap::Math::choose_double ( 2 * k , 2 * i ) * 
+        Ostap::Math::choose_double ( n - k , j - i ) :
         r -=
-        Ostap::Math::choose ( 2 * k , 2 * i ) * 
-        Ostap::Math::choose ( n - k , j - i ) ;
+        Ostap::Math::choose_double ( 2 * k , 2 * i ) * 
+        Ostap::Math::choose_double ( n - k , j - i ) ;
     }
     //
     return r / (  (long double)  Ostap::Math::choose ( n , j ) ) ;
@@ -1918,8 +1920,8 @@ namespace
     //
     return
       j < k ? 0.0 : 
-      (double) ( Ostap::Math::choose ( j , k ) ) / 
-      (double) ( Ostap::Math::choose ( n , k ) ) ; 
+      (double) ( Ostap::Math::choose_double ( j , k ) ) / 
+      (double) ( Ostap::Math::choose_double ( n , k ) ) ; 
   }
   // ==========================================================================
   /// affine transformation of polynomial
@@ -1930,7 +1932,7 @@ namespace
   {
     if ( k < j ) { return 0 ; }
     const long double c = 
-      Ostap::Math::choose ( k , j ) * Ostap::Math::POW ( 2 , j ) ;
+      Ostap::Math::choose_double ( k , j ) * Ostap::Math::POW ( 2 , j ) ;
     //
     return 0 == ( k - j ) % 2 ?  c : -c ;
   }
@@ -2682,15 +2684,18 @@ Ostap::Math::BernsteinDual::BernsteinDual
 		  "Invaild Bernstein-Dual index!"         ,
 		  "Ostap::Math::BernsteinDual"            ,
 		  INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
-
+  //
   const unsigned short n = N ;
   for ( unsigned short k = 0 ; k <= N ; ++k ) 
   {
-    double ck = 0.0 ;
+    //
+    long double ck = 0.0 ;
     const unsigned short imax = std::min ( j ,  k ) ;
     for ( unsigned short i = 0 ; i <= imax ; ++i ) 
     {
+      //
       long double a = 2 * i + 1 ;
+      //
       a *= c_nk (  n + i + 1 , n - j ) ;
       a *= c_nk (  n - i     , n - j ) ;
       a *= c_nk (  n + i + 1 , n - k ) ;
@@ -2698,8 +2703,10 @@ Ostap::Math::BernsteinDual::BernsteinDual
       //
       ck += a ;
     }
+    //
     ck /= ( c_nk ( n , j ) * c_nk ( n , k ) ) ;
     if ( ( j + k )  % 2 ) { ck = -ck ; }
+    //
     m_bernstein.setPar ( k , ck ) ;
   }
 }
