@@ -256,6 +256,42 @@ namespace Ostap
     constexpr std::array<std::uintmax_t,N+1>
     Pochhammer_<N>::s_coeff { Ostap::Math::stirling1_array<std::uintmax_t,N>() } ;
     // ========================================================================
+    /** @class Pochhammer
+     *  Pochhammer symbol as polynomial
+     *  @see Ostap::Math::rising_factorial
+     *  @see Ostap::Math::pochhammer
+     *  @see Ostap::Math::Pochhammer_
+     */
+    class Pochhammer
+    {
+    public :
+      // =====================================================================
+      /// constructor 
+      Pochhammer ( const unsigned short N = 0 ) ;
+      // =====================================================================
+    public :
+      // =====================================================================
+      /// evaluate Pochhammer symbol/polynomial 
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// evaluate Pochhammer symbol/polynomial 
+      double        evaluate   ( const double x ) const ;
+      /// get the derivative 
+      double        derivative ( const double x ) const ;
+      // =====================================================================
+    public :
+      // =====================================================================
+      /// degree of polynomial 
+      inline unsigned short degree () const { return m_N ; }
+      /// degree of polynomial 
+      inline unsigned short N      () const { return m_N ; }
+      // =====================================================================
+    public :
+      // =====================================================================
+      /// degree order 
+      unsigned short m_N { 0 } ; // degree order
+      // =====================================================================
+    } ;
+    // ========================================================================
     /** calculate unsigned Stirling number of 1st kind 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
@@ -273,7 +309,6 @@ namespace Ostap
     ( const unsigned short n ,
       const unsigned short k ) ;
     // ========================================================================
-
     /** @class Stirling2
      *  Unsigned Stirling numbers of 2nd kind
      *  @see https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
@@ -362,8 +397,16 @@ namespace Ostap
     struct Eulerian_<0,0>   { enum _ { value = 1 } ; } ;    
     template <unsigned short N>
     struct Eulerian_<N,0>   { enum _ { value = 1 } ; } ;
+    // 
+    // ========================================================================
+#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) // ==================
+    // ========================================================================
+    // C++17 does not like it:
     template <unsigned short N>
     struct Eulerian_<N+1,N> { enum _ { value = 1 } ; } ;
+    // ========================================================================
+#endif // =====================================================================
+    // ========================================================================
     template <unsigned short N>
     struct Eulerian_<N,N>   { enum _ { value = 0 } ; } ;
     // ========================================================================
@@ -373,11 +416,13 @@ namespace Ostap
     template <unsigned short N>
     struct EulerianRow_
     {
+      // ======================================================================
       /// the actual type fof elements in the row 
       typedef Eulerian_t<N> the_type ;
       // ======================================================================
       /// the actual type of the row in trianlge
       typedef std::array<the_type,N+1>  Row ;
+      // ======================================================================
       /// get the row of coefficients 
       template <std::size_t... i>
       inline static constexpr Row eulerian_array ( std::index_sequence<i...> )
@@ -392,7 +437,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** get the row in Euelr's triangle - the row of Eulrelian numebrs coefficients 
+    /** get the row in Euler's triangle - the row of Eulerian number coefficients 
      *  @see EulerianRow_
      */
     template<unsigned short N>
@@ -402,7 +447,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Eulerian_number
      *  @param n   \f$ 0 \le n \f$
      *  @param k   \f$ 0 \le k \le n \f$ 
-     *  @return euleria number A(n,k)  
+     *  @return Eulerian number A(n,k)  
      */
     std::uintmax_t 
     eulerian 
@@ -413,7 +458,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Eulerian_number
      *  @param n   \f$ 0 \le n \f$
      *  @param k   \f$ 0 \le k \le n \f$ 
-     *  @return euleria number A(n,k)  
+     *  @return Eulerian number A(n,k)  
      */
      double 
      eulerian_double 

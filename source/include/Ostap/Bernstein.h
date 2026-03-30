@@ -38,6 +38,7 @@ namespace Ostap
     class LegendreSum   ; // forward declaration
     class ChebyshevSum  ; // forward declaration
     class Polynomial    ; // forward declaration
+    class Pochhammer    ; // forward declaration
     // ========================================================================
     /// Interpolants 
     namespace Interpolation { class Table ; } // forward declaration
@@ -327,6 +328,9 @@ namespace Ostap
       /// constructor from Bernulli
       explicit Bernstein ( const Bernulli&      poly ) ;
       // ======================================================================
+      /// constructor from Pochhammer 
+      explicit Bernstein ( const Pochhammer&    poly ) ;
+      // ======================================================================
       /// constructor from BernsteinEven 
       explicit Bernstein ( const BernsteinEven& poly ) ;
       // ======================================================================
@@ -403,6 +407,16 @@ namespace Ostap
       ( const Bernulli&       poly ,
 	const double          xmin ,
 	const double          xmax ) ;
+      // ======================================================================
+      /** create Bernstein polynomial from other polynomial in different range 
+       *  @param poly orignal polinoial
+       *  @param xmin new x-min 
+       *  @param xmax new x-max 
+       */
+      Bernstein
+      ( const Pochhammer&     poly ,
+	const double          xmin ,
+	const double          xmax ) ;      
       // ======================================================================            
       /** create Bernstein polynomial from other polynomial in different range 
        *  @param poly orignal polinoial

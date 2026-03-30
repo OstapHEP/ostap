@@ -2046,7 +2046,7 @@ namespace
     //
     // more   specific treatment 
     //
-    if ( s_zero ( x )  ) { return 0 ; }  // RETURN 
+    if ( !x || s_zero ( x )  ) { return 0 ; }  // RETURN 
     // avoid too negative values 
     if ( x < 0.5L - N ) 
     { return _pochhammer_ ( std::abs ( x ) - N + 1 , N ) * ( N % 2 ? -1 : 1 ) ; }
@@ -2214,7 +2214,7 @@ double Ostap::Math::falling_factorial
 { return __pochhammer__ ( -1 * x , n ) * ( n % 2 ? -1 : 1 ) ; }
 // ============================================================================
 /*  Pochhammer symbol, aka "rising factorial" and its derivative 
- *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+ *  \f[ P(x,n) = x ( x + 1) ( x + 2 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
  *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
  *  @see Ostap::Math::rising_factorial
  *  @see Ostap::Math::pochhammer
@@ -2226,6 +2226,27 @@ Ostap::Math::pochhammer_with_derivative
   const unsigned short n )
 { return _pochhammer2_ ( x , n ) ; }
 // ============================================================================
+
+// ============================================================================
+/// constructor 
+// ============================================================================
+Ostap::Math::Pochhammer::Pochhammer
+( const unsigned short N )
+  : m_N ( N )
+{}
+// =====================================================================
+// evaluate Pochhammer symbol/polynomial 
+// =====================================================================
+double Ostap::Math::Pochhammer::evaluate
+( const double x ) const
+{ return __pochhammer__ ( x , m_N ) ; }
+// =====================================================================
+// get the derivative 
+// =====================================================================
+double Ostap::Math::Pochhammer::derivative
+( const double x ) const
+{ return _pochhammer2_ ( x , m_N ).second ; }
+// =====================================================================
 
 // ============================================================================
 // Elliptic integrals 
