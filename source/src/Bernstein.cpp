@@ -2139,19 +2139,22 @@ Ostap::Math::Bernstein::Bernstein
   : Bernstein ( poly.bernstein () , xmin , xmax )
 {}
 // ============================================================================
-
-
-// ============================================================================
-namespace
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Pochhammer&    poly ,
+  const double                      xmin ,
+  const double                      xmax ) 
+  : Bernstein ( xmin , xmax , poly.roots () )
 {
-  // ==========================================================================
-  // pochhammer roots 
-  // ==========================================================================
+  const double xmid  = 0.5 * ( this->xmin () + this->xmax() ) ;
+  const double scale = poly ( xmid ) / evaluate ( xmid ) ;
+  Ostap::Math::scale ( m_pars , scale ) ; 
 }
+// =============================================================================
+Ostap::Math::Bernstein::Bernstein
+( const Ostap::Math::Pochhammer&    poly )
+  : Bernstein ( poly , -1.0*poly.N() + 1 , 1 ) 
+{}
 // ============================================================================
-
-/// @todo: constructors from Pochhammer 
-
 
 
 // ============================================================================

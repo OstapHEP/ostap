@@ -2247,8 +2247,17 @@ double Ostap::Math::Pochhammer::derivative
 ( const double x ) const
 { return _pochhammer2_ ( x , m_N ).second ; }
 // ============================================================================
-
-// ROOTS
+// roots 
+// ============================================================================
+std::vector<double> 
+Ostap::Math::Pochhammer::roots
+( const unsigned short N  ) 
+{
+  std::vector<double> result ( N ) ;
+  std::iota ( result.begin() , result.end() , -1.0 * N + 1 ) ; 
+  return result ;
+}
+// ============================================================================
 
 // ============================================================================
 // Elliptic integrals 
@@ -7940,6 +7949,36 @@ Ostap::Math::slh
   //
   return std::complex<double> ( s_1_sqrt2 * ( 1.0L + clz * clz  ) * slz / clz ) ;
 }
+// =============================================================================
+
+
+// =============================================================================
+namespace 
+{
+  // ===========================================================================
+   constexpr unsigned short N_HARMONIC = 250 ; 
+   auto  HN = [] ( const unsigned short I )-> long double 
+   { return Ostap::Math::harmonic_ ( I ) ;  } ; 
+   const std::array<long double,N_HARMONIC+1> s_Harmonic {
+   Ostap::Math::make_array ( HN , std::make_index_sequence<N_HARMONIC+1> () ) }; 
+  // ===========================================================================
+}
+// =============================================================================
+/* get the harmonic number  
+ * @see https://en.wikipedia.org/wiki/Harmonic_number
+ */
+ // =============================================================================
+double Ostap::Math::harmonic 
+( const unsigned short N ) 
+{
+  if ( N <= N_HARMONIC ) { return s_Harmonic [ N ] ; } ;
+  long double result = s_Harmonic.back() ;
+  for ( unsigned int k = N_HARMONIC + 1 ; k <= N ; ++k )
+  { result += 1.0L / k ; }
+  return result ; 
+}
+
+
 
 // ============================================================================
 //                                                                      The END 

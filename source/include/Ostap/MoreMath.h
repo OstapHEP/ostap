@@ -2869,6 +2869,33 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
+    /** recursively calculate the harmonix number
+      * @see https://en.wikipedia.org/wiki/Harmonic_number
+      */
+    template <unsigned short N>
+    struct Harmonic_
+    {
+      inline static constexpr long double value { 1.0L / N + Harmonic_<N-1>::value } ;
+    } ; 
+    template <>
+    struct Harmonic_<0>
+    {
+     inline static constexpr long double value { 0 } ;
+    };
+    // =========================================================================
+    /** get the harmonic number  
+     * @see https://en.wikipedia.org/wiki/Harmonic_number
+     */
+    constexpr long double harmonic_ ( const unsigned short N ) 
+    { return !N ? 0 : 1.0L/N + harmonic_ ( N - 1 ) ; } 
+    // ==========================================================================
+    /** get the harmonic number  
+     * @see https://en.wikipedia.org/wiki/Harmonic_number
+     */
+    double harmonic ( const unsigned short N ) ;
+
+
+    // ========================================================================
     // Sigmoid/kind functions 
     // ========================================================================
     /// the sigmoid type 

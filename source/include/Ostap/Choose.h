@@ -291,7 +291,7 @@ namespace Ostap
       inline std::vector<double> roots () const { return roots ( m_N ) ; }
       // =====================================================================
       /// vector of roots 
-      static std::vector<double> roots ( const unsigned int N ) ;
+      static std::vector<double> roots ( const unsigned short N ) ;
       // =====================================================================
     private: 
       // =====================================================================
