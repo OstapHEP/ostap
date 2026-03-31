@@ -24,7 +24,7 @@ jobs:
     name: el9_LCG_109_gcc15
     vmImage:  'ubuntu-latest'
     dockername: 'gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest'
-    LCG: 'LCG_109'
+    LCG: 'LCG_109a'
     CMTCONFIG: 'x86_64-el9-gcc15-opt'
     artifact: 'test_al9_LCG_109_gcc15'
 
