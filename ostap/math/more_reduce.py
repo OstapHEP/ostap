@@ -1538,16 +1538,24 @@ Ostap.Math.HILLdini . __reduce__ = _omdini_reduce_
 
 
 # =============================================================================
-## reduce Ostap::Math::BErnulli
-#  @see Ostap::math::Bernullli
-def _ombernulli_reduce_ ( s ) :
+## reduce Ostap::Math::Bernulli
+#  @see Ostap::math::Bernulli
+#  @see Ostap::math::Binomial 
+#  @see Ostap::math::Pochhammer
+#  @see Ostap::math::Eulerian
+def _om_specpol_reduce_ ( s ) :
     """Reduce `Ostap.Math.Bernuli`
     - see `Ostap.Math.Bernulli`
+    - see `Ostap.Math.Binomial`
+    - see `Ostap.Math.Pochhammer`
+    - see `Ostap.Math.Eulerian`
     """
-    return root_factory , ( type ( s ) , s.degree ()  )
+    return root_factory , ( type ( s ) , s.N ()  )
 
-Ostap.Math.Bernulli. __reduce__ = _ombernulli_reduce_
-Ostap.Math.Binomial. __reduce__ = _ombernulli_reduce_
+Ostap.Math.Bernulli   . __reduce__ = _om_specpol_reduce_
+Ostap.Math.Binomial   . __reduce__ = _om_specpol_reduce_
+Ostap.Math.Pochhammer . __reduce__ = _om_specpol_reduce_
+Ostap.Math.Eulerian   . __reduce__ = _om_specpol_reduce_
 
 # =============================================================================
 ## Reduce Ostap::Math::CutOffGauss

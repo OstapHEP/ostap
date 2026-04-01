@@ -230,7 +230,7 @@ double Ostap::Math::Bernulli::integral
 // ============================================================================
 
 // ============================================================================
-// convert Bernulli polynomials into "regular" polynomial
+//  constructor Bernulli polynomial ->  
 // ============================================================================
 Ostap::Math::Polynomial::Polynomial
 ( const Ostap::Math::Bernulli& bp )
@@ -244,6 +244,7 @@ Ostap::Math::Polynomial::Polynomial
   //
   std::copy ( C.rbegin () , C.rend () , m_pars.begin () ) ;
 }
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

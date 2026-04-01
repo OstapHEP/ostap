@@ -180,7 +180,6 @@ Ostap.Math.Rational         .__reduce__ = rati_reduce
 Ostap.Math.RationalBernstein.__reduce__ = rati2_reduce 
 Ostap.Math.RationalPositive .__reduce__ = rati2_reduce 
 
-
 # =============================================================================
 ## factory for Pade deserializaton 
 #  @see Ostap.Math.Pade 

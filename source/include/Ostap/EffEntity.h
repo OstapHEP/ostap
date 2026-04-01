@@ -86,7 +86,7 @@ namespace Ostap
      *  @return the confidence interval 
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-09-17
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      */
     Interval  wald_interval (  const double        conflevel ) const ;
     // ========================================================================
@@ -97,7 +97,7 @@ namespace Ostap
      *  @return the confidence interval 
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-09-17
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      */
     Interval wilson_score_interval (  const double        conflevel ) const ;
     // ========================================================================
@@ -108,7 +108,7 @@ namespace Ostap
      *  @return the confidence interval 
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-09-17
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      */
     Interval wilson_score_continuity_interval ( const double        conflevel ) const ;
     // ========================================================================
@@ -119,7 +119,7 @@ namespace Ostap
      *  @return the confidence interval 
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-09-17
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      */
     Interval arcsin_interval ( const double        conflevel ) const ;
     // ========================================================================
@@ -130,7 +130,7 @@ namespace Ostap
      *  @return the confidence interval 
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-09-17
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      */
     Interval agresti_coull_interval ( const double        conflevel ) const ;
     // ========================================================================
@@ -139,10 +139,10 @@ namespace Ostap
      *  @param  rejected  number of rejected events
      *  @param  conflevel the confidence level:    0<=CL<=1 
      *  @return the confidence interval 
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-09-17
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      */
     Interval jeffreys_interval ( const double        conflevel ) const ;
     // ========================================================================
@@ -151,10 +151,10 @@ namespace Ostap
      *  @param  rejected  number of rejected events
      *  @param  conflevel the confidence level:    0<=CL<=1 
      *  @return the confidence interval 
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2015-09-17
-     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+     *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
      */
     Interval clopper_pearson_interval ( const double         conflevel ) const ;
     // ========================================================================

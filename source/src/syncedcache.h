@@ -28,7 +28,7 @@ namespace
     // =========================================================================
     /// Standard constructor
     template <typename... Args>
-    SyncedCache(Args&&... args) 
+    SyncedCache ( Args&&... args ) 
       : m_cnt   { std::forward<Args>(args)... } 
       , m_mutex {}
     {} ;

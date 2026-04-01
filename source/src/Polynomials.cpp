@@ -1023,6 +1023,24 @@ Ostap::Math::Polynomial::Polynomial
   : Polynomial ( poly.bernstein() ) 
 {}
 // ============================================================================
+//  constructor from Bernulli polynomial
+//  @see Bernilii.cpp
+// ============================================================================
+//  constructor from Eulerian  polynomial -
+// ============================================================================
+Ostap::Math::Polynomial::Polynomial
+( const Ostap::Math::Eulerian& ep )
+  : Polynomial ( ep.degree() , -1.0 , 1.0 )
+{
+  const std::vector<double>& C = eulerian ( ep.N () ) ;
+  Ostap::Assert ( m_pars.size() == C.size()           ,
+                  "Invalid static structure"          ,
+                  "Ostap::Math::Eulerian"             , 
+                  INVALID_CACHE , __FILE__ , __LINE__ ) ;
+  std::copy ( C.rbegin () , C.rend () , m_pars.begin () ) ;
+}
+
+// ============================================================================
 // get the value
 // ============================================================================
 double Ostap::Math::Polynomial::evaluate ( const double x ) const 
@@ -3736,6 +3754,12 @@ Ostap::Math::JacobiBase::JacobiBase
 }
 // ============================================================================
 
+// ============================================================================
+Ostap::Math::Binomial::Binomial
+( const unsigned int N )
+  : m_N { N }
+{}
+// ============================================================================
 double
 Ostap::Math::Binomial::evaluate
 ( const double x ) const
@@ -3747,6 +3771,7 @@ Ostap::Math::Binomial::evaluate
   //
   return result ;
 }
+
      
 // ============================================================================
 //                                                                      The END  

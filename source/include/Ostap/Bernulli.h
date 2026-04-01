@@ -234,9 +234,10 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      unsigned short degree () const { return m_N ; }
-      double         xmin   () const { return 0   ; }
-      double         xmax   () const { return 1   ; }
+      inline unsigned short N      () const { return m_N ; }
+      inline unsigned short degree () const { return m_N ; }
+      inline double         xmin   () const { return 0   ; }
+      inline double         xmax   () const { return 1   ; }
       // ======================================================================
     public:
       // ======================================================================

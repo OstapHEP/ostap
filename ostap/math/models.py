@@ -1156,6 +1156,7 @@ for model in ( Ostap.Math.Chebyshev               ,
                Ostap.Math.Pade                    ,
                Ostap.Math.Bernulli                , 
                Ostap.Math.Pochhammer              ,
+               Ostap.Math.Eulerian                , 
                ##  
                Ostap.Math.BifurcatedGauss         , 
                Ostap.Math.DoubleGauss             ,

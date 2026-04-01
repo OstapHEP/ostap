@@ -1322,8 +1322,6 @@ namespace Ostap
       // ======================================================================
     } ; 
     // ========================================================================
-    
-    // ========================================================================
     /// Binomial coefficients  as polynomials 
     template <unsigned int N>
     class Binomial_
@@ -1361,7 +1359,7 @@ namespace Ostap
     } ;
     // ========================================================================
     
-    
+
     // =========================================================================
     // Non-templated 
     // ========================================================================
@@ -1628,22 +1626,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      Binomial
-      ( const unsigned int N )
-        : m_N { N }
-      {}
+      Binomial ( const unsigned int N ) ;
       // ======================================================================
     public:
       // ======================================================================
-      inline double operator () ( const double x ) const
-      { return evaluate ( x ) ; }
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; }
       double evaluate ( const double x ) const ; 
       // ======================================================================
     public:
       // ======================================================================
-      unsigned int degree () const { return  m_N ; }
-      double       xmin   () const { return -1   ; }
-      double       xmax   () const { return +1   ; }      
+      inline unsigned short N      () const { return  m_N ; }
+      inline unsigned short degree () const { return  m_N ; }
+      inline double         xmin   () const { return -1   ; }
+      inline double         xmax   () const { return +1   ; }      
       // ======================================================================
     private:
       // ======================================================================
@@ -1651,8 +1646,7 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    
-    
+        
     // ========================================================================
     /** affine transformation of polynomial
      *  \f$ x ^{\prime} = \alpha x + \beta \f$
@@ -1724,6 +1718,7 @@ namespace Ostap
     class Convex        ; // forward declaration 
     class ConvexOnly    ; // forward declaration 
     class Bernulli      ; // forward declaration 
+    class Eulerian      ; // forward declaration 
     // ========================================================================
     // Polynomial sums
     // ========================================================================
@@ -1827,6 +1822,8 @@ namespace Ostap
       explicit Polynomial ( const ConvexOnly&    poly ) ;
       ///  constructor from Bernulli polynomial 
       explicit Polynomial ( const Bernulli&      poly ) ;
+      ///  constructor from Eulerian polynomial 
+      explicit Polynomial ( const Eulerian&      poly ) ;
       // ======================================================================
     public:
       // ======================================================================

@@ -568,6 +568,51 @@ Ostap::Math::eulerian_double
 }
 // ============================================================================
 
+
+// ============================================================================
+/* Eulerian polynomials
+ *  \f$  A_n(t) = \sum_k  A(k,k) t^k \f$ 
+ *  @see https://en.wikipedia.org/wiki/Eulerian_number
+ */
+// ============================================================================
+// constructor
+// ============================================================================
+Ostap::Math::Eulerian::Eulerian
+( const unsigned short N )
+  : m_N { N }
+{}
+// ============================================================================
+// evaluate the Eulerian polynomial 
+// ============================================================================
+double
+Ostap::Math::Eulerian::evaluate
+( const double x ) const
+{
+  //
+  if      ( 2 > m_N            ) { return 1     ; }
+  else if ( 2 == m_N           ) { return 1 + x ; }
+  else if ( 1 < std::abs ( x ) ) { return std::pow ( x , m_N - 1 ) * evaluate ( 1 / x ) ; }
+  //
+  const std::vector<double>& row = eulerian ( m_N ) ;
+  return Ostap::Math::Clenshaw::monomial_sum ( row.begin() , row.end() , x * 1.0L ).first ; 
+}
+// ============================================================================
+// get the derivative
+// ============================================================================
+double
+Ostap::Math::Eulerian::derivative 
+( const double x ) const
+{
+  const std::vector<double>& row = eulerian ( m_N ) ;
+  return Ostap::Math::Clenshaw::monomial_sum ( row.begin() , row.end() , x * 1.0L ).second ; 
+}
+// ============================================================================
+
+// ============================================================================
+template <unsigned short N>
+using RW = Ostap::Math::EulerianRow_<N>;
+// ============================================================================
+
 // ============================================================================
 /* Get a row of Eulerian numbers for given N
  *  @see https://en.wikipedia.org/wiki/Eulerian_number
@@ -576,7 +621,6 @@ Ostap::Math::eulerian_double
  *  @return euleria number A(n,k)  
  */
 // ============================================================================
-/**
 const std::vector<double>&
 Ostap::Math::eulerian
 ( const unsigned short n )
@@ -587,30 +631,72 @@ Ostap::Math::eulerian
   typedef std::map<KEY,RESULT>   MAP    ;
   typedef SyncedCache<MAP>       CACHE  ;
   /// the cache
-  static CACHE                   s_CACHE = { { 0 , { 1.0 } } } ; // the cache
+  static CACHE                   s_CACHE     {}       ; 
   static const std::size_t       s_MAX_CACHE { 1000 } ;
   //
   const KEY key { n } ;
   //
-  { // (1) check a value already calculated
+  { // (1) check if a value is already calculated
     CACHE::Lock lock { s_CACHE.mutex () } ;
+    if ( s_CACHE->empty () )
+      {
+      s_CACHE->insert ( std::make_pair (  0 , RESULT{ 1.0 } ) ) ;
+      s_CACHE->insert ( std::make_pair (  1 , RESULT( RW<1>  ::row.begin() , RW<1>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  2 , RESULT( RW<2>  ::row.begin() , RW<2>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  3 , RESULT( RW<3>  ::row.begin() , RW<3>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  4 , RESULT( RW<4>  ::row.begin() , RW<4>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  5 , RESULT( RW<5>  ::row.begin() , RW<5>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  6 , RESULT( RW<6>  ::row.begin() , RW<6>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  7 , RESULT( RW<7>  ::row.begin() , RW<7>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  8 , RESULT( RW<8>  ::row.begin() , RW<8>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair (  9 , RESULT( RW<9>  ::row.begin() , RW<9>  ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 10 , RESULT( RW<10> ::row.begin() , RW<10> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 11 , RESULT( RW<11> ::row.begin() , RW<11> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 12 , RESULT( RW<12> ::row.begin() , RW<12> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 13 , RESULT( RW<13> ::row.begin() , RW<13> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 14 , RESULT( RW<14> ::row.begin() , RW<14> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 15 , RESULT( RW<15> ::row.begin() , RW<15> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 16 , RESULT( RW<16> ::row.begin() , RW<16> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 17 , RESULT( RW<17> ::row.begin() , RW<17> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 18 , RESULT( RW<18> ::row.begin() , RW<18> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 19 , RESULT( RW<19> ::row.begin() , RW<19> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 20 , RESULT( RW<20> ::row.begin() , RW<20> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 21 , RESULT( RW<21> ::row.begin() , RW<21> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 22 , RESULT( RW<22> ::row.begin() , RW<22> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 23 , RESULT( RW<23> ::row.begin() , RW<23> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 24 , RESULT( RW<24> ::row.begin() , RW<24> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 25 , RESULT( RW<25> ::row.begin() , RW<25> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 26 , RESULT( RW<21> ::row.begin() , RW<26> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 27 , RESULT( RW<22> ::row.begin() , RW<27> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 28 , RESULT( RW<23> ::row.begin() , RW<28> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 29 , RESULT( RW<24> ::row.begin() , RW<29> ::row.end() ) ) ) ;
+      s_CACHE->insert ( std::make_pair ( 30 , RESULT( RW<25> ::row.begin() , RW<30> ::row.end() ) ) ) ;
+    }
     auto it = s_CACHE->find ( key ) ;
     if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
   }
   //
-  // calculate the row 
-  RESULT result ; result.reserve ( n + 1 ) ;
+  // calculate the previous row:
+  const RESULT& prev = eulerian ( n - 1 ) ;
+  // current row
+  RESULT result ( n , 0.0 ) ;
+  // A(N,0) = 1 
+  result [ 0    ] = 1 ; // A (N,0)=1 
+  result [ n -1 ] = 1 ; // A (N,N-1) = 1 
   //
+  for ( unsigned short k = 1 ; k + 1 < n ; ++k )
+  { result [ k ] = ( n - k ) * prev [ k - 1 ] + ( k + 1 ) * prev [ k ] ; }
   //
   { // (3) add calculated value into the cache
     CACHE::Lock lock { s_CACHE.mutex () } ;
     if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
-    s_CACHE->insert ( std::make_pair ( key , result ) ) ;    
+    //
+    return s_CACHE->insert ( std::make_pair ( key , result ) ).first->second ;
   }  
-  //
-  return result ;
 }
-*/
+// ============================================================================
+
+
 
 // ============================================================================
 // The END 

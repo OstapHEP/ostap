@@ -11,7 +11,7 @@
 /** @file Ostap/Binomial.h
  *  Collection of functions to estimate the confidence intervals for 
  *  binomial proportion/efficiency
- *  @see http://en.wikipedia.org.wiki/Binomial_proportion_connfidence_interval
+ *  @see http://en.wikipedia.org.wiki/Binomial_proportion_confidence_interval
  *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
  *  @date 2015-09-17
  */

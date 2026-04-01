@@ -407,14 +407,6 @@ namespace Ostap
     struct Eulerian_<N,0>   { enum _ { value = 1 } ; } ;
     // 
     // ========================================================================
-#if defined ( __cplusplus ) && ( 202002L <= __cplusplus ) // ==================
-    // ========================================================================
-    // C++17 does not like it:
-    template <unsigned short N>
-    struct Eulerian_<N+1,N> { enum _ { value = 1 } ; } ;
-    // ========================================================================
-#endif // =====================================================================
-    // ========================================================================
     template <unsigned short N>
     struct Eulerian_<N,N>   { enum _ { value = 0 } ; } ;
     // ========================================================================
@@ -429,7 +421,7 @@ namespace Ostap
       typedef Eulerian_t<N> the_type ;
       // ======================================================================
       /// the actual type of the row in trianlge
-      typedef std::array<the_type,N+1>  Row ;
+      typedef std::array<the_type,N>  Row ;
       // ======================================================================
       /// get the row of coefficients 
       template <std::size_t... i>
@@ -438,7 +430,7 @@ namespace Ostap
       // ======================================================================
       /// get the row of coefficients 
       inline static constexpr Row eulerian_array ()
-      { return EulerianRow_<N>::eulerian_array ( std::make_index_sequence<N+1> {} ) ; }
+      { return EulerianRow_<N>::eulerian_array ( std::make_index_sequence<N> {} ) ; }
       // ======================================================================
       /// get the row of coefficients 
       static constexpr const Row row { eulerian_array () } ;
@@ -473,19 +465,52 @@ namespace Ostap
      ( const unsigned short n , 
        const unsigned short k ) ; 
     // ========================================================================
+    /** Eulerian polynomials
+     *  \f$  A_n(t) = \sum_k  A(k,k) t^k \f$ 
+     *  @see https://en.wikipedia.org/wiki/Eulerian_number
+     */
+    class Eulerian
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// constructor
+      Eulerian ( const unsigned short N ) ;      
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// evaluate Eulerian polynomial 
+      inline double operator () ( const double x ) const {  return evaluate ( x ) ; } 
+      /// evaluate Eulerian polynomial 
+      double evaluate   ( const double x ) const ;
+      /// get the derivative 
+      double derivative ( const double x ) const ;
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// get N : index 
+      inline unsigned short N      () const { return m_N ; }
+      inline unsigned short index  () const { return m_N ; }
+      /// ATTENTION the actual degree is N-1 
+      inline unsigned short degree () const     // ATTENTION! 
+      { return !m_N ? 0 : ( m_N - 1 ) ; }       // ATTENTION!
+      // ======================================================================
+    private: 
+      // ======================================================================
+      /// polynomial index, the actual degree is oneunit less 
+      unsigned short m_N { 0 } ;              // polynomial index 
+      // ======================================================================      
+    } ;
+    // ========================================================================            
     /** Get a row of Eulerian numbers for given N
      *  @see https://en.wikipedia.org/wiki/Eulerian_number
      *  @param n   \f$ 0 \le n \f$
      *  @param k   \f$ 0 \le k \le n \f$ 
-     *  @return euleria number A(n,k)  
+     *  @return eulerian number A(n,k)  
      */
-
-    
-    // const std::vector<double>&
-    // eulerian
-    // ( const unsigned short n ) ;
-
-    
+    const std::vector<double>&
+    eulerian
+    ( const unsigned short n ) ;    
     // ========================================================================    
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
