@@ -4211,7 +4211,7 @@ double Ostap::Math::ImLi
 ( const double s , 
   const double x )
 {
-  if      ( x <= 1 || s_equal ( x , 1 ) ) { return 0 ; } ;
+  if      ( x <= 1 || s_equal ( x , 1 ) ) { return 0 ; } 
   else if ( isshort ( s ) )
   {
     const short n = round ( s ) ;
@@ -4239,7 +4239,7 @@ double Ostap::Math::Li
   if       ( !x || s_zero ( x ) ) { return 0          ; }
   else if  ( s_equal ( x ,  1 ) ) { return zeta ( n ) ; } 
   else if  ( s_equal ( x , -1 ) ) { return -eta ( n ) ; }
-
+  
   //
   if       ( 1  == n ) { return - std::log ( 1.0L - std::abs ( x ) ) ; }  // Eq (6.1)  
   else if  ( 0  == n ) { return x /        ( 1.0L - x )              ; } // Eq.(6.2)
