@@ -4111,10 +4111,11 @@ Ostap::Math::sc
   if ( !y ||s_zero ( y ) )  { return sc ( x , m ) ; } 
   return sn ( u , m ) / cn ( u , m ) ; 
 }
+// ============================================================================
 
 // ============================================================================
 /* Dilogarithm function (real case) 
- *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
+ *  \f$ Li_2(x) = - Re \int\limits_0^{x}\frac{\log ( 1 - s ) }{ s } ds  \f$ 
  */
 // ============================================================================
 double Ostap::Math::dilog ( const double x )
@@ -4129,7 +4130,7 @@ double Ostap::Math::dilog ( const double x )
     //
     gsl_error ( "Error from gsl_sf_dilog_e function" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-      { return std::numeric_limits<double>::quiet_NaN() ; }
+    { return std::numeric_limits<double>::quiet_NaN() ; }
     //
   }
   return result.val ;
@@ -4140,7 +4141,8 @@ double Ostap::Math::dilog ( const double x )
  */
 // ============================================================================
 std::complex<double>
-Ostap::Math::dilog ( const std::complex<double>& z ) 
+Ostap::Math::dilog
+( const std::complex<double>& z ) 
 {
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -4185,7 +4187,7 @@ double Ostap::Math::ImLi
   const double x )
 {
   //
-  if      ( n <  0 || x <= 1 || s_equal ( x , 1 ) ) { return  0    ; } 
+  if      ( n <= 0 || x <= 1 || s_equal ( x , 1 ) ) { return  0    ; } 
   else if ( 1 == n                                ) { return -s_pi ; }
   //
   const double u = std::log ( x ) ;
@@ -4209,9 +4211,8 @@ double Ostap::Math::ImLi
 ( const double s , 
   const double x )
 {
-  if ( x <= 1 || s_equal ( x , 1 ) ) { return 0 ; } ;
-  //
-  if ( isshort ( s ) )
+  if      ( x <= 1 || s_equal ( x , 1 ) ) { return 0 ; } ;
+  else if ( isshort ( s ) )
   {
     const short n = round ( s ) ;
     return ImLi ( n , x ) ;
