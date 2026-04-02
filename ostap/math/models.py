@@ -152,7 +152,7 @@ def tf1  ( self , **kwargs  ) :
             from ostap.logger.utils import print_args
             title  = 'tf1: Unused %d arguments' % len ( kw )
             prefix = '# ' 
-            table  = print_args ( *args , title  = title , prefix = prefix , **kw )
+            table  = print_args ( title  = title , prefix = prefix , **kw )
             logger.warning ( '%s:\n%s' % ( title , table ) )
             
     return fun 
@@ -247,7 +247,7 @@ def tf2 ( self , **kwargs ) :
             from ostap.logger.utils import print_args
             title  = 'tf2: Unused %d arguments' % len ( kw )
             prefix = '# ' 
-            table  = print_args ( *args , title  = title , prefix = prefix , **kw )
+            table  = print_args ( title  = title , prefix = prefix , **kw )
             logger.warning ( '%s:\n%s' % ( title , table ) )
     ## 
     return fun 
@@ -355,7 +355,7 @@ def tf3 ( self , **kwargs ) :
             from ostap.logger.utils import print_args
             title  = 'tf3: Unused %d arguments' % len ( kw )
             prefix = '# ' 
-            table  = print_args ( *args , title  = title , prefix = prefix , **kw )
+            table  = print_args ( title  = title , prefix = prefix , **kw )
             logger.warning ( '%s:\n%s' % ( title , table ) )
     ## 
     return fun 
@@ -412,39 +412,38 @@ def f1_draw ( self , option = '' , *options , **kwargs ) :
 
 # =============================================================================
 ## draw the function 
-def f2_draw ( self , option = '' , *options , **kwargs ) :
+def f2_draw ( obj , option = '' , *options , **kwargs ) :
     """ Drawing the function object through conversion to ROOT.TF2    
     >>> fun = ...
     >>> fun.draw()    
     """
     kw = cidict ( transform = cidict_fun , **kwargs )
     
-    if hasattr ( self , '_tf2' ) and 'xmin'     in kw :        
+    if hasattr ( obj , '_tf2' ) and 'xmin'     in kw :        
         xmin    = kw.get ( 'xmin'    , None )
-        if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf2.GetXmin () : del self._tf2 
-    if hasattr ( self , '_tf2' ) and 'xmax'     in kw :        
+        if isinstance ( xmin    , num_types     ) and float ( xmin ) != obj._tf2.GetXmin () : del obj._tf2 
+    if hasattr ( obj , '_tf2' ) and 'xmax'     in kw :        
         xmax    = kw.get ( 'xmax'    , None )
-        if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf2.GetXmax () : del self._tf2 
-    if hasattr ( self , '_tf2' ) and 'ymin'     in kw :        
+        if isinstance ( xmax    , num_types     ) and float ( xmax ) != obj._tf2.GetXmax () : del obj._tf2 
+    if hasattr ( obj , '_tf2' ) and 'ymin'     in kw :        
         ymin    = kw.get ( 'ymin'    , None )
-        if isinstance ( ymin    , num_types     ) and float ( ymin ) != self._tf2.GetYmin () : del self._tf2 
-    if hasattr ( self , '_tf2' ) and 'ymax'     in kw :        
+        if isinstance ( ymin    , num_types     ) and float ( ymin ) != obj._tf2.GetYmin () : del obj._tf2 
+    if hasattr ( obj , '_tf2' ) and 'ymax'     in kw :        
         ymax    = kw.get ( 'ymax'    , None )
-        if isinstance ( ymax    , num_types     ) and float ( ymax ) != self._tf2.GetYmax () : del self._tf2
+        if isinstance ( ymax    , num_types     ) and float ( ymax ) != obj._tf2.GetYmax () : del obj._tf2
 
-    if hasattr ( self , '_tf2' ) and  ( 'npx' in kw  or 'npoints' in kw ) : 
+    if hasattr ( obj , '_tf2' ) and  ( 'npx' in kw  or 'npoints' in kw ) : 
         npx    = kw.get ( 'npx' , kw.get ( 'npoints'  , 50 ) ) 
-        if isinstance ( npx     , integer_types ) and 1 < npx : self._tf2.SetNpx ( npx ) 
+        if isinstance ( npx     , integer_types ) and 1 < npx : obj._tf2.SetNpx ( npx ) 
                 
-    if hasattr ( self , '_tf2' ) and 'npy'       in kw :        
+    if hasattr ( obj , '_tf2' ) and 'npy'       in kw :        
         npy    = kw.get ( 'npy' , 50 )
-        if isinstance ( npy     , integer_types ) and 1 < npy : self._tf2.SetNpy ( npy ) 
+        if isinstance ( npy     , integer_types ) and 1 < npy : obj._tf2.SetNpy ( npy ) 
 
-    if not hasattr ( self , '_tf2'  ) :
-        self._tf2        =  tf2 ( self , **kw )
+    if not hasattr ( obj , '_tf2'  ) : obj._tf2        =  tf2 ( obj , **kw )
         
     for k in tf2_keys : kw.pop ( k , None ) 
-    self._plot = self._tf2.draw ( option , *options , **kw )
+    obj._plot = obj._tf2.draw ( option , *options , **kw )
     return self
 
 # =============================================================================

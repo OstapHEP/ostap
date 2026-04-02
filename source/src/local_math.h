@@ -103,7 +103,6 @@ namespace
   const Ostap::Math::Equal_To<std::complex<double> > s_cequal {} ; // equality criteria for complex doubles
   // ==========================================================================    
 
-
   // ==========================================================================
   /** @var s_QUIETNAN
    *  quite NaN

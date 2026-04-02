@@ -389,18 +389,18 @@ namespace Ostap
      *  \f$ \Gamma ( x ) \f$ 
      *  @see Ostapo::Math::gamma 
      */
-    double               tgamma ( const double x ) ;
+    double               tgamma  ( const double x ) ;
     // ========================================================================
     /** Gamma function
      *  \f$ \Gamma ( x )\f$ 
      *  @see Ostapo::Math::tgamma 
      */
-    double               gamma ( const double x ) ;
+    double               gamma   ( const double x ) ;
     // ========================================================================
     /** logarithm of gamma function
      *  \f$ \log \Gamma ( x ) \f$ 
      */
-    double               lgamma ( const double x ) ;
+    double               lgamma  ( const double x ) ;
     // ========================================================================
     /** logarithm of gamma function
      *  \f$ \log \Gamma ( x ) \f$ 
@@ -413,10 +413,16 @@ namespace Ostap
      */
     double               igamma ( const double x ) ;
     // ========================================================================
+    /** Compute inverse Gamma function 
+     *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
+     *  @return the value of inverse Gamma functions 
+     */
+    std::complex<double> igamma ( const std::complex<double>& z ) ;
+    // ========================================================================
     /** Gamma function of complex argument 
      *  \f$ \Gamma ( x ) \f$ 
      */
-    std::complex<double> gamma ( const std::complex<double>& x ) ;
+    std::complex<double> gamma ( const std::complex<double>& z ) ;
     /** =======================================================================
      *  Gamma function of complex argument 
      *  \f$ \Gamma ( x ) \f$ 
@@ -1838,16 +1844,6 @@ namespace Ostap
       const double       x ) ;
       
     // ========================================================================
-    /** Harmonic number 
-     *  \f$ H_n = \sum_{k=1}^{n}  \frac{1}{k} \f$ 
-     */
-    double harmonic ( const unsigned int n ) ;
-    // ========================================================================
-    /** Harmonic number (generalized) 
-     *  \f$ H(x) = \gamma + \psi ( 1 + x ) \f$ 
-     */
-    double harmonic ( const double       x  ) ;
-    // ========================================================================
     
     // ========================================================================
     /** \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
@@ -2893,7 +2889,12 @@ namespace Ostap
      * @see https://en.wikipedia.org/wiki/Harmonic_number
      */
     double harmonic ( const unsigned short N ) ;
-
+    // ==========================================================================
+    /** Harmonic number (generalized) 
+     *  \f$ H(x) = \gamma + \psi ( 1 + x ) \f$ 
+     */
+    double harmonic ( const double       x  ) ;
+    // ========================================================================
 
     // ========================================================================
     // Sigmoid/kind functions 

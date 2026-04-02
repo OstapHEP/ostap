@@ -869,7 +869,8 @@ double Ostap::Math::lgamma ( const double x ) { return std::lgamma ( x )  ; }
 // ============================================================================
 double Ostap::Math::igamma ( const double x ) 
 {
-  if ( x > 170 || ( x<=0 && Ostap::Math::isint ( x ) ) ) { return 0 ; }  // RETURN 
+  /// simple case 
+  if ( x > 170 || ( x <= 0 && Ostap::Math::isint ( x ) ) ) { return 0 ; }  // RETURN 
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
   //
@@ -887,6 +888,26 @@ double Ostap::Math::igamma ( const double x )
   return result.val ;
 }
 // ============================================================================
+/*  compute inverse Gamma function 
+ *  \$f f(x) = \frac{1}{\Gamma(x)}\f$
+ *  @return the value of inverse Gamma functions 
+ */
+// ============================================================================
+std::complex<double> 
+Ostap::Math::igamma
+( const std::complex<double>& z ) 
+{
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
+  // simple cases:
+  if       ( 170 < x            ) { return 0 ;   }
+  else if  ( !y || s_zero ( y ) ) { return Ostap::Math::igamma ( x ) ; }
+  //
+  return std::exp ( -Ostap::Math::lgamma ( z ) ) ;
+}
+// ============================================================================
 /* Logarithm of gamma function for complex argument 
  *  \f$ \log \Gamma ( x ) $
  * Note that the imaginary part (arg) is not well-determined 
@@ -896,11 +917,15 @@ double Ostap::Math::igamma ( const double x )
  */
 // ============================================================================
 std::complex<double> 
-Ostap::Math::lgamma ( const std::complex<double>& x ) 
-{ 
+Ostap::Math::lgamma
+( const std::complex<double>& z ) 
+{
+  //
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  //
   // simple case 
-  if ( s_zero ( x.imag() ) && 0 < x.real() && !s_zero ( x.real() ) ) 
-  { return std::lgamma ( x.real() ) ; }
+  if ( ( !y || s_zero ( y ) ) && 0 < x  && !s_zero ( x ) ) { return std::lgamma ( x ) ; }
   //
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -908,7 +933,7 @@ Ostap::Math::lgamma ( const std::complex<double>& x )
   gsl_sf_result r ;
   gsl_sf_result a ;
   //
-  const int ierror = gsl_sf_lngamma_complex_e ( x.real() , x.imag() , &r , &a ) ;
+  const int ierror = gsl_sf_lngamma_complex_e ( x , y , &r , &a ) ;
   //
   if ( ierror && GSL_ELOSS != ierror ) 
   {
@@ -928,14 +953,8 @@ Ostap::Math::lgamma ( const std::complex<double>& x )
 // ===========================================================================
 std::complex<double> 
 Ostap::Math::gamma 
-( const std::complex<double>& x ) 
-{
-  // simple case 
-  if ( s_zero ( x.imag() ) && 0 < x.real() && !s_zero ( x.real() ) ) 
-  { return std::tgamma ( x.real() ) ; }
-  //
-  return std::exp ( Ostap::Math::lgamma ( x ) ) ;
-}
+( const std::complex<double>& z ) 
+{ return Ostap::Math::tgamma ( z ) ;  }
 // ===========================================================================
 /*  Gamma function of complex argument 
  *  \f$ \Gamma ( x ) \f$ 
@@ -943,35 +962,14 @@ Ostap::Math::gamma
 // ===========================================================================
 std::complex<double> 
 Ostap::Math::tgamma 
-( const std::complex<double>& x ) 
+( const std::complex<double>& z ) 
 {
+  const double x = z.real () ;
+  const double y = z.imag () ;
   // simple case 
-  if ( s_zero ( x.imag() ) && 0 < x.real() && !s_zero ( x.real() ) ) 
-  { return std::tgamma ( x.real() ) ; }
+  if ( ( !y || s_zero ( y ) ) && 0 < x  && !s_zero ( x ) ) { return std::tgamma ( x ) ; }
   //
-  return std::exp ( Ostap::Math::lgamma ( x ) ) ;
-}
-// ============================================================================
-/*  compute psi function 
- *  \$f f(x) = \frac{d}{dx}\ln \Gamma(x)\f$
- *  @return the value of psi function 
- */
-// ============================================================================G
-double Ostap::Math::psi ( const double x ) 
-{
-  // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
-  //
-  gsl_sf_result result ;
-  const int ierror = gsl_sf_psi_e ( x , &result ) ;
-  if ( ierror ) 
-  {
-    gsl_error ( "Error from gsl_sf_psi_e" , __FILE__ , __LINE__ , ierror ) ;
-    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-      { return std::numeric_limits<double>::quiet_NaN(); }
-  }
-  //
-  return result.val ;
+  return std::exp ( Ostap::Math::lgamma ( z ) ) ;
 }
 // ============================================================================
 /* compute polygamma function 
@@ -4221,6 +4219,7 @@ double Ostap::Math::ImLi
   const long double u = std::log ( x * 1.0L ) ;
   return -s_pi * std::pow ( u , s - 1.0L ) * igamma ( s ) ;
 }
+#include <iostream> 
 // ============================================================================
 /* polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
  *  @see https://en.wikipedia.org/wiki/Polylogarithm
@@ -4239,25 +4238,154 @@ double Ostap::Math::Li
   if       ( !x || s_zero ( x ) ) { return 0          ; }
   else if  ( s_equal ( x ,  1 ) ) { return zeta ( n ) ; } 
   else if  ( s_equal ( x , -1 ) ) { return -eta ( n ) ; }
-  
-  //
-  if       ( 1  == n ) { return - std::log ( 1.0L - std::abs ( x ) ) ; }  // Eq (6.1)  
-  else if  ( 0  == n ) { return x /        ( 1.0L - x )              ; } // Eq.(6.2)
   //
   
-  // use Eq (10.3)
-  if ( 1 < std::abs ( x ) && n < 0 ) { return ( n % 2 ? -1 : +1 ) * Li ( n , 1 / x ) ; } // Eq. (10.3)
+  ///
+  if      ( 0  == n ) { return x /        ( 1.0L - x )              ; } // Eq.(6.2)
+  else if ( 1  == n ) { return - std::log ( 1.0L - std::abs ( x ) ) ; } // Eq (6.1)
+  /// dilogarithm
+  else if ( 2  == n )
+  {
+    static const short two = 2u ;
+    
+    // helper constant 
+    static const long double s_c { s_pi2 / 6.0L } ;
+    
+    /// very special case
+    static const long double s_Li2_2 = s_pi2 / 4 ;  
+    if       ( s_equal (  2 , x ) ) { return                          s_Li2_2 ; }  // RETURN 
+    else if  ( s_equal ( -2 , x ) ) { return Li ( two , 2 * 2 ) / 2 - s_Li2_2 ; }  // RETURN  
+
+    
+    if        ( -1 > x )
+    {
+      /// Eq. (7.3)
+      const long double l1 = std::log ( - 1.0L * x ) ;
+      const long double l2 = l1 * l1 ; 
+      return -s_c - 0.5L * l2 - Li ( two , 1.0 / x ) ;
+    }
+    else if ( -0.5 > x )
+    {
+      /// Eq. (7.3)
+      const long double l2  = std::log ( 1.0L - x ) * std::log ( ( 1.0L - x ) / ( x * x ) ) ;
+      return -s_c +0.5L * l2  +  Li ( two , 1 / ( 1 - x ) ) ;
+    }
+    else if ( 1 < x )
+    {
+      /// Eq. (7.3)
+      const long double l1 = std::log ( 1.0L * x ) ;
+      const long double l2 = l1 * l1 - s_pi2       ;        // ATTENTION: pi^2 here fro m complex logarithm! 
+      return -s_c - 0.5L * l2 - Li ( two , 1.0 / x ) ;
+    }
+    else if ( 0.5 < x )
+    {
+      /// Eq. (7.3)
+      const long double LL = std::log ( 1.0L * x ) * std::log ( 1.0L - x ) ;
+      return s_c - LL  - Li ( two , 1 - x ) ;
+    }
+
+    /// couple of very special cases 
+    static const long double s_Li2_half = s_pi2/12.0L - 0.5L * s_ln2 * s_ln2 ;
+    if      ( s_equal (  0.5 , x ) ) { return                              s_Li2_half ; } // RETURN 
+    else if ( s_equal ( -0.5 , x ) ) { return Li ( two , 0.5 * 0.5 ) / 2 - s_Li2_half ; } // RETURN
+    //
+
+    /// ATTENTION! 
+    if ( 0 < x  )
+    {
+      // Eq (14.1) 
+      return Li ( two , x * x ) / 2 - Li ( two , -x ) ; 
+    }
+    
+    std::cerr << "dilog case " << x << std::endl ;
+  }
   //
   
   if       ( -1 == n  ) { return x                / std::pow ( 1.0L - x , 2 ) ; } // Eq.(6.2)
   else if  ( -2 == n  ) { return x * ( x + 1.0L ) / std::pow ( 1.0L - x , 3 ) ; } // Eq.(6.2)
   //
+  //
   // Rational case 
-  if ( -100 <= n && n < 0 )
+  if ( N_EULERIAN_MAX <= -n && n < 0 )
   {
-      
+    const unsigned short NN = -n ;
+    Eulerian eu { NN } ;
+    return x * eu ( x ) / std::pow ( 1.0L - x , NN + 1 ) ;
   }
   //
+  // Simple serie for small argument Eq. (8.1)
+  // 
+  if ( 2 <= n && std::abs ( x ) <= 0.50 )
+    {
+    long double    result      = 1 ; // NB: no x here 
+    long double    term        = 1 ; // NB: no x here 
+    unsigned short nSmall      = 0 ;
+    const bool     alternating = x < 0 ;
+    for ( unsigned short k = 2 ; k < 50 ; ++ k )
+    {
+      term *= x ;
+      const long double delta = term * std::pow ( k * 1.0L , -1*n ) ;
+      //
+      if ( !delta || s_zero ( delta ) || s_equal ( result + delta , result ) ) { ++nSmall     ; }
+      else                                                                     {   nSmall = 0 ; }
+      //
+      result += delta ;
+      //
+      // Alternating series ?
+      // - one "small" term is enough,
+      // - otherwise requre several  consequitive small terms are requred 
+      if ( ( 2 <= nSmall && alternating ) || ( 4 <= nSmall ) ) 
+      {
+	std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	return x * result ; // NB: x here 
+      }
+    }
+
+    std::cerr << "slow convergency" << x << std::endl ;
+    return x * result ; // NB: x here
+  }
+  // 
+  
+  //
+  // Eq (10.3) 
+  if ( 0 > n && 1 < std::abs ( x ) )
+  { return ( ( n + 1 ) % 2 ? 1 : -1 ) * Li ( n , 1.0 /x ) ; }
+  //
+
+  // Eq (9.5) 
+  if ( 0 < n && 0 < x ) 
+  {
+    const double w = std::log ( x ) ;
+    /// actual convergency for abs(w)<2*pi
+    /// Eq (9.7) 
+    if ( std::abs ( w ) < 1.5 * s_pi )
+    {
+      long double result = zeta ( n ) ;
+      long double term   = 1 ;
+      for ( unsigned short k = 1 ; k + 2 <= n  ; ++k )
+      {
+	term *= ( w / k ) ;
+	result += term ;
+      }
+      //
+      term   *= w / ( n - 1 ) ;
+      const unsigned short n1 = n -1 ;
+      result +=  ( harmonic ( n1 ) - std::log ( std::abs ( w ) ) ) * term ;
+      term   *= w /   n       ;      
+      result -= 0.5 * term ;  
+      //
+      const long double   wpi = w / s_2pi ;
+      long double result2 = zeta ( 2 ) * igamma ( n ) ;
+      long double term2   = 1 ;      
+      for ( unsigned short j   = 1 ; j < 1000 ; ++j )
+      {
+	/// NOTE YEt
+      }      
+    }
+  }
+  
+  
+  
   
   Ostap::Assert ( false ,
 		  "Not yet implemented!" ,
@@ -4627,29 +4755,6 @@ double Ostap::Math::fermi_dirac
     }
   return result.val ;
 }
-// ============================================================================
-/* Harmonic number 
- *  \f$ H_n = \sum_{k=1}^{n}  \frac{1}{k} \f$ 
- */
-// ============================================================================
-double Ostap::Math::harmonic ( const unsigned int n )
-{
-  long double result = 0 ;
-  if ( n <= 100 )
-  {
-    for ( unsigned int k = 1 ; k <= n ; ++k ) { result += 1.0L / k ; }
-    return result ; 
-  }
-  return M_EULER + psi ( 1.0 + n )  ;
-}
-// ============================================================================
-/* Harmonic number (generalized) 
- *  \f$ H(x) = \gamma + \psi ( 1 + x ) \f$ 
- */
-// ============================================================================
-double Ostap::Math::harmonic ( const double x  )
-{ return M_EULER + psi ( 1.0 + x ) ; }
-
 // ============================================================================
 /* Mill's ratio for normal distribution
  *  - \f$ m (x) = \frac{1 - \Phi(x)}{\phi(x)}\f$  
@@ -7957,11 +8062,11 @@ Ostap::Math::slh
 namespace 
 {
   // ===========================================================================
-   constexpr unsigned short N_HARMONIC = 250 ; 
-   auto  HN = [] ( const unsigned short I )-> long double 
-   { return Ostap::Math::harmonic_ ( I ) ;  } ; 
-   const std::array<long double,N_HARMONIC+1> s_Harmonic {
-   Ostap::Math::make_array ( HN , std::make_index_sequence<N_HARMONIC+1> () ) }; 
+  constexpr unsigned short N_HARMONIC = 250 ; 
+  auto  HN = [] ( const unsigned short I )-> long double 
+  { return Ostap::Math::harmonic_ ( I ) ;  } ; 
+  const std::array<long double,N_HARMONIC+1>
+  s_HARMONIC { Ostap::Math::make_array ( HN , std::make_index_sequence<N_HARMONIC+1> () ) } ;
   // ===========================================================================
 }
 // =============================================================================
@@ -7972,13 +8077,59 @@ namespace
 double Ostap::Math::harmonic 
 ( const unsigned short N ) 
 {
-  if ( N <= N_HARMONIC ) { return s_Harmonic [ N ] ; } ;
-  long double result = s_Harmonic.back() ;
-  for ( unsigned int k = N_HARMONIC + 1 ; k <= N ; ++k )
-  { result += 1.0L / k ; }
-  return result ; 
+  /// precomputed values 
+  if      ( N <=       N_HARMONIC ) { return s_HARMONIC [ N ] ; }
+  /// explicit sum 
+  else if ( N <= 100 + N_HARMONIC )
+  {
+    /// the last precomputed harmonic number:
+    long double result   = s_HARMONIC.back () ;
+    for ( unsigned int k = N_HARMONIC + 1 ; k <= N ; ++k ) { result += 1.0L / k ; }
+    return result ;
+  }
+  /// generic result
+  return s_GammaE + psi ( 1.0 + N ) ;
 }
-
+// ============================================================================
+/* Harmonic number (generalized) 
+ *  \f$ H(x) = \gamma + \psi ( 1 + x ) \f$ 
+ */
+// ============================================================================
+double Ostap::Math::harmonic ( const double x  )
+{ return s_GammaE + psi ( 1.0 + x ) ; }
+// ============================================================================
+/*  compute psi function 
+ *  \$f f(x) = \frac{d}{dx}\ln \Gamma(x)\f$
+ *  @return the value of psi function 
+ */
+// ============================================================================
+double Ostap::Math::psi ( const double x ) 
+{
+  //
+  /// use precomputed harmonic numbers 
+  if ( 0.999 < x && x < N_HARMONIC + 0.001 && isushort ( x ) )
+  {
+    const unsigned short N = round ( x ) ;
+    if ( 1 <= N )
+    {
+      const unsigned short NN = N - 1 ;
+      return harmonic ( NN ) - s_GammaE ;
+    } 
+  }
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_psi_e ( x , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_psi_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
+  return result.val ;
+}
 
 
 // ============================================================================
