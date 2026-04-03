@@ -511,7 +511,91 @@ namespace Ostap
     const std::vector<double>&
     eulerian
     ( const unsigned short n ) ;    
-    // ========================================================================    
+    // ========================================================================   
+    /** @struct Stieltjes_
+     * Stiltjes's constants
+    *  @see https://en.wikipedia.org/wiki/Stieltjes_constants
+     */
+    template  <unsigned short N>
+    struct Stieltjes_ ;
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<0>
+    {
+	     inline static constexpr long double value {
+        +0.5772156649015328606065120900824024310421593359L } ; 
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<1>
+    {
+	     inline static constexpr long double value {
+       -0.0728158454836767248605863758749013191377363383L } ;
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<2>
+    {
+	     inline static constexpr long double value {
+        -0.0096903631928723184845303860352125293590658061L } ;
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<3>
+    {
+	     inline static constexpr long double value {
+        +0.0020538344203033458661600465427533842857158044L } ; 
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<4>
+    {
+	     inline static constexpr long double value {
+        +0.0023253700654673000574681701775260680009044694L } ; 
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<5>
+    {
+	     inline static constexpr long double value {
+        +0.0007933238173010627017533348774444448307315394L } ;
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<6>
+    {
+	     inline static constexpr long double value {
+        -0.0002387693454301996098724218419080042777837151L } ; 
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<7>
+    {
+	     inline static constexpr long double value {
+        -0.0005272895670577510460740975054788582819962534L } ; 
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<8>
+    {
+	     inline static constexpr long double value {
+        -0.0003521233538030395096020521650012087417291805L} ; 
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<9>
+    {
+	     inline static constexpr long double value {
+        -0.0000343947744180880481779146237982273906207895L } ;
+    }; 
+    // ========================================================================
+    template  <>
+    struct Stieltjes_<10>
+    {
+	     inline static constexpr long double value {
+        +0.0002053328149090647946837222892370653029598537L } ;
+    }; 
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

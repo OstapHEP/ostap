@@ -1809,9 +1809,9 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    /** Dirichet's beta funnction
+    /** Dirichlet's beta funnction
      *  \f[ \beta ( s ) 
-     *   \equiv \sum_{n=0}^{+\innfty}\frac{(-1)^n}{(2n+1)^s} \]
+     *   \equiv \sum_{n=0}^{+\infty}\frac{(-1)^n}{(2n+1)^s} \]
      *    \f[ \beta ( s ) = \frac{1}{\Gamma(s)}
      * \int_0^{+\infty}\frac{x^{s-1}\mathrm{e}^{-x}}{1+\mathrm{e}^{-2x}}dx \f]
      *   \f[ \beta ( s ) = 4^{-1}\left( \zeta ( z , \frac{1}{4} - \zeta ( s , frac{3}{4} ) \right) \f] 
@@ -1820,7 +1820,7 @@ namespace Ostap
     double dirichlet_beta
     ( const int x ) ;
     // ========================================================================
-    /** Dirichet's beta funnction
+    /** Dirichlet's beta funnction
      *  \f[ \beta ( s ) 
      *   \equiv \sum_{n=0}^{+\innfty}\frac{(-1)^n}{(2n+1)^s} \]
      *    \f[ \beta ( s ) = \frac{1}{\Gamma(s)}
@@ -2895,6 +2895,14 @@ namespace Ostap
      */
     double harmonic ( const double       x  ) ;
     // ========================================================================
+    /** generalized harmonic numbed \f$ H_{n,m} = \sum_k^n \frac{1}{k^m}\f$
+     *  https://en.wikipedia.org/wiki/Harmonic_number
+     */
+    double harmonic 
+    ( const unsigned short n , 
+      const unsigned short m ) ;
+    // =========================================================================
+
 
     // ========================================================================
     // Sigmoid/kind functions 

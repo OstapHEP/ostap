@@ -8096,7 +8096,14 @@ double Ostap::Math::harmonic
  */
 // ============================================================================
 double Ostap::Math::harmonic ( const double x  )
-{ return s_GammaE + psi ( 1.0 + x ) ; }
+{ 
+  if ( -0.001 < x && isushort ( x ) && x < N_HARMONIC + 0.001 )
+  {
+    const unsigned short N = round ( x ) ;
+    if  (  N <= N_HARMONIC ) { return harmonic ( N ) ; }
+  }
+  return s_GammaE + psi ( 1.0 + x ) ; 
+}
 // ============================================================================
 /*  compute psi function 
  *  \$f f(x) = \frac{d}{dx}\ln \Gamma(x)\f$
@@ -8130,7 +8137,66 @@ double Ostap::Math::psi ( const double x )
   //
   return result.val ;
 }
+// ============================================================================
 
+
+// ============================================================================
+namespace 
+{
+  //  Generalized harmonic numbers 
+  long double _harmonic_ 
+  ( const unsigned short n , 
+    const unsigned short m ) 
+  {
+    // 
+    if      ( 0 == n ) { return                         0   ; }
+    else if ( 0 == m ) { return                         n   ; }
+    else if ( 1 == m ) { return Ostap::Math::harmonic ( n ) ; }
+    //
+    typedef std::pair<unsigned short,unsigned short> KEY   ;
+    typedef std::map<KEY,long double>                MAP   ;
+    typedef SyncedCache<MAP>                         CACHE ;
+    /// the cache
+    static CACHE             s_CACHE {} ; // the cache
+    //
+    static const std::size_t s_MAX_CACHE { 10000 } ; 
+    //
+    const KEY key { n , m } ; 
+    //
+    // (1) check a value already calculated 
+    { 
+     CACHE::Lock lock { s_CACHE.mutex () } ;
+     auto it = s_CACHE->find ( key ) ;
+     if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+    }
+    //
+    // (2) make the real calculation
+    const unsigned short m1 = m - 1 ;
+    long double result      =     0 ;
+    for ( unsigned short k = 1 ; k < n; ++k )
+    { result += _harmonic_ ( k , m1  ) / ( k * 1.0L * ( k + 1 ) ) ; }
+    result += _harmonic_ ( n , m1 ) / ( 1.0L * n ) ;
+    //
+    // add calculated value into the cache 
+    { 
+      CACHE::Lock lock { s_CACHE.mutex () } ;
+      if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+      s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+    }
+    //
+    return result ; 
+  }
+}
+// ============================================================================
+/* generalized harmonic number \f$ H_{n,m} = \sum_k^n \frac{1}{k^m}\f$
+ *  https://en.wikipedia.org/wiki/Harmonic_number
+ */
+ // ===========================================================================
+double Ostap::Math::harmonic 
+( const unsigned short n , 
+  const unsigned short m ) 
+{ return _harmonic_ ( n , m ) ; }
+  
 
 // ============================================================================
 //                                                                      The END 
