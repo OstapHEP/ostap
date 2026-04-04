@@ -124,6 +124,7 @@
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Plot.h"
 #include "Ostap/Polarization.h"
+#include "Ostap/PolyLog.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Positive.h"
 #include "Ostap/Power.h"

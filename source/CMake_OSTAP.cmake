@@ -79,11 +79,11 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-            		 src/Names.cpp 
+            		     src/Names.cpp 
                          src/NStatEntity.cpp
                          src/Notifier.cpp			 
                          src/Ostap.cpp
-			 src/Quantile.cpp
+			             src/Quantile.cpp
                          src/Parameter.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
@@ -97,13 +97,14 @@ add_library(ostap SHARED src/format.cpp
                          src/Piecewise.cpp
                          src/Plot.cpp
                          src/Point3DWithError.cpp
-                         src/Polynomials.cpp   
+                         src/Polynomials.cpp
+                         src/PolyLog.cpp   
                          src/Polarization.cpp
                          src/Positive.cpp
                          src/Primitives.cpp
                          src/Printable.cpp
                          src/ProgressBar.cpp
-			 src/Project.cpp
+			             src/Project.cpp
                          src/PyBLOB.cpp
                          src/PyCallable.cpp 
                          src/PyFuncs.cpp 
