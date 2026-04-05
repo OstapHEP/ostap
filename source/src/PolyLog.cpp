@@ -92,13 +92,13 @@ double Ostap::Math::Li
   else if  ( s_equal ( x , -1 ) ) { return -eta ( n ) ; }
   //
   
-  ///
-  if      ( 0  == n ) { return x /        ( 1.0L - x )              ; } // Eq.(6.2)
-  else if ( 1  == n ) { return - std::log ( 1.0L - std::abs ( x ) ) ; } // Eq (6.1)
-  /// dilogarithm
+  // explicit case:
+  if      ( 1  == n ) { return - std::log ( 1.0L - std::abs ( x ) )         ; } // Eq (6.1)
+   /// dilogarithm
   else if ( 2  == n )
   {
-    static const short two = 2u ;
+
+    static const short two = 2 ;
     
     // helper constant 
     static const long double s_c { s_pi2 / 6.0L } ;
@@ -151,11 +151,13 @@ double Ostap::Math::Li
     std::cerr << "dilog case " << x << std::endl ;
   }
   //
-  
-  if       ( -1 == n  ) { return x                / std::pow ( 1.0L - x , 2 ) ; } // Eq.(6.2)
-  else if  ( -2 == n  ) { return x * ( x + 1.0L ) / std::pow ( 1.0L - x , 3 ) ; } // Eq.(6.2)
+  // RATIONAL CASES 
+  //  
+  if      (  0  == n ) { return x                /          ( 1.0L - x )     ; } // Eq.(6.2)
+  else if ( -1 == n  ) { return x                / std::pow ( 1.0L - x , 2 ) ; } // Eq.(6.2)
+  else if ( -2 == n  ) { return x * ( x + 1.0L ) / std::pow ( 1.0L - x , 3 ) ; } // Eq.(6.2)
   // Rational case 
-  else if  ( N_EULERIAN_MAX <= -n && n < 0 )
+  else if  (  0 >  n && N_EULERIAN_MAX >= std::abs ( n ) ) 
   {
     const unsigned short NN = -n ;
     Eulerian eu { NN } ;
@@ -163,26 +165,69 @@ double Ostap::Math::Li
   }
   //
 
-  //
-  const long double w = std::log ( 1.0L * std::abs ( x ) ) 
+  const long double w = std::log ( 1.0L * std::abs ( x ) ) ;
 
-  // use Eq. (9.2)
-  if ( 0 > x && std::abs ( w ) < s_pi_2 )
+  // for small z use power series 
+  
+  const long double absw1pi = std::abs ( w * s_1_pi ) ; 
+  const long double absw2pi = 0.5L* absw1pi           ;  
+  const long double absx    = std::abs ( x          ) ;
+
+  //  use simple power series 
+  const bool xsmall_1 = ( 0 > x ) && ( absx <= absw1pi ) ; // for 
+  const bool xsmall_2 = ( 0 < x ) && ( absx <= absw2pi ) ; // for Eq (9.3) & Eq.(9.5) 
+
+  /// (A) simple power serie  
+  if ( std::abs ( x ) < 0.25 || xsmall_1 || xsmall_2 )
   {
-    const long double w1p    = w * s_1_pi ; 
-    long double       result = eta ( n )  ;
+    long double    result      =       1 ; // NB: no x here 
+    long double    term        =       1 ; // NB: no x here 
+    unsigned short nSmall      =       0 ;
+    const bool     alternating = ( x < 0 ) ;
+    for ( unsigned short k = 2 ; k < std::abs ( n ) + 50 ; ++ k )
+    {
+      term *= x ;
+      const long double kterm = 0 <= n ? std::pow ( 1.0L/k , n ) : std::pow ( 1.0L * k , std::abs ( n ) ) ;
+      const long double delta = term * kterm ;
+      //
+      if ( !delta || s_zero ( 2 * delta ) || s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
+      else                                                                             {   nSmall = 0 ; }
+      //
+      result += delta ;
+      //
+      // Alternating series ?
+      // - one "small" term is enough,
+      // - otherwise requre several  consequitive small terms are requred 
+      if ( ( alternating && nSmall ) || ( 2 <= nSmall ) ) 
+      {
+	      std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      return x * result ; // NB: x here 
+      }
+    }
+    std::cerr << "slow convergency" << x << std::endl ;
+    return x * result ; // NB: x here
+  }
+  
+  //  (B)  Use Eq 9.2 
+  if  ( ( 0 > x ) && ( absw1pi <= 0.5 ) ) 
+  {
+    long double       result = eta ( n ) ;
     long double       term   = 1 ;
     unsigned short nSmall = 0 ;  
-    for ( insigned int k = 1  ; k < 100 ; ++k )
+    for ( unsigned int k = 1  ; k < std::abs ( n ) + 100 ; ++k )
     {
-      term /=  ( w1p / k  ) ;
-      const long double delta = term * eta ( n - k ) ; 
-      if ( !delta || s_zero ( delta ) ||  s_equal ( result + delta , result ) ) { ++nSmall     ; }
-      else                                                                    ) {   nSmall = 0 ; }
+      term /=  ( w / k  ) ;
+      const int         nmk   = 1 * n - k ;
+      const long double eta_v = eta ( nmk ) ;
+      if ( !eta_v )  { continue ; } 
+      const long double delta = term * eta_v ;
+      // 
+      if ( !delta || s_zero ( 2 * delta ) ||  s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
+      else                                                                              {   nSmall = 0 ; }
       //
       result += delta ; 
       // 
-      if ( 4 <= nSmall ) 
+      if ( 2 <= nSmall ) 
       {
 	      std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
 	      return result ; // NB: x here 
@@ -190,85 +235,68 @@ double Ostap::Math::Li
     return result ;   
     }
   }
-  if ( 0 < x && n < 0 && atd::abs ( w / s_2pi ) < 0.512 i )
-  {
-  
-  }
-
-  // Simple serie for small argument Eq. (8.1)
   // 
-  if ( 2 <= n && std::abs ( s_2pi * x ) <=  w ) 
+  //  (c) use Eq ( 9.5 )  
+  if ( 0 < x && 2 <= n && absw2pi < 0.512 )
+  {
+    long double result  = zeta ( n ) ;
+    long double term    = 1 ;
+    unsigned int nSmall = 0 ;
+    for ( unsigned int k = 1 ; k < n + 100 ; ++k ) 
     {
-    long double    result      = 1 ; // NB: no x here 
-    long double    term        = 1 ; // NB: no x here 
-    unsigned short nSmall      = 0 ;
-    const bool     alternating = x < 0 ;
-    for ( unsigned short k = 2 ; k < 50 ; ++ k )
-    {
-      term *= x ;
-      const long double delta = term * std::pow ( 1.0L / k , n ) ;
+      term /= ( w / k ) ; 
+      if ( 1 * n  == k + 1 ) { continue ; } // skip singularity 
+      const int         nmk    = 1 * n - k    ;
+      const long double zeta_v = zeta ( nmk ) ;
+      if ( !zeta_v )  { continue ; }
+      const long double delta = term * zeta_v ;
       //
-      if ( !delta || s_zero ( delta ) || s_equal ( result + delta , result ) ) { ++nSmall     ; }
-      else                                                                     {   nSmall = 0 ; }
+      if ( !delta || s_zero ( 2 * delta ) ||  s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
+      else                                                                              {   nSmall = 0 ; }
       //
-      result += delta ;
-      //
-      // Alternating series ?
-      // - one "small" term is enough,
-      // - otherwise requre several  consequitive small terms are requred 
-      if ( ( 2 <= nSmall && alternating ) || ( 4 <= nSmall ) ) 
+      result += delta ; 
+      // 
+      if ( 2 <= nSmall ) 
       {
-	std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	return x * result ; // NB: x here 
+	      std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ;  
       }
     }
-
-    std::cerr << "slow convergency" << x << std::endl ;
-    return x * result ; // NB: x here
+    //
+    const unsigned short nm1 = n - 1 ; 
+    result += ( harmonic ( nm1 ) - std::log ( std::abs ( w ) ) ) *  std::pow ( w , n - 1 ) * igamma ( nm1 ) ;
+    return result ;   
   }
-  // 
-  
-  //
-  // Eq (10.3) 
-  if ( 0 > n && 1 < std::abs ( x ) )
-  { return ( ( n + 1 ) % 2 ? 1 : -1 ) * Li ( n , 1.0 /x ) ; }
-  //
 
-  // Eq (9.5) 
-  if ( 0 < n && 0 < x ) 
+
+  /// negative argument?
+  if ( x <= -0.25 )
   {
-    const double w = std::log ( x ) ;
-    /// actual convergency for abs(w)<2*pi
-    /// Eq (9.7) 
-    if ( std::abs ( w ) < 1.5 * s_pi )
-    {
-      long double result = zeta ( n ) ;
-      long double term   = 1 ;
-      for ( unsigned short k = 1 ; k + 2 <= n  ; ++k )
-      {
-	term *= ( w / k ) ;
-	result += term ;
-      }
-      //
-      term   *= w / ( n - 1 ) ;
-      const unsigned short n1 = n -1 ;
-      result +=  ( harmonic ( n1 ) - std::log ( std::abs ( w ) ) ) * term ;
-      term   *= w /   n       ;      
-      result -= 0.5 * term ;  
-      //
-      const long double   wpi = w / s_2pi ;
-      long double result2 = zeta ( 2 ) * igamma ( n ) ;
-      long double term2   = 1 ;      
-      for ( unsigned short j   = 1 ; j < 1000 ; ++j )
-      {
-	/// NOTE YEt
-      }      
-    }
+    // Use square formula to convert to positive arguments
+    return std::pow ( 2 , 1 - n ) * Li ( n , x * x ) - Li ( n , -x ) ;
   }
+
+
+  // Eq. (10.3)
+  if      ( 0 > n && 1 < std::abs ( x ) )
+  { return ( ( n + 1 ) % 2 ? 1 : -1 ) * Li ( n , 1.0 / x ) ; }
+  // Eq. (10.1)
+  else if ( 0 < n && 1 <  x  ) 
+  {
+    long double       rr = zeta ( 0 ) ;
+    long double       tt = 1 ; 
+    const long double w2 = w * w ;
+    for ( unsigned short k = 1 ; 2 * k <= n ; ++k )
+    {
+      tt *= ( n + 2 - 2 * k ) * ( n + 1 - 2 * k ) / w2 ;
+      rr = tt * zeta ( 2 * k ) ; 
+    }
+    const double f1 = std::pow ( w , n - 1 ) * igamma ( n - 2 ) ;
+
+  }    
   
-  
-  
-  
+
+
   Ostap::Assert ( false ,
 		  "Not yet implemented!" ,
 		  "Ostap::Math::Li"      ,
