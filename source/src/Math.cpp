@@ -5,6 +5,7 @@
 // STD& STL
 // ============================================================================
 #include <cstdlib>
+#include <cstdint>
 #include <cmath>
 #include <cfenv>
 #include <limits>
@@ -231,6 +232,132 @@ bool Ostap::Math::isulonglong ( const double x )
     x >= s_MAX_ULL ? false :
     lomont_compare_double ( x , std::llround ( x_ ) , mULPS_double ) ;
 }
+// ============================================================================
+/* is floaing value actually std::int8_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isint8 ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<std::int8_t>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<std::int8_t>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually std::uint8_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isuint8 ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<std::uint8_t>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<std::uint8_t>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually std::int16_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isint16 ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<std::int16_t>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<std::int16_t>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually std::uint16_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isuint16 ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<std::uint16_t>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<std::uint16_t>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually std::int32_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isint32 ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<std::int32_t>::lowest () ? false :
+    x - 0.1    >  std::numeric_limits<std::int32_t>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually std::uint32_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isuint32 ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<std::uint32_t>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<std::uint32_t>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually std::int64_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isint64 ( const double x ) 
+{
+  static const long double l_min { -1.0L*std::numeric_limits<std::int64_t>::lowest () } ; 
+  static const long double l_max { +1.0L*std::numeric_limits<std::int64_t>::max    () } ; 
+  return 
+    x + 0.1L < l_min ? false :
+    x - 0.1L > l_max ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually std::uint64_t ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isuint64 ( const double x ) 
+{
+  static const long double l_min { -1.0L*std::numeric_limits<std::uint64_t>::lowest () } ; 
+  static const long double l_max { +1.0L*std::numeric_limits<std::uint64_t>::max    () } ; 
+  return 
+    x + 0.L < l_min ? false :
+    x - 0.1L > l_max ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually char ?
+ */
+ // ===========================================================================
+bool Ostap::Math::ischar ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<char>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<char>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/* is floaing value actually signed char ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isschar ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<signed char>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<signed char>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================s
+/* is floaing value actually unsigned char ?
+ */
+ // ===========================================================================
+bool Ostap::Math::isuchar ( const double x ) 
+{
+  return 
+    x + 0.1 < -std::numeric_limits<unsigned char>::lowest () ? false :
+    x - 0.1 >  std::numeric_limits<unsigned char>::max    () ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+
 // ============================================================================
 /* check if the double value is actually equal to the integer value  
  *  @param val value to be compared with the integer 

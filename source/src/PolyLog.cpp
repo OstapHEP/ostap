@@ -73,6 +73,12 @@ double Ostap::Math::ImLi
 }
 #include <iostream> 
 // ============================================================================
+namespace
+{
+
+  // ==========================================================================
+}
+// ============================================================================
 /* polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
  *  @see https://en.wikipedia.org/wiki/Polylogarithm
  *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
@@ -153,11 +159,11 @@ double Ostap::Math::Li
   //
   // RATIONAL CASES 
   //  
-  if      (  0  == n ) { return x                /          ( 1.0L - x )     ; } // Eq.(6.2)
-  else if ( -1 == n  ) { return x                / std::pow ( 1.0L - x , 2 ) ; } // Eq.(6.2)
-  else if ( -2 == n  ) { return x * ( x + 1.0L ) / std::pow ( 1.0L - x , 3 ) ; } // Eq.(6.2)
+  if      (  0 == n ) { return x                /          ( 1.0L - x )     ; } // Eq.(6.2)
+  else if ( -1 == n ) { return x                / std::pow ( 1.0L - x , 2 ) ; } // Eq.(6.2)
+  else if ( -2 == n ) { return x * ( x + 1.0L ) / std::pow ( 1.0L - x , 3 ) ; } // Eq.(6.2)
   // Rational case 
-  else if  (  0 >  n && N_EULERIAN_MAX >= std::abs ( n ) ) 
+  else if  ( -1 * N_EULERIAN_MAX <= n && n < 0 ) 
   {
     const unsigned short NN = -n ;
     Eulerian eu { NN } ;
@@ -184,7 +190,7 @@ double Ostap::Math::Li
     long double    term        =       1 ; // NB: no x here 
     unsigned short nSmall      =       0 ;
     const bool     alternating = ( x < 0 ) ;
-    for ( unsigned short k = 2 ; k < std::abs ( n ) + 50 ; ++ k )
+    for ( unsigned int k = 2 ; k < std::abs ( n ) + 50u ; ++ k )
     {
       term *= x ;
       const long double kterm = 0 <= n ? std::pow ( 1.0L/k , n ) : std::pow ( 1.0L * k , std::abs ( n ) ) ;
@@ -200,11 +206,11 @@ double Ostap::Math::Li
       // - otherwise requre several  consequitive small terms are requred 
       if ( ( alternating && nSmall ) || ( 2 <= nSmall ) ) 
       {
-	      std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	      return x * result ; // NB: x here 
+	      std::cerr << "POWER # terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ;
       }
     }
-    std::cerr << "slow convergency" << x << std::endl ;
+    std::cerr << "POWER x=" << x << std::endl ;
     return x * result ; // NB: x here
   }
   
@@ -229,11 +235,11 @@ double Ostap::Math::Li
       // 
       if ( 2 <= nSmall ) 
       {
-	      std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	      return result ; // NB: x here 
+	      std::cerr << "# EQ(9.1) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ; // NB: x here 
       }
-    return result ;   
     }
+    return result ;   
   }
   // 
   //  (c) use Eq ( 9.5 )  
@@ -258,7 +264,7 @@ double Ostap::Math::Li
       // 
       if ( 2 <= nSmall ) 
       {
-	      std::cerr << "# terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
 	      break ;  
       }
     }
@@ -267,7 +273,6 @@ double Ostap::Math::Li
     result += ( harmonic ( nm1 ) - std::log ( std::abs ( w ) ) ) *  std::pow ( w , n - 1 ) * igamma ( nm1 ) ;
     return result ;   
   }
-
 
   /// negative argument?
   if ( x <= -0.25 )

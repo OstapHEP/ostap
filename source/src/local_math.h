@@ -80,16 +80,76 @@ namespace
   // ==========================================================================
   
   // ==========================================================================
-  static_assert ( std::numeric_limits<std::int8_t>  ::is_specialized        ,
-                  "std::numeric_limits<std::int8_t> is not specialized"     ) ;
+  static_assert ( std::numeric_limits<std::int8_t>  ::is_specialized  && 
+                  std::numeric_limits<std::int8_t>  ::is_integer      &&   
+                  std::numeric_limits<std::int8_t>  ::is_signed       ,
+                  "std::numeric_limits<std::int8_t> is not OK"        ) ;
   // ==========================================================================
-  static_assert ( std::numeric_limits<std::int8_t>  ::is_signed             ,
-                  "std::numeric_limits<std::int8_t> is not signed"          ) ;
+  static_assert ( std::numeric_limits<std::int16_t>  ::is_specialized  && 
+                  std::numeric_limits<std::int16_t>  ::is_integer      &&   
+                  std::numeric_limits<std::int16_t>  ::is_signed       ,
+                  "std::numeric_limits<std::int16_t> is not OK"        ) ;
   // ==========================================================================
-  static_assert ( std::numeric_limits<std::int8_t>  ::is_integer            ,
-                  "std::numeric_limits<std::int8_t> is not integer"         ) ;  
+  static_assert ( std::numeric_limits<std::int32_t>  ::is_specialized  && 
+                  std::numeric_limits<std::int32_t>  ::is_integer      &&   
+                  std::numeric_limits<std::int32_t>  ::is_signed       ,
+                  "std::numeric_limits<std::int32_t> is not OK"        ) ;
   // ==========================================================================
-  
+  static_assert ( std::numeric_limits<std::int64_t>  ::is_specialized  && 
+                  std::numeric_limits<std::int64_t>  ::is_integer      &&   
+                  std::numeric_limits<std::int64_t>  ::is_signed       ,
+                  "std::numeric_limits<std::int64_t> is not OK"        ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::intmax_t>  ::is_specialized  && 
+                  std::numeric_limits<std::intmax_t>  ::is_integer      &&   
+                  std::numeric_limits<std::intmax_t>  ::is_signed       ,
+                  "std::numeric_limits<std::intmax_t> is not OK"        ) ;
+  // ==========================================================================
+
+ // ==========================================================================
+  static_assert ( std::numeric_limits<std::uint8_t>  ::is_specialized  && 
+                  std::numeric_limits<std::uint8_t>  ::is_integer      &&   
+                  !std::numeric_limits<std::uint8_t> ::is_signed       ,
+                  "std::numeric_limits<std::uint8_t> is not OK"        ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::uint16_t>  ::is_specialized  && 
+                  std::numeric_limits<std::uint16_t>  ::is_integer      &&   
+                  !std::numeric_limits<std::uint16_t> ::is_signed       ,
+                  "std::numeric_limits<std::uint16_t> is not OK"        ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::uint32_t>  ::is_specialized  && 
+                  std::numeric_limits<std::uint32_t>  ::is_integer      &&   
+                  !std::numeric_limits<std::uint32_t> ::is_signed       ,
+                  "std::numeric_limits<std::uint32_t> is not OK"        ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::uint64_t>  ::is_specialized  && 
+                  std::numeric_limits<std::uint64_t>  ::is_integer      &&   
+                  !std::numeric_limits<std::uint64_t> ::is_signed       ,
+                  "std::numeric_limits<std::uint64_t> is not OK"        ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::uintmax_t>  ::is_specialized  && 
+                  std::numeric_limits<std::uintmax_t>  ::is_integer      &&   
+                  !std::numeric_limits<std::uintmax_t> ::is_signed       ,
+                  "std::numeric_limits<std::uintmax_t> is not OK"        ) ;
+  // ==========================================================================
+
+  // ==========================================================================
+  static_assert ( std::numeric_limits<char>  ::is_specialized  && 
+                  std::numeric_limits<char>  ::is_integer      &&   
+                  "std::numeric_limits<char> is not OK"        ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<signed char>  ::is_specialized  && 
+                  std::numeric_limits<signed char>  ::is_integer      &&   
+                  std::numeric_limits<signed char>  ::is_signed       ,
+                  "std::numeric_limits<signed char> is not OK"        ) ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned char>  ::is_specialized  && 
+                  std::numeric_limits<unsigned char>  ::is_integer      &&   
+                  !std::numeric_limits<unsigned char> ::is_signed       ,
+                  "std::numeric_limits<unsigned char> is not OK"        ) ;
+  // ==========================================================================
+ 
+ 
   // ==========================================================================
   /// equality criteria for doubles
   const Ostap::Math::Equal_To<double>                s_equal  {} ; // equality criteria for doubles

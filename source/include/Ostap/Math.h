@@ -829,7 +829,7 @@ namespace Ostap
      */
     long round ( const long double x ) ; 
     // ========================================================================
-    /** round to nearest integer, roundinng half a way from zero 
+    /** round to nearest integer, rounding half a way from zero 
      *  @author Vanya BELYAEV Ivan.Belyaev
      */
     inline long round ( const float  x ) { return round ( double ( x ) ) ; }
@@ -1039,6 +1039,52 @@ namespace Ostap
     /** is the value actually nusigned  long long?
      */
     bool isulonglong ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::int8_t ?
+     */
+    bool isint8 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::int16_t ?
+     */
+    bool isint16 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::int32_t ?
+     */
+    bool isint32 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::int64_t ?
+     */
+    bool isint64 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::uint8_t ?
+     */
+    bool isuint8 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::uint16_t ?
+     */
+    bool isuint16 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::uint32_t ?
+     */
+    bool isuint32 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually std::uint64_t ?
+     */
+    bool isuint64 ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually char  ?
+     */
+    bool ischar ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually signed char  ?
+     */
+    bool isschar ( const double x ) ;
+    // ========================================================================
+    /** is floaing value actually unsigned char  ?
+     */
+    bool isuchar ( const double x ) ;
+    // ========================================================================
+
     // ========================================================================    
     /** check if the double value is actually equal to the integer value  
      *  @param val value to be compared with the integer 
