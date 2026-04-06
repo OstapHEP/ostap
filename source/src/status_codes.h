@@ -33,7 +33,7 @@ namespace
     INVALID_YAXIS              = 726 ,
     INVALID_ZAXIS              = 727 ,
     INVALID_BUFFER             = 728 ,
-    MISMATCH_TREE              = 728  , 
+    MISMATCH_TREE              = 729  , 
     //
     INVALID_ABSDATA            = 730 ,
     INVALID_ARGSET             = 731 ,
@@ -43,6 +43,7 @@ namespace
     INVALID_OBSERVABLE         = 735 , 
     INVALID_OBSERVABLES        = 736 ,
     INVALID_ABSPDF             = 737 ,
+    INVALID_ARGUMENT           = 738 ,
     //
     INVALID_PDF                = 740 ,
     INVALID_FITRESULT          = 741 ,

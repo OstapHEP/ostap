@@ -19,166 +19,90 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
+    /** @var N_BERNULLI_MAX
+     * number  of exact Bernully numbers
+     */
+    constexpr unsigned short N_BERNULLI_MAX = 40 ;
+    // ========================================================================
     /// Bernulli's numbers 
     template <unsigned short N>
     struct Bernulli_ ;    
     // ========================================================================
     template <>
     struct Bernulli_<0>
-    {
-      static constexpr std::ratio<+1,1>        ratio {}  ; 
-      static constexpr const long double       value { 1     } ;
-    } ;       
+    { static constexpr std::ratio<+1,1>        ratio {}  ;  } ;       
     // ========================================================================
     template <>
     struct Bernulli_<1>
-    {
-      static constexpr std::ratio<-1,2>        ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-1,2>        ratio {}  ; } ;
     //  
     template <>
     struct Bernulli_<2>
-    {
-      static constexpr std::ratio<+1,6>        ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+1,6>        ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<4>
-    {
-      static constexpr std::ratio<-1,30>       ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-1,30>       ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<6>
-    {
-      static constexpr std::ratio<+1,42>       ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+1,42>       ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<8>
-    {
-      static constexpr std::ratio<-1,30>       ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-1,30>       ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<10>
-    {
-      static constexpr std::ratio<+5,66>       ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+5,66>       ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<12>
-    {
-      static constexpr std::ratio<-691,2730>   ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-691,2730>   ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<14>
-    {
-      static constexpr std::ratio<+7,6>        ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+7,6>        ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<16>
-    {
-      static constexpr std::ratio<-3617,510>   ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-3617,510>   ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<18>
-    {
-      static constexpr std::ratio<+43867,798>  ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+43867,798>  ratio {}  ;  } ;
     //
     template <>
     struct Bernulli_<20>
-    {
-      static constexpr std::ratio<-174611,330> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-174611,330> ratio {}  ;  } ;
     //
     template <>
     struct Bernulli_<22>
-    {
-      static constexpr std::ratio<+854513,138> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+854513,138> ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<24>
-    {
-      static constexpr std::ratio<-236364091,2730> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-236364091,2730> ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<26>
-    {
-      static constexpr std::ratio<+8553103,6> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+8553103,6> ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<28>
-    {
-      static constexpr std::ratio<-23749461029,870> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-23749461029,870> ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<30>
-    {
-      static constexpr std::ratio<+8615841276005,14322> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<+8615841276005,14322> ratio {} ; } ;
     //
     template <>
     struct Bernulli_<32>
-    {
-      static constexpr std::ratio<-7709321041217,510> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
+    { static constexpr std::ratio<-7709321041217,510> ratio {}  ; } ;
     //
     template <>
     struct Bernulli_<34>
-    {
-      static constexpr std::ratio<+2577687858367,6> ratio {}  ; 
-      static constexpr const long double       value { ratio.num * 1.0L / ratio.den  } ;
-    } ;
-    //
-    template <>
-    struct Bernulli_<36>
-    {
-      static constexpr long double       num   { -26315271553.053477373e+9 } ;      
-      static constexpr long double       den   { +1919190                  } ;
-      static constexpr const long double value { num * 1.0L / den  } ;
-    } ;
-    //    
-    template <>
-    struct Bernulli_<38>
-    {
-      static constexpr long double       num   { +2929993.913841559e+9 } ; 
-      static constexpr long double       den   { +6                    } ; 
-      static constexpr const long double value { num * 1.0L / den      } ;
-    } ;
-    //
-    template <>
-    struct Bernulli_<40>
-    {
-      static constexpr long double       num   { -261082718496.449122051e+9 } ;
-      static constexpr long double       den   { +13530                     } ; 
-      static constexpr const long double value { num * 1.0L / den           } ;
-    } ;
+    { static constexpr std::ratio<+2577687858367,6> ratio {} ; } ;
     //
     template <unsigned short N>
     struct Bernulli_ : public std::enable_if<(3<=N)&&(1== N%2)>

@@ -75,8 +75,171 @@ double Ostap::Math::ImLi
 // ============================================================================
 namespace
 {
-
   // ==========================================================================
+  template <class TYPE1, 
+            class TYPE2, 
+            class ZERO , 
+            class EQUAL>
+  double Li_power  
+  ( const TYPE1       s         , 
+    const TYPE2       x         , 
+    const ZERO        cmp_zero  ,
+    const EQUAL       cmp_equal , 
+    const std::size_t NN  = 100 ) 
+  {
+    /// mandatory condition for convergency
+    Ostap::Assert ( std::abs ( x ) < 1  , 
+                    "Argument is not small enough to use the power series!" , 
+                    "::Li_power"  , 
+                    INVALID_ARGUMENT , __FILE__ , __LINE__ ) ;
+
+    TYPE2 result      =       1 ; // NB: no x here 
+    TYPE2 term        =       1 ; // NB: no x here 
+    unsigned short nSmall      =       0 ;
+    const bool     alternating = ( x < 0 ) ;
+    //
+    for ( std::size_t k = 2 ; NN ; ++ k )
+    {
+      term *= x ;
+      TYPE2 delta = term * std::pow ( 1.0L / k , s ) ;
+      //
+      if ( !delta || cmp_zero ( 2 * delta ) || cmp_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
+      else                                                                                 {   nSmall = 0 ; }
+      //
+      result += delta ;
+      //
+      // Alternating series ?
+      // - one "small" term is enough,
+      // - otherwise requre several  consequitive small terms are requred 
+      if ( ( alternating && nSmall ) || ( 2 <= nSmall ) ) 
+      {
+	      std::cerr << "POWER # terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ;
+      }
+    }
+    std::cerr << "POWER x=" << x << std::endl ;
+    return x * result ; // NB: x here
+  } 
+  // ==========================================================================
+  long double Li_power 
+  ( const short       n , 
+    const long double x )
+  {
+    const std::size_t NN  = 100 + std::max ( 0 , -2 * n ) ;
+    return Li_power ( n , 1.0L * x , s_zero , s_equal , NN ) ;
+  }
+  // ===========================================================================
+  inline long double Li_eq_9_2
+  ( const short       n , 
+    const long double x , 
+    const long double w ) 
+  {
+    Ostap::Assert ( x < 0 && std::abs( w / s_pi ) < 1 ,
+                  "Invalid ranage for x or w" , 
+                  "::Li_eq_9_2_"  , 
+                  INVALID_ARGUMENT , __FILE__ , __LINE__ );
+
+    long double    result = -1 * Ostap::Math::eta ( n ) ;
+    long double    term   =  1 ;
+    unsigned short nSmall =  0 ;  
+    for ( unsigned int k = 1  ; k < 1000 ; ++k )
+    {
+      term /=  ( w / k  ) ;
+      const int         nmk   = 1 * n - k ;
+      const long double eta_v = Ostap::Math::eta ( nmk ) ;
+      if ( !eta_v )  { continue ; } 
+      const long double delta = term * eta_v ;
+      // 
+      if ( !delta || s_zero ( 2 * delta ) ||  s_equal ( result - 2 * delta , result ) ) { ++nSmall     ; }
+      else                                                                              {   nSmall = 0 ; }
+      //
+      result -= delta ; 
+      // 
+      if ( 3 <= nSmall ) 
+      {
+	      std::cerr << "POWER-W (9.2) #terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ; // NB: x here 
+      }
+    }
+    std::cerr << "POWER-W (9.2) x=" << x << std::endl ;
+    return result ;   
+  }
+  // ===========================================================================
+  inline double Li_eq_9_3
+  ( const short       n , 
+    const long double x , 
+    const long double w ) 
+  {
+    Ostap::Assert ( ( n <= 0 ) && ( x > 0 ) && std::abs( w / s_2pi ) < 1 ,
+                  "Invalid ranage for n,x or w" , 
+                  "::Li_eq_9_3_"  , 
+                  INVALID_ARGUMENT , __FILE__ , __LINE__ );
+
+    long double    result = Ostap::Math::zeta ( n ) ;
+    long double    term   = 1 ;
+    unsigned short nSmall = 0 ;  
+    for ( unsigned int k = 1  ; k < 1000 ; ++k )
+    {
+      term /=  ( w / k  ) ;
+      const int         nmk   = 1 * n - k ;
+      const long double eta_v = Ostap::Math::zeta ( nmk ) ;
+      if ( !eta_v )  { continue ; } 
+      const long double delta = term * eta_v ;
+      // 
+      if ( !delta || s_zero ( 2 * delta ) ||  s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
+      else                                                                              {   nSmall = 0 ; }
+      //
+      result += delta ; 
+      // 
+      if ( 3 <= nSmall ) 
+      {
+	      std::cerr << "POWER-W (9.3) #terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ; // NB: x here 
+      }
+    }
+    std::cerr << "POWER-W (9.3) x=" << x << std::endl ;
+    return result + Ostap::Math::gamma ( 1.0 + std::abs ( n ) ) * std::pow ( -w , 1 * n - 1 ) ; 
+  }
+  // =========================================================================
+  inline double Li_eq_9_5
+  ( const short       n , 
+    const long double x , 
+    const long double w ) 
+  {
+    Ostap::Assert ( ( 1 <= n ) && ( x > 0 ) && std::abs( w / s_2pi ) < 1 ,
+                  "Invalid ranage for n,x or w" , 
+                  "::Li_eq_9_5_"  , 
+                  INVALID_ARGUMENT , __FILE__ , __LINE__ ) ;
+
+    long double result  = Ostap::Math::zeta ( n ) ;
+    long double term    = 1 ;
+    unsigned int nSmall = 0 ;
+    for ( unsigned int k = 1 ; k < n + 1000 ; ++k ) 
+    {
+      term /= ( w / k ) ; 
+      if ( 1 * n  == k + 1 ) { continue ; } // skip singularity 
+      const int         nmk    = 1 * n - k    ;
+      const long double zeta_v = Ostap::Math::zeta ( nmk ) ;
+      if ( !zeta_v )  { continue ; }
+      const long double delta = term * zeta_v ;
+      //
+      if ( !delta || s_zero ( 2 * delta ) ||  s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
+      else                                                                              {   nSmall = 0 ; }
+      //
+      result += delta ; 
+      // 
+      if ( 2 <= nSmall ) 
+      {
+	      std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ;  
+      }
+    }
+    //
+    const unsigned short nm1 = n - 1 ; 
+    // result += ( Ostap::Math::harmonic ( nm1 ) - std::log ( std::abs ( w ) ) ) * std::pow ( w , nm1 ) * Ostap::Math::igamma ( nm1 ) ;
+    return result ;   
+  }
+ //const long double sB99 =  -94598037819122125295227433069493721872702841533066936133385696204311395415197247711.0L/33330;
 }
 // ============================================================================
 /* polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
@@ -185,94 +348,28 @@ double Ostap::Math::Li
 
   /// (A) simple power serie  
   if ( std::abs ( x ) < 0.25 || xsmall_1 || xsmall_2 )
-  {
-    long double    result      =       1 ; // NB: no x here 
-    long double    term        =       1 ; // NB: no x here 
-    unsigned short nSmall      =       0 ;
-    const bool     alternating = ( x < 0 ) ;
-    for ( unsigned int k = 2 ; k < std::abs ( n ) + 50u ; ++ k )
-    {
-      term *= x ;
-      const long double kterm = 0 <= n ? std::pow ( 1.0L/k , n ) : std::pow ( 1.0L * k , std::abs ( n ) ) ;
-      const long double delta = term * kterm ;
-      //
-      if ( !delta || s_zero ( 2 * delta ) || s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
-      else                                                                             {   nSmall = 0 ; }
-      //
-      result += delta ;
-      //
-      // Alternating series ?
-      // - one "small" term is enough,
-      // - otherwise requre several  consequitive small terms are requred 
-      if ( ( alternating && nSmall ) || ( 2 <= nSmall ) ) 
-      {
-	      std::cerr << "POWER # terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	      break ;
-      }
-    }
-    std::cerr << "POWER x=" << x << std::endl ;
-    return x * result ; // NB: x here
-  }
+  { return Li_power  ( n , 1.0 * x ) ; }
+
+  // use Eq (9.2)
+  if ( ( x < 0 )  && ( absw1pi <= 0.5 ) )
+  { return Li_eq_9_2 ( n , 1.0L * x , 1.0L * w ) ; }
+
   
-  //  (B)  Use Eq 9.2 
-  if  ( ( 0 > x ) && ( absw1pi <= 0.5 ) ) 
-  {
-    long double       result = eta ( n ) ;
-    long double       term   = 1 ;
-    unsigned short nSmall = 0 ;  
-    for ( unsigned int k = 1  ; k < std::abs ( n ) + 100 ; ++k )
-    {
-      term /=  ( w / k  ) ;
-      const int         nmk   = 1 * n - k ;
-      const long double eta_v = eta ( nmk ) ;
-      if ( !eta_v )  { continue ; } 
-      const long double delta = term * eta_v ;
-      // 
-      if ( !delta || s_zero ( 2 * delta ) ||  s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
-      else                                                                              {   nSmall = 0 ; }
-      //
-      result += delta ; 
-      // 
-      if ( 2 <= nSmall ) 
-      {
-	      std::cerr << "# EQ(9.1) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	      break ; // NB: x here 
-      }
-    }
-    return result ;   
-  }
-  // 
+  // use Eq (9.3)
+  if ( ( n < 0 ) && ( x < 0 )  && ( absw2pi <= 0.512 ) )
+  { return Li_eq_9_3 ( n , 1.0L * x , 1.0L * w ) ; }
+
+
+  // use Eq (9.5)
+  if ( ( n > 0 ) && ( x < 0 )  && ( absw2pi <= 0.512 ) )
+  { return Li_eq_9_5 ( n , 1.0L * x , 1.0L * w ) ; }
+
+
+
   //  (c) use Eq ( 9.5 )  
   if ( 0 < x && 2 <= n && absw2pi < 0.512 )
   {
-    long double result  = zeta ( n ) ;
-    long double term    = 1 ;
-    unsigned int nSmall = 0 ;
-    for ( unsigned int k = 1 ; k < n + 100 ; ++k ) 
-    {
-      term /= ( w / k ) ; 
-      if ( 1 * n  == k + 1 ) { continue ; } // skip singularity 
-      const int         nmk    = 1 * n - k    ;
-      const long double zeta_v = zeta ( nmk ) ;
-      if ( !zeta_v )  { continue ; }
-      const long double delta = term * zeta_v ;
-      //
-      if ( !delta || s_zero ( 2 * delta ) ||  s_equal ( result + 2 * delta , result ) ) { ++nSmall     ; }
-      else                                                                              {   nSmall = 0 ; }
-      //
-      result += delta ; 
-      // 
-      if ( 2 <= nSmall ) 
-      {
-	      std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	      break ;  
-      }
-    }
-    //
-    const unsigned short nm1 = n - 1 ; 
-    result += ( harmonic ( nm1 ) - std::log ( std::abs ( w ) ) ) *  std::pow ( w , n - 1 ) * igamma ( nm1 ) ;
-    return result ;   
-  }
+  }   
 
   /// negative argument?
   if ( x <= -0.25 )
@@ -297,10 +394,8 @@ double Ostap::Math::Li
       rr = tt * zeta ( 2 * k ) ; 
     }
     const double f1 = std::pow ( w , n - 1 ) * igamma ( n - 2 ) ;
-
   }    
   
-
 
   Ostap::Assert ( false ,
 		  "Not yet implemented!" ,
@@ -312,8 +407,8 @@ double Ostap::Math::Li
   if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
 
   return std::numeric_limits<double>::quiet_NaN() ; 
-  
 }
+
 // ============================================================================
 /* polylogarithm function  \f$ Li_s(x)  = \sum \frac{x^k}{k^s} f\$
  *  @see https://en.wikipedia.org/wiki/Polylogarithm
@@ -325,19 +420,19 @@ double Ostap::Math::Li
  *  @see  Ostap::Math::ImLi
  */
 // ============================================================================
-double Ostap::Math::Li
-( const double s ,
-  const double x )
-{
-  if       ( !x || s_zero ( x ) ) { return 0             ; }
-  //  
-  Ostap::Assert ( false ,
-		  "Not yet implemented!" ,
-		  "Ostap::Math::Li"      ,
-		  NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
-  
-  return std::numeric_limits<double>::quiet_NaN() ;   
-}
+// double Ostap::Math::Li
+// ( const double s ,
+//   const double x )
+// {
+//   if       ( !x || s_zero ( x ) ) { return 0  ; }
+//  //  
+//  Ostap::Assert ( false ,
+//		  "Not yet implemented!" ,
+//		  "Ostap::Math::Li"      ,
+//		  NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
+//  
+//  return std::numeric_limits<double>::quiet_NaN() ;   
+// }
 
 // ===========================================================================
 //                                                                     The END 

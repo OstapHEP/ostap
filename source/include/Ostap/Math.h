@@ -338,10 +338,26 @@ namespace Ostap
       { return
           m_equal ( v1.real () , v2.real () ) && 
           m_equal ( v1.imag () , v2.imag () ) ; }
+      /// comparison:
+      template <class TYPE2>
+      inline bool operator() 
+      ( const std::complex<TYPE> & v1 ,
+        const std::complex<TYPE2>& v2 ) const
+      { return
+          m_equal ( v1.real () , v2.real () ) && 
+          m_equal ( v1.imag () , v2.imag () ) ; }
+      /// comparison:
+      template <class TYPE2>
+      inline bool operator() 
+      ( const std::complex<TYPE2>& v1 ,
+        const std::complex<TYPE> & v2 ) const
+      { return
+          m_equal ( v1.real () , v2.real () ) && 
+          m_equal ( v1.imag () , v2.imag () ) ; }
       // =======================================================================
     private: 
       // =======================================================================
-      /// comparison for real and imagibary parts 
+      /// comparison for real and imaginary parts 
       Equal_To<TYPE> m_equal ;
       // =======================================================================
     };
