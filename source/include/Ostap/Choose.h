@@ -480,9 +480,16 @@ namespace Ostap
     public: 
       // ======================================================================
       /// evaluate Eulerian polynomial 
-      inline double operator () ( const double x ) const {  return evaluate ( x ) ; } 
+      inline              double       operator () ( const              double   x ) const {  return evaluate ( x ) ; }
       /// evaluate Eulerian polynomial 
-      double evaluate   ( const double x ) const ;
+      inline std::complex<double>      operator () ( const std::complex<double>& z ) const {  return evaluate ( z ) ; }       
+      /// evaluate Eulerian polynomial 
+      double               evaluate   ( const              double   x ) const ;
+      /// evaluate Eulerian polynomial 
+      std::complex<double> evaluate   ( const std::complex<double>& z ) const ;
+      // ======================================================================
+    public: 
+      // ======================================================================            
       /// get the derivative 
       double derivative ( const double x ) const ;
       // ======================================================================

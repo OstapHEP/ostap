@@ -597,6 +597,33 @@ Ostap::Math::Eulerian::evaluate
   return Ostap::Math::Clenshaw::monomial_sum ( row.begin() , row.end() , x * 1.0L ).first ; 
 }
 // ============================================================================
+// evaluate the Eulerian polynomial 
+// ============================================================================
+std::complex<double>
+Ostap::Math::Eulerian::evaluate
+( const std::complex<double>& z ) const
+{ 
+  const double x = z.real () ;
+  const double y = z.imag () ;
+  if ( !y || s_zero ( y ) ) { return evaluate ( x ) ; } 
+  //
+  typedef std::complex<double> RR ;
+  const std::complex<long double> zz { z } ;
+  if      ( 2 > m_N             ) { return      1           ; }
+  else if ( 2 == m_N            ) { return RR ( 1.0L + zz ) ; }
+  //
+  const std::vector<double>& row = eulerian ( m_N ) ;
+  if ( 1 < std::abs ( zz ) )
+  {
+    const auto r1 = Ostap::Math::Clenshaw::monomial_sum ( row.begin() , row.end() , 1.0L / zz ).first ;
+    const auto r2 = std::pow ( zz , m_N - 1 ) ;
+    return RR ( r1 * r2 ) ;
+  }
+  //
+  const auto rr =  Ostap::Math::Clenshaw::monomial_sum ( row.begin() , row.end() , zz * 1.0L ).first ;
+  return RR ( rr ) ;
+}
+// ============================================================================
 // get the derivative
 // ============================================================================
 double
