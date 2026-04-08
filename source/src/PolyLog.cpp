@@ -11,6 +11,7 @@
 #include "Ostap/PolyLog.h"
 #include "Ostap/Choose.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Power.h"
 // ============================================================================
 // Local 
 // ============================================================================
@@ -98,6 +99,95 @@ namespace Ostap
 }
 namespace
 {
+  // ==========================================================================
+  // Borwain' formulae
+  // @see https://doi.org/https://doi.org/10.1016/j.jat.2014.10.004
+  // page 119, Eqs (11-14)
+  // ==========================================================================
+  constexpr inline long double borwain_f 
+  ( const unsigned int k , 
+    const unsigned int q )
+    {
+      if      ( !k && !q ) { return 1 ; }  // f(0,0) = 1 
+      else if ( !k       ) { return 0 ; }  // f(0,q) = 0 
+      else if ( !q       ) { return 1 ; }  // f(k,0) = 1 
+      // 
+      long double r = 0 ;
+      for ( unsigned int h = 0 ; h <= q ; ++h  )
+      { r += Ostap::Math::sign ( h ) * Ostap::Math::POW ( 1.0L / k , h ) * borwain_f ( k - 1 , q - h ) ; }
+      return r ; 
+    }
+  // ==========================================================================
+  template <typename  TYPE>
+  inline TYPE borwain_b 
+  ( const unsigned int k ,
+    const unsigned int j , 
+    const TYPE&        L )
+  {
+    TYPE result       = 0 ;
+
+    std::vector<TYPE>   LP ( j + 1 ) ; 
+    LP [ 0 ] = 1  ;
+
+    TYPE t1  = 1 ;
+    for ( unsigned int p = 1 ; p <= j ; ++p )
+    {
+      t1 *= ( L / p ) ; 
+      LP [ p ] = t1 ;
+    }
+
+    std::vector<double> GP ( j + 1 ) ;
+    GP [ 0 ] = Ostap::Math::dgamma_at_1 ( 0 ) ;
+    double t2 = 1 ;
+    for ( unsigned int t = 0 ; t <= j ; ++t )
+    {
+      t2 /= t ; 
+      GP [ t ] = Ostap::Math::dgamma_at_1 ( t ) * t2 * Ostap::Math::sign ( t );
+    }
+
+    for ( unsigned int p = 0 ; p <= j ; ++p )
+    {
+      for ( unsigned int t = 0 ; p + t <= j ; ++t )
+      {
+        const unsigned int q = j - p - t ; 
+        result += LP [ p ] * GP [ t ] * borwain_f ( k , q ) ;
+      }
+    }
+    //
+    return result ;
+  } 
+  // ==========================================================================
+  template <typename  TYPE>
+  inline TYPE borwain_c 
+  ( const unsigned int k ,
+    const unsigned int j , 
+    const TYPE&        L )
+  {
+    const double t = Ostap::Math::stieltjes ( j ) * Ostap::Math::sign ( j ) * Ostap::Math::igamma ( 1.0L + j ) ;
+    return TYPE ( t ) - borwain_b ( k , j + 1 , L ) ;
+  }
+  // ==========================================================================
+  template <typename TYPE1,
+            typename TYPE2>
+  inline TYPE1 borwain_Q 
+  ( const unsigned int k     ,
+    const TYPE1&       L     , 
+    const TYPE2&       t     , 
+    const unsigned int J = 5 )
+  {
+    TYPE1 result = 0 ;
+    TYPE1 tau    = 1 ;
+    for ( unsigned int j = 0 ; j <= J ; ++j )
+    {
+      result += borwain_c ( k , j , L ) * tau ;
+      tau    *= t ;  
+    }
+    return result ;
+  }
+
+
+  // ==========================================================================
+  const double s_Li_DELTA = 1.e-3 ;
   // ==========================================================================
   inline bool alternating ( const long double            x    ) { return x <= 0 ; }
   template <typename TYPE>
@@ -429,8 +519,8 @@ namespace
       // 
       if ( 2 <= nSmall ) 
       {
-	std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	break ;  
+	      std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
+	      break ;  
       }
     }
     //
@@ -694,7 +784,7 @@ double Ostap::Math::Li
   //
   
   //
-  // Here s is *not*  (short) integer
+  // Here s is *not* (short) integer
   //
 
   const long double w = std::log ( 1.0L * std::abs ( x ) ) ;
@@ -710,7 +800,19 @@ double Ostap::Math::Li
 
   /// (A) simple power serie  for small x 
   if ( std::abs ( x ) <= 0.25 || xsmall_1 || xsmall_2 ) { return Li_power  ( s , x ) ; }
-  
+
+  // s is close to the positive integer ?
+  if ( 0 < x ) 
+  { 
+    const double sf = std::floor ( s ) ; 
+    const double sc = std::ceil  ( s ) ;
+    const unsigned int nf = 1 <= sf && std::abs ( s - sf ) <= s_Li_DELTA && sf <= std::numeric_limits<unsigned int>::max() ? round ( sf ) : 0u ;
+    const unsigned int nc = 1 <= sc && std::abs ( s - sc ) <= s_Li_DELTA && sc <= std::numeric_limits<unsigned int>::max() ? round ( sc ) : 0u ;
+    if ( 1 <= nf || 1 <= nc  )
+    {  
+    }
+  }
+
   /// (B) use Eq (9.2)
   if ( ( x < 0 )  && ( absw1pi <= 0.5 ) )
   { return Li_eq_9_2 ( 1.0L * s , 1.0L * x , 1.0L * w ) ; }

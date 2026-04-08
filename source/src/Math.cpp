@@ -119,6 +119,21 @@ namespace
  *  @date 2011-07-18
  */
 // ============================================================================
+bool Ostap::Math::islong ( const long double x ) 
+{
+  return 
+    x <= s_MIN_L  ? false :
+    x >= s_MAX_L  ? false :
+    lomont_compare_double ( x                   , 
+                            std::lround   ( x ) , 
+                            mULPS_double        ) ;
+}
+// ============================================================================
+/*  is the value actually long ?
+ *  @author Vanya BELYAEV Ivan.Belyaev       
+ *  @date 2011-07-18
+ */
+// ============================================================================
 bool Ostap::Math::islong ( const double x ) 
 {
   return 
@@ -127,6 +142,19 @@ bool Ostap::Math::islong ( const double x )
     lomont_compare_double ( x                   , 
                             std::lround   ( x ) , 
                             mULPS_double        ) ;
+}
+// ============================================================================
+/*  is the value actually int ?
+ *  @author Vanya BELYAEV Ivan.Belyaev       
+ *  @date 2011-07-18
+ */
+// ============================================================================
+bool Ostap::Math::isint ( const long double x ) 
+{
+  return
+    x <= s_MIN_I  ? false :
+    x >= s_MAX_I  ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
 }
 // ============================================================================
 /*  is the value actually int ?

@@ -39,16 +39,12 @@ namespace Ostap
     // ========================================================================
     // Parameters for numerical calculations (M.Needham)
     // ========================================================================
-    /// high tolerance
-    static const double hiTolerance    = 1e-40;
-    /// low  tolerance
-    static const double lowTolerance   = 1e-20;
-    /// very loose tolerance
-    static const double looseTolerance = 1e-5;
-    /// sqrt(12)
-    static const double     sqrt_12 = 3.4641016151377546; // sqrt(12.)
-    /// 1/sqrt(12)
-    static const double inv_sqrt_12 = 0.2886751345948129; // 1./sqrt(12.)
+    /// High tolerance
+    static const double hiTolerance    = 1e-40 ;
+    /// Low  tolerance
+    static const double lowTolerance   = 1e-20 ;
+    /// Loose tolerance
+    static const double looseTolerance = 1e-6  ;
     // ========================================================================
     /** @var mULPS_float
      *  "tolerance" parameter for "Lomont"-compare of floating point numbers.
@@ -107,6 +103,9 @@ namespace Ostap
       };
       // ====================================================================
     }
+    // ======================================================================
+    /// get \f$ s(n) = (-1)^{n} \f$  
+    constexpr inline std::int8_t sign ( const int n ) { return ( 1 == n % 2 ) ? -1 : +1 ; }
     // ======================================================================
     /** @struct abs_less 
      *  comparison by absolute value 
@@ -1009,6 +1008,12 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
+    bool islong ( const long double x ) ;
+    // ========================================================================
+    /** is the value actually long ?
+     *  @author Vanya BELYAEV Ivan.Belyaev       
+     *  @date 2011-07-18
+     */
     bool islong ( const double x ) ;
     // ========================================================================
     /** is the value actually long ?
@@ -1016,6 +1021,12 @@ namespace Ostap
      *  @date 2011-07-18
      */
     bool islong ( const float  x ) ;
+    // ========================================================================
+    /** is the value actually int ?
+     *  @author Vanya BELYAEV Ivan.Belyaev       
+     *  @date 2011-07-18
+     */
+    bool isint  ( const long double x ) ;
     // ========================================================================
     /** is the value actually int ?
      *  @author Vanya BELYAEV Ivan.Belyaev       

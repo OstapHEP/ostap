@@ -397,6 +397,12 @@ namespace Ostap
      */
     double               gamma   ( const double x ) ;
     // ========================================================================
+    /** Gamma function
+     *  \f$ \Gamma ( x )\f$ 
+     *  @see Ostapo::Math::tgamma 
+     */
+    long double          gamma   ( const long double x ) ;
+    // ========================================================================
     /** logarithm of gamma function
      *  \f$ \log \Gamma ( x ) \f$ 
      */
@@ -405,13 +411,35 @@ namespace Ostap
     /** logarithm of gamma function
      *  \f$ \log \Gamma ( x ) \f$ 
      */
+    long double          lgamma  ( const long double x ) ;
+    // ========================================================================
+    /** logarithm of gamma function
+     *  \f$ \log \Gamma ( x ) \f$ 
+     */
     inline double        lngamma ( const double x ) { return lgamma ( x ) ; }    
+    // ========================================================================
+    /** logarithm of gamma function
+     *  \f$ \log \Gamma ( x ) \f$ 
+     */
+    inline long double   lngamma ( const long double x ) { return lgamma ( x ) ; }    
     // ========================================================================
     /** Compute inverse Gamma function 
      *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
      *  @return the value of inverse Gamma functions 
      */
     double               igamma ( const double x ) ;
+    // =======================================================================
+    /** Compute inverse Gamma function 
+     *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
+     *  @return the value of inverse Gamma functions 
+     */
+    long double          igamma ( const long double x ) ;
+    // =======================================================================
+    /** Compute inverse Gamma function 
+     *  \f[ f(n) = \frac{n}{\Gamma(n)} \f]
+     *  @return the value of inverse Gamma functions 
+     */
+    double               igamma ( const int n ) ;
     // ========================================================================
     /** Compute inverse Gamma function 
      *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
@@ -440,6 +468,16 @@ namespace Ostap
     std::complex<double> lgamma ( const std::complex<double>& x ) ;
     // ========================================================================
     
+    // =========================================================================
+    /** Get the n-th derivative of gamma function at x=1 
+     *   \f[  f(n) = \left. \frac{d^{n} \Gamma(x) }{dx^n} \right|_{x=1} \f]  
+     *  @see https://www.researchgate.net/publication/228557691_Evaluation_of_higher-order_derivatives_of_the_Gamma_function
+     *  @see Choi, Junesang & Srivastava, Hari. (2000). 
+     *       Evaluation of higher-order derivatives of the Gamma function. Publ. Elektrotehn. Fak. Ser. Mat. 11. 9-18. 
+     */
+    double dgamma_at_1 ( const unsigned short n ) ; 
+    // ========================================================================
+
     // ========================================================================
     /** Compute psi function 
      *  \f[ f(x) = \frac{d}{dx}\ln \Gamma(x)\f]
@@ -499,10 +537,20 @@ namespace Ostap
      *  - \f$ 0<y\f$ 
      *  @return value of beta function 
      */
+    long double beta
+    ( const long double x ,
+      const long double y ) ;
+    // ========================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
     double beta
     ( const double x ,
       const double y ) ;
-    // =======================================================================
+      // =======================================================================
     /** beta function for 
      *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
      *  - \f$ 0<x\f$

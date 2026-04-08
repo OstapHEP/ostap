@@ -126,7 +126,14 @@ namespace Ostap
      *  - \f$ B_{2k+1) = 0 \f$ 
      */
     double bernulli ( const unsigned short k ) ;
-    // =========================================================================
+    // ========================================================================
+    /** Get the  ratio   \f$ r_k = \frac{B_r}{k!}\f$
+     * - \f$ r_0 = B_0 = 0 \f$
+     * - \f$ r_1 = B_1 -\frac{1}{2}\f$ 
+     * - ...
+     */
+    double bernulli_k  ( const unsigned short k ) ; 
+    // ========================================================================
     /** @class Bernulli
      *  evaluate the Bernulli polynomials
      *  @see https://en.wikipedia.org/wiki/Bernoulli_polynomials

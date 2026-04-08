@@ -856,11 +856,23 @@ double Ostap::Math::tgamma ( const double x ) { return std::tgamma ( x )  ; }
 // ============================================================================
 double Ostap::Math::gamma  ( const double x ) { return std::tgamma ( x )  ; }
 // ============================================================================
+/*  Gamma function \f$ \Gamma ( x )\ f$ 
+ *  @see Ostap::Math::gamma 
+ */
+// ============================================================================
+long double Ostap::Math::gamma  ( const long double x ) { return std::tgamma ( x )  ; }
+// ============================================================================
 /* logarithm of gamma function
  *  \f$ \log \Gamma ( x ) \f$ 
  */
 // ============================================================================
 double Ostap::Math::lgamma ( const double x ) { return std::lgamma ( x )  ; }
+// ============================================================================
+/* logarithm of gamma function
+ *  \f$ \log \Gamma ( x ) \f$ 
+ */
+// ============================================================================
+long double Ostap::Math::lgamma ( const long double x ) { return std::lgamma ( x )  ; }
 // ============================================================================
 /*  compute inverse Gamma function 
  *  \$f f(x) = \frac{1}{\Gamma(x)}\f$
@@ -886,6 +898,30 @@ double Ostap::Math::igamma ( const double x )
   }
   //
   return result.val ;
+}
+// ============================================================================
+/*  compute inverse Gamma function 
+ *  \$f f(x) = \frac{1}{\Gamma(x)}\f$
+ *  @return the value of inverse Gamma functions 
+ */
+// ============================================================================
+long double Ostap::Math::igamma ( const long double x ) 
+{
+  /// simple case 
+  if ( x > 170 || ( x <= 0 && Ostap::Math::isint ( x ) ) ) { return 0 ; }  // RETURN 
+  return 1.0L / gamma ( x ) ; 
+}
+// ============================================================================
+/*  compute inverse Gamma function 
+ *  \$f f(n) = \frac{1}{\Gamma(n)}\f$
+ *  @return the value of inverse Gamma functions 
+ */
+// ============================================================================
+double Ostap::Math::igamma ( const int n ) 
+{
+  /// simple case 
+  if ( n > 170 || n <= 0  ) { return 0 ; }  // RETURN 
+  return 1.0L / gamma ( 1.0L * n ) ; 
 }
 // ============================================================================
 /*  compute inverse Gamma function 
@@ -971,6 +1007,75 @@ Ostap::Math::tgamma
   //
   return std::exp ( Ostap::Math::lgamma ( z ) ) ;
 }
+// ===========================================================================
+/* Get the n-th derivative of gamma function at x=1 
+ *   \f[  f(n) = \left. \frac{d^{n} \Gamma(x) }{dx^n} \right|_{x=1} \f]  
+ *  @see https://www.researchgate.net/publication/228557691_Evaluation_of_higher-order_derivatives_of_the_Gamma_function
+ *  @see Choi, Junesang & Srivastava, Hari. (2000). 
+ *       Evaluation of higher-order derivatives of the Gamma function. Publ. Elektrotehn. Fak. Ser. Mat. 11. 9-18. 
+ */
+// =============================================================================
+#include <iostream>
+namespace 
+{
+  long double _dgamma_at_1_
+  ( const unsigned short N ) 
+  {
+    if      ( 0 == N ) { return  1        ; }  // Gamma(1)
+    else if ( 1 == N ) { return -s_GammaE ; }  // Gamma'(1)
+
+    typedef unsigned short            KEY   ;
+    typedef std::map<KEY,long double> MAP   ;
+    typedef SyncedCache<MAP>          CACHE ;
+    /// the cache
+    static CACHE                 s_CACHE { MAP { 
+      { 0 ,  1.0L     } , 
+      { 1 , -s_GammaE } ,
+      { 2 ,  std::pow ( s_GammaE , 2 ) +                Ostap::Math::zeta ( 2 ) } , 
+      { 3 , -std::pow ( s_GammaE , 3 ) - 3 * s_GammaE * Ostap::Math::zeta ( 2 ) - 2 * Ostap::Math::zeta ( 3 ) } ,
+    } } ; // the cache
+    //
+    static const std::size_t s_MAX_CACHE { 10000 } ; 
+    //
+    const KEY key { N } ;
+    { // (1) check a value already calculated 
+      CACHE::Lock lock { s_CACHE.mutex () } ;
+      auto it = s_CACHE->find ( key ) ;
+      if ( s_CACHE->end () != it ) { return it->second ; }   // RETURN 
+    }
+    //
+    const unsigned short np = N     ;
+    const unsigned short n  = N - 1 ;
+    //
+    // the first term 
+    long double result = 0  ;
+    for ( unsigned short k = 1 ; k <= n ; ++k )
+    { result += Ostap::Math::sign ( k + 1 ) * Ostap::Math::zeta ( k + 1 ) * _dgamma_at_1_ ( n - k ) * Ostap::Math::igamma ( n - k + 1.0L ) ; }
+    //
+    result *= Ostap::Math::gamma       ( 1.0L * N ) ; 
+    result -= s_GammaE * _dgamma_at_1_ ( n        ) ;
+    //
+    { // add calculated value into the cache 
+      CACHE::Lock lock { s_CACHE.mutex () } ;
+      if ( s_MAX_CACHE < s_CACHE->size() ) { s_CACHE->clear() ; }
+      s_CACHE->insert ( std::make_pair ( key , result ) ) ;
+    }
+    //
+    return result ; 
+  }
+  //
+}
+// =============================================================================
+double Ostap::Math::dgamma_at_1 
+( const unsigned short n ) 
+{
+  if      ( 0 == n ) { return  1        ; }  // Gamma(1)
+  else if ( 1 == n ) { return -s_GammaE ; }  // Gamma'(1)
+  return _dgamma_at_1_ ( n );
+}
+
+
+
 // ============================================================================
 /* compute polygamma function 
  * \f$ \psi^{(n)}(x) = \left(\frac{d}{dx}\right)^{(n)}\psi(x) = 
@@ -1038,6 +1143,35 @@ double Ostap::Math::psi
   
 // ============================================================================
 // Beta function
+// ============================================================================
+/*  beta function for 
+ *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+long double Ostap::Math::beta
+( const long double x ,
+  const long double y ) 
+{
+  // ==========================================================================
+  if      ( x <= 0 || s_zero ( x ) ) { return std::numeric_limits<long double>::quiet_NaN (); }
+  else if ( y <= 0 || s_zero ( y ) ) { return std::numeric_limits<long double>::quiet_NaN (); }
+  else if ( s_equal ( x , 1 )      ) { return 1.0L / y ; }
+  else if ( s_equal ( y , 1 )      ) { return 1.0L / x ; }
+   // ==========================================================================
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_special_functions ) && ( 201603L <= __cpp_lib_math_special_functions )
+  // ==========================================================================
+  return std::beta ( x , y ) ;
+  // ==========================================================================
+#else //
+  // ==========================================================================
+  return std::exp ( std::lgamma ( x ) + std::lgamma ( y ) - std::lgamma ( x + y ) ) ;
+  // ==========================================================================
+#endif // =====================================================================
+  // ==========================================================================
+}
 // ============================================================================
 /*  beta function for 
  *  \f$ B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 

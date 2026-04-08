@@ -15,6 +15,7 @@
 #include "Ostap/StatusCode.h"
 #include "Ostap/Bernulli.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/MoreMath.h"
 // ===========================================================================
 // Local
 // ===========================================================================
@@ -230,10 +231,10 @@ namespace
 // ============================================================================
 double Ostap::Math::bernulli ( const unsigned short n )
 {
-  if      ( 0 == n               ) { return  1   ; }  
-  else if ( 1 == n               ) { return -0.5 ; }  // ATTENTION! 
-  else if ( 1 == n % 2           ) { return  0.0 ; }
-  else if ( n <= N_BERNULLI_MAX2 ) { return s_BERNULLI [ n /2 ] ; }
+  if      ( 0 == n                   ) { return  1   ; }  
+  else if ( 1 == n                   ) { return -0.5 ; }  // ATTENTION! 
+  else if ( 1 == n % 2               ) { return  0.0 ; }
+  else if ( n <= 2 * N_BERNULLI_MAX2 ) { return s_BERNULLI [ n / 2 ] ; }
   //
   typedef std::map<unsigned short,double> MAP   ;
   typedef SyncedCache<MAP>                STORE ;
@@ -266,6 +267,29 @@ double Ostap::Math::bernulli ( const unsigned short n )
   return result ;
   // ==========================================================================
 }
+// ============================================================================
+/*  Get the  ratio   \f$ r_k = \frac{B_r}{k!}\f$
+ * - \f$ r_0 = B_0 = 0 \f$
+ * - \f$ r_1 = B_1 -\frac{1}{2}\f$ 
+ * - ...
+ */
+ // ===========================================================================
+double Ostap::Math::bernulli_k 
+ ( const unsigned short k ) 
+ {
+    if      ( 0 == k               ) { return  0   ; }
+    else if ( 1 == k               ) { return -0.5 ; }
+    else if ( 1 == k % 2           ) { return  0.0 ; }
+    else if ( k <= N_BERNULLI_MAX2 ) 
+    { 
+      const unsigned short n = k / 2 ;
+      return s_BERNULLI [ n ] *  igamma ( n + 1.0L ) ; 
+    }
+
+    // use zeta-function
+    const unsigned short n = k / 2 ;
+    return 2 * sign ( n + 1 ) * zeta ( k ) * std::pow ( s_1_2pi , k ) ; 
+ } 
 // ============================================================================
 // constructor from the order 
 // ============================================================================

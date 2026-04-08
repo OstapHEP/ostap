@@ -21,13 +21,6 @@ namespace Ostap
   namespace Math 
   {
     // ========================================================================
-    // using namespace std ; ?
-    // ========================================================================
-#ifdef __INTEL_COMPILER         // Disable ICC remark
-#pragma warning(disable:2259) //  non-pointer conversion may lose significant bits
-#pragma warning(push)
-#endif
-    // ========================================================================
     /** Simple utility for efficient "pow".
      *  It works only for positive integer powers.
      *
@@ -44,7 +37,7 @@ namespace Ostap
      *  @date 2005-04-09 
      */
     template<typename TYPE>
-    inline TYPE POW ( TYPE __x , unsigned long __n )
+    constexpr inline TYPE POW ( TYPE __x , unsigned long __n )
     {
       //
       TYPE __y = __n % 2 ? __x : 1;
@@ -57,10 +50,6 @@ namespace Ostap
       //
       return __y ;
     }
-    // ========================================================================
-#ifdef __INTEL_COMPILER         // Disable ICC remark
-#pragma warning(push)
-#endif
     // ========================================================================
   } //                                                    end of namespace Math
   // ==========================================================================
