@@ -861,6 +861,7 @@ double Ostap::Math::gamma  ( const double x ) { return std::tgamma ( x )  ; }
  */
 // ============================================================================
 long double Ostap::Math::gamma  ( const long double x ) { return std::tgamma ( x )  ; }
+
 // ============================================================================
 /* logarithm of gamma function
  *  \f$ \log \Gamma ( x ) \f$ 
@@ -921,6 +922,18 @@ double Ostap::Math::igamma ( const int n )
 {
   /// simple case 
   if ( n > 170 || n <= 0  ) { return 0 ; }  // RETURN 
+  return 1.0L / gamma ( 1.0L * n ) ; 
+}
+// ============================================================================
+/*  compute inverse Gamma function 
+ *  \$f f(n) = \frac{1}{\Gamma(n)}\f$
+ *  @return the value of inverse Gamma functions 
+ */
+// ============================================================================
+double Ostap::Math::igamma ( const unsigned int n ) 
+{
+  /// simple case 
+  if ( n > 170 ) { return 0 ; }  // RETURN 
   return 1.0L / gamma ( 1.0L * n ) ; 
 }
 // ============================================================================

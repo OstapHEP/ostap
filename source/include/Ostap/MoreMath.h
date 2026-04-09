@@ -442,6 +442,12 @@ namespace Ostap
     double               igamma ( const int n ) ;
     // ========================================================================
     /** Compute inverse Gamma function 
+     *  \f[ f(n) = \frac{n}{\Gamma(n)} \f]
+     *  @return the value of inverse Gamma functions 
+     */
+    double               igamma ( const unsigned int n ) ;
+    // ========================================================================
+    /** Compute inverse Gamma function 
      *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
      *  @return the value of inverse Gamma functions 
      */
@@ -451,8 +457,8 @@ namespace Ostap
      *  \f$ \Gamma ( x ) \f$ 
      */
     std::complex<double> gamma ( const std::complex<double>& z ) ;
-    /** =======================================================================
-     *  Gamma function of complex argument 
+    // =======================================================================
+    /** Gamma function of complex argument 
      *  \f$ \Gamma ( x ) \f$ 
      */
     std::complex<double> tgamma ( const std::complex<double>& x ) ;

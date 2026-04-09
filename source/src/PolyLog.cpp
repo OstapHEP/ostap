@@ -76,80 +76,94 @@ double Ostap::Math::ImLi
 // ============================================================================
 namespace Ostap
 {
+  // ==========================================================================
   namespace Math
   {
-    inline double  eta ( const long double x )
-    { return  eta ( static_cast<double> ( x ) ) ; }
-    inline double zeta ( const long double x )
-    { return zeta ( static_cast<double> ( x ) ) ; }
+    // ========================================================================
+    inline double  eta ( const long double x ) { return  eta ( static_cast<double> ( x ) ) ; }
+    // ========================================================================
+    inline double zeta ( const long double x ) { return zeta ( static_cast<double> ( x ) ) ; }
     //
-    inline std::complex<long double> zeta
-    ( const std::complex<long double>&  x )
+    inline std::complex<long double> zeta ( const std::complex<long double>&  x )
     {
       const std::complex<double> xx { x } ;
       return std::complex<long double> ( zeta ( xx ) ) ;
     }
-    inline std::complex<long double> gamma 
-    ( const std::complex<long double>&  x )
+    // ========================================================================
+    inline std::complex<long double> gamma ( const std::complex<long double>&  x )
     {
       const std::complex<double> xx { x } ;
       return std::complex<long double> ( gamma ( xx ) ) ;
     }
-  }
-}
+    // ========================================================================
+  } // ========================================================================
+  // ==========================================================================
+} // ==========================================================================
+// ============================================================================
 namespace
 {
+  // ==========================================================================
+  constexpr std::complex<long double>  s_J { 0.0L , 1.0L } ;
+  // ==========================================================================
+  constexpr double s_Li_DELTA = 1.e-3 ;
+  // ==========================================================================
+  static_assert ( 0 < s_Li_DELTA && s_Li_DELTA < 1 ,
+		  "Invalid Li_DELTA parameter!"   ) ; 
+  // ==========================================================================
+  constexpr unsigned short s_borwain_JMAX = 6 ;
+  static_assert ( 3 <= s_borwain_JMAX  && s_borwain_JMAX <= 10 ,
+		  "Invalid s_borwain_JMAX parameter!"   ) ; 
   // ==========================================================================
   // Borwain' formulae
   // @see https://doi.org/https://doi.org/10.1016/j.jat.2014.10.004
   // page 119, Eqs (11-14)
   // ==========================================================================
   constexpr inline long double borwain_f 
-  ( const unsigned int k , 
-    const unsigned int q )
+  ( const unsigned int   k , 
+    const unsigned short q )
     {
       if      ( !k && !q ) { return 1 ; }  // f(0,0) = 1 
       else if ( !k       ) { return 0 ; }  // f(0,q) = 0 
       else if ( !q       ) { return 1 ; }  // f(k,0) = 1 
       // 
       long double r = 0 ;
-      for ( unsigned int h = 0 ; h <= q ; ++h  )
+      for ( unsigned short h = 0 ; h <= q ; ++h  )
       { r += Ostap::Math::sign ( h ) * Ostap::Math::POW ( 1.0L / k , h ) * borwain_f ( k - 1 , q - h ) ; }
       return r ; 
     }
   // ==========================================================================
   template <typename  TYPE>
   inline TYPE borwain_b 
-  ( const unsigned int k ,
-    const unsigned int j , 
-    const TYPE&        L )
+  ( const unsigned int   k ,
+    const unsigned short j , 
+    const TYPE&          L )
   {
     TYPE result       = 0 ;
 
+    //
     std::vector<TYPE>   LP ( j + 1 ) ; 
     LP [ 0 ] = 1  ;
-
     TYPE t1  = 1 ;
-    for ( unsigned int p = 1 ; p <= j ; ++p )
+    for ( unsigned short p = 1 ; p <= j ; ++p )
     {
-      t1 *= ( L / p ) ; 
+      t1 *= ( L / ( 1.0L * p ) ) ; 
       LP [ p ] = t1 ;
     }
-
-    std::vector<double> GP ( j + 1 ) ;
+    //
+    std::vector<long double> GP ( j + 1 ) ;
     GP [ 0 ] = Ostap::Math::dgamma_at_1 ( 0 ) ;
     double t2 = 1 ;
-    for ( unsigned int t = 0 ; t <= j ; ++t )
+    for ( unsigned short t = 1 ; t <= j ; ++t )
     {
-      t2 /= t ; 
+      t2 /= t ;
       GP [ t ] = Ostap::Math::dgamma_at_1 ( t ) * t2 * Ostap::Math::sign ( t );
     }
-
-    for ( unsigned int p = 0 ; p <= j ; ++p )
+    //
+    for ( unsigned short p = 0 ; p <= j ; ++p )
     {
-      for ( unsigned int t = 0 ; p + t <= j ; ++t )
+      for ( unsigned short t = 0 ; p + t <= j ; ++t )
       {
-        const unsigned int q = j - p - t ; 
+        const unsigned short q = j - p - t ; 
         result += LP [ p ] * GP [ t ] * borwain_f ( k , q ) ;
       }
     }
@@ -159,35 +173,48 @@ namespace
   // ==========================================================================
   template <typename  TYPE>
   inline TYPE borwain_c 
-  ( const unsigned int k ,
-    const unsigned int j , 
-    const TYPE&        L )
+  ( const unsigned int   k ,
+    const unsigned short j , 
+    const TYPE&          L )
   {
-    const double t = Ostap::Math::stieltjes ( j ) * Ostap::Math::sign ( j ) * Ostap::Math::igamma ( 1.0L + j ) ;
-    return TYPE ( t ) - borwain_b ( k , j + 1 , L ) ;
+    const long double t = Ostap::Math::stieltjes ( j ) * Ostap::Math::sign ( j ) * Ostap::Math::igamma ( 1 + j ) ;
+    // return TYPE ( t ) - borwain_b ( k , j + 1 , L ) ;
+    const auto r = TYPE ( t ) - borwain_b ( k , j + 1 , L ) ;
+    std::cerr << "BORWAIN-C "
+	      << " k=" << k
+	      << " j=" << k
+	      << " L=" << L
+	      << " t=" << t
+	      << " c=" << r
+	      << std::endl ;
+    return r ;           
   }
   // ==========================================================================
-  template <typename TYPE1,
-            typename TYPE2>
-  inline TYPE1 borwain_Q 
-  ( const unsigned int k     ,
-    const TYPE1&       L     , 
-    const TYPE2&       t     , 
-    const unsigned int J = 5 )
+  template <typename TYPE>
+  inline TYPE borwain_Q 
+  ( const unsigned int   k     ,
+    const TYPE&          L     , 
+    const TYPE&          t     , 
+    const unsigned short J = s_borwain_JMAX )
   {
-    TYPE1 result = 0 ;
-    TYPE1 tau    = 1 ;
+    TYPE  result = 0 ;
+    TYPE  tau    = 1 ;
     for ( unsigned int j = 0 ; j <= J ; ++j )
     {
       result += borwain_c ( k , j , L ) * tau ;
       tau    *= t ;  
+      std::cerr << "BORWAIN-Q LOOP j=" << j << " r=" << result << std::endl ;
     }
+    //
+    std::cerr << "BORWAIN-Q "
+	      << " k=" << k
+	      << " L=" << L
+	      << " t=" << t 
+	      << " r=" << result
+	      << std::endl ;
+    //
     return result ;
-  }
-
-
-  // ==========================================================================
-  const double s_Li_DELTA = 1.e-3 ;
+  }  
   // ==========================================================================
   inline bool alternating ( const long double            x    ) { return x <= 0 ; }
   template <typename TYPE>
@@ -374,9 +401,9 @@ namespace
     const std::size_t NN ) 
   {
     Ostap::Assert ( std::abs( w / s_2pi ) < 1 ,
-		    "Invalid range for n,x,w" , 
-		    "::Li_eq_9_3"  , 
-		    INVALID_ARGUMENT , __FILE__ , __LINE__ ) ;    
+		    "Invalid range for w"     , 
+		    "::Li_eq_9_3"             , 
+		    INVALID_ARGUMENT          , __FILE__ , __LINE__ ) ;    
     //
     static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
@@ -387,8 +414,17 @@ namespace
     for ( unsigned int k = 1  ; k < NN ; ++k )
     {
       term *= ( w / ( 1.0L * k )  ) ;
-      const TYPES nmk  = s - TYPES ( k ) ;
+      const TYPES nmk    = s - TYPES ( k ) ;
       const TYPEX zeta_v = Ostap::Math::zeta ( nmk ) ;
+      
+      std::cerr << "EQ(9/3) "
+		<< " x="    << x
+		<< " s="    << s
+		<< " k="    << k
+		<< " nmk="  << nmk 
+		<< " zeta=" << zeta_v
+		<< std::endl ;
+      
       if ( is_not ( zeta_v ) )  { continue ; } 
       const TYPEX delta = term * zeta_v ;
       // 
@@ -403,9 +439,14 @@ namespace
 	break ; // NB: x here 
       }
     }
-    std::cerr << "POWER-W (9.3) x=" << x << std::endl ;
-    const TYPEX tt = Ostap::Math::gamma ( 1.0L - s ) ; 
-    return result + tt * std::pow ( -w , s - 1.0L ) ; 
+    //
+    std::cerr << "POWER-W (9.3) end " << __LINE__
+	      << " x="  << x    
+	      << " s="  << s
+	      << " r="  << result
+	      << std::endl ; 
+    //
+    return result ;
   }
   // =========================================================================================   
   inline double Li_eq_9_3
@@ -417,8 +458,18 @@ namespace
 		    "Invalid range for n,x,w" , 
 		    "::Li_eq_9_3"  , 
 		    INVALID_ARGUMENT , __FILE__ , __LINE__ );
+    
+    // series 
+    const long double sum = Li_eq_9_3_ ( n , 1.0L * x , 1.0L * w , 10000 ) ;
     //
-    return Li_eq_9_2_ ( n , 1.0L * x , 1.0L * w , 10000 ) ;
+    const long double gg  = Ostap::Math::gamma ( 1.0L - n  ) ;
+    //
+    // get the Re ( pow ( -w , n - 1 ) )
+    const long double pp  = w < 0 ?
+      std::pow ( -w , n - 1 ) :
+      std::pow (  w , n - 1 ) * Ostap::Math::sign ( n - 1 ) ;
+    //
+    return sum + gg * pp ; 
   } ; 
   // =========================================================================================
   inline double Li_eq_9_3
@@ -431,7 +482,16 @@ namespace
 		    "::Li_eq_9_3"  , 
 		    INVALID_ARGUMENT , __FILE__ , __LINE__ );
     //
-    return Li_eq_9_3_ ( 1.0L * s  , 1.0L * x , 1.0L * w , 10000 ) ;
+    /// series 
+    const long double sum = Li_eq_9_3_ ( 1.0L * s  , 1.0L * x , 1.0L * w , 10000 ) ;
+    //
+    const long double gg  = Ostap::Math::gamma ( 1.0L - s  ) ;
+    //    
+    const long double pp  = w < 0 ?
+      std::pow ( -w , s - 1.0L ) :
+      std::pow (  w , s - 1.0L ) * std::cos ( s_pi * ( s - 1.0L ) ) ;
+    //
+    return sum + gg * pp ; 
   }
   // =========================================================================
   inline std::complex<double> Li_eq_9_3
@@ -440,14 +500,18 @@ namespace
     const std::complex<double> w ) 
   {
     Ostap::Assert ( ( n <= 0 ) && std::abs( w ) / s_2pi < 1 ,
-                  "Invalid range for n,x,w" , 
-                  "::Li_eq_9_3"  , 
-                  INVALID_ARGUMENT , __FILE__ , __LINE__ );
-    
-    const std::complex<long double> xx { x } ;
-    const std::complex<long double> ww { w } ;
-    const std::complex<long double> rr { Li_eq_9_3_ ( n , xx , ww , 10000 ) } ;
-    return std::complex<double> ( rr ) ;
+		    "Invalid range for n,x,w" , 
+		    "::Li_eq_9_3"  , 
+		    INVALID_ARGUMENT , __FILE__ , __LINE__ );
+    //
+    const std::complex<long double> xx  { x } ;
+    const std::complex<long double> ww  { w } ;
+    const std::complex<long double> sum { Li_eq_9_3_ ( n , xx , ww , 10000 ) } ;
+    //
+    const long double               gg  { Ostap::Math::gamma ( 1.0L - n  ) } ;
+    const std::complex<long double> pp  { std::pow ( -w , n - 1 )          } ;
+    //
+    return std::complex<double> (  sum + gg * pp ) ; 
   }    
   // =========================================================================
   inline std::complex<double> Li_eq_9_3
@@ -460,10 +524,14 @@ namespace
 		    "::Li_eq_9_3"  , 
 		    INVALID_ARGUMENT , __FILE__ , __LINE__ );
     
-    const std::complex<long double> xx { x } ;
-    const std::complex<long double> ww { w } ;
-    const std::complex<long double> rr { Li_eq_9_3_ ( 1.0L * s , xx , ww  , 10000 ) } ;
-    return std::complex<double> ( rr ) ;
+    const std::complex<long double> xx  { x } ;
+    const std::complex<long double> ww  { w } ;
+    const std::complex<long double> sum { Li_eq_9_3_ ( 1.0L * s , xx , ww  , 10000 ) } ;
+    //    
+    const long double               gg  { Ostap::Math::gamma ( 1.0L - s  ) } ;
+    const std::complex<long double> pp  { std::pow ( -w , s - 1          ) } ;
+    //
+    return std::complex<double> ( sum + gg * pp ) ;
   }      
   // =========================================================================
   inline std::complex<double> Li_eq_9_3
@@ -476,11 +544,15 @@ namespace
                   "::Li_eq_9_3"  , 
                   INVALID_ARGUMENT , __FILE__ , __LINE__ );
     
-    const std::complex<long double> xx { x } ;
-    const std::complex<long double> ww { w } ;
-    const std::complex<long double> ss { s } ;
-    const std::complex<long double> rr { Li_eq_9_3_ ( ss , xx , ww , 10000 ) } ;
-    return std::complex<double> ( rr ) ;
+    const std::complex<long double> xx  { x } ;
+    const std::complex<long double> ww  { w } ;
+    const std::complex<long double> ss  { s } ;
+    const std::complex<long double> sum { Li_eq_9_3_ ( ss , xx , ww , 10000 ) } ;
+    //
+    const std::complex<long double> gg  { Ostap::Math::gamma ( 1.0L - ss ) } ;
+    const std::complex<long double> pp  { std::pow ( -w , ss - 1.0L      ) } ;
+    //
+    return std::complex<double> ( sum + gg * pp ) ;
   }    
   // ==========================================================================
   template <typename TYPEX>  
@@ -498,7 +570,7 @@ namespace
     static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
     //
-    TYPEX result  = Ostap::Math::zeta ( n ) ;
+    TYPEX result  = 1 == n ? TYPEX ( 0.0L ) : Ostap::Math::zeta ( n ) ;
     TYPEX term    = 1 ;
     unsigned int nSmall = 0 ;
     for ( unsigned int k = 1 ; k < N ; ++k ) 
@@ -507,7 +579,6 @@ namespace
       if ( 1 * n  == k + 1 ) { continue ; } // skip singularity 
       const int   nmk    = 1 * n - k    ;
       const TYPEX zeta_v = Ostap::Math::zeta ( nmk ) ;
-      std::cerr << "EQ9.5 " << k << " " << nmk  << " " << zeta_v << std::endl ;
       if ( is_not ( zeta_v ) )  { continue ; }
       //
       const TYPEX delta = term * zeta_v ;
@@ -517,15 +588,20 @@ namespace
       //
       result += delta ; 
       // 
+      std::cerr << "EQ9.5 in loop "
+		<< " k=" << k
+		<< " z=" << zeta_v
+		<< " d=" << delta 
+		<< " r=" << result 
+		<< std::endl ;
+      //
       if ( 2 <= nSmall ) 
       {
-	      std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	      break ;  
+	std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall << ""<<std::endl ;
+	break ;  
       }
     }
     //
-    // const unsigned short nm1 = n - 1 ; 
-    // result += ( Ostap::Math::harmonic ( nm1 ) - std::log ( std::abs ( w ) ) ) * std::pow ( w , nm1 ) * Ostap::Math::igamma ( nm1 ) ;
     return result ;   
   }
   // ==========================================================================
@@ -539,11 +615,29 @@ namespace
 		    "::Li_eq_9_5"              , 
 		    INVALID_ARGUMENT           , __FILE__ , __LINE__ ) ;
     //
-    auto sum = Li_eq_9_5_ ( n , 1.0L * x , 1.0L * w , 10000 ) ;
+    const long double    sum = Li_eq_9_5_ ( n , 1.0L * x , 1.0L * w , 10000 ) ;
     //
-    const unsigned short nm1 = n - 1 ;
-    sum += ( Ostap::Math::harmonic ( nm1 ) - std::log ( std::abs ( w ) ) ) * std::pow ( w , nm1 ) * Ostap::Math::igamma ( nm1 ) ;
-    return sum ;
+    const unsigned short nm1  = n - 1 ;
+    const long double    hm  =  Ostap::Math::harmonic ( nm1 )  ;
+    const long double    ig  =  Ostap::Math::igamma   ( nm1 )  ;
+    //
+    const long double    t1 =  w < 0 ? 
+      hm - std::log ( -w            )         :
+      hm - std::log ( -w + 0.0L*s_J ).real()  ;
+    //
+    const long double    t2 = std::pow ( w , nm1 ) * ig ;
+    //
+    std::cerr << "Li_eq_9_5 " << __LINE__
+	      << " sum=" << sum
+	      << " nm1=" << nm1
+	      << " hm="  << hm  
+	      << " ig="  << ig 
+	      << " t1="  << t1 
+	      << " t2="  << t2
+	      << " r="   << (sum+t1*t2)      
+	      << std::endl ; 
+          
+    return sum + t1 * t2 ;
   }
   // ==========================================================================
   inline std::complex<double> Li_eq_9_5
@@ -559,16 +653,162 @@ namespace
     const std::complex<long double> xx  { x } ;
     const std::complex<long double> ww  { w } ;
     //
-    auto sum { Li_eq_9_5_ ( n , xx , ww , 10000 ) } ;
+    const std::complex<long double> sum { Li_eq_9_5_ ( n , xx , ww , 10000 ) } ;
     //
     const unsigned short nm1 = n - 1 ;
     const long double    hm  =  Ostap::Math::harmonic ( nm1 )  ;
-    const long double    ig  =  Ostap::Math::igamma   ( nm1 )  ;    
-    sum += ( hm - std::log ( -ww ) ) * std::pow ( ww , nm1  ) * ig ;
+    const long double    ig  =  Ostap::Math::igamma   ( nm1 )  ;
     //
-    return std::complex<double> ( sum ) ;
+    const std::complex<long double> t1 = hm - std::log ( -ww ) ;
+    const std::complex<long double> t2 = std::pow ( ww , nm1 ) * ig ; 
+    //
+    return std::complex<double> ( sum + t1 * t2 ) ;
   }
   // ==========================================================================
+  /// Li ( k + 1 + tau , e^w ) 
+  long double Li_eq_BB_11
+  ( const unsigned int k   ,
+    const long double  tau ,
+    const long double  w   )
+  {
+    //
+    std::cerr << " BB_QQ "
+	      << " k=" << k
+	      << " t=" << tau
+	      << " w=" << w
+	      << std::endl ;
+      
+    Ostap::Assert ( std::abs( w ) / s_2pi < 1 ,
+		    "Invalid range for w"     , 
+		    "::Li_eq_BB_11"           , 
+		    INVALID_ARGUMENT          , __FILE__ , __LINE__ ) ;
+    //
+    typedef long double TYPE ;
+    static const Ostap::Math::Equal_To<TYPE> xequal {} ;
+    static const Ostap::Math::Zero<TYPE>     xzero  {} ; 
+    //
+    TYPE result = 0 ;
+    TYPE term   = 1 ;
+    unsigned short nSmall =  0 ;
+    for ( unsigned int n  = 0 ; n <= k + 1000 ; ++n )
+    {
+      if ( n      ) { term *= ( w / ( 1.0L * n ) ) ; }
+      if ( n == k ) { continue ; }                      // ATTENTION!
+      const TYPE arg_zeta = 1.0L + k + tau - n ;
+      const TYPE zeta_v   = Ostap::Math::zeta ( arg_zeta ) ;
+      if ( is_not ( zeta_v ) ) { continue ; }
+      const TYPE delta  = term * zeta_v   ;
+      //
+      std::cerr << " BB -in loop " << n
+		<< " az=" << arg_zeta
+		<< " z="  << zeta_v 
+		<< " d="  << delta 
+		<< " r="  << result
+		<< std::endl ;
+      
+      if ( is_not ( delta ) || xzero ( 2.0L * delta ) ||  xequal ( result - 2.0L * delta , result ) ) { ++nSmall     ; }
+      else                                                                                            {   nSmall = 0 ; }
+      //
+      result += delta ;
+      //
+      if ( 2 <= nSmall ) 
+      {
+	std::cerr << "BB (11) #terms " << n << " " << delta << " " << "# " << nSmall <<std::endl ;
+	break ; // NB: x here 
+      }      
+    }
+    //
+    std::cerr << "BB (11) " << __LINE__
+	      << " r="      << result
+	      << std::endl ;
+    
+    const long double pp = Ostap::Math::POW    ( w , k ) ; 
+    const long double gg = Ostap::Math::igamma ( k + 1 ) ;  
+    //
+    if ( 0 <= w )
+    {
+      const std::complex<long double> L { std::log ( -w + 0.0L * s_J ) }  ;
+      const std::complex<long double> T { tau } ;      
+      const std::complex<long double> Q = borwain_Q ( k , L , T , s_borwain_JMAX ) ;
+      std::cerr << "BB (11)/A " << __LINE__
+		<< " r="      << result
+		<< " t="      << tau   
+		<< " pp="     << pp 
+		<< " gg="     << gg
+		<< " L="      << L
+		<< " Q="      << Q
+		<< std::endl ;
+      
+      return result + pp * gg * Q.real() ;
+    }
+    //
+    const long double L = std::log ( w ) ;    
+    const long double T = tau            ;    
+    const long double Q = borwain_Q ( k , L , T , s_borwain_JMAX ) ;
+    //
+    std::cerr << "BB (11)/B " << __LINE__
+	      << " r="      << result
+	      << " pp="     << pp 
+	      << " gg="     << gg
+	      << " Q="      << Q
+	      << std::endl ;
+    
+    return result + pp * gg * Q ;
+  }
+  // ==========================================================================
+  /// Li ( k + 1 + tau , e^w ) 
+  std::complex<double> Li_eq_BB_11
+  ( const unsigned int          k    ,
+    const std::complex<double>& tau_ ,
+    const std::complex<double>& w_   )
+  {
+    //
+    Ostap::Assert ( std::abs ( w_ ) / s_2pi < 1 ,
+		    "Invalid range for w"     , 
+		    "::Li_eq_BB_11"           , 
+		    INVALID_ARGUMENT          , __FILE__ , __LINE__ ) ;
+    //    
+    typedef std::complex<long double> TYPE ;
+    //
+    static const Ostap::Math::Equal_To<TYPE> xequal {} ;
+    static const Ostap::Math::Zero<TYPE>     xzero  {} ; 
+    //
+    const TYPE tau { tau_ } ;
+    const TYPE w   { w_   } ;
+    //
+    TYPE result = 0 ;
+    TYPE term   = 1 ;
+    unsigned short nSmall =  0 ;
+    for ( unsigned int n  = 0 ; n <= k + 1000 ; ++n )
+    {
+      if ( n      ) { term *= ( w / ( 1.0L * n ) ) ; }
+      if ( n == k ) { continue ; }                      // ATTENTION!
+      const TYPE arg_zeta = 1.0L + k - n + tau ;
+      const TYPE zeta_v   = Ostap::Math::zeta ( arg_zeta ) ;
+      if ( is_not ( zeta_v ) ) { continue ; }
+      const TYPE delta  = term * zeta_v   ;
+      //
+      if ( is_not ( delta ) || xzero ( 2.0L * delta ) ||  xequal ( result - 2.0L * delta , result ) ) { ++nSmall     ; }
+      else                                                                                            {   nSmall = 0 ; }
+      //
+      result += delta ;
+      //
+      if ( 2 <= nSmall ) 
+      {
+	std::cerr << "BB (11) #terms " << n << " " << delta << " " << "# " << nSmall <<std::endl ;
+	break ; // NB: x here 
+      }      
+    }
+    //
+    const TYPE        pp = Ostap::Math::POW    ( w , k ) ; 
+    const long double gg = Ostap::Math::igamma ( k + 1 ) ;  
+    //
+    const TYPE        L = std::log  ( - w ) ;    
+    const TYPE        Q = borwain_Q ( k , L , tau , s_borwain_JMAX ) ;
+    //
+    return std::complex<double> ( result + pp * gg * Q ) ;
+  }
+  // ==========================================================================  
 }
 // ============================================================================
 /*  Polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
@@ -591,11 +831,17 @@ double Ostap::Math::Li
   //
   
   // explicit case:
-  if      ( 1  == n ) { return - std::log ( 1.0L - std::abs ( x ) )         ; } // Eq (6.1)
-   /// dilogarithm
+  if      ( 1  == n ) // Eq (6.1)
+  {
+    /** 
+	return x < 1 ?
+	- std::log (                            1.0L - x       )         :
+	- std::log ( std::complex<long double>( 1.0L - x , 0 ) ).real () ;
+    */
+  }
+  /// dilogarithm
   else if ( 2  == n )
   {
-
     static const short two = 2 ;
     
     // helper constant 
@@ -800,27 +1046,39 @@ double Ostap::Math::Li
 
   /// (A) simple power serie  for small x 
   if ( std::abs ( x ) <= 0.25 || xsmall_1 || xsmall_2 ) { return Li_power  ( s , x ) ; }
-
-  // s is close to the positive integer ?
-  if ( 0 < x ) 
-  { 
-    const double sf = std::floor ( s ) ; 
-    const double sc = std::ceil  ( s ) ;
-    const unsigned int nf = 1 <= sf && std::abs ( s - sf ) <= s_Li_DELTA && sf <= std::numeric_limits<unsigned int>::max() ? round ( sf ) : 0u ;
-    const unsigned int nc = 1 <= sc && std::abs ( s - sc ) <= s_Li_DELTA && sc <= std::numeric_limits<unsigned int>::max() ? round ( sc ) : 0u ;
-    if ( 1 <= nf || 1 <= nc  )
-    {  
-    }
-  }
-
+  
   /// (B) use Eq (9.2)
   if ( ( x < 0 )  && ( absw1pi <= 0.5 ) )
   { return Li_eq_9_2 ( 1.0L * s , 1.0L * x , 1.0L * w ) ; }
   
-  /// (C) use Eq (9.3)
+  /// (C) use Eq (9.3) or (9.4) 
   if ( ( 0 < x ) && ( absw2pi <= 0.512 ) )
-  { return Li_eq_9_3 ( 1.0L * s , 1.0L * x , 1.0L * w ) ; }
-  
+  {
+    /// Is s close to the positive integer ?
+    const bool sposint =
+      ( 1 -  s_Li_DELTA ) < s                                        &&
+      ( s <= s_Li_DELTA + std::numeric_limits<unsigned int>::max() ) && 
+      std::abs ( s - round ( s ) ) <= s_Li_DELTA    ;
+    //
+    
+    /// return Li_eq_9_3 ( 1.0L * s , 1.0L * x , 1.0L * w ) ; 
+
+    if ( !sposint ) { return Li_eq_9_3 ( 1.0L * s , 1.0L * x , 1.0L * w ) ; }
+    
+    /// close to positive integer
+    /// From here follow Bailey & Borwain, p 119 Eq(11)
+    const unsigned int kp1 = round ( s )    ;
+    const unsigned int k   = kp1 - 1        ;
+    const long double  tau = 1.0L * s - kp1 ;
+    std::cerr << " CLOSE to int " << s
+	      << " k+1:  " << kp1 
+	      << " k:  "   << k  
+	      << " t: "    << tau
+	      << std::endl ;
+    //
+    return Li_eq_BB_11 ( k , tau , w ) ; 
+    //
+  }
   /// use the square formula to reduce the modulus 
   if ( 0 < x )
   {
