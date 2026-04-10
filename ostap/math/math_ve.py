@@ -13,47 +13,67 @@ __date__    = "2014-06-02"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'exp'          , 'expm1'      ,
-    'log'          , 'log10'      , 'log1p'   , 
-    'sqrt'         , 'cbrt'       , 'pow'     ,   
-    'sin'          , 'cos'        , 'tan'     ,
-    'cot'          , 'sec'        , 'csc'     , 'cas'      ,
-    'sinh'         , 'cosh'       , 'tanh'    , 'sech'     ,
-    'asin'         , 'acos'       , 'atan'    , 'atan2'    , 
-    'asinh'        , 'acosh'      , 'atanh'   ,
-    'erf'          , 'erfc'       , 'erfi'    , 'erfcx'    ,
-    'sinc'         , 
-    'probit'       , 'logit'      ,
-    'pochhammer'   , 
-    'gamma'        , 'tgamma'     , 'lgamma'  , 'igamma'   ,
-    'psi'          , 'polygamma'  , 'digamma' , 'trigamma' ,
-    'beta'         , 'lnbeta'     ,
-    'gd'           , 'gd_inv'     ,
-    'Ai'           , 'Bi'         ,
-    'li'           , 'Li'         ,              ## integral logarithms 
-    'Ei'           , 'Ein'        , 'E1'      ,  ## integral exponents 
-    'Si'           , 'Ci'         , 'Cin'     ,  ## integral trigonometry
-    'exp2'         , 'log2'       ,
-    'bessel_J'     , 'bessel_Y'   ,              ## Bessel functions  
-    'bessel_I'     , 'bessel_K'   ,              ## Bessel functions 
-    'gauss_pdf'    , 'gauss_cdf'  ,              ## Gaussian PDF and CDF 
-    'hypot'        , 'sigmoid'    , 'fma'    ,
-    'minv'         , 'maxv'       ,
-    'agm'          , 'ghm'        ,
-    'bring'        , 'BR'         ,
-    'am'           , 'dn'         ,             ## elliptic functions 
-    'sn'           , 'cn'         , 'sc'      , ## elliptic functions
-    'elliptic_K'   , 'elliptic_K' ,             ## elliptic integrals
-    'cm'           , 'sm'         ,             ## Dixon elliptic functions 
-    'cl'           , 'sl'         ,             ## Lemniscate elliptic functions 
-    'clh'          , 'slh'        ,             ## Lemniscate elliptic functions 
-    'dilog'        ,
-    'zeta'         , 'zetam1'     , 'eta'        , 
-    'hurwitz'      , 'hzeta'      ,
-    'moebius'      ,                               ## Moebius transform
-    'Cl'           , 'Sl'         , 'clausen'    , 
-    'hyperg_M'     , 'hyperg_U'   , 'hyperg_2F1' ,
-    'significance' , 'nsigmas'    , 'nsigma'
+    'exp'            , 'expm1'      ,
+    'log'            , 'log10'      , 'log1p'   , 
+    'sqrt'           , 'cbrt'       , 'pow'     ,   
+    'sin'            , 'cos'        , 'tan'     ,
+    'cot'            , 'sec'        , 'csc'     , 'cas'      ,
+    'sinh'           , 'cosh'       , 'tanh'    , 'sech'     ,
+    'asin'           , 'acos'       , 'atan'    , 'atan2'    , 
+    'asinh'          ,  'acosh'      , 'atanh'   ,
+    'erf'            , 'erfc'       , 'erfi'    , 'erfcx'    ,
+    'sinc'           , 
+    'probit'         , 'logit'      ,
+    'pochhammer'     , 
+    'gamma'          , 'tgamma'     , 'lgamma'  , 'igamma'   ,
+    'psi'            , 'polygamma'  , 'digamma' , 'trigamma' ,
+    'beta'           , 'lnbeta'     ,
+    'gd'             , 'gd_inv'     ,
+    'Ai'             ,  'Bi'         ,
+    'li'             , 'Li'         ,              ## integral logarithms 
+    'Ei'             , 'Ein'        , 'E1'      ,  ## integral exponents 
+    'Si'             , 'Ci'         , 'Cin'     ,  ## integral trigonometry
+    'exp2'           , 'log2'       ,
+    ## 
+    'bessel_J'       , 'bessel_Y'   ,              ## Bessel functions  
+    'bessel_I'       , 'bessel_K'   ,              ## Bessel functions 
+    'gauss_pdf'      , 'gauss_cdf'  ,              ## Gaussian PDF and CDF
+    ## 
+    'hypot'          , 'sigmoid'    , 'fma'    ,
+    'minv'           , 'maxv'       ,
+    'agm'            , 'ghm'        ,
+    ## 
+    'bring'          , 'BR'         ,             ## Bring's radical
+    ##
+    'am'             , 'dn'         ,             ## elliptic functions 
+    'sn'             , 'cn'         , 'sc'      , ## elliptic functions
+    ##
+    'elliptic_K'     , 'elliptic_E' ,             ## elliptic integrals
+    ##
+    'cm'             , 'sm'         ,             ## Dixon elliptic functions
+    ## 
+    'cl'             , 'sl'         ,             ## Lemniscate elliptic functions 
+    'clh'            , 'slh'        ,             ## Lemniscate elliptic functions
+    ## 
+    'zeta'           , 'zetam1'     ,             ## Zeta-family
+    'dirichlet_eta'  , 'eta'        ,             ## Dirichlet' eta-function
+    'dirichlet_beta' ,                            ## Dirichlet' lambda-function
+    'hurwitz'        , 'hzeta'      ,             ## Hurwitz' zeta fuction 
+    ## 
+    'Cl'             , 'Sl'         , 'clausen'    , ## Clausen functions 
+    'hyperg_M'       , 'hyperg_U'   , 'hyperg_2F1' , ## Huypergeometric functions 
+    ## 
+    'dilog'          ,                            ## Di-Logarithm
+    'pLi'            , 'polyLog'    ,             ## polylogarithm
+    'Ti'             ,                            ## inverse tangent intergal
+    'debye'          ,                            ## Debye function
+    'fermi_dirac'    ,                            ## complete Fermi-Dirac integral 
+    'bose_einstein'  ,                            ## complete Bose-Einstein integral 
+    'legendre_chi'   ,                            ## Legendre chi-function
+    ##
+    'moebius'        ,                            ## Moebius transform
+    ##     
+    'significance'  , 'nsigmas'    , 'nsigma'
     )
 # =============================================================================
 # logging 
@@ -826,21 +846,6 @@ def gauss_cdf ( x , mu = 0.0 , sigma = 1.0 ) :
     y =  VE ( x ) 
     return _gauss_cdf_ ( y if 0 < y.cov2() else y.value () , mu , sigma )
 
-# ==============================================================================
-_FD_ = Ostap.Math.fermi_dirac 
-# =============================================================================
-## Complete Fermi-Dirac integral
-#  \f$ F_j(x) = \frac{1}{\Gamma(j+1)}\int^{+\infty}_{0} \frac{t^j}{ \exp ( t-x) + 1 } dt \f$ 
-#  @param j parameter
-#  @param x argument 
-#  @return return value of complete Fermi-Dirac integral 
-def fermi_dirac ( j , x ) :
-    """ Complete Fermi-Dirac integral
-    """
-    assert isinstance ( j , integer_types ) and 0 <= j , 'Invalid value of j!'
-    ## 
-    return _FD_ ( j , x )
-
 # =============================================================================
 _li_ = Ostap.Math.li
 # =============================================================================
@@ -862,9 +867,11 @@ _Li_ = Ostap.Math.Li
 #   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
 #   for \f$ 0 < x \f$ 
 #  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+#  @attention Por polylogarithm functon  see `pLi` and `polyLog`
 def Li ( x ) :
     """ Get the Logarithmic integral function Li(x) = li(x) - li(2)
     - see https://en.wikipedia.org/wiki/Logarithmic_integral_function
+    - attention: for polylogarithm functon  see `pLi` and `polyLog`
     """
     fun = getattr ( x , '__Li__' , None )
     if fun : return fun ()
@@ -1207,13 +1214,28 @@ hzeta = hurwitz
 # =============================================================================
 _eta_ = Ostap.Math.eta
 # =============================================================================
-## Direchlet's  Eta function
-def eta ( x ) :
+## Dirichlet's  Eta function
+def dirichlet_eta ( x ) :
     """ Dirichlet's Eta function 
     """
     fun = getattr ( x , '__eta__' , None )
     if fun : return fun (   )
     return _eta_ ( x )
+
+## another name 
+eta = dirichlet_eta
+
+
+_dirichlet_beta_ = Ostap.Math.dirichlet_beta
+# =============================================================================
+## Dirichlet's  beta function
+def dirichlet_beta ( x ) :
+    """ Dirichlet's beta function 
+    """
+    fun = getattr ( x , '__dirichlet_beta__' , None )
+    if fun : return fun (   )
+    return _dirichlet_beta_ ( x )
+
 
 _Cl_n_    = Ostap.Math.Cl
 _Sl_n_    = Ostap.Math.Sl
@@ -1301,6 +1323,104 @@ def hyperg_2F1 ( a , b , c , x ) :
     return _hyperg_2F1 ( a , b , c , x )
 
 
+_pLi_  = Ostap.Math.Li
+_Ti_   = Ostap.Math.Ti
+
+# ==============================================================================
+## Polylogarithm function
+#  @see Ostap::Math::Li
+#  @see https://en.wikipedia.org/wiki/Polylogarithm
+#  @Attention   symbol `Li` stands for integral logarithm! 
+def pLi  ( s , z ) :
+    """ Polylogarithm function
+    - see `Ostap.Math.Li`
+    - attention: symbol `Li` stands for integral logarithm! 
+    """
+    fun = getattr ( z , '__pLi__' , None )
+    if fun : return fun ( s )
+    return _pLi_ ( s , z )
+
+## another name 
+polyLog = pLi
+
+# ==============================================================================
+## Inverse tangent integral 
+#  @see Ostap::Math::Ti 
+#  @see https://en.wikipedia.org/wiki/Inverse_tangent_integral
+def Ti  ( s , z ) :
+    """ Inverse tangent integral 
+    - see `Ostap.Math.Ti`
+    - see https://en.wikipedia.org/wiki/Inverse_tangent_integral
+    """
+    fun = getattr ( z , '__Ti__' , None )
+    if fun : return fun ( s )
+    return _Ti_ ( s , z )
+
+_lc_ = Ostap.Math.legendre_chi
+# ==============================================================================
+## Legendre's chi-function
+#  @see https://en.wikipedia.org/wiki/Legendre_chi_function
+#  @see Ostap::Math::legendre_chi
+def legendre_chi ( s , z ) :
+    """ Legendre's chi-function
+    - see https://en.wikipedia.org/wiki/Legendre_chi_function
+    - see Ostap::Math::legendre_chi
+    """
+    fun = getattr ( z , '__Legendre_chi__' , None )
+    if fun : return fun ( s )
+    return _lc_ ( s , z )
+    
+_fd_ = Ostap.Math.fermi_dirac
+_be_ = Ostap.Math.bose_einstein
+
+# ==============================================================================
+## Complete Fermi-Dirac integral 
+#  \f[] F_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}+1}\f]
+#
+#  It is related to polylogarithm
+#  \f$ F_s ( x ) = - Li_{s+1} ( -\mathrm{e}^{x} ) \f$
+def fermi_dirac ( s , z ) :
+    """ Complete Fermi-Dirac integral
+    - see https://en.wikipedia.org/wiki/Complete_Fermi%E2%80%93Dirac_integral
+
+    It is related to polylogarithm: F_s ( x ) = - Li_{s+1} ( -exp(x} ) 
+    """
+    fun = getattr ( z , '__fermi_dirac__' , None )
+    if fun : return fun ( s )
+    return _fd_ ( s , z )  
+
+# ==============================================================================
+## Complete Bose-Einstein integral 
+#  \f[] B_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}-1}\f]
+# 
+#  It is related to polylogarithm
+#   \f$ B_s ( x ) =  Li_{s+1} ( \mathrm{e}^{x} ) \f$
+#   @see Ostap::Math::Li
+def bose_einstein ( s , z ) :
+    """ Complete Bose-Einstein integral
+    - see https://en.wikipedia.org/wiki/Complete_Fermi%E2%80%93Dirac_integral
+    
+    It is related to polylogarithm: G_s ( x ) =  Li_{s+1} ( exp(x} ) 
+    """
+    fun = getattr ( z , '__bose_einstein__' , None )
+    if fun : return fun ( s )
+    return _be_ ( s , z )  
+
+_debye_ = Ostap.Math.debye
+# ==============================================================================
+## Debye function
+#  \f[ D_n(x) = \frac{n}{x^n} \int_0^x  \frac{t^n}{e^t - 1} dt \f]
+#  @see https://en.wikipedia.org/wiki/Debye_function
+#  @see Ostap::Math::Debye 
+def debye ( n , x ) :
+    """ Debye function
+    - see https://en.wikipedia.org/wiki/Debye_function
+    - @see `Ostap.Math.debye`
+    """
+    fun = getattr ( z , '__debye__' , None )
+    if fun : return fun ( s )
+    return _debye_ ( s , z )  
+
 _moebius_   = Ostap.Math.moebius
 # ==============================================================================
 ## Moebius transform
@@ -1316,19 +1436,6 @@ def moebius ( x       , *pars ) :
     fun = getattr ( x , '__moebius__' , None )
     if fun : return fun ( *pars )
     return _moebius_ ( x , *pars ) 
-    
-# =============================================================================
-## FIX
-#  @see https://sft.its.cern.ch/jira/browse/ROOT-6627'
-_a  = VE ( 1  , 1 )
-_b  = VE ( _a     )
-if   isequal ( _a.error () , _b.error () ) : pass 
-else :
-    jira = 'https://sft.its.cern.ch/jira/browse/ROOT-6627'
-    from ostap.core.meta_info import root_version 
-    logger.warning ( 'The problem %s is not solved yet ( ROOT %s) ' %  ( jira , root_version ) )
-    logger.warning ( 'Temporarily disable cast of VE to float' )
-    del VE.__float__
 
 # =============================================================================
 ## Convert p-value/probability into significance (# of sigmas)
@@ -1349,6 +1456,21 @@ def significance ( pvalue ) :
 nsigma  = significance
 # ============================================================================
 nsigmas = significance
+
+
+
+# =============================================================================
+## FIX
+#  @see https://sft.its.cern.ch/jira/browse/ROOT-6627'
+_a  = VE ( 1  , 1 )
+_b  = VE ( _a     )
+if   isequal ( _a.error () , _b.error () ) : pass 
+else :
+    jira = 'https://sft.its.cern.ch/jira/browse/ROOT-6627'
+    from ostap.core.meta_info import root_version 
+    logger.warning ( 'The problem %s is not solved yet ( ROOT %s) ' %  ( jira , root_version ) )
+    logger.warning ( 'Temporarily disable cast of VE to float' )
+    del VE.__float__
 
 # =============================================================================
 if '__main__' == __name__ :
