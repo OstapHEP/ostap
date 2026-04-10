@@ -849,6 +849,21 @@ namespace Ostap
      */
     inline long round ( const float  x ) { return round ( double ( x ) ) ; }
     // ========================================================================
+    /** round the complex value: 
+     *  round both the real and imaginary components
+     *  @code
+     *  std::complex<double> x = ...
+     *  std::complex<double> r = round ( x ) ;      
+     *  @endcode 
+     */
+    template <class TYPE>
+    inline std::complex<TYPE> round
+    ( const std::complex<TYPE>& x)
+    {
+      return std::complex<TYPE> ( TYPE(1) * round ( x.real() ) ,
+				  TYPE(1) * round ( x.imag() ) ) ;
+    }
+    // ========================================================================
     /** Round  down
      *  @see std::floor 
      *  @see  https://en.wikipedia.org/wiki/Rounding 

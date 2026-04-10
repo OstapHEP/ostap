@@ -1829,14 +1829,86 @@ namespace Ostap
      * 
      *  It is related to polylogarithm
      *  \f$ F_j ( x ) = - Li_{j+1} ( -\mathrm{e}^{x} ) \f$
+     *
+     *  GSL is used for computation: <code>gsl_sf_fermi_dirac_[0,1,2,int]_e</code>
      */
     double fermi_dirac 
-    ( const unsigned int j , 
-      const double       x ) ;
-      
+    ( const int     j , 
+      const double  x ) ;
     // ========================================================================
+    /** complete Fermi-Dirac integral of order \f$ +\frac{1}{2}\f$
+     *  @see Ostap::Math::fermi_dirac
+     *  @see Ostap::Math::fermi_dirac_mhalf 
+     *  GSL is used for computation: <code>gsl_sf_fermi_dirac_half_e</code>
+     */
+    double fermi_dirac_phalf ( const double x ) ;
+    // ========================================================================
+    /** complete Fermi-Dirac integral of order \f$ -\frac{1}{2}\f$
+     *  @see Ostap::Math::fermi_dirac
+     *  @see Ostap::Math::fermi_dirac_phalf 
+     *  GSL is used for computation: <code>gsl_sf_fermi_dirac_mhalf_e</code>
+     */
+    double fermi_dirac_mhalf ( const double x ) ;
+    // ========================================================================
+    /** complete Fermi-Dirac integral of order \f$ +\frac{3}{2}\f$
+     *  @see Ostap::Math::fermi_dirac
+     *  @see Ostap::Math::fermi_dirac_mhalf 
+     *  @see Ostap::Math::fermi_dirac_phalf 
+     *  GSL is used for computation: <code>gsl_sf_fermi_dirac_3half_e</code>
+     */
+    double fermi_dirac_3half ( const double x ) ;
+    // ========================================================================
+    /** complete Fermi-Dirac integral 
+     *  \f[] F_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}+1}\f]
+     * 
+     *  It is related to polylogarithm
+     *  \f$ F_s ( x ) = - Li_{s+1} ( -\mathrm{e}^{x} ) \f$
+     *
+     *  Use GSL for:
+     *   - integer s
+     *   - j = -1/2
+     *   - j = +1/2
+     *   - j = +3/2
+     *   - otherwhise polylogaritm is used 
+     *  @see Ostap::Math::Li
+     */
+    double fermi_dirac 
+    ( const double s , 
+      const double x ) ;
+    // =======================================================================    
+    /** complete Bose-Einstein integral 
+     *  \f[] B_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}-1}\f]
+     * 
+     *  It is related to polylogarithm
+     *  \f$ B_s ( x ) =  Li_{s+1} ( \mathrm{e}^{x} ) \f$
+     *  @see Ostap::Math::Li
+     */
+    double bose_einstein
+    ( const int    s , 
+      const double x ) ;
+    // =======================================================================    
+    /** complete Bose-Einstein integral 
+     *  \f[] B_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}-1}\f]
+     * 
+     *  It is related to polylogarithm
+     *  \f$ B_s ( x ) =  Li_{s+1} ( \mathrm{e}^{x} ) \f$
+     *  @see Ostap::Math::Li
+     */
+    double bose_einstein
+    ( const double s , 
+      const double x ) ;
+    // =======================================================================
     
-    // ========================================================================
+    // =======================================================================
+    /** Debye function
+     * \f[ D_n(x) = \frac{n}{x^n} \int_0^x  \frac{t^n}{e^t - 1} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Debye_function
+     */
+    double debye
+    ( const short  n ,
+      const double x ) ;
+    
+    // =======================================================================
     /** \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
      *  \f$  x> 0\f$.
      *  
@@ -2893,7 +2965,6 @@ namespace Ostap
     ( const unsigned short n , 
       const unsigned short m ) ;
     // =========================================================================
-
 
     // ========================================================================
     // Sigmoid/kind functions 

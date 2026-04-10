@@ -72,7 +72,8 @@ double Ostap::Math::ImLi
   const long double u = std::log ( x * 1.0L ) ;
   return -s_pi * std::pow ( u , s - 1.0L ) * igamma ( s ) ;
 }
-#include <iostream> 
+#include <iostream>
+#include "Ostap/Names.h"
 // ============================================================================
 namespace Ostap
 {
@@ -105,12 +106,12 @@ namespace
   // ==========================================================================
   constexpr std::complex<long double>  s_J { 0.0L , 1.0L } ;
   // ==========================================================================
-  constexpr double s_Li_DELTA = 1.e-3 ;
+  constexpr long double s_Li_DELTA = 1e-3L ;
   // ==========================================================================
   static_assert ( 0 < s_Li_DELTA && s_Li_DELTA < 1 ,
 		  "Invalid Li_DELTA parameter!"   ) ; 
   // ==========================================================================
-  constexpr unsigned short s_borwain_JMAX = 6 ;
+  constexpr unsigned short s_borwain_JMAX = 7 ;
   static_assert ( 3 <= s_borwain_JMAX  && s_borwain_JMAX <= 10 ,
 		  "Invalid s_borwain_JMAX parameter!"   ) ; 
   // ==========================================================================
@@ -180,13 +181,7 @@ namespace
     const long double t = Ostap::Math::stieltjes ( j ) * Ostap::Math::sign ( j ) * Ostap::Math::igamma ( 1 + j ) ;
     // return TYPE ( t ) - borwain_b ( k , j + 1 , L ) ;
     const auto r = TYPE ( t ) - borwain_b ( k , j + 1 , L ) ;
-    std::cerr << "BORWAIN-C "
-	      << " k=" << k
-	      << " j=" << k
-	      << " L=" << L
-	      << " t=" << t
-	      << " c=" << r
-	      << std::endl ;
+    //
     return r ;           
   }
   // ==========================================================================
@@ -194,24 +189,16 @@ namespace
   inline TYPE borwain_Q 
   ( const unsigned int   k     ,
     const TYPE&          L     , 
-    const TYPE&          t     , 
+    const long double    t     , 
     const unsigned short J = s_borwain_JMAX )
   {
-    TYPE  result = 0 ;
-    TYPE  tau    = 1 ;
+    TYPE        result = 0 ;
+    long double tau    = 1 ;
     for ( unsigned int j = 0 ; j <= J ; ++j )
     {
       result += borwain_c ( k , j , L ) * tau ;
       tau    *= t ;  
-      std::cerr << "BORWAIN-Q LOOP j=" << j << " r=" << result << std::endl ;
     }
-    //
-    std::cerr << "BORWAIN-Q "
-	      << " k=" << k
-	      << " L=" << L
-	      << " t=" << t 
-	      << " r=" << result
-	      << std::endl ;
     //
     return result ;
   }  
@@ -262,13 +249,9 @@ namespace
       // Alternating series ?
       // - one "small" term is enough,
       // - otherwise requre several  consequitive small terms are requred 
-      if ( ( xalt && nSmall ) || ( 2 <= nSmall ) ) 
-      {
-	std::cerr << "POWER # terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	break ;
-      }
+      if ( ( xalt && nSmall ) || ( 2 <= nSmall ) ) { break ; }
     }
-    std::cerr << "POWER x=" << x << std::endl ;
+    //
     return x * result ; // NB: x here
   } 
   // ==========================================================================
@@ -358,13 +341,9 @@ namespace
       //
       result -= delta ; 
       // 
-      if ( 2 <= nSmall ) 
-      {
-	std::cerr << "POWER-W (9.2) #terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	break ; // NB: x here 
-      }
+      if ( 2 <= nSmall ) { break ; }
     }
-    std::cerr << "POWER-W (9.2) x=" << x << std::endl ;
+    //
     return result ;   
   }
   // ===========================================================================
@@ -416,15 +395,7 @@ namespace
       term *= ( w / ( 1.0L * k )  ) ;
       const TYPES nmk    = s - TYPES ( k ) ;
       const TYPEX zeta_v = Ostap::Math::zeta ( nmk ) ;
-      
-      std::cerr << "EQ(9/3) "
-		<< " x="    << x
-		<< " s="    << s
-		<< " k="    << k
-		<< " nmk="  << nmk 
-		<< " zeta=" << zeta_v
-		<< std::endl ;
-      
+      //
       if ( is_not ( zeta_v ) )  { continue ; } 
       const TYPEX delta = term * zeta_v ;
       // 
@@ -433,18 +404,8 @@ namespace
       //
       result += delta ; 
       // 
-      if ( 3 <= nSmall ) 
-      {
-	std::cerr << "POWER-W (9.3) #terms " << k << " " << delta << " " << x << "# " << nSmall <<std::endl ;
-	break ; // NB: x here 
-      }
+      if ( 3 <= nSmall ) { break ; }
     }
-    //
-    std::cerr << "POWER-W (9.3) end " << __LINE__
-	      << " x="  << x    
-	      << " s="  << s
-	      << " r="  << result
-	      << std::endl ; 
     //
     return result ;
   }
@@ -570,7 +531,7 @@ namespace
     static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
     //
-    TYPEX result  = 1 == n ? TYPEX ( 0.0L ) : Ostap::Math::zeta ( n ) ;
+    TYPEX result  = ( 1 < n ) ? Ostap::Math::zeta ( n ) : 0.0L ; 
     TYPEX term    = 1 ;
     unsigned int nSmall = 0 ;
     for ( unsigned int k = 1 ; k < N ; ++k ) 
@@ -588,18 +549,7 @@ namespace
       //
       result += delta ; 
       // 
-      std::cerr << "EQ9.5 in loop "
-		<< " k=" << k
-		<< " z=" << zeta_v
-		<< " d=" << delta 
-		<< " r=" << result 
-		<< std::endl ;
-      //
-      if ( 2 <= nSmall ) 
-      {
-	std::cerr << "# EQ (9.5) terms " << k << " " << delta << " " << x << "# " << nSmall << ""<<std::endl ;
-	break ;  
-      }
+      if ( 2 <= nSmall ) { break ; }
     }
     //
     return result ;   
@@ -619,7 +569,7 @@ namespace
     //
     const unsigned short nm1  = n - 1 ;
     const long double    hm  =  Ostap::Math::harmonic ( nm1 )  ;
-    const long double    ig  =  Ostap::Math::igamma   ( nm1 )  ;
+    const long double    ig  =  Ostap::Math::igamma   ( n   )  ;
     //
     const long double    t1 =  w < 0 ? 
       hm - std::log ( -w            )         :
@@ -627,16 +577,6 @@ namespace
     //
     const long double    t2 = std::pow ( w , nm1 ) * ig ;
     //
-    std::cerr << "Li_eq_9_5 " << __LINE__
-	      << " sum=" << sum
-	      << " nm1=" << nm1
-	      << " hm="  << hm  
-	      << " ig="  << ig 
-	      << " t1="  << t1 
-	      << " t2="  << t2
-	      << " r="   << (sum+t1*t2)      
-	      << std::endl ; 
-          
     return sum + t1 * t2 ;
   }
   // ==========================================================================
@@ -657,7 +597,7 @@ namespace
     //
     const unsigned short nm1 = n - 1 ;
     const long double    hm  =  Ostap::Math::harmonic ( nm1 )  ;
-    const long double    ig  =  Ostap::Math::igamma   ( nm1 )  ;
+    const long double    ig  =  Ostap::Math::igamma   ( n   )  ;
     //
     const std::complex<long double> t1 = hm - std::log ( -ww ) ;
     const std::complex<long double> t2 = std::pow ( ww , nm1 ) * ig ; 
@@ -672,12 +612,6 @@ namespace
     const long double  w   )
   {
     //
-    std::cerr << " BB_QQ "
-	      << " k=" << k
-	      << " t=" << tau
-	      << " w=" << w
-	      << std::endl ;
-      
     Ostap::Assert ( std::abs( w ) / s_2pi < 1 ,
 		    "Invalid range for w"     , 
 		    "::Li_eq_BB_11"           , 
@@ -698,47 +632,23 @@ namespace
       const TYPE zeta_v   = Ostap::Math::zeta ( arg_zeta ) ;
       if ( is_not ( zeta_v ) ) { continue ; }
       const TYPE delta  = term * zeta_v   ;
-      //
-      std::cerr << " BB -in loop " << n
-		<< " az=" << arg_zeta
-		<< " z="  << zeta_v 
-		<< " d="  << delta 
-		<< " r="  << result
-		<< std::endl ;
-      
+      //      
       if ( is_not ( delta ) || xzero ( 2.0L * delta ) ||  xequal ( result - 2.0L * delta , result ) ) { ++nSmall     ; }
       else                                                                                            {   nSmall = 0 ; }
       //
       result += delta ;
       //
-      if ( 2 <= nSmall ) 
-      {
-	std::cerr << "BB (11) #terms " << n << " " << delta << " " << "# " << nSmall <<std::endl ;
-	break ; // NB: x here 
-      }      
+      if ( 2 <= nSmall ) { break ; }      
     }
     //
-    std::cerr << "BB (11) " << __LINE__
-	      << " r="      << result
-	      << std::endl ;
-    
     const long double pp = Ostap::Math::POW    ( w , k ) ; 
     const long double gg = Ostap::Math::igamma ( k + 1 ) ;  
     //
     if ( 0 <= w )
     {
       const std::complex<long double> L { std::log ( -w + 0.0L * s_J ) }  ;
-      const std::complex<long double> T { tau } ;      
+      const long double               T { tau } ;      
       const std::complex<long double> Q = borwain_Q ( k , L , T , s_borwain_JMAX ) ;
-      std::cerr << "BB (11)/A " << __LINE__
-		<< " r="      << result
-		<< " t="      << tau   
-		<< " pp="     << pp 
-		<< " gg="     << gg
-		<< " L="      << L
-		<< " Q="      << Q
-		<< std::endl ;
-      
       return result + pp * gg * Q.real() ;
     }
     //
@@ -746,20 +656,13 @@ namespace
     const long double T = tau            ;    
     const long double Q = borwain_Q ( k , L , T , s_borwain_JMAX ) ;
     //
-    std::cerr << "BB (11)/B " << __LINE__
-	      << " r="      << result
-	      << " pp="     << pp 
-	      << " gg="     << gg
-	      << " Q="      << Q
-	      << std::endl ;
-    
     return result + pp * gg * Q ;
   }
   // ==========================================================================
   /// Li ( k + 1 + tau , e^w ) 
   std::complex<double> Li_eq_BB_11
   ( const unsigned int          k    ,
-    const std::complex<double>& tau_ ,
+    const long double           tau  ,
     const std::complex<double>& w_   )
   {
     //
@@ -773,7 +676,6 @@ namespace
     static const Ostap::Math::Equal_To<TYPE> xequal {} ;
     static const Ostap::Math::Zero<TYPE>     xzero  {} ; 
     //
-    const TYPE tau { tau_ } ;
     const TYPE w   { w_   } ;
     //
     TYPE result = 0 ;
@@ -781,10 +683,11 @@ namespace
     unsigned short nSmall =  0 ;
     for ( unsigned int n  = 0 ; n <= k + 1000 ; ++n )
     {
+      //
       if ( n      ) { term *= ( w / ( 1.0L * n ) ) ; }
       if ( n == k ) { continue ; }                      // ATTENTION!
-      const TYPE arg_zeta = 1.0L + k - n + tau ;
-      const TYPE zeta_v   = Ostap::Math::zeta ( arg_zeta ) ;
+      const long double arg_zeta = 1.0L + k - n + tau ;
+      const long double zeta_v   = Ostap::Math::zeta ( arg_zeta ) ;
       if ( is_not ( zeta_v ) ) { continue ; }
       const TYPE delta  = term * zeta_v   ;
       //
@@ -793,11 +696,7 @@ namespace
       //
       result += delta ;
       //
-      if ( 2 <= nSmall ) 
-      {
-	std::cerr << "BB (11) #terms " << n << " " << delta << " " << "# " << nSmall <<std::endl ;
-	break ; // NB: x here 
-      }      
+      if ( 2 <= nSmall ) { break ; }      
     }
     //
     const TYPE        pp = Ostap::Math::POW    ( w , k ) ; 
@@ -833,11 +732,9 @@ double Ostap::Math::Li
   // explicit case:
   if      ( 1  == n ) // Eq (6.1)
   {
-    /** 
-	return x < 1 ?
-	- std::log (                            1.0L - x       )         :
-	- std::log ( std::complex<long double>( 1.0L - x , 0 ) ).real () ;
-    */
+    return x < 1 ?
+      - std::log (                            1.0L - x       )         :
+      - std::log ( std::complex<long double>( 1.0L - x , 0 ) ).real () ;
   }
   /// dilogarithm
   else if ( 2  == n )
@@ -891,13 +788,9 @@ double Ostap::Math::Li
       // Eq (14.1) 
       return Li ( two , x * x ) / 2 - Li ( two , -x ) ; 
     }
-    
-    std::cerr << "dilog case " << x << std::endl ;
+    //
   }
   //
-
-  std::cerr << "Li(" << n << "," << x << ") / 1" << std::endl ;
-  
   // RATIONAL CASES 
   //  
   if      (  0 == n ) { return x                /          ( 1.0L - x )     ; } // Eq.(6.2)
@@ -908,13 +801,9 @@ double Ostap::Math::Li
   {
     const unsigned short NN = -n ;
     Eulerian eu { NN } ;
-    std::cerr << "Eulerian explicit " << x << std::endl ;
     return x * eu ( x ) / std::pow ( 1.0L - x , NN + 1 ) ;
   }
   //
-
-  std::cerr << "Li(" << n << "," << x << ") / 2" << std::endl ;
-
   const long double w = std::log ( 1.0L * std::abs ( x ) ) ;
 
   // for small z use power series 
@@ -927,50 +816,27 @@ double Ostap::Math::Li
   const bool xsmall_1 = ( 0 > x ) && ( absx <= absw1pi ) ; // for 
   const bool xsmall_2 = ( 0 < x ) && ( absx <= absw2pi ) ; // for Eq (9.3) & Eq.(9.5) 
 
-  std::cerr << "Li(" << n << "," << x << ") / 3"
-	    << " small1:" << xsmall_1 
-	    << " small2:" << xsmall_2 
-	    << std::endl ;
-  
   /// (A) simple power serie  
   if ( std::abs ( x ) <= 0.25 || xsmall_1 || xsmall_2 ) { return Li_power  ( n , x ) ; }
 
-  std::cerr << "Li(" << n << "," << x << ") / 4"
-	    << " abs(w/pi):" << absw1pi  << std::endl ;
-
   /// (B) use Eq (9.2)
   if ( ( x < 0 )  && ( absw1pi <= 0.5 ) )
-  { return Li_eq_9_2 ( n , 1.0L * x , 1.0L * w ) ; }
+    { return Li_eq_9_2 ( n , 1.0L * x , 1.0L * w ) ; }
   
-  std::cerr << "Li(" << n << "," << x << ") / 5"
-	    << " abs(w/2pi):" << absw2pi 
-	    << std::endl ;
-
   /// (C) use Eq (9.3)
   if ( ( n < 0 ) && ( 0 < x ) && ( absw2pi <= 0.512 ) )
   { return Li_eq_9_3 ( n , 1.0L * x , 1.0L * w ) ; }
   
-  std::cerr << "Li(" << n << "," << x << ") / 6"
-	    << " abs(w/2pi):" << absw2pi
-	    << std::endl ;
-
   /// (D) use Eq (9.5)
   if ( ( n > 0 ) && ( 0 < x ) && ( absw2pi <= 0.512 ) )
   { return Li_eq_9_5 ( n , 1.0L * x , 1.0L * w ) ; }
 
-  std::cerr << "Li(" << n << "," << x << ") / 7" << std::endl ;
-
   /// (E) Eq. (10.3)
   if ( 0 > n && 1 < std::abs ( x ) )
-  {
-    std::cerr << "Reciprocal 10.3 " << x << std::endl ;
-    return ( 0 == n % 2 ? -1 : +1 ) * Li ( n , 1.0 / x ) ;
-  }
+  { return ( 0 == n % 2 ? -1 : +1 ) * Li ( n , 1.0 / x ) ; }
   
-  std::cerr << "Li(" << n << "," << x << ") / 8" << std::endl ;
-
   /// (F) Eq. (10.1)
-  if ( 0 < n && 1 < x ) 
+  if ( 1 <= n && 1 < x ) 
   {
     long double          rr = zeta ( 0 ) ;
     long double          tt = 1 ; 
@@ -980,22 +846,16 @@ double Ostap::Math::Li
       tt *= ( n + 2 - 2 * k ) * ( n + 1 - 2 * k ) / w2 ;
       rr += tt * zeta ( 2 * k ) ;      
     }
-    const long double R = std::pow ( w , n ) * igamma ( n + 1 ) * rr ; 
-    std::cerr << "Reciprocal 10.1 " << x << std::endl ;
+    const long double R = 2 * std::pow ( w , n ) * igamma ( n + 1 ) * rr ; 
     return R + ( 0 == n % 2 ? -1 : +1 ) * Li ( n , 1.0 / x ) ;
   }    
 
-  std::cerr << "Li(" << n << "," << x << ") / 9" << std::endl ;
-  
   /// (G) negative argument? (Eq 14.1)
   if ( x < 0  )
   {
     // Use the square formula Eq.(14.1) to convert to the positive argument
-    std::cerr << "Square14.1 " << x << std::endl ;
     return std::pow ( 2 , 1 - n ) * Li ( n , x * x ) - Li ( n , -x ) ;
   }
-  
-  std::cerr << "Li(" << n << "," << x << ") / 10" << std::endl ;
   
   Ostap::Assert ( false ,
 		  "Not yet implemented!" ,
@@ -1019,6 +879,7 @@ double Ostap::Math::Li
 ( const double s ,
   const double x )
 {
+  //
   if      ( !x || s_zero ( x ) ) { return 0  ; }
   else if ( isshort ( s ) )
   {
@@ -1060,25 +921,18 @@ double Ostap::Math::Li
       ( s <= s_Li_DELTA + std::numeric_limits<unsigned int>::max() ) && 
       std::abs ( s - round ( s ) ) <= s_Li_DELTA    ;
     //
-    
-    /// return Li_eq_9_3 ( 1.0L * s , 1.0L * x , 1.0L * w ) ; 
-
-    if ( !sposint ) { return Li_eq_9_3 ( 1.0L * s , 1.0L * x , 1.0L * w ) ; }
+    if ( !sposint ) { return Li_eq_9_3 ( 1.0L * s , 1.0L * x , 1.0L * w ) ;}
     
     /// close to positive integer
     /// From here follow Bailey & Borwain, p 119 Eq(11)
     const unsigned int kp1 = round ( s )    ;
     const unsigned int k   = kp1 - 1        ;
     const long double  tau = 1.0L * s - kp1 ;
-    std::cerr << " CLOSE to int " << s
-	      << " k+1:  " << kp1 
-	      << " k:  "   << k  
-	      << " t: "    << tau
-	      << std::endl ;
     //
     return Li_eq_BB_11 ( k , tau , w ) ; 
     //
   }
+  //
   /// use the square formula to reduce the modulus 
   if ( 0 < x )
   {
@@ -1142,7 +996,6 @@ Ostap::Math::Li
   {
     const unsigned short NN = -n ;
     Eulerian eu { NN } ;
-    std::cerr << "Eulerian explicit " << x << std::endl ;
     return eu ( z ) * RR ( zz / std::pow ( 1.0L - zz , NN + 1 ) ) ;
   }
   
@@ -1232,8 +1085,26 @@ Ostap::Math::Li
   
   
   /// (B) Use Eq (9.3) 
-  if (  absw2pi <= 0.512 ) { return Li_eq_9_3 ( 1.0L * s , z , w  ) ; }
-
+  if (  absw2pi <= 0.512 )
+  {
+    /// close to positive integer ? 
+    const bool sposint =
+      ( 1 -  s_Li_DELTA ) < s                                        &&
+      ( s <= s_Li_DELTA + std::numeric_limits<unsigned int>::max() ) && 
+      std::abs ( s - round ( s ) ) <= s_Li_DELTA    ;
+    //
+    if ( !sposint ) { return Li_eq_9_3 ( 1.0L * s , z , w  ) ; }
+    //
+    
+    /// close to positive integer
+    /// From here follow Bailey & Borwain, p 119 Eq(11)
+    const unsigned int    kp1 = round ( s ) ;
+    const unsigned int    k   = kp1 - 1     ;
+    const long     double tau =  s - kp1    ;
+    //
+    return Li_eq_BB_11 ( k , tau , w ) ; 
+  }
+  
   /// (D) Use the square formula top reduce modulus 
   if ( 1 < absz )
   {
@@ -1250,67 +1121,169 @@ Ostap::Math::Li
   return std::numeric_limits<double>::quiet_NaN () ;     
 }
 // ===========================================================================
-/** Polylogarithm function  \f$ Li_s(x)  = \sum \frac{x^k}{k^s} f\$
- *  @see https://en.wikipedia.org/wiki/Polylogarithm
- *  @see David Wood, "The computation of polylogarithms",
- *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
- *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
- *  @param s parameter
- *  @param x argument
- *  @return value of polylogarithm function \f$ Li_s(x) \f$
- *  @see  Ostap::Math::ImLi
- *
- */
+
+// ===========================================================================
+/*  (Real part of) inverse tangent integral
+ *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+ *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+ */ 
+// ===========================================================================
+double Ostap::Math::Ti
+( const short  n ,
+  const double x )
+{
+  //
+  if      ( 0 == n ) { return x / ( 1 + x * x ) ; }
+  else if ( 1 == n ) { return std::atan ( x )   ; }
+  //
+  const std::complex<double> z1 { 0.0 , +x } ;
+  const std::complex<double> z2 { 0.0 , -x } ;
+  //
+  const std::complex<double> l1 { Li ( n , z1 ) } ;
+  const std::complex<double> l2 { Li ( n , z2 ) } ;
+  //
+  return 0.5 * std::imag ( l1 - l2 ) ; 
+}
+// ===========================================================================
+/*  (Real part of) inverse tangent integral
+ *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+ *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+ */ 
+// ===========================================================================
+double Ostap::Math::Ti
+( const double s ,
+  const double x )
+{
+  if ( isshort ( s ) )
+  {
+    const short n = round ( s ) ;
+    return Ti ( n , x ) ;
+  }
+  //
+  const std::complex<double> z1 { 0.0 , +x } ;
+  const std::complex<double> z2 { 0.0 , -x } ;
+  //
+  const std::complex<double> l1 { Li ( s , z1 ) } ;
+  const std::complex<double> l2 { Li ( s , z2 ) } ;
+  //
+  return 0.5 * std::imag ( l1 - l2 ) ; 
+}
+// ===========================================================================
+/*  Inverse tangent integral
+ *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+ *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+ */ 
 // ===========================================================================
 std::complex<double>
-Ostap::Math::Li
-( const std::complex<double>& s , 
+Ostap::Math::Ti
+( const short                 n ,
   const std::complex<double>& z )
 {
   //
-  const double sx = s.real () ;
-  const double sy = s.imag () ;
+  if      ( 0 == n ) { return z / ( 1.0 + z * z ) ; }
+  else if ( 1 == n ) { return std::atan ( z )   ; }
   //
-  if ( !sy || s_zero ( sy ) ) { return Li ( sx , z ) ; } 
+  const std::complex<double> z1 { +s_j * z } ;
+  const std::complex<double> z2 { -s_j * z } ;
   //
-  
-  std::cerr << "(0) Li(C,C)<1" << z << std::endl ;  
-  
+  const std::complex<double> l1 { Li ( n , z1 ) } ;
+  const std::complex<double> l2 { Li ( n , z2 ) } ;
   //
-  // Here s is *NOT* (short) integer!  
-  //
-  const std::complex<double> w { std::log ( z ) } ;
-  
-  const long double absw1pi = std::abs ( w ) * s_1_pi ; 
-  const long double absw2pi = 0.5L* absw1pi           ;  
-  const long double absz    = std::abs ( z ) ;
-  
-  ///  use simple power series 
-  const bool xsmall_2 = absz <= absw2pi ;
-  
-  /// (A) simple power serie  for small x 
-  if ( absz <= 0.25 || xsmall_2 ) { return Li_power  ( s , z ) ; }
-  
-  /// (B) Use Eq (9.3) 
-  if (  absw2pi <= 0.512 ) { return Li_eq_9_3 ( s , z , w  ) ; }
-  
-  /// (C) Use the square formula to reduce modulus 
-  if ( 1 < absz )
-  {
-    const std::complex<double> sqz { std::sqrt ( z ) } ;
-    std::cerr << "(1) Li(C,C)<1" << z << std::endl ;  
-    return ( Li ( s , +sqz ) + Li ( s  , -sqz ) ) * std::pow ( 2.0 , s - 1.0 ) ;    
-  }
-  
-  std::cerr << "(2) Li(C,C)<1" << z << std::endl ;  
-  
-  Ostap::Assert ( false ,
-		  "Not yet implemented!" ,
-		  "Ostap::Math::Li"      ,
-		  NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
-  //
-  return std::numeric_limits<double>::quiet_NaN () ;     
+  return 0.5 * ( l1 - l2 ) / s_j ; 
 }
+// ===========================================================================
+/*  Inverse tangent integral
+ *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+ *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+ */ 
+// ===========================================================================
+std::complex<double>
+Ostap::Math::Ti
+( const double                s ,
+  const std::complex<double>& z )
+{
+  if ( isshort ( s ) )
+  {
+    const short n = round ( s ) ;
+    return Ti ( n , z ) ;
+  }
+  // 
+  const std::complex<double> z1 { +s_j * z } ;
+  const std::complex<double> z2 { -s_j * z } ;
+  //
+  const std::complex<double> l1 { Li ( s , z1 ) } ;
+  const std::complex<double> l2 { Li ( s , z2 ) } ;
+  //
+  return 0.5 * ( l1 - l2 ) / s_j ; 
+}
+// ===========================================================================
+
+// ===========================================================================
+/* (Real part of) Legendre chi-function
+ *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+ *  https://en.wikipedia.org/wiki/Legendre_chi_function
+ */
+// ===========================================================================
+double Ostap::Math::legendre_chi
+( const short  n ,
+  const double x )
+{
+  if ( 0 == n ) { return x / ( 1 - x * x ) ; }
+  return 0.5 * ( Li ( n , +x ) - Li ( n , -x ) ) ;
+}
+// ===========================================================================
+/*  (Real part of) Legendre chi-function
+ *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+ *  https://en.wikipedia.org/wiki/Legendre_chi_function
+ */
+// ===========================================================================
+double Ostap::Math::legendre_chi
+( const double s ,
+  const double x ) 
+{
+  if ( isshort ( s ) )
+  {
+    const short n = round ( s ) ;
+    return legendre_chi ( n , x ) ;
+  }
+  //
+  return 0.5 * ( Li ( s , +x ) - Li ( s , -x ) ) ;
+}
+// ===========================================================================
+/*  Legendre chi-function
+ *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+ *  https://en.wikipedia.org/wiki/Legendre_chi_function
+ */
+// ===========================================================================
+std::complex<double>
+Ostap::Math::legendre_chi
+( const short                 n ,
+  const std::complex<double>& z )
+{
+  if ( 0 == n ) { return z / ( 1.0 - z * z ) ; }
+  return 0.5 * ( Li ( n , +z ) - Li ( n , -z ) ) ;  
+}
+// ===========================================================================
+/*  Legendre chi-function
+ *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+ *  https://en.wikipedia.org/wiki/Legendre_chi_function
+ */
+// ===========================================================================
+std::complex<double>
+Ostap::Math::legendre_chi
+( const double                s ,
+  const std::complex<double>& z )
+{
+  if ( isshort ( s ) )
+  {
+    const short n = round ( s ) ;
+    return legendre_chi ( n , z ) ;
+  }
+  //
+  return 0.5 * ( Li ( s , +z ) - Li ( s , -z ) ) ;  
+}
+// ===========================================================================
+
 // ===========================================================================
 //                                                                     The END 
 // ===========================================================================

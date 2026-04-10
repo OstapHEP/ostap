@@ -24,6 +24,7 @@
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_log.h"
 #include "gsl/gsl_sf_psi.h"
+#include "gsl/gsl_sf_debye.h"
 #include "gsl/gsl_sf_bessel.h"
 #include "gsl/gsl_sf_ellint.h"
 #include "gsl/gsl_sf_lambert.h"
@@ -43,6 +44,7 @@
 #include "Ostap/Interpolants.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/ChebyshevApproximation.h"
+#include "Ostap/PolyLog.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -4350,7 +4352,7 @@ Ostap::Math::dilog
 // ============================================================================
 double Ostap::Math::zeta ( const int n  )
 {
-  if ( 1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  if      (  1 == n ) { return std::numeric_limits<double>::quiet_NaN() ; }
   // use Cauchi principal value: 
   // if      (  1 == n ) { return s_Mascheroni ; }
   else if (  0 == n ) { return -0.5         ; }
@@ -4642,18 +4644,20 @@ double Ostap::Math::dirichlet_beta
  // 
  return dirichlet_beta ( 1.0 * n ) ;
 }
-
 // ========================================================================
 /* complete Fermi-Dirac integral 
  *  \f[] F_j(x) = \frac{1}{\Gamma ( j + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}+1}\f]
  * 
  *  It is related to polylogarithm
  *  \f$ F_j ( x ) = - Li_{j+1} ( -\mathrm{e}^{x} ) \f$
+ *
+ *  GSL is used for computation: <code>gsl_sf_fermi_dirac_[0,1,2,int]_e</code>
+ *
  */
 // =============================================================================
 double Ostap::Math::fermi_dirac 
-( const unsigned int j , 
-  const double       x ) 
+( const int    j , 
+  const double x ) 
 {
   // use GSL: 
   Ostap::Math::GSL::GSL_Error_Handler sentry ;
@@ -4667,12 +4671,201 @@ double Ostap::Math::fermi_dirac
   else               { ierror = gsl_sf_fermi_dirac_int_e ( j , x , &result ) ; }
   //
   if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_fermi_dirac_[0,1,2,int]_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
+  //
+  return result.val ;
+}
+// =============================================================================
+/*  complete Fermi-Dirac integral of order \f$ +\frac{1}{2}\f$
+ *  @see Ostap::Math::fermi_dirac
+ *  @see Ostap::Math::fermi_dirac_mhalf 
+ *  GSL is used for computation: <code>gsl_sf_fermi_dirac_half_e</code>
+ */
+// =============================================================================
+double Ostap::Math::fermi_dirac_phalf
+( const double x )
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  //
+  const int     ierror = gsl_sf_fermi_dirac_half_e ( x , &result ) ; 
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_fermi_dirac_half_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
+  //
+  return result.val ;
+}
+// =============================================================================
+/*  complete Fermi-Dirac integral of order \f$ -\frac{1}{2}\f$
+ *  @see Ostap::Math::fermi_dirac
+ *  @see Ostap::Math::fermi_dirac_phalf 
+ *  GSL is used for computation: <code>gsl_sf_fermi_dirac_mhalf_e</code>
+ */
+// =============================================================================
+double Ostap::Math::fermi_dirac_mhalf
+( const double x )
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  //
+  const int     ierror = gsl_sf_fermi_dirac_mhalf_e ( x , &result ) ; 
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_fermi_dirac_mhalf_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
+  //
+  return result.val ;
+}
+// =============================================================================
+/*  complete Fermi-Dirac integral of order \f$ +\frac{3}{2}\f$
+ *  @see Ostap::Math::fermi_dirac
+ *  @see Ostap::Math::fermi_dirac_mhalf 
+ *  @see Ostap::Math::fermi_dirac_phalf 
+ *  GSL is used for computation: <code>gsl_sf_fermi_dirac_3half_e</code>
+ */
+// =============================================================================
+double Ostap::Math::fermi_dirac_3half
+( const double x )
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  //
+  const int     ierror = gsl_sf_fermi_dirac_3half_e ( x , &result ) ; 
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_fermi_dirac_3half_e function" , __FILE__ , __LINE__ , ierror ) ;
+    if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+      { return std::numeric_limits<double>::quiet_NaN() ; }
+  }
+  //
+  return result.val ;
+}
+// =============================================================================
+/*  Complete Fermi-Dirac integral     
+ *  \f[] F_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}+1}\f]
+ * 
+ *  It is related to polylogarithm
+ *  \f$ F_s ( x ) = - Li_{s+1} ( -\mathrm{e}^{x} ) \f$
+ *
+ *  Use GSL for
+ *   - integer s
+ *   - j = -1/2
+ *   - j = +1/2
+ *   - j = +3/2     
+ */
+// ===========================================================================
+double Ostap::Math::fermi_dirac 
+( const double s , 
+  const double x )
+{
+  /// redirect to the GSL-based functions 
+  if ( isint ( s ) )
+  {
+    const int n = round ( s ) ;
+    return fermi_dirac ( n , x ) ;
+  }
+  else if ( s_equal ( 2 * s , -1.0 ) ) { return fermi_dirac_mhalf ( x ) ;  }
+  else if ( s_equal ( 2 * s , +1.0 ) ) { return fermi_dirac_phalf ( x ) ;  }
+  else if ( s_equal ( 2 * s , +3.0 ) ) { return fermi_dirac_3half ( x ) ;  }
+  //
+  // Use polylogarithm
+  return - Li ( s + 1 , -std::exp ( x ) ) ;  
+}
+// ============================================================================
+/* complete Bose-Einstein integral 
+ *  \f[] B_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}-1}\f]
+ * 
+ *  It is related to polylogarithm
+ *  \f$ B_s ( x ) =  Li_{s+1} ( \mathrm{e}^{x} ) \f$
+ *
+ */
+// ============================================================================
+double Ostap::Math::bose_einstein
+( const int    s , 
+  const double x )
+{ return Li ( 1.0 + s , std::exp ( x ) ) ; }
+// ============================================================================
+/*  complete Bose-Einstein integral 
+ *  \f[] B_s(x) = \frac{1}{\Gamma ( s + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}-1}\f]
+ * 
+ *  It is related to polylogarithm
+ *  \f$ B_s ( x ) =  Li_{s+1} ( \mathrm{e}^{x} ) \f$
+ *
+ */
+// ============================================================================
+double Ostap::Math::bose_einstein
+( const double s , 
+  const double x )
+{ return Li ( 1.0 + s , std::exp ( x ) ) ; }
+
+// ===========================================================================
+/* Debye function
+ * \f[ D_n(x) = \frac{n}{x^n} \int_0^x  \frac{t^n}{e^t - 1} dt \f]
+ *  @see https://en.wikipedia.org/wiki/Debye_function
+ */
+// ===========================================================================
+double Ostap::Math::debye
+( const short  n ,
+  const double x )
+{
+  if      ( 0 == n       ) { return 1 ; }
+  else if ( s_zero ( x ) ) { return 1 ; }   
+  //
+  // (A) use GSL
+  // 
+  if ( 1 <= n && n <= 6  )
+  {
+    // use GSL: 
+    Ostap::Math::GSL::GSL_Error_Handler sentry ;
+    //
+    gsl_sf_result result ;
+    int ierror = GSL_SUCCESS ;
+    //
+    if      ( 1 == n ) { ierror = gsl_sf_debye_1_e ( x , &result ) ; }
+    else if ( 2 == n ) { ierror = gsl_sf_debye_2_e ( x , &result ) ; }
+    else if ( 3 == n ) { ierror = gsl_sf_debye_3_e ( x , &result ) ; }
+    else if ( 4 == n ) { ierror = gsl_sf_debye_4_e ( x , &result ) ; }
+    else if ( 5 == n ) { ierror = gsl_sf_debye_5_e ( x , &result ) ; }
+    else if ( 6 == n ) { ierror = gsl_sf_debye_6_e ( x , &result ) ; }
+    //
+    if ( ierror ) 
     {
-      gsl_error ( "Error from gsl_sf_fermi_dirac_[0,1,2,int]_e function" , __FILE__ , __LINE__ , ierror ) ;
+      gsl_error ( "Error from gsl_sf_debye_[1,..,6]_e function" , __FILE__ , __LINE__ , ierror ) ;
       if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
       { return std::numeric_limits<double>::quiet_NaN() ; }
     }
-  return result.val ;
+  }
+  //
+  // (B) use polylogarithms
+  //
+  const long double xx   = x ; 
+  const long double expx = std::exp ( -xx ) ;
+  long double  result    = Li ( n , expx ) ;
+  long double  term      = 1 ;
+  //
+  for ( unsigned short k = 1 ; k < n ; ++k )
+  {
+    term   *= ( xx / k ) ;
+    const short nmk = n - k ;
+    result += Li ( nmk , expx ) * term ;
+  }
+  //
+  return result ;
 }
 // ============================================================================
 /* Mill's ratio for normal distribution

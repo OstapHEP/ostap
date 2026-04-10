@@ -124,21 +124,88 @@ namespace Ostap
     ( const double                s ,
       const std::complex<double>& z ) ;
     // =======================================================================
-    /** Polylogarithm function  \f$ Li_s(x)  = \sum \frac{x^k}{k^s} f\$
-     *  @see https://en.wikipedia.org/wiki/Polylogarithm
-     *  @see David Wood, "The computation of polylogarithms",
-     *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
-     *  @see https://www.cs.kent.ac.uk/pubs/1992/110/
-     *  @param s parameter
-     *  @param x argument
-     *  @return value of polylogarithm function \f$ Li_s(x) \f$
-     */
-    std::complex<double> Li
-    ( const std::complex<double>& s ,
+
+    // =======================================================================
+    // Related functions 
+    // =======================================================================
+
+    // =======================================================================
+    // Inverse tangent integral
+    // =======================================================================
+    
+    // =======================================================================
+    /** (Real part of) inverse tangent integral
+     *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+     *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+     */ 
+    double Ti
+    ( const short  n ,
+      const double x ) ;
+    // =======================================================================
+    /** (Real part of) inverse tangent integral
+     *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+     *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+     */ 
+    double Ti
+    ( const double s ,
+      const double x ) ;
+    // ======================================================================
+    /** Inverse tangent integral
+     *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+     *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+     */ 
+    std::complex<double> Ti
+    ( const short                 n ,
       const std::complex<double>& z ) ;
     // =======================================================================
-    // Eelated functions 
+    /** Inverse tangent integral
+     *  \f[ Ti_s(z) = \frac{Li_s(iz) - Li_s(-iz)}{2i} \right)\f]
+     *  @See https://en.wikipedia.org/wiki/Inverse_tangent_integral
+     */ 
+    std::complex<double> Ti
+    ( const double                s ,
+      const std::complex<double>& z ) ;
     // =======================================================================
+
+    // =======================================================================
+    // Legendre chi-function
+    // =======================================================================
+    
+    // =======================================================================
+    /** (Real part of) Legendre chi-function
+     *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+     *  https://en.wikipedia.org/wiki/Legendre_chi_function
+     */
+    double legendre_chi
+    ( const short  n ,
+      const double x ) ;
+    // =======================================================================
+    /** (Real part of) Legendre chi-function
+     *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+     *  https://en.wikipedia.org/wiki/Legendre_chi_function
+     */
+    double legendre_chi
+    ( const double s ,
+      const double x ) ;
+    // =======================================================================
+    /** Legendre chi-function
+     *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+     *  https://en.wikipedia.org/wiki/Legendre_chi_function
+     */
+    std::complex<double> legendre_chi
+    ( const short                 n ,
+      const std::complex<double>& z ) ;
+    // =======================================================================
+    /** Legendre chi-function
+     *  \f[ \chi_s(z) = \frac{Li_s(z) - Li_s(-z)}{2} \f] 
+     *  https://en.wikipedia.org/wiki/Legendre_chi_function
+     */
+    std::complex<double> legendre_chi
+    ( const double                s ,
+      const std::complex<double>& z ) ;
+    // =======================================================================
+    
+    // =======================================================================    
   } //                                         The end of namesace Ostap::Math
   // =========================================================================
 } //                                                The end of namespace Ostap
