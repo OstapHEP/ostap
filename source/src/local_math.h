@@ -493,6 +493,25 @@ namespace
   inline double error_func_x ( const long double x ) 
   { return 0 == x || s_zero ( x ) ? s_HALFSQRTPIi : error_func( x ) / x ; }
   // ==========================================================================
+
+  // ==========================================================================
+  /// factorial function 
+  constexpr inline std::uintmax_t factorial_ ( const std::uint8_t N )
+  { return  ( N <= 1 ) ? 1u : N * factorial_ ( N - 1  ) ; }
+  // ==========================================================================
+  /** @var N_FACTORIAL_MAX1
+   *  Number of precomputed catorials (integers)
+   */
+  constexpr std::uint8_t N_FACTORIAL_MAX1 = 18 ;
+  // =========================================================================
+  /** @var N_FACTORIAL_MAX2
+   *  Number of precomputed catorials (doubles)
+   */
+  constexpr std::uint8_t N_FACTORIAL_MAX2 = 170 ;
+  // =========================================================================
+
+
+  // ==========================================================================
 }
 // ============================================================================
 //                                                                      The END 

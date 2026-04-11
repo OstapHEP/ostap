@@ -229,28 +229,28 @@ namespace Ostap
       {
         if ( first == last ) { return std::make_pair(0,0) ; }
         //
-	std::complex<long double> xx { x }     ;
+	      std::complex<long double> xx { x }     ;
         std::complex<long double> p = *first   ;
         std::complex<long double> q  { 0 , 0 } ;
         while ( ++first != last ) 
         {
-	  // q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
-	  // p = std::fma ( x , p , *first ) ; // x * p + *first  ;
-	  q = xx * q + p ;
-	  p = xx * p + std::complex<long double> ( *first );
-	}
+	        // q = std::fma ( x , q ,  p     ) ; // x * q + p       ;
+	        // p = std::fma ( x , p , *first ) ; // x * p + *first  ;
+	        q = xx * q + p ;
+	        p = xx * p + std::complex<long double> ( *first );
+	      }
         //
         return std::make_pair ( std::complex<TYPE> { p }  ,
 				std::complex<TYPE> { q } ) ;
       }
       // ======================================================================
       /// Clenshaw algorithm for summation of monomial series (aka "Horner's rule")
-      template <class CONTAINER>
+      template <class CONTAINER, typename TYPE>
       inline 
-      std::pair<long double,long double>
+      std::pair<TYPE,TYPE>
       monomial_sum 
       ( const CONTAINER&  cnt , 
-        const long double x   ) { return monomial_sum ( cnt.begin() , cnt.end() , x ) ; }      
+        const TYPE        x   ) { return monomial_sum ( cnt.begin() , cnt.end() , x ) ; } 
       // ======================================================================
       /** Clenshaw algorithm for summation of Legendre series 
        *  \f$ f(x) = \sum_{i=0}^{n} a_i L_i(x) \f$

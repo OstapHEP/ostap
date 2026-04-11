@@ -9,13 +9,18 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <complex>
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Clenshaw.h"
 // ============================================================================
 /** @file Ostap/Choose.h
- *  Binomial coefficients, Pochhammer's symbols and Stirling numbers 
+ *  - Binomial coefficients
+ *  - Pascal's triangle
+ *  - Pochhammer's symbols
+ *  - Stirling numbers
+ *  - Eulerian polynomials  
  */
 // ============================================================================
 namespace Ostap
@@ -40,27 +45,27 @@ namespace Ostap
     {      
       // ======================================================================
       template <unsigned short N ,
-		unsigned short K ,
-		bool           A ,  // N is not *too* large 
-		bool           B >  //  K <= N 
+		  unsigned short K ,
+		  bool           A ,  // N is not *too* large 
+		  bool           B >  //  K <= N 
       struct _Choose ;
       // ======================================================================
       template <unsigned short N,
-		unsigned short K>
+		  unsigned short K>
       struct _Choose<N,K,true,true>
       {
-	typedef std::uintmax_t type ;
-	enum _ : std::uintmax_t { value =
-				  std::uintmax_t ( Ostap::Math::Choose_<N-1,K-1>::value ) +
-				  std::uintmax_t ( Ostap::Math::Choose_<N-1,K>::value   ) } ; 
+	      typedef std::uintmax_t type ;
+	      enum _ : std::uintmax_t { value =
+			      	   std::uintmax_t ( Ostap::Math::Choose_<N-1,K-1>::value ) +
+				         std::uintmax_t ( Ostap::Math::Choose_<N-1,K>::value   ) } ; 
       } ;
       // ======================================================================
       template <unsigned short N,
-		unsigned short K>
+		            unsigned short K>
       struct _Choose<N,K,false,true>
       {
-	typedef Ostap::Math::Choose_t<N> type ;
-	inline static constexpr type value { 1.0L * type ( Ostap::Math::Choose_<N,K-1>::value ) * ( N + 1 - K ) / K } ; 	  
+	      typedef Ostap::Math::Choose_t<N> type ;
+	      inline static constexpr type value { 1.0L * type ( Ostap::Math::Choose_<N,K-1>::value ) * ( N + 1 - K ) / K } ; 	  
       } ;
     // ========================================================================
     }
@@ -69,7 +74,7 @@ namespace Ostap
      *  Binomial coefficient \f$ C^n_k = \left(\begin{array}{c}n \\ k \end{array}\rght) = \frac{n!}{k!(n-k)!}\f$
      */
     template <unsigned short N,
-	      unsigned short K>
+	            unsigned short K>
     struct Choose_ : public details::_Choose<N,K,N<=N_CHOOSE_MAX,(K<=N)>
     {} ; 
     // ========================================================================
@@ -231,13 +236,29 @@ namespace Ostap
     public:
       // ======================================================================
       /// the only one important method
-      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline      double operator() ( const      double x ) const { return evaluate ( 1.0L * x ) ; }
+      /// the only one important method
+      inline long double operator() ( const long double x ) const { return evaluate (        x ) ; }
+      template <class TYPE>
+      inline std::complex<TYPE> operator ()
+      ( const std::complex<TYPE>& z ) const { return evaluate ( z ) ; } 
       // ======================================================================      
     public:
       // ======================================================================      
       /// evaluate the polynomial 
-      static inline double evaluate   ( const double x ) 
+      static inline long double evaluate   
+      ( const long double x ) 
       { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , x ).first  ; }
+      /// evaluate the polynomial 
+      static inline double evaluate ( const double x ) { return evaluate ( 1.0L * x ) ; }
+      /// evaluate the polynomial
+      template <class TYPE> 
+      static inline std::complex<TYPE> evaluate   
+      ( const std::complex<TYPE>& z ) 
+      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , z ).first  ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
       /// get the derivative 
       static inline double derivative ( const double x ) 
       { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , x ).second ; }      
@@ -272,9 +293,20 @@ namespace Ostap
     public :
       // =====================================================================
       /// evaluate Pochhammer symbol/polynomial 
-      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      inline double operator() 
+      ( const double                x ) const { return evaluate ( x ) ; }
+       /// evaluate Pochhammer symbol/polynomial 
+      inline std::complex<double> operator() 
+      ( const std::complex<double>& z ) const { return evaluate ( z ) ; }
       /// evaluate Pochhammer symbol/polynomial 
-      double        evaluate   ( const double x ) const ;
+      double        evaluate   
+      ( const double x ) const ;
+      /// evaluate Pochhammer symbol/polynomial 
+      std::complex<double> evaluate   
+      ( const std::complex<double>& z ) const ;
+      // =====================================================================
+    public: 
+      // =====================================================================
       /// get the derivative 
       double        derivative ( const double x ) const ;
       // =====================================================================

@@ -983,68 +983,6 @@ namespace Ostap
     ValueWithError igamma
     ( const ValueWithError& b ) ;
     // ========================================================================
-    /** \overload evaluate Pochhammer symbol 
-     *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
-     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
-     *  @param x (INPUT) the parameter 
-     *  @param n (INPUT) the parameter 
-     *  @return  pochhammer  symbol 
-     *  @warning invalid and small covariances are ignored 
-     *  @see     Ostap::Math::rising_factorial
-     *  @see     Ostap::Math::falling_factorial
-     *  @see     Ostap::Math::pochhammer 
-     */
-    ValueWithError pochhammer 
-    ( const ValueWithError& x ,  
-      const unsigned short  n ) ;
-    // ========================================================================
-    /** \overload evaluate Pochhammer symbol 
-     *  \f[  \frac{\Gamma ( a+ x ) } {\Gamma ( a ) } \f] 
-     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
-     *  @param   a (INPUT) the parameter 
-     *  @param   x (INPUT) the parameter 
-     *  @return  pochhammer  symbol 
-     *  @warning invalid and small covariances are ignored 
-     *  @see     Ostap::Math::rising_factorial
-     *  @see     Ostap::Math::falling_factorial
-     *  @see     Ostap::Math::pochhammer 
-     */
-    ValueWithError pochhammer 
-    ( const ValueWithError& a ,  
-      const double          x ) ;
-    // ========================================================================
-    /** \overload evaluate Pochhammer symbol 
-     *  \f[  \frac{\Gamma ( a+ x ) } {\Gamma ( a ) } \f] 
-     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
-     *  @param   a (INPUT) the parameter 
-     *  @param   x (INPUT) the parameter 
-     *  @return  pochhammer  symbol 
-     *  @warning invalid and small covariances are ignored 
-     *  @see     Ostap::Math::rising_factorial
-     *  @see     Ostap::Math::falling_factorial
-     *  @see     Ostap::Math::pochhammer 
-     */
-    ValueWithError pochhammer 
-    ( const double          a , 
-      const ValueWithError& x ) ; 
-    // ==========================================================================
-    /** \overload evaluate Pochhammer symbol 
-     *  \f[  \frac{\Gamma ( a+ x ) } {\Gamma ( a ) } \f] 
-     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
-     *  @param   a (INPUT) the parameter 
-     *  @param   x (INPUT) the parameter 
-     *  @return  pochhammer  symbol 
-     *  @warning invalid and small covariances are ignored 
-     *  @see     Ostap::Math::rising_factorial
-     *  @see     Ostap::Math::falling_factorial
-     *  @see     Ostap::Math::pochhammer 
-     */
-    ValueWithError pochhammer 
-    ( const ValueWithError& a ,  
-      const ValueWithError& x ) ; 
-
-    
-    // ========================================================================
     /** Complete elliptic integral \f$ K(k) \f$  
      *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral

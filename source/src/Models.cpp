@@ -5525,8 +5525,8 @@ double Ostap::Math::InverseGamma::raw_moment ( const unsigned short n ) const
 {
   const double av = alpha () ;
   if ( av <= n || s_equal ( av , 1.0 * n ) ) { return s_QUIETNAN ; }
-  return std::exp ( Ostap::Math::lngamma ( av - n ) -
-		    Ostap::Math::lngamma ( av     ) ) ;
+  return std::exp ( Ostap::Math::lgamma ( av - n ) -
+		    Ostap::Math::lgamma ( av     ) ) ;
 }
 // ============================================================================
 // mean

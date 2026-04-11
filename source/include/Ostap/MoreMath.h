@@ -6,6 +6,7 @@
 // ============================================================================
 // STD& STL 
 // ============================================================================
+#include <cstdint>
 #include <vector>
 #include <complex>
 #include <cmath>
@@ -382,46 +383,80 @@ namespace Ostap
     { return std::sin ( x ) + std::cos ( x ) ; }
     // ========================================================================
     
-    // ========================================================================
-    // Gamma function and fiends 
+  
     // ========================================================================
     /** Gamma function
+     *  \f$ \Gamma ( x )\f$ 
+     *  @see Ostapo::Math::tgamma 
+     *  @see std::tgamma 
+     */
+    inline double gamma   
+    ( const double x ) { return std::tgamma ( x ) ; }
+    // ========================================================================
+    /** Gamma function
+     *  \f$ \Gamma ( x )\f$ 
+     *  @see Ostapo::Math::tgamma
+     *  @see std::tgamma  
+     */
+    inline long double gamma   
+    ( const long double x ) { return std::tgamma ( x ) ; }
+    // ========================================================================
+    /** Gamma function of complex argument 
      *  \f$ \Gamma ( x ) \f$ 
-     *  @see Ostapo::Math::gamma 
+     * @see Ostap::Math::lgamma 
      */
-    double               tgamma  ( const double x ) ;
+    std::complex<double> gamma ( const std::complex<double>& z ) ;
     // ========================================================================
-    /** Gamma function
-     *  \f$ \Gamma ( x )\f$ 
-     *  @see Ostapo::Math::tgamma 
+    /** Gamma function of complex argument 
+     *  \f$ \Gamma ( x ) \f$ 
+     * @see Ostap::Math::lgamma 
      */
-    double               gamma   ( const double x ) ;
+    std::complex<long double> gamma ( const std::complex<long double>& z ) ;
     // ========================================================================
-    /** Gamma function
-     *  \f$ \Gamma ( x )\f$ 
-     *  @see Ostapo::Math::tgamma 
-     */
-    long double          gamma   ( const long double x ) ;
+   
     // ========================================================================
-    /** logarithm of gamma function
-     *  \f$ \log \Gamma ( x ) \f$ 
+    /** factorial function
+     *   \f[ n! = \Gamma ( n + 1 ) \f]
+     *  - Factorials are precomputed up to the max
+     *  @attention \f$ +\innfty\f$  is returned for n > 170 \f$ 
      */
-    double               lgamma  ( const double x ) ;
+    double factorial ( const std::uint8_t n ) ;
     // ========================================================================
-    /** logarithm of gamma function
-     *  \f$ \log \Gamma ( x ) \f$ 
-     */
-    long double          lgamma  ( const long double x ) ;
+
     // ========================================================================
     /** logarithm of gamma function
      *  \f$ \log \Gamma ( x ) \f$ 
      */
-    inline double        lngamma ( const double x ) { return lgamma ( x ) ; }    
+    inline double lgamma  
+    ( const double x ) { return std::lgamma ( x ) ; }
     // ========================================================================
     /** logarithm of gamma function
      *  \f$ \log \Gamma ( x ) \f$ 
      */
-    inline long double   lngamma ( const long double x ) { return lgamma ( x ) ; }    
+    inline long double lgamma  
+    ( const long double x ) { return std::lgamma ( x ) ; }
+    // ========================================================================
+    /** Logarithm of gamma function of complex argument 
+     *  \f$ \log \Gamma ( x ) \f$  \f%  -\pi < arg < +\pi \f$ 
+     * 
+     *   Note that the imaginary part (arg) is not well-determined 
+     *   when |z| is very large, due to inevitable roundoff in restricting 
+     *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
+     *   The real part (lnr), however, never suffers from loss of precision.
+     */
+    std::complex<double>      lgamma ( const std::complex<double>&      z ) ;
+    // =========================================================================
+    /** Logarithm of gamma function of complex argument 
+     *  \f$ \log \Gamma ( x ) \f$  \f%  -\pi < arg < +\pi \f$ 
+     * 
+     *   Note that the imaginary part (arg) is not well-determined 
+     *   when |z| is very large, due to inevitable roundoff in restricting 
+     *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
+     *   The real part (lnr), however, never suffers from loss of precision.
+     */
+    std::complex<long double> lgamma ( const std::complex<long double>& z ) ;
+    // ========================================================================
+    
     // ========================================================================
     /** Compute inverse Gamma function 
      *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
@@ -453,28 +488,14 @@ namespace Ostap
      */
     std::complex<double> igamma ( const std::complex<double>& z ) ;
     // ========================================================================
-    /** Gamma function of complex argument 
-     *  \f$ \Gamma ( x ) \f$ 
+    /** Compute inverse Gamma function 
+     *  \f[ f(x) = \frac{1}{\Gamma(x)} \f]
+     *  @return the value of inverse Gamma functions 
      */
-    std::complex<double> gamma ( const std::complex<double>& z ) ;
-    // =======================================================================
-    /** Gamma function of complex argument 
-     *  \f$ \Gamma ( x ) \f$ 
-     */
-    std::complex<double> tgamma ( const std::complex<double>& x ) ;
+    std::complex<long double> igamma ( const std::complex<long double>& z ) ;
     // ========================================================================
-    /** Logarithm of gamma function of complex argument 
-     *  \f$ \log \Gamma ( x ) \f$  \f%  -\pi < arg < +\pi \f$ 
-     * 
-     *   Note that the imaginary part (arg) is not well-determined 
-     *   when |z| is very large, due to inevitable roundoff in restricting 
-     *   to (-\pi,\pi]. This will result in a GSL_ELOSS error when it occurs. 
-     *   The real part (lnr), however, never suffers from loss of precision.
-     */
-    std::complex<double> lgamma ( const std::complex<double>& x ) ;
+
     // ========================================================================
-    
-    // =========================================================================
     /** Get the n-th derivative of gamma function at x=1 
      *   \f[  f(n) = \left. \frac{d^{n} \Gamma(x) }{dx^n} \right|_{x=1} \f]  
      *  @see https://www.researchgate.net/publication/228557691_Evaluation_of_higher-order_derivatives_of_the_Gamma_function
@@ -776,7 +797,35 @@ namespace Ostap
      */
     double pochhammer
     ( const double a , 
-      const double x ) ;    
+      const double x ) ;   
+    // ========================================================================== 
+    /*  Pochhammer symbol, aka rising factorial 
+     *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::rising_factorial
+     */
+    std::complex<double> pochhammer
+    ( const std::complex<double>&  a ,
+      const unsigned short         n ) ;
+    // =============================================================================
+    /*  Pochhammer symbol, aka rising factorial 
+     *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::rising_factorial
+     */
+    std::complex<double> pochhammer
+    ( const std::complex<double>&  a ,
+      const double                 x ) ;  
+    // =============================================================================
+    /*  Pochhammer symbol, aka rising factorial 
+     *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::rising_factorial
+     */
+    std::complex<double> pochhammer
+    ( const std::complex<double>&  a ,
+      const std::complex<double>&  x ) ; 
+     
     // ========================================================================
     /** Rising  factorial, aka "Pochhammer's symbol"
      *  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
