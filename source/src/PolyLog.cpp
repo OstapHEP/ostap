@@ -72,34 +72,6 @@ double Ostap::Math::ImLi
   const long double u = std::log ( x * 1.0L ) ;
   return -s_pi * std::pow ( u , s - 1.0L ) * igamma ( s ) ;
 }
-#include <iostream>
-#include "Ostap/Names.h"
-// ============================================================================
-namespace Ostap
-{
-  // ==========================================================================
-  namespace Math
-  {
-    // ========================================================================
-    inline double  eta ( const long double x ) { return  eta ( static_cast<double> ( x ) ) ; }
-    // ========================================================================
-    inline double zeta ( const long double x ) { return zeta ( static_cast<double> ( x ) ) ; }
-    //
-    inline std::complex<long double> zeta ( const std::complex<long double>&  x )
-    {
-      const std::complex<double> xx { x } ;
-      return std::complex<long double> ( zeta ( xx ) ) ;
-    }
-    // ========================================================================
-    inline std::complex<long double> gamma ( const std::complex<long double>&  x )
-    {
-      const std::complex<double> xx { x } ;
-      return std::complex<long double> ( gamma ( xx ) ) ;
-    }
-    // ========================================================================
-  } // ========================================================================
-  // ==========================================================================
-} // ==========================================================================
 // ============================================================================
 namespace
 {

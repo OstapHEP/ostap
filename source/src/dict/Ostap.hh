@@ -55,6 +55,7 @@
 #include "Ostap/Fourier.h"
 #include "Ostap/Funcs.h"
 #include "Ostap/Functions.h"
+#include "Ostap/Gamma.h"
 #include "Ostap/GenericMatrixTypes.h"
 #include "Ostap/GenericVectorTypes.h"
 #include "Ostap/GeomFun.h"
@@ -186,6 +187,7 @@
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/qMath.h"
+#include "Ostap/Zeta.h"
 // ============================================================================
 // ALL 
 // ============================================================================

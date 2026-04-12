@@ -140,12 +140,13 @@ add_library(ostap SHARED src/format.cpp
                          src/Vector3DWithError.cpp
                          src/Voigt.cpp
                          src/Workspace.cpp    
-                         src/WStatEntity.cpp    
+                         src/WStatEntity.cpp 
+                         src/Zeta.cpp   
                          src/nSphere.cpp      
                          src/owens.cpp      
                          src/hcubature.cpp                         
                          src/pcubature.cpp
-			 src/hstats.cpp      
+			             src/hstats.cpp      
                         )
 
 target_compile_features ( ostap PUBLIC cxx_constexpr                      )
