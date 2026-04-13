@@ -211,7 +211,7 @@ Ostap::Math::choose
   const unsigned short m  = n < 2 * k ?  ( n - k ) : k ;
   //
   typedef std::pair<unsigned short,unsigned short> KEY    ;
-  typedef unsigned long long                       RESULT ;
+  typedef std::uintmax_t                           RESULT ;
   typedef std::map<KEY,RESULT>                     MAP    ;
   typedef SyncedCache<MAP>                         CACHE  ;
   /// the cache

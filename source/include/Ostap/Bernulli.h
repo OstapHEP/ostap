@@ -20,9 +20,14 @@ namespace Ostap
   {
     // ========================================================================
     /** @var N_BERNULLI_MAX
-     * number  of exact Bernully numbers
+     * number  of exact Bernully numbers (as ratios)
      */
-    constexpr unsigned short N_BERNULLI_MAX = 40 ;
+    constexpr unsigned short N_BERNULLI_MAX  = 40  ;
+    // ========================================================================
+    /** @var N_BERNULLI_MAX2
+     * number  of cached Bernully numbers (as long double)
+     */
+    constexpr unsigned short N_BERNULLI_MAX2 = 100 ;
     // ========================================================================
     /// Bernulli's numbers 
     template <unsigned short N>

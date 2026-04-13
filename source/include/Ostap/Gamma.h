@@ -118,6 +118,13 @@ namespace Ostap
      */
     std::complex<long double> igamma ( const std::complex<long double>& z ) ;
     // ========================================================================
+    /** Compute inverse Gamma function 
+     *  \f[ f(n) = \frac{n}{\Gamma(n)} \f]
+     *  @return the value of inverse Gamma functions 
+     */
+    long double               igammal ( const unsigned int n ) ;
+    // ========================================================================
+
 
     // ========================================================================
     /** factorial function

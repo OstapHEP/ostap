@@ -55,8 +55,9 @@ namespace
                   "std::numeric_limits<unsigned long long> is not specialized" ) ;
   // =========================================================================
   /// list of bernulli numbers up to N_BERNULLI_MAX2 inclusive
-  constexpr unsigned short     N_BERNULLI_MAX2 = 100 ;  
-  const std::array<long double,N_BERNULLI_MAX2+1> s_BERNULLI { 
+  /// constexpr unsigned short     N_BERNULLI_MAX2 = 100 ;  
+  static_assert ( 100 == Ostap::Math::N_BERNULLI_MAX2 , "mismatch in Bernulli's structire") ;
+  const std::array<long double,Ostap::Math::N_BERNULLI_MAX2+1> s_BERNULLI { 
                                                                                                                                                                                                                                  1.0L/1 ,        // 0
                                                                                                                                                                                                                                1.0L/6 ,          // 2
                                                                                                                                                                                                                               -1.0L/30 ,         // 4
@@ -160,6 +161,13 @@ namespace
  -498384049428333414764928632140399662108495887457206674968055822617263669621523687568865802302210999132601412697613279391058654527145340515840099290478026350382802884371712359337984274122861159800280019110197888555893671151.0L/1366530 ,    //200
   } ;
 
+  /// B(k)/k! 
+  const std::array<long double,Ostap::Math::N_BERNULLI_MAX2+1> s_BERNULLI_K { [] () 
+  { std::array<long double,Ostap::Math::N_BERNULLI_MAX2+1> rr {} ;
+    for ( unsigned short i = 0  ; i <= Ostap::Math::N_BERNULLI_MAX2 ; ++i )
+    { rr [ i ] = s_BERNULLI [ i ] * Ostap::Math::igammal ( 2 * i + 1.0L ) ; }
+    return rr ; } () } ; 
+ 
   // Ostap::Math::bernulli<Ostap::Math::N_BERNULLI_MAX>() } ;
 
   // ==========================================================================
@@ -283,7 +291,7 @@ double Ostap::Math::bernulli_k
     else if ( k <= N_BERNULLI_MAX2 ) 
     { 
       const unsigned short n = k / 2 ;
-      return s_BERNULLI [ n ] *  igamma ( n + 1.0L ) ; 
+      return s_BERNULLI_K  [ n ] ;
     }
 
     // use zeta-function

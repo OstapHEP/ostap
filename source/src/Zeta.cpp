@@ -17,6 +17,7 @@
 #include "Ostap/Zeta.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Gamma.h"
+#include "Ostap/Bernulli.h"
 // ===========================================================================
 // Local
 // ===========================================================================
@@ -386,7 +387,6 @@ double Ostap::Math::eta ( const double s   )
 long double Ostap::Math::eta ( const long double s   )
 { return eta ( static_cast<double> ( s ) ) ;  }
 
-
 // ========================================================================
 /** Dirichet's beta function
  *  \f[ \beta ( s ) 
@@ -486,8 +486,10 @@ long double Ostap::Math::hurwitz
 // ===========================================================================
 namespace 
 {
-    typedef std::complex<double>       DC ;
-    typedef std::complex<long double> LDC ;
+  // =========================================================================
+  typedef std::complex<double>       DC ;
+  typedef std::complex<long double> LDC ;
+  // =========================================================================
 } 
 // ===========================================================================
 /*  Riemann's Zeta function \f$ s \ne 1\f$:
@@ -508,10 +510,13 @@ std::complex<double> Ostap::Math::zeta ( const std::complex<double>& s  )
  *  \f$ \zeta ( s ) = \sum_k k^{-s}\f$ 
  */
 // ==========================================================================
+#include <iostream> 
+
 std::complex<long double> 
 Ostap::Math::zeta 
 ( const std::complex<long double>& s  ) 
 {
+   // 
    const long double sigma = s.real () ;
    const long double tau   = s.imag () ;
    if ( !tau || s_zero ( tau ) ) { return zeta ( sigma ) ; }
@@ -520,35 +525,95 @@ Ostap::Math::zeta
    static const Ostap::Math::Equal_To<LDC> xequal {} ;
    static const Ostap::Math::Zero<LDC>     xzero  {} ; 
    //
-    
-   // ======================================================================== 
-   /// (1) try the Laurent expansion at s= 1 
-   //      Usually it it not the best approach, but here it should be cheap,
-   //      since all involved Stielties' constants are cached.
-   // ========================================================================
-   const  LDC ds { s - 1.0L } ;
-   if ( std::abs ( ds ) <= 1 * s_pi ) // the actual convergency range is |1-s|<2pi
-   {
-     LDC            result = 1.0L / ds + 1.0L * stieltjes ( 0 ) ; // pole term + 0 order term  
-     LDC            term   = 1.0L ;
-     unsigned short nSmall = 0 ; 
-     for  ( unsigned short k = 1 ; k <= N_STIELTJES ; ++k )
-     {
-        // collect factorials 
-        term            *= ds   / ( 1.0L * k )  ;
-        const LDC delta  = term * ( 1.0L * sign ( k ) * stieltjes ( k ) )  ;
-        //
-        if (   xzero ( delta ) || xequal ( result + delta , result ) ) { ++nSmall     ; }
-        else                                                           {   nSmall = 0 ; }
-        //
-        result += delta ;
-        //
-        if ( 2 <= nSmall )  { break ; }    
-     }
-     //
-     return result ;
-   }
+   const LDC ds { s - 1.0L } ;
    //
+   { // ======================================================================
+     // (1) try Laurent expansion at s= 1 
+     //      Usually it it not the best approach, but here it should be cheap,
+     //      since all involved Stielties' constants are cached.
+     // ======================================================================
+      if ( false && std::abs ( ds ) <= 1 * s_pi ) // the actual convergency range is |1-s|<2pi
+     {
+       LDC            result = 1.0L / ds + 1.0L * stieltjes ( 0 ) ; // pole term + 0 order term  
+       LDC            term   = 1.0L ;
+       unsigned short nSmall = 0 ; 
+       for  ( unsigned short k = 1 ; k <= N_STIELTJES ; ++k )
+       {
+         // collect factorials 
+         term            *= ds   / ( 1.0L * k )  ;
+         const LDC delta  = term * ( 1.0L * sign ( k ) * stieltjes ( k ) )  ;
+         //
+         if (   xzero ( delta ) || xequal ( result + delta , result ) ) { ++nSmall     ; }
+         else                                                           {   nSmall = 0 ; }
+         //
+         result += delta ;
+         //
+         if ( 2 <= nSmall )  { break ; }    
+       }
+       //
+       return result ;
+      }
+    }
+   //
+
+
+  /// number of terms in the Euler - Maclaurin expansion 
+  constexpr unsigned short N { 15              } ;
+  constexpr unsigned short M { N_BERNULLI_MAX2 } ;
+  if ( sigma > -5 ) 
+  { // ======================================================================
+
+     // (2) Try the Euler Maclaurin formula with N = 15  
+     const LDC NS1 = std::pow ( 1.0L * N , 1.0L - s ) ;
+     LDC result1   =  NS1 * ( 1.0L / ( 2 * N ) + 1.0L / ds ) ;
+     for ( unsigned short k = 1 ; k < N ; ++k )
+     { result1  += std::pow ( 1.0L / k , s ) ;  } 
+
+    std::cerr << " EULER MACLAURIN "  << s << " r=" << result1 << std::endl ;
+
+     //
+     LDC term                 = s / ( 1.0L * N * N ) ;
+     LDC result2              = 0.0L ;  
+     long double     previous = std::numeric_limits<long double>::max() ;
+     unsigned short nSmall    = 0 ;
+     unsigned short rr        = 0 ;
+     for ( unsigned short   r = 1 ; r < M ; ++r )
+     {
+      rr = r + 1 ; 
+      //
+      const unsigned short r2 = 2 * r ; 
+      const LDC delta = term * ( 1.0L * bernulli_k (  r2  ) ) ;
+      //
+      if ( xzero ( delta ) || xequal ( result2  + delta , result2 ) )  { ++nSmall ; }
+      //
+      result2 += delta ;
+      //
+      const long double abs_delta = std::abs ( delta ) ; 
+      if ( 1 <= nSmall || previous < abs_delta ) { break ; }
+
+      previous = abs_delta ; 
+
+      /// update the term 
+      term *= ( s + ( 1.0L * r2 - 1.0L )  ) * ( s + 1.0L * r2 ) / ( 1.0L * N * N ) ; 
+
+     }
+
+     const long double error = std::abs ( term * ( s + 2.0L * rr  + 1.0L ) / ( sigma + 2 * rr + 1.0L ) ) * bernulli_k ( 2 * rr ) ;
+     std::cerr << " error is "  << error << std::endl ; 
+
+     //
+     return result1 + NS1 * result2 ;
+    }
+
+    { /// (3) Use Borwain' method 
+      // =====================================================================
+      // =====================================================================
+    }
+
+    // use reflection formula 
+    if ( sigma < 0 ) { return chi ( s ) * zeta ( 1.0L - s ) ; }
+
+
    Ostap::Assert ( false , 
                    "zeta is not yet implelmented for complex argument!" , 
                    "Ostap::Math::zeta" , 
@@ -565,7 +630,8 @@ Ostap::Math::zeta
  * such as \f$  \zeta(s) = \chi(s) \zeta ( 1 - s ) f$  
  */
 // ============================================================================
-double Ostap::Math::chi ( const double s ) { return chi ( s * 1.0L ) ; }
+double Ostap::Math::chi ( const double s ) 
+{ return chi ( s * 1.0L ) ; }
 // ========================================================================
 /* helper chi-function:
  * \f[ \chi(s) = \frac{(2\pi)^s}{\pi} \sin \frac{\pi s}{s} \Gamma (1-s), \f]
@@ -573,20 +639,20 @@ double Ostap::Math::chi ( const double s ) { return chi ( s * 1.0L ) ; }
  */
 // ======================================================================== 
 long double Ostap::Math::chi ( const long double s ) 
-{ 
-    if ( isint ( s ) )
-    {
-        const int n = round ( s ) ;
-        // poles 
-        if      ( n >= 1 && 1 == n % 2 ) { return std::numeric_limits<double>::quiet_NaN () ; }
-        // finite value 
-        else if ( n >= 1 && 0 == n % 2 ) { return std::pow ( s_2pi , n ) * 0.5L * igamma ( n )  * sign ( n / 2 ) ; }
-        // zeroes 
-        else if ( n <= 0 && 0 == n % 2 ) { return 0 ; }
-    }
-    //
-    return std::pow ( s_2pi , s ) * s_1_pi * std::sin ( s_pi * s / 2 ) *  gamma ( 1.0L - s ) ;  
-    }
+{
+  if ( isint ( s ) )
+  {
+    const int n = round ( s ) ;
+    // poles 
+    if      ( n >= 1 && 1 == n % 2 ) { return std::numeric_limits<double>::quiet_NaN () ; }
+    // finite value 
+    else if ( n >= 2 && 0 == n % 2 ) { return std::pow ( s_2pi , n ) * 0.5L * igamma ( n )  * sign ( n / 2 ) ; }
+    // zeroes 
+    else if ( n <= 0 && 0 == n % 2 ) { return 0 ; }
+  }
+  //
+  return std::pow ( s_2pi , s ) * s_1_pi * std::sin ( s_pi * s / 2 ) *  gamma ( 1.0L - s ) ;  
+}
 // ========================================================================
 /* helper chi-function:
  * \f[ \chi(s) = \frac{(2\pi)^s}{\pi} \sin \frac{\pi s}{s} \Gamma (1-s), \f]

@@ -1006,6 +1006,17 @@ double Ostap::Math::igamma ( const int n )
  *  @return the value of inverse Gamma functions 
  */
 // ============================================================================
+long double Ostap::Math::igammal ( const unsigned int n ) 
+{
+  if ( n <= 0  ) { return 0 ; }  // RETURN 
+  return 1.0L / gamma ( 1.0L * n ) ; 
+}
+// ============================================================================
+/*  compute inverse Gamma function 
+ *  \$f f(n) = \frac{1}{\Gamma(n)}\f$
+ *  @return the value of inverse Gamma functions 
+ */
+// ============================================================================
 double Ostap::Math::igamma ( const unsigned int n ) 
 {
   /// simple case 
