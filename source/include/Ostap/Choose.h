@@ -30,7 +30,7 @@ namespace Ostap
   {    
     // ========================================================================
     /** @var N_CHOOSE_MAX
-     *  maximal value of n scuh that for all k the \f$ C^n_k \f$ fits into 64 bit integer
+     *  maximal value of n such that for all k the \f$ C^n_k \f$ fits into 64 bit integer
      */	
     inline constexpr unsigned short N_CHOOSE_MAX = 67 ;
     /// Use this type for Binomial coeffients 
@@ -140,6 +140,15 @@ namespace Ostap
     ( const unsigned short n , 
       const unsigned short k ) ;
     // ========================================================================
+    /** calculate the scaled binomial coefficient 
+     *  \f$ a = \frac{1}{2^n} C(n,k)^{-1} = \frac {1}{2^n} \frac{ (n-k)!k!}{n!}\f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2020-01-31
+     */
+    double choose2
+    ( const unsigned short n , 
+      const unsigned short k ) ;    
+    // ========================================================================
     /** calculate the logarithm of binomial coefficient
      *  \f$ \log C^n_k \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -233,17 +242,22 @@ namespace Ostap
     template <unsigned short N>
     class Pochhammer_
     {
+      // ======================================================================
     public:
       // ======================================================================
       /// the only one important method
-      inline      double operator() ( const      double x ) const { return evaluate ( 1.0L * x ) ; }
+      inline      double operator() ( const      double x ) const
+      { return evaluate ( 1.0L * x ) ; }
       /// the only one important method
-      inline long double operator() ( const long double x ) const { return evaluate (        x ) ; }
+      inline long double operator() ( const long double x ) const
+      { return evaluate (        x ) ; }
+      /// use complex values 
       template <class TYPE>
       inline std::complex<TYPE> operator ()
-      ( const std::complex<TYPE>& z ) const { return evaluate ( z ) ; } 
+      ( const std::complex<TYPE>& z ) const
+      { return evaluate ( z ) ; } 
       // ======================================================================      
-    public:
+    public:  // evaluate polynomial for different input data 
       // ======================================================================      
       /// evaluate the polynomial 
       static inline long double evaluate   
@@ -257,14 +271,37 @@ namespace Ostap
       ( const std::complex<TYPE>& z ) 
       { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , z ).first  ; }
       // ======================================================================
-    public: 
+    public: // evaluate the derivative for different input data 
       // ======================================================================
       /// get the derivative 
-      static inline double derivative ( const double x ) 
-      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , x ).second ; }      
+      static inline long double derivative ( const long double x )
+      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , x ).second ; }
+      /// get the derivative 
+      static inline      double derivative ( const      double x )
+      { return derivative  ( 1.0L * x )  ; } 
+      /// evaluate the polynomial
+      template <class TYPE> 
+      static inline std::complex<TYPE> derivative 
+      ( const std::complex<TYPE>& z ) 
+      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , z ).second  ; }
+      // ====================================================================
+    public : // get the value *and* derivative 
+      // ====================================================================
       /// get the value and the derivative 
-      static inline std::pair<double,double> value_with_derivative  ( const double x ) 
-      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , x )        ; }
+      static inline std::pair<double,double>
+      value_with_derivative  ( const double x ) 
+      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , x ) ; }
+      /// get the value and the derivative 
+      static inline std::pair<long double, long double>
+      value_with_derivative  ( const long double x ) 
+      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , x ) ; }
+      // get teh value and derivative
+      /// evaluate the polynomial
+      template <class TYPE> 
+      static inline std::pair<std::complex<TYPE>,std::complex<TYPE> >
+      value_with_derivative 
+      ( const std::complex<TYPE>& z ) 
+      { return Ostap::Math::Clenshaw::monomial_sum ( s_coeff , z ) ; ; }      
       // ======================================================================
     private: 
       // ======================================================================

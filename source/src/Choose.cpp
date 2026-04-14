@@ -10,6 +10,10 @@
 #include <climits>
 #include <algorithm>
 // ============================================================================
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
+#include <numbers>
+#endif 
+// =============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Clenshaw.h"
@@ -247,6 +251,42 @@ Ostap::Math::choose
   return result ;
 }
 // ============================================================================
+/* calculate the scaled binomial coefficient 
+ *  \f$ a = \frac{1}{2^n} C(n,k)^{-1} = \frac {1}{2^n} \frac{ (n-k)!k!}{n!}\f$
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2020-01-31
+ */
+// ============================================================================
+double Ostap::Math::choose2
+( const unsigned short n , 
+  const unsigned short k )
+{
+  //
+  if      ( k > n                ) { return 0 ; }
+  else if ( 0 == k || n == k     ) { return 1 ; }
+  else if ( 1 == k || n == k + 1 ) { return n ; }
+  //
+  /// N is not too large
+  if ( n <= N_CHOOSE_MAX )
+  {
+    const std::uintmax_t c = choose ( n , k ) ;
+    return c * 1.0L / std::pow ( 2ul , n ) ;
+  }
+  // ==========================================================================
+#if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
+  // ==========================================================================
+  constexpr long double s_ln2  { std::numbers::ln2_v<long double> } ;
+  // ==========================================================================
+#else // ======================================================================
+  // ==========================================================================
+  constexpr long double s_ln2  { std::log ( 2.0L ) } ;
+  // ==========================================================================  
+#endif 
+  // ==========================================================================
+  const long double logr = log_choose ( n , k ) - n * s_ln2 ;
+  return std::exp ( logr ) ;
+}
+// =============================================================================
 /*  calculate the inverse binomial coefficient 
  *  \f$ a = C(n,k)^{-1} = \frac{ (n-k)!k!}{n!}\f$
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

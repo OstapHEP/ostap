@@ -482,10 +482,17 @@ namespace Ostap
     ( const double         x , 
       const unsigned short n ) ;    
     // ========================================================================
-   
-    
-
-
+    /** Pochhammer symbol, aka "rising factorial" and its derivative 
+     *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+     *  @see Ostap::Math::rising_factorial
+     *  @see Ostap::Math::pochhammer 
+     */
+    std::pair<double,double>
+    pochhammer_with_derivative 
+    ( const double x , 
+      const double s ) ;    
+    // ========================================================================
 
     // ========================================================================
    } //                                        The end of namespace Ostap::Math

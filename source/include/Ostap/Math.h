@@ -1064,6 +1064,7 @@ namespace Ostap
     /** is it a short value ?
      */
     bool isshort    ( const double x ) ;
+    // =========================================================================
     /** is it am nusigned  short value ?
      */
     bool isushort   ( const double x ) ;

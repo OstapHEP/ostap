@@ -34,8 +34,8 @@
 // ============================================================================
 // LHCbMath
 // ============================================================================
-#include "Ostap/Names.h"
 #include "Ostap/Math.h"
+#include "Ostap/Names.h"
 #include "Ostap/MakeArray.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
@@ -2280,7 +2280,53 @@ namespace
     const TYPE nn = N * 1 ; 
     return std::exp ( Ostap::Math::lgamma ( x + nn ) - Ostap::Math::lgamma ( x ) ) ;
   }
-  // ==========================================================================
+  // ==========================================================================  
+  template <typename TYPE>  
+  inline std::pair<TYPE,TYPE> __pochhammer2__
+  ( const TYPE           x ,
+    const unsigned short N ) 
+  {
+    //
+    typedef std::pair<TYPE,TYPE> RESULT ;
+    //    
+    if      (  0 == N ) { return std::make_pair ( 1 , 0 ) ; }
+    else if (  1 == N ) { return std::make_pair ( x , 1 ) ; }
+    else if (  2 == N ) { return Ostap::Math::Pochhammer_< 2>::value_with_derivative ( x ) ; }
+    else if (  3 == N ) { return Ostap::Math::Pochhammer_< 3>::value_with_derivative ( x ) ; }
+    else if (  4 == N ) { return Ostap::Math::Pochhammer_< 4>::value_with_derivative ( x ) ; }
+    else if (  5 == N ) { return Ostap::Math::Pochhammer_< 5>::value_with_derivative ( x ) ; }
+    else if (  6 == N ) { return Ostap::Math::Pochhammer_< 6>::value_with_derivative ( x ) ; }
+    else if (  7 == N ) { return Ostap::Math::Pochhammer_< 7>::value_with_derivative ( x ) ; }
+    else if (  8 == N ) { return Ostap::Math::Pochhammer_< 8>::value_with_derivative ( x ) ; }
+    else if (  9 == N ) { return Ostap::Math::Pochhammer_< 9>::value_with_derivative ( x ) ; }
+    else if ( 10 == N ) { return Ostap::Math::Pochhammer_<10>::value_with_derivative ( x ) ; }
+    //
+    /// If N is not too large , split it into smaller pieces  
+    if ( N <= 64 )
+    {
+      const unsigned short K = N / 2 ;
+      const unsigned short M = N - K ; 
+      const TYPE xk = x + TYPE ( 1.0L * K ) ;
+      //
+      const RESULT r1 = __pochhammer2__ ( x  , K ) ;
+      const RESULT r2 = __pochhammer2__ ( xk , M ) ;
+      //
+      return std::make_pair ( r1.first  * r2.first  ,
+			      r1.first  * r2.second +
+			      r1.second * r2.first  ) ;
+    }
+    ///
+    /// use the generic formula 
+    const TYPE nn = N * 1 ;
+    ///
+    /// get the result 
+    const TYPE r = std::exp ( Ostap::Math::lgamma ( x + nn ) - Ostap::Math::lgamma ( x ) ) ;
+    /// get the derivative
+    const TYPE d = r * ( Ostap::Math::psi ( x + nn ) - Ostap::Math::psi ( x ) ) ;
+    ///
+    return std::make_pair ( r , d ) ;  
+  }
+  // ==========================================================================  
 }
 // ============================================================================
 /*  Pochhammer symbol, aka rising factorial 
@@ -2294,10 +2340,10 @@ double Ostap::Math::pochhammer
   const unsigned short n ) 
 { 
   return 
-    0 == n                                                 ? 1.0 :
-    1 == n                                                 ? x   :
-    ( !x         || s_zero ( x ) )                         ? 0.0 : 
-    /// ( x < -0.999 && isint  ( x ) && 1 == round ( x ) + n ) ? 0.0 :  
+    0 == n                                                ? 1.0 :
+    1 == n                                                ? x   :
+    ( !x         || s_zero ( x ) )                        ? 0.0 :
+    ( x < 1.e-5 && isint  ( x ) && 0  < round ( x ) + n ) ? 0.0 :  
     __pochhammer__ ( 1.0L *  x , n ) ;
 }
 // ============================================================================
@@ -2400,6 +2446,7 @@ Ostap::Math::pochhammer
   //
   const double z_re = z.real () ;
   const double z_im = z.imag () ;
+  //
   if ( !z_im || s_zero ( z_im ) ) { return pochhammer ( a , z_re ) ; } ;
   //
   /// use generic formula 
@@ -2433,6 +2480,51 @@ double Ostap::Math::falling_factorial
 ( const double         x ,
   const unsigned short n ) 
 { return pochhammer ( -x , n ) * sign ( n + 1 ) ;  }
+// ============================================================================
+/*  Pochhammer symbol, aka "rising factorial" and its derivative 
+ *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+ *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+ *  @see Ostap::Math::rising_factorial
+ *  @see Ostap::Math::pochhammer 
+ */
+// ============================================================================
+std::pair<double,double>
+Ostap::Math::pochhammer_with_derivative 
+( const double         x , 
+  const unsigned short n )  
+{
+  if      ( 0 == n ) { return std::make_pair ( 1.0 , 0.0 ) ; }
+  else if ( 1 == n ) { return std::make_pair ( x   , 1.0 ) ; }
+  //
+  return __pochhammer2__ ( x , n ) ;
+}
+// ============================================================================
+/*  Pochhammer symbol, aka "rising factorial" and its derivative 
+ *  \f[ P(x,n) = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f] 
+ *  @see https://en.wikipedia.org/wiki/Falling_and_rising_factorials
+ *  @see Ostap::Math::rising_factorial
+ *  @see Ostap::Math::pochhammer 
+ */
+// ============================================================================
+std::pair<double,double>
+Ostap::Math::pochhammer_with_derivative 
+( const double x , 
+  const double s )
+{
+  if ( -0.001 < s && isushort ( s ) )
+  {
+    const unsigned short n = round ( s ) ;
+    return pochhammer_with_derivative ( x , n ) ;
+  }
+  // 
+  const long double xx = x ;
+  /// get the result
+  const long double r = std::exp ( Ostap::Math::lgamma ( xx + s ) - Ostap::Math::lgamma ( xx ) ) ;
+  /// get the derivative
+  const long double d = r * ( Ostap::Math::psi ( xx + s ) - Ostap::Math::psi ( xx ) ) ;
+  ///
+  return std::make_pair ( r , d ) ;
+}
 // ============================================================================
 
 // ============================================================================

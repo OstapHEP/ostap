@@ -102,6 +102,17 @@ namespace Ostap
      */
     long double eta ( const long double s ) ;
     // ========================================================================
+    /** Dirichlet's Eta function 
+     *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+     */
+    std::complex<double> eta ( const std::complex<double>& s ) ;
+    // ========================================================================
+    /** Dirichlet's Eta function 
+     *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+     */
+    std::complex<long double> eta ( const std::complex<long double>& s  ) ;
+    // ========================================================================
+    
 
     // ========================================================================
     /** Dirichlet's Eta function 

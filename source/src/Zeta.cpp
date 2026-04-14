@@ -490,7 +490,53 @@ namespace
   typedef std::complex<double>       DC ;
   typedef std::complex<long double> LDC ;
   // =========================================================================
-} 
+}
+// ===========================================================================
+/*  Dirichlet's Eta function 
+ *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::eta ( const  std::complex<double>& s )
+{
+  const double x = s.real () ;
+  const double y = s.imag () ;
+  // real?
+  if ( !y || s_zero ( y ) || s_equal ( x + y , x ) ) { return eta ( x ) ; }
+  //
+  return DC ( eta ( LDC ( s ) ) ) ; 
+}
+// ===========================================================================
+/*  Dirichlet's Eta function 
+ *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
+ */
+// ============================================================================
+std::complex<long double>
+Ostap::Math::eta ( const  std::complex<long double>& s )
+{
+  const long double sigma = s.real () ;
+  const long double t     = s.imag () ;
+  /// real case?
+  if ( !t || s_zero ( t ) || s_equal ( sigma + t , sigma ) ) { return eta ( sigma ) ; }
+  //
+  //
+  /// Use Borwain's algorithm
+  const long double eps = 1.e-15 ;
+  //
+  
+  constexpr unsigned short N  { 10  } ;
+  ///
+  
+  return DC ( eta ( LDC ( s ) ) ) ; 
+}
+
+
+
+
+
+
+
+
 // ===========================================================================
 /*  Riemann's Zeta function \f$ s \ne 1\f$:
  *  \f$ \zeta ( s ) = \sum_k k^{-s}\f$ 
