@@ -511,6 +511,7 @@ Ostap::Math::eta ( const  std::complex<double>& s )
  *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
  */
 // ============================================================================
+#include <iostream> 
 std::complex<long double>
 Ostap::Math::eta ( const  std::complex<long double>& s )
 {
@@ -523,11 +524,27 @@ Ostap::Math::eta ( const  std::complex<long double>& s )
   /// Use Borwain's algorithm
   const long double eps = 1.e-15 ;
   //
+  const double n1 =
+    + std::log ( 1 + std::abs ( t / sigma ) )
+    + std::log ( std::abs ( t ) )
+    + s_pi * 0.5
+    - std::log ( 1.e-15 ) ; 
   
+  const double n2 =
+    + std::abs ( sigma  ) * std::log ( 4.0 )    
+    - std::abs ( lgamma  ( s ) )
+    - std::log ( 1.e-15 ) ; 
+  
+  std::cerr
+    << " eta " << s
+    << " N1="   << n1 / std::log ( 8.0 )
+    << " N2="   << n2 / std::log ( 8.0 )
+    << std::endl ; 
+
   constexpr unsigned short N  { 10  } ;
   ///
-  
-  return DC ( eta ( LDC ( s ) ) ) ; 
+
+  return 0 ; 
 }
 
 
