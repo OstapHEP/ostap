@@ -14,6 +14,7 @@
 #include <list>
 #include <array>
 #include <string>
+#include <complex>
 #include <sstream>
 #include <type_traits>
 // ============================================================================
@@ -114,53 +115,89 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
      */
-    inline std::ostream& toStream
-    ( const std::string& obj , std::ostream& s )
-    {
-      auto c = ( std::string::npos == obj.find('\'') ? '\'' : '\"' );
-      return s << c << obj << c;
-    }
+    std::ostream& toStream
+    ( const std::string& obj ,
+      std::ostream&      s ) ;
     // ========================================================================
     /** the printout of boolean values "a'la Python"
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
-    inline std::ostream& toStream
-    ( const bool         obj , std::ostream& s )
-    { return s << ( obj ? "True" : "False" ) ; }
+    std::ostream& toStream
+    ( const bool         obj ,
+      std::ostream&      s ) ; 
     // ========================================================================
     /** the printout of float values with the reasonable precision
+     *  @param obj  the object
+     *  @param s    the stream 
+     *  @param prec precision, zero implies full precision      
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
-    inline std::ostream& toStream
-    ( const float        obj , std::ostream& s , const int prec = 6 )
-    {
-      const int  p = s.precision() ;
-      return s << std::setprecision (  prec ) << obj << std::setprecision ( p ) ;
-    }
+    std::ostream& toStream
+    ( const float          obj      ,
+      std::ostream&        s        ,
+      const unsigned short prec = 5 ) ;
     // ========================================================================
     /** the printout of double values with the reasonable precision
+     *  @param obj  the object
+     *  @param s    the stream 
+     *  @param prec precision, zero implies full precision      
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
-    inline std::ostream& toStream
-    ( const double       obj , std::ostream& s , const int prec = 8 )
-    {
-      const int p = s.precision() ;
-      return s << std::setprecision ( prec ) << obj << std::setprecision ( p ) ;
-    }
+    std::ostream& toStream
+    ( const double         obj       ,
+      std::ostream&        s         ,
+      const unsigned short prec = 8 ) ;
     // ========================================================================
     /** the printout of long double values with the reasonable precision
+     *  @param obj  the object
+     *  @param s    the stream 
+     *  @param prec precision, zero implies full precision      
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-09-09
      */
-    inline std::ostream& toStream
-    ( const long double  obj , std::ostream& s , const int prec = 10 )
-    {
-      const int p = s.precision() ;
-      return s << std::setprecision ( prec ) << obj << std::setprecision ( p ) ;
-    }
+    std::ostream& toStream
+    ( const long double    obj       ,
+      std::ostream&        s         ,
+      const unsigned short prec = 12 ) ;
+    // ========================================================================
+    /** the printout of complex values with the reasonable precision
+     *  @param obj  the object
+     *  @param s    the stream 
+     *  @param prec precision, zero implies full precision      
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2006-09-09
+     */
+    std::ostream& toStream    
+    ( const std::complex<float>& obj      ,
+      std::ostream&              s        ,
+      const unsigned short       prec = 5 ) ;
+    // ========================================================================
+    /** the printout of complex values with the reasonable precision
+     *  @param obj  the object
+     *  @param s    the stream 
+     *  @param prec precision, zero implies full precision      
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2006-09-09
+     */
+    std::ostream& toStream    
+    ( const std::complex<double>& obj       ,
+      std::ostream&               s         ,
+      const unsigned short        prec =  8 ) ;
+    // ========================================================================
+    /** the printout of complex values with the reasonable precision
+     *  @param obj  the object
+     *  @param s    the stream 
+     *  @param prec precision, zero implies full precision      
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2006-09-09
+     */
+    std::ostream& toStream    
+    ( const std::complex<long double>& obj       ,
+      std::ostream&                    s         ,
+      const unsigned short             prec = 12 ) ;
     // ========================================================================
     /** the partial template specialization of
      *  <c>std::pair<KTYPE,VTYPE></c> printout
@@ -197,7 +234,7 @@ namespace Ostap
     { return toStream ( obj.begin() , obj.end () , s , "[ " , " ]" , " , " ) ; }
     // ========================================================================
     /** the partial template specialization of <c>std::set<TYPE,CMP,ALLOCATOR></c>
-     *  printout. The vector is printed a'la Python list: "[ a, b, c ]"
+     *  printout. The vector is printed a'la Python list: "{ a, b, c }"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
@@ -205,10 +242,10 @@ namespace Ostap
     template<class TYPE,class CMP,class ALLOCATOR>
     inline std::ostream& toStream
     ( const std::set<TYPE,CMP,ALLOCATOR>& obj, std::ostream& s)
-    { return toStream ( obj.begin() , obj.end () , s , "[ " , " ]" , " , " ) ; }
+    { return toStream ( obj.begin() , obj.end () , s , "{ " , " }" , " , " ) ; }
     // =========================================================================
     /** the partial template specialization of <c>std::array<TYPE,N></c>
-     *  printout. The vector is printed a'la Python list: "[ a, b, c ]"
+     *  printout. The vector is printed a'la Python tuple : "( a, b, c )"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
@@ -219,7 +256,7 @@ namespace Ostap
     // ========================================================================
     /** the partial template specialization of
      *  <c>std::map<KTYPE,VTYPE,CMP,ALLOCATOR></c> printout
-     *  the map is printed a'la Python dict: " ( a : b , c: d , e : f )"
+     *  the map is printed a'la Python dict: " { a : b , c: d , e : f }"
      *  @author Alexander MAZUROV Alexander.Mazurov@gmail.com
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2006-05-12
@@ -349,6 +386,7 @@ namespace Ostap
       std::ostringstream s;
       std::ios::fmtflags orig_flags = s.flags();
       s.setf ( std::ios::showpoint ) ; // to display correctly floats
+      s.setf ( std::ios::showpos   ) ; // show the sign for positives 
       s.setf ( std::ios::boolalpha ) ; // for booleans
       toStream ( obj , s  ) ;
       s.flags( orig_flags ) ;

@@ -179,11 +179,6 @@ namespace
   template <typename TYPE>
   inline bool alternating ( const std::complex<TYPE>& /* z */ ) { return false  ; }
   // ==========================================================================
-  inline bool is_not      ( const long double            x    ) { return !x     ; }
-  template <typename TYPE>
-  inline bool is_not      ( const std::complex<TYPE>&    z    )
-  { return !z.real() && !z.imag () ; } 
-  // ==========================================================================  
   template <typename TYPES, 
 	    typename TYPEX>
   TYPEX Li_power  

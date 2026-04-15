@@ -257,21 +257,23 @@ Ostap::Math::choose
  *  @date 2020-01-31
  */
 // ============================================================================
+#include <iostream> 
 double Ostap::Math::choose2
 ( const unsigned short n , 
   const unsigned short k )
 {
   //
-  if      ( k > n                ) { return 0 ; }
-  else if ( 0 == k || n == k     ) { return 1 ; }
-  else if ( 1 == k || n == k + 1 ) { return n ; }
-  //
+  if      ( k > n                ) { return 0                         ; }
   /// N is not too large
   if ( n <= N_CHOOSE_MAX )
   {
     const std::uintmax_t c = choose ( n , k ) ;
-    return c * 1.0L / std::pow ( 2ul , n ) ;
+    return c * 1.0L / ( std::uintmax_t ( 1 ) << n ) ;
   }
+  //
+  if      ( 0 == k || n == k     ) { return     std::pow ( 0.5L , n ) ; }
+  else if ( 1 == k || n == k + 1 ) { return n * std::pow ( 0.5L , n ) ; }
+  //
   // ==========================================================================
 #if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
   // ==========================================================================

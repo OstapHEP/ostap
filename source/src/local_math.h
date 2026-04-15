@@ -510,6 +510,15 @@ namespace
   constexpr std::uint8_t N_FACTORIAL_MAX2 = 170 ;
   // =========================================================================
 
+  // =========================================================================
+  /// Is this double actually zero ? 
+  inline constexpr bool is_not ( const      double         x ) { return !x ; }
+  /// Is thos long double is a zero ?
+  inline constexpr bool is_not ( const long double         x ) { return !x ; }
+  template <typename TYPE>
+  inline constexpr bool is_not ( const std::complex<TYPE>& z )
+   { return is_not ( z.real() ) && is_not ( z.imag () ) ; } 
+  // ==========================================================================  
 
   // ==========================================================================
 }

@@ -131,6 +131,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Tensors.cpp
                          src/Topics.cpp
                          src/Tmva.cpp
+			 src/ToStream.cpp						  
                          src/TreeGetter.cpp
                          src/Types.cpp
                          src/qMath.cpp

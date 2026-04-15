@@ -281,10 +281,9 @@ class DeLevie(Rule) :
         >>> hopt , f0 = deLevier.optimal_step ( fun , x = 0 , h = 0.1 )
         
         """
-        
+
         ## adjust inital step size 
         h = self.adjust_step ( x , h , hmax )
-
         
         ## get the function value at the given point 
         f0    = fun ( x , *args , **kwargs )
@@ -338,7 +337,7 @@ class DeLevie(Rule) :
         ## get the optimal step and value f(x) 
         hopt , f0 = self.optimal_step ( fun , x , h , args = args , kwargs = kwargs )
 
-        ## adjust it if needed 
+        ## adjust it, if needed 
         hopt = self.adjust_step ( x , hopt )
             
         if not self.with_error :
@@ -356,7 +355,8 @@ class DeLevie(Rule) :
         e     = j * c_j / ( d_j * ( j - 1 ) )
         a     = j * epsilon + abs ( f0 ) + abs ( x * d1 )
         e2    = e * e * ( a ** ( 2 - 2./j) ) * ( abs ( dJ ) ** (2.0/j) ) 
-        
+
+        print ( 'HOPT' , hopt ) 
         return VE ( d1 , 4 * e2 ) 
                      
 # =============================================================================
@@ -364,8 +364,6 @@ class DeLevie(Rule) :
 # =============================================================================
 _deLevie_  = tuple ( DeLevie ( i                     ) for i in range ( DeLevie.IMAX + 1 ) )
 _deLevieE_ = tuple ( DeLevie ( i , with_error = True ) for i in range ( DeLevie.IMAX + 1 ) )
-
-
 
 # =============================================================================
 ## Calculate the first derivative for the function
@@ -477,6 +475,8 @@ class Derivative(object) :
         >>> print deriv(0.1) 
         """
 
+        print ( 'CALL' , x , args ,kwargs )
+        
         return self.__deLevie.derivative ( self.__func     ,
                                            x               ,
                                            self.__step     ,  
