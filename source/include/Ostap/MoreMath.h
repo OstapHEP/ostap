@@ -1474,6 +1474,13 @@ namespace Ostap
      */
     double sinc ( const double x ) ;
     // ========================================================================
+    /** Sinc function 
+     *  \f$ f(x) = \frac{ \sin x }{x}  \f$ 
+     *  @see https://en.wikipedia.org/wiki/Sinc_function
+     *  precise for small x 
+     */
+    long double sinc ( const long double x ) ;
+    // ========================================================================
 
     // ========================================================================
     /** \f$ f(x) = \frac{ \sin x }{ x }  \f$ 

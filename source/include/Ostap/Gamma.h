@@ -251,6 +251,66 @@ namespace Ostap
      *  - \f$ 0<y\f$ 
      *  @return value of beta function 
      */
+    std::complex<double> beta
+    ( const std::complex<double>& x ,
+      const std::complex<double>& y ) ;
+    // ========================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
+    std::complex<long double> beta
+    ( const std::complex<long double>& x ,
+      const std::complex<long double>& y ) ;
+    // ========================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
+    std::complex<double> beta
+    ( const std::complex<double>& x ,
+      const double                y ) ;
+    // =========================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
+    inline std::complex<double> beta
+    ( const double                x , 
+      const std::complex<double>& y ) { return beta ( y , x ) ; }
+    // =========================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
+    std::complex<long double> beta
+    ( const std::complex<long double>& x ,
+      const long double                y ) ;
+    // =========================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
+    inline std::complex<long double> beta
+    ( const long double                x , 
+      const std::complex<long double>& y ) { return beta ( y , x ) ; }
+    // ========================================================================
+    /** beta function for 
+     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+     *  - \f$ 0<x\f$
+     *  - \f$ 0<y\f$ 
+     *  @return value of beta function 
+     */
     double beta
     ( const unsigned short x ,
       const unsigned short y ) ;
@@ -275,8 +335,7 @@ namespace Ostap
     ( const unsigned short y , 
       const double         x ) ; 
     // ========================================================================
-
-
+   
     // ========================================================================
     /** natural logarithm of beta function 
      *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
@@ -493,8 +552,36 @@ namespace Ostap
     ( const double x , 
       const double s ) ;    
     // ========================================================================
-
+    
     // ========================================================================
+    /** Hadamard's (pseudo)gamma function
+     *  @see https://en.wikipedia.org/wiki/Hadamard%27s_gamma_function
+     *  - The alternative "interpolant" for factorial \f$ H(n+1) = \Gamma(n+1) = n!\f$ 
+     *  - Unlike Gamma function is s entire function for all values of argument
+     */
+    double hadamard ( const double x ) ;
+    // ========================================================================
+    /** Hadamard's (pseudo)gamma function \f$ H(x) \f$
+     *  @see https://en.wikipedia.org/wiki/Hadamard%27s_gamma_function
+     *  - The alternative "interpolant" for factorial: \f$ H(n+1) = \Gamma(n+1) = n!\f$ 
+     *  - Unlike Gamma function is s entire function for all values of argument
+     */
+    long double hadamard ( const long double x ) ;    
+    // ========================================================================
+    /** "L-factorial": Luschny' function  \f$ L (x)\f$ 
+     *  - The alternative "interpolant" for factorial: \f$ L(n) = \Gamma(n+1) = n!\f$ 
+     * @see https://www.luschny.de/math/factorial/hadamard/HadamardsGammaFunction.html
+     *  - Unlike Gamma function it is entire function for all values of argument
+     */
+    double luschny ( const double x ) ; 
+    // =======================================================================
+    /** "L-factorial": Luschny' function  \f$ L (x,\alpha)\f$ 
+     *  - The alternative "interpolant" for factorial: \f$ L(n) = \Gamma(n+1) = n!\f$ 
+     * @see https://www.luschny.de/math/factorial/hadamard/HadamardsGammaFunction.html
+     *  - Unlike Gamma function it is entire function for all values of argument
+     */
+    long double luschny ( const long double x  ) ;
+    // =======================================================================       
    } //                                        The end of namespace Ostap::Math
   // ==========================================================================
 } // The end of namesapce Ostap

@@ -175,21 +175,21 @@ namespace
   }
   // =========================================================================
   /* Hurwitz Zeta function 
-   *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
+   *  \f$ zeta ( s , a ) = \sum_k  ( k + q )^{-s}\f$
    *  - \f$ 1 < s \f$
-   *  - \f$ 0 < q \f$
+   *  - \f$ 0 < a \f$
    */
   double GSL_hurwitz 
   ( const double s ,
-    const double q )
+    const double a )
   {
-    if ( s <= 1 || q <= 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }
+    if ( s <= 1 || a <= 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }
     //
     // use GSL: 
     Ostap::Math::GSL::GSL_Error_Handler sentry ;
     //
     gsl_sf_result result ;
-    const int ierror = gsl_sf_hzeta_e ( s , q , &result) ;
+    const int ierror = gsl_sf_hzeta_e ( s , a , &result) ;
     if ( ierror ) 
     {
       gsl_error ( "Error from gsl_sf_hzeta_e function" , __FILE__ , __LINE__ , ierror ) ;
@@ -459,29 +459,48 @@ long double Ostap::Math::dirichlet_beta
   
 // ===========================================================================
 /* Hurwitz Zeta function 
- *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
+ *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
  *  - \f$ 1 < s \f$
- *  - \f$ 0 < q \f$
+ *  - \f$ 0 < a \f$
  */
 // ============================================================================
 double Ostap::Math::hurwitz 
 ( const double s ,
-  const double q )
+  const double a )
 {
-  if ( s <= 1 || q <= 0 ) { return std::numeric_limits<double>::quiet_NaN() ; }
-  return ::GSL_hurwitz ( s , q ) ; 
+  if      ( 1 < s && 0 < a    ) { return ::GSL_hurwitz ( s , a ) ; }
+  else if ( s_equal ( a , 1 ) ) { return zeta          ( s )     ; }
+  //
+  if      ( s == 1 || s_equal ( s , 1.0 ) ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  else if ( a < 1.e-5 && isint ( a )      ) { return std::numeric_limits<double>::quiet_NaN() ; }
+  //
+  return hurwitz ( 1.0L * s , 1.0L * a ) ;  
 }
 // ============================================================================
 /* Hurwitz Zeta function 
- *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
+ *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
  *  - \f$ 1 < s \f$
- *  - \f$ 0 < q \f$
+ *  - \f$ 0 < a \f$
  */
 // ============================================================================
 long double Ostap::Math::hurwitz
 ( const long double s ,
-  const long double q ) 
-{ return hurwitz ( static_cast<double> ( s ) ,  static_cast<double> ( q ) ) ;  }
+  const long double a ) 
+{
+  // 
+  if      ( 1 < s && 0 < a    ) { return ::GSL_hurwitz ( s , a ) ; } 
+  else if ( s_equal ( a , 1 ) ) { return zeta          ( s )     ; }
+  //
+  if      ( s == 1 || s_equal ( s , 1.0 ) ) { return std::numeric_limits<long double>::quiet_NaN() ; }
+  else if ( a < 1.e-5 && isint ( a )      ) { return std::numeric_limits<long double>::quiet_NaN() ; }
+  //
+  Ostap::Assert ( false , 
+		  "Hurwitz zeta is not (yet) implemented for these arguments!" , 
+		  "Ostap::Math::hurwitz" , 
+		  NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
+  //
+  return std::numeric_limits<long double>::quiet_NaN() ; 
+}
 // ===========================================================================
 
 // ===========================================================================
@@ -796,10 +815,10 @@ Ostap::Math::zeta
 
   /// use the reflection formula if real part is non-positive 
   if ( sigma <= 0 || s_zero ( sigma ) ) { return chi ( s ) * zeta ( 1.0L - s ) ; }
-
+  
   /// check the number of terms in Borwain's algorithm for eta 
   const unsigned int n =  15 + std::ceil ( 1.2 * std::abs ( tau ) ) ;
-
+  ///
   if      ( n <   5  && ( 1 - n ) < sigma ) { return borwain_zeta<5>   ( s ).first ; }
   else if ( n <  10  && ( 1 - n ) < sigma ) { return borwain_zeta<10>  ( s ).first ; }
   else if ( n <  20  && ( 1 - n ) < sigma ) { return borwain_zeta<20>  ( s ).first ; }
@@ -812,41 +831,8 @@ Ostap::Math::zeta
   else if ( n < 120  && ( 1 - n ) < sigma ) { return borwain_zeta<120> ( s ).first ; }
   else if ( n < 150  && ( 1 - n ) < sigma ) { return borwain_zeta<150> ( s ).first ; }
   else if ( n < 200  && ( 1 - n ) < sigma ) { return borwain_zeta<200> ( s ).first ; }
-
-  auto r10  = emaclaurin_zeta<10>  ( s ) ; 
-  auto r15  = emaclaurin_zeta<15>  ( s ) ; 
-  auto r20  = emaclaurin_zeta<20>  ( s ) ; 
-  auto r25  = emaclaurin_zeta<25>  ( s ) ; 
-  auto r50  = emaclaurin_zeta<50>  ( s ) ; 
-  auto r75  = emaclaurin_zeta<75>  ( s ) ; 
-  auto r100 = emaclaurin_zeta<100> ( s ) ; 
-
-  /** 
-  std::cerr << " EM[10]  : " ;
-  Ostap::Utils::toStream ( r10 , std::cerr ) << std::endl ;
-  std::cerr << " EM[15]  : " ;
-  Ostap::Utils::toStream ( r15 , std::cerr ) << std::endl ;
-  std::cerr << " EM[20]  : " ;
-  Ostap::Utils::toStream ( r20 , std::cerr ) << std::endl ;
-  std::cerr << " EM[50]  : " ;
-  Ostap::Utils::toStream ( r25 , std::cerr ) << std::endl ; 
-  std::cerr << " EM[75]  : " ;
-  Ostap::Utils::toStream ( r75 , std::cerr ) << std::endl ;
-  std::cerr << " EM[100] : " ;
-  Ostap::Utils::toStream ( r100 , std::cerr ) << std::endl ;
-  */
-
-  
-  return r100.first ;
-  
-  /// Use Borwain' method for precise calculation of eta:
-  Ostap::Assert ( false , 
-		  "zeta is not yet implelmented for complex argument!" , 
-		  "Ostap::Math::zeta" , 
-                   NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
-  
-   //
-  return 0 ; 
+  ///
+  return emaclaurin_zeta<100> ( s ) .first ;
 }
 // ===========================================================================
 
@@ -889,13 +875,13 @@ std::complex<double>
 Ostap::Math::chi 
 ( const std::complex<double>&  s ) 
 { 
-    //
-    const double x = s.real () ;
-    const double y = s.imag () ;
-    if ( !y ||  s_zero ( y ) ) { return chi ( x ) ; }
-    //
-    const LDC ss { s } ; 
-    return DC ( chi ( ss ) ) ;  
+  //
+  const double x = s.real () ;
+  const double y = s.imag () ;
+  if ( !y ||  s_zero ( y ) || s_equal ( x + y , x ) ) { return chi ( x ) ; }
+  //
+  const LDC ss { s } ; 
+  return DC ( chi ( ss ) ) ;  
 }
 // ==========================================================================
 /* helper chi-function:
@@ -907,14 +893,60 @@ std::complex<long double>
 Ostap::Math::chi 
 ( const std::complex<long double>&  s ) 
 { 
-    //
-    const long double x = s.real () ;
-    const long double y = s.imag () ;
-    if ( !y ||  s_zero ( y ) ) { return chi ( x ) ; }
-    //
-    return std::pow ( s_2pi , s ) * s_1_pi * std::sin ( s_pi * s * 0.5L ) * gamma ( 1.0L - s ) ;  
+  //
+  const long double x = s.real () ;
+  const long double y = s.imag () ;
+  if ( !y ||  s_zero ( y ) || s_equal ( x + y , x ) ) { return chi ( x ) ; }
+  //
+  return std::pow ( s_2pi , s ) * s_1_pi * std::sin ( s_pi * s * 0.5L ) * gamma ( 1.0L - s ) ;  
 } 
-  
+// ===========================================================================
+
+// ===========================================================================
+/*  Hurwitz Zeta function 
+ *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
+ *  - \f$ 1 < s \f$
+ *  - \f$ 0 < a \f$
+ */
+// ===========================================================================
+std::complex<double>
+Ostap::Math::hurwitz
+( const std::complex<double>& s ,
+  const std::complex<double>& a )
+{
+  const auto result = hurwitz ( std::complex<long double> ( s ) ,
+				std::complex<long double> ( a ) ) ;
+  return std::complex<double> ( result ) ; 
+}
+// ===========================================================================
+/*  Hurwitz Zeta function 
+ *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
+ *  - \f$ 1 < s \f$
+ *  - \f$ 0 < a \f$
+ */
+// ===========================================================================
+std::complex<long double>
+Ostap::Math::hurwitz
+( const std::complex<long double>& s ,
+  const std::complex<long double>& a )
+{
+  const long double re_s = s.real() ;
+  const long double im_s = s.imag() ;
+  const bool s_real = !im_s || s_zero ( im_s ) || s_equal ( re_s + im_s , re_s ) ;
+  //
+  const long double re_a = a.real() ;
+  const long double im_a = a.imag() ;
+  const bool a_real = !im_a || s_zero ( im_a ) || s_equal ( re_a + im_a , re_a ) ;
+  //
+  if ( s_real && a_real ) { return hurwitz ( re_s , im_s ) ; }
+  //
+  Ostap::Assert ( false , 
+		  "Hurwitz zeta is not (yet) implemented for these arguments!" , 
+		  "Ostap::Math::hurwitz" , 
+		  NOT_IMPLEMENTED_YET , __FILE__ , __LINE__ ) ;
+  //
+  return std::numeric_limits<long double>::quiet_NaN() ; 
+}
 
 // ===========================================================================
 //                                                                     The END

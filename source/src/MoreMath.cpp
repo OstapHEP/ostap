@@ -886,7 +886,7 @@ Ostap::Math::gamma
   const double x = z.real () ;
   const double y = z.imag () ;
   // simple case 
-  if ( ( !y || s_zero ( y ) ) && 0 < x  && !s_zero ( x ) ) { return std::tgamma ( x ) ; }
+  if ( !y || s_zero ( y ) || s_equal ( x + y , y ) ) { return std::tgamma ( x ) ; }
   //
   return std::exp ( Ostap::Math::lgamma ( z ) ) ;
 }
@@ -1059,6 +1059,97 @@ Ostap::Math::igamma
 }
 // ===========================================================================
 
+// ========================================================================
+/*  Hadamard's (pseudo)gamma function
+ *  @see https://en.wikipedia.org/wiki/Hadamard%27s_gamma_function
+ *  - The alternative "interpolant" for factorial \f$ H(n+1) = \Gamma(n+1) = n!\f$ 
+ *  - Unlike Gamma function is s entire function for all values of argument
+ */
+// ========================================================================
+double Ostap::Math::hadamard 
+( const double x )
+{
+  //
+  if      ( 180   < x                   ) { return std::numeric_limits<double>::infinity() ; }
+  else if ( 0.999 < x && isushort ( x ) ) { return gamma ( x ) ; } 
+  //
+  return hadamard ( 1.0 * x ) ;
+}
+// ========================================================================
+/*  Hadamard's (pseudo)gamma function
+ *  @see https://en.wikipedia.org/wiki/Hadamard%27s_gamma_function
+ *  - The alternative "interpolant" for factorial \f$ H(n+1) = \Gamma(n+1) = n!\f$ 
+ *  - Unlike Gamma function is s entire function for all values of argument
+ */
+// ========================================================================
+long double Ostap::Math::hadamard
+( const long double x )
+{
+  //
+  if      ( 180   < x                   ) { return std::numeric_limits<long double>::infinity() ; }
+  else if ( 0.999 < x && isushort ( x ) ) { return gamma ( x ) ; } 
+  //
+  return 0.5L * ( psi ( 1.0L - 0.5L * x ) - psi ( 0.5L - 0.5L * x ) ) * igamma ( 1.0L - x ) ;
+}
+// ===========================================================================
+/*  "L-factorial": Luschny' function  \f$ L (x,\alpha)\f$ 
+ *  @see https://www.luschny.de/math/factorial/hadamard/HadamardsGammaFunction.html
+ */
+// ===========================================================================
+double Ostap::Math::luschny
+( const double x     )
+{
+  //
+  if      ( 180    < x                   ) { return std::numeric_limits<long double>::infinity() ; }
+  else if ( -0.001 < x && isushort ( x ) ) { return gamma ( x + 1 ) ; } 
+  //
+  return luschny ( 1.0L * x ) ;
+}
+// ===========================================================================
+/*  "L-factorial": Luschny' function  \f$ L (x,\alpha)\f$ 
+ *  @see https://www.luschny.de/math/factorial/hadamard/HadamardsGammaFunction.html
+ */
+// ===========================================================================
+long double Ostap::Math::luschny
+( const long double x     )
+{
+  //
+  if      ( 180    < x                   ) { return std::numeric_limits<long double>::infinity() ; }
+  else if ( -0.001 < x && isushort ( x ) ) { return gamma ( x + 1 ) ; } 
+  //
+  const auto g = [] ( const long double x ) -> long double
+  {
+    const long double hx = 0.5L * x ;
+    return !s_zero ( hx ) ? hx * ( psi ( 0.5L + hx ) - psi ( hx ) ) - 0.5L : 0.5L  ;
+  };
+  //
+  const auto P = [g] ( const long double x ) -> long double
+  {
+    const long double pix = x * s_pi ; 
+    return 1.0L - g ( x ) * sinc ( pix ) ;
+  };
+  //
+  if ( -0.001L + std::numeric_limits<int>::lowest() < x  && x < -0.999L )
+    {
+    const int  n   = round ( x ) ;
+    /// exact value is known 
+    if ( isint ( x )  ) { return  g ( std::abs ( n ) ) * igamma ( std::abs ( n ) + 1 ) ; } 
+    //
+    constexpr long double eps = 1.e-5L ;    
+    if ( std::abs ( x - n ) < eps )
+    {     
+      const long double x1 = n + eps ;
+      const long double x2 = n - eps ;
+      const long double l1 = gamma ( x1 + 1 ) * P ( x1 ) ;
+      const long double l2 = gamma ( x2 + 1 ) * P ( x2 ) ;
+      //
+      return 0.5L * ( l1 + l2 ) ;
+    }
+  }
+  return gamma ( x + 1.0 ) * P ( x ) ;
+}
+// ==========================================================================
+
 // ===========================================================================
 /* Get the n-th derivative of gamma function at x=1 
  *   \f[  f(n) = \left. \frac{d^{n} \Gamma(x) }{dx^n} \right|_{x=1} \f]  
@@ -1067,7 +1158,6 @@ Ostap::Math::igamma
  *       Evaluation of higher-order derivatives of the Gamma function. Publ. Elektrotehn. Fak. Ser. Mat. 11. 9-18. 
  */
 // =============================================================================
-#include <iostream>
 namespace 
 {
   long double _dgamma_at_1_
@@ -1272,6 +1362,83 @@ double Ostap::Math::beta
   // ==========================================================================
 #endif // =====================================================================
   // ==========================================================================
+}
+// ============================================================================
+/* beta function for 
+ *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+std::complex<long double>
+Ostap::Math::beta
+( const std::complex<long double>& x ,
+  const std::complex<long double>& y )
+{
+  ///
+  const long double x_re = x.real () ;
+  const long double x_im = x.imag () ;
+  if ( !x_im || s_zero ( x_im ) || s_equal ( x_re + x_im , x_re ) ) { return beta ( x_re , y ) ; }
+  //
+  const long double y_re = y.real () ;
+  const long double y_im = y.imag () ;
+  if ( !y_im || s_zero ( y_im ) || s_equal ( y_re + y_im , y_re ) ) { return beta ( x , y_re ) ; }
+  //
+  return std::exp ( lgamma ( x ) + lgamma ( y ) - lgamma ( x + y ) ) ;  
+}
+// ============================================================================
+/* beta function for 
+ *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::beta
+( const std::complex<double>& x ,
+  const std::complex<double>& y )
+{
+  const auto result = beta ( std::complex<long double> ( x ) ,
+			     std::complex<long double> ( y ) ) ;
+  return std::complex<double> ( result ) ; 
+}
+// ============================================================================
+/* beta function for 
+ *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::beta
+( const std::complex<double>& x ,
+  const double                y )
+{
+  const auto result = beta ( std::complex<long double> ( x ) , 1.0L * y ) ;
+  return std::complex<double> ( result ) ;
+}
+// ============================================================================
+/* beta function for 
+ *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
+ *  - \f$ 0<x\f$
+ *  - \f$ 0<y\f$ 
+ *  @return value of beta function 
+ */
+// ============================================================================
+std::complex<long double>
+Ostap::Math::beta
+( const std::complex<long double>& x ,
+  const long double                y )
+{
+  ///
+  const long double x_re = x.real () ;
+  const long double x_im = x.imag () ;
+  if ( !x_im || s_zero ( x_im ) || s_equal ( x_re + x_im , x_re ) ) { return beta ( x_re , y ) ; }
+  //
+  return std::exp ( lgamma ( x ) + lgamma ( y ) - lgamma ( x + y ) ) ;     
 }
 // ============================================================================
 /*  beta function for 
@@ -5345,7 +5512,18 @@ double Ostap::Math::hat ( const double x )
 double Ostap::Math::sinc ( const double x ) 
 {
   const double absx = std::abs ( x ) ;
-  // 
+  if ( 1.e-3 < absx ) { return std::sin ( absx ) / absx ; } 
+  return sinc ( 1.0L * x ) ;
+}
+// ============================================================================
+/*  Sinc function 
+ *  \f$ f(x) = \frac{ \sin x }{x}  \f$ 
+ *  @see https://en.wikipedia.org/wiki/Sinc_function
+ */
+// ============================================================================
+long double Ostap::Math::sinc ( const long double x ) 
+{
+  const long double absx = std::abs ( x ) ;
   if ( 1.e-3 < absx ) { return std::sin ( absx ) / absx ; } 
   //
   const long double x2     = absx * absx ;
@@ -5354,7 +5532,7 @@ double Ostap::Math::sinc ( const double x )
   long double       result = 1 ;
   unsigned long     k      = 3 ;
   //
-  while ( std::abs ( term ) > 0.5 * s_EPSILON  ) 
+  while ( !s_lzero ( term ) || !s_lequal ( result + term , result ) ) 
   {
     result += term ;
     term   *= - x2 / ( ( k + 1 ) * ( k + 2 ) ) ;
@@ -5363,7 +5541,6 @@ double Ostap::Math::sinc ( const double x )
   //
   return result ;
 }
-
 // ========================================================================
 /*  \f$ f(x) = \frac{ \sin x }{x}  \f$ 
  *  @see https://en.wikipedia.org/wiki/Sinc_function

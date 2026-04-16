@@ -353,7 +353,7 @@ namespace Ostap
       public:
         // ====================================================================
         /** get Nth difference
-         *  @param fun the fnuction
+         *  @param fun the function
          *  @param x   x-value 
          *  @param h   step 
          *  @return Nth difference 
@@ -378,7 +378,7 @@ namespace Ostap
       public:
         // ====================================================================
         /** get Nth difference
-         *  @param fun the fnuction
+         *  @param fun the function
          *  @param x   x-value 
          *  @param h   step 
          *  @return Nth difference 
@@ -403,7 +403,7 @@ namespace Ostap
       public:
         // ==================================================================== 
         /** get Nth difference
-         *  @param fun the fnuction
+         *  @param fun the function
          *  @param x   x-value 
          *  @param h   step 
          *  @return Nth difference 

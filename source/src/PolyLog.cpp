@@ -94,16 +94,16 @@ namespace
   constexpr inline long double borwain_f 
   ( const unsigned int   k , 
     const unsigned short q )
-    {
-      if      ( !k && !q ) { return 1 ; }  // f(0,0) = 1 
-      else if ( !k       ) { return 0 ; }  // f(0,q) = 0 
-      else if ( !q       ) { return 1 ; }  // f(k,0) = 1 
-      // 
-      long double r = 0 ;
-      for ( unsigned short h = 0 ; h <= q ; ++h  )
+  {
+    if      ( !k && !q ) { return 1 ; }  // f(0,0) = 1 
+    else if ( !k       ) { return 0 ; }  // f(0,q) = 0 
+    else if ( !q       ) { return 1 ; }  // f(k,0) = 1 
+    // 
+    long double r = 0 ;
+    for ( unsigned short h = 0 ; h <= q ; ++h  )
       { r += Ostap::Math::sign ( h ) * Ostap::Math::POW ( 1.0L / k , h ) * borwain_f ( k - 1 , q - h ) ; }
-      return r ; 
-    }
+    return r ; 
+  }
   // ==========================================================================
   template <typename  TYPE>
   inline TYPE borwain_b 
@@ -112,7 +112,6 @@ namespace
     const TYPE&          L )
   {
     TYPE result       = 0 ;
-
     //
     std::vector<TYPE>   LP ( j + 1 ) ; 
     LP [ 0 ] = 1  ;
@@ -923,7 +922,7 @@ double Ostap::Math::Li
   return std::numeric_limits<double>::quiet_NaN () ;   
 }
 // ===========================================================================
-/** Polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
+/*  Polylogarithm function  \f$ Li_n(x)  = \sum \frac{x^k}{k^n} f\$
  *  @see https://en.wikipedia.org/wiki/Polylogarithm
  *  @see David Wood, "The computation of polylogarithms",
  *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
@@ -942,8 +941,8 @@ Ostap::Math::Li
 {
   const double x = z.real () ;
   const double y = z.imag () ;
-  //
-  if ( !y || s_zero ( y ) )
+  // REAL case ?
+  if ( !y || s_zero ( y ) || s_equal ( x + y , x ) )
   {
     return 0 <= y ?
       std::complex<double> ( Li ( n , x ) , +ImLi ( n , x ) ) : 
@@ -1002,7 +1001,7 @@ Ostap::Math::Li
   return std::numeric_limits<double>::quiet_NaN () ;     
 }
 // ===========================================================================
-/** Polylogarithm function  \f$ Li_s(x)  = \sum \frac{x^k}{k^s} f\$
+/*  Polylogarithm function  \f$ Li_s(x)  = \sum \frac{x^k}{k^s} f\$
  *  @see https://en.wikipedia.org/wiki/Polylogarithm
  *  @see David Wood, "The computation of polylogarithms",
  *       Technical Report 15-92*, University of Kent, Computing Laboratory, Canterbury, UK, June 1992.
@@ -1029,7 +1028,7 @@ Ostap::Math::Li
   const double x = z.real () ;
   const double y = z.imag () ;
   //
-  if ( !y || s_zero ( y ) )
+  if ( !y || s_zero ( y ) || s_equal ( x + y , x ) )
   {
     return 0 <= y ?
       std::complex<double> ( Li ( s , x ) , +ImLi ( s , x ) ) :

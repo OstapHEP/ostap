@@ -155,6 +155,10 @@ namespace
   const Ostap::Math::Equal_To<double>                     s_equal   {} ; // equality criteria for doubles
   /// zero for doubles  
   const Ostap::Math::Zero<double>                         s_zero    {} ; // zero for doubles
+  /// equality criteria for doubles
+  const Ostap::Math::Equal_To<long double>                s_lequal  {} ; // equality criteria for doubles
+  /// zero for doubles  
+  const Ostap::Math::Zero<long double>                    s_lzero   {} ; // zero for doubles
   /// zero for vectors 
   const Ostap::Math::Zero< std::vector<double> >          s_vzero   {} ; // zero for vectors
   /// zero for comples doubles  

@@ -113,7 +113,6 @@ namespace Ostap
     std::complex<long double> eta ( const std::complex<long double>& s  ) ;
     // ========================================================================
     
-
     // ========================================================================
     /** Dirichlet's Eta function 
      *  \f$ \eta ( z ) = ( 1 - 2 ^{1-s} ) \zeta ( s ) 
@@ -171,23 +170,37 @@ namespace Ostap
 
     // ========================================================================
     /** Hurwitz Zeta function 
-     *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
+     *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
      *  - \f$ 1 < s \f$
-     *  - \f$ 0 < q \f$
+     *  - \f$ 0 < a \f$
      */
     double hurwitz
     ( const double s     ,
-      const double q = 1 ) ;
+      const double a = 1 ) ;
     // ========================================================================
     /** Hurwitz Zeta function 
-     *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
+     *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
      *  - \f$ 1 < s \f$
-     *  - \f$ 0 < q \f$
+     *  - \f$ 0 < a \f$
      */
     long double hurwitz
     ( const long double s     ,
-      const long double q = 1 ) ;
+      const long double a = 1 ) ;
+    // =========================================================================
+    /** Hurwitz Zeta function 
+     *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
+     */
+    std::complex<double> hurwitz
+    ( const std::complex<double>& s ,
+      const std::complex<double>& a ) ;
     // ========================================================================
+    /** Hurwitz Zeta function 
+     *  \f$ zeta ( s , a ) = \sum_k  ( k + a )^{-s}\f$
+     */
+    std::complex<long double> hurwitz
+    ( const std::complex<long double>& s ,
+      const std::complex<long double>& a ) ;
+    // ========================================================================    
     /** Hurwitz Zeta function 
      *  \f$ zeta ( s , q ) = \sum_k  ( k + q )^{-s}\f$
      *  - \f$ 1 < s \f$
