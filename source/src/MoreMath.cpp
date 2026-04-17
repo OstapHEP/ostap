@@ -8346,7 +8346,41 @@ double Ostap::Math::harmonic
 ( const unsigned short n , 
   const unsigned short m ) 
 { return _harmonic_ ( n , m ) ; }
-  
+
+
+// ============================================================================
+namespace Ostap
+{
+  namespace Math
+  {
+    void math_test ()
+    {
+
+      std::comp_ellint_1 ( 0.5 ) ;
+      std::comp_ellint_2 ( 0.5 ) ;
+      std::comp_ellint_3 ( 0.5 , 0.5 ) ;
+
+      std::cyl_bessel_i ( 1.0 , 1.0 ) ;
+      std::cyl_bessel_k ( 1.0 , 1.0 ) ;
+      std::cyl_bessel_k ( 1.0 , 1.0 ) ;
+
+      std::cyl_neumann  ( 1.0 , 1.0 ) ;
+
+      std::ellint_1 ( 0.1 , 0.5 ) ;
+      std::ellint_2 ( 0.1 , 0.5 ) ;
+      std::ellint_3 ( 0.1 , 0.5 , 0.5 ) ;
+
+      std::expint       ( 0.1  ) ;
+      
+      std::riemann_zeta ( 1.0 ) ;
+      
+      std::beta         ( 1.0 , 1.0 ) ;
+
+      
+    } ;
+  }
+}
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

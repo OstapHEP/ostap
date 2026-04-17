@@ -1,3 +1,9 @@
+## New features
+
+## Bug fixes
+
+## Backward incompatible
+
 # v3.6.9.14
 
 ## New features
@@ -24,7 +30,6 @@
   1. fixes, fixes, fixes
   1. fix the bug in adding TMVA/choping decision for TChain
   
-
 ## Backward incompatible
 
   1. rename `ostap.core.base` t o `ostap.core.core_base`
