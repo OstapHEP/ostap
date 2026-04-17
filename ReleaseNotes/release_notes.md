@@ -7,11 +7,10 @@
   1. Add Dixon elliptic functions to `ostap.math.math_ve`
   1. Add lemniscate elliptic sine and cosine functions
   1. Add lemniscate elliptic hyperbolic sine and cosine functions
-  1. Add complex eta and zeta functions
+  1. Add complex eta, complex zeta and complex polylogarithm functions
   1. reshuffle `Ostap/MoreMath.h` header fiel ans split it into smaller pieces 
   1. Add Hadamard's (pseudo) gamma function
   1. Add Luschny's  (L)-factorial function
-
 
 # v3.6.9.12
 
