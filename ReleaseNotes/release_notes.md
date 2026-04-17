@@ -1,5 +1,8 @@
 ## New features
 
+   1. Add `aic` and `aikaike_IC` `methods to fit-result to access Aikaike's information criteria (thanks to Yuhao Wang)
+   1. Add `bic` and `bayes_IC` `  methods to fit-result to access Bayes's information criteria (thans to Yuhao Wang)
+   
 ## Bug fixes
 
 ## Backward incompatible

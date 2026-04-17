@@ -45,14 +45,16 @@ namespace
   static_assert ( std::numeric_limits<unsigned int>::is_specialized,
 		  "numeric_limits<usigned int> is not specialzaed!" ) ;
   // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned int>::max ()       <= std::numeric_limits<unsigned long>::max ()      && 		  
-		  std::numeric_limits<unsigned long>::max ()      <= std::numeric_limits<unsigned long long>::max () &&  
-		  std::numeric_limits<unsigned long long>::max () <= std::numeric_limits<std::uintmax_t>::max ()     && 
-		  std::numeric_limits<std::size_t>::max ()        <= std::numeric_limits<std::uintmax_t>::max () ,
+  static_assert ( std::numeric_limits<std::uint8_t>::max       () <= std::numeric_limits<std::uint16_t>::max      () && 		  
+		  std::numeric_limits<std::uint16_t>::max      () <= std::numeric_limits<unsigned short>::max     () && 		  
+		  std::numeric_limits<unsigned short>::max     () <= std::numeric_limits<unsigned int>::max       () && 		  
+		  std::numeric_limits<unsigned int>::max       () <= std::numeric_limits<unsigned long>::max      () &&	      
+		  std::numeric_limits<unsigned long>::max      () <= std::numeric_limits<unsigned long long>::max () &&  
+		  std::numeric_limits<unsigned long long>::max () <= std::numeric_limits<std::uintmax_t>::max     () && 
+		  std::numeric_limits<std::size_t>::max        () <= std::numeric_limits<std::uintmax_t>::max     () ,
 		  "Invalid std::numeric_limits<*UINT*>::max () hierarchy!" ) ;
   // ==========================================================================================================
-  const std::uintmax_t s_ULLMAX = std::numeric_limits<std::uintmax_t>::max () - 1 ;
-  const long double    s_emax   = std::log ( 0.4L * ( s_ULLMAX / 2 ) ) ;
+  const std::uintmax_t s_UINTMAX = std::numeric_limits<std::uintmax_t>::max () ;
   // ==========================================================================
   /** calculate the binomial coefficient C(k,n) =  n!/((n-k)!*k!)
    *  In case of overflow std::numeric_limits<unsigned long long>::max is returned 
@@ -72,11 +74,11 @@ namespace
     k = std::min ( k , (unsigned short) ( n - k ) ) ;
     //
     std::uintmax_t r = 1  ;
-    const std::uintmax_t L = s_ULLMAX / n ; 
+    const std::uintmax_t L = s_UINTMAX / n ; 
     for ( unsigned short d = 1 ; d <= k  ; ++d , --n ) 
     {
-      // if ( r > s_ULLMAX / n * d ) { return s_ULLMAX ; }  //  RETURN
-      if ( r > L * d ) { return s_ULLMAX ; }  //  RETURN
+      // if ( r > s_UINTMAX / n * d ) { return s_UINTMAX ; }  //  RETURN
+      if ( r > L * d ) { return s_UINTMAX ; }  //  RETURN
       r = ( r / d ) * n + ( r % d ) * n / d;
     }
     return r ;
@@ -234,13 +236,13 @@ Ostap::Math::choose
   // (2) calculate it using Pascal's rule : 
   //
   const RESULT p1 = choose ( n - 1 , m - 1 ) ;
-  if ( s_ULLMAX <= p1 ) { return p1 ; }
+  if ( s_UINTMAX <= p1     ) { return p1     ; }
   //
   const RESULT p2 = choose ( n - 1 , m     ) ;
-  if ( s_ULLMAX <= p2 ) { return p2 ; }
+  if ( s_UINTMAX <= p2     ) { return p2     ; }
   //
   const RESULT result = p1 + p2 ;
-  if ( s_ULLMAX <= result ) { return result ; }
+  if ( s_UINTMAX <= result ) { return result ; }
   //
   {  // (3) add valid calculated value into the cache 
     CACHE::Lock lock { s_CACHE.mutex () } ;
@@ -257,7 +259,6 @@ Ostap::Math::choose
  *  @date 2020-01-31
  */
 // ============================================================================
-#include <iostream> 
 double Ostap::Math::choose2
 ( const unsigned short n , 
   const unsigned short k )

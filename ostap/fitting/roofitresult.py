@@ -7,7 +7,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-"""Decoration of some RooFit objects for efficient use in python
+""" Decoration of some RooFit objects for efficient use in python
 - see RooFitResult
 """
 # =============================================================================
@@ -699,7 +699,13 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-
+    ## Aikaike's information criteria 
+    #  https://ieeexplore.ieee.org/document/1100705
+    s , n = pretty_float ( r.aic () )
+    if n : n = '[10^%+d]' % n
+    else : n = '' 
+    rows.append ( ( "Aikaike's IC"    , n , '  ' + s , '' ) )
+        
     with_globcorr = True 
 
     pars_all   = r.params ( float_only = False )
@@ -842,6 +848,90 @@ def _rfr_table_ ( rr , title = '' , prefix = '' , more_vars = {} ) :
     import ostap.logger.table as T
     if all : all = T.remove_empty_columns ( all ) 
     return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'lcclcccc' )
+
+# =============================================================================
+## Aikaike's information criteria 
+#  @see https://ieeexplore.ieee.org/document/1100705
+#  It is useful to compare diffent fit models
+#  with different number of free parameters 
+#  \f[ A = 2k - 2 \log \mathcal {L}, \f]
+#  where
+#  - \f$k\f$ is the number of free parameters 
+#  - \f$L\f$ is value of likelihood function at minimum
+#  @code 
+#  fit_result = ...
+#  aic = fit_result.aic () 
+#  #endcode 
+def _rfr_aic_ ( self ) :
+    """ Aikaike's information criteria,
+    
+    It is useful to compare diffent fit models
+    with different number of free parameters
+    
+    - see https://ieeexplore.ieee.org/document/1100705
+    
+    2k -2 log L,
+    where
+    - k is the number of free parameters
+    - L is the value of likelihood function at minimum
+    
+    >>> fit_result = ...
+    >>>aic = fit_result.aic ()
+    """
+    npars = len ( self.floatParsFinal() )
+    nll   = self.minNll () 
+    return 2 * npars + 2 * nll 
+
+# =============================================================================
+## Bayesian information criteria
+#  @see Gideon Schwarz. "Estimating the Dimension of a Model."
+#       Ann. Statist. 6 (2) 461 - 464, March, 1978.
+#  @see https://doi.org/10.1214/aos/1176344136
+#  It is useful to compare diffent fit models
+#  with different number of free parameters 
+#  \f[ B = k \log N  - 2 \log \mathcal {L}, \f]
+#  where
+#  - \f$k\f$ is the number of free parameters 
+#  - \f$N\f$ is the number of events in dataset 
+#  - \f$L\f$ is value of likelihood function at minimum
+#  @code
+#   data      = ... 
+#  fit_result = ...
+#  bic        = fit_result.bic ( data ) 
+#  #endcode 
+def _rfr_bic_ ( self , N ) :
+    """ Bayesian information criteria
+    - see Gideon Schwarz. "Estimating the Dimension of a Model."
+           Ann. Statist. 6 (2) 461 - 464, March, 1978.
+    - see https://doi.org/10.1214/aos/1176344136
+    It is useful to compare diffent fit models
+    with different number of free parameters 
+    
+    k* log N  -2 log L,
+    where  
+    - k is the number of free parameters
+    - N is the number of events parameters
+    - L is the value of likelihood function at minimum
+    
+    >>> data       = ... 
+    >>> fit_result = ...
+    >>> bic        = fit_result.bic ( data )
+    """
+    
+    assert ( isinstance ( N , integer_types ) and 1 <= N ) or \
+        ( isinstance ( N , ROOT.RooAbsData ) and 0 < N.sumEntries () ) , \
+        "Invalid data types %s" % typename ( N )
+
+    
+    ## get number of entries 
+    if isinstance ( N , ROOT.RooAbsData ) : N = N.sumEntries() 
+
+    npars = len ( self.floatParsFinal() )
+    nll   = self.minNll ()
+    log_N = math.log ( N ) 
+    
+    return npars * log_N + 2 * nll 
+
 
 # =============================================================================
 ## 'easy' print of RooFitResult
@@ -1374,7 +1464,11 @@ ROOT.RooFitResult.success = property ( _rfr_success_ , None , None, _rfr_success
 ROOT.RooFitResult.failure = property ( _rfr_failure_ , None , None, _rfr_failure_.__doc__ )
 
 
-ROOT.RooFitResult . __repr__         = _rfr_table_
+ROOT.RooFitResult . aic              = _rfr_aic_
+ROOT.RooFitResult . bic              = _rfr_bic_
+ROOT.RooFitResult . aikaike_IC       = _rfr_aic_
+ROOT.RooFitResult . bayes_IC         = _rfr_bic_
+
 ROOT.RooFitResult . __str__          = _rfr_table_
 ROOT.RooFitResult . __call__         = _rfr_param_
 ROOT.RooFitResult . __getattr__      = _rfr_getattr_ 
@@ -1429,7 +1523,12 @@ _new_methods_ += [
     #
     ROOT.RooFitResult . success             , 
     ROOT.RooFitResult . failure             , 
-    # 
+    #
+    ROOT.RooFitResult . aic                 , 
+    ROOT.RooFitResult . bic                 , 
+    ROOT.RooFitResult . aikaike_IC          , 
+    ROOT.RooFitResult . bayes_IC            , 
+    #    
     ROOT.RooFitResult . __repr__            ,
     ROOT.RooFitResult . __str__             ,
     ROOT.RooFitResult . __call__            ,
