@@ -372,6 +372,10 @@ namespace Ostap
       ValueWithError __clh__    () const ;
       /// Lemniscate elliptic  hyperbolic sine sm 
       ValueWithError __slh__    () const ;
+      /// Polylogarithm 
+      ValueWithError __Li__     ( const short  n ) const ;
+      /// Polylogarithm 
+      ValueWithError __Li__     ( const double s ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1439,7 +1443,23 @@ namespace Ostap
     ValueWithError Cl
     ( const unsigned int    n , 
       const ValueWithError& x ) ;
-    // ========================================================================
+    // ========================================================================  
+    /** Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
+     *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     */
+    ValueWithError Li
+    ( const short           n ,
+      const ValueWithError& x ) ;
+    // =======================================================================
+    /** Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
+     *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     */
+    ValueWithError Li
+    ( const double          s ,
+      const ValueWithError& x ) ;
+    // =======================================================================
     /** standard Clausen functions, aka Gleisher-Clausen fnuctions  
      *  \f[ \begin{array}{lcc}
      *      Sl_{2m+2} ( x ) & = \sum_k \frac{ \cos kx }{k^{2m+2}}& \\ 

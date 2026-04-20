@@ -29,49 +29,49 @@ __all__     = (
     'psi'            , 'polygamma'  , 'digamma' , 'trigamma' ,
     'beta'           , 'lnbeta'     ,
     'gd'             , 'gd_inv'     ,
-    'Ai'             ,  'Bi'         ,
-    'li'             , 'Li'         ,              ## integral logarithms 
-    'Ei'             , 'Ein'        , 'E1'      ,  ## integral exponents 
-    'Si'             , 'Ci'         , 'Cin'     ,  ## integral trigonometry
+    'Ai'             , 'Bi'         ,                ## Airy functions 
+    'li'             , 'Li'         ,                ## integral logarithms 
+    'Ei'             , 'Ein'        , 'E1'      ,    ## integral exponents 
+    'Si'             , 'Ci'         , 'Cin'     ,    ## integral trigonometry
     'exp2'           , 'log2'       ,
     ## 
-    'bessel_J'       , 'bessel_Y'   ,              ## Bessel functions  
-    'bessel_I'       , 'bessel_K'   ,              ## Bessel functions 
-    'gauss_pdf'      , 'gauss_cdf'  ,              ## Gaussian PDF and CDF
+    'bessel_J'       , 'bessel_Y'   ,                ## Bessel functions  
+    'bessel_I'       , 'bessel_K'   ,                ## Bessel functions 
+    'gauss_pdf'      , 'gauss_cdf'  ,                ## Gaussian PDF and CDF
     ## 
     'hypot'          , 'sigmoid'    , 'fma'    ,
     'minv'           , 'maxv'       ,
     'agm'            , 'ghm'        ,
     ## 
-    'bring'          , 'BR'         ,             ## Bring's radical
+    'bring'          , 'BR'         ,                ## Bring's radical
     ##
-    'am'             , 'dn'         ,             ## elliptic functions 
-    'sn'             , 'cn'         , 'sc'      , ## elliptic functions
+    'am'             , 'dn'         ,                ## elliptic functions 
+    'sn'             , 'cn'         , 'sc'      ,    ## elliptic functions
     ##
-    'elliptic_K'     , 'elliptic_E' ,             ## elliptic integrals
+    'elliptic_K'     , 'elliptic_E' ,                ## elliptic integrals
     ##
-    'cm'             , 'sm'         ,             ## Dixon elliptic functions
+    'cm'             , 'sm'         ,                ## Dixon elliptic functions
     ## 
-    'cl'             , 'sl'         ,             ## Lemniscate elliptic functions 
-    'clh'            , 'slh'        ,             ## Lemniscate elliptic functions
+    'cl'             , 'sl'         ,                ## Lemniscate elliptic functions 
+    'clh'            , 'slh'        ,                ## Lemniscate elliptic functions
     ## 
-    'zeta'           , 'zetam1'     ,             ## Zeta-family
-    'dirichlet_eta'  , 'eta'        ,             ## Dirichlet' eta-function
-    'dirichlet_beta' ,                            ## Dirichlet' lambda-function
-    'hurwitz'        , 'hzeta'      ,             ## Hurwitz' zeta fuction 
+    'zeta'           , 'zetam1'     ,                ## Zeta-family
+    'dirichlet_eta'  , 'eta'        ,                ## Dirichlet' eta-function
+    'dirichlet_beta' ,                               ## Dirichlet' lambda-function
+    'hurwitz'        , 'hzeta'      ,                ## Hurwitz' zeta fuction 
     ## 
     'Cl'             , 'Sl'         , 'clausen'    , ## Clausen functions 
     'hyperg_M'       , 'hyperg_U'   , 'hyperg_2F1' , ## Huypergeometric functions 
     ## 
-    'dilog'          ,                            ## Di-Logarithm
-    'pLi'            , 'polyLog'    ,             ## polylogarithm
-    'Ti'             ,                            ## inverse tangent intergal
-    'debye'          ,                            ## Debye function
-    'fermi_dirac'    ,                            ## complete Fermi-Dirac integral 
-    'bose_einstein'  ,                            ## complete Bose-Einstein integral 
-    'legendre_chi'   ,                            ## Legendre chi-function
+    'dilog'          ,                               ## Di-Logarithm
+    'Li'             , 'polyLog'    , 'pLi'        , ## polylogarithm
+    'Ti'             ,                               ## inverse tangent intergal
+    'debye'          ,                               ## Debye function
+    'fermi_dirac'    ,                               ## complete Fermi-Dirac integral 
+    'bose_einstein'  ,                               ## complete Bose-Einstein integral 
+    'legendre_chi'   ,                               ## Legendre chi-function
     ##
-    'moebius'        ,                            ## Moebius transform
+    'moebius'        ,                               ## Moebius transform
     ##     
     'significance'  , 'nsigmas'    , 'nsigma'
     )
@@ -863,19 +863,38 @@ def li ( x ) :
 # ============================================================================
 _Li_ = Ostap.Math.Li
 # =============================================================================
-## get the Logarithmic integral function 
-#   \f$ li(x) \equiv \int\limits_{0}^{x} \frac{dt}{\log t} \f$ 
-#   for \f$ 0 < x \f$ 
+##   Two functions here:
+#    - function of one argument: \f$ f(x) = Li(x) \f$ 
+#    - function of two arguments \f$ f(s,z) = Li_s(z) \f$ 
+# 
+#  - One argument case:  Logarithmic integral function 
+#    \f$ Li(x)  =Li(x) - li(2)\f$ 
+#    for \f$ 0 < x \f$ 
 #  @see https://en.wikipedia.org/wiki/Logarithmic_integral_function
-#  @attention Por polylogarithm functon  see `pLi` and `polyLog`
-def Li ( x ) :
-    """ Get the Logarithmic integral function Li(x) = li(x) - li(2)
+#
+#  - Two argument case: Polylogarithm function  \f$ f(s,z) = Li_s(z) \f$
+#  @see  https://en.wikipedia.org/wiki/Polylogarithm#Relationship_to_other_functions
+# 
+#  @see `Ostap.Math.Li
+def Li ( *args ) :
+    """ Two functions here:
+    - function of one argument:  f(x) = Li(x) = li(x) - li(2) 
+    - function of two arguments  f(s,z) = Li_s(z) 
+    
+    (A) One argument case:  Logarithmic integral function 
     - see https://en.wikipedia.org/wiki/Logarithmic_integral_function
-    - attention: for polylogarithm functon  see `pLi` and `polyLog`
+    - see `Ostap.Math.li`
+
+    (B) Two argument case: Polylogarithm function  f(s,z) = Li_s(z)
+    - see  https://en.wikipedia.org/wiki/Polylogarithm#Relationship_to_other_functions
+ 
+    - see `Ostap.Math.Li
     """
+    asssert args and len(args) <= 2 , "Li: invalid arguments!"
     fun = getattr ( x , '__Li__' , None )
-    if fun : return fun ()
-    return _Li_ ( x ) 
+    if fun : return fun ( *args )
+    return _Li_ ( *args  )
+
 # ============================================================================
 _Ei_ = Ostap.Math.Ei
 # =============================================================================
@@ -1323,9 +1342,6 @@ def hyperg_2F1 ( a , b , c , x ) :
     return _hyperg_2F1 ( a , b , c , x )
 
 
-_pLi_  = Ostap.Math.Li
-_Ti_   = Ostap.Math.Ti
-
 # ==============================================================================
 ## Polylogarithm function
 #  @see Ostap::Math::Li
@@ -1334,14 +1350,15 @@ _Ti_   = Ostap.Math.Ti
 def pLi  ( s , z ) :
     """ Polylogarithm function
     - see `Ostap.Math.Li`
-    - attention: symbol `Li` stands for integral logarithm! 
     """
     fun = getattr ( z , '__pLi__' , None )
     if fun : return fun ( s )
-    return _pLi_ ( s , z )
+    return _Li_ ( s , z )
 
 ## another name 
 polyLog = pLi
+
+_Ti_  = Ostap.Math.Ti
 
 # ==============================================================================
 ## Inverse tangent integral 

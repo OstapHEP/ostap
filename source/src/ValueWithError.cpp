@@ -16,6 +16,7 @@
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Bessel.h"
 #include "Ostap/Clausen.h"
+#include "Ostap/PolyLog.h"
 #include "Ostap/Combine.h"
 #include "Ostap/Interpolation.h"
 #include "Ostap/ValueWithError.h"
@@ -964,6 +965,18 @@ Ostap::Math::ValueWithError::__clh__ () const
 Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__slh__ () const 
 { return slh ( *this ) ; }
+// ============================================================================
+// Polylogaritmh 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Li__ ( const short  n ) const 
+{ return Li ( n , *this ) ; }
+// ============================================================================
+// Polylogaritmh 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__Li__ ( const double s ) const 
+{ return Li ( s , *this ) ; }
 // ============================================================================
 
 // ============================================================================
@@ -4383,7 +4396,54 @@ Ostap::Math::two_samples
 }
 // =============================================================================
 
-
+// =============================================================================
+/*  Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
+ *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
+ *  @see https://en.wikipedia.org/wiki/Polylogarithm
+ */
+// =============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Li
+( const short                        n ,
+  const Ostap::Math::ValueWithError& x )
+{
+  //
+  const double xv    = x.value() ;
+  const double value = Li  ( n , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //  
+  // get the derivative:
+  const short  nm1 = n - 1 ; 
+  const double d   = !s_zero ( xv ) ?  Li ( nm1 , xv ) / xv : 1.0 ;
+  //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
+}
+// =============================================================================
+/*  Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
+ *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
+ *  @see https://en.wikipedia.org/wiki/Polylogarithm
+ */
+// =============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::Li
+( const double                       s ,
+  const Ostap::Math::ValueWithError& x )
+{
+  if ( isshort ( s ) )
+  {
+    const short n = round ( s ) ;
+    return Li ( n , x ) ;
+  }
+  //
+  const double xv    = x.value() ;
+  const double value = Li ( s , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //  
+  // get the derivative:
+  const double d = !s_zero ( xv ) ?  Li ( s - 1.0 , xv ) / xv : 1.0 ;
+  //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
+}
 // =============================================================================
 /*  Clausen function \f$ Cl_n \f$ 
  *  \f[ \begin{array}{lcc}

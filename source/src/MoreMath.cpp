@@ -146,12 +146,14 @@ namespace
  *  \f$ f = \sum_{i=0}^{N} \frac{x^k}{k!}\f$
  *  @param x  INPUT the argument 
  *  @param N  INPUT N-terms to be used 
- *  @return partial expoenntial sum 
+ *  @return partial exponential sum 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2015-03-26
  */
 // ============================================================================
-double Ostap::Math::exp_N ( const double x , const unsigned short N ) 
+double Ostap::Math::exp_N
+( const double         x ,
+  const unsigned short N ) 
 {
   return 
     0 == N       ? 1 :
