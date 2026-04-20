@@ -21,6 +21,7 @@
 #include "Ostap/Tails.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Bessel.h"
 #include "Ostap/qMath.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/Polynomials.h"

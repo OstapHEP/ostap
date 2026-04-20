@@ -530,7 +530,6 @@ Ostap::Math::eta ( const  std::complex<double>& s )
   return std::complex<double> ( eta ( ss ) ) ;
 }
 // ===========================================================================
-#include <iostream> 
 namespace
 {
   // =========================================================================

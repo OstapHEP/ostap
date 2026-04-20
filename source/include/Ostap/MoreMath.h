@@ -16,8 +16,11 @@
 // Ostap
 // =============================================================================
 #include "Ostap/Power.h"
-#include "Ostap/Zeta.h"
 #include "Ostap/Gamma.h"
+#include "Ostap/Beta.h"
+#include "Ostap/Bessel.h"
+#include "Ostap/Elliptic.h"
+#include "Ostap/Zeta.h"
 // ============================================================================
 /** @file Ostap/MoreMath.h
  *  collection of various helper math functions  
@@ -384,65 +387,7 @@ namespace Ostap
     inline std::complex<double>  cas ( const std::complex<double>& x )
     { return std::sin ( x ) + std::cos ( x ) ; }
     // ========================================================================
-
-   
     
-    
-    // ========================================================================
-    /** Normalized incomplete Beta function  
-     *  - CDF for beta-distribution
-     *
-     *  \f$ f ( \alpha_1,\alpha_2, z ) = 
-     *      I_z( \alpha_1, \alpha_2 ) = 
-     *      \frac{\Beta_z(\alpha_1,\alpha_2}}
-     *           {\Beta  (\alpha_1,\alpha_2}
-     *
-     *  - \f$ 0 \le z \le 1\f$
-     *  - \f$ 0<\alpha_1\f$
-     *  - \f$ 0<\alpha_2\f$ 
-     */
-    double beta_inc 
-    ( const unsigned short alpha1 , 
-      const unsigned short alpha2 , 
-      const double         z      ) ;
-    // ========================================================================
-    /** Derivative of the normalized incomplete Beta function
-     *  - PDF for beta-distribition
-     *
-     *  \f$ f ( \alpha_1,\alpha_2, z ) = 
-     *      I_z( \alpha_1, \alpha_2 ) = 
-     *      \frac{\Beta_z(\alpha_1,\alpha_2}}
-     *           {\Beta  (\alpha_1,\alpha_2}
-     *
-     *  - \f$ 0<z<1\f$
-     *  - \f$ 0<\alpha_1\f$
-     *  - \f$ 0<\alpha_2\f$ 
-     */
-    double dbeta_inc 
-    ( const double alpha1 , 
-      const double alpha2 , 
-      const double z      ) ;    
-    // ========================================================================
-    /** Derivative of the normalized incomplete Beta function
-     *  - PDF for beta-distribition
-     *
-     *  \f$ f ( \alpha_1,\alpha_2, z ) = 
-     *      I_z( \alpha_1, \alpha_2 ) = 
-     *      \frac{\Beta_z(\alpha_1,\alpha_2}}
-     *           {\Beta  (\alpha_1,\alpha_2}
-     *
-     *  - \f$ 0<z<1\f$
-     *  - \f$ 0<\alpha_1\f$
-     *  - \f$ 0<\alpha_2\f$ 
-     */
-    double dbeta_inc 
-    ( const unsigned short alpha1 , 
-      const unsigned short alpha2 , 
-      const double         z      ) ;    
-    // ========================================================================
-
-     
-     
     // ========================================================================
     /** get Arithmetic-geometric mean 
      *  @see https://en.wikipedia.org/wiki/Arithmetic%E2%80%93geometric_mean
@@ -754,606 +699,6 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
-    // Complete Elliptic integrals 
-    // ========================================================================
-
-    // ========================================================================
-    /** Complete elliptic integral \f$ K(k) \f$  
-     *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_K 
-    ( const double k   ) ;
-    // ========================================================================
-    /** Complete elliptic integral \f$ E(k) \f$  
-     *  \[ E(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_E 
-    ( const double k   ) ;    
-    // ========================================================================
-    /** Complete elliptic integral \f$ K[m] \f$  as function of parameter m 
-     *  \f[ K[m] = K(k) = 
-     *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{1-k^2}} = 
-     *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{1-m}  } = 
-     *     \frac{\pi}{2 \mathrm{agm} (1, \sqrt{ m^{\prime}}} \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_Km 
-    ( const double m   ) ;        
-    // ========================================================================
-    /** Complete elliptic integral \f$ E[m] \f$ as function of parameter m  
-     *  \[ E(,) \equiv F ( \frac{\pi}{2}, m ) \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  \f[ E(m) \equiv 2 R_{G}(0, 1 - m , 1 ) \f]
-     *  @see Eq. (55) in arXiv:math/9409227
-     */
-    double elliptic_Em 
-      ( const double m   ) ;    
-    // ========================================================================
-    /** Complete elliptic integral \f$ K(k) \f$  
-     *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @attention GSL is used for calculation 
-     */
-    double elliptic_K_gsl 
-    ( const double k   ) ;
-    // ========================================================================
-    /** Complete elliptic integral \f$ E(k) \f$  
-     *  \[ E(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @attention GSL is used for calculation 
-     */
-    double elliptic_E_gsl 
-    ( const double k   ) ;
-    
-    // ========================================================================
-    // Incomplete Elliptic integrals 
-    // ========================================================================
-
-    // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
-     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \psi }}\f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Eq. (59) in arXiv:math/9409227
-     */
-    double elliptic_F
-    ( const double phi , 
-      const double k   ) ;
-    // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
-     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \psi } d \psi \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Eq. (60) in arXiv:math/9409227
-     */
-    double elliptic_E
-    ( const double phi , 
-      const double k   ) ;
-    // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,m) \f$
-     *  \f[ F(\phi,m) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-m \sin^2 \psi }}\f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Eq. (59) in arXiv:math/9409227
-     */
-    double elliptic_Fm
-    ( const double phi , 
-      const double m   ) ;    
-    // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,m) \f$
-     *  \f[ F(\phi,m) \equiv \int_{0}^{\phi} \sqrt{1-m \sin^2 \psi } d \psi \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Eq. (60) in arXiv:math/9409227
-     */
-    double elliptic_Em
-    ( const double phi , 
-      const double m   ) ;    
-    // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
-     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \psi }}\f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_F_gsl 
-    ( const double phi , 
-      const double k   ) ;
-    // ========================================================================
-    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
-     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \psi } d \psi \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     */
-    double elliptic_E_gsl 
-    ( const double phi , 
-      const double k   ) ;    
-    // ========================================================================
-    /** difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
-     *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
-     *  where \f$ R_D(x,y,z)\f$ is a symmetric Carlson form 
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double elliptic_KmE 
-    ( const double k   ) ;    
-    // ========================================================================
-    /** Jacobi zeta function
-     *  \f[ K(k) Z( \beta , k ) = K(k) E(\beta, k ) - E(k) F(\beta,k) \f] 
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  http://functions.wolfram.com/EllipticIntegrals/JacobiZeta/introductions/IncompleteEllipticIntegrals/ShowAll.html
-     */
-    double elliptic_Z  
-    ( const double beta , 
-      const double k    ) ;
-    // ========================================================================
-    /** Product of Jacobi zeta function \f$ Z(\beta,k) \f$
-     *  and complete elliptic integral \f$ K(k) \f$
-     *  \f[ K(k) Z( \beta , k ) = \frac{k^2}{3} \sin \beta \cos \beta 
-     *   \sqrt{ 1 - k^2\sin^2\beta } R_J\left(0,1-k^2, 1 , 1-k^2\sin^2\beta\right)\f], 
-     *  where \f$ R_J(x,y,z,t)\f$ is a symmetric Carlson form  
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double elliptic_KZ 
-    ( const double beta  , 
-      const double k   ) ;
-    // ========================================================================
-    /** elliptic \f$ \Pi(\alpha^2,k)\f$ function 
-     *  - \f$ alpha^2 < 1 \f$ 
-     *  - \f$ k      < 1 \f$ 
-     *  \f[ \Pi(\alpha^2, k) - K(k) = 
-     *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
-     */ 
-    double elliptic_PI
-    ( const double alpha2 , 
-      const double k      ) ;
-    // ========================================================================
-    /** elliptic \f$ \Pi(\alpha^2,k) - K(k) \f$ function 
-     *  \f[ \Pi(\alpha^2, k) - K(k) \equiv  
-     *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
-     *  - \f$ alpha^2 < 1 \f$ 
-     *  - \f$ k      < 1 \f$ 
-     */ 
-    double elliptic_PImK  
-    ( const double alpha2 , 
-      const double k      ) ;
-    // ========================================================================
-
-    // ========================================================================
-    // Symmetric Carlson forms 
-    // ========================================================================
-    
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
-     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RF 
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
-     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RF_gsl  
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
-     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RF_int 
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
-     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RJ
-    ( const double x , 
-      const double y , 
-      const double z , 
-      const double p ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
-     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RJ_gsl
-    ( const double x , 
-      const double y , 
-      const double z , 
-      const double p ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
-     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RJ_int
-    ( const double x , 
-      const double y , 
-      const double z , 
-      const double p ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
-     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     *  For negative y, Cauchy principal value it returned 
-     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
-     */
-    double carlson_RC
-    ( const double x , 
-      const double y ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
-     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     *  For negative y, Cauchy principal value it returned 
-     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
-     */
-    double carlson_RC_gsl 
-    ( const double x , 
-      const double y ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
-     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     *  For negative y, Cauchy principal value it returned 
-     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
-     */
-    double carlson_RC_int
-    ( const double x , 
-      const double y ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
-     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RD 
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
-     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RD_gsl  
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
-     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RD_int  
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
-     *  \left[  (t+x)(t+y)\right]^{-1/2} 
-     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RG 
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
-     *  \left[  (t+x)(t+y)\right]^{-1/2} 
-     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RG_gsl 
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
-     *  \left[  (t+x)(t+y)\right]^{-1/2} 
-     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RG_int 
-    ( const double x , 
-      const double y , 
-      const double z ) ;
-    // ========================================================================
-    // specific cases of symmetric forms 
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_F(x,y) = R_F(x,y,0)\f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RF
-    ( const double x , 
-      const double y ) ;
-    // ========================================================================
-    /** Symmetric Carlson form 
-     *  \f[ R_G(x,y) = R_G(x,y,0)\f]
-     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
-     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
-     *                Numerical Algorithms, 10, 1995,  13
-     *  @see https://doi.org/10.1007/BF02198293
-     *  @see https://arxiv.org/abs/math/9409227
-     */
-    double carlson_RG 
-    ( const double x , 
-      const double y ) ;
-    // ========================================================================
-
-    // ========================================================================
-    // Jacobi elliptic functions (real argument)
-    // ========================================================================
-
-    // ========================================================================
-    /** Elliptic amplitude \f$ \mathrm{am}(u,m)=\phi\f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    double am
-    ( const double u ,
-      const double m ) ;
-    // ========================================================================
-    /** Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    double dn
-    ( const double u ,
-      const double m ) ;
-    // ========================================================================
-    /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    double sn
-    ( const double u ,
-      const double m ) ;
-    // ========================================================================
-    /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    double sn_
-    ( const double u ,
-      const double m ) ;
-    // ========================================================================
-    /** Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    double cn
-    ( const double u ,
-      const double m ) ;
-    // ========================================================================
-    /** elliptic function 
-     *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */ 
-    double sc
-    ( const double u ,
-      const double m ) ;
-    // ========================================================================
-
-    // ========================================================================
-    // Jacobi elliptic functions (complex argument)
-    // ========================================================================
-    /** Elliptic sine amplitude \f$ \mathrm{sn} (u,m)=\sin \mathrm{am} ( u, m ) \f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    std::complex<double> sn
-    ( const std::complex<double>& u ,
-      const double                m ) ;
-    // ========================================================================
-    /** Elliptic cosine amplitude \f$ \mathrm{sn} (u,m)=\cos \mathrm{am} ( u, m ) \f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    std::complex<double> cn
-    ( const std::complex<double>& u ,
-      const double                m ) ;    
-    // ========================================================================
-    /** Elliptic delta amplitude \f$ \mathrm{sn} (u,m)=\frac{d}{du} \mathrm{am} ( u, m ) \f$, where 
-     *  \f[ u = \int\limit_0^{\phi} \frac{d\theta}{\sqrt{1-m\sin^2\theta}}\f]
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */
-    std::complex<double> dn
-    ( const std::complex<double>& u ,
-      const double                m ) ;
-    // ========================================================================
-    /** elliptic function 
-     *  \f[ \matmrm{sc}\,(u,m) = \frac{ \mathrm{sn} ( u, m) } { \mathrm{cn} ( u , m ) } \f] 
-     *  @see https://en.wikipedia.org/wiki/Jacobi_elliptic_functions
-     */ 
-    std::complex<double> sc
-    ( const std::complex<double>& u ,
-      const double                m ) ;
-    // ========================================================================
-
-    // ========================================================================
-    // Dixon elliptic functions 
-    // ========================================================================
-    /** Dixon (or Dixonian) elliptic function cm for real argument 
-     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions
-     *  @param x argument 
-     *  @return value of Dixon elliptic function cm 
-     */
-    double cm ( const double x ) ;
-    // ========================================================================
-    /** Dixon (or Dixonian) elliptic function sm for real arguemnt 
-     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
-     *  @param x argument
-     *  @return value of Dixon elliptic function sm 
-     */
-    double sm ( const double x ) ;
-    // ========================================================================
-    /** Dixon (or Dixonian) elliptic function cm for complex argument 
-     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
-     *  @param z argument
-     *  @return value of Dixon elliptic function sm 
-     */
-    std::complex<double> cm ( const std::complex<double>& z ) ;
-    // ========================================================================
-    /** Dixon (or Dixonian) elliptic function sm for complex argument 
-     *  @see https://en.wikipedia.org/wiki/Dixon_elliptic_functions     
-     *  @param z argument
-     *  @return value of Dixon elliptic function sm 
-     */
-    std::complex<double> sm ( const std::complex<double>& z ) ;
-    // ========================================================================
-
-    // ========================================================================
-    /** Lemniscate elliptic function cl for real argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param x the argument
-     *  @return the value of lemniscate elliptic functinon cl
-     */
-    double cl ( const double x ) ;
-    // ========================================================================
-    /** Lemniscate elliptic function sl for real argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param x the argument
-     *  @return the value of lemniscate elliptic function sl
-     */
-    double sl ( const double x ) ;
-    // ========================================================================
-    /** Lemniscate elliptic function cl for complex argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param x the argument
-     *  @return the value of lemniscate elliptic function cl
-     */
-    std::complex<double> cl ( const std::complex<double>& z ) ;  
-    // ========================================================================
-    /** Lemniscate elliptic function sl for complex argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param  z the argument
-     *  @return the value of lemniscate elliptic function sl
-     */
-    std::complex<double> sl ( const std::complex<double>& z ) ;  
-    // ========================================================================
-
-    // ========================================================================
-    /** Lemniscate elliptic function hyperbolic cosine clh for real argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param x the argument
-     *  @return the value of lemniscate elliptic functinon clh
-     */
-    double clh ( const double x ) ;
-    // ========================================================================
-    /** Lemniscate elliptic function hyperbolic sine slh for real argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param x the argument
-     *  @return the value of lemniscate elliptic functinon slh
-     */
-    double slh ( const double x ) ;
-    // ========================================================================
-    /** Lemniscate elliptic hyperboilic cosine function clh for complex argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param x the argument
-     *  @return the value of lemniscate elliptic function clh
-     */
-    std::complex<double> clh ( const std::complex<double>& z ) ;  
-    // ========================================================================
-    /** Lemniscate elliptic hyperbolic sine function slh for complex argument 
-     *  @see https://en.wikipedia.org/wiki/Lemniscate_elliptic_functions
-     *  @param  z the argument
-     *  @return the value of lemniscate elliptic function slh
-     */
-    std::complex<double> slh ( const std::complex<double>& z ) ;  
-    // ========================================================================
-
-    // ========================================================================
     /** Dilogarith function (real case) 
      *  \f$ Li_2(x) = - Re \int\limits_0^{x}\draf{\log ( 1-s) } {s} ds  \f$ 
      */
@@ -1365,7 +710,6 @@ namespace Ostap
     std::complex<double> dilog ( const std::complex<double>& z ) ;  
     // ========================================================================
   
- 
     // ========================================================================
     /** complete Fermi-Dirac integral 
      *  \f[] F_j(x) = \frac{1}{\Gamma ( j + 1 )} \int_0^{+\infty}dt\frac{t^j}{ \mathrm{e}^{t-x}+1}\f]
@@ -1450,6 +794,7 @@ namespace Ostap
     double debye
     ( const short  n ,
       const double x ) ;
+    // =======================================================================
     
     // =======================================================================
     /** \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
@@ -1517,6 +862,10 @@ namespace Ostap
     // =======================================================================
 
     // ========================================================================
+    // finite functions 
+    // ========================================================================
+
+    // ========================================================================
     /** simple infinitely smooth and finite function 
      *  \f$ f(x) = \mathrm{e}^{ - \frac{1}{1-x^2}}\f$ 
      *   for \f$ \left| x \right| \< 1\f$. else 0.
@@ -1553,38 +902,6 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
-    /** smooth transition function 
-     *   \f[ \phix() = left\{ 
-     *   \begin{array}{ll}
-     *     0 &  x\le a \\
-     *     1 &  x\ge b \\ 
-     *    smooth & 
-     *    \end{array} \right. \f] 
-     */
-    double smooth_transition 
-    ( const double x     , 
-      const double a = 0 ,
-      const double b = 1 ) ;
-    // ========================================================================
-    
-    // ========================================================================
-    /** smooth (polynomial) step function
-     *  @see https://en.wikipedia.org/wiki/Smoothstep
-     *  Transition function for \f$ 0 \le x \le 1\f$ 
-     *  - \f$ f(x)=0\f$ for  \f$ x \le 0 \f$
-     *  - \f$ f(x)=1\f$ for  \f$ x \ge 1 \f$
-     *  - \f$ f(x)\f$ if a \f$ 2n+1 \f$ polynomial fuction inbetween      
-     *  @param x variable
-     *  @param n index, polynomial of order \f$ 2n+1 \f$     
-     *  @see Ostap::Math::smooth_transtion 
-     *  @see Ostap::Math::clamp 
-     */
-    double smooth_step
-    ( const double         x     , 
-      const unsigned short n = 1 ) ;
-    // ========================================================================
-
-    // ========================================================================
     /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile
      * 
      * The relativistic Voigt profile \f$ V_2(m;\mu,\Gamma,\sigma) \f$  is
@@ -1612,192 +929,6 @@ namespace Ostap
     ( const double a  , 
       const double u1 , 
       const double u2 ) ;
-    
-    // ========================================================================
-    // Bessel functions 
-    // ========================================================================
-
-    // ========================================================================
-    /** regular Bessel function of the first kind
-     *  \f$ J_n(x)\f$ 
-     * @see https://en.wikipedia.org/wiki/Bessel_function
-     * @see gsl_sf_bessel_J0
-     * @see gsl_sf_bessel_J1
-     * @see gsl_sf_bessel_Jn
-     */
-    double bessel_Jn
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** Irregular Bessel function of the first kind
-     *  \f$ Y_n(x)\f$ 
-     * @see https://en.wikipedia.org/wiki/Bessel_function
-     * @see gsl_sf_bessel_Y0
-     * @see gsl_sf_bessel_Y1
-     * @see gsl_sf_bessel_Yn
-     */
-    double bessel_Yn
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** regular Bessel function of the first kind
-     *  \f$ J_{\nu}(x)\f$ 
-     * @see https://en.wikipedia.org/wiki/Bessel_function
-     * @see gsl_sf_bessel_Jnu
-     */
-    double bessel_Jnu
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
-    /** Irregular Bessel function of the first kind
-     *  \f$ Y_{\nu}(x)\f$ 
-     * @see https://en.wikipedia.org/wiki/Bessel_function
-     * @see gsl_sf_bessel_Y0
-     * @see gsl_sf_bessel_Y1
-     * @see gsl_sf_bessel_Yn
-     */
-    double bessel_Ynu
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
-    /** modified Bessel function of the fist kind  
-     *  \f$ I_n(x) \f$ for \f$ x>0 \f$
-     * @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions:_I%CE%B1,_K%CE%B1 
-     * @see gsl_sf_bessel_I0
-     * @see gsl_sf_bessel_I1
-     * @see gsl_sf_bessel_In
-     */
-    double bessel_In
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** modified Bessel function of the second kind  
-     *  \f$ K_n(x) \f$ for \f$ x>0 \f$
-     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
-     *  @see gsl_sf_bessel_K0_e 
-     *  @see gsl_sf_bessel_K1_e 
-     *  @see gsl_sf_bessel_Kn_e 
-     */
-    double bessel_Kn    
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** modified Bessel function of the second kind  
-     *  \f$ I_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
-     *  @see https://en.wikipedia.org/wiki/Bessel_function
-     *  @see gsl_sf_bessel_Inu_e 
-     */
-    double bessel_Inu   
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
-    /** modified Bessel function of the second kind  
-     *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
-     *  @see https://en.wikipedia.org/wiki/Bessel_function
-     *  @see gsl_sf_bessel_Knu_e 
-     */
-    double bessel_Knu   
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
-    /** scaled modified Bessel function of the second kind 
-     *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
-     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
-     *  @see gsl_sf_bessel_K0_scaled_e 
-     *  @see gsl_sf_bessel_K1_scaled_e 
-     *  @see gsl_sf_bessel_Kn_scaled_e 
-     */
-    double bessel_Kn_scaled  
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** scaled modified Bessel function of the second kind 
-     *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
-     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
-     *  @see gsl_sf_bessel_Knu_scaled_e 
-     */
-    double bessel_Knu_scaled
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
-
-    // ========================================================================
-    // derivatives for Bessel functions 
-    // ========================================================================
-
-    // ========================================================================
-    /** derivative for the  regular Bessel function of the first kind
-     *  - \f$ J_0^{\prime}(x) =  - J_1(s)\f$
-     *  - \f$ J_{n}^{\prime}(x) = \frac{1}{2}\left(J_{n-1}(x) - J_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_Jn
-     */
-    double der_bessel_Jn
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** derivative for the  regular Bessel function of the first kind
-     *  - \f$ J_0^{\prime}(x) =  - J_1(s)\f$
-     *  - \f$ J_{n}^{\prime}(x) = \frac{1}{2}\left(J_{n-1}(x) - J_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_Jnu
-     */
-    double der_bessel_Jnu
-    ( const double nu , 
-      const double x  ) ;
-    // =========================================================================
-    /** derivative for the  irregular Bessel function of the first kind
-     *  - \f$ Y_0^{\prime}(x) =  - Y_1(s)\f$
-     *  - \f$ Y_{n}^{\prime}(x) = \frac{1}{2}\left(Y_{n-1}(x) - Y_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_Yn
-     */
-    double der_bessel_Yn
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** derivative for the irregular Bessel function of the first kind
-     *  - \f$ Y_0^{\prime}(x) =  - Y_1(s)\f$
-     *  - \f$ Y_{n}^{\prime}(x) = \frac{1}{2}\left(Y_{n-1}(x) - Y_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_Ynu
-     */
-    double der_bessel_Ynu
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
-    /** derivative for the  modified Bessel function
-     *  - \f$ I_0^{\prime}(x) =  I_1(s)\f$
-     *  - \f$ I_{n}^{\prime}(x) = \frac{1}{2}\left(I_{n-1}(x) + I_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_In
-     */
-    double der_bessel_In
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** derivative for the modified Bessel function
-     *  - \f$ I_0^{\prime}(x) =  I_1(s)\f$
-     *  - \f$ I_{n}^{\prime}(x) = \frac{1}{2}\left(I_{n-1}(x) + I_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_Inu
-     */
-    double der_bessel_Inu
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
-    /** derivative for the  modified Bessel function
-     *  - \f$ K_0^{\prime}(x) = -K_1(s)\f$
-     *  - \f$ K_{n}^{\prime}(x) = -\frac{1}{2}\left(K_{n-1}(x) + K_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_Kn
-     */
-    double der_bessel_Kn
-    ( const int    n , 
-      const double x ) ;
-    // ========================================================================
-    /** derivative for the modified Bessel function
-     *  - \f$ K_0^{\prime}(x) = -K_1(s)\f$
-     *  - \f$ K_{n}^{\prime}(x) = -\frac{1}{2}\left(K_{n-1}(x) + K_{n+1}(x)\right)\f$ 
-     *  @see Ostap::Math::bessel_Knu
-     */
-    double der_bessel_Knu
-    ( const double nu , 
-      const double x  ) ;
-    // ========================================================================
     
     // ========================================================================
     /** Laguerre polynomial of non-integher order 
@@ -1995,44 +1126,6 @@ namespace Ostap
       const double         x ) ;
     // ========================================================================
 
-    // ========================================================================
-    /**  get PDF for beta distribution 
-     *  \f[ f(x,\alpha, \beta ) =  
-     *   \frac{ x^(\alpha-1) (1-x)^{\beta-1}} { B(\alpha,\beta} \f] 
-     *  - \f$ 0 < x < 1 \f$ 
-     *  - \f$ 0 < alpha \f$ 
-     *  - \f$ 0 < beta   \f$
-     *  @see Ostap::Math::dbeta_inc 
-     *  @attention Not ethe order of arguments!
-     */
-    double beta_pdf
-    ( const double x     ,
-      const double alpha ,
-      const double beta  ) ;
-    // ========================================================================
-    /**  get CDF for beta distribution 
-     *  \f[ F(x,\alpha, \beta ) = I_x(\alpha,\beta)\f] 
-     *  - \f$ 0 < x < 1 \f$ 
-     *  - \f$ 0 < alpha \f$ 
-     *  - \f$ 0 < beta   \f$
-     *  @see Ostap::Math::beta_inc 
-     *  @attention Note the order of arguments!     
-     */
-    double beta_cdf
-    ( const double x     ,
-      const double alpha ,
-      const double beta  ) ;
-    // ========================================================================
-    /**  Quantile function CDF for beta distribution 
-     *  - \f$ 0 \le  p \le 1 \f$ 
-     *  - \f$ 0 < alpha \f$ 
-     *  - \f$ 0 < beta   \f$ 
-     */
-    double beta_quantile 
-    ( const double p     ,
-      const double alpha ,
-      const double beta  ) ;
-        
     // ========================================================================
     // Hypergeometric functions 
     // ========================================================================
@@ -2272,13 +1365,14 @@ namespace Ostap
     std::pair<double,double> softmax
     ( const double z1 ,
       const double z2 ) ;
+    // ========================================================================
 
     // ========================================================================
-    // clenshaw summation algorithms 
+    // Clenshaw' summation algorithms 
     // ========================================================================
     
     // ========================================================================
-    /** Clenshaw algorithm for summation of Chebyshev polynomials 
+    /** Clenshaw' algorithm for summation of Chebyshev polynomials 
      *  \f$ f(x) = \sum_i p_i T_i(x)\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -2287,7 +1381,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // =========================================================================
-    /** Clenshaw algorithm for summation of Legendre polynomials 
+    /** Clenshaw' algorithm for summation of Legendre polynomials 
      *  \f$ f(x) = \sum_i p_i P_i(x) \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -2296,7 +1390,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // ========================================================================
-    /** Clenshaw algorithm for summation of monomial series 
+    /** Clenshaw' algorithm for summation of monomial series 
      *  (aka Horner rule) 
      *  \f$ f(x) = \sum_i a_i x^i \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2306,7 +1400,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // ========================================================================
-    /** Clenshaw algorithm for summation of monomial series (aka Horner rule) 
+    /** Clenshaw' algorithm for summation of monomial series (aka Horner rule) 
      *  \f$ f(x) = \sum_i a_i x^i \f$, such as \f$f(0)= a_0\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -2315,7 +1409,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // ========================================================================
-    /** Clenshaw algorithm for summation of monomial series (aka Horner rule) 
+    /** Clenshaw' algorithm for summation of monomial series (aka Horner rule) 
      *  \f$ f(x) = \sum_i a_i x^{n-i} \f$, such as \f$f(0)= a_n\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -2324,7 +1418,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // ========================================================================
-    /** Clenshaw algorithm for summation of cosine-series 
+    /** Clenshaw' algorithm for summation of cosine-series 
      *  \f$ f(x) = \frac{a_0}{2} + \sum_{i=k}^{n} a_k \cos( k x) \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -2333,7 +1427,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // ========================================================================
-    /** Clenshaw algorithm for summation of sine-series 
+    /** Clenshaw' algorithm for summation of sine-series 
      *  \f$ f(x) = \sum_{i=k}^{n} a_k \sin( k x) \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -2342,7 +1436,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // ========================================================================
-    /** Clenshaw algorithm for summation of Fourier-series 
+    /** Clenshaw' algorithm for summation of Fourier-series 
      *  \f$ f(x) = \frac{a_0}{2} + \sum_{i=k}^{n} a_{2k-1}\sin(kx)+a_{2k}\cos(kx) \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-02-10
@@ -2351,7 +1445,7 @@ namespace Ostap
     ( const std::vector<double>& pars , 
       const double               x    ) ;
     // ========================================================================
-    /** Clenshaw algorithm for summation of Hermite polynomials 
+    /** Clenshaw' algorithm for summation of Hermite polynomials 
      *  \f$ f(x) = \sum_i p_i He_i(x) \f$
      *  @attention here we consider "probabilistic" polynomials
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -2363,7 +1457,7 @@ namespace Ostap
     // =========================================================================
 
     // ========================================================================
-    // continued fractions 
+    // Continued fractions 
     // ========================================================================
     
     // ========================================================================
@@ -2516,62 +1610,6 @@ namespace Ostap
       const unsigned short m ) ;
     // =========================================================================
 
-    // ========================================================================
-    // Sigmoid/kind functions 
-    // ========================================================================
-    /// the sigmoid type 
-    enum class SigmoidType
-    {
-      //
-      Logistic              , // based on logistic function 
-      Hyperbolic            , // based on tanh 
-      Trigonometric         , // based on atan 
-      Error                 , // Based on error function 
-      Gudermannian          , // Based on Gudermannian function
-      Algebraic             , // 0.5 * ( 1 + 2*x / hypot ( 1 , 2*x ) )
-      SmoothTransition      , // Based on "smooth transition" function
-      //
-      Polynomial_n0         , // Based on "smooth step" with n=0
-      Polynomial_n1         , // Based on "smooth step" with n=1
-      Polynomial_n2         , // Based on "smooth step" with n=2
-      Polynomial_n3         , // Based on "smooth step" with n=3
-      Polynomial_n4         , // Based on "smooth step" with n=4
-      Polynomial_n5         , // Based on "smooth step" with n=5
-      Polynomial_n6         , // Based on "smooth step" with n=6
-      //
-      Sine                  , // based on sine-function
-      //
-      First = Logistic      , 
-      Last  = Sine          ,  
-    } ;      	
-    // ========================================================================
-    /** sigmoid type
-     *  @param  name the case-insensitive name of of sigmoid function
-     *  @return ID   of sigmoid function
-     */
-    SigmoidType sigmoid_type
-    ( const std::string& name = "Hyperbolic" ) ;
-    // ========================================================================
-    /*  sigmoid type
-     *  @param  sigmoid ID 
-     *  @return the name of of sigmoid function
-     */
-    // ========================================================================
-    std::string sigmoid_name 
-    ( const SigmoidType stype ) ;
-    // ======================================================================= 
-    /** Sigmoid functions
-     *  All sigmoid fuctions \f$ \sigma(z) \f$ are normalized & scaled such
-     *  - \f$ \sigma(-\infty) =0\f$ 
-     *  - \f$ \sigma(+\infty) =1\f$ 
-     *  - \f$ \sigma^\prime(0)=1\f$
-     * @see Ostap::Math::SigmoidType
-     */
-    double sigmoid
-    ( const double      x                           ,
-      const SigmoidType t = SigmoidType::Hyperbolic ) ;
-    // ========================================================================
-    
     // ========================================================================
     /** variance from raw-moments
      *  @param m2 raw second  moment

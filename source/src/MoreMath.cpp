@@ -35,6 +35,11 @@
 // LHCbMath
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Beta.h"
+#include "Ostap/Bessel.h"
+#include "Ostap/Gamma.h"
+#include "Ostap/Elliptic.h"
+#include "Ostap/Zeta.h"
 #include "Ostap/Names.h"
 #include "Ostap/MakeArray.h"
 #include "Ostap/MoreMath.h"
@@ -45,6 +50,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/ChebyshevApproximation.h"
 #include "Ostap/PolyLog.h"
+#include "Ostap/Sigmoid.h"
 #include "Ostap/Workspace.h"
 // ============================================================================
 // Local

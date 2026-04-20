@@ -10,6 +10,7 @@
 #include "Ostap/Hash.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Bessel.h"
 #include "Ostap/Spectra.h"
 // ============================================================================
 //  Local 

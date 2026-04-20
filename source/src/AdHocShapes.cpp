@@ -11,6 +11,8 @@
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Bessel.h"
+#include "Ostap/Sigmoid.h"
 #include "Ostap/AdHocShapes.h"
 // ============================================================================
 //  Local 

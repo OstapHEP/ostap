@@ -18,7 +18,7 @@ namespace Ostap
     // gamma & friends 
     // ========================================================================
 
-// ========================================================================
+    // ========================================================================
     /** Gamma function
      *  \f$ \Gamma ( x )\f$ 
      *  @see std::tgamma 
@@ -125,7 +125,6 @@ namespace Ostap
     long double               igammal ( const unsigned int n ) ;
     // ========================================================================
 
-
     // ========================================================================
     /** factorial function
      *   \f[ n! = \Gamma ( n + 1 ) \f]
@@ -144,7 +143,6 @@ namespace Ostap
      */
     double dgamma_at_1 ( const unsigned short n ) ; 
     // ========================================================================
-
 
     // ========================================================================
     /** Compute psi function 
@@ -224,246 +222,6 @@ namespace Ostap
     { return psi ( x , n ) ; }
     // ========================================================================
     
-    // ========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    double beta
-    ( const double x ,
-      const double y ) ;
-    // =======================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    long double beta
-    ( const long double x ,
-      const long double y ) ;
-    // ========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    std::complex<double> beta
-    ( const std::complex<double>& x ,
-      const std::complex<double>& y ) ;
-    // ========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    std::complex<long double> beta
-    ( const std::complex<long double>& x ,
-      const std::complex<long double>& y ) ;
-    // ========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    std::complex<double> beta
-    ( const std::complex<double>& x ,
-      const double                y ) ;
-    // =========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    inline std::complex<double> beta
-    ( const double                x , 
-      const std::complex<double>& y ) { return beta ( y , x ) ; }
-    // =========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    std::complex<long double> beta
-    ( const std::complex<long double>& x ,
-      const long double                y ) ;
-    // =========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    inline std::complex<long double> beta
-    ( const long double                x , 
-      const std::complex<long double>& y ) { return beta ( y , x ) ; }
-    // ========================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    double beta
-    ( const unsigned short x ,
-      const unsigned short y ) ;
-   // =======================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    double beta
-    ( const double         x ,
-      const unsigned short y ) ;
-  // =======================================================================
-    /** beta function for 
-     *  \f$ \Beta(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of beta function 
-     */
-    double beta
-    ( const unsigned short y , 
-      const double         x ) ; 
-    // ========================================================================
-   
-    // ========================================================================
-    /** natural logarithm of beta function 
-     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of logarithm of beta function 
-     */
-    double lnbeta
-    ( const double x ,
-      const double y ) ;
-    // ========================================================================
-    /** natural logarithm of beta function 
-     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of logarithm of beta function 
-     */
-    double lnbeta
-    ( const unsigned short x ,
-      const unsigned short y ) ;
-    // ========================================================================
-    /** natural logarithm of beta function 
-     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of logarithm of beta function 
-     */
-    double lnbeta
-    ( const unsigned short x ,
-      const double         y ) ;
-    // ========================================================================
-    /** natural logarithm of beta function 
-     *  \f$ \log \Beta(x,y) = \log \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)} \f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of logarithm of beta function 
-     */
-    double lnbeta
-    ( const double         x , 
-      const unsigned short y ) ;
-    // ========================================================================
-
-    // ========================================================================
-    /** reciprocal beta function for 
-     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of reciprocal beta function 
-     */
-    // ========================================================================
-    double ibeta
-    ( const unsigned short x ,
-      const unsigned short y ) ;
-    // ========================================================================
-    /** reciprocal beta function for 
-     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of reciprocal beta function 
-     */
-    // ========================================================================
-    double ibeta
-    ( const unsigned short x ,
-      const double         y ) ;
-    // ========================================================================
-    /** reciprocal beta function for 
-     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of reciprocal beta function 
-     */
-    // ========================================================================
-    double ibeta
-    ( const double         x , 
-      const unsigned short y ) ;
-    // ========================================================================
-    /** reciprocal beta function for 
-     *  \f$ f(x,y) = \frac{1}{B(x,y)} = \frac{\Gamma(x+y)}{\Gamma(x)\Gamma(y)}\f$ 
-     *  - \f$ 0<x\f$
-     *  - \f$ 0<y\f$ 
-     *  @return value of reciprocal beta function 
-     */
-    // ========================================================================
-    double ibeta
-    ( const double         x , 
-      const double         y ) ;
-    // ========================================================================
-
-    // ========================================================================    
-    /** Normalized incomplete Beta function
-     *  - CDF for beta-distribution
-     *
-     *  \f$ f ( \alpha_1,\alpha_2, z ) = 
-     *      I_z( \alpha_1, \alpha_2 ) = 
-     *      \frac{\Beta_z(\alpha_1,\alpha_2}}
-     *           {\Beta  (\alpha_1,\alpha_2}
-     *
-     *  - \f$ 0 \le z \le 1\f$
-     *  - \f$ 0<\alpha_1\f$
-     *  - \f$ 0<\alpha_2\f$
-     *  @see Ostap::Math::I
-     */
-    double beta_inc 
-    ( const double alpha1 , 
-      const double alpha2 , 
-      const double z      ) ;
-    // =======================================================================
-    /** Normalized incomplete Beta function
-     *  - CDF for beta-distribution
-     *
-     *  \f$ f ( \alpha_1,\alpha_2, z ) = 
-     *      I_z( \alpha_1, \alpha_2 ) = 
-     *      \frac{\Beta_z(\alpha_1,\alpha_2}}
-     *           {\Beta  (\alpha_1,\alpha_2}
-     *
-     *  - \f$ 0 \le z \le 1\f$
-     *  - \f$ 0<\alpha_1\f$
-     *  - \f$ 0<\alpha_2\f$
-     *  @see Ostap::Math::beta_inc
-     */
-    inline double I
-    ( const double alpha1 , 
-      const double alpha2 , 
-      const double z      ) 
-    { return beta_inc ( alpha1 , alpha2 , z ) ; }
-    // ========================================================================
-
-
     // ========================================================================
     /** Pochhammer symbol, aka "rising factorial"
      *  \f[ P(a,n) = a ( a + 1) ( a + 1 ) ... ( a + n - 1 ) = \Pi^{k-1}_{k=0} (a + k) \f] 

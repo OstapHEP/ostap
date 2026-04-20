@@ -14,6 +14,7 @@
 #include "Ostap/Workspace.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Sigmoid.h"
 // ============================================================================
 /** @file Ostap/AdHocShapes.h
  *  Set of useful ad-hoc, sometem phsyicmotovated, shapes

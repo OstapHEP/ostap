@@ -14,6 +14,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Clenshaw.h"
+#include "Ostap/Bessel.h"
 #include "Ostap/Clausen.h"
 #include "Ostap/Combine.h"
 #include "Ostap/Interpolation.h"

@@ -99,12 +99,16 @@ fi
 
 LCG_VIEWS=/cvmfs/sft.cern.ch/lcg/views
 LCG_BUILD=${LCG_VIEWS}/${LCG}/${PLATFORM}
-LCG_SETUP=${LCG_BUILD}/setup.sh 
+LCG_SETUP=${LCG_BUILD}/setup.sh
 
-if [[ ${LCG} && ${PLATFORM}   &&
-       -d ${LCG_VIEWS}        && 
-       -d ${LCG_BUILD}        &&
-       -f ${LCG_SETUP}        ]]
+LCG_BUILD=$(readlink -f ${LCG_BUILD})
+LCG_SETUP=$(readlink -f ${LCG_SETUP})
+
+if [[ ${LCG} && ${PLATFORM} &&
+      -d ${LCG_VIEWS}       && 
+      -d ${LCG_BUILD}       &&
+      -f ${LCG_SETUP}       &&
+      -r ${LCG_SETUP}       ]]
 then
     echo -e ${prefix}$' Source LCG setup   = '${LCG_SETUP}  
     source ${LCG_SETUP}
@@ -162,9 +166,12 @@ done
 if [[    ${source_found} &&
       -d ${source_found} ]]
 then
+    
     OSTAP_SOURCE=$(readlink -f ${source_found})
     echo -e ${prefix}' Use OSTAP_SOURCE   = '${OSTAP_SOURCE}
+    
 else
+    
     echo -e ${prefix_error}' No ostap source drectory found!'
     return 114 
 fi
@@ -184,6 +191,7 @@ elif [[   ${OSTAP_BUILD} && `echo "${OSTAP_BUILD}" | tr '[:lower:]' '[:upper:]'`
 then
     
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
+    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
     echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
     
 elif [[ -d ${OSTAP_SOURCE}/build &&
@@ -204,6 +212,7 @@ then
 else
     
     OSTAP_BUILD=`mktemp -d -t ostap-$(date '+%Y-%b-%d')-OSTAP-BUILD-DIR-XXXXXX`
+    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})
     echo -e ${prefix} ' Build directory is created '${OSTAP_BUILD}
     
 fi
@@ -213,8 +222,12 @@ if   [[    ${OSTAP_BUILD} &&
 	-d ${OSTAP_BUILD} &&
 	-w ${OSTAP_BUILD} ]]
 then
-    OSTAP_BUILD=$(realpath ${OSTAP_BUILD})
+    
+    OSTAP_BUILD=$(readlink -f ${OSTAP_BUILD})    
+    echo -e ${prefix}' Use OSTAP_BUILD    = '${OSTAP_BUILD}
+    
 else
+    
     echo -e ${prefix_error}' No valid build directory is found! '${OSTAP_BUILD}
     return 115
 fi     
@@ -276,7 +289,8 @@ if   [[   ${OSTAP_INSTALL} &&
        -d ${OSTAP_INSTALL} &&
        -w ${OSTAP_INSTALL} ]]
 then
-    OSTAP_INSTALL=$(realpath ${OSTAP_INSTALL})
+    
+    OSTAP_INSTALL=$(readlink -f ${OSTAP_INSTALL})
     ( echo -e ${prefix}' Clean  OSTAP_INSTALL directory        '${OSTAP_INSTALL} ;
       cd ${OSTAP_INSTALL} ;
       rm -rf .footprints .ostap.build .ostaprc .rootlogon.C cmake examples include lib packages scripts thisostap.sh )
@@ -285,12 +299,16 @@ elif [[     ${OSTAP_INSTALL} &&
          -d ${OSTAP_INSTALL} &&
        ! -w ${OSTAP_INSTALL} ]]
 then
+    
     echo -e ${prefix_error}' Directory OSTAP_INSTALL is not writeable! '${OSTAP_INSTALL}
     return 120
+    
 else
+    
     OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG${LCG_VERSION}/${PLATFORM}
     OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL})
     ## echo -e ${prefix}' Use OSTAP_INSTALL  = '${OSTAP_INSTALL}
+    
 fi
 
 echo -e ${prefix}' LCG VERSION    : '${LCG}

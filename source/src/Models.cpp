@@ -36,6 +36,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/Clenshaw.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/Bessel.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Models.h"
 // ============================================================================
