@@ -147,9 +147,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==0),int>::type = 0 > 
 	static inline double forward
-	( const FUNCTION& fun ,
-	  const double    x   ,
-	  const double    h   = 1 ) { return fun ( x ) ; }
+	( const FUNCTION&    fun  ,
+	  const double       x    ,
+	  const double    /* h */ ) { return fun ( x ) ; }
 	// ====================================================================
 	/// backward difference
 	template <class FUNCTION,
@@ -157,9 +157,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==0),int>::type = 0 > 
 	static inline double backward 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 ) { return fun ( x ) ; }
+	( const FUNCTION&    fun  ,
+	  const double       x    ,
+	  const double    /* h */ ) { return fun ( x ) ; }
 	// ====================================================================
 	/// central difference
 	template <class FUNCTION,
@@ -167,9 +167,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==0),int>::type = 0 > 
 	static inline double central 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 ) { return fun ( x ) ; }
+	( const FUNCTION&    fun  ,
+	  const double       x    ,
+	  const double    /* h */ ) { return fun ( x ) ; }
 	// ====================================================================
       public : // N == 1 
 	// ====================================================================
@@ -179,9 +179,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==1),int>::type = 0 > 
 	static inline double forward
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 ) { return !h ? 0.0 : fun ( x + 1.0L * h ) - 1.0L * fun ( x ) ; }
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   ) { return !h ? 0.0 : fun ( x + 1.0L * h ) - 1.0L * fun ( x ) ; }
 	// ====================================================================
 	/// backward difference
 	template <class FUNCTION,
@@ -189,9 +189,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==1),int>::type = 0 > 
 	static inline double backward 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 ) { return !h ? 0.0 : fun ( x ) - 1.0L * fun ( x - 1.0L * h ) ; }
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   ) { return !h ? 0.0 : fun ( x ) - 1.0L * fun ( x - 1.0L * h ) ; }
 	// ====================================================================
 	/// central difference
 	template <class FUNCTION,
@@ -199,9 +199,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==1),int>::type = 0 > 
 	static inline double central 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 ) { return !h ? 0.0 : fun ( x + 0.5L * h ) - 1.0L * fun ( x - 0.5L * h ) ; }
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   ) { return !h ? 0.0 : fun ( x + 0.5L * h ) - 1.0L * fun ( x - 0.5L * h ) ; }
 	// ====================================================================
       public : // N == 2 
 	// ====================================================================
@@ -211,9 +211,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==2),int>::type = 0 > 
 	static inline double forward
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 )
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   )
 	{ return !h ? 0.0 : fun ( x ) - 2.0L * fun ( x + 1.0L * h ) + fun ( x + 2.0L * h )  ; }
 	// ====================================================================
 	/// backward difference
@@ -222,9 +222,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==2),int>::type = 0 > 
 	static inline double backward 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 )
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   )
 	{ return !h ? 0.0 : fun ( x ) - 2.0L * fun ( x - 1.0L * h ) + fun ( x - 2.0L * h )  ; }
 	// ====================================================================
 	/// central difference
@@ -233,9 +233,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==2),int>::type = 0 > 
 	static inline double central 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 ) 
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   ) 
 	{ return !h ? 0.0 : fun ( x + 1.0L * h ) - 2.0L * fun ( x ) + fun ( x - 1.0L * h )  ; }
 	// ====================================================================
       public : // N == 3 
@@ -246,9 +246,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==3),int>::type = 0 > 
 	static inline double forward
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 )
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   )
 	{ return !h ? 0.0 : - fun ( x ) + 3.0L * fun ( x + 1.0L * h ) - 3.0L * fun (  x + 2.0L * h ) + fun ( x + 3.0L * h ) ; }
 	// ====================================================================
 	/// backward difference
@@ -257,9 +257,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==3),int>::type = 0 > 
 	static inline double backward 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 )
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   )
 	{ return !h ? 0.0 : + fun ( x ) - 3.0L * fun ( x - 1.0L * h ) + 3.0L * fun (  x - 2.0L * h ) - fun ( x - 3.0L * h ) ; }
 	// ====================================================================
 	/// central difference
@@ -268,9 +268,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N==3),int>::type = 0 > 
 	static inline double central 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 ) 
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   ) 
 	{ return !h ? 0.0 : + fun ( x + 1.5L * h ) - 3.0L * fun ( x + 0.5L * h ) + 3.0L * fun ( x - 0.5L * h ) - fun ( x - 1.5L * h ) ; } 
 	// ====================================================================
       public : // N > 3 
@@ -281,9 +281,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N>3),int>::type = 0 > 
 	static inline double forward
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 )	
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   )	
 	{
 	  if ( !h ) { return 0 ; } 
 	  long double r = fun ( x ) * ( 0 == N % 2 ? 1 : -1 ) ;
@@ -303,9 +303,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N>3),int>::type = 0 > 
 	static inline double backward 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 )
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   )
 	{
 	  if ( !h ) { return 0 ; } 
 	  long double r = fun ( x ) ;
@@ -325,9 +325,9 @@ namespace Ostap
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 ,	  
 		  typename std::enable_if<(N>3),int>::type = 0 > 
 	static inline double central 
-	( const FUNCTION& fun     ,
-	  const double    x       ,
-	  const double    h   = 1 )
+	( const FUNCTION& fun ,
+	  const double    x   ,
+	  const double    h   )
 	{
 	  if ( !h ) { return 0 ; } 
 	  long double r = fun ( x ) ;
@@ -361,9 +361,9 @@ namespace Ostap
 	template <class FUNCTION,
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0>
         static inline double evaluate 
-        ( const FUNCTION& fun     , 
-          const double    x       , 
-          const double    h   = 1 )
+        ( const FUNCTION& fun , 
+          const double    x   , 
+          const double    h   )
 	{ return FiniteDifference_::forward<N> ( fun , x , h ) ; }
         // ====================================================================
       } ;
@@ -386,9 +386,9 @@ namespace Ostap
 	template <class FUNCTION,
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0>
         static inline double evaluate 
-        ( const FUNCTION& fun     , 
-          const double    x       , 
-          const double    h   = 1 )
+        ( const FUNCTION& fun , 
+          const double    x   , 
+          const double    h   )
 	{ return FiniteDifference_::backward<N> ( fun , x , h ) ; }
         // ====================================================================
       } ;
@@ -411,9 +411,9 @@ namespace Ostap
 	template <class FUNCTION,
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0>
         static inline double evaluate 
-        ( const FUNCTION& fun     , 
-          const double    x       , 
-          const double    h   = 1 )
+        ( const FUNCTION& fun , 
+          const double    x   , 
+          const double    h   )
 	{ return FiniteDifference_::central<N> ( fun , x , h ) ; }
         // ====================================================================
       } ;
@@ -428,10 +428,10 @@ namespace Ostap
       template <class FUNCTION,
 		typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0>
       inline double forward_ 
-      ( const FUNCTION&      fun     , 
-        const unsigned short N       , 
-        const double         x       , 
-        const double         h   = 1 ) 
+      ( const FUNCTION&      fun , 
+        const unsigned short N   , 
+        const double         x   , 
+        const double         h   ) 
       {
 	//
 	if      ( 0 == N ) { return fun ( x ) ; }
@@ -460,10 +460,10 @@ namespace Ostap
       template <class FUNCTION,
 		typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0>
       inline double backward_ 
-      ( const FUNCTION&      fun     , 
-        const unsigned short N       , 
-        const double         x       , 
-        const double         h   = 1 ) 
+      ( const FUNCTION&      fun , 
+        const unsigned short N   , 
+        const double         x   , 
+        const double         h   ) 
       {
 	//
 	if      ( 0 == N ) { return fun ( x ) ; }
@@ -492,10 +492,10 @@ namespace Ostap
       template <class FUNCTION,
 		typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0>
       inline double central_
-      ( const FUNCTION&      fun     , 
-        const unsigned short N       , 
-        const double         x       , 
-        const double         h   = 1 ) 
+      ( const FUNCTION&      fun , 
+        const unsigned short N   , 
+        const double         x   , 
+        const double         h   ) 
       {
 	if      ( 0 == N ) { return fun ( x ) ; }
 	else if ( !h     ) { return 0         ; }
@@ -521,10 +521,10 @@ namespace Ostap
        *  @return N-th forward dirrerence 
        */
       double forward 
-      ( std::function<double(double)> fun     , 
-        const unsigned short          N       , 
-        const double                  x       , 
-        const double                  h   = 1 ) ;
+      ( std::function<double(double)> fun , 
+        const unsigned short          N   , 
+        const double                  x   , 
+        const double                  h   ) ;
       // ======================================================================
       /** Evaluate N-th backward difference of function <code>fun</code>
        *  @param fun the function 
@@ -535,9 +535,9 @@ namespace Ostap
        */
       double backward 
       ( std::function<double(double)> fun , 
-        const unsigned short          N     , 
-        const double                  x     , 
-        const double                  h = 1 ) ;
+        const unsigned short          N   , 
+        const double                  x   , 
+        const double                  h   ) ;
       // ======================================================================
       /** Evaluate N-th central difference of function <code>fun</code>
        *  @param fun the function 
@@ -547,10 +547,10 @@ namespace Ostap
        *  @return N-th central dirrerence 
        */
       double central
-      ( std::function<double(double)> fun   , 
-        const unsigned short          N     , 
-        const double                  x     , 
-        const double                  h = 1 ) ;
+      ( std::function<double(double)> fun , 
+        const unsigned short          N   , 
+        const double                  x   , 
+        const double                  h   ) ;
       // ======================================================================
       /** @class FiniteDifference 
        */
@@ -570,48 +570,48 @@ namespace Ostap
 	template <class FUNCTION, 
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 >       	
 	inline double forward 
-	( const FUNCTION& f     ,
-	  const double    x     ,
-	  const double    h = 1 ) const
+	( const FUNCTION& f ,
+	  const double    x ,
+	  const double    h ) const
 	{ return Ostap::Math::Differences::forward_ ( f , m_N , x , h ) ;  }
 	// =================================================================
 	/// get backward difference 
 	template <class FUNCTION, 
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 >       	
 	inline double backward 
-	( const FUNCTION& f     ,
-	  const double    x     ,
-	  const double    h = 1 ) const
+	( const FUNCTION& f ,
+	  const double    x ,
+	  const double    h ) const
 	{ return Ostap::Math::Differences::backward_ ( f , m_N , x , h ) ;  }
 	// =================================================================
 	/// get central difference 
 	template <class FUNCTION, 
 		  typename std::enable_if<std::is_invocable<FUNCTION,double>::value,int>::type = 0 >       	
 	inline double central 
-	( const FUNCTION& f     ,
-	  const double    x     ,
-	  const double    h = 1 ) const
+	( const FUNCTION& f ,
+	  const double    x ,
+	  const double    h ) const
 	{ return Ostap::Math::Differences::central_ ( f , m_N , x , h ) ;  }
 	// =================================================================	
       public :
 	// =================================================================
 	/// get forward difference 
 	double forward
-	( std::function<double(double)> f     , 
-	  const double                  x     ,
-	  const double                  h = 1 ) const ;
+	( std::function<double(double)> f , 
+	  const double                  x ,
+	  const double                  h ) const ;
 	// =================================================================
 	/// get backward difference 
 	double backward 
-	( std::function<double(double)> f     , 
-	  const double                  x     ,
-	  const double                  h = 1 ) const ;
+	( std::function<double(double)> f , 
+	  const double                  x ,
+	  const double                  h ) const ;
 	// =================================================================
 	/// get central difference 
 	double central 
-	( std::function<double(double)> f     , 
-	  const double                  x     ,
-	  const double                  h = 1 ) const ;
+	( std::function<double(double)> f , 
+	  const double                  x ,
+	  const double                  h ) const ;
 	// =================================================================	
       public :
 	// =================================================================

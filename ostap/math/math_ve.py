@@ -888,9 +888,10 @@ def Li ( *args ) :
     (B) Two argument case: Polylogarithm function  f(s,z) = Li_s(z)
     - see  https://en.wikipedia.org/wiki/Polylogarithm#Relationship_to_other_functions
  
-    - see `Ostap.Math.Li
+    - see `Ostap.Math.Li`
+    
     """
-    asssert args and len(args) <= 2 , "Li: invalid arguments!"
+    assert args and len(args) <= 2 , "Li: invalid number of arguments!"
     fun = getattr ( x , '__Li__' , None )
     if fun : return fun ( *args )
     return _Li_ ( *args  )
