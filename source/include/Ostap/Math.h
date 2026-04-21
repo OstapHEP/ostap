@@ -1079,55 +1079,62 @@ namespace Ostap
      */
     bool islonglong ( const double x ) ;
     // ========================================================================
-    /** is the value actually nusigned  long long?
+    /** is the value actually unsigned  long long?
      */
     bool isulonglong ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::int8_t ?
+    /** is floating value actually std::int8_t ?
      */
     bool isint8 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::int16_t ?
+    /** is floating value actually std::int16_t ?
      */
     bool isint16 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::int32_t ?
+    /** is floating value actually std::int32_t ?
      */
     bool isint32 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::int64_t ?
+    /** is floating value actually std::int64_t ?
      */
     bool isint64 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::uint8_t ?
+    /** is floating value actually std::uint8_t ?
      */
     bool isuint8 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::uint16_t ?
+    /** is floating value actually std::uint16_t ?
      */
     bool isuint16 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::uint32_t ?
+    /** is floating value actually std::uint32_t ?
      */
     bool isuint32 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually std::uint64_t ?
+    /** is floating value actually std::uint64_t ?
      */
     bool isuint64 ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually char  ?
+    /** is floating value actually char  ?
      */
     bool ischar ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually signed char  ?
+    /** is floating value actually signed char  ?
      */
     bool isschar ( const double x ) ;
     // ========================================================================
-    /** is floaing value actually unsigned char  ?
+    /** is floating value actually unsigned char  ?
      */
     bool isuchar ( const double x ) ;
     // ========================================================================
-
+    /// Is floating value actually std::intmax_t ? 
+    bool isintmax  ( const double x ) ; 
+    /// Is floating value actually std::uintmax_t ? 
+    bool isuintmax ( const double x ) ; 
+    /// Is floating value actually std::size_t  ? 
+    bool issize    ( const double x ) ; 
+    // ========================================================================
+    
     // ========================================================================    
     /** check if the double value is actually equal to the integer value  
      *  @param val value to be compared with the integer 
