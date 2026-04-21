@@ -25,14 +25,14 @@
 #include "Ostap/Power.h"
 // ============================================================================
 /** @file Ostap/Math.h
- *  collection of generic math functions and classes 
+ *  Collection of generic Math functions and classes for Ostap
  */
 // ===========================================================================
 namespace Ostap
 {
   // ==========================================================================
   /** @namespace Ostap::Math Math.h
-   *  collection of generic math functions and classes 
+   *  Collection of generic Math functions and classes 
    */
   namespace Math 
   {
@@ -108,7 +108,7 @@ namespace Ostap
     constexpr inline std::int8_t sign ( const int n ) { return ( 1 == n % 2 ) ? -1 : +1 ; }
     // ======================================================================
     /** @struct abs_less 
-     *  comparison by absolute value 
+     *  Comparison by absolute value 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2007-08-17
      */
@@ -140,7 +140,7 @@ namespace Ostap
       inline TYPE operator() 
       ( typename detail::param<const TYPE>::param_type v1 ,
         typename detail::param<const TYPE>::param_type v2 ) const 
-      { return m_eval ( std::fabs( v1 ) , std::fabs( v2 ) ) ; }
+      { return m_eval ( std::abs ( v1 ) , std::abs ( v2 ) ) ; }
       // ======================================================================
       /// evaluator: 
       std::greater<TYPE> m_eval ;
@@ -264,18 +264,8 @@ namespace Ostap
       inline bool operator() 
       ( const long double v1 ,
         const long double v2 ) const
-      { 
-        using namespace std;
-#ifdef __INTEL_COMPILER       // Disable ICC remark
-#pragma warning(disable:2259) //  non-pointer conversion may lose significant bits
-#pragma warning(push)
-#endif
-        return  m_cmp ( static_cast<double> ( v1 ) , 
-                        static_cast<double> ( v2 ) ) ; 
-#ifdef __INTEL_COMPILER         // End disable ICC remark
-#pragma warning(pop)
-#endif
-      }
+      { return  m_cmp ( static_cast<double> ( v1 ) , 
+                        static_cast<double> ( v2 ) ) ; }
       // ======================================================================
     private :
       // ======================================================================
