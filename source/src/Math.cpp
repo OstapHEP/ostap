@@ -606,12 +606,8 @@ float Ostap::Math::round_N ( const float x , const unsigned short n )
  *  @author Vanya BELYAEV Ivan.BElyaev
  */
 // ============================================================================
-long Ostap::Math::round ( const double x ) 
-{
-  return 
-    x <= sd_long_min ? s_long_min :
-    x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
-}
+std::intmax_t Ostap::Math::round ( const double x ) 
+{ return round ( 1.0L * x ) ;  }
 // ============================================================================
 /* round to nearest integer, rounding half a  way from  zero 
  *  @see std::lround 
@@ -619,16 +615,21 @@ long Ostap::Math::round ( const double x )
  *  @author Vanya BELYAEV Ivan.BElyaev
  */
 // ============================================================================
-long Ostap::Math::round ( const long double x ) 
+std::intmax_t Ostap::Math::round ( const long double x ) 
 {
-  return 
-    x <= sd_long_min ? s_long_min :
-    x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
+  //
+  static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest () } ;
+  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () } ;
+  //
+  return
+    x <= s_min ? s_min :
+    x >= s_max ? s_max :
+    std::intmax_t ( std::llround ( x ) ) ;
 }
 // ============================================================================
 /* Round half to even  
  *  Aka: 
- *  -  convergent rounding
+ *  - convergent rounding
  *  - statistician's rounding, 
  *  - Dutch rounding, 
  *  - Gaussian rounding, 
@@ -637,13 +638,19 @@ long Ostap::Math::round ( const long double x )
  *  @see std::lrint
  */    
 // ==============================================================================
-long Ostap::Math::round_half_even ( const double v ) 
+std::intmax_t Ostap::Math::round_half_even ( const double v ) 
 {
-  if      ( v <= sd_long_min ) { return s_long_min ; } 
-  else if ( v >= sd_long_max ) { return s_long_max ; } 
-  const int mode = std::fegetround() ; 
-  if ( 0 <= mode ) { std::fesetround ( FE_TONEAREST ) ; } 
-  const long result = std::lrint ( v ) ;
+  //
+  static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest () } ;
+  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () } ;
+  //
+  const long double vv = v ; 
+  if      ( vv <= s_min ) { return s_min ; } 
+  else if ( vv >= s_max ) { return s_max ; }
+  //
+  const int           mode   = std::fegetround() ; 
+  if ( 0 <= mode ) { std::fesetround ( FE_TONEAREST ) ; }
+  const std::intmax_t result = std::lrint ( v ) ;
   if ( 0 <= mode ) { std::fesetround ( mode ) ; }
   return result ; 
 }

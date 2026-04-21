@@ -2757,9 +2757,9 @@ class APDF1 ( Components ) :
         pdf_args = pdf_name , pdf_title , pdf_list , num_list
         
         if not extended : 
-            if ( 6 , 39 ) <= root_info and recursive :
-                recursive = False 
-                self.warning ( "(TEMPORARY): set `recursive' to be %s" % recursive ) 
+            ## if ( 6 , 39 ) <= root_info and recursive :
+            ##    recursive = False 
+            ##    self.warning ( "(TEMPORARY): set `recursive' to be %s" % recursive ) 
             pdf_args = pdf_args + ( recursive , )
 
         result = ROOT.RooAddPdf ( *pdf_args )

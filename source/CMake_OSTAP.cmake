@@ -79,11 +79,12 @@ add_library(ostap SHARED src/format.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
-            		     src/Names.cpp 
+            		 src/Names.cpp 
                          src/NStatEntity.cpp
-                         src/Notifier.cpp			 
+                         src/Notifier.cpp
+			 src/Numbers.cpp
                          src/Ostap.cpp
-			             src/Quantile.cpp
+			 src/Quantile.cpp
                          src/Parameter.cpp
                          src/Parameters.cpp
                          src/Parameterization.cpp
@@ -104,7 +105,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Primitives.cpp
                          src/Printable.cpp
                          src/ProgressBar.cpp
-			             src/Project.cpp
+			 src/Project.cpp
                          src/PyBLOB.cpp
                          src/PyCallable.cpp 
                          src/PyFuncs.cpp 
@@ -147,7 +148,7 @@ add_library(ostap SHARED src/format.cpp
                          src/owens.cpp      
                          src/hcubature.cpp                         
                          src/pcubature.cpp
-			             src/hstats.cpp      
+			 src/hstats.cpp      
                         )
 
 target_compile_features ( ostap PUBLIC cxx_constexpr                      )

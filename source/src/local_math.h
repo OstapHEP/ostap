@@ -8,7 +8,6 @@
 // ============================================================================
 #include <cmath>
 #include <cstdint>
-#include <numbers>
 #include <limits>
 #include <complex>
 // ============================================================================
@@ -23,133 +22,6 @@
 /// local namespace to hide all techinical symbols
 namespace 
 {
-  // ==========================================================================
-  // Limits? 
-  // ==========================================================================
-  static_assert ( std::numeric_limits<float> ::is_specialized                ,
-                  "std::numeric_limits<float>       is not specialized"      ) ;
-  static_assert ( std::numeric_limits<double>::is_specialized                ,
-                  "std::numeric_limits<double>      is not specialized"      ) ;
-  static_assert ( std::numeric_limits<long double>::is_specialized           ,
-                  "std::numeric_limits<long double> is not specialized"      ) ;
-  // ==========================================================================  
-  static_assert ( std::numeric_limits<float>::has_infinity                   ,
-                  "std::numeric_limits<float> does not have infinity"        ) ;
-  static_assert ( std::numeric_limits<double>::has_infinity                  ,
-                  "std::numeric_limits<double> does not have infinity"       ) ;
-  static_assert ( std::numeric_limits<long double>::has_infinity             ,
-                  "std::numeric_limits<long double> does not have infinity"  ) ;
-  // ==========================================================================    
-  static_assert ( std::numeric_limits<float>::has_quiet_NaN                  ,
-                  "std::numeric_limits<float> does not have quiet NaN"       ) ;
-  static_assert ( std::numeric_limits<double>::has_quiet_NaN                 ,
-                  "std::numeric_limits<double> does not have quiet NaN"      ) ;
-  static_assert ( std::numeric_limits<long double>::has_quiet_NaN            ,
-                  "std::numeric_limits<long double> does not have quiet NaN" ) ;
-  // ==========================================================================
-  
-  // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned short> ::is_specialized         ,
-                  "std::numeric_limits<unsigned short>  is not specialized"    ) ;
-  static_assert ( std::numeric_limits<unsigned int>   ::is_specialized         ,
-                  "std::numeric_limits<unsigned int>  is not specialized"      ) ;
-  static_assert ( std::numeric_limits<unsigned long>  ::is_specialized         ,
-                  "std::numeric_limits<unsigned long> is not specialized"      ) ;
-  static_assert ( std::numeric_limits<unsigned long long>  ::is_specialized    ,
-                  "std::numeric_limits<unsigned long long> is not specialized" ) ;
-  // ==========================================================================
-
-  // ==========================================================================
-  static_assert ( std::numeric_limits<signed short> ::is_specialized         ,
-                  "std::numeric_limits<signed short>  is not specialized"    ) ;
-  static_assert ( std::numeric_limits<signed int>   ::is_specialized         ,
-                  "std::numeric_limits<signed int>  is not specialized"      ) ;
-  static_assert ( std::numeric_limits<signed long>  ::is_specialized         ,
-                  "std::numeric_limits<signed long> is not specialized"      ) ;
-  static_assert ( std::numeric_limits<signed long long>  ::is_specialized    ,
-                  "std::numeric_limits<signed long long> is not specialized" ) ;
-  // ==========================================================================
-
-  // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned char> ::is_specialized        ,
-                  "std::numeric_limits<unsigned char> is not specialized"    ) ;
-  static_assert ( std::numeric_limits<signed char>    ::is_specialized         ,
-                  "std::numeric_limits<signed char>   is not specialized"    ) ;
-  static_assert ( std::numeric_limits<char>           ::is_specialized         ,
-                  "std::numeric_limits<char>          is not specialized"    ) ;
-  // ==========================================================================
-  
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::int8_t>  ::is_specialized  && 
-                  std::numeric_limits<std::int8_t>  ::is_integer      &&   
-                  std::numeric_limits<std::int8_t>  ::is_signed       ,
-                  "std::numeric_limits<std::int8_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::int16_t>  ::is_specialized  && 
-                  std::numeric_limits<std::int16_t>  ::is_integer      &&   
-                  std::numeric_limits<std::int16_t>  ::is_signed       ,
-                  "std::numeric_limits<std::int16_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::int32_t>  ::is_specialized  && 
-                  std::numeric_limits<std::int32_t>  ::is_integer      &&   
-                  std::numeric_limits<std::int32_t>  ::is_signed       ,
-                  "std::numeric_limits<std::int32_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::int64_t>  ::is_specialized  && 
-                  std::numeric_limits<std::int64_t>  ::is_integer      &&   
-                  std::numeric_limits<std::int64_t>  ::is_signed       ,
-                  "std::numeric_limits<std::int64_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::intmax_t>  ::is_specialized  && 
-                  std::numeric_limits<std::intmax_t>  ::is_integer      &&   
-                  std::numeric_limits<std::intmax_t>  ::is_signed       ,
-                  "std::numeric_limits<std::intmax_t> is not OK"        ) ;
-  // ==========================================================================
-
- // ==========================================================================
-  static_assert ( std::numeric_limits<std::uint8_t>  ::is_specialized  && 
-                  std::numeric_limits<std::uint8_t>  ::is_integer      &&   
-                  !std::numeric_limits<std::uint8_t> ::is_signed       ,
-                  "std::numeric_limits<std::uint8_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::uint16_t>  ::is_specialized  && 
-                  std::numeric_limits<std::uint16_t>  ::is_integer      &&   
-                  !std::numeric_limits<std::uint16_t> ::is_signed       ,
-                  "std::numeric_limits<std::uint16_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::uint32_t>  ::is_specialized  && 
-                  std::numeric_limits<std::uint32_t>  ::is_integer      &&   
-                  !std::numeric_limits<std::uint32_t> ::is_signed       ,
-                  "std::numeric_limits<std::uint32_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::uint64_t>  ::is_specialized  && 
-                  std::numeric_limits<std::uint64_t>  ::is_integer      &&   
-                  !std::numeric_limits<std::uint64_t> ::is_signed       ,
-                  "std::numeric_limits<std::uint64_t> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<std::uintmax_t>  ::is_specialized  && 
-                  std::numeric_limits<std::uintmax_t>  ::is_integer      &&   
-                  !std::numeric_limits<std::uintmax_t> ::is_signed       ,
-                  "std::numeric_limits<std::uintmax_t> is not OK"        ) ;
-  // ==========================================================================
-
-  // ==========================================================================
-  static_assert ( std::numeric_limits<char>  ::is_specialized  && 
-                  std::numeric_limits<char>  ::is_integer      &&   
-                  "std::numeric_limits<char> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<signed char>  ::is_specialized  && 
-                  std::numeric_limits<signed char>  ::is_integer      &&   
-                  std::numeric_limits<signed char>  ::is_signed       ,
-                  "std::numeric_limits<signed char> is not OK"        ) ;
-  // ==========================================================================
-  static_assert ( std::numeric_limits<unsigned char>  ::is_specialized  && 
-                  std::numeric_limits<unsigned char>  ::is_integer      &&   
-                  !std::numeric_limits<unsigned char> ::is_signed       ,
-                  "std::numeric_limits<unsigned char> is not OK"        ) ;
-  // ==========================================================================
- 
- 
   // ==========================================================================
   /// equality criteria for doubles
   const Ostap::Math::Equal_To<double>                     s_equal   {} ; // equality criteria for doubles
@@ -168,8 +40,7 @@ namespace
    /// zero for comples doubles  
   const Ostap::Math::Zero<std::complex<long double> >     s_clzero  {} ; // zero for complex doubles
   /// equality criteria for comples doubles
-  const Ostap::Math::Equal_To<std::complex<long double> > s_clequal {} ; // equality criteria for complex doubles
-  
+  const Ostap::Math::Equal_To<std::complex<long double> > s_clequal {} ; // equality criteria for complex doubles  
   // ==========================================================================    
 
   // ==========================================================================
@@ -306,80 +177,81 @@ namespace
 #else // ======================================================================
   // ==========================================================================
   /// @var s_pi  constant pi 
-  const long double s_pi         = 3.141592653589793238462643383279502884L /* pi */ ; 
+  constexpr long double s_pi         = 3.141592653589793238462643383279502884L /* pi */ ; 
   /// @var s_1_pi    \f$ \frac{1}{\pi} \f$  
-  const long double s_1_pi       = 1.0L / s_pi ;
+  constexpr long double s_1_pi       = 1.0L / s_pi ;
   /// @var s_e   constant e  
-  const long double s_3          = 2.718281828459045235360287471352L       /* e */  ; 
+  constexpr long double s_3          = 2.718281828459045235360287471352L       /* e */  ; 
   /// @var s_Mascheroni Euler-Mascheroni constant \f$ \gamma_E \f$
-  const long double s_Mascheroni = 0.57721566490153286060651209008240243104215933593992L ;
+  constexpr long double s_Mascheroni = 0.57721566490153286060651209008240243104215933593992L ;
   /// @var s_GammaE     Euler-Mascheroni constant \f$ \gamma_E \f$
-  const long double s_GammaE     = s_Mascheroni       ;
+  constexpr long double s_GammaE     = s_Mascheroni       ;
   /// @var s_ln10 \f$\log 10\f$ 
-  const long double s_ln10       = std::log ( 10.0L ) ; 
+  const     long double s_ln10       = std::log ( 10.0L ) ; 
   /// @var s_ln10 \f$\log 2 \f$ 
-  const long double s_ln2        = std::log (  2.0L ) ; 
+  const     long double s_ln2        = std::log (  2.0L ) ; 
   /// @var s_sqrt2  \f$ \sqrt{2} \f$
-  const long double s_sqrt2      = std::sqrt ( 2.0L ) ;
+  const     long double s_sqrt2      = std::sqrt ( 2.0L ) ;
   /// @var s_sqrt3  \f$ \sqrt{3} \f$
-  const long double s_sqrt3      = std::sqrt ( 3.0L ) ; 
+  const     long double s_sqrt3      = std::sqrt ( 3.0L ) ; 
   // ==========================================================================
 #endif // =====================================================================
   // ==========================================================================
   /// @var s_Euler   Euler-Mascheroni constant \f$ \gamma_E \f$
-  const long double s_Euler = s_Mascheroni ;
+  constexpr long double s_Euler = s_Mascheroni ;
   /// @var s_2pi   \f$  2\pi\f$
-  const long double s_2pi        = s_pi * 2 ;
+  constexpr long double s_2pi        = s_pi * 2 ;
   /// @var s_pi2   \f$  \pi^2 \f$
-  const long double s_pi2        = s_pi  * s_pi ;
+  constexpr long double s_pi2        = s_pi  * s_pi ;
   /// @var s_pi3   \f$  \pi^3 \f$
-  const long double s_pi3        = s_pi2 * s_pi ;
+  constexpr long double s_pi3        = s_pi2 * s_pi ;
   /// @var s_pi4   \f$  \pi^4 \f$
-  const long double s_pi4        = s_pi2 * s_pi2 ;
+  constexpr long double s_pi4        = s_pi2 * s_pi2 ;
   /// @var s_pi_2  \f$ \frac{\pi}{2}\f$
-  const long double s_pi_2       = s_pi / 2 ;  
+  constexpr long double s_pi_2       = s_pi / 2 ;  
   /// @var s_3pi_2  \f$ \frac{3\pi}{2}\f$
-  const long double s_3pi_2      = s_pi * 1.5L ;
+  constexpr long double s_3pi_2      = s_pi * 1.5L ;
   /// @var s_pi_3  \f$ \frac{\pi}{3}\f$
-  const long double s_pi_3       = s_pi / 3 ;
+  constexpr long double s_pi_3       = s_pi / 3 ;
   /// @var s_pi_4  \f$ \frac{\pi}{4}\f$
-  const long double s_pi_4       = s_pi / 4 ;
+  constexpr long double s_pi_4       = s_pi / 4 ;
   /// @var s_pi_5  \f$ \frac{\pi}{5}\f$
-  const long double s_pi_5       = s_pi / 5 ;
+  constexpr long double s_pi_5       = s_pi / 5 ;
   /// @var s_2_pi  \f$ \frac{2}{\pi} \f$
-  const long double s_2_pi       = s_1_pi * 2 ;  
+  constexpr long double s_2_pi       = s_1_pi * 2 ;  
   /// @var s_4_pi  \f$ \frac{4}{\pi} \f$
-  const long double s_4_pi       = s_1_pi * 4 ;
+  constexpr long double s_4_pi       = s_1_pi * 4 ;
   /// @var s_8_pi  \f$ \frac{8}{\pi} \f$
-  const long double s_8_pi       = s_1_pi * 8 ;
+  constexpr long double s_8_pi       = s_1_pi * 8 ;
   /// @var s_1_2pi \f$ \frac{1}{2\pi} \f$
-  const long double s_1_2pi      = s_1_pi / 2  ;
+  constexpr long double s_1_2pi      = s_1_pi / 2  ;
   /// @var s_1_4pi \f$ \frac{1}{4\pi} \f$
-  const long double s_1_4pi      = s_1_pi / 4  ;
+  constexpr long double s_1_4pi      = s_1_pi / 4  ;
   /// @var s_1_8pi \f$ \frac{1}{8\pi} \f$
-  const long double s_1_8pi      = s_1_pi / 8  ;  
+  constexpr long double s_1_8pi      = s_1_pi / 8  ;  
   /// @var s_1_sqrt2  \f$  \frac{1}{\sqrt{2}}\f$  
-  const long double s_1_sqrt2    = 1.0L / s_sqrt2 ;
+  const     long double s_1_sqrt2    = 1.0L / s_sqrt2 ;
   /// @var s_sqrt_pi   \f$ \sqrt { \pi } \f$
-  const long double s_sqrt_pi    = std::sqrt ( s_pi ) ; 
+  const     long double s_sqrt_pi    = std::sqrt ( s_pi ) ; 
   /// @var s_sqrt_2pi  \f$ \sqrt { 2\pi } \f$
-  const long double s_sqrt_2pi   = std::sqrt ( 2.0L * s_pi ) ; 
+  const     long double s_sqrt_2pi   = std::sqrt ( 2.0L * s_pi ) ; 
   /// @var s+sqrt_ip_2 \f$ \sqrt { \frac { \pi }{ 2 } \f$
-  const long double s_sqrt_pi_2  = std::sqrt ( s_pi_2  ) ; 
+  const     long double s_sqrt_pi_2  = std::sqrt ( s_pi_2  ) ; 
   /// @var s_sqrt_1_pi  \f$ \frac{1}{ \sqrt { \pi }\f$
-  const long double s_sqrt_1_pi  = std::sqrt ( s_1_pi  ) ; 
+  const     long double s_sqrt_1_pi  = std::sqrt ( s_1_pi  ) ; 
   /// @var s_sqrt_1_2pi \f$ \frac{1}{ \sqrt { 2\pi }\f$
-  const long double s_sqrt_1_2pi = 1.0L / s_sqrt_2pi ;
+  const     long double s_sqrt_1_2pi = 1.0L / s_sqrt_2pi ;
   /// @var s_sqrt_2_pi \f$ \sqrt{\frac{2}{\pi} }\f$
-  const long double s_sqrt_2_pi  = s_sqrt2 / s_sqrt_pi ;  
+  const     long double s_sqrt_2_pi  = s_sqrt2 / s_sqrt_pi ;  
   /// @var s_sqrt_1_8pi \f$ \frac{1}{ \sqrt { 8\pi }\f$
-  const long double s_sqrt_1_8pi = 0.5L / s_sqrt_2pi;
+  const     long double s_sqrt_1_8pi = 0.5L / s_sqrt_2pi;
   /// @var s_1_pi3   \f$  \frac{1}{\pi^2}\f$
-  const long double s_1_pi2      = 1.0L / s_pi2 ;
+  const     long double s_1_pi2      = 1.0L / s_pi2 ;
   /// @var s_log_2pi \f$ \log 2\pi \f$
-  const long double s_log_2pi    = std::log ( s_2pi ) ;
+  const     long double s_log_2pi    = std::log ( s_2pi ) ;
   /// !@var s_1_sqrt12 \f$ \frac{1}{\sqrt{12}}\f$
-  const long double s_1_sqrt12   = 1.0L / std::sqrt ( 12.0L ) ;
+  const     long double s_1_sqrt12   = 1.0L / std::sqrt ( 12.0L ) ;
+  // ==========================================================================
   
   // ==========================================================================
   /// precomputed value of ln(2) squared 
@@ -390,54 +262,55 @@ namespace
   const long double s_1_ln2  = 1.0L / s_ln2  ;
   /// precomputer lnllb 2 
   const long double s_ln_ln2 = std::log ( s_ln2 ) ;
+  // ==========================================================================
 
   // ==========================================================================
   // some old-fashioned names 
   // ==========================================================================  
   ///  @var s_PIHALF  \f$ \frac{\pi}{2} \f$ 
-  const long double s_PIHALF     = s_pi_2 ; 
+  constexpr long double s_PIHALF     = s_pi_2 ; 
   // ==========================================================================
   /** @var s_HALFSQRTPI
    *  helper constant \f$ \frac{\sqrt{\pi}}{2}\f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
-  const long double s_HALFSQRTPI = 0.5L * s_sqrt_pi ;
+  const    long double s_HALFSQRTPI = 0.5L * s_sqrt_pi ;
   // ==========================================================================
   /** @var s_HALFSQRTPIi
    *  helper constant \f$ \frac{2}{\sqrt{\pi}}\f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
-  const long double s_HALFSQRTPIi = 1.0L / s_HALFSQRTPI  ;
+  const    long double s_HALFSQRTPIi = 1.0L / s_HALFSQRTPI  ;
   // ==========================================================================
   /** @var s_HALFSQRTPI_log
   *  helper constant \f$ \log \frac{\sqrt{\pi}}{2}\f$
   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
   *  @date 2010-04-19
   */
-  const long double s_HALFSQRTPI_log  = std::log ( 0.5L * s_sqrt_pi ) ;
+  const     long double s_HALFSQRTPI_log  = std::log ( 0.5L * s_sqrt_pi ) ;
   // ==========================================================================
   /** @var s_SQRT2PISQUARED 
    *  helper constant  \f$   \sqrt{2}\pi^2\f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2016-06-11
    */
-  const long double s_SQRT2PISQUARED  = s_sqrt2 * s_pi * s_pi ;
+  const     long double s_SQRT2PISQUARED  = s_sqrt2 * s_pi * s_pi ;
   // ==========================================================================
   /** @var s_SQRT2PISQUAREDi
    *  helper constant  \f$   \frac{1}{\sqrt{2}\pi^2}\f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2016-06-11
    */
-  const long double s_SQRT2PISQUAREDi = 1.0 / s_SQRT2PISQUARED ;
+  const     long double s_SQRT2PISQUAREDi = 1.0 / s_SQRT2PISQUARED ;
   // ==========================================================================
   /** @var s_SQRT3overPI 
    *  helper constant \f$ \frac{\sqrt{3}}{\pi} \f$
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2016-06-14
    */
-  const long double s_SQRT3overPI = s_sqrt3 / s_pi ;
+  const     long double s_SQRT3overPI = s_sqrt3 / s_pi ;
   // ==========================================================================
   // Bukin & Co
   // ==========================================================================
@@ -447,7 +320,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
-  const long double s_Bukin   = std::sqrt ( 2.0L * std::log ( 2.0L ) ) ;
+  const     long double s_Bukin   = std::sqrt ( 2.0L * std::log ( 2.0L ) ) ;
   // ==========================================================================
   // Novosibirsk & Co
   // ==========================================================================
@@ -456,15 +329,15 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-04-19
    */
-  const long double s_Novosibirsk = std::sqrt ( std::log ( 4.0L ) ) ;
+  const     long double s_Novosibirsk = std::sqrt ( std::log ( 4.0L ) ) ;
   // ==========================================================================
   /** @var s_WMODE 
    *  width of the window between mean and mode:
    * |mean -mode|< sqrt(3) * sigma
    */
-  const double s_WMODE            = s_sqrt3 * 1.05 ;
+  const     double s_WMODE            = s_sqrt3 * 1.05 ;
   // ===========================================================================
-  const double s_INFINITY_LOG     = s_INFINITY_LOG_POS ;
+  const     double s_INFINITY_LOG     = s_INFINITY_LOG_POS ;
   // ==========================================================================
   /** the protected exponent
    *  @author Vanya BELYAEV
@@ -524,7 +397,6 @@ namespace
    { return is_not ( z.real() ) && is_not ( z.imag () ) ; } 
   // ==========================================================================  
 
-  // ==========================================================================
 }
 // ============================================================================
 //                                                                      The END 

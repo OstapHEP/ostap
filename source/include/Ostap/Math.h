@@ -40,11 +40,11 @@ namespace Ostap
     // Parameters for numerical calculations (M.Needham)
     // ========================================================================
     /// High tolerance
-    static const double hiTolerance    = 1e-40 ;
+    constexpr double hiTolerance    = 1e-40 ;
     /// Low  tolerance
-    static const double lowTolerance   = 1e-20 ;
+    constexpr double lowTolerance   = 1e-20 ;
     /// Loose tolerance
-    static const double looseTolerance = 1e-6  ;
+    constexpr double looseTolerance = 1e-6  ;
     // ========================================================================
     /** @var mULPS_float
      *  "tolerance" parameter for "Lomont"-compare of floating point numbers.
@@ -55,7 +55,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-01-02
      */
-    const unsigned short mULPS_float = 100 ;
+    constexpr unsigned short mULPS_float = 100 ;
     // ========================================================================
     /** @var mULPS_float_low
      *  "Low-tolerance" parameter for "Lomont"-compare of floating point numbers.
@@ -66,7 +66,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-01-02
      */
-    const unsigned short mULPS_float_low = 1000 ;
+    constexpr unsigned short mULPS_float_low = 1000 ;
     // =========================================================================
     /** @var mULPS_double
      *  "tolerance" parameter for "Lomont"-compare of floating point numbers.
@@ -76,7 +76,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-01-02
      */
-    const unsigned int mULPS_double = 1000 ;
+    constexpr unsigned int mULPS_double = 1000 ;
     // ========================================================================
     namespace detail
     {
@@ -264,18 +264,8 @@ namespace Ostap
       inline bool operator() 
       ( const long double v1 ,
         const long double v2 ) const
-      { 
-        using namespace std;
-#ifdef __INTEL_COMPILER       // Disable ICC remark
-#pragma warning(disable:2259) //  non-pointer conversion may lose significant bits
-#pragma warning(push)
-#endif
-        return  m_cmp ( static_cast<double> ( v1 ) , 
-                        static_cast<double> ( v2 ) ) ; 
-#ifdef __INTEL_COMPILER         // End disable ICC remark
-#pragma warning(pop)
-#endif
-      }
+      { return  m_cmp ( static_cast<double> ( v1 ) ,
+			static_cast<double> ( v2 ) ) ; }
       // ======================================================================
     private :
       // ======================================================================
@@ -566,7 +556,7 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
-      // comparison criteria for elements 
+      /// comparison criterion for elements 
       NotZero<TYPE> m_nz ;
       // ======================================================================
     } ;
@@ -628,9 +618,9 @@ namespace Ostap
       /// inner type 
       typedef TYPE Inner ;
       // ======================================================================
-      // constructor with threshold 
+      /// constructor with threshold 
       Small ( const typename Small<TYPE>::Inner & a ) : m_cmp ( a ) {}
-      // the only one important method   
+      /// the only one important method   
       inline bool operator() ( const std::vector<TYPE>& v ) const
       {
         return 
@@ -652,7 +642,7 @@ namespace Ostap
     // ========================================================================
     /** @struct MuchSmaller 
      *  Is a value of "a" tiny with respect to b ? 
-     *  -  if b is numerical zero, a is numerical zero also 
+     *  - if b is numerical zero, a is numerical zero also 
      *  - otherwise (a+b) is numerically equal to b 
      */
     template <class TYPE>
@@ -794,6 +784,50 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** Is the complex value actually real ?
+     *  - imaginary part is exact zero
+     *  - imaginary part is very small
+     *  - imaginary part is negligible in comparison to the real part
+     *
+     *  @see Ostap::Math::Equal_To
+     *  @see Ostap::Math::Zero 
+     */
+    template <class TYPE>
+    inline bool isreal
+    ( const std::complex<TYPE>& z )
+    {
+      /// equality criteria 
+      static const Ostap::Math::Equal_To<TYPE>  xequal{} ;
+      static const Ostap::Math::Zero<TYPE>      xzero {} ;
+      //
+      const TYPE re_z { z.real () } ;
+      const TYPE im_z { z.imag () } ;
+      //
+      return !im_z || xzero ( im_z ) || xequal ( re_z + im_z , re_z ) ;
+    }
+    // ========================================================================
+    /** Is the complex value pure imaginary? ?
+     *  - real part is exact zero
+     *  - real part is very small
+     *  - real part is negligible in comparison to the real part
+     *
+     *  @see Ostap::Math::Equal_To
+     *  @see Ostap::Math::Zero 
+     */
+    template <class TYPE>
+    inline bool isimagine
+    ( const std::complex<TYPE>& z )
+    {
+      /// equality criteria 
+      static const Ostap::Math::Equal_To<TYPE>  xequal{} ;
+      static const Ostap::Math::Zero<TYPE>      xzero {} ;
+      //
+      const TYPE re_z { z.real () } ;
+      const TYPE im_z { z.imag () } ;
+      //
+      return !re_z || xzero ( re_z ) || xequal ( re_z + im_z , im_z ) ;
+    }    
+    // ========================================================================    
     /// real value? 
     template <class TYPE> struct IsReal;
     // ========================================================================
@@ -802,13 +836,8 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      bool operator () ( const std::complex<TYPE>& v ) const 
-      { return s_zero ( v.imag() ) ; }
-      // ======================================================================
-    private :
-      // ======================================================================
-      /// check that imaginary part is zero
-      Zero <TYPE> s_zero ; // check that imaginary part is zero
+      inline bool operator () ( const std::complex<TYPE>& z ) const 
+      { return isreal ( z ) ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -820,76 +849,75 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      bool operator () ( const std::complex<TYPE>& v ) const 
-      { return s_zero ( v.real () ) ; }
-      // ======================================================================
-    private :
-      // ======================================================================
-      /// check that real part is zero
-      Zero <TYPE> s_zero ; // check that real part is zero
+      inline bool operator () ( const std::complex<TYPE>& z ) const 
+      { return isimagine  ( z ) ; }
       // ======================================================================
     } ;
     // ========================================================================
     /** round to nearest integer, rounding half a  way from  zero 
-     *  @see std::lround 
+     *  @see std::llround 
      *  @see https://en.cppreference.com/w/cpp/numeric/math/round
      *  @author Vanya BELYAEV Ivan.Belyaev
      */
-    long round ( const double      x ) ;
+    std::intmax_t round ( const double x ) ;
     // ========================================================================
     /** round to nearest integer, rounding half a  way from  zero 
-     *  @see std::lround 
+     *  @see std::llround 
      *  @see https://en.cppreference.com/w/cpp/numeric/math/round
      *  @author Vanya BELYAEV Ivan.Belyaev
      */
-    long round ( const long double x ) ; 
+    std::intmax_t round ( const long double x ) ; 
     // ========================================================================
     /** round to nearest integer, rounding half a way from zero 
      *  @author Vanya BELYAEV Ivan.Belyaev
      */
-    inline long round ( const float  x ) { return round ( double ( x ) ) ; }
+    inline std::intmax_t round ( const float  x ) { return round ( 1.0 * x ) ; }
     // ========================================================================
-    /** round the complex value: 
+    /** "Round" the complex value: 
      *  round both the real and imaginary components
      *  @code
      *  std::complex<double> x = ...
      *  std::complex<double> r = round ( x ) ;      
-     *  @endcode 
+     *  @endcode
+     *  @see Ostap::Math::round
      */
     template <class TYPE>
     inline std::complex<TYPE> round
-    ( const std::complex<TYPE>& x)
+    ( const std::complex<TYPE>& z )
     {
-      return std::complex<TYPE> ( TYPE(1) * round ( x.real() ) ,
-				  TYPE(1) * round ( x.imag() ) ) ;
+      /// round real & imaginary parts 
+      const TYPE re_z { round ( z.real () ) } ;
+      const TYPE im_z { round ( z.imag () ) } ;
+      //
+      return std::complex<TYPE> ( re_z , im_z ) ;
     }
     // ========================================================================
     /** Round  down
      *  @see std::floor 
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_down ( const double v )
+    inline std::intmax_t round_down ( const double v )
     { return round ( std::floor ( v ) ) ; } 
     // ========================================================================
-    /** Round  down
+    /** Round  up 
      *  @see std::ceil 
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_up  ( const double v )
+    inline std::intmax_t round_up  ( const double v )
     { return round ( std::ceil  ( v ) ) ; } 
     // =========================================================================
-   /** Round  toward zero
+    /** Round  toward zero
      *  @see std::trunc  
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_toward_zero ( const double v )
+    inline std::intmax_t round_toward_zero ( const double v )
     { return round ( std::trunc ( v ) ) ; } 
     // ==========================================================================
-   /** Round  away zero
+    /** Round  away zero
      *  @see std::ceil    
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_away_zero ( const double v )
+    inline std::intmax_t round_away_zero ( const double v )
     { 
       const double av = std::ceil ( std::abs ( v ) ) ;
       return round ( 0 <= v ? av : -av ) ; 
@@ -899,14 +927,14 @@ namespace Ostap
      *  @see std::floor    
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_half_up ( const double v )
+    inline std::intmax_t round_half_up ( const double v )
     { return round ( std::floor ( v + 0.5 ) ) ;  } 
     // ==========================================================================
     /** Round half-down 
      *  @see std::ceil    
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_half_down ( const double v )
+    inline std::intmax_t round_half_down ( const double v )
     { return round ( std::ceil ( v - 0.5 ) ) ;  }
     // ========================================================================
     /** Round half-toward sero 
@@ -914,15 +942,15 @@ namespace Ostap
      *  @see std;:ceil 
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_half_toward_zero ( const double v )
+    inline std::intmax_t round_half_toward_zero ( const double v )
     { return round ( 0 <= v ? std::ceil ( v - 0.5 ) : std::floor ( v + 0.5 ) ) ;  } 
     // ========================================================================
-     /** Round half-away sero 
+    /** Round half-away sero 
      *  @see std::floor    
      *  @see std;:ceil 
      *  @see  https://en.wikipedia.org/wiki/Rounding 
      */
-    inline long round_half_away_zero ( const double v )
+    inline std::intmax_t round_half_away_zero ( const double v )
     { return round ( 0 <= v ? std::floor ( v + 0.5 ) : std::ceil ( v - 0.5 ) ) ;  } 
     // ========================================================================
     /** Round half to even  
@@ -935,11 +963,11 @@ namespace Ostap
      *  - bankers' rounding.
      *  @see std::lrint
      */    
-     long round_half_even ( const double v ) ; 
-     // =======================================================================
+    std::intmax_t round_half_even ( const double v ) ; 
+    // =======================================================================
     /** Round half to even  
      *  Aka: 
-     *  -  convergent rounding
+     *  - convergent rounding
      *  - statistician's rounding, 
      *  - Dutch rounding, 
      *  - Gaussian rounding, 
@@ -947,7 +975,7 @@ namespace Ostap
      *  - bankers' rounding.
      *  @see std::lrint
      */    
-    inline long banker ( const double v ) { return round_half_even ( v ) ; }  
+    inline std::intmax_t banker ( const double v ) { return round_half_even ( v ) ; }  
     // ========================================================================
     /** get mantissa and (decimal) exponent 
      *  similar to std::frexp, but radix=10)
@@ -1001,7 +1029,7 @@ namespace Ostap
     ( const double value ,
       const short  expo  ) ;
     // ========================================================================
-    /** round to N-significant digits 
+    /** Round to N-significant digits 
      *  @param x  INPUT  input value 
      *  @param n  INPUT  number of significnat digits 
      *  @return rounded value 
@@ -1010,7 +1038,7 @@ namespace Ostap
      */
     double round_N ( const double x , const unsigned short n ) ;
     // ========================================================================
-    /** round to N-significant digits 
+    /** Round to N-significant digits 
      *  @param x  INPUT  input value 
      *  @param n  INPUT  number of significnat digits 
      *  @return rounded value 
@@ -1019,112 +1047,97 @@ namespace Ostap
      */
     float round_N ( const float x , const unsigned short n ) ;
     // ========================================================================
-    /** is the value actually long ?
+    /** Is the value actually long ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool islong ( const long double x ) ;
     // ========================================================================
-    /** is the value actually long ?
+    /** Is the value actually long ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool islong ( const double x ) ;
     // ========================================================================
-    /** is the value actually long ?
+    /** Is the value actually long ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool islong ( const float  x ) ;
     // ========================================================================
-    /** is the value actually int ?
+    /** Is the value actually int ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool isint  ( const long double x ) ;
     // ========================================================================
-    /** is the value actually int ?
+    /** Is the value actually int ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool isint  ( const double x ) ;
     // ========================================================================    
-    /** is the value actually int ?
+    /** Is the value actually int ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool isint  ( const float  x ) ;
     // ========================================================================
-    /** is the value actually unsigned int ?
+    /** Is the value actually unsigned int ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool isuint     ( const double x ) ;
     // =========================================================================
-    /** is it a short value ?
-     */
+    /// Is it a short value ?
     bool isshort    ( const double x ) ;
     // =========================================================================
-    /** is it am nusigned  short value ?
-     */
+    /// Is it an unsigned  short value ?
     bool isushort   ( const double x ) ;
     // =========================================================================
-    /** is the value actually unsigned long ?
+    /** Is the value actually unsigned long ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
     bool isulong    ( const double x ) ;
     // =========================================================================
-    /** is the value actually long long?
-     */
+    /// Is the value actually long long?
     bool islonglong ( const double x ) ;
     // ========================================================================
-    /** is the value actually unsigned  long long?
-     */
+    /// Is the value actually unsigned  long long?
     bool isulonglong ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::int8_t ?
-     */
+    /// Is floating value actually std::int8_t ?
     bool isint8 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::int16_t ?
-     */
+    /// Is floating value actually std::int16_t ?
     bool isint16 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::int32_t ?
-     */
+    /// Is floating value actually std::int32_t ?
     bool isint32 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::int64_t ?
-     */
+    /// Is floating value actually std::int64_t ?
     bool isint64 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::uint8_t ?
-     */
+    /// Is floating value actually std::uint8_t ?
     bool isuint8 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::uint16_t ?
-     */
+    /// Is floating value actually std::uint16_t ?
     bool isuint16 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::uint32_t ?
-     */
+    /// Is floating value actually std::uint32_t ?
     bool isuint32 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually std::uint64_t ?
-     */
+    /// Is floating value actually std::uint64_t ?
     bool isuint64 ( const double x ) ;
     // ========================================================================
-    /** is floating value actually char  ?
-     */
+    /// Is floating value actually char  ?
     bool ischar ( const double x ) ;
     // ========================================================================
-    /** is floating value actually signed char  ?
-     */
+    /// Is floating value actually signed char  ?
     bool isschar ( const double x ) ;
     // ========================================================================
-    /** is floating value actually unsigned char  ?
-     */
+    /// Is floating value actually unsigned char  ?
     bool isuchar ( const double x ) ;
     // ========================================================================
     /// Is floating value actually std::intmax_t ? 
@@ -1580,9 +1593,9 @@ namespace Ostap
         return std::sqrt ( r ) ;                                        // RETURN 
       }
       /// 4) not very large integer 
-      else if (  ( 0.05 < ip ) && Ostap::Math::isint ( 1/ip ) ) 
+      else if (  ( 0.05 < ip ) && Ostap::Math::isushort ( 1 / ip ) ) 
       {
-        const unsigned short p = Ostap::Math::round ( 1/ip ) ;
+        const unsigned short p = Ostap::Math::round ( 1 / ip ) ;
         for ( ; begin != end ; ++begin ) 
         {
           const long double c = *begin ;
@@ -1666,7 +1679,7 @@ namespace Ostap
       return nc ;
     }
     // ========================================================================
-    /** reduce the argument of to the desired range ( low , high ) 
+    /** reduce the argument to the desired range ( low , high ) 
      *  @code
      *  double xx = 123.45 ;
      *  double x , n ;
@@ -1696,7 +1709,7 @@ namespace Ostap
     template <class T, typename... Ts>
     inline const T& min ( const T& a , const T& b , const Ts&... ts ) 
     { return min ( min ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
-    
+    // 
     template <class T>
     inline const T& max ( const T& a ) { return a ; }
     template <class T>
@@ -1704,7 +1717,7 @@ namespace Ostap
     template <class T, typename... Ts>
     inline const T& max ( const T& a , const T& b , const Ts&... ts ) 
     { return max ( max ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
-    
+    //
     template <class T>
     inline std::pair<const T&,const T&> minmax ( const T& a ) 
     { return std::pair<const T&,const T&> ( a , a ) ; }
@@ -1717,7 +1730,7 @@ namespace Ostap
       std::pair<const T&,const T&> m { minmax ( b , std::forward<Ts>(ts)... ) } ;
       return std::pair<const T&,const T&> ( min ( a , m.first ) , max ( a , m.second ) ) ;
     }
-
+    //
     template <class T>
     inline T absmin ( const T& a ) { return std::abs ( a ) ; }
     template <class T>
@@ -1725,7 +1738,7 @@ namespace Ostap
     template <class T, typename... Ts>
     inline T absmin ( const T& a , const T& b , Ts&&... ts ) 
     { return absmin ( absmin ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
-   
+    //
     template <class T>
     inline T absmax ( const T& a ) { return std::abs ( a ) ; }
     template <class T>
@@ -1733,7 +1746,8 @@ namespace Ostap
     template <class T, typename... Ts>
     inline T absmax ( const T& a , const T& b , Ts&&... ts ) 
     { return absmax ( absmax ( a , b ) , std::forward<Ts> ( ts )...  ) ; }
-
+    //
+    
     // ========================================================================
     /// Nolume of N-ball 
     template <unsigned short>
@@ -1781,7 +1795,7 @@ namespace Ostap
       { return unit_volume * std::pow ( radius , N ) ; }
       /// volume of n-ball of unit radius 
       static double volume () { return unit_volume   ; }
-      /// volume of uinit n-ball is : 2*pi/n*V(n-2) 
+      /// volume of unit n-ball is : 2*pi/n*V(n-2) 
       static constexpr double unit_volume =
 #if defined ( __cplusplus ) && defined ( __cpp_lib_math_constants ) && ( 201907L <= __cpp_lib_math_constants )
         ( 2 * std::numbers::pi_v<long double>         * NBallVolume_<N-2>::unit_volume ) / N  ;

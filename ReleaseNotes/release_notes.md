@@ -1,3 +1,5 @@
+# v3.7.0.0
+
 ## New features
 
 ## Bug fixes
