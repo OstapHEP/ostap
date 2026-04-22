@@ -24,56 +24,56 @@ strings vct ;
 std::string::size_type opos = 0                ;
 std::string::size_type pos  = path.find ("-I") ;
 while ( std::string::npos != pos ) 
-  {
-    if ( opos < pos ) { vct.push_back ( std::string ( path , opos , pos - opos ) ) ; }
-    opos = pos + 2 ;
-    pos  = path.find ( "-I" , pos + 2 )  ;
-  }
+{
+  if ( opos < pos ) { vct.push_back ( std::string ( path , opos , pos - opos ) ) ; }
+  opos = pos + 2 ;
+  pos  = path.find ( "-I" , pos + 2 )  ;
+}
 vct.push_back("$OSTAP_DIR/include") ;
 strings npath  ;
 strings npath_ ;
 for ( strings::iterator i = vct.begin() ; vct.end() !=i ; ++i ) 
+{
+  std::string item ( *i ) ;
+  while ( !item.empty() && ' ' == item.front() ) { item = std::string ( item , 1                   ) ; }
+  while ( !item.empty() && ' ' == item.back () ) { item = std::string ( item , 0 , item.size() - 1 ) ; } 
+  if ( item.empty() ) { continue ; }
+  if ( '"'  == item.front() && '"'  == item.back() ) { item = std::string ( item , 1 , item.size() - 2 ) ; }
+  if ( '\'' == item.front() && '\'' == item.back() ) { item = std::string ( item , 1 , item.size() - 2 ) ; }
+  if ( item.empty() ) { continue ; }    
+  TString nitem ( item ) ;
+  gSystem->ExpandPathName( nitem ) ;
+  //
+  Long_t id      ;
+  Long_t size    ;
+  Long_t flags   ; 
+  Long_t modtime ; 
+  //
+  const int st = gSystem->GetPathInfo ( nitem , &id , &size , &flags , &modtime ) ;
+  if ( 0 == st && ( flags & 2 ) ) 
   {
-    std::string item ( *i ) ;
-    while ( !item.empty() && ' ' == item.front() ) { item = std::string ( item , 1                   ) ; }
-    while ( !item.empty() && ' ' == item.back () ) { item = std::string ( item , 0 , item.size() - 1 ) ; } 
-    if ( item.empty() ) { continue ; }
-    if ( '"'  == item.front() && '"'  == item.back() ) { item = std::string ( item , 1 , item.size() - 2 ) ; }
-    if ( '\'' == item.front() && '\'' == item.back() ) { item = std::string ( item , 1 , item.size() - 2 ) ; }
-    if ( item.empty() ) { continue ; }    
-    TString nitem ( item ) ;
-    gSystem->ExpandPathName( nitem ) ;
-    //
-    Long_t id      ;
-    Long_t size    ;
-    Long_t flags   ; 
-    Long_t modtime ; 
-    //
-    const int st = gSystem->GetPathInfo ( nitem , &id , &size , &flags , &modtime ) ;
-    if ( 0 == st && ( flags & 2 ) ) 
-      {
-        if ( npath .end() == std::find ( npath .begin() , npath .end() ,  item        ) && 
-             npath_.end() == std::find ( npath_.begin() , npath_.end() , nitem.Data() ) )
-          {
-            npath .push_back (  item        ) ;
-            npath_.push_back ( nitem.Data() ) ;
-          }
-      }
+    if ( npath .end() == std::find ( npath .begin() , npath .end() ,  item        ) && 
+	 npath_.end() == std::find ( npath_.begin() , npath_.end() , nitem.Data() ) )
+    {
+      npath .push_back (  item        ) ;
+      npath_.push_back ( nitem.Data() ) ;
+    }
   }
+}
 std::string ipath ;
  std::cout << " - Include dirs(s)  [gSystem::SetIncludePath] :  " << std::endl ; 
 for ( strings::const_iterator i = npath.begin() ; npath.end() != i ; ++i ) 
-  {
-    ipath += "-I" + (*i) + " " ;
-    std::cout <<  "     - " << (*i) << std::endl ;
-  }
+{
+  ipath += "-I" + (*i) + " " ;
+  std::cout <<  "     - " << (*i) << std::endl ;
+}
 //
 /// for ACLiC
 gSystem->SetIncludePath ( ipath.c_str() ) ;
 /// interactive processing 
 for ( strings::const_iterator i = npath_.begin() ; npath_.end() != i ; ++i ) 
-  {
-    std::string ii = ".include " + (*i) ;
-    gROOT->ProcessLine( ii.c_str () ) ; 
-  }
+{
+  std::string ii = ".include " + (*i) ;
+  gROOT->ProcessLine( ii.c_str () ) ; 
+}
 }

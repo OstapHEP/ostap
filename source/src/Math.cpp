@@ -122,10 +122,10 @@ namespace
 bool Ostap::Math::islong ( const long double x ) 
 {
   return 
-    x + 0.1L < std::numeric_limits<long>::lowest () ? false :
-    x - 0.1L > std::numeric_limits<long>::max    () ? false :
+    x + 0.1L <   std::numeric_limits<long>::lowest ()        ? false :
+    x - 0.1L > ( std::numeric_limits<long>::max    () >> 1 ) ? false :
     lomont_compare_double ( x                   , 
-                            std::lround   ( x ) , 
+                            std::llround  ( x ) , 
                             mULPS_double        ) ;
 }
 // ============================================================================
@@ -137,10 +137,10 @@ bool Ostap::Math::islong ( const long double x )
 bool Ostap::Math::islong ( const double x ) 
 {
   return
-    x + 0.1L < std::numeric_limits<long>::lowest () ? false :
-    x - 0.1L > std::numeric_limits<long>::max    () ? false :
+    x + 0.1L <   std::numeric_limits<long>::lowest ()        ? false :
+    x - 0.1L > ( std::numeric_limits<long>::max    () >> 1 ) ? false :
     lomont_compare_double ( x                   , 
-                            std::lround   ( x ) , 
+                            std::llround ( x )  , 
                             mULPS_double        ) ;
 }
 // ============================================================================
@@ -203,8 +203,8 @@ bool Ostap::Math::islonglong ( const double x )
 {
   const long double x_ = x  ;
   return 
-    x_ + 0.1L < std::numeric_limits<long long>::lowest () ? false :
-    x_ - 0.1L > std::numeric_limits<long long>::max    () ? false :
+    x_ + 0.1L <   std::numeric_limits<long long>::lowest ()        ? false :
+    x_ - 0.1L > ( std::numeric_limits<long long>::max    () >> 1 ) ? false :
     lomont_compare_double ( x , std::llround ( x_ ) , mULPS_double ) ;
 }
 // ============================================================================
@@ -242,8 +242,8 @@ bool Ostap::Math::isulong ( const double x )
 {
   const long double x_ = x  ;
   return 
-    x  + 0.1L < std::numeric_limits<unsigned long>::lowest () ? false :
-    x  - 0.1L > std::numeric_limits<unsigned long>::max   () ? false :
+    x  + 0.1L <   std::numeric_limits<unsigned long>::lowest ()        ? false :
+    x  - 0.1L > ( std::numeric_limits<unsigned long>::max    () >> 1 ) ? false :
     lomont_compare_double ( x , std::llround ( x ) , mULPS_double ) ;
 }
 // ============================================================================
@@ -256,8 +256,8 @@ bool Ostap::Math::isulonglong ( const double x )
 {
   const long double x_ = x  ;
   return 
-    x  + 0.1L < std::numeric_limits<unsigned long long>::lowest () ? false :
-    x  - 0.1L > std::numeric_limits<unsigned long long>::max    () ? false :
+    x  + 0.1L <   std::numeric_limits<unsigned long long>::lowest ()        ? false :
+    x  - 0.1L > ( std::numeric_limits<unsigned long long>::max    () >> 1 ) ? false :
     lomont_compare_double ( x , std::llround ( x_ ) , mULPS_double ) ;
 }
 // ============================================================================
@@ -333,8 +333,8 @@ bool Ostap::Math::isuint32 ( const double x )
 bool Ostap::Math::isint64 ( const double x ) 
 {
   return 
-    x + 0.1L < std::numeric_limits<std::int64_t>::lowest () ? false :
-    x - 0.1L > std::numeric_limits<std::int64_t>::max    () ? false :
+    x + 0.1L <   std::numeric_limits<std::int64_t>::lowest ()        ? false :
+    x - 0.1L > ( std::numeric_limits<std::int64_t>::max    () >> 1 ) ? false :
     lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
 }
 // ============================================================================
@@ -344,8 +344,8 @@ bool Ostap::Math::isint64 ( const double x )
 bool Ostap::Math::isuint64 ( const double x ) 
 {
   return 
-    x + 0.1L < std::numeric_limits<std::uint64_t>::lowest () ? false :
-    x - 0.1L > std::numeric_limits<std::uint64_t>::max    () ? false :
+    x + 0.1L <   std::numeric_limits<std::uint64_t>::lowest ()        ? false :
+    x - 0.1L > ( std::numeric_limits<std::uint64_t>::max    () >> 1 ) ? false :
     lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
 }
 // ============================================================================
@@ -387,8 +387,8 @@ bool Ostap::Math::isuchar ( const double x )
 bool Ostap::Math::isintmax  ( const double x )
 {
   return 
-    x + 0.1L < std::numeric_limits<std::intmax_t>::lowest () ? false :
-    x - 0.1L > std::numeric_limits<std::intmax_t>::max    () ? false :
+    x + 0.1L <   std::numeric_limits<std::intmax_t>::lowest ()        ? false :
+    x - 0.1L > ( std::numeric_limits<std::intmax_t>::max    () >> 1 ) ? false :
     lomont_compare_double ( x , round ( 1.0L * x ) , mULPS_double ) ;
 }
 // ===========================================================================
@@ -397,8 +397,8 @@ bool Ostap::Math::isintmax  ( const double x )
 bool Ostap::Math::isuintmax  ( const double x )
 {
   return 
-    x + 0.1L < std::numeric_limits<std::uintmax_t>::lowest () ? false :
-    x - 0.1L > std::numeric_limits<std::uintmax_t>::max    () ? false :
+    x + 0.1L <   std::numeric_limits<std::uintmax_t>::lowest ()        ? false :
+    x - 0.1L > ( std::numeric_limits<std::uintmax_t>::max    () >> 1 ) ? false :
     lomont_compare_double ( x , round ( 1.0L * x ) , mULPS_double ) ;
 }
 // ===========================================================================
@@ -606,12 +606,8 @@ float Ostap::Math::round_N ( const float x , const unsigned short n )
  *  @author Vanya BELYAEV Ivan.BElyaev
  */
 // ============================================================================
-long Ostap::Math::round ( const double x ) 
-{
-  return 
-    x <= sd_long_min ? s_long_min :
-    x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
-}
+std::intmax_t Ostap::Math::round ( const double x ) 
+{ return round ( 1.0L * x ) ;  }
 // ============================================================================
 /* round to nearest integer, rounding half a  way from  zero 
  *  @see std::lround 
@@ -619,16 +615,21 @@ long Ostap::Math::round ( const double x )
  *  @author Vanya BELYAEV Ivan.BElyaev
  */
 // ============================================================================
-long Ostap::Math::round ( const long double x ) 
+std::intmax_t Ostap::Math::round ( const long double x ) 
 {
-  return 
-    x <= sd_long_min ? s_long_min :
-    x >= sd_long_max ? s_long_max : long ( std::lround ( x )  ) ;
+  //
+  static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest ()     } ;
+  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () - 1 } ;
+  //
+  return
+    x <= s_min ? s_min :
+    x >= s_max ? s_max :
+    std::intmax_t ( std::llround ( x ) ) ;
 }
 // ============================================================================
 /* Round half to even  
  *  Aka: 
- *  -  convergent rounding
+ *  - convergent rounding
  *  - statistician's rounding, 
  *  - Dutch rounding, 
  *  - Gaussian rounding, 
@@ -637,13 +638,19 @@ long Ostap::Math::round ( const long double x )
  *  @see std::lrint
  */    
 // ==============================================================================
-long Ostap::Math::round_half_even ( const double v ) 
+std::intmax_t Ostap::Math::round_half_even ( const double v ) 
 {
-  if      ( v <= sd_long_min ) { return s_long_min ; } 
-  else if ( v >= sd_long_max ) { return s_long_max ; } 
-  const int mode = std::fegetround() ; 
-  if ( 0 <= mode ) { std::fesetround ( FE_TONEAREST ) ; } 
-  const long result = std::lrint ( v ) ;
+  //
+  static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest ()     } ;
+  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () - 1 } ;
+  //
+  const long double vv = v ; 
+  if      ( vv <= s_min ) { return s_min ; } 
+  else if ( vv >= s_max ) { return s_max ; }
+  //
+  const int           mode   = std::fegetround() ; 
+  if ( 0 <= mode ) { std::fesetround ( FE_TONEAREST ) ; }
+  const std::intmax_t result = std::lrint ( v ) ;
   if ( 0 <= mode ) { std::fesetround ( mode ) ; }
   return result ; 
 }
