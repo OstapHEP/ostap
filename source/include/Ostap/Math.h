@@ -1147,6 +1147,12 @@ namespace Ostap
     /// Is floating value actually std::size_t  ? 
     bool issize    ( const double x ) ; 
     // ========================================================================
+    /// Is floating value actually std::intptr_t 
+    bool isintptr  ( const double x ) ; 
+    // ========================================================================
+    /// Is floating value actually std::uintptr_t 
+    bool isuintptr ( const double x ) ; 
+    // ========================================================================
     
     // ========================================================================    
     /** check if the double value is actually equal to the integer value  

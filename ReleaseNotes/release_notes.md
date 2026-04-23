@@ -3,6 +3,8 @@
 
   1. remove remnants of debug prints. 
   1. tweaks for `Ostap::Math::Dalitz/Dalitz0`
+  1. more tweaks for `Ostap::Math::Dalitz/Dalitz0'
+  1. more tweaks for `Ostap/Math.h`
 
 ## Bug fixes
   

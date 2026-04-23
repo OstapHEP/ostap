@@ -31,7 +31,7 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
 if (PY3VERSION_ROOT VERSION_LESS "3.8" )
-  message ( FATAL_ERROR " Python version " ${PY3VERSION}   "<3.8 is no tsupported anymore")
+  message ( FATAL_ERROR " Python version " ${PY3VERSION}   "<3.8 is not supported anymore")
 endif() 
 
 add_library ( root_pyroot INTERFACE IMPORTED)
@@ -40,7 +40,8 @@ find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy
 if  (Python3_FOUND)
 else()
   message ( FATAL_ERROR "Python3 is NOT FOUND!" ) 
-endif()  
+endif()
+
 if (Python3_VERSION  VERSION_LESS "3.8" )
   message ( FATAL_ERROR " Python version " ${Python3_VERSION} "<3.8 is not supported anymore")
 endif() 
@@ -50,10 +51,12 @@ message ( "----> PYTHON          version    : " ${Python3_VERSION}      )
 message ( "----> PYTHON          executable : " ${Python3_EXECUTABLE}   )
 message ( "----> PYTHON          include    : " ${Python3_INCLUDE_DIRS} )
 message ( "----> PYTHON          libraries  : " ${Python3_LIBRARIES}    )
+
 set( PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS} )
 set( PYTHON_LIBRARIES    ${Python3_LIBRARIES}    )
 set( PYTHON_VERSION      ${Python3_VERSION}      PARENT_SCOPE)
 set( PYTHON_EXECUTABLE   ${Python3_EXECUTABLE}   PARENT_SCOPE)
+
 if(ROOT_VERSION VERSION_LESS "6.31.01")
   set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;ROOT::ROOTTPython;Python3::Python")
 else  ()
@@ -89,7 +92,6 @@ else()
   message ( SEND_ERROR "----> No GSL libraries are found!" )
 endif() 
 
-
 set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS} )
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -99,7 +101,6 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif()
 
 message ( "----> C++             flags      : " ${CMAKE_CXX_FLAGS} )
-
   
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
@@ -113,7 +114,6 @@ configure_file (
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
-
 
 function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection})
@@ -130,9 +130,7 @@ if ( ${ROOT_CXX_STANDARD} )
   message ( "----> C++             standard   : " ${CMAKE_CXX_STANDARD} )
 endif ()
 
-
 include(CMake_OSTAP.cmake) 
-
 
 if ( ${ROOT_CXX_STANDARD} )
   

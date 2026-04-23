@@ -1095,8 +1095,6 @@ double Ostap::Kinematics::Dalitz0::cos_zeta123
 }
 // ============================================================================
 
-
-
 // ============================================================================
 // Dalitz 
 // ============================================================================
@@ -1112,7 +1110,7 @@ Ostap::Kinematics::Dalitz::Dalitz
   const double m1 , 
   const double m2 , 
   const double m3 ) 
-  : Dalitz ( M , Ostap::Math::Dalitz0 ( m1 , m2 , m3 ) ) 
+  : Dalitz ( M , Ostap::Kinematics::Dalitz0 ( m1 , m2 , m3 ) ) 
 {}
 // ============================================================================
 /* constructor from all masses 
@@ -1121,8 +1119,8 @@ Ostap::Kinematics::Dalitz::Dalitz
  */
 // ============================================================================
 Ostap::Kinematics::Dalitz::Dalitz
-( const Ostap::Math::Dalitz0& b , 
-  const double                M )
+( const Ostap::Kinematics::Dalitz0& b , 
+  const double                      M )
   : Dalitz ( M , b ) 
 {}
 // ======================================================================
@@ -1160,8 +1158,8 @@ Ostap::Kinematics::Dalitz::Dalitz
 /** Is point \f$ (s_1,s_2)\f$ "inside" the Dalizt plot?
  *  Get the sign of G-function 
  *  \f$ g(s_1,s_2) = G ( s_1, s_2 , s , m_2^2, m_1^2, m_3^2) \f$
- *  @see Ostap::Math::PhaseSpace2::G
- *  Physical region correspoinds to \f$ g\le0 \f$  
+ *  @see Ostap::Kinematics::G
+ *  Physical region correspoinds to \f$ g \le 0 \f$  
  */
 // ============================================================================
 bool Ostap::Kinematics::Dalitz::inside 
@@ -1169,6 +1167,7 @@ bool Ostap::Kinematics::Dalitz::inside
 {
   if ( s1  < s1_min () || s1  > s1_max () ) { return false ; }
   if ( s2  < s2_min () || s2  > s2_max () ) { return false ; }
+  //
   const double s3_ = s3 (  s1  , s2 ) ;
   if ( s3_ < s3_min () || s3_ > s3_max () ) { return false ; }
   //
@@ -1190,9 +1189,9 @@ double Ostap::Kinematics::Dalitz::dRds2   ( const double s2 ) const
   if ( s2 < s2_min () || s2 > s2_max () ){ return 0 ; }
   //
   const double f1 = Ostap::Kinematics::triangle ( s2 , s ()    , m1sq () ) ;
-  if ( f1 < 0 ) {  return 0 ; }
+  if ( f1 <= 0 ) {  return 0 ; }
   const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;  
-  if ( f1 < 0 ) {  return 0 ; }
+  if ( f1 <= 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * s_pi2 ;
   //
@@ -1213,9 +1212,9 @@ double Ostap::Kinematics::Dalitz::dRds3   ( const double s3 ) const
   if ( s3 < s3_min () || s3 > s3_max () ){ return 0 ; }
   //
   const double f1 = Ostap::Kinematics::triangle ( s3 , s ()   , m2sq () ) ;
-  if ( f1 < 0 ) {  return 0 ; }
+  if ( f1 <= 0 ) {  return 0 ; }
   const double f2 = Ostap::Kinematics::triangle ( s3 , m3sq() , m1sq () ) ;  
-  if ( f1 < 0 ) {  return 0 ; }
+  if ( f1 <= 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * s_pi2 ;
   //
@@ -1236,9 +1235,9 @@ double Ostap::Kinematics::Dalitz::dRds1   ( const double s1 ) const
   if ( s1 < s1_min () || s1 > s1_max () ){ return 0 ; }
   //
   const double f1 = Ostap::Kinematics::triangle ( s1 , s ()   , m3sq () ) ;
-  if ( f1 < 0 ) {  return 0 ; }
+  if ( f1 <= 0 ) {  return 0 ; }
   const double f2 = Ostap::Kinematics::triangle ( s1 , m1sq() , m2sq () ) ;  
-  if ( f1 < 0 ) {  return 0 ; }
+  if ( f1 <= 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * s_pi2  ;
   //

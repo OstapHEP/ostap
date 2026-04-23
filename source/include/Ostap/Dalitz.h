@@ -157,7 +157,7 @@ namespace Ostap
        *  Get the sign of G-function 
        *  \f$ g(s_1,s_2) = G ( s_1, s_2 , s , m_2^2, m_1^2, m_3^2) \f$
        *  @see Ostap::Kinematics::G
-       *  Physical region corresponds to \f$ g\le0 \f$  
+       *  Physical region corresponds to \f$ g \le 0 \f$  
        */
       bool   inside
       ( const double s  ,
@@ -394,59 +394,59 @@ namespace Ostap
       // ======================================================================
     public:  // (1,2) rest frame 
       // ======================================================================
-      /// full energy in (1,2)-rest frame 
+      /// full energy in the (1,2)-rest frame 
       inline double E_R12  
       ( const double    s     , 
         const double    s1    , 
         const double /* s2 */ ) const    
       { return ( s + s1 - m3sq ()  )        / ( 2 * std::sqrt ( s1 ) ) ; }
       // ======================================================================
-      /// energy of 1st  particle in (1,2)-rest frame 
+      /// energy of the 1st  particle in (1,2)-rest frame 
       inline double E1_R12 
       ( const double /* s  */ , 
         const double    s1    , 
         const double /* s2 */ ) const    
       { return ( s1   + m1sq () - m2sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
       // ======================================================================
-      /// energy of 2nd  particle in (1,2)-rest frame 
+      /// energy of the 2nd  particle in (1,2)-rest frame 
       inline double E2_R12 
       ( const double /* s  */ , 
         const double    s1    ,
         const double /* s2 */ ) const    
       { return ( s1   + m2sq () - m1sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
       // ======================================================================
-      /// energy of 3rd  particle in (1,2)-rest frame 
+      /// energy of the 3rd  particle in (1,2)-rest frame 
       inline double E3_R12 
       ( const double    s     , 
         const double    s1    , 
         const double /* s2 */ ) const    
       { return ( s - s1 - m3sq ()  )       / ( 2 * std::sqrt ( s1 ) ) ; }
       // =====================================================================
-      /// total momentum in (1,2)-rest frame
+      /// total momentum in the (1,2)-rest frame
       double P_R12  
       ( const double s  , 
         const double s1 , 
         const double s2 ) const ;
       // ======================================================================
-      /// momentum of 1st particle in (1,2)-rest frame 
+      /// momentum of the 1st particle in (1,2)-rest frame 
       double P1_R12  
       ( const double s  , 
         const double s1 , 
         const double s2 ) const ;
       // ======================================================================
-      /// momentum of 2nd particle in (1,2)-rest frame 
+      /// momentum of the 2nd particle in (1,2)-rest frame 
       inline double P2_R12   
       ( const double s  , 
         const double s1 ,
         const double s2 ) const { return P1_R12 ( s , s1 , s2 ) ; }
       // ======================================================================
-      /// momentum of 3rd particle in (1,2)-rest frame 
+      /// momentum of the 3rd particle in (1,2)-rest frame 
       inline double P3_R12  
       ( const double s  , 
         const double s1 , 
         const double s2 ) const { return P_R12  ( s , s1 , s2 ) ; }
       // ======================================================================
-      /** cosine on the angle between 3rd and 1st particles in the  (1,2) rest frame
+      /** cosine on the angle between the 3rd and the 1st particles in the  (1,2) rest frame
        *  \f$ \cos \theta_{31}^{R(1,2)}
        * - the same as <c>Ostap::Kinematics::cosThetaRest (p3,p1,p1+p2)</c>
        * - the same as <c>Ostap::Kinematics::cos_theta    (p3,p1,p1+p2)</c>
@@ -457,7 +457,7 @@ namespace Ostap
         const double s1 , 
         const double s2 ) const ;
       // ======================================================================
-      /** sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
+      /** sine squared  on the angle between the 3rd and the 1st particles in the  (1,2) rest frame
        *  \f$ \sin^2 \theta_{31}^{R(1,2)}
        */
       double sin2_31_R12 
@@ -474,54 +474,54 @@ namespace Ostap
         const double    s2    ) const    
       { return ( s + s2 - m1sq () )        / ( 2 * std::sqrt ( s2 ) ) ; }
       // ======================================================================
-      /// energy of 1st  particle in (2,3)-rest frame 
+      /// energy of the 1st  particle in (2,3)-rest frame 
       inline double E1_R23 
       ( const double    s     , 
         const double /* s1 */ ,
         const double    s2    ) const    
       { return ( s - s2 - m1sq ()  )       / ( 2 * std::sqrt ( s2 ) ) ; }
       // ======================================================================
-      /// energy of 2nd  particle in (2,3)-rest frame 
+      /// energy of the 2nd  particle in (2,3)-rest frame 
       inline double E2_R23 
       ( const double /* s  */ , 
         const double /* s1 */ , 
         const double    s2    ) const    
       { return ( s2   +  m2sq () - m3sq ()  ) / ( 2 * std::sqrt ( s2 ) ) ; }
       // ======================================================================
-      /// energy of 3rd  particle in (2,3)-rest frame 
+      /// energy of the 3rd  particle in (2,3)-rest frame 
       inline double E3_R23 
       ( const double /* s  */ , 
         const double /* s1 */ , 
         const double    s2    ) const    
       { return ( s2   +  m3sq () - m2sq () ) / ( 2 * std::sqrt ( s2 ) ) ; }
       // ======================================================================
-      /// total momentum in (2,3)-rest frame
+      /// total momentum in the (2,3)-rest frame
       double P_R23   
       ( const double    s     , 
         const double /* s1 */ , 
         const double    s2    ) const ;
       // ======================================================================
-      /// momentum of 1st particle in (2,3)-rest frame 
+      /// momentum of the 1st particle in (2,3)-rest frame 
       inline double P1_R23  
       ( const double    s     , 
         const double    s1    , 
         const double    s2    ) const 
       { return P_R23  ( s , s1 , s2 ) ; }
       // ======================================================================
-      /// momentum of 2nd particle in (2,3)-rest frame 
+      /// momentum of the 2nd particle in (2,3)-rest frame 
       double P2_R23  
       ( const double /* s  */ , 
         const double /* s1 */ , 
         const double    s2    ) const ;
       // ======================================================================
-      /// momentum of 3rd particle in (2,3)-rest frame 
+      /// momentum of the 3rd particle in (2,3)-rest frame 
       inline double P3_R23  
       ( const double    s     , 
         const double    s1    , 
         const double    s2    ) const 
       { return P2_R23 ( s , s1 , s2 ) ; }
       // ======================================================================   
-      /** cosine on the angle between 1st and 2nd particles in the  (2,3) rest frame
+      /** cosine on the angle between the 1st and the 2nd particles in the  (2,3) rest frame
        *  \f$ \cos \theta_{12}^{R(2,3)}
        * - the same as <c>Ostap::Kinematics::cosThetaRest (p1,p2,p2+p3)</c>
        * - the same as <c>Ostap::Kinematics::cos_theta    (p1,p2,p2+p3)</c>
@@ -532,7 +532,7 @@ namespace Ostap
         const double s1 ,
         const double s2 ) const ;
       // ======================================================================
-      /** sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
+      /** sine squared  on the angle between the 1st and the 2nd particles in the  (2,3) rest frame
        *  \f$ \sin^2 \theta_{12}^{R(2,3)}
        */
       double sin2_12_R23 
@@ -542,7 +542,7 @@ namespace Ostap
       // ======================================================================
     public: // (3,1)-rest frame 
       // ======================================================================
-      ///  full energy in (3,1)-rest frame 
+      ///  full energy in the (3,1)-rest frame 
       inline double E_R31  
       ( const double s  , 
         const double s1 , 
@@ -552,7 +552,7 @@ namespace Ostap
         return ( s + s3_ - m2sq ()  )        / ( 2 * std::sqrt ( s3_) ) ; 
       }
       // ======================================================================
-      /// energy of 1st  particle in (3,1)-rest frame 
+      /// energy of the 1st  particle in (3,1)-rest frame 
       inline double E1_R31 
       ( const double s  , 
         const double s1 , 
@@ -562,7 +562,7 @@ namespace Ostap
         return ( s3_ +  m1sq ()  - m3sq () ) / ( 2 * std::sqrt ( s3_ ) ) ;
       }
       // ======================================================================
-      /// energy of 2nd  particle in (3,1)-rest frame 
+      /// energy of the 2nd  particle in (3,1)-rest frame 
       inline double E2_R31 
       ( const double s  , 
         const double s1 , 
@@ -572,7 +572,7 @@ namespace Ostap
         return ( s - s3_ - m2sq ()  )       / ( 2 * std::sqrt ( s3_ ) ) ; 
       }
       // ======================================================================
-      /// energy of 3rd  particle in (2,3)-rest frame 
+      /// energy of the 3rd  particle in (2,3)-rest frame 
       inline double E3_R31 
       ( const double s  , 
         const double s1 , 
@@ -582,31 +582,31 @@ namespace Ostap
         return ( s3_ +  m3sq ()  - m1sq () ) / ( 2 * std::sqrt ( s3_ ) ) ; 
       }
       // ======================================================================
-      /// total momentum in (3,1)-rest frame
+      /// total momentum in the (3,1)-rest frame
       double P_R31   
       ( const double    s     , 
         const double /* s1 */ , 
         const double    s2    ) const ;
       // ======================================================================
-      /// momentum of 3rd particle in (2,3)-rest frame 
+      /// momentum of the 3rd particle in (2,3)-rest frame 
       inline double P1_R31  
       ( const double    s     , 
         const double    s1    , 
         const double    s2    ) const { return P3_R31 ( s , s1 , s2 ) ; }
       // ======================================================================
-      /// momentum of 2nd particle in (3,1)-rest frame 
+      /// momentum of the 2nd particle in (3,1)-rest frame 
       inline double P2_R31  
       ( const double    s    , 
         const double    s1   , 
         const double    s2   ) const { return P_R31  ( s , s1 , s2 ) ; }
       // ======================================================================
-      /// momentum of 1st particle in (2,3)-rest frame 
+      /// momentum of the 1st particle in (2,3)-rest frame 
       double P3_R31  
       ( const double    s   , 
         const double    s1  , 
         const double    s2  ) const ;
       // ======================================================================
-      /** cosine on the angle between 2nd and 3rd particles in the  (3,1) rest frame
+      /** cosine on the angle between the 2nd and the 3rd particles in the  (3,1) rest frame
        *  \f$ \cos \theta_{23}^{R(3,1)}
        * - the same as <c>Ostap::Kinematics::cosThetaRest (p2,p3,p1+p3)</c>
        * - the same as <c>Ostap::Kinematics::cos_theta    (p2,p3,p1+p3)</c>
@@ -617,7 +617,7 @@ namespace Ostap
         const double s1 , 
         const double s2 ) const ;
       // ======================================================================
-      /** sine squared  on the angle between 2nd and 3rd particles in the  (3,1) rest frame
+      /** sine squared  on the angle between the 2nd and the 3rd particles in the  (3,1) rest frame
        *  \f$ \sin^2 \theta_{23}^{R(3,1)}
        */
       double sin2_23_R31 
@@ -1070,20 +1070,16 @@ namespace Ostap
       /// tag/hash value 
       std::size_t m_tag  ;  // tag/hash value
       // ======================================================================
-      /// the precalculated quantities
+      /// Precalculated quantities
       typedef std::array<double,9> CACHE1 ;
       typedef std::array<bool,3>   CACHEB ;
-      // std::array<double,9> m_cache  ;            // the precalculated quantities 
-      // std::array<int,7>    m_cacheb ;            // the precalculated quantities
-      /// double m_cache  [9] ;                     // the precalculated quantities 
-      /// bool   m_cacheb [7] ;                     // the precalculated quantities
-      CACHE1      m_cache  ;                        // the precalculated quantities 
-      CACHEB      m_cacheb ;                        // the precalculated quantities 
+      CACHE1      m_cache  ;                        // precalculated quantities 
+      CACHEB      m_cacheb ;                        // precalculated quantities 
       // ======================================================================      
     } ;
     // ========================================================================
     /** @class Dalitz Ostap/Dalitz.h 
-     *  Simple Kinematics of Dalitz plot 
+     *  Kinematics of Dalitz plot 
      *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
      *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)     
      *  @see Section V.1
@@ -1939,11 +1935,9 @@ namespace Ostap
       /// tag/hash value
       std::size_t m_tag2  ;  // tag/hash value
       // ======================================================================
-      /// the precalculated quantities
-      typedef std::array<double,8> CACHE2 
-      // std::array<double,8> m_cache2 ;        // the precalculated quantities
-      // double m_cache2 [8] ;                  // the precalculated quantities
-      CACHE2      m_cache2 ;                    // the precalculated quantities
+      /// Precalculated quantities
+      typedef std::array<double,8> CACHE2 ;  
+      CACHE2      m_cache2 ;                        // precalculated quantities
       // ======================================================================      
     } ;
     // ========================================================================

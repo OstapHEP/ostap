@@ -135,7 +135,30 @@ namespace
                   !std::numeric_limits<unsigned char> ::is_signed       ,
                   "std::numeric_limits<unsigned char> is not OK"        ) ;
   // ==========================================================================
- 
+
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::size_t>  ::is_specialized  && 
+                  std::numeric_limits<std::size_t>  ::is_integer      &&   
+                  !std::numeric_limits<std::size_t> ::is_signed       ,
+                  "std::numeric_limits<std::size_t> is not OK"        ) ;
+  // ==========================================================================
+  
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::intptr_t>  ::is_specialized  && 
+                  std::numeric_limits<std::intptr_t>  ::is_integer      &&   
+                  std::numeric_limits<std::intptr_t> ::is_signed        ,
+                  "std::numeric_limits<std::intptr_t> is not OK"        ) ;
+  // ==========================================================================
+
+  // ==========================================================================
+  static_assert ( std::numeric_limits<std::uintptr_t>  ::is_specialized  && 
+                  std::numeric_limits<std::uintptr_t>  ::is_integer      &&   
+                  !std::numeric_limits<std::uintptr_t> ::is_signed       ,
+                  "std::numeric_limits<std::uintptr_t> is not OK"        ) ;
+  // ==========================================================================
+  
+  
+  
 }
 
 
