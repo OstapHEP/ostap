@@ -122,16 +122,20 @@ namespace
     //
     INVALID_TAXISBINS          = 890 ,     
     // =========================================================================
-    ZERO_DIVISION              = 600 , 
-    INCONSISTENT_RANGES        = 601 ,  
+    ZERO_DIVISION              = 900 , 
+    INCONSISTENT_RANGES        = 901 ,  
     // =========================================================================
-    NUM_CALLS_LIMIT_REACHED    = 610 , 
-    INVALID_BRACKET            = 611 ,  
-    INVALID_FUNCTION           = 612 ,
-    INVALID_MINIMIZER          = 613 , 
+    NUM_CALLS_LIMIT_REACHED    = 910 , 
+    INVALID_BRACKET            = 911 ,  
+    INVALID_FUNCTION           = 912 ,
+    INVALID_MINIMIZER          = 913 ,
+    // 
+    INVALID_MASSES             = 915 , 
+    INVALID_INDEX              = 916 , 
+    INVALID_INDICES            = 917 , 
     // =========================================================================
-    NOT_IMPLEMENTED            = 950 ,
-    NOT_IMPLEMENTED_YET        = 951 , 
+    NOT_IMPLEMENTED            = 990 ,
+    NOT_IMPLEMENTED_YET        = 991 , 
     // =========================================================================    
     ERROR_ROOT                 = 1000000 ,
     ERROR_GSL                  = 2000000 ,    

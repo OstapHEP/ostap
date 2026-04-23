@@ -22,7 +22,7 @@ namespace Ostap
   {
     // ========================================================================
     /** @class Dalitz0 Ostap/Dalitz.h 
-     *  Simple Kinematics of Dalitz plot 
+     *  Kinematics of Dalitz' plot 
      *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
      *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)     
      *  @see Section V.1
@@ -106,19 +106,19 @@ namespace Ostap
       // ======================================================================
     public:  // only two s_i are independent 
       // ======================================================================
-      /** get s_1 for given s_2 and s_3 are defined 
+      /** Get s_1 for given s_2 and s_3 are defined 
        *  \f$ s_1 = s_{12} = \sum s -   s_2 - s_3  \f$ 
        */
       inline double s1 ( const double s , const double s2 , const double s3 ) const 
       { return s  + summ2 () - s2 - s3 ; }
       // ======================================================================
-      /** get s_2 for given s_1 and s_3 are defined 
+      /** Get s_2 for given s_1 and s_3 are defined 
        *  \f$ s_2 = s_{23} = \sum s -   s_1 - s_3  \f$ 
        */
       inline double s2 ( const double s , const double s1 , const double s3 ) const 
       { return s + summ2 () - s1 - s3 ; }
       // ======================================================================
-      /** get s_3 for given s_1 and s_2 are defined 
+      /** Get s_3 for given s_1 and s_2 are defined 
        *  \f$ s_3 = s_{31} = \sum s -   s_1 - s_2  \f$ 
        */
       inline double s3 ( const double s , const double s1 , const double s2 ) const 
@@ -262,72 +262,63 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /** get product of 4-momenta \f$ p_1p_{12} = m_1^2 +  p_1p_2\f$ 
-       */
+      /// get product of 4-momenta \f$ p_1p_{12} = m_1^2 +  p_1p_2\f$ 
       inline double p1p12 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return m1sq () + p1p2 ( s , s1 , s2 ) ; }
       // =====================================================================
-      /** get product of 4-momenta \f$ p_1p_{13} = m_1^2 +  p_1p_3\f$ 
-       */
+      /// get product of 4-momenta \f$ p_1p_{13} = m_1^2 +  p_1p_3\f$ 
       inline double p1p13 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return m1sq () + p1p3 ( s , s1 , s2 ) ; }
       // ======================================================================
-      /** get product of 4-momenta \f$ p_1p_{23} = p_1p_2 +  p_1p_3\f$ 
-       */
+      /// get product of 4-momenta \f$ p_1p_{23} = p_1p_2 +  p_1p_3\f$ 
       inline double p1p23 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return p1p2 ( s , s1 , s2 ) + p1p3 ( s , s1 , s2 ) ; }
       // ======================================================================
-      /** get product of 4-momenta \f$ p_2p_{12} = p_1p_2 + m^2_2\f$ 
-       */
+      /// get product of 4-momenta \f$ p_2p_{12} = p_1p_2 + m^2_2\f$ 
       inline double p2p12 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return p1p2 ( s , s1 , s2 ) + m2sq () ; }
       // =====================================================================
-      /** get product of 4-momenta \f$ p_2p_{13} = p_1p_2 + p2p3 \f$ 
-       */
+      /// get product of 4-momenta \f$ p_2p_{13} = p_1p_2 + p2p3 \f$ 
       inline double p2p13 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return p1p2 ( s , s1 , s2 ) + p2p3 ( s , s1 , s2 )  ; }
       // =====================================================================
-      /** get product of 4-momenta \f$ p_2p_{23} = m^2_2 p_2p_3 \f$ 
-       */
+      /// get product of 4-momenta \f$ p_2p_{23} = m^2_2 p_2p_3 \f$ 
       inline double p2p23 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return m2sq () + p2p3 ( s , s1 , s2 )  ; }
       // =====================================================================      
-      /** get product of 4-momenta \f$ p_3p_{12} = p_1p_3 + p2p3 \f$ 
-       */
+      /// get product of 4-momenta \f$ p_3p_{12} = p_1p_3 + p2p3 \f$ 
       inline double p3p12 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return p1p3 ( s , s1 , s2 ) + p2p3 ( s , s1 , s2 ) ; }
       // =====================================================================
-      /** get product of 4-momenta \f$ p_3p_{13} = p_1p_3 + m^2_3 \f$ 
-       */
+      /// get product of 4-momenta \f$ p_3p_{13} = p_1p_3 + m^2_3 \f$ 
       inline double p3p13 
       ( const double    s     ,
         const double    s1    ,
         const double    s2    ) const
       { return p1p3 ( s , s1 , s2 ) + m3sq () ; }
       // =====================================================================
-      /** get product of 4-momenta \f$ p_3p_{23} = p_2p_3 + m^2_3 \f$ 
-       */
+      /// get product of 4-momenta \f$ p_3p_{23} = p_2p_3 + m^2_3 \f$ 
       inline double p3p23 
       ( const double    s     ,
         const double    s1    ,
@@ -403,24 +394,27 @@ namespace Ostap
       // ======================================================================
     public:  // (1,2) rest frame 
       // ======================================================================
-      ///  full energy in (1,2)-rest frame 
+      /// full energy in (1,2)-rest frame 
       inline double E_R12  
       ( const double    s     , 
         const double    s1    , 
         const double /* s2 */ ) const    
       { return ( s + s1 - m3sq ()  )        / ( 2 * std::sqrt ( s1 ) ) ; }
+      // ======================================================================
       /// energy of 1st  particle in (1,2)-rest frame 
       inline double E1_R12 
       ( const double /* s  */ , 
         const double    s1    , 
         const double /* s2 */ ) const    
       { return ( s1   + m1sq () - m2sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
+      // ======================================================================
       /// energy of 2nd  particle in (1,2)-rest frame 
       inline double E2_R12 
       ( const double /* s  */ , 
         const double    s1    ,
         const double /* s2 */ ) const    
       { return ( s1   + m2sq () - m1sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
+      // ======================================================================
       /// energy of 3rd  particle in (1,2)-rest frame 
       inline double E3_R12 
       ( const double    s     , 
@@ -433,16 +427,19 @@ namespace Ostap
       ( const double s  , 
         const double s1 , 
         const double s2 ) const ;
+      // ======================================================================
       /// momentum of 1st particle in (1,2)-rest frame 
       double P1_R12  
       ( const double s  , 
         const double s1 , 
         const double s2 ) const ;
+      // ======================================================================
       /// momentum of 2nd particle in (1,2)-rest frame 
       inline double P2_R12   
       ( const double s  , 
         const double s1 ,
         const double s2 ) const { return P1_R12 ( s , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 3rd particle in (1,2)-rest frame 
       inline double P3_R12  
       ( const double s  , 
@@ -459,6 +456,7 @@ namespace Ostap
       ( const double s  , 
         const double s1 , 
         const double s2 ) const ;
+      // ======================================================================
       /** sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
        *  \f$ \sin^2 \theta_{31}^{R(1,2)}
        */
@@ -475,18 +473,21 @@ namespace Ostap
         const double /* s1 */ , 
         const double    s2    ) const    
       { return ( s + s2 - m1sq () )        / ( 2 * std::sqrt ( s2 ) ) ; }
+      // ======================================================================
       /// energy of 1st  particle in (2,3)-rest frame 
       inline double E1_R23 
       ( const double    s     , 
         const double /* s1 */ ,
         const double    s2    ) const    
       { return ( s - s2 - m1sq ()  )       / ( 2 * std::sqrt ( s2 ) ) ; }
+      // ======================================================================
       /// energy of 2nd  particle in (2,3)-rest frame 
       inline double E2_R23 
       ( const double /* s  */ , 
         const double /* s1 */ , 
         const double    s2    ) const    
       { return ( s2   +  m2sq () - m3sq ()  ) / ( 2 * std::sqrt ( s2 ) ) ; }
+      // ======================================================================
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R23 
       ( const double /* s  */ , 
@@ -499,17 +500,20 @@ namespace Ostap
       ( const double    s     , 
         const double /* s1 */ , 
         const double    s2    ) const ;
+      // ======================================================================
       /// momentum of 1st particle in (2,3)-rest frame 
       inline double P1_R23  
       ( const double    s     , 
         const double    s1    , 
         const double    s2    ) const 
       { return P_R23  ( s , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 2nd particle in (2,3)-rest frame 
       double P2_R23  
       ( const double /* s  */ , 
         const double /* s1 */ , 
         const double    s2    ) const ;
+      // ======================================================================
       /// momentum of 3rd particle in (2,3)-rest frame 
       inline double P3_R23  
       ( const double    s     , 
@@ -527,6 +531,7 @@ namespace Ostap
       ( const double s  , 
         const double s1 ,
         const double s2 ) const ;
+      // ======================================================================
       /** sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
        *  \f$ \sin^2 \theta_{12}^{R(2,3)}
        */
@@ -546,6 +551,7 @@ namespace Ostap
         const double s3_ = s3 ( s , s1 , s2 ) ;
         return ( s + s3_ - m2sq ()  )        / ( 2 * std::sqrt ( s3_) ) ; 
       }
+      // ======================================================================
       /// energy of 1st  particle in (3,1)-rest frame 
       inline double E1_R31 
       ( const double s  , 
@@ -555,6 +561,7 @@ namespace Ostap
         const double s3_ = s3 ( s , s1 , s2 ) ;
         return ( s3_ +  m1sq ()  - m3sq () ) / ( 2 * std::sqrt ( s3_ ) ) ;
       }
+      // ======================================================================
       /// energy of 2nd  particle in (3,1)-rest frame 
       inline double E2_R31 
       ( const double s  , 
@@ -564,6 +571,7 @@ namespace Ostap
         const double s3_ = s3 ( s , s1 , s2 ) ;
         return ( s - s3_ - m2sq ()  )       / ( 2 * std::sqrt ( s3_ ) ) ; 
       }
+      // ======================================================================
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R31 
       ( const double s  , 
@@ -579,16 +587,19 @@ namespace Ostap
       ( const double    s     , 
         const double /* s1 */ , 
         const double    s2    ) const ;
+      // ======================================================================
       /// momentum of 3rd particle in (2,3)-rest frame 
       inline double P1_R31  
       ( const double    s     , 
         const double    s1    , 
         const double    s2    ) const { return P3_R31 ( s , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 2nd particle in (3,1)-rest frame 
       inline double P2_R31  
       ( const double    s    , 
         const double    s1   , 
         const double    s2   ) const { return P_R31  ( s , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 1st particle in (2,3)-rest frame 
       double P3_R31  
       ( const double    s   , 
@@ -605,6 +616,7 @@ namespace Ostap
       ( const double s  , 
         const double s1 , 
         const double s2 ) const ;
+      // ======================================================================
       /** sine squared  on the angle between 2nd and 3rd particles in the  (3,1) rest frame
        *  \f$ \sin^2 \theta_{23}^{R(3,1)}
        */
@@ -620,11 +632,13 @@ namespace Ostap
       ( const double /* s  */ , 
         const double /* s1 */ , 
         const double    s2    ) const { return s2 ; }
+      // ======================================================================
       ///  \f$ \sigma_2 \equiv s_3 = \left( p_3+p_1\right)^2 \f$ 
       inline double sigma2 
       ( const double    s     , 
         const double    s1    , 
         const double    s2    ) const { return s3 ( s , s1 , s2 ) ; }
+      // ======================================================================
       ///  \f$ \sigma_3 \equiv s_1 = \left( p_1+p_2\right)^2 \f$ 
       inline double sigma3 
       ( const double /* s  */ , 
@@ -800,15 +814,16 @@ namespace Ostap
         const double s1 , 
         const double s2 ) const ;      
       // =====================================================================
-    public:
+    public: /// The first useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
       // ======================================================================
       /// The first useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
       // ======================================================================
       /// the first x-variable is just \f$ x_1 = \cos_{R23}(12) \f$ 
-      double x1 ( const double    s    , const double    s1    , const double s2 ) const ;
+      inline double x1 ( const double    s    , const double    s1    , const double s2 ) const
+      { return cos_12_R23 ( s , s1 , s2 ) ; }
       /// the second x-variable is  \f$  x_2 = s_2 \f$ 
-      double x2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
-      { return s2 ;}
+      inline double x2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
+      { return s2 ; }
       // ======================================================================
       /** (direct) variable transformation (s1,s2)->(x1,x2)
        *   \f[ \begin{array{l} 
@@ -852,7 +867,7 @@ namespace Ostap
         const double x1 ,
         const double x2 ) const ;
       // =======================================================================
-      /**  absolute value of the jacobian  
+      /**  absolute value of the Jacobian  
        *   \f$ J( s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(x_1,x_2)} \right| \f$ 
        */
       double J
@@ -865,7 +880,7 @@ namespace Ostap
       inline double x2_min ()                 const { return s2_min ()    ; }
       inline double x2_max ( const double M ) const { return s2_max ( M ) ; }
       // ======================================================================
-    public:
+    public: /// The second useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,z_1,z_2) \f$
       // ======================================================================
       /// The second useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,z_1,z_2) \f$
       // ======================================================================
@@ -874,7 +889,7 @@ namespace Ostap
       { return x1 ( s , s1 , s2 ) ; }
       /// the second z-variable is  \f$  z_2 = \sqrt { s_2} = \sqrt{x_2} \f$ 
       inline double z2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
-      { return s2 <=0 ? 0.0 : std::sqrt ( s2 ) ; }
+      { return s2 <= 0 ? 0.0 : std::sqrt ( s2 ) ; }
       // ======================================================================
       /** (direct) variable transformation (s1,s2)->(z1,z1)
        *   \f[ \begin{array{l} 
@@ -918,7 +933,7 @@ namespace Ostap
         const double z1 ,
         const double z2 ) const { return x2s ( s , z1 , z2 * z2 ) ; }
       // ======================================================================
-      /**  absolute value of the jacobian  
+      /**  absolute value of the Jacobian  
        *   \f$ J_z( s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(z_1,z_2)} \right| \f$ 
        */
       inline double Jz
@@ -932,15 +947,15 @@ namespace Ostap
       inline double z2_min ()                 const { return m2 () + m3 () ; }
       inline double z2_max ( const double M ) const { return M - m1 () ; }
       // ======================================================================
-    public:
+    public: // The third useful variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s_2,y_1,y_2) \f$
       // ======================================================================
-      /// The second useful: variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s_2,y_1,y_2) \f$
+      /// The third useful variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s_2,y_1,y_2) \f$
       // ======================================================================
       /// the first  y-varible is just \f$ y_1 = s \f$ 
-      double y1 ( const double s , const double /* s1 */ , const double /* s2 */ ) const
+      inline double y1 ( const double s , const double /* s1 */ , const double /* s2 */ ) const
       { return s ; }
       /// the second y-varible is just \f$ y_2 = \cos_{R23}(12) \f$ 
-      double y2 ( const double s  , const double   s1    , const double s2 ) const
+      inline double y2 ( const double s , const double    s1    , const double    s2    ) const
       { return x1 ( s , s1  , s2 ) ; }
       // =======================================================================
       /** (inverse) variable transformation  
@@ -1017,11 +1032,13 @@ namespace Ostap
       ( const double s  , 
         const double s1 , 
         const double s2 ) const { return E1 ( s , s1 , s2 ) - m1 () ; } ;
+      // ======================================================================
       /// kinetic energy of 2nd particle 
       inline double T2 
       ( const double s  , 
         const double s1 , 
         const double s2 ) const { return E2 ( s , s1 , s2 ) - m2 () ; }
+      // ======================================================================
       /// kinetic energy of 3rd particle 
       inline double T3 
       ( const double s  , 
@@ -1045,18 +1062,23 @@ namespace Ostap
     private :
       // ======================================================================
       /// the first mass 
-      double m_m1 ;                                      //      the first mass 
+      double      m_m1   ;  //      the first mass 
       /// the second mass 
-      double m_m2 ;                                      //     the second mass 
+      double      m_m2   ;  //     the second mass 
       /// the third mass 
-      double m_m3 ;                                      //      the third mass 
+      double      m_m3   ;  //      the third mass 
       /// tag/hash value 
-      std::size_t          m_tag    ;                         // tag/hash value 
-      /// the precalculated quantities 
+      std::size_t m_tag  ;  // tag/hash value
+      // ======================================================================
+      /// the precalculated quantities
+      typedef std::array<double,9> CACHE1 ;
+      typedef std::array<bool,3>   CACHEB ;
       // std::array<double,9> m_cache  ;            // the precalculated quantities 
       // std::array<int,7>    m_cacheb ;            // the precalculated quantities
-      double m_cache  [9] ;                     // the precalculated quantities 
-      bool   m_cacheb [7] ;                     // the precalculated quantities
+      /// double m_cache  [9] ;                     // the precalculated quantities 
+      /// bool   m_cacheb [7] ;                     // the precalculated quantities
+      CACHE1      m_cache  ;                        // the precalculated quantities 
+      CACHEB      m_cacheb ;                        // the precalculated quantities 
       // ======================================================================      
     } ;
     // ========================================================================
@@ -1081,12 +1103,10 @@ namespace Ostap
       ( const double M  = 1 , 
         const double m1 = 0 , 
         const double m2 = 0 , 
-        const double m3 = 0 ) 
-        : Dalitz ( M , Dalitz0 ( m1 , m2 , m3 ) ) 
-      {}
+        const double m3 = 0 ) ;
       // ======================================================================
       /** constructor from all masses 
-       *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
+       *  @param m overall mass of the system, \f$\sqrt{s}\f$;
        *  @param b individual masses 
        */
       Dalitz 
@@ -1095,15 +1115,13 @@ namespace Ostap
       // ======================================================================
       /** constructor from all masses 
        *  @param b individual masses 
-       *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
+       *  @param m overall mass of the system, \f$\sqrt{s}\f$;
        */
       Dalitz 
       ( const Dalitz0& b , 
-        const double   M ) 
-        : Dalitz ( M , b ) 
-      {}
+        const double   M ) ;
       // ======================================================================
-    public:  // trivial getters 
+    public: // trivial getters 
       // ====================================================================== 
       /// \f$ s =  (p_1 + p^2 + p^3)^2 \f$
       inline double s      () const  { return S ()  ; }
@@ -1394,6 +1412,7 @@ namespace Ostap
        */
       inline double cos_31_R12  ( const double s1 , const double s2 ) const 
       { return cos_31_R12 ( s() , s1 , s2 ) ; }
+      // ======================================================================
       /** sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
        *  \f$ \sin^2 \theta_{31}^{R(1,2)}
        */
@@ -1410,12 +1429,15 @@ namespace Ostap
       ///  full energy in (2,3)-rest frame 
       inline double E_R23  ( const double s1 , const double s2 ) const   
       { return E_R23  ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// energy of 1st  particle in (2,3)-rest frame 
       inline double E1_R23 ( const double s1 , const double s2 ) const    
       { return E1_R23 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// energy of 2nd  particle in (2,3)-rest frame 
       inline double E2_R23 ( const double s1 , const double s2 ) const    
       { return E2_R23 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R23 ( const double s1 , const double s2 ) const    
       { return E3_R23 ( s () , s1 , s2 ) ; }
@@ -1428,12 +1450,15 @@ namespace Ostap
       /// total momentum in (2,3)-rest frame
       inline double P_R23   ( const double s1 , const double s2 ) const 
       { return P_R23  ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 1st particle in (2,3)-rest frame 
       inline double P1_R23  ( const double s1 , const double s2 ) const 
       { return P1_R23 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 2nd particle in (2,3)-rest frame 
       inline double P2_R23  ( const double s1 , const double s2 ) const 
       { return P2_R23 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 3rd particle in (2,3)-rest frame 
       inline double P3_R23  ( const double s1 , const double s2 ) const 
       { return P3_R23 ( s () , s1 , s2 ) ; }
@@ -1449,6 +1474,7 @@ namespace Ostap
        */
       inline double cos_12_R23  ( const double s1 , const double s2 ) const 
       { return cos_12_R23 ( s() , s1 , s2 ) ; }
+      // ======================================================================
       /** sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
        *  \f$ \sin^2 \theta_{12}^{R(2,3)}
        */
@@ -1465,12 +1491,15 @@ namespace Ostap
       ///  full energy in (3,1)-rest frame 
       inline double E_R31  ( const double s1 , const double s2 ) const    
       { return E_R31  ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// energy of 1st  particle in (3,1)-rest frame 
       inline double E1_R31 ( const double  s1 , const double s2 ) const    
       { return E1_R31 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// energy of 2nd  particle in (3,1)-rest frame 
       inline double E2_R31 ( const double s1 , const double s2 ) const    
       { return E2_R31 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R31 ( const double s1 , const double s2 ) const    
       { return E3_R31 ( s () , s1 , s2 ) ; }
@@ -1483,12 +1512,15 @@ namespace Ostap
       /// total momentum in (3,1)-rest frame
       inline double P_R31   ( const double s1 , const double s2 ) const 
       { return P_R31  ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 3rd particle in (2,3)-rest frame 
       inline double P1_R31  ( const double s1 , const double s2 ) const 
       { return P1_R31 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 2nd particle in (3,1)-rest frame 
       inline double P2_R31  ( const double    s1    , const double s2 ) const 
       { return P2_R31 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /// momentum of 1st particle in (2,3)-rest frame 
       inline double P3_R31  ( const double    s1    , const double s2 ) const 
       { return P3_R31 ( s () , s1 , s2 ) ; }
@@ -1504,6 +1536,7 @@ namespace Ostap
        */
       inline double cos_23_R31 ( const double s1 , const double s2 ) const 
       { return cos_23_R31 ( s() , s1 , s2 ) ; }
+      // ======================================================================
       /** sine squared  on the angle between 2nd and 3rd particles in the  (3,1) rest frame
        *  \f$ \sin^2 \theta_{23}^{R(3,1)}
        */
@@ -1519,9 +1552,11 @@ namespace Ostap
       ///  \f$ \sigma_1 \equiv s_2 = \left( p_2+p_3\right)^2 \f$ 
       inline double sigma1 ( const double /* s1 */ , const double    s2    ) const 
       { return s2  ; }
+      // ======================================================================
       ///  \f$ \sigma_2 \equiv s_3 = \left( p_3+p_1\right)^2 \f$ 
       inline double sigma2 ( const double    s1    , const double    s2    ) const 
       { return s3 ( s1 , s2 ) ; }
+      // ======================================================================
       ///  \f$ \sigma_3 \equiv s_1 = \left( p_1+p_2\right)^2 \f$ 
       inline double sigma3 ( const double    s1    , const double /* s2 */ ) const 
       { return s1 ; }
@@ -1538,6 +1573,7 @@ namespace Ostap
        */
       inline double cos_theta12 ( const double s1 , const double s2 ) const
       { return cos_theta12 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /** \f$ \cos \theta_{23} \f$  
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
@@ -1546,6 +1582,7 @@ namespace Ostap
        */
       inline double cos_theta23 ( const double s1 , const double s2 ) const 
       { return cos_theta23 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /**  \f$ \cos \theta_{31} \f$  
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
@@ -1567,6 +1604,7 @@ namespace Ostap
        */          
       inline double cos_zeta120 ( const double s1 , const double s2 ) const 
       { return cos_zeta120 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /** \f$ \cos \zeta_{2(3)}^{0} \f$ or \f$ \cos \hat{\theta}_{23}\f$  
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
@@ -1575,6 +1613,7 @@ namespace Ostap
        */
       inline double cos_zeta230 ( const double s1 , const double s2 ) const 
       { return cos_zeta230 ( s () , s1 , s2 ) ; }
+      // ======================================================================
       /** \f$ \cos \zeta_{3(1)}^{0} \f$ or \f$ \cos \hat{\theta}_{31}\f$  
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
@@ -1677,7 +1716,7 @@ namespace Ostap
       inline double cos_zeta123 ( const double s1 , const double s2 ) const 
       { return cos_zeta123 ( s () , s1 , s2 ) ; }
       // =====================================================================
-    public:
+    public: /// The first useful variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
       // ======================================================================
       /// The first useful variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
       // ======================================================================
@@ -1735,7 +1774,7 @@ namespace Ostap
         const double x2 ) const 
       { return x2s ( s () , x1 , x2 ) ; }
       // ======================================================================
-      /**  absolute value of the jacobian  
+      /**  absolute value of the Jacobian  
        *   \f$ J_x(s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(x_1,x_2)} \right| \f$ 
        */
       inline double J
@@ -1745,7 +1784,7 @@ namespace Ostap
       /// maximal value for x2 
       inline double x2_max () const { return s2_max () ; }
       // ======================================================================
-    public:
+    public: // The second useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,z_1,z_2) \f$
       // ======================================================================
       /// The second useful variable transformation: \f$ (s,s_1,s_2) \leftrigtharrow (s,z_1,z_2) \f$
       // ======================================================================
@@ -1802,7 +1841,7 @@ namespace Ostap
       ( const double z1 ,
         const double z2 ) const { return z2s ( s () , z1 , z2 ) ; }
       // ======================================================================
-      /**  absolute value of the jacobian  
+      /**  absolute value of the Jacobian  
        *   \f$ J_z( s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(z_1,z_2)} \right| \f$ 
        */
       inline double Jz
@@ -1811,7 +1850,7 @@ namespace Ostap
       // ======================================================================
       inline double z2_max () const { return M ()  - m1 () ; }
       // ======================================================================
-    public:   // 1-dimension 
+    public: // 1-dimension 
       // ======================================================================
       /** Dalitz density in 1-dimension:
        *  \f$  \frac{{\mathrm{d}} R_3}{{\mathrm{d}} s_2} = 
@@ -1847,11 +1886,13 @@ namespace Ostap
       { return
           m12 <= ( m1 () + m2 () ) ? 0 : m12 >= ( m_M  - m3 () ) ? 0 : 
           2 * m12 * dRds1 ( m12 * m12 ) ; }
+      // ======================================================================
       /// Dalitz density as function of \f$ m_23 = \sqrt{s_2}\f$ 
       inline double dRdm23 ( const double m23 ) const
       { return 
           m23 <= ( m2 () + m3 () ) ? 0 : m23 >= ( m_M  - m1 () ) ? 0 :
           2 * m23 * dRds2 ( m23 * m23 ) ; }
+      // ======================================================================
       /// Dalitz density as function of \f$ m_31 = \sqrt{s_3}\f$ 
       inline double dRdm31 ( const double m31 ) const
       { return 
@@ -1894,16 +1935,19 @@ namespace Ostap
     private :
       // ======================================================================
       /// the total mass 
-      double m_M ;                                       //      the total mass
-      /// the precalculated quantities 
-      // std::array<double,8> m_cache2 ;        // the precalcualted quantities
-      double m_cache2 [8] ;                     // the precalcualted quantities
+      double      m_M     ;  // the total mass
       /// tag/hash value
-      std::size_t          m_tag2   ;                         // tag/hash value
+      std::size_t m_tag2  ;  // tag/hash value
+      // ======================================================================
+      /// the precalculated quantities
+      typedef std::array<double,8> CACHE2 
+      // std::array<double,8> m_cache2 ;        // the precalculated quantities
+      // double m_cache2 [8] ;                  // the precalculated quantities
+      CACHE2      m_cache2 ;                    // the precalculated quantities
       // ======================================================================      
     } ;
     // ========================================================================
-    /** Get a full integrated phase space over Dalitz plot 
+    /** Get a full integrated phase space over the Dalitz plot 
      *  \f$  R(s) = \int \int R(s_1,s_2) {\mathrm{d}} s_1 {\mathrm{d}} s_2 =
      *  \int _{(m_2+m_3)^2}^{ (\sqrt{s}-m_1)^2}
      *  \frac{{\mathrm{d}} s_2}{s_2}

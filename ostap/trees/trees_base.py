@@ -395,9 +395,9 @@ def _rc_init_ ( chain , *args , files = () , **kwargs ) :
     """ Updated constructor for ROOT.TChain with (optional)  list of input files
     >>> chain = ROOT.TChain ( 'S' , files = ( 'a.root' , 'b.root' ) )
     """
-    print ( 'TCHAIN/INIT:', args , kwargs , files ) 
-    chain._old_init_ ( *args , **kwargs )
+    result = chain._old_init_ ( *args , **kwargs )
     if files : chain += files
+    return result
 
 if not hasattr ( ROOT.TChain , '_old_init_' ) :
     ROOT.TChain._old_init_ = ROOT.TChain.__init__

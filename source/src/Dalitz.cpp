@@ -17,6 +17,7 @@
 // ============================================================================
 #include "local_math.h"
 #include "local_hash.h"
+#include "status_codes.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::Kinematics::Dalitz
@@ -35,28 +36,28 @@ Ostap::Kinematics::Dalitz0::Dalitz0
   : m_m1 ( s_zero ( m1 ) || s_zero ( m1 * m1 ) ? 0.0 : std::abs ( m1 ) )
   , m_m2 ( s_zero ( m2 ) || s_zero ( m2 * m2 ) ? 0.0 : std::abs ( m2 ) )
   , m_m3 ( s_zero ( m3 ) || s_zero ( m3 * m3 ) ? 0.0 : std::abs ( m3 ) )
+  , m_tag ( Ostap::Utils::hash_combiner ( m_m1 , m_m2 , m_m3 ) ) 
     // precalculated quantities: s1_min/max, s2_min/max , s3_min/max, sum(s_i) & m_i^2
   , m_cache {
-  // s1_min, s2_min, s3_min
-  ( m_m1 + m_m2 ) * ( m_m1 + m_m2 )         , // [0]
-    ( m_m2 + m_m3 ) * ( m_m2 + m_m3 )       , // [1] 
-    ( m_m3 + m_m1 ) * ( m_m3 + m_m1 )       , // [2] 
-    // mass-squared 
-    m_m1 * m_m1                             , // [3] 
-    m_m2 * m_m2                             , // [4]
-    m_m3 * m_m3                             , // [5] 
-    m_m1 * m_m1 + m_m2 * m_m2 + m_m3 * m_m3 , // [6]
-    // sum of masses
-    m_m1 + m_m2 + m_m3                      , // [7]
-    // sum of masses
-    std::pow  ( m_m1 + m_m2 + m_m3 , 2 )      // [8]
+      // s1_min, s2_min, s3_min
+      ( m_m1 + m_m2 ) * ( m_m1 + m_m2 )       , // [0]
+      ( m_m2 + m_m3 ) * ( m_m2 + m_m3 )       , // [1] 
+      ( m_m3 + m_m1 ) * ( m_m3 + m_m1 )       , // [2] 
+      // mass-squared 
+      m_m1 * m_m1                             , // [3] 
+      m_m2 * m_m2                             , // [4]
+      m_m3 * m_m3                             , // [5] 
+      m_m1 * m_m1 + m_m2 * m_m2 + m_m3 * m_m3 , // [6]
+      // sum of masses
+      m_m1 + m_m2 + m_m3                      , // [7]
+      // sum of masses
+      std::pow  ( m_m1 + m_m2 + m_m3 , 2 )      // [8]
     }
   , m_cacheb { 
-    s_zero ( m_m1 ) ,
+      s_zero ( m_m1 ) ,
       s_zero ( m_m2 ) ,
       s_zero ( m_m3 )
-      }
-  , m_tag ( Ostap::Utils::hash_combiner ( m_m1  , m_m2 , m_m3 ) ) 
+    }
 {}
 // ============================================================================
 /** Is point \f$ (s_1,s_2)\f$ "inside" the Dalizt plot?
@@ -257,17 +258,13 @@ Ostap::Kinematics::Dalitz0::s1_minmax_for_s_s2
   //
   return std::make_pair ( q2 , q1 ) ;
 }
-
-
-
 // ============================================================================
 // Dalitz plot boundaries \f$ s_2^{min/max} ( s , s_1 ) \f$ 
 // ============================================================================
 std::pair<double,double>  
 Ostap::Kinematics::Dalitz0::s2_minmax_for_s_s1 
 ( const double s  ,
-  const double s1 )
-  const 
+  const double s1 ) const 
 {
   //
   static const std::pair<double,double> s_BAD { s2_min () , -s2_min () } ;
@@ -363,24 +360,24 @@ Ostap::Kinematics::Dalitz0::s2_minmax_for_s_s1
  *  \f$ \cos \theta_{12}^{R(2,3)}
  */
 // ============================================================================
-double Ostap::Kinematics::Dalitz0::x1
-( const double s  ,
-  const double s1 ,
-  const double s2 ) const
-{
-  //
-  if  ( !inside ( s , s1  , s2 ) ) { return -1000 ; }
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
-  //
-  if ( 0 >= f1 || 0 >= f2       ) { return  -1000 ; }
-  //
-  const double f = ( s - s2 - m1sq () ) * ( s2 + m2sq () - m3sq () ) 
-                            + 2 * s2 * ( m1sq () + m2sq () - s1 ) ;
-  //
-  return f / std::sqrt ( f1 * f2 ) ;
-}
+// double Ostap::Kinematics::Dalitz0::x1
+// ( const double s  ,
+//   const double s1 ,
+//   const double s2 ) const
+// {
+//  //
+//  if  ( !inside ( s , s1  , s2 ) ) { return -1000 ; }
+//  //
+//  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
+//  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+//  //
+//  if ( 0 >= f1 || 0 >= f2       ) { return  -1000 ; }
+//  //
+//  const double f = ( s - s2 - m1sq () ) * ( s2 + m2sq () - m3sq () ) 
+//                            + 2 * s2 * ( m1sq () + m2sq () - s1 ) ;
+//  //
+//  return f / std::sqrt ( f1 * f2 ) ;
+// }
 // ============================================================================
 /* (inverse) variable transformation  
  *   \f[ \begin{array{l} 
@@ -461,7 +458,7 @@ std::pair<double,double> Ostap::Kinematics::Dalitz0::y2s
   return std::make_pair ( s , s1  ) ;
 }
 // ============================================================================
-/**  absolute value of the jacobian  
+/**  absolute value of the Jacobian  
  *   \f$ J(s, s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(x_1,x_2)} \right| \f$ 
  */
 // ============================================================================
@@ -487,13 +484,16 @@ Ostap::Kinematics::Dalitz0::transpose
 ( const unsigned short i1 , 
   const unsigned short i2 ) const 
 {
-  Ostap::Assert ( 1 <= i1 && i1 <= 3 , "Invalid i1" , 
-                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
-  Ostap::Assert ( 1 <= i2 && i2 <= 3 , "Invalid i2" , 
-                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
-  Ostap::Assert ( i1 != i2           , "Invalid i1/i2" , 
-                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
-  
+  Ostap::Assert ( 1 <= i1 && i1 <= 3 , "Invalid i1"       , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ,
+		  INVALID_INDEX   , __FILE__ , __LINE__   ) ; 
+  Ostap::Assert ( 1 <= i2 && i2 <= 3 , "Invalid i2"       , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ,
+		  INVALID_INDEX   , __FILE__ , __LINE__   ) ; 
+  Ostap::Assert ( i1 != i2           , "Invalid i1/i2"    , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ,
+		  INVALID_INDICES , __FILE__ , __LINE__   ) ; 
+  //
   if      ( 1 == i1 && 2 == i2 ) { return Dalitz0 ( m1 () , m2 () , m3 () ) ; }
   else if ( 1 == i1 && 3 == i2 ) { return Dalitz0 ( m2 () , m1 () , m3 () ) ; }
   else if ( 2 == i1 && 1 == i2 ) { return Dalitz0 ( m3 () , m2 () , m1 () ) ; }
@@ -1100,29 +1100,61 @@ double Ostap::Kinematics::Dalitz0::cos_zeta123
 // ============================================================================
 // Dalitz 
 // ============================================================================
+/*   Constructor from all masses 
+ *  - M  : overall mass of the system, \f$\sqrt{s}\f$;
+ *  - m1 : the mass of the first particle  \f$ m_1 \f$;
+ *  - m2 : the mass of the second particle  \f$ m_2 \f$;
+ *  - m3 : the mass of the third particle  \f$ m_3 \f$;
+ */
+// ============================================================================
+Ostap::Kinematics::Dalitz::Dalitz
+( const double M  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+  : Dalitz ( M , Ostap::Math::Dalitz0 ( m1 , m2 , m3 ) ) 
+{}
+// ============================================================================
+/* constructor from all masses 
+ *  @param b individual masses 
+ *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
+ */
+// ============================================================================
+Ostap::Kinematics::Dalitz::Dalitz
+( const Ostap::Math::Dalitz0& b , 
+  const double                M )
+  : Dalitz ( M , b ) 
+{}
+// ======================================================================
+/*  constructor from all masses 
+ *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
+ *  @param b individual masses 
+ */
+// ======================================================================
 Ostap::Kinematics::Dalitz::Dalitz
 ( const double M  ,
   const Ostap::Kinematics::Dalitz::Dalitz0& b )   
   : Dalitz0 ( b )  
   , m_M     ( std::abs ( M  ) )
+  , m_tag2  ( Ostap::Utils::hash_combiner ( Dalitz0::tag()  , m_M ) ) 
     // precalculated quantities: s1_min/max, s2_min/max , s3_min/max, sum(s_i) & m_i^2
-  , m_cache2 { Dalitz0::s1_max ( m_M ) , // [0]
-               Dalitz0::s2_max ( m_M ) , // [1]
-               Dalitz0::s3_max ( m_M ) ,   // [2] 
-    // sum of all invariants 
-    m_M * m_M + summ2 () ,                                                          // [3] 
-    // mass-squared               
-    m_M  * m_M           ,                                                          // [4]
-    // max e1 , e2 , e3 
-    ( m_M * m_M + m1sq () - ( m2 () + m3 () ) * ( m2 () + m3 () ) ) / ( 2 * m_M ) , // [5] 
-    ( m_M * m_M + m2sq () - ( m1 () + m3 () ) * ( m1 () + m3 () ) ) / ( 2 * m_M ) , // [6] 
-    ( m_M * m_M + m3sq () - ( m1 () + m2 () ) * ( m1 () + m2 () ) ) / ( 2 * m_M )   // [7]
+  , m_cache2 { Dalitz0::s1_max ( m_M ) ,                                                       // [0]
+               Dalitz0::s2_max ( m_M ) ,                                                       // [1]
+               Dalitz0::s3_max ( m_M ) ,                                                       // [2] 
+	       // sum of all invariants 
+	       m_M * m_M + summ2 () ,                                                          // [3] 
+	       // mass-squared               
+	       m_M * m_M           ,                                                           // [4]
+	       // max e1 , e2 , e3 
+	       ( m_M * m_M + m1sq () - ( m2 () + m3 () ) * ( m2 () + m3 () ) ) / ( 2 * m_M ) , // [5] 
+	       ( m_M * m_M + m2sq () - ( m1 () + m3 () ) * ( m1 () + m3 () ) ) / ( 2 * m_M ) , // [6] 
+	       ( m_M * m_M + m3sq () - ( m1 () + m2 () ) * ( m1 () + m2 () ) ) / ( 2 * m_M )   // [7]
     }
-                 , m_tag2 ( Ostap::Utils::hash_combiner ( Dalitz0::tag()  , m_M ) ) 
-                 {
-                   Ostap::Assert ( m_M > m1 ()  + m2 () + m3 ()  , 
-                                   "Invalid masses for Dalitz" , 
-                                   "Ostap::Kinematics::Dalitz" ) ;
+{
+  Ostap::Assert ( m_M > m1 () + m2 () + m3 ()  , 
+		  "Invalid masses for Dalitz" , 
+		  "Ostap::Kinematics::Dalitz" ,
+		  INVALID_MASSES , __FILE__ , __LINE__ ) ;
 }
 // ============================================================================
 /** Is point \f$ (s_1,s_2)\f$ "inside" the Dalizt plot?

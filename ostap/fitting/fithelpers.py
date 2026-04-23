@@ -427,7 +427,6 @@ class VarMaker (object) :
             vtitle  = title if title and isinstance ( title , string_types ) else "Variable from TAxis"
             var     = ROOT.RooRealVar ( name , vtitle , var.GetXmin() , var.GetXmax() )
             var.setBinning ( binning )
-
             
         ## (1) Try to resolve ambiguity when two variables are specified:
         
@@ -720,9 +719,10 @@ class VarMaker (object) :
                 params   = vmin , vmax , unit
                 the_case = 17
                 fixed    = True
-                
-            if fixed : self.warning ( "make_var[%s]: %s + %s %s %s [case #%d]" % ( name , str ( vvars_ ) , str ( vargs_ ) , arrow_right , str ( params[:-1] ) , the_case ) )
-            else     : self.debug   ( "make_var[%s]: %s + %s %s %s [case #%d]" % ( name , str ( vvars_ ) , str ( vargs_ ) , arrow_right , str ( params[:-1] ) , the_case ) )
+
+            msg = "make_var[%s]: %s + %s %s %s [case #%d]" % ( name , str ( vvars_ ) , str ( vargs_ ) , arrow_right , str ( params[:-1] ) , the_case ) 
+            if fixed and 15 != the_case : self.warning ( msg )
+            else                        : self.debug   ( msg )
 
             ## check the name: 
             ## if usedRootID ( name ) : self.warning ( "make_var[%s]: name is already used by ROOT/RooFit" % name )
@@ -747,7 +747,6 @@ class VarMaker (object) :
             else :
                 self.warning ("make_varp%s]: ignore 'fix' of %s" % ( var.name , str ( fix ) ) )
                 
-
         ## var is either newly created or provided as RooAbsArg 
         assert isinstance ( var , ROOT.RooAbsReal ) , \
                "make_var[%s]: invalid 'var' type! %s/%s" % ( name , var , typename ( var ) ) 

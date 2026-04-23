@@ -1,3 +1,13 @@
+
+## New features
+
+  1. remove remnants of debug prints. 
+  1. tweaks for `Ostap::Math::Dalitz/Dalitz0`
+
+## Bug fixes
+  
+## Backward incompatible
+
 # v3.7.0.0
 
 ## New features
