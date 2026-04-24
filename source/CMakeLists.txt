@@ -271,12 +271,13 @@ install(EXPORT ostap-export
 
 enable_testing()
 
-add_test ( NAME ostap.test_aclic_cpp1
+add_test ( NAME ostap.test_aclic1_cpp
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC1.cpp    -q -b -l -x ) 
-add_test ( NAME ostap.test_aclic_cpp2
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC1.cpp   -b -x -l -q ) 
+add_test ( NAME ostap.test_aclic2_cpp
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC2.cpp+   -q -b -l -x ) 
-add_test ( NAME ostap.test_aclic_cpp3
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC2.cpp+  -b -x -l -q ) 
+add_test ( NAME ostap.test_aclic3_cpp
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC3.cpp++  -q -b -l -x ) 
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC3.cpp++ -b -x -l -q ) 
+

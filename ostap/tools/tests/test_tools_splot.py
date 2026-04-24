@@ -95,7 +95,7 @@ def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
     return files
 
 # =============================================================================
-## Test sPlotting macheinery (outside of RooFit)
+## Test sPlotting machinery (outside of RooFit)
 # - fill histogram for Ttree 
 # - fit the histogram
 # - make sPlot
@@ -115,7 +115,7 @@ def test_splotting  () :
 
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
 
-    chain  = data.chain 
+    chain = data.chain 
     histo = ROOT.TH1D ( hID() , 'x-distibution' , 200 , xmin , xmax  )
 
     chain.project ( histo , 'x' )
@@ -172,33 +172,34 @@ def test_splotting  () :
             chain = data.chain
             sp.add_to_tree ( chain , 'x' , prefix = 'f' if fast else 'n' , parallel = False  )
 
-
+        del fnsp
+        ## del sp
+        
     ds = model.histo_data.dset 
-    ## unbineed machinery 
+    ## unbinned machinery 
     with timing ( "Adding UNBINNED sPLOT results to TTree/TChain" , logger = logger ) :
         
         chain = data.chain 
-        sp    = sPLOT ( model , dataset = ds ) ## SPLOT IT! 
-        sp.splot2tree ( chain , 'x' , prefix = 'u' , parallel = True )
+        splot = sPLOT ( model , dataset = ds ) ## SPLOT IT! 
+        splot.splot2tree ( chain , 'x' , prefix = 'u' , parallel = True )
 
     ## COWs
     with timing ( "Adding UNBINNED COWs results to TTree/TChain" , logger = logger ) :
         
         chain = data.chain 
-        sp    = COWs ( model , dataset = ds ) ## SPLOT IT!
+        cow   = COWs ( model , dataset = ds ) ## SPLOT IT!
         names = tuple ( v.name + '_cw' for v in model.alist2 ) 
-        sp.cows2tree ( chain , 'x' , names = names  , parallel = True )
-          
+        cow.cows2tree ( chain , 'x' , names = names  , parallel = True )
+
+
     chain = data.chain
 
-    
     nS_hw = chain.statVar ( 'nS_hw' )
     fS_hw = chain.statVar ( 'fS_hw' )
     uS_sw = chain.statVar ( 'uS_sw' )
     S_cw  = chain.statVar ( 'S_cw'  )
     B_cw  = chain.statVar ( 'B_cw'  )
     
-
     dun   = chain.statVar ( 'uS_sw - nS_hw' )
     duf   = chain.statVar ( 'uS_sw - fS_hw' )
     dnf   = chain.statVar ( 'nS_hw - fS_hw' )
@@ -217,6 +218,7 @@ def test_splotting  () :
         'nS-hw - fS_hw' : dnf ,
         'uS-sw -  S_hw' : duc ,        
     }
+    
     title = "sPlot counters"
     from ostap.stats.counters import table_counters
     logger.info ( '%s\n%s' %  ( title , table_counters ( counters , prefix = '# ', title = title ) ) ) 
