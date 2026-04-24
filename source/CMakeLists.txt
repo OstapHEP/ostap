@@ -273,10 +273,10 @@ enable_testing()
 
 add_test ( NAME ostap.test_aclic_cpp1
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp    -q -b -l -x ) 
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC1.cpp    -q -b -l -x ) 
 add_test ( NAME ostap.test_aclic_cpp2
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp+   -q -b -l -x ) 
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC2.cpp+   -q -b -l -x ) 
 add_test ( NAME ostap.test_aclic_cpp3
            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary2
-	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC.cpp++  -q -b -l -x ) 
+	   COMMAND ${ROOT_EXE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src/test_ACLiC3.cpp++  -q -b -l -x ) 
