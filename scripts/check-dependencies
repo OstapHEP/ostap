@@ -101,7 +101,8 @@ check_install ( 'numpy'      , 'scipy'            , 'numba'    , 'cffi'         
                 'joblib'     , 
                 'psutil'     , 'more_itertools'   , 
                 'tabulate'   , 'sortedcontainers' , 
-                'pragmastat' , 'hep_ml'           , 
+                ## 'pragmastat' ,
+                'hep_ml'     , 
                 'zstandard'  , 'lzma'             ) 
                  
 # =============================================================================
