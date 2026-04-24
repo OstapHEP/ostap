@@ -96,7 +96,9 @@ except : # ====================================================================
 # =============================================================================
 
 ##  
-check_install ( 'numpy'      , 'scipy'            , 'numba'    , 'cffi'         ,
+check_install ( 'numpy'      , 'scipy'            , 
+                ## 'numba'      , 
+                'cffi'         ,
                 'pathos'     , 'dill'             , 'ppft'     , 'multiprocess' ,
                 'joblib'     , 
                 'psutil'     , 'more_itertools'   , 
