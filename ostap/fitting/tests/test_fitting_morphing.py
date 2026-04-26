@@ -117,8 +117,6 @@ def test_morphing_N1m () :
     
     logger = getLogger ('test_morphing_N1m')
     
-
-
     shapes = {}
 
     sigma       = 2.5
@@ -143,8 +141,6 @@ def test_morphing_N2 () :
     
     logger = getLogger ('test_morphing_N2')
     
-  
-
     shapes = {}
     
     mmin , mmax = 8.0 , 12.0
