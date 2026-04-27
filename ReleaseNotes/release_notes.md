@@ -1,5 +1,7 @@
 ## New features
 
+ 1. Add Gompertz' curve/sigmoid
+ 
 ## Bug fixes
   
 ## Backward incompatible

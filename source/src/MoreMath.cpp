@@ -7199,6 +7199,7 @@ Ostap::Math::sigmoid_type
     { "hyperbolic"       , SigmoidType::Hyperbolic       } ,
     { "trigonometric"    , SigmoidType::Trigonometric    } ,      
     { "error"            , SigmoidType::Error            } ,      
+    { "erfc"             , SigmoidType::Error            } ,      
     { "gudermannian"     , SigmoidType::Gudermannian     } ,      
     { "algebraic"        , SigmoidType::Algebraic        } ,      
     { "smoothtransition" , SigmoidType::SmoothTransition } ,
@@ -7235,6 +7236,9 @@ Ostap::Math::sigmoid_type
     //
     { "sin"              , SigmoidType::Sine             } ,
     { "sine"             , SigmoidType::Sine             } ,
+    //
+    { "absalgebraic"      , SigmoidType::AbsAlgebraic    } ,      
+    { "algebraicabs"      , SigmoidType::AbsAlgebraic    } ,      
     //
   } ;
   //
@@ -7281,6 +7285,7 @@ std::string Ostap::Math::sigmoid_name
     case Ostap::Math::SigmoidType::Polynomial_n6    : return "Polynomial_n6"    ;
       //
     case Ostap::Math::SigmoidType::Sine             : return "Sine"             ;
+    case Ostap::Math::SigmoidType::AbsAlgebraic     : return "AbsAlgebraic"     ;      
       //
     default :
       break ; 
@@ -7329,7 +7334,6 @@ double Ostap::Math::sigmoid
     case Ostap::Math::SigmoidType::Trigonometric    : return s_scale * ( s_bias + std::atan       ( z / s_scale   ) ) ;
     case Ostap::Math::SigmoidType::Error            : return 0.5     * ( 1      + std::erf        ( z * s_erf     ) ) ;
     case Ostap::Math::SigmoidType::Gudermannian     : return s_scale * ( s_bias + Ostap::Math::gd ( z / s_scale   ) ) ;      
-    case Ostap::Math::SigmoidType::Algebraic        : return 0.5     * ( 1 + ( 2 * z ) / std::hypot ( 1.0 , 2 * z ) ) ; 
     case Ostap::Math::SigmoidType::SmoothTransition : return Ostap::Math::smooth_transition ( z , -1 , 1 ) ;
     case Ostap::Math::SigmoidType::Polynomial_n0    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p0  ,  0 ) ;
     case Ostap::Math::SigmoidType::Polynomial_n1    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p1  ,  1 ) ;
@@ -7338,11 +7342,32 @@ double Ostap::Math::sigmoid
     case Ostap::Math::SigmoidType::Polynomial_n4    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p4  ,  4 ) ;
     case Ostap::Math::SigmoidType::Polynomial_n5    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p5  ,  5 ) ;
     case Ostap::Math::SigmoidType::Polynomial_n6    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p6  ,  6 ) ;
+      //
     case Ostap::Math::SigmoidType::Sine             :
       return z <= s_pi_4 ? 0 : s_pi_4 <= z ? 1.0 : 0.5 * ( 1.0 + std::sin ( 2 * z ) ) ;
+      //
+    case Ostap::Math::SigmoidType::Algebraic        : return 0.5 + z / std::hypot ( 1.0 , 2 * z ) ;
+    case Ostap::Math::SigmoidType::AbsAlgebraic     : return 0.5 + z / ( 1 + 2 * std::abs ( z ) ) ; 
     } ;
   //
   return 0 ;
+}
+// ========================================================================
+/*  Gompertz' curve/sigmoid
+ *  \f$ f(x;a,c,x_0) = \left|a|right|\mathrm{e}^{ - \mathrm{e}^{ - c ( x - x_0) } }\f$
+ *  @see https://en.wikipedia.org/wiki/Gompertz_function
+ */
+// ========================================================================
+double Ostap::Math::gompertz
+( const double x  ,
+  const double a  ,
+  const double c  ,
+  const double x0 )
+{
+  const long double  z = - c * ( x - x0 ) ;
+  const long double ez = s_EXP_OVERFLOW <= z ? 0 : std::exp ( - std::exp ( z ) ) ;
+  //
+  return a * ez ;  
 }
 // ============================================================================
 /*  variance from raw-moments

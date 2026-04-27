@@ -70,7 +70,7 @@ namespace Ostap
       Trigonometric         , // based on atan 
       Error                 , // Based on error function 
       Gudermannian          , // Based on Gudermannian function
-      Algebraic             , // 0.5 * ( 1 + 2*x / hypot ( 1 , 2*x ) )
+      Algebraic             , // 0.5 * ( 1 + 2 * x / hypot ( 1 , 2*x ) )
       SmoothTransition      , // Based on "smooth transition" function
       //
       Polynomial_n0         , // Based on "smooth step" with n=0
@@ -82,9 +82,10 @@ namespace Ostap
       Polynomial_n6         , // Based on "smooth step" with n=6
       //
       Sine                  , // based on sine-function
+      AbsAlgebraic          , // 0.5  + x / ( 1 + abs  ( 2 * x ) ) 
       //
       First = Logistic      , 
-      Last  = Sine          ,  
+      Last  = AbsAlgebraic  ,  
     } ;      	
     // ========================================================================
     /** sigmoid type
@@ -113,7 +114,20 @@ namespace Ostap
     ( const double      x                           ,
       const SigmoidType t = SigmoidType::Hyperbolic ) ;
     // ========================================================================
-        
+
+    // ========================================================================
+    /** Gompertz' curve/sigmoid
+     *  \f$ f(x;a,c,x_0) = \left|a|right|\mathrm{e}^{ - \mathrm{e}^{ - c ( x - x_0) } }\f$
+     *  @see https://en.wikipedia.org/wiki/Gompertz_function
+     *  - \f$ b = \mathrm{e}^{cx_0}\f$ 
+     */
+    double gompertz
+    ( const double x      ,
+      const double a  = 1 ,
+      const double c  = 1 ,
+      const double x0 = 0 ) ;
+    // ========================================================================
+    
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

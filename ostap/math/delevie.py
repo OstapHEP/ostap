@@ -356,7 +356,6 @@ class DeLevie(Rule) :
         a     = j * epsilon + abs ( f0 ) + abs ( x * d1 )
         e2    = e * e * ( a ** ( 2 - 2./j) ) * ( abs ( dJ ) ** (2.0/j) ) 
 
-        print ( 'HOPT' , hopt ) 
         return VE ( d1 , 4 * e2 ) 
                      
 # =============================================================================
@@ -474,9 +473,6 @@ class Derivative(object) :
         
         >>> print deriv(0.1) 
         """
-
-        print ( 'CALL' , x , args ,kwargs )
-        
         return self.__deLevie.derivative ( self.__func     ,
                                            x               ,
                                            self.__step     ,  
