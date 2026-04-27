@@ -844,7 +844,6 @@ class AFUN1(XVar,FitHelper,ConfigReducer) : ## VarMaker) :
             
             if kwargs :
                 self.warning ( "draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
-
                 
             ## a bit strange action but it helps to avoid decolorization/reset for the last created frame
             if frame :                

@@ -104,11 +104,12 @@ class LinearMorph_pdf (PDF1) :
         """'cache_alpha' : create cache for morphing parameter 'alpha'?"""
         return self.__cache_alpha
 
-
 # =============================================================================
 ## @class MorphingN1_pdf
 #  Wrapper for <code>RooMomentMorph</code> PDF
-#  @see RooMomentMorph
+#  @see ROOT.RooMomentMorphFuncND (
+#  @see ROOT.RooMomentMorph
+#
 #  @see Baak, M., Gadatsch, S., Harrington, R., & Verkerke, W. (2015).
 #       "Interpolation between multi-dimensional histograms using
 #       a new non-linear moment morphing method".
@@ -127,7 +128,7 @@ class MorphingN1_pdf (PDF1) :
     """
     def __init__ ( self                ,
                    name                , ## PDF name 
-                   pdfs                , ## dictionary {mu1,mu2 -> pdf }
+                   pdfs                , ## dictionary {mu : pdf }
                    setting    = None   , ## morphing setting 
                    morph_var  = None   , ## morphing variable mu 
                    xvar       = None ) : ## observable (1D) 
@@ -143,7 +144,7 @@ class MorphingN1_pdf (PDF1) :
         for k in pdfs :
             if xvar : break
             p = pdfs [ k ]
-            if isinstance ( p , PDF ) :
+            if isinstance ( p , PDF1 ) :
                 xvar = p.xvar
                 break
         else :
@@ -194,16 +195,16 @@ class MorphingN1_pdf (PDF1) :
 
         self.__morph_pdflst      = pdflst        
         self.__morph_observables = ROOT.RooArgList (  self.xvar )
-
+        self.__morph_muvct       = muvct 
         ## create the PDF
         if ( 6 , 31 ) <= root_info :            
             self.__morph = ROOT.RooMomentMorphFuncND (
                 self.roo_name ( 'morph1d_' )   ,
                 "Morphing 1D %s" % self.name  , 
-                self.mu                    , ## morphing variables 
+                self.mu                    , ## morphing variable
                 self.__morph_observables   , ## observables
-                self.__morph_pdflst        , ## ordered list of PDFs  
-                muvct                      , ## values of morhing parameter 
+                self.__morph_pdflst        , ## ordered list of PDFs   
+                self.__morph_muvct         , ## values of morphing parameter 
                 self.setting               ) ## morphing setting 
             self.__morph.setPdfMode()
             ## create the PDF  
@@ -219,11 +220,10 @@ class MorphingN1_pdf (PDF1) :
                 "Morphing %s" % self.name  , 
                 self.mu                    , ## morphing variable
                 self.__morph_observables   , ## observables 
-                self.__morph_pdflst        , ## ordered list of PDFs  
-                muvct                      , ## values of morhing parameter 
+                self.__morph_pdflst        , ## ordered list of PDFs
+                self.__morph_muvct         , ## values of morphing parameter 
                 self.setting               ) ## morphing setting 
-            
-            
+                        
         #
         self.config = {
             'name'      : self.name             ,
@@ -278,7 +278,7 @@ class MorphingN2_pdf (PDF1) :
     """
     def __init__ ( self                ,
                    name                , ## PDF name 
-                   pdfs                , ## dictionary {mu1,mu2 -> pdf }
+                   pdfs                , ## dictionary { mu1,mu2 : pdf }
                    setting    = None   , ## morphing setting 
                    morph_var1 = None   , ## morphing variable mu1 
                    morph_var2 = None   , ## morphing variable mu2 
@@ -386,7 +386,8 @@ class MorphingN2_pdf (PDF1) :
                 self.__morph_vars         , ## morphing variables 
                 self.__morph_observables  , ## observables 
                 self.grid               , ## morphing grid 
-                self.setting            ) ## morphing setting 
+                self.setting            ) ## morphing setting
+            
             self.__morph.setPdfMode()
             ## create the PDF  
             self.pdf = ROOT.RooWrapperPdf (
@@ -445,8 +446,6 @@ class MorphingN2_pdf (PDF1) :
         """'setting': morphing setting"""
         return self.__setting 
                        
-
-
 # =============================================================================
 ## @class MorphingN3_pdf
 #  Wrapper for <code>RooMomentMorph</code> PDF
@@ -473,7 +472,7 @@ class MorphingN3_pdf (PDF1) :
     """
     def __init__ ( self                ,
                    name                , ## PDF name 
-                   pdfs                , ## dictionary {mu1,mu2 -> pdf }
+                   pdfs                , ## dictionary {mu1,mu2.mu3 -> pdf }
                    setting    = None   , ## morphing setting 
                    morph_var1 = None   , ## morphing variable mu1 
                    morph_var2 = None   , ## morphing variable mu2 

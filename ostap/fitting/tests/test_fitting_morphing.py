@@ -7,8 +7,7 @@
 # Test module 
 # - It tests transform-PDF  
 # ============================================================================= 
-""" Test module 
-- It tests transform-PDF 
+""" Test morphing PDFs 
 """
 # ============================================================================= 
 __author__ = "Ostap developers"
@@ -45,7 +44,7 @@ varset = ROOT.RooArgSet ( mass )
 ds   = ROOT.RooDataSet ( 'ds' , '' , varset ) 
 
 h1   = ROOT.TH1D ('h' ,'' , 200 , 0 , 20 )
-N    = 10000
+N    = 5000
 for i in range ( N ) :
     v = random.gauss ( 10 , 2.5 ) 
     h1.Fill ( v )
@@ -62,11 +61,14 @@ if (6,29) <= root_info :
 
 # ============================================================================
 def test_morphingL () :
-
-    logger = getLogger ('test_morphingL')    
- 
+    """ Test LinearMorph_pdf
+    - see `ROOT.RooIntegralMorph`
+    """
     
-    pdf1 = Models.Gauss_pdf ( 'GL1'  ,
+    logger = getLogger ('test_morphingL')    
+    logger.info ( 'test LinearMorph_pdf/ROOT.RooIntegralMorph' ) 
+    
+    pdf1 = Models.Gauss_pdf ( 'GLinear1'   ,
                               xvar  = mass ,
                               mean  = ROOT.RooFit.RooConst ( 10 ) ,
                               sigma = ROOT.RooFit.RooConst ( 1  ) )
@@ -88,32 +90,42 @@ def test_morphingL () :
 
 # ============================================================================
 def test_morphing_N1s() :
-
+    """ Test MorphingN1_pdf
+    """
     logger = getLogger ('test_morphing_N1s')    
-  
+    
 
     shapes = {}
 
     mean        = 10 
     smin , smax = 0.5 , 5.0
     
-    for i , sigma in  enumerate ( vrange ( smin , smax , 20 ) ) :
+    for i , sigma in  enumerate ( vrange ( smin , smax , 10 ) ) :
         gauss = Models.Gauss_pdf ( 'G1_%d' % i ,
                                    xvar  = mass ,
                                    mean  = ROOT.RooFit.RooConst ( mean  ) ,
                                    sigma = ROOT.RooFit.RooConst ( sigma ) )
         shapes [ sigma ] = gauss
+        with use_canvas ( 'test_morphing_N1s:components' ) :
+            gauss.draw ()
         
     ## create morphing PDF 
     pdf  = MorphingN1_pdf ( 'N1s' , shapes , xvar =  mass )
-            
+
+        
     with use_canvas ( 'test_morphing_N1s' , wait = 1 ) :
+        ## r , f = pdf.fitTo ( ds , draw = True , nbins = 100 , silent = True , **conf )
         r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True , **conf )
         logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
 
 # ============================================================================
 def test_morphing_N1m () :
+    """ Test MorphingN1_pdf
+    - see `MorphingN1_pdf`
+    - see `ROOT.RooMomentMorphFuncND`
+
+    """
     
     logger = getLogger ('test_morphing_N1m')
     
@@ -122,7 +134,7 @@ def test_morphing_N1m () :
     sigma       = 2.5
     mmin , mmax = 5.0 , 15.0
     
-    for j , mean in  enumerate ( vrange ( mmin , mmax , 20 ) ) :
+    for j , mean in  enumerate ( vrange ( mmin , mmax , 10 ) ) :
         gauss = Models.Gauss_pdf ( 'G2_%d' % j  , 
                                    xvar  = mass ,
                                    mean  = ROOT.RooFit.RooConst ( mean  ) ,
@@ -138,6 +150,8 @@ def test_morphing_N1m () :
     
 # ============================================================================
 def test_morphing_N2 () :
+    """ Test MorphingN2_pdf
+    """
     
     logger = getLogger ('test_morphing_N2')
     
@@ -155,8 +169,7 @@ def test_morphing_N2 () :
             shapes [ mean , sigma ] = gauss
             ## logger.info ( 'Add [%2d,%2d] = [%6.3f,%6.2f] component ' % ( i , j , mean , sigma ) )
             
-    ## create morphing PDF
-    
+    ## create morphing PDF    
     pdf  = MorphingN2_pdf ( 'N2' , shapes , xvar =  mass )
             
     with use_canvas ( 'test_morphing_N2' , wait = 1) :
@@ -167,11 +180,14 @@ def test_morphing_N2 () :
 if '__main__' == __name__ :
 
     with timing ("MorphingL" , logger ) :  
-        test_morphingL      () 
+        test_morphingL      ()
+        
     with timing ("Morphing_N1s" , logger ) :  
-        test_morphing_N1s   () 
+        test_morphing_N1s   ()
+        
     with timing ("Morphing_N1m" , logger ) :  
-        test_morphing_N1m   () 
+        test_morphing_N1m   ()
+        
     with timing ("Morphing_N2" , logger ) :  
         test_morphing_N2    () 
     

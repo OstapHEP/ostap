@@ -1456,7 +1456,7 @@ class APDF1 ( Components ) :
         if not isinstance ( dataset , ROOT.RooAbsData ) and hasattr ( dataset , 'dset' ) :
             dataset = dataset.dset
 
-        ## get all parametrs
+        ## get all parameters
         pars = self.params ( dataset )
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
