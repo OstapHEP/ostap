@@ -671,7 +671,7 @@ std::intmax_t Ostap::Math::round ( const long double x )
 {
   //
   static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest ()     } ;
-  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    ()  } ;
+  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () - 1 } ;
   //
   return
     x <= s_min ? s_min :
@@ -694,7 +694,7 @@ std::intmax_t Ostap::Math::round_half_even ( const double v )
 {
   //
   static const std::intmax_t s_min { std::numeric_limits<std::intmax_t>::lowest ()     } ;
-  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    ()  } ;
+  static const std::intmax_t s_max { std::numeric_limits<std::intmax_t>::max    () - 1 } ;
   //
   const long double vv = v ; 
   if      ( vv <= s_min ) { return s_min ; } 
