@@ -128,7 +128,10 @@ class CompressShelf (shelve.Shelf,CUBase) :
             writeback   = False    ,
             silent      = True     ,
             keyencoding = ENCODING , **kwargs ) :
-        
+
+        ## opened? 
+        self.__opened = False
+
         ## the mode 
         mode = _modes_.get( mode.lower() , '' )
         if not mode :
@@ -138,8 +141,6 @@ class CompressShelf (shelve.Shelf,CUBase) :
         if not 0 <= protocol <= HIGHEST_PROTOCOL :
             logger.warning ("Invalid pickle protocol:%s, replace with:%s" % ( protocol , PROTOCOL ) ) 
             protocol = PROTOCOL 
-            
-        self.__opened          = False        
         
         ## expand the actual file name
         dbname_ = dbname
@@ -244,7 +245,7 @@ class CompressShelf (shelve.Shelf,CUBase) :
         # =====================================================================
         self.__opened = False        
         dbase = dbopen ( self.dbname , flag = mode , dbtype = dbtype , **kwargs )
-        self.__opened        = True
+        self.__opened = True
         if 'r' != mode and hasattr ( dbase , 'sync' ) : dbase.sync()
         
         # =======================================================================
