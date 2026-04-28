@@ -290,7 +290,6 @@ def top_dir ( rdir ) :
 ROOT.TNamed.top_dir = property ( top_dir , None , None , top_dir . __doc__ )
 ROOT.TNamed.topdir  = property ( top_dir , None , None , top_dir . __doc__ )
 
-
 # =======================================================================================
 ## write the (T)object to ROOT-file/directory
 #  @code
@@ -312,9 +311,11 @@ def _rd_setitem_ ( rdir , name , tobj ) :
     elif not rdir.IsWritable () :
         raise IOError ( "TDirectory '%s' is not writable" % rdir.GetPath() ) 
     ##
+    if isinstance ( name , bytes ) : name = name.decode ( 'utf-8' )
+    ## 
     with ROOTCWD() :
         ##
-        dirname , sep , fname = name.partition('/')
+        dirname , sep , fname = name.partition ( '/' )
         ##
         while sep :
             rdir.cd() 
@@ -332,7 +333,7 @@ def _rd_setitem_ ( rdir , name , tobj ) :
         rdir.cd()
         
         from ostap.utils.root_utils import implicitMT  
-        with implicitMT ( False ) : 
+        with implicitMT ( False ) :
             return rdir.WriteTObject( tobj , dirname , 'WriteDelete' )
         
         ## DO NOT DELETE OBJECT IN ROOT 
@@ -395,11 +396,12 @@ def _rd_key_object_ ( rdir , name ) :
     >>> t = f.get_key_object ('A/tup') 
     >>> h = f.get_key_object ('histo') 
     """
-    ##
+    ## 
     if not rdir : raise IOError ( "TDirectory is invalid" )
     ##
     with ROOTCWD() :
         ##
+        if isinstance ( name , bytes ) : name = name.decode ( 'utf-8' )
         dirname , sep , fname = name.partition('/')
         ##
         while sep :
@@ -435,6 +437,7 @@ def _rd_getitem_ ( rdir , name ) :
     ##
     with ROOTCWD() :
         ##
+        if isinstance ( name , bytes ) : name = name.decode ( 'utf-8' )
         dirname , sep , fname = name.partition('/')
         ##
         while sep :
@@ -480,6 +483,7 @@ def _rd_getattr_ ( rdir , name ) :
     ##
     with ROOTCWD() :
         ##
+        if isinstance ( name , bytes ) : name = name.decode ( 'utf-8' )
         dirname , sep , fname = name.partition('/')
         if sep : raise AttributeError('TDirectory[]: invalid attribute %s.%s' % rdir.GetPath() , dirname )
 
@@ -504,9 +508,9 @@ def _rd_contains_ ( rdir , name ) :
     ##
     if not rdir : return False 
     ##
-    name = str ( name ) 
     with ROOTCWD() :
         ##
+        if isinstance ( name , bytes ) : name = name.decode ( 'utf-8' )
         dirname , sep , fname = name.partition('/')
         ##
         while sep :
@@ -540,6 +544,7 @@ def _rd_delitem_ ( rdir , name , cycle=';*') :
     ##
     with ROOTCWD () :
         ##
+        if isinstance ( name , bytes ) : name = name.decode ( 'utf-8' )
         dirname , sep , fname = name.partition('/')
         ##
         while sep :
@@ -810,9 +815,13 @@ def _rd_rm_ ( rdir , name , cycle=';*') :
     >>> rfile.rm('mydir/h1')
     """
     ##
-    try :
+    # ==========================================================================
+    try : # ====================================================================
+        # ======================================================================
         return _rd_delitem_ ( rdir , name , cycle )
-    except KeyError :
+        # ======================================================================
+    except KeyError : # ========================================================
+        # ======================================================================
         return
             
 # ===============================================================================
@@ -831,9 +840,13 @@ def _rd_get_ ( rdir , name , default = None ) :
     ##
     if not rdir : return default 
     ##
-    try :
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
         return _rd_getitem_ ( rdir , name )
-    except KeyError :
+        # =======================================================================
+    except KeyError : # =========================================================
+        # =======================================================================
         return default
 
 # =============================================================================
@@ -1165,7 +1178,7 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
         return rinit
     
 # ============================================================================
-## create ROOT.TFile without making it a current working directory 
+## Open ROOT.TFile without making it a current working directory 
 #  @code
 #  print ROOT.gROOT.CurrentDirectory()
 #  f = ROOT.TFile.Open('test_file.root','recreate')
@@ -1266,8 +1279,8 @@ def _rf_exit_  ( self , *_ ) :
 
 # =============================================================================
 ## another name, just for convinince
-open = _rf_new_open_
-
+open      = _rf_new_open_
+root_open = open 
 # =============================================================================
 if hasattr ( ROOT.TFile , '_new_init_' ) and hasattr ( ROOT.TFile , '_old_init_' ) : pass
 else :

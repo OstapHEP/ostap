@@ -63,7 +63,6 @@ from   ostap.logger.logger    import getLogger, logColor, logNoColor
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
-
 # =============================================================================
 ## format list of strings into multicolumn string
 #  @code 

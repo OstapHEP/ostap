@@ -1,6 +1,7 @@
 ## New features
 
  1. Add Gompertz' curve/sigmoid
+ 1. Allow to specify the (ordered) list of preferrable DBASE backends via new environment variable `OSTAP_DBTYPES`
  
 ## Bug fixes
   

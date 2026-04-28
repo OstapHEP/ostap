@@ -24,7 +24,7 @@
  */
 // ============================================================================
 PyObject* Ostap::blob_to_bytes ( const Ostap::BLOB& blob ) 
-{ return  PyBytes_FromStringAndSize ( (const char*) blob.buffer () , blob.size () ) ; }
+{ return PyBytes_FromStringAndSize ( (const char*) blob.buffer () , blob.size () ) ; }
 // ============================================================================
 /*  convert bytes to blob 
  *  @see   Ostap::BLOB
@@ -39,10 +39,10 @@ PyObject* Ostap::blob_from_bytes ( Ostap::BLOB& blob , PyObject* bytes )
   // check the arguments 
   //
   if ( nullptr == bytes || !PyBytes_Check  ( bytes ) ) 
-    {
-      PyErr_SetString( PyExc_TypeError, "Invalid bytes/string object" ) ;
-      return NULL ;
-    } 
+  {
+    PyErr_SetString ( PyExc_TypeError, "Invalid bytes/string object" ) ;
+    return NULL ;
+  } 
   //
   // set the blob 
   //

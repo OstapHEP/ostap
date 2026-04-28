@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 # @file ostap/io/dbase.py
-# 
 # Helper module to use databases
-#
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2020-05-16
 # =============================================================================
@@ -16,12 +14,13 @@ __date__    = "2020-05-16"
 __version__ = "$Revision:$" 
 # =============================================================================
 __all__ = (
-    'whichdb'    , ## guess database type
-    'isdbase'    , ## ditto 
-    'dbopen'     , ## open database
-    'Item'       , ## item: named tuple (time,payload)
-    'TmpDB'      , ## mixin for temporary database
-    
+    'whichdb'              , ## guess the database type
+    'isdbase'              , ## ditto 
+    'dbopen'               , ## open database
+    'Item'                 , ## item: named tuple (creation time & payload)
+    'TmpDB'                , ## mixin for temporary database
+    'available_backends'   , ## List of available DBASE backends 
+    'preferrable_backends' , ## List of available DBASE backends 
     )
 # =============================================================================
 import sys, os, collections
@@ -42,28 +41,54 @@ except ImportError : # ========================================================
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
-import dbm                    as std_db
-std_whichdb = std_db.whichdb
-# =============================================================================
 ordered_dict = dict
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
     import dbm.gnu  as db_gnu
+    db_gnu_types = 'dbm.gnu'  , 'gdbm' , 'gnu' , 'dbm'
     # =========================================================================
-except ImportError :
+except ImportError : # ========================================================
     # =========================================================================
     db_gnu = None
 # =============================================================================
 try : # =======================================================================
     # =========================================================================
     import dbm.ndbm as db_dbm
+    db_ndbm_types =  'dbm.ndbm' , 'ndbm' 
     # =========================================================================
-except ImportError :
+except ImportError : # ========================================================
     # =========================================================================
     db_dbm = None
 # =============================================================================
 import dbm.dumb as db_dumb
+db_dumb_types = 'dbm.dumb' , 'dumbdbm' , 'dumb' 
+db_std_types  = 'std' , 'stddb' , 'standard' 
+# =============================================================================
+## Check sqlite3 
+# =============================================================================
+if ( 3 , 13 ) <= sys.version_info : # =========================================
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        import dbm.sqlite3
+        def sqlite3_open ( filename     ,
+                           flag = 'c'   ,
+                           mode = 0o660 , **kwargs ) :
+            ## 
+            return dbm.sqlite3.open ( filename    ,
+                                      flag = flag ,
+                                      mode = mode )
+        use_sqlite3 = True
+        db_sqlite3_types = 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' 
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================       
+        use_sqlite3 = False
+    # =========================================================================
+else : # ======================================================================
+    # =========================================================================
+    use_sqlite3 = False
 # =============================================================================
 ## Check for Berkeley DB
 # =============================================================================
@@ -102,14 +127,14 @@ try : # =======================================================================
         db = berkeleydb.db.DB ( dbenv )
         db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flag ]  , mode )
         
-        return db        
-
+        return db
+    
+    db_berkeley_types = 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash'
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
     berkeleydb      = None
     use_berkeleydb  = False 
-
 # =============================================================================
 ## Check for BSDDB3 
 # =============================================================================
@@ -125,35 +150,35 @@ if sys.version_info < ( 3 , 10 ) :
         def bsddb3_open ( filename        ,
                           flag    = 'c'   ,
                           mode    = 0o660 , **kwargs ) :
-            """ Open `bsddb3` database """
+            """ Open `bsddb3` database
+            """
             return bsddb3.hashopen ( filename , flag = flag  , mode = mode , **kwargs )        
         use_bsddb3  = True
+        db_bsddb_types = 'bsddb3' , 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash' 
         # =====================================================================
     except ImportError  : # ===================================================
         # =====================================================================
         bsddb3      = None 
         use_bsddb3  = False 
-
 # =============================================================================
-if ( 3 , 13 ) <= sys.version_info : # =========================================
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        import dbm.sqlite3
-        def sqlite3_open ( filename   ,
-                           flag = 'c' ,
-                           mode    = 0o660 , **kwargs ) :
-            return dbm.sqlite3.open ( filename , flag = flag , mode = mode )
-        use_sqlite3 = True 
-        # ====================================================================
-    except ImportError : # ===================================================
-        # ====================================================================        
-        use_sqlite3 = False
-    # ========================================================================
-else : # =====================================================================
-    # ========================================================================
-    use_sqlite3 = False
-    
+import dbm                    as std_db
+std_whichdb = std_db.whichdb
+# =============================================================================
+## available DB types: 
+available_backends = set ( db_std_types ) 
+if use_berkeleydb : available_backends.update ( db_berkeley_types ) 
+if use_sqlite3    : available_backends.update ( db_sqlite3_types  ) 
+if db_dumb        : available_backends.update ( db_dumb_types     ) 
+if db_gnu         : available_backends.update ( db_gnu_types      ) 
+if db_dbm         : available_backends.update ( db_ndbm_types     ) 
+if use_bsddb3     : available_backends.update ( db_bsddb3_types   ) 
+available_backends = frozenset ( available_backends )
+# ============================================================================
+## check the environment variable for the preferred DBASE backends 
+from ostap.utils.env import get_env, OSTAP_DBTYPES
+preferrable_backends = tuple ( t for t in get_env ( OSTAP_DBTYPES , '' ).lower().split ( os.pathsep ) if t in available_backends ) 
+# =============================================================================
+
 # =============================================================================
 ##  Guess which db package to use to open a db file.
 #  
@@ -305,7 +330,14 @@ def dbopen ( file               ,
 
     if 'c' in flag and '' == check :
         check = None 
-        if os.path.exists ( file ) and os.path.isfile ( file ) : os.unlink ( file ) 
+        if os.path.exists ( file ) and os.path.isfile ( file ) :
+            # =====================================================================================
+            try : # ===============================================================================
+                os.unlink ( file )
+                # =================================================================================
+            except OSError : # ====================================================================
+                # =================================================================================
+                logger.warning ( "dbopen: unable to unlink file:`%s'" % file , exc_info = True ) 
 
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
@@ -314,64 +346,83 @@ def dbopen ( file               ,
         elif not dbtype                : db_types = () 
         else                           : db_types = tuple ( db.lower() for db in dbtype ) 
 
-        if kwargs : message = 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] )
-        else      : message = '' 
+        
+        def _extra_args_ ( **kw ) :
+            if not kw : return
+            from ostap.logger.utils import print_args
+            title  = 'dbopen: Unused %d arguments' % len ( kw )
+            table  = print_args ( prefix = '# ' , **kw )
+            logger.warning ( '%s:\n%s' % ( title , table ) )
+            
+        the_dbs = dbtype if dbtype else preferrable_backends 
         
         ## check the preferred database type:
-        for db in db_types :
-                        
-            if   use_berkeleydb and db in ( 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash'   , '' ) :  ## NB!!
-                return berkeleydb_open ( file            , flag , mode , **kwargs ) 
-            elif SQLiteDict     and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' , '' ) : ## NB!!
+        for db in the_dbs :
+
+            if   use_berkeleydb and ( db in db_berkeley_types or not db ) : 
+                return berkeleydb_open ( file            , flag , mode , **kwargs )            
+            elif SQLiteDict     and ( db in db_sqlite3_types  or not db ) : ## NB!!
                 return SQLiteDict      ( filename = file , flag = flag , **kwargs )                        
-            elif use_sqlite3    and db in ( 'dbm.sqlite3' , 'sqlite3' , 'sqlite'  , 'sql3' , 'sql' , '' ) : ## NB
-                if kwargs : logger.warning ( message ) 
+            elif use_sqlite3    and ( db in db_sqlite3_types  or not db ) : ## NB!!
+                _extra_args_ ( **kwargs )
                 return sqlite3_open ( file , flag , mode )
-            elif use_bsddb3     and db in ( 'bsddb3' , 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash' ) : 
+            elif use_bsddb3     and db in db_bsddb3_types :  
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
-            elif db_gnu  and db in ( 'dbm.gnu'  , 'gdbm' , 'gnu' , 'dbm' ) :
-                if kwargs : logger.warning ( message ) 
+            elif db_gnu  and db in db_gnu_types  : 
+                _extra_args_ ( **kwargs )
                 return db_gnu.open ( file , flag , mode )
-            elif db_dbm  and db in ( 'dbm.ndbm' , 'ndbm' ) :
-                if kwargs : logger.warning ( message  ) 
+            elif db_dbm  and db in db_ndbm_types : 
+                _extra_args_ ( **kwargs )
                 return db_dbm.open ( file , flag , mode )
-            elif db in ( 'dbm.dumb' , 'dumbdbm' , 'dumb' ) :
-                if kwargs : logger.warning ( message ) 
+            elif db in db_dumb_types : 
+                _extra_args_ ( **kwargs )
                 return db_dumb.open ( file , flag , mode )
-            elif db in  ( 'std' , 'standard' ) or not db :                                     ## NB !! 
-                if kwargs : logger.warning ( message )                 
+            
+            elif db in  db_std_types or not db :                                     ## NB !! 
+                _extra_args_ ( **kwargs )
                 return std_db.open ( file , flag , mode )
 
-        if db_types : logger.warning  ( 'DB-type hints not used: [%s]' %  (  ','.join ( db for fn in db_types ) ) ) 
+            elif db == 'root' : 
+                from ostap.io.root_file import root_open                
+                return root_open ( file , mode = flag , **kwargs ) 
+
+        if the_dbs : logger.warning  ( 'DB-type hints not used: [%s]' %  (  ','.join ( db for fn in the_dbs ) ) ) 
 
         ## require the concurrent database 
         if concurrent :
+            ## 
             if   use_berkeleydb : return berkeleydb_open ( file            , flag , mode , **kwargs ) 
-            elif use_bsddb3     : return bsddb3_open     ( file            , flag , mode , **kwargs ) 
             elif SQLiteDict     : return SQLiteDict      ( filename = file , flag = flag , **kwargs )
             elif use_sqlite3    :
-                if kwargs : logger.warning ( message ) 
+                _extra_args_ ( **kwargs )
                 return sqlite3_open ( file , flag , mode )
-            logger.warning ( "No concurrent dbase backend is available" )
+            elif use_bsddb3     : return bsddb3_open     ( file            , flag , mode , **kwargs )
+            ## 
+            logger.warning ( "No concurrent DBASE-backend is available" )
             
-        if kwargs : logger.warning ( message ) 
+        _extra_args_ ( **kwargs )
         return std_db.open ( file , flag , mode ) 
 
-    if use_berkeleydb and check in ( 'berkeleydb' , 'bsddb3' , 'dbhash' ) :
+    if use_berkeleydb and check in db_berkeley_types :
         return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
-    if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
-        return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
-
-    if SQLiteDict     and check in ( 'sqlite3' , 'sqlite' ) :
+    if SQLiteDict     and check in db_sqlite3_types :
         return SQLiteDict ( filename = file , flag = flag , **kwargs )
 
-    if kwargs : logger.warning ( 'Ignore extra %d arguments:%s' % ( len ( kwargs ) , [ k for k in kwargs ] ) ) 
+    if use_bsddb3     and check in db_bsddb3_types :
+        return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
+    
+    _extra_args_ ( **kwargs )
 
     ## dbm.sqlite3 
-    if use_sqlite3 : return sqlite3_open ( file , flag , mode )
+    if use_sqlite3    and check in db_sqlite3_types :
+        return sqlite3_open ( file , flag , mode )
 
-    ## as a lasty resort - use the standard stuff 
+    if check == 'root' : 
+        from ostap.io.root_file import root_open                
+        return root_open ( file , mode = flag , **kwargs ) 
+
+    ## as a last resort - use the standard stuff 
     return std_db.open ( file , flag , mode )  
     
 # =============================================================================
@@ -476,12 +527,16 @@ if '__main__' == __name__ :
 
     logger.info  ('Available DB-backends are:' )
     if use_berkeleydb : logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb  ) ) 
-    if use_bsddb3     : logger.info ( ' - BSDDB3     : %s' % str ( bsddb3      ) ) 
-    if db_gnu         : logger.info ( ' - GNU dbase  : %s' % str ( db_gnu      ) ) 
+    if SQLiteDict     : logger.info ( ' - SQLITEDICT : %s' % str ( ostap.io.sqlitedict ) )
+    if use_sqlite3    : logger.info ( ' - SQLITE3    : %s' % str ( dbm.sqlite3 ) ) 
+    if db_gnu         : logger.info ( ' - GNU DB     : %s' % str ( db_gnu      ) ) 
     if db_dbm         : logger.info ( ' - NDBM       : %s' % str ( db_dbm      ) ) 
     if db_dumb        : logger.info ( ' - DUMB       : %s' % str ( db_dumb     ) ) 
-    if use_sqlite3    : logger.info ( ' - SQLITE3    : %s' % str ( dbm.sqlite3 ) ) 
-    logger.info ( ' - SQLITEDICT : %s' % str ( ostap.io.sqlitedict ) ) 
+    if use_bsddb3     : logger.info ( ' - BSDDB3     : %s' % str ( bsddb3      ) ) 
+
+    logger.info  ('Available   DB-backends are: %s' % ','.join ( b for b in available_backends   ) )
+    logger.info  ('Preferrable DB-backends are: %s' % ','.join ( b for b in preferrable_backends ) )
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

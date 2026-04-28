@@ -74,7 +74,7 @@ ENCODING = 'utf-8'
 _modes_ = {
     # =========================================================================
     # 'r'	Open existing database for reading only
-    # 'w'	Open existing database for reading and writing
+    # 'w'	Open existing database for reading and writing[
     # 'c'	Open database for reading and writing, creating it if it doesn't exist
     # 'n'	Always create a new, empty database, open for reading and writing
     # =========================================================================
@@ -680,9 +680,12 @@ class CompressShelf (shelve.Shelf,CUBase) :
         """ `get-and-uncompress-item' from dbase
         >>> value = dbase['item'] 
         """
-        try:            
+        # =====================================================================
+        try: # ================================================================
             value = self.cache [ key ]
-        except KeyError:            
+            # =================================================================
+        except KeyError: # ====================================================
+            # =================================================================
             value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] ) 
             if self.writeback : self.cache [ key ] = value
             
@@ -697,11 +700,15 @@ class CompressShelf (shelve.Shelf,CUBase) :
         """ `get-and-uncompress-item' from dbase
         >>> value =   dbase.get ( 'item' , default ) 
         """
-        try : 
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
             value = self.__get_raw_item__ ( key )
             if isinstance ( value , Item ) : value = value.payload
-            return value 
-        except KeyError :
+            return value
+            # =================================================================
+        except KeyError : # ===================================================
+            # =================================================================
             return default
 
     # =========================================================================

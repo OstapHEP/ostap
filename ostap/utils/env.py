@@ -46,6 +46,8 @@ __all__     = (
     'OSTAP_PROFILE'      , ## Profiel the processing? 
     ## 
     'OSTAP_TABLE'        , ## Ostap table style
+    ## 
+    'OSTAP_DBTYPES'      , ## preferred DB-types for new databases 
     ##
     'OSTAP_STARTUP'      , ## startup files to be (pre)execucted
     ## 
@@ -86,6 +88,8 @@ OSTAP_STARTUP       = 'OSTAP_STARTUP'      ## list of startup files to be (pre)e
 OSTAP_PROTOCOL      = 'OSTAP_PROTOCOL'     ## pickling protocol 
 ##
 OSTAP_DIR           = 'OSTAP_DIR'
+## 
+OSTAP_DBTYPES       = 'OSTAP_DBTYPES'      ## preferred DB types for newly created databases 
 
 # =============================================================================
 ## list of "boolean false" values 

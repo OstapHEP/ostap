@@ -197,7 +197,7 @@ class RootOnlyShelf(shelve.Shelf):
         return new_db 
 
     # =========================================================================
-    ##  Iterator over avilable keys (patterns included).
+    ##  Iterator over available keys (patterns included).
     #   Pattern matching is performed accoriding to
     #   fnmatch/glob/shell rules (default) or regex 
     #   @code  
@@ -243,22 +243,26 @@ class RootOnlyShelf(shelve.Shelf):
         return self.dict.get ( key , default ) 
 
     # =============================================================================
-    ## get item from ROOT-file
+    ## get item from the ROOT-file
     #  @code
     #  obj = db['A/B/C/histo']
     #  @endcode 
     #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
     #  @date   2015-07-31 
     def __getitem__ ( self , key ) :
-        """Get the item from ROOT-file
+        """ Get the item from ROOT-file
         >>> obj = db['A/B/C/histo']
         """
-        try:
+        # ==========================================================================
+        try: # =====================================================================
+            # ======================================================================
             value = self.cache [ key ]
-        except KeyError:
+            # =====================================================================
+        except KeyError: # ========================================================
+            # =====================================================================
             value = self.dict [ key ] 
-            if self.writeback:
-                self.cache [ key ] = value
+            if self.writeback: self.cache [ key ] = value
+            
         return value
 
     # ==============================================================================
@@ -342,11 +346,13 @@ def _ros_delitem_  ( self , key ) :
     except KeyError: # ========================================================
         # =====================================================================
         pass
-    
+
+# =============================================================================
 RootOnlyShelf.__iter__     = _ros_iter_ 
 RootOnlyShelf.__contains__ = _ros_contains_
 RootOnlyShelf.__ros_get__  = _ros_get_
 RootOnlyShelf.__delitem__  = _ros_delitem_
+# =============================================================================
     
 # =============================================================================
 ## @class RootShelf
@@ -417,7 +423,7 @@ class RootShelf(RootOnlyShelf):
 
     @property
     def protocol ( self ) :
-        """``protocol'' : pickle protocol"""
+        """`protocol' : pickle protocol"""
         return self.__protocol
     @property
     def compresslevel ( self ) :
@@ -433,14 +439,16 @@ class RootShelf(RootOnlyShelf):
     #   @author Vanya BELYAEV Ivan.Belyaev@cern.ch
     #   @date   2015-07-31 
     def __getitem__ ( self , key ):
-        """ Get object (unpickle if needed)  from dbase
+        """ Get the object (unpickle if needed)  from dbase
         >>> obj = db['A/B/C']
         """
-
-        try:    
+        # ========================================================================
+        try: # ===================================================================
+            # ====================================================================
             value = self.cache [ key ]
-        except KeyError:
-
+            # ====================================================================
+        except KeyError: # =======================================================
+            # ====================================================================
             ## value = self.dict [ key ]
             tkey , value = self.dict.get_key_object ( key )
             self.__sizes [ key ] = tkey.GetNbytes()
@@ -448,20 +456,21 @@ class RootShelf(RootOnlyShelf):
             ## blob ?
             from  ostap.core.core import  Ostap
             if isinstance ( value , Ostap.BLOB ) :
-                ## unpack it!
+                ## (1) unpack it!
                 z     = Ostap.blob_to_bytes ( value )
+                ## (2) decompress 
                 u     = zlib.decompress ( z )
-                ## unpickle it! 
+                ## (3) unpickle it! 
                 f     = BytesIO ( u )
                 value = Unpickler(f).load()
-                del z , u , f            
-            if self.writeback:
-                self.cache[key] = value
+                del z , u , f
+                
+            if self.writeback : self.cache[key] = value
                 
         return value
     
     # =============================================================================
-    ##  Add object (pickle if needed)  to dbase
+    ##  Add object (pickle it if needed)  to dbase
     #   @code
     #   db['A/B/C'] = obj
     #   @endcode
@@ -471,9 +480,9 @@ class RootShelf(RootOnlyShelf):
         """ Add object (pickle if needed)  to dbase
         >>> db['A/B/C'] = obj
         """
-        if self.writeback:
-            self.cache [ key ] = value
-            
+        if self.writeback: self.cache [ key ] = value
+
+        blob = None 
         ## not TObject? pickle it and convert to Ostap.BLOB
         if not isinstance  ( value , ROOT.TObject ) :
             ## (1) pickle it 
@@ -492,13 +501,8 @@ class RootShelf(RootOnlyShelf):
         
         ## finally use ROOT 
         self.dict [ key ] = value
+        if blob : del blob 
 
-    ## close the database 
-    ## def close ( self ) :
-    ##    """ Close the database
-    ##    """
-    ##    RootOnlyShelf.close ( self )
-        
     # =========================================================================
     ## list the available keys 
     def ls    ( self , pattern = '' , load = True ) :
@@ -513,10 +517,14 @@ class RootShelf(RootOnlyShelf):
         """
         n  = os.path.basename ( self.filename )
         ap = os.path.abspath  ( self.filename ) 
-        
-        try :
+
+        # =======================================================================
+        try : # =================================================================
+            # ===================================================================
             fs = os.path.getsize ( self.filename )
-        except :
+            # ===================================================================
+        except : # ==============================================================
+            # ===================================================================
             fs = -1
             
         if    fs < 0            : size = "???"
@@ -527,8 +535,7 @@ class RootShelf(RootOnlyShelf):
             size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
         else :
             size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
-            
-                        
+                                    
         keys = [] 
         for k in self.ikeys ( pattern ): keys.append ( k )
         keys.sort()
@@ -605,7 +612,7 @@ def open ( filename              ,
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-07-31 
 class TmpRootShelf(RootShelf,TmpDB):
-    """The actual class for TEMPORARY ROOT-based shelve-like data base
+    """ The actual class for TEMPORARY ROOT-based shelve-like data base
     it implement shelve-intergase with underlyinog ROOT-fiel storage
     - ROOT-object are stored directly in the ROOT-file,
     - other objects are pickled and stored via  ROOT.TObjString
