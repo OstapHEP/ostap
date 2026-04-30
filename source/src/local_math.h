@@ -149,7 +149,9 @@ namespace
   const double s_ERFC_UNDERFLOW = 26.55 ;
   // ==========================================================================
   /// imaginary unit 
-  const std::complex<double> s_j { 0.0 , 1.0 } ;
+  const std::complex<double>      s_j  { 0.0  , 1.0 } ;
+  /// imaginary unit 
+  const std::complex<long double> s_jl { 0.0L , 1.0L } ;
   // ==========================================================================  
   // Constants
   // ==========================================================================

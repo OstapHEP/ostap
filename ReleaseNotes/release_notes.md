@@ -2,9 +2,13 @@
 
  1. Add Gompertz' curve/sigmoid
  1. Allow to specify the (ordered) list of preferrable DBASE backends via new environment variable `OSTAP_DBTYPES`
+ 1. Upgrade, improve  extend   "Clausen" stuff
  
 ## Bug fixes
-  
+
+ 1. Fix few bugs in `Ostap/Differences.h`
+ 1. Fix minor bugs in (some) Clausen functions
+
 ## Backward incompatible
 
 # v3.7.0.2 

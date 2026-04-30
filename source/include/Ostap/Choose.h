@@ -95,6 +95,7 @@ namespace Ostap
     template <unsigned short N>
     struct Pascal_
     {
+      // ======================================================================
       /// the actual type fof elements in the row 
       // typedef typename std::conditional<(N<=N_CHOOSE_MAX),std::uintmax_t,long double>::type the_type ;
       typedef Choose_t<N> the_type ;

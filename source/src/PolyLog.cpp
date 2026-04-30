@@ -271,6 +271,39 @@ namespace
     return std::complex<double> ( result ) ;
   }
   // ===========================================================================
+  /// use formula from Wikipedia
+  template <typename TYPES ,
+            typename TYPEX >
+  inline TYPEX Li_zz
+  ( const TYPES       s ,
+    const TYPEX       z , 
+    const std::size_t N ) 
+  {
+    /// Condition for convergency
+    Ostap::Assert ( std::abs ( z ) < 0.5  , 
+                    "Argument is not small enough for the z-power series!" , 
+                    "::Li_zpower"         , 
+                    INVALID_ARGUMENT , __FILE__ , __LINE__ ) ;
+    //
+    const TYPEX zz = -z / ( 1.0L - z ) ;
+    //    
+    static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
+    static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
+    //
+    TYPEX          result      =       1 ; // NB: no x here 
+    TYPEX          term        =       1 ; // NB: no x here 
+    unsigned short nSmall      =       0 ;
+    //
+    for ( unsigned short k = 0 ; k <= N ; ++ k )
+    {
+      term *= zz ;
+      for ( unsigned short j = 0 ; j <= k ; ++j )
+      {
+      }
+    }
+    return result ;
+  }
+  // ===========================================================================
   template <typename TYPES,
 	    typename TYPEX> 
   inline TYPEX Li_eq_9_2_
@@ -787,7 +820,7 @@ double Ostap::Math::Li
 
   /// (B) use Eq (9.2)
   if ( ( x < 0 )  && ( absw1pi <= 0.5 ) )
-    { return Li_eq_9_2 ( n , 1.0L * x , 1.0L * w ) ; }
+  { return Li_eq_9_2 ( n , 1.0L * x , 1.0L * w ) ; }
   
   /// (C) use Eq (9.3)
   if ( ( n < 0 ) && ( 0 < x ) && ( absw2pi <= 0.512 ) )
@@ -814,9 +847,23 @@ double Ostap::Math::Li
     }
     const long double R = 2 * std::pow ( w , n ) * igamma ( n + 1 ) * rr ; 
     return R + ( 0 == n % 2 ? -1 : +1 ) * Li ( n , 1.0 / x ) ;
-  }    
+  }
 
-  /// (G) negative argument? (Eq 14.1)
+  
+  /// (G) use formula form Wiki-page, it has some useful range 
+  /** 
+      if ( !s_equal ( x , -1 ) )
+      {
+      const double zx = -x / ( 1.0L - x ) ;
+      /// use 
+      if ( std::abs ( zx ) < 0.25 )
+      {
+      return Li_zz ( s , x ) ;
+      }
+      }
+  */
+
+  /// (H) negative argument? (Eq 14.1)
   if ( x < 0  )
   {
     // Use the square formula Eq.(14.1) to convert to the positive argument
