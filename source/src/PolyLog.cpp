@@ -12,6 +12,7 @@
 #include "Ostap/Choose.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Power.h"
+#include "Ostap/Differences.h"
 // ============================================================================
 // Local 
 // ============================================================================
@@ -195,9 +196,9 @@ namespace
     static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
     //
-    TYPEX          result      =       1 ; // NB: no x here 
-    TYPEX          term        =       1 ; // NB: no x here 
-    unsigned short nSmall      =       0 ;
+    TYPEX        result =  1 ; // NB: no x here 
+    TYPEX        term   =  1 ; // NB: no x here 
+    std::uint8_t nSmall =  0 ;
     //
     // alternating series? 
     const bool     xalt        = alternating ( x ) ;
@@ -279,33 +280,81 @@ namespace
     const TYPEX       z , 
     const std::size_t N ) 
   {
-    /// Condition for convergency
-    Ostap::Assert ( std::abs ( z ) < 0.5  , 
-                    "Argument is not small enough for the z-power series!" , 
-                    "::Li_zpower"         , 
-                    INVALID_ARGUMENT , __FILE__ , __LINE__ ) ;
-    //
     const TYPEX zz = -z / ( 1.0L - z ) ;
+
+    /// Condition for convergency
+    Ostap::Assert ( std::abs ( zz ) < 0.5  , 
+                    "Argument is not small enough for the z-power series!" , 
+                    "::Li_zz"        , 
+                    INVALID_ARGUMENT , __FILE__ , __LINE__ ) ;
+
     //    
     static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
     //
-    TYPEX          result      =       1 ; // NB: no x here 
-    TYPEX          term        =       1 ; // NB: no x here 
-    unsigned short nSmall      =       0 ;
+    TYPEX        result = 0 ;
+    TYPEX        term   = 1 ; 
+    std::uint8_t nSmall = 0 ;
     //
-    for ( unsigned short k = 0 ; k <= N ; ++ k )
+    auto fun = [s]( const long double q ) -> long double 
+    { return std::pow ( 1.0L / ( q + 1.0L ) , s ) ; } ;
+
+    //
+    for ( unsigned short k = 0 ; k < N ; ++k )
     {
       term *= zz ;
-      for ( unsigned short j = 0 ; j <= k ; ++j )
-      {
+      const long  double diff  = Ostap::Math::Differences::forward_( fun , k ,  0 , 1 );
+      const TYPEX        delta = term * ( diff * Ostap::Math::sign ( k + 1 ) ) ;
+      //
+      if   ( is_not ( delta ) || xzero ( 2.0L * delta ) || xequal ( result + 2.0L * delta , result ) ) { ++nSmall     ; }
+      else                                                                                             {   nSmall = 0 ; }
+      //
+      result += delta ;
+      //
+      if ( 2 <= nSmall ) { return result ; } 
       }
-    }
+    //
     return result ;
   }
   // ===========================================================================
+  double Li_zz 
+  ( const short  n , 
+    const double x )
+  {
+    constexpr std::size_t N = 200 ; 
+    return Li_zz ( n , 1.0L * x , N ) ;
+  }
+ // ===========================================================================
+  double Li_zz 
+  ( const double s , 
+    const double x )
+  {
+    constexpr std::size_t N  = 200  ;
+    return Li_zz ( 1.0L * s  , 1.0L * x , N ) ;
+  }
+  // ==========================================================================
+  std::complex<double> Li_zz 
+  ( const short                 n , 
+    const std::complex<double>& z )
+  {
+    constexpr std::size_t N = 200 ; 
+    const std::complex<long double> zz { z } ;
+    auto result = Li_zz ( n , zz , N ) ;
+    return std::complex<double> ( result ) ;
+  }
+  // ===========================================================================
+  std::complex<double> Li_zz 
+  ( const double                s , 
+    const std::complex<double>& z )
+  {
+    constexpr std::size_t N = 200 ; 
+    const std::complex<long double> zz { z } ;
+    auto result = Li_zz ( s , zz , N ) ;
+    return std::complex<double> ( result ) ;
+  }
+  // ============================================================================
   template <typename TYPES,
-	    typename TYPEX> 
+	typename TYPEX> 
   inline TYPEX Li_eq_9_2_
   ( const TYPES       s , 
     const TYPEX       x , 
@@ -322,9 +371,9 @@ namespace
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
     //
     
-    TYPEX          result = -1 * Ostap::Math::eta ( s ) ;
-    TYPEX          term   =  1 ;
-    unsigned short nSmall =  0 ;
+    TYPEX        result = -1 * Ostap::Math::eta ( s ) ;
+    TYPEX        term   =  1 ;
+    std::uint8_t nSmall =  0 ;
     ///
     for ( unsigned int k = 1  ; k < N ; ++k )
     {
@@ -386,9 +435,10 @@ namespace
     static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
     //    
-    TYPEX result = Ostap::Math::zeta ( s ) ;
-    TYPEX term   = 1 ;
-    unsigned short nSmall = 0 ;  
+    TYPEX        result = Ostap::Math::zeta ( s ) ;
+    TYPEX        term   = 1 ;
+    std::uint8_t nSmall = 0 ;
+    //   
     for ( unsigned int k = 1  ; k < NN ; ++k )
     {
       term *= ( w / ( 1.0L * k )  ) ;
@@ -530,9 +580,10 @@ namespace
     static const Ostap::Math::Equal_To<TYPEX> xequal {} ;
     static const Ostap::Math::Zero<TYPEX>     xzero  {} ; 
     //
-    TYPEX result  = ( 1 < n ) ? Ostap::Math::zeta ( n ) : 0.0L ; 
-    TYPEX term    = 1 ;
-    unsigned int nSmall = 0 ;
+    TYPEX        result  = ( 1 < n ) ? Ostap::Math::zeta ( n ) : 0.0L ; 
+    TYPEX        term    = 1 ;
+    std::uint8_t nSmall = 0 ;
+    //
     for ( unsigned int k = 1 ; k < N ; ++k ) 
     {
       term *= ( w / ( 1.0L * k ) ) ; 
@@ -620,9 +671,10 @@ namespace
     static const Ostap::Math::Equal_To<TYPE> xequal {} ;
     static const Ostap::Math::Zero<TYPE>     xzero  {} ; 
     //
-    TYPE result = 0 ;
-    TYPE term   = 1 ;
-    unsigned short nSmall =  0 ;
+    TYPE         result = 0 ;
+    TYPE         term   = 1 ;
+    std::uint8_t nSmall = 0 ;
+    //
     for ( unsigned int n  = 0 ; n <= k + 1000 ; ++n )
     {
       if ( n      ) { term *= ( w / ( 1.0L * n ) ) ; }
@@ -677,9 +729,10 @@ namespace
     //
     const TYPE w   { w_   } ;
     //
-    TYPE result = 0 ;
-    TYPE term   = 1 ;
-    unsigned short nSmall =  0 ;
+    TYPE         result = 0 ;
+    TYPE         term   = 1 ;
+    std::uint8_t nSmall = 0 ;
+    //
     for ( unsigned int n  = 0 ; n <= k + 1000 ; ++n )
     {
       //
@@ -849,19 +902,14 @@ double Ostap::Math::Li
     return R + ( 0 == n % 2 ? -1 : +1 ) * Li ( n , 1.0 / x ) ;
   }
 
-  
-  /// (G) use formula form Wiki-page, it has some useful range 
-  /** 
-      if ( !s_equal ( x , -1 ) )
-      {
-      const double zx = -x / ( 1.0L - x ) ;
-      /// use 
-      if ( std::abs ( zx ) < 0.25 )
-      {
-      return Li_zz ( s , x ) ;
-      }
-      }
-  */
+  /// (G) use formula from Wiki-page, it has some useful range 
+  if ( x < 0.5 )
+  {
+    const long double xx = -x / ( 1.0L - x ) ;
+    /// use 
+    if ( std::abs ( xx ) < 0.5 ) { return Li_zz  ( n , x ) ;  }
+  }
+
 
   /// (H) negative argument? (Eq 14.1)
   if ( x < 0  )
@@ -946,6 +994,15 @@ double Ostap::Math::Li
     //
   }
   //
+
+  /// (G) use formula from Wiki-page, it has some useful range 
+  if ( x < 0.5 )
+  {
+    const long double xx = -x / ( 1.0L - x ) ;
+    /// use 
+    if ( std::abs ( xx ) < 0.5 ) { return Li_zz  ( s , x ) ;  }
+  }
+
   /// use the square formula to reduce the modulus 
   if ( 0 < x )
   {
@@ -999,6 +1056,7 @@ Ostap::Math::Li
   const std::complex<long double> zz { z } ;
   
   typedef std::complex<double> RR ;
+
   // explicit case:
   if      (  1 == n ) { return RR ( - std::log ( 1.0L - zz ) ) ; }                       // Eq (6.1)
   else if (  0 == n ) { return RR ( zz                /          ( 1.0L - zz     ) ) ; } // Eq.(6.2)
@@ -1032,6 +1090,16 @@ Ostap::Math::Li
   /// (C) Use Eq (9.5) 
   if ( ( n > 0 ) && ( absw2pi <= 0.512 ) )
   { return Li_eq_9_5 ( n , z , w  ) ; }
+
+
+  /// (G) use formula from Wiki-page, it has some useful range 
+  if ( z.real () < 0.5 )
+  {
+    const std::complex<long double> zw = -zz / ( 1.0L - zz ) ;
+    /// use 
+    if ( std::abs ( zw ) < 0.5 ) { return Li_zz  ( n , z ) ;  }
+  }
+
 
   /// (D) Use the square formula top reduce modulus 
   if ( 1 < absz )
@@ -1096,7 +1164,6 @@ Ostap::Math::Li
   /// (A) simple power serie  for small x 
   if ( absz <= 0.25 || xsmall_2 ) { return Li_power ( s , z ) ; }
   
-  
   /// (B) Use Eq (9.3) 
   if (  absw2pi <= 0.512 )
   {
@@ -1118,6 +1185,15 @@ Ostap::Math::Li
     return Li_eq_BB_11 ( k , tau , w ) ; 
   }
   
+  /// (G) use formula from Wiki-page, it has some useful range 
+  if ( z.real () < 0.5 )
+  {
+    const std::complex<long double> zz { z } ; 
+    const std::complex<long double> zw = - zz / ( 1.0L - zz ) ;
+    /// use 
+    if ( std::abs ( zw ) < 0.5 ) { return Li_zz  ( s , z ) ;  }
+  }
+
   /// (D) Use the square formula top reduce modulus 
   if ( 1 < absz )
   {
