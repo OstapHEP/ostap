@@ -21,7 +21,8 @@ message ( "----> ROOT            version    : " ${ROOT_VERSION} )
        
 find_program ( ROOT_CONFIG_EXECUTABLE NAMES root-config )
 find_program ( ROOT_EXECUTABLE        NAMES root        )        
-find_program ( ROOT_EXE_EXECUTABLE    NAMES root.exe    )        
+find_program ( ROOT_EXE_EXECUTABLE    NAMES root.exe    )
+
 message ( "----> ROOT            executable : " ${ROOT_EXECUTABLE} )
 message ( "----> ROOT.EXE        executable : " ${ROOT_EXE_EXECUTABLE} )
 message ( "----> ROOT config     executable : " ${ROOT_CONFIG_EXECUTABLE} )

@@ -271,13 +271,13 @@ namespace Ostap
     std::intmax_t ulps_distance_double ( const double a , const double b ) ;
     // ========================================================================
     /// "cast" float to int32
-    std::int32_t float_2_int  ( const float        a ) ;
+    /// std::int32_t float_2_int  ( const float        a ) ;
     /// "cast" float to int32
-    float        int_2_float  ( const std::int32_t i ) ;
+    /// float        int_2_float  ( const std::int32_t i ) ;
     /// "cast" double to int64
-    std::int64_t double_2_int ( const double       a ) ;
+    ///std::int64_t double_2_int ( const double       a ) ;
     /// "cast" float to int64
-    double       int_2_double ( const std::int64_t i ) ;    
+    ///double       int_2_double ( const std::int64_t i ) ;    
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

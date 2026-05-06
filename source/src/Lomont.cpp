@@ -174,7 +174,7 @@ namespace
     else if ( af >  bf            ) { return -_distance_float_ (  bf ,  af ) ; }
     // both numbers are negative:
     if      ( bf <  0             ) { return  _distance_float_ ( -bf , -af ) ; }
-    // numbers have differrent  signs: 
+    // the numbers have differrent  signs: 
     else if ( af <= 0 && 0 <= bf ) 
     { return _distance_float_ ( af   , 0.0f ) + _distance_float_ ( 0.0f ,   bf ) ; }
     //
@@ -201,8 +201,8 @@ namespace
     else if ( af >  bf              ) { return - _distance_double_ (  bf ,  af ) ; }
     // both numbers are negative:
     if      ( bf <  0               ) { return   _distance_double_ ( -bf , -af ) ; }
-    // both numbers have differrent  signs: 
-    else if ( af <= 0 && 0 <= bf   ) 
+    // the numbers have differrent  signs: 
+    else if ( af <= 0 && 0 <= bf    ) 
     { return _distance_double_ ( af  , 0.0 ) +  _distance_double_ ( 0.0 ,  bf ) ; }
     //
     Cast_D caster{} ;
@@ -493,6 +493,7 @@ std::intmax_t Ostap::Math::ulps_distance_double
 // ============================================================================
 /// "cast" float to int32
 // ============================================================================
+/** 
 std::int32_t Ostap::Math::float_2_int  ( const float        a )
 {
   Cast_F caster{} ;
@@ -522,6 +523,8 @@ double       Ostap::Math::int_2_double ( const std::int64_t i )
   Cast_D caster{} ;
   return caster.l2d ( i ) ;
 }
+*/
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
