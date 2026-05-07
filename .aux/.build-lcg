@@ -307,7 +307,6 @@ else
     
     OSTAP_INSTALL=${OSTAP_BUILD}/INSTALL/LCG${LCG_VERSION}/${PLATFORM}
     OSTAP_INSTALL=$(realpath -m ${OSTAP_INSTALL})
-    ## echo -e ${prefix}' Use OSTAP_INSTALL  = '${OSTAP_INSTALL}
     
 fi
 
