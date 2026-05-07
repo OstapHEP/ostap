@@ -499,7 +499,7 @@ void Ostap::Math::KarlinStudden::updateRoots()
   // std::reverse     ( m_troots.begin () + 1 , m_troots.end () ) ;
   std::partial_sum ( m_troots.begin ()     , m_troots.end () , m_troots.begin() ) ;
   //
-  const long double r_small { Ostap::Math::next_float ( 1.0f , -2 )  } ;
+  const long double r_small { Ostap::Math::Lomont::next_float ( 1.0f , -2 )  } ;
   std::transform   ( m_troots.begin () + 1 , 
                      m_troots.end   () , 
                      m_zroots.begin () + 1 , 

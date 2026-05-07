@@ -81,14 +81,13 @@ else                       : logger = getLogger ( __name__                )
 _eps_ = float_info.epsilon
 if not 0.75 < _eps_ * 2**52 < 1.25 :
     logger.warning ('"epsilon" in not in the expected range! Math could be suboptimal')
-    
-_next_double_ = Ostap.Math.next_double
+# =============================================================================
+_next_double_ = Ostap.Math.Lomont.next_double
 _mULPs_       = 1000 
 def _delta_ ( x , ulps = _mULPs_ ) :
     n1 = _next_double_ ( x ,  ulps )
     n2 = _next_double_ ( x , -ulps )
     return max ( abs ( n1 - x ) , abs ( n2 - x ) )
-
 # =============================================================================
 ## @class EvalVE
 #  Evaluate the function taking into account the uncertainty in the argument

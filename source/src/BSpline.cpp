@@ -887,7 +887,7 @@ double Ostap::Math::BSpline::integral
   //
   const double xhigh =
     !s_equal ( high , m_xmax ) ? high : 
-    Ostap::Math::next_double ( m_xmax , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( m_xmax , -s_ulps ) ;
   //
   // make the integration:
   m_pars_i[0] = 0 ;
@@ -941,7 +941,7 @@ double Ostap::Math::BSpline::derivative ( const double x   ) const
   //
   const double arg = 
     !s_equal ( x , m_xmax ) ? x :
-    Ostap::Math::next_double ( m_xmax , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( m_xmax , -s_ulps ) ;
   
   //
   // make the differentiation 
@@ -1831,11 +1831,11 @@ double Ostap::Math::BSpline2D::evaluate
   //
   const double xarg =
     !s_equal ( x , xmax ()) ? x :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const double yarg =
     !s_equal ( y , ymax ()) ? y :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_xspline.npars() ;
   const unsigned short NY = m_yspline.npars() ;
@@ -1916,11 +1916,11 @@ double Ostap::Math::BSpline2D::integral
   //
   const double xarg =
     !s_equal ( xhigh , xmax ()) ? xhigh :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_xspline.npars() ;
   const unsigned short NY = m_yspline.npars() ;
@@ -1989,11 +1989,11 @@ double Ostap::Math::BSpline2D::integrateY
   //
   const double xarg =
     !s_equal ( x     , xmax ()) ? x :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_xspline.npars() ;
   const unsigned short NY = m_yspline.npars() ;
@@ -2062,11 +2062,11 @@ double Ostap::Math::BSpline2D::integrateX
   //
   const double xarg =
     !s_equal ( xhigh , xmax ()) ? xhigh :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const double yarg =
     !s_equal ( y     , ymax ()) ? y     :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_xspline.npars() ;
   const unsigned short NY = m_yspline.npars() ;
@@ -2135,7 +2135,7 @@ double Ostap::Math::BSpline2D::integrateY ( const double x ) const
   //
   const double xarg =
     !s_equal ( x     , xmax ()) ? x :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const unsigned short NX = m_xspline.npars() ;
   const unsigned short NY = m_yspline.npars() ;
@@ -2176,7 +2176,7 @@ double Ostap::Math::BSpline2D::integrateX
   //
   const double yarg =
     !s_equal ( y     , ymax ()) ? y     :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_xspline.npars() ;
   const unsigned short NY = m_yspline.npars() ;
@@ -2354,11 +2354,11 @@ double Ostap::Math::BSpline2DSym::evaluate
   //
   const double xarg =
     !s_equal ( x , xmax ()) ? x :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const double yarg =
-    !s_equal ( y , ymax ()) ? y :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    !s_equal ( y , ymax () ) ? y :
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_spline.npars() ;
   const unsigned short NY = m_spline.npars() ;
@@ -2439,11 +2439,11 @@ double Ostap::Math::BSpline2DSym::integral
   //
   const double xarg =
     !s_equal ( xhigh , xmax ()) ? xhigh :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_spline.npars() ;
   const unsigned short NY = m_spline.npars() ;
@@ -2512,11 +2512,11 @@ double Ostap::Math::BSpline2DSym::integrateY
   //
   const double xarg =
     !s_equal ( x     , xmax ()) ? x :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const double yarg =
     !s_equal ( yhigh , ymax ()) ? yhigh :
-    Ostap::Math::next_double ( ymax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( ymax() , -s_ulps ) ;
   //
   const unsigned short NX = m_spline.npars() ;
   const unsigned short NY = m_spline.npars() ;
@@ -2608,7 +2608,7 @@ double Ostap::Math::BSpline2DSym::integrateY ( const double x ) const
   //
   const double xarg =
     !s_equal ( x     , xmax ()) ? x :
-    Ostap::Math::next_double ( xmax() , -s_ulps ) ;
+    Ostap::Math::Lomont::next_double ( xmax() , -s_ulps ) ;
   //
   const unsigned short NX = m_spline.npars() ;
   const unsigned short NY = m_spline.npars() ;
@@ -3065,9 +3065,9 @@ Ostap::Math::Interpolation::bspline
       double xj = xy.x ( j ) ; 
       //
       if      ( s_equal ( xj , xmin ) ) 
-      { xj = Ostap::Math::next_double ( xmin , +s_ulps ) ; }
+      { xj = Ostap::Math::Lomont::next_double ( xmin , +s_ulps ) ; }
       else if ( s_equal ( xj , xmax ) ) 
-      { xj = Ostap::Math::next_double ( xmax , -s_ulps ) ; }
+      { xj = Ostap::Math::Lomont::next_double ( xmax , -s_ulps ) ; }
       //
       const double bij = bs.bspline ( i , xj ) ;
       if  ( i == j && s_zero ( bij ) ) {  return 111 ; }  // RETURN 111 

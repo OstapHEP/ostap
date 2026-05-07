@@ -1,6 +1,12 @@
 
 ## New features
 
+ 1. Some code reshuffling for `Lomont.h`
+ 1. New namespace `Ostap::Math::Lomont`
+ 1. Template class `Ostap::Math::Lomont<...>` is renamed to `Ostap::Math::Lomont_<...>`
+ 1. Functions `Ostap::Math::lomont_*` are renamed to `Ostap::Math::Lomont:*``
+ 1. Add generalized Clausen Functions to `ValueWithError`
+
 ## Bug fixes
 
 ## Backward incompatible

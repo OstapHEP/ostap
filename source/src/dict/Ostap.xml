@@ -14,12 +14,13 @@
   <class pattern    = "Ostap::Math::FormFactors::*" />
   
   <function pattern = "Ostap::Math::*"            />
+  <function pattern = "Ostap::Math::Lomont::*"    />
+  <function pattern = "Ostap::Math::Clausen::*"   />
   <function pattern = "Ostap::Utils::*"           />
   <function pattern = "Ostap::Utils::Histos::*"   />
   <function pattern = "Ostap::Kinematics::*"      />
   
   <function name    = "Ostap::TMVA::addResponse"  />
-
   
   <class name    = "std::function&lt;double(double,double,double,double)&gt;" />
   <class pattern = "std::function&lt;double(*)&gt;" />
@@ -54,9 +55,9 @@
     <class pattern = "Ostap::Math::Models::*"       />
     <class pattern = "Ostap::Utils::details::*"     />
     <class pattern = "Ostap::Math::TypeWrapper*"    />
-    <class pattern = "ROOT::Math::SVector*" />
-    <class pattern = "ROOT::Math::Plane3D*" />
-    <class pattern = "ROOT::Math::SMatrix*" />
+    <class pattern = "ROOT::Math::SVector*"         />
+    <class pattern = "ROOT::Math::Plane3D*"         />
+    <class pattern = "ROOT::Math::SMatrix*"         />
     <class pattern = "ROOT::Math::PositionVector*"     />
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />

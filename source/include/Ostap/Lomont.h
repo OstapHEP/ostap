@@ -5,7 +5,7 @@
 // ============================================================================
 // STD & STL 
 // ============================================================================
-#include <functional>
+#include <cstdint>
 // ============================================================================
 namespace Ostap
 {
@@ -31,105 +31,171 @@ namespace Ostap
      *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
      *  @date 2009-10-22
      */
-    template <class TYPE> class Lomont ;
-    // ========================================================================
-    /** equality comparison of float numbers using as the metric the maximal 
-     *  number of Units in the Last Place (ULP).
-     *  It is a slightly modified version of very efficient implementation 
-     *  of the initial Bruce Dawson's algorithm by Chris Lomont.
-     *
-     *  @see www.lomont.org 
-     *  @see http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
-     *
-     *  C.Lomont claims the algorithm is factor 2-10 more efficient 
-     *  with respect to classical Knuth's algorithm for comparison
-     *  of the floating number using the relative precision.
-     *
-     *  The effective relative difference depends on the choice of 
-     *   <c>maxULPS</c>:
-     *  - For the case of maxULPs=1, (of course it is totally unphysical case!!!)
-     *  the effective relative precision r = |a-b|/(|a|+|b|)is 
-     *  between 3.5e-8 and 5.5e-8 for |a|,|b|>1.e-37, and 
-     *  then it quickly goes to ~1 
-     *  - For the case of maxULPS=10 
-     *  the effective relative precision is 
-     *  between 3e-8 and 6e-7 for |a|,|b|>1.e-37, and 
-     *  then it quickly goes to ~1 
-     *  - For the case of maxULPS=100 
-     *  the effective relative precision is 
-     *  around ~6e-6 for |a|,|b|>1.e-37, and 
-     *  then it quickly goes to ~1 
-     *  - For the case of maxULPS=1000 
-     *  the effective relative precision is 
-     *  around ~6e-5 for |a|,|b|>1.e-37, and 
-     *  then it quickly goes to ~1 
-     *  
-     *  @code
-     *
-     *  const float a = ... ;
-     *  const float b = ... ;
-     *
-     *  const bool equal = Ostap::Math::lomont_compare_float ( a , b ) ;
-     *  
-     *  @endcode 
-     * 
-     *  @param  af the first number 
-     *  @param  bf the second number 
-     *  @param  maxULPs the maximal metric deviation in the terms of
-     *                 maximal number of units in the last place
-     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
-     *  @date 2008-11-08
-     */
-    bool lomont_compare_float
-    ( const float          af      , 
-      const float          bf      , 
-      const unsigned short maxULPs ) ;
-    // ========================================================================
-    /** equality comparison of double numbers using as the metric the maximal 
-     *  number of Units in the Last Place (ULP).
-     *  It is a slightly modified version of very efficient implementation 
-     *  of the initial Bruce Dawson's algorithm by Chris Lomont.
-     *
-     *  @see www.lomont.org 
-     *  @see http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
-     *
-     *  C.Lomont claims the algorithm is factor 2-10 more efficient 
-     *  with respect to  classical Knuth's algorithm for comparison of
-     *  the floating number using the relative precision.
-     *
-     *  The effective relative difference depends on the choice of 
-     *   <c>maxULPS</c>:
-     *  - For the case of maxULPs=1, (of course it is totally unphysical case!!!)
-     *  the effective relative precision r = |a-b|/(|a|+|b|)is 
-     *  ~6e-16 for |a|,|b|>1.e-304, and 
-     *  then it quickly goes to ~1 
-     *  
-     *  @code
-     *
-     *  const double a = ... ;
-     *  const double b = ... ;
-     *
-     *  const bool equal = Ostap::Math::lomont_compare_double ( a , b ) ;
-     *  
-     *  @endcode 
-     * 
-     *  @param  af the first number 
-     *  @param  bf the second number 
-     *  @param  maxULPs the maximal metric deviation in the terms of
-     *                 maximal number of units in the last place
-     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
-     *  @date 2008-11-08
-     */
-    bool lomont_compare_double
-    ( const double         af      , 
-      const double         bf      , 
-      const unsigned int   maxULPs ) ;
-    // ========================================================================    
+    template <class TYPE> class Lomont_ ;
+    // =========================================================================
+    namespace Lomont
+    {
+      // =======================================================================
+      /** equality comparison of float numbers using as the metric the maximal 
+       *  number of Units in the Last Place (ULP).
+       *  It is a slightly modified version of very efficient implementation 
+       *  of the initial Bruce Dawson's algorithm by Chris Lomont.
+       *
+       *  @see www.lomont.org 
+       *  @see http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
+       *
+       *  C.Lomont claims the algorithm is factor 2-10 more efficient 
+       *  with respect to classical Knuth's algorithm for comparison
+       *  of the floating number using the relative precision.
+       *
+       *  The effective relative difference depends on the choice of 
+       *   <c>maxULPS</c>:
+       *  - For the case of maxULPs=1, (of course it is totally unphysical case!!!)
+       *  the effective relative precision r = |a-b|/(|a|+|b|)is 
+       *  between 3.5e-8 and 5.5e-8 for |a|,|b|>1.e-37, and 
+       *  then it quickly goes to ~1 
+       *  - For the case of maxULPS=10 
+       *  the effective relative precision is 
+       *  between 3e-8 and 6e-7 for |a|,|b|>1.e-37, and 
+       *  then it quickly goes to ~1 
+       *  - For the case of maxULPS=100 
+       *  the effective relative precision is 
+       *  around ~6e-6 for |a|,|b|>1.e-37, and 
+       *  then it quickly goes to ~1 
+       *  - For the case of maxULPS=1000 
+       *  the effective relative precision is 
+       *  around ~6e-5 for |a|,|b|>1.e-37, and 
+       *  then it quickly goes to ~1 
+       *  
+       *  @code
+       *
+       *  const float a = ... ;
+       *  const float b = ... ;
+       *
+       *  const bool equal = Ostap::Math::Lomont::compare_float ( a , b ) ;
+       *  
+       *  @endcode 
+       * 
+       *  @param  af the first number 
+       *  @param  bf the second number 
+       *  @param  maxULPs the maximal metric deviation in the terms of
+       *                 maximal number of units in the last place
+       *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+       *  @date 2008-11-08
+       */
+      bool compare_float
+      ( const float          af      , 
+	const float          bf      , 
+	const unsigned short maxULPs ) ;
+      // ========================================================================
+      /** equality comparison of double numbers using as the metric the maximal 
+       *  number of Units in the Last Place (ULP).
+       *  It is a slightly modified version of very efficient implementation 
+       *  of the initial Bruce Dawson's algorithm by Chris Lomont.
+       *
+       *  @see www.lomont.org 
+       *  @see http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
+       *
+       *  C.Lomont claims the algorithm is factor 2-10 more efficient 
+       *  with respect to  classical Knuth's algorithm for comparison of
+       *  the floating number using the relative precision.
+       *
+       *  The effective relative difference depends on the choice of 
+       *   <c>maxULPS</c>:
+       *  - For the case of maxULPs=1, (of course it is totally unphysical case!!!)
+       *  the effective relative precision r = |a-b|/(|a|+|b|)is 
+       *  ~6e-16 for |a|,|b|>1.e-304, and 
+       *  then it quickly goes to ~1 
+       *  
+       *  @code
+       *
+       *  const double a = ... ;
+       *  const double b = ... ;
+       *
+       *  const bool equal = Ostap::Math::Lomont::compare_double ( a , b ) ;
+       *  
+       *  @endcode 
+       * 
+       *  @param  af the first number 
+       *  @param  bf the second number 
+       *  @param  maxULPs the maximal metric deviation in the terms of
+       *                 maximal number of units in the last place
+       *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+       *  @date 2008-11-08
+       */
+      bool compare_double
+      ( const double         af      , 
+	const double         bf      , 
+	const unsigned int   maxULPs ) ;
+      // ======================================================================
+      /** Get the floating number that representation 
+       *  is different with respect  to the argument for 
+       *  the certain number of "Units in the Last Position".
+       *  For ulps=1, it is just next float number, for ulps=-1 is is the 
+       *  previous one.
+       *
+       *  This routine is very convenient to test the parameter maxULPS for
+       *  the routine Ostap::Math::Lomont::compare_float 
+       *
+       *  @see Ostap:Math::Lomont::compare_float
+       *  @param af the reference number 
+       *  @param ulps the bias 
+       *  @return the biased float number (on distance "ulps")
+       *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+       *  @date 2008-11-08
+       */  
+      float next_float ( const float af , const short ulps ) ;
+      float prev_float ( const float af , const short ulps ) ; 
+      // =======================================================================
+      /** Get the floating number that representation 
+       *  is different with respect  to the argument for 
+       *  the certain number of "Units in the Last Position".
+       *  For ulps=1, it is just next float number, for ulps=-1 is is the 
+       *  previous one.
+       *
+       *  This routine is very convenient to test the parameter maxULPS for
+       *  the routine Ostap::Math::Lomont::compare_double
+       *
+       *  @see Ostap::Math::Lomont::compare_double
+       *  @param af the reference number 
+       *  @param ulps the bias 
+       *  @return the biased float number (on distance "ulps")
+       *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+       *  @date 2008-11-08
+       */  
+      double next_double ( const double  af , const short ulps ) ;
+      double prev_double ( const double  af , const short ulps ) ;
+      // =======================================================================
+      /** "distance" in ULPS between two float values 
+       *   @param a (INPUT) the first  number 
+       *   @param b (INPUT) the second number 
+       *   @param "distance" in ULPs
+       */
+      std::intmax_t ulps_distance_float  ( const float  a , const float  b ) ;
+      // =======================================================================
+      /** "distance" in ULPS between two double values 
+       *   @param a (INPUT) the first  number 
+       *   @param b (INPUT) the second number 
+       *   @param "distance" in ULPs
+       */
+      std::intmax_t ulps_distance_double ( const double a , const double b ) ;
+      // =======================================================================     
+      /// explicit "cast" of float to int32 
+      std::int32_t float2int  ( const float        v ) ;
+      /// explicit "cast" of int   to float 
+      float        int2float  ( const std::int32_t i ) ;
+      /// explicit "cast" of double to int64
+      std::int64_t double2int ( const double       v ) ;
+      /// explicit "cast" of int   to float 
+      double       int2double ( const std::int64_t i ) ;
+      // =======================================================================           
+    } //                                The end of namespace Ostap::Math::Lomont     
+    // =========================================================================
     /** the specialization for float numbers  
      *
      *  @code
      *
-     *  Ostap::Math::Lomont<float> compare ( 100 ) ;
+     *  Ostap::Math::Lomont_<float> compare ( 100 ) ;
      * 
      *  const float a = ... ;
      *  const float b = ... ;
@@ -145,24 +211,24 @@ namespace Ostap
      *  @date 2009-10-22
      */
     template <>
-    class Lomont<float> 
+    class Lomont_<float> 
     {
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from ULPS:
-      Lomont ( const unsigned short ulps ) : m_ulps ( ulps ) {}
+      Lomont_ ( const unsigned short ulps ) : m_ulps ( ulps ) {}
       // ======================================================================
     public:
       // ======================================================================
       /// the only one important method:
       inline bool operator () ( const float a , const float b ) const 
-      { return lomont_compare_float ( a , b , m_ulps ) ; }
+      { return Ostap::Math::Lomont::compare_float ( a , b , m_ulps ) ; }
       // ======================================================================
     private: 
       // ======================================================================
       /// the default constructor is disabled 
-      Lomont() ;                         // the default constructor is disabled
+      Lomont_() ;                        // the default constructor is disabled
       // ======================================================================
     private: 
       // ======================================================================
@@ -178,7 +244,7 @@ namespace Ostap
      *
      *  @code
      *
-     *  Ostap::Math::Lomont<double> compare ( 500 ) ;
+     *  Ostap::Math::Lomont_<double> compare ( 500 ) ;
      * 
      *  const double a = ... ;
      *  const double b = ... ;
@@ -191,24 +257,24 @@ namespace Ostap
      *  @date 2009-10-22
      */
     template <>
-    class Lomont<double> 
+    class Lomont_<double> 
     {
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from ULPS:
-      Lomont ( const unsigned int ulps ) : m_ulps ( ulps ) {}
+      Lomont_ ( const unsigned int ulps ) : m_ulps ( ulps ) {}
       // ======================================================================
     public:
       // ======================================================================
       /// the only one important method:
       inline bool operator () ( const double a , const double b ) const 
-      { return lomont_compare_double ( a , b , m_ulps ) ; }
+      { return Ostap::Math::Lomont::compare_double ( a , b , m_ulps ) ; }
       // ======================================================================
     private: 
       // ======================================================================
       /// the default constructor is disabled 
-      Lomont () ;                        // the default constructor is disabled
+      Lomont_ () ;                        // the default constructor is disabled
       // ======================================================================
     private: 
       // ======================================================================
@@ -216,58 +282,6 @@ namespace Ostap
       unsigned int m_ulps ;           // the precision in "units in last place"
       // ======================================================================      
     };
-    // ========================================================================
-    /** Get the floating number that representation 
-     *  is different with respect  to the argument for 
-     *  the certain number of "Units in the Last Position".
-     *  For ulps=1, it is just next float number, for ulps=-1 is is the 
-     *  previous one.
-     *
-     *  This routine is very convenient to test the parameter maxULPS for
-     *  the routine Ostap::Math::lomont_compare_float 
-     *
-     *  @see Ostap:Math::lomont_compare_float
-     *  @param af the reference number 
-     *  @param ulps the bias 
-     *  @return the biased float number (on distance "ulps")
-     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
-     *  @date 2008-11-08
-     */  
-    float next_float ( const float af , const short ulps ) ;
-    float prev_float ( const float af , const short ulps ) ; 
-    // ========================================================================
-    /** Get the floating number that representation 
-     *  is different with respect  to the argument for 
-     *  the certain number of "Units in the Last Position".
-     *  For ulps=1, it is just next float number, for ulps=-1 is is the 
-     *  previous one.
-     *
-     *  This routine is very convenient to test the parameter maxULPS for
-     *  the routine Ostap::Math::lomont_compare_double
-     *
-     *  @see Ostap::Math::lomont_compare_double
-     *  @param af the reference number 
-     *  @param ulps the bias 
-     *  @return the biased float number (on distance "ulps")
-     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
-     *  @date 2008-11-08
-     */  
-    double next_double ( const double  af , const short ulps ) ;
-    double prev_double ( const double  af , const short ulps ) ;
-    // ========================================================================
-    /** "distance" in ULPS between two float values 
-     *   @param a (INPUT) the first  number 
-     *   @param b (INPUT) the second number 
-     *   @param "distance" in ULPs
-     */
-    long ulps_distance_float  ( const float  a , const float  b ) ;
-    // ========================================================================
-    /** "distance" in ULPS between two double values 
-     *   @param a (INPUT) the first  number 
-     *   @param b (INPUT) the second number 
-     *   @param "distance" in ULPs
-     */
-    long ulps_distance_double ( const double a , const double b ) ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

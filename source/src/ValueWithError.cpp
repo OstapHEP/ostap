@@ -966,6 +966,30 @@ Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__slh__ () const 
 { return slh ( *this ) ; }
 // ============================================================================
+// Generalizeed Clausen S
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__clS__  ( const unsigned int n ) const 
+{ return clS ( n  , *this ) ; }
+// ============================================================================
+// Generalizee Clausen C
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__clC__  ( const unsigned int n ) const 
+{ return clC ( n  , *this ) ; }
+// ============================================================================
+// Generalizeed Clausen S
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__clS__  ( const double s ) const 
+{ return clS ( s  , *this ) ; }
+// ============================================================================
+// Generalizee Clausen C
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__clC__  ( const double s ) const 
+{ return clC ( s  , *this ) ; }
+// ============================================================================
 // Polylogaritmh 
 // ============================================================================
 Ostap::Math::ValueWithError
@@ -4501,7 +4525,100 @@ Ostap::Math::ValueWithError
 Ostap::Math::clausen 
 ( const ValueWithError& x ) { return Cl ( 2 , x ) ; } 
 // ============================================================================
-
+/*  Generalized Clausen function S
+ *  @see https://en.wikipedia.org/wiki/Clausen_function
+ *  \f[ S(n,x) = \Im Li ( n , x) = \sum_i \frac{\sin kx}{k^n}\f$
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::clS 
+( const unsigned int                 n , 
+  const Ostap::Math::ValueWithError& x )
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::Clausen::S ( n , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get the derivative 
+  const double d = 1 <= n ? Ostap::Math::Clausen::C ( n - 1  , xv  ) :
+    0.25 / std::pow ( std::sin ( xv ) , 2 ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;  
+}
+// ============================================================================
+/*  Generalized Clausen function C
+ *  @see https://en.wikipedia.org/wiki/Clausen_function
+ *  \f[ C(n,x) = \Re Li ( n , x) = \sum_i \frac{\cos kx}{k^n}\f$
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::clC
+( const unsigned int                 n , 
+  const Ostap::Math::ValueWithError& x )
+{
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::Clausen::C ( n , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get the derivative 
+  const double d = 1 <= n ? Ostap::Math::Clausen::S ( n - 1  , xv  ) : 0.0 ;
+  //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;  
+}
+// ============================================================================
+/*  Generalized Clausen function S
+ *  @see https://en.wikipedia.org/wiki/Clausen_function
+ *  \f[ S(s,x) = \Im Li ( s , x) = \sum_i \frac{\sin kx}{k^s}\f$
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::clS 
+( const double                       s , 
+  const Ostap::Math::ValueWithError& x )
+{
+  //
+  if ( isuint ( s ) )
+  {
+    const unsigned int n = round ( s ) ;
+    return clS ( n , x ) ;
+  }
+  //
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::Clausen::S ( s , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get the derivative 
+  const double d = Ostap::Math::Clausen::C ( s - 1  , xv  ) ;
+  //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;  
+} 
+// ============================================================================
+/*  Generalized Clausen function C
+ *  @see https://en.wikipedia.org/wiki/Clausen_function
+ *  \f[ C(s,x) = \Re Li ( s , x) = \sum_i \frac{\cos kx}{k^s}\f$
+ */
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::clC
+( const double                       s , 
+  const Ostap::Math::ValueWithError& x )
+{
+  //
+  if ( isuint ( s ) )
+  {
+    const unsigned int n = round ( s ) ;
+    return clC ( n , x ) ;
+  }
+  //  
+  const double xv    = x.value() ;
+  const double value = Ostap::Math::Clausen::C ( s , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //
+  /// get the derivative 
+  const double d = Ostap::Math::Clausen::S ( s - 1  , xv  ) ; 
+  //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;  
+}
 // ============================================================================
 /* Moebius transformation
  * \f[ f(x) = \frac{ax+b}{cx+d}\f]

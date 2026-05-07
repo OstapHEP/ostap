@@ -3,6 +3,7 @@
 // ============================================================================
 // STD & STL 
 // ============================================================================
+#include <cstdint>
 #include <cmath>
 #include <limits>
 #include <cassert>
@@ -14,52 +15,24 @@
 namespace 
 {
   // ==========================================================================
-  // prerequisites for "correct" Float 
   static_assert( std::numeric_limits<float>          ::is_specialized &&
-                 std::numeric_limits<int>            ::is_specialized && 
-                 std::numeric_limits<unsigned int>   ::is_specialized &&
-                 sizeof(float)==sizeof(int)                           && 
-                 sizeof(float)==sizeof(unsigned int)                  &&
-                 32 == std::numeric_limits<unsigned int>::digits , "FAILED ASSUMPTIONS") ;
-  // ==========================================================================
-  // define proper double 
-  // ==========================================================================
-  template <bool I> 
-  struct __Longs ;
-  template <>
-  struct __Longs<true>
-  {
-    typedef long               Long   ;
-    typedef unsigned long      ULong  ;
-  } ;
-  template <>
-  struct __Longs<false>
-  {
-    typedef long long               Long   ;
-    typedef unsigned long long      ULong  ;
-  } ;
-  struct _Longs : public __Longs<sizeof(double)==sizeof(long)>{};
-  /// get the final types:
-  typedef _Longs::Long  Long  ;
-  typedef _Longs::ULong ULong ;
-  // ==========================================================================
-  ///  minimal int 
-  const int  const_min_int  = std::numeric_limits<int>::min  () ;
-  ///  minimal Long
-  const Long const_min_long = std::numeric_limits<Long>::min () ;
-  // ==========================================================================
-  /// the final check
-  static_assert( std::numeric_limits<double>  ::is_specialized &&
-                 std::numeric_limits<Long>    ::is_specialized && 
-                 std::numeric_limits<ULong>   ::is_specialized &&
-                 std::numeric_limits<ULong>   ::is_specialized &&
-                 std::numeric_limits<Long>    ::is_specialized &&
-                 sizeof(double)==sizeof(Long)                  && 
-                 sizeof(double)==sizeof(ULong)                 &&
-                 64 == std::numeric_limits<ULong>::digits      , "FAILED ASSUMPTIONS") ;
-  // ==========================================================================
-
-  // ==========================================================================
+                 std::numeric_limits<std::int32_t>   ::is_specialized && 
+                 std::numeric_limits<std::uint32_t>  ::is_specialized &&
+		 sizeof ( float ) == sizeof ( std::int32_t  )         &&
+		 sizeof ( float ) == sizeof ( std::uint32_t )         &&  
+                 31 == std::numeric_limits<std::int32_t>::digits      && 
+                 32 == std::numeric_limits<std::uint32_t>::digits     , 
+		 "FAILED FLOAT/INT32 ASSUMPTIONS" ) ;
+  // ===========================================================================
+  static_assert( std::numeric_limits<double>         ::is_specialized &&
+                 std::numeric_limits<std::int64_t>   ::is_specialized && 
+                 std::numeric_limits<std::uint64_t>  ::is_specialized &&
+		 sizeof ( double ) == sizeof ( std::int64_t  )        &&
+		 sizeof ( double ) == sizeof ( std::uint64_t )        &&  
+                 63 == std::numeric_limits<std::int64_t>::digits      && 
+                 64 == std::numeric_limits<std::uint64_t>::digits     , 
+		 "FAILED DOUBLE/INT64 ASSUMPTIONS" ) ;
+  // ===========================================================================
   /** @struct Cast_F 
    *  Helper structure to perfrom "cast" between int and float 
    *  @author Vanya BELYAEV Ivan.Belyaev@nikhef.nl
@@ -67,29 +40,21 @@ namespace
    */
   struct Cast_F
   {
-  public :
-    // ========================================================================
-    // prerequisites:
-    static_assert( std::numeric_limits<float>          ::is_specialized &&
-                   std::numeric_limits<int>            ::is_specialized && 
-                   std::numeric_limits<unsigned int>   ::is_specialized &&
-                   sizeof(float)==sizeof(int)                           && 
-                   32 == std::numeric_limits<unsigned int>::digits , "FAILED ASSUMPTIONS") ;
-    // ========================================================================
+    // ===========================================================================
   public:
     // ========================================================================
     /// int -> float 
-    float i2f ( const int   i ) { m_f.i = i ; return m_f.f ; } // int   -> float
+    inline float        i2f ( const std::int32_t i ) { m_f.i = i ; return m_f.f ; } // int   -> float
     /// float -> in
-    int   f2i ( const float f ) { m_f.f = f ; return m_f.i ; } // float -> int 
+    inline std::int32_t f2i ( const float        f ) { m_f.f = f ; return m_f.i ; } // float -> int 
     // ========================================================================
   private:
     // ========================================================================
-    /// Helper union to avoid reinterpret cast for floats 
+    /// Helper union to avoid the reinterpret cast for floats 
     union Float_U                     // Helper union to avoid reinterpret cast 
     {
-      float f ;  // float value 
-      int   i ;  // int   value 
+      float        f ;  // float value 
+      std::int32_t i ;  // int   value 
     } ;
     // ========================================================================
   private:
@@ -107,30 +72,20 @@ namespace
   struct Cast_D
   {
     // ========================================================================
-    /// the final check
-    static_assert( std::numeric_limits<double>  ::is_specialized &&
-                   std::numeric_limits<Long>    ::is_specialized && 
-                   std::numeric_limits<ULong>   ::is_specialized &&
-                   std::numeric_limits<ULong>   ::is_specialized &&
-                   std::numeric_limits<Long>    ::is_specialized &&
-                   sizeof(double)==sizeof(Long)                  && 
-                   sizeof(double)==sizeof(ULong)                 &&
-                   64 == std::numeric_limits<ULong>::digits      , "FAILED ASSUMPTIONS") ;
-    // ========================================================================
   public:
     // ========================================================================
     /// long   -> double 
-    double l2d ( const Long   l ) { m_d.l = l ; return m_d.d ; } // long   -> double
+    inline double       l2d ( const std::int64_t l ) { m_d.l = l ; return m_d.d ; } // long   -> double
     /// double -> long 
-    Long   d2l ( const double d ) { m_d.d = d ; return m_d.l ; } // double -> long
+    inline std::int64_t d2l ( const double       d ) { m_d.d = d ; return m_d.l ; } // double -> long
     // ========================================================================
   private:
     // ========================================================================
-    /// Helper union to avoid reinterpret cast for floats 
+    /// Helper union to avoid the reinterpret cast for floats 
     union Double_U                     // Helper union to avoid reinterpret cast 
     {
-      double d ; // double value 
-      Long   l ; // long   value 
+      double        d ; // double value 
+      std::int64_t  l ; // long   value 
     } ;
     // ========================================================================
   private:
@@ -141,131 +96,129 @@ namespace
   } ;
   // ==========================================================================
   // kind of "distance" between two floats
-  inline int _distance_float_ ( const float af , 
-                                const float bf ) 
+  inline std::intmax_t _distance_float_
+  ( const float a  , 
+    const float b  ) 
   {
     //
-    if      ( af == bf    ) { return 0 ; }
-    else if ( af >  bf    ) { return -_distance_float_ ( bf , af ) ; }
-    //  
+    if      ( a == b               ) { return 0 ; }
+    else if ( !std::isfinite ( a ) ) { return std::numeric_limits<std::intmax_t>::max() ; } 
+    else if ( !std::isfinite ( b ) ) { return std::numeric_limits<std::intmax_t>::max() ; } 
+    else if ( a >  b               ) { return -_distance_float_ (  b ,  a ) ; }
+    //
+    if      ( !b                   ) { return  _distance_float_ (  0 , -a ) ; }
     // both numbers are negative:
-    if      ( bf < 0      ) { return _distance_float_ ( -bf , -af ) ; }
-    // both numbers have differrent  signs: 
-    else if ( af < 0 && 0 < bf ) 
-    {
-      return 
-        _distance_float_ ( af   , 0.0f ) + 
-        _distance_float_ ( 0.0f ,   bf ) ;
-    }
+    else if ( b < 0                ) { return  _distance_float_ ( -b , -a ) ; }
+    // both numbers have different  signs: 
+    else if ( a < 0 && 0 < b       ) { return -_distance_float_ (  0 ,  a ) + _distance_float_ ( 0 , b ) ; }
     //
     Cast_F caster{} ;
     //
-    const int ai   = caster.f2i ( af ) ;
-    const int bi   = caster.f2i ( bf ) ;
-    const int test = (((unsigned int)(ai^bi))>>31)-1;
+    // const int ai   = caster.f2i ( af ) ;
+    // const int bi   = caster.f2i ( bf ) ;
+    // const int test = (((unsigned int)(ai^bi))>>31)-1;
+    // return ((( const_min_int - ai ) & (~test)) | ( ai& test )) - bi ;
     //
-    return ((( const_min_int - ai ) & (~test)) | ( ai& test )) - bi ;
+    const std::intmax_t ai = caster.f2i ( a ) ;
+    const std::intmax_t bi = caster.f2i ( b ) ;
+    return bi - ai ; 
+    // ========================================================================
   }
   // ==========================================================================
   // kind of "distance" between two doubles
-  inline Long  _distance_double_ ( const double af , 
-                                   const double bf ) 
+  inline std::intmax_t
+  _distance_double_
+  ( const double a , 
+    const double b ) 
   {
     //
-    if      ( af == bf    ) { return 0 ; }
-    else if ( af >  bf    ) { return - _distance_double_ (  bf ,  af ) ; }
-    //  
+    if      (  a == b               ) { return 0 ; }
+    else if (  !std::isfinite ( a ) ) { return std::numeric_limits<std::intmax_t>::max() ; }    
+    else if (  !std::isfinite ( b ) ) { return std::numeric_limits<std::intmax_t>::max() ; } 
+    else if (  a >  b               ) { return - _distance_double_ (  b ,  a ) ; }
+    //
+    if      ( !b                    ) { return   _distance_double_ (  0 , -a ) ; }
     // both numbers are negative:
-    if      ( bf < 0      ) { return   _distance_double_ ( -bf , -af ) ; }
-    // both numbers have differrent  signs: 
-    else if ( af < 0 && 0 < bf ) 
-    {
-      return
-        _distance_double_ ( af   , 0.0l ) + 
-        _distance_double_ ( 0.0l ,   bf ) ;
-    }
+    else if (  b <  0               ) { return   _distance_double_ ( -b , -a ) ; }
+    // both numbers have different  sign: 
+    else if (  a <  0 && 0 <  b     )  { return -_distance_double_ (  0 ,  a ) + _distance_double_ ( 0 , b ) ; }
     //
     Cast_D caster{} ;
     //
-    const Long ai   = caster.d2l ( af ) ;
-    const Long bi   = caster.d2l ( bf ) ;
-    const Long test = (((ULong)(ai^bi))>>63)-1;
+    // const Long ai   = caster.d2l ( af ) ;
+    // const Long bi   = caster.d2l ( bf ) ;
+    // const Long test = (((ULong)(ai^bi))>>63)-1;
+    // return ((( const_min_long - ai ) & (~test)) | ( ai& test )) - bi ;
     //
-    return ((( const_min_long - ai ) & (~test)) | ( ai& test )) - bi ;
+    const std::intmax_t ai = caster.d2l ( a ) ;
+    const std::intmax_t bi = caster.d2l ( b ) ;
+    return bi - ai ; 
   }
   // ==========================================================================
   inline bool _compare_float_ 
-  ( const float          af      , 
-    const float          bf      , 
+  ( const float          a       , 
+    const float          b       , 
     const unsigned short maxULPs ) 
   {
-    //
-    const int diff     = _distance_float_ ( af  , bf ) ;
-    //
-    const int maxDiff_ = maxULPs ;
-    //
-    const int v1       = maxDiff_ + diff ;
-    const int v2       = maxDiff_ - diff ;
-    //
-    return 0 <= ( v1 | v2 ) ;
+    const std::intmax_t diff = _distance_float_ ( a , b ) ;
+    return std::abs ( diff ) <= maxULPs ; 
   }
   // ==========================================================================
   bool _compare_double_
-  ( const double       af      , 
-    const double       bf      , 
+  ( const double       a       , 
+    const double       b       , 
     const unsigned int maxULPs ) 
   {
-    // ==========================================================================
-    //
-    const Long diff     = _distance_double_ ( af  , bf ) ;
-    //
-    const Long maxDiff_ = maxULPs ;
-    //
-    const Long v1       = maxDiff_ + diff ;
-    const Long v2       = maxDiff_ - diff ;
-    //
-    return 0 <= ( v1 | v2 ) ;
+    const std::intmax_t diff = _distance_double_ ( a , b ) ;
+    return std::abs ( diff ) <= maxULPs ; 
   }
   // ==========================================================================
   // next  float
-  inline float _next_float_ ( const float af , const short ulps ) 
+  inline float _next_float_
+  ( const float a           ,
+    const std::int32_t ulps ) 
   {
-    if      ( 0 == ulps ) { return af ; }
-    else if ( 0 > af    ) { return -_next_float_ ( -af , -ulps ) ; }
+    if      (  0 == ulps             ) { return a  ; }
+    else if (  !std::isfinite ( a  ) ) { return a  ; }
+    else if (  0 > a                 ) { return -_next_float_ ( -a , -ulps ) ; }
     //
     if ( 0 > ulps ) 
     {
-      const int d = _distance_float_ ( af , 0.0f ) + ulps ;
-      if (  d < 0 ) { return -_next_float_ ( 0.0f , -d ) ; }
+      const std::int32_t d = _distance_float_ ( a , 0 ) + ulps ;
+      if ( d < 0 ) { return _next_float_ ( 0  , d ) ; }
     }
-    //
+    //    
     Cast_F caster{} ;
-    int ai  = caster.f2i ( af ) ;
-    ai     += ulps ;
+    std::int32_t ai  = caster.f2i ( a ) ;
+    ai              += ulps ;
     return caster.i2f ( ai );
   }
   // ============================================================================
   // next  double
-  inline double _next_double_ ( const double ad , const short ulps ) 
+  inline double _next_double_
+  ( const double       a    ,
+    const std::int64_t ulps ) 
   {
-    if      ( 0 == ulps ) { return ad ; }
-    else if ( 0 > ad    ) { return -_next_double_ ( -ad , -ulps ) ; }
+    //
+    if      ( 0 == ulps            ) { return a ; }
+    else if ( !std::isfinite ( a ) ) { return a ; }
+    else if ( 0 > a                ) { return - _next_double_ ( -a , -ulps ) ; }
     //
     if ( 0 > ulps ) 
     {
-      const Long d = _distance_double_ ( ad , 0 ) + ulps ;
-      if (  d < 0 ) { return -_next_double_ ( 0 , -d ) ; }
-    }
+      const std::int64_t d = a ?  (_distance_double_ ( 0 , a  ) + ulps ) : ulps ;
+      if ( d < 0 ) { return - _next_double_ ( 0 , -d ) ; }
+    }    
     //
-    Cast_D caster{} ;
-    Long al  = caster.d2l ( ad ) ;
-    al      += ulps ;
+    Cast_D caster {} ;    
+    std::int64_t al  = caster.d2l ( a ) ;
+    al              += ulps ;
     return caster.l2d ( al );
   }
   // ============================================================================
 } // end of anonymous namespace 
 // ============================================================================
-/*  equality comparion of float numbers using as the metric the maximal 
+/*  equality comparison of float numbers using as the metric the maximal 
  *  number of Units in the Last Place (ULP).
  *  It is a slightly modified version of very efficient implementation 
  *  of the initial Bruce Dawson's algorithm by Chris Lomont.
@@ -274,7 +227,7 @@ namespace
  *  @see http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
  *
  *  Lomont claims the algorithm is factor 2-10 more efficient 
- *  with respect to  Knuth's algorithm fomr comparions of floating number 
+ *  with respect to  Knuth's algorithm from comparisons of floating number 
  *  using the relative precision.
  *
  *  The effective relative difference depends on the choice of 
@@ -303,21 +256,22 @@ namespace
  *  @author Vanya BELYAEV  Ivan.Belyaev@nikhef.nl
  */
 // ============================================================================
-bool Ostap::Math::lomont_compare_float 
-( const float          af      , 
-  const float          bf      , 
+bool Ostap::Math::Lomont::compare_float 
+( const float          a       , 
+  const float          b       , 
   const unsigned short maxULPs ) 
 {
   // ==========================================================================
-  // prerequisites:
-  static_assert( std::numeric_limits<float>        ::is_specialized &&
-                 std::numeric_limits<int>          ::is_specialized && 
-                 std::numeric_limits<unsigned int> ::is_specialized &&
-                 sizeof(float)==sizeof(int)                         && 
-                 sizeof(float)==sizeof(unsigned int)                &&
-                 32 == std::numeric_limits<unsigned int>::digits    , "FAILED ASSUMPTIONS") ;
-  // ==========================================================================
-  return _compare_float_ ( af ,   bf , maxULPs ) ;
+  static_assert ( std::numeric_limits<float>          ::is_specialized &&
+		  std::numeric_limits<std::int32_t>   ::is_specialized && 
+		  std::numeric_limits<std::uint32_t>  ::is_specialized &&
+		  sizeof ( float ) == sizeof ( std::int32_t  )         &&
+		  sizeof ( float ) == sizeof ( std::uint32_t )         &&  
+		  31 == std::numeric_limits<std::int32_t>::digits      && 
+		  32 == std::numeric_limits<std::uint32_t>::digits     , 
+		  "FAILED FLOAT/INT32 ASSUMPTIONS" ) ;
+  // ===========================================================================
+  return a == b || _compare_float_ ( a , b , maxULPs ) ;
   // ==========================================================================
 }
 // ============================================================================
@@ -338,19 +292,18 @@ bool Ostap::Math::lomont_compare_float
  *  @date 2008-11-08
  */  
 // ============================================================================
-float Ostap::Math::next_float ( const float af , const short ulps ) 
+float Ostap::Math::Lomont::next_float
+( const float a    ,
+  const short ulps ) 
 {
-  /// the final check
-  static_assert( std::numeric_limits<float> ::is_specialized &&
-                 std::numeric_limits<int>   ::is_specialized && 
-                 sizeof(float)==sizeof(int) , "FAILED ASSUMPTIONS") ;
   // ==========================================================================
-  return _next_float_ ( af , ulps ) ;
+  return _next_float_ ( a , ulps ) ;
   // ==========================================================================
 }
 // ============================================================================
-float Ostap::Math::prev_float ( const float af , const short ulps ) 
-{ return next_float ( af , -ulps ) ; }
+float Ostap::Math::Lomont::prev_float
+( const float a    ,
+  const short ulps ) { return next_float ( a , -ulps ) ; }
 // ============================================================================
 /*  equality comparison of float numbers using as the metric the maximal 
  *  number of Units in the Last Place (ULP).
@@ -361,7 +314,7 @@ float Ostap::Math::prev_float ( const float af , const short ulps )
  *  @see http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
  *
  *  C.Lomont claims the algorithm is factor 2-10 more efficient 
- *  with respect to  Knuth's algorithm fomr comparions of floating number 
+ *  with respect to  Knuth's algorithm from comparisons of floating number 
  *  using the relative precision.
  *
  *  The effective relative difference depends on the choice of 
@@ -379,23 +332,23 @@ float Ostap::Math::prev_float ( const float af , const short ulps )
  *  @date 2008-11-08
  */
 // ============================================================================
-bool Ostap::Math::lomont_compare_double 
-( const double       af      , 
-  const double       bf      , 
+bool Ostap::Math::Lomont::compare_double 
+( const double       a       , 
+  const double       b       , 
   const unsigned int maxULPs ) 
 {
   // ==========================================================================
-  /// the final check
-  static_assert( std::numeric_limits<double>  ::is_specialized &&
-                 std::numeric_limits<Long>    ::is_specialized && 
-                 std::numeric_limits<ULong>   ::is_specialized &&
-                 std::numeric_limits<ULong>   ::is_specialized &&
-                 std::numeric_limits<Long>    ::is_specialized &&
-                 sizeof(double)==sizeof(Long)                  && 
-                 sizeof(double)==sizeof(ULong)                 &&
-                 64 == std::numeric_limits<ULong>::digits      , "FAILED ASSUMPTIONS") ;
-  // ==========================================================================
-  return _compare_double_ ( af ,   bf , maxULPs ) ;
+  static_assert( std::numeric_limits<double>         ::is_specialized &&
+                 std::numeric_limits<std::int64_t>   ::is_specialized && 
+                 std::numeric_limits<std::uint64_t>  ::is_specialized &&
+		 sizeof ( double ) == sizeof ( std::int64_t  )        &&
+		 sizeof ( double ) == sizeof ( std::uint64_t )        &&  
+                 63 == std::numeric_limits<std::int64_t>::digits      && 
+                 64 == std::numeric_limits<std::uint64_t>::digits     , 
+		 "FAILED DOUBLE/INT64 ASSUMPTIONS" ) ;
+  // ===========================================================================
+  return a == b || _compare_double_ ( a , b , maxULPs ) ;
+  // ===========================================================================  
 }
 // ============================================================================
 /*  Get the floating number that representation 
@@ -415,20 +368,18 @@ bool Ostap::Math::lomont_compare_double
  *  @date 2008-11-08
  */  
 // ============================================================================
-double Ostap::Math::next_double ( const double ad , const short ulps ) 
+double Ostap::Math::Lomont::next_double
+( const double a    ,
+  const short  ulps ) 
 {
   // ==========================================================================
-  /// the final check
-  static_assert( std::numeric_limits<double> ::is_specialized &&
-                 std::numeric_limits<Long>   ::is_specialized && 
-                 sizeof(double)==sizeof(Long) , "FAILED ASSUMPTIONS") ;
-  // ==========================================================================
-  return _next_double_ (  ad , ulps ) ;
+  return _next_double_ (  a  , ulps ) ;
   // ==========================================================================
 }
 // ============================================================================
-double Ostap::Math::prev_double ( const double ad , const short ulps )
-{  return next_double ( ad, - ulps ) ; } 
+double Ostap::Math::Lomont::prev_double
+( const double a    ,
+  const short  ulps ) { return next_double ( a , - ulps ) ; } 
 // ============================================================================
 /*  "distance" in ULPS between two float values 
  *   @param a (INPUT) the first  number 
@@ -436,7 +387,9 @@ double Ostap::Math::prev_double ( const double ad , const short ulps )
  *   @param "distance" in ULPs
  */
 // ============================================================================
-long Ostap::Math::ulps_distance_float  ( const float  a , const float  b ) 
+std::intmax_t Ostap::Math::Lomont::ulps_distance_float
+( const float  a ,
+  const float  b ) 
 { return _distance_float_  ( a , b ) ; }
 // ============================================================================
 /*  "distance" in ULPS between two double values 
@@ -445,8 +398,46 @@ long Ostap::Math::ulps_distance_float  ( const float  a , const float  b )
  *   @param "distance" in ULPs
  */
 // ============================================================================
-long Ostap::Math::ulps_distance_double ( const double a , const double b )
+std::intmax_t Ostap::Math::Lomont::ulps_distance_double
+( const double a ,
+  const double b )
 { return _distance_double_ ( a , b ) ; }
+// ============================================================================
+// explicit "cast" of float to int32 
+// ============================================================================
+std::int32_t Ostap::Math::Lomont::float2int
+( const float        v )
+{
+  Cast_F caster {} ;
+  return caster.f2i ( v ) ;
+}
+// ============================================================================
+// explicit "cast" of int   to float 
+// ============================================================================
+float Ostap::Math::Lomont::int2float
+( const std::int32_t i ) 
+{
+  Cast_F caster {} ;
+  return caster.i2f ( i ) ;
+}
+// ============================================================================
+// explicit "cast" of double to int64
+// ============================================================================
+std::int64_t Ostap::Math::Lomont::double2int
+( const double       v )
+{
+  Cast_D caster {} ;
+  return caster.d2l ( v ) ;
+}
+// ============================================================================
+// explicit "cast" of int   to float 
+// ============================================================================
+double Ostap::Math::Lomont::int2double
+( const std::int64_t i )
+{
+  Cast_D caster {} ;
+  return caster.l2d ( i ) ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

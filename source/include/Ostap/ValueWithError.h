@@ -372,6 +372,14 @@ namespace Ostap
       ValueWithError __clh__    () const ;
       /// Lemniscate elliptic  hyperbolic sine sm 
       ValueWithError __slh__    () const ;
+      /// Generalized Clausen function S
+      ValueWithError __clS__    ( const unsigned int n ) const ;
+      /// Generalized Clausen function C
+      ValueWithError __clC__    ( const unsigned int n ) const ;
+      /// Generalized Clausen function S
+      ValueWithError __clS__    ( const double       s ) const ;
+      /// Generalized Clausen function C
+      ValueWithError __clC__    ( const double       s ) const ;            
       /// Polylogarithm 
       ValueWithError __Li__     ( const short  n ) const ;
       /// Polylogarithm 
@@ -1443,22 +1451,6 @@ namespace Ostap
     ValueWithError Cl
     ( const unsigned int    n , 
       const ValueWithError& x ) ;
-    // ========================================================================  
-    /** Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
-     *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
-     *  @see https://en.wikipedia.org/wiki/Polylogarithm
-     */
-    ValueWithError Li
-    ( const short           n ,
-      const ValueWithError& x ) ;
-    // =======================================================================
-    /** Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
-     *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
-     *  @see https://en.wikipedia.org/wiki/Polylogarithm
-     */
-    ValueWithError Li
-    ( const double          s ,
-      const ValueWithError& x ) ;
     // =======================================================================
     /** standard Clausen functions, aka Gleisher-Clausen fnuctions  
      *  \f[ \begin{array}{lcc}
@@ -1476,6 +1468,54 @@ namespace Ostap
      * @see https://en.wikipedia.org/wiki/Clausen_function
      */
     ValueWithError clausen ( const ValueWithError& x ) ;
+    // =========================================================================
+    /** Generalized Clausen function S
+     *  @see https://en.wikipedia.org/wiki/Clausen_function
+     *  \f[ S(n,x) = \Im Li ( n , x) = \sum_i \frac{\sin kx}{k^n}\f$
+     */
+    ValueWithError clS 
+    ( const unsigned int    n , 
+      const ValueWithError& x ) ;
+    // =========================================================================
+    /** Generalized Clausen function C
+     *  @see https://en.wikipedia.org/wiki/Clausen_function
+     *  \f[ C(n,x) = \Re Li ( n , x) = \sum_i \frac{\cos kx}{k^n}\f$
+     */
+    ValueWithError clC  
+    ( const unsigned int    n , 
+      const ValueWithError& x ) ;
+    // =========================================================================
+    /** Generalized Clausen function S
+     *  @see https://en.wikipedia.org/wiki/Clausen_function
+     *  \f[ S(s,x) = \Im Li ( s , x) = \sum_i \frac{\sin kx}{k^s}\f$
+     */
+    ValueWithError clS 
+    ( const double          s , 
+      const ValueWithError& x ) ;
+    // =========================================================================
+    /** Generalized Clausen function C
+     *  @see https://en.wikipedia.org/wiki/Clausen_function
+     *  \f[ C(s,x) = \Re Li ( s , x) = \sum_i \frac{\cos kx}{k^s}\f$
+     */
+    ValueWithError clC  
+    ( const double          s , 
+      const ValueWithError& x ) ;      
+    // ========================================================================  
+    /** Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
+     *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     */
+    ValueWithError Li
+    ( const short           n ,
+      const ValueWithError& x ) ;
+    // =======================================================================
+    /** Real part Polylogarithm function  \f$ f(s,x) = Re (  Li_n(x) ) \f$,
+     *  where \f$ Li_s(x) = \sum \frac{x^k}{k^n} f\$
+     *  @see https://en.wikipedia.org/wiki/Polylogarithm
+     */
+    ValueWithError Li
+    ( const double          s ,
+      const ValueWithError& x ) ;    
     // ========================================================================       
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 

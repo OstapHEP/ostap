@@ -60,7 +60,8 @@ __all__     = (
     'dirichlet_beta' ,                               ## Dirichlet' lambda-function
     'hurwitz'        , 'hzeta'      ,                ## Hurwitz' zeta fuction 
     ## 
-    'Cl'             , 'Sl'         , 'clausen'    , ## Clausen functions 
+    'Cl'             , 'Sl'         , 'clausen'    , ## Clausen functions
+    'clS'            , 'clC'                       , ## Generalized Clausen functions 
     'hyperg_M'       , 'hyperg_U'   , 'hyperg_2F1' , ## Huypergeometric functions 
     ## 
     'dilog'          ,                               ## Di-Logarithm
@@ -1304,6 +1305,39 @@ def clausen ( x ) :
     fun = getattr ( x , '__clausen__' , None )
     if fun : return fun ()
     return _clausen_ ( x )
+
+
+# ==============================================================================
+## generalized Clausen function 
+# ==============================================================================
+_clS_ = Ostap.Math.Clausen.S
+_clC_ = Ostap.Math.Clausen.C
+
+# ===============================================================================
+## Generalized Clausen function
+#  \f$ S(n,x) = \sum_{i=1} \frac{ \sin kx }{ k^n }\f$
+#  \f[ S(s,x) = \Im Li ( s , \mathrm{e}{ix} ) = \sum \frac{ \sin kx}{k^s}\f]
+def clS ( n , x ) :
+    """ Generalized Clausen function
+    - S(n,x) = sum_{i=1}  sin kx / k^n 
+    - S(s,x) = Im Li ( s , e^{ix} ) = sum sin kx / k^s 
+    """
+    fun = getattr ( x , '__clS__' , None )
+    if fun : return fun ()
+    return _clS_ ( x )
+
+# ===============================================================================
+## Generalized Clausen function
+#  \f$ C(n,x) = \sum_{i=1} \frac{ \sin kx }{ k^n }\f$
+#  \f[ C(s,x) = \Im Li ( s , \mathrm{e}{ix} ) = \sum \frac{ \sin kx}{k^s}\f]
+def clC ( n , x ) :
+    """ Generalized Clausen function
+    - C(n,x) = sum_{i=1}  cos kx / k^n 
+    - C(s,x) = Re Li ( s , e^{ix} ) = sum cos kx / k^s 
+    """
+    fun = getattr ( x , '__clC__' , None )
+    if fun : return fun ()
+    return _clC_ ( x )
 
 _hyperg_M   = Ostap.Math.hyperg_M
 _hyperg_U   = Ostap.Math.hyperg_U 

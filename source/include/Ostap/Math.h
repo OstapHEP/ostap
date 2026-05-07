@@ -51,7 +51,7 @@ namespace Ostap
      *  It corresponds to relative ("Knuth/GLS") tolerance of about ~6*10^-6
      *  for values in excess of 10^-37.
      *
-     *  @see Ostap::Math::lomont_compare_float 
+     *  @see Ostap::Math::Lomont::compare_float 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-01-02
      */
@@ -62,7 +62,7 @@ namespace Ostap
      *  It corresponds to relative ("Knuth/GLS") tolerance of about ~6*10^-5
      *  for values in excess of 10^-37.
      *
-     *  @see Ostap::Math::lomont_compare_float 
+     *  @see Ostap::Math::Lomont::compare_float 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-01-02
      */
@@ -72,7 +72,7 @@ namespace Ostap
      *  "tolerance" parameter for "Lomont"-compare of floating point numbers.
      *  It corresponds to relative ("Knuth/GLS") tolerance of about ~6*10^-13
      *  for values in excess of 10^-304.
-     *  @see Ostap::Math::lomont_compare_double
+     *  @see Ostap::Math::Lomont::compare_double
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2010-01-02
      */
@@ -192,7 +192,7 @@ namespace Ostap
     ( const double value1                      ,
       const double value2                      ,
       const unsigned int mULPS = mULPS_double  ) 
-    { return lomont_compare_double ( value1 , value2 , mULPS ) ; }
+    { return Ostap::Math::Lomont::compare_double ( value1 , value2 , mULPS ) ; }
     // ========================================================================
     /** @struct Equal_To
      *  helper structure for comparison of floating values
@@ -246,7 +246,7 @@ namespace Ostap
     private :
       // ======================================================================
       /// evaluator 
-      Lomont<double> m_cmp ;                      // the evalautor 
+      Lomont_<double> m_cmp ;                      // the evalautor 
       // ======================================================================
     };
     // ========================================================================
@@ -281,8 +281,8 @@ namespace Ostap
     // ========================================================================
     /** explicit specialization for floats
      *  @see Ostap::Math::mULPS_float
-     *  @see Ostap::Math::Lomont
-     *  @see Ostap::Math::Lomont<float>
+     *  @see Ostap::Math::Lomont_
+     *  @see Ostap::Math::Lomont_<float>
      */
     template <>
     struct Equal_To<float>
@@ -305,7 +305,7 @@ namespace Ostap
     private :
       // ======================================================================
       /// the evaluator 
-      Lomont<float> m_cmp ;                       // the evaluator
+      Lomont_<float> m_cmp ;                       // the evaluator
       // ======================================================================
     } ;
     // ========================================================================
@@ -353,8 +353,8 @@ namespace Ostap
     // ========================================================================
     /** specialisation for vectors 
      *  @see Ostap::Math::mULPS_double
-     *  @see Ostap::Math::Lomont
-     *  @see Ostap::Math::Lomont<double>
+     *  @see Ostap::Math::Lomont_
+     *  @see Ostap::Math::Lomont_<double>
      */
     template <>
     struct Equal_To<std::vector<double> > 
@@ -1159,7 +1159,7 @@ namespace Ostap
      *  @param val value to be compared with the integer 
      *  @param ref the reference integer number 
      *  @param mULPS the precision 
-     *  @see Ostap::Math::lomont_compare_double 
+     *  @see Ostap::Math::Lomont::compare_double 
      *  @see Ostap::Math::mULPS_double
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17
@@ -1173,7 +1173,7 @@ namespace Ostap
      *  @param ref the reference integer  number 
      *  @param val value to be compared with the integer 
      *  @param mULPS the precision 
-     *  @see Ostap::Math::lomont_compare_double 
+     *  @see Ostap::Math::Lomont::compare_double 
      *  @see Ostap::Math::mULPS_double
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17
@@ -1188,7 +1188,7 @@ namespace Ostap
      *  @param val value to be compared with the unsigned integer 
      *  @param ref the reference unsigned integer number 
      *  @param mULPS the precision 
-     *  @see Ostap::Math::lomont_compare_double 
+     *  @see Ostap::Math::Lomont::compare_double 
      *  @see Ostap::Math::mULPS_double
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17
@@ -1202,7 +1202,7 @@ namespace Ostap
      *  @param val value to be compared with the unsigned integer 
      *  @param ref the reference unsigned integer number 
      *  @param mULPS the precision 
-     *  @see Ostap::Math::lomont_compare_double 
+     *  @see Ostap::Math::Lomont::compare_double 
      *  @see Ostap::Math::mULPS_double
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2008-09-17

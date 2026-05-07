@@ -76,11 +76,11 @@ def eps ( D , N ) :
     """
     return pow ( epsilon , 1.0 / ( D + N ) )
 # =============================================================================
-_next_double_ = Ostap.Math.next_double
+_next_double_ = Ostap.Math.Lomont.next_double
 # =============================================================================
 ##  get "small" interval around x 
 def delta ( x , ulps = 1000  ) :
-    """Get ``small'' interval around x"""
+    """Get `small' interval around x"""
     if abs ( x ) < epsilon : x = math.copysign ( 2*epsilon , x ) 
     n1 = _next_double_ ( x ,  ulps )
     n2 = _next_double_ ( x , -ulps )
