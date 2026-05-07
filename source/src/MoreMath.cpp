@@ -6011,6 +6011,95 @@ Ostap::Math::lehmer_mean
     ( std::pow ( a , p - 1 ) + std::pow ( b , p - 1 ) ) ; 
 }
 // ============================================================================
+/* Identric mean 
+ * https://en.wikipedia.org/wiki/Identric_mean
+ */
+ // ===========================================================================
+double Ostap::Math::identric_mean 
+( const double a , 
+  const double b ) 
+{
+  Ostap::Assert ( 0 < a , 
+    "The first number in non=positive!"     ,
+    "Ostap::Math::identric_mean"            , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+  Ostap::Assert ( 0 < b , 
+    "The second number in non=positive!"     ,
+    "Ostap::Math::identric_mean"            , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+  //
+  if ( s_equal ( a , b ) ) { return 0.5 * ( a + b ) ; }
+  // 
+  const long double al { a } ;
+  const long double bl { b } ; 
+  const long double logr = ( al * std::log ( al ) - bl * std::log ( bl ) ) /  ( al - bl ) ;
+  //
+  return std::exp ( logr - 1 ) ;   
+}
+// ===========================================================================
+/* Logarithic mean
+ *  @see  https://en.wikipedia.org/wiki/Logarithmic_mean
+ */
+// ============================================================================
+double Ostap::Math::logarithmic_mean 
+( const double a ,
+  const double b ) 
+{
+  Ostap::Assert ( 0 < a , 
+    "The first number in non=positive!"     ,
+    "Ostap::Math::logarithmic_mean"         , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+  Ostap::Assert ( 0 < b , 
+    "The second number in non=positive!"     ,
+    "Ostap::Math::logarithmic_mean"          , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+  //
+  if ( s_equal ( a , b ) ) { return 0.5 * ( a + b ) ; }
+  // 
+  const long double al { a } ;
+  const long double bl { b } ; 
+  //
+  return ( al - bl ) / ( std::log ( al ) - std::log ( bl ) ) ; 
+}
+// ==============================================================================
+/*  Stolarsky mean 
+ *  https://en.wikipedia.org/wiki/Stolarsky_mean
+ *  @param p parameter 
+ *  @param a the first number 
+ *  @param b the second number 
+ *  @return Stolarsky mean 
+ */
+// =============================================================================
+double Ostap::Math::stolarsky_mean 
+( const double p , 
+  const double a , 
+  const double b ) 
+{
+  Ostap::Assert ( 0 < a , 
+    "The first number in non=positive!"     ,
+    "Ostap::Math::stolarsky_mean"           , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+  Ostap::Assert ( 0 < b , 
+    "The second number in non=positive!"     ,
+    "Ostap::Math::stolarsky_mean"            , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+  //
+  if ( s_equal ( a , b ) ) { return 0.5 * ( a + b ) ; }
+  //
+  if      ( s_equal ( p     , -1   ) ) { return geometric_mean   ( a , b ) ; }
+  else if ( s_equal ( 1 + p ,  p   ) ) { return logarithmic_mean ( a , b ) ; }
+  else if ( s_equal ( p     ,  0.5 ) ) { return power_mean       ( 0.5 , a , b ) ; }
+  else if ( s_equal ( p     ,  1.0 ) ) { return identric_mean    ( a , b ) ; }
+  else if ( s_equal ( p     ,  2.0 ) ) { return arithmetic_mean  ( a , b ) ; } 
+  else if ( p < -1 && s_equal ( 1 - 1/p , 1 ) ) { return std::min ( a , b ) ; } 
+  else if ( p > +1 && s_equal ( 1 + 1/p , 1 ) ) { return std::max ( a , b ) ; } 
+  //
+  const long double al { a } ;
+  const long double bl { b } ;
+  //
+  const long double rr = std::pow ( al , p ) - std::pow ( bl , p ) ;
+  return std::pow ( rr / ( p * ( al - bl ) ) , 1.0L / ( p - 1.0L ) ) ;
+}
 
 // ============================================================================
 /*  Gudermannian function 

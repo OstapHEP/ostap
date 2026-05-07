@@ -543,7 +543,33 @@ namespace Ostap
       const double a ,
       const double b ) ;
     // ========================================================================
-    
+    /** Identric mean 
+     * https://en.wikipedia.org/wiki/Identric_mean
+     */
+    double identric_mean 
+    ( const double a , 
+      const double b ) ;
+    // ======================================================================== 
+    /** Logarithic mean
+     *  @see  https://en.wikipedia.org/wiki/Logarithmic_mean
+     *  \f[ L(a,b) = \frac{a-b}{\log a - \log b } \f]
+     */
+    double logarithmic_mean 
+    ( const double a ,
+      const double b ) ; 
+    // =========================================================================
+    /** Stolarsky mean 
+     *  https://en.wikipedia.org/wiki/Stolarsky_mean
+     *  @param p parameter 
+     *  @param a the first number 
+     *  @param b the second number 
+     *  @return Stolarsky mean 
+     */
+    double stolarsky_mean 
+    ( const double p , 
+      const double a , 
+      const double b ) ;
+
     // ========================================================================
     /** Gudermannian function 
      *  @see https://en.wikipedia.org/wiki/Gudermannian_function

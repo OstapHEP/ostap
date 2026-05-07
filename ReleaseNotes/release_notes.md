@@ -4,8 +4,12 @@
  1. Some code reshuffling for `Lomont.h`
  1. New namespace `Ostap::Math::Lomont`
  1. Template class `Ostap::Math::Lomont<...>` is renamed to `Ostap::Math::Lomont_<...>`
- 1. Functions `Ostap::Math::lomont_*` are renamed to `Ostap::Math::Lomont:*``
+ 1. Functions `Ostap::Math::lomont_*` are renamed to `Ostap::Math::Lomont::*``
  1. Add generalized Clausen Functions to `ValueWithError`
+ 1. Add `Ostap::Math::identric_mean`
+ 1. Add `Ostap::Math::logarithmic_mean`
+ 1. Add `Ostap::Math::stolarsky_mean` 
+ 
 
 ## Bug fixes
 
