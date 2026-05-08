@@ -182,11 +182,12 @@ namespace
     else if (  !std::isfinite ( a  ) ) { return a  ; }
     else if (  0 > a                 ) { return -_next_float_ ( -a , -ulps ) ; }
     //
+
     if ( 0 > ulps ) 
     {
-      const std::int32_t d = _distance_float_ ( a , 0 ) + ulps ;
-      if ( d < 0 ) { return _next_float_ ( 0  , d ) ; }
-    }
+      const std::int32_t d = a ?  (_distance_float_ ( 0 , a  ) + ulps ) : ulps ;
+      if ( d < 0 ) { return - _next_float_ ( 0 , -d ) ; }
+    }    
     //    
     Cast_F caster{} ;
     std::int32_t ai  = caster.f2i ( a ) ;

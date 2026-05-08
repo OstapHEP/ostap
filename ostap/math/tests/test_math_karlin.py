@@ -81,7 +81,7 @@ def test_karlin_shapley_troots () :
     h1.SetMinimum  ( -0.1 )
     h1.SetMaximum  (  1.1 )
     
-    for n in range ( 2 , 10 ) :
+    for n in range ( 2 , 11 ) :
         
         ks    = Ostap.Math.KarlinShapley ( n , 0 , 1 )
         
@@ -122,7 +122,7 @@ def test_karlin_studden_troots () :
     h1.SetMinimum  ( -0.1 )
     h1.SetMaximum  (  1.1 )
     
-    for n in range ( 2 , 10 ) :
+    for n in range ( 2 , 11 ) :
         
         ks    = Ostap.Math.KarlinStudden ( n , 0 , 1 )
         
