@@ -1174,13 +1174,16 @@ Ostap.Math.Log10GammaDist. __reduce__ = _omgdis_reduce_
 # ============================================================================
 ## Reduce Chi2 
 #  @eee Ostap::Math::Chi2
+#  @see Ostap::Math::Kolmogorov
 def _omchi2_reduce_( s ) :
     """ Reduce `Ostap.Math.Chi2`
     - see `Ostap.Math.Chi2`
+    - see `Ostap.Math.Kolmogorov`
     """
-    return root_factory , ( type ( s ) , s.ndf() )
+    return root_factory , ( type ( s ) , s.n() )
 
-Ostap.Math.Chi2.__reduce__ = _omchi2_reduce_ 
+Ostap.Math.Chi2      .__reduce__ = _omchi2_reduce_ 
+Ostap.Math.Kolmogorov.__reduce__ = _omchi2_reduce_ 
     
 # =============================================================================
 ## Reduce Ostap::Math::GenGammaDist

@@ -16,6 +16,7 @@
 #include "Ostap/Bernstein.h"
 #include "Ostap/Workspace.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/Integrator.h"
 // ============================================================================
 /** @file Ostap/Models.h
  *  Set of useful continuos  PDFs/models
@@ -282,7 +283,8 @@ namespace Ostap
       // ======================================================================
       // variables
       // ======================================================================
-      inline unsigned int  ndf () const  { return m_n ; }
+      inline unsigned int  ndf () const { return m_n ; }
+      inline unsigned int  n   () const { return m_n ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -4687,6 +4689,108 @@ namespace Ostap
       // ======================================================================      
     } ;
     // ========================================================================    
+    /** @class Kolmogorov
+     *
+     * The Kolmogorov-Smirnov test statistic D_n is defined by
+     *
+     *        D_n = sup_x |F(x) - S_n(x)|
+     *
+     * where n is the sample size, F(x) is a completely specified theoretical
+     * distribution, and S_n(x) is an empirical distribution function.
+     *
+     * The function computes the cumulative probability P[D_n <= x] of the 2-sided 1-sample
+     * Kolmogorov-Smirnov distribution with sample size n at x.
+     * It returns at least 13 decimal degits of precision for n <= 140,
+     * at least 5 decimal degits of precision for 140 < n <= 100000,
+     * and a few correct decimal digits for n > 100000.
+     *
+     * The code is taken from
+     *  - Simard, R., & L’Ecuyer, P. (2011). 
+     *    "Computing the Two-Sided Kolmogorov-Smirnov Distribution."
+     *    Journal of Statistical Software, 39(11), 1–18.
+     * @see  https://doi.org/10.18637%2Fjss.v039.i11
+     * @eee Ostap::Math::kolmogorov_cdf
+     * @eee Ostap::Math::kolmogorov_pdf
+     * @eee Ostap::Math::kolmogorov_ccdf
+    */
+    class Kolmogorov
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// constructor 
+      Kolmogorov ( const unsigned int n = 1 ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate Kolmogorov function
+      double        evaluate    ( const double x ) const ;
+      /// evaluate Kolmogorov function
+      inline double operator () ( const double x ) const { return evaluate ( x ) ; } 
+      /// evaluate Kolmogoriv function
+      inline double pdf         ( const double x ) const { return evaluate ( x ) ; } 
+      // ======================================================================
+    public : 
+      // ======================================================================
+      // get number of entries
+      inline unsigned int n () const { return m_n ; };
+      //=======================================================================
+    public :
+      // ======================================================================
+      // set new value for N 
+      bool setN ( const unsigned int value ) ;
+      // ======================================================================
+    public : // support 
+      // ======================================================================
+      /// xmin
+      inline double xmin  () const { return 0 ; }
+      /// xmax
+      inline double xmax  () const { return 1 ; }
+      // ======================================================================
+    public : 
+      //=======================================================================
+      /// mean              
+      double mean     () const ;
+      /// variance          
+      double variance () const ;
+      /// RMS               
+      double rms      () const ;
+      /// skewness          
+      double skewness () const ;
+      /// (excess) kurtosis 
+      double kurtosis () const ;      
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      /// intergal 
+      double integral ()    const ;
+      /// intergal 
+      double integral
+      ( const double low  ,
+        const double high ) const ;
+      // ======================================================================
+      /** CDF
+       * @see Ostap::Math::Kolmogorov_cdf 
+       */ 
+      double cdf 
+      ( const double x ) const ;
+      // ======================================================================
+      /** Complementary CDF
+       * @see Ostap::Math::Kolmogorov_ccdf 
+       */ 
+      double ccdf 
+      ( const  double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///get the unique tag 
+      std::size_t tag() const ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      unsigned int m_n  { 1 } ; 
+      // ======================================================================
+    };
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

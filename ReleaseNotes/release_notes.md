@@ -10,7 +10,7 @@
  1. Add `Ostap::Math::logarithmic_mean`
  1. Add `Ostap::Math::stolarsky_mean` 
  1. Extend Fermi-Dirac,Bose-Einstein and Debye functions, add them to `math_ve` 
- 
+ 1. add Kolmogorov's pdf,cdf&ccdd as "model" 
 
 ## Bug fixes
 

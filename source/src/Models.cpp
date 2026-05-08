@@ -6881,6 +6881,187 @@ std::size_t Ostap::Math::BurrXII::tag () const
 				       m_k           .tag () ) ;
 }
 
+
+// ============================================================================
+// Kolmogorov 
+// ============================================================================
+Ostap::Math::Kolmogorov::Kolmogorov
+( const unsigned int n )
+: m_n  ( n )
+{
+  Ostap::Assert ( m_n , 
+    "Non-positive number of entries"         , 
+    "Ostap::Math::Kolmogorov::Kolmgorotov"   , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+}
+// ============================================================================
+// Set new number of entries 
+// ============================================================================
+bool Ostap::Math::Kolmogorov::setN
+( const unsigned int value )
+{
+  if ( value == m_n ) { return false  ; }
+  
+  Ostap::Assert ( value , 
+    "Non-positive number of entries"         , 
+    "Ostap::Math::Kolmogorov::setN"         , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ ) ;
+
+  m_n = value ;
+  return true ; 
+}
+// ============================================================================
+// evaluate it 
+// ============================================================================
+double Ostap::Math::Kolmogorov::evaluate 
+( const  double x )  const 
+{ return kolmogorov_pdf ( m_n , x ) ; }
+// ============================================================================
+// integral 
+// ============================================================================
+double Ostap::Math::Kolmogorov::integral () const { return 1 ; }
+// ============================================================================
+double Ostap::Math::Kolmogorov::integral 
+( const double low  , 
+  const double high ) const 
+{  
+  return 
+    s_equal ( low , high ) ? 0.0 :
+    high < low             ? -integral ( high, low  ) :
+    low <= 0 && high <= 0  ? 0.0 : 
+    low >= 1 && high >= 1  ? 0.0 : 
+    low <= 0 && high >= 1  ? 1.0 : cdf ( high ) - cdf ( low ) ; 
+}
+// =============================================================================
+// get CDF 
+// ============================================================================
+double Ostap::Math::Kolmogorov::cdf 
+( const  double x )  const 
+{ return kolmogorov_cdf ( m_n , x ) ;  }
+// ============================================================================
+// get complementary CDF 
+// ============================================================================
+double Ostap::Math::Kolmogorov::ccdf 
+( const  double x )  const 
+{ return kolmogorov_ccdf ( m_n , x ) ;  }
+// ============================================================================
+// calculate the mean value 
+// ============================================================================
+double Ostap::Math::Kolmogorov::mean () const
+{
+  Ostap::Math::Integrator ii {} ;
+  //
+  auto m1_fun = [this] ( const double x ) -> double
+  { return  x * (*this)(x)  ; } ; 
+  static const std::string m1_name  { "M1" } ;
+  const std::size_t m1_tag = Ostap::Utils::hash_combiner ( m1_name , tag () ) ;
+  const double m1 = ii.integrate ( std::cref ( m1_fun ) , xmin () , xmax () , m1_tag ) ; 
+  //
+  return m1 ; 
+}
+// ============================================================================
+// calculate the variance 
+// ============================================================================
+double Ostap::Math::Kolmogorov::variance () const
+{
+  //
+  Ostap::Math::Integrator ii {} ;
+  //
+  auto m1_fun = [this] ( const double x ) -> double
+  { return x * (*this)(x)  ; } ; 
+  static const std::string m1_name  { "M1" } ;
+  const std::size_t m1_tag = Ostap::Utils::hash_combiner ( m1_name , tag () ) ;
+  const double m1 = ii.integrate ( std::cref ( m1_fun ) , xmin () , xmax () , m1_tag ) ; 
+  //
+  auto m2_fun = [this] ( const double x ) -> double
+  { return x * x * (*this)(x)  ; } ; 
+  static const std::string m2_name  { "M2" } ;
+  const std::size_t m2_tag = Ostap::Utils::hash_combiner ( m2_name , tag () ) ;
+  const double m2 = ii.integrate ( std::cref ( m2_fun ) , xmin () , xmax () , m2_tag ) ;
+  //
+  return Ostap::Math::variance ( m2 , m1 ) ; 
+}
+// ============================================================================
+// calculate the skewness 
+// ============================================================================
+double Ostap::Math::Kolmogorov::skewness () const
+{
+  //
+  Ostap::Math::Integrator ii {} ;
+  //
+  auto m1_fun = [this] ( const double x ) -> double
+  { return x * (*this)(x)  ; } ; 
+  static const std::string m1_name  { "M1" } ;
+  const std::size_t m1_tag = Ostap::Utils::hash_combiner ( m1_name , tag () ) ;
+  const double m1 = ii.integrate ( std::cref ( m1_fun ) , xmin () , xmax () , m1_tag ) ; 
+  //
+  auto m2_fun = [this] ( const double x ) -> double
+  { return x * x * (*this)(x)  ; } ; 
+  static const std::string m2_name  { "M2" } ;
+  const std::size_t m2_tag = Ostap::Utils::hash_combiner ( m2_name , tag () ) ;
+  const double m2 = ii.integrate ( std::cref ( m2_fun ) , xmin () , xmax () , m2_tag ) ;
+  //
+  auto m3_fun = [this] ( const double x ) -> double
+  { return Ostap::Math::POW ( x , 3 ) * (*this)(x)  ; } ; 
+  static const std::string m3_name  { "M3" } ;
+  const std::size_t m3_tag = Ostap::Utils::hash_combiner ( m3_name , tag () ) ;
+  const double m3 = ii.integrate ( std::cref ( m3_fun ) , xmin () , xmax () , m3_tag ) ;
+  //
+  return Ostap::Math::skewness ( m3 , m2 , m1 ) ; 
+}
+// ============================================================================
+// calculate the skewness 
+// ============================================================================
+double Ostap::Math::Kolmogorov::kurtosis () const
+{
+  //
+  Ostap::Math::Integrator ii {} ;
+  //
+  auto m1_fun = [this] ( const double x ) -> double
+  { return x * (*this)(x)  ; } ; 
+  static const std::string m1_name  { "M1" } ;
+  const std::size_t m1_tag = Ostap::Utils::hash_combiner ( m1_name , tag () ) ;
+  const double m1 = ii.integrate ( std::cref ( m1_fun ) , xmin () , xmax () , m1_tag ) ; 
+  //
+  auto m2_fun = [this] ( const double x ) -> double
+  { return x * x * (*this)(x)  ; } ; 
+  static const std::string m2_name  { "M2" } ;
+  const std::size_t m2_tag = Ostap::Utils::hash_combiner ( m2_name , tag () ) ;
+  const double m2 = ii.integrate ( std::cref ( m2_fun ) , xmin () , xmax () , m2_tag ) ;
+  //
+  auto m3_fun = [this] ( const double x ) -> double
+  { return Ostap::Math::POW ( x , 3 ) * (*this)(x)  ; } ; 
+  static const std::string m3_name  { "M3" } ;
+  const std::size_t m3_tag = Ostap::Utils::hash_combiner ( m3_name , tag () ) ;
+  const double m3 = ii.integrate ( std::cref ( m3_fun ) , xmin () , xmax () , m3_tag ) ;
+  //
+  auto m4_fun = [this] ( const double x ) -> double
+  { return Ostap::Math::POW ( x , 4 ) * (*this)(x)  ; } ; 
+  static const std::string m4_name  { "M4" } ;
+  const std::size_t m4_tag = Ostap::Utils::hash_combiner ( m4_name , tag () ) ;
+  const double m4 = ii.integrate ( std::cref ( m4_fun ) , xmin () , xmax () , m4_tag ) ;
+  //
+  return Ostap::Math::kurtosis ( m4 , m3 , m2 , m1 ) ; 
+}
+// ============================================================================
+// get RMS
+// ============================================================================
+double Ostap::Math::Kolmogorov::rms () const 
+{ 
+  const double v2 = variance () ;
+  return v2 <= 0 ? 0.0 : std::sqrt ( v2 ) ;
+}
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Kolmogorov::tag () const 
+{ 
+  static const std::string s_name = "Kolmogorov" ;
+  return Ostap::Utils::hash_combiner ( s_name  , m_n ); 
+}
+
+
+
 // ============================================================================
 //                                                                      The END
 // ============================================================================
