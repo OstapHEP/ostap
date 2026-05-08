@@ -1002,7 +1002,35 @@ Ostap::Math::ValueWithError
 Ostap::Math::ValueWithError::__Li__ ( const double s ) const 
 { return Li ( s , *this ) ; }
 // ============================================================================
-
+// Complete Fermi-Dirac integral 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__FD__ ( const int n ) const 
+{ return fermi_dirac ( n , *this ) ; }
+// ============================================================================
+// Complete Fermi-Dirac integral 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__FD__ ( const double s ) const 
+{ return fermi_dirac ( s , *this ) ; }
+// ============================================================================
+// Complete Bose-Einstein  integral 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__BE__ ( const int n ) const 
+{ return bose_einstein ( n , *this ) ; }
+// ============================================================================
+// Complete Bose-Einstein  integral 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__BE__ ( const double s ) const 
+{ return bose_einstein ( s , *this ) ; }
+// ============================================================================
+// Debye functionn 
+// ============================================================================
+Ostap::Math::ValueWithError
+Ostap::Math::ValueWithError::__debye__ ( const unsigned short n ) const 
+{ return debye  ( n , *this ) ; }
 // ============================================================================
 /* Does this object represent natural number?
  *  - non-negative integer value 
@@ -4466,6 +4494,101 @@ Ostap::Math::Li
   // get the derivative:
   const double d = !s_zero ( xv ) ?  Li ( s - 1.0 , xv ) / xv : 1.0 ;
   //
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
+}
+// ==============================================================================
+/*  Complete Fermi-Dirac integral 
+ *  \f[ F_j(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^j dt}{ e^{t-x} + 1 } = - Li_{j+1}( - \mathrm{e}^{x} ) \f]
+ */
+// ==============================================================================  
+Ostap::Math::ValueWithError 
+Ostap::Math::fermi_dirac 
+( const int                          j  , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = fermi_dirac ( j , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //  
+  // get the derivative:
+  const double d = fermi_dirac ( j - 1 , xv );
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
+}
+// ========================================================================
+/*  Complete Fermi-Dirac integral 
+ *  \f[ F_s(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^s dt}{ e^{t-x} + 1 } = - Li_{j+1}( - \mathrm{e}^{x} ) \f]
+ */  
+// ========================================================================    
+Ostap::Math::ValueWithError 
+Ostap::Math::fermi_dirac 
+( const double                       s , 
+  const Ostap::Math::ValueWithError& x ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = fermi_dirac ( s , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //  
+  // get the derivative:
+  const double d = fermi_dirac ( s - 1 , xv );
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
+}
+// ==========================================================================
+/*  Complete Bose-Einstein integral 
+ *  \f[ F_j(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^j dt}{ e^{t-x} - 1 } = Li_{j+1}( \mathrm{e}^{x} ) \f]
+ */  
+// ===========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::bose_einstein 
+( const int                          j  , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = bose_einstein ( j , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //  
+  // get the derivative:
+  const double d = bose_einstein ( j - 1 , xv );
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
+}
+// ===========================================================================
+/** Complete Bose-Einstein integral 
+ *  \f[ F_s(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^s dt}{ e^{t-x} - 1 } = Li_{j+1}( \mathrm{e}^{x} ) \f]
+ */
+// ===========================================================================  
+Ostap::Math::ValueWithError 
+Ostap::Math::bose_einstein 
+( const double                       s  , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = bose_einstein ( s , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //  
+  // get the derivative:
+  const double d = bose_einstein ( s - 1 , xv );
+  return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
+}
+// ==========================================================================
+/*  Debye function 
+ *  @see https://en.wikipedia.org/wiki/Debye_function
+ */  
+// ===========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::debye 
+( const unsigned short               n   , 
+  const Ostap::Math::ValueWithError& x  ) 
+{
+  //
+  const double xv    = x.value() ;
+  const double value = debye ( n , xv ) ;
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return value ; }
+  //  
+  // get the derivative:
+  const double d = n * ( bernulli_fun ( xv ) - value ) ;
   return Ostap::Math::ValueWithError ( value  , d * d * x.cov2 () ) ;    
 }
 // =============================================================================

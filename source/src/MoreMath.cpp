@@ -4649,7 +4649,7 @@ Ostap::Math::dilog
  *  It is related to polylogarithm
  *  \f$ F_j ( x ) = - Li_{j+1} ( -\mathrm{e}^{x} ) \f$
  *
- *  GSL is used for computation: <code>gsl_sf_fermi_dirac_[0,1,2,int]_e</code>
+ *  GSL is used for computation: <code>gsl_sf_fermi_dirac_[m1,0,1,2,int]_e</code>
  *
  */
 // =============================================================================
@@ -4663,14 +4663,15 @@ double Ostap::Math::fermi_dirac
   gsl_sf_result result ;
   int ierror = GSL_SUCCESS ;
   //
-  if      ( 0 == j ) { ierror = gsl_sf_fermi_dirac_0_e   (     x , &result ) ; }
-  else if ( 1 == j ) { ierror = gsl_sf_fermi_dirac_1_e   (     x , &result ) ; }
-  else if ( 2 == j ) { ierror = gsl_sf_fermi_dirac_2_e   (     x , &result ) ; }
-  else               { ierror = gsl_sf_fermi_dirac_int_e ( j , x , &result ) ; }
+  if      ( -1 == j ) { ierror = gsl_sf_fermi_dirac_m1_e  (     x , &result ) ; }
+  else if (  0 == j ) { ierror = gsl_sf_fermi_dirac_0_e   (     x , &result ) ; }
+  else if (  1 == j ) { ierror = gsl_sf_fermi_dirac_1_e   (     x , &result ) ; }
+  else if (  2 == j ) { ierror = gsl_sf_fermi_dirac_2_e   (     x , &result ) ; }
+  else                { ierror = gsl_sf_fermi_dirac_int_e ( j , x , &result ) ; }
   //
   if ( ierror ) 
   {
-    gsl_error ( "Error from gsl_sf_fermi_dirac_[0,1,2,int]_e function" , __FILE__ , __LINE__ , ierror ) ;
+    gsl_error ( "Error from gsl_sf_fermi_dirac_[m1,0,1,2,int]_e function" , __FILE__ , __LINE__ , ierror ) ;
     if ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
       { return std::numeric_limits<double>::quiet_NaN() ; }
   }
@@ -4818,8 +4819,8 @@ double Ostap::Math::bose_einstein
  */
 // ===========================================================================
 double Ostap::Math::debye
-( const short  n ,
-  const double x )
+( const unsigned short  n ,
+  const double          x )
 {
   if      ( 0 == n       ) { return 1 ; }
   else if ( s_zero ( x ) ) { return 1 ; }   
@@ -4851,19 +4852,36 @@ double Ostap::Math::debye
   //
   // (B) use polylogarithms
   //
+  const short nn = n ;
+  //
   const long double xx   = x ; 
   const long double expx = std::exp ( -xx ) ;
-  long double  result    = Li ( n , expx ) ;
+  long double  result    = Li ( nn , expx ) ;
   long double  term      = 1 ;
+  //
+  
   //
   for ( unsigned short k = 1 ; k < n ; ++k )
   {
     term   *= ( xx / k ) ;
-    const short nmk = n - k ;
-    result += Li ( nmk , expx ) * term ;
+    const short nmk = nn - k ;
+    result += Li ( nmk   , expx ) * term ;
   }
   //
   return result ;
+}
+// ============================================================================
+/** Bernulli function  \f[ B(x) = \frac{x}{e^x - 1 }\f]
+ */
+// ============================================================================
+double Ostap::Math::bernulli_fun 
+( const double x ) 
+{ 
+  if      ( std::abs( x ) < 1 ) { return 1.0 / expm1_x ( x ) ; } 
+  else if ( x < 0             ) { return x / ( std::exp ( 1.0L * x ) - 1.0L  ) ; }
+  //
+  const long double ex = std::exp ( -1.0L * x ) ;
+  return x * ex / ( 1.0L - ex ) ; 
 }
 // ============================================================================
 /* Mill's ratio for normal distribution
@@ -5976,12 +5994,12 @@ double Ostap::Math::weighted_power_mean
   const double a     , 
   const double b     ) 
 {
-
+  //
   Ostap::Assert ( 0 < a , 
     "The first number in non-positive!"     ,
     "Ostap::Math::weighted_power_mean"      , 
     INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
-
+  //
   Ostap::Assert ( 0 < b , 
     "The second number in non-positive!"    ,
     "Ostap::Math::weighted_power_mean"      , 
@@ -6005,7 +6023,7 @@ double Ostap::Math::weighted_power_mean
   return std::pow ( r , 1.0L /p ) ;  
   //
 }
-
+//  ===========================================================================
 
 // ============================================================================
 /*  Heinz mean for two real numbers (just for completeness)

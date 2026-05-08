@@ -69,7 +69,8 @@ __all__     = (
     'Ti'             ,                               ## inverse tangent intergal
     'debye'          ,                               ## Debye function
     'fermi_dirac'    ,                               ## complete Fermi-Dirac integral 
-    'bose_einstein'  ,                               ## complete Bose-Einstein integral 
+    'bose_einstein'  ,                               ## complete Bose-Einstein integral
+    'debye'          ,                               ## Debye function
     'legendre_chi'   ,                               ## Legendre chi-function
     ##
     'moebius'        ,                               ## Moebius transform
@@ -1422,8 +1423,8 @@ def legendre_chi ( s , z ) :
     if fun : return fun ( s )
     return _lc_ ( s , z )
     
-_fd_ = Ostap.Math.fermi_dirac
-_be_ = Ostap.Math.bose_einstein
+_fd_    = Ostap.Math.fermi_dirac
+_be_    = Ostap.Math.bose_einstein
 
 # ==============================================================================
 ## Complete Fermi-Dirac integral 
@@ -1437,7 +1438,7 @@ def fermi_dirac ( s , z ) :
 
     It is related to polylogarithm: F_s ( x ) = - Li_{s+1} ( -exp(x} ) 
     """
-    fun = getattr ( z , '__fermi_dirac__' , None )
+    fun = getattr ( z , '__fermi_dirac__' , getattr ( z ,'__FD__' , None ) ) 
     if fun : return fun ( s )
     return _fd_ ( s , z )  
 
@@ -1454,7 +1455,7 @@ def bose_einstein ( s , z ) :
     
     It is related to polylogarithm: G_s ( x ) =  Li_{s+1} ( exp(x} ) 
     """
-    fun = getattr ( z , '__bose_einstein__' , None )
+    fun = getattr ( z , '__bose_einstein__' , getattr ( z , '__BE__' , None ) )
     if fun : return fun ( s )
     return _be_ ( s , z )  
 
@@ -1470,8 +1471,8 @@ def debye ( n , x ) :
     - @see `Ostap.Math.debye`
     """
     fun = getattr ( z , '__debye__' , None )
-    if fun : return fun ( s )
-    return _debye_ ( s , z )  
+    if fun : return fun ( n )
+    return _debye_ ( n , z )  
 
 _moebius_   = Ostap.Math.moebius
 # ==============================================================================

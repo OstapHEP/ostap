@@ -384,6 +384,16 @@ namespace Ostap
       ValueWithError __Li__     ( const short  n ) const ;
       /// Polylogarithm 
       ValueWithError __Li__     ( const double s ) const ;
+      /// Complete Fermi-Dirac intergal 
+      ValueWithError __FD__     ( const int    n ) const ; 
+      /// Complete Fermi-Dirac intergal 
+      ValueWithError __FD__     ( const double s ) const ; 
+      /// Complete Bose-Einstein intergal 
+      ValueWithError __BE__     ( const int    n ) const ; 
+      /// Complete Bose-Einstein intergal 
+      ValueWithError __BE__     ( const double s ) const ; 
+      /// Debye functtion
+      ValueWithError __debye__  ( const unsigned short n ) const ;  
       // ======================================================================
     public:
       // ======================================================================
@@ -1516,6 +1526,42 @@ namespace Ostap
     ValueWithError Li
     ( const double          s ,
       const ValueWithError& x ) ;    
+    // ========================================================================
+    /** Complete Fermi-Dirac integral 
+     *  \f[ F_j(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^j dt}{ e^{t-x} + 1 } = - Li_{j+1}( - \mathrm{e}^{x} ) \f]
+     */  
+    ValueWithError fermi_dirac 
+    ( const int             j  , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /** Complete Fermi-Dirac integral 
+     *  \f[ F_s(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^s dt}{ e^{t-x} + 1 } = - Li_{j+1}( - \mathrm{e}^{x} ) \f]
+     */  
+    ValueWithError fermi_dirac 
+    ( const double          s  , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /** Complete Bose-Einstein integral 
+     *  \f[ F_j(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^j dt}{ e^{t-x} - 1 } = Li_{j+1}( \mathrm{e}^{x} ) \f]
+     */  
+    ValueWithError bose_einstein 
+    ( const int             j  , 
+      const ValueWithError& x  ) ;
+    // ========================================================================
+    /** Complete Bose-Einstein integral 
+     *  \f[ F_s(x) = \frac{1}{\Gamma(j+1)} \int_0^{+\infty} \frac{t^s dt}{ e^{t-x} - 1 } = Li_{j+1}( \mathrm{e}^{x} ) \f]
+     */  
+    ValueWithError bose_einstein
+    ( const double          s  , 
+      const ValueWithError& x  ) ;
+    // =========================================================================
+    /** Debye function
+     * \f[ D_n(x) = \frac{n}{x^n} \int_0^x  \frac{t^n}{e^t - 1} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Debye_function
+    */
+    ValueWithError debye
+    ( const unsigned short  n ,
+      const ValueWithError& x ) ;
     // ========================================================================       
     /** evaluate <code>fma(x,y,z)</code>: \f$ xy+z \f$  
      *  @param y    (INPUT) the parameter 

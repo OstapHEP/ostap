@@ -584,15 +584,7 @@ namespace Ostap
       const double a , 
       const double b ) ;
     // ========================================================================
-    /** Hypergemetric mean 
-     *  @see https://web.archive.org/web/20130921055354/http://www.kurims.kyoto-u.ac.jp/EMIS/journals/JIPAM/images/202_06_JIPAM/202_06_www.pdf
-     *  @see RICHARDS, KENDALL C; HILARI C. TIEDEMAN (2006). 
-     *       "A NOTE ON WEIGHTED IDENTRIC AND LOGARITHMIC MEANS" (PDF). 
-     *        Journal of Inequalities in Pure and Applied Mathematics. 7 (5). 
-     *        Archived (PDF) from the original on 21 September 2013. Retrieved 20 September 2013.
-     */
-    // ========================================================================
-
+  
     // ========================================================================
     /** Gudermannian function 
      *  @see https://en.wikipedia.org/wiki/Gudermannian_function
@@ -834,17 +826,21 @@ namespace Ostap
     ( const double s , 
       const double x ) ;
     // =======================================================================
-    
-    // =======================================================================
     /** Debye function
      * \f[ D_n(x) = \frac{n}{x^n} \int_0^x  \frac{t^n}{e^t - 1} dt \f]
      *  @see https://en.wikipedia.org/wiki/Debye_function
      */
     double debye
-    ( const short  n ,
-      const double x ) ;
+    ( const unsigned short  n ,
+      const double          x ) ;
     // =======================================================================
-    
+    /** Bernulli function  \f[ B(x) = \frac{x}{e^x - 1 }\f]
+     */
+    double bernulli_fun 
+    ( const double x ) ; 
+    // =======================================================================
+
+
     // =======================================================================
     /** \f$ \left| \frac{\Gamma(x+iy)}{\Gamma(x)} \right|^2 \f$ for 
      *  \f$  x> 0\f$.
