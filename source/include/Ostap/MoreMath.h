@@ -499,16 +499,30 @@ namespace Ostap
     // ========================================================================
     /** Power mean for two real numbers (just for completeness)
      *  @see https://en.wikipedia.org/wiki/Power_mean 
-     *  @param x-parameter: 0<=x<=0.5
+     *  @param p-parameter: 0<=p<=0.5
      *  @param a the first number 
      *  @param b the second number 
      *  @return power mean 
      */
     double
     power_mean 
-    ( const double x , 
+    ( const double p , 
       const double a ,
       const double b ) ;
+    // ========================================================================
+    /**  weighted power mean 
+     *  \f[ f(a,b) = \left( \left(1-\omega\right)a^p + \omega b^p \right)^{1/p}\f]
+     *  @param p power parameter
+     *  @param omega  omega-parameter \f$ 0 < \omega < 1 \f$
+      * @param a the first number 
+     *  @param b the second number 
+     *  @return weighted power mean 
+     */
+     double weighted_power_mean 
+     ( const double p     , 
+       const double omega , 
+       const double a     , 
+       const double b     ) ;
     // ========================================================================
     /** Heinz mean for two real numbers (just for completeness)
      *  @see https://en.wikipedia.org/wiki/Heinz_mean 
@@ -569,6 +583,15 @@ namespace Ostap
     ( const double p , 
       const double a , 
       const double b ) ;
+    // ========================================================================
+    /** Hypergemetric mean 
+     *  @see https://web.archive.org/web/20130921055354/http://www.kurims.kyoto-u.ac.jp/EMIS/journals/JIPAM/images/202_06_JIPAM/202_06_www.pdf
+     *  @see RICHARDS, KENDALL C; HILARI C. TIEDEMAN (2006). 
+     *       "A NOTE ON WEIGHTED IDENTRIC AND LOGARITHMIC MEANS" (PDF). 
+     *        Journal of Inequalities in Pure and Applied Mathematics. 7 (5). 
+     *        Archived (PDF) from the original on 21 September 2013. Retrieved 20 September 2013.
+     */
+    // ========================================================================
 
     // ========================================================================
     /** Gudermannian function 

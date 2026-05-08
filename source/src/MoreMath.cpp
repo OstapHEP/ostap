@@ -5944,7 +5944,7 @@ Ostap::Math::heronian_mean
 // ============================================================================
 /** Power mean for two real numbers 
  *  @see https://en.wikipedia.org/wiki/Power_mean 
- *  @param x-parameter: 0<=x<=0.5
+ *  @param p-parameter: 0<=p<=0.5
  *  @param a the first number 
  *  @param b the second number 
  *  @return power mean 
@@ -5960,6 +5960,53 @@ Ostap::Math::power_mean
     s_zero ( p ) ? geometric_mean ( a , b ) :
     std::pow ( 0.5 * ( std::pow ( a , p ) + std::pow ( b , p ) ) , 1.0 / p ) ;
 }
+// ===========================================================================
+/* weighted power mean 
+ *  \f[ f(a,b) = \left( \left(1-\omega\right)a^p + \omega b^p \right)^{1/p}\f]
+ *  @param p power parameter
+ *  @param omega  omega-parameter \f$ 0 < \omega < 1 \f$
+ * @param a the first number 
+ *  @param b the second number 
+ *  @return weighted power mean 
+ */
+// ==========================================================================
+double Ostap::Math::weighted_power_mean 
+( const double p     , 
+  const double omega , 
+  const double a     , 
+  const double b     ) 
+{
+
+  Ostap::Assert ( 0 < a , 
+    "The first number in non-positive!"     ,
+    "Ostap::Math::weighted_power_mean"      , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+
+  Ostap::Assert ( 0 < b , 
+    "The second number in non-positive!"    ,
+    "Ostap::Math::weighted_power_mean"      , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+
+  if ( s_equal ( omega , 0.5 ) )
+  {
+    if      ( s_equal ( p + 1 , 1 ) ) { return geometric_mean  ( a , b ) ; }
+    else if ( s_equal ( p     , 1 ) ) { return arithmetic_mean ( a , b ) ; }
+  }
+
+  Ostap::Assert ( 0 < omega && omega < 1  , 
+    "Inavlid omega!"    ,
+    "Ostap::Math::weighted_power_mean"      , 
+    INVALID_PARAMETER , __FILE__ , __LINE__ )  ;
+  //
+  const long double al { a } ;
+  const long double bl { b } ;
+  //
+  const long double r = ( 1.0L - omega ) * std::pow ( al , p  ) + omega * std::pow ( bl , p ) ;
+  return std::pow ( r , 1.0L /p ) ;  
+  //
+}
+
+
 // ============================================================================
 /*  Heinz mean for two real numbers (just for completeness)
  *  @see https://en.wikipedia.org/wiki/Heinz_mean 
