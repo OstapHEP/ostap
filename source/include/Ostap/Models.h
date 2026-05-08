@@ -150,7 +150,7 @@ namespace Ostap
       GammaDist 
       ( const double k     = 2 ,   // shape parameter
         const double theta = 1 ,   // scale parameter
-	const double shift = 0 ) ; // shift parametet 
+	      const double shift = 0 ) ; // shift parametet 
       // ======================================================================
     public:
       // ======================================================================
@@ -205,6 +205,7 @@ namespace Ostap
        *  @attention for shift!=0  NaN is returned
        */
       double nu () const ;
+      // ======================================================================
       /** effective \f$ \chi^2 \f$-parameters
        *  If   \f$ Q  \sim \chi^2(\nu)\f$  and c is a positive constant,
        *  than \f$ cQ \sim \Gamma (k = \nu/2, \theta = 2c) \f$
@@ -255,6 +256,95 @@ namespace Ostap
       mutable double        m_lgk { 0 } ; 
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class Chi2 
+     *  Chi2-distribution, special case of Gamma distribution
+     *  @see https://en.wikipedia.org/wiki/Chi-squared_distribution
+     */
+    class Chi2
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+        /// constructor from degrees of freedom 
+        Chi2 ( const unsigned int n = 2 ) ;
+        // ====================================================================
+    public:
+      // ======================================================================
+      /// calculate chi2 distribution shape
+      inline double evaluate   ( const double x ) const { return m_gamma.evaluate ( x ) ; }
+      /// calculate chi2 distribution shape
+      inline double operator() ( const double x ) const { return evaluate ( x ) ; }
+      /// calculate chi2 distribution shape
+      inline double pdf        ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      // variables
+      // ======================================================================
+      inline unsigned int  ndf () const  { return m_n ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      inline double mean       () const { return     m_n ; } 
+      /// variance 
+      inline double variance   () const { return 2 * m_n ; } 
+      /// RMS 
+      inline double rms        () const { return m_gamma.rms      () ; }
+      ///  kewness 
+      inline double skewness   () const { return m_gamma.skewness () ; }
+      /// Mode 
+      inline double mode       () const { return m_gamma.mode     () ; }
+      /// dispersion 
+      inline double dispersion () const { return variance         () ; }
+      /// kurtosis 
+      inline double kurtosis   () const { return 12.0 / m_n          ; }
+      // ======================================================================
+    public: // support 
+      // ======================================================================
+      /// finite range ?
+      inline bool   finite_range () const { return false ; }      
+      /// xmin 
+      inline double xmin         () const { return 0     ; }
+      /// xmax 
+      inline double xmax         () const { return m_gamma.xmax() ; }       
+      // =====================================================================
+    public:
+      // =====================================================================
+      /// set new number of degrees of freedom
+      bool        setNDF   ( const unsigned int value ) ; 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral
+      inline double integral () const { return m_gamma.integral () ; }
+      /// get the integral between low and high limits
+      inline double integral 
+      ( const double low  ,
+        const double high ) const { return m_gamma.integral ( low , high ) ; }
+      /// get CDF 
+      inline double cdf 
+      ( const double x    ) const { return m_gamma.cdf ( x ) ;}
+      // ======================================================================
+    public: // quantiles
+      // ======================================================================
+      /// calculate the quantile   (0<p<1)
+      inline double quantile ( const double p ) const { return m_gamma.quantile ( p ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private :
+      // ====================================================================== 
+      /// number of degrees of freedom 
+      unsigned int           m_n     { 2 } ; // number of degrees of freedom 
+      /// Gamma distribution 
+      Ostap::Math::GammaDist m_gamma { 1 , 2 , 0 } ; 
+      // ======================================================================
+    };
     // ========================================================================
     /** @class LogGammaDist
      *  Distribution for log(x) where x has gamma-distribution shape/scale parameters

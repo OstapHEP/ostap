@@ -367,6 +367,45 @@ double Ostap::Math::GammaDist::c  () const
 // ============================================================================
 
 // ============================================================================
+// constructor from degrees of freedom
+// ============================================================================
+Ostap::Math::Chi2::Chi2 
+( const unsigned int n ) 
+: m_n     ( n )
+, m_gamma ( 0.5 * n , 2 , 0 )
+{
+  Ostap::Assert ( m_n , 
+    "Non-positive number of degrees of freedom!" , 
+    "Ostap::Math::Chi2::Chi2", 
+    INVALID_PARAMETER, __FILE__ , __LINE__ ) ; 
+}
+// ============================================================================
+// set new number of degrees of freedom
+// ============================================================================
+bool Ostap::Math::Chi2::setNDF  
+( const unsigned int value ) 
+ {
+    if ( m_n == value ) { return false ; }
+    
+    Ostap::Assert ( value , 
+    "Non-positive number of degrees of freedom!" , 
+    "Ostap::Math::Chi2::Chi2", 
+    INVALID_PARAMETER, __FILE__ , __LINE__ ) ; 
+
+    m_n  = value ;
+
+    return m_gamma.setK ( 0.5 * m_n ) ; 
+} 
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Chi2::tag () const 
+{ 
+  static const std::string s_name = "Chi2" ;
+  return Ostap::Utils::hash_combiner ( s_name  , m_n ) ; 
+}
+
+// ============================================================================
 // Generalized Gamma distribtion
 // ============================================================================
 /*  constructor

@@ -1171,6 +1171,17 @@ Ostap.Math.GammaDist     . __reduce__ = _omgdis_reduce_
 Ostap.Math.LogGammaDist  . __reduce__ = _omgdis_reduce_
 Ostap.Math.Log10GammaDist. __reduce__ = _omgdis_reduce_
 
+# ============================================================================
+## Reduce Chi2 
+#  @eee Ostap::Math::Chi2
+def _omchi2_reduce_( s ) :
+    """ Reduce `Ostap.Math.Chi2`
+    - see `Ostap.Math.Chi2`
+    """
+    return root_factory , ( type ( s ) , s.ndf() )
+
+Ostap.Math.Chi2.__reduce__ = _omchi2_reduce_ 
+    
 # =============================================================================
 ## Reduce Ostap::Math::GenGammaDist
 #  @see Ostap::Math::GenGammaDist
