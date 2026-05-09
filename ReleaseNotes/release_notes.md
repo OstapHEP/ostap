@@ -1,3 +1,12 @@
+
+## New features
+
+1. Add Berk-Jones GoF-estimator 
+
+## Bug fixes
+
+## Backward incompatible
+
 # v3.7.0.6 
 
 ## New features

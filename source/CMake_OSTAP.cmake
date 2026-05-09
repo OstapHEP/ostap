@@ -46,6 +46,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Funcs.cpp   
                          src/GetWeight.cpp 
                          src/GSL_sentry.cpp
+                         src/GoF.cpp
                          src/GetQuantile.cpp    
                          src/Hesse.cpp
                          src/Hilbert.cpp
