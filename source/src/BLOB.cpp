@@ -37,7 +37,7 @@ Ostap::BLOB::BLOB
   : TNamed ( name , title ) 
   , m_data () 
 {
-  if  ( len ) 
+  if  ( len && buffer ) 
   {
     char* data = new char [ len ] ;
     std::memcpy ( data , buffer , len ) ;
