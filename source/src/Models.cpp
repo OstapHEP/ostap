@@ -371,8 +371,15 @@ double Ostap::Math::GammaDist::c  () const
 // ============================================================================
 Ostap::Math::Chi2::Chi2 
 ( const unsigned int n ) 
-: m_n     ( n )
-, m_gamma ( 0.5 * n , 2 , 0 )
+: Chi2 ( 1.0 * n )
+{}
+// ============================================================================
+// constructor from degrees of freedom
+// ============================================================================
+Ostap::Math::Chi2::Chi2 
+( const double n ) 
+: m_n     (       std::abs ( n ) )
+, m_gamma ( 0.5 * std::abs ( n ) , 2 , 0 )
 {
   Ostap::Assert ( m_n , 
     "Non-positive number of degrees of freedom!" , 
@@ -382,20 +389,27 @@ Ostap::Math::Chi2::Chi2
 // ============================================================================
 // set new number of degrees of freedom
 // ============================================================================
-bool Ostap::Math::Chi2::setNDF  
-( const unsigned int value ) 
+bool Ostap::Math::Chi2::setN 
+( const double value ) 
  {
-    if ( m_n == value ) { return false ; }
-    
-    Ostap::Assert ( value , 
+    const double avalue = std::abs ( value ) ;
+    if ( s_equal ( m_n , value ) ) { return false ; }
+    // 
+    Ostap::Assert ( avalue , 
     "Non-positive number of degrees of freedom!" , 
     "Ostap::Math::Chi2::Chi2", 
     INVALID_PARAMETER, __FILE__ , __LINE__ ) ; 
-
-    m_n  = value ;
-
+    // 
+    m_n = avalue ;
+    // 
     return m_gamma.setK ( 0.5 * m_n ) ; 
 } 
+// ============================================================================
+// set new number of degrees of freedom
+// ============================================================================
+bool Ostap::Math::Chi2::setNDF  
+( const unsigned int value ) 
+{ return setN  ( 1.0 * value ) ; } 
 // ============================================================================
 // get the tag
 // ============================================================================

@@ -267,9 +267,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-        /// constructor from degrees of freedom 
-        Chi2 ( const unsigned int n = 2 ) ;
-        // ====================================================================
+      /// constructor from degrees of freedom 
+      Chi2 ( const unsigned int n = 2 ) ;
+      /// constructor from degrees of freedom 
+      Chi2 ( const double       n     ) ;
+      // ====================================================================
     public:
       // ======================================================================
       /// calculate chi2 distribution shape
@@ -283,8 +285,8 @@ namespace Ostap
       // ======================================================================
       // variables
       // ======================================================================
-      inline unsigned int  ndf () const { return m_n ; }
-      inline unsigned int  n   () const { return m_n ; }
+      inline double ndf () const { return m_n ; }
+      inline double n   () const { return m_n ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -315,7 +317,8 @@ namespace Ostap
     public:
       // =====================================================================
       /// set new number of degrees of freedom
-      bool        setNDF   ( const unsigned int value ) ; 
+      bool setNDF   ( const unsigned int value ) ; 
+      bool setN     ( const double       value ) ;  
       // ======================================================================
     public:
       // ======================================================================
@@ -342,7 +345,7 @@ namespace Ostap
     private :
       // ====================================================================== 
       /// number of degrees of freedom 
-      unsigned int           m_n     { 2 } ; // number of degrees of freedom 
+      double                 m_n     { 2 } ; // number of degrees of freedom 
       /// Gamma distribution 
       Ostap::Math::GammaDist m_gamma { 1 , 2 , 0 } ; 
       // ======================================================================
