@@ -1081,7 +1081,7 @@ double Ostap::Math::hadamard
   if      ( 180   < x                   ) { return std::numeric_limits<double>::infinity() ; }
   else if ( 0.999 < x && isushort ( x ) ) { return gamma ( x ) ; } 
   //
-  return hadamard ( 1.0 * x ) ;
+  return hadamard ( 1.0L * x ) ;
 }
 // ========================================================================
 /*  Hadamard's (pseudo)gamma function
@@ -1138,7 +1138,7 @@ long double Ostap::Math::luschny
   };
   //
   if ( -0.001L + std::numeric_limits<int>::lowest() < x  && x < -0.999L )
-    {
+  {
     const int  n   = round ( x ) ;
     /// exact value is known 
     if ( isint ( x )  ) { return  g ( std::abs ( n ) ) * igamma ( std::abs ( n ) + 1 ) ; } 
@@ -1157,6 +1157,60 @@ long double Ostap::Math::luschny
   return gamma ( x + 1.0 ) * P ( x ) ;
 }
 // ==========================================================================
+/* Klimek's pseudo-gamma function
+ *   \f[ K(x) = \Gamma(x) \left( 1 + \frac{\in 2\pi x}{2\pi} \psi(x) \right) \f]
+ *  @see  Klimek, Matthew D. (2023). "A new entire factorial function". 
+ *        Ramanujan Journal. 61 (3): 757–762. arXiv:2107.11330. 
+ *        doi:10.1007/s11139-023-00708-2. MR 4599649.
+ *  @see https://arxiv.org/abs/2107.11330 
+ */
+// =========================================================================== 
+long double Ostap::Math::klimek ( const long double x ) 
+{
+  //
+  if      ( 180   < x                       ) { return std::numeric_limits<long double>::infinity() ; }
+  else if ( 0.999 < x && isushort (     x ) ) { return gamma ( x ) ; } 
+  else if ( 0.499 < x && isushort ( 2 * x ) ) { return gamma ( x ) ; }
+  //
+  // treat vicinity of non-positive integers:
+  if ( -0.001L + std::numeric_limits<int>::lowest() < x  && x < +0.001L )
+  {
+    const int             n   = round ( x ) ;
+    const long double     dx  = x - n ;
+    constexpr long double eps = 1.e-5L ;    
+    if ( std::abs ( dx ) < eps )
+    {
+      long double l1 = klimek ( x + eps ) ;
+      long double l2 = klimek ( x - eps ) ;
+      return 0.5L * ( l1 + l2 ) ;
+    }
+  }
+  //
+  const long double g = gamma ( x ) ;
+  const long double p = psi   ( x ) ;
+  //
+  return g * ( 1 + std::sin ( s_2pi * x ) * p * s_1_2pi ) ;
+}
+// ==========================================================================
+/* Klimek's pseudo-gamma function
+ *   \f[ K(x) = \Gamma(x) \left( 1 + \frac{\in 2\pi x}{2\pi} \psi(x) \right) \f]
+ *  @see  Klimek, Matthew D. (2023). "A new entire factorial function". 
+ *        Ramanujan Journal. 61 (3): 757–762. arXiv:2107.11330. 
+ *        doi:10.1007/s11139-023-00708-2. MR 4599649.
+ *  @see https://arxiv.org/abs/2107.11330 
+ */
+// =========================================================================== 
+double Ostap::Math::klimek ( const double x ) 
+{ 
+  //
+  if      ( 180   < x                       ) { return std::numeric_limits<long double>::infinity() ; }
+  else if ( 0.999 < x && isushort (     x ) ) { return gamma ( x ) ; } 
+  else if ( 0.499 < x && isushort ( 2 * x ) ) { return gamma ( x ) ; }
+  //
+  return klimek ( 1.0L * x ) ; 
+} 
+// ===========================================================================
+
 
 // ===========================================================================
 /* Get the n-th derivative of gamma function at x=1 

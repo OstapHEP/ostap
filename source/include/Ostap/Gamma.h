@@ -340,6 +340,27 @@ namespace Ostap
      */
     long double luschny ( const long double x  ) ;
     // =======================================================================       
+    /** Klimek's pseudo-gamma function
+     *   \f[ K(x) = \Gamma(x) \left( 1 + \frac{\in 2\pi x}{2\pi} \psi(x) \right) \f]
+     *  @see  Klimek, Matthew D. (2023). "A new entire factorial function". 
+     *        Ramanujan Journal. 61 (3): 757–762. arXiv:2107.11330. 
+     *        doi:10.1007/s11139-023-00708-2. MR 4599649.
+     *  @see https://arxiv.org/abs/2107.11330 
+     */ 
+    double klimek ( const double x ) ;
+    // ========================================================================
+    /** Klimek's pseudo-gamma function
+     *   \f[ K(x) = \Gamma(x) \left( 1 + \frac{\in 2\pi x}{2\pi} \psi(x) \right) \f]
+     *  @see  Klimek, Matthew D. (2023). "A new entire factorial function". 
+     *        Ramanujan Journal. 61 (3): 757–762. arXiv:2107.11330. 
+     *        doi:10.1007/s11139-023-00708-2. MR 4599649.
+     *  @see https://arxiv.org/abs/2107.11330 
+     */ 
+    long double klimek ( const long double x ) ;
+    // ========================================================================
+
+
+
    } //                                        The end of namespace Ostap::Math
   // ==========================================================================
 } // The end of namesapce Ostap

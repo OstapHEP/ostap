@@ -2,6 +2,8 @@
 ## New features
 
 1. Add Berk-Jones GoF-estimator 
+1. Add Klimek's (entire factorial) pseudo-gamma function 
+
 
 ## Bug fixes
 
