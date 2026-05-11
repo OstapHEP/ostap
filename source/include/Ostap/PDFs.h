@@ -4829,6 +4829,87 @@ namespace Ostap
       mutable Ostap::Math::GammaDist m_gamma {} ; // the actual function
       // ======================================================================
     } ;
+
+    // ========================================================================
+    /** @class Chi2
+     *  Chi2-distribution with n-degrees of freedom
+     *  - special case of Gamma distribution
+     *  http://en.wikipedia.org/wiki/Gamma_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2013-05-11
+     *  @see Ostap::Math::Chi2
+     */
+    class  Chi2 : public RooAbsPdf 
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Chi2,1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Chi2 
+      ( const char* name      ,
+        const char* title     ,
+        RooAbsReal& x         ,
+        RooAbsReal& n         ) ;
+      /// "copy constructor"
+      Chi2
+      ( const Chi2& right           ,
+	const char* name  = nullptr )  ;
+      /// destructor
+      virtual ~Chi2 () ;
+      /// clone
+      Chi2* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Chi2 () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+	RooArgSet&     analVars     ,
+	const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+	const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      inline const Ostap::Math::Chi2& chi2     () const { setPars() ; return m_chi2    ; }
+      inline const Ostap::Math::Chi2& function () const {             return   chi2 () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline const RooAbsReal& x () const { return m_x.arg ()  ; }
+      inline const RooAbsReal& n () const { return m_n.arg () ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x {} ;
+      RooRealProxy m_n {} ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Chi2 m_chi2 {} ; // the actual function
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class GenGammaDist
      *  Generalized Gamma-distribution with additional shift parameter

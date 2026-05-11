@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 # ==============================================================================
 # @file ostap/stats/tests/test_stats_gof1d.py 
-# Test Goddness-of-fits for 1D fits 
+# Test Goodness-of-fits for 1D fits 
 # Copyright (c) Ostap developpers.
 # ==============================================================================
-""" Test Goddness-of-fits for 1D fits 
+""" Test Goodness-of-fits for 1D fits 
 """
 # ==============================================================================
 from   ostap.plotting.canvas  import use_canvas
@@ -32,12 +32,12 @@ xvar  = ROOT.RooRealVar ( 'x', '' ,  0 , 20 )
 gauss = M.Gauss_pdf     ( 'G' , xvar = xvar , mean = 10 , sigma = 1 )
 model = M.Fit1D         ( signal = gauss , background = 'flat' , fix_norm = True )
 
-ND1   = 100
-ND2   = 100
+ND1   = 200
+ND2   = 200
 
 # =============================================================================
 ## data_g: pure gaussian
-gauss.mean  = 10
+gauss.mean .fix ( 10  ) 
 gauss.sigma.fix ( 1.0 )
 
 data_g1     = gauss.generate ( ND1 , sample = True )
@@ -49,8 +49,12 @@ model.S     = 0.0
 model.B     = ND2
 data_u      = model.generate ( ND2 , sample = True )
 
+
 data_g = data_g1 + data_g2
 data_b = data_g1 + data_u 
+
+gauss.mean .release () 
+gauss.sigma.fix ( 1.0 )
 
 fitconf = { 'draw' : True , 'nbins' : 25 , 'refit' : 5 , 'quiet' : True }
 
@@ -141,22 +145,24 @@ def run_USTAT  ( pdf , data, result , label , logger = logger ) :
     ## u-distribution
     return ustat.histo 
 
+plots = [] 
 # ==============================================================================
 def run_fit ( pdf , dataset , label  , logger = logger ) :
-    """ Make a test for presumably GOOD/BAD fits
+    """ Make a test for presumably GOOD or BAD fits
     """
 
-    nToys = 50 if numcpu () < 10 else 500
+    nToys = 100 if numcpu () < 10 else 1000
     
     logger.info ( 'Make a test for presumably %s fit' % label  )
 
-    with use_canvas ( '%s_fit_1' % label ) :
+    with use_canvas ( title = '%s:Fit' % label ) :
         r , f = pdf.fitTo ( dataset, **fitconf ) 
-
-    with use_canvas ( '%s_fit_1: GoF' % label   ) :
+        plots.append ( f )
         
-        gauss.load_params ( r , silent = True ) 
-        gof = G1D.GoF1D   ( pdf , data_g )
+    with use_canvas ( title = '%s:GoF' % label   ) :
+        
+        pdf.load_params ( r , silent = True ) 
+        gof = G1D.GoF1D   ( pdf , dataset )
         logger.info ( 'Goodness-of-fit (%s):\n%s' %  ( label , gof ) )
         
         gauss.load_params ( r , silent = True ) 
@@ -164,41 +170,51 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
             toys = G1D.GoF1DToys ( gof )
             toys = toys.run ( nToys = nToys , parallel = True )
         logger.info ( 'Goodness-of-fit (%s) with %d toys:\n%s' % ( label , toys.nToys , toys ) ) 
-
-    with use_canvas ( '%s_fit_1: GoF/Kolmogorov-Smirnov' % label ) :
+        
+    with use_canvas ( title = '%s:GoF/Kolmogorov-Smirnov' % label ) :
         dks = toys.draw ( 'Kolmogorov-Smirnov')
-    with use_canvas ( '%s_fit_1: GoF/Anderson-Darling'   % label ) :
+        plots.append ( dks ) 
+    with use_canvas ( title = '%s:GoF/Anderson-Darling'   % label ) :
         dad = toys.draw ( 'Anderson-Darling')
-    with use_canvas ( '%s_fit_1: GoF/Cramer-von Mises'   % label ) :
+        plots.append ( dad ) 
+    with use_canvas ( title = '%s:GoF/Cramer-von Mises'   % label ) :
         dcm = toys.draw ( 'Cramer-von Mises')
-    with use_canvas ( '%s_fit_1: GoF/Kuiper'             % label ) :
-        dcm = toys.draw ( 'Kuiper')
-    with use_canvas ( '%s_fit_1: GoF/ZK' % label ) :
+        plots.append ( dcm ) 
+    with use_canvas ( title = '%s:GoF/Kuiper'             % label ) :
+        dku = toys.draw ( 'Kuiper')
+        plots.append ( dku ) 
+    with use_canvas ( title = '%s:GoF/ZK' % label ) :
         dzk = toys.draw ( 'ZK')
-    with use_canvas ( '%s_fit_1: GoF/ZA' % label ) :
+        plots.append ( dzk )         
+    with use_canvas ( '%s_fit_1:GoF/ZA' % label ) :
         dza = toys.draw ( 'ZA')
-    with use_canvas ( '%s_fit_1: GoF/ZC' % label ) :
+        plots.append ( dza )         
+    with use_canvas ( title = '%s:GoF/ZC' % label ) :
         dzc = toys.draw ( 'ZC')
+        plots.append ( dzc )         
+    with use_canvas ( title = '%s:GoF/Berk-Jones'         % label ) :
+        dbj = toys.draw ( 'Berk-Jones')
+        plots.append ( dbj )         
     
     ## Try to use multidimensional methods:
-
+    
     run_PPD   ( pdf , dataset , r , label , logger )    
     run_DNN   ( pdf , dataset , r , label , logger )
     run_USTAT ( pdf , dataset , r , label , logger )
 
 # =====================================================================================
 def test_good_fit_1 ( ) :
-    logger = getLogger ( 'test_GOOD_fit_1' )
+    logger = getLogger ( 'test_GOOD: ( G -> G )' )
     return run_fit ( gauss , data_g , 'GOOD1' , logger )
 
 # =====================================================================================
 def test_good_fit_2 ( ) :
-    logger = getLogger ( 'test_GOOD_fit_2' )
+    logger = getLogger ( 'test_GOOD: ( G + B -> G + B )' )
     return run_fit ( model , data_b , 'GOOD2' , logger )
 
 # =====================================================================================
 def test_bad_fit_1  ( ) :
-    logger = getLogger ( 'test_BAD_fit_1'  )
+    logger = getLogger ( 'test_BAD: ( G -> G + B )'  )
     return run_fit ( gauss , data_b , 'BAD'  , logger  )
 
 # ===============================================================================

@@ -38,7 +38,8 @@ from   ostap.stats.gof1d        import ( GoF1D , vct_clip      ,
                                          kolmogorov_smirnov    ,
                                          anderson_darling      ,
                                          cramer_von_mises      ,
-                                         kuiper , ZK , ZA , ZC )
+                                         kuiper , berk_jones   ,
+                                         ZK , ZA , ZC          )
 from   ostap.plotting.color     import Navy, DarkGreen  
 from   collections              import defaultdict, namedtuple
 import ostap.stats.gofnd        as     GoFnD 
@@ -222,7 +223,13 @@ class GoFSimFit1D(GoFSimFitBase) :
         """ Get Zhang's statistics ZC
         """
         return { key : v.ZC_estimator for key , v in self.gofs.items () }
-   
+
+    @property
+    def berk_jones_estimator ( self ) :
+        """ Get Berk-Jones 's statistics BJ
+        """
+        return { key : v.berk_jones_estimator for key , v in self.gofs.items () }
+    
     # ====================================================================================
     ## Print the summary as Table  (for simfit)
     def table ( self             , * ,
@@ -255,6 +262,7 @@ class GoFSimFit1D(GoFSimFitBase) :
             elif 'ZK' == label : values = self.ZK_estimator
             elif 'ZA' == label : values = self.ZA_estimator
             elif 'ZC' == label : values = self.ZC_estimator
+            elif 'BJ' == label : values = self.berk_jones_estimator
             else               : continue
             
             row = the_label ,
@@ -380,6 +388,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
             total_ZK = True 
             total_ZA = True 
             total_ZC = True 
+            total_BJ = True 
                       
             for key , gof  in self.gofs.items ()  :
 
@@ -404,6 +413,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                 zk       = ZK                 ( cdf_data )
                 za       = ZA                 ( cdf_data )
                 zc       = ZC                 ( cdf_data )
+                bj       = berk_jones         ( cdf_data )
                 
                 total_KS = total_KS and gof .kolmogorov_smirnov_estimator <= ks
                 total_K  = total_K  and gof .            kuiper_estimator <= k
@@ -412,6 +422,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                 total_ZK = total_ZK and gof .                ZK_estimator <= zk 
                 total_ZA = total_ZA and gof .                ZA_estimator <= za 
                 total_ZC = total_ZC and gof .                ZC_estimator <= zc 
+                total_BJ = total_BJ and gof .        berk_jones_estimator <= bj
                 
                 cnts = counters [ key ]                
                 cnts [ 'KS' ] += ks
@@ -421,6 +432,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                 cnts [ 'ZK' ] += zk
                 cnts [ 'ZA' ] += za
                 cnts [ 'ZC' ] += zc
+                cnts [ 'BJ' ] += bj
 
                 res  = results [ key ]
                 res [ 'KS'  ].append ( ks )    
@@ -430,6 +442,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
                 res [ 'ZK'  ].append ( zk ) 
                 res [ 'ZA'  ].append ( za ) 
                 res [ 'ZC'  ].append ( zc ) 
+                res [ 'BJ'  ].append ( bj ) 
 
                 ## delete data
                 if isinstance ( ds , ROOT.RooDataSet ) : ds.clear () 
@@ -444,6 +457,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
             self.__total [ 'ZK' ] += total_ZK
             self.__total [ 'ZA' ] += total_ZA
             self.__total [ 'ZC' ] += total_ZC
+            self.__total [ 'BJ' ] += total_BJ
                 
             ## delete data
             if isinstance ( dset , ROOT.RooDataSet ) : dset.clear () 
@@ -547,6 +561,14 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         """        
         return self.result ( 'K' ) 
 
+    # =========================================================================
+    ## Get Berk-Jonesstatistics
+    @property 
+    def berk_jones ( self ) :
+        """ Get Berk-Jones statistics 
+        """        
+        return self.result ( 'BJ' ) 
+    
     # ========================================================================
     ## Helper method to get the result
     def result ( self , sample , label ) :
@@ -702,6 +724,10 @@ class GoFSimFit1DToys(GoFSimFit1D) :
         elif key in Keys [ 'ZC' ] and 'ZC' in ecdfs : 
             result = self.result  ( sample , 'ZC' )
             ecdf   = ecdfs   [ 'ZC' ]
+            ## logger.info ( 'Toy results for %s/Zhang/ZC estimate'           % sample ) 
+        elif key in Keys [ 'BJ' ] and 'BJ' in ecdfs : 
+            result = self.result  ( sample , 'BJ' )
+            ecdf   = ecdfs   [ 'BJ' ]
             ## logger.info ( 'Toy results for %s/Zhang/ZC estimate'           % sample ) 
         else :
             raise KeyError (  "draw: Invalid `sample/what`: %s/%s" % ( sample , what ) )

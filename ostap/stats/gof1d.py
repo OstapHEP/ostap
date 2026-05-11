@@ -22,6 +22,7 @@ __all__     = (
     'ZK'                 , ## ZK                GoF estimator
     'ZA'                 , ## ZA                GoF estimator
     'ZC'                 , ## ZC                GoF estimator
+    'berk_jones'         , ## Berk-Jones        GoF estimator 
     'GoF1D'              , ## helper utility for GoF estimate 
     'GoF1DToys'          , ## helper utility for GoF estimate with toys
     'GoF_1D'             , ## using AGoF interface ...
@@ -65,11 +66,13 @@ GoF_methods = ( "KS" ,  ## Kolmogorov-Smirnov
                 "CM" ,  ## Cramer-von-Mises 
                 "ZK" ,  ## Zhang's Z_K-estimator 
                 "ZA" ,  ## Zhang's Z_A-estimatoe 
-                "ZC" )  ## Zhang's Z_C-estimator 
+                "ZC" ,  ## Zhang's Z_C-estimator 
+                "BJ" )  ## Berk-Jones -estimator 
 # =============================================================================
 ## @var NL
 #  use C++ if length of data exceeds NL, otherwise Python is OK 
 NL  = 100 
+
 # =============================================================================
 ## Get Kolmogorov-Smirnov statistics KS
 #  @code
@@ -286,6 +289,71 @@ def ZC  ( cdf_data ) :
     result = sum ( ( flog ( ( 1.0 / Fi - 1 ) / ( ( n - 0.5 ) / ( i + 0.25 ) - 1 ) ) ) ** 2 for ( i , Fi ) in enumerate ( cdf_data ) )
     return result
 
+# =============================================================================
+## Get Berk-Jones statistics BJ
+#  @see https://en.wikipedia.org/wiki/Berk-Jones_test
+#  - In statistical hypothesis testing, a goodness-of-fit test compares an
+#  empirical distribution function (EDF) to a theoretical cumulative
+#  distribution function (CDF). While the Kolmogorov-Smirnov test is
+#  arguably the most well-known method, it is often criticized for its
+#  lack of sensitivity to deviations occurring at the extremes (tails) of the distribution.
+#  The Berk-Jones test addresses this shortcoming by adopting a "pointwise"
+#  maximum likelihood ratio approach. It still belongs to the family of
+#  supremum-type statistics but also incorporates information-theoretic properties,
+#  specifically the Kullback-Leibler divergence
+#
+#  @code
+#  cdf_data =...
+#  bj  = berk_jones  ( cdf_data )
+#  @endcode
+#  @param cdf_data sorted array of F0(X_i) - values of CDF at X data points
+#  @return Berk-Jones statistics BJ
+def berk_jones ( cdf_data ) :
+    """ Get Berk-Jones statistics  KS
+    - see https://en.wikipedia.org/wiki/Berk-Jones_test
+
+    - In statistical hypothesis testing, a goodness-of-fit test compares an
+    empirical distribution function (EDF) to a theoretical cumulative
+    distribution function (CDF). While the Kolmogorov-Smirnov test is
+    arguably the most well-known method, it is often criticized for its
+    lack of sensitivity to deviations occurring at the extremes (tails) of the distribution.
+    The Berk-Jones test addresses this shortcoming by adopting a "pointwise"
+    maximum likelihood ratio approach. It still belongs to the family of
+    supremum-type statistics but also incorporates information-theoretic properties,
+    specifically the Kullback-Leibler divergence
+
+    - `cdf_data` : sorted array of F0(X_i) - values of CDF at (sorted) X data points
+    >>> cdf_data =...
+    >>> bj  = berk_jones( cdf_data )
+    """
+
+    n = len ( cdf_data )
+
+    """
+    
+    ## Long numpy arrays 
+    if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
+        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+            raw_buffer , n = np2raw ( cdf_data )
+            the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
+            return Ostap.GoF.berk_jones ( the_buffer )
+
+    ## Long arrays to be converted to numpy 
+    if NL < n : return berk_jones ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) )
+
+    """
+    
+    kp = Ostap.GoF.K_plus
+    
+    ## for short arrays plain vanilla python is OK
+    result = max ( kp ( Fi , ( i + 1.0 ) / n ) for ( i , Fi ) in enumerate ( cdf_data ) )
+    
+    ## print ( 'BJ' , min ( result ) , max(result ) )     
+    ## result = max ( kp ( ( i + 1.0 ) / n , Fi ) for ( i , Fi ) in enumerate ( cdf_data ) )
+    
+    return result
+
+
 # =========================================================================
 ## Clip input CDF arrays 
 def vct_clip ( input , silent = True ) :
@@ -294,6 +362,7 @@ def vct_clip ( input , silent = True ) :
     if not silent and ( numpy.min ( input ) < vmin or vmax < numpy.max ( input ) ) :
         logger.warning ( 'Adjust CDF to be %s<cdf<%s' % ( vmin , vmax ) ) 
     return numpy.clip ( input , a_min = vmin , a_max = vmax )
+
 
 # ==============================================================================
 ## @class GoF1D
@@ -342,7 +411,11 @@ class GoF1D(object) :
         self.__ecdf = Ostap.Math.ECDF ( data2vct ( data ) )
 
         ## evaluate CDF for sorted data 
+
         cdf_data = vct_clip ( self.__vct_cdf ( data ) ) 
+
+        ## cdf_data = self.__vct_cdf ( data ) 
+        ## print ( 'CDF_DATA' , len ( cdf_data ) ,  cdf_data[0] , cdf_data[-1] ) 
         
         self.__estimators = {
             'KS'  : kolmogorov_smirnov ( cdf_data ) , 
@@ -352,6 +425,7 @@ class GoF1D(object) :
             'ZK'  : ZK                 ( cdf_data ) , 
             'ZA'  : ZA                 ( cdf_data ) , 
             'ZC'  : ZC                 ( cdf_data ) ,
+            'BJ'  : berk_jones         ( cdf_data ) ,
         }
         
     ## serialize the object 
@@ -363,25 +437,25 @@ class GoF1D(object) :
                  'parameters' : self.__parameters   , 
                  'cdf'        : self.__original_cdf ,
                  'ecdf'       : self.ecdf           ,
-                 'estimators' : self.estimators     } 
+                 'estimators' : self.estimators     }  
     
     ## De-serialize the object 
     def __setstate__ ( self , state ) :
         """ De-serialize the object
         """
         self.__pdf          = state.pop ( 'pdf'        ) 
-        self.__parameters   = state.pop ( 'parameters' , {}  ) 
+        self.__parameters   = state.pop ( 'parameters' , {} ) 
         self.__original_cdf = state.pop ( 'cdf'        )
         self.__ecdf         = state.pop ( 'ecdf'       )
         self.__estimators   = state.pop ( 'estimators' ) 
-
+        
         ## (1) re-load parameters 
         self.pdf.load_params ( self.__parameters , silent = True )
         ## (2) re-reconstruct CDF 
         self.__cdf     = self.get_cdf ( self.__original_cdf )         
-        ## vectorized form of CDF 
+        ## (3) vectorized form of CDF 
         self.__vct_cdf = numpy.vectorize ( self.cdf )
-                
+
     # =========================================================================
     ## Get/Construct CDF 
     def get_cdf ( self , cdf ) :
@@ -517,7 +591,15 @@ class GoF1D(object) :
     def ZC_estimator ( self ) :
         """ Get ZC statistics
         """        
-        return self.__estimators.get ( 'ZC' , None ) 
+        return self.__estimators.get ( 'ZC' , None )
+    
+    # =========================================================================
+    ## Get Berk-Jones statististics 
+    @property 
+    def berk_jones_estimator ( self ) :
+        """ Get Berk-Jones statistics
+        """        
+        return self.__estimators.get ( 'BJ' , None ) 
 
     # =========================================================================
     ## Print the summary as Table
@@ -612,6 +694,7 @@ class GoF1D(object) :
                          xmin   = xmin    ,
                          xmax   = xmax    , *options , **kw )
         
+        ## 
         return r1 , r2
     
 # =============================================================================
@@ -713,6 +796,7 @@ class GoF1DToys(GoF1D) :
             zk       = ZK                 ( cdf_data )
             za       = ZA                 ( cdf_data )
             zc       = ZC                 ( cdf_data )
+            bj       = berk_jones         ( cdf_data )
 
             counters [ 'KS' ] += ks
             counters [ 'K'  ] += k
@@ -721,6 +805,7 @@ class GoF1DToys(GoF1D) :
             counters [ 'ZK' ] += zk
             counters [ 'ZA' ] += za
             counters [ 'ZC' ] += zc
+            counters [ 'BJ' ] += bj
             
             results  [ 'KS' ].append ( ks )    
             results  [ 'K'  ].append ( k  )
@@ -729,6 +814,7 @@ class GoF1DToys(GoF1D) :
             results  [ 'ZK' ].append ( zk ) 
             results  [ 'ZA' ].append ( za ) 
             results  [ 'ZC' ].append ( zc ) 
+            results  [ 'BJ' ].append ( bj ) 
 
             cnt += ks
             
@@ -821,6 +907,14 @@ class GoF1DToys(GoF1D) :
         """        
         return self.result ( 'ZC' ) 
 
+    # =========================================================================
+    ## Get Berk-Jones statistics
+    @property 
+    def berk_jones( self ) :
+        """ Get Berk-Jones statistics 
+        """        
+        return self.result ( 'BJ' ) 
+    
     # =========================================================================
     ## Get Kuiper statistics
     @property 
@@ -966,21 +1060,24 @@ class GoF1DToys(GoF1D) :
         elif key in Keys [ 'ZC' ] and 'ZC' in self.ecdfs : 
             result = self.result  ( 'ZC' )
             ecdf   = self.ecdfs   [ 'ZC' ]
-            ## logger.info ( 'Toy results for Zhang/ZC estimate' ) 
+        elif key in Keys [ 'BJ' ] and 'BJ' in self.ecdfs : 
+            result = self.result  ( 'BJ' )
+            ecdf   = self.ecdfs   [ 'BJ' ]
+            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )
 
         tvalue       = result.tvalue 
     
         ## draw ECDF
-        result , vline , hline = draw_ecdf ( ecdf            ,
-                                             tvalue          ,
-                                             option = option , **kwargs )
+        result , vl , hl = draw_ecdf ( ecdf            ,
+                                       tvalue          ,
+                                       option = option , **kwargs )
         ##
-        self._vline = vline
-        self._hline = hline
+        self._vline = vl
+        self._hline = hl
         ##
-        return result , vline , hline
+        return result , vl , hl
 
 # =============================================================================
 ## @class GoF1D

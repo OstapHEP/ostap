@@ -205,6 +205,15 @@ namespace Ostap
     // =======================================================================
     /** Berk-Jones estimator
      *  @see https://en.wikipedia.org/wiki/Berk-Jones_test
+     *  - In statistical hypothesis testing, a goodness-of-fit test compares an
+     *  empirical distribution function (EDF) to a theoretical cumulative
+     *  distribution function (CDF). While the Kolmogorov-Smirnov test is
+     *  arguably the most well-known method, it is often criticized for its
+     *  lack of sensitivity to deviations occurring at the extremes (tails) of the distribution.
+     *  The Berk-Jones test addresses this shortcoming by adopting a "pointwise"
+     *  maximum likelihood ratio approach. It still belongs to the family of
+     *  supremum-type statistics but also incorporates information-theoretic properties,
+     *  specifically the Kullback-Leibler divergence     
      */
     template <class ITERATOR>
     inline double

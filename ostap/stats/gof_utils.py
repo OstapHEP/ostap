@@ -237,6 +237,7 @@ Labels = {
     'ZK' : 'Zhang/ZK'           ,
     'ZA' : 'Zhang/ZA'           ,
     'ZC' : 'Zhang/ZC'           ,        
+    'BJ' : 'Berk-Jones'         ,        
 }
 ## lower-case shortcuts:
 Keys = {    
@@ -247,6 +248,7 @@ Keys = {
     'ZK' : ( 'zk' , 'zhangk'     , 'zhangzk'           ) , 
     'ZA' : ( 'za' , 'zhanga'     , 'zhangza'           ) , 
     'ZC' : ( 'zc' , 'zhangc'     , 'zhangzc'           ) , 
+    'BJ' : ( 'bj' , 'berkjones'  , 'berk'              ) , 
     }
 # =============================================================================
 assert Labels.keys() == Keys.keys() , "Mismatch between Labels & Keys structures!"
@@ -652,7 +654,7 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , *options , **kwargs ) :
         xmin    = min ( xmin , tvalue )
         xmax    = max ( xmax , tvalue )
 
-    xmin , xmax = axis_range ( xmin , xmax , delta = 0.20 )
+    xmin , xmax = axis_range ( xmin , xmax , delta = 0.30 )
 
     ## some transformation  
     kw = cidict ( transform = cidict_fun , **kwargs )
@@ -662,6 +664,7 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , *options , **kwargs ) :
     kw [ 'color'     ] = kw.pop ( 'linecolor'  , Orange )
     kw [ 'linewidth' ] = kw.pop ( 'linewidth'  , 2      )
     kw [ 'maxvalue'  ] = kw.pop ( 'maxvalue'   , 1.1    )
+    kw [ 'copy'      ] = kw.pop ( 'copy'       , True   )
     
     result = ecdf.draw  ( option = option , *options , **kw )
     
@@ -686,8 +689,13 @@ def draw_ecdf ( ecdf , tvalue = None , option = '' , *options , **kwargs ) :
     hline.SetLineColor  ( Blue  )  
     hline.SetLineStyle  ( 9     ) 
     ##
-    vline.draw ( 'same' )
-    hline.draw ( 'same' )
+    ecdf.__lines = vline , hline 
+    ##
+    ## ROOT.SetOwnership ( vline , False ) 
+    ## ROOT.SetOwnership ( hline , False )
+    ## 
+    vline.draw ( 'same' , copy = True )
+    hline.draw ( 'same' , copy = True )
     ## 
     return result, vline, hline 
 

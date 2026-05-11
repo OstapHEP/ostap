@@ -9,6 +9,7 @@
 """ A set of various smooth shapes and PDFs
 
 - GammaDist_pdf        : Gamma-distributuon in shape/scale parameterization
+- Chi2_pdf             : Chi2-distributuon 
 - GenGammaDist_pdf     : Generalized Gamma-distribution
 - Amoroso_pdf          : Another view of generalized Gamma distribution
 - LogGammaDist_pdf     : Gamma-distributuon in shape/scale parameterization
@@ -74,6 +75,7 @@ __date__    = "2011-07-25"
 __all__     = (
     #
     'GammaDist_pdf'        , ## Gamma-distributuon in shape/scale parameterization
+    'Chi2_pdf'             , ## Chi2-distributuon
     'GenGammaDist_pdf'     , ## Generalized Gamma-distribution
     'Amoroso_pdf'          , ## another view of generalized Gamma distribution
     'LogGammaDist_pdf'     , ## Gamma-distributuon in shape/scale parameterization
@@ -225,6 +227,55 @@ class GammaDist_pdf(PDF1,ShiftAndScale,K) :
     theta = ShiftAndScale.scale
     
 models.append ( GammaDist_pdf )
+
+
+# =============================================================================
+## @class Chi2_pdf
+#  Chi2-distribution 
+#  @see Ostap::Models::Chi2
+#  @see Ostap::Math::Chi2
+class Chi2_pdf(PDF1,ShiftAndScale,K) :
+    """ Chi2-distribution
+    Parameters
+    - n>0     : number of degreed of freedom
+    """
+    ## constructor
+    def __init__ ( self        , * , 
+                   xvar        ,   ## the variable
+                   name  = ''  ,   ## the name 
+                   n     = 10  ) : ## n-parameter
+        
+        ## initiailze the 1st base 
+        PDF1.__init__ ( self , name = name , xvar = xvar )
+        
+        self.__n  = self.make_var ( n                    ,
+                                    'n_%s'   % self.name ,
+                                    'n(%s)'  % self.name ,
+                                    None , 10 , 1.e-5 , 1000 )
+        
+        self.pdf  = Ostap.Models.Chi2 (
+            self.roo_name ( 'chi2_' )          ,
+            'Chi2-distribution %s' % self.name , 
+            self.x      ,
+            self.n      )
+        ## save the configuration:
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'n'     : self.n     ,
+            }
+        
+    @property
+    def n ( self ) :
+        """`n'-parameter of Chi20distribution """
+        return self.__n
+    @n.setter 
+    def n ( self , value ) :
+        self.set_value ( self.__n , value )
+
+        
+models.append ( Chi2_pdf )
+
 
 # =============================================================================
 ## @class GenGammaDist_pdf 

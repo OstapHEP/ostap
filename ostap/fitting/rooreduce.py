@@ -2001,6 +2001,19 @@ Ostap.Models.LogGammaDist  .__reduce__ = _rgamdist_reduce_
 Ostap.Models.Log10GammaDist.__reduce__ = _rgamdist_reduce_ 
 
 # =============================================================================
+## reduce Chi2
+def _rchi2_reduce_ ( pdf ):
+    """ Reduce Chi2"""
+    return root_store_factory , ( type ( pdf )      ,
+                                  pdf.name          ,
+                                  pdf.title         ,
+                                  pdf.x          () ,
+                                  pdf.n          () ) 
+
+Ostap.Models.Chi2  .__reduce__ = _rchi2_reduce_ 
+
+
+# =============================================================================
 ## reduce GenGammaDist
 def _rggamdist_reduce_ ( pdf ):
     """ Reduce GenGammaDist"""

@@ -6781,6 +6781,81 @@ double Ostap::Models::GammaDist::maxVal  ( Int_t      code ) const
 }
 // ============================================================================
 
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::Chi2::Chi2
+( const char*          name  , 
+  const char*          title ,
+  RooAbsReal&          x     ,
+  RooAbsReal&          n     ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x       ( "!x"  , "observable"  , this , x ) 
+  , m_n       ( "!n"  , "n-parameter" , this , n ) 
+  , m_chi2    () 
+{
+  setPars () ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::Chi2::Chi2
+( const Ostap::Models::Chi2& right ,
+  const char*                name  )
+  : RooAbsPdf ( right , name ) 
+  , m_x    ( "!a"  , this , right.m_x ) 
+  , m_n    ( "!n"  , this , right.m_n ) 
+  , m_chi2 ( right.m_chi2  ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::Chi2::~Chi2 () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Chi2*
+Ostap::Models::Chi2::clone( const char* name ) const 
+{ return new Ostap::Models::Chi2 ( *this , name) ; }
+// ============================================================================
+void Ostap::Models::Chi2::setPars () const 
+{ m_chi2.setN ( m_n ) ; }
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Chi2::evaluate() const 
+{
+  setPars () ;
+  return m_chi2 (  m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Chi2::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , this->m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Chi2::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  //
+  Ostap::Assert ( 1 == code                         ,
+                  "Invalid integration code"        ,
+                  "Ostap::Models::Chi2"             ,
+                  INVALID_INTEGRATION_CODE          , __FILE__ , __LINE__  ) ;
+  //
+  setPars () ;
+  return m_chi2.integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+}
+// ============================================================================
+
 // ============================================================================
 // constructor from all parameters 
 // ============================================================================
@@ -15141,6 +15216,7 @@ ClassImp(Ostap::Models::ExpoPositive       )
 ClassImp(Ostap::Models::PolySigmoid        )
 ClassImp(Ostap::Models::TwoExpoPositive    ) 
 ClassImp(Ostap::Models::GammaDist          ) 
+ClassImp(Ostap::Models::Chi2               ) 
 ClassImp(Ostap::Models::GenGammaDist       ) 
 ClassImp(Ostap::Models::Amoroso            ) 
 ClassImp(Ostap::Models::LogGammaDist       ) 
