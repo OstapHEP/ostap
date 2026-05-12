@@ -80,7 +80,8 @@ class GoFnp (AGoFnp) :
                    nToys    = 0      ,
                    silent   = False  , 
                    parallel = False  ,
-                   method   = 'GoF'  ) : 
+                   method   = 'GoF'  ,
+                   progress = True   ) : 
 
         assert isinstance ( nToys , int ) and 0 <= nToys  , \
             "Invalid number of permulations/toys:%s" % nToys
@@ -88,6 +89,7 @@ class GoFnp (AGoFnp) :
         self.__nToys    = nToys
         self.__silent   = True if silent   else False
         self.__parallel = True if parallel else False
+        self.__progress = True if progress else False 
         self.__method   = method
         
         if self.__parallel and memory_enough () < numcpu () : 
@@ -150,6 +152,11 @@ class GoFnp (AGoFnp) :
     def parallel ( self ) :
         """`parallel` : parallel processing where/when/if possible?"""
         return self.__parallel
+    # ========================================================================
+    @property
+    def progress ( self ) :
+        """`progress` : show progress bar?"""
+        return self.__progress 
     # ========================================================================
     @property
     def method ( self ) :
@@ -229,12 +236,14 @@ class PPDnp(GoFnp) :
                    sigma     = 0.10       ,
                    parallel  = False      , 
                    silent    = False      ,
+                   progress  = True       , 
                    maxsize   = 1000000    ) :
         
         GoFnp.__init__ ( self                ,
                          nToys    = nToys    ,
                          parallel = parallel , 
                          silent   = silent   ,
+                         progress = progress , 
                          method   = 'Point-to-Point Dissimilarity' )
         
         self.__mc2mc     = True if mc2mc else False
@@ -389,10 +398,10 @@ class PPDnp(GoFnp) :
         permutator = PERMUTATOR ( self , t_value , uds1 , uds2 )
 
         if self.parallel and permutator.run :
-            counter = permutator.run ( self.nToys , silent = self.silent )            
+            counter = permutator.run ( self.nToys , progress = self.progress )            
         else :
-            counter = permutator     ( self.nToys , silent = self.silent )
-            
+            counter = permutator     ( self.nToys , progress = self.progress )
+
         self.__ecdf = permutator.ecdf
         
         p_value = counter.eff
@@ -436,12 +445,14 @@ class DNNnp(GoFnp) :
                    histo    = None   ,
                    nToys    = 1000   ,
                    parallel = False  , 
-                   silent   = False  ) :
+                   silent   = False  ,
+                   progress = True   ) :
 
         GoFnp.__init__ ( self                ,
                          nToys    = nToys    ,
                          parallel = parallel , 
-                         silent   = silent   , 
+                         silent   = silent   ,
+                         progress = progress , 
                          method   = 'Distance-to-Nearest-Neighbour' )
         
         self.__histo = None 

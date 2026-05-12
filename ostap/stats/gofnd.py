@@ -23,12 +23,15 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
-    'PPD'   , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
-    'DNN'   , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
-    'USTAT' , ## Alternative implementation of DNN method 
+    'PPD'        , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
+    'DNN'        , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
+    'USTAT'      , ## Alternative implementation of DNN method
+    'NLL'        , ## Use -log L as GoF estimator 
+    'AikaikeIC'  , ## Use Aikaike IC  as GoF estimator 
+    'BayesianIC' , ## Use Bayesian IC  as GoF estimator 
 )
 # =============================================================================
-from   ostap.core.ostap_types   import num_types 
+from   ostap.core.ostap_types   import num_types, integer_types, sized_types   
 from   ostap.stats.gof          import AGoF
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.math_base     import axis_range
@@ -79,7 +82,7 @@ class GoF(AGoF) :
     
     @property
     def nToys ( self )  :
-        """`nToys` : number of toys/permutations for toys/permutations test"""
+        """`nToys` : number of toys/permutations for toys (or permutations) test"""
         return self.gof.nToys
 
     @property
@@ -92,6 +95,11 @@ class GoF(AGoF) :
         """`silent` : silent processing?"""
         return self.gof.silent
 
+    @property
+    def progress ( self ) :
+        """`progress` : show progress bar?"""
+        return self.gof.progress 
+    
     @property
     def parallel ( self ) :
         """`parallel` : parallel processing where/when/if possible?"""
@@ -109,8 +117,11 @@ class GoF(AGoF) :
         """ Generate MC dataset from PDF according to data 
         """
         nEvents = len ( data ) * self.mcFactor
-        return pdf.generate ( nEvents = nEvents , varset = data , sample = self.sample )
-    
+        dset    = pdf.generate ( nEvents = nEvents , varset = data , sample = self.sample )        
+        assert dset or self.sample , "generate: failrue to produce non-empty dataset!"
+        while not dset : dset = pdf.generate ( nEvents = nEvents , varset = data , sample = self.sample )        
+        return dset 
+            
     # ==========================================================================
     ## Transform a (pdf,data) pair into (data_np, mc_np) pair 
     #  @code
@@ -226,7 +237,7 @@ class PPD(GoF) :
                    psi       = 'gaussian' ,
                    sigma     = 0.10       ,
                    silent    = False      ,
-                   parallel  = False      , 
+                   parallel  = False      ,
                    mcFactor  = 10         ) : 
         """ Create the Point-to-Point Dissimilarity estimator
         
@@ -319,13 +330,13 @@ class PPD(GoF) :
     # =========================================================================
     @property
     def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distributon"""
+        """`ecdf` : empirical CDF for t-value distribution"""
         return self.ppd.ecdf
 
     # =========================================================================
     ## Get results in a form of the table 
     def table ( self , title = '' , prefix = '' ) :
-        """ Get resutls in a for of the table 
+        """ Get results in a for of the table 
         """
         return self.the_table ( tvalue = self.__tvalue ,
                                 pvalue = self.__pvalue ,
@@ -366,7 +377,8 @@ class DNN(GoF) :
                    nToys    = 500   ,
                    sample   = False ,
                    parallel = False , 
-                   silent   = False ) :
+                   silent   = False ,
+                   progress = True  ) : 
         
         ## initialize the base 
         GoF.__init__ ( self             ,
@@ -374,7 +386,8 @@ class DNN(GoF) :
                        gof      = GNP.DNNnp ( histo    = histo    ,
                                               nToys    = nToys    ,
                                               parallel = parallel , 
-                                              silent   = silent ) ,
+                                              silent   = silent   ,
+                                              progress = progress ) ,
                        sample   = sample )
         
         self.__ecdf   = None 
@@ -484,9 +497,9 @@ class DNN(GoF) :
                       pdf     = pdf          ,
                       Ndata   = len ( data ) ,
                       sample  = self.sample  )
-        
-        if self.parallel : counter = toys.run ( self.nToys , silent = self.silent )            
-        else             : counter = toys     ( self.nToys , silent = self.silent )            
+
+        if self.parallel : counter = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
+        else             : counter = toys     ( self.nToys , progress = self.progress )
         
         ## get ECDF from toys
         self.__ecdf = toys.ecdf
@@ -509,9 +522,9 @@ class DNN(GoF) :
         return self.__ecdf
 
     # =========================================================================
-    ## Get results in a for of the table 
+    ## Get results in a form of the table 
     def table ( self , title = '' , prefix = '' ) :
-        """ Get results in a for of the table 
+        """ Get results in a form of the table 
         """
         return self.the_table ( tvalue = self.__tvalue ,
                                 pvalue = self.__pvalue ,
@@ -520,6 +533,285 @@ class DNN(GoF) :
                                 prefix = prefix ) 
     __str__  = table
     __repr__ = table
+
+    
+# =============================================================================
+## @class NLL
+#  Trivial `estimator' for -log N as `fit-quality'
+#  - @attention the absolute value of -log L is *not* a true GoF-estimator
+#  toys are needed!
+class NLL(AGoF) :
+    """  Trivial `estimator' for -log N as fit-quality.
+    - attention the absolute value of -log L is not a true GoF-estimator
+    - toys are needed!
+    """
+    def __init__ ( self             ,
+                   fitresult        , * , 
+                   fitconf  = { 'silent' : True  , 'draw' : False } ,
+                   nToys    = 100   , 
+                   sample   = False ,
+                   parallel = False ,
+                   silent   = True  ,
+                   progress = True  ) :
+        
+        assert fitresult and isinstance ( fitresult , ROOT.RooFitResult ) , \
+            "Invalid fit-result %s" % typename ( fitresult ) 
+
+        assert isinstance ( nToys , integer_types ) and 1 <= nToys , \
+            "Invalid nToys %s" % typename ( nToys )
+
+        self.__sample    = True if sample   else False 
+        self.__parallel  = True if parallel else False 
+        self.__silent    = True if silent   else False 
+        self.__progress  = True if progress else False 
+        self.__fitconf   = fitconf
+        self.__nToys     = nToys 
+        self.__fitresult = fitresult 
+        self.__ecdf      = None
+    
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object
+        """
+        return { 'sample'    : self.sample    ,
+                 'parallel'  : self.parallel  ,
+                 'silent'    : self.silent    ,
+                 'progress'  : self.progress  ,
+                 'fitconf'   : self.fitconf   ,
+                 'fitresult' : self.fitresult ,
+                 'nToys'     : self.nToys     ,
+                 'ecdf'      : self.ecdf      }
+    
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object
+        """
+        self.__sample    = state.pop ( 'sample'    )
+        self.__parallel  = state.pop ( 'parallel'  )
+        self.__silent    = state.pop ( 'silent'    )
+        self.__progress  = state.pop ( 'progress'  )        
+        self.__fitconf   = state.pop ( 'fitconf'   )
+        self.__fitresult = state.pop ( 'fitresult' )        
+        self.__nToys     = state.pop ( 'nToys'     )
+        self.__ecdf      = state.pop ( 'ecdf'      )
+    
+    # =========================================================================
+    @property
+    def sample    ( self ) :
+        """`sample` : sample number of events for toys?"""
+        return self.__sample
+    
+    @property
+    def silent    ( self ) :
+        """`silent` : silent prpcessing ?"""
+        return self.__silent
+    
+    @property
+    def progress    ( self ) :
+        """`progress` : show progress bar?"""
+        return self.__progress
+    
+    @property
+    def parallel  ( self ) :
+        """`parallel` : parallel processing?"""
+        return self.__parallel
+    
+    @property
+    def fitconf   ( self ) :
+        """`fitconf` : configuraton of fit (arguments for `PDF.fitTo`)"""
+        return self.__fitconf
+    
+    @property
+    def fitresult ( self ) :
+        """`fitresult` : initially specified fit result"""
+        return self.__fitresult
+        
+    @property
+    def nToys     ( self ) :
+        """`nToys: number of pseudoexperiments for p-value"""
+        return self.__nToys  
+
+    @property
+    def ecdf ( self ) :
+        """`ecdf: empirical CDF for t-values"""
+        return self.__ecdf 
+    
+    # =========================================================================
+    ## get the actual t-value from the fit-result 
+    def t_value   ( self , fitresult ) : return fitresult.minNll () 
+        
+    # =========================================================================
+    ## Calculate t-value for Goodness-of-Fit test
+    #  @code
+    #  gof   = ...
+    #  pdf   = ...  
+    #  data  = ... 
+    #  t_value = gof ( pdf , data ) 
+    #  @endcode
+    def __call__ ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof   = ...
+        >>> pdf   = ... 
+        >>> data  = ... 
+        >>> t_value = gof ( pdf , data ) 
+        """
+        return self.tvalue ( pdf , data ) 
+
+    # ===========================================================================
+    ## get the t-value 
+    def tvalue ( self, pdf , data ) :
+        """ Get t-value: -log L here 
+        """
+        ## to ensure consistency:
+        pdf.load_params ( self.fitresult , silent = True )
+
+        r , _ = pdf.fitTo ( data , **self.fitconf )
+        
+        tv = self.t_value ( r ) 
+        del r
+        
+        return tv
+
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  gof  = ...
+    #  pdf  = ...
+    #  data = ... 
+    #  t_value , p_value = gof.pvalue ( pdf , data )
+    #  @endcode 
+    def pvalue ( self , pdf , data ) :
+        """ Calculate the t & p-values
+        >>> gof  = ...
+        >>> pdf  = ... 
+        >>> data = ... 
+        >>> t_value , p_value = gof.pvalue ( pdf , data ) 
+        """
+
+        t_value   = self.t_value ( self.fitresult ) 
+
+        ## prepare toys
+        toys = TOYS ( self                        ,
+                      t_value    = t_value        ,
+                      pdf        = pdf            ,
+                      Ndata      = len ( data )   ,
+                      sample     = self.sample    ,
+                      parameters = self.fitresult )
+        
+
+        if self.parallel : counter = toys.run ( self.nToys , progress = self.progress , silent = self.silent ) 
+        else             : counter = toys     ( self.nToys , progress = self.progress )
+                 
+        ## get ECDF from toys
+        self.__ecdf = toys.ecdf
+        
+        p_value       = 1 - counter.eff
+        
+        self.__tvalue = t_value 
+        self.__pvalue = p_value 
+
+        return t_value, p_value
+    
+    # =========================================================================
+    ## Draw the empirical CDF from toys  
+    def draw  ( self , option = '' , *args , **kwargs ) :
+        """ Draw empirical CDF from toys 
+        """
+        ## 
+        ecdf = self.ecdf 
+        if not ecdf : return ecdf 
+        ##
+        t_value = self.t_value ( self.fitresult ) 
+        ## 
+        result, vline, hline = draw_ecdf (  ecdf , tvalue = t_value , option = option , **kwargs )
+        ## 
+        self._vline = vline 
+        self._hline = hline 
+        ##
+        ecdf.__lines = vline , hline 
+        ## 
+        return result, vline, hline   
+
+# =============================================================================
+## @class AikaikeIC
+#  Use Aikaike information criterion as `estimate` for Goodness-of-Fit
+class AikaikeIC(NLL) :
+    """  Trivial `estimator' for Aikaike informatio criterion as fit-quality.
+    - attention: the absolute value of -log L is not a true GoF-estimator
+    - toys are needed!
+    """
+    # =========================================================================
+    ## get the actual t-value from the fit-result 
+    def t_value   ( self , fitresult ) : return fitresult.aic () 
+
+# =============================================================================
+## @class BayesianIC
+#  Use Bayesian information criterion as `estimate` for Goodness-of-Fit
+class BayesianIC(NLL) :
+    """  Trivial `estimator' for Bayesian informatio criterion as fit-quality.
+    - attention: the absolute value of -log L is not a true GoF-estimator
+    - toys are needed!
+    """
+    # =========================================================================
+    def __init__ ( self             ,
+                   fitresult        ,
+                   data             , * , 
+                   fitconf  = { 'silent' : True  , 'draw' : False } ,
+                   nToys    = 100   , 
+                   sample   = False ,
+                   parallel = False ,
+                   silent   = False ,
+                   progress = True  ) :
+
+        if   isinstance ( data , ROOT.RooDataSet ) : data = len ( data )
+        elif isinstance ( data , sized_types     ) : data = len ( data )
+        
+        assert data and isinstance ( data , integer_types ) and 1 <= data , \
+            "Invalid data %s" % typename ( data )
+        
+        NLL.__init__ ( self      ,
+                       fitresult = fitresult , 
+                       fitconf   = fitconf   ,
+                       nToys     = nToys     ,  
+                       sample    = sample    , 
+                       parallel  = parallel  , 
+                       silent    = silent    ,
+                       progress  = progress  ) 
+
+        self.__ndata = data 
+
+    ## get the actual t-value from the fit-result 
+    def t_value   ( self , fitresult ) : return fitresult.bic ( self.__ndata ) 
+
+    # ===========================================================================
+    ## get the t-value 
+    def tvalue ( self, pdf , data ) :
+        """ Get t-value: -log L here 
+        """
+        ## to ensure consistency:
+        pdf.load_params ( self.fitresult , silent = True )
+
+        r , _ = pdf.fitTo ( data , **self.fitconf )
+        
+        tv = r.bic ( data ) 
+        del r
+        
+        return tv
+
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object
+        """
+        state = NLL.__getstate__ ( self )
+        state [ 'ndata' ] = self.__ndata
+        return state
+    
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object
+        """
+        self.__ndata = state.pop ( 'ndata' ) 
+        NLL.__setstate__ ( self , state )
     
 # =============================================================================
 if '__main__' == __name__ :

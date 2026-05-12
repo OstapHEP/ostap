@@ -100,6 +100,7 @@ class GoFTask (Task) :
 def parallel_goftoys ( gof             ,
                        nToys    = 1000 ,
                        nSplit   = 0    ,
+                       fitconf  = {}   , 
                        silent   = True , 
                        progress = True , **kwargs ) :
     """ Run GoF1D/GoFSimFit toys in parallel 
@@ -126,6 +127,7 @@ def parallel_goftoys ( gof             ,
         
         toys.run ( nToys    = nToys                  ,
                    parallel = False                  ,
+                   fitconf  = fitconf                , 
                    silent   = silent or not progress )
         
         return toys

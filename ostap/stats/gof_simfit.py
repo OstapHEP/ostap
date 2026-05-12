@@ -139,7 +139,7 @@ class GoFSimFit1D(GoFSimFitBase) :
     def __init__ ( self               ,
                    pdf                ,
                    dataset            ,
-                   parameters  = None ) :
+                   parameters  = None ) : 
         
         ## initialize the base class 
         GoFSimFitBase.__init__ ( self                    ,
@@ -354,6 +354,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
     def run ( self ,
               nToys    = 1000  , * ,
               parallel = False ,
+              fitconf  = {}    , 
               silent   = False ,
               nSplit   = 0     ) :
         """ Run toys 
@@ -366,6 +367,7 @@ class GoFSimFit1DToys(GoFSimFit1D) :
             self += parallel_toys ( gof      = self       ,
                                     nToys    = nToys      ,
                                     nSplit   = nSplit     ,
+                                    fitconf  = fitconf    , 
                                     silent   = True       ,
                                     progress = not silent )
             return self 
@@ -1071,7 +1073,7 @@ class USTATSimFit(GoFSimFitType) :
 # =============================================================================
 ## @class GoFSimFit
 #  Goodness-of-fit for simultaneous fits
-#  - It is a bit more  gneria and (a bit less efficient)  GoG estimator for 
+#  - It is a bit more  general and (a bit less efficient)  GoF estimator for 
 #    simulataneous fits
 class GoFSimFit(GoFSimFitBase) :
     """ Generic Goodness-of-fit for simultaneous fits
@@ -1096,7 +1098,6 @@ class GoFSimFit(GoFSimFitBase) :
             "Invalid keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
         assert all ( l in estimators for l in self.sample.labels() ) , \
             "Missing keys in `estimators`: %s" % ( ',%s' % ( k for k in estimators ) ) 
-
         
         ## self.__dataset  = dataset
         
@@ -1224,7 +1225,8 @@ class GoFSimFit(GoFSimFitBase) :
     ## run toys to get p-value
     def run ( self     ,
               nToys    = 500    ,
-              parallel = False  ,    
+              parallel = False  ,
+              fitconf  = {}     , 
               silent   = False  ,
               nSplit   = 0      ) :
         """ Run toys to get the p-value
@@ -1236,6 +1238,7 @@ class GoFSimFit(GoFSimFitBase) :
             self += parallel_toys ( gof      = self       ,
                                     nToys    = nToys      ,
                                     nSplit   = nSplit     ,
+                                    fitconf  = {}         , 
                                     silent   = True       ,
                                     progress = not silent )
             return self 

@@ -162,15 +162,17 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     with use_canvas ( title = '%s:GoF' % label   ) :
         
         pdf.load_params ( r , silent = True ) 
-        gof = G1D.GoF1D   ( pdf , dataset )
-        logger.info ( 'Goodness-of-fit (%s):\n%s' %  ( label , gof ) )
+        gof = G1D.GoF1D   ( pdf , dataset , fitresult = r )
+        logger.info ( 'Goodness-of-fit (%s) #%d:\n%s' %  ( label , len ( dataset ) , gof ) )
         
         gauss.load_params ( r , silent = True ) 
         with timing ( 'GoF1D-toys %s' % label  , logger = logger ) : 
             toys = G1D.GoF1DToys ( gof )
             toys = toys.run ( nToys = nToys , parallel = True )
         logger.info ( 'Goodness-of-fit (%s) with %d toys:\n%s' % ( label , toys.nToys , toys ) ) 
-        
+
+    return
+
     with use_canvas ( title = '%s:GoF/Kolmogorov-Smirnov' % label ) :
         dks = toys.draw ( 'Kolmogorov-Smirnov')
         plots.append ( dks ) 
@@ -195,12 +197,21 @@ def run_fit ( pdf , dataset , label  , logger = logger ) :
     with use_canvas ( title = '%s:GoF/Berk-Jones'         % label ) :
         dbj = toys.draw ( 'Berk-Jones')
         plots.append ( dbj )         
+    with use_canvas ( title = '%s:GoF/NLL'                 % label ) :
+        dnl = toys.draw ( 'BLL')
+        plots.append ( dnl )         
+    with use_canvas ( title = '%s:GoF/AikaikeIC'           % label ) :
+        dai = toys.draw ( 'AIC')
+        plots.append ( dai )         
+    with use_canvas ( title = '%s:GoF/BayesianIC'          % label ) :
+        dbi = toys.draw ( 'BIC')
+        plots.append ( dbi )         
     
     ## Try to use multidimensional methods:
     
-    run_PPD   ( pdf , dataset , r , label , logger )    
-    run_DNN   ( pdf , dataset , r , label , logger )
-    run_USTAT ( pdf , dataset , r , label , logger )
+    ## run_PPD   ( pdf , dataset , r , label , logger )    
+    ## run_DNN   ( pdf , dataset , r , label , logger )
+    ## run_USTAT ( pdf , dataset , r , label , logger )
 
 # =====================================================================================
 def test_good_fit_1 ( ) :

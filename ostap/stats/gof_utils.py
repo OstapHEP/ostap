@@ -25,7 +25,8 @@ from   ostap.utils.cidict       import cidict, cidict_fun
 from   ostap.core.ostap_types   import string_types, num_types 
 from   ostap.math.math_base     import doubles, axis_range
 from   ostap.math.math_ve       import significance
-from   ostap.math.ve            import fmt_pretty_ve 
+from   ostap.math.ve            import fmt_pretty_ve
+from    ostap.math.math_base    import pos_infinity     
 from   ostap.stats.counters     import SE, WSE, EffCounter
 from   ostap.utils.basic        import numcpu, loop_items 
 from   ostap.utils.utils        import splitter
@@ -230,25 +231,32 @@ def normalize ( ds , *others , weight = () , first = True ) :
 # =============================================================================
 ## Short labels for various statitical estimators 
 Labels = {
-    'KS' : 'Kolmogorov-Smirnov' ,
-    'K'  : 'Kuiper'             ,
-    'AD' : 'Anderson-Darling'   ,
-    'CM' : 'Cramer-von Mises'   ,
-    'ZK' : 'Zhang/ZK'           ,
-    'ZA' : 'Zhang/ZA'           ,
-    'ZC' : 'Zhang/ZC'           ,        
-    'BJ' : 'Berk-Jones'         ,        
+    'KS'  : 'Kolmogorov-Smirnov' ,
+    'K'   : 'Kuiper'             ,
+    'AD'  : 'Anderson-Darling'   ,
+    'CM'  : 'Cramer-von Mises'   ,
+    'ZK'  : 'Zhang/ZK'           ,
+    'ZA'  : 'Zhang/ZA'           ,
+    'ZC'  : 'Zhang/ZC'           ,        
+    'BJ'  : 'Berk-Jones'         ,        
+    'NLL' : '-log L'             ,
+    'AIC' : 'Aikaike IC'         ,
+    'BIC' : 'Bayesian IC'        ,
+    
 }
 ## lower-case shortcuts:
 Keys = {    
-    'KS' : ( 'ks' , 'kolmogorov' , 'kolmogorovsmirnov' ) , 
-    'K'  : ( 'k'  , 'kuiper'                           ) , 
-    'AD' : ( 'ad' , 'anderson'   , 'andersondarling'   ) , 
-    'CM' : ( 'cm' , 'cramer'     , 'cramervonmises'    ) , 
-    'ZK' : ( 'zk' , 'zhangk'     , 'zhangzk'           ) , 
-    'ZA' : ( 'za' , 'zhanga'     , 'zhangza'           ) , 
-    'ZC' : ( 'zc' , 'zhangc'     , 'zhangzc'           ) , 
-    'BJ' : ( 'bj' , 'berkjones'  , 'berk'              ) , 
+    'KS'  : ( 'ks'  , 'kolmogorov' , 'kolmogorovsmirnov' ) , 
+    'K'   : ( 'k'   , 'kuiper'                           ) , 
+    'AD'  : ( 'ad'  , 'anderson'   , 'andersondarling'   ) , 
+    'CM'  : ( 'cm'  , 'cramer'     , 'cramervonmises'    ) , 
+    'ZK'  : ( 'zk'  , 'zhangk'     , 'zhangzk'           ) , 
+    'ZA'  : ( 'za'  , 'zhanga'     , 'zhangza'           ) , 
+    'ZC'  : ( 'zc'  , 'zhangc'     , 'zhangzc'           ) , 
+    'BJ'  : ( 'bj'  , 'berkjones'  , 'berk'              ) , 
+    'NLL' : ( 'nll' ,              ) , 
+    'AIC' : ( 'aic' , 'aikaike'    ) ,  
+    'BIC' : ( 'bic' , 'bayesian'   ) , 
     }
 # =============================================================================
 assert Labels.keys() == Keys.keys() , "Mismatch between Labels & Keys structures!"
@@ -281,6 +289,25 @@ class PERMUTATOR(object) :
         self.ds2     = ds2
         self.t_value = t_value
         self.__ecdf  = None
+
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object
+        """
+        return { 'gof'        : self.gof      ,
+                 'ds1'        : self.ds1      ,   
+                 't_value'    : self.t_value  , 
+                 'ecdf'       : self.ecdf     }
+    
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object
+        """
+        self.gof     = state.pop ( 'gof'        )
+        self.ds1     = state.pop ( 'ds1'        )
+        self.ds2     = state.pop ( 'ds2'        )        
+        self.t_value = state.pop ( 't_value'    )
+        self.__ecdf  = state.pop ( 'ecdf'       )
         
     # =========================================================================
     ## run N-permutations 
@@ -295,7 +322,7 @@ class PERMUTATOR(object) :
 
     # =========================================================================
     ## run N-toys 
-    def run_toys ( self, N , silent = True ) :
+    def run_toys ( self, N , progress = False ) :
         """ Run N-toys
         """
         
@@ -304,7 +331,7 @@ class PERMUTATOR(object) :
         pooled  = numpy.concatenate ( [ self.ds1 , self.ds2 ] )
         counter = EffCounter()
         tvalues = [] 
-        for i in progress_bar ( N , silent = silent , description = 'Permutations:') : 
+        for i in progress_bar ( N , silent = not progress  , description = 'Permutations:') : 
             numpy.random.shuffle ( pooled )            
             tv       = self.gof.t_value ( pooled [ : n1 ] , pooled [ n1: ] )
             tvalues.append ( float ( tv ) )
@@ -316,11 +343,12 @@ class PERMUTATOR(object) :
     def ecdf ( self ) :
         """`ecdf` : empirical CDF for t-values from permutations 
         """
-        return self.__ecdf
-    
+        return self.__ecdf    
     @ecdf.setter
     def ecdf ( self , value ) :
         self.__ecdf = value
+
+
         
 # =============================================================================
 jl = None 
@@ -333,7 +361,7 @@ if False : # ==================================================================
         jl_version = tuple ( int ( i ) for i in jl.__version__.split('.') )
         # =====================================================================
         ## Run NN-permutations in parallel using joblib 
-        def joblib_run ( self , NN , silent = True ) :
+        def joblib_run ( self , NN , progress = True ) :
             """ Run NN-permutations in parallel using joblib
             """
             me    = math.ceil ( memory_enough() ) + 1 
@@ -350,7 +378,7 @@ if False : # ==================================================================
             counter = EffCounter()
             tvalues = () 
             results = jl.Parallel ( **conf ) ( input )
-            for r in progress_bar ( results , max_value = njobs , silent = silent , description = 'Permutations:') :
+            for r in progress_bar ( results , max_value = njobs , silent = not progress , description = 'Permutations:') :
                 cnt , tvals = r 
                 counter += cnt
                 tvalues += tvals 
@@ -373,7 +401,7 @@ if False : # ==================================================================
 if not jl : # =================================================================
     # =========================================================================
     ## Run NN-permutations in parallel using WorkManager
-    def pp_run ( self , NN , silent = True ) :
+    def pp_run ( self , NN , progress  = True ) :
         """ Run NN-permutations in parallel using WorkManager"""
         me    = math.ceil ( memory_enough() ) + 1 
         nj    = min ( 2 * numcpu () + 3 , me ) 
@@ -388,7 +416,7 @@ if not jl : # =================================================================
         with WorkManager ( silent = silent ) as manager : 
             for result in manager.iexecute ( self.run_toys ,
                                              lst           ,
-                                             progress    = not silent      ,
+                                             progress    = progress        ,
                                              njobs       = njobs           ,
                                              description = 'Permutations:' ) :
                 cnt , tvals = result 
@@ -412,47 +440,89 @@ class TOYS(object) :
     """ Helper class that allow to run toys in parallel 
     """
     def __init__ ( self    , 
-                   gof     , * , 
-                   t_value ,
-                   pdf     ,
-                   Ndata   , sample = False ) :
+                   gof     , *        , 
+                   t_value            ,
+                   pdf                ,
+                   Ndata              , 
+                   sample     = False ,
+                   parameters = {}    ) :
         
-        self.gof     = gof
-        self.pdf     = pdf
-        self.Ndata   = Ndata 
-        self.t_value = t_value
-        self.sample  = gof.sample 
-        self.silent  = gof.silent
+        self.gof        = gof
+        self.pdf        = pdf
+        self.Ndata      = Ndata 
+        self.t_value    = t_value
+        self.sample     = gof.sample 
+        self.silent     = gof.silent
+
+        if parameters : self.parameters = parameters
+        else          : self.parameters = pdf.params() 
+                    
         self.__ecdf  = None 
-        
+
+    ## serialize the object 
+    def __getstate__ ( self ) :
+        """ Serialize the object
+        """
+        self.pdf.load_params ( self.parameters , silent = True )        
+        return { 'gof'        : self.gof        ,
+                 'pdf'        : self.pdf        ,
+                 'Ndata'      : self.Ndata      ,
+                 't_value'    : self.t_value    , 
+                 'sample'     : self.sample     , 
+                 'silent'     : self.silent     ,                  
+                 'parameters' : self.parameters ,
+                 'ecdf'       : self.ecdf       } 
+
+    ## De-serialize the object 
+    def __setstate__ ( self , state ) :
+        """ De-serialize the object
+        """
+        self.gof         = state.pop ( 'gof'        )
+        self.pdf         = state.pop ( 'pdf'        )
+        self.Ndata       = state.pop ( 'Ndata'      )
+        self.t_value     = state.pop ( 't_value'    )
+        self.sample      = state.pop ( 'sample'     )
+        self.silent      = state.pop ( 'silent'     )
+        self.parameters  = state.pop ( 'parameters' )
+        self.__ecdf      = state.pop ( 'ecdf'       )
+
+        ## (1) re-load parameters 
+        self.pdf.load_params ( self.parameters , silent = True )
+
+
     # =========================================================================
     ## run N-toys 
-    def __call__ ( self , nToys , silent = True ) :
+    def __call__ ( self , nToys , progress = True  ) :
         """ Run N-toys
         """
-        counter , ecdf = self.run_toys ( nToys = nToys , silent = silent )
+        counter , ecdf = self.run_toys ( nToys = nToys , progress = progress )
         return counter 
     
     # =========================================================================
     ## run N-toys 
-    def run_toys ( self , nToys , silent = True ) :
+    def run_toys ( self , nToys , progress = False ) :
         """ Run N-toys
         """
         ROOT.gRandom                     .SetSeed () 
         ROOT.RooRandom.randomGenerator() .SetSeed ()
-
-        
+                
         counter = EffCounter ()
         tvalues = [] 
-        for i in range ( nToys ) :
+        for i in progress_bar ( nToys , description = "Toys:" , silent = not progress ) : 
+
+            ## for consistency
+            self.pdf.load_params ( self.parameters , silent = True )
             
             dset     = self.pdf.generate ( self.Ndata , sample = self.sample )
             tv       = self.gof ( self.pdf , dset )
-            counter += bool ( self.t_value > tv   ) ## NOTE SIGN HERE!
+            counter += bool ( self.t_value > tv   ) ## NOTE THE SIGN HERE!
 
             tvalues.append ( tv ) 
-            if isinstance  ( dset , ROOT.RooDataSet ) : dset.clear () 
-            del dset
+
+            if isinstance  ( dset , ROOT.RooDataSet ) :
+                dset.clear ()
+                ROOT.SetOwnership ( dset , True )
+                del dset
 
         tvalues = tuple ( tvalues ) 
         if not self.ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues  , True ) 
@@ -462,15 +532,18 @@ class TOYS(object) :
 
     # =========================================================================
     ## Run N-toys in parallel using WorkManager
-    def run ( self , nToys  , silent = False ) :
+    def run ( self , nToys , silent = False , progress = True ) :
         """ Run N-toys in parallel using WorkManager
         """
-        me       = math.ceil ( memory_enough() ) + 1 
-        nj       = min ( 2 * numcpu () + 3 , me , ( nToys // 5 ) + 1  )        
+        me       = math.ceil ( memory_enough() ) + 1
+        ## set aprpoximately 5 as a typical size of job
+        toys_per_job = 10 
+        nj       = min ( 2 * numcpu () + 3 , me , 5 + nToys // toys_per_job , 70 )        
         the_list = splitter ( nToys , nj ) 
         njobs    = min ( nToys , nj ) 
         if not silent : logger.info ( 'toys: #%d parallel subjobs to be used' % njobs ) 
         ##
+
         counter = EffCounter()
         tvalues = ()
         ##        
@@ -480,7 +553,7 @@ class TOYS(object) :
 
             for result in manager.iexecute ( self.run_toys ,
                                              the_list      ,
-                                             progress      = not silent ,
+                                             progress      = progress   ,
                                              njobs         = njobs      ,
                                              description   = 'Toys:'    ) :
 
@@ -498,6 +571,9 @@ class TOYS(object) :
         """
         return self.__ecdf
 
+
+# =============================================================================
+pvalue_types = num_types + ( VE , ) 
 # =============================================================================
 ## Format the row for GoF tables
 #  @code
@@ -519,10 +595,10 @@ def format_row ( tvalue    = None ,
     >>> header , row = format_row ( tvalue = tvalue , pvalue = pvalue  , ecdf = ecdf )
     """
     
-    has_tvalue  = not tvalue  is None and isinstance ( tvalue  , num_types ) 
-    has_pvalue  = not pvalue  is None and isinstance ( pvalue  , VE        ) 
+    has_tvalue  = not tvalue  is None and isinstance ( tvalue  , num_types       ) 
+    has_pvalue  = not pvalue  is None and isinstance ( pvalue  , pvalue_types    ) 
     has_ecdf    = not ecdf    is None and isinstance ( ecdf    , Ostap.Math.ECDF ) 
-    has_counter = not counter is None and isinstance ( counter , ( SE , WSE )   )
+    has_counter = not counter is None and isinstance ( counter , ( SE , WSE )    )
 
     if has_ecdf  and not has_counter  :
         counter     = ecdf.counter ()
@@ -535,9 +611,6 @@ def format_row ( tvalue    = None ,
                    't-rms'      ,
                    't-min/max'  ,                
                    '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
-        
-        pv         = clip_pvalue  ( pvalue ) 
-        nsigma     = significance ( pv ) ## convert  it to significance
         
         mean       = counter.mean   ()
         rms        = counter.rms    () 
@@ -563,10 +636,21 @@ def format_row ( tvalue    = None ,
         vmx = vmax   / scale
         
         fmt2 = '%s/%s' % ( fmtv , fmtv ) 
+
+        ##
         
+        pv      = clip_pvalue  ( pvalue ) 
+        nsigma  = significance ( pv     ) ## convert  it to significance
+        ## 
+        if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
+        if 50 <= float ( nsigma ) : nsigma = pos_infinity 
+
         pvalue  = pvalue * 100
-        pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
-        nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
+
+        if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        else                          : pvalue  = '%5.2f'         % float ( pvalue ) 
+        if isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )
+        else                          : nsigma  = '%.2f'          % float ( nsigma ) 
         
         row = ( fmtv  % vs ,
                 fmt   % ( vm.value() , vm.error() ) ,
@@ -577,17 +661,22 @@ def format_row ( tvalue    = None ,
         return header , row
 
     elif has_tvalue and has_pvalue :
-
         
         header = ( 't-value'  , '%s[..]' % times , 'p-value [%]' , '#%s' % greek_lower_sigma ) 
 
         pv        = clip_pvalue  ( pvalue )
         nsigma    = significance ( pv     )
+        if isinstance ( nsigma , VE ) and nsigma.cov2 () <= 0 : nsigma = float ( nsigma ) 
+        if 50 <= float ( nsigma ) : nsigma = pos_infinity 
+        
         tv , expo = pretty_float ( tvalue , precision = precision , width = width )
-            
-        pvalue  = pvalue * 100
-        pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error() )        
-        nsigma  =  '%.2f %s %.2f' % ( nsigma.value() , plus_minus , nsigma.error () )        
+
+        pvalue  = pvalue * 100 
+        if isinstance ( pvalue , VE ) : pvalue  = '%5.2f %s %.2f' % ( pvalue.value() , plus_minus , pvalue.error () )
+        else                          : pvalue  = '%5.2f'         % float ( pvalue ) 
+        if isinstance ( nsigma , VE ) : nsigma  = '%.2f %s %.2f'  % ( nsigma.value() , plus_minus , nsigma.error () )        
+        else                          : nsigma  = '%.2f'          % float ( nsigma ) 
+        
         row     = tv , '%s10^%+d' % ( times , expo ) if expo else '' , pvalue , nsigma
 
         return header , row 

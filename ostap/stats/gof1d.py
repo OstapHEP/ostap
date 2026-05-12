@@ -374,8 +374,9 @@ class GoF1D(object) :
     """
     def __init__ ( self              ,
                    pdf               ,
-                   dataset           ,
+                   dataset           ,                   
                    cdf        = None ,
+                   fitresult  = None , 
                    parameters = {}   ) :
         
         assert isinstance ( pdf     , PDF1            ) , 'Invalid type of `pdf`:%s'     % typename ( pdf     )
@@ -390,10 +391,15 @@ class GoF1D(object) :
         ## store PDF 
         self.__pdf        = pdf        
         self.__parameters = parameters if parameters else pdf.parameters ( dataset )
-        
-        ## re-load parameters
-        self.__pdf.load_params ( self.__parameters , silent = True )
 
+        ##
+        if fitresult and isinstance ( fitresult , ROOT.RooFitResult ) :
+            ## re-load parameters from fit result 
+            self.__pdf.load_params ( fitresult , silent = False )
+            
+        ## re-load parameters
+        if parameters : self.__pdf.load_params ( self.__parameters , silent = True )
+            
         ## get/construct/store  CDF 
         self.__cdf = self.get_cdf ( cdf ) 
         
@@ -427,7 +433,12 @@ class GoF1D(object) :
             'ZC'  : ZC                 ( cdf_data ) ,
             'BJ'  : berk_jones         ( cdf_data ) ,
         }
-        
+        ##
+        if fitresult and isinstance ( fitresult , ROOT.RooFitResult ) :
+            self.__estimators [ 'NLL' ] = fitresult.minNll () 
+            self.__estimators [ 'AIC' ] = fitresult.aic    () 
+            self.__estimators [ 'BIC' ] = fitresult.bic    ( dataset )  
+            
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object
@@ -538,69 +549,93 @@ class GoF1D(object) :
         return self.__parameters
     
     # =========================================================================
-    ## Get Kolmogorov-Smirnov statistics 
+    ## Get Kolmogorov-Smirnov statistic
     @property 
     def kolmogorov_smirnov_estimator ( self ) :
-        """ Get Kolmogorov-Smirnov' statistics KS
+        """ Get Kolmogorov-Smirnov' statistic KS
         """
         return self.__estimators.get('KS',None) 
 
     # =========================================================================
-    ## Get Kuiper  statististics 
+    ## Get Kuiper  statistic 
     @property 
     def kuiper_estimator ( self ) :
-        """ Get Kuiper' statistics K 
+        """ Get Kuiper' statisticc K 
         """        
         return self.__estimators.get('K', None ) 
                 
     # =========================================================================
-    ## Get Anderson-Darling  statistiscs 
+    ## Get Anderson-Darling  statistisc 
     @property 
     def anderson_darling_estimator ( self ) :
-        """ Get Anderson-Darling statistiscs AD
+        """ Get Anderson-Darling statistic
         """
         return self.__estimators.get ( 'AD' , None ) 
 
     # =========================================================================
-    ## Get Cramer-von Mises statistics 
+    ## Get Cramer-von Mises statistic 
     @property 
     def cramer_von_mises_estimator ( self ) :
-        """ Get Cramer-von Mises statistics 
+        """ Get Cramer-von Mises statistic
         """
         return self.estimators.get ( 'CM' , None ) 
     
     # =========================================================================
-    ## Get ZK statististics 
+    ## Get ZK statistic
     @property 
     def ZK_estimator  ( self ) :
-        """ Get ZK statistics
+        """ Get ZK statistic
         """
         return self.estimators.get ( 'ZK' , None ) 
         
     # =========================================================================
-    ## Get ZA statististics 
+    ## Get ZA statistic
     @property 
     def ZA_estimator  ( self ) :
-        """ Get ZA statistics
+        """ Get ZA statistic
         """        
         return self.estimators.get( 'ZA' , None ) 
     
     # =========================================================================
-    ## Get ZC statististics 
+    ## Get ZC statistic
     @property 
     def ZC_estimator ( self ) :
-        """ Get ZC statistics
+        """ Get ZC statistic
         """        
         return self.__estimators.get ( 'ZC' , None )
     
     # =========================================================================
-    ## Get Berk-Jones statististics 
+    ## Get Berk-Jones statistic
     @property 
     def berk_jones_estimator ( self ) :
-        """ Get Berk-Jones statistics
+        """ Get Berk-Jones statistic
         """        
         return self.__estimators.get ( 'BJ' , None ) 
 
+    # =========================================================================
+    ## Get NLL statistic 
+    @property 
+    def NLL_estimator ( self ) :
+        """ Get NLL statistic
+        """        
+        return self.__estimators.get ( 'NLL' , None ) 
+
+    # =========================================================================
+    ## Get AIC statistic
+    @property 
+    def aikaike_estimator ( self ) :
+        """ Get AIC statistic
+        """        
+        return self.__estimators.get ( 'AIC' , None ) 
+
+    # =========================================================================
+    ## Get Bayesian IC statististic
+    @property 
+    def bayesian_estimator ( self ) :
+        """ Get Bayesian IC statistic
+        """        
+        return self.__estimators.get ( 'BIC' , None ) 
+    
     # =========================================================================
     ## Print the summary as Table
     def table ( self             , * , 
@@ -619,17 +654,22 @@ class GoF1D(object) :
         for label , value  in loop_items ( self.estimators ) :
             
             the_label = Labels.get ( label , label )
+            
+            if 'KS' == label :
+                pvalue       = Ostap.Math.kolmogorov_ccdf ( len ( self.ecdf ) , value )                
+                header , row = format_row ( tvalue = value , pvalue =  pvalue  )
+            else :
+                h      , row = format_row ( tvalue = value )
+                if not header : header = h 
 
-            header, row = format_row ( tvalue = value )
-
-            row = ( label , ) + row 
+            row = ( the_label , ) + row 
             rows.append ( row )
 
         header = ( 'Statistic' , ) + header 
         rows   = [ header ] + sorted ( rows ) 
         title  = title if title else 'Goodness of 1D Fit' 
         rows   = T.remove_empty_columns ( rows )
-        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcc' , style = style  )
+        return T.table ( rows , title = title , prefix = prefix , alignment = 'lcccc' , style = style  )
 
     ## print estimator as table 
     __repr__ = table
@@ -757,6 +797,7 @@ class GoF1DToys(GoF1D) :
               nToys    = 1000   , * ,
               parallel = False  ,
               silent   = False  ,
+              fitconf  = {}     , 
               nSplit   = 0      ) :
         """ Run toys 
         """
@@ -767,6 +808,7 @@ class GoF1DToys(GoF1D) :
             self += parallel_toys ( gof      = self       ,
                                     nToys    = nToys      ,
                                     nSplit   = nSplit     ,
+                                    fitconf  = fitconf    , 
                                     silent   = True       ,
                                     progress = not silent )
             return self 
@@ -778,11 +820,33 @@ class GoF1DToys(GoF1D) :
 
         from ostap.utils.progress_bar import progress_bar
 
+        use_NLL = 'NLL' in self.estimators  or 'AIC' in self.estimators  or 'BIC' in self.estimators
+        
         cnt = SE() 
         for i in progress_bar ( nToys , silent = silent , description = 'Toys:') :
 
             self.pdf.load_params ( self.parameters , silent = True )            
-            dset     = self.pdf.generate ( self.N  , sample = True )                
+            dset     = self.pdf.generate ( self.N  , sample = True )
+
+
+            # =======================================================================
+            if use_NLL : # =========================================================
+                ## fit it ?                
+                r , _ = self.pdf.fitTo ( dset , draw = False , silent = silent , **fitconf )
+                nll   = r.minNll (      )
+                aic   = r.aic    (      )
+                bic   = r.bic    ( dset )
+                
+                counters [ 'NLL' ] += nll 
+                counters [ 'AIC' ] += aic 
+                counters [ 'BIC' ] += bic 
+
+                results  [ 'NLL' ].append ( nll )
+                results  [ 'AIC' ].append ( aic )
+                results  [ 'BIC' ].append ( bic )
+                
+                del r 
+            
             data     = dset.tonumpy ( varname ) [ varname ] 
             data     = numpy.sort ( data )
 
@@ -798,23 +862,23 @@ class GoF1DToys(GoF1D) :
             zc       = ZC                 ( cdf_data )
             bj       = berk_jones         ( cdf_data )
 
-            counters [ 'KS' ] += ks
-            counters [ 'K'  ] += k
-            counters [ 'AD' ] += ad
-            counters [ 'CM' ] += cm
-            counters [ 'ZK' ] += zk
-            counters [ 'ZA' ] += za
-            counters [ 'ZC' ] += zc
-            counters [ 'BJ' ] += bj
+            counters [ 'KS'  ] += ks
+            counters [ 'K'   ] += k
+            counters [ 'AD'  ] += ad
+            counters [ 'CM'  ] += cm
+            counters [ 'ZK'  ] += zk
+            counters [ 'ZA'  ] += za
+            counters [ 'ZC'  ] += zc
+            counters [ 'BJ'  ] += bj
             
-            results  [ 'KS' ].append ( ks )    
-            results  [ 'K'  ].append ( k  )
-            results  [ 'AD' ].append ( ad ) 
-            results  [ 'CM' ].append ( cm ) 
-            results  [ 'ZK' ].append ( zk ) 
-            results  [ 'ZA' ].append ( za ) 
-            results  [ 'ZC' ].append ( zc ) 
-            results  [ 'BJ' ].append ( bj ) 
+            results  [ 'KS'  ].append ( ks  )    
+            results  [ 'K'   ].append ( k   )
+            results  [ 'AD'  ].append ( ad  ) 
+            results  [ 'CM'  ].append ( cm  ) 
+            results  [ 'ZK'  ].append ( zk  ) 
+            results  [ 'ZA'  ].append ( za  ) 
+            results  [ 'ZC'  ].append ( zc  ) 
+            results  [ 'BJ'  ].append ( bj  ) 
 
             cnt += ks
             
@@ -931,7 +995,8 @@ class GoF1DToys(GoF1D) :
     
     ## merge two objects:
     def __iadd__ ( self , other ) :
-        """ Merge two GoF-toys objects """        
+        """ Merge two GoF-toys objects
+        """        
         if not isinstance ( other , GoF1DToys ) : return NotImplemented 
 
         ecdfs = other.ecdfs        
@@ -954,6 +1019,7 @@ class GoF1DToys(GoF1D) :
     def result ( self , label ) :
         """ Helper method to get the result 
         """
+
         if not label in self.estimators : return None
         if not label in self.ecdfs      : return None
         if not label in self.counters   : return None
@@ -1004,7 +1070,8 @@ class GoF1DToys(GoF1D) :
         """
 
         header = () 
-        rows   = []         
+        rows   = []
+
         for label, ecdf  in self.ecdfs.items ()  :
             
             result  = self.result ( label )
@@ -1063,6 +1130,18 @@ class GoF1DToys(GoF1D) :
         elif key in Keys [ 'BJ' ] and 'BJ' in self.ecdfs : 
             result = self.result  ( 'BJ' )
             ecdf   = self.ecdfs   [ 'BJ' ]
+            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
+        elif key in Keys [ 'NLL' ] and 'NLL' in self.ecdfs : 
+            result = self.result  ( 'NLL' )
+            ecdf   = self.ecdfs   [ 'NLL' ]
+            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
+        elif key in Keys [ 'AIC' ] and 'AIC' in self.ecdfs : 
+            result = self.result  ( 'AIC' )
+            ecdf   = self.ecdfs   [ 'AIC' ]
+            ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
+        elif key in Keys [ 'BIC' ] and 'BIC' in self.ecdfs : 
+            result = self.result  ( 'BIC' )
+            ecdf   = self.ecdfs   [ 'BIC' ]
             ## logger.info ( 'Toy results for Berk-Jones estimate' ) 
         else :
             raise KeyError (  "draw: Invalid `what`:%s" % what )

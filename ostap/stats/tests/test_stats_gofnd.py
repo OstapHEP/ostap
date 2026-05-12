@@ -228,13 +228,154 @@ def test_USTAT () :
     rows  = T.remove_empty_columns ( rows )     
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
+
+# ===============================================================================
+def test_NLL () :
     
+    logger = getLogger ("test_NLL")
+
+    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
+    
+    nll_good = GnD.NLL ( nToys = 50 , fitresult = rgood )
+    nll_bad  = GnD.NLL ( nToys = 50 , fitresult = rbad  )
+    
+    ## presumably good fit
+    with timing ( "Good fit NLL" , logger = logger ) :
+        pdf.load_params ( rgood , silent = True ) 
+        tgood, pgood = nll_good.pvalue ( pdf , data_good )
+        
+    ## presumably bad fit 
+    with timing ( "Bad  fit NLL" , logger = logger ) : 
+        pdf.load_params ( rbad  , silent = True ) 
+        tbad, pbad  = nll_bad.pvalue ( pdf , data_bad )
+        
+    with use_canvas ( title = "Good fit -log N "  , wait = 2 ) : nll_good.draw ()     
+    with use_canvas ( title = "Bad  fit -log N "  , wait = 2 ) : nll_bad .draw ()     
+        
+    gp = pgood * 100 
+    bp = pbad  * 100
+    
+    gt , ge = pretty_float ( tgood )
+    bt , be = pretty_float ( tbad  )
+    
+    pvg    = clip_pvalue  ( pgood )
+    pvb    = clip_pvalue  ( pbad  )        
+    nsg    = significance ( pvg   )
+    nsb    = significance ( pvb   )
+    
+    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
+    
+    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
+    rows.append ( row )
+            
+    title= 'Goodness-of-Fit -logL test'
+    rows  = T.remove_empty_columns ( rows )     
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
+
+# ===============================================================================
+def test_AIC () :
+    
+    logger = getLogger ("test_AIC")
+
+    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
+    
+    aic_good = GnD.AikaikeIC ( nToys = 500 , fitresult = rgood )
+    aic_bad  = GnD.AikaikeIC ( nToys = 500 , fitresult = rbad  )
+    
+    ## presumably good fit
+    with timing ( "Good fit Aikaike IC" , logger = logger ) :
+        pdf.load_params ( rgood , silent = True ) 
+        tgood, pgood = aic_good.pvalue ( pdf , data_good )
+                
+    ## presumably bad fit 
+    with timing ( "Bad  fit Aikaike IC" , logger = logger ) : 
+        pdf.load_params ( rbad  , silent = True ) 
+        tbad, pbad  = aic_bad.pvalue ( pdf , data_bad )
+        
+    with use_canvas ( title = "Good fit Aikaike IC"  , wait = 2 ) : aic_good.draw ()     
+    with use_canvas ( title = "Bad  fit Aikaike IC"  , wait = 2 ) : aic_bad .draw ()     
+
+    gp = pgood * 100 
+    bp = pbad  * 100
+    
+    gt , ge = pretty_float ( tgood )
+    bt , be = pretty_float ( tbad  )
+    
+    pvg    = clip_pvalue  ( pgood )
+    pvb    = clip_pvalue  ( pbad  )        
+    nsg    = significance ( pvg   )
+    nsb    = significance ( pvb   )
+    
+    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
+    
+    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
+    rows.append ( row )
+            
+    title= 'Goodness-of-Fit Aikaike IC test'
+    rows  = T.remove_empty_columns ( rows )     
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
+
+# ===============================================================================
+def test_BIC () :
+    
+    logger = getLogger ("test_BIC")
+
+    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
+    
+    bic_good = GnD.BayesianIC ( nToys = 100 , fitresult = rgood , data = data_good , parallel = True )
+    bic_bad  = GnD.BayesianIC ( nToys = 100 , fitresult = rbad  , data = data_bad  , parallel = True )
+    
+    ## presumably good fit
+    with timing ( "Good fit Bayesian IC" , logger = logger ) :
+        pdf.load_params ( rgood , silent = True ) 
+        tgood, pgood = bic_good.pvalue ( pdf , data_good )
+            
+    ## presumably bad fit 
+    with timing ( "Bad  fit Bayesian IC" , logger = logger ) : 
+        pdf.load_params ( rbad  , silent = True ) 
+        tbad, pbad  = bic_bad.pvalue ( pdf , data_bad )
+        
+    with use_canvas ( title = "Good fit Bayesian IC"  , wait = 2 ) : bic_good.draw ()     
+    with use_canvas ( title = "Bad  fit Bayesian IC"  , wait = 2 ) : bic_bad .draw ()
+    
+    gp = pgood * 100 
+    bp = pbad  * 100
+    
+    gt , ge = pretty_float ( tgood )
+    bt , be = pretty_float ( tbad  )
+    
+    pvg    = clip_pvalue  ( pgood )
+    pvb    = clip_pvalue  ( pbad  )        
+    nsg    = significance ( pvg   )
+    nsb    = significance ( pvb   )
+    
+    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
+    
+    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
+    rows.append ( row )
+            
+    title= 'Goodness-of-Fit Bayesian IC test'
+    rows  = T.remove_empty_columns ( rows )     
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
+
 # ===============================================================================
 if '__main__' == __name__ :
 
-    test_PPD   ()
-    test_DNN   ()
-    test_USTAT ()
+    ## test_PPD   ()
+    ## test_DNN   ()
+    ## test_USTAT ()
+    test_BIC   ()
+    test_NLL   ()
+    test_AIC   ()
 
 # ===============================================================================
 ##                                                                        The END 

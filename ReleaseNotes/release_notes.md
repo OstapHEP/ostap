@@ -1,6 +1,8 @@
 
 # New features
 
+ 1. Add NLL, Aikaike IC and Bayesian IC as "GoF-estimates"
+ 
 ## Bug fixes
 
 ## Backward incompatible
