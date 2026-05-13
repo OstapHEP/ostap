@@ -208,14 +208,14 @@ except ImportError : # ========================================================
     message = """numba cannot be imported!
     Numba is useful for better C++/pytini intercommunications 
     """
-    missing.append ( 'numba' ) 
+    ## missing.append ( 'numba' ) 
     logger.warning ( message )
     row = attention ( 'numba' ) , attention ( '---' ) , '' 
     rows.append  ( row )
     # =========================================================================
 except : # ====================================================================
     # =========================================================================
-    missing.append ( 'numba' ) 
+    ## missing.append ( 'numba' ) 
     logger.error ( 'numba cannot be imported!' )
 # =============================================================================        
 try : # =======================================================================
