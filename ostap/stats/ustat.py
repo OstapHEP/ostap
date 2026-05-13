@@ -344,8 +344,8 @@ class USTAT(AGoF) :
                       sample  = self.sample  )
         
 
-        if self.parallel : counter = toys.run ( self.nToys , silent =      silent )
-        else             : counter = toys     ( self.nToys , silent = self.silent )            
+        if self.parallel : counter = toys.run ( self.nToys , progress = not self.silent )
+        else             : counter = toys     ( self.nToys , progress = not self.silent )            
 
         self.__silent = silent 
        
