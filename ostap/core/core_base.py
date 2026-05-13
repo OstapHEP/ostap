@@ -378,23 +378,6 @@ def brutally_kill  ( obj ) :
     elif isinstance ( obj , ROOT.TObject    ) : obj.Delete        () 
     else                                      : del obj
 
-# =============================================================================
-#  Report strange/truncated symbols
-#  @see https://github.com/root-project/root/issues/21536
-def _report_strange_( symbols ) :
-    """ Report strange/truncated symbols
-    - see https://github.com/root-project/root/issues/21536
-    """
-    if not symbols : return    
-    from ostap.logger.logger import getLogger 
-    logger = getLogger( 'ostap.core.core_base' )
-    ns     = len ( symbols ) 
-    logger.warning ( "Strange/truncated symbols in namespace Ostap: #%d" % ns  )
-    logger.warning ( "[see https://github.com/root-project/root/issues/21536]" )
-    for i, s in enumerate ( symbols ) : logger.warning ( "%d/%d  %s" % ( i , ns , s ) ) 
-
-import atexit
-atexit.register ( _report_strange_  , __strange__ ) 
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -405,10 +388,19 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    if not __strange__ :
-        logger.info    ( "No strange/truncated symbols in namespace Ostap" )
-        
-# =============================================================================
+    with ROOTIgnore ( ROOT.kError ) :
+        ## strange symbols 
+        symbols = tuple ( s for s in dir ( Ostap ) if not hasattr ( Ostap , s ) )
+        ## report 
+        if symbols : 
+            ns     = len ( symbols ) 
+            logger.warning ( "Strange/truncated symbols in namespace Ostap: #%d" % ns  )
+            logger.warning ( "[see https://github.com/root-project/root/issues/21536]" )
+            for i, s in enumerate ( symbols ) : logger.warning ( "%d/%d  %s" % ( i , ns , s ) ) 
+        else :
+            logger.info    ( "No strange/truncated symbols in namespace Ostap" )
+
+# ========================================================п=====================
 ##                                                                      The END 
 # ============================================================================= 
 
