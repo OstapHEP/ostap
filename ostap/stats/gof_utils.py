@@ -296,6 +296,7 @@ class PERMUTATOR(object) :
         """
         return { 'gof'        : self.gof      ,
                  'ds1'        : self.ds1      ,   
+                 'ds2'        : self.ds2      ,   
                  't_value'    : self.t_value  , 
                  'ecdf'       : self.ecdf     }
     
@@ -361,7 +362,7 @@ if False : # ==================================================================
         jl_version = tuple ( int ( i ) for i in jl.__version__.split('.') )
         # =====================================================================
         ## Run NN-permutations in parallel using joblib 
-        def joblib_run ( self , NN , progress = True ) :
+        def joblib_run ( self , NN , silent = False , progress = True ) :
             """ Run NN-permutations in parallel using joblib
             """
             me    = math.ceil ( memory_enough() ) + 1 
@@ -401,7 +402,7 @@ if False : # ==================================================================
 if not jl : # =================================================================
     # =========================================================================
     ## Run NN-permutations in parallel using WorkManager
-    def pp_run ( self , NN , progress  = True ) :
+    def pp_run ( self , NN , silent = False , progress  = True ) :
         """ Run NN-permutations in parallel using WorkManager"""
         me    = math.ceil ( memory_enough() ) + 1 
         nj    = min ( 2 * numcpu () + 3 , me ) 

@@ -2,8 +2,11 @@
 # New features
 
  1. Add NLL, Aikaike IC and Bayesian IC as "GoF-estimates"
+ 1. tweaks for `check-dependencies`
  
 ## Bug fixes
+
+ 1. Fix newly introduced bug(typo) in GoF-simfit
 
 ## Backward incompatible
 
