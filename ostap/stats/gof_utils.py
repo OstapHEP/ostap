@@ -312,9 +312,9 @@ class PERMUTATOR(object) :
         
     # =========================================================================
     ## run N-permutations 
-    def __call__ ( self , N , silent = True ) :
+    def __call__ ( self , N , silent = True , progress = False ) :
         
-        counter, tvalues = self.run_toys ( N = N , silent = silent )
+        counter, tvalues = self.run_toys ( N = N , silent = silent , progress = progress )
         
         if not self.__ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues , True )
         else               : self.__ecdf.add ( data2vct ( tvalues )  )
@@ -348,7 +348,6 @@ class PERMUTATOR(object) :
     @ecdf.setter
     def ecdf ( self , value ) :
         self.__ecdf = value
-
 
         
 # =============================================================================
