@@ -323,7 +323,7 @@ class PERMUTATOR(object) :
 
     # =========================================================================
     ## run N-toys 
-    def run_toys ( self, N , progress = False ) :
+    def run_toys ( self, N , silent = True , progress = False ) :
         """ Run N-toys
         """
         
