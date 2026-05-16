@@ -1,6 +1,17 @@
+##  New features
+  
+  1. Add Gompertz' curve into "sigmoids"
+
+##  Bug fixes
+
+  1.  Fix bug in "sine-based" sigmoid function
+
+## backward incompatible 
+
+
 # v3.7.1.0
 
-# New features
+## New features
 
 1. Add `DataReweighter` - a thin wrapper over `(GB)Reweighter` but using tree/source interface and better tratement of long `TChain` objects.
 

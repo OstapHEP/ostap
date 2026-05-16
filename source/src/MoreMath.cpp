@@ -7447,6 +7447,7 @@ Ostap::Math::sigmoid_type
     //
     { "absalgebraic"      , SigmoidType::AbsAlgebraic    } ,      
     { "algebraicabs"      , SigmoidType::AbsAlgebraic    } ,      
+    { "gompertz"          , SigmoidType::Gompertz        }
     //
   } ;
   //
@@ -7493,7 +7494,8 @@ std::string Ostap::Math::sigmoid_name
     case Ostap::Math::SigmoidType::Polynomial_n6    : return "Polynomial_n6"    ;
       //
     case Ostap::Math::SigmoidType::Sine             : return "Sine"             ;
-    case Ostap::Math::SigmoidType::AbsAlgebraic     : return "AbsAlgebraic"     ;      
+    case Ostap::Math::SigmoidType::AbsAlgebraic     : return "AbsAlgebraic"     ;   
+    case Ostap::Math::SigmoidType::Gompertz         : return "Gompertz"         ;    
       //
     default :
       break ; 
@@ -7512,6 +7514,7 @@ std::string Ostap::Math::sigmoid_name
  *  - \f$ \sigma(-\infty) =0\f$ 
  *  - \f$ \sigma(+\infty) =1\f$ 
  *  - \f$ \sigma^\prime(0)=1\f$ 
+ * For Gompertz' function normalization is a bit different \f$ \sigma^\prime(0) = \max \f$
  */
 // ============================================================================
 double Ostap::Math::sigmoid
@@ -7523,17 +7526,18 @@ double Ostap::Math::sigmoid
 		  "Ostap::Math::sigmoid"  ,
 		  INVALID_PARAMETER       , __FILE__ , __LINE__ ) ;
   //
-  static const double s_bias  = s_pi_2  ;
-  static const double s_scale = s_1_pi  ;
+  static const double s_bias     = s_pi_2  ;
+  static const double s_scale    = s_1_pi  ;
   //
-  static const double s_erf   = s_sqrt_pi          ;
-  static const double s_p0    = 1.0                ;
-  static const double s_p1    = 1.0 / 1.5          ;
-  static const double s_p2    = 1.0 / 1.875        ; 
-  static const double s_p3    = 1.0 / 2.1875       ; 
-  static const double s_p4    = 1.0 / 2.4609375    ;
-  static const double s_p5    = 1.0 / 2.70703125   ; 
-  static const double s_p6    = 1.0 / 2.9326171875 ;  
+  static const double s_erf      = s_sqrt_pi          ;
+  static const double s_p0       = 1.0                ;
+  static const double s_p1       = 1.0 / 1.5          ;
+  static const double s_p2       = 1.0 / 1.875        ; 
+  static const double s_p3       = 1.0 / 2.1875       ; 
+  static const double s_p4       = 1.0 / 2.4609375    ;
+  static const double s_p5       = 1.0 / 2.70703125   ; 
+  static const double s_p6       = 1.0 / 2.9326171875 ;  
+  static const double s_gompertz = 1.28254983016186   ;
   //
   switch ( t )
     {
@@ -7552,10 +7556,11 @@ double Ostap::Math::sigmoid
     case Ostap::Math::SigmoidType::Polynomial_n6    : return Ostap::Math::smooth_step       ( 0.5 + z * s_p6  ,  6 ) ;
       //
     case Ostap::Math::SigmoidType::Sine             :
-      return z <= s_pi_4 ? 0 : s_pi_4 <= z ? 1.0 : 0.5 * ( 1.0 + std::sin ( 2 * z ) ) ;
+      return z <= -s_pi_4 ? 0 : s_pi_4 <= z ? 1.0 : 0.5 * ( 1.0 + std::sin ( 2 * z ) ) ;
       //
     case Ostap::Math::SigmoidType::Algebraic        : return 0.5 + z / std::hypot ( 1.0 , 2 * z ) ;
     case Ostap::Math::SigmoidType::AbsAlgebraic     : return 0.5 + z / ( 1 + 2 * std::abs ( z ) ) ; 
+    case Ostap::Math::SigmoidType::Gompertz         : return gompertz ( z , 1 , s_gompertz , 0 )  ; 
     } ;
   //
   return 0 ;

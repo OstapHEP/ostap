@@ -1,3 +1,4 @@
+
 // ============================================================================
 #ifndef OSTAP_SIGMOID_H 
 #define OSTAP_SIGMOID_H 1
@@ -83,9 +84,10 @@ namespace Ostap
       //
       Sine                  , // based on sine-function
       AbsAlgebraic          , // 0.5  + x / ( 1 + abs  ( 2 * x ) ) 
+      Gompertz              , // Based on Gompertz' curve
       //
       First = Logistic      , 
-      Last  = AbsAlgebraic  ,  
+      Last  = Gompertz      ,  
     } ;      	
     // ========================================================================
     /** sigmoid type
@@ -108,6 +110,11 @@ namespace Ostap
      *  - \f$ \sigma(-\infty) =0\f$ 
      *  - \f$ \sigma(+\infty) =1\f$ 
      *  - \f$ \sigma^\prime(0)=1\f$
+     *
+     * Gompertz' function is asymmetric and therefore 
+     * normalization is a bit different \f$ \sigma^\prime(0) = \max \sigma^\prime \f$, 
+     * corresponding to the maximum value (mode)of derivative
+     *
      * @see Ostap::Math::SigmoidType
      */
     double sigmoid
@@ -119,7 +126,8 @@ namespace Ostap
     /** Gompertz' curve/sigmoid
      *  \f$ f(x;a,c,x_0) = \left|a|right|\mathrm{e}^{ - \mathrm{e}^{ - c ( x - x_0) } }\f$
      *  @see https://en.wikipedia.org/wiki/Gompertz_function
-     *  - \f$ b = \mathrm{e}^{cx_0}\f$ 
+     *  - \f$ b = \mathrm{e}^{cx_0}\f$
+     *  - 
      */
     double gompertz
     ( const double x      ,
