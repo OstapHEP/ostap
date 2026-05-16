@@ -77,7 +77,7 @@ if GBRW : # ===================================================================
             assert ( target_weight   is None ) or len ( target_weight   ) == len ( target   ) , \
                 "Invalid length of ``target weights''"
         
-            if not silent : 
+            if not silent and kwargs : 
                 title = '(GB)Reweighter configuration'
                 table = self.table ( title = title  , prefix = '# ' )
                 logger.info ( '%s:\n%s' %  ( title , table ) )
@@ -139,8 +139,9 @@ if GBRW : # ===================================================================
     __doc__                     += '\n\nGBReweighter documentation:\n%s' % GBRW.__init__.__doc__ 
     Reweighter.__doc__          += '\n\nGBReweighter documentation:\n%s' % GBRW.__init__.__doc__ 
     Reweighter.__init__.__doc__ += '\n\nGBReweighter documentation:\n%s' % GBRW.__init__.__doc__ 
- 
-# =============================================================================
+     
+     
+# ============================================================================
 if '__main__' == __name__ :
         
     from ostap.utils.docme import docme

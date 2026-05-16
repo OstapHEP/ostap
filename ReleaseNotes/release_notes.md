@@ -1,10 +1,14 @@
+# v3.7.1.0
+
 # New features
+
+1. Add `DataReweighter` - a thin wrapper over `(GB)Reweighter` but using tree/source interface and better tratement of long `TChain` objects.
 
 ## Bug fixes
 
 ## Backward incompatible
 
-# v3.7.0.8
+# v3.7.0.10
 
 # New features
 

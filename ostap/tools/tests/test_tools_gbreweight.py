@@ -53,19 +53,16 @@ if os.path.exists ( testdata ) : os.remove ( testdata )
 
 import ostap.parallel.kisa
 
-N1   = 1000000
-N2   = 200000
-
-N1   = 100000
-N2   = 10000
+N1   = 10000
+N2   = 1000
 
 xmax = 20.0
 ymax = 15.0 
 
-def prepare_data ( ) : 
+def prepare_file () : 
     #
-        
-    seed =  1234567890 
+    testdata = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-gbreweight-' )
+    seed      =  1234567890 
     random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
@@ -222,8 +219,18 @@ def prepare_data ( ) :
             
         mctree.Write()
         mc_file.ls()
+        
+    return testdata 
 
-
+def prepare_data ( nfiles = 10 )  :
+    
+    
+    seed      =  1234567890 
+    random.seed ( seed ) 
+    logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
+ 
+    return tuple ( prepare_file() for n in range ( nfiles ) )
+ 
 # =============================================================================
 def test_gbreweight() :
 
@@ -232,38 +239,70 @@ def test_gbreweight() :
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        from ostap.tools.reweighter import Reweighter
+        from ostap.tools.reweighter      import Reweighter
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
-        logger.error ('GBReweighter is not available!')
+        logger.error ('(GB)Reweighter is not available!', exc_info = True )
         return 
-
-    if not os.path.exists( testdata ) :
-        with timing ( "Prepare input data" , logger = logger ) :
-            prepare_data ()
-            
+    
+    # =========================================================================
+    try : # ===================================================================
+        # =====================================================================
+        from ostap.tools.data_reweighter import DataReweighter
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
+        logger.error ('(Data)Reweighter is not available!', exc_info = True )
+        return 
+    
+    with timing ( "Prepare input data" , logger = logger ) :
+        testfiles = prepare_data ( 10 )
+    
     # =========================================================================
     ## Input data/mc samples 
     # =========================================================================
-    data = Data ( testdata , 'DATA_tree' )
-    mc   = Data ( testdata , tag_mc      ) 
+    data = Data ( testfiles , 'DATA_tree' )
+    mc   = Data ( testfiles , tag_mc      ) 
        
-    ddata , wdata = data.chain.slice  ( [ 'x' , 'y' ] , structured = False )
-    dmc   , wmc   = mc  .chain.slice  ( [ 'x' , 'y' ] , structured = False )
+    with timing ( "Use (GB)Reweighter directly" , logger = logger ) :
+        
+        ddata , wdata = data.chain.slice  ( [ 'x' , 'y' ] , structured = False )
+        dmc   , wmc   = mc  .chain.slice  ( [ 'x' , 'y' ] , structured = False )
 
-    rw = Reweighter ( original = dmc , target = ddata ) 
+        ## (1)  Use GB-Reweigher  explicitely
+        
+        rw = Reweighter ( original = dmc , target = ddata ) 
     
-    ## new weights 
-    wnew = rw ( original = dmc )
-    ## mc.chain.add_new_branch ( wnew , name = 'w')
-    mc.chain.add_new_buffer ( wnew , name = 'w' )
+        ## (1a) new weights 
+        wnew = rw ( original = dmc )
+        
+        ## (1b)
+        mc.chain.add_new_buffer ( wnew , name = 'w1' , progress = True , report = True  )
     
+    
+    with timing ( "Use (GB)Reweighting via smart&efficient wrapper" , logger = logger ) : 
+       ## (2) use smart wrapper 
+       
+       ## (2a) 
+       rw = DataReweighter ( original = mc.chain   , 
+                             target   = data.chain , 
+                             target_variables = ['x','y'] ) 
+       
+       ## (2b) add new weight into mc 
+       rw.reweight ( mc.chain , name = 'w2' ) 
+   
+
     ## reload data 
-    data = Data ( testdata , 'DATA_tree' )
-    mc   = Data ( testdata , tag_mc      ) 
+    data = Data ( testfiles , 'DATA_tree' )
+    mc   = Data ( testfiles , tag_mc      ) 
     
-    wsum = mc.chain.sumVar ( 'w' )
+    
+    title = "Both weights:"
+    table = mc.chain.table ( 'w1,w2', title = title , prefix = '# ' )
+    logger.info ( '%s:\n%s' % ( title , table ) )
+        
+    wsum = mc.chain.sumVar ( 'w1' )
     wvar = '%d*w/%s' % ( len ( data.chain ) , wsum.value() )
     
     nn   = '%s' % ( len ( data.chain ) * 1.0 / len ( mc.chain) ) 
@@ -278,9 +317,9 @@ def test_gbreweight() :
         h2 = h1.clone()
         h3 = h1.clone()
         
-        data.chain.project ( h1 , dvar       ) ## data 
-        mc  .chain.project ( h2 , dvar ,     ) ## original (non-weighted) MC 
-        mc  .chain.project ( h3 , dvar , 'w' ) ## weighted  MC 
+        data.chain.project ( h1 , dvar        ) ## data 
+        mc  .chain.project ( h2 , dvar ,      ) ## original (non-weighted) MC 
+        mc  .chain.project ( h3 , dvar , 'w1' ) ## weighted  MC 
         
         h1 = h1.density()
         h2 = h2.density()
