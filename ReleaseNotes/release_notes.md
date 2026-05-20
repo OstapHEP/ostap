@@ -6,7 +6,7 @@
 
   1.  Fix bug in "sine-based" sigmoid function
 
-## backward incompatible 
+## Backward incompatible 
 
 
 # v3.7.1.0
