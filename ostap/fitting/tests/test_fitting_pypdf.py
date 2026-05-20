@@ -277,6 +277,7 @@ def test_PyPDFLite1() :
     ##  fit!
     with use_canvas ( "test_PyPDFLite1: global function " , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
+        del r 
 
     # =========================================================================
     try : # ===================================================================
@@ -321,21 +322,8 @@ def test_PyPDFLite2() :
     ##  fit!
     with use_canvas ( "test_PyPDFLite1: global function " , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
-
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        with tmpdb ( )as db :
-            db [ mygauss.name ] = mygauss
-            db ['signal'      ] = signal 
-            db ['gauss_ref'   ] = gauss_ref
-            db ['model_ref'   ] = model_ref        
-            db.ls()
-        # =====================================================================
-    except : # ================================================================
-        # =====================================================================
-        logger.error ( "Cannot serialize!" , exc_info = True )
-            
+        del r
+    
 # =============================================================================
 ## Test pure python PDF: <code>PyPDFLite</code
 #  @see ostap.fitting.pypdf.PyPDFLifgt 
@@ -346,13 +334,13 @@ def test_PyPDFLite3() :
     - see `Ostap::Models::PyPdf` 
     """
 
-    logger   = getLogger("test_PyPDFLite2")
+    logger   = getLogger("test_PyPDFLite3")
     logger.info ( "Use `light' PDF:  global object" )
         
     function  = gauss_obj 
 
     variables = gauss_ref.xvar, gauss_ref.mean, gauss_ref.sigma    
-    mygauss   = PyPDFLite ( "MyGauss5"             ,
+    mygauss   = PyPDFLite ( "MyGauss5"              ,
                              function   = function  ,
                              variables  = variables )
 
@@ -364,7 +352,7 @@ def test_PyPDFLite3() :
     ##  fit!
     with use_canvas ( "test_PyPDFLite1: global object" , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
-
+        del r 
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
@@ -384,13 +372,13 @@ def test_PyPDFLite3() :
 ## Test pure python PDF: <code>PyPDFLite</code
 #  @see ostap.fitting.pypdf.PyPDFLifgt 
 #  @see Ostap::Models::PyPdfLight 
-def test_PyPDFLite4() :
+def test_PyPDFLite4 () :
     """ Test pure python PDF: pyPDF wth analysticla integration 
     - see `ostap.fitting.pypdf.PyPdf`
     - see `Ostap::Models::PyPdf` 
     """
 
-    logger   = getLogger("test_PyPDFLite2")
+    logger   = getLogger("test_PyPDFLite4")
     logger.info ( "Use `light' PDF: local function" )
 
     def local_fun ( *args ) : return gauss_cpp ( *args )
@@ -410,23 +398,7 @@ def test_PyPDFLite4() :
     ##  fit!
     with use_canvas ( "test_PyPDFLite1: local function" , wait = 2 ) : 
         r, _ = model.fitTo ( dataset , draw = True , nbins = 50 , quiet  = True  )
-
-    """
-    # =========================================================================
-    try : # ===================================================================
-        # =====================================================================
-        with tmpdb ( )as db :
-            db [ mygauss.name ] = mygauss
-            db ['signal'      ] = signal 
-            db ['gauss_ref'   ] = gauss_ref
-            db ['model_ref'   ] = model_ref        
-            db.ls()
-        # =====================================================================
-    except : # ================================================================
-        # =====================================================================
-        logger.error ( "Cannot serialize!" , exc_info = True )
-    """
-    
+        del r 
 # =============================================================================
 if '__main__' == __name__ :
     

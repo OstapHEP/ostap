@@ -108,6 +108,7 @@ def PyPDFLite ( name            ,
     assert callable ( function ) , \
         "PyPDFLite: invalid `function`: %s/%s" %  ( typename ( function ) , prntrf ( function ) )
     
+    
     assert variables and isinstance ( variables, sequence_types )   and \
         all ( isinstance ( v , ROOT.RooAbsReal ) for v in variables ) , \
         "PyPDFLite: invalid `variables`: %s/%s" %  ( typename ( variables ) , str ( variables ) ) 
@@ -117,8 +118,16 @@ def PyPDFLite ( name            ,
                                                             prntrf   ( function ) )
     vv = ROOT.RooArgList () ;
     for v in variables : vv.add ( v )    
-    return Ostap.Models.PyPdfLite ( name , title , function , vv )
+    result = Ostap.Models.PyPdfLite ( name , title , function , vv )
 
+    from ostap.io.checker import PickleChecker as Checker
+    ## from ostap.parallel.parallel import Checker
+    checker = Checker() 
+    if not checker.pickles ( function ) :
+        logger.warning ( "This PyPdfLite object could not be pickled/serialized: %s/%s" % ( type ( function ) , typename ( function ) ) ) 
+
+    return result 
+    
 # =============================================================================
 ## Further decoration 
 # =============================================================================
@@ -137,18 +146,19 @@ def _ppdfl_str_    ( self ) :
                                      prntrf   ( self.function () ) ,
                                      self.numrefs() )
 
-
-## The factory to de-serialize the PyPdfLine onjects 
-def ppdfl_factory ( config ) : return PyPDFLite ( **config )
+# =============================================================================
+## The factory to de-serialize the PyPdfLite onjects 
+def ppdfl_factory  ( config ) : return PyPDFLite ( **config )
 ## Reduce/serialize  PyPdfLite objects 
 def _ppdfl_reduce_ ( self ) :
-    """ Reduce/serialize  PyPdfLite objects """
+    """ Reduce/serialize  PyPdfLite object
+    """
     config = { 'name'      : self.name       ,
                'function'  : self.function() ,
                'variables' : self.varlist()  , 
                'title'     : self.title      } 
     return  ppdfl_factory , ( config , )
-
+               
 Ostap.Models.PyPdfLite.values     = _ppdfl_values_
 Ostap.Models.PyPdfLite.__str__    = _ppdfl_str_
 Ostap.Models.PyPdfLite.__repr__   = _ppdfl_str_

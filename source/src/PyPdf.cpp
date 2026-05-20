@@ -304,6 +304,21 @@ Ostap::Models::PyPdfLite::PyPdfLite
   if ( m_function ) { Py_XINCREF ( m_function ) ; }
 }
 // ============================================================================
+/*  Standard constructor
+ *  @param self      python-partner for this C++ instance 
+ *  @param name      the name of PDF 
+ *  @param title     the title  of PDF 
+ *  @param variables all variables 
+ */
+// ============================================================================
+Ostap::Models::PyPdfLite::PyPdfLite
+( const char*       name      , 
+  PyObject*         function  , 
+  const RooArgList& variables ,
+  const char*       title     )
+  : PyPdfLite ( name  , title , function, variables )
+{}
+// ============================================================================
 // copy constructor
 // ============================================================================
 Ostap::Models::PyPdfLite::PyPdfLite

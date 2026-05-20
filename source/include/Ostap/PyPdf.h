@@ -146,7 +146,7 @@ namespace Ostap
     {
     public: 
       // ======================================================================
-      ClassDefOverride(Ostap::Models::PyPdfLite, 1 ) ;
+      ClassDefOverride ( Ostap::Models::PyPdfLite, 2 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -161,6 +161,18 @@ namespace Ostap
         const char*       title     ,
         PyObject*         function  , 
         const RooArgList& variables ) ;
+      // =======================================================================
+      /** Standard constructor
+       *  @param name      the name of PDF 
+       *  @param title     the title  of PDF 
+       *  @param function  callable function
+       *  @param variables all variables 
+       */
+      PyPdfLite
+      ( const char*       name      , 
+        PyObject*         function  , 
+        const RooArgList& variables , 
+        const char*       title     ) ;
       // =======================================================================
       /// copy  constructor 
       PyPdfLite

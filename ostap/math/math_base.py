@@ -1034,7 +1034,10 @@ def np2raw ( data ) :
         "np2raw: argument must be `numpy.ndarray`"
     size   = len ( data ) 
     dtype  = data.dtype
-    ctype  = numpy.ctypeslib._ctype_from_dtype ( dtype  )
+    
+    ## ctype  = numpy.ctypeslib._ctype_from_dtype ( dtype  )
+    ctype  = numpy.ctypeslib.as_ctypes_type ( dtype  )
+    
     buffer = data.ctypes.data_as ( ctypes.POINTER ( ctype ) )
     # 
     return buffer , size      
