@@ -117,6 +117,18 @@ else
     return 112 
 fi
 
+## CLANG
+if [[ $LCG_BUILD == *"x86_64-el9-clang22-"* ]]
+then
+    wrapper=/cvmfs/sft.cern.ch/lcg/contrib/clang/22.1.5/x86_64-el9/setup-wrapper.sh
+    if [[ -f ${wrapper} && -r ${wrapper} ]]
+    then 
+	echo -e ${prefix}$' Source clang22-wrapper = '${wrapper}
+	source $wrapper
+    fi
+fi
+
+
 ##  check ROOTSYS 
 if [[    ${ROOTSYS}                 &&
       -d ${ROOTSYS}                 &&
