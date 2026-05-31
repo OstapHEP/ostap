@@ -1,3 +1,5 @@
+# v3.7.1.2
+
 ##  New features
   
   1. Add Gompertz' curve into "sigmoids"
@@ -9,7 +11,6 @@
   1.  Fix bug in "sine-based" sigmoid function
 
 ## Backward incompatible 
-
 
 # v3.7.1.0
 
