@@ -6,6 +6,7 @@
 // ============================================================================
 // STD STL 
 // ============================================================================
+#include <cstddef>
 #include <iterator>
 #include <algorithm>
 #include <map>
@@ -189,6 +190,22 @@ namespace Ostap
       const std::size_t   size       ,
       const unsigned char value = 0  )
     { return Buffer<unsigned char> ( static_cast<const unsigned char*> ( data ) , size , value ) ; }
+    // =======================================================================
+    inline
+    Buffer<char>
+    char_buffer
+    ( const void*         data       ,
+      const std::size_t   size       ,
+      const char          value = 0  )
+    { return Buffer<char> ( static_cast<const char*> ( data ) , size , value ) ; }
+    // =======================================================================
+    inline
+    Buffer<std::byte>
+    byte_buffer
+    ( const void*         data  ,
+      const std::size_t   size  ,
+      const std::byte     value = std::byte ( 0 ) )
+    { return Buffer<std::byte> ( static_cast<const std::byte*> ( data ) , size , value ) ; }
     // =========================================================================    
     /** @class Buffers 
      *  a collection of several named buffers 

@@ -3,6 +3,7 @@
 // ============================================================================
 // STD&STL 
 // ============================================================================
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <array>
@@ -157,10 +158,14 @@ namespace
                   "std::numeric_limits<std::uintptr_t> is not OK"        ) ;
   // ==========================================================================
   
-  
-  
+  // ==========================================================================
+  static_assert ( sizeof ( std::byte ) == sizeof ( unsigned char ) , 
+                  "size of std::byte is not OK" ) ;
+  static_assert ( !std::numeric_limits<std::byte>  ::is_specialized &&
+                  !std::numeric_limits<std::byte>  ::is_integer , 
+                  "std::numeric_limits<std::byte> is not OK" ) ;
+  // ==========================================================================
 }
-
 
 // ============================================================================
 //                                                                      The END 
