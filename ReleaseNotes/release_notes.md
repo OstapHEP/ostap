@@ -1,4 +1,3 @@
-
 ## New features
 
 ## Bug fixes
