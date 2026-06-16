@@ -240,6 +240,9 @@ def whichdb ( filename  ) :
     if s16[:9] == b'TkrzwSDB\n': return 'TkrzwSDB' ## Skip 
     if s16[:4] == b'TDB\n'     : return 'TDB'      ## Tree 
 
+    ## DUCKDB
+    if 12 <= len ( s16 ) and s16[8:12] == b'DUCK' : return 'DUCKDB'
+
     s = s16[:4]
     # Return "" if not at least 4 bytes
     if len ( s ) != 4:

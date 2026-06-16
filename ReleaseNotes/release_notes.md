@@ -1,6 +1,8 @@
 
 ## New features
 
+  1. few steps toward duckdb 
+
 ## Bug fixes
 
 ## Backward incompatible 
