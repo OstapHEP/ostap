@@ -265,7 +265,6 @@ endif()
 # ========================================================================================
 ## tkrzw 
 # ========================================================================================
-##
 find_python_module ( tkrzw QUIET )
 if ( NOT ${PY_tkrzw_FOUND} )  
    message ( "----> warning (optional)           tkrzw is NOT found!" ) 
@@ -277,7 +276,7 @@ endif()
 if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.10.0" )
    find_python_module ( duckdb QUIET )
    if ( NOT ${PY_duckdb_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install 'duckdb[all]' ${PIP_ARGS})
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "duckdb[all]" ${PIP_ARGS})
    endif ()
    find_python_module ( duckdb QUIET )
    if ( NOT ${PY_duckdb_FOUND} )
