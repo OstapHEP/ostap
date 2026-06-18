@@ -164,7 +164,9 @@ def test_shelves1():
         'dbm.dumb'  ,
         'std'       ]
     
-    if sys.version_info < ( 3 , 10 ) :  backends.append ( 'bsddb3' )
+    if sys.version_info < ( 3 , 10 ) : backends.append ( 'bsddb3' )
+    else                             : backends.append ( 'duckdb' )
+    
     if sys.version_info < ( 3 ,  0 ) :
         backends.add ( 'dbm'     )
         backends.add ( 'gdbm'    )
@@ -230,7 +232,9 @@ def test_shelves2 () :
         ''          , None  ,         
     ]
 
-    if sys.version_info < ( 3 , 10 ) :  backends.append ( 'bsddb3' )
+    if sys.version_info < ( 3 , 10 ) : backends.append ( 'bsddb3' )
+    else                             : backends.append ( 'duckdb' )
+    
     if sys.version_info < ( 3 ,  0 ) :
         backends.add ( 'dbm'     )
         backends.add ( 'gdbm'    )

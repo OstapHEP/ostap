@@ -42,6 +42,11 @@ def test_io_check() :
             row = attention ( 'BSDDB3' ) , attention ( '---' )   , attention ( '---' ) 
         rows.append ( row )
 
+    if ( 3 , 10 ) <= python_info and DB.use_duckdb :
+        import ostap.io.duckdbdict as duckdbdict
+        row = 'DuckDBDict' , duckdbdict.__name__ , duckdbdict.__file__ ,
+        rows.append ( row )
+        
     row = 'SQLiteDict' , ostap.io.sqlitedict.__name__ , ostap.io.sqlitedict.__file__ 
     rows.append ( row )
     

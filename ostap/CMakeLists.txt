@@ -263,26 +263,35 @@ if ( ${PYTHON_VERSION} VERSION_LESS       "3.10.0" )
 endif()
     
 # ========================================================================================
+## duckdb
+# ========================================================================================
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.10.0" )
+   find_python_module ( duckdb QUIET )
+   if ( NOT ${PY_duckdb_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install 'duckdb[all]' ${PIP_ARGS})
+   endif ()
+   find_python_module ( duckdb QUIET )
+   if ( NOT ${PY_duckdb_FOUND} )
+     message ( "----> warning (optional)          duckdb is NOT found!" )    
+   endif ()
+   ##  
+   find_python_module ( fasteners QUIET )
+   if ( NOT ${PY_fasteners_FOUND} )
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install fasteners ${PIP_ARGS})
+   endif ()
+   find_python_module ( fasteners QUIET )
+   if ( NOT ${PY_duckdb_FOUND} )
+     message ( "----> warning (optional)       fasteners is NOT found!" )    
+   endif ()                       
+endif () 
+
+# ========================================================================================
 ## tkrzw 
 # ========================================================================================
 find_python_module ( tkrzw QUIET )
 if ( NOT ${PY_tkrzw_FOUND} )  
    message ( "----> warning (optional)           tkrzw is NOT found!" ) 
 endif()
-
-# ========================================================================================
-## duckdb
-# ========================================================================================
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.10.0" )
-   find_python_module ( duckdb QUIET )
-   if ( NOT ${PY_duckdb_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install "duckdb[all]" ${PIP_ARGS})
-   endif ()
-   find_python_module ( duckdb QUIET )
-   if ( NOT ${PY_duckdb_FOUND} )
-     message ( "----> warning (optional)          duckdb is NOT found!" )    
-   endif ()                        
-endif () 
 
 # ========================================================================================
 ## sortedcontainers
@@ -430,6 +439,10 @@ if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.10.0" )
   if ( ${PY_duckdb_FOUND} )
   find_python_module_version ( duckdb ) 
   message ( "----> duckdb           version    : " ${PY_duckdb_VERSION} " \t" ${PY_DUCKDB} )                                       
+  endif()
+  if ( ${PY_fasteners_FOUND} )
+  find_python_module_version ( fasteners ) 
+  message ( "----> fasteners        version    : " ${PY_fasteners_VERSION} " \t" ${PY_FASTENERS} )                                       
   endif()
 endif()
 ##

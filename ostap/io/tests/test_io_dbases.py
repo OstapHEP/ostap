@@ -18,6 +18,7 @@ from   ostap.utils.cleanup      import CleanUp
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.timing       import timing
 from   ostap.utils.utils        import random_name 
+import ostap.io.dbase           as     DB 
 import ROOT, sys, pickle, random  
 # =============================================================================
 # logging 
@@ -53,7 +54,20 @@ if python_info < ( 3 , 10 ) :
     except ImportError: # ====================================================
         # ====================================================================
         logger.warning ( 'bsddb3      is not accessible anymore!' )
-        
+      
+# ============================================================================ 
+if ( 3 , 10 ) <= python_info : 
+    # ========================================================================
+    try : # ==================================================================
+        # ====================================================================
+        from ostap.io.duckdbdict import DuckDBDict
+        item = 'DuckDBDict' , CleanUp.tempfile ( prefix = 'ostap-DduckDBDict-' , suffix = '.db') , DuckDBDict
+        dbases.append ( item )
+        # ========================================================================
+    except ImportError: # ========================================================
+        # ========================================================================
+        logger.warning ( 'DuckDBDict  is not accessible!' )
+    
 # ============================================================================
 try : # ======================================================================
     # ========================================================================
