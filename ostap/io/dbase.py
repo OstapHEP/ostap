@@ -23,6 +23,7 @@ __all__ = (
     'preferrable_backends' , ## List of available DBASE backends 
     )
 # =============================================================================
+from   ostap.utils.cidict     import cidict_fun as name_transform 
 import sys, os, collections
 import ostap.io.shelve_ext
 # =============================================================================
@@ -133,7 +134,7 @@ try : # =======================================================================
         
         return db
     
-    db_berkeley_types = 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash'
+    db_berkeley_types = 'berkeleydb' , 'berkeley' , 'dbhash'
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
@@ -158,28 +159,29 @@ if sys.version_info < ( 3 , 10 ) :
             """
             return bsddb3.hashopen ( filename , flag = flag  , mode = mode , **kwargs )        
         use_bsddb3  = True
-        db_bsddb_types = 'bsddb3' , 'berkeleydb' , 'berkeley' , 'berkeley-db' , 'dbhash' 
+        db_bsddb_types = 'bsddb3' , 'berkeley' , 'berkeley-db' , 'db-hash' 
         # =====================================================================
     except ImportError  : # ===================================================
         # =====================================================================
         bsddb3      = None 
         use_bsddb3  = False 
 # =============================================================================
-use_duckdb = False
+use_duckdb     = False
+use_duckdblite = False 
 # =============================================================================
 if ( 3 , 10 ) <= sys.version_info : # =========================================
     # =========================================================================
     try : # ===================================================================
         # =====================================================================
-        import duckdb, fasteners 
-        from ostap.io.duckdbdict import DuckDBDict, isduckdb 
-        use_duckdb = True 
-        db_duckdb_types = 'duckdb' , 'duck', 'duck-db'   
+        from ostap.io.duckdbdict import DuckDBDict, DuckDBLiteDict
+        use_duckdb     = True if DuckDBDict     else False 
+        use_duckdblite = True if DuckDBLiteDict else False 
+        db_duckdb_types     = 'duck-db'      , 'duck'
+        db_duckdblite_types = 'duck-db-lite' , 'duck-lite',     
         # =====================================================================
     except ImportError : # ====================================================
     # =========================================================================
-        DuckDBDict, isduckdb = None , None
-        use_duckdb = False 
+        pass 
         
 # =============================================================================
 import dbm                    as std_db
@@ -187,18 +189,21 @@ std_whichdb = std_db.whichdb
 # =============================================================================
 ## available DB types: 
 available_backends = set ( db_std_types ) 
-if use_berkeleydb : available_backends.update ( db_berkeley_types ) 
-if use_sqlite3    : available_backends.update ( db_sqlite3_types  ) 
-if db_dumb        : available_backends.update ( db_dumb_types     ) 
-if db_gnu         : available_backends.update ( db_gnu_types      ) 
-if db_dbm         : available_backends.update ( db_ndbm_types     ) 
-if use_bsddb3     : available_backends.update ( db_bsddb3_types   ) 
-if use_duckdb     : available_backends.update ( db_duckdb_types   )
+if use_berkeleydb : available_backends.update ( db_berkeley_types   ) 
+if use_sqlite3    : available_backends.update ( db_sqlite3_types    ) 
+if db_dumb        : available_backends.update ( db_dumb_types       ) 
+if db_gnu         : available_backends.update ( db_gnu_types        ) 
+if db_dbm         : available_backends.update ( db_ndbm_types       ) 
+if use_bsddb3     : available_backends.update ( db_bsddb3_types     ) 
+if use_duckdb     : available_backends.update ( db_duckdb_types     )
+if use_duckdblite : available_backends.update ( db_duckdblite_types )
+available_backend  = set ( [ name_transform ( t ) for t in available_backends ] )
 available_backends = frozenset ( available_backends )
 # ============================================================================
 ## check the environment variable for the preferred DBASE backends 
 from ostap.utils.env import get_env, OSTAP_DBTYPES
-preferrable_backends = tuple ( t for t in get_env ( OSTAP_DBTYPES , '' ).lower().split ( os.pathsep ) if t in available_backends ) 
+preferrable_backends = tuple ( name_transform ( t ) for t in get_env ( OSTAP_DBTYPES , '' ).split ( os.pathsep ) )
+preferrable_backends = tuple ( t for t in preferrable_backends if  t and t in available_backends ) 
 # =============================================================================
 
 # =============================================================================
@@ -367,11 +372,11 @@ def dbopen ( file               ,
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
         
-        if isinstance ( dbtype , str ) : db_types = dbtype.lower() ,  
-        elif not dbtype                : db_types = () 
-        else                           : db_types = tuple ( db.lower() for db in dbtype ) 
+        from   ostap.core.ostap_types import string_types 
+        if   not dbtype                           : db_types = () 
+        elif isinstance ( dbtype , string_types ) : db_types = name_transform ( dbtype ) ,  
+        else                                      : db_types = tuple ( name_transform ( db )  for db in dbtype ) 
 
-        
         def _extra_args_ ( **kw ) :
             if not kw : return
             from ostap.logger.utils import print_args
@@ -394,7 +399,9 @@ def dbopen ( file               ,
                 _extra_args_ ( **kwargs )
                 return sqlite3_open ( file , flag , mode )
             elif use_duckdb     and ( db in db_duckdb_types  or not db ) : ## NB!!
-                return DuckDBDict ( filename = file , flag = flag , **kwargs )
+                return DuckDBDict  ( filename = file , flag = flag , **kwargs )
+            elif use_duckdblite and ( db in db_duckdblite_types  or not db ) : ## NB!!
+                return DuckDBLiteDict ( filename = file , flag = flag , **kwargs )
             elif use_bsddb3     and db in db_bsddb3_types :  
                 return bsddb3_open     ( file            , flag , mode , **kwargs ) 
             elif db_gnu  and db in db_gnu_types  : 
@@ -430,6 +437,8 @@ def dbopen ( file               ,
             ## 
             logger.warning ( "No concurrent DBASE-backend is available" )
             
+        elif use_duckdblite : return DuckDBLiteDict ( filename = file , flag = flag , **kwargs )
+        
         _extra_args_ ( **kwargs )
         return std_db.open ( file , flag , mode ) 
 
@@ -562,7 +571,8 @@ if '__main__' == __name__ :
     if use_berkeleydb : logger.info ( ' - BerkeleyDB : %s' % str ( berkeleydb  ) ) 
     if SQLiteDict     : logger.info ( ' - SQLITEDICT : %s' % str ( ostap.io.sqlitedict ) )
     if use_sqlite3    : logger.info ( ' - SQLITE3    : %s' % str ( dbm.sqlite3 ) ) 
-    if use_duckdb     : logger.info ( ' - DUCKDB     : %s' % str ( duckdb      ) ) 
+    if use_duckdb     : logger.info ( ' - DUCKDB     : %s' % str ( DuckDBDict    .__module__ ) ) 
+    if use_duckdblite : logger.info ( ' - DUCKDBLITE : %s' % str ( DuckDBLiteDict.__module__ ) ) 
     if db_gnu         : logger.info ( ' - GNU DB     : %s' % str ( db_gnu      ) ) 
     if db_dbm         : logger.info ( ' - NDBM       : %s' % str ( db_dbm      ) ) 
     if db_dumb        : logger.info ( ' - DUMB       : %s' % str ( db_dumb     ) ) 

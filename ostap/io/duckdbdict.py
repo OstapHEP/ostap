@@ -4,11 +4,15 @@
 # Simplistic lightweighted  class that provides  wrapping to duckdb data base
 # @see https://duckdb.org/
 # @author Vanya BELYAEV 2024-06-17
+# @see DuckDBDict
 # To provide some concurrency control, the `fasteners` module is used with explicit Read/Write locks.
 # @see https://pypi.org/project/fasteners/
 # It results in some sizeable performance penalty, but provides reasonaly safety, 
 # The penalty is negligible for large dbase&and large records, 
 # but can be sizeable for small dbase and small records.
+# @see DuckDBFastDict
+# More efficient variant, but without race safety is provided by DuckDBFastDict, 
+# which is not based on fasteners, but relies on duckdb's internal locking mechanism.
 # =============================================================================
 """
 Simplistic lightweighted  class that provides  wrapping to duckdb data base
@@ -18,12 +22,16 @@ To provide some concurrency control, the `fasteners` module is used with explici
 - see https://pypi.org/project/fasteners/
 It results in some (sizeable) performance penalty, but provides reasonaly safety, 
 The penalty is negligible for large dbase&and large records, 
-#but can be sizeable for small dbase and small records.
+but can be sizeable for small dbase and small records.
+
+More efficient variant, but without race safety is provided by DuckDBFastDict, 
+which is not based on fasteners, but relies on duckdb's internal locking mechanism.
 """
 # =============================================================================
 __all__ = (
-    'DuckDBDict' , ## duckdb-persistent dictionary
-    'isduckdb'   , ## is it a duckdb file?
+    'DuckDBDict'      , ## duckdb-persistent dictionary
+    'DuckDBLiteDict'  , ## fast/lite duckdb-persistent dictionary, but without safety
+    'isduckdb'        , ## is it a duckdb file?
 )
 # =============================================================================
 from   collections.abc         import MutableMapping
@@ -82,6 +90,7 @@ def isduckdb ( filename ) :
     
     return False
 
+
 # ============================================================================
 ## directory for lock-file for duckdb database
 lock_dir = Path ( CU.CleanUp.tempdir ( prefix = 'ostap-duckdb-locks' , date = False) ) 
@@ -99,9 +108,166 @@ def lock_file ( filename ) :
     return str ( lock_dir / f"{hash_path}.{name}.rwlock" )
 
 # =============================================================================
-## @class DuckDBDict
-#  Persistent dictionary based on duckdb
+## @class DuckDBLiteDict        
+#  Persistent dictionary based on duckdb, but without safety
 #  @attention both keys and values are bytestrings!
+class DuckDBLiteDict ( MutableMapping ) :
+    """ Persistent dictionary based on duckdb, but without safety
+    """
+    def __init__ ( self                  ,
+                   filename              ,
+                   flag        = 'r'     , 
+                   tablename   = 'ostap' , 
+                   keyencoding = 'utf-8' , **config )  :
+        
+        ## check presence of the tkrzwz module 
+        assert duckdb     , "`duckdb` module is not available!"
+        assert RWFileLock , "`fasteners` module is not available!"
+        
+        assert 1 == len ( flag ) and isinstance ( flag , str ) and flag.lower() in self.FLAGS , "Invalid `flag`:%s" % flag
+        
+        flag = flag.lower() 
+
+        if 'n' == flag and filename and os.path.exists ( filename ) :
+            if   os.path.isfile ( filename ) :
+                try    : os.unlink ( filename )
+                except : pass 
+            elif os.path.isdir  ( filename ) :
+                try    : shutil.rmtree ( filename )
+                except : pass                    
+            if os.path.exists ( filename ) :
+                logger.warning ( 'path exists!' )
+         
+        self.__filename    = filename
+        self.__config      = config
+        self.__tablename   = tablename 
+        self.__flag        = flag 
+        self.__keyencoding = keyencoding  
+    
+        self.__connect     = duckdb.connect ( self.filename , read_only = 'r' in self.flag , **self.__config) 
+        
+        ## check if the table exists, create if needed 
+        if not 'r' in self.flag :
+           self.__connect.execute (f"""CREATE TABLE IF NOT EXISTS {self.tablename} (
+                                    key VARCHAR PRIMARY KEY, 
+                                    value BLOB )
+                                    """)
+                    
+        self.__SQL_GET  =  f"SELECT value FROM {self.tablename} WHERE key = ?"
+        self.__SQL_SET  =  f"""INSERT INTO {self.tablename} (key, value) VALUES (?, ?) 
+                               ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"""
+        self.__SQL_DEL  =  f"DELETE FROM {self.tablename} WHERE key = ?"
+        self.__SQL_IN   =  f"SELECT 1 FROM {self.tablename} WHERE key = ?"
+        self.__SQL_ITER =  f"SELECT key, value FROM {self.tablename}"
+        self.__SQL_LEN  =  f"SELECT COUNT(*) FROM {self.tablename}" 
+        
+    @property
+    def filename ( self ) : 
+        """ Get the filename of the duckdb database."""
+        return self.__filename
+    
+    @property
+    def flag ( self ) :
+        """ Get the flag used to open the duckdb database."""
+        return self.__flag
+    
+    @property
+    def tablename ( self ) :
+        """ Get the name of the table used in the duckdb database."""
+        return self.__tablename
+        
+    @property
+    def keyencoding ( self ) :
+        """ Get the key encoding used for the duckdb database."""
+        return self.__keyencoding
+
+    ## Get data from DB
+    def get ( self , key , default = None ) :
+        """ Get data from DB 
+        """ 
+        assert self.__connect , 'Database is closed or invalid!' 
+        result = self.__connect.execute( self.__SQL_GET , [key] ).fetchone()        
+        return default if result is None else self.decode_value ( result [ 0 ] ) 
+            
+    ## Get data from DB 
+    def __getitem__ ( self , key ) :
+        """ Get data from DB 
+        """
+        value = self.get ( key , default = None ) 
+        if value is None : raise KeyError ( key )
+        return value  
+    
+    ## Add data from DB 
+    def __setitem__( self , key , value):
+        """ Add data to DB 
+        """ 
+        assert self.__connect       , 'Database is closed or invalid!' 
+        assert not 'r' in self.flag , "Database is opened as read-only!"
+        self.__connect.execute( self.__SQL_SET , [ key , self.encode_value ( value ) ] )
+        
+    ## elete dat afrom DBase 
+    def __delitem__ ( self , key ) :
+        """ Delete data from DB
+        """ 
+        assert self.__connect       , 'Database is closed or invalid!' 
+        assert not 'r' in self.flag , "Database is opened as read-only!"
+        if key not in self : raise KeyError ( key )
+        self.__connect.execute( self.__SQL_DEL , [ key ] )  
+           
+    def __iter__ ( self ) :
+        assert self.__connect       , 'Database is closed or invalid!' 
+        cursor = self.__connect.execute ( self.__SQL_ITER )
+        keys   = [ row [ 0 ].encode ( self.keyencoding ) for row in cursor.fetchall() ]
+        return iter ( keys )    
+
+    def __contains__ ( self , key ):
+        if not self.__connect : return False 
+        return self.__connect.execute ( self.__SQL_IN , [ key ] ).fetchone() is not None 
+                
+    def __len__( self ):
+        assert self.__connect       , 'Database is closed or invalid!' 
+        return self.__connect.execute ( self.__SQL_LEN ).fetchone() [ 0 ]
+
+    ## sync it! 
+    def sync ( self ) :  
+        """ Sync it!
+        """  
+        if not 'r' in self.flag :
+            try :
+                if self.__connect : self.__connect.execute ( "CHECKPOINT" )
+            except :
+                pass 
+            
+    ## close database 
+    def close ( self ) :
+        """ Close database 
+        """
+        ## (1) sync it!
+        self.sync () 
+        
+        ## (2) close it 
+        try :
+            if self.__connect : self.__connect.close()
+        except : 
+            pass 
+        
+        self.__connect = None  
+            
+    def __del__ ( self ) :  
+        if self.__connect : self.close ()
+        self.__connect = None 
+        
+    ## context manager ENTER 
+    def __enter__ ( self     ) : return self 
+    
+    ## context manager EXIT 
+    def __exit__  ( self, *_ ) :
+        self.close() 
+        self.__connect = None
+        
+# =============================================================================
+## @class DuckDBDict
+#  Persistent dictionary based on duckdb 
 #  @code
 #
 #  mydict = DuckDBDict ( 'some.db' , 'c' )
@@ -197,22 +363,22 @@ class DuckDBDict ( MutableMapping ) :
         
     @property
     def filename ( self ) : 
-        """Get the filename of the duckdb database."""
+        """ Get the filename of the duckdb database."""
         return self.__filename
     
     @property
     def flag ( self ) :
-        """Get the flag used to open the duckdb database."""
+        """ Get the flag used to open the duckdb database."""
         return self.__flag
     
     @property
     def tablename ( self ) :
-        """Get the name of the table used in the duckdb database."""
+        """ Get the name of the table used in the duckdb database."""
         return self.__tablename
         
     @property
     def keyencoding ( self ) :
-        """Get the key encoding used for the duckdb database."""
+        """ Get the key encoding used for the duckdb database."""
         return self.__keyencoding
 
     ## Get data from DB
@@ -340,15 +506,19 @@ class DuckDBDict ( MutableMapping ) :
     
     # =========================================================================
     ## context manager: EXIT  
-    def __exit__ ( self , *args ) :
+    def __exit__ ( self , *_ ) :
         """ Context manager: EXIT 
         """        
         self.close()
 
 # ==============================================================================
 ## disable imports 
-if not duckdb  : __all__ = () 
-
+if   not duckdb  :
+    DuckDBDict     = None 
+    DuckDBLiteDict = None 
+elif not RWFileLock :
+    DuckDBDict     = None  
+    
 # =============================================================================
 if '__main__' == __name__ :
 
