@@ -90,11 +90,10 @@ def isduckdb ( filename ) :
     
     return False
 
-
 # ============================================================================
 ## directory for lock-file for duckdb database
-lock_dir = Path ( CU.CleanUp.tempdir ( prefix = 'ostap-duckdb-locks' , date = False) ) 
-
+from ostap.core.cache_dir import lock_dir 
+lock_dir = Path ( lock_dir ) 
 # ============================================================================
 ## Lock-file for duckdb database
 def lock_file ( filename ) :
@@ -113,7 +112,8 @@ def lock_file ( filename ) :
 #  @attention both keys and values are bytestrings!
 class DuckDBLiteDict ( MutableMapping ) :
     """ Persistent dictionary based on duckdb, but without safety
-    """
+    """ 
+    FLAGS      = 'rwcn'
     def __init__ ( self                  ,
                    filename              ,
                    flag        = 'r'     , 
@@ -264,7 +264,26 @@ class DuckDBLiteDict ( MutableMapping ) :
     def __exit__  ( self, *_ ) :
         self.close() 
         self.__connect = None
-        
+    
+    # =========================================================================
+    ## encode value: input -> dbase 
+    def encode_value ( self , value ) : 
+        """ encode value: 
+        - input -> dbase 
+        """
+        return value
+
+    # =========================================================================
+    ## decode value: dbase -> ouput (no-op) 
+    def decode_value ( self , value ) :
+        """ decode value: (no-op) 
+        - dbase -> output 
+        """
+        return value 
+       
+# =============================================================================
+## all created lock-files 
+lock_files = set() 
 # =============================================================================
 ## @class DuckDBDict
 #  Persistent dictionary based on duckdb 
@@ -335,6 +354,7 @@ class DuckDBDict ( MutableMapping ) :
         
         ## Read-Write Lock 
         lf = lock_file ( self.filename )
+        lock_files.add ( lf ) 
         self.__lock = RWFileLock( lf )
         
         ## check if the table exists 
@@ -519,6 +539,17 @@ if   not duckdb  :
 elif not RWFileLock :
     DuckDBDict     = None  
     
+import atexit 
+def _cleanup_ ( files ) :
+    import os 
+    while files :
+        l = files.pop() 
+        if os.path.exists ( l ) : 
+            try    : os.remove ( l ) 
+            except : pass 
+            
+atexit.register ( _cleanup_ , lock_files )
+
 # =============================================================================
 if '__main__' == __name__ :
 

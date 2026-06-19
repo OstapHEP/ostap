@@ -13,6 +13,7 @@ __date__    = "2014-03-10"
 __version__ = "$Revision$"
 __all__     = (
     'cache_dir' , ## work/cache directory
+    'lock_dir'  , ## directory to place read-write locks 
 )
 # =============================================================================
 import ostap.core.config as     config
@@ -46,6 +47,12 @@ if not cache_dir                    or \
     from ostap.utils.cleanup import CleanUp
     cache_dir = CleanUp.tempdir ( prefix = 'ostap-cache-' ) 
     
+lock_dir = os.path.join ( cache_dir , 'lock' )
+if not os.path.exists ( lock_dir ) : 
+    try : 
+        os.makedirs ( lock_dir , exist_ok = True )
+    except OSError : 
+        lock_dir = CleanUp.tempdir ( prefix = 'ostap-lock-' ) 
 # =============================================================================
 if '__main__' == __name__ : 
     

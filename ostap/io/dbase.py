@@ -159,7 +159,7 @@ if sys.version_info < ( 3 , 10 ) :
             """
             return bsddb3.hashopen ( filename , flag = flag  , mode = mode , **kwargs )        
         use_bsddb3  = True
-        db_bsddb_types = 'bsddb3' , 'berkeley' , 'berkeley-db' , 'db-hash' 
+        db_bsddb_types = 'bsddb3' , 'berkeley' , 'berkeleydb' , 'dbhash' 
         # =====================================================================
     except ImportError  : # ===================================================
         # =====================================================================
@@ -176,8 +176,8 @@ if ( 3 , 10 ) <= sys.version_info : # =========================================
         from ostap.io.duckdbdict import DuckDBDict, DuckDBLiteDict
         use_duckdb     = True if DuckDBDict     else False 
         use_duckdblite = True if DuckDBLiteDict else False 
-        db_duckdb_types     = 'duck-db'      , 'duck'
-        db_duckdblite_types = 'duck-db-lite' , 'duck-lite',     
+        db_duckdb_types     = 'duckdb'     , 'duck'
+        db_duckdblite_types = 'duckdblite' , 'ducklite', 'liteduckdb' , 'liteduck'     
         # =====================================================================
     except ImportError : # ====================================================
     # =========================================================================
@@ -384,26 +384,26 @@ def dbopen ( file               ,
             table  = print_args ( prefix = '# ' , **kw )
             logger.warning ( '%s:\n%s' % ( title , table ) )
             
-        the_dbs = db_types if db_types else preferrable_backends 
+        the_dbs = preferrable_backends + db_types 
         from ostap.core.ostap_types import string_types
         if the_dbs and isinstance ( the_dbs , string_types ) : the_dbs = the_dbs , 
-        
+            
         ## check the preferred database type:
         for db in the_dbs :
             
-            if   use_berkeleydb and ( db in db_berkeley_types or not db ) : 
+            if   use_berkeleydb and ( db in db_berkeley_types    or not db ) : 
                 return berkeleydb_open ( file            , flag , mode , **kwargs )            
-            elif SQLiteDict     and ( db in db_sqlite3_types  or not db ) : ## NB!!
+            elif SQLiteDict     and ( db in db_sqlite3_types     or not db ) : ## NB!!
                 return SQLiteDict      ( filename = file , flag = flag , **kwargs )                        
-            elif use_sqlite3    and ( db in db_sqlite3_types  or not db ) : ## NB!!
+            elif use_sqlite3    and ( db in db_sqlite3_types     or not db ) : ## NB!!
                 _extra_args_ ( **kwargs )
                 return sqlite3_open ( file , flag , mode )
-            elif use_duckdb     and ( db in db_duckdb_types  or not db ) : ## NB!!
-                return DuckDBDict  ( filename = file , flag = flag , **kwargs )
+            elif use_duckdb     and ( db in db_duckdb_types      or not db ) : ## NB!!
+                return DuckDBDict     ( filename = file , flag = flag , **kwargs )
             elif use_duckdblite and ( db in db_duckdblite_types  or not db ) : ## NB!!
                 return DuckDBLiteDict ( filename = file , flag = flag , **kwargs )
             elif use_bsddb3     and db in db_bsddb3_types :  
-                return bsddb3_open     ( file            , flag , mode , **kwargs ) 
+                return bsddb3_open    ( file            , flag , mode , **kwargs ) 
             elif db_gnu  and db in db_gnu_types  : 
                 _extra_args_ ( **kwargs )
                 return db_gnu.open ( file , flag , mode )
