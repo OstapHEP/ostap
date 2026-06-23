@@ -128,7 +128,6 @@ then
     fi
 fi
 
-
 ##  check ROOTSYS 
 if [[    ${ROOTSYS}                 &&
       -d ${ROOTSYS}                 &&
@@ -142,6 +141,7 @@ else
     echo -e ${prefix_error}' No valid ROOTSYS directory ' ${ROOTSYS}
     return 113
 fi
+
 
 OSTAP_SOURCE=${3:-${OSTAP_SOURCE}}
 
@@ -325,7 +325,11 @@ fi
 echo -e ${prefix}' LCG VERSION    : '${LCG}
 echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
 echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
+
+
 echo -e ${prefix}' ROOTSYS        : '${ROOTSYS}
+
+
 echo -e ${prefix}' OSTAP_SOURCE   : '${OSTAP_SOURCE}
 echo -e ${prefix}' OSTAP_INSTALL  : '${OSTAP_INSTALL}
 echo -e ${prefix}' OSTAP_BUILD    : '${OSTAP_BUILD}
@@ -338,6 +342,24 @@ result=$?
 echo -e ${prefix}' LCG VERSION    : '${LCG}
 echo -e ${prefix}' LCG PLATFORM   : '${PLATFORM}
 echo -e ${prefix}' LCG BUILD      : '${LCG_BUILD}
+
+if [[ -d ${ROOTSYS}/lib ]]
+then
+   a_libs=`find ${ROOTSYS}/lib  -name '*'.a | wc -l`
+   so_libs=`find ${ROOTSYS}/lib  -name '*'.so'*' | wc -l`
+   pcm_libs=`find ${ROOTSYS}/lib  -name '*'.pcm | wc -l`
+   rm_libs=`find ${ROOTSYS}/lib  -name '*'.rootmap | wc -l`
+   echo -e ${prefix}' ROOT-libs      : #a:'${a_libs}' #so:'${so_libs}' #pcm:'${pcm_libs}' #rootmap:'${rm_libs} 
+fi 
+
+## if [[ -d ${LCG_BUILD}/lib ]]
+##  then
+##    a_libs=`find ${LCG_BUILD}/lib  -name '*'.a | wc -l`
+##   so_libs=`find ${LCG_BUILD}/lib  -name '*'.so'*' | wc -l`
+##   pcm_libs=`find ${LCG_BUILD}/lib  -name '*'.pcm | wc -l`
+##   rm_libs=`find ${LCG_BUILD}/lib  -name '*'.rootmap | wc -l`
+##   echo -e ${prefix}' LCG-libs        : #a:'${a_libs}' #so:'${so_libs}' #pcm:'${pcm_libs}' #rootmap:'${rm_libs} 
+## fi 
 
 if [[ $result -eq 0 ]]
 then
