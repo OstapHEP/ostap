@@ -313,7 +313,7 @@ class PPDnp(GoFnp) :
         return numpy.sum ( distances )         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
-    def t_value ( self , ds1 , ds2 , * , weight1 = None , weigh2 = None ) :
+    def t_value ( self , ds1 , ds2 , * , weight1 = None , weight2 = None ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
