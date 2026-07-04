@@ -1,6 +1,8 @@
 
 ## New features
 
+  1. Add Adversarial Vaildation tools to compare (weihted) dataset. It can be used for Goodness-of-fit and for reweighting quality 
+  
 ## Bug fixes
 
 ## Backward incompatible 

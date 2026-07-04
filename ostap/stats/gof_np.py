@@ -20,6 +20,7 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
+    'GoFnp' , ## A base class for numpy-related family of methods to probe goodness-of-fit
     'PPDnp' , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
     'DNNnp' , ## Distance-to-Nearest-Neighbour Goodness-of-fit method 
 )
@@ -113,7 +114,7 @@ class GoFnp (AGoFnp) :
         >>> gof = ... ##
         >>> nd1, nd2 = gof.normalize ( ds1 , ds2 ) 
         """ 
-        return ds_normalize  ( *datasets  , first = False ) 
+        return ds_normalize ( *datasets  , first = False ) 
     # =========================================================================
     ## Generator of permutations
     #  @code
@@ -312,7 +313,7 @@ class PPDnp(GoFnp) :
         return numpy.sum ( distances )         
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
-    def t_value ( self , ds1 , ds2 ) :
+    def t_value ( self , ds1 , ds2 , * , weight1 = None , weigh2 = None ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
@@ -325,7 +326,10 @@ class PPDnp(GoFnp) :
         n1 = len ( ds1 ) 
         n2 = len ( ds2 ) 
         ##
-        
+
+        assert weight1 is None or numpy.ones ( n1 ) == weight1 , "weight1 must be either None or trivial"
+        assert weight2 is None or numpy.ones ( n2 ) == weight2 , "weight2 must be either None or trivial"
+
         ## calculate sums of distances, Eq (3.7) 
         result  = self.sum_distances ( ds1 , ds1 ) / ( n1 * ( n1 - 1 ) )
         result -= self.sum_distances ( ds1 , ds2 ) / ( n1 * n2 )
@@ -336,7 +340,7 @@ class PPDnp(GoFnp) :
         return float ( result )
 
     # =========================================================================    
-    ## Calculate T-value for two datasets 
+    ## Calculate T-value for two (structured) datasets 
     #  @code
     #  ppd   = ...
     #  data1 = ... ## the first  data set 
@@ -344,7 +348,7 @@ class PPDnp(GoFnp) :
     #  t = ppd ( data1 , data1 , normalize = False ) 
     #  t = ppd ( data1 , data1 , normalize = True  ) 
     #  @endcode
-    def __call__ ( self , data1 , data2 , normalize = True ) :
+    def __call__ ( self , data1 , data2 , * , normalize = True ) :
         """ Calculate T-value for two data sets 
         >>> ppd   = ...
         >>> data1 = ... ## the first  data set 
@@ -395,6 +399,7 @@ class PPDnp(GoFnp) :
         
         t_value    = self.t_value ( uds1 , uds2 )
 
+        
         permutator = PERMUTATOR ( self , t_value , uds1 , uds2 )
 
         if self.parallel and permutator.run :
@@ -514,7 +519,7 @@ class DNNnp(GoFnp) :
     #  @see Eqs. (3.16) in M.Williams' paper
     #  @param data1 actual data (as structured array)
     #  @param vpdf  array of PDF values  
-    def __call__ ( self ,  data1 , vpdf , normalize = False ) :
+    def __call__ ( self ,  data1 , vpdf , * , normalize = False ) :
         """" Calculate the t-value
         - see Eqs. (3.16) in M.Williams' paper
         data1: actual data (as structured array)

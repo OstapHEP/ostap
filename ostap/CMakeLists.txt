@@ -86,7 +86,6 @@ if ( NOT ${PY_cffi_FOUND} )
   message ( "----> warning (optional)          cffi is NOT found!" ) 
 endif()
 
-
 # ========================================================================================
 ## Check for PATHOS & friends
 # ========================================================================================
@@ -320,17 +319,63 @@ if ( NOT ${PY_pragmastat_FOUND} )
 endif()
 
 # ========================================================================================
+## Pandas & friends
+# ========================================================================================
+##
+find_python_module ( pandas  QUIET )
+if ( NOT ${PY_pandas_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pandas ${PIP_ARGS})
+endif()
+find_python_module ( pandas  QUIET )
+if ( NOT ${PY_pandas_FOUND} )
+  message ( "----> warning (optional)        pandas is NOT found!" ) 
+endif()
+##
+find_python_module ( sklearn  QUIET )
+if ( NOT ${PY_sklearn_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install scikit-learn ${PIP_ARGS})
+endif()
+find_python_module ( sklearn  QUIET )
+if ( NOT ${PY_sklearn_FOUND} )
+  message ( "----> warning (optional)       sklearn is NOT found!" ) 
+endif()
+
+# ========================================================================================
+## sweetviz
+# ========================================================================================
+## 
+find_python_module ( sweetviz QUIET )
+if ( NOT ${PY_sweetviz_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install sweetviz ${PIP_ARGS})
+endif()
+find_python_module ( sweetviz QUIET )
+if ( NOT ${PY_sweetviz_FOUND} )
+  message ( "----> warning                   sweetviz is NOT found!" ) 
+endif()
+
+# ========================================================================================
+## lightgbm
+# ========================================================================================
+## 
+find_python_module ( lightgbm QUIET )
+if ( NOT ${PY_lightgbm_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install lightgbm ${PIP_ARGS})
+endif()
+find_python_module ( lightgbm QUIET )
+if ( NOT ${PY_lightgbm_FOUND} )
+  message ( "----> warning                   lightgbm is NOT found!" ) 
+endif()
+
+# ========================================================================================
 ## hep_ml
 # ========================================================================================
-if ( ${PYTHON_VERSION} VERSION_LESS       "3.12.0" )
-   find_python_module ( hep_ml QUIET )
-   if ( NOT ${PY_hep_ml_FOUND} )
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
-   endif()
-   find_python_module ( hep_ml QUIET )
-   if ( NOT ${PY_hep_ml_FOUND} )
-     message ( "----> warning (optional)          hep_ml is NOT found!" ) 
-   endif()
+find_python_module ( hep_ml QUIET )
+if ( NOT ${PY_hep_ml_FOUND} )
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
+endif()
+find_python_module ( hep_ml QUIET )
+if ( NOT ${PY_hep_ml_FOUND} )
+  message ( "----> warning (optional)          hep_ml is NOT found!" ) 
 endif()
 
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
@@ -454,6 +499,26 @@ if ( ${PY_sortedcontainers_FOUND} )
 if ( ${PY_pragmastat_FOUND} )
   find_python_module_version ( pragmastat ) 
   message ( "----> pragmastat       version    : " ${PY_pragmastat_VERSION} " \t" ${PY_PRAGMASTAT} ) 
+endif()
+##
+if ( ${PY_pandas_FOUND} )
+  find_python_module_version ( pandas ) 
+  message ( "----> pandas           version    : " ${PY_pandas_VERSION} " \t" ${PY_PANDAS}  )  
+endif()
+##
+if ( ${PY_sklearn_FOUND} )
+  find_python_module_version ( sklearn ) 
+  message ( "----> sklearn          version    : " ${PY_sklearn_VERSION} " \t" ${PY_SKLEARN}  )  
+endif()
+##
+if ( ${PY_sweetviz_FOUND} )
+  find_python_module_version ( sweetviz ) 
+  message ( "----> sweetviz         version    : " ${PY_sweetviz_VERSION} " \t" ${PY_SWEETVIZ} ) 
+endif()
+##
+if ( ${PY_lightgbm_FOUND} )
+  find_python_module_version ( lighgbm ) 
+  message ( "----> lightgbm         version    : " ${PY_lightgbm_VERSION} " \t" ${PY_LIGHTGBM} ) 
 endif()
 ##
 if ( ${PY_hep_ml_FOUND} )

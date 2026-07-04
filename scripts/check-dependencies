@@ -136,13 +136,15 @@ check_install ( *missing )
 
 ## check & install other packages 
 to_install =  ( 'numpy'            , 'scipy'            ,
-                'cffi'             , ## 'numba'            , 
+                'cffi'             , ## 'numba'            ,
                 'pathos'           , 'multiprocess'     , 'ppft' , 'dill' ,
                 'psutil'           , 'more_itertools'   , 
                 'tabulate'         , 'terminaltables3'  , 
                 'sortedcontainers' ,  ## 'pragmastat'   ,
-                'hep_ml'           , 
-                'zstandard'        , 'lzma'             ) 
+                'zstandard'        , 'lzma'             ,
+                'pandas'           ,
+                'sweetviz'         , 'lightgbm'         , 
+                'hep_ml'           )
 
 if ( 3, 10 ) <= python_info : to_install += ( 'fasteners' , 'duckdb' )
 
@@ -230,7 +232,7 @@ try : # =======================================================================
 except ImportError : # ========================================================
     # =========================================================================
     message = """cffi cannot be imported!
-    Cffi  is useful for better C++/python inntercommunucations
+    Cffi  is useful for better C++/python intercommunucations
     """
     missing.append ( 'cffi' ) 
     logger.error ( message )
@@ -710,6 +712,72 @@ except : # ====================================================================
     missing.append ( 'sortedcontainers' ) 
     logger.error   ( 'sortedcontainers cannot  be imported!' )
 # =============================================================================                  
+try : # =======================================================================
+    # =========================================================================
+    import pandas 
+    version = getattr ( pandas , '__version__' , '' ) 
+    row = 'pandas' , version , pandas.__file__
+    rows.append  ( row )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    message = """pandas cannot be imported!
+    pandas  is useful for some dataset manipulations 
+    """
+    missing.append ( 'pandas' ) 
+    logger.error ( message )
+    row = attention ( 'pandas' ) , attention ( '---' ) , '' 
+    rows.append  ( row )
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    missing.append ( 'pandas' ) 
+    logger.error ( 'pandas  cannot be imported!' )
+# ============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import sweetviz
+    version = getattr ( sweetviz , '__version__' , '' ) 
+    row = 'sweetviz' , version , sweetviz.__file__
+    rows.append  ( row )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    message = """sweetviz cannot be imported!
+    sweetviz  is useful for comparison of datasets  
+    """
+    missing.append ( 'sweetwiz' ) 
+    logger.error ( message )
+    row = attention ( 'sweetviz' ) , attention ( '---' ) , '' 
+    rows.append  ( row )
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    missing.append ( 'sweetviz' ) 
+    logger.error ( 'sweetviz  cannot be imported!' )
+# =============================================================================
+try : # =======================================================================
+    # =========================================================================
+    import lightgbm
+    version = getattr ( lighgbm , '__version__' , '' ) 
+    row = 'lightgbm' , version , lightgmb.__file__
+    rows.append  ( row )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    message = """lightgbm cannot be imported!
+    lightgbm  is useful for comparison of datasets  
+    """
+    missing.append ( 'lightgbm' ) 
+    logger.error ( message )
+    row = attention ( 'lightgbm' ) , attention ( '---' ) , '' 
+    rows.append  ( row )
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    missing.append ( 'lightgbm' ) 
+    logger.error ( 'lightgbm  cannot be imported!' )
+# ============================================================================
 try : # ======================================================================
     # ========================================================================    
     import pragmastat

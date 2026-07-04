@@ -282,11 +282,19 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
 class PERMUTATOR(object) :
     """ Helper class that allow to run permutation test in parallel 
     """
-    def __init__ ( self, gof, t_value , ds1 , ds2 ) :
+    def __init__ ( self, gof, t_value , ds1 , ds2 , weight1 = None , weight2 = None ) :
         
         self.gof     = gof
         self.ds1     = ds1
         self.ds2     = ds2
+
+        if weight1 is None and weigth2 is None : pass 
+        else : 
+            weight1 = numpy.ones ( len ( self.ds1 ) ) if weight1 is None else weight1
+            weight2 = numpy.ones ( len ( self.ds2 ) ) if weight2 is None else weight2
+        
+        self.weight1 = weight1
+        self.weight2 = weight2 
         self.t_value = t_value
         self.__ecdf  = None
 
@@ -297,6 +305,8 @@ class PERMUTATOR(object) :
         return { 'gof'        : self.gof      ,
                  'ds1'        : self.ds1      ,   
                  'ds2'        : self.ds2      ,   
+                 'weight1'    : self.weight1  ,
+                 'weight2'    : self.weight2  ,   
                  't_value'    : self.t_value  , 
                  'ecdf'       : self.ecdf     }
     
@@ -307,6 +317,8 @@ class PERMUTATOR(object) :
         self.gof     = state.pop ( 'gof'        )
         self.ds1     = state.pop ( 'ds1'        )
         self.ds2     = state.pop ( 'ds2'        )        
+        self.weight1 = state.pop ( 'weight1'    )
+        self.weight2 = state.pop ( 'weight2'    )
         self.t_value = state.pop ( 't_value'    )
         self.__ecdf  = state.pop ( 'ecdf'       )
         
@@ -326,15 +338,37 @@ class PERMUTATOR(object) :
     def run_toys ( self, N , silent = True , progress = False ) :
         """ Run N-toys
         """
-        
         numpy.random.seed()
         n1      = len ( self.ds1 )
-        pooled  = numpy.concatenate ( [ self.ds1 , self.ds2 ] )
+        n2      = len ( self.ds2 )
+        
+        pooled  = numpy.concatenate ( [ self.ds1     , self.ds2     ] )
+
+        easy_way = False 
+        if self.weight1 is None and self.weight2 is None : easy_way = True 
+        else :            
+            weights = numpy.concatenate ( [ self.weight1 , self.weight2 ] , dtype = pooled.dtype ).reshape ( ( n1 + n2 , 1 ) ) 
+            pooled  = numpy.hstack      ( [ pooled       , weights      ] )
+            
         counter = EffCounter()
         tvalues = [] 
-        for i in progress_bar ( N , silent = not progress  , description = 'Permutations:') : 
-            numpy.random.shuffle ( pooled )            
-            tv       = self.gof.t_value ( pooled [ : n1 ] , pooled [ n1: ] )
+        for i in progress_bar ( N , silent = not progress  , description = 'Permutations:') :
+            
+            numpy.random.shuffle ( pooled )
+            
+            ds1 = pooled [    : n1 ]
+            ds2 = pooled [ n1 :    ]
+            
+            if easy_way :
+                
+                w1 , w2 = None, None
+                
+            else :
+                
+                ds1 , w1 = ds1[ : , : -1 ] , ds1 [ : , -1 ]
+                ds2 , w2 = ds2[ : , : -1 ] , ds2 [ : , -1 ]
+                
+            tv       = self.gof.t_value ( ds1 , ds2 , weight1 = w1 , weight2 = w2  )
             tvalues.append ( float ( tv ) )
             counter += bool ( self.t_value < tv  )            
         del pooled
