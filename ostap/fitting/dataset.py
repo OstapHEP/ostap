@@ -4036,6 +4036,12 @@ ROOT.RooAbsData.copy         = _ds_copy_
 ROOT.RooAbsData.__copy__     = _ds_copy_
 ROOT.RooAbsData.__deepcopy__ = _ds_copy_
 
+
+
+## add sweetviz-based methods 
+import ostap.stats.sweet_viz
+
+
 _new_methods_ += list ( data_decorate ( ROOT.RooAbsData ) )
 del data_decorate
 
@@ -4045,8 +4051,6 @@ _decorated_classes_ = (
     )
 
 _new_methods_ = tuple ( _new_methods_ )
-
-
 
 # =============================================================================
 if '__main__' == __name__ :

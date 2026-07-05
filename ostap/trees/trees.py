@@ -2653,6 +2653,9 @@ def use_aliases ( tree , **aliases ) :
     """
     return UseAliases ( tree , **aliases ) 
 
+## add sweetviz-based methods 
+import ostap.stats.sweet_viz
+
 # =============================================================================
 _new_methods_   = data_decorate ( ROOT.TTree )
 del data_decorate 

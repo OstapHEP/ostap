@@ -2321,7 +2321,7 @@ def data_slice ( data        ,
     var_lst , cuts, _  = vars_and_cuts ( expressions , cuts )
     
     ## (2) adjust first/last 
-    first , last = evt_range ( data , *args )
+    first , last = evt_range ( data , first , last )
 
     ## (3) cut_range defined *only* for RooFit datasets 
     if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
@@ -2437,7 +2437,7 @@ def data_efficiency ( data        ,
                       use_frame   = False       , 
                       parallel    = False       , 
                       progress    = False       ) : 
-    """ Produce  "efficiency" histogram for boolean <code>criteriaon</c>
+    """ Produce  "efficiency" histogram for boolean <code>criterion</c>
     as function of valiabed listed as <code>expressions</code>
     internally it creatd two histogram
     - "acepted" for events accepted by (boolean) criterion

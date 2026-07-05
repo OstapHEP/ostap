@@ -457,7 +457,8 @@ class SliceTask(Task) :
         if not self.__output : 
             self.__output  = result
             return
-        ## acgtual  merging
+        
+        ## actual  merging
         v1 , w1 = self.__output
         v2 , w2 =        result
 
@@ -481,7 +482,7 @@ class SliceTask(Task) :
     def results ( self ) : return self.__output 
 
 # ================================================================================
-## The simple task object to collecy slices 
+## The simple task object to collect all slices 
 #  @see GaudiMP.Parallel
 #  @see GaudiMP.Parallel.Task
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

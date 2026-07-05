@@ -2,7 +2,8 @@
 ## New features
 
   1. Add Adversarial Vaildation tools to compare (weihted) dataset. It can be used for Goodness-of-fit and for reweighting quality 
-  1. Add explicit first/last arguments to all `data_` functions
+  1. Add explicit `first/last` arguments to all `data_xxx` functions from `ostap.stats.statvars` module: it makes the intefrace much more robust and less confusing 
+  1. Add `sweetviz_analyse` and `sweetviz_compare` function for very simple analysis/comparison of (unweighted) datasets using `sweetviz`
   
 ## Bug fixes
 
