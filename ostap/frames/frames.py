@@ -1479,7 +1479,7 @@ _types_nD = _types_1D + _types_2D + _types_3D + _types_4D
 def frame_project ( frame               , 
                     model               ,
                     expressions         , 
-                    cuts        = ''    , * , 
+                    cuts        = ''    , * ,
                     as_weight   = True  , 
                     progress    = False , 
                     report      = False ,
@@ -1519,8 +1519,8 @@ def frame_project ( frame               ,
     
     """
 
-    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
-
+    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame ) 
+           
     # ===================================================================================
     ## ROOT.TProfile is not supprted yet (ROOT 6.36)
     if isinstance ( model , ROOT.TProfile3D ) :
@@ -1530,7 +1530,7 @@ def frame_project ( frame               ,
             return _tree_project_ ( frame                ,
                                     model                , 
                                     expressions          ,
-                                    cuts                 ,
+                                    cuts      = cuts     ,
                                     progress  = progress ,
                                     use_frame = False    ,
                                     parallel  = False    )
@@ -1663,7 +1663,7 @@ def frame_project ( frame               ,
 def frame_param ( frame               ,
                   target              ,
                   expressions         , 
-                  cuts        = ''    , * , 
+                  cuts        = ''    , * ,
                   as_weight   = True  , 
                   progress    = False ,
                   report      = False ,
@@ -1694,8 +1694,8 @@ def frame_param ( frame               ,
     >>> res   = frame_the_param ( frame , bs2 , 'y,x' , 'z>0' )
     """
     
-    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame )
-
+    if progress and isinstance ( frame , ROOT.TTree ) : progress = len ( frame ) 
+            
     ## the histogram ? 
     if isinstance ( target , ROOT.TH1 ) :
         return frame_project ( frame                   ,

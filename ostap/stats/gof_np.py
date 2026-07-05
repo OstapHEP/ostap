@@ -45,9 +45,9 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
 ## scipy-version 
-scipy_version = tuple ( int ( i ) for i in scipy.__version__.split( '.' ) )
+scipy_version = tuple ( int ( i ) for i in scipy.__version__.split ( '.' ) )
 # =============================================================================    
-s2u,cdist = None , None
+s2u , cdist = None , None
 # =============================================================================
 try : # =======================================================================
     # =========================================================================  
@@ -55,19 +55,22 @@ try : # =======================================================================
     from scipy.spatial.distance import cdist                      as cdist
     ## ========================================================================
     if ( 1 , 6 , 0 ) <= scipy_version :
+        # =====================================================================
         qconf = { 'k' : [ 2 ] , 'workers' : -1 }
         def neighbour_distances ( tree , data ) :
             dist , xx = tree.query ( data , **qconf )
             del xx 
-            return dist.flatten() 
+            return dist.flatten()
+        # ====================================================================
     else : # =================================================================
+        # ====================================================================
         qconf = { 'k' :   2                    }
         def neighbour_distances ( tree , data ) :
             dist , xx = tree.query ( data , **qconf )
             del xx 
             return numpy.delete ( dist , 0 , axis = 1 ).flatten()         
-        # =====================================================================
-except ImportError :
+    # =========================================================================
+except ImportError : # ========================================================
     # =========================================================================
     s2u        = None
     cdist      = None
@@ -572,8 +575,6 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
-    if not numpy : logger.warning ( 'Numpy  is not available' ) 
-    if not numpy : logger.warning ( 'Scipy  is not available' ) 
     if not s2u   : logger.warning ( 's2u    is not available' ) 
     if not cdist : logger.warning ( 'cdist  is not available' )
     if scipy_version < ( 1 , 6 , 0 ) : 

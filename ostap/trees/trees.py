@@ -242,9 +242,9 @@ ROOT.TTree .__call__  = _tc_call_
 ROOT.TChain.__call__  = _tc_call_
 
 # =============================================================================
-if numpy : 
+if numpy : # ================================================================== 
     # =========================================================================
-    def get_result ( vct ) : return numpy.frombuffer ( vct.data() , count = len ( vct ) , dtype = float )
+    def get_result ( vct ) : return numpy.frombuffer ( vct.data () , count = len ( vct ) , dtype = float )
     # =========================================================================
 else : # ======================================================================
     # =========================================================================
@@ -618,7 +618,9 @@ def tree_draw ( tree                     ,
     ## get the suitable ranges for the variables
     ranges = data_range ( tree   ,
                           varlst ,
-                          cuts   , first , last , 
+                          cuts      = cuts      ,
+                          first     = first     ,
+                          last      = last      , 
                           use_frame = use_frame , 
                           parallel  = parallel  , 
                           delta     = delta     , 
@@ -1220,23 +1222,27 @@ def tree_slice ( tree                     ,
         return () , None 
 
     if  use_frame and good_for_frame ( tree , first , last ) : 
-        from ostap.stats.data_statvars import data_slice
-        return data_slice ( tree         ,
-                            expressions  ,  
-                            cuts         , first , last , 
-                            structured   = structured   ,
-                            progress     = progress     ,
-                            use_frame    = use_frame    ,
-                            parallel     = parallel     )
+        from ostap.stats.statvars import data_slice as _data_slice_ 
+        return _data_slice_ ( tree         ,
+                              expressions  ,  
+                              cuts         = cuts         ,
+                              first        = first        ,
+                              last         = last         , 
+                              structured   = structured   ,
+                              progress     = progress     ,
+                              use_frame    = use_frame    ,
+                              parallel     = parallel     )
     
     elif parallel and good_for_parallel ( tree , first , last ) : 
         from ostap.stats.data_statvars import data_slice
         return data_slice ( tree         ,
                             expressions  ,  
-                            cuts         , first , last , 
+                            cuts         = cuts         ,
+                            first        = first        ,
+                            last         = last         , 
                             structured   = structured   ,
                             progress     = progress     ,
-                            use_frame    = use_frame    ,
+                            use_frame    = False        , ## ATTENTION! 
                             parallel     = parallel     )
     
     ## decode cuts & the expressions 
@@ -2442,10 +2448,10 @@ def tree_efficiency ( tree        ,
                       criterion   ,  
                       histo       , 
                       expressions ,
-                      cuts        = ''          , 
-                      weight      = ""          , 
+                      cuts        = ''          , * , 
                       first       = FIRST_ENTRY , 
-                      last        = LAST_ENTRY  , 
+                      last        = LAST_ENTRY  ,                       
+                      weight      = ""          , 
                       use_frame   = False       , 
                       parallel    = False       , 
                       progress    = False       ) : 
@@ -2538,9 +2544,11 @@ def tree_efficiency ( tree        ,
                                      criterion ,
                                      histo     ,
                                      var_lst   ,
-                                     cuts      , first     , last , 
+                                     cuts      = cuts      ,
+                                     first     = first     ,
+                                     last      = last      , 
                                      weight    = weight    ,
-                                     use_frame = use_frame , 
+                                     use_frame = False     , ## ATTENTION!  
                                      progress  = progress  ) 
 
     h_efficiency = histo.clone ()

@@ -2627,7 +2627,7 @@ def _ds_table_0_ ( dataset                 ,
         
     _vars = []
 
-    stat  = dataset.statVars ( vars , cuts , first , last , cut_range = cut_range )
+    stat  = dataset.statVars ( vars , cuts = cuts , first = first , last = last , cut_range = cut_range )
 
     
     for v in  stat :
@@ -2776,7 +2776,7 @@ def _ds_table_1_ ( dataset                 ,
 
     _vars = []    
     vvars = tuple ( sorted ( vars ) )
-    stat = dataset.statVars ( vvars  , cuts , first , last , cut_range = cut_range ) 
+    stat = dataset.statVars ( vvars  , cuts = cuts , first = first , last = last , cut_range = cut_range ) 
     for v in  stat :
         s   = stat [ v ] 
         mnmx = s.minmax ()

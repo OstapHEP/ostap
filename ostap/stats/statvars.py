@@ -84,10 +84,11 @@ __all__     = (
     'expression_types'     , ## valid types for expressions/cuts/weights
 )
 # =============================================================================
-from   ostap.math.math_base            import ( isequal     , iszero    ,
-                                               axis_range  ,
-                                               strings     , doubles   ,  
-                                               all_entries , evt_range )      
+from   ostap.math.math_base            import ( isequal     , iszero     ,
+                                                axis_range  ,
+                                                strings     , doubles    ,  
+                                                all_entries , evt_range  ,
+                                                FIRST_ENTRY , LAST_ENTRY )      
 from   ostap.core.core                 import Ostap, rootException, WSE, VE, std     
 from   ostap.core.ostap_types          import ( string_types   , integer_types  , 
                                                 num_types      , dictlike_types ,
@@ -115,12 +116,12 @@ MIN_ENTRIES_FOR_PARALLEL = 200000
 MIN_FILES_FOR_PARALLEL   = 2
 # =============================================================================
 ## Good for provcssing via frames?
-def good_for_frame    ( data , *args ,
+def good_for_frame    ( data       ,
+                        first      = FIRST_ENTRY ,
+                        last       = LAST_ENTRY  ,                        
                         min_events = MIN_ENTRIES_FOR_FRAME ) :
     """ Good for provcessing via frames?
     """
-    if 2 < len ( args )                                    : return False
-    
     ## Not TTree ?
     if not isinstance ( data , ROOT.TTree  )               : return False
     
@@ -131,7 +132,7 @@ def good_for_frame    ( data , *args ,
     if not ROOT.ROOT.IsImplicitMTEnabled()                 : return False 
 
     ## check number of events 
-    first, last = evt_range ( data , *args[:2] )
+    first, last = evt_range ( data , first , last )
     
     ## dataset is too small
     return 0 <= first < last and min_events <= ( last - first ) and all_entries ( data , first , last ) 
@@ -139,7 +140,8 @@ def good_for_frame    ( data , *args ,
 # ============================================================================
 ## good for parallel processing 
 def good_for_parallel ( data ,
-                        *args ,
+                        first      = FIRST_ENTRY ,
+                        last       = LAST_ENTRY  ,                        
                         min_events = MIN_ENTRIES_FOR_PARALLEL , 
                         min_files  = MIN_FILES_FOR_PARALLEL   ) :
     
@@ -148,9 +150,8 @@ def good_for_parallel ( data ,
 
     ## do we have at least two CPUs?
     if numcpu() < 2                                        : return False
-
             
-    first, last = evt_range ( data , *args[:2] )
+    first, last = evt_range ( data , first , last )
     if 0 <= first < last and min_events < ( last - first ) : return True ## ATTENTION
 
     if isinstance ( data , ROOT.TChain ) : return min_files <= data.nFiles
@@ -205,7 +206,9 @@ _s4D = Ostap.Math.Statistic4 , Ostap.Math.WStatistic4
 def data_get_stat ( data               ,
                     statobj            ,
                     expressions        ,
-                    cuts       = ""    , *args ,  
+                    cuts       = ""    , *   ,
+                    first      = FIRST_ENTRY ,
+                    last       =  LAST_ENTRY ,                     
                     cut_range  = ""    ,
                     progress   = False , 
                     use_frame  = False ,
@@ -241,6 +244,12 @@ def data_get_stat ( data               ,
     if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
         raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  ) 
 
+    ## check first/last 
+    first , last = evt_range ( data , first , last )
+    if last <= first : return statobj 
+
+    args = first , last
+    
     ## (4) display progress ? 
     progress = progress_conf ( progress )
 
@@ -263,7 +272,7 @@ def data_get_stat ( data               ,
         return statobj
 
     ## Use frame processing ?
-    if   use_frame and good_for_frame ( data , *args ) : 
+    if   use_frame and good_for_frame ( data , first , last ) : 
         return F.frame_project ( data                   ,
                                  model       = statobj  ,
                                  expressions = var_lst  ,
@@ -272,12 +281,14 @@ def data_get_stat ( data               ,
                                  report      = progress ,
                                  lazy        = False    )
     ## Use parallel processon 
-    elif parallel and good_for_parallel ( data , *args ) : 
+    elif parallel and good_for_parallel ( data , first , last ) : 
         from ostap.parallel.parallel_stavar import parallel_get_stat        
         return parallel_get_stat ( data        ,
                                    statobj     ,
                                    expressions ,
-                                   cuts        , *args         ,  
+                                   cuts        ,
+                                   first       = first         ,
+                                   last        = last          , 
                                    progress    = progress      ,
                                    use_frame   = False         , ## NB!!
                                    chunk_size  = 2 * LARGE     ,
@@ -305,7 +316,9 @@ def data_get_stat ( data               ,
 def data_the_moment ( data               ,
                       order              ,
                       expression         ,
-                      cuts       = ''    , *args , 
+                      cuts       = ''    , *   , 
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                       
                       cut_range  = ''    ,
                       as_weight  = True  , ## interpret cuts as weight 
                       progress   = False , 
@@ -331,7 +344,9 @@ def data_the_moment ( data               ,
     return data_get_stat ( data                   ,
                            statobj                ,
                            expression             , 
-                           cuts       , *args     ,
+                           cuts       = cuts      ,
+                           first      = first     ,
+                           last       = last      , 
                            cut_range  = cut_range ,
                            progress   = progress  , 
                            use_frame  = use_frame , 
@@ -340,7 +355,9 @@ def data_the_moment ( data               ,
 # =============================================================================
 ## Is there at least one good entry ?
 def data_hasEntry ( data               ,
-                    cuts      = ""     , *args , 
+                    cuts      = ""     , * ,
+                    first     = FIRST_ENTRY ,
+                    last      =  LAST_ENTRY ,                                           
                     cut_range = ""     ,
                     progress  = False  ,
                     use_frame = False  ,
@@ -351,8 +368,8 @@ def data_hasEntry ( data               ,
     _ , cuts , _  = vars_and_cuts ( "1" , cuts )
 
     ##  (2) trivial case 
-    first , last = evt_range ( data , *args[:2] )
-    if last <= first : return False
+    first , last = evt_range ( data , first , last )
+    if   last <= first : return False
     
     ## (2) cut_range defined *only* for RooFit datasets 
     if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
@@ -376,23 +393,25 @@ def data_hasEntry ( data               ,
             logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
 
         with rootException() :
-            return sv.hasEntry ( data , cuts , cut_range , *args )
+            return sv.hasEntry ( data , cuts , cut_range , first , last  )
         
     ## (7) trivial case 
     if not cuts : return True 
 
     ## use frame ? 
-    if use_frame and good_for_frame ( data , *args ) :
+    if use_frame and good_for_frame ( data , first , last ) :
         return 0 < F.frame_size ( data                ,
                                   cuts     = cuts     , 
                                   progress = progress ,
                                   report   = progress ,
                                   lazy     = False    )     
     ## parallel ? 
-    elif parallel and good_for_parallel ( data , *args ) :
+    elif parallel and good_for_parallel ( data , first , last ) :
         from ostap.parallel.parallel_statvar import parallel_size 
         return 0 < paralel_size ( data                  ,
-                                  cuts      , *args     , 
+                                  cuts      = cuts      ,
+                                  first     = first     ,
+                                  last      = last      , 
                                   progress  = progress  , 
                                   use_frame = use_frame )
 
@@ -401,25 +420,28 @@ def data_hasEntry ( data               ,
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( cuts ) :
-        return sv.hasEntry ( data , cuts , *args )
+        return sv.hasEntry ( data , cuts , first , last )
 
 # =============================================================================
 ## How many good entries in dataset?
 def data_size ( data               ,       
-                cuts      = ""     , *args , 
+                cuts      = ""     , *  ,
+                first     = FIRST_ENTRY ,
+                last      =  LAST_ENTRY , 
                 cut_range = ""     ,
                 progress  = False  ,
                 use_frame = False  ,
-                parallel =  False  ) :
+                parallel  = False  ) :
     """ How many  good entries in the dataset ?
     """
     ## (1) decode expressions & cuts
     _ , cuts , _  = vars_and_cuts ( "1" , cuts )
 
     ##  (2) trivial case 
-    first , last = evt_range ( data , *args[:2] )
-    if last <= first : return 0 
-
+    first , last = evt_range ( data , first , last )
+    if   last <= first : return 0 
+    elif all_entries ( data ,  first , last ) and not cuts and not cut_range : return len ( data ) 
+        
     ## (2) cut_range defined *only* for RooFit datasets 
     if cut_range and not isinstance ( data , ROOT.RooAbsData ) : 
         raise TypeError ( "Invalid use of `cut_range':%s" % cut_range  )
@@ -442,23 +464,25 @@ def data_size ( data               ,
             logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
             
         with rootException() :
-            return sv.size ( data , cuts , cut_range , *args )
+            return sv.size ( data , cuts , cut_range , first , last )
 
     ## (7) trivial case 
     if not cuts : return last - first 
 
     ## use frame ? 
-    if   use_frame and good_for_frame ( data , *args ) : 
+    if   use_frame and good_for_frame ( data , first , last ) : 
         return F.frame_size ( data                 ,
-                              cuts     = cuts      , 
+                              cuts     = cuts      ,
                               progress = progress  ,
                               report   = progress  ,
                               lazy     = False     )
     ## parallel ?
-    elif parallel and good_for_parallel ( data , *args ) : 
+    elif parallel and good_for_parallel ( data , first , last ) : 
         from ostap.parallel.parallel_statvar import parallel_size 
         return paralel_size ( data                  ,
-                              cuts      , *args     ,
+                              cuts      = cuts      ,
+                              first     = first     ,
+                              last      = last      ,                               
                               progress  = progress  , 
                               use_frame = use_frame )
     
@@ -467,7 +491,7 @@ def data_size ( data               ,
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( cuts ) :
-        return sv.size ( data , cuts , *args )
+        return sv.size ( data , cuts , first , last )
     
 # =============================================================================
 
@@ -482,7 +506,9 @@ def data_size ( data               ,
 def  data_moment ( data               ,
                    order              ,
                    expression         ,
-                   cuts       = ''    , *args , 
+                   cuts       = ''    , *   ,
+                   first      = FIRST_ENTRY ,
+                   last       =  LAST_ENTRY ,                    
                    cut_range  = ''    ,
                    as_weight  = True  , ## interpret cuts s as weiggt 
                    progress   = False , 
@@ -499,7 +525,9 @@ def  data_moment ( data               ,
     the_moment = data_the_moment ( data       ,
                                    2 * order  ,
                                    expression ,
-                                   cuts       , *args     , 
+                                   cuts       = cuts      ,
+                                   first      = first     ,
+                                   last       = last      , 
                                    cut_range  = cut_range ,
                                    progress   = progress  , 
                                    as_weight  = as_weight , 
@@ -519,7 +547,9 @@ def  data_moment ( data               ,
 #  @see Ostap::Math::WECDF
 def data_ECDF ( data               ,
                 expression         ,
-                cuts       = ''    , *args , 
+                cuts       = ''    , * ,
+                first      = FIRST_ENTRY ,
+                last       =  LAST_ENTRY ,                 
                 cut_range  = ''    ,
                 progress   = False , 
                 as_weight  = True  , ## interpret cuts as weiggt 
@@ -544,7 +574,9 @@ def data_ECDF ( data               ,
     return data_get_stat ( data                  ,
                            statobj               ,
                            expression            , 
-                           cuts                  , *args , 
+                           cuts      = cuts      ,
+                           first     = first     ,
+                           last      = last      ,                                                       
                            cut_range = cut_range ,
                            progress  = progress  , 
                            use_frame = use_frame , 
@@ -562,7 +594,9 @@ def data_ECDF ( data               ,
 #  @see Ostap::StatVar::statVar
 def data_statistic ( data               , 
                      expressions        ,
-                     cuts       = ''    , *args , 
+                     cuts       = ''    , *   ,
+                     first      = FIRST_ENTRY ,
+                     last       =  LAST_ENTRY ,                      
                      cut_range  = ''    ,
                      progress   = False , 
                      as_weight  = True  , ## interpret cuts as weight
@@ -580,24 +614,30 @@ def data_statistic ( data               ,
     var_lst, cuts, input_string = vars_and_cuts ( expressions , cuts )
     assert var_lst , "Invalid expressions!"
 
+    ##  adjust first/last 
+    first , last = evt_range ( data , first , last )
+    args = first, last
+    
     ## Use frames? 
-    if use_frame and good_for_frame ( data , *args ) : 
+    if use_frame and good_for_frame ( data , first , last ) : 
         return F.frame_statistic ( data        ,
                                    expressions ,
-                                   cuts        = cuts      , 
+                                   cuts        = cuts      ,
                                    as_weight   = as_weight , 
                                    progress    = progress  ,
                                    report      = progress  ,
                                    lazy        = False     )
     ## Use parallel processing ?
-    elif parallel and good_for_parallel ( data , *args ) : 
+    elif parallel and good_for_parallel ( data , first , last ) : 
         from ostap.parallel.parallel_statvar import parallel_statistic
         return parallel_statistic ( data        ,
                                     expressions ,
-                                    cuts        , *args      ,
-                                    as_weight   = as_weight  , 
-                                    progress    = progress   ,
-                                    use_frame   = use_frame  )
+                                    cuts       = cuts      ,
+                                    first      = first     ,
+                                    last       = last      ,                                                       
+                                    as_weight  = as_weight , 
+                                    progress   = progress  ,
+                                    use_frame  = use_frame )
 
     
     ## display progress bar? 
@@ -605,15 +645,15 @@ def data_statistic ( data               ,
 
     ## create the driver 
     sv = StatVar ( progress )
-    
+
     if input_string :
         varname  = var_lst [ 0 ] 
         if   isinstance ( data , ROOT.RooAbsData ) :
-            return sv.statVar     ( data , varname , cuts , cut_range , *args )
+            return sv.statVar     ( data , varname , cuts , cut_range , first , last )
         elif cuts and as_weight                    :
-            return sv.statVar     ( data , varname , cuts ,             *args )
+            return sv.statVar     ( data , varname , cuts ,             first , last )
         else : 
-            return sv.statVar_cut ( data , varname , cuts ,             *args )
+            return sv.statVar_cut ( data , varname , cuts ,             first , last )
            
     ##     
     if   isinstance ( data , ROOT.RooAbsData ) :
@@ -638,7 +678,7 @@ def data_statistic ( data               ,
             logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
         
         with rootException() :
-            sc   = sv.statVars ( data , vcnt , vnames  , cuts , cut_range , *args )
+            sc   = sv.statVars ( data , vcnt , vnames  , cuts , cut_range , first , last  )
             assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc  
             assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"
             return { name : TCNT ( cnt ) for ( name , cnt ) in zip ( var_lst , vcnt ) } 
@@ -647,7 +687,7 @@ def data_statistic ( data               ,
     
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data  , cuts , *var_lst ) :
-        sc   = sv.statVars ( data , vcnt , vnames , cuts , *args   ) 
+        sc   = sv.statVars ( data , vcnt , vnames , cuts , first , last ) 
         assert sc.isSuccess() , 'Error %s from Ostap::StatVar::statVars' % sc 
         assert len ( vcnt ) == len ( vnames ) , "Mismatch in structure"    
         return { name : TCNT ( cnt ) for ( name , cnt ) in zip ( var_lst , vcnt ) } 
@@ -664,7 +704,9 @@ def data_statistic ( data               ,
 #  @see Ostap::StatVar::statVar
 def data_minmax ( data , 
                   expressions        ,
-                  cuts       = ''    , *args , 
+                  cuts       = ''    , * ,
+                  first      = FIRST_ENTRY ,
+                  last       =  LAST_ENTRY ,                   
                   cut_range  = ''    ,
                   progress   = False , 
                   use_frame  = False ,
@@ -679,7 +721,9 @@ def data_minmax ( data ,
     """
     results = data_statistic ( data ,
                                expressions            , 
-                               cuts                   , *args , 
+                               cuts      = cuts       ,
+                               first     = first      ,
+                               last      = last       , 
                                cut_range = cut_range  ,
                                progress  = progress   ,
                                use_frame = use_frame  ,
@@ -707,7 +751,9 @@ def data_minmax ( data ,
 #  @see axis_range 
 def data_range ( data               ,
                  expressions        ,
-                 cuts       = ''    , *args , 
+                 cuts       = ''    , *   , 
+                 first      = FIRST_ENTRY ,
+                 last       =  LAST_ENTRY ,                   
                  cut_range  = ''    ,
                  progress   = False , 
                  use_frame  = False ,
@@ -719,19 +765,26 @@ def data_range ( data               ,
     >>> result  = data_range ( data , 'sin(x)*100*y' , 'x<0' )
     >>> results = data_range ( dataset , 'x,y,z,t,u,v'  , 'x<0' ) ## as dictionary
     """
+    ## adjust first/last
+    first , last = evt_range   ( data , first , last )
+    process_all  = all_entries ( data , first , last )
+    #
     results = data_minmax ( data                   ,
                             expressions            , 
-                            cuts                   , *args , 
+                            cuts      = cuts       ,
+                            first     = first      ,
+                            last      = last       , 
                             cut_range = cut_range  ,
                             progress  = progress   ,
                             use_frame = use_frame  ,
                             parallel  = parallel   ) 
     
+
     if isinstance ( results , dictlike_types ) :
         for k , r in loop_items ( results ) :
             mn, mx = r
-            if mx < mn and ( cuts or cut_range or args ) : 
-                ## recalculate without cuts and arg-ranges 
+            if mx < mn and ( cuts or cut_range or not process_all  ) : 
+                ## recalculate without cuts, cut-range and event ranges: 
                 mn , mx = data_minmax ( data , k ,        
                                         cuts      = ''         ,
                                         cut_range = ''         ,
@@ -742,7 +795,7 @@ def data_range ( data               ,
             results [ k ] = axis_range ( mn , mx , delta = delta ) 
     else :
         mn , mx = results
-        if mx < mn and ( cuts or cut_range or args ) :
+        if mx < mn and ( cuts or cut_range or not process_all ) :
             mn , mx = data_minmax ( data                  ,
                                     expressions           , 
                                     progress  = progress  ,
@@ -766,7 +819,9 @@ def data_range ( data               ,
 #  @see Ostap::StatVar::statCov
 def data_covariance ( data        ,
                       expressions ,               
-                      cuts        = ''    , *args , 
+                      cuts        = ''    , *   ,
+                      first       = FIRST_ENTRY ,
+                      last        =  LAST_ENTRY ,                                       
                       cut_range   = ''    ,
                       as_weight   = True  ,  
                       progress    = False , 
@@ -801,7 +856,10 @@ def data_covariance ( data        ,
     sv = StatVar ( progress )
     
     vnames = strings ( var_lst )
-    
+
+    ##  (2) trivial case 
+    first , last = evt_range ( data , first , last )
+
     if isinstance ( data , ROOT.RooAbsData ) :
         
         weighted          = data.isWeighted ()
@@ -811,36 +869,38 @@ def data_covariance ( data        ,
             logger.warning ( "Weight uncertainties are defined, but will be ignored!" ) 
 
         with rootException() :
-            if 2 == N : sc = sv.statCov ( data , result , var_lst [ 0 ] , var_lst [ 1 ] , cuts , cut_range , *args )
-            else      : sc = sv.statCov ( data , result , vnames                        , cuts , cut_range , *args )
+            if 2 == N : sc = sv.statCov ( data , result , var_lst [ 0 ] , var_lst [ 1 ] , cuts , cut_range , first , last )
+            else      : sc = sv.statCov ( data , result , vnames                        , cuts , cut_range , first , last )
             assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
             return result 
         
-    if  use_frame and good_for_frame ( data , *args )  and 2 == N : 
+    if  use_frame and good_for_frame ( data , first , last )  and 2 == N : 
         return F.frame_covariance ( frame                 ,
                                     var_lst [ 0 ]         ,
                                     var_lst [ 1 ]         ,
                                     cuts      = cuts      ,
                                     as_weight = as_weight ,
                                     progress  = progress  ,
-                                    lazy      = False     ) 
+                                    lazy      = False     )
     
-    if  parallel and good_for_parallel ( data , *args ) : 
+    elif  parallel and good_for_parallel ( data , first , last ) : 
         from ostap.parallel.parallel_statvar import parallel_covariance
         return parallel_covariance ( data        ,
                                      expressions ,
-                                     cuts        , *args      , 
+                                     cuts        = cuts       ,
+                                     first       = first      ,
+                                     last        = last       , 
                                      as_weight   = as_weight  , 
                                      progress    = progress   ,
-                                     use_frame   = use+_frame )
+                                     use_frame   = use_frame  )
     
     assert isinstance ( data , ROOT.TTree ) , "Invalid type for data!"
 
     ## Branches to be activated
     from ostap.trees.trees import ActiveBranches
     with rootException() , ActiveBranches ( data , cuts , *var_lst ) :
-        if 2 == N : sc = sv.statCov ( data , result , var_lst[0] , var_lst[1] , cuts , *args )
-        else      : sc = sv.statCov ( data , result , vnames                  , cuts , *args )
+        if 2 == N : sc = sv.statCov ( data , result , var_lst[0] , var_lst[1] , cuts , first , last )
+        else      : sc = sv.statCov ( data , result , vnames                  , cuts , first , last )
         assert sc.isSuccess() , 'Error %s from StatVar::statVars' % sc 
         return result 
 
@@ -851,7 +911,9 @@ def data_covariance ( data        ,
 #  @endcode 
 def data_statvector ( data        ,
                       expressions ,               
-                      cuts        = ''    , *args , 
+                      cuts        = ''    , *   ,
+                      first       = FIRST_ENTRY ,
+                      last        =  LAST_ENTRY ,                       
                       cut_range   = ''    ,
                       as_weight   = True  ,  
                       progress    = False , 
@@ -869,7 +931,9 @@ def data_statvector ( data        ,
         
     covs = data_covariance ( data                    ,
                              expressions = var_lst   ,
-                             cuts        = cuts      , 
+                             cuts        = cuts      ,
+                             first       = first     ,
+                             last        = last      , 
                              cut_range   = cut_range ,                             
                              as_weight   = as_weight ,  
                              progress    = progress  , 
@@ -905,7 +969,9 @@ def data_statvector ( data        ,
 #  @see Ostap::StatVar::statVar
 def data_sum ( data               ,
                expressions        ,
-               cuts       = ''    , *args , 
+               cuts       = ''    , * ,
+               first      = FIRST_ENTRY ,
+               last       =  LAST_ENTRY ,                
                cut_range  = ''    ,
                progress   = False , 
                as_weight  = True  , ## interpret cuts as weiggt 
@@ -919,7 +985,9 @@ def data_sum ( data               ,
     """    
     result = data_statistic ( data                  ,
                               expressions           ,  
-                              cuts                  , *args , 
+                              cuts      = cuts      ,
+                              first     = first     ,
+                              last      = last      ,                               
                               cut_range = cut_range ,
                               progress  = progress  ,
                               as_weight = as_weight ,
@@ -943,7 +1011,9 @@ def data_sum ( data               ,
 #  @encode
 #  @see Ostap::StatVar::nEff 
 def data_nEff ( data ,
-                cuts       = ''    , *args , 
+                cuts       = ''    , * ,
+                first      = FIRST_ENTRY ,
+                last       =  LAST_ENTRY , 
                 cut_range  = ''    ,
                 as_weight  = True  , ## interpret cuts as weiggt 
                 progress   = False , 
@@ -961,7 +1031,9 @@ def data_nEff ( data ,
 
     stat = data_statistic ( data       ,
                             expression , 
-                            cuts       , *args     , 
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      ,                             
                             cut_range  = cut_range ,
                             as_weight  = as_weight ,
                             progress   = progress  ,
@@ -982,7 +1054,9 @@ def data_nEff ( data ,
 #  @see Ostap::statVar::the_moment
 def data_harmonic_mean ( data , 
                          expression         ,
-                         cuts       = ''    , *args , 
+                         cuts       = ''    , * ,
+                         first      = FIRST_ENTRY ,
+                         last       =  LAST_ENTRY ,                          
                          cut_range  = ''    ,
                          progress   = False , 
                          as_weight  = True  , ## interpret cuts as weiggt 
@@ -1010,7 +1084,9 @@ def data_harmonic_mean ( data ,
     return data_get_stat  ( data       ,
                             stat       ,
                             expression ,
-                            cuts       , *args     , 
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
@@ -1029,7 +1105,9 @@ def data_harmonic_mean ( data ,
 #  @see Ostap::statVar::the_moment
 def data_geometric_mean ( data , 
                           expression         ,
-                          cuts       = ''    , *args , 
+                          cuts       = ''    , * ,
+                          first      = FIRST_ENTRY ,
+                          last       =  LAST_ENTRY ,                           
                           cut_range  = ''    ,
                           progress   = False , 
                           as_weight  = True  , ## interpret cuts as weiggt 
@@ -1055,7 +1133,9 @@ def data_geometric_mean ( data ,
     return data_get_stat  ( data       ,
                             stat       ,
                             expression ,
-                            cuts       , *args     , 
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      ,                             
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
@@ -1075,7 +1155,9 @@ def data_geometric_mean ( data ,
 #  @see Ostap::statVar::the_moment
 def data_power_mean ( data , p ,
                       expression         ,
-                      cuts       = ''    , *args , 
+                      cuts       = ''    , *   ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                       
                       cut_range  = ''    ,
                       progress   = False , 
                       as_weight  = True  , ## interpret cuts as weiggt 
@@ -1097,24 +1179,30 @@ def data_power_mean ( data , p ,
 
     if    p == -1 or isequal ( p , -1. ) :
         return data_harmonic_mean   ( data       ,
-                                      expression , 
-                                      cuts       , *args     , 
+                                      expression ,
+                                      cuts       = cuts      ,
+                                      first      = first     ,
+                                      last       = last      , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
                                       parallel   = parallel  ) 
     elif  p ==  0 or iszero  ( p       ) :
         return data_geometric_mean  ( data       ,
-                                      expression , 
-                                      cuts       , *args     ,
+                                      expression ,
+                                      cuts       = cuts      ,
+                                      first      = first     ,
+                                      last       = last      , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
                                       parallel   = parallel  ) 
     elif  p ==  1 or isequal ( p ,  1. ) :
         return data_arithmetic_mean ( data       ,
-                                      expression ,
-                                      cuts       , *args     ,
+                                      expression ,                                      
+                                      cuts       = cuts      ,
+                                      first      = first     ,
+                                      last       = last      , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
@@ -1129,8 +1217,10 @@ def data_power_mean ( data , p ,
         
     return data_get_stat  ( data       , 
                             stat       ,
-                            expression , 
-                            cuts       , *args     , 
+                            expression ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
@@ -1149,7 +1239,9 @@ def data_power_mean ( data , p ,
 #  @see Ostap::statVar::the_moment
 def data_arithmetic_mean ( data , 
                            expression         ,
-                           cuts       = ''    , *args , 
+                           cuts       = ''    , * ,
+                           first      = FIRST_ENTRY ,
+                           last       =  LAST_ENTRY ,                            
                            cut_range  = ''    ,
                            progress   = False , 
                            as_weight  = True  , ## interpret cuts as weiggt 
@@ -1176,8 +1268,10 @@ def data_arithmetic_mean ( data ,
         
     return data_get_stat  ( data                   ,
                             stat                   ,
-                            expression             , 
-                            cuts       , *args     , 
+                            expression             ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
@@ -1196,7 +1290,9 @@ def data_arithmetic_mean ( data ,
 #  @see Ostap::statVar::the_moment
 def data_lehmer_mean ( data , p , 
                        expression         ,
-                       cuts       = ''    , *args , 
+                       cuts       = ''    , * ,
+                       first      = FIRST_ENTRY ,
+                       last       =  LAST_ENTRY ,                        
                        cut_range  = ''    ,
                        progress   = False , 
                        as_weight  = True  , ## interpret cuts as weiggt 
@@ -1220,16 +1316,20 @@ def data_lehmer_mean ( data , p ,
     
     if   p == 0 or iszero  ( p       ) :
         return data_harmonic_mean   ( data       ,
-                                      expression , 
-                                      cuts       , *args     , 
+                                      expression ,                                      
+                                      cuts       = cuts      ,
+                                      first      = first     ,
+                                      last       = last      , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
                                       parallel   = parallel  )
     elif p == 1 or isequal ( p , 1.0 ) :
         return data_arithmetic_mean ( data       ,
-                                      expression , 
-                                      cuts       , *args     ,
+                                      expression ,
+                                      cuts      = cuts      ,
+                                      first     = first     ,
+                                      last      = last      , 
                                       cut_range  = cut_range ,
                                       progress   = progress  ,
                                       use_frame  = use_frame ,
@@ -1243,8 +1343,10 @@ def data_lehmer_mean ( data , p ,
 
     return data_get_stat  ( data       ,
                             stat       ,
-                            expression , 
-                            cuts       , *args     ,
+                            expression ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range ,
                             progress   = progress  ,
                             use_frame  = use_frame ,
@@ -1261,7 +1363,9 @@ def data_lehmer_mean ( data , p ,
 #  @see Ostap::StatVar::moment
 def data_mean ( data  , 
                 expression         ,
-                cuts       = ''    , *args , 
+                cuts       = ''    , * ,
+                first      = FIRST_ENTRY ,
+                last       =  LAST_ENTRY ,                 
                 cut_range  = ''    ,
                 progress   = False , 
                 as_weight  = True  , ## interpret cuts as weiggt 
@@ -1274,7 +1378,9 @@ def data_mean ( data  ,
     """
     m2 = data_the_moment ( data , 2   ,
                            expression ,
-                           cuts       , *args     ,
+                           cuts       = cuts      ,
+                           first      = first     ,
+                           last       = last      , 
                            cut_range  = cut_range ,
                            progress   = progress  ,
                            use_frame  = use_frame ,
@@ -1291,7 +1397,9 @@ def data_mean ( data  ,
 #  @see Ostap::StatVar::moment
 def data_variance ( data  , 
                     expression         ,
-                    cuts       = ''    , *args , 
+                    cuts       = ''    , *   , 
+                    first      = FIRST_ENTRY ,
+                    last       =  LAST_ENTRY ,                 
                     cut_range  = ''    ,
                     progress   = False , 
                     as_weight  = True  , ## interpret cuts as weiggt 
@@ -1303,8 +1411,10 @@ def data_variance ( data  ,
     >>> data.mean(        'mass*mass', 'pt>0') ## ditto
     """
     m4 = data_the_moment ( data   , 4 ,
-                           expression , 
-                           cuts       , *args     , 
+                           expression ,
+                           cuts       = cuts      ,
+                           first      = first     ,
+                           last       = last      , 
                            cut_range  = cut_range ,
                            progress   = progress  ,
                            use_frame  = use_frame ,
@@ -1324,7 +1434,9 @@ data_dispersion = data_variance
 #  @see Ostap::StatVar::moment
 def data_rms ( data               , 
                expression         ,
-               cuts       = ''    , *args , 
+               cuts       = ''    , * ,
+               first      = FIRST_ENTRY ,
+               last       =  LAST_ENTRY ,                 
                cut_range  = ''    ,
                progress   = False , 
                as_weight  = True  , ## interpret cuts as weiggt 
@@ -1336,8 +1448,10 @@ def data_rms ( data               ,
     >>> data.mean(        'mass*mass', 'pt>0') ## ditto
     """
     variance  = data_variance ( data                   ,
-                                expression             , 
-                                cuts       , *args     , 
+                                expression             ,
+                                cuts       = cuts      ,
+                                first      = first     ,
+                                last       = last      , 
                                 cut_range  = cut_range ,
                                 progress   = progress  ,
                                 use_frame  = use_frame ,
@@ -1354,7 +1468,9 @@ def data_rms ( data               ,
 #  @see Ostap::StatVar::skewness
 def data_skewness ( data  , 
                     expression         ,
-                    cuts       = ''    , *args , 
+                    cuts       = ''    , * ,
+                    first      = FIRST_ENTRY ,
+                    last       =  LAST_ENTRY ,                                     
                     cut_range  = ''    ,
                     progress   = False , 
                     as_weight  = True  , ## interpret cuts as weiggt 
@@ -1366,8 +1482,10 @@ def data_skewness ( data  ,
     >>> print data.skewness (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::skewness
     """
-    result = data_the_moment ( data , 6 , expression , *args ,
+    result = data_the_moment ( data , 6 , expression  , 
                                cuts       = cuts      ,
+                               first      = first     ,
+                               last       = last      , 
                                cut_range  = cut_range ,
                                progress   = progress  ,
                                use_frame  = use_frame ,
@@ -1384,7 +1502,9 @@ def data_skewness ( data  ,
 #  @see Ostap::StatVar::kurtosis
 def data_kurtosis ( data               , 
                     expression         ,
-                    cuts       = ''    , *args , 
+                    cuts       = ''    , * ,
+                    first      = FIRST_ENTRY ,
+                    last       =  LAST_ENTRY ,                                                        
                     cut_range  = ''    ,
                     progress   = False , 
                     as_weight  = True  , ## interpret cuts as weiggt 
@@ -1398,7 +1518,9 @@ def data_kurtosis ( data               ,
     """
     result = data_the_moment ( data , 8   ,
                                expression ,
-                               cuts       , *args     ,
+                               cuts       = cuts      ,
+                               first      = first     ,
+                               last       = last      , 
                                cut_range  = cut_range ,
                                progress   = progress  ,
                                use_frame  = use_frame ,
@@ -1421,7 +1543,9 @@ def data_kurtosis ( data               ,
 def  data_quantiles ( data               ,
                       p                  , 
                       expression         ,
-                      cuts       = ''    , *args , 
+                      cuts       = ''    , * ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                       
                       cut_range  = ''    ,
                       progress   = False , 
                       use_frame  = False ,
@@ -1447,7 +1571,9 @@ def  data_quantiles ( data               ,
     result = data_get_stat ( data                  ,
                              qq                    ,
                              expression            ,
-                             cuts       , *args    ,
+                             cuts      = cuts      ,
+                             first     = first     ,
+                             last      = last      , 
                              cut_range = cut_range ,
                              progress  = progress  ,              
                              use_frame = False     ,  ## ATTENTION!
@@ -1470,7 +1596,9 @@ def  data_quantiles ( data               ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_median ( data       ,
                   expression ,
-                  cuts       = ""    , *args ,
+                  cuts       = ""    , * ,
+                  first      = FIRST_ENTRY ,
+                  last       =  LAST_ENTRY ,                                         
                   cut_range  = ''    ,
                   progress   = False , 
                   use_frame  = False ,
@@ -1490,7 +1618,9 @@ def data_median ( data       ,
     qs = data_quantiles ( data       ,
                           0.5        ,
                           expression ,
-                          cuts       , *args     ,
+                          cuts       = cuts      ,
+                          first      = first     ,
+                          last       = last      , 
                           cut_range  = cut_range , 
                           progress   = progress  ,  
                           use_frame  = False     ,
@@ -1510,7 +1640,9 @@ def data_median ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_terciles ( data       ,
                     expression ,
-                    cuts       = ""    , *args ,
+                    cuts       = ""    , * ,
+                    first      = FIRST_ENTRY ,
+                    last       =  LAST_ENTRY ,                                         
                     cut_range  = ""    , 
                     progress   = False , 
                     use_frame  = False ,
@@ -1522,7 +1654,9 @@ def data_terciles ( data       ,
     return data_quantiles ( data       ,
                             2          ,
                             expression ,
-                            cuts       , *args     ,
+                            cuts      = cuts      ,
+                            first     = first     ,
+                            last      = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
@@ -1541,7 +1675,9 @@ def data_terciles ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_quartiles  ( data       ,
                       expression ,
-                      cuts       = ""    , *args ,
+                      cuts       = ""    , * ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                                         
                       cut_range  = ""    , 
                       progress   = False , 
                       use_frame  = False ,
@@ -1552,8 +1688,10 @@ def data_quartiles  ( data       ,
     """
     return data_quantiles ( data       ,
                             3          ,
-                            expression ,
-                            cuts       , *args     ,
+                            expression ,                            
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
@@ -1572,7 +1710,9 @@ def data_quartiles  ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_quintiles  ( data       ,
                       expression ,
-                      cuts       = ""    , *args ,
+                      cuts       = ""    , * ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                                         
                       cut_range  = ""    , 
                       progress   = False , 
                       use_frame  = False ,
@@ -1584,8 +1724,9 @@ def data_quintiles  ( data       ,
     return data_quantiles ( data       ,
                             4          ,
                             expression ,
-                            cuts       , *args     ,
-                            cut_range  = cut_range , 
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             progress   = progress  ,  
                             use_frame  = False     ,
                             parallel   = False     ) 
@@ -1604,7 +1745,9 @@ def data_quintiles  ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_sextiles   ( data       ,
                       expression ,
-                      cuts       = ""    , *args ,
+                      cuts       = ""    , * ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                                         
                       cut_range  = ""    , 
                       progress   = False , 
                       use_frame  = False ,
@@ -1615,14 +1758,15 @@ def data_sextiles   ( data       ,
     """
     return data_quantiles ( data       ,
                             5          ,
-                            expression ,
-                            cuts       , *args     ,
+                            expression ,                            
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
                             parallel   = False     ) 
     
-
 # =============================================================================
 ## Get the (approximate) septiles  for the data using P2-algorithm
 #  @code
@@ -1636,7 +1780,9 @@ def data_sextiles   ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_septiles   ( data       ,
                       expression ,
-                      cuts       = ""    , *args ,
+                      cuts       = ""    , *  ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                        
                       cut_range  = ""    , 
                       progress   = False , 
                       use_frame  = False ,
@@ -1648,7 +1794,9 @@ def data_septiles   ( data       ,
     return data_quantiles ( data       ,
                             6          ,
                             expression ,
-                            cuts       , *args     ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
@@ -1668,7 +1816,7 @@ def data_septiles   ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_octiles    ( data       ,
                       expression ,
-                      cuts       = ""    , *args ,
+                      cuts       = ""    , * ,
                       cut_range  = ""    , 
                       progress   = False , 
                       use_frame  = False ,
@@ -1680,7 +1828,9 @@ def data_octiles    ( data       ,
     return data_quantiles ( data       ,
                             7          ,
                             expression ,
-                            cuts       , *args     ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
@@ -1700,7 +1850,9 @@ def data_octiles    ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_deciles    ( data       ,
                       expression ,
-                      cuts       = ""    , *args ,
+                      cuts       = ""    , * ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                        
                       cut_range  = ""    , 
                       progress   = False , 
                       use_frame  = False ,
@@ -1712,7 +1864,9 @@ def data_deciles    ( data       ,
     return data_quantiles ( data       ,
                             9          ,
                             expression ,
-                            cuts       , *args     ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
@@ -1731,7 +1885,9 @@ def data_deciles    ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_ventiles   ( data       ,
                       expression ,
-                      cuts       = ""    , *args ,
+                      cuts       = ""    , *  ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                        
                       cut_range  = ""    , 
                       progress   = False , 
                       use_frame  = False ,
@@ -1743,7 +1899,9 @@ def data_ventiles   ( data       ,
     return data_quantiles ( data       ,
                             19         ,
                             expression ,
-                            cuts       , *args     ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
@@ -1763,7 +1921,9 @@ def data_ventiles   ( data       ,
 #  @see https://www.cse.wustl.edu/~jain/papers/ftp/psqr.pdf
 def data_percentiles ( data       ,
                        expression ,
-                       cuts       = ""    , *args ,
+                       cuts       = ""    , * ,
+                       first      = FIRST_ENTRY ,
+                       last       =  LAST_ENTRY ,                        
                        cut_range  = ""    , 
                        progress   = False , 
                        use_frame  = False ,
@@ -1775,19 +1935,22 @@ def data_percentiles ( data       ,
     return data_quantiles ( data       ,
                             99         ,
                             expression ,
-                            cuts       , *args     ,
+                            cuts       = cuts      ,
+                            first      = first     ,
+                            last       = last      , 
                             cut_range  = cut_range , 
                             progress   = progress  ,  
                             use_frame  = False     ,
                             parallel   = False     ) 
     
-
 # =============================================================================
 ## Get "center" for data  using Pragmastat toolkit 
 #  @see https://pragmastat.dev/
 def data_center ( data       ,
                   expression ,
-                  cuts       = ''    , *args , 
+                  cuts       = ''    , * ,
+                  first      = FIRST_ENTRY ,
+                  last       = LAST_ENTRY  , 
                   cut_range  = ''    , 
                   progress   = False ,  
                   use_frame  = False ,
@@ -1806,7 +1969,9 @@ def data_center ( data       ,
 
     npdata , weights = data_slice  ( data                   ,
                                      expression             ,
-                                     cuts       , *args     ,
+                                     cuts       = cuts      ,
+                                     first      = first     ,
+                                     last       = last      , 
                                      cut_range  = cut_range ,
                                      structured = False     ,
                                      transpose  = False     ,
@@ -1822,7 +1987,9 @@ def data_center ( data       ,
 #  @see https://pragmastat.dev/
 def data_spread ( data       ,
                   expression ,
-                  cuts       = ''    , *args , 
+                  cuts       = ''    , * ,
+                  first      = FIRST_ENTRY ,
+                  last       = LAST_ENTRY  , 
                   cut_range  = ''    , 
                   progress   = False ,  
                   use_frame  = False ,
@@ -1841,7 +2008,9 @@ def data_spread ( data       ,
 
     npdata , weights = data_slice  ( data                   ,
                                      expression             ,
-                                     cuts       , *args     ,
+                                     cuts       = cuts      ,
+                                     first      = first     ,
+                                     last       = last      , 
                                      cut_range  = cut_range ,
                                      structured = False     ,
                                      transpose  = False     ,
@@ -1857,7 +2026,9 @@ def data_spread ( data       ,
 #  @see https://pragmastat.dev/
 def data_volatility ( data       ,
                       expression ,
-                      cuts       = ''    , *args , 
+                      cuts       = ''    , * ,
+                      first      = FIRST_ENTRY ,
+                      last       =  LAST_ENTRY ,                       
                       cut_range  = ''    , 
                       progress   = False ,  
                       use_frame  = False ,
@@ -1876,7 +2047,9 @@ def data_volatility ( data       ,
         
     npdata , weights = data_slice  ( data                   ,
                                      expression             ,
-                                     cuts       , *args     ,
+                                     cuts       = cuts      ,
+                                     first      = first     ,
+                                     last       = last      , 
                                      cut_range  = cut_range ,
                                      structured = False     ,
                                      transpose  = False     ,
@@ -1892,7 +2065,9 @@ def data_volatility ( data       ,
 #  @see https://pragmastat.dev/
 def data_precision ( data       ,
                      expression ,
-                     cuts       = ''    , *args , 
+                    cuts        = ''    , * ,
+                     first      = FIRST_ENTRY ,
+                     last       =  LAST_ENTRY ,                      
                      cut_range  = ''    , 
                      progress   = False ,  
                      use_frame  = False ,
@@ -1911,7 +2086,9 @@ def data_precision ( data       ,
         
     npdata , weights = data_slice  ( data                   ,
                                      expression             ,
-                                     cuts       , *args     ,
+                                     cuts       = cuts      ,
+                                     first      = first     ,
+                                     last       = last      , 
                                      cut_range  = cut_range ,
                                      structured = False     ,
                                      transpose  = False     ,
@@ -1965,7 +2142,9 @@ def target_reset  ( t ) :
 def data_project ( data                ,
                    target              ,
                    expressions         ,
-                   cuts        = ''    , *args , 
+                   cuts        = ''    , * ,
+                   first       = FIRST_ENTRY ,
+                   last        =  LAST_ENTRY , 
                    cut_range   = ""    ,
                    as_weight   = ""    ,
                    progress    = True  ,
@@ -2025,7 +2204,8 @@ def data_project ( data                ,
     ## (5) create the driver 
     # ========================================================================
     pv = Ostap.Project ( progress )
-    
+
+    args = first , last 
     # ========================================================================
     ## (6) RooFit dataset ?
     # ========================================================================
@@ -2076,7 +2256,7 @@ def data_project ( data                ,
     # =========================================================================
     ## (7) delegate processing to RDataFrame if/when  possible?
     # =========================================================================
-    if  use_frame and good_for_frame ( data , *args ) and not h1_stack and not isinstance ( target , ROOT.TProfile3D ) : 
+    if  use_frame and good_for_frame ( data , first , last ) and not h1_stack and not isinstance ( target , ROOT.TProfile3D ) : 
         return F.frame_project ( data                   ,
                                  model       = target   ,
                                  expressions = var_lst  ,
@@ -2088,12 +2268,14 @@ def data_project ( data                ,
     # =========================================================================
     ## (8) parallel processing ?
     # =========================================================================
-    if  parallel and good_for_parallel ( data , *args ) and not profile : 
+    if  parallel and good_for_parallel ( data , first , last  ) and not profile : 
         from ostap.parallel.parallel_statvars import parallel_project
         return parallel_project ( data                   ,
                                   target                 ,
                                   expressions            ,
-                                  cuts       , *args     ,
+                                  cuts       = cuts      ,
+                                  first      = first     ,
+                                  last       = last      , 
                                   as_weight  = as_weight ,
                                   progress   = progress  ,
                                   use_frame  = use_frame )
@@ -2121,14 +2303,16 @@ def data_project ( data                ,
 # =============================================================================
 def data_slice ( data        ,
                  expressions ,
-                 cuts        = ""    , *args , 
+                 cuts        = ""    , * ,
+                 first       = FIRST_ENTRY ,
+                 last        =  LAST_ENTRY ,                                                                 
                  cut_range   = ""    ,
                  structured  = True  ,
                  transpose   = True  ,
                  progress    = False , 
                  use_frame   = False ,
                  parallel    = False ) :
-    """ Get slice of data s in form of Numpy array
+    """ Get slice of data in a form of numpy array
     >>> data = ...
     >>> arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
     """
@@ -2149,11 +2333,11 @@ def data_slice ( data        ,
         return ds_slice ( data                    ,
                           expressions             ,
                           cuts       = cuts       ,
+                          first      = first      ,
+                          last       = last       , 
                           cut_range  = cut_range  ,
                           structured = structured ,
-                          transpose  = transpose  , 
-                          first      = first      ,
-                          last       = last       )
+                          transpose  = transpose  ) 
 
     ## Frame processing ? 
     if  use_frame and good_for_frame ( data , first , last  ) : 
@@ -2168,7 +2352,9 @@ def data_slice ( data        ,
         from ostap.parallel.parallel_statvar import parallel_slice 
         return parallel_slice ( data                     ,
                                 expressions              ,
-                                cuts        , first      , last ,
+                                cuts        = cuts       ,
+                                first       = first      ,
+                                last        = last       ,
                                 structured  = structured ,
                                 transpose   = transpose  , 
                                 progress    = prorgess   ,
@@ -2179,7 +2365,7 @@ def data_slice ( data        ,
     from ostap.trees.trees import tree_slice
     return tree_slice ( data        ,
                         expressions ,
-                        cuts        ,
+                        cuts        = cuts       ,
                         first       = first      ,
                         last        = last       , 
                         structured  = structured ,
@@ -2243,7 +2429,9 @@ def data_efficiency ( data        ,
                       criterion   ,  
                       histo       , 
                       expressions ,
-                      cuts        = ''          , *args ,
+                      cuts        = ''          , * ,
+                      first       = FIRST_ENTRY ,
+                      last        =  LAST_ENTRY ,                                                                      
                       cut_range   = ''          , 
                       weight      = ''          , 
                       use_frame   = False       , 
@@ -2356,7 +2544,9 @@ def data_efficiency ( data        ,
         h_accept = data_project ( data       , 
                                   h_accepted , 
                                   var_lst    , 
-                                  cuts       = accept    , *args , 
+                                  cuts       = accept    ,
+                                  first      = first     ,
+                                  last       = last      , 
                                   cut_range  = cut_range , 
                                   use_frame  = False     ,
                                   parallel   = False     , 
@@ -2366,7 +2556,9 @@ def data_efficiency ( data        ,
         h_reject = data_project ( tree       , 
                                   h_rejected , 
                                   var_lst    , 
-                                  cuts       = reject    , *args , 
+                                  cuts       = reject    ,
+                                  first      = first     ,
+                                  last       = last      ,                                   
                                   cut_range  = cut_range ,                                       
                                   use_frame  = use_frame ,
                                   parallel   = parallel  , 
@@ -2386,19 +2578,23 @@ def data_efficiency ( data        ,
                                     histo       = histo     ,
                                     expressions = var_lst   , 
                                     cuts        = cuts      ,
+                                    first       = first     ,
+                                    last        = last      ,                                   
                                     weight      = weight    ,
                                     progress    = progress  ,
                                     report      = False     ,
                                     lazy        = False     )
     
     ## delegate processing to parallel machinery if requested and possible 
-    elif parallel and good_for_parallel ( data , first , last ) :
+    if parallel and good_for_parallel ( data , first , last ) :
         from ostap.parallel.parallel_project import parallel_efficiency 
         return parallel_efficiency ( data      ,
                                      criterion ,
                                      histo     ,
                                      var_lst   ,
-                                     cuts      , first     , last ,   
+                                     cuts      = cuts      ,
+                                     first     = first     ,
+                                     last      = last      ,   
                                      weight    = weight    ,
                                      use_frame = use_frame , 
                                      progress  = progress  )
@@ -2410,10 +2606,10 @@ def data_efficiency ( data        ,
                              criterion   ,
                              histo       , 
                              expressions ,
-                             cuts        ,
-                             weight      = weight     , 
+                             cuts        = cuts       ,
                              first       = first      ,
-                             last        = last       , 
+                             last        = last       ,   
+                             weight      = weight     , 
                              progress    = progress   , 
                              use_frame   = use_frame  ,
                              parallel    = parallel   )

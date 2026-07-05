@@ -288,7 +288,7 @@ class PERMUTATOR(object) :
         self.ds1     = ds1
         self.ds2     = ds2
 
-        if weight1 is None and weigth2 is None : pass 
+        if weight1 is None and weight2 is None : pass 
         else : 
             weight1 = numpy.ones ( len ( self.ds1 ) ) if weight1 is None else weight1
             weight2 = numpy.ones ( len ( self.ds2 ) ) if weight2 is None else weight2
