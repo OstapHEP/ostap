@@ -1199,16 +1199,17 @@ ROOT.TTree.table2   = _rt_table2_
 #  @see numpy.array 
 #  @author Albert BURSCHE
 #  @date 2015-07-08
-def tree_slice ( tree                     ,
-                 expressions              ,
-                 cuts       = ''          , * ,
-                 first      = FIRST_ENTRY ,          
-                 last       = LAST_ENTRY  ,                  
-                 structured = True        ,
-                 transpose  = True        , 
-                 progress   = False       , 
-                 use_frame  = False       ,
-                 parallel   = False       ) : 
+def tree_slice ( tree                       ,
+                 expressions                ,
+                 cuts         = ''          , * ,
+                 first        = FIRST_ENTRY ,          
+                 last         = LAST_ENTRY  ,
+                 weight_total = True        , ## final weigth is a product of internal weight and weigth from (non-zero) cuts? 
+                 structured   = True        ,
+                 transpose    = True        , 
+                 progress     = False       , 
+                 use_frame    = False       ,
+                 parallel     = False       ) : 
     
     """ Get `slice' from TTree in a form of numpy.array
     >>> tree = ...
@@ -1222,31 +1223,37 @@ def tree_slice ( tree                     ,
         return () , None 
 
     if  use_frame and good_for_frame ( tree , first , last ) : 
-        from ostap.stats.statvars import data_slice as _data_slice_ 
-        return _data_slice_ ( tree         ,
-                              expressions  ,  
-                              cuts         = cuts         ,
-                              first        = first        ,
-                              last         = last         , 
-                              structured   = structured   ,
-                              progress     = progress     ,
-                              use_frame    = use_frame    ,
-                              parallel     = parallel     )
+        from ostap.stats.statvars import data_slice as _data_s_slice_ 
+        return _data_s_slice_ ( tree         ,
+                                expressions  ,  
+                                cuts         = cuts         ,
+                                first        = first        ,
+                                last         = last         ,
+                                weight_total = weight_total , 
+                                structured   = structured   ,
+                                transpose    = transpose    , 
+                                progress     = progress     ,
+                                use_frame    = use_frame    ,
+                                parallel     = parallel     )
     
     elif parallel and good_for_parallel ( tree , first , last ) : 
-        from ostap.stats.data_statvars import data_slice
-        return data_slice ( tree         ,
-                            expressions  ,  
-                            cuts         = cuts         ,
-                            first        = first        ,
-                            last         = last         , 
-                            structured   = structured   ,
-                            progress     = progress     ,
-                            use_frame    = False        , ## ATTENTION! 
-                            parallel     = parallel     )
+        from ostap.parallel.parallel_statvars import parallel_slice as _data_p_slice_
+        return _data_p_slice_ ( tree         ,
+                                expressions  ,  
+                                cuts         = cuts         ,
+                                first        = first        ,
+                                last         = last         ,
+                                weight_total = weight_total ,                                 
+                                structured   = structured   ,
+                                transpose    = transpose    , 
+                                progress     = progress     ,
+                                use_frame    = False        , ## ATTENTION! 
+                                parallel     = parallel     )
     
     ## decode cuts & the expressions 
-    varlst, cuts , _ = vars_and_cuts  ( expressions , cuts )
+    varlst , cuts , _ = vars_and_cuts  ( expressions , cuts )
+    ## sort it? NO! 
+    ## varlst = tuple ( sorted ( varlst ) )
     
     ## preliminary result: list of arrays 
     result = [] 
@@ -1279,19 +1286,20 @@ def tree_slice ( tree                     ,
         if cuts   :
             result.append ( numpy.array ( numpy.frombuffer ( tree.GetW   (   ) , count = num , dtype = numpy.float64 ) , copy = True ) )
         
-        ## reset estimate to the previosus value
+        ## reset estimate to the previous value
         tree.SetEstimate ( ge ) 
-            
+
     if not result :
         return () , None 
 
-    if not cuts :
-        weights = None
+    if   not cuts         : weights = None
+    elif not weigth_total : weights = None 
     else : 
         weights = result [ -1]
         result  = result [:-1]
+        ## remove totally trivial weights 
         if numpy.all ( weights == 1 ) : weights = None 
-        
+
     if structured :
         
         dt   = numpy.dtype ( [ ( v , numpy.float64 ) for v in varlst ] )
@@ -1303,7 +1311,7 @@ def tree_slice ( tree                     ,
         
         result = numpy.stack ( result )
         if transpose : result = numpy.transpose ( result )
-        
+
     return result, weights
 
 ROOT.TTree .slice  = tree_slice

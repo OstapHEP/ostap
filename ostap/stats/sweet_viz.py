@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file sweet_viz.py 
-#  Functino to analysse and compare datasets using sweetviz 1-liners  
+#  Functiond to analyze and compare datasets using sweetviz one-liners  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2026-07-05  
 # =============================================================================
@@ -16,6 +16,7 @@ __all__     = (
 # =============================================================================
 from   ostap.math.math_base import FIRST_ENTRY , LAST_ENTRY 
 from   ostap.utils.cleanup  import CleanUp
+from   ostap.logger.utils   import logWarning
 import ROOT 
 # =============================================================================
 # logging 
@@ -34,7 +35,7 @@ try : # =======================================================================
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    np , pd , sv = None, None
+    np , pd , sv = None, None, None 
 
 # =============================================================================
 ## Use sweetviz to analyse single dataset 
@@ -100,15 +101,15 @@ def data_sweetviz_analyze ( data        ,
     ## (2) convert it to Panda frame 
     df = pd.DataFrame ( ds )
 
-    ## (3) make sweetviz report
-    report   = sv.analyze ( df , **anaconf )
-
     if not 'filepath' in showconf : 
         tmp_path = CleanUp.tempfile ( suffix = '.html' , prefix = 'ostap-sweetviz-analyze-' )
         showconf [ 'filepath' ] = tmp_path
-    
-    ## (4) show report as HTML
-    report.show_html ( **showconf )
+        
+    with logWarning() :        
+        ## (3) make sweetviz report
+        report   = sv.analyze ( df , **anaconf )        
+        ## (4) show report as HTML
+        report.show_html ( **showconf )
 
     return showconf.get ( 'filepath' , '' )
 
@@ -215,16 +216,16 @@ def data_sweetviz_compare ( data         ,
     df1 = pd.DataFrame ( ds1 ) , name1 
     df2 = pd.DataFrame ( ds2 ) , name2 
 
-    ## (3) make sweetviz report
-    report   = sv.compare ( df1 , df2 , **cmpconf )
-
     if not 'filepath' in showconf : 
         tmp_path = CleanUp.tempfile ( suffix = '.html' , prefix = 'ostap-sweetviz-compare-' )
         showconf [ 'filepath' ] = tmp_path
-    
-    ## (4) show report as HTML
-    report.show_html ( **showconf )
 
+    with logWarning() :        
+        ## (3) make sweetviz report
+        report   = sv.compare ( df1 , df2 , **cmpconf )
+        ## (4) show report as HTML
+        report.show_html ( **showconf )
+        
     return showconf.get ( 'filepath' , '' )
 
 

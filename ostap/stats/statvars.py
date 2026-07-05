@@ -2303,15 +2303,16 @@ def data_project ( data                ,
 # =============================================================================
 def data_slice ( data        ,
                  expressions ,
-                 cuts        = ""    , * ,
-                 first       = FIRST_ENTRY ,
-                 last        =  LAST_ENTRY ,                                                                 
-                 cut_range   = ""    ,
-                 structured  = True  ,
-                 transpose   = True  ,
-                 progress    = False , 
-                 use_frame   = False ,
-                 parallel    = False ) :
+                 cuts         = ""    , *   ,
+                 first        = FIRST_ENTRY ,
+                 last         =  LAST_ENTRY ,                                                                 
+                 cut_range    = ""    ,
+                 weight_total = True  , ## final weigth is a product of internal weight and weigth from (non-zero) cuts 
+                 structured   = True  ,
+                 transpose    = True  ,
+                 progress     = False , 
+                 use_frame    = False ,
+                 parallel     = False ) :
     """ Get slice of data in a form of numpy array
     >>> data = ...
     >>> arr , weight = data_slice ( data , "x,y,x" , "pt>1" ) 
@@ -2330,14 +2331,15 @@ def data_slice ( data        ,
     ## (3) RooFit ?
     if isinstance ( data , ROOT.RooAbsData ) :
         from ostap.fitting.dataset import ds_slice
-        return ds_slice ( data                    ,
-                          expressions             ,
-                          cuts       = cuts       ,
-                          first      = first      ,
-                          last       = last       , 
-                          cut_range  = cut_range  ,
-                          structured = structured ,
-                          transpose  = transpose  ) 
+        return ds_slice ( data                       ,
+                          expressions                 ,
+                          cuts         = cuts         ,
+                          first        = first        ,
+                          last         = last         ,
+                          weight_total = weight_total , 
+                          cut_range    = cut_range    ,
+                          structured   = structured   ,
+                          transpose    = transpose    ) 
 
     ## Frame processing ? 
     if  use_frame and good_for_frame ( data , first , last  ) : 

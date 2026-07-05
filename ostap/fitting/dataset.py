@@ -3299,13 +3299,13 @@ _new_methods_ += [
 def ds_slice ( data                       ,
                expressions                , * , 
                cuts         = ''          ,
+               first        = FIRST_ENTRY ,
+               last         = LAST_ENTRY  ,
                cut_range    = ''          ,
-               weight_total = False       , 
+               weight_total = True        , ## final weigth is a product of internal weight and weigth from (non-zero) cuts? 
                structured   = True        ,
                transpose    = True        ,
-               progress     = True        , 
-               first        = FIRST_ENTRY ,
-               last         = LAST_ENTRY  ) :
+               progress     = True        ) :  
     
     """ Get "slice" from <code>RooAbsData</code> in form of numpy array
     >>> data = ...
@@ -3324,6 +3324,8 @@ def ds_slice ( data                       ,
     
     ## decode cuts & the expressions 
     varlst, cuts , _ = vars_and_cuts  ( expressions , cuts )
+    ## sort it? NO! 
+    ## varlst = tuple ( sorted ( varlst ) )
 
     assert len ( varlst ) == len ( set ( varlst ) ) , \
         "Variables are not unique: %s" % ( ','.join ( varlst ) ) 
@@ -3411,6 +3413,7 @@ def ds_slice ( data                       ,
         result = numpy.stack ( result )
         if transpose : result = numpy.transpose ( result )
 
+    ## remove totally trivial weights 
     if not weights is None and numpy.all ( weights == 1 ) :
         weights = None 
         
