@@ -199,6 +199,19 @@ if ( NOT ${PY_tabulate_FOUND} )
 endif()
 
 # ========================================================================================
+## pathvalidate
+# ========================================================================================
+##  
+find_python_module ( pathvalidate QUIET )
+if ( NOT ${PY_pathvalidate_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pathvalidate ${PIP_ARGS})
+endif()
+find_python_module ( pathvalidate QUIET )
+if ( NOT ${PY_pathvalidate_FOUND} )
+  message ( "----> warning (optional)    pathvalidate is NOT found!" )
+endif()
+
+# ========================================================================================
 ## more_itertools 
 # ========================================================================================
 ##   
@@ -367,6 +380,34 @@ if ( NOT ${PY_lightgbm_FOUND} )
 endif()
 
 # ========================================================================================
+## xgboost
+# ========================================================================================
+## 
+if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.12.0" )
+  find_python_module ( xgboost QUIET )
+  if ( NOT ${PY_xgboost_FOUND} )
+     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install xgboost ${PIP_ARGS})
+  endif()
+  find_python_module ( xgboost QUIET )
+  if ( NOT ${PY_xgboost_FOUND} )
+     message ( "----> warning                 xgboost is NOT found!" ) 
+  endif()
+endif()
+
+# ========================================================================================
+## catboost
+# ========================================================================================
+## 
+find_python_module ( catboost QUIET )
+if ( NOT ${PY_catboost_FOUND} )
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install catboost ${PIP_ARGS})
+endif()
+find_python_module ( catboost QUIET )
+if ( NOT ${PY_catboost_FOUND} )
+  message ( "----> warning                catboost is NOT found!" ) 
+endif()
+
+# ========================================================================================
 ## hep_ml
 # ========================================================================================
 find_python_module ( hep_ml QUIET )
@@ -455,6 +496,11 @@ if ( ${PY_tabulate_FOUND} )
   message ( "----> tabulate         version    : " ${PY_tabulate_VERSION} " \t" ${PY_TABULATE} )               
 endif()
 ##
+if ( ${PY_pathvalidate_FOUND} )
+  find_python_module_version ( pathvalidate )   
+  message ( "----> pathvalidate     version    : " ${PY_pathvalidate_VERSION} " \t" ${PY_PATHVALIDATE} )           
+endif()
+##
 if ( ${PY_more_itertools_FOUND} )
   find_python_module_version ( more_itertools ) 
   message ( "----> more_itertools   version    : " ${PY_more_itertools_VERSION} " \t" ${PY_MORE_ITERTOOLS} )                           
@@ -517,8 +563,18 @@ if ( ${PY_sweetviz_FOUND} )
 endif()
 ##
 if ( ${PY_lightgbm_FOUND} )
-  find_python_module_version ( lighgbm ) 
+  find_python_module_version ( lightgbm ) 
   message ( "----> lightgbm         version    : " ${PY_lightgbm_VERSION} " \t" ${PY_LIGHTGBM} ) 
+endif()
+##
+if ( ${PY_xgboost_FOUND} )
+  find_python_module_version ( xgboost ) 
+  message ( "----> xgboost          version    : " ${PY_xgboost_VERSION} " \t" ${PY_XGBOOST} ) 
+endif()
+##
+if ( ${PY_catboost_FOUND} )
+  find_python_module_version ( catboost ) 
+  message ( "----> catboost         version    : " ${PY_catboost_VERSION} " \t" ${PY_CATBOOST} ) 
 endif()
 ##
 if ( ${PY_hep_ml_FOUND} )

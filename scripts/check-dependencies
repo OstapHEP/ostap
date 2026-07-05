@@ -139,14 +139,19 @@ to_install =  ( 'numpy'            , 'scipy'            ,
                 'cffi'             , ## 'numba'            ,
                 'pathos'           , 'multiprocess'     , 'ppft' , 'dill' ,
                 'psutil'           , 'more_itertools'   , 
-                'tabulate'         , 'terminaltables3'  , 
+                'tabulate'         , 'pathvalidate'  ,  
                 'sortedcontainers' ,  ## 'pragmastat'   ,
                 'zstandard'        , 'lzma'             ,
                 'pandas'           ,
-                'sweetviz'         , 'lightgbm'         , 
+                'sweetviz'         , 
+                'lightgbm'         , 
+                'catboost'         , 
                 'hep_ml'           )
 
-if ( 3, 10 ) <= python_info : to_install += ( 'fasteners' , 'duckdb' )
+if ( 3 , 9  ) <= python_info : to_install += ( 'terminaltables3' , )
+else                         : to_install += ( 'terminaltables'  , )
+if ( 3 , 10 ) <= python_info : to_install += ( 'fasteners' , 'duckdb' )
+if ( 3 , 12 ) <= python_info : to_install += ( 'xgboost'   ,  ) 
 
 # =============================================================================
 try : # =======================================================================
@@ -687,7 +692,25 @@ except ImportError : # ========================================================
 except : # ====================================================================
     # =========================================================================
     missing.append ( 'tabulate' ) 
-    logger.error   ( 'tabulate cannot be imported!' )
+    logger.error   ( 'tabulate cannot be imported!' )    
+# =============================================================================                    
+try : # =======================================================================
+    # =========================================================================
+    import pathvalidate
+    version = getattr ( pathvalidate , '__version__' , '' ) 
+    row = 'pathvalidate' , version  , pathvalidate.__file__
+    rows.append  ( row )
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    missing.append ( 'pathvalidate' ) 
+    row = attention ( 'pathvalidate' ) , attention ( '---' ) , ''
+    rows.append  ( row )
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    missing.append ( 'pathvalidate' ) 
+    logger.error   ( 'pathvalidate cannot be imported!' )
 # =============================================================================                  
 try : # ======================================================================
     # ========================================================================    
@@ -711,7 +734,32 @@ except : # ====================================================================
     # =========================================================================
     missing.append ( 'sortedcontainers' ) 
     logger.error   ( 'sortedcontainers cannot  be imported!' )
-# =============================================================================                  
+# =============================================================================   
+try : # ======================================================================
+    # ========================================================================    
+    import pragmastat
+    version = getattr ( pragmastat , '__version__' , '' ) 
+    row = 'pragmastat' , version , pragmastat.__file__
+    rows.append  ( row )
+    # ========================================================================
+except ImportError : # =======================================================
+    # ========================================================================
+    message = """pragmastat cannot be imported! 
+    pragmastat is useful for robust statistical features
+    - There is no local replacement
+    - https://github.com/AndreyAkinshin/pragmastat
+    - https://doi.org/10.5281/zenodo.17236778
+    """
+    ## missing.append  ( 'pragmastat' ) 
+    logger.error ( message )
+    row = attention ( 'pragmastat' ) , attention ( '---' ) , ''
+    rows.append  ( row )   
+    # =========================================================================
+except : # ====================================================================
+    # =========================================================================
+    ## missing.append ( 'pragmastat' ) 
+    logger.error   ( 'pragmastat cannot be imported!' )
+# =============================================================================               
 try : # =======================================================================
     # =========================================================================
     import pandas 
@@ -746,7 +794,7 @@ except ImportError : # ========================================================
     message = """sweetviz cannot be imported!
     sweetviz  is useful for comparison of datasets  
     """
-    missing.append ( 'sweetwiz' ) 
+    missing.append ( 'sweetviz' ) 
     logger.error ( message )
     row = attention ( 'sweetviz' ) , attention ( '---' ) , '' 
     rows.append  ( row )
@@ -759,8 +807,8 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import lightgbm
-    version = getattr ( lighgbm , '__version__' , '' ) 
-    row = 'lightgbm' , version , lightgmb.__file__
+    version = getattr ( lightgbm , '__version__' , '' ) 
+    row = 'lightgbm' , version , lightgbm.__file__
     rows.append  ( row )
     # =========================================================================
 except ImportError : # ========================================================
@@ -778,30 +826,52 @@ except : # ====================================================================
     missing.append ( 'lightgbm' ) 
     logger.error ( 'lightgbm  cannot be imported!' )
 # ============================================================================
-try : # ======================================================================
-    # ========================================================================    
-    import pragmastat
-    version = getattr ( pragmastat , '__version__' , '' ) 
-    row = 'pragmastat' , version , pragmastat.__file__
+try : # =======================================================================
+    # =========================================================================
+    import catboost
+    version = getattr ( catboost , '__version__' , '' ) 
+    row = 'catboost' , version , catboost.__file__
     rows.append  ( row )
-    # ========================================================================
-except ImportError : # =======================================================
-    # ========================================================================
-    message = """pragmastat cannot be imported! 
-    pragmastat is useful for robust statistical features
-    - There is no local replacement
-    - https://github.com/AndreyAkinshin/pragmastat
-    - https://doi.org/10.5281/zenodo.17236778
+    # =========================================================================
+except ImportError : # ========================================================
+    # =========================================================================
+    message = """catboost cannot be imported!
+    catboost  is useful for comparison of datasets  
     """
-    ## missing.append  ( 'pragmastat' ) 
+    missing.append ( 'catboost' ) 
     logger.error ( message )
-    row = attention ( 'pragmastat' ) , attention ( '---' ) , ''
-    rows.append  ( row )   
+    row = attention ( 'catboost' ) , attention ( '---' ) , '' 
+    rows.append  ( row )
     # =========================================================================
 except : # ====================================================================
     # =========================================================================
-    ## missing.append ( 'pragmastat' ) 
-    logger.error   ( 'pragmastat cannot be imported!' )
+    missing.append ( 'catboost' ) 
+    logger.error ( 'catboost  cannot be imported!' )
+# ============================================================================
+if ( 3 , 12 ) <= python_info : # =============================================
+    #  =======================================================================
+    try : # ===================================================================
+    # =========================================================================
+        import xgboost
+        version = getattr ( xgboost , '__version__' , '' )
+        row = 'xgboost' , version , xgboost.__file__
+        rows.append  ( row )
+    # =========================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
+        message = """xgboost cannot be imported!
+        xgboost  is useful for comparison of datasets  
+        """
+        missing.append ( 'xgboost' ) 
+        logger.error ( message )
+        row = attention ( 'xgboost' ) , attention ( '---' ) , '' 
+        rows.append  ( row )
+    # ========================================================================
+    except : # ===============================================================
+        # ====================================================================
+        missing.append ( 'xgboost' ) 
+        logger.error ( 'xgboost   cannot be imported!' )
+
 # =============================================================================        
 try : # =======================================================================
     # =========================================================================
