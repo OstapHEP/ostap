@@ -1944,7 +1944,7 @@ class SliceHelper(object) :
         
         for key, value in self.vardct.items() :
             
-            dtypes.append ( ( key , numpy.float64 ) )
+            dtypes.append ( ( key , float ) )
             result [ key ] = values [ value ]
             num = max ( num , len ( result [ key ] ) )            
             

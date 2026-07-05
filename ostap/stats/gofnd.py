@@ -28,10 +28,12 @@ __all__     = (
     'USTAT'      , ## Alternative implementation of DNN method
     'NLL'        , ## Use -log L as GoF estimator 
     'AikaikeIC'  , ## Use Aikaike IC  as GoF estimator 
-    'BayesianIC' , ## Use Bayesian IC  as GoF estimator 
+    'BayesianIC' , ## Use Bayesian IC  as GoF estimator
+    'ADVAL1'     , ## Use Adversarial Validation as GoF estimator 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types   
+from   ostap.utils.basic        import typename  
 from   ostap.stats.gof          import AGoF
 from   ostap.core.core          import Ostap, VE 
 from   ostap.math.math_base     import axis_range
@@ -55,10 +57,10 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
 # =============================================================================
-## @class GoFnD
-#  A base class for numpy-related family of methods to probe goodness-of-fit
+## @class GoF
+#  A base class for family of methods to probe goodness-of-fit
 class GoF(AGoF) :
-    """ A base class for numpy-related family of methods to probe goodness-of-fit
+    """ A base class for family of methods to probe goodness-of-fit
     """
     def __init__ ( self             ,
                    gof              , ## actual GoF-evaluator
@@ -111,6 +113,23 @@ class GoF(AGoF) :
         """
         return self.gof.method
         
+    # =========================================================================
+    ## Calculate t-value for Goodness-of-Fit test
+    #  @code
+    #  gof   = ...
+    #  pdf   = ...  
+    #  data  = ... 
+    #  t_value = gof ( pdf , data ) 
+    #  @endcode
+    def __call__ ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof   = ...
+        >>> pdf   = ... 
+        >>> data  = ... 
+        >>> t_value = gof ( pdf , data ) 
+        """
+        return self.tvalue ( pdf , data ) 
+
     # =======================================================================
     ## Generate MC dataset from PDF according to model data
     def generate ( self ,  pdf , data ) :
@@ -154,9 +173,50 @@ class GoF(AGoF) :
         ## delete 
         if isinstance ( data2  , ROOT.RooDataSet ) : data2.clear()            
         del data2 
+        
+        return ds1 , ds2
+
+    # =========================================================================
+    ## Transform a (pdf,wdata) pair into (data_np, mc_np, w_np) triplet 
+    #  @code
+    #  gof  = ...
+    #  pdf  = ...
+    #  data = ... ## as *WEIGHTED* ROOT.RooAbsData 
+    #  ds1 , ds2 , w = gof.wtransform ( pdf , data ) 
+    #  @endcode
+    def wtransform  ( self , pdf , data ) :
+        """ Transform a (pdf,data) pair into (data_np, mc_np) pair 
+        >>> gof  = ...
+        >>> pdf  = ...
+        >>> data = ... ## as ROOT.RooAbsData
+        >>> ds1, ds2 , w1 = gof.wtransform ( pdf , data ) 
+        """
+
+        if not data.isWeighted() :
+            ds1 , ds2 = self.transform ( pdf , data )
+            w1  = None 
+            return ds1 , ds2 , w1 
+
+        
+        data1 = data
+        data2 = self.generate ( pdf , data )
+
+        vars1 = data1.get() 
+        vars2 = data2.get()
+        
+        wname = data1.wname
+        
+        var_lst = tuple ( sorted ( v.name for v in var1  if v in var2 and v.name != wname ) )  
+                   
+        ds1 , w1 = data1.slice ( var_lst , silent = silent , structured = True , weight_name = data.wname() )
+        ds2 , _  = data2.slice ( var_lst , silent = silent , structured = True )
+
+        ## delete 
+        if isinstance ( data2  , ROOT.RooDataSet ) : data2.clear()            
+        del data2 
             
-        return ds1, ds2
-    
+        return ds1 , ds2 , w1 
+
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
     def draw  ( self , tvalue = None , option = '' , *args , **kwargs ) :
@@ -448,23 +508,6 @@ class DNN(GoF) :
         return self.__tvalue 
 
     # =========================================================================
-    ## Calculate T-value for Goodness-of-Git 
-    #  @code
-    #  dnn     = ...
-    #  pdf     = ...  
-    #  data    = ... 
-    #  tvalue  = dnn ( pdf , data ) 
-    #  @endcode
-    def __call__ ( self , pdf , data ) :
-        """ Calculate T-value for Goodness-of-Fit
-        >>> dnn    = ...
-        >>> pdf    = ... 
-        >>> data   = ... 
-        >>> tvalue = dnn ( pdf , data ) 
-        """
-        return self.tvalue ( pdf , data ) 
-
-    # =========================================================================
     ## Calculate the t & p-values
     #  @code
     #  dnn  = ...
@@ -635,11 +678,7 @@ class NLL(AGoF) :
     def ecdf ( self ) :
         """`ecdf: empirical CDF for t-values"""
         return self.__ecdf 
-    
-    # =========================================================================
-    ## get the actual t-value from the fit-result 
-    def t_value   ( self , fitresult ) : return fitresult.minNll () 
-        
+
     # =========================================================================
     ## Calculate t-value for Goodness-of-Fit test
     #  @code
@@ -656,7 +695,12 @@ class NLL(AGoF) :
         >>> t_value = gof ( pdf , data ) 
         """
         return self.tvalue ( pdf , data ) 
-
+    
+    # =========================================================================
+    ## get the actual t-value from the fit-result 
+    def t_value   ( self , fitresult ) :
+        return fitresult.minNll () 
+        
     # ===========================================================================
     ## get the t-value 
     def tvalue ( self, pdf , data ) :
@@ -812,6 +856,134 @@ class BayesianIC(NLL) :
         """
         self.__ndata = state.pop ( 'ndata' ) 
         NLL.__setstate__ ( self , state )
+    
+# =============================================================================
+
+# =============================================================================
+## @class ADVAL1
+#  Use "adversatial validation" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+class ADVAL1(GoF) : 
+    """ Implementation of concrete method "Point-To-Point Dissimilarity" for probing of Goodness-Of-Fit
+    - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
+    - see https://doi.org/10.1088/1748-0221/5/09/P09004
+    - see http://arxiv.org/abs/arXiv:1003.1768 
+
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    - n_splits : (int)   number of splits for cross-validation 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    #  @param n_splits : (int) number of splits for cross-validation 
+    def __init__ ( self               ,
+                   mcFactor  = 20     , 
+                   nToys     = 400    ,
+                   parallel  = False  ,
+                   silent    = False  ,
+                   progress  = True   ,
+                   n_splits  = 8      , **params ) : 
+    
+        """ Create the Adversarial Validation estimator 
+
+        Parameters  
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        - n_splits : (int) number of splits for cross-validation 
+        """
+        
+        from ostap.stats.adversarial_validation import ADVAL_LGBM 
+        GoF.__init__ ( self ,
+                       gof = ADVAL_LGBM ( nToys    = nToys    ,
+                                          parallel = parallel ,
+                                          silent   = silent   , 
+                                          progress = progress ,
+                                          n_splits = n_splits , **params ) ,                       
+                       mcFactor = mcFactor )
+        
+        self.__ecdf   = None
+        self.__tvalue = None
+        self.__pvalue = None
+        
+    @property
+    def adval ( self ) :
+        """`adval` : get the actual calculator for two datasets """
+        return self.gof 
+    
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Fit 
+    #  @code
+    #  ppd    = ...
+    #  pdf    = ...  
+    #  data   = ... 
+    #  tvalue = ppd ( pdf , data ) 
+    #  @endcode
+    def tvalue ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> ppd    = ...
+        >>> pdf    = ... 
+        >>> data   = ... 
+        >>> tvalue = ppd.tvalue ( pdf , data ) 
+        """
+        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
+        ## estimate the t-value 
+        t = self.adval ( ds1              ,
+                         ds2              ,
+                         weight1   = w1   ,
+                         weight2   = None ,
+                         normalize = True )
+        ## 
+        self.__tvalue = float ( t ) 
+        return self.__tvalue 
+
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  ppd  = ...
+    #  pdf  = ...
+    #  data = ... 
+    #  t , p = ppd.pvalue ( pdf , data )
+    #  @endcode 
+    def pvalue ( self , pdf , data ) :
+        """ Calculate the t & p-values
+        >>> ppd  = ...
+        >>> pdf  = ... 
+        >>> data = ... 
+        >>> t , p = ppd.pvalue ( pdf , data ) 
+        """
+        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
+        ## estimate t&p-values 
+        self.__tvalue , self.__pvalue = self.adval.pvalue ( ds1              ,
+                                                            ds2              ,
+                                                            weight1   = w1   , 
+                                                            weight2   = None , 
+                                                            normalize = True )        
+        return self.__tvalue , self.__pvalue
+
+    # =========================================================================
+    @property
+    def ecdf ( self ) :
+        """`ecdf` : empirical CDF for t-value distribution"""
+        return self.ppd.ecdf
+
+    # =========================================================================
+    ## Get results in a form of the table 
+    def table ( self , title = '' , prefix = '' ) :
+        """ Get results in a for of the table 
+        """
+        return self.the_table ( tvalue = self.__tvalue ,
+                                pvalue = self.__pvalue ,
+                                ecdf   = self.__ecdf   , 
+                                title  = title ,
+                                prefix = prefx ) 
+    __str__  = table
+    __repr__ = table
     
 # =============================================================================
 if '__main__' == __name__ :

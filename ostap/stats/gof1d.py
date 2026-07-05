@@ -92,13 +92,13 @@ def kolmogorov_smirnov ( cdf_data ) :
     
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.kolmogorov_smirnov ( the_buffer )
 
     ## Long arrays to be converted to numpy 
-    if NL < n : return kolmogorov_smirnov ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) )
+    if NL < n : return kolmogorov_smirnov ( numpy.asarray ( cdf_data , dtype = float ) )
 
     ## for short arrays plain vanilla python is OK 
     result = max ( max ( ( i + 1.0 ) / n - Fi , Fi - float ( i ) / n ) for ( i , Fi )  in enumerate ( cdf_data )  ) ## ** 2 
@@ -122,13 +122,13 @@ def anderson_darling ( cdf_data ) :
     
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.anderson_darling ( the_buffer )
         
     ## Long arrays to be converted to numpy 
-    if NL < n : return anderson_darling ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) )
+    if NL < n : return anderson_darling ( numpy.asarray ( cdf_data , dtype = float ) )
 
     ## for short arrays plain vanilla python is OK 
     flog    = math.log
@@ -153,13 +153,13 @@ def cramer_von_mises ( cdf_data  ) :
 
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.cramer_von_mises  ( the_buffer )
         
     ## Long arrays to be converted to numpy 
-    if NL < n : return cramer_von_mises ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) )
+    if NL < n : return cramer_von_mises ( numpy.asarray ( cdf_data , dtype = float ) )
     
     ## for short arrays plain vanilla python is OK 
     result  = sum ( ( Fi - ( i + 0.5 ) / n ) ** 2 for ( i, Fi ) in enumerate ( cdf_data ) ) 
@@ -182,13 +182,13 @@ def kuiper ( cdf_data ) :
     
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.kuiper  ( the_buffer )
         
     ## Long arrays to be converted to numpy 
-    if NL < n : return kuiper ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) )
+    if NL < n : return kuiper ( numpy.asarray ( cdf_data , dtype = float ) )
     
     ## for short arrays plain vanilla python is OK 
     d_plus  = max ( ( i + 1.0 ) / n - Fi for ( i, Fi ) in enumerate ( cdf_data ) )
@@ -213,13 +213,13 @@ def ZA  ( cdf_data ) :
     
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.ZA  ( the_buffer )
         
     ## Long arrays to be converted to numpy 
-    if NL < n : return ZA ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) )
+    if NL < n : return ZA ( numpy.asarray ( cdf_data , dtype = float ) )
     
     ## for short arrays plain vanilla python is OK 
     flog    = math.log
@@ -244,13 +244,13 @@ def ZK  ( cdf_data ) :
 
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.ZK  ( the_buffer )
         
     ## Long arrays to be converted to numpy 
-    if NL < n : return ZK ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) ) 
+    if NL < n : return ZK ( numpy.asarray ( cdf_data , dtype = float ) ) 
     
     ## for short arrays plain vanilla python is OK 
     flog   = math.log 
@@ -276,13 +276,13 @@ def ZC  ( cdf_data ) :
     
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.ZC  ( the_buffer )
         
     ## Long arrays to be converted to numpy 
-    if NL < n : return ZC ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) ) 
+    if NL < n : return ZC ( numpy.asarray ( cdf_data , dtype = float ) ) 
     
     ## for short arrays plain vanilla python is OK 
     flog   = math.log
@@ -333,13 +333,13 @@ def berk_jones ( cdf_data ) :
     
     ## Long numpy arrays 
     if NL < n and np2raw and isinstance ( cdf_data , numpy.ndarray ) :
-        if cdf_data.dtype in ( numpy.float32 , numpy.float64 ) :
+        if cdf_data.dtype in ( numpy.float32 , float ) :
             raw_buffer , n = np2raw ( cdf_data )
             the_buffer = Ostap.Utils.make_buffer ( raw_buffer , n )
             return Ostap.GoF.berk_jones ( the_buffer )
 
     ## Long arrays to be converted to numpy 
-    if NL < n : return berk_jones ( numpy.asarray ( cdf_data , dtype = numpy.float64 ) )
+    if NL < n : return berk_jones ( numpy.asarray ( cdf_data , dtype = float ) )
 
     """
     

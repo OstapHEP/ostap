@@ -1282,9 +1282,9 @@ def tree_slice ( tree                       ,
         assert num <= tree.GetEstimate  () , "Something wrong with SetEstimate/GetEstimate/GetSelectedRows"
             
         for k, v  in enumerate ( varlst ) :
-            result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = num , dtype = numpy.float64 ) , copy = True ) )
+            result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = num , dtype = float ) , copy = True ) )
         if cuts   :
-            result.append ( numpy.array ( numpy.frombuffer ( tree.GetW   (   ) , count = num , dtype = numpy.float64 ) , copy = True ) )
+            result.append ( numpy.array ( numpy.frombuffer ( tree.GetW   (   ) , count = num , dtype = float ) , copy = True ) )
         
         ## reset estimate to the previous value
         tree.SetEstimate ( ge ) 
@@ -1293,7 +1293,7 @@ def tree_slice ( tree                       ,
         return () , None 
 
     if   not cuts         : weights = None
-    elif not weigth_total : weights = None 
+    elif not weight_total : weights = None 
     else : 
         weights = result [ -1]
         result  = result [:-1]
@@ -1302,7 +1302,7 @@ def tree_slice ( tree                       ,
 
     if structured :
         
-        dt   = numpy.dtype ( [ ( v , numpy.float64 ) for v in varlst ] )
+        dt   = numpy.dtype ( [ ( v , float ) for v in varlst ] )
         part = numpy.zeros ( num  , dtype = dt )
         for v , a in zip ( varlst , result ) : part [ v ] = a 
         result = part
@@ -2176,7 +2176,7 @@ def add_new_buffer ( tree , buffer , * , name = '' , **kwargs ) :
         newbuff = {}
         for key, v in buffer.items() :
             assert not key in tree , "The branch/leaf `%s' already exists!" % key
-            newbuff [ key ] = numpy.asarray ( v , dtype = numpy.float64 )
+            newbuff [ key ] = numpy.asarray ( v , dtype = float )
         keep.append ( newbuff )
 
         ## Ostap's buffers

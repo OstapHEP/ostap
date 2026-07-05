@@ -265,6 +265,13 @@ class PPDnp(GoFnp) :
         self.__ecdf   = None 
 
     # =========================================================================
+    ## Are weigths  are supported by this estimator?
+    def weights_supported ( self ) :
+        """ Are weigths are supported by this estimator?
+        """
+        return False 
+    
+    # =========================================================================
     @property
     def mc2mc ( self ) :
         """`mc2mc` : add mc<-->mc distances to the T-value 
@@ -320,6 +327,11 @@ class PPDnp(GoFnp) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
+        if not self.weights_supported : 
+            assert weight1 is None or numpy.ones ( n1 ) == weight1 , "weight1 must be either None or trivial"
+            assert weight2 is None or numpy.ones ( n2 ) == weight2 , "weight2 must be either None or trivial"
+            weight1 = None
+            weight2 = None
         
         sh1 = ds1.shape
         sh2 = ds2.shape
@@ -329,9 +341,6 @@ class PPDnp(GoFnp) :
         n1 = len ( ds1 ) 
         n2 = len ( ds2 ) 
         ##
-
-        assert weight1 is None or numpy.ones ( n1 ) == weight1 , "weight1 must be either None or trivial"
-        assert weight2 is None or numpy.ones ( n2 ) == weight2 , "weight2 must be either None or trivial"
 
         ## calculate sums of distances, Eq (3.7) 
         result  = self.sum_distances ( ds1 , ds1 ) / ( n1 * ( n1 - 1 ) )
@@ -365,8 +374,8 @@ class PPDnp(GoFnp) :
         else         : ds1 , ds2 = data1 , data2 
 
         ## convert to unstructured datasets 
-        uds1    = s2u ( data1 , copy = False )
-        uds2    = s2u ( data2 , copy = False )
+        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
+        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
 
         ## For 1D-arrays add a fictive second dimension to please `cdist`-function
         if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
@@ -393,15 +402,14 @@ class PPDnp(GoFnp) :
         else         : ds1 , ds2 = data1 , data2 
 
         ## convert to unstructured datasets 
-        uds1 = s2u ( ds1 , copy = False )
-        uds2 = s2u ( ds2 , copy = False )
+        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
+        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
 
         ## For 1D-arrays add a fictive second dimension to please `cdist`-function
         if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
         if 1 == uds2.shape [ 1 ] : uds2 = numpy.c_[ uds2 , numpy.zeros ( len ( uds2 ) ) ] 
         
         t_value    = self.t_value ( uds1 , uds2 )
-
         
         permutator = PERMUTATOR ( self , t_value , uds1 , uds2 )
 
@@ -470,16 +478,29 @@ class DNNnp(GoFnp) :
             self.__histo = ROOT.TH1D ( hID() , 'U-values' , histo , -0.1 , 1.1 ) 
             
     # =========================================================================
+    ## Are weigths  are supported by this estimators?
+    def weights_supported ( self ) :
+        """ Are weights are supported by this estimators?
+        """
+        return False 
+    
+    # =========================================================================
     ## Calculate the t-value
     #  @see Eqs. (3.16) in M.Williams' paper
     #  @param data1 actual data (as unstructured array)
     #  @param vpdf  array of PDF values  
-    def t_value ( self , ds1 , vpdf ) :
+    def t_value ( self , ds1 , vpdf , * , weight1 = None , weight2 = None ) :
         """ Calculate the t-value
         - see Eqs. (3.14)&(3.15) in M/.Williams' paper
         data1 : actual data (as unstructured array)
         vpdf  : array of PDF values  
         """
+        
+        if not self.weights_supported : 
+            assert weight1 is None or numpy.ones ( n1 ) == weight1 , "weight1 must be either None or trivial"
+            assert weight2 is None or numpy.ones ( n2 ) == weight2 , "weight2 must be either None or trivial"
+            weight1 = None
+            weight2 = None
         
         sh1 = ds1 .shape
         sh2 = vpdf.shape

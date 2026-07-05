@@ -466,10 +466,10 @@ class SliceTask(Task) :
         
         if   w1 is None and w2 is None : ww = None 
         elif w1 is None                :
-            w1 = numpy.ones ( len  ( v1 ) , dtype = numpy.float64 )
+            w1 = numpy.ones ( len  ( v1 ) , dtype = float )
             ww = numpy.concatenate ( ( w1 , w2 ) )
         elif w2 is None                :
-            w2 = numpy.ones ( len  ( v2 ) , dtype = numpy.float64 )
+            w2 = numpy.ones ( len  ( v2 ) , dtype = float )
             ww = numpy.concatenate ( ( w1 , w2 ) )
         else :
             ww = numpy.concatenate ( ( w1 , w2 ) )
@@ -825,7 +825,7 @@ def parallel_project ( chain                    ,
     import ostap.trees.trees
     from   ostap.stats.statvars import data_project
 
-    first , last = evt_range ( chain , *args[:2] ) 
+    first , last = evt_range ( chain , first , last ) 
     nevents = last - first
     
     ## Parallel projection for profiles is not supported
@@ -955,18 +955,19 @@ def parallel_covariance ( chain                    ,
 #  chain           = ...
 #  result , weight = parallel_slice ( chain , 'pt,mass', 'y<4.5' ) 
 #  @endcode
-def parallel_slice ( chain                    ,
-                     expressions              ,
-                     cuts       = ''          , *  ,
-                     first      = FIRST_ENTRY ,
-                     last       =  LAST_ENTRY ,                      
-                     structured = True        ,
-                     transpose  = True        , 
-                     progress   = False       ,
-                     use_frame  = True        , 
-                     chunk_size = CHUNK_SIZE  ,
-                     max_files  = MAX_FILES   ,
-                     silent     = True        , **kwargs ) :
+def parallel_slice ( chain                      ,
+                     expressions                ,
+                     cuts         = ''          , *  ,
+                     first        = FIRST_ENTRY ,
+                     last         =  LAST_ENTRY ,
+                     weight_total = False       , ## final weigth is a product of internal weight and weigth from (non-zero) cuts? 
+                     structured   = True        ,
+                     transpose    = True        , 
+                     progress     = False       ,
+                     use_frame    = True        , 
+                     chunk_size   = CHUNK_SIZE  ,
+                     max_files    = MAX_FILES   ,
+                     silent       = True        , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>> chain = ...
     >>> result = parallel_slice ( chain, 'mass' , 'pt>1') 
@@ -988,23 +989,25 @@ def parallel_slice ( chain                    ,
     if nevents <= chunk_size :
         return data_slice( chain       ,
                            expressions ,
-                           cuts        = cuts      ,
-                           first       = first     ,
-                           last        = last      , 
-                           structured  = transpose ,
-                           transpose   = transpose , 
-                           progress    = progress  ,
-                           use_frame   = use_frame ,
-                           parallel    = False     )
+                           cuts         = cuts         ,
+                           first        = first        ,
+                           last         = last         ,
+                           weight_total = weight_total , 
+                           structured   = transpose    ,
+                           transpose    = transpose    , 
+                           progress     = progress     ,
+                           use_frame    = use_frame    ,
+                           parallel     = False        )
     
     ## Task 
-    task   = SliceTask ( expressions             ,
-                         cuts                    ,
-                         structured = structured ,
-                         transpose  = transpose  , 
-                         use_frame  = use_frame  , 
-                         progress   = False      ,
-                         parallel   = False      )
+    task   = SliceTask ( expressions                 ,
+                         cuts                        ,
+                         weight_total = weight_total , 
+                         structured   = structured   ,
+                         transpose    = transpose    , 
+                         use_frame    = use_frame    , 
+                         progress     = False        ,
+                         parallel     = False        )
 
     ## Manager 
     wmgr   = WorkManager ( silent = silent , progress = progress or not silent , **kwargs )

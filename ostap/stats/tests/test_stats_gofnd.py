@@ -184,6 +184,51 @@ def test_DNN () :
     logger.info ( '%s:\n%s' % ( title , table ) )
 
 # ===============================================================================
+def test_ADVAL1 () :
+    
+    logger = getLogger ("test_ADVAL/LightGBM")
+
+    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
+    
+    gof = GnD.ADVAL1 ( nToys = 200 )
+    
+    ## presumably good fit
+    with timing ( "Good fit ADVAL/LightGBM" , logger = logger ) :
+        pdf.load_params ( rgood , silent = True ) 
+        tgood        = gof        ( pdf , data_good )
+        tgood, pgood = gof.pvalue ( pdf , data_good )
+        
+    ## presumably bad fit 
+    with timing ( "Bad  fit ADVAL/LigthGBM" , logger = logger ) : 
+        pdf.load_params ( rbad  , silent = True ) 
+        tbad        = gof        ( pdf , data_bad )
+        tbad, pbad  = gof.pvalue ( pdf , data_bad )
+        
+    gp = pgood * 100 
+    bp = pbad  * 100
+    
+    gt , ge = pretty_float ( tgood )
+    bt , be = pretty_float ( tbad  )
+    
+    pvg    = clip_pvalue  ( pgood )
+    pvb    = clip_pvalue  ( pbad  )        
+    nsg    = significance ( pvg   )
+    nsb    = significance ( pvb   )
+    
+    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
+    
+    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
+    rows.append ( row )
+            
+    title= 'Goodness-of-Fit ADVAL/LightGBM test'
+    rows  = T.remove_empty_columns ( rows )     
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
+
+    
+# ===============================================================================
 def test_USTAT () :
     
     logger = getLogger ("test_USTAT")
@@ -367,15 +412,18 @@ def test_BIC () :
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
 
+    
 # ===============================================================================
 if '__main__' == __name__ :
 
-    ## test_PPD   ()
-    ## test_DNN   ()
-    ## test_USTAT ()
-    test_BIC   ()
-    test_NLL   ()
-    test_AIC   ()
+    test_PPD    ()
+    test_DNN    ()
+    test_USTAT  ()
+    test_ADVAL1 ()
+    test_NLL    ()
+    test_AIC    ()
+    test_BIC    ()
+
 
 # ===============================================================================
 ##                                                                        The END 

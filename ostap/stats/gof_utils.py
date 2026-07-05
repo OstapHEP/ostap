@@ -28,7 +28,7 @@ from   ostap.math.math_ve       import significance
 from   ostap.math.ve            import fmt_pretty_ve
 from    ostap.math.math_base    import pos_infinity     
 from   ostap.stats.counters     import SE, WSE, EffCounter
-from   ostap.utils.basic        import numcpu, loop_items 
+from   ostap.utils.basic        import numcpu, loop_items, typename  
 from   ostap.utils.utils        import splitter
 from   ostap.utils.memory       import memory_enough 
 from   ostap.utils.progress_bar import progress_bar
@@ -78,8 +78,8 @@ def mean_var ( data , weight = None ) :
     """
     #
     if weight is None :
-        mean = numpy.mean ( data , axis = 0 , dtype = numpy.float64 ) 
-        var  = numpy.var  ( data , axis = 0 , dtype = numpy.float64 ) 
+        mean = numpy.mean ( data , axis = 0 , dtype = float ) 
+        var  = numpy.var  ( data , axis = 0 , dtype = float ) 
         return mean , var
     # 
     mean  = numpy.average (   data               , weights = weight , axis = 0 )
@@ -96,8 +96,8 @@ def nEff ( weights ) :
     n_eff = ( sum ( x )  ) ^2 / sum ( x^2 )
     """
 
-    s1 = numpy.sum ( weights      , dtype = numpy.float64 )
-    s2 = numpy.sum ( weights ** 2 , dtype = numpy.float64 )
+    s1 = numpy.sum ( weights      , dtype = float )
+    s2 = numpy.sum ( weights ** 2 , dtype = float )
     
     return s1 * s1 / s2
 
@@ -290,8 +290,8 @@ class PERMUTATOR(object) :
 
         if weight1 is None and weight2 is None : pass 
         else : 
-            weight1 = numpy.ones ( len ( self.ds1 ) ) if weight1 is None else weight1
-            weight2 = numpy.ones ( len ( self.ds2 ) ) if weight2 is None else weight2
+            weight1 = numpy.ones ( len ( self.ds1 ) , dtype = float ) if weight1 is None else weight1
+            weight2 = numpy.ones ( len ( self.ds2 ) , dtype = float ) if weight2 is None else weight2
         
         self.weight1 = weight1
         self.weight2 = weight2 

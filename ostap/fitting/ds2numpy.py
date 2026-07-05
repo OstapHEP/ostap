@@ -220,11 +220,11 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
 
         dtypes = [] 
         for v in vnames :
-            if   v in doubles    : dtypes.append ( ( str ( v      ) , numpy.float64 ) ) 
+            if   v in doubles    : dtypes.append ( ( str ( v      ) , float ) ) 
             elif v in categories : dtypes.append ( ( str ( v      ) , numpy.int64   ) )
 
-        for f in funcs           : dtypes.append ( ( str ( f[0]   ) , numpy.float64 ) ) 
-        if weight                : dtypes.append ( ( str ( weight ) , numpy.float64 ) ) 
+        for f in funcs           : dtypes.append ( ( str ( f[0]   ) , float ) ) 
+        if weight                : dtypes.append ( ( str ( weight ) , float ) ) 
             
         ## get data in batches
         nevts  = len ( dataset ) 
@@ -246,7 +246,7 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
                 for d in dpart :
                     dname   = d.first.name
                     buffer  = d.second
-                    payload = numpy.frombuffer ( buffer.data() , dtype = numpy.float64 , count = buffer.size() )
+                    payload = numpy.frombuffer ( buffer.data() , dtype = float , count = buffer.size() )
                     if   dname in doubles : part [ dname ] = payload
                     elif dname == weight  : part [ dname ] = payload
                 del dpart
@@ -263,9 +263,9 @@ if ( 6 , 28 ) <= root_info  :  ## 6.26 <= ROOT
             if weight and not wget :
                 if twoargs : buffer = source.getWeightBatch ( first , num         )
                 else       : buffer = source.getWeightBatch ( first , num , False )
-                weights = numpy.frombuffer ( buffer.data(), dtype = numpy.float64, count = buffer.size() )
+                weights = numpy.frombuffer ( buffer.data(), dtype = float, count = buffer.size() )
                 if buffer  : part [ weight ] = weights 
-                else       : part [ weight ] = numpy.full ( num , source.weight() , dtype = numpy.float64 )
+                else       : part [ weight ] = numpy.full ( num , source.weight() , dtype = float )
 
             if data is None : data = part
             else            :  
@@ -458,11 +458,11 @@ else :
 
         dtypes = [] 
         for v in vnames :
-            if   v in doubles    : dtypes.append ( ( str ( v      ) , numpy.float64 ) ) 
+            if   v in doubles    : dtypes.append ( ( str ( v      ) , float  ) ) 
             elif v in categories : dtypes.append ( ( str ( v      ) , numpy.int64   ) )
             
-        for f in funcs           : dtypes.append ( ( str ( f[0]   ) , numpy.float64 ) ) 
-        if weight                : dtypes.append ( ( str ( weight ) , numpy.float64 ) ) 
+        for f in funcs           : dtypes.append ( ( str ( f[0]   ) , float ) ) 
+        if weight                : dtypes.append ( ( str ( weight ) , float ) ) 
                     
         ## create data 
         data = numpy.zeros ( len ( dataset )  , dtype = dtypes )

@@ -220,6 +220,14 @@ class AGoFnp(object) :
         """
         return NotImplemented
 
+    # =========================================================================
+    ## Are weigths  are supported by this estimators?
+    @abc.abstractmethod
+    def weights_supported ( self ) :
+        """ Are weigths are supported by this estimators?
+        """
+        return NotImplemented
+    
 # =============================================================================
 if '__main__' == __name__ :
     

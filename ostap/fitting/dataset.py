@@ -1700,9 +1700,9 @@ def ds_project  ( dataset                 ,
                   histo                   ,
                   what                    , 
                   cuts      = ''          , * , 
-                  cut_range = ''          , 
                   first     = FIRST_ENTRY ,
                   last      = LAST_ENTRY  ,
+                  cut_range = ''          , 
                   progress  = False       ) :
     """ Helper project method for RooDataSet/DataFrame/... and similar objects 
 
@@ -1723,10 +1723,12 @@ def ds_project  ( dataset                 ,
         assert isinstance ( h , ROOT.TH1 ) , "Object `%s' exists, but not ROOT.TH1" % typename ( h ) 
         histo = h
     
-    return data_project ( dataset  ,
+    return data_project ( dataset   ,
                           histo     ,
                           what      ,
-                          cuts      , first , last  , 
+                          cuts      = cuts      ,
+                          first     = first     ,
+                          last      = last      , 
                           cut_range = cut_range ,
                           progress  = progress  ,
                           use_frame = False     ,
@@ -1745,8 +1747,8 @@ def ds_project  ( dataset                 ,
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
 def ds_draw ( dataset ,
-              what                    , * , 
-              cuts      = ''          ,
+              what                    , 
+              cuts      = ''          , * , 
               option    = ''          ,
               cut_range = ''          ,
               first     = FIRST_ENTRY ,
@@ -1799,9 +1801,9 @@ def ds_draw ( dataset ,
         ranges = ds_range ( dataset     ,
                             varlst      ,
                             cuts      = cuts      ,
-                            cut_range = cut_range ,
                             first     = first     ,
                             last      = last      ,
+                            cut_range = cut_range ,
                             delta     = delta     )
     else :
         
@@ -1863,9 +1865,9 @@ def get_var ( self, aname ) :
 def ds_range  ( dataset                 ,
                 expressions             ,
                 cuts      = ''          , * , 
-                cut_range = ''          ,
                 first     = FIRST_ENTRY , 
                 last      = LAST_ENTRY  ,
+                cut_range = ''          ,
                 delta     = 0.05        ,
                 progress  = False       ) :
     """ Get suitable ranges for drawing expressions/variables
@@ -1876,7 +1878,9 @@ def ds_range  ( dataset                 ,
     first , last = evt_range ( dataset , first , last ) 
     return data_range ( dataset     ,
                         expressions ,
-                        cuts        , first , last , 
+                        cuts        = cuts         ,
+                        first       = first        ,
+                        last        = last         , 
                         cut_range   = cut_range    ,
                         delta       = delta        ,
                         progress    = progress     )
@@ -2673,7 +2677,7 @@ def _ds_table_0_ ( dataset                 ,
 
         ## name of weight variabe
         weight = dataset.wname ()
-        wcnt   = dataset.statVar ( '1' , cuts , first , last , cut_range = cut_range )
+        wcnt   = dataset.statVar ( '1' , cuts = cuts , first = first , last = last , cut_range = cut_range )
         wcnt   = wcnt.weights ()            
         r    = (  weight                            ,   ## 0 
                   'Weight variable'                 ,   ## 1 
@@ -3363,7 +3367,7 @@ def ds_slice ( data                       ,
     result  = OrderedDict()   ## ensure ordering! 
     for var in varlst :
         column         = table [ var ]
-        result [ var ] = numpy.asarray ( column , dtype = numpy.float64 , **kwcopy  )
+        result [ var ] = numpy.asarray ( column , dtype = float , **kwcopy  )
         ## check the size 
         n              = len ( column )
         if not nEvents : nEvents = n
@@ -3389,7 +3393,7 @@ def ds_slice ( data                       ,
     if weighted :
         assert 1 == table.size()  , "Here table *MUST* have size equal to 1!"
         column  = table [ wname ]
-        weights = numpy.asarray ( column , dtype = numpy.float64 , **kwcopy ) 
+        weights = numpy.asarray ( column , dtype = float , **kwcopy ) 
         column.clear ()
         table.erase ( wname )
 
@@ -3399,7 +3403,7 @@ def ds_slice ( data                       ,
 
     if structured :
         
-        dt    = numpy.dtype ( [ ( str ( v ) , numpy.float64 ) for v in result ] )
+        dt    = numpy.dtype ( [ ( str ( v ) , float ) for v in result ] )
         dt    = numpy.dtype ( dt )
         part  = numpy.zeros ( nEvents , dtype = dt )
         for v, d in result.items()  : part [ v ] = d 

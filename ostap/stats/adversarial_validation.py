@@ -79,6 +79,13 @@ class ADVAL_base (GoFnp):
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
         self.__n_splits = n_splits 
         
+    # =========================================================================
+    ## Are weigths  are supported by this estimator?
+    def weights_supported ( self ) :
+        """ Are weigths are supported by this estimator?
+        """
+        return True 
+    
     # =========================================================================    
     ## Calculate T-value for two (structured) datasets 
     #  @code
@@ -101,8 +108,8 @@ class ADVAL_base (GoFnp):
         >>> data2 = ... ## the second data set
         >>> t = adval ( data1 , data1 , normalize = False ) 
         >>> t = adval ( data1 , data1 , normalize = True  ) 
-        """
-
+        """        
+        
         ## transform/normalize ? 
         if normalize : ds1 , ds2 = self.normalize ( data1 , data2 )
         else         : ds1 , ds2 = data1 , data2 
@@ -223,30 +230,27 @@ class ADVAL_LGBM (ADVAL_base) :
         - weight3 : the second array of weights 
          t-value is defined as 400 * abs(0.5-AUC)**2
         """
-
+        
         sh1 = data1.shape 
         sh2 = data2.shape
         
         assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1 [ 1 ] == sh2 [ 1 ] and sh1 [ 0 ] and sh2 [ 0 ] , \
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
         
-        if weight1 is None : weigth1 = numpy.ones ( sh1 [ 0 ] )
-        if weight2 is None : weigth2 = numpy.ones ( sh2 [ 0 ] )
-        
         ## convert numpy arrays into pandas dataframes
         import pandas as pd 
 
-        df_1 = pd.DataFrame ( data1 ) 
-        df_2 = pd.DataFrame ( data2 )
+        df_1 = pd.DataFrame ( data1 , dtype = float ) 
+        df_2 = pd.DataFrame ( data2 , dtype = float )
 
         column_target = 'column_target'
         column_weight = 'column_weight'
         
         df_1 [ column_target ] = 1
         df_2 [ column_target ] = 0
-        
-        df_1 [ column_weight ] = weight1 
-        df_2 [ column_weight ] = weight2 
+
+        df_1 [ column_weight ] = 1 if weight1 is None else weight1 
+        df_2 [ column_weight ] = 1 if weight2 is None else weight2 
 
         ## merge datasets together
         dataset = pd.concat ( [ df_1 , df_2 ] , axis = 0 ).reset_index ( drop = True )
@@ -358,24 +362,21 @@ class ADVAL_HGBC (ADVAL_base) :
         assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1 [ 1 ] == sh2 [ 1 ] and sh1 [ 0 ] and sh2 [ 0 ] , \
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
         
-        if weight1 is None : weigth1 = numpy.ones ( sh1 [ 0 ] )
-        if weight2 is None : weigth2 = numpy.ones ( sh2 [ 0 ] )
-        
         ## convert numpy arrays into pandas dataframes
         import pandas as pd 
 
-        df_1 = pd.DataFrame ( data1 ) 
-        df_2 = pd.DataFrame ( data2 )
+        df_1 = pd.DataFrame ( data1 , dtype = float )
+        df_2 = pd.DataFrame ( data2 , dtype = float )
 
         column_target = 'column_target'
         column_weight = 'column_weight'
         
         df_1 [ column_target ] = 1
         df_2 [ column_target ] = 0
-        
-        df_1 [ column_weight ] = weight1 
-        df_2 [ column_weight ] = weight2 
 
+        df_1 [ column_weight ] = 1 if weight1 is None else weight1
+        df_2 [ column_weight ] = 1 if weight2 is None else weight2
+        
         ## merge datasets together
         dataset = pd.concat ( [ df_1 , df_2 ] , axis = 0 ).reset_index ( drop = True )
 
@@ -482,14 +483,14 @@ class ADVAL_GBC (ADVAL_base) :
         assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1 [ 1 ] == sh2 [ 1 ] and sh1 [ 0 ] and sh2 [ 0 ] , \
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
         
-        if weight1 is None : weigth1 = numpy.ones ( sh1 [ 0 ] )
-        if weight2 is None : weigth2 = numpy.ones ( sh2 [ 0 ] )
+        if weight1 is None : weigth1 = numpy.ones ( sh1 [ 0 ] , dtype = float )
+        if weight2 is None : weigth2 = numpy.ones ( sh2 [ 0 ] , dtype = float )
         
         ## convert numpy arrays into pandas dataframes
         import pandas as pd 
 
-        df_1 = pd.DataFrame ( data1 ) 
-        df_2 = pd.DataFrame ( data2 )
+        df_1 = pd.DataFrame ( data1 , dtype = float ) 
+        df_2 = pd.DataFrame ( data2 , dtype = float )
 
         column_target = 'column_target'
         column_weight = 'column_weight'
