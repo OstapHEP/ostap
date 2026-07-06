@@ -9,7 +9,7 @@
 #  @see ADVAL_HGBC, class based on HistGradientBoosterClassifier, slower 
 #  @see ADVAL_GBC
 #
-#  As t-value \f$ 400 \times \left( \frac{1}{2} - AUC \right)^2\f$ is used
+#  As t-value \f$ 100 \times \left( 1 - 2 \times AUC \right)^2\f$ is used
 #  To estimate the~p-value permutations are used.
 # 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -22,7 +22,7 @@
  - see ADVAL_HGBC, class based on HistGradientBoosterClassifier, slower 
  - see ADVAL_GBC
 
-As t-value 400*( AUC - 0.5)**2  is used
+As t-value 100*( 1 - 2 * AUC AUC )**2  is used
 To estimate the~p-value permutations are used. 
 
 """
@@ -32,14 +32,16 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2026-07-04"
 __all__     = (
     'ADVAL_LGBM' , ## LightGBM-based class for Adversarial Validation for the differecne between two (weighted) dataset
+    'ADVAL_XGB'  , ## XGBoost-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_HGBC' , ## HGBC-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_GBC'  , ## GBC-based class for Adversarial Validation for the difference between two (weighted) dataset
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types
+from   ostap.core.cpu_info      import HAS_AVX2 
 from   ostap.stats.gof_np       import GoFnp , s2u 
 from   ostap.stats.gof_utils    import PERMUTATOR, normalize as ds_normalize
-import ROOT, numpy 
+import ROOT, numpy, abc  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -80,9 +82,9 @@ class ADVAL_base (GoFnp):
         self.__n_splits = n_splits 
         
     # =========================================================================
-    ## Are weigths  are supported by this estimator?
+    ## Are weigths supported by this estimator?
     def weights_supported ( self ) :
-        """ Are weigths are supported by this estimator?
+        """ Are weigths supported by this estimator?
         """
         return True 
     
@@ -179,45 +181,13 @@ class ADVAL_base (GoFnp):
         """`n_splits`: # of splits for cross-validation"""
         return self.__n_splits 
 
-# =======================================================================================
-## @class ADVAL_LGBM
-#  ligрtgbm-based lass for adversarial validation for the difference between two (weighted) dataset
-#  @see lightgbm
-class ADVAL_LGBM (ADVAL_base) : 
-    """ LightGBM-based class for Adversarial validation for the differece between two (weighted) dataset
-    """
-    def __init__ ( self             ,
-                   nToys    = 400   ,
-                   parallel = False ,
-                   silent   = False ,
-                   progress = True  ,
-                   n_splits = 8     , **params ) :
-        
-        config = {
-            'objective'     : 'binary' ,
-            'metric'        : 'auc'    ,
-            'learning_rate' :  0.05    , 
-            'max_depth'     :  5       ,
-            'verbose'       : -1       ,
-            'random_state'  : 42
-        }
-        config.update ( params ) 
-        
-        ADVAL_base.__init__ ( self, 
-                              nToys    = nToys    ,
-                              parallel = parallel ,
-                              silent   = silent   , 
-                              progress = progress , 
-                              method   = "Adversarial Validation/LightGBM" ,
-                              n_splits = n_splits , **config   ) 
-        
     # ==========================================================================
     ## Calculate t-value for two non-structured (weighted) datasets 
     #   @param data1   the first dataset
     #   @param data2   the second dataset
     #   @param weight1 the first array of weights 
     #   @param weight3 the second array of weights
-    #   tvalue is defined as \f$  400 \times \left( \frac{1}{2} - AUC \right)^2 \f$ 
+    #   tvalue is defined as \f$  100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 
     def t_value ( self  ,
                   data1          ,
                   data2          , * , 
@@ -228,8 +198,10 @@ class ADVAL_LGBM (ADVAL_base) :
         - data2   : the second dataset
         - weight1 : the first array of weights 
         - weight3 : the second array of weights 
-         t-value is defined as 400 * abs(0.5-AUC)**2
+         t-value is defined as 100 * abs(1-2*AUC)**2
         """
+
+        print ( 'I am T_VALUE/0' )
         
         sh1 = data1.shape 
         sh2 = data2.shape
@@ -266,10 +238,48 @@ class ADVAL_LGBM (ADVAL_base) :
         cv        = StratifiedKFold ( n_splits = self.n_splits , shuffle=True , random_state = 42 )
         oof_preds = numpy.zeros( N )
 
-        import lightgbm as LGB 
+        ###
 
-        ## model parameters
-        params = {
+        print ( 'I am T_VALUE/1' )
+
+        for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
+            
+            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
+            X_val   , Y_val   , W_val   = X.iloc [   val_idx ] , Y.iloc [   val_idx ] , W.iloc [   val_idx ]
+
+            print ( 'I am T_VALUE/2'  , fold )
+
+            ## train model and make predictions & predict 
+            oof_preds [ val_idx ] = self.work ( X_train , Y_train , W_train , X_val  , Y_val   , W_val   )
+                                    
+            print ( 'I am T_VALUE/3'  , fold )
+
+            
+        #  weighted ROC-AUC
+        auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
+
+        print ( 'I am T_VALUE/4 ' ) 
+
+        ## 
+        return  100 * ( 1.0 - 2.0 * auc_score ) ** 2 
+
+        
+# =======================================================================================
+## @class ADVAL_LGBM
+#  LightGBM-based lass for Adversarial Validation for the difference between two (weighted) dataset
+#  @see lightgbm
+class ADVAL_LGBM (ADVAL_base) : 
+    """ LightGBM-based class for Adversarial Validation for the differece between two (weighted) dataset
+    - see lightgbm 
+    """
+    def __init__ ( self             ,
+                   nToys    = 400   ,
+                   parallel = False ,
+                   silent   = False ,
+                   progress = True  ,
+                   n_splits = 8     , **params ) :
+        
+        config = {
             'objective'     : 'binary' ,
             'metric'        : 'auc'    ,
             'learning_rate' :  0.05    , 
@@ -277,33 +287,194 @@ class ADVAL_LGBM (ADVAL_base) :
             'verbose'       : -1       ,
             'random_state'  : 42
         }
-        
-        for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
-            
-            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
-            X_val   , Y_val   , W_val   = X.iloc [   val_idx ] , Y.iloc [   val_idx ] , W.iloc [   val_idx ]
-
-            train_data = LGB.Dataset ( X_train , label = Y_train , weight = W_train)
-            val_data   = LGB.Dataset (   X_val , label =   Y_val , weight = W_val , reference = train_data )
-        
-            # train the model
-            model = LGB.train (
-                self.params ,
-                train_data  ,
-                num_boost_round = 500 ,
-                valid_sets = [ val_data ],
-                callbacks  = [ LGB.early_stopping ( stopping_rounds=20 , verbose=False ) ]
-            )
-            
-            # predictions 
-            oof_preds [ val_idx ] = model.predict ( X_val , num_iteration = model.best_iteration )
-            
-        #  weighted ROC-AUC
-        auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
+        config.update ( params ) 
 
         ## 
-        return  100 * ( 1.0 - 2.0 * auc_score ) ** 2 
+        import lightgbm as _LightGBM
+        self.__LightGBM = _LightGBM
+        
+        ADVAL_base.__init__ ( self, 
+                              nToys    = nToys    ,
+                              parallel = parallel ,
+                              silent   = silent   , 
+                              progress = progress , 
+                              method   = "Adversarial Validation/LightGBM" ,
+                              n_splits = n_splits , **config   ) 
 
+    # ===============================================================================
+    ## get the LightGBM module 
+    @property
+    def LightGBM ( self ) :
+        """`LightGBM` : the LightGBM module
+        - see lightgbm
+        """
+        return self.__LightGBM
+    
+    # ==================================================================================
+    ## Train the model and make predictions
+    def work ( self ,
+               X_train , Y_train , W_train ,
+               X_val   , Y_val   , W_val   ) :
+        """" Train the model and make predictions
+        """
+
+        print ( 'I am WORK/0' )  
+
+        train_data = self.LightGBM.Dataset ( X_train , label = Y_train , weight = W_train)
+        val_data   = self.LightGBM.Dataset (   X_val , label =   Y_val , weight = W_val , reference = train_data )
+        
+        ## train the model
+        model = self.LightGBM.train (
+            self.params ,
+            train_data  ,
+            num_boost_round = 500 ,
+            valid_sets = [ val_data ],
+            callbacks  = [ self.LightGBM.early_stopping ( stopping_rounds=20 , verbose = False ) ]
+        )
+
+        ## predict the results 
+        return model.predict ( X_val , num_iteration = model.best_iteration )
+
+# =======================================================================================
+## @class ADVAL_XGB
+#  XGBoost-based lass for Adversarial Validation for the difference between two (weighted) dataset
+#  @see xgboost 
+class ADVAL_XGB (ADVAL_base) : 
+    """ XGBoost-based class for Adversarial Validation for the differece between two (weighted) dataset
+    - see xgboost
+    """
+    def __init__ ( self             ,
+                   nToys    = 400   ,
+                   parallel = False ,
+                   silent   = False ,
+                   progress = True  ,
+                   n_splits = 8     , **params ) :
+        
+        
+        config = {
+            'objective'     : 'binary:logistic' ,
+            'eval_metric'   : 'auc'             ,
+            'tree_method'   : 'hist'            ,       # Histogram methos, similar to LigthGBM 
+            'learning_rate' : 0.05              ,
+            'max_depth'     : 5                 ,
+            'seed'          : 42
+        }
+        config.update ( params ) 
+
+        ## 
+        import xgboost as _XGBoost 
+        self.__XGBoost = _XGBoost
+        
+        ADVAL_base.__init__ ( self, 
+                              nToys    = nToys    ,
+                              parallel = parallel ,
+                              silent   = silent   , 
+                              progress = progress , 
+                              method   = "Adversarial Validation/XGBoost" ,
+                              n_splits = n_splits , **config   ) 
+
+    # ===============================================================================
+    ## get the XGBoost module 
+    @property
+    def XGBoost ( self ) :
+        """`XGBoost` : the XGBoost module
+        - see xgboost
+        """
+        return self.__XGBoost
+
+    # ==================================================================================
+    ## Train the model and make predictions
+    def work ( self ,
+               X_train , Y_train , W_train ,
+               X_val   , Y_val   , W_val   ) :
+        """" Train the model and make predictions
+        """
+
+
+        dtrain = self.XGBoost.DMatrix ( X_train , label = Y_train , weight = W_train)
+        dval   = self.XGBoost.DMatrix (   X_val , label =   Y_val , weight = W_val)
+        
+        # Train the model 
+        model = self.XGBoost.train(
+            self.params                  ,
+            dtrain                       ,
+            num_boost_round=500          ,
+            evals = [ ( dval , 'val' ) ] ,
+            early_stopping_rounds=20,
+            verbose_eval=False
+        )
+        
+        # predict 
+        return model.predict ( dval, iteration_range= ( 0 , model.best_iteration + 1 ) )
+
+
+# ======================================================================================
+if HAS_AVX2 : 
+    # ==================================================================================
+    ## @class ADVAL_CATB
+    #  CatBoost-based lass for Adversarial Validation for the difference between two (weighted) dataset
+    #  @see catboost 
+    class ADVAL_CATB (ADVAL_base) : 
+        """ CatBoost-based class for Adversarial Validation for the differece between two (weighted) dataset
+        - see Catboost
+        """
+        def __init__ ( self             ,
+                       nToys    = 400   ,
+                       parallel = False ,
+                       silent   = False ,
+                       progress = True  ,
+                       n_splits = 8     , **params ) :
+            
+            config = { 'iterations'    : 500    ,
+                       'learning_rate' : 0.05   ,
+                       'depth'         : 5      ,
+                       'eval_metric'   : 'AUC'  ,
+                       'random_seed'   : 42     ,
+                       'verbose'       : False  }
+            config.update ( params ) 
+            
+            ## 
+            import catboost as _CatBoost 
+            self.__CatBoost = _CatBoost
+            
+            ADVAL_base.__init__ ( self, 
+                                  nToys    = nToys    ,
+                                  parallel = parallel ,
+                                  silent   = silent   , 
+                                  progress = progress , 
+                                  method   = "Adversarial Validation/CatBoost" ,
+                                  n_splits = n_splits , **config   ) 
+            
+        # ===============================================================================
+        ## get the CatBoost module 
+        @property
+        def CatBoost ( self ) :
+            """`CatBoost` : the CatBoost module
+            - see catboost
+            """
+            return self.__CatBoost
+            
+        # ==================================================================================
+        ## Train the model and make predictions
+        def work ( self ,
+                   X_train , Y_train , W_train ,
+                   X_val   , Y_val   , W_val   ) :
+            """" Train the model and make predictions
+                """
+            
+            train_pool = self.CatBoost.Pool ( data = X_train , label = Y_train , weight = W_train )
+            val_pool   = self.CatBoost.Pool ( data = X_val   , label = Y_val   , weight = W_val   )
+            
+            ## create the model 
+            model = self.CatBoost.CatBoostClassifier( **self.params )
+            
+            # train it 
+            model.fit ( train_pool , eval_set=val_pool, early_stopping_rounds = 20 )
+            
+            return model.predict_proba(X_val)[:, 1]
+        
+    __all__ += ( 'ADVAL_CATB' , )
+        
 # =============================================================================
 ## @class ADVAL_HGBC
 #  Class for adversarial validation for the difference between two (weighted) dataset
@@ -327,7 +498,7 @@ class ADVAL_HGBC (ADVAL_base) :
                     'n_iter_no_change' : 15   ,
                     'random_state'     : 42   }
         config.update ( params ) 
-        
+
         ADVAL_base.__init__ ( self, 
                               nToys    = nToys    ,
                               parallel = parallel ,
@@ -336,95 +507,22 @@ class ADVAL_HGBC (ADVAL_base) :
                               method   = "Adversarial Validation/HGBC" ,
                               n_splits = n_splits  , **config   ) 
         
-    # ==========================================================================
-    ## Calculate t-value for two non-structured (weighted) datasets 
-    #   @param data1   the first dataset
-    #   @param data2   the second dataset
-    #   @param weight1 the first array of weights 
-    #   @param weight3 the second array of weights
-    #   tvalue is defined as \f$  400 \times \left( \frac{1}{2} - AUC \right)^2 \f$ 
-    def t_value ( self  ,
-                  data1          ,
-                  data2          , * , 
-                  weight1 = None ,
-                  weight2 = None ) :
-        """ Calculate t-value for two non-structured (weighted) arrays 
-        - data1   : the first dataset
-        - data2   : the second dataset
-        - weight1 : the first array of weights 
-        - weight3 : the second array of weights 
-         t-value is defined as 400 * abs(0.5-AUC)**2
+
+    # ==================================================================================
+    ## Train the model and make predictions
+    def work ( self ,
+               X_train , Y_train , W_train ,
+               X_val   , Y_val   , W_val   ) :
+        """" Train the model and make predictions
         """
-
-        sh1 = data1.shape 
-        sh2 = data2.shape
-        
-        assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1 [ 1 ] == sh2 [ 1 ] and sh1 [ 0 ] and sh2 [ 0 ] , \
-            "Invalid arrays: %s , %s" % ( sh1 , sh2 )
-        
-        ## convert numpy arrays into pandas dataframes
-        import pandas as pd 
-
-        df_1 = pd.DataFrame ( data1 , dtype = float )
-        df_2 = pd.DataFrame ( data2 , dtype = float )
-
-        column_target = 'column_target'
-        column_weight = 'column_weight'
-        
-        df_1 [ column_target ] = 1
-        df_2 [ column_target ] = 0
-
-        df_1 [ column_weight ] = 1 if weight1 is None else weight1
-        df_2 [ column_weight ] = 1 if weight2 is None else weight2
-        
-        ## merge datasets together
-        dataset = pd.concat ( [ df_1 , df_2 ] , axis = 0 ).reset_index ( drop = True )
-
-        n_splits = 5
-                
-        X       = dataset . drop ( columns = [ column_target , column_weight ]  )
-        Y       = dataset [ column_target ]
-        W       = dataset [ column_weight ]
-        N       = len ( dataset )
-        
-        ## cross-validation
-        from sklearn.model_selection import StratifiedKFold
-        from sklearn.metrics         import roc_auc_score 
-        cv        = StratifiedKFold ( n_splits = n_splits , shuffle=True , random_state = 42 )
-        oof_preds = numpy.zeros( N )
         
         from sklearn.ensemble import HistGradientBoostingClassifier
-
-        ## model parameters
-        params = {
-            'objective'     : 'binary' ,
-            'metric'        : 'auc'    ,
-            'learning_rate' :  0.05    , 
-            'max_depth'     :  5       ,
-            'verbose'       : -1       ,
-            'random_state'  : 42
-        }
         
-        for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
+        model = HistGradientBoostingClassifier ( **self.params )
+        model.fit ( X_train , Y_train , sample_weight = W_train )
+        
+        return model.predict_proba ( X_val ) [ : , 1 ]
             
-            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
-            X_val   , Y_val   , W_val   = X.iloc [   val_idx ] , Y.iloc [   val_idx ] , W.iloc [   val_idx ]
-
-            # train the model
-
-            model = HistGradientBoostingClassifier ( **self.params )
-            model.fit ( X_train , Y_train , sample_weight = W_train )
-            
-            # Предсказываем вероятность принадлежности к классу 1 (выборке P)
-            oof_preds [ val_idx ] = model.predict_proba ( X_val ) [ : , 1 ]
-            
-        #  weighted ROC-AUC
-        auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
-
-        ## 
-        return  100 * ( 1.0 - 2.0 * auc_score ) ** 2 
-
-
 # =============================================================================
 ## @class ADVAL_GBC
 #  Class for adversarial validation for the difference between two (weighted) dataset
@@ -456,85 +554,22 @@ class ADVAL_GBC (ADVAL_base) :
                               progress = progress , 
                               method   = "Adversarial Validation/GBC" ,
                               n_splits = n_splits , **config   ) 
-            
-    # ==========================================================================
-    ## Calculate t-value for two non-structured (weighted) datasets 
-    #   @param data1   the first dataset
-    #   @param data2   the second dataset
-    #   @param weight1 the first array of weights 
-    #   @param weight3 the second array of weights
-    #   tvalue is defined as \f$  400 \times \left( \frac{1}{2} - AUC \right)^2 \f$ 
-    def t_value ( self  ,
-                  data1          ,
-                  data2          , * , 
-                  weight1 = None ,
-                  weight2 = None ) :
-        """ Calculate t-value for two non-structured (weighted) arrays 
-        - data1   : the first dataset
-        - data2   : the second dataset
-        - weight1 : the first array of weights 
-        - weight3 : the second array of weights 
-         t-value is defined as 400 * abs(0.5-AUC)**2
+
+        
+    # ==================================================================================
+    ## Train the model and make predictions
+    def work ( self ,
+               X_train , Y_train , W_train ,
+               X_val   , Y_val   , W_val   ) :
+        """" Train the model and make predictions
         """
-
-        sh1 = data1.shape 
-        sh2 = data2.shape
-        
-        assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1 [ 1 ] == sh2 [ 1 ] and sh1 [ 0 ] and sh2 [ 0 ] , \
-            "Invalid arrays: %s , %s" % ( sh1 , sh2 )
-        
-        if weight1 is None : weigth1 = numpy.ones ( sh1 [ 0 ] , dtype = float )
-        if weight2 is None : weigth2 = numpy.ones ( sh2 [ 0 ] , dtype = float )
-        
-        ## convert numpy arrays into pandas dataframes
-        import pandas as pd 
-
-        df_1 = pd.DataFrame ( data1 , dtype = float ) 
-        df_2 = pd.DataFrame ( data2 , dtype = float )
-
-        column_target = 'column_target'
-        column_weight = 'column_weight'
-        
-        df_1 [ column_target ] = 1
-        df_2 [ column_target ] = 0
-        
-        df_1 [ column_weight ] = weight1 
-        df_2 [ column_weight ] = weight2 
-
-        ## merge datasets together
-        dataset = pd.concat ( [ df_1 , df_2 ] , axis = 0 ).reset_index ( drop = True )
-
-        X       = dataset . drop ( columns = [ column_target , column_weight ]  )
-        Y       = dataset [ column_target ]
-        W       = dataset [ column_weight ]
-        N       = len ( dataset )
-        
-        ## cross-validation
-        from sklearn.model_selection import StratifiedKFold
-        from sklearn.metrics         import roc_auc_score 
-        cv        = StratifiedKFold ( n_splits = self.n_splits , shuffle=True , random_state = 42 )
-        oof_preds = numpy.zeros( N )
         
         from sklearn.ensemble import GradientBoostingClassifier
-
-        for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
-            
-            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
-            X_val   , Y_val   , W_val   = X.iloc [   val_idx ] , Y.iloc [   val_idx ] , W.iloc [   val_idx ]
-
-            # train the model
-
-            model = GradientBoostingClassifier ( **self.params )
-            model.fit ( X_train , Y_train , sample_weight = W_train )
-            
-            # Предсказываем вероятность принадлежности к классу 1 (выборке P)
-            oof_preds [ val_idx ] = model.predict_proba ( X_val ) [ : , 1 ]
-            
-        #  weighted ROC-AUC
-        auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
-
-        ## 
-        return  100 * ( 1.0 - 2.0 * auc_score ) ** 2 
+        
+        model = GradientBoostingClassifier ( **self.params )
+        model.fit ( X_train , Y_train , sample_weight = W_train )
+        
+        return model.predict_proba ( X_val ) [ : , 1 ]
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -554,6 +589,7 @@ if '__main__' == __name__ :
     try : # ===================================================================
         # =====================================================================                       
         from sklearn.ensemble        import HistGradientBoostingClassifier
+        from sklearn.ensemble        import GradientBoostingClassifier
         from sklearn.model_selection import StratifiedKFold
         from sklearn.metrics         import roc_auc_score
         # =====================================================================
@@ -568,8 +604,25 @@ if '__main__' == __name__ :
     except ImportError : # ====================================================
         # =====================================================================
         logger.error ( "lightgbm cannot be imported!" ) # =====================
+        # =====================================================================
+    try : # ===================================================================
+        # =====================================================================
+        import xgboost 
+        # =====================================================================
+    except ImportError : # ====================================================
+        # =====================================================================
+        logger.error ( "xgboost cannot be imported!" ) # ======================
+    # =========================================================================
+    if HAS_AVX2 : # ===========================================================
+        # =====================================================================
+        try : # ===============================================================
+            # =================================================================
+            import catboost 
+            # =================================================================
+        except ImportError : # ================================================
+            # =================================================================
+            logger.error ( "catboost cannot be imported!" ) # =================
         
-
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

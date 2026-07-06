@@ -338,6 +338,9 @@ class PERMUTATOR(object) :
     def run_toys ( self, N , silent = True , progress = False ) :
         """ Run N-toys
         """
+        
+        print ( 'RUN_TOYS' , N  )
+
         numpy.random.seed()
         n1      = len ( self.ds1 )
         n2      = len ( self.ds2 )
@@ -353,11 +356,17 @@ class PERMUTATOR(object) :
         counter = EffCounter()
         tvalues = [] 
         for i in progress_bar ( N , silent = not progress  , description = 'Permutations:') :
+
+            print ( 'I AM PERMUTATOR/0' , i )
             
             numpy.random.shuffle ( pooled )
-            
+
+            print ( 'I AM PERMUTATOR/1' , i )
+
             ds1 = pooled [    : n1 ]
             ds2 = pooled [ n1 :    ]
+            
+            print ( 'I AM PERMUTATOR/2' , i )
             
             if easy_way :
                 
@@ -367,10 +376,13 @@ class PERMUTATOR(object) :
                 
                 ds1 , w1 = ds1[ : , : -1 ] , ds1 [ : , -1 ]
                 ds2 , w2 = ds2[ : , : -1 ] , ds2 [ : , -1 ]
+
+            print ( 'I AM PERMUTATOR/3' , i , easy_way ) 
                 
             tv       = self.gof.t_value ( ds1 , ds2 , weight1 = w1 , weight2 = w2  )
             tvalues.append ( float ( tv ) )
-            counter += bool ( self.t_value < tv  )            
+            counter += bool ( self.t_value < tv  )
+            
         del pooled
         return counter, tuple ( tvalues )
 
@@ -539,7 +551,7 @@ class TOYS(object) :
         """
         ROOT.gRandom                     .SetSeed () 
         ROOT.RooRandom.randomGenerator() .SetSeed ()
-                
+
         counter = EffCounter ()
         tvalues = [] 
         for i in progress_bar ( nToys , description = "Toys:" , silent = not progress ) : 

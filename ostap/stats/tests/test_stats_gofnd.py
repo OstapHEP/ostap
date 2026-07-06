@@ -14,7 +14,7 @@ from   ostap.logger.pretty    import pretty_float
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.math.math_ve     import significance
 from   ostap.utils.root_utils import batch_env
-from ostap.utils.basic        import numcpu
+from   ostap.utils.basic      import numcpu, typename 
 from   ostap.logger.symbols   import plus_minus , greek_lower_sigma 
 import ostap.fitting.models   as     M 
 import ostap.stats.gofnd      as     GnD
@@ -179,60 +179,6 @@ def test_DNN () :
     rows.append ( row )
             
     title= 'Goodness-of-Fit DNN test'
-    rows  = T.remove_empty_columns ( rows )     
-    table = T.table ( rows , title = title , prefix = '# ')
-    logger.info ( '%s:\n%s' % ( title , table ) )
-
-# ===============================================================================
-def test_ADVAL1 () :
-    
-    logger = getLogger ("test_ADVAL/LightGBM")
-
-    # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
-        import lightgbm as LGB 
-        # =======================================================================
-    except ImportError : # ======================================================
-        # =======================================================================
-        logger.error  ( "LightGBM is not available, skip the test" )
-        return
-    
-    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
-    
-    gof = GnD.ADVAL1 ( nToys = 200 )
-    
-    ## presumably good fit
-    with timing ( "Good fit ADVAL/LightGBM" , logger = logger ) :
-        pdf.load_params ( rgood , silent = True ) 
-        tgood        = gof        ( pdf , data_good )
-        tgood, pgood = gof.pvalue ( pdf , data_good )
-        
-    ## presumably bad fit 
-    with timing ( "Bad  fit ADVAL/LigthGBM" , logger = logger ) : 
-        pdf.load_params ( rbad  , silent = True ) 
-        tbad        = gof        ( pdf , data_bad )
-        tbad, pbad  = gof.pvalue ( pdf , data_bad )
-        
-    gp = pgood * 100 
-    bp = pbad  * 100
-    
-    gt , ge = pretty_float ( tgood )
-    bt , be = pretty_float ( tbad  )
-    
-    pvg    = clip_pvalue  ( pgood )
-    pvb    = clip_pvalue  ( pbad  )        
-    nsg    = significance ( pvg   )
-    nsb    = significance ( pvb   )
-    
-    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
-    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
-    
-    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
-        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
-    rows.append ( row )
-            
-    title= 'Goodness-of-Fit ADVAL/LightGBM test'
     rows  = T.remove_empty_columns ( rows )     
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
@@ -422,17 +368,161 @@ def test_BIC () :
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
 
+
+
+# ===============================================================================
+def probe_ADVAL ( gof , tag ) :
+
+    logger = getLogger ("test_ADVAL/%s" % tag )
+
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        import lightgbm 
+        # =======================================================================
+    except ImportError : # ======================================================
+        # =======================================================================
+        logger.error  ( "LightGBM is not available, skip the test" )
+        return
     
+    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
+    
+    ## presumably good fit
+    with timing ( "Good fit ADVAL %s" % tag , logger = logger ) :
+        pdf.load_params ( rgood , silent = True ) 
+        tgood        = gof        ( pdf , data_good )
+        tgood, pgood = gof.pvalue ( pdf , data_good )
+        
+    ## presumably bad fit 
+    with timing ( "Bad  fit ADVAL/%s" % tag  , logger = logger ) : 
+        pdf.load_params ( rbad  , silent = True ) 
+        tbad        = gof        ( pdf , data_bad )
+        tbad, pbad  = gof.pvalue ( pdf , data_bad )
+        
+    gp = pgood * 100 
+    bp = pbad  * 100
+    
+    gt , ge = pretty_float ( tgood )
+    bt , be = pretty_float ( tbad  )
+    
+    pvg    = clip_pvalue  ( pgood )
+    pvb    = clip_pvalue  ( pbad  )        
+    nsg    = significance ( pvg   )
+    nsb    = significance ( pvb   )
+    
+    nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
+    nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
+    
+    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
+    rows.append ( row )
+            
+    title= 'Goodness-of-Fit ADVAL/%s test' % tag 
+    rows  = T.remove_empty_columns ( rows )     
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
+
+# ===============================================================================
+def test_ADVAL () :
+    
+
+    to_test = []
+    config  = { 'nToys' : 100 , 'parallel' : True , 'progress' : True }
+    
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        import lightgbm
+        from   ostap.stats.gofnd import ADVAL_LightGBM as GOF 
+        ## 
+        gof    = GOF ( **config )
+        test   = gof , typename ( gof ) 
+        to_test.append ( test )
+        ## 
+        # =======================================================================
+    except ImportError : # ======================================================
+        # =======================================================================
+        logger.error  ( "LightGBM is not available, skip the test" )
+
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        import sklearn
+        from   ostap.stats.gofnd import ADVAL_HistoGBoost as GOF 
+        ## 
+        gof    = GOF ( **config )
+        test   = gof , typename ( gof ) 
+        to_test.append ( test ) 
+        ## 
+        ## 
+        # =======================================================================
+    except ImportError : # ======================================================
+        # =======================================================================
+        logger.error  ( "HistoGBoost is not available, skip the test" )
+
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        import sklearn
+        from   ostap.stats.gofnd import ADVAL_GBoost as GOF 
+        ## 
+        gof    = GOF (  **config   )
+        test   = gof , typename ( gof ) 
+        to_test.append ( test ) 
+        ## 
+        # =======================================================================
+    except ImportError : # ======================================================
+        # =======================================================================
+        logger.error  ( "GBoost is not available, skip the test" )
+        
+    # ===========================================================================
+    try : # =====================================================================
+        # =======================================================================
+        import xgboost
+        from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
+        ## 
+        gof    = GOF ( **config )
+        test   = gof , typename ( gof ) 
+        to_test.append ( test ) 
+        ## 
+        # =======================================================================
+    except ImportError : # ======================================================
+        # =======================================================================
+        logger.error  ( "XGBoost is not available, skip the test" )
+
+    # ===========================================================================
+    from   ostap.core.cpu_info      import HAS_AVX2
+    # ===========================================================================
+    if HAS_AVX2 :
+        # =======================================================================
+        try : # =================================================================
+            # ===================================================================
+            import catboost
+            from   ostap.stats.gofnd import ADVAL_CatBoost as GOF 
+            ## 
+            gof    = GOF ( **config )
+            test   = gof , typename ( gof ) 
+            to_test.append ( test ) 
+            ## 
+            # ===================================================================
+        except ImportError : # ==================================================
+            # ===================================================================
+            logger.error  ( "CatBoost is not available, skip the test" )
+
+    ## run tests: 
+    for test in to_test : probe_ADVAL ( *test ) 
+        
+
 # ===============================================================================
 if '__main__' == __name__ :
 
-    test_PPD    ()
-    test_DNN    ()
-    test_USTAT  ()
-    test_ADVAL1 ()
-    test_NLL    ()
-    test_AIC    ()
-    test_BIC    ()
+    ## test_PPD    ()
+    ## test_DNN    ()
+    ## test_USTAT  ()
+    test_ADVAL  ()    
+    ## test_NLL    ()
+    ## test_AIC    ()
+    ## test_BIC    ()
 
 
 # ===============================================================================

@@ -122,4 +122,41 @@ if '__main__' == __name__ :
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
-    
+
+"""
+        ## 
+        import lightgbm as LGB
+        ### 
+        for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
+            
+            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
+            X_val   , Y_val   , W_val   = X.iloc [   val_idx ] , Y.iloc [   val_idx ] , W.iloc [   val_idx ]
+
+            
+            ## trains & predict 
+            self.work ( X_train , Y_train , W_train ,
+                        X-xval  , Y-val   , W_val   )
+            
+            
+            train_data = LGB.Dataset ( X_train , label = Y_train , weight = W_train)
+            val_data   = LGB.Dataset (   X_val , label =   Y_val , weight = W_val , reference = train_data )
+        
+            # train the model
+            model = LGB.train (
+                self.params ,
+                train_data  ,
+                num_boost_round = 500 ,
+                valid_sets = [ val_data ],
+                callbacks  = [ LGB.early_stopping ( stopping_rounds=20 , verbose=False ) ]
+            )
+            
+            # predictions 
+            oof_preds [ val_idx ] = model.predict ( X_val , num_iteration = model.best_iteration )
+            
+        #  weighted ROC-AUC
+        auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
+
+        ## 
+        return  100 * ( 1.0 - 2.0 * auc_score ) ** 2 
+
+""" 

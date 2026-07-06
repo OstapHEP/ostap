@@ -23,16 +23,20 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
-    'PPD'        , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
-    'DNN'        , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
-    'USTAT'      , ## Alternative implementation of DNN method
-    'NLL'        , ## Use -log L as GoF estimator 
-    'AikaikeIC'  , ## Use Aikaike IC  as GoF estimator 
-    'BayesianIC' , ## Use Bayesian IC  as GoF estimator
-    'ADVAL1'     , ## Use Adversarial Validation as GoF estimator 
+    'PPD'               , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
+    'DNN'               , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
+    'USTAT'             , ## Alternative implementation of DNN method
+    'NLL'               , ## Use -log L as GoF estimator 
+    'AikaikeIC'         , ## Use Aikaike IC  as GoF estimator 
+    'BayesianIC'        , ## Use Bayesian IC  as GoF estimator
+    'ADVAL_LightGBM'    , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_HistoGBoost' , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_GBoost'      , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_XGBoost'     , ## Use Adversarial Validation as GoF estimator 
 )
 # =============================================================================
-from   ostap.core.ostap_types   import num_types, integer_types, sized_types   
+from   ostap.core.ostap_types   import num_types, integer_types, sized_types
+from   ostap.core.cpu_info      import HAS_AVX2 
 from   ostap.utils.basic        import typename  
 from   ostap.stats.gof          import AGoF
 from   ostap.core.core          import Ostap, VE 
@@ -47,7 +51,7 @@ from   ostap.plotting.color     import Navy, DarkGreen
 from   ostap.stats.gof_utils    import format_row, draw_ecdf  
 import ostap.stats.gof_np       as     GNP
 import ostap.logger.table       as     T 
-import ROOT
+import ROOT, numpy 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -211,6 +215,14 @@ class GoF(AGoF) :
         ds1 , w1 = data1.slice ( var_lst , silent = silent , structured = True , weight_name = data.wname() )
         ds2 , _  = data2.slice ( var_lst , silent = silent , structured = True )
 
+        ## scale the weights such that
+        if w1 is None              : pass
+        elif numpy.all ( w1 == 1 ) : pass 
+        else                       :
+            wsum = numpy.sum ( w1 )
+            assert 0 < wsum , "Sum of weights is non-positive: %g" % wsum
+            w1   = w1 * ( len ( w1 ) * 1.0 / wsum )
+            
         ## delete 
         if isinstance ( data2  , ROOT.RooDataSet ) : data2.clear()            
         del data2 
@@ -860,15 +872,142 @@ class BayesianIC(NLL) :
 # =============================================================================
 
 # =============================================================================
-## @class ADVAL1
+## @class ADVAL_LightGBM
 #  Use "adversatial validation" method to estimate the Goodness-of-Fit
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
-class ADVAL1(GoF) : 
-    """ Implementation of concrete method "Point-To-Point Dissimilarity" for probing of Goodness-Of-Fit
-    - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
-    - see https://doi.org/10.1088/1748-0221/5/09/P09004
-    - see http://arxiv.org/abs/arXiv:1003.1768 
+#  @see ADVAL_LGBM 
+class ADVAL_LightGBM(GoF) : 
+    """ Implementation of concrete method LigthGBM-based Adversation Validation for probing of Goodness-Of-Fit
+    -   t-value is defined via AUC
+    -   p-value if defined via permutations 
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    - n_splits : (int)   number of splits for cross-validation 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    #  @param n_splits : (int) number of splits for cross-validation 
+    def __init__ ( self               ,
+                   mcFactor   = 20    , 
+                   nToys      = 400   ,
+                   parallel   = False ,
+                   silent     = False ,
+                   progress   = True  ,
+                   n_splits   = 8     ,
+                   ADVAL_TYPE = None  , **params ) : 
+    
+        """ Create the Adversarial Validation estimator 
 
+        Parameters  
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        - n_splits : (int) number of splits for cross-validation 
+        """
+        
+        if ADVAL_TYPE is None : 
+            from ostap.stats.adversarial_validation import ADVAL_LGBM as ADVAL_TYPE
+            
+        from ostap.stats.adversarial_validation import ADVAL_base
+        assert issubclass ( ADVAL_TYPE , ADVAL_base ) , "Invalid ADVAL_TYPE %s" % ADVAL_TYPE 
+            
+        GoF.__init__ ( self ,
+                       gof = ADVAL_TYPE ( nToys    = nToys    ,
+                                          parallel = parallel ,
+                                          silent   = silent   , 
+                                          progress = progress ,
+                                          n_splits = n_splits , **params ) ,                       
+                       mcFactor = mcFactor )
+        
+        self.__ecdf   = None
+        self.__tvalue = None
+        self.__pvalue = None
+
+    
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Fit 
+    #  @code
+    #  ppd    = ...
+    #  pdf    = ...  
+    #  data   = ... 
+    #  tvalue = ppd ( pdf , data ) 
+    #  @endcode
+    def tvalue ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> ppd    = ...
+        >>> pdf    = ... 
+        >>> data   = ... 
+        >>> tvalue = ppd.tvalue ( pdf , data ) 
+        """
+        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
+        ## estimate the t-value 
+        t = self.gof ( ds1              ,
+                       ds2              ,
+                       weight1   = w1   ,
+                       weight2   = None ,
+                       normalize = True )
+        ## 
+        self.__tvalue = float ( t ) 
+        return self.__tvalue 
+
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  ppd  = ...
+    #  pdf  = ...
+    #  data = ... 
+    #  t , p = ppd.pvalue ( pdf , data )
+    #  @endcode 
+    def pvalue ( self , pdf , data ) :
+        """ Calculate the t & p-values
+        >>> ppd  = ...
+        >>> pdf  = ... 
+        >>> data = ... 
+        >>> t , p = ppd.pvalue ( pdf , data ) 
+        """
+        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
+        ## estimate t&p-values 
+        self.__tvalue , self.__pvalue = self.gof.pvalue ( ds1              ,
+                                                          ds2              ,
+                                                          weight1   = w1   , 
+                                                          weight2   = None , 
+                                                          normalize = True )        
+        return self.__tvalue , self.__pvalue
+
+    # =========================================================================
+    @property
+    def ecdf ( self ) :
+        """`ecdf` : empirical CDF for t-value distribution"""
+        return self.gof.ecdf
+
+    # =========================================================================
+    ## Get results in a form of the table 
+    def table ( self , title = '' , prefix = '' ) :
+        """ Get results in a for of the table 
+        """
+        return self.the_table ( tvalue = self.__tvalue ,
+                                pvalue = self.__pvalue ,
+                                ecdf   = self.__ecdf   , 
+                                title  = title ,
+                                prefix = prefx ) 
+    __str__  = table
+    __repr__ = table
+
+# =============================================================================
+## @class ADVAL_HistoGBoost
+#  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+#  @see ADVAL_HGBC 
+class ADVAL_HistoGBoost(ADVAL_LightGBM) : 
+    """ Implementation of concrete method XGBoost-based Adversation Validation for probing of Goodness-Of-Fit
+    -   t-value is defined via AUC
+    -   p-value if defined via permutations
+    
     Important parameters:
     
     - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
@@ -897,94 +1036,162 @@ class ADVAL1(GoF) :
         - nToys    : (int) number of permutations/toys 
         - n_splits : (int) number of splits for cross-validation 
         """
-        
-        from ostap.stats.adversarial_validation import ADVAL_LGBM 
-        GoF.__init__ ( self ,
-                       gof = ADVAL_LGBM ( nToys    = nToys    ,
-                                          parallel = parallel ,
-                                          silent   = silent   , 
-                                          progress = progress ,
-                                          n_splits = n_splits , **params ) ,                       
-                       mcFactor = mcFactor )
-        
-        self.__ecdf   = None
-        self.__tvalue = None
-        self.__pvalue = None
-        
-    @property
-    def adval ( self ) :
-        """`adval` : get the actual calculator for two datasets """
-        return self.gof 
+        from ostap.stats.adversarial_validation import ADVAL_HGBC as ADVAL_TYPE 
+        ADVAL_LightGBM.__init__ ( self ,
+                                  mcFactor   = mcFactor ,
+                                  nToys      = nToys    ,
+                                  parallel   = parallel ,
+                                  silent     = silent   ,
+                                  n_splits   = n_splits ,
+                                  ADVAL_TYPE = ADVAL_TYPE , **params )
+
+# =============================================================================
+## @class ADVAL_GBoost
+#  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+#  @see ADVAL_GBC 
+class ADVAL_GBoost(ADVAL_LightGBM) : 
+    """ Implementation of concrete method XGBoost-based Adversation Validation for probing of Goodness-Of-Fit
+    -   t-value is defined via AUC
+    -   p-value if defined via permutations
     
-    # =========================================================================
-    ## Calculate T-value for Goodness-of-Fit 
-    #  @code
-    #  ppd    = ...
-    #  pdf    = ...  
-    #  data   = ... 
-    #  tvalue = ppd ( pdf , data ) 
-    #  @endcode
-    def tvalue ( self , pdf , data ) :
-        """ Calculate T-value for Goodness-of-Fit
-        >>> ppd    = ...
-        >>> pdf    = ... 
-        >>> data   = ... 
-        >>> tvalue = ppd.tvalue ( pdf , data ) 
-        """
-        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
-        ## estimate the t-value 
-        t = self.adval ( ds1              ,
-                         ds2              ,
-                         weight1   = w1   ,
-                         weight2   = None ,
-                         normalize = True )
-        ## 
-        self.__tvalue = float ( t ) 
-        return self.__tvalue 
-
-    # =========================================================================
-    ## Calculate the t & p-values
-    #  @code
-    #  ppd  = ...
-    #  pdf  = ...
-    #  data = ... 
-    #  t , p = ppd.pvalue ( pdf , data )
-    #  @endcode 
-    def pvalue ( self , pdf , data ) :
-        """ Calculate the t & p-values
-        >>> ppd  = ...
-        >>> pdf  = ... 
-        >>> data = ... 
-        >>> t , p = ppd.pvalue ( pdf , data ) 
-        """
-        ds1 , ds2 , w1 = self.wtransform ( pdf , data )         
-        ## estimate t&p-values 
-        self.__tvalue , self.__pvalue = self.adval.pvalue ( ds1              ,
-                                                            ds2              ,
-                                                            weight1   = w1   , 
-                                                            weight2   = None , 
-                                                            normalize = True )        
-        return self.__tvalue , self.__pvalue
-
-    # =========================================================================
-    @property
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distribution"""
-        return self.ppd.ecdf
-
-    # =========================================================================
-    ## Get results in a form of the table 
-    def table ( self , title = '' , prefix = '' ) :
-        """ Get results in a for of the table 
-        """
-        return self.the_table ( tvalue = self.__tvalue ,
-                                pvalue = self.__pvalue ,
-                                ecdf   = self.__ecdf   , 
-                                title  = title ,
-                                prefix = prefx ) 
-    __str__  = table
-    __repr__ = table
+    Important parameters:
     
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    - n_splits : (int)   number of splits for cross-validation 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    #  @param n_splits : (int) number of splits for cross-validation 
+    def __init__ ( self               ,
+                   mcFactor  = 20     , 
+                   nToys     = 400    ,
+                   parallel  = False  ,
+                   silent    = False  ,
+                   progress  = True   ,
+                   n_splits  = 8      , **params ) : 
+    
+        """ Create the Adversarial Validation estimator 
+
+        Parameters  
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        - n_splits : (int) number of splits for cross-validation 
+        """
+        from ostap.stats.adversarial_validation import ADVAL_GBC as ADVAL_TYPE 
+        ADVAL_LightGBM.__init__ ( self ,
+                                  mcFactor   = mcFactor ,
+                                  nToys      = nToys    ,
+                                  parallel   = parallel ,
+                                  silent     = silent   ,
+                                  n_splits   = n_splits ,
+                                  ADVAL_TYPE = ADVAL_TYPE , **params )
+        
+
+# =============================================================================
+## @class ADVAL_XGBoost
+#  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+#  @see ADVAL_XGB 
+class ADVAL_XGBoost(ADVAL_LightGBM) : 
+    """ Implementation of concrete method XGBoost-based Adversation Validation for probing of Goodness-Of-Fit
+    -   t-value is defined via AUC
+    -   p-value if defined via permutations
+    
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    - n_splits : (int)   number of splits for cross-validation 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    #  @param n_splits : (int) number of splits for cross-validation 
+    def __init__ ( self               ,
+                   mcFactor  = 20     , 
+                   nToys     = 400    ,
+                   parallel  = False  ,
+                   silent    = False  ,
+                   progress  = True   ,
+                   n_splits  = 8      , **params ) : 
+    
+        """ Create the Adversarial Validation estimator 
+
+        Parameters  
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        - n_splits : (int) number of splits for cross-validation 
+        """
+        from ostap.stats.adversarial_validation import ADVAL_XGB as ADVAL_TYPE 
+        ADVAL_LightGBM.__init__ ( self ,
+                                  mcFactor   = mcFactor ,
+                                  nToys      = nToys    ,
+                                  parallel   = parallel ,
+                                  silent     = silent   ,
+                                  n_splits   = n_splits ,
+                                  ADVAL_TYPE = ADVAL_TYPE , **params )
+        
+# ==============================================================================
+if HAS_AVX2 : 
+    # ==========================================================================
+    ## @class ADVAL_CatBoost
+    #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
+    #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+    #  @see ADVAL_CATB 
+    class ADVAL_CatBoost(ADVAL_LigthGBM) : 
+        """ Implementation of concrete method CatBoost-based Adversation Validation for probing of Goodness-Of-Fit
+        -   t-value is defined via AUC
+        -   p-value if defined via permutations
+        
+        Important parameters:
+        
+        - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int)   number of permutations/toys 
+        - n_splits : (int)   number of splits for cross-validation 
+        
+        """
+        # =========================================================================
+        ## create the estimator
+        #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+        #  @param nToys    : (int)  number of permutations/toys 
+        #  @param n_splits : (int) number of splits for cross-validation 
+        def __init__ ( self               ,
+                       mcFactor  = 20     , 
+                       nToys     = 400    ,
+                       parallel  = False  ,
+                       silent    = False  ,
+                       progress  = True   ,
+                       n_splits  = 8      , **params ) : 
+            
+            """ Create the Adversarial Validation estimator 
+
+            Parameters  
+            
+            - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+            - nToys    : (int) number of permutations/toys 
+            - n_splits : (int) number of splits for cross-validation            
+            """
+            from ostap.stats.adversarial_validation import ADVAL_CATB as ADVAL_TYPE 
+            ADVAL_LightGBM.__init__ ( self ,
+                                      mcFactor   = mcFactor ,
+                                      nToys      = nToys    ,
+                                      parallel   = parallel ,
+                                      silent     = silent   ,
+                                      n_splits   = n_splits ,
+                                      ADVAL_TYPE = ADVAL_TYPE , **params )
+            
+            __all__ += ( 'ADVAL_CatBoost' , )
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

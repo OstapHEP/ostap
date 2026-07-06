@@ -87,6 +87,28 @@ if ( NOT ${PY_cffi_FOUND} )
 endif()
 
 # ========================================================================================
+## cpuinfo & cpufeature 
+# ========================================================================================
+## 
+find_python_module ( cpuinfo QUIET )
+if ( NOT ${PY_cpuinfo_FOUND} ) 
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install py-cpuinfo ${PIP_ARGS})
+endif()
+find_python_module ( cpuinfo QUIET )
+if ( NOT ${PY_cpuinfo_FOUND} ) 
+  message ( "----> warning                 cpuinfo is NOT found!" ) 
+endif()
+
+find_python_module ( cpufeature QUIET )
+if ( NOT ${PY_cpufeature_FOUND} ) 
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install cpufeature ${PIP_ARGS})
+endif()
+find_python_module ( cpufeature QUIET )
+if ( NOT ${PY_cpufeature_FOUND} ) 
+  message ( "----> warning                 cpufeature is NOT found!" ) 
+endif()
+
+# ========================================================================================
 ## Check for PATHOS & friends
 # ========================================================================================
 find_python_module ( dill          QUIET )
@@ -398,14 +420,14 @@ endif()
 ## catboost
 # ========================================================================================
 ## 
-find_python_module ( catboost QUIET )
-if ( NOT ${PY_catboost_FOUND} )
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install catboost ${PIP_ARGS})
-endif()
-find_python_module ( catboost QUIET )
-if ( NOT ${PY_catboost_FOUND} )
-  message ( "----> warning                catboost is NOT found!" ) 
-endif()
+## find_python_module ( catboost QUIET )
+## if ( NOT ${PY_catboost_FOUND} ) 
+##  ## execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install catboost ${PIP_ARGS})
+## endif()
+## find_python_module ( catboost QUIET )
+## if ( NOT ${PY_catboost_FOUND} ) 
+##   message ( "----> warning                catboost is NOT found!" ) 
+## endif()
 
 # ========================================================================================
 ## hep_ml
@@ -443,6 +465,16 @@ endif()
 if ( ${PY_cffi_FOUND} )
   find_python_module_version ( cffi ) 
   message ( "----> cffi             version    : " ${PY_cffi_VERSION} " \t" ${PY_CFFI}  )  
+endif()
+
+if ( ${PY_cpuinfo_FOUND} )
+  find_python_module_version ( cpuinfo ) 
+  message ( "----> cpuinfo          version    : " ${PY_cpuinfo_VERSION} " \t" ${PY_CPUINFO}  )  
+endif()
+
+if ( ${PY_cpufeature_FOUND} )
+  find_python_module_version ( cpufeature ) 
+  message ( "----> cpufeature       version    : " ${PY_cpufeature_VERSION} " \t" ${PY_CPUFEATURE}  )  
 endif()
 
 ##
@@ -572,10 +604,10 @@ if ( ${PY_xgboost_FOUND} )
   message ( "----> xgboost          version    : " ${PY_xgboost_VERSION} " \t" ${PY_XGBOOST} ) 
 endif()
 ##
-if ( ${PY_catboost_FOUND} )
-  find_python_module_version ( catboost ) 
-  message ( "----> catboost         version    : " ${PY_catboost_VERSION} " \t" ${PY_CATBOOST} ) 
-endif()
+## if ( ${PY_catboost_FOUND} )
+##  find_python_module_version ( catboost ) 
+##  message ( "----> catboost         version    : " ${PY_catboost_VERSION} " \t" ${PY_CATBOOST} ) 
+## endif()
 ##
 if ( ${PY_hep_ml_FOUND} )
   find_python_module_version ( hep_ml ) 
