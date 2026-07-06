@@ -877,7 +877,7 @@ class BayesianIC(NLL) :
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
 #  @see ADVAL_LGBM 
 class ADVAL_LightGBM(GoF) : 
-    """ Implementation of concrete method LigthGBM-based Adversation Validation for probing of Goodness-Of-Fit
+    """ Implementation of concrete method LightGBM-based Adversation Validation for probing of Goodness-Of-Fit
     -   t-value is defined via AUC
     -   p-value if defined via permutations 
     Important parameters:
@@ -1147,7 +1147,7 @@ if HAS_AVX2 :
     #  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
     #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
     #  @see ADVAL_CATB 
-    class ADVAL_CatBoost(ADVAL_LigthGBM) : 
+    class ADVAL_CatBoost(ADVAL_LightGBM) : 
         """ Implementation of concrete method CatBoost-based Adversation Validation for probing of Goodness-Of-Fit
         -   t-value is defined via AUC
         -   p-value if defined via permutations
