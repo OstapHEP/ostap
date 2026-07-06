@@ -38,7 +38,8 @@ __all__     = (
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types
-from   ostap.core.cpu_info      import HAS_AVX2 
+from   ostap.core.cpu_info      import HAS_AVX2
+from   ostap.utils.basic        import typename 
 from   ostap.stats.gof_np       import GoFnp , s2u 
 from   ostap.stats.gof_utils    import PERMUTATOR, normalize as ds_normalize
 import ROOT, numpy, abc  
@@ -318,10 +319,12 @@ class ADVAL_LGBM (ADVAL_base) :
         """" Train the model and make predictions
         """
 
-        print ( 'I am WORK/0' )  
+        print ( 'I am WORK/0' , typename ( self ) )  
 
         train_data = self.LightGBM.Dataset ( X_train , label = Y_train , weight = W_train)
         val_data   = self.LightGBM.Dataset (   X_val , label =   Y_val , weight = W_val , reference = train_data )
+        
+        print ( 'I am WORK/1' , typename ( self ) )
         
         ## train the model
         model = self.LightGBM.train (
@@ -331,10 +334,16 @@ class ADVAL_LGBM (ADVAL_base) :
             valid_sets = [ val_data ],
             callbacks  = [ self.LightGBM.early_stopping ( stopping_rounds=20 , verbose = False ) ]
         )
+        
+        print ( 'I am WORK/2' , typename ( self ) )
 
         ## predict the results 
-        return model.predict ( X_val , num_iteration = model.best_iteration )
+        result = model.predict ( X_val , num_iteration = model.best_iteration )
+    
+        print ( 'I am WORK/3' , typename ( self ) )
 
+        return result
+    
 # =======================================================================================
 ## @class ADVAL_XGB
 #  XGBoost-based lass for Adversarial Validation for the difference between two (weighted) dataset
