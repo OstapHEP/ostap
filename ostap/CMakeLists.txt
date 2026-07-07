@@ -420,14 +420,16 @@ endif()
 ## catboost
 # ========================================================================================
 ## 
-## find_python_module ( catboost QUIET )
-## if ( NOT ${PY_catboost_FOUND} ) 
-##  ## execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install catboost ${PIP_ARGS})
-## endif()
-## find_python_module ( catboost QUIET )
-## if ( NOT ${PY_catboost_FOUND} ) 
-##   message ( "----> warning                catboost is NOT found!" ) 
-## endif()
+if ( ${OSTAP_HAS_AVX2} )
+  find_python_module ( catboost QUIET )
+  if ( NOT ${PY_catboost_FOUND} ) 
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install catboost ${PIP_ARGS})
+  endif()
+  find_python_module ( catboost QUIET )
+  if ( NOT ${PY_catboost_FOUND} ) 
+    message ( "----> warning                catboost is NOT found!" ) 
+  endif()
+endif() 
 
 # ========================================================================================
 ## hep_ml
@@ -604,10 +606,10 @@ if ( ${PY_xgboost_FOUND} )
   message ( "----> xgboost          version    : " ${PY_xgboost_VERSION} " \t" ${PY_XGBOOST} ) 
 endif()
 ##
-## if ( ${PY_catboost_FOUND} )
-##  find_python_module_version ( catboost ) 
-##  message ( "----> catboost         version    : " ${PY_catboost_VERSION} " \t" ${PY_CATBOOST} ) 
-## endif()
+if ( ${OSTAP_HAS_AVX2} AND ${PY_catboost_FOUND} )
+  find_python_module_version ( catboost ) 
+  message ( "----> catboost         version    : " ${PY_catboost_VERSION} " \t" ${PY_CATBOOST} ) 
+endif()
 ##
 if ( ${PY_hep_ml_FOUND} )
   find_python_module_version ( hep_ml ) 
