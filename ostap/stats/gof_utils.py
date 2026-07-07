@@ -159,7 +159,7 @@ def normalize ( ds , *others , weight = () , first = True ) :
     and the mean and sigma are either taken either from the first dataset,
     if `first=True` or as combined through all datasets, otherwise  
     
-    - If `weight` is specified, this floating column is concidered
+    - If `weight` is specified, this floating column is considered
     as the weight
     
     - attention Only the floating point columns are transformed! 
@@ -297,7 +297,7 @@ class PERMUTATOR(object) :
         self.weight2 = weight2 
         self.t_value = t_value
         self.__ecdf  = None
-
+        
     ## serialize the object 
     def __getstate__ ( self ) :
         """ Serialize the object
@@ -339,8 +339,6 @@ class PERMUTATOR(object) :
         """ Run N-toys
         """
         
-        print ( 'RUN_TOYS' , N  )
-
         numpy.random.seed()
         n1      = len ( self.ds1 )
         n2      = len ( self.ds2 )
@@ -354,7 +352,8 @@ class PERMUTATOR(object) :
             pooled  = numpy.hstack      ( [ pooled       , weights      ] )
             
         counter = EffCounter()
-        tvalues = [] 
+        tvalues = []
+        
         for i in progress_bar ( N , silent = not progress  , description = 'Permutations:') :
 
             print ( 'I AM PERMUTATOR/0' , i )
@@ -384,6 +383,7 @@ class PERMUTATOR(object) :
             counter += bool ( self.t_value < tv  )
             
         del pooled
+        
         return counter, tuple ( tvalues )
 
     @property 
@@ -410,6 +410,7 @@ if False : # ==================================================================
         def joblib_run ( self , NN , silent = False , progress = True ) :
             """ Run NN-permutations in parallel using joblib
             """
+
             me    = math.ceil ( memory_enough() ) + 1 
             nj    = min ( 2 * numcpu () + 3 , me ) 
             lst   = splitter ( NN , nj )
@@ -446,13 +447,17 @@ if False : # ==================================================================
 # =============================================================================
 if not jl : # =================================================================
     # =========================================================================
-    ## Run NN-permutations in parallel using WorkManager
+    ## Run NN-permutations in parallel using the default WorkManager
     def pp_run ( self , NN , silent = False , progress  = True ) :
         """ Run NN-permutations in parallel using WorkManager"""
+
         me    = math.ceil ( memory_enough() ) + 1 
         nj    = min ( 2 * numcpu () + 3 , me ) 
         lst   = splitter ( NN , nj )
         njobs = len ( [ k for k in splitter ( NN , nj ) ] )
+
+        ## njobs = 2 * min ( NN // 2 + 1 , numcpu () + 1 ) 
+        
         if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used with WorkManager' % njobs ) 
         counter = EffCounter()
         tvalues = () 
@@ -470,7 +475,7 @@ if not jl : # =================================================================
                 tvalues += tvals 
         ##
         if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
-        else             : self.ecdf.add ( data2vct ( tvalues )  )
+        else             : self.ecdf.add    ( data2vct ( tvalues )     )
         ## 
         return counter
     # =========================================================================

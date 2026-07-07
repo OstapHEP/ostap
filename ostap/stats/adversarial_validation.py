@@ -50,7 +50,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.adversarial_validation' )
 else                       : logger = getLogger ( __name__ )
 # =============================================================================
-logger.debug ( 'Implement adversarial vaildation for Goodness-of-fit and Two-Sample discrimination ' )
+logger.debug ( 'Implement adversarial validation for Goodness-of-fit & Two-Samples test' )
 # =============================================================================
 ## @class ADVAL_base 
 #  Base class for adversarial validation for the difference between two (weighted) dataset
@@ -76,101 +76,33 @@ class ADVAL_base (GoFnp):
         ## update parameters from argument 
         self.__params = {} 
         self.__params.update ( params ) 
-        ## Empirical CDF for t-value distribution from permutations"""
-        self.__ecdf    = None
 
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
         self.__n_splits = n_splits 
-        
+
+        ## print configuration 
+        if not self.silent :
+            cnf = { 'method'   : self.method        ,
+                    'n_splits' : self.n_splits      ,
+                    'nToys'    : self.nToys         ,
+                    'silent'   : self.silent        ,
+                    'progress' : self.progress      ,
+                    'parallel' : self.parallel      }
+            cnf.update ( self.params )            
+            from ostap.logger.utils import map2table_ex
+            title = "%s configuration " % typename ( self ) 
+            table = map2table_ex ( cnf   ,
+                                   header = ( 'Parameter' , 'type' , 'value' ) ,
+                                   prefix = '# '  ,
+                                   title  = title )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+
     # =========================================================================
     ## Are weigths supported by this estimator?
     def weights_supported ( self ) :
         """ Are weigths supported by this estimator?
         """
         return True 
-    
-    # =========================================================================    
-    ## Calculate T-value for two (structured) datasets 
-    #  @code
-    #  adval  = ...
-    #  data1 = ... ## the first  data set 
-    #  data2 = ... ## the second data set
-    #  t = adval ( data1 , data1 , normalize = False ) 
-    #  t = adval ( data1 , data1 , normalize = True  ) 
-    #  @endcode
-    def __call__ ( self              ,
-                   data1             ,
-                   data2             , * ,
-                   weight1   = None  ,
-                   weight2   = None  ,
-                   normalize = False ) :
-        
-        """ Calculate T-value for two (STRUCTURED) data sets 
-        >>> adval = ...
-        >>> data1 = ... ## the first  data set 
-        >>> data2 = ... ## the second data set
-        >>> t = adval ( data1 , data1 , normalize = False ) 
-        >>> t = adval ( data1 , data1 , normalize = True  ) 
-        """        
-        
-        ## transform/normalize ? 
-        if normalize : ds1 , ds2 = self.normalize ( data1 , data2 )
-        else         : ds1 , ds2 = data1 , data2 
-
-        ## convert to unstructured datasets 
-        uds1 = s2u ( ds1 , copy = False ) if ds1.dtype.fields else ds1
-        uds2 = s2u ( ds2 , copy = False ) if ds2.dtype.fields else ds2
-
-        return self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
-    
-    # =========================================================================
-    ## Calculate the t & p-values
-    #  @code
-    #  adval = ...
-    #  ds1 , ds2 = ...
-    #  t , p = adval.pvalue ( ds1 , ds2 , normalize = True ) 
-    #  @endcode 
-    def pvalue ( self              ,
-                 data1             ,
-                 data2             , * ,
-                 weight1   = None  ,
-                 weight2   = None  ,
-                 normalize = False ) :
-        """ Calculate the t & p-values
-        >>> adval = ...
-        >>> ds1 , ds2 = ...
-        >>> t , p = adval.pvalue ( ds1 , ds2 , normalize = True ) 
-        """
-        
-        ## transform/normalize ? 
-        if normalize : ds1 , ds2 = self.normalize ( data1 , data2 )
-        else         : ds1 , ds2 = data1 , data2 
-
-        ## convert to unstructured datasets 
-        uds1 = s2u ( ds1 , copy = False ) if ds1.dtype.fields else ds1
-        uds2 = s2u ( ds2 , copy = False ) if ds2.dtype.fields else ds2
-
-        t_value    = self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
-
-        permutator = PERMUTATOR ( self , t_value , uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
-
-        if self.parallel and permutator.run :
-            counter = permutator.run ( self.nToys , progress = self.progress )            
-        else :
-            counter = permutator     ( self.nToys , progress = self.progress )
-
-        self.__ecdf = permutator.ecdf
-        
-        p_value = counter.eff
-
-        ## if self.__increasing : p_value = 1 - p_value
-
-        return t_value , p_value
-    
-    @property
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distribution from permutations"""
-        return self.__ecdf
     
     @property
     def params ( self ) :
@@ -202,7 +134,7 @@ class ADVAL_base (GoFnp):
          t-value is defined as 100 * abs(1-2*AUC)**2
         """
 
-        print ( 'I am T_VALUE/0' )
+        print ( 'I am T_VALUE/0' , typename ( self )  )
         
         sh1 = data1.shape 
         sh2 = data2.shape
@@ -241,21 +173,20 @@ class ADVAL_base (GoFnp):
 
         ###
 
-        print ( 'I am T_VALUE/1' )
+        print ( 'I am T_VALUE/1' , typename ( self ) )
 
-        for fold, ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
+        for fold , ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
             
             X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
-            X_val   , Y_val   , W_val   = X.iloc [   val_idx ] , Y.iloc [   val_idx ] , W.iloc [   val_idx ]
+            X_val   , Y_val   , W_val   = X.iloc [ val_idx   ] , Y.iloc [ val_idx   ] , W.iloc [ val_idx   ]
 
             print ( 'I am T_VALUE/2'  , fold )
 
             ## train model and make predictions & predict 
-            oof_preds [ val_idx ] = self.work ( X_train , Y_train , W_train , X_val  , Y_val   , W_val   )
+            oof_preds [ val_idx ] = self.work ( X_train , Y_train , W_train , X_val  , Y_val , W_val   )
                                     
             print ( 'I am T_VALUE/3'  , fold )
 
-            
         #  weighted ROC-AUC
         auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
 
@@ -281,19 +212,23 @@ class ADVAL_LGBM (ADVAL_base) :
                    n_splits = 8     , **params ) :
         
         config = {
-            'objective'     : 'binary' ,
-            'metric'        : 'auc'    ,
-            'learning_rate' :  0.05    , 
-            'max_depth'     :  5       ,
-            'verbose'       : -1       ,
-            'random_state'  : 42
+            'objective'        : 'binary' ,
+            'metric'           : 'auc'    ,
+            'learning_rate'    :  0.05    , 
+            'num_leaves'       : 24       ,
+            'max_depth'        :  4       ,
+            'min_data_in_leaf' : 10       ,
+            'verbose'          : -1       ,
+            'random_state'     : 42       , 
+            'num_threads'      : -1       ,
         }
-        config.update ( params ) 
-
+        ##
+        parallel = True if parallel else False 
+        if parallel : params [ 'num_threads' ] = 1      
         ## 
-        import lightgbm as _LightGBM
-        self.__LightGBM = _LightGBM
-        
+        config.update ( params ) 
+        ## 
+        import lightgbm as LightGBM
         ADVAL_base.__init__ ( self, 
                               nToys    = nToys    ,
                               parallel = parallel ,
@@ -301,16 +236,7 @@ class ADVAL_LGBM (ADVAL_base) :
                               progress = progress , 
                               method   = "Adversarial Validation/LightGBM" ,
                               n_splits = n_splits , **config   ) 
-
-    # ===============================================================================
-    ## get the LightGBM module 
-    @property
-    def LightGBM ( self ) :
-        """`LightGBM` : the LightGBM module
-        - see lightgbm
-        """
-        return self.__LightGBM
-    
+          
     # ==================================================================================
     ## Train the model and make predictions
     def work ( self ,
@@ -318,21 +244,24 @@ class ADVAL_LGBM (ADVAL_base) :
                X_val   , Y_val   , W_val   ) :
         """" Train the model and make predictions
         """
+        
+        ## 
+        import lightgbm as LightGBM
 
         print ( 'I am WORK/0' , typename ( self ) )  
 
-        train_data = self.LightGBM.Dataset ( X_train , label = Y_train , weight = W_train)
-        val_data   = self.LightGBM.Dataset (   X_val , label =   Y_val , weight = W_val , reference = train_data )
+        train_data = LightGBM.Dataset ( X_train , label = Y_train , weight = W_train )
+        val_data   = LightGBM.Dataset ( X_val   , label = Y_val   , weight = W_val   , reference = train_data )
         
         print ( 'I am WORK/1' , typename ( self ) )
         
         ## train the model
-        model = self.LightGBM.train (
+        model = LightGBM.train (
             self.params ,
             train_data  ,
             num_boost_round = 500 ,
             valid_sets = [ val_data ],
-            callbacks  = [ self.LightGBM.early_stopping ( stopping_rounds=20 , verbose = False ) ]
+            callbacks  = [ LightGBM.early_stopping ( stopping_rounds = 20 , verbose = False ) ]
         )
         
         print ( 'I am WORK/2' , typename ( self ) )
@@ -358,8 +287,7 @@ class ADVAL_XGB (ADVAL_base) :
                    silent   = False ,
                    progress = True  ,
                    n_splits = 8     , **params ) :
-        
-        
+                
         config = {
             'objective'     : 'binary:logistic' ,
             'eval_metric'   : 'auc'             ,
@@ -368,12 +296,15 @@ class ADVAL_XGB (ADVAL_base) :
             'max_depth'     : 5                 ,
             'seed'          : 42
         }
+        ## 
+        parallel = True if parallel else False 
+        if parallel : params [ 'nthread' ] = 1      
+        ## 
         config.update ( params ) 
 
         ## 
-        import xgboost as _XGBoost 
-        self.__XGBoost = _XGBoost
-        
+        import xgboost as XGBoost 
+            
         ADVAL_base.__init__ ( self, 
                               nToys    = nToys    ,
                               parallel = parallel ,
@@ -382,14 +313,6 @@ class ADVAL_XGB (ADVAL_base) :
                               method   = "Adversarial Validation/XGBoost" ,
                               n_splits = n_splits , **config   ) 
 
-    # ===============================================================================
-    ## get the XGBoost module 
-    @property
-    def XGBoost ( self ) :
-        """`XGBoost` : the XGBoost module
-        - see xgboost
-        """
-        return self.__XGBoost
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -399,18 +322,20 @@ class ADVAL_XGB (ADVAL_base) :
         """" Train the model and make predictions
         """
 
+        ## 
+        import xgboost as XGBoost 
 
-        dtrain = self.XGBoost.DMatrix ( X_train , label = Y_train , weight = W_train)
-        dval   = self.XGBoost.DMatrix (   X_val , label =   Y_val , weight = W_val)
+        dtrain = XGBoost.DMatrix ( X_train , label = Y_train , weight = W_train)
+        dval   = XGBoost.DMatrix (   X_val , label =   Y_val , weight = W_val)
         
         # Train the model 
-        model = self.XGBoost.train(
+        model = XGBoost.train (
             self.params                  ,
             dtrain                       ,
-            num_boost_round=500          ,
+            num_boost_round = 500        ,
             evals = [ ( dval , 'val' ) ] ,
-            early_stopping_rounds=20,
-            verbose_eval=False
+            early_stopping_rounds = 20   ,
+            verbose_eval = False 
         )
         
         # predict 
@@ -443,8 +368,7 @@ if HAS_AVX2 :
             config.update ( params ) 
             
             ## 
-            import catboost as _CatBoost 
-            self.__CatBoost = _CatBoost
+            import catboost as CatBoost 
             
             ADVAL_base.__init__ ( self, 
                                   nToys    = nToys    ,
@@ -454,28 +378,21 @@ if HAS_AVX2 :
                                   method   = "Adversarial Validation/CatBoost" ,
                                   n_splits = n_splits , **config   ) 
             
-        # ===============================================================================
-        ## get the CatBoost module 
-        @property
-        def CatBoost ( self ) :
-            """`CatBoost` : the CatBoost module
-            - see catboost
-            """
-            return self.__CatBoost
-            
         # ==================================================================================
         ## Train the model and make predictions
         def work ( self ,
                    X_train , Y_train , W_train ,
                    X_val   , Y_val   , W_val   ) :
-            """" Train the model and make predictions
-                """
+            """ Train the model and make predictions
+            """
             
-            train_pool = self.CatBoost.Pool ( data = X_train , label = Y_train , weight = W_train )
-            val_pool   = self.CatBoost.Pool ( data = X_val   , label = Y_val   , weight = W_val   )
+            import catboost as CatBoost 
+            
+            train_pool = CatBoost.Pool ( data = X_train , label = Y_train , weight = W_train )
+            val_pool   = CatBoost.Pool ( data = X_val   , label = Y_val   , weight = W_val   )
             
             ## create the model 
-            model = self.CatBoost.CatBoostClassifier( **self.params )
+            model = CatBoost.CatBoostClassifier( **self.params )
             
             # train it 
             model.fit ( train_pool , eval_set=val_pool, early_stopping_rounds = 20 )

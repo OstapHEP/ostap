@@ -74,6 +74,7 @@ except ImportError : # ========================================================
     # =========================================================================
     s2u        = None
     cdist      = None
+
 # =============================================================================
 ## @class GoFnp 
 #  A base class for numpy-related family of methods to probe goodness-of-fit
@@ -96,17 +97,22 @@ class GoFnp (AGoFnp) :
         self.__progress = True if progress else False 
         self.__method   = method
         
-        if self.__parallel and memory_enough () < numcpu () : 
-            logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing')
-            self.__parallel = False
-        
+        ## Empirical CDF for t-value distribution from permutations/toys"""
+        self.__ecdf    = None
+
+        if self.__parallel :
+            mratio = memory_enough () / numcpu () 
+            if mratio < 1 :
+                logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing' % mratio )                
+                ## self.__parallel = False
+
     # ==========================================================================
     ## Normalize two data sets, such that each variable in pooled set
     #  has a mean of zero and variance of one 
     #  @code
     #  ds1 = ... ## the 1st structured array 
     #  ds2 = ... ## the 2nd structured array
-    #  gof = ... ##    #  nd1, nd2 = god.normalize ( ds1 , ds2 ) 
+    #  gof = ... ##    #  nd1, nd2 = gof.normalize ( ds1 , ds2 ) 
     #  @encode
     def normalize ( self , *datasets ) :
         """ Normalize two data sets, such that each variable in pooled set
@@ -166,7 +172,114 @@ class GoFnp (AGoFnp) :
     def method ( self ) :
         """`method` : the actual GoF method """
         return self.__method
+
+    # =========================================================================    
+    ## Calculate T-value for two (structured) datasets 
+    #  @code
+    #  adval  = ...
+    #  data1 = ... ## the first  data set 
+    #  data2 = ... ## the second data set
+    #  t = adval ( data1 , data1 , normalize = False ) 
+    #  t = adval ( data1 , data1 , normalize = True  ) 
+    #  @endcode
+    def __call__ ( self              ,
+                   data1             ,
+                   data2             , * ,
+                   weight1   = None  ,
+                   weight2   = None  ,
+                   normalize = False ) :
+        
+        """ Calculate T-value for two (STRUCTURED) data sets 
+        >>> adval = ...
+        >>> data1 = ... ## the first  data set 
+        >>> data2 = ... ## the second data set
+        >>> t = adval ( data1 , data1 , normalize = False ) 
+        >>> t = adval ( data1 , data1 , normalize = True  ) 
+        """        
+        
+        if not self.weights_supported : 
+            assert weight1 is None or numpy.all ( 1 == weight1 ) , "weight1 must be either None or trivial"
+            assert weight2 is None or numpy.all ( 1 == weight2 ) , "weight2 must be either None or trivial"
+            weight1 = None
+            weight2 = None
+
+        ## transform/normalize ? 
+        structured1 = True if data1.dtype.fields else False
+        structured2 = True if data2.dtype.fields else False
+        
+        if normalize and structured1 and structured2 :
+            ds1 , ds2 = self.normalize ( data1 , data2 )
+        else         :
+            ds1 , ds2 = data1 , data2 
+
+        ## convert to unstructured datasets 
+        uds1 = s2u ( ds1 , copy = False ) if ds1.dtype.fields else ds1
+        uds2 = s2u ( ds2 , copy = False ) if ds2.dtype.fields else ds2
+
+        return self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+        
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  gof = ...
+    #  data1 , data2 = ...
+    #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
+    #  @endcode 
+    def pvalue ( self , 
+                 data1             ,
+                 data2             , * ,
+                 weight1   = None  ,
+                 weight2   = None  ,
+                 normalize = False ) :
+                
+        """ Calculate the t & p-values
+        >>> gof  = ...
+        >>> data1 , data2 = ...
+        >>> t   , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
+        """
+        
+        if not self.weights_supported : 
+            assert weight1 is None or numpy.all ( 1 == weight1 ) , "weight1 must be either None or trivial"
+            assert weight2 is None or numpy.all ( 1 == weight2 ) , "weight2 must be either None or trivial"
+            weight1 = None
+            weight2 = None
+
+        ## transform/normalize ? 
+        structured1 = True if data1.dtype.fields else False
+        structured2 = True if data2.dtype.fields else False        
+        if normalize and structured1 and structured2 :
+            ds1 , ds2 = self.normalize ( data1 , data2 )
+        else         :
+            ds1 , ds2 = data1 , data2 
+
+        ## convert to unstructured datasets 
+        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
+        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
+
+        ### get t-value 
+        t_value    = self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+
+        ## use permutations to get the p-value 
+        permutator = PERMUTATOR ( self , t_value , uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+        
+        if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
+        else                                : counter = permutator     ( self.nToys , progress = self.progress )
+
+        ## get the t-value distribution from permutator 
+        self.__ecdf = permutator.ecdf
+
+        ## get the efficiency/p-value from the counter 
+        p_value = counter.eff
+
+        ## if self.__increasing : p_value = 1 - p_value
+
+        return t_value , p_value
     
+    @property
+    def ecdf ( self ) :
+        """`ecdf` : empirical CDF for t-value distribution from permutations"""
+        return self.__ecdf
+        
 # ============================================================================
 ## define configuration for psi-function for PPD method
 #   - distance type of <code>cdist</code>
@@ -265,9 +378,9 @@ class PPDnp(GoFnp) :
         self.__ecdf   = None 
 
     # =========================================================================
-    ## Are weigths  are supported by this estimator?
+    ## Are weights  are supported by this estimator?
     def weights_supported ( self ) :
-        """ Are weigths are supported by this estimator?
+        """ Are weights are supported by this estimator?
         """
         return False 
     
@@ -320,7 +433,8 @@ class PPDnp(GoFnp) :
         ## distances = distances [ distances > 0 ]        
         if transform : distances  = transform ( distances )        
         ## 
-        return numpy.sum ( distances )         
+        return numpy.sum ( distances )
+    
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
     def t_value ( self , ds1 , ds2 , * , weight1 = None , weight2 = None ) :
@@ -328,8 +442,8 @@ class PPDnp(GoFnp) :
         """
         ##
         if not self.weights_supported : 
-            assert weight1 is None or numpy.ones ( n1 ) == weight1 , "weight1 must be either None or trivial"
-            assert weight2 is None or numpy.ones ( n2 ) == weight2 , "weight2 must be either None or trivial"
+            assert weight1 is None or numpy.all ( 1 == weight1 ) , "weight1 must be either None or trivial"
+            assert weight2 is None or numpy.all ( 1 == weight2 ) , "weight2 must be either None or trivial"
             weight1 = None
             weight2 = None
         
@@ -341,6 +455,10 @@ class PPDnp(GoFnp) :
         n1 = len ( ds1 ) 
         n2 = len ( ds2 ) 
         ##
+        
+        ## For 1D-arrays add a fictive second dimension to please `cdist`-function
+        if 1 == ds1.shape [ 1 ] : ds1 = numpy.c_[ uds1 , numpy.zeros ( n1 , dtype = float ) ] 
+        if 1 == ds2.shape [ 1 ] : ds2 = numpy.c_[ uds2 , numpy.zeros ( n2 , dtype = float ) ] 
 
         ## calculate sums of distances, Eq (3.7) 
         result  = self.sum_distances ( ds1 , ds1 ) / ( n1 * ( n1 - 1 ) )
@@ -352,15 +470,14 @@ class PPDnp(GoFnp) :
         return float ( result )
 
     # =========================================================================    
-    ## Calculate T-value for two (structured) datasets 
+    ## Calculate t-value for two (structured) datasets 
     #  @code
     #  ppd   = ...
     #  data1 = ... ## the first  data set 
     #  data2 = ... ## the second data set
-    #  t = ppd ( data1 , data1 , normalize = False ) 
-    #  t = ppd ( data1 , data1 , normalize = True  ) 
+    #  t = ppd ( data1 , data2 , normalize = False ) 
     #  @endcode
-    def __call__ ( self , data1 , data2 , * , normalize = True ) :
+    def __call__ ( self , data1 , data2 , * , normalize = False ) :
         """ Calculate T-value for two data sets 
         >>> ppd   = ...
         >>> data1 = ... ## the first  data set 
@@ -374,62 +491,14 @@ class PPDnp(GoFnp) :
         else         : ds1 , ds2 = data1 , data2 
 
         ## convert to unstructured datasets 
-        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
-        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
+        uds1 = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
+        uds2 = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
 
         ## For 1D-arrays add a fictive second dimension to please `cdist`-function
         if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
         if 1 == uds2.shape [ 1 ] : uds2 = numpy.c_[ uds2 , numpy.zeros ( len ( uds2 ) ) ] 
         
-        return self.t_value ( uds1 , uds2 )
-    
-    # =========================================================================
-    ## Calculate the t & p-values
-    #  @code
-    #  ppd = ...
-    #  ds1 , ds2 = ...
-    #  t , p = ppd.pvalue ( ds1 , ds2 , normalize = True ) 
-    #  @endcode 
-    def pvalue ( self , data1 , data2 , normalize = True ) :
-        """ Calculate the t & p-values
-        >>> ppd = ...
-        >>> ds1 , ds2 = ...
-        >>> t , p = ppd.pvalue ( ds1 , ds2 , normalize = True ) 
-        """
-        
-        ## transform/normalize ? 
-        if normalize : ds1 , ds2 = self.normalize ( data1 , data2 )
-        else         : ds1 , ds2 = data1 , data2 
-
-        ## convert to unstructured datasets 
-        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
-        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
-
-        ## For 1D-arrays add a fictive second dimension to please `cdist`-function
-        if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
-        if 1 == uds2.shape [ 1 ] : uds2 = numpy.c_[ uds2 , numpy.zeros ( len ( uds2 ) ) ] 
-        
-        t_value    = self.t_value ( uds1 , uds2 )
-        
-        permutator = PERMUTATOR ( self , t_value , uds1 , uds2 )
-
-        if self.parallel and permutator.run :
-            counter = permutator.run ( self.nToys , progress = self.progress )            
-        else :
-            counter = permutator     ( self.nToys , progress = self.progress )
-
-        self.__ecdf = permutator.ecdf
-        
-        p_value = counter.eff
-
-        ## if self.__increasing : p_value = 1 - p_value
-
-        return t_value , p_value
-    
-    @property
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distribution from permutations"""
-        return self.__ecdf
+        return self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
     
 # =============================================================================
 ## @class DNNnp
@@ -478,7 +547,7 @@ class DNNnp(GoFnp) :
             self.__histo = ROOT.TH1D ( hID() , 'U-values' , histo , -0.1 , 1.1 ) 
             
     # =========================================================================
-    ## Are weigths  are supported by this estimators?
+    ## Are weights  are supported by this estimators?
     def weights_supported ( self ) :
         """ Are weights are supported by this estimators?
         """
@@ -554,8 +623,8 @@ class DNNnp(GoFnp) :
             normalize = False 
             
         ## transform/normalize ? 
-        ## if normalize : ds1 = self.normalize ( data1 ) [ 0 ] 
-        ## else         : ds1 = data1
+        if normalize : ds1 = self.normalize ( data1 ) [ 0 ] 
+        else         : ds1 = data1
         
         ds1 = data1
         
@@ -568,6 +637,7 @@ class DNNnp(GoFnp) :
         
         return self.t_value ( uds1 , vpdf  )
 
+    '''
     # ============================================================================
     ## p-value is not really defined here 
     # 
@@ -577,14 +647,16 @@ class DNNnp(GoFnp) :
     #  - However, one always can run straightforward pseudoexperiments 
     def pvalue ( self , *args , **kwargs ) :
         """ p-value is not defined..
-
+        
         M.Williams writes:
         ... `Because of this I do not think p-value are worth calculating`
         
         However, one always can run straightforward pseudoexperiments 
         """        
-        raise NotImplementedError( "p-value is not defined for DDDNP!" )
-    
+    raise NotImplementedError( "p-value is not defined for DNNNP!" )
+    '''
+        
+     
     @property
     def histo ( self ) :
         """`histo` : the histogram with distribution of U-values"""

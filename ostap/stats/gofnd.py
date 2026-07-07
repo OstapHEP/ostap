@@ -141,7 +141,7 @@ class GoF(AGoF) :
         """
         nEvents = len ( data ) * self.mcFactor
         dset    = pdf.generate ( nEvents = nEvents , varset = data , sample = self.sample )        
-        assert dset or self.sample , "generate: failrue to produce non-empty dataset!"
+        assert dset or self.sample , "generate: failure to produce non-empty dataset!"
         while not dset : dset = pdf.generate ( nEvents = nEvents , varset = data , sample = self.sample )        
         return dset 
             
@@ -215,9 +215,11 @@ class GoF(AGoF) :
         ds1 , w1 = data1.slice ( var_lst , silent = silent , structured = True , weight_name = data.wname() )
         ds2 , _  = data2.slice ( var_lst , silent = silent , structured = True )
 
-        ## scale the weights such that
-        if w1 is None              : pass
-        elif numpy.all ( w1 == 1 ) : pass 
+        
+        ## scale the weights properly, such as sum(w) === N 
+        if w1 is None                                 : pass
+        elif isinstance ( w1 , num_types ) and 0 < w1 : w1 = numpy.ones ( len ( ds1 ) , dtype = float ) 
+        elif numpy.all  ( w1 == 1 )                   : pass 
         else                       :
             wsum = numpy.sum ( w1 )
             assert 0 < wsum , "Sum of weights is non-positive: %g" % wsum

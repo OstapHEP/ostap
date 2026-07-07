@@ -64,81 +64,61 @@ def test_PPD () :
     
     logger = getLogger ("test_PPD")
 
-    rows  = [ ( 'Distance' , 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
     
     sigma = ''
 
-    if 10 <= numcpu () : tconf = { 'nToys' : 1000 , 'parallel' : True }
-    else               : tconf = { 'nToys' :   50 }
-        
+    if 10 <= numcpu () : tconf = { 'nToys' :   10 , 'parallel' : True }
+    else               : tconf = { 'nToys' :   10 }
+
+    to_test = []
+    
     for conf in ( { 'psi' : 'linear'     } ,
-                  { 'psi' : 'logarithm'  } ,
-                  { 'psi' : 'chebyshev'  } ,   
-                  { 'psi' : 'coulomb'    } ,   
-                  ## { 'psi' : 'inverse2'   } ,   
-                  ## { 'psi' : 'squared'    } ,   
-                  ## { 'psi' : 'cosine'     } ,   
-                  ## { 'psi' : 'canberra'   } ,   
-                  { 'psi' : 'braycurtis' } ,   
-                  { 'psi' : 'cityblock'  } ,   
-                  { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.04 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.03 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
+                  ## { 'psi' : 'logarithm'  } ,
+                  ## { 'psi' : 'chebyshev'  } ,   
+                  ## { 'psi' : 'coulomb'    } ,
+                  ##
+                  ## ## { 'psi' : 'inverse2'   } ,   
+                  ## ## { 'psi' : 'squared'    } ,   
+                  ## ## { 'psi' : 'cosine'     } ,   
+                  ## ## { 'psi' : 'canberra'   } ,
+                  ## 
+                  ## { 'psi' : 'braycurtis' } ,   
+                  ## { 'psi' : 'cityblock'  } ,
+                  ## 
+                  ## { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.04 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.03 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.01 } ) : 
-
-        conf.update ( tconf ) 
+        
+        tag = 'PPD:%s' % conf['psi']
+        if 'sigma' in conf : tag = '%s[%s=%s]' % ( tag , greek_lower_sigma , conf['sigma'] ) 
+        conf.update ( tconf )        
         ppd = GnD.PPD ( **conf )
-        
-        ## presumably good fit
-        with timing ( "Good fit PPD distance %s %s" % ( conf [ 'psi' ] , conf.get('sigma','') ) , logger = logger ) :
-            pdf.load_params ( rgood , silent = True ) 
-            tgood        = ppd        ( pdf , data_good )
-            tgood, pgood = ppd.pvalue ( pdf , data_good )
+        entry = ppd ,tag
+        to_test.append ( entry )
 
-        with use_canvas ( title = 'PPD  good %s' % conf  ) : ppd.draw( tvalue = tgood ) 
-            
-        ## presumably bad fit 
-        with timing ( "Bad  fit PPD distance %s %s" % ( conf [ 'psi' ] , conf.get('sigma','') ) , logger = logger ) : 
-            pdf.load_params ( rbad  , silent = True ) 
-            tbad        = ppd        ( pdf , data_bad )
-            tbad, pbad  = ppd.pvalue ( pdf , data_bad )
+    rows  = [ ( 'Distance' , 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma , 'time' ) ]
 
-        with use_canvas ( title = 'PPD  bad %s ' % conf ) as cnv :
-            ppd.draw ( tvalue = tbad  )
-            
-        gp = pgood * 100 
-        bp = pbad  * 100
-
-        gt , ge = pretty_float ( tgood )
-        bt , be = pretty_float ( tbad  )
-
-        sigma  = conf.get ( 'sigma' , '' )
-        sigma  = '' if not sigma else '/%.2f' % sigma
-        
-        pvg    = clip_pvalue  ( pgood )
-        pvb    = clip_pvalue  ( pbad  )        
-        nsg    = significance ( pvg   )
-        nsb    = significance ( pvb   )
-        
-        nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
-        nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
-            
-        row = '%s%s' % ( conf ['psi'] , sigma ) ,\
-            '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
-            '%5.2f %s %.2f' % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb        
+    ## run tests: 
+    for gof, tag  in to_test :
+        with timing ( 'Processing GoF/%s' % tag , logger = logger ) as timer :
+            row = probe_GOF ( gof , tag  )
+        row = list ( row )  + [  '%.f' % timer.delta ] 
         rows.append ( row )
-                
-    title = 'Goodness-of-Fit PPD tests'
-    rows  = T.remove_empty_columns ( rows ) 
-    table = T.table ( rows , title = title , prefix = '# ' , alignment = 10*'c' )
-    logger.info ( '%s:\n%s' % ( title , table ) )
 
+    print ( 'ROWS' , rows  ) 
+    title = 'Goodness-of-Fit %s tests' % tag 
+    rows  = T.remove_empty_columns ( rows )     
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+    
 # ===============================================================================
 def test_DNN () :
     
@@ -369,32 +349,19 @@ def test_BIC () :
     logger.info ( '%s:\n%s' % ( title , table ) )
 
 
-
 # ===============================================================================
-def probe_ADVAL ( gof , tag ) :
+def probe_GOF ( gof , tag ) :
 
-    logger = getLogger ("test_ADVAL/%s" % tag )
+    logger = getLogger ("test_GOF/%s" % tag )
 
-    # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
-        import lightgbm 
-        # =======================================================================
-    except ImportError : # ======================================================
-        # =======================================================================
-        logger.error  ( "LightGBM is not available, skip the test" )
-        return
-    
-    rows  = [ ( 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma ) ]
-    
     ## presumably good fit
-    with timing ( "Good fit ADVAL %s" % tag , logger = logger ) :
+    with timing ( "Good fit GOF/%s" % tag , logger = logger ) :
         pdf.load_params ( rgood , silent = True ) 
         tgood        = gof        ( pdf , data_good )
         tgood, pgood = gof.pvalue ( pdf , data_good )
         
     ## presumably bad fit 
-    with timing ( "Bad  fit ADVAL/%s" % tag  , logger = logger ) : 
+    with timing ( "Bad  fit GOF/%s" % tag  , logger = logger ) : 
         pdf.load_params ( rbad  , silent = True ) 
         tbad        = gof        ( pdf , data_bad )
         tbad, pbad  = gof.pvalue ( pdf , data_bad )
@@ -405,30 +372,26 @@ def probe_ADVAL ( gof , tag ) :
     gt , ge = pretty_float ( tgood )
     bt , be = pretty_float ( tbad  )
     
-    pvg    = clip_pvalue  ( pgood )
-    pvb    = clip_pvalue  ( pbad  )        
-    nsg    = significance ( pvg   )
-    nsb    = significance ( pvb   )
+    pvg     = clip_pvalue  ( pgood )
+    pvb     = clip_pvalue  ( pbad  )        
+    nsg     = significance ( pvg   )
+    nsb     = significance ( pvb   )
     
     nsg    = '%.2f %s %.2f' % ( nsg.value() , plus_minus , nsg.error () )
     nsb    = '%.2f %s %.2f' % ( nsb.value() , plus_minus , nsb.error () )
     
-    row = '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
-        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb 
-    rows.append ( row )
-            
-    title= 'Goodness-of-Fit ADVAL/%s test' % tag 
-    rows  = T.remove_empty_columns ( rows )     
-    table = T.table ( rows , title = title , prefix = '# ')
-    logger.info ( '%s:\n%s' % ( title , table ) )
+    return tag , '%5.2f %s %.2f' % ( gp.value() , plus_minus , gp.error () ) , \
+        '%5.2f %s %.2f'   % ( bp.value() , plus_minus , bp.error () ) , nsg , nsb
 
 # ===============================================================================
-def test_ADVAL () :
+def test_GOF () :
     
-
     to_test = []
-    config  = { 'nToys' : 100 , 'parallel' : True , 'progress' : True }
-    
+
+    # ===========================================================================
+    ## ADVAL-based tests: 
+    config  = { 'nToys' : 100 , 'parallel' : False , 'progress' : True }
+
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
@@ -444,6 +407,7 @@ def test_ADVAL () :
         # =======================================================================
         logger.error  ( "LightGBM is not available, skip the test" )
 
+    """ 
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
@@ -490,6 +454,8 @@ def test_ADVAL () :
         # =======================================================================
         logger.error  ( "XGBoost is not available, skip the test" )
 
+    """
+    
     # ===========================================================================
     from   ostap.core.cpu_info      import HAS_AVX2
     # ===========================================================================
@@ -509,17 +475,37 @@ def test_ADVAL () :
             # ===================================================================
             logger.error  ( "CatBoost is not available, skip the test" )
 
-    ## run tests: 
-    for test in to_test : probe_ADVAL ( *test ) 
-        
+    ##
 
+    rows  = [ ( '' , 'p-value/good[%]' , 'p-value/bad[%]' , '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma , 'time' ) ] 
+
+    import pickle
+    ## run tests: 
+    for gof, tag  in to_test :
+        print  ( 'CHECK PICKLE for ' , tag )
+        pickle.loads ( pickle.dumps ( gof ) )
+        
+    ## run tests: 
+    for gof, tag  in to_test :
+        with timing ( 'Processing GoF/%s' % tag , logger = logger ) as timer :
+            row = probe_GOF ( gof , tag  )
+        row = list ( row ) + [ '%.1f' % timer.delta ] 
+        rows.append ( row )
+            
+    title = 'Goodness-of-Fit %s tests' % tag 
+    rows  = T.remove_empty_columns ( rows )     
+    table = T.table ( rows , title = title , prefix = '# ')
+    logger.info ( '%s:\n%s' % ( title , table ) )
+    
+    
+    
 # ===============================================================================
 if '__main__' == __name__ :
 
     ## test_PPD    ()
     ## test_DNN    ()
     ## test_USTAT  ()
-    test_ADVAL  ()    
+    test_GOF  ()    
     ## test_NLL    ()
     ## test_AIC    ()
     ## test_BIC    ()

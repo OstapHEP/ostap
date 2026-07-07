@@ -58,6 +58,8 @@ message ( "----> OSTAP           timestamp  : " ${OSTAP_BUILD_TIMESTAMP} )
 
 set(OSTAP_PYTHON_SITE_DIR "")
 
+
+
 cmake_host_system_information(RESULT OSTAP_HOSTNAME QUERY HOSTNAME)
 cmake_host_system_information(RESULT OSTAP_DOMAIN   QUERY FQDN    )
 
@@ -78,6 +80,39 @@ message ( "----> Physical cores             : " ${OSTAP_NUMBER_OF_PHYSICAL_CORES
 message ( "----> Total     memory [MiB]     : " ${OSTAP_TOTAL_PHYSICAL_MEMORY}     )
 message ( "----> Available memory [MiB]     : " ${OSTAP_AVAILABLE_PHYSICAL_MEMORY} )
         
+cmake_host_system_information(RESULT OSTAP_OS_NAME     QUERY OS_NAME)
+cmake_host_system_information(RESULT OSTAP_OS_PLATFORM QUERY OS_PLATFORM)
+cmake_host_system_information(RESULT OSTAP_OS_VERSION  QUERY OS_VERSION)
+cmake_host_system_information(RESULT OSTAP_OS_RELEASE  QUERY OS_RELEASE)
+
+message ( "----> OS name                    : " ${OSTAP_OS_NAME}     )
+message ( "----> OS platform                : " ${OSTAP_OS_PLATFORM} )
+message ( "----> OS version                 : " ${OSTAP_OS_VERSION}  )
+message ( "----> OS release                 : " ${OSTAP_OS_RELEASE}  )
+
+# Use compiler from PATH, not the system one
+# http://stackoverflow.com/a/29904501/504346
+find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
+find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
+
+message ( "----> C-compiler                 : " $ENV{CC}  )
+message ( "----> C++-compiler               : " $ENV{CXX} )
+if ( CMAKE_C_COMPILER_ID ) 
+  message ( "----> C-compiler      ID         : " ${CMAKE_C_COMPILER_ID}   )
+endif() 
+if ( CMAKE_CXX_COMPILER_ID ) 
+  message ( "----> C++-compiler    ID         : " ${CMAKE_CXX_COMPILER_ID} )
+endif() 
+if ( CMAKE_C_COMPILER_VERSION ) 
+  message ( "----> C-compiler      version    : " ${CMAKE_C_COMPILER_VERSION}   )
+endif() 
+if ( CMAKE_CXX_COMPILER_VERSION ) 
+  message ( "----> C++-compiler    version    : " ${CMAKE_CXX_COMPILER_VERSION} ) 
+endif()
+if ( CMAKE_CXX_COMPILER_LAUNCHER )
+  message ( "----> C++             launcher   : " ${CMAKE_CXX_COMPILER_LAUNCHER} ) 
+endif()
+
 cmake_host_system_information(RESULT OSTAP_IS_64BIT QUERY IS_64BIT)
 message ( "----> 64-bit     ?               : " ${OSTAP_IS_64BIT} )
 
@@ -107,40 +142,46 @@ message ( "----> AMD 3DNOW  ?               : " ${OSTAP_AMD_3DNOW} )
 
 cmake_host_system_information(RESULT OSTAP_AMD_3DNOW_PLUS QUERY HAS_AMD_3DNOW_PLUS)
 message ( "----> AMD 3DNOW+ ?               : " ${OSTAP_AMD_3DNOW_PLUS} )
-            
-cmake_host_system_information(RESULT OSTAP_OS_NAME     QUERY OS_NAME)
-cmake_host_system_information(RESULT OSTAP_OS_PLATFORM QUERY OS_PLATFORM)
-cmake_host_system_information(RESULT OSTAP_OS_VERSION  QUERY OS_VERSION)
-cmake_host_system_information(RESULT OSTAP_OS_RELEASE  QUERY OS_RELEASE)
 
-message ( "----> OS name                    : " ${OSTAP_OS_NAME}     )
-message ( "----> OS platform                : " ${OSTAP_OS_PLATFORM} )
-message ( "----> OS version                 : " ${OSTAP_OS_VERSION}  )
-message ( "----> OS release                 : " ${OSTAP_OS_RELEASE}  )
+cmake_host_system_information(RESULT OSTAP_HAS_IA64    QUERY HAS_IA64)
+message ( "----> IA64       ?               : " ${OSTAP_HAS_IA64} )
 
-    
-# Use compiler from PATH, not the system one
-# http://stackoverflow.com/a/29904501/504346
-find_program(CMAKE_C_COMPILER   NAMES $ENV{CC}  gcc PATHS ENV PATH NO_DEFAULT_PATH)
-find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-message ( "----> C-compiler                 : " $ENV{CC}  )
-message ( "----> C++-compiler               : " $ENV{CXX} )
-if ( CMAKE_C_COMPILER_ID ) 
-  message ( "----> C-compiler      ID         : " ${CMAKE_C_COMPILER_ID}   )
-endif() 
-if ( CMAKE_CXX_COMPILER_ID ) 
-  message ( "----> C++-compiler    ID         : " ${CMAKE_CXX_COMPILER_ID} )
-endif() 
-if ( CMAKE_C_COMPILER_VERSION ) 
-  message ( "----> C-compiler      version    : " ${CMAKE_C_COMPILER_VERSION}   )
-endif() 
-if ( CMAKE_CXX_COMPILER_VERSION ) 
-  message ( "----> C++-compiler    version    : " ${CMAKE_CXX_COMPILER_VERSION} ) 
+### CHECK FOR AVX2 
+
+# Use 'Runs' instead of 'Compiles'
+include(CheckCXXSourceRuns)
+
+# 1. Test code that actually executes AVX2 instructions
+set(AVX2_RUN_CODE "
+    #include <immintrin.h>
+    int main() {
+        __m256i a = _mm256_set1_epi32(1);
+        __m256i b = _mm256_add_epi32(a, a);
+        // Volatile prevents the compiler from optimizing the math away
+        volatile int* ptr = (volatile int*)&b; 
+        return (ptr[0] == 2) ? 0 : 1; 
+    }
+")
+
+# 2. Set the flags temporarily
+set(SAFE_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+if(MSVC)
+    set(CMAKE_REQUIRED_FLAGS "/arch:AVX2")
+else()
+    set(CMAKE_REQUIRED_FLAGS "-mavx2")
 endif()
-if ( CMAKE_CXX_COMPILER_LAUNCHER )
-  message ( "----> C++             launcher   : " ${CMAKE_CXX_COMPILER_LAUNCHER} ) 
-endif() 
+
+# 3. Compile AND Execute the code
+check_cxx_source_runs("${AVX2_RUN_CODE}" OSTAP_HAS_AVX2)
+
+# Restore flags
+set(CMAKE_REQUIRED_FLAGS "${SAFE_CMAKE_REQUIRED_FLAGS}")
+
+message ( "----> AVX2       ?               : " ${OSTAP_HAS_AVX2} )
+
+###
+
 # You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
 # - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
 # - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
