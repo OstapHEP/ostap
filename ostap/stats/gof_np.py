@@ -437,7 +437,11 @@ class PPDnp(GoFnp) :
     
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
-    def t_value ( self , ds1 , ds2 , * , weight1 = None , weight2 = None ) :
+    def t_value ( self   , 
+                 data1   , 
+                 data2   , * , 
+                 weight1 = None , 
+                 weight2 = None ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
@@ -447,25 +451,26 @@ class PPDnp(GoFnp) :
             weight1 = None
             weight2 = None
         
-        sh1 = ds1.shape
-        sh2 = ds2.shape
-        assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1[1] == sh2[1] , \
-            "Invalid arrays: %s , %s" % ( sh1 , sh2 )
+        shape1 = data1.shape
+        shape2 = data2.shape
+        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
+            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
         
-        n1 = len ( ds1 ) 
-        n2 = len ( ds2 ) 
+        n1 = len ( data1 ) 
+        n2 = len ( data2 ) 
         ##
         
         ## For 1D-arrays add a fictive second dimension to please `cdist`-function
-        if 1 == ds1.shape [ 1 ] : ds1 = numpy.c_[ uds1 , numpy.zeros ( n1 , dtype = float ) ] 
-        if 1 == ds2.shape [ 1 ] : ds2 = numpy.c_[ uds2 , numpy.zeros ( n2 , dtype = float ) ] 
+        if 1 == shape1 [ 1 ] : data1 = numpy.c_[ data1 , numpy.zeros ( n1 , dtype = float ) ] 
+        if 1 == shape2 [ 1 ] : data2 = numpy.c_[ data2 , numpy.zeros ( n2 , dtype = float ) ] 
 
         ## calculate sums of distances, Eq (3.7) 
-        result  = self.sum_distances ( ds1 , ds1 ) / ( n1 * ( n1 - 1 ) )
-        result -= self.sum_distances ( ds1 , ds2 ) / ( n1 * n2 )
+        result  = self.sum_distances ( data1 , data1 ) / ( n1 * ( n1 - 1 ) )
+        result -= self.sum_distances ( data1 , data2 ) / ( n1 * n2 )
+        
         if self.mc2mc :
             ## add the distances from the second dataset? 
-            result += self.sum_distances ( ds2 , ds2 ) / ( n2 * ( n2 - 1 ) )
+            result += self.sum_distances ( data2 , data2 ) / ( n2 * ( n2 - 1 ) )
         ## 
         return float ( result )
 
@@ -477,7 +482,12 @@ class PPDnp(GoFnp) :
     #  data2 = ... ## the second data set
     #  t = ppd ( data1 , data2 , normalize = False ) 
     #  @endcode
-    def __call__ ( self , data1 , data2 , * , normalize = False ) :
+    def __call__ ( self     , 
+                  data1     , 
+                  data2     , * , 
+                  weight1   = None , 
+                  weight2   = None , 
+                  normalize = False ) :
         """ Calculate T-value for two data sets 
         >>> ppd   = ...
         >>> data1 = ... ## the first  data set 

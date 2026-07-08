@@ -1191,7 +1191,7 @@ if HAS_AVX2 :
                                       n_splits   = n_splits ,
                                       ADVAL_TYPE = ADVAL_TYPE , **params )
             
-            __all__ += ( 'ADVAL_CatBoost' , )
+    __all__ += ( 'ADVAL_CatBoost' , )
 
 
 # =============================================================================
