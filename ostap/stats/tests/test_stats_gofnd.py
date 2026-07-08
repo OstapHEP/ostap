@@ -492,7 +492,7 @@ def test_GOF () :
         row = list ( row ) + [ '%.1f' % timer.delta ] 
         rows.append ( row )
             
-    title = 'Goodness-of-Fit %s tests' % tag 
+    title = 'Goodness-of-Fit tests'
     rows  = T.remove_empty_columns ( rows )     
     table = T.table ( rows , title = title , prefix = '# ')
     logger.info ( '%s:\n%s' % ( title , table ) )
