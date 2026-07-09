@@ -23,16 +23,18 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
-    'PPD'               , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
-    'DNN'               , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
-    'USTAT'             , ## Alternative implementation of DNN method
-    'NLL'               , ## Use -log L as GoF estimator 
-    'AikaikeIC'         , ## Use Aikaike IC  as GoF estimator 
-    'BayesianIC'        , ## Use Bayesian IC  as GoF estimator
-    'ADVAL_LightGBM'    , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_HistoGBoost' , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_GBoost'      , ## Use Adversarial Validation as GoF estimator 
-    'ADVAL_XGBoost'     , ## Use Adversarial Validation as GoF estimator 
+    'PPD'                , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
+    'DNN'                , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
+    'USTAT'              , ## Alternative implementation of DNN method
+    'NLL'                , ## Use -log L as GoF estimator 
+    'AikaikeIC'          , ## Use Aikaike IC  as GoF estimator 
+    'BayesianIC'         , ## Use Bayesian IC  as GoF estimator
+    ## 
+    'ADVAL_LightGBM'     , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_HistoGBoost'  , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_GBoost'       , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_XGBoost'      , ## Use Adversarial Validation as GoF estimator 
+    'ADVAL_RandomForest' , ## Use Adversarial Validation as GoF estimator 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import num_types, integer_types, sized_types
@@ -1141,6 +1143,55 @@ class ADVAL_XGBoost(ADVAL_LightGBM) :
                                   silent     = silent   ,
                                   n_splits   = n_splits ,
                                   ADVAL_TYPE = ADVAL_TYPE , **params )
+
+# =============================================================================
+## @class ADVAL_RandomForest
+#  Use "Adversarial Validation" method to estimate the Goodness-of-Fit
+#  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
+#  @see ADVAL_RF 
+class ADVAL_RandomForest(ADVAL_LightGBM) : 
+    """ Implementation of concrete method RandomForest-based Adversation Validation for probing of Goodness-Of-Fit
+    -   t-value is defined via AUC
+    -   p-value if defined via permutations
+    
+    Important parameters:
+    
+    - mcFactor : (int)   the size of mc-dataset is `mcFactor` times size of real data
+    - nToys    : (int)   number of permutations/toys 
+    - n_splits : (int)   number of splits for cross-validation 
+    
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    #  @param nToys    : (int)  number of permutations/toys 
+    #  @param n_splits : (int) number of splits for cross-validation 
+    def __init__ ( self               ,
+                   mcFactor  = 20     , 
+                   nToys     = 400    ,
+                   parallel  = False  ,
+                   silent    = False  ,
+                   progress  = True   ,
+                   n_splits  = 8      , **params ) : 
+    
+        """ Create the Adversarial Validation estimator 
+
+        Parameters  
+
+        - mcFactor : (int) the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int) number of permutations/toys 
+        - n_splits : (int) number of splits for cross-validation 
+        """
+        from ostap.stats.adversarial_validation import ADVAL_RF as ADVAL_TYPE 
+        ADVAL_LightGBM.__init__ ( self ,
+                                  mcFactor   = mcFactor   ,
+                                  nToys      = nToys      ,
+                                  parallel   = parallel   ,
+                                  silent     = silent     ,
+                                  n_splits   = n_splits   ,
+                                  ADVAL_TYPE = ADVAL_TYPE , **params )
+        
+
         
 # ==============================================================================
 if HAS_AVX2 : 

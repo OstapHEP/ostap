@@ -221,10 +221,11 @@ class AGoFnp(object) :
         return NotImplemented
 
     # =========================================================================
-    ## Are weigths  are supported by this estimators?
+    ## Are weigths supported by this GoF estimator?
+    @property 
     @abc.abstractmethod
     def weights_supported ( self ) :
-        """ Are weigths are supported by this estimators?
+        """`weghts_supported`: Are weights supported by this estimator?
         """
         return NotImplemented
     

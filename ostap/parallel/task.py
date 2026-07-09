@@ -1150,7 +1150,7 @@ class TaskManager(object) :
     @abc.abstractmethod 
     def iexecute ( self , job , jobs_args , progress = False , **kwargs ) :
         """ Process the bare `executor` function
-        >>> mgr  = WorManager  ( .... )
+        >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
         >>> args = ...
         >>> for result in mgr.iexecute ( job , args ) :

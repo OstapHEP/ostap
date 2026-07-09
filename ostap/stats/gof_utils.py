@@ -36,7 +36,7 @@ from   ostap.logger.symbols     import times, plus_minus, greek_lower_sigma
 from   ostap.logger.pretty      import pretty_float
 from   ostap.plotting.color     import Orange, Green, Blue
 import ostap.logger.table       as     T 
-import ROOT, sys, math, numpy  
+import ROOT, os, sys, math, numpy  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -54,6 +54,43 @@ np_floats = ( numpy.float16  ,
 # ============================================================================
 if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
 else                        : data2vct = lambda s : doubles ( s ) 
+# ============================================================================
+njobs_kwords = ( 'num_threads' , 'num_thread' ,
+                 'numthreads'  , 'numthread'  ,
+                 'n_threads'   , 'n_thread'   ,
+                 'nthreads'    , 'nthread'    ,
+                 'num_jobs'    , 'num_job'    ,
+                 'numjobs'     , 'numjob'     ,
+                 'n_jobs'      , 'n_job'      ,
+                 'njobs'       , 'njob'       )
+# ==============================================================================
+## get the value of "n_jobs" parameter 
+def num_jobs ( params , defval = -2 ) :
+    """ get the value of "n_jobs" parameter
+    """
+    nj = params.pop ( njobs_kwords [ 0 ] , defval   )
+    for kw in njobs_kwords[1:] :  nj = params.pop ( kw , nj )
+    return nj
+# ==============================================================================
+## allow parallel run
+#  - check "OMP_NUM_THREADS"
+#  - check "MKL_NUM_THREADS"
+#  - check "OPENBLAS_NUM_THREADS"
+def run_parallel ( parallel ) : 
+    """ Allow parallel run
+    - check "OMP_NUM_THREADS"
+    - check "MKL_NUM_THREADS"
+    - check "OPENBLAS_NUM_THREADS"
+    """
+    ##
+    if not parallel : return False
+    ## 
+    if   '1' != os.environ.get ( "OMP_NUM_THREADS"      , "" ) : return False 
+    elif '1' != os.environ.get ( "MKL_NUM_THREADS"      , "" ) : return False 
+    elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ) : return False
+    ## 
+    return True 
+
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
 #  @code
@@ -244,6 +281,7 @@ Labels = {
     'BIC' : 'Bayesian IC'        ,
     
 }
+# =============================================================================
 ## lower-case shortcuts:
 Keys = {    
     'KS'  : ( 'ks'  , 'kolmogorov' , 'kolmogorovsmirnov' ) , 
@@ -356,16 +394,10 @@ class PERMUTATOR(object) :
         
         for i in progress_bar ( N , silent = not progress  , description = 'Permutations:') :
 
-            print ( 'I AM PERMUTATOR/0' , i )
-            
             numpy.random.shuffle ( pooled )
-
-            print ( 'I AM PERMUTATOR/1' , i )
 
             ds1 = pooled [    : n1 ]
             ds2 = pooled [ n1 :    ]
-            
-            print ( 'I AM PERMUTATOR/2' , i )
             
             if easy_way :
                 
@@ -376,8 +408,6 @@ class PERMUTATOR(object) :
                 ds1 , w1 = ds1[ : , : -1 ] , ds1 [ : , -1 ]
                 ds2 , w2 = ds2[ : , : -1 ] , ds2 [ : , -1 ]
 
-            print ( 'I AM PERMUTATOR/3' , i , easy_way ) 
-                
             tv       = self.gof.t_value ( ds1 , ds2 , weight1 = w1 , weight2 = w2  )
             tvalues.append ( float ( tv ) )
             counter += bool ( self.t_value < tv  )
@@ -449,8 +479,8 @@ if not jl : # =================================================================
     # =========================================================================
     ## Run NN-permutations in parallel using the default WorkManager
     def pp_run ( self , NN , silent = False , progress  = True ) :
-        """ Run NN-permutations in parallel using WorkManager"""
-
+        """ Run NN-permutations in parallel using WorkManager
+        """
         me    = math.ceil ( memory_enough() ) + 1 
         nj    = min ( 2 * numcpu () + 3 , me ) 
         lst   = splitter ( NN , nj )

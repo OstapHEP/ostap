@@ -35,6 +35,7 @@ __all__     = (
     'ADVAL_XGB'  , ## XGBoost-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_HGBC' , ## HGBC-based class for Adversarial Validation for the difference between two (weighted) dataset
     'ADVAL_GBC'  , ## GBC-based class for Adversarial Validation for the difference between two (weighted) dataset
+    'ADVAL_RF'   , ## RandomForst-based class for Adversarial Validation for the difference between two (weighted) dataset
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types
@@ -42,7 +43,7 @@ from   ostap.core.cpu_info      import HAS_AVX2
 from   ostap.utils.basic        import typename 
 from   ostap.stats.gof_np       import GoFnp , s2u 
 from   ostap.stats.gof_utils    import PERMUTATOR, normalize as ds_normalize
-import ROOT, numpy, abc  
+import ROOT, numpy, abc, os   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -52,6 +53,43 @@ else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Implement adversarial validation for Goodness-of-fit & Two-Samples test' )
 # =============================================================================
+njobs_kwords = ( 'num_threads' , 'num_thread' ,
+                 'numthreads'  , 'numthread'  ,
+                 'n_threads'   , 'n_thread'   ,
+                 'nthreads'    , 'nthread'    ,
+                 'num_jobs'    , 'num_job'    ,
+                 'numjobs'     , 'numjob'     ,
+                 'n_jobs'      , 'n_job'      ,
+                 'njobs'       , 'njob'       )
+# ==============================================================================
+## get the value of "n_jobs" parameter 
+def num_jobs ( params , defval = -2 ) :
+    """ get the value of "n_jobs" parameter
+    """
+    nj = params.pop ( njobs_kwords [ 0 ] , defval   )
+    for kw in njobs_kwords[1:] :  nj = params.pop ( kw , nj )
+    return nj
+# ==============================================================================
+## allow parallel run
+#  - check "OMP_NUM_THREADS"
+#  - check "MKL_NUM_THREADS"
+#  - check "OPENBLAS_NUM_THREADS"
+def run_parallel ( parallel ) : 
+    """ Allow parallel run
+    - check "OMP_NUM_THREADS"
+    - check "MKL_NUM_THREADS"
+    - check "OPENBLAS_NUM_THREADS"
+    """
+    ##
+    if not parallel : return False
+    ## 
+    if   '1' != os.environ.get ( "OMP_NUM_THREADS"      , "" ) : return False 
+    elif '1' != os.environ.get ( "MKL_NUM_THREADS"      , "" ) : return False 
+    elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ) : return False
+    ## 
+    return True 
+
+# ==============================================================================
 ## @class ADVAL_base 
 #  Base class for adversarial validation for the difference between two (weighted) dataset
 class ADVAL_base (GoFnp):
@@ -63,56 +101,41 @@ class ADVAL_base (GoFnp):
                    silent   = False ,
                    progress = True  ,
                    method   = "Adversarial Validation" ,
-                   n_splits = 8     , ##  number fo splits for cross-validation 
+                   n_splits = 5     , ##  number of splits for cross-validation 
                    **params         ) :
+
+        if not 'random_state' in params : params [ 'random_state' ] = 42
         
         GoFnp.__init__ ( self                ,
                          nToys    = nToys    ,
                          parallel = parallel , 
                          silent   = silent   ,
                          progress = progress , 
-                         method   = method   )
+                         method   = method   , **params )
         
-        ## update parameters from argument 
-        self.__params = {} 
-        self.__params.update ( params ) 
-
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
         self.__n_splits = n_splits 
 
-        ## print configuration 
-        if not self.silent :
-            cnf = { 'method'   : self.method        ,
-                    'n_splits' : self.n_splits      ,
-                    'nToys'    : self.nToys         ,
-                    'silent'   : self.silent        ,
-                    'progress' : self.progress      ,
-                    'parallel' : self.parallel      }
-            cnf.update ( self.params )            
-            from ostap.logger.utils import map2table_ex
-            title = "%s configuration " % typename ( self ) 
-            table = map2table_ex ( cnf   ,
-                                   header = ( 'Parameter' , 'type' , 'value' ) ,
-                                   prefix = '# '  ,
-                                   title  = title )
-            logger.info ( '%s:\n%s' % ( title , table ) ) 
+    # ============================================================================
+    @property
+    def n_splits ( self ) :
+        """`n_splits`: # of splits for cross-validation"""
+        return self.__n_splits 
 
+    # ==================================================================================
+    @property
+    def config ( self ) :
+        """`config` : get all configuratino parameters"""
+        conf = GoFnp.config
+        conf [ 'n_splits' ] = self.n_splits 
+        return conf
+    
     # =========================================================================
     ## Are weigths supported by this estimator?
     def weights_supported ( self ) :
         """ Are weigths supported by this estimator?
         """
         return True 
-    
-    @property
-    def params ( self ) :
-        """`params` : configuration of underlying classifier"""
-        return self.__params
-    
-    @property
-    def n_splits ( self ) :
-        """`n_splits`: # of splits for cross-validation"""
-        return self.__n_splits 
 
     # ==========================================================================
     ## Calculate t-value for two non-structured (weighted) datasets 
@@ -134,8 +157,6 @@ class ADVAL_base (GoFnp):
          t-value is defined as 100 * abs(1-2*AUC)**2
         """
 
-        print ( 'I am T_VALUE/0' , typename ( self )  )
-        
         sh1 = data1.shape 
         sh2 = data2.shape
         
@@ -167,30 +188,24 @@ class ADVAL_base (GoFnp):
         
         ## cross-validation
         from sklearn.model_selection import StratifiedKFold
-        from sklearn.metrics         import roc_auc_score 
-        cv        = StratifiedKFold ( n_splits = self.n_splits , shuffle=True , random_state = 42 )
-        oof_preds = numpy.zeros( N )
+        from sklearn.metrics         import roc_auc_score
+        
+        random_state = self.params.get ( 'random_state' )
+        cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle=True , random_state = 42 )
+        oof_preds    = numpy.zeros( N )
 
         ###
-
-        print ( 'I am T_VALUE/1' , typename ( self ) )
 
         for fold , ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
             
             X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
             X_val   , Y_val   , W_val   = X.iloc [ val_idx   ] , Y.iloc [ val_idx   ] , W.iloc [ val_idx   ]
 
-            print ( 'I am T_VALUE/2'  , fold )
-
             ## train model and make predictions & predict 
             oof_preds [ val_idx ] = self.work ( X_train , Y_train , W_train , X_val  , Y_val , W_val   )
                                     
-            print ( 'I am T_VALUE/3'  , fold )
-
         #  weighted ROC-AUC
         auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
-
-        print ( 'I am T_VALUE/4 ' ) 
 
         ## 
         return  100 * ( 1.0 - 2.0 * auc_score ) ** 2 
@@ -209,7 +224,7 @@ class ADVAL_LGBM (ADVAL_base) :
                    parallel = False ,
                    silent   = False ,
                    progress = True  ,
-                   n_splits = 8     , **params ) :
+                   n_splits = 5     , **params ) :
         
         config = {
             'objective'        : 'binary' ,
@@ -219,13 +234,18 @@ class ADVAL_LGBM (ADVAL_base) :
             'max_depth'        :  4       ,
             'min_data_in_leaf' : 10       ,
             'verbose'          : -1       ,
-            'random_state'     : 42       , 
-            'num_threads'      : -1       ,
         }
         ##
-        parallel = True if parallel else False 
-        if parallel : params [ 'num_threads' ] = 1      
-        ## 
+        
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "Parallel processing is switched OFF!" ) 
+            parallel = False 
+        
+        ## Attention! 
+        params [ 'num_threads' ] = num_jobs ( params , -2 )
+        if parallel : params [ 'num_threads' ] = 1 
+        
         config.update ( params ) 
         ## 
         import lightgbm as LightGBM
@@ -236,10 +256,12 @@ class ADVAL_LGBM (ADVAL_base) :
                               progress = progress , 
                               method   = "Adversarial Validation/LightGBM" ,
                               n_splits = n_splits , **config   ) 
-          
+
+        ##        
+
     # ==================================================================================
     ## Train the model and make predictions
-    def work ( self ,
+    def work ( self    ,
                X_train , Y_train , W_train ,
                X_val   , Y_val   , W_val   ) :
         """" Train the model and make predictions
@@ -248,12 +270,8 @@ class ADVAL_LGBM (ADVAL_base) :
         ## 
         import lightgbm as LightGBM
 
-        print ( 'I am WORK/0' , typename ( self ) )  
-
         train_data = LightGBM.Dataset ( X_train , label = Y_train , weight = W_train )
         val_data   = LightGBM.Dataset ( X_val   , label = Y_val   , weight = W_val   , reference = train_data )
-        
-        print ( 'I am WORK/1' , typename ( self ) )
         
         ## train the model
         model = LightGBM.train (
@@ -264,14 +282,8 @@ class ADVAL_LGBM (ADVAL_base) :
             callbacks  = [ LightGBM.early_stopping ( stopping_rounds = 20 , verbose = False ) ]
         )
         
-        print ( 'I am WORK/2' , typename ( self ) )
-
         ## predict the results 
-        result = model.predict ( X_val , num_iteration = model.best_iteration )
-    
-        print ( 'I am WORK/3' , typename ( self ) )
-
-        return result
+        return model.predict ( X_val , num_iteration = model.best_iteration )
     
 # =======================================================================================
 ## @class ADVAL_XGB
@@ -286,25 +298,25 @@ class ADVAL_XGB (ADVAL_base) :
                    parallel = False ,
                    silent   = False ,
                    progress = True  ,
-                   n_splits = 8     , **params ) :
+                   n_splits = 5     , **params ) :
                 
         config = {
             'objective'     : 'binary:logistic' ,
             'eval_metric'   : 'auc'             ,
-            'tree_method'   : 'hist'            ,       # Histogram methos, similar to LigthGBM 
+            'tree_method'   : 'hist'            , # Histogram methos, similar to LigthGBM 
             'learning_rate' : 0.05              ,
             'max_depth'     : 5                 ,
             'seed'          : 42
         }
-        ## 
-        parallel = True if parallel else False 
-        if parallel : params [ 'nthread' ] = 1      
-        ## 
+        ##
+
+        ## Attention! 
+        params [ 'n_jobs' ] = num_jobs ( params , -2 )
+        if parallel : params [ 'n_jobs' ] = 1 
+        
         config.update ( params ) 
 
-        ## 
-        import xgboost as XGBoost 
-            
+        import xgboost as XGBoost             
         ADVAL_base.__init__ ( self, 
                               nToys    = nToys    ,
                               parallel = parallel ,
@@ -357,7 +369,7 @@ if HAS_AVX2 :
                        parallel = False ,
                        silent   = False ,
                        progress = True  ,
-                       n_splits = 8     , **params ) :
+                       n_splits = 5     , **params ) :
             
             config = { 'iterations'    : 500    ,
                        'learning_rate' : 0.05   ,
@@ -366,7 +378,7 @@ if HAS_AVX2 :
                        'random_seed'   : 42     ,
                        'verbose'       : False  }
             config.update ( params ) 
-            
+
             ## 
             import catboost as CatBoost 
             
@@ -415,16 +427,26 @@ class ADVAL_HGBC (ADVAL_base) :
                    parallel = False ,
                    silent   = False ,
                    progress = True  ,
-                   n_splits = 8     , **params ) :
+                   n_splits = 5     , **params ) :
         
-        config =  { 'learning_rate'    : 0.05 ,
-                    'max_depth'        : 5    ,
-                    'max_iter'         : 200  , # Количество деревьев (аналог num_boost_round)
-                    'early_stopping'   : True ,  # Включаем встроенный early stopping
-                    'n_iter_no_change' : 15   ,
-                    'random_state'     : 42   }
-        config.update ( params ) 
+        config =  { 'learning_rate'    : 0.05  ,
+                    'max_depth'        : 5     ,
+                    'max_iter'         : 200   ,  ## number of trees (num_boost_round)
+                    'early_stopping'   : False ,  ## embedded early stopping
+                    'n_iter_no_change' : 15    } 
 
+        ## Attention! 
+        ## params [ 'n_jobs' ] = num_jobs ( params , -2 )
+        ## if parallel : params [ 'n_jobs' ] = 1
+        
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "Parallel processing is switched OFF!" ) 
+            parallel = False 
+                
+        config.update ( params )
+        
+        import sklearn.ensemble 
         ADVAL_base.__init__ ( self, 
                               nToys    = nToys    ,
                               parallel = parallel ,
@@ -432,7 +454,6 @@ class ADVAL_HGBC (ADVAL_base) :
                               progress = progress , 
                               method   = "Adversarial Validation/HGBC" ,
                               n_splits = n_splits  , **config   ) 
-        
 
     # ==================================================================================
     ## Train the model and make predictions
@@ -442,9 +463,9 @@ class ADVAL_HGBC (ADVAL_base) :
         """" Train the model and make predictions
         """
         
-        from sklearn.ensemble import HistGradientBoostingClassifier
-        
-        model = HistGradientBoostingClassifier ( **self.params )
+        from sklearn.ensemble import HistGradientBoostingClassifier as CLASSIFIER
+        ## 
+        model = CLASSIFIER ( **self.params )
         model.fit ( X_train , Y_train , sample_weight = W_train )
         
         return model.predict_proba ( X_val ) [ : , 1 ]
@@ -463,16 +484,22 @@ class ADVAL_GBC (ADVAL_base) :
                    parallel = False ,
                    silent   = False ,
                    progress = True  ,
-                   n_splits = 8     , **params   ) :
+                   n_splits = 5     , **params   ) :
         
         config =  { 'learning_rate'       : 0.05 ,
                     'max_depth'           : 5    ,
                     'n_estimators'        : 200  , ## number of trees 
                     'validation_fraction' : 0.10 , ## internal validation for early stopping
-                    'n_iter_no_change'    : 15   ,
-                    'random_state'        : 42   }
-        config.update ( params ) 
+                    'n_iter_no_change'    : 15   }
+
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "Parallel processing is switched OFF!" ) 
+            parallel = False 
         
+        config.update ( params ) 
+
+        import sklearn.ensemble 
         ADVAL_base.__init__ ( self, 
                               nToys    = nToys    ,
                               parallel = parallel ,
@@ -481,7 +508,62 @@ class ADVAL_GBC (ADVAL_base) :
                               method   = "Adversarial Validation/GBC" ,
                               n_splits = n_splits , **config   ) 
 
+    # ==================================================================================
+    ## Train the model and make predictions
+    def work ( self ,
+               X_train , Y_train , W_train ,
+               X_val   , Y_val   , W_val   ) :
+        """" Train the model and make predictions
+        """
+        ## 
+        from sklearn.ensemble import GradientBoostingClassifier as CLASSIFIER 
+        ##
+        model = CLASSIFIER ( **self.params )
+        model.fit ( X_train , Y_train , sample_weight = W_train )
+        ## 
+        return model.predict_proba ( X_val ) [ : , 1 ]
+
+# =============================================================================
+## @class ADVAL_RF
+#  Class for adversarial validation for the difference between two (weighted) dataset
+#  based on RandomForestClassifier 
+#  @see RandomForestClassifier 
+class ADVAL_RF (ADVAL_base) : 
+    """ GBC-based class for Adversarial validation for the differece between two (weighted) dataset
+    @see GradientBoosterClassifier 
+    """
+    def __init__ ( self             ,
+                   nToys    = 400   ,
+                   parallel = False ,
+                   silent   = False ,
+                   progress = True  ,
+                   n_splits = 5     , **params   ) :
+
+        config =  {
+            'n_estimators' : 200 ,
+            'max_depth'    :   6 ,       # Для состязательной валидации лучше брать неглубокие деревья
+            }
         
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "Parallel processing is switched OFF!" ) 
+            parallel = False 
+
+        ## Attention! 
+        params [ 'n_jobs' ] = num_jobs ( params , -2 )
+        if parallel : params [ 'n_jobs' ] = 1 
+        
+        config.update ( params ) 
+
+        import sklearn.ensemble 
+        ADVAL_base.__init__ ( self, 
+                              nToys    = nToys    ,
+                              parallel = parallel ,
+                              silent   = silent   , 
+                              progress = progress , 
+                              method   = "Adversarial Validation/RandomForest" ,
+                              n_splits = n_splits , **config   ) 
+
     # ==================================================================================
     ## Train the model and make predictions
     def work ( self ,
@@ -490,12 +572,13 @@ class ADVAL_GBC (ADVAL_base) :
         """" Train the model and make predictions
         """
         
-        from sklearn.ensemble import GradientBoostingClassifier
-        
-        model = GradientBoostingClassifier ( **self.params )
+        from sklearn.ensemble import RandomForestClassifier as CLASSIFIER 
+        ## 
+        model = CLASSIFIER ( **self.params )
         model.fit ( X_train , Y_train , sample_weight = W_train )
-        
+        ## 
         return model.predict_proba ( X_val ) [ : , 1 ]
+
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -16,6 +16,8 @@ import sys, subprocess, importlib
 # =============================================================================
 logger = getLogger('ostap-check-dependencies')
 # =============================================================================
+unknown = '?.?.?'
+# =============================================================================
 ##  check & install packages via pip 
 def check_install ( *packages ) :
     """ Check & install packages via pip
@@ -37,7 +39,7 @@ def check_install ( *packages ) :
     if not missing : return
 
     ## Use pip to install missing packages 
-    logger.info ( 'Use pip to install  [%s]' %  ( ','.join ( missing ) ) ) 
+    logger.info ( 'Make a try for pip to install missing [%s]' %  ( ','.join ( missing ) ) ) 
     subprocess.run ( [ sys.executable , "-m" ,  "pip" , "install" , "--user" ] + missing  )
 
     ## re-check and report the problmes 
@@ -115,7 +117,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import cppyy
-    row = 'cppyy', getattr ( cppyy , '__version__' , '?.?.?' )  , cppyy.__file__
+    row = 'cppyy', getattr ( cppyy , '__version__' , unknown )  , cppyy.__file__
     rows.append ( row )
     # =========================================================================
 except ImportError : # ========================================================
@@ -158,7 +160,7 @@ if ( 3 , 12 ) <= python_info : to_install += ( 'xgboost'   ,  )
 try : # =======================================================================
     # =========================================================================
     import numpy
-    version = getattr ( numpy , '__version__' , '?.?.?' ) 
+    version = getattr ( numpy , '__version__' , unknown ) 
     row = 'numpy' , version , numpy.__file__
     rows.append  ( row )
     # =========================================================================
@@ -182,7 +184,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import scipy
-    version = getattr ( scipy , '__version__' , '?.?.?' ) 
+    version = getattr ( scipy , '__version__' , unknown ) 
     row = 'scipy' , version , scipy.__file__
     rows.append  ( row )
     # =========================================================================
@@ -209,7 +211,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import numba 
-    version = getattr ( numba , '__version__' , '?.?.?' ) 
+    version = getattr ( numba , '__version__' , unknown ) 
     row = 'numba' , version , numba.__file__
     rows.append  ( row )
     # =========================================================================
@@ -231,7 +233,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import cffi 
-    version = getattr ( cffi , '__version__' , '?.?.?' ) 
+    version = getattr ( cffi , '__version__' , unknown ) 
     row = 'cffi' , version , cffi.__file__
     rows.append  ( row )
     # =========================================================================
@@ -262,7 +264,8 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import cpuinfo # ==========================================================
-    version = getattr ( cpuinfo , '__version__' , '?.?.?' ) 
+    # =========================================================================
+    version = cpuinfo.cpuinfo.get_cpu_info().get ( 'cpuinfo_version_string' , unknown )   
     row = 'cpuinfo' , version , cpuinfo.__file__
     rows.append  ( row )
     # =========================================================================
@@ -279,7 +282,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import cpufeature  # ======================================================
-    version = getattr ( cpufeature , '__version__' , '?.?.?' ) 
+    version = getattr ( cpufeature , '__version__' , unknown ) 
     row = 'cpufeature' , version , cpufeature.__file__
     rows.append  ( row )
     # =========================================================================
@@ -412,7 +415,7 @@ if ( 3 , 13 ) <= python_info : # ==============================================
 try : # ===================================================================
     # =====================================================================        
     import berkeleydb
-    row = 'berkeleydb' , getattr ( berkeleydb , '__version__' , '?.?.?' ) , berkeleydb.__file__
+    row = 'berkeleydb' , getattr ( berkeleydb , '__version__' , unknown ) , berkeleydb.__file__
     rows.append  ( row )
     # =====================================================================
 except ImportError : # ====================================================
@@ -463,7 +466,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import pathos
-    version = getattr ( pathos , '__version__' , '?.?.?' ) 
+    version = getattr ( pathos , '__version__' , unknown ) 
     row = 'pathos' , version  , pathos.__file__
     rows.append  ( row )
     # =========================================================================
@@ -491,7 +494,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import dill
-    row = 'dill' , getattr ( dill , '__version__', '?.?.?' ) , dill.__file__
+    row = 'dill' , getattr ( dill , '__version__', unknown ) , dill.__file__
     rows.append  ( row )
     # =========================================================================
 except ImportError : # ========================================================
@@ -513,7 +516,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import multiprocess
-    version = getattr ( multiprocess , '__version__' , '?.?.?' ) 
+    version = getattr ( multiprocess , '__version__' , unknown ) 
     row = 'multiprocess' , version  , multiprocess.__file__
     rows.append  ( row )
     # =========================================================================
@@ -536,7 +539,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import ppft
-    version = getattr ( ppft , '__version__' , '?.?.?' ) 
+    version = getattr ( ppft , '__version__' , unknown ) 
     row = 'ppft' , version  , ppft.__file__
     rows.append  ( row )
     # =========================================================================
@@ -559,7 +562,7 @@ except : # ====================================================================
 try : # ===================================================================
     # =====================================================================        
     import ipyparallel        
-    version = getattr ( ipyparallel , '__version__' , '?.?.?' ) 
+    version = getattr ( ipyparallel , '__version__' , unknown ) 
     row = 'ipyparallel' , version  , ipyparallel.__file__
     rows.append  ( row )
     # =====================================================================
@@ -577,7 +580,7 @@ except : # ====================================================================
 try : # ===================================================================
     # =====================================================================        
     import joblib        
-    version = getattr ( joblib , '__version__' , '?.?.?' ) 
+    version = getattr ( joblib , '__version__' , unknown ) 
     row = 'joblib' , version , joblib.__file__
     rows.append  ( row )
     # =====================================================================
@@ -598,7 +601,7 @@ except : # ====================================================================
 try : # ======================================================================
     # ========================================================================    
     import psutil
-    version = getattr ( psutil, '__version__' , '?.?.?' ) 
+    version = getattr ( psutil, '__version__' , unknown ) 
     row = 'psutil' , version , psutil.__file__
     rows.append  ( row )
     # ========================================================================
@@ -643,14 +646,14 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================        
     import zstandard
-    version = getattr ( zstandard , '__version__' , '?.?.?' ) 
+    version = getattr ( zstandard , '__version__' , unknown ) 
     row = 'zstandard' , version  , zstandard.__file__
     rows.append  ( row )
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
     missing.append ( 'zstandard' ) 
-    row = attention ( 'zstandard' ) , attention ( '---' ) , '?.?.?'
+    row = attention ( 'zstandard' ) , attention ( '---' ) , unknown
     rows.append  ( row ) 
     # =========================================================================
 except : # ====================================================================
@@ -684,7 +687,7 @@ if ( 3 , 9 ) <= python_info : # ===============================================
         # =====================================================================        
         import terminaltables3
         has_tt3 = True 
-        version = getattr ( terminaltables3 , '__version__' , '?.?.?' ) 
+        version = getattr ( terminaltables3 , '__version__' , unknown ) 
         row = 'terminaltables3' , version  , terminaltables3.__file__
         rows.append  ( row )        
         # =====================================================================
@@ -705,7 +708,7 @@ if not has_tt3 : # ============================================================
     try : # ===================================================================
         # =====================================================================        
         import terminaltables
-        version = getattr ( terminaltables , '__version__' , '?.?.?' ) 
+        version = getattr ( terminaltables , '__version__' , unknown ) 
         row = 'terminaltables' , version  , terminaltables.__file__
         rows.append  ( row )        
         # =====================================================================
@@ -723,7 +726,7 @@ if not has_tt3 : # ============================================================
 try : # =======================================================================
     # =========================================================================
     import tabulate
-    version = getattr ( tabulate , '__version__' , '?.?.?' ) 
+    version = getattr ( tabulate , '__version__' , unknown ) 
     row = 'tabulate' , version  , tabulate.__file__
     rows.append  ( row )
     # =========================================================================
@@ -741,7 +744,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import pathvalidate
-    version = getattr ( pathvalidate , '__version__' , '?.?.?' ) 
+    version = getattr ( pathvalidate , '__version__' , unknown ) 
     row = 'pathvalidate' , version  , pathvalidate.__file__
     rows.append  ( row )
     # =========================================================================
@@ -759,7 +762,7 @@ except : # ====================================================================
 try : # ======================================================================
     # ========================================================================    
     import sortedcontainers
-    version = getattr ( sortedcontainers , '__version__' , '?.?.?' ) 
+    version = getattr ( sortedcontainers , '__version__' , unknown ) 
     row = 'sortedcontainers' , version , sortedcontainers.__file__
     rows.append  ( row )
     # ========================================================================
@@ -782,7 +785,7 @@ except : # ====================================================================
 try : # ======================================================================
     # ========================================================================    
     import pragmastat
-    version = getattr ( pragmastat , '__version__' , '?.?.?' ) 
+    version = getattr ( pragmastat , '__version__' , unknown ) 
     row = 'pragmastat' , version , pragmastat.__file__
     rows.append  ( row )
     # ========================================================================
@@ -807,7 +810,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import pandas 
-    version = getattr ( pandas , '__version__' , '?.?.?' ) 
+    version = getattr ( pandas , '__version__' , unknown ) 
     row = 'pandas' , version , pandas.__file__
     rows.append  ( row )
     # =========================================================================
@@ -829,7 +832,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import sweetviz
-    version = getattr ( sweetviz , '__version__' , '?.?.?' ) 
+    version = getattr ( sweetviz , '__version__' , unknown ) 
     row = 'sweetviz' , version , sweetviz.__file__
     rows.append  ( row )
     # =========================================================================
@@ -851,7 +854,7 @@ except : # ====================================================================
 try : # =======================================================================
     # =========================================================================
     import lightgbm
-    version = getattr ( lightgbm , '__version__' , '?.?.?' ) 
+    version = getattr ( lightgbm , '__version__' , unknown ) 
     row = 'lightgbm' , version , lightgbm.__file__
     rows.append  ( row )
     # =========================================================================
@@ -880,7 +883,7 @@ if HAS_AVX2 : # ===============================================================
     try : # ===================================================================
         # =====================================================================
         import catboost
-        version = getattr ( catboost , '__version__' , '?.?.?' ) 
+        version = getattr ( catboost , '__version__' , unknown ) 
         row = 'catboost' , version , catboost.__file__
         rows.append  ( row )
         # =====================================================================
@@ -904,14 +907,14 @@ if ( 3 , 12 ) <= python_info : # ==============================================
     try : # ===================================================================
     # =========================================================================
         import xgboost
-        version = getattr ( xgboost , '__version__' , '?.?.?' )
+        version = getattr ( xgboost , '__version__' , unknown )
         row = 'xgboost' , version , xgboost.__file__
         rows.append  ( row )
     # =========================================================================
     except ImportError : # ====================================================
         # =====================================================================
-        message = """xgboost cannot be imported!
-        xgboost  is useful for comparison of datasets  
+        message = """ xgboost cannot be imported!
+        xgboost  is useful for comparison of datasets & goodness-of-fit 
         """
         missing.append ( 'xgboost' ) 
         logger.error ( message )
@@ -927,13 +930,14 @@ if ( 3 , 12 ) <= python_info : # ==============================================
 try : # =======================================================================
     # =========================================================================
     import hep_ml
-    row = 'hep_ml' , getattr ( hep_ml , '__version__' , '?.?.?' ) , hep_ml.__file__
+    row = 'hep_ml' , getattr ( hep_ml , '__version__' , unknown ) , hep_ml.__file__
     rows.append  ( row )
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
-    message = """hep_ml cannot be imported! 
-    hep_ml is recommended for very efficient  multidimensional reweighting"""
+    message = """ hep_ml cannot be imported! 
+    hep_ml is recommended for very efficient  multidimensional reweighting
+    """
     missing.append ( 'hep_ml' ) 
     logger.error ( message ) 
     row = attention ( 'hep_ml' ) , attention ( '---' ) , ''

@@ -24,12 +24,28 @@ HAS_AVX  = False
 HAS_AVX2 = False
 cpu_info = {} 
 # =============================================================================
+## major CPU flags 
+flags = ( 'ABM'        , 'ADX'        , 'AEX' ,
+          'AVX'        , 'AVX2'       ,
+          'AVX512bw'   , 'AVX512cd'   , 'AVX512dq' , 'AVX512er'   ,
+          'AVX512f'    , 'AVX512ifma' , 'AVX512pf' , 'AVX512vbmi' ,          
+          'AVX512vl'   , 'AVX512vnni' ,
+          'BMI1'       , 'BMI2'       ,
+          'FMA3'       , 'FMA4'       ,
+          'MMX'        , 'MPX'        ,
+          'SSE4.1'     , 'SSE4.2'     , 'SSE4.a'  , 'SSSE3'  )
+# =============================================================================
 try : # =======================================================================
     # =========================================================================
     import cpuinfo
     cpu_info.update ( cpuinfo.cpuinfo.get_cpu_info() )
-    HAS_AVX  = 'avx'  in cpu_info.get ( 'flags' , () )
-    HAS_AVX2 = 'avx2' in cpu_info.get ( 'flags' , () )    
+    cpu_flags   = cpu_info.get ( 'flags' , () )
+    HAS_AVX  = 'avx'  in cpu_flags 
+    HAS_AVX2 = 'avx2' in cpu_flags  
+    cpu_info [ 'SOURCE'   ] = 'cpuinfo'
+    for flag in flags :
+        fl = flag.lower().replace ( '.' , '_' )
+        cpu_info [ flag ] = fl in cpu_flags 
     # =========================================================================
 except ImportError : # ========================================================
     # =========================================================================
@@ -43,6 +59,7 @@ if not cpu_info : # ===========================================================
         cpu_info.update ( cpufeature.CPUFeature )
         HAS_AVX  = cpu_info.get ( 'AVX'  , False )
         HAS_AVX2 = cpu_info.get ( 'AVX2' , False )
+        cpu_info [ 'SOURCE'   ] = 'cpufeature'
         # =====================================================================
     except ImportError : # ====================================================
         # =====================================================================
@@ -64,7 +81,13 @@ if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-  
 
+    from ostap.logger.utils import map2table
+    title = 'CPU info'
+    logger.info ( '%s:\n%s' % ( title , map2table ( cpu_info          ,
+                                                    prefix    = '# '  ,
+                                                    alignment = 'lw'  , 
+                                                    title     = title ) ) )
+    
 # =============================================================================
 # =============================================================================

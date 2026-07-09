@@ -236,7 +236,7 @@ def map2table ( dct                             ,
                 prefix    = ''                  ,
                 title     = ''                  ,
                 alignment = 'rl'                ,
-                style     = ''                  ) :
+                style     = ''                  , **kwargs ) :
     """ Format map/dict-like object  as a table
     >>> map = ...
     >>> title = 'My dictionary'
@@ -244,7 +244,8 @@ def map2table ( dct                             ,
     """
     rows = [ header ]
     map  = {}
-    map.update ( dct )
+    map.update ( dct    )
+    map.update ( kwargs )
     for key in sorted ( map ) :
         value = map [ key ]
         row   = str ( key ) , str ( value )
@@ -269,7 +270,7 @@ def map2table_ex ( dct                                    ,
                    prefix    = ''                  ,
                    title     = ''                  ,
                    alignment = 'rcc'               ,
-                   style     = ''                  ) :
+                   style     = ''                  , **kwargs ) :
     """ Format map/dict-like object  as a table
     >>> map = ...
     >>> title = 'My dictionary'
@@ -277,7 +278,8 @@ def map2table_ex ( dct                                    ,
     """
     rows = [ header ]
     map  = {}
-    map.update ( dct )
+    map.update ( dct    )
+    map.update ( kwargs )
     for key in sorted ( map ) :
         value = map [ key ]
         row   = str ( key ) , typename ( value ) , str ( value )

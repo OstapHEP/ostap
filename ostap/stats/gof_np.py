@@ -21,6 +21,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
     'GoFnp' , ## A base class for numpy-related family of methods to probe goodness-of-fit
+    'MIXnp' , ## Mized samples                 Goodness-of-fit method 
     'PPDnp' , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
     'DNNnp' , ## Distance-to-Nearest-Neighbour Goodness-of-fit method 
 )
@@ -32,7 +33,9 @@ from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu, typename  
 from   ostap.stats.gof          import AGoFnp
+from   ostap.stats.gof_utils    import run_parallel , num_jobs 
 from   ostap.utils.memory       import memory, memory_enough
+from   ostap.math.math_ve       import gauss_cdf 
 import ostap.math.math_base           
 import ROOT, os, abc, numpy, scipy 
 # =============================================================================
@@ -86,17 +89,20 @@ class GoFnp (AGoFnp) :
                    silent   = False  , 
                    parallel = False  ,
                    method   = 'GoF'  ,
-                   progress = True   ) : 
+                   progress = True   , **params ) : 
 
         assert isinstance ( nToys , int ) and 0 <= nToys  , \
             "Invalid number of permulations/toys:%s" % nToys
         
         self.__nToys    = nToys
+        
         self.__silent   = True if silent   else False
         self.__parallel = True if parallel else False
-        self.__progress = True if progress else False 
-        self.__method   = method
+        self.__progress = True if progress else False
         
+        self.__method   = method
+        self.__params   = params
+
         ## Empirical CDF for t-value distribution from permutations/toys"""
         self.__ecdf    = None
 
@@ -105,7 +111,39 @@ class GoFnp (AGoFnp) :
             if mratio < 1 :
                 logger.warning ( 'Available/Used memory ratio: %.1f; switch-off parallel processing' % mratio )                
                 ## self.__parallel = False
+                
+    @property
+    def params ( self ) :
+        """`params` : configuration of underlying classifier"""
+        return self.__params
 
+    # ==================================================================================
+    @property
+    def config ( self ) :
+        """`config` : get all configuratino parameters"""
+        conf = {} 
+        conf.update ( self.params )
+        conf [ 'nToys'            ] = self.nToys
+        conf [ 'silent'           ] = self.silent
+        conf [ 'progress'         ] = self.progress
+        conf [ 'parallel'         ] = self.parallel
+        conf [ 'weight_supported' ] = self.weights_supported
+        return conf 
+        
+    # =========================================================================
+    ## self-print get the configuration 
+    def __str__ ( self ) :        
+        ## print configuration 
+        from ostap.logger.utils import map2table_ex
+        title = "%s configuration " % typename ( self ) 
+        return map2table_ex ( self.config              , 
+                              header = ( 'Parameter' , 'type' , 'value' ) ,
+                              prefix = '# '  ,
+                              title  = title )
+    ## ditto ...
+    def __repr__ ( self ) : return self.__str__ ()
+    
+    
     # ==========================================================================
     ## Normalize two data sets, such that each variable in pooled set
     #  has a mean of zero and variance of one 
@@ -173,6 +211,8 @@ class GoFnp (AGoFnp) :
         """`method` : the actual GoF method """
         return self.__method
 
+    # =========================================================================
+    
     # =========================================================================    
     ## Calculate T-value for two (structured) datasets 
     #  @code
@@ -268,8 +308,16 @@ class GoFnp (AGoFnp) :
         ## get the t-value distribution from permutator 
         self.__ecdf = permutator.ecdf
 
-        ## get the efficiency/p-value from the counter 
-        p_value = counter.eff
+        # ==================================================
+        ## @see Phipson, Belinda; Smyth, Gordon K (2010).
+        #       "Permutation p-values should never be zero:
+        #       calculating exact p-values when permutations are randomly drawn".
+        #       Statistical Applications in Genetics and Molecular Biology. 9 (1) 39.
+        #       arXiv:1603.05766. doi:10.2202/1544-6115.1585. PMID 21044043. S2CID 10735784.
+        counter += True
+        
+        ## get the efficiency/p-value from the counter
+        p_value  = counter.eff
 
         ## if self.__increasing : p_value = 1 - p_value
 
@@ -310,7 +358,249 @@ def psi_conf ( psi , scale = 1.0 ) :
     raise TypeError ( "Unknown `psi':%s" % psi ) 
 
 # =============================================================================
-## @class PPD
+## @class MIXnp
+#  Implementation of conctete method "Mixed samples"
+#  for probing of Goodness-Of-Fit
+#  @see M.Williams, "How good are your fits?
+#       Unbinned multivariate goodness-of-fit tests in high energy physics"
+#  @see https://doi.org/10.1088/1748-0221/5/09/P09004
+#  @see http://arxiv.org/abs/arXiv:1003.1768
+#
+#  M.Williams writes:
+#     The method <...> is easy to use and conceptually it is easy to understand.
+#     It is excellent at rejecting large localized discrepancies but fairly poor
+#     at rejecting small omnipresent ones.  The p-values can be calculated analytically.
+#     This method would make a nice addition to the high energy physics g.o.f.\ toolkit.
+class MIXnp(GoFnp) :
+    """ Implementation of concrete method "Mixed samples"
+    for probing of Goodness-Of-Fit
+    - see M.Williams, "How good are your fits?
+       Unbinned multivariate goodness-of-fit tests in high energy physics"
+    - see https://doi.org/10.1088/1748-0221/5/09/P09004
+    - see http://arxiv.org/abs/arXiv:1003.1768
+    
+    M.Williams writes:
+    The method <...> is easy to use and conceptually it is easy to understand.
+    It is excellent at rejecting large localized discrepancies but fairly poor
+    at rejecting small omnipresent ones.  The p-values can be calculated analytically.
+    This method would make a nice addition to the high energy physics g.o.f.\ toolkit.
+    """
+    
+    def __init__ ( self ,
+                   nToys        = 1000  ,
+                   parallel     = False , 
+                   silent       = False ,
+                   progress     = True  ,
+                   analytic     = True  ,
+                   n_neighbours = 10    , **params ) : 
+        
+        # =================================================================================
+        if parallel and not run_parallel ( parallel ) :
+            logger.warning ( "Parallel processing is switched OFF!" ) 
+            parallel = False 
+            
+        ## Attention!
+        assert isinstance ( n_neighbours , int ) and 2 <= n_neighbours , \
+            "Invaild `n_neighbours`: %s" % n_neighbours 
+        
+        n_jobs = 1 if parallel else num_jobs ( params , -2 )
+
+        self.__analytic = True if analytic else False
+        
+        ## initialize the base 
+        GoFnp.__init__ ( self                          , 
+                         nToys        = nToys          ,
+                         parallel     = parallel       , 
+                         silent       = silent         ,
+                         progress     = progress       ,                         
+                         method       = 'Mixed Sample' ,
+                         n_neighbours = n_neighbours   ,
+                         n_jobs       = n_jobs         , **params )
+
+    # =========================================================================
+    ## Are weights supported by this estimator?
+    @property
+    def weights_supported ( self ) :
+        """`weights_supported` : Are weights supported by this estimator?
+        """
+        return True 
+
+    # =========================================================================
+    ## k_max` : number fo nearest neighbours to test
+    @property
+    def k_max ( self ) :
+        """`k_max` : number fo nearest neighbours to test
+        """
+        return self.params [ 'n_neighbours' ]
+    
+    # =========================================================================
+    ## use analytcal p-value ?
+    @property
+    def analytic ( self ) :
+        """`analytic` : use analytical p-value?
+        """
+        return self.__analytic
+
+    # =========================================================================
+    ## full configuration
+    @property
+    def config ( self ) :
+        """`config` : full configuration"""
+        conf = GoFnp.config
+        conf [ 'analytic'     ] = self.analytic
+        return conf 
+    
+    # =========================================================================
+    # calculate t-value for (non-structured) 2D arrays
+    def t_value ( self   , 
+                 data1   , 
+                 data2   , * , 
+                 weight1 = None , 
+                 weight2 = None ) :
+        """ Calculate t-value for (non-structured) 2D arrays
+        """
+        ##
+        shape1 = data1.shape
+        shape2 = data2.shape
+        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
+            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
+        
+        ## 
+        n1 = len ( data1 ) 
+        n2 = len ( data2 ) 
+
+        if weight1 is None : weight1 = numpy.once ( n1 )
+        if weight2 is None : weight2 = numpy.once ( n2 )
+
+        ## combine them
+
+        data    = numpy.vstack       ( [ data1   , data2   ] )
+        labels  = numpy.array        ( [1] * n1 + [0] * n2   )
+        
+        w1_trivial = weigth1 is None or numpy.all ( weight1 == 1 )
+        w2_trivial = weigth2 is None or numpy.all ( weight2 == 1 )
+        
+        ## combine weights, if needed 
+        if   w1_trival and w2_trivial : weights = None
+        else : 
+            if weight1 is None : weight1 = numpy.ones ( n1 )
+            if weight2 is None : weight2 = numpy.ones ( n2 )            
+            weights = numpy.concatenate ( [ weight1 , weigth2 ] )
+
+        ## 
+        from sklearn.neighbors import NearestNeighbors
+        
+        nn = NearestNeighbors ( **self.param )
+        
+        nn.fit ( data )
+        _ , indices      = nn.kneighbors ( data )
+        
+        actual_neighbors = indices[:, 1:]
+
+        source_labels    = labels[ : , np.newaxis   ] # (N, 1)
+        neighbor_labels  = labels[ actual_neighbors ] # (N, K)
+
+        # I(i, k) = 1
+        
+        I_ik = ( source_labels == neighbor_labels).astype ( int )
+        
+        if weigths is None :
+            
+            return numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n1 ) )
+        
+        w_i = weights [ :, numpy.newaxis ]  ## (N, 1)
+        w_k = weights [ actual_neighbors ]  ## (N, K)
+        
+        pair_weights = w_i * w_k            ## (N, K)
+        
+        weighted_numerator = numpy.sum ( I_ik * pair_weights)
+        total_weight_sum   = numpy.sum ( pair_weights)
+        
+        return weighted_numerator / total_weight_sum
+    
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  gof = ...
+    #  data1 , data2 = ...
+    #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
+    #  @endcode 
+    def pvalue ( self , 
+                 data1             ,
+                 data2             , * ,
+                 weight1   = None  ,
+                 weight2   = None  ,
+                 normalize = False ) :
+                
+        """ Calculate the t & p-values
+        >>> gof  = ...
+        >>> data1 , data2 = ...
+        >>> t   , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
+        """
+
+        ## transform/normalize ? 
+        structured1 = True if data1.dtype.fields else False
+        structured2 = True if data2.dtype.fields else False        
+        if normalize and structured1 and structured2 :
+            ds1 , ds2 = self.normalize ( data1 , data2 )
+        else         :
+            ds1 , ds2 = data1 , data2 
+
+        ## convert to unstructured datasets 
+        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
+        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
+
+        ### get t-value 
+        t_value    = self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+
+        w1_trivial = weigth1 is None or numpy.all ( weight1 == 1 )
+        w2_trivial = weigth2 is None or numpy.all ( weight2 == 1 )
+        
+        if self.analytic and w1_trivial and w2_trivial :
+        
+            n1     = len ( data1 )
+            n2     = len ( data2 )
+            
+            nt     = n1 + n2 
+            mu     = n1 * ( n1 - 1 ) + n2 * ( n2 - 1 ) 
+            mu    /= n  * ( n - 1  ) 
+
+            m1     = n1 * 1.0 / n
+            m2     = n2 * 1.0 / n
+            
+            sigma2 = m1 * m2 * ( 1 + 4 * m1 * m2 ) / ( n * self.k_max )
+
+            pv = gauss_cdf ( t_value , mu , sigma2 ** 0.5 )
+            print ( 'ANALYTIC P_VALUE' , pv ) 
+            
+            
+        ## use permutations to get the p-value 
+        permutator = PERMUTATOR ( self , t_value , uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+        
+        if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
+        else                                : counter = permutator     ( self.nToys , progress = self.progress )
+
+        ## get the t-value distribution from permutator 
+        self.__ecdf = permutator.ecdf
+
+        # ==================================================
+        ## @see Phipson, Belinda; Smyth, Gordon K (2010).
+        #       "Permutation p-values should never be zero:
+        #       calculating exact p-values when permutations are randomly drawn".
+        #       Statistical Applications in Genetics and Molecular Biology. 9 (1) 39.
+        #       arXiv:1603.05766. doi:10.2202/1544-6115.1585. PMID 21044043. S2CID 10735784.
+        counter += True
+        
+        ## get the efficiency/p-value from the counter
+        p_value  = counter.eff
+
+        ## if self.__increasing : p_value = 1 - p_value
+
+        return t_value , p_value
+
+    
+# =============================================================================
+## @class PPDnp
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
 #  for probing of Goodness-Of-Fit
 #  @see M.Williams, "How good are your fits?
@@ -375,15 +665,6 @@ class PPDnp(GoFnp) :
         scale = -0.5 / ( self.sigma ** 2 ) 
         self.__distance_type , _ , _ = psi_conf ( psi , scale )
 
-        self.__ecdf   = None 
-
-    # =========================================================================
-    ## Are weights  are supported by this estimator?
-    def weights_supported ( self ) :
-        """ Are weights are supported by this estimator?
-        """
-        return False 
-    
     # =========================================================================
     @property
     def mc2mc ( self ) :

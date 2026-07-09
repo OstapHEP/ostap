@@ -104,7 +104,7 @@ boolean_true_values  = ( '1' , 'true'  , 'yes' , 'sure' , 'yep' ,           'on'
 #  - dashes ignored 
 transform = lambda v : v.replace(' ','').replace('_','').replace('-','').lower()
 # =============================================================================
-## Can the value be interprted as "boolean true"?
+## Can the value be intepreted as "boolean true"?
 #  - bool 
 #  - in lst  of "true"  values
 #  - not in lst of "false" values and True  
