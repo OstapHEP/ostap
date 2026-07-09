@@ -38,6 +38,9 @@ __all__     = (
     'ADVAL_RF'   , ## RandomForst-based class for Adversarial Validation for the difference between two (weighted) dataset
 )
 # =============================================================================
+from pandas._config import config
+from sklearn.utils import parallel
+
 from   ostap.core.ostap_types   import string_types
 from   ostap.core.cpu_info      import HAS_AVX2
 from   ostap.utils.basic        import typename 
@@ -375,13 +378,21 @@ if HAS_AVX2 :
                        'learning_rate' : 0.05   ,
                        'depth'         : 5      ,
                        'eval_metric'   : 'AUC'  ,
-                       'random_seed'   : 42     ,
                        'verbose'       : False  }
-            config.update ( params ) 
+            
+            
+            # =================================================================================
+            if parallel and not run_parallel ( parallel ) :
+                logger.warning ( "Parallel processing is switched OFF!" ) 
+                parallel = False 
 
+            ## Attention! 
+            params [ 'thread_count' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )  
+           
+            
             ## 
             import catboost as CatBoost 
-            
+            config.update ( params ) 
             ADVAL_base.__init__ ( self, 
                                   nToys    = nToys    ,
                                   parallel = parallel ,
@@ -390,6 +401,9 @@ if HAS_AVX2 :
                                   method   = "Adversarial Validation/CatBoost" ,
                                   n_splits = n_splits , **config   ) 
             
+            if 'random_seed' in self.params :      self.params.pop ( 'random_state' )
+            else : self.params [ 'random_seed' ] = self.params.pop ( 'random_state' , 42 )
+                
         # ==================================================================================
         ## Train the model and make predictions
         def work ( self ,
@@ -488,7 +502,7 @@ class ADVAL_GBC (ADVAL_base) :
         
         config =  { 'learning_rate'       : 0.05 ,
                     'max_depth'           : 5    ,
-                    'n_estimators'        : 200  , ## number of trees 
+                    'n_estimators'        : 100  , ## number of trees 
                     'validation_fraction' : 0.10 , ## internal validation for early stopping
                     'n_iter_no_change'    : 15   }
 
@@ -540,7 +554,7 @@ class ADVAL_RF (ADVAL_base) :
                    n_splits = 5     , **params   ) :
 
         config =  {
-            'n_estimators' : 200 ,
+            'n_estimators' : 100 ,
             'max_depth'    :   6 ,       # Для состязательной валидации лучше брать неглубокие деревья
             }
         
@@ -550,8 +564,7 @@ class ADVAL_RF (ADVAL_base) :
             parallel = False 
 
         ## Attention! 
-        params [ 'n_jobs' ] = num_jobs ( params , -2 )
-        if parallel : params [ 'n_jobs' ] = 1 
+        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , -2 ) 
         
         config.update ( params ) 
 

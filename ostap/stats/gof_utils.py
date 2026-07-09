@@ -55,14 +55,15 @@ np_floats = ( numpy.float16  ,
 if  ( 6 , 32 ) <= root_info : data2vct = lambda s : s
 else                        : data2vct = lambda s : doubles ( s ) 
 # ============================================================================
-njobs_kwords = ( 'num_threads' , 'num_thread' ,
-                 'numthreads'  , 'numthread'  ,
-                 'n_threads'   , 'n_thread'   ,
-                 'nthreads'    , 'nthread'    ,
-                 'num_jobs'    , 'num_job'    ,
-                 'numjobs'     , 'numjob'     ,
-                 'n_jobs'      , 'n_job'      ,
-                 'njobs'       , 'njob'       )
+njobs_kwords = ( 'num_threads'  , 'num_thread'  ,
+                 'numthreads'   , 'numthread'   ,
+                 'n_threads'    , 'n_thread'    ,
+                 'nthreads'     , 'nthread'     ,
+                 'num_jobs'     , 'num_job'     ,
+                 'numjobs'      , 'numjob'      ,
+                 'n_jobs'       , 'n_job'       ,
+                 'njobs'        , 'njob'        ,
+                 'thread_count' , 'threadcount' )
 # ==============================================================================
 ## get the value of "n_jobs" parameter 
 def num_jobs ( params , defval = -2 ) :

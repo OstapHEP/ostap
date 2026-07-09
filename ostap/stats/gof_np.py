@@ -370,7 +370,7 @@ def psi_conf ( psi , scale = 1.0 ) :
 #     The method <...> is easy to use and conceptually it is easy to understand.
 #     It is excellent at rejecting large localized discrepancies but fairly poor
 #     at rejecting small omnipresent ones.  The p-values can be calculated analytically.
-#     This method would make a nice addition to the high energy physics g.o.f.\ toolkit.
+#     This method would make a nice addition to the high energy physics g.o.f. toolkit.
 class MIXnp(GoFnp) :
     """ Implementation of concrete method "Mixed samples"
     for probing of Goodness-Of-Fit
@@ -383,7 +383,7 @@ class MIXnp(GoFnp) :
     The method <...> is easy to use and conceptually it is easy to understand.
     It is excellent at rejecting large localized discrepancies but fairly poor
     at rejecting small omnipresent ones.  The p-values can be calculated analytically.
-    This method would make a nice addition to the high energy physics g.o.f.\ toolkit.
+    This method would make a nice addition to the high energy physics g.o.f. toolkit.
     """
     
     def __init__ ( self ,
