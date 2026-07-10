@@ -8,6 +8,12 @@
 """ # Test averages for inconsistend data 
 """
 # ==============================================================================
+## ATTENTION! 
+import os 
+os.environ["OMP_NUM_THREADS"     ]  = "1"
+os.environ["MKL_NUM_THREADS"     ]  = "1"
+os.environ["OPENBLAS_NUM_THREADS"]  = "1"
+# ==============================================================================
 from   ostap.plotting.canvas  import use_canvas
 from   ostap.utils.timing     import timing
 from   ostap.logger.pretty    import pretty_float
@@ -94,8 +100,12 @@ def test_GOF () :
     
     to_test = []
 
-    nToys = 100
+    small = numcpu () <= 8
 
+    ## very small number of toys     
+    nToys = 20 if small else 200 
+
+    
     tconf = { 'nToys' : nToys , 'parallel' : True }
     
     for conf in ( { 'psi' : 'linear'     } ,
@@ -118,7 +128,8 @@ def test_GOF () :
                   { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.01 } ) : 
+                  { 'psi' : 'gaussian' , 'sigma' : 0.01 }
+                 ) : 
         
         tag = 'PPD:%s' % conf['psi']
         if 'sigma' in conf : tag = '%s[%s=%s]' % ( tag , greek_lower_sigma , conf['sigma'] ) 
@@ -155,7 +166,7 @@ def test_GOF () :
         from   ostap.stats.gofnd import ADVAL_LightGBM as GOF 
         ## 
         gof    = GOF ( **config )
-        test   = gof , gof , typename ( gof ) 
+        test   = gof , gof , 'ADVAL:LightGBM'
         to_test.append ( test )
         ## 
         # =======================================================================
@@ -170,30 +181,32 @@ def test_GOF () :
         from   ostap.stats.gofnd import ADVAL_HistoGBoost as GOF 
         ## 
         gof    = GOF ( **config )
-        test   = gof , gof , typename ( gof ) 
-        to_test.append ( test ) 
+        test   = gof , gof , 'ADVAL:HistGradientBoost'
+        ## 
+        if not small : to_test.append ( test ) 
         ## 
         ## 
-        # =======================================================================
-    except ImportError : # ======================================================
-        # =======================================================================
+        # ======================================================================
+    except ImportError : # =====================================================
+        # ======================================================================
         logger.error  ( "HistoGBoost is not available, skip the test" )
-
-    # ===========================================================================
-    try : # =====================================================================
-        # =======================================================================
+        
+    # ==========================================================================    
+    try : # ====================================================================
+        # ======================================================================
         import sklearn
         from   ostap.stats.gofnd import ADVAL_GBoost as GOF 
         ## 
         gof    = GOF ( **config )
-        test   = gof , gof , typename ( gof ) 
-        to_test.append ( test ) 
+        test   = gof , gof , 'ADVAL:GrandientBoost'
+        ## 
+        if not small : to_test.append ( test ) 
         ## 
         # =======================================================================
     except ImportError : # ======================================================
         # =======================================================================
         logger.error  ( "GBoost is not available, skip the test" )
-
+        
     # ===========================================================================
     try : # =====================================================================
         # =======================================================================
@@ -201,8 +214,9 @@ def test_GOF () :
         from   ostap.stats.gofnd import ADVAL_RandomForest as GOF 
         ## 
         gof    = GOF (  **config   )
-        test   = gof , gof , typename ( gof ) 
-        to_test.append ( test ) 
+        test   = gof , gof , 'ADVAL:RandomForest'
+        ## 
+        if not small : to_test.append ( test ) 
         ## 
         # =======================================================================
     except ImportError : # ======================================================
@@ -216,7 +230,7 @@ def test_GOF () :
         from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
         ## 
         gof    = GOF ( **config )
-        test   = gof , gof , typename ( gof ) 
+        test   = gof , gof , 'ADVAL:XBGoost'
         to_test.append ( test ) 
         ## 
         # =======================================================================
@@ -235,46 +249,47 @@ def test_GOF () :
             from   ostap.stats.gofnd import ADVAL_CatBoost as GOF 
             ## 
             gof    = GOF ( **config )
-            test   = gof , gof , typename ( gof ) 
+            test   = gof , gof , 'ADVAL:CatBoost'
             to_test.append ( test ) 
             ## 
             # ===================================================================
         except ImportError : # ==================================================
             # ===================================================================
             logger.error  ( "CatBoost is not available, skip the test" )
-
             
-    # ============================================================================
+    # ===========================================================================
     ## -log L 
-    # ============================================================================
+    # ===========================================================================
     nll_good = GnD.NLL ( nToys = nToys , fitresult = rgood , parallel = True )
     nll_bad  = GnD.NLL ( nToys = nToys , fitresult = rbad  , parallel = True )
     entry    = nll_good , nll_bad , '-log L'
     to_test.append ( entry )
 
-    # ============================================================================
+    # ===========================================================================
     ## Aikaike IC 
-    # ============================================================================
+    # ===========================================================================
     aic_good = GnD.AikaikeIC ( nToys = nToys , fitresult = rgood , parallel = True )
     aic_bad  = GnD.AikaikeIC ( nToys = nToys , fitresult = rbad  , parallel = True )
     entry    = aic_good , aic_bad , 'Aikaike IC'
     to_test.append ( entry )
 
-    # ============================================================================
+    # ===========================================================================
     ## Bayesial IC 
-    # ============================================================================
+    # ===========================================================================
     bic_good = GnD.BayesianIC ( nToys = nToys , fitresult = rgood , data = data_good , parallel = True )
     bic_bad  = GnD.BayesianIC ( nToys = nToys , fitresult = rbad  , data = data_bad  , parallel = True )
     entry    = bic_good , bic_bad , 'Bayesian IC'
     to_test.append ( entry )
 
-    # ============================================================================
+    # ===========================================================================
     ## Run the test and build the table
-    # ============================================================================
+    # ===========================================================================
     
     rows  = [ ( 'Estimator' ,
-                'p-value/GOOD-FIT[%]' , 'p-value/BAD-FIT[%]' ,
-                '#%s/good' % greek_lower_sigma , '#%s/bad' % greek_lower_sigma , 'time [s]' ) ] 
+                'GOOD-FIT:p-value[%]' ,
+                'BAD-FIG:p-value[%]'  ,
+                'GOOD-FIT:#%s' % greek_lower_sigma ,
+                'BAD-FIT:#%s'  % greek_lower_sigma , 'time [s]' ) ] 
 
     for gof1, gof2, tag  in to_test :
         with timing ( 'Processing GoF/%s' % tag , logger = logger ) as timer :

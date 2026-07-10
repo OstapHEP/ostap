@@ -314,7 +314,7 @@ class GoFnp (AGoFnp) :
         #       calculating exact p-values when permutations are randomly drawn".
         #       Statistical Applications in Genetics and Molecular Biology. 9 (1) 39.
         #       arXiv:1603.05766. doi:10.2202/1544-6115.1585. PMID 21044043. S2CID 10735784.
-        counter += True
+        # counter += True
         
         ## get the efficiency/p-value from the counter
         p_value  = counter.eff
@@ -403,7 +403,7 @@ class MIXnp(GoFnp) :
         assert isinstance ( n_neighbours , int ) and 2 <= n_neighbours , \
             "Invaild `n_neighbours`: %s" % n_neighbours 
         
-        n_jobs = 1 if parallel else num_jobs ( params , -2 )
+        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
 
         self.__analytic = True if analytic else False
         
@@ -839,6 +839,7 @@ class DNNnp(GoFnp) :
             
     # =========================================================================
     ## Are weights  are supported by this estimators?
+    @property 
     def weights_supported ( self ) :
         """ Are weights are supported by this estimators?
         """

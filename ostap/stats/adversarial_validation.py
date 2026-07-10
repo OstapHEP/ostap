@@ -5,9 +5,12 @@
 #  Implement adversarial vaildation to probe
 #  the difference between two weighted datasets
 #
-#  @see ADVAL_LGBM, class based on lightgbm, the most CPU efficient 
-#  @see ADVAL_HGBC, class based on HistGradientBoosterClassifier, slower 
-#  @see ADVAL_GBC
+#  @see ADVAL_LGBM , class based on lightgbm, the most CPU efficient 
+#  @see ADVAL_HGBC , class based on HistGradientBoosterClassifier
+#  @see ADVAL_GBC  , class based on GradientBoosterClassifier
+#  @see ADVAL_RF   , class based on RandomForestClassifier 
+#  @see ADVAL_XGB  , class based on XGBoost 
+#  @see ADVAL_CATB , class based on CatBoost 
 #
 #  As t-value \f$ 100 \times \left( 1 - 2 \times AUC \right)^2\f$ is used
 #  To estimate the~p-value permutations are used.
@@ -18,11 +21,14 @@
 """ Implement adversarial vaildation to probe
     the difference between two weighted datasets
 
- - see ADVAL_LGBM, class based on lightgbm, the most CPU efficient 
- - see ADVAL_HGBC, class based on HistGradientBoosterClassifier, slower 
- - see ADVAL_GBC
+ - see ADVAL_LGBM , class based on lightgbm, the most CPU efficient 
+ - see ADVAL_HGBC , class based on HistGradientBoosterClassifier
+ - see ADVAL_GBC  , class based on GradientBoosterClassifier
+ - see ADVAL_RF   , class based on RandomForestClassifier 
+ - see ADVAL_XGB  , class based on XGBoost 
+ - see ADVAL_CATB , class based on CatBoost 
 
-As t-value 100*( 1 - 2 * AUC AUC )**2  is used
+As t-value 100 * ( 1 - 2 * AUC AUC )**2  is used
 To estimate the~p-value permutations are used. 
 
 """
@@ -38,14 +44,13 @@ __all__     = (
     'ADVAL_RF'   , ## RandomForst-based class for Adversarial Validation for the difference between two (weighted) dataset
 )
 # =============================================================================
-from pandas._config import config
-from sklearn.utils import parallel
-
+## from   pandas._config           import config
+## from   sklearn.utils            import parallel
 from   ostap.core.ostap_types   import string_types
 from   ostap.core.cpu_info      import HAS_AVX2
-from   ostap.utils.basic        import typename 
+from   ostap.utils.basic        import typename , numcpu 
 from   ostap.stats.gof_np       import GoFnp , s2u 
-from   ostap.stats.gof_utils    import PERMUTATOR, normalize as ds_normalize
+from   ostap.stats.gof_utils    import PERMUTATOR, num_jobs, normalize as ds_normalize
 import ROOT, numpy, abc, os   
 # =============================================================================
 # logging 
@@ -56,23 +61,6 @@ else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Implement adversarial validation for Goodness-of-fit & Two-Samples test' )
 # =============================================================================
-njobs_kwords = ( 'num_threads' , 'num_thread' ,
-                 'numthreads'  , 'numthread'  ,
-                 'n_threads'   , 'n_thread'   ,
-                 'nthreads'    , 'nthread'    ,
-                 'num_jobs'    , 'num_job'    ,
-                 'numjobs'     , 'numjob'     ,
-                 'n_jobs'      , 'n_job'      ,
-                 'njobs'       , 'njob'       )
-# ==============================================================================
-## get the value of "n_jobs" parameter 
-def num_jobs ( params , defval = -2 ) :
-    """ get the value of "n_jobs" parameter
-    """
-    nj = params.pop ( njobs_kwords [ 0 ] , defval   )
-    for kw in njobs_kwords[1:] :  nj = params.pop ( kw , nj )
-    return nj
-# ==============================================================================
 ## allow parallel run
 #  - check "OMP_NUM_THREADS"
 #  - check "MKL_NUM_THREADS"
@@ -135,11 +123,11 @@ class ADVAL_base (GoFnp):
     
     # =========================================================================
     ## Are weigths supported by this estimator?
+    @property 
     def weights_supported ( self ) :
-        """ Are weigths supported by this estimator?
-        """
+        """`weights_supported` : Are weigths supported by this estimator?"""
         return True 
-
+    
     # ==========================================================================
     ## Calculate t-value for two non-structured (weighted) datasets 
     #   @param data1   the first dataset
@@ -242,12 +230,11 @@ class ADVAL_LGBM (ADVAL_base) :
         
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
-            logger.warning ( "Parallel processing is switched OFF!" ) 
+            logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
             parallel = False 
         
         ## Attention! 
-        params [ 'num_threads' ] = num_jobs ( params , -2 )
-        if parallel : params [ 'num_threads' ] = 1 
+        params [ 'num_threads' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )
         
         config.update ( params ) 
         ## 
@@ -314,8 +301,7 @@ class ADVAL_XGB (ADVAL_base) :
         ##
 
         ## Attention! 
-        params [ 'n_jobs' ] = num_jobs ( params , -2 )
-        if parallel : params [ 'n_jobs' ] = 1 
+        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu() - 1 )
         
         config.update ( params ) 
 
@@ -383,7 +369,7 @@ if HAS_AVX2 :
             
             # =================================================================================
             if parallel and not run_parallel ( parallel ) :
-                logger.warning ( "Parallel processing is switched OFF!" ) 
+                logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
                 parallel = False 
 
             ## Attention! 
@@ -448,14 +434,10 @@ class ADVAL_HGBC (ADVAL_base) :
                     'max_iter'         : 200   ,  ## number of trees (num_boost_round)
                     'early_stopping'   : False ,  ## embedded early stopping
                     'n_iter_no_change' : 15    } 
-
-        ## Attention! 
-        ## params [ 'n_jobs' ] = num_jobs ( params , -2 )
-        ## if parallel : params [ 'n_jobs' ] = 1
         
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
-            logger.warning ( "Parallel processing is switched OFF!" ) 
+            logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
             parallel = False 
                 
         config.update ( params )
@@ -508,7 +490,7 @@ class ADVAL_GBC (ADVAL_base) :
 
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
-            logger.warning ( "Parallel processing is switched OFF!" ) 
+            logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
             parallel = False 
         
         config.update ( params ) 
@@ -560,11 +542,11 @@ class ADVAL_RF (ADVAL_base) :
         
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
-            logger.warning ( "Parallel processing is switched OFF!" ) 
+            logger.warning ( "Parallel processing is switched OFF! (OMP/MKL/OPENBLAS)_NUM_THREADS" ) 
             parallel = False 
 
         ## Attention! 
-        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , -2 ) 
+        params [ 'n_jobs' ] = 1 if parallel else num_jobs ( params , numcpu() - 1  ) 
         
         config.update ( params ) 
 
