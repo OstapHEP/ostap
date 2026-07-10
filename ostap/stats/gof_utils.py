@@ -91,6 +91,21 @@ def run_parallel ( parallel ) :
     elif '1' != os.environ.get ( "OPENBLAS_NUM_THREADS" , "" ) : return False
     ## 
     return True 
+# =============================================================================
+## Trvial weight
+#  - None
+#  - positive constant
+#  - all ones
+def weight_trivial ( weight ) :
+    """ Trvial weight
+    - None
+    - positive constant
+    - all ones
+    """
+    if    weight is None                        : return True
+    elif  isinstance ( weight , num_types     ) : return 0 < weight 
+    elif  isinstance ( weight , numpy.ndarray ) : return numpy.all ( weight == 1 ) 
+    return False
 
 # =============================================================================
 ## Get the mean and variance for (1D) data array with optional (1D) weight array
@@ -133,11 +148,86 @@ def nEff ( weights ) :
     """ Get the effective number of entries for 1D-array
     n_eff = ( sum ( x )  ) ^2 / sum ( x^2 )
     """
-
     s1 = numpy.sum ( weights      , dtype = float )
     s2 = numpy.sum ( weights ** 2 , dtype = float )
-    
     return s1 * s1 / s2
+
+# =============================================================================
+## Normalize several numpy arrays such that mean and rms for the pooled sample
+#  are equal to 0 and 1 correspondinly
+#  @code
+#  ds1 = ...
+#  ds2 = ...
+#  ds3 = ...
+#  ds1 , ds2 , ds3 = pool_normalize ( ds1 , ds2 , ds3 ) 
+#  @endcode 
+def normalize_pooled ( *datasets ) :
+    """ Normalize several numpy arrays such that the mean and rms for the POOLED sample
+    are equal to 0 and 1 correspondinly
+    
+    >>> ds1 = ...
+    >>> ds2 = ...
+    >>> ds3 = ...
+    >>> ds1 , ds2 , ds3 = np_normalize ( ds1 , ds2 , ds3 )
+    
+    """
+
+    print ( 'I AM POOLED NORMALIZE!' )
+    
+    if not datasets : return ()
+
+    ## print ( 'SKIP NORMALIZATION' ) 
+    ## return datasets 
+    
+    total      = 0 
+    total_mean = None
+    total_std2 = None
+    
+    sizes      = []
+    sizes      = []
+    means      = []
+    
+    for i , data in enumerate ( datasets ) :
+        
+        n     = len ( data )
+        
+        mean = numpy.mean ( data , axis=0 , keepdims = True )
+        std2 = numpy.std  ( data , axis=0 , keepdims = True ) ** 2 
+        
+        sizes .append ( n    ) 
+        means .append ( mean )
+        
+        if total_mean is None : total_mean  = n * mean
+        else                  : total_mean += n * mean
+        
+        if total_std2 is None : total_std2  = n * std2
+        else                  : total_std2 += n * std2
+        
+    ## total number of entries in pooled sample
+    total       = sum ( sizes )
+
+    ## mean values 
+    total_mean /= total
+
+    for n , mu in zip ( sizes , means ) : total_std2 += n * ( mu - total_mean ) ** 2
+    
+    ## squared RMS
+    total_std2 /= total
+
+    ## mean value 
+    mean = total_mean
+
+    ## RMS 
+    std  = numpy.sqrt ( total_std2 )
+    
+    result = []
+    for i , data in enumerate ( datasets ) :
+        ### shift&scale 
+        result.append ( ( data - mean ) / std )
+
+    if 1 == len ( result ) : return result [ 0 ]
+    
+    return tuple ( result ) 
 
 # =============================================================================
 ## Get the "normalized" input datasets
@@ -316,21 +406,86 @@ def clip_pvalue ( pvalue , clip = 0.5 ) :
     return pv 
     
 # =============================================================================
+## Generator of permutations for datasets (and associated weights)
+#  1. pooled dataset is created
+#  2. pooled dataset is split into two permuted datasets 
+def make_permutations ( nToys    ,
+                        data1    ,
+                        data2    , *    ,
+                        weight1  = None ,
+                        weight2  = None ,
+                        silent   = True , 
+                        progress = True ) :
+    """ Generator of permutations
+    >>> ds1, ds2 = ...
+    >>> gof      = ...
+    >>> nToys    = 100 
+    >>> for d1,d2,w1,w2  in make_permutations ( nToys , ds1 , ds2 ) :
+    ...
+    """
+    assert isinstance ( nToys , int ) and 1 <= nToys , "make_permutations: Invalid `nToys`: %s" % nToys 
+
+    n1     = len ( data1 )
+    n2     = len ( data2 )
+    pooled = numpy.concatenate ( [ data1 , data2 ] )
+
+    w1_trivial = weight_trivial ( weight1 )
+    w2_trivial = weight_trivial ( weight2 )
+    
+    if w1_trivial and w2_trivial : weights = None 
+    else :
+        if w1_trivial : weight1 = numpy.ones ( n1 )
+        if w2_trivial : weight2 = numpy.ones ( n2 )
+        weights = numpy.concatenate ( [ weight1 , weight2 ] , dtype = pooled.dtype ).reshape ( ( n1 + n2 , 1 ) )
+        pooled  = numpy.hstack      ( [ pooled       , weights      ] )
+
+    
+    ## run permutations 
+    for i in progress_bar ( nToys , silent = silent and not progress ) :
+        
+        numpy.random.shuffle ( pooled )
+        
+        ds1 = pooled [    : n1 ]
+        ds2 = pooled [ n1 :    ]
+        
+        if weights is None :
+            ds1 , w1 = ds1 , None
+            ds2 , w2 = ds2 , None
+        else               :                
+            ds1 , w1 = ds1 [ : , : -1 ] , ds1 [ : , -1 ]
+            ds2 , w2 = ds2 [ : , : -1 ] , ds2 [ : , -1 ]
+            
+        yield ds1 , ds2 , w1 , w2 
+            
+    del pooled
+    del weights
+                    
+# =============================================================================
 ## @class PERMUTATOR
 #  Helper class that allow to run permutation test in parallel 
 class PERMUTATOR(object) :
     """ Helper class that allow to run permutation test in parallel 
     """
-    def __init__ ( self, gof, t_value , ds1 , ds2 , weight1 = None , weight2 = None ) :
+    def __init__ ( self    ,
+                   gof     ,
+                   t_value ,
+                   ds1     ,
+                   ds2     ,
+                   weight1 = None ,
+                   weight2 = None ) :
         
         self.gof     = gof
         self.ds1     = ds1
         self.ds2     = ds2
 
-        if weight1 is None and weight2 is None : pass 
-        else : 
-            weight1 = numpy.ones ( len ( self.ds1 ) , dtype = float ) if weight1 is None else weight1
-            weight2 = numpy.ones ( len ( self.ds2 ) , dtype = float ) if weight2 is None else weight2
+        w1_trivial = weight_trivial ( weight1 )
+        w2_trivial = weight_trivial ( weight2 )
+        
+        if w1_trivial and w2_trivial :
+            weight1 , weight2 = None, None 
+        else :
+            if w1_trivial : weight1 = numpy.ones ( len ( self.ds1 ) , dtype = float )
+            if w2_trivial : weight2 = numpy.ones ( len ( self.ds2 ) , dtype = float )
         
         self.weight1 = weight1
         self.weight2 = weight2 
@@ -378,43 +533,28 @@ class PERMUTATOR(object) :
         """ Run N-toys
         """
         
-        numpy.random.seed()
-        n1      = len ( self.ds1 )
-        n2      = len ( self.ds2 )
-        
-        pooled  = numpy.concatenate ( [ self.ds1     , self.ds2     ] )
-
-        easy_way = False 
-        if self.weight1 is None and self.weight2 is None : easy_way = True 
-        else :            
-            weights = numpy.concatenate ( [ self.weight1 , self.weight2 ] , dtype = pooled.dtype ).reshape ( ( n1 + n2 , 1 ) ) 
-            pooled  = numpy.hstack      ( [ pooled       , weights      ] )
-            
         counter = EffCounter()
         tvalues = []
-        
-        for i in progress_bar ( N , silent = not progress  , description = 'Permutations:') :
 
-            numpy.random.shuffle ( pooled )
+        for data1 , data2 , weight1 , weight2 in make_permutations ( N                       ,
+                                                                     self.ds1                ,
+                                                                     self.ds2                ,
+                                                                     weight1  = self.weight1 ,
+                                                                     weight2  = self.weight2 , 
+                                                                     progress = progress     ,   
+                                                                     silent   = silent       ) :
 
-            ds1 = pooled [    : n1 ]
-            ds2 = pooled [ n1 :    ]
-            
-            if easy_way :
-                
-                w1 , w2 = None, None
-                
-            else :
-                
-                ds1 , w1 = ds1[ : , : -1 ] , ds1 [ : , -1 ]
-                ds2 , w2 = ds2[ : , : -1 ] , ds2 [ : , -1 ]
-
-            tv       = self.gof.t_value ( ds1 , ds2 , weight1 = w1 , weight2 = w2  )
-            tvalues.append ( float ( tv ) )
+            ## attention: normalize = False 
+            tv       = self.gof.t_value ( data1     ,
+                                          data2     ,
+                                          weight1   = weight1 ,
+                                          weight2   = weight2 ,
+                                          normalize = False   )
+            tv       = float ( tv )
+            tvalues.append  ( tv  )
             counter += bool ( self.t_value < tv  )
-            
-        del pooled
-        
+
+        print ('T-VALUES', tvalues) 
         return counter, tuple ( tvalues )
 
     @property 

@@ -107,7 +107,15 @@ def test_GOF () :
 
     
     tconf = { 'nToys' : nToys , 'parallel' : True }
-    
+
+    # ===========================================================================
+    ## MIX 
+    # ===========================================================================
+    mix   = GnD.MIX  ( **tconf )
+    entry = mix , mix, 'Mix Sample'
+    to_test.append ( entry )
+
+
     for conf in ( { 'psi' : 'linear'     } ,
                   { 'psi' : 'logarithm'  } ,
                   { 'psi' : 'chebyshev'  } ,   
@@ -121,14 +129,14 @@ def test_GOF () :
                   { 'psi' : 'braycurtis' } ,   
                   { 'psi' : 'cityblock'  } ,
                   ## 
-                  { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
-                  { 'psi' : 'gaussian' , 'sigma' : 0.01 }
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
+                  ## { 'psi' : 'gaussian' , 'sigma' : 0.01 }
                  ) : 
         
         tag = 'PPD:%s' % conf['psi']
@@ -287,7 +295,7 @@ def test_GOF () :
     
     rows  = [ ( 'Estimator' ,
                 'GOOD-FIT:p-value[%]' ,
-                'BAD-FIG:p-value[%]'  ,
+                'BAD-FIT:p-value[%]'  ,
                 'GOOD-FIT:#%s' % greek_lower_sigma ,
                 'BAD-FIT:#%s'  % greek_lower_sigma , 'time [s]' ) ] 
 

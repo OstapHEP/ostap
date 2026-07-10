@@ -26,14 +26,17 @@ __all__     = (
     'DNNnp' , ## Distance-to-Nearest-Neighbour Goodness-of-fit method 
 )
 # =============================================================================
-from   ostap.core.ostap_types   import string_types 
-from   ostap.stats.gof_utils    import PERMUTATOR, normalize as ds_normalize  
+from   ostap.core.ostap_types   import string_types
+from   ostap.stats.gof_utils    import PERMUTATOR
 from   ostap.core.core          import SE, VE, Ostap, hID  
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.utils.utils        import split_n_range
 from   ostap.utils.basic        import numcpu, typename  
 from   ostap.stats.gof          import AGoFnp
-from   ostap.stats.gof_utils    import run_parallel , num_jobs 
+from   ostap.stats.gof_utils    import ( run_parallel     ,
+                                         num_jobs         ,
+                                         weight_trivial   ,
+                                         normalize_pooled ) 
 from   ostap.utils.memory       import memory, memory_enough
 from   ostap.math.math_ve       import gauss_cdf 
 import ostap.math.math_base           
@@ -84,24 +87,26 @@ except ImportError : # ========================================================
 class GoFnp (AGoFnp) :
     """ A base class for numpy-related family of methods to probe goodness-of-fit
     """
-    def __init__ ( self              ,
-                   nToys    = 0      ,
-                   silent   = False  , 
-                   parallel = False  ,
-                   method   = 'GoF'  ,
-                   progress = True   , **params ) : 
+    def __init__ ( self               ,
+                   nToys     = 0      ,
+                   silent    = False  , 
+                   parallel  = False  ,
+                   method    = 'GoF'  ,
+                   progress  = True   ,
+                   normalize = True   , **params ) : 
 
         assert isinstance ( nToys , int ) and 0 <= nToys  , \
             "Invalid number of permulations/toys:%s" % nToys
         
         self.__nToys    = nToys
-        
-        self.__silent   = True if silent   else False
-        self.__parallel = True if parallel else False
-        self.__progress = True if progress else False
-        
-        self.__method   = method
-        self.__params   = params
+        ## 
+        self.__silent    = True if silent    else False
+        self.__parallel  = True if parallel  else False
+        self.__progress  = True if progress  else False
+        self.__normalize = True if normalize else False 
+        ## 
+        self.__method    = method
+        self.__params    = params
 
         ## Empirical CDF for t-value distribution from permutations/toys"""
         self.__ecdf    = None
@@ -117,6 +122,11 @@ class GoFnp (AGoFnp) :
         """`params` : configuration of underlying classifier"""
         return self.__params
 
+    @property
+    def normalize ( self ) :
+        """`normalize` : scale and shift both datasets to have mean = 0 and rms=1 for each column of pooled data"""
+        return self.__normalize
+    
     # ==================================================================================
     @property
     def config ( self ) :
@@ -127,6 +137,7 @@ class GoFnp (AGoFnp) :
         conf [ 'silent'           ] = self.silent
         conf [ 'progress'         ] = self.progress
         conf [ 'parallel'         ] = self.parallel
+        conf [ 'normalize'        ] = self.normalize 
         conf [ 'weight_supported' ] = self.weights_supported
         return conf 
         
@@ -142,49 +153,7 @@ class GoFnp (AGoFnp) :
                               title  = title )
     ## ditto ...
     def __repr__ ( self ) : return self.__str__ ()
-    
-    
-    # ==========================================================================
-    ## Normalize two data sets, such that each variable in pooled set
-    #  has a mean of zero and variance of one 
-    #  @code
-    #  ds1 = ... ## the 1st structured array 
-    #  ds2 = ... ## the 2nd structured array
-    #  gof = ... ##    #  nd1, nd2 = gof.normalize ( ds1 , ds2 ) 
-    #  @encode
-    def normalize ( self , *datasets ) :
-        """ Normalize two data sets, such that each variable in pooled set
-        has a  mean of zero and variance of one 
-        
-        >>> ds1 = ... ## the 1st structured array 
-        >>> ds2 = ... ## the 2nd structured array
-        >>> gof = ... ##
-        >>> nd1, nd2 = gof.normalize ( ds1 , ds2 ) 
-        """ 
-        return ds_normalize ( *datasets  , first = False ) 
-    # =========================================================================
-    ## Generator of permutations
-    #  @code
-    #  ds1, ds2 = ...
-    #  gof      = ...
-    #  for d1,d2 in gof.permutations ( 100 , ds1 , ds2 ) :
-    #  ...  
-    #  @endcode 
-    def permutations ( self , nToys , data1 , data2 ) :
-        """ Generator of permutations
-        >>> ds1, ds2 = ...
-        >>> gof      = ...
-        >>> for d1,d2 in gof.permutations ( 100 , ds1 , ds2 ) :
-         ...
-        """
-        n1     = len ( data1 )
-        pooled = numpy.concatenate ( [ data1 , data2 ] )
-        ## 
-        for i in progress_bar ( nToys , silent = self.silent ) : 
-            numpy.random.shuffle ( pooled )
-            yield pooled [ : n1 ] , pooled [ n1 : ]
 
-        del pooled 
     # =========================================================================
     @property 
     def nToys ( self ) :
@@ -210,10 +179,32 @@ class GoFnp (AGoFnp) :
     def method ( self ) :
         """`method` : the actual GoF method """
         return self.__method
-
-    # =========================================================================
     
-    # =========================================================================    
+    # =======================================================================
+    ##  Unpack data ( consvert from structured to unstructured arrays)
+    #   @code
+    #   gof   = 
+    #   ds1   , ds2  = ...
+    #   data1 , dat2 = gof.unpack ( ds1 , ds2 ) 
+    #   @endcode 
+    def unpack ( self , ds1 , ds2 ) :
+        """ Unpack data ( convert from structured to unstructured arrays)
+        >>> gof   = 
+        >>> ds1   , ds2  = ...
+        >>> data1 , dat2 = gof.unpack ( ds1 , ds2 ) 
+        """
+        ## 
+        ## transform ?  
+        structured1 = True if ds1.dtype.fields else False
+        structured2 = True if ds2.dtype.fields else False
+        ## 
+        ## convert to unstructured datasets 
+        data1 = s2u ( ds1 , copy = False ) if structured1 else ds1
+        data2 = s2u ( ds2 , copy = False ) if structured2 else ds2
+        ##
+        return data1 , data2 
+                       
+    # =======================================================================
     ## Calculate T-value for two (structured) datasets 
     #  @code
     #  adval  = ...
@@ -227,37 +218,35 @@ class GoFnp (AGoFnp) :
                    data2             , * ,
                    weight1   = None  ,
                    weight2   = None  ,
-                   normalize = False ) :
+                   normalize = True  ) :
         
         """ Calculate T-value for two (STRUCTURED) data sets 
         >>> adval = ...
         >>> data1 = ... ## the first  data set 
-        >>> data2 = ... ## the second data set
+        >>> data2 = ... ## the second data set 
         >>> t = adval ( data1 , data1 , normalize = False ) 
         >>> t = adval ( data1 , data1 , normalize = True  ) 
         """        
         
-        if not self.weights_supported : 
-            assert weight1 is None or numpy.all ( 1 == weight1 ) , "weight1 must be either None or trivial"
-            assert weight2 is None or numpy.all ( 1 == weight2 ) , "weight2 must be either None or trivial"
+        if not self.weights_supported :
+            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
+            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
             weight1 = None
             weight2 = None
 
-        ## transform/normalize ? 
-        structured1 = True if data1.dtype.fields else False
-        structured2 = True if data2.dtype.fields else False
-        
-        if normalize and structured1 and structured2 :
-            ds1 , ds2 = self.normalize ( data1 , data2 )
-        else         :
-            ds1 , ds2 = data1 , data2 
-
-        ## convert to unstructured datasets 
-        uds1 = s2u ( ds1 , copy = False ) if ds1.dtype.fields else ds1
-        uds2 = s2u ( ds2 , copy = False ) if ds2.dtype.fields else ds2
-
-        return self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
-        
+        ## transform ?  
+        uds1 , uds2 = self.unpack ( data1 , data2 ) 
+            
+        ## normalize
+        if normalize and self.normalize :
+            uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
+            
+        return self.t_value ( uds1 ,
+                              uds2 ,
+                              weight1   = weight1 ,
+                              weight2   = weight2 ,
+                              normalize = False   )
+    
     # =========================================================================
     ## Calculate the t & p-values
     #  @code
@@ -265,12 +254,11 @@ class GoFnp (AGoFnp) :
     #  data1 , data2 = ...
     #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
     #  @endcode 
-    def pvalue ( self , 
+    def pvalue ( self              , 
                  data1             ,
                  data2             , * ,
                  weight1   = None  ,
-                 weight2   = None  ,
-                 normalize = False ) :
+                 weight2   = None  ) : 
                 
         """ Calculate the t & p-values
         >>> gof  = ...
@@ -278,29 +266,32 @@ class GoFnp (AGoFnp) :
         >>> t   , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
         """
         
-        if not self.weights_supported : 
-            assert weight1 is None or numpy.all ( 1 == weight1 ) , "weight1 must be either None or trivial"
-            assert weight2 is None or numpy.all ( 1 == weight2 ) , "weight2 must be either None or trivial"
+        if not self.weights_supported :
+            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
+            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
             weight1 = None
             weight2 = None
 
-        ## transform/normalize ? 
-        structured1 = True if data1.dtype.fields else False
-        structured2 = True if data2.dtype.fields else False        
-        if normalize and structured1 and structured2 :
-            ds1 , ds2 = self.normalize ( data1 , data2 )
-        else         :
-            ds1 , ds2 = data1 , data2 
-
-        ## convert to unstructured datasets 
-        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
-        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
-
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 ) 
+        
+        ## normalize ? 
+        if self.normalize : uds1 , uds1 = normalize_pooled ( uds1 , uds2 ) 
+        
         ### get t-value 
-        t_value    = self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
-
+        t_value    = self.t_value ( uds1      ,
+                                    uds2      ,
+                                    weight1   = weight1 ,
+                                    weight2   = weight2 ,
+                                    normalize = False   )
+        
         ## use permutations to get the p-value 
-        permutator = PERMUTATOR ( self , t_value , uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+        permutator = PERMUTATOR ( self              ,
+                                  t_value           ,
+                                  uds1              ,
+                                  uds2              ,
+                                  weight1 = weight1 ,
+                                  weight2 = weight2 )
         
         if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
         else                                : counter = permutator     ( self.nToys , progress = self.progress )
@@ -327,7 +318,12 @@ class GoFnp (AGoFnp) :
     def ecdf ( self ) :
         """`ecdf` : empirical CDF for t-value distribution from permutations"""
         return self.__ecdf
-        
+    @ecdf.setter
+    def ecdf ( self , value ) :
+        assert value is None or isinstance ( value , Ostap.Math.ECDF ) , \
+            "Invaild type for ECDF: %s" % typename ( value )
+        self.__ecdf = value 
+
 # ============================================================================
 ## define configuration for psi-function for PPD method
 #   - distance type of <code>cdist</code>
@@ -359,7 +355,7 @@ def psi_conf ( psi , scale = 1.0 ) :
 
 # =============================================================================
 ## @class MIXnp
-#  Implementation of conctete method "Mixed samples"
+#  Implementation of "Mixed Sample"
 #  for probing of Goodness-Of-Fit
 #  @see M.Williams, "How good are your fits?
 #       Unbinned multivariate goodness-of-fit tests in high energy physics"
@@ -372,7 +368,7 @@ def psi_conf ( psi , scale = 1.0 ) :
 #     at rejecting small omnipresent ones.  The p-values can be calculated analytically.
 #     This method would make a nice addition to the high energy physics g.o.f. toolkit.
 class MIXnp(GoFnp) :
-    """ Implementation of concrete method "Mixed samples"
+    """ Implementation of "Mixed Sample"
     for probing of Goodness-Of-Fit
     - see M.Williams, "How good are your fits?
        Unbinned multivariate goodness-of-fit tests in high energy physics"
@@ -387,12 +383,12 @@ class MIXnp(GoFnp) :
     """
     
     def __init__ ( self ,
-                   nToys        = 1000  ,
-                   parallel     = False , 
-                   silent       = False ,
-                   progress     = True  ,
-                   analytic     = True  ,
-                   n_neighbours = 10    , **params ) : 
+                   nToys       = 1000  ,
+                   parallel    = False , 
+                   silent      = False ,
+                   progress    = True  ,
+                   analytic    = True  ,
+                   n_neighbors = 10    , **params ) : 
         
         # =================================================================================
         if parallel and not run_parallel ( parallel ) :
@@ -400,11 +396,12 @@ class MIXnp(GoFnp) :
             parallel = False 
             
         ## Attention!
-        assert isinstance ( n_neighbours , int ) and 2 <= n_neighbours , \
-            "Invaild `n_neighbours`: %s" % n_neighbours 
+        assert isinstance ( n_neighbors , int ) and 2 <= n_neighbors , \
+            "Invaild `n_neighbors`: %s" % n_neighbors 
         
-        n_jobs = 1 if parallel else num_jobs ( params , numcpu() - 1 )
-
+        n_jobs = num_jobs ( params , numcpu() - 1 )
+        if parallel : n_jobs = 1 
+        
         self.__analytic = True if analytic else False
         
         ## initialize the base 
@@ -414,7 +411,8 @@ class MIXnp(GoFnp) :
                          silent       = silent         ,
                          progress     = progress       ,                         
                          method       = 'Mixed Sample' ,
-                         n_neighbours = n_neighbours   ,
+                         normalize    = True           , 
+                         n_neighbors  = n_neighbors    ,
                          n_jobs       = n_jobs         , **params )
 
     # =========================================================================
@@ -426,12 +424,12 @@ class MIXnp(GoFnp) :
         return True 
 
     # =========================================================================
-    ## k_max` : number fo nearest neighbours to test
+    ## k_max` : number fo nearest neighbors to test
     @property
     def k_max ( self ) :
-        """`k_max` : number fo nearest neighbours to test
+        """`k_max` : number fo nearest neighbors to test
         """
-        return self.params [ 'n_neighbours' ]
+        return self.params [ 'n_neighbors' ]
     
     # =========================================================================
     ## use analytcal p-value ?
@@ -447,67 +445,71 @@ class MIXnp(GoFnp) :
     def config ( self ) :
         """`config` : full configuration"""
         conf = GoFnp.config
-        conf [ 'analytic'     ] = self.analytic
+        conf [ 'analytic' ] = self.analytic
         return conf 
     
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
-    def t_value ( self   , 
-                 data1   , 
-                 data2   , * , 
-                 weight1 = None , 
-                 weight2 = None ) :
+    def t_value ( self      , 
+                  data1     , 
+                  data2     , * , 
+                  weight1   = None , 
+                  weight2   = None ,
+                  normalize = True ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
+
         shape1 = data1.shape
         shape2 = data2.shape
         assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
             "Invalid arrays: %s , %s" % ( shape1 , shape2  )
-        
+
+        ## transform ?
+        uds1 , uds2 = self.unpack ( data1 , data2 )
+
+        ## normalize
+        if normalize and self.normalize :
+            uds1, uds2  = normalize_pooled ( uds1 , uds2  ) 
+            
         ## 
-        n1 = len ( data1 ) 
-        n2 = len ( data2 ) 
-
-        if weight1 is None : weight1 = numpy.once ( n1 )
-        if weight2 is None : weight2 = numpy.once ( n2 )
-
-        ## combine them
-
-        data    = numpy.vstack       ( [ data1   , data2   ] )
-        labels  = numpy.array        ( [1] * n1 + [0] * n2   )
+        n1 = len ( uds1 ) 
+        n2 = len ( uds2 ) 
+                
+        data       = numpy.vstack       ( [ uds1  , uds2 ]    )
+        labels     = numpy.array        ( [ 1 ] * n1 + [ 0 ] * n2  )
         
-        w1_trivial = weigth1 is None or numpy.all ( weight1 == 1 )
-        w2_trivial = weigth2 is None or numpy.all ( weight2 == 1 )
+        w1_trivial = weight_trivial ( weight1 )
+        w2_trivial = weight_trivial ( weight2 )
         
         ## combine weights, if needed 
-        if   w1_trival and w2_trivial : weights = None
+        if   w1_trivial and w2_trivial : weights = None
         else : 
             if weight1 is None : weight1 = numpy.ones ( n1 )
             if weight2 is None : weight2 = numpy.ones ( n2 )            
-            weights = numpy.concatenate ( [ weight1 , weigth2 ] )
+            weights = numpy.concatenate ( [ weight1 , weight2 ] )
 
         ## 
         from sklearn.neighbors import NearestNeighbors
-        
-        nn = NearestNeighbors ( **self.param )
+        nn = NearestNeighbors ( **self.params )
         
         nn.fit ( data )
-        _ , indices      = nn.kneighbors ( data )
+        _  , indices      = nn.kneighbors ( data )
         
-        actual_neighbors = indices[:, 1:]
+        actual_neighbors = indices[ : , 1: ]
 
-        source_labels    = labels[ : , np.newaxis   ] # (N, 1)
-        neighbor_labels  = labels[ actual_neighbors ] # (N, K)
+        source_labels    = labels [ : , numpy.newaxis   ] # (N, 1)
+        neighbor_labels  = labels [ actual_neighbors ] # (N, K)
 
-        # I(i, k) = 1
+        # I(i, k) = 1 
         
         I_ik = ( source_labels == neighbor_labels).astype ( int )
+
         
-        if weigths is None :
-            
-            return numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n1 ) )
-        
+        if weights is None :
+            result = numpy.sum ( I_ik ) / ( 1.0 * self.k_max * ( n1 + n1) )
+            return float ( result ) 
+
         w_i = weights [ :, numpy.newaxis ]  ## (N, 1)
         w_k = weights [ actual_neighbors ]  ## (N, K)
         
@@ -516,7 +518,9 @@ class MIXnp(GoFnp) :
         weighted_numerator = numpy.sum ( I_ik * pair_weights)
         total_weight_sum   = numpy.sum ( pair_weights)
         
-        return weighted_numerator / total_weight_sum
+        result = weighted_numerator / total_weight_sum
+
+        return float ( result ) 
     
     # =========================================================================
     ## Calculate the t & p-values
@@ -525,57 +529,57 @@ class MIXnp(GoFnp) :
     #  data1 , data2 = ...
     #  t , p = gof.pvalue ( data1 , data2 , normalize = False ) 
     #  @endcode 
-    def pvalue ( self , 
+    def pvalue ( self              , 
                  data1             ,
                  data2             , * ,
                  weight1   = None  ,
-                 weight2   = None  ,
-                 normalize = False ) :
+                 weight2   = None  ) :
                 
         """ Calculate the t & p-values
         >>> gof  = ...
         >>> data1 , data2 = ...
-        >>> t   , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
+        >>> t   , p = gof.pvalue ( ds1 , ds2 ) 
         """
-
-        ## transform/normalize ? 
-        structured1 = True if data1.dtype.fields else False
-        structured2 = True if data2.dtype.fields else False        
-        if normalize and structured1 and structured2 :
-            ds1 , ds2 = self.normalize ( data1 , data2 )
-        else         :
-            ds1 , ds2 = data1 , data2 
-
-        ## convert to unstructured datasets 
-        uds1    = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
-        uds2    = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
+        
+        ## transform?
+        uds1 , uds2 = self.unpack ( data1 , data2 ) 
+        
+        ## normalize ? 
+        if self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
 
         ### get t-value 
-        t_value    = self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+        t_value    = self.t_value ( uds1      ,
+                                    uds2      ,
+                                    weight1   = weight1 ,
+                                    weight2   = weight2 ,
+                                    normalize = False   )
 
-        w1_trivial = weigth1 is None or numpy.all ( weight1 == 1 )
-        w2_trivial = weigth2 is None or numpy.all ( weight2 == 1 )
-        
-        if self.analytic and w1_trivial and w2_trivial :
-        
-            n1     = len ( data1 )
-            n2     = len ( data2 )
-            
-            nt     = n1 + n2 
-            mu     = n1 * ( n1 - 1 ) + n2 * ( n2 - 1 ) 
-            mu    /= n  * ( n - 1  ) 
+        if self.analytic and weight_trivial ( weight1 ) and weight_trivial ( weight2 ) : 
 
-            m1     = n1 * 1.0 / n
-            m2     = n2 * 1.0 / n
+            n1     = len ( uds1 )
+            n2     = len ( uds2  )
             
-            sigma2 = m1 * m2 * ( 1 + 4 * m1 * m2 ) / ( n * self.k_max )
+            nt     = 1.0 * n1 + 1.0 * n2 
+            mu     = n1 * ( n1 - 1.0 ) + n2 * ( n2 - 1.0 ) 
+            mu    /= nt * ( nt - 1.0 ) 
 
-            pv = gauss_cdf ( t_value , mu , sigma2 ** 0.5 )
-            print ( 'ANALYTIC P_VALUE' , pv ) 
+            m1     = n1 * 1.0 / nt
+            m2     = n2 * 1.0 / nt
+            mm     = m1 * m2
             
+            sigma2 = mm * ( 1.0 + 4 * mm ) / ( nt * self.k_max )
+            sigma  = sigma2 ** 0.5
             
+            pv = gauss_cdf ( t_value , mu , sigma )
+            print ( 'ANALYTIC P_VALUE' , pv , mu , sigma , t_value , ( t_value - mu ) / sigma ) 
+
         ## use permutations to get the p-value 
-        permutator = PERMUTATOR ( self , t_value , uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+        permutator = PERMUTATOR ( self    ,
+                                  t_value ,
+                                  uds1    ,
+                                  uds2    ,
+                                  weight1 = weight1 ,
+                                  weight2 = weight2 )
         
         if self.parallel and permutator.run : counter = permutator.run ( self.nToys , progress = self.progress )            
         else                                : counter = permutator     ( self.nToys , progress = self.progress )
@@ -597,7 +601,6 @@ class MIXnp(GoFnp) :
         ## if self.__increasing : p_value = 1 - p_value
 
         return t_value , p_value
-
     
 # =============================================================================
 ## @class PPDnp
@@ -646,12 +649,13 @@ class PPDnp(GoFnp) :
                    progress  = True       , 
                    maxsize   = 1000000    ) :
         
-        GoFnp.__init__ ( self                ,
-                         nToys    = nToys    ,
-                         parallel = parallel , 
-                         silent   = silent   ,
-                         progress = progress , 
-                         method   = 'Point-to-Point Dissimilarity' )
+        GoFnp.__init__ ( self                 ,
+                         nToys     = nToys    ,
+                         parallel  = parallel , 
+                         silent    = silent   ,
+                         progress  = progress ,
+                         normalize = True     ,                          
+                         method    = 'Point-to-Point Dissimilarity' )
         
         self.__mc2mc     = True if mc2mc else False
         self.__transform = None
@@ -718,20 +722,33 @@ class PPDnp(GoFnp) :
     
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
-    def t_value ( self   , 
-                 data1   , 
-                 data2   , * , 
-                 weight1 = None , 
-                 weight2 = None ) :
+    def t_value ( self      , 
+                  data1     , 
+                  data2     , *    , 
+                  weight1   = None , 
+                  weight2   = None ,
+                  normalize = True ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
-        if not self.weights_supported : 
-            assert weight1 is None or numpy.all ( 1 == weight1 ) , "weight1 must be either None or trivial"
-            assert weight2 is None or numpy.all ( 1 == weight2 ) , "weight2 must be either None or trivial"
+        if not self.weights_supported :
+            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
+            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
             weight1 = None
             weight2 = None
+
+        ## transform ?  
+        structured1 = True if data1.dtype.fields else False
+        structured2 = True if data2.dtype.fields else False
         
+        ## convert to unstructured datasets 
+        data1 = s2u ( data1 , copy = False ) if structured1 else data1
+        data2 = s2u ( data2 , copy = False ) if structured2 else data2
+        
+        ## normalize
+        if normalize and self.normalize :
+            data1, data2 = normalize_pooled ( data1 , data2 ) 
+                               
         shape1 = data1.shape
         shape2 = data2.shape
         assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
@@ -768,7 +785,7 @@ class PPDnp(GoFnp) :
                   data2     , * , 
                   weight1   = None , 
                   weight2   = None , 
-                  normalize = False ) :
+                  normalize = True ) :
         """ Calculate T-value for two data sets 
         >>> ppd   = ...
         >>> data1 = ... ## the first  data set 
@@ -777,19 +794,22 @@ class PPDnp(GoFnp) :
         >>> t = ppd ( data1 , data1 , normalize = True  ) 
         """
         
-        ## transform/normalize ? 
-        if normalize : ds1 , ds2 = self.normalize ( data1 , data2 )
-        else         : ds1 , ds2 = data1 , data2 
-
+        ## transform ?  
+        structured1 = True if data1.dtype.fields else False
+        structured2 = True if data2.dtype.fields else False
+  
         ## convert to unstructured datasets 
-        uds1 = s2u ( data1 , copy = False ) if data1.dtype.fields else data1 
-        uds2 = s2u ( data2 , copy = False ) if data2.dtype.fields else data2
-
+        uds1 = s2u ( data1 , copy = False ) if structured1 else data1 
+        uds2 = s2u ( data2 , copy = False ) if structured2 else data2
+         
+        ## normalize
+        if normalize and self.normalize : uds1, uds2= normalize_pooled ( uds1 , uds2 ) 
+                            
         ## For 1D-arrays add a fictive second dimension to please `cdist`-function
         if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
         if 1 == uds2.shape [ 1 ] : uds2 = numpy.c_[ uds2 , numpy.zeros ( len ( uds2 ) ) ] 
-        
-        return self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 )
+        ## 
+        return self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 , normalize = False )
     
 # =============================================================================
 ## @class DNNnp
@@ -823,13 +843,14 @@ class DNNnp(GoFnp) :
                    parallel = False  , 
                    silent   = False  ,
                    progress = True   ) :
-
-        GoFnp.__init__ ( self                ,
-                         nToys    = nToys    ,
-                         parallel = parallel , 
-                         silent   = silent   ,
-                         progress = progress , 
-                         method   = 'Distance-to-Nearest-Neighbour' )
+        
+        GoFnp.__init__ ( self                 ,
+                         nToys     = nToys    ,
+                         parallel  = parallel , 
+                         silent    = silent   ,
+                         progress  = progress ,
+                         normalize = False    ,                          
+                         method    = 'Distance-to-Nearest-Neighbour' )
         
         self.__histo = None 
         if   isinstance ( histo , ROOT.TH1 ) :
@@ -850,16 +871,21 @@ class DNNnp(GoFnp) :
     #  @see Eqs. (3.16) in M.Williams' paper
     #  @param data1 actual data (as unstructured array)
     #  @param vpdf  array of PDF values  
-    def t_value ( self , ds1 , vpdf , * , weight1 = None , weight2 = None ) :
+    def t_value ( self      ,
+                  ds1       ,
+                  vpdf      , * ,
+                  weight1   = None ,
+                  weight2   = None ,
+                  normalize = True ) :
         """ Calculate the t-value
         - see Eqs. (3.14)&(3.15) in M/.Williams' paper
         data1 : actual data (as unstructured array)
         vpdf  : array of PDF values  
         """
         
-        if not self.weights_supported : 
-            assert weight1 is None or numpy.ones ( n1 ) == weight1 , "weight1 must be either None or trivial"
-            assert weight2 is None or numpy.ones ( n2 ) == weight2 , "weight2 must be either None or trivial"
+        if not self.weights_supported :
+            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
+            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
             weight1 = None
             weight2 = None
         
@@ -868,15 +894,29 @@ class DNNnp(GoFnp) :
         assert 2 == len ( sh1 ) and 1 == len ( sh2 ) and len ( ds1 ) == len ( vpdf ) , \
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
 
-        tree = scipy.spatial.KDTree ( ds1 )
+        data1 , data2 = ds1 , vpdf
+        
+        ## transform ?  
+        structured1 = True if data1.dtype.fields else False
+        structured2 = True if data2.dtype.fields else False        
+        
+        ## convert to unstructured datasets 
+        data1 = s2u ( data1 , copy = False ) if structured1 else data1
+        data2 = s2u ( data2 , copy = False ) if structured2 else data2
+
+        ## normalize
+        if normalize and self.normalize :
+            data1, data2 = normalize_pooled ( data1 , data2 )     
+        
+        tree = scipy.spatial.KDTree ( data1 )
         ## uvalues , _ = tree.query ( ds1 , **qconf )
         ## uvalues     = uvalues.flatten ()
-        uvalues = neighbour_distances ( tree , ds1 ) 
+        uvalues = neighbour_distances ( tree , data2 ) 
         del tree
 
         ## dimension of the problem (it must be set in __call__)
         D = self.__D
-        C = - Ostap.Math.nball_volume ( D ) * len ( ds1 )  ## constant 
+        C = - Ostap.Math.nball_volume ( D ) * len ( data2 )  ## constant 
         if 1 != D : uvalues = uvalues ** D
         
         uvalues *= C
@@ -887,10 +927,8 @@ class DNNnp(GoFnp) :
             for u in uvalues :
                 v = min ( max ( 0 , float ( u  ) ) , 0.999999 )
                 self.__histo.Fill ( v ) 
-
         
-        ## convert u-values into t-values:
-        
+        ## convert u-values into t-values:        
         uvalues  = numpy.sort ( uvalues )
         
         n        = len ( uvalues )
@@ -913,21 +951,17 @@ class DNNnp(GoFnp) :
         if normalize :
             logger.warning ( "%s: `normalize` must be `False`!" % typename ( self ) )
             normalize = False 
-            
-        ## transform/normalize ? 
-        if normalize : ds1 = self.normalize ( data1 ) [ 0 ] 
-        else         : ds1 = data1
+
+        usd1 , uds2 = self.unpack ( data1 , vpdf ) 
         
-        ds1 = data1
-        
-        ## convert to unstructured dataset 
-        uds1     = s2u ( ds1 , copy = False )
-        self.__D = uds1.shape[1] 
+        self.__D = uds1.shape [ 1 ] 
         
         ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
-        if 1 == self.__D : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ]
+        if 1 == self.__D : data1  = numpy.c_[ data1 , numpy.zeros ( len ( data1) ) ]        
+        ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
+        if 1 == self.__D : data2  = numpy.c_[ data2 , numpy.zeros ( len ( data2 ) ) ]
         
-        return self.t_value ( uds1 , vpdf  )
+        return self.t_value ( data1 , data2 , normalize = False  )
 
     '''
     # ============================================================================

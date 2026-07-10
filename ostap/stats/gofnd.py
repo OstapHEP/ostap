@@ -23,8 +23,11 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
+    ## 
+    'MIX'                , ## Mixed Sample Goodness-of-fit method 
     'PPD'                , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
     'DNN'                , ## Distance-to-Nearest-Neighbour Goodness-Of-Fit method
+    ##
     'USTAT'              , ## Alternative implementation of DNN method
     'NLL'                , ## Use -log L as GoF estimator 
     'AikaikeIC'          , ## Use Aikaike IC  as GoF estimator 
@@ -74,13 +77,17 @@ class GoF(AGoF) :
                    sample   = False ) : 
         
         assert isinstance ( mcFactor, int ) and 1 <= mcFactor , "Invalid `mcFactor':%s" % mcFactor
-        self.__gof      = gof
-        self.__mcFactor = mcFactor 
-        self.__sample   = True if sample else False
+        ## 
+        self.__gof        = gof
+        self.__mcFactor   = mcFactor 
+        self.__sample     = True if sample else False
+        
+        self.__the_tvalue = None
+        self.__the_pvalue = None
         
     @property
     def gof      ( self ) :
-        """`gof` : actual Goodness-of-Fit evaluator"""
+        """`gof` : Actual Goodness-of-Fit evaluator for numpy-arrays"""
         return self.__gof 
     
     @property
@@ -118,7 +125,102 @@ class GoF(AGoF) :
         """`method` : the actual GoF-method 
         """
         return self.gof.method
+
+    @property
+    def ecdf ( self ) :
+        """`ecdf` : empirical CDF for t-values 
+        """
+        return self.gof.ecdf 
+    @ecdf.setter
+    def ecdf ( self , value ) :
+        self.gof.ecdf = value
+
+    @property
+    def the_tvalue ( self ) :
+        """`the_tvalue`: the saved t-value
+        """
+        return self.__the_tvalue
+    @the_tvalue.setter
+    def the_tvalue ( self , value ) :
+        """`the_tvalue`: the saved t-value
+        """
+        self.__the_tvalue = value
+
+    @property
+    def the_pvalue ( self ) :
+        """`the_pvalue`: the saved p-value
+        """
+        return self.__the_pvalue
+    @the_pvalue.setter
+    def the_pvalue ( self , value ) :
+        """`the_pvalue`: the saved p-value
+        """
+        self.__the_pvalue = value
         
+    # =========================================================================
+    # serialize it (for parallelization) 
+    def __getstate_ ( self ) :
+        """ Serialize it (for parallelization)
+        """
+        return { 'gof'      : self.gof          ,
+                 'mcFactor' : self.mcFactor     ,
+                 'sample'   : self.sample       ,
+                 'tvalue'   : self.__the_tvalue , 
+                 'pvalue'   : self.__the_pvalue }
+    
+    # =========================================================================
+    # De-serialize it (for parallelization) 
+    def __setstate__ ( self , state ) :
+        """ (De)Serialize it (for parallelization)
+        """
+        self.__gof        = state.pop ( 'gof'              )
+        self.__mcFactor   = state.pop ( 'mcFactor' , 20    )
+        self.__sample     = state.pop ( 'sample'   , False )
+        self.__the_tvalue = state.pop ( 'tvalue'   , None  )
+        self.__the_pvalue = state.pop ( 'pvalue'   , None  )
+        
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Git 
+    #  @code
+    #  ppd    = ...
+    #  pdf    = ...  
+    #  data   = ... 
+    #  tvalue = ppd ( pdf , data ) 
+    #  @endcode
+    def tvalue ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> gof    = ...
+        >>> pdf    = ... 
+        >>> data   = ... 
+        >>> tvalue = gof.tvalue ( pdf , data ) 
+        """
+        ds1, ds2 = self.transform ( pdf , data )         
+        ## estimate the t-value 
+        t = self.gof ( ds1 , ds2 , normalize = True )
+        ## 
+        self.__the_tvalue = float ( t ) 
+        return self.the_tvalue 
+
+    # =========================================================================
+    ## Calculate the t & p-values
+    #  @code
+    #  ppd  = ...
+    #  pdf  = ...
+    #  data = ... 
+    #  t , p = ppd.pvalue ( pdf , data )
+    #  @endcode 
+    def pvalue ( self , pdf , data ) :
+        """ Calculate the t & p-values
+        >>> gof   = ...
+        >>> pdf   = ... 
+        >>> data  = ... 
+        >>> t , p = gof.pvalue ( pdf , data ) 
+        """
+        ds1 , ds2 = self.transform ( pdf , data )         
+        ## estimate t&p-values 
+        self.__the_tvalue , self.__the_pvalue = self.gof.pvalue ( ds1 , ds2  )        
+        return self.the_tvalue , self.the_pvalue
+    
     # =========================================================================
     ## Calculate t-value for Goodness-of-Fit test
     #  @code
@@ -137,7 +239,7 @@ class GoF(AGoF) :
         return self.tvalue ( pdf , data ) 
 
     # =======================================================================
-    ## Generate MC dataset from PDF according to model data
+    ## Generate MC dataset from PDF according to the model data
     def generate ( self ,  pdf , data ) :
         """ Generate MC dataset from PDF according to data 
         """
@@ -203,7 +305,6 @@ class GoF(AGoF) :
             w1  = None 
             return ds1 , ds2 , w1 
 
-        
         data1 = data
         data2 = self.generate ( pdf , data )
 
@@ -253,6 +354,74 @@ class GoF(AGoF) :
         ##
         return result, vline, hline   
 
+    # =========================================================================
+    ## Get results in a form of the table 
+    def table ( self , title = '' , prefix = '' ) :
+        """ Get results in a for of the table 
+        """
+        return self.the_table ( tvalue = self.the_tvalue ,
+                                pvalue = self.the_pvalue ,
+                                ecdf   = self.ecdf       , 
+                                title  = title ,
+                                prefix = prefx ) 
+    __str__  = table
+    __repr__ = table
+
+# =============================================================================
+## @class MIX
+#  Implementation of "Mixed samples" method 
+#  for probing of Goodness-Of-Fit
+#  @see M.Williams, "How good are your fits?
+#       Unbinned multivariate goodness-of-fit tests in high energy physics"
+#  @see https://doi.org/10.1088/1748-0221/5/09/P09004
+#  @see http://arxiv.org/abs/arXiv:1003.1768
+#
+#  M.Williams writes:
+#     The method <...> is easy to use and conceptually it is easy to understand.
+#     It is excellent at rejecting large localized discrepancies but fairly poor
+#     at rejecting small omnipresent ones.  The p-values can be calculated analytically.
+#     This method would make a nice addition to the high energy physics g.o.f. toolkit.
+class MIX(GoF) : 
+    """ Implementation of "Mixed Sample" method 
+    for probing of Goodness-Of-Fit
+    - see M.Williams, "How good are your fits?
+           Unbinned multivariate goodness-of-fit tests in high energy physics"
+    - see https://doi.org/10.1088/1748-0221/5/09/P09004
+    - see http://arxiv.org/abs/arXiv:1003.1768
+
+    M.Williams writes:
+    The method <...> is easy to use and conceptually it is easy to understand.
+    It is excellent at rejecting large localized discrepancies but fairly poor
+    at rejecting small omnipresent ones.  The p-values can be calculated analytically.
+    This method would make a nice addition to the high energy physics g.o.f. toolkit.
+    """
+    # =========================================================================
+    ## create the estimator
+    #  @param nToys    : (int)  number of permutations/toys 
+    #  @param mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data    
+    def __init__ ( self                  ,
+                   nToys       = 1000   ,
+                   silent      = False  ,
+                   parallel    = False  ,
+                   n_neighbors = 10     ,
+                   analytic    = True   , 
+                   mcFactor    = 20     , **params ) : 
+        """ Create Mixed Sample Estimator
+    
+        Parameters  
+
+        - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data
+        - nToys    : (int)  number of permutations/toys 
+        """
+        
+        GoF.__init__ ( self ,
+                       gof = GNP.MIXnp ( nToys       = nToys       ,
+                                         parallel    = parallel    ,
+                                         n_neighbors = n_neighbors ,
+                                         analytic    = True if analytic else False , 
+                                         silent      = silent      , **params ) ,                          
+                       mcFactor = mcFactor )
+        
 # =============================================================================
 ## @class PPD
 #  Implementation of concrete method "Point-To-Point Dissimilarity"
@@ -262,7 +431,7 @@ class GoF(AGoF) :
 #  @see http://arxiv.org/abs/arXiv:1003.1768 
 #  Important parameters:
 #  - mcFactor : (int)  the size of mc-dataset is `mcFactor` times size of real data
-#  - mc2mc    : (bool) should distances witng (large) mc-dataste be accounted? 
+#  - mc2mc    : (bool) should distances witng (large) mc-dataset be accounted for? 
 #  - nToys    : (int)  number of permutations/toys 
 #  - psi      : type of psi/distance function 
 #  - sigma    : sigma scale (used for psi=`gaussian`)
@@ -284,7 +453,7 @@ class PPD(GoF) :
 
     Important parameters:
     
-    - mc2mc    : (bool)  should distances within (large) mc-dataste be accounted? 
+    - mc2mc    : (bool)  should distances within (large) mc-dataset be accounted for? 
     - nToys    : (int)   number of permutations/toys 
     - psi      : (str)   type of psi/distance function 
     - sigma    : (float) sigma scale (used for psi=`gaussian`) 
@@ -314,7 +483,7 @@ class PPD(GoF) :
                    sigma     = 0.10       ,
                    silent    = False      ,
                    parallel  = False      ,
-                   mcFactor  = 10         ) : 
+                   mcFactor  = 20         , **params ) : 
         """ Create the Point-to-Point Dissimilarity estimator
         
         Parameters  
@@ -332,95 +501,9 @@ class PPD(GoF) :
                                          psi      = psi      ,
                                          sigma    = sigma    ,
                                          parallel = parallel ,
-                                         silent   = silent   ) ,                          
+                                         silent   = silent   , **params ) ,                          
                          mcFactor = mcFactor )
 
-        self.__ecdf   = None
-        self.__tvalue = None
-        self.__pvalue = None
-        
-    @property
-    def ppd ( self ) :
-        """`ppd` : Point-To-Point Dissimilarity calculator for two datasets """
-        return self.gof 
-    
-    # =========================================================================
-    ## Calculate T-value for Goodness-of-Git 
-    #  @code
-    #  ppd    = ...
-    #  pdf    = ...  
-    #  data   = ... 
-    #  tvalue = ppd ( pdf , data ) 
-    #  @endcode
-    def tvalue ( self , pdf , data ) :
-        """ Calculate T-value for Goodness-of-Fit
-        >>> ppd    = ...
-        >>> pdf    = ... 
-        >>> data   = ... 
-        >>> tvalue = ppd.tvalue ( pdf , data ) 
-        """
-        ds1, ds2 = self.transform ( pdf , data )         
-        ## estimate the t-value 
-        t = self.ppd ( ds1 , ds2 , normalize = True )
-        ## 
-        self.__tvalue = float ( t ) 
-        return self.__tvalue 
-
-    # =========================================================================
-    ## Calculate T-value for Goodness-of-Git 
-    #  @code
-    #  ppd    = ...
-    #  pdf    = ...  
-    #  data   = ... 
-    #  tvalue = ppd ( pdf , data ) 
-    #  @endcode
-    def __call__ ( self , pdf , data ) :
-        """ Calculate T-value for Goodness-of-Fit
-        >>> ppd    = ...
-        >>> pdf    = ... 
-        >>> data   = ... 
-        >>> tvalue = ppd ( pdf , data ) 
-        """
-        return self.tvalue ( pdf , data ) 
-    
-    # =========================================================================
-    ## Calculate the t & p-values
-    #  @code
-    #  ppd  = ...
-    #  pdf  = ...
-    #  data = ... 
-    #  t , p = ppd.pvalue ( pdf , data )
-    #  @endcode 
-    def pvalue ( self , pdf , data ) :
-        """ Calculate the t & p-values
-        >>> ppd  = ...
-        >>> pdf  = ... 
-        >>> data = ... 
-        >>> t , p = ppd.pvalue ( pdf , data ) 
-        """
-        ds1, ds2 = self.transform ( pdf , data )         
-        ## estimate t&p-values 
-        self.__tvalue , self.__pvalue = self.ppd.pvalue ( ds1 , ds2 , normalize = True )        
-        return self.__tvalue , self.__pvalue
-
-    # =========================================================================
-    @property
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distribution"""
-        return self.ppd.ecdf
-
-    # =========================================================================
-    ## Get results in a form of the table 
-    def table ( self , title = '' , prefix = '' ) :
-        """ Get results in a for of the table 
-        """
-        return self.the_table ( tvalue = self.__tvalue ,
-                                pvalue = self.__pvalue ,
-                                ecdf   = self.__ecdf   , 
-                                title  = title ,
-                                prefix = prefx ) 
-    __str__  = table
-    __repr__ = table
     
 # =============================================================================
 ## @class DNN
@@ -458,18 +541,15 @@ class DNN(GoF) :
         
         ## initialize the base 
         GoF.__init__ ( self             ,
-                       mcFactor = 1     , 
                        gof      = GNP.DNNnp ( histo    = histo    ,
                                               nToys    = nToys    ,
                                               parallel = parallel , 
                                               silent   = silent   ,
                                               progress = progress ) ,
+                       mcFactor = 1      , 
                        sample   = sample )
         
         self.__ecdf   = None 
-        self.__histo  = None 
-        self.__tvalue = None
-        self.__pvalue = None
         
     @property
     def dnn ( self ) :
@@ -503,27 +583,6 @@ class DNN(GoF) :
         return ds1 , vpdf 
         
     # =========================================================================
-    ## Calculate T-value for Goodness-of-Git 
-    #  @code
-    #  dnn     = ...
-    #  pdf     = ...  
-    #  data    = ... 
-    #  tvalue  = dnn ( pdf , data ) 
-    #  @endcode
-    def tvalue ( self , pdf , data ) :
-        """ Calculate T-value for Goodness-of-Fit
-        >>> dnn    = ...
-        >>> pdf    = ... 
-        >>> data   = ... 
-        >>> tvalue = dnn ( pdf , data ) 
-        """
-        ds1 , vpdf = self.transform ( pdf , data ) 
-        ## call underlying method 
-        t  = self.dnn ( ds1 , vpdf , normalize = False )
-        self.__tvalue = float ( t ) 
-        return self.__tvalue 
-
-    # =========================================================================
     ## Calculate the t & p-values
     #  @code
     #  dnn  = ...
@@ -544,11 +603,12 @@ class DNN(GoF) :
         ## call underlying method 
         t_value = self.dnn ( ds1 , vpdf )
 
-        ## save the histogram (do not override it!)
-        if   self.__histo   : pass
-        elif self.dnn.histo :
-            self.__histo = self.dnn.histo.clone() 
-            self.dnn.histo.Reset()
+
+        ## ## save the histogram (do not override it!)
+        ## if   self.__histo   : pass
+        ## elif self.dnn.histo :
+        ##    self.__histo = self.dnn.histo.clone() 
+        ##    self.dnn.histo.Reset()
 
         ## prepare toys
         toys = TOYS ( self                   ,
@@ -561,38 +621,14 @@ class DNN(GoF) :
         else             : counter = toys     ( self.nToys , progress = self.progress )
         
         ## get ECDF from toys
-        self.__ecdf = toys.ecdf
+        self.ecdf = toys.ecdf
         
-        p_value       = 1 - counter.eff
+        p_value   = 1 - counter.eff
         
-        self.__tvalue = t_value 
-        self.__pvalue = p_value 
+        self.the_tvalue = t_value 
+        self.the_pvalue = p_value 
 
         return t_value, p_value
-    
-    @property
-    def histo ( self ) :
-        """`histo` : histogram with U-value distribution"""
-        return self.__histo
-    
-    @property
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distribution"""
-        return self.__ecdf
-
-    # =========================================================================
-    ## Get results in a form of the table 
-    def table ( self , title = '' , prefix = '' ) :
-        """ Get results in a form of the table 
-        """
-        return self.the_table ( tvalue = self.__tvalue ,
-                                pvalue = self.__pvalue ,
-                                ecdf   = self.ecdf     , 
-                                title  = title  ,
-                                prefix = prefix ) 
-    __str__  = table
-    __repr__ = table
-
     
 # =============================================================================
 ## @class NLL
@@ -931,7 +967,6 @@ class ADVAL_LightGBM(GoF) :
         self.__ecdf   = None
         self.__tvalue = None
         self.__pvalue = None
-
     
     # =========================================================================
     ## Calculate T-value for Goodness-of-Fit 
@@ -982,12 +1017,6 @@ class ADVAL_LightGBM(GoF) :
                                                           weight2   = None , 
                                                           normalize = True )        
         return self.__tvalue , self.__pvalue
-
-    # =========================================================================
-    @property
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-value distribution"""
-        return self.gof.ecdf
 
     # =========================================================================
     ## Get results in a form of the table 

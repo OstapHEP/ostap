@@ -657,7 +657,11 @@ else  ()
    set ( OSTAP_TEST_PYTHON_WARNINGS "-Werror -Wignore::DeprecationWarning" ) 
 endif () 
 
-set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning,once::UserWarning" ) 
+if ( ${PY_xgboost_FOUND} AND ${PY_xgboost_VERSION} VERSION_LESS "1.0.0" )
+   set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning,once::UserWarning,ignore::FutureWarning" ) 
+else ()
+   set ( OSTAP_TEST_PYWARNINGS "error,ignore::DeprecationWarning,once::UserWarning" ) 
+endif()
 
 if ( OSTAP_TEST_PYWARNINGS )  
   message ( "----> All tests will be executed with PYTHONWARNINGS=" ${OSTAP_TEST_PYWARNINGS}  ) 

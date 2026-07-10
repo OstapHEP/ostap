@@ -161,20 +161,27 @@ class ADVAL_base (GoFnp):
         df_2 = pd.DataFrame ( data2 , dtype = float )
 
         column_target = 'column_target'
+        
         column_weight = 'column_weight'
         
         df_1 [ column_target ] = 1
         df_2 [ column_target ] = 0
 
-        df_1 [ column_weight ] = 1 if weight1 is None else weight1 
-        df_2 [ column_weight ] = 1 if weight2 is None else weight2 
-
+        w1_trivial = weight_trivial ( weight1 )
+        w2_trivial = weight_trivial ( weight2 )
+        
+        if w1_trivial and w2_trivial : weights = False 
+        else                         :            
+            weights = True
+            df_1 [ column_weight ] = 1 if w1_trivial else weight1 
+            df_2 [ column_weight ] = 1 if w2_trivial else weight2 
+            
         ## merge datasets together
         dataset = pd.concat ( [ df_1 , df_2 ] , axis = 0 ).reset_index ( drop = True )
 
-        X       = dataset . drop ( columns = [ column_target , column_weight ]  )
+        X       = dataset . drop ( columns = [ column_target , column_weight ] if weights else [ column_target ] )
         Y       = dataset [ column_target ]
-        W       = dataset [ column_weight ]
+        W       = dataset [ column_weight ] if weights else False 
         N       = len ( dataset )
         
         ## cross-validation
@@ -182,20 +189,19 @@ class ADVAL_base (GoFnp):
         from sklearn.metrics         import roc_auc_score
         
         random_state = self.params.get ( 'random_state' )
-        cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle=True , random_state = 42 )
+        cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle=True , random_state = random_state )
         oof_preds    = numpy.zeros( N )
 
-        ###
-
+        ## 
         for fold , ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
-            
-            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ]
-            X_val   , Y_val   , W_val   = X.iloc [ val_idx   ] , Y.iloc [ val_idx   ] , W.iloc [ val_idx   ]
 
+            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ] if weigths else None 
+            X_val   , Y_val   , W_val   = X.iloc [ val_idx   ] , Y.iloc [ val_idx   ] , W.iloc [ val_idx   ] if weigths else None 
+                            
             ## train model and make predictions & predict 
             oof_preds [ val_idx ] = self.work ( X_train , Y_train , W_train , X_val  , Y_val , W_val   )
-                                    
-        #  weighted ROC-AUC
+            
+        ## (weighted) ROC-AUC
         auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
 
         ## 
@@ -259,10 +265,10 @@ class ADVAL_LGBM (ADVAL_base) :
         
         ## 
         import lightgbm as LightGBM
-
+        ## 
         train_data = LightGBM.Dataset ( X_train , label = Y_train , weight = W_train )
         val_data   = LightGBM.Dataset ( X_val   , label = Y_val   , weight = W_val   , reference = train_data )
-        
+        ## 
         ## train the model
         model = LightGBM.train (
             self.params ,
@@ -293,7 +299,7 @@ class ADVAL_XGB (ADVAL_base) :
         config = {
             'objective'     : 'binary:logistic' ,
             'eval_metric'   : 'auc'             ,
-            'tree_method'   : 'hist'            , # Histogram methos, similar to LigthGBM 
+            'tree_method'   : 'hist'            , # Histogram method, similar to LigthGBM 
             'learning_rate' : 0.05              ,
             'max_depth'     : 5                 ,
             'seed'          : 42
@@ -326,8 +332,8 @@ class ADVAL_XGB (ADVAL_base) :
         ## 
         import xgboost as XGBoost 
 
-        dtrain = XGBoost.DMatrix ( X_train , label = Y_train , weight = W_train)
-        dval   = XGBoost.DMatrix (   X_val , label =   Y_val , weight = W_val)
+        dtrain = XGBoost.DMatrix ( X_train , label = Y_train , weight = W_train )
+        dval   = XGBoost.DMatrix ( X_val   , label = Y_val   , weight = W_val   )
         
         # Train the model 
         model = XGBoost.train (
@@ -340,8 +346,7 @@ class ADVAL_XGB (ADVAL_base) :
         )
         
         # predict 
-        return model.predict ( dval, iteration_range= ( 0 , model.best_iteration + 1 ) )
-
+        return model.predict ( dval ) ## , iteration_range= ( 0 , model.best_iteration + 1 ) )
 
 # ======================================================================================
 if HAS_AVX2 : 
@@ -515,6 +520,7 @@ class ADVAL_GBC (ADVAL_base) :
         from sklearn.ensemble import GradientBoostingClassifier as CLASSIFIER 
         ##
         model = CLASSIFIER ( **self.params )
+        ##
         model.fit ( X_train , Y_train , sample_weight = W_train )
         ## 
         return model.predict_proba ( X_val ) [ : , 1 ]
