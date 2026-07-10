@@ -405,15 +405,13 @@ endif()
 ## xgboost
 # ========================================================================================
 ## 
-if ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.12.0" )
-  find_python_module ( xgboost QUIET )
-  if ( NOT ${PY_xgboost_FOUND} )
-     execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install xgboost ${PIP_ARGS})
-  endif()
-  find_python_module ( xgboost QUIET )
-  if ( NOT ${PY_xgboost_FOUND} )
-     message ( "----> warning                 xgboost is NOT found!" ) 
-  endif()
+find_python_module ( xgboost QUIET )
+if ( NOT ${PY_xgboost_FOUND} )
+   execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install xgboost ${PIP_ARGS})
+endif()
+find_python_module ( xgboost QUIET )
+if ( NOT ${PY_xgboost_FOUND} )
+   message ( "----> warning                 xgboost is NOT found!" ) 
 endif()
 
 # ========================================================================================
