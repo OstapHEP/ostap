@@ -159,7 +159,7 @@ if sys.version_info < ( 3 , 10 ) :
             """
             return bsddb3.hashopen ( filename , flag = flag  , mode = mode , **kwargs )        
         use_bsddb3  = True
-        db_bsddb_types = 'bsddb3' , 'berkeley' , 'berkeleydb' , 'dbhash' 
+        db_bsddb3_types = 'bsddb3' , 'berkeley' , 'berkeleydb' , 'dbhash' 
         # =====================================================================
     except ImportError  : # ===================================================
         # =====================================================================
