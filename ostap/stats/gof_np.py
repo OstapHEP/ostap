@@ -275,7 +275,7 @@ class GoFnp (AGoFnp) :
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
         
         ## normalize ? 
-        if self.normalize : uds1 , uds1 = normalize_pooled ( uds1 , uds2 ) 
+        if self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
         
         ### get t-value 
         t_value    = self.tvalue ( uds1      ,
