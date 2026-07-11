@@ -106,7 +106,9 @@ def test_GOF () :
     
     ## very small number of toys     
 
-    nToys =  40 if small else 200
+    nToys =  40 if small else 500
+    
+    ## nToys = 400 
     
     tconf = { 'nToys' : nToys , 'parallel' : True }
 
@@ -237,15 +239,18 @@ def test_GOF () :
     try : # =====================================================================
         # =======================================================================
         import xgboost
-        if xgboost.__version__ < '1.0.0' :
-            logger.warning ( "XGBoost version is too old, skip the test" )
-            continue 
         
-        from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
-        ## 
-        gof    = GOF ( **config )
-        test   = gof , gof , 'ADVAL:XBGoost'
-        to_test.append ( test ) 
+        if xgboost.__version__  >=  '1.0.0' :
+            
+            from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
+            ## 
+            gof    = GOF ( **config )
+            test   = gof , gof , 'ADVAL:XBGoost'
+            to_test.append ( test ) 
+            
+        else :
+            logger.warning ( "XGBoost version is too old, skip the test" )
+            
         ## 
         # =======================================================================
     except ImportError : # ======================================================

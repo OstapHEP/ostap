@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/stats/gof_np.py
-#  Set of utulities for goodness-of-fit studies for multidimensional fits
+#  Set of utilities for goodness-of-fit studies for multidimensional fits
 #  @see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
 #  @see https://doi.org/10.1088/1748-0221/5/09/P09004
 #  @see http://arxiv.org/abs/arXiv:1003.1768 
@@ -10,7 +10,7 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2024-09-16
 # =============================================================================
-""" Simple utulities for goodness-of-fit studies for multidimensional fits 
+""" Simple utilities for goodness-of-fit studies for multidimensional fits 
 - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
 - see https://doi.org/10.1088/1748-0221/5/09/P09004
 - see http://arxiv.org/abs/arXiv:1003.1768
@@ -658,7 +658,7 @@ class PPDnp(GoFnp) :
                          parallel  = parallel , 
                          silent    = silent   ,
                          progress  = progress , ## ATTENTION!                          
-                         normalize = False    ,
+                         normalize = True     ,
                          n_jobs    = n_jobs   , 
                          method    = 'Point-to-Point Dissimilarity' , **params )
         
@@ -920,16 +920,12 @@ class DNNnp(GoFnp) :
 
         ## # of points & dimensionality of the problem
         N , D = shape1
-
-        ## total weight 
-        W_tot = N if w1_trivial else numpy.sum ( weight1 ) 
-        
+                
         ## normalize
         jacobian = 1.0  
         if normalize and self.normalize :
             jacobian = numpy.prod ( numpy.std  ( uds1  , axis = 0 , keepdims = True ) ) 
             uds1     = normalize_pooled ( uds1  )     
-
 
         from sklearn.neighbors import NearestNeighbors   
         nn = NearestNeighbors ( **self.params )

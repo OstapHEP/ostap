@@ -172,8 +172,6 @@ def normalize_pooled ( *datasets ) :
     
     """
 
-    print ( 'I AM POOLED NORMALIZE!' )
-    
     if not datasets : return ()
 
     ## print ( 'SKIP NORMALIZATION' ) 
