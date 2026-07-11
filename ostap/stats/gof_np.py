@@ -21,9 +21,9 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2024-09-29"
 __all__     = (
     'GoFnp' , ## A base class for numpy-related family of methods to probe goodness-of-fit
-    'MIXnp' , ## Mized samples                 Goodness-of-fit method 
-    'PPDnp' , ## Point-to-Point Dissimilarity  Goodness-of-fit method 
-    'DNNnp' , ## Distance-to-Nearest-Neighbour Goodness-of-fit method 
+    'MIXnp' , ## Mixed samples                 Goodness-of-Fit method 
+    'PPDnp' , ## Point-to-Point Dissimilarity  Goodness-of-Fit method 
+    'DNNnp' , ## Distance-to-Nearest-Neighbour Goodness-of-Fit method 
 )
 # =============================================================================
 from   ostap.core.ostap_types   import string_types
@@ -45,7 +45,7 @@ import ROOT, os, abc, numpy, scipy
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gofnd' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.stats.gof_np' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Simple utilities for goodness-of-fit studies for multidimensional fits' )
@@ -906,12 +906,13 @@ class DNNnp(GoFnp) :
 
         ## normalize
         if normalize and self.normalize :
-            data1, data2 = normalize_pooled ( data1 , data2 )     
-        
+            data1 = normalize_pooled ( data1  )     
+            
+            
         tree = scipy.spatial.KDTree ( data1 )
         ## uvalues , _ = tree.query ( ds1 , **qconf )
         ## uvalues     = uvalues.flatten ()
-        uvalues = neighbour_distances ( tree , data2 ) 
+        uvalues = neighbour_distances ( tree , data1 ) 
         del tree
 
         ## dimension of the problem (it must be set in __call__)
@@ -952,16 +953,16 @@ class DNNnp(GoFnp) :
             logger.warning ( "%s: `normalize` must be `False`!" % typename ( self ) )
             normalize = False 
 
-        usd1 , uds2 = self.unpack ( data1 , vpdf ) 
+        uds1 , uds2 = self.unpack ( data1 , vpdf ) 
         
         self.__D = uds1.shape [ 1 ] 
         
         ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
-        if 1 == self.__D : data1  = numpy.c_[ data1 , numpy.zeros ( len ( data1) ) ]        
+        if 1 == self.__D : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( data1) ) ]        
         ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
-        if 1 == self.__D : data2  = numpy.c_[ data2 , numpy.zeros ( len ( data2 ) ) ]
+        ## if 1 == self.__D : data2  = numpy.c_[ data2 , numpy.zeros ( len ( data2 ) ) ]
         
-        return self.t_value ( data1 , data2 , normalize = False  )
+        return self.t_value ( uds1 , uds2 , normalize = False  )
 
     '''
     # ============================================================================
@@ -979,10 +980,8 @@ class DNNnp(GoFnp) :
         
         However, one always can run straightforward pseudoexperiments 
         """        
-    raise NotImplementedError( "p-value is not defined for DNNNP!" )
+    raise NotImplementedError( "p-value is not defined for DNNnp!" )
     '''
-        
-     
     @property
     def histo ( self ) :
         """`histo` : the histogram with distribution of U-values"""

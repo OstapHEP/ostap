@@ -1,4 +1,5 @@
 
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
 
 macro(find_python_module module)

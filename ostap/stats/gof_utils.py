@@ -586,7 +586,7 @@ if False : # ==================================================================
             nj    = min ( 2 * numcpu () + 3 , me ) 
             lst   = splitter ( NN , nj )
             njobs = len ( [ k for k in splitter ( NN , nj ) ] )
-            if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used with joblib' % njobs ) 
+            if not silent : logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with joblib' % njobs ) 
             ## 
             conf  = { 'n_jobs' : -1 , 'verbose' : 0 }
             if    (1,3,0) <= jl_version < (1,4,0) : conf [ 'return_as' ] = 'generator'           
@@ -629,7 +629,7 @@ if not jl : # =================================================================
 
         ## njobs = 2 * min ( NN // 2 + 1 , numcpu () + 1 ) 
         
-        if not silent : logger.info ( 'permutations: #%d parallel subjobs to be used with WorkManager' % njobs ) 
+        if not silent : logger.info ( 'GoF-permutations: #%d parallel subjobs to be used with WorkManager' % njobs ) 
         counter = EffCounter()
         tvalues = () 
         ## 

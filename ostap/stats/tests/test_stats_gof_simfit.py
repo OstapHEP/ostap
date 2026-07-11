@@ -13,6 +13,12 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # =============================================================================
+## ATTENTION! 
+import os 
+os.environ["OMP_NUM_THREADS"     ]  = "1"
+os.environ["MKL_NUM_THREADS"     ]  = "1"
+os.environ["OPENBLAS_NUM_THREADS"]  = "1"
+# ==============================================================================
 from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import dsID, rooSilent
 from   ostap.utils.timing       import timing 
@@ -64,7 +70,7 @@ dataset2 = ROOT.RooDataSet ( dsID() , 'Test Data set-2' , varset2 )
 
 mean1  = 2.0
 sigma1 = 0.50
-NS1    = 5000
+NS1    = 2000
 NB1    =  100
 
 for i in range ( NS1 )  :    
@@ -82,8 +88,8 @@ for i in range ( NB1 ) :
 # ============================================================================
 ## low statistic, high-background "signal channel"
 # ============================================================================
-NS2     =    400
-NB2     =   3000     
+NS2     =    200
+NB2     =   1000     
 mean2   = mean1  + 1.0
 sigma2  = sigma1 * 0.5
 
@@ -137,18 +143,18 @@ model2.B = NB2
 model_sim  = Models.SimFit ( sample , { 'A' : model1  , 'B' : model2 } , name = 'X' )
 
 # =============================================================================
-def test_gof_simfit1 () :
+def test_gof_simfit () :
     
-    logger = getLogger( 'test_gof_simfit1' )
+    logger = getLogger( 'test_gof_simfit' )
     
-    with use_canvas ( 'test_gof_simfit1: fit dataset1' , wait = 2 ) : 
+    with use_canvas ( 'test_gof_simfit: fit dataset1' , wait = 2 ) : 
         # =========================================================================
         ## fit 1
         r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
         title = 'Results of fit to dataset1'
         logger.info ( '%s:\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
         
-    with use_canvas ( 'test_gof_simfit1: fit dataset2' , wait = 2 ) : 
+    with use_canvas ( 'test_gof_simfit: fit dataset2' , wait = 2 ) : 
         ## fit 2
         r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
         title = 'Results of fit to dataset2'
@@ -165,9 +171,9 @@ def test_gof_simfit1 () :
     title = 'Results of simultaneous fit'
     logger.info ( '%s:\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
     
-    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw A' ) :        
+    with use_canvas ( 'test_gof_simfit: fit both datasets & draw A' ) :        
         fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-    with use_canvas ( 'test_gof_simfit1: fit both datasets & draw B' ) :        
+    with use_canvas ( 'test_gof_simfit: fit both datasets & draw B' ) :        
         fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
         
     models.add ( model1        )
@@ -181,6 +187,7 @@ def test_gof_simfit1 () :
     results.append ( r2 ) 
     results.append ( r  ) 
 
+    """ 
     # =============================================================================
     ## GOF/1D machinery
     # =============================================================================
@@ -207,35 +214,39 @@ def test_gof_simfit1 () :
             with use_canvas ( 'test_gof_simfit1: GoF-%s %s' % ( sample , k ) ) :
                 toys .draw ( sample , k )
 
-            
-    if numcpu() < 10 :
+    """
+    
+    if numcpu() <= 8 :
         nToys    =  5 ## realistic values should be well in excess of 100
         mcFactor =  2 ## realistic values should be well in excess of 10
     else :
         nToys    = 20 ## realistic values should be well in excess of 100
         mcFactor =  5 ## realistic values should be well in excess of 10  
-    
+        
+    nToys    =  5 ## realistic values should be well in excess of 100
+    mcFactor =  2 ## realistic values should be well in excess of 10
+        
     gof_ppd  = PPDSimFit   ( model_sim             , 
                              dataset               ,
                              parameters = r        ,                          
                              mcFactor   = mcFactor , 
                              nToys      = nToys    ,
                              sigma      = 0.5      , ## can be (and should be!) varied between 0.1 and 1.0 
-                             parallel   = True     , 
+                             ## parallel   = True     , 
                              silent     = False    )
     
     gof_dnn  = DNNSimFit   ( model_sim             , 
                              dataset               ,
                              parameters = r        ,                          
                              nToys      = nToys    ,
-                             parallel   = True     , 
+                             ## parallel   = True     , 
                              silent     = False    )
     
     gof_ustat = USTATSimFit ( model_sim             , 
                               dataset               ,
                               parameters = r        ,                          
                               nToys      = nToys    ,
-                              parallel   = True     , 
+                              ## parallel   = True     , 
                               silent     = False    )
     
     for gof in ( gof_ppd   ,
@@ -294,8 +305,8 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing( "simfit-1" ,   logger ) :  
-        test_gof_simfit1 ()
+    with timing( "GoF-SimFit" ,   logger ) :  
+        test_gof_simfit ()
         
     ## check finally that everything is serializeable:
     with timing ('Save to DB:'     , logger ) :

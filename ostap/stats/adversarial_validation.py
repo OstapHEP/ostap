@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+3#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/stats/adversarial_vaildation.py
@@ -49,8 +49,8 @@ __all__     = (
 from   ostap.core.ostap_types   import string_types
 from   ostap.core.cpu_info      import HAS_AVX2
 from   ostap.utils.basic        import typename , numcpu 
-from   ostap.stats.gof_np       import GoFnp , s2u 
-from   ostap.stats.gof_utils    import PERMUTATOR, num_jobs, normalize as ds_normalize
+from   ostap.stats.gof_np       import GoFnp 
+from   ostap.stats.gof_utils    import weigth_trivial
 import ROOT, numpy, abc, os   
 # =============================================================================
 # logging 
@@ -135,11 +135,12 @@ class ADVAL_base (GoFnp):
     #   @param weight1 the first array of weights 
     #   @param weight3 the second array of weights
     #   tvalue is defined as \f$  100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 
-    def t_value ( self  ,
-                  data1          ,
-                  data2          , * , 
-                  weight1 = None ,
-                  weight2 = None ) :
+    def t_value ( self              ,
+                  data1             ,
+                  data2             ,  * , 
+                  weight1   = None  ,
+                  weight2   = None  ,
+                  normalize = False ) :
         """ Calculate t-value for two non-structured (weighted) arrays 
         - data1   : the first dataset
         - data2   : the second dataset
@@ -160,8 +161,7 @@ class ADVAL_base (GoFnp):
         df_1 = pd.DataFrame ( data1 , dtype = float ) 
         df_2 = pd.DataFrame ( data2 , dtype = float )
 
-        column_target = 'column_target'
-        
+        column_target = 'column_target'        
         column_weight = 'column_weight'
         
         df_1 [ column_target ] = 1
@@ -179,17 +179,17 @@ class ADVAL_base (GoFnp):
         ## merge datasets together
         dataset = pd.concat ( [ df_1 , df_2 ] , axis = 0 ).reset_index ( drop = True )
 
-        X       = dataset . drop ( columns = [ column_target , column_weight ] if weights else [ column_target ] )
-        Y       = dataset [ column_target ]
-        W       = dataset [ column_weight ] if weights else False 
-        N       = len ( dataset )
+        X = dataset . drop ( columns = [ column_target , column_weight ] if weights else [ column_target ] )
+        Y = dataset [ column_target ]
+        W = dataset [ column_weight ] if weights else None 
+        N = len ( dataset )
         
         ## cross-validation
         from sklearn.model_selection import StratifiedKFold
         from sklearn.metrics         import roc_auc_score
         
         random_state = self.params.get ( 'random_state' )
-        cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle=True , random_state = random_state )
+        cv           = StratifiedKFold ( n_splits = self.n_splits , shuffle = True , random_state = random_state )
         oof_preds    = numpy.zeros( N )
 
         ## 

@@ -2836,7 +2836,7 @@ class PDF1(APDF1,FUN1) :
             ## evaluate the function
             v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ( ROOT.nullptr )
             
-            ## get ucertainties if/when available 
+            ## get uncertainties if/when available 
             if error and self.fit_result :
                 e = self.pdf.getPropagatedError ( self.fit_result )
                 if 0 <= e : v = VE ( v ,  e * e )

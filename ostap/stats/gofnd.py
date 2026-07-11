@@ -910,8 +910,6 @@ class BayesianIC(NLL) :
         NLL.__setstate__ ( self , state )
     
 # =============================================================================
-
-# =============================================================================
 ## @class ADVAL_LightGBM
 #  Use "adversatial validation" method to estimate the Goodness-of-Fit
 #  Actually we'll compare the dataset (possible weighted) and MC-dataset generated from PDF
@@ -1014,12 +1012,13 @@ class ADVAL_LightGBM(GoF) :
         self.__tvalue , self.__pvalue = self.gof.pvalue ( ds1              ,
                                                           ds2              ,
                                                           weight1   = w1   , 
-                                                          weight2   = None , 
-                                                          normalize = True )        
+                                                          weight2   = None )        
         return self.__tvalue , self.__pvalue
 
     # =========================================================================
-    ## Get results in a form of the table 
+    ## Get results in a form of the table
+    #  @code
+    #  @endcode 
     def table ( self , title = '' , prefix = '' ) :
         """ Get results in a for of the table 
         """
@@ -1027,7 +1026,8 @@ class ADVAL_LightGBM(GoF) :
                                 pvalue = self.__pvalue ,
                                 ecdf   = self.__ecdf   , 
                                 title  = title ,
-                                prefix = prefx ) 
+                                prefix = prefx )
+    report   = table 
     __str__  = table
     __repr__ = table
 

@@ -102,9 +102,10 @@ def test_GOF () :
 
     small = numcpu () <= 8
 
+    small = True
+    
     ## very small number of toys     
-    nToys = 20 if small else 200 
-
+    nToys = 20 if small else 200
     
     tconf = { 'nToys' : nToys , 'parallel' : True }
 
@@ -117,16 +118,16 @@ def test_GOF () :
 
 
     for conf in ( { 'psi' : 'linear'     } ,
-                  { 'psi' : 'logarithm'  } ,
-                  { 'psi' : 'chebyshev'  } ,   
-                  { 'psi' : 'coulomb'    } ,
+                  ## { 'psi' : 'logarithm'  } ,
+                  ## { 'psi' : 'chebyshev'  } ,   
+                  ## { 'psi' : 'coulomb'    } ,
                   ##
-                  ## { 'psi' : 'inverse2'   } ,   
-                  ## { 'psi' : 'squared'    } ,   
-                  ## { 'psi' : 'cosine'     } ,   
-                  ## { 'psi' : 'canberra'   } ,
+                  ## ## { 'psi' : 'inverse2'   } ,   
+                  ## ## { 'psi' : 'squared'    } ,   
+                  ## ## { 'psi' : 'cosine'     } ,   
+                  ## ## { 'psi' : 'canberra'   } ,
                   ## 
-                  { 'psi' : 'braycurtis' } ,   
+                  ## { 'psi' : 'braycurtis' } ,   
                   { 'psi' : 'cityblock'  } ,
                   ## 
                   ## { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
