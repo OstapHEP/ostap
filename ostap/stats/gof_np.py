@@ -727,17 +727,14 @@ class PPDnp(GoFnp) :
         ##
         
         ## calculate all pair-wise distances    
-        distances = cdist ( data1 , data2 , distance_type ) .flatten () ## data <-> data
+        ## distances = cdist ( data1 , data2 , distance_type ) .flatten () ## data <-> data
 
         ## ## calculate all pair-wise distances
-        """
         from sklearn.metrics import pairwise_distances        
         distances = pairwise_distances ( data1                  ,
                                          data2                  ,
                                          metric = distance_type , **self.params ) .flatten () ## data <-> data
-        """
 
-        
         distances = distances [ distances > 0 ]
         if transform : distances  = transform ( distances )        
         ## 

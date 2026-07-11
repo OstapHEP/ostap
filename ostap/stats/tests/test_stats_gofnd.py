@@ -106,8 +106,9 @@ def test_GOF () :
     
     ## very small number of toys     
 
-    nToys = 20 if small else 200
-    nToys = 50
+    nToys =  20 if small else 200
+    
+    nToys = 200
     
     tconf = { 'nToys' : nToys , 'parallel' : True }
 
