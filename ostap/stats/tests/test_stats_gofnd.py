@@ -106,9 +106,7 @@ def test_GOF () :
     
     ## very small number of toys     
 
-    nToys =  20 if small else 200
-    
-    nToys = 200
+    nToys =  40 if small else 200
     
     tconf = { 'nToys' : nToys , 'parallel' : True }
 
@@ -121,26 +119,26 @@ def test_GOF () :
 
 
     for conf in ( { 'psi' : 'linear'     } ,
-                  ## { 'psi' : 'logarithm'  } ,
-                  ## { 'psi' : 'chebyshev'  } ,   
-                  ## { 'psi' : 'coulomb'    } ,
+                  { 'psi' : 'logarithm'  } ,
+                  { 'psi' : 'chebyshev'  } ,   
+                  { 'psi' : 'coulomb'    } ,
                   ##
-                  ## ## { 'psi' : 'inverse2'   } ,   
-                  ## ## { 'psi' : 'squared'    } ,   
-                  ## ## { 'psi' : 'cosine'     } ,   
-                  ## ## { 'psi' : 'canberra'   } ,
+                  ## { 'psi' : 'inverse2'   } ,   
+                  ## { 'psi' : 'squared'    } ,   
+                  ## { 'psi' : 'cosine'     } ,   
+                  ## { 'psi' : 'canberra'   } ,
                   ## 
-                  ## { 'psi' : 'braycurtis' } ,   
+                  { 'psi' : 'braycurtis' } ,   
                   { 'psi' : 'cityblock'  } ,
                   ## 
-                  ## { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
-                  ## { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
-                  ## { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 5.00 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 2.00 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 1.00 } ,
                   { 'psi' : 'gaussian' , 'sigma' : 0.50 } ,
-                  ## { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
-                  ## { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
-                  ## { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
-                  ## { 'psi' : 'gaussian' , 'sigma' : 0.01 }
+                  { 'psi' : 'gaussian' , 'sigma' : 0.10 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.05 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.02 } ,
+                  { 'psi' : 'gaussian' , 'sigma' : 0.01 }
                  ) : 
         
         tag = 'PPD:%s' % conf['psi']
@@ -239,6 +237,10 @@ def test_GOF () :
     try : # =====================================================================
         # =======================================================================
         import xgboost
+        if xgboost.__version__ < '1.0.0' :
+            logger.warning ( "XGBoost version is too old, skip the test" )
+            continue 
+        
         from   ostap.stats.gofnd import ADVAL_XGBoost as GOF 
         ## 
         gof    = GOF ( **config )

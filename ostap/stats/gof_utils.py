@@ -554,15 +554,6 @@ class PERMUTATOR(object) :
             tvalues.append   ( tv  )
             counter += bool  ( self.t_value < tv  )
 
-        ##
-        t1 = [ t for t in tvalues if t <  self.t_value ]
-        t2 = [ t for t in tvalues if t >= self.t_value ]
-        tmin = min ( tvalues ) 
-        tmax = max ( tvalues ) 
-        ##
-        print ( 'RUN-TOYS:', self.t_value , tvalues , tmin , tmax , tmin <= self.t_value <= tmax )
-                
-        
         return counter, tuple ( tvalues )
         
 # =============================================================================
@@ -646,8 +637,6 @@ if not jl : # =================================================================
         if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
         else             : self.ecdf.add    ( data2vct ( tvalues )     )
         ##
-        print ('PP-RUN', tvalues , counter ) 
-        ## 
         return counter
     # =========================================================================
     logger.debug ( 'Parallel will be  used for parallel permutations')
