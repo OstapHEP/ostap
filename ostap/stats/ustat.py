@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ============================================================================
-# @file ostap/stats/ustat.py
+# @f  e ostap/stats/ustat.py
 #
 # Helper module to get ``U-statistics'' useful for ``Goodnes-Of-Fit'' tests
 #
@@ -302,6 +302,23 @@ class USTAT(AGoF) :
         >>> data   = ... 
         >>> tvalue = ustat ( pdf , data ) 
         """
+        return self.tvalue ( pdf , data )
+
+    # =========================================================================
+    ## Calculate T-value for Goodness-of-Git 
+    #  @code
+    #  ustat   = ...
+    #  pdf     = ...  
+    #  data    = ... 
+    #  tvalue  = ustat ( pdf , data ) 
+    #  @endcode
+    def tvalue   ( self , pdf , data ) :
+        """ Calculate T-value for Goodness-of-Fit
+        >>> ustat  = ...
+        >>> pdf    = ... 
+        >>> data   = ... 
+        >>> tvalue = ustat ( pdf , data ) 
+        """
 
         ## get t-value 
         t_value , histo , _ = uPlot ( pdf  ,
@@ -313,7 +330,7 @@ class USTAT(AGoF) :
             self.__histo = histo.clone()
         
         return t_value
-
+    
     # =========================================================================
     ## Calculate the t & p-values
     #  @code

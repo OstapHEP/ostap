@@ -102,10 +102,12 @@ def test_GOF () :
 
     small = numcpu () <= 8
 
-    small = True
+    ## small = True
     
     ## very small number of toys     
+
     nToys = 20 if small else 200
+    nToys = 50
     
     tconf = { 'nToys' : nToys , 'parallel' : True }
 

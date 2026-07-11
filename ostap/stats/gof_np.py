@@ -238,14 +238,13 @@ class GoFnp (AGoFnp) :
         uds1 , uds2 = self.unpack ( data1 , data2 ) 
             
         ## normalize
-        if normalize and self.normalize :
-            uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
-            
-        return self.t_value ( uds1 ,
-                              uds2 ,
-                              weight1   = weight1 ,
-                              weight2   = weight2 ,
-                              normalize = False   )
+        if normalize and self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
+        
+        return self.tvalue ( uds1      ,
+                             uds2      ,
+                             weight1   = weight1 ,
+                             weight2   = weight2 ,
+                             normalize = False   )
     
     # =========================================================================
     ## Calculate the t & p-values
@@ -279,11 +278,11 @@ class GoFnp (AGoFnp) :
         if self.normalize : uds1 , uds1 = normalize_pooled ( uds1 , uds2 ) 
         
         ### get t-value 
-        t_value    = self.t_value ( uds1      ,
-                                    uds2      ,
-                                    weight1   = weight1 ,
-                                    weight2   = weight2 ,
-                                    normalize = False   )
+        t_value    = self.tvalue ( uds1      ,
+                                   uds2      ,
+                                   weight1   = weight1 ,
+                                   weight2   = weight2 ,
+                                   normalize = False   )
         
         ## use permutations to get the p-value 
         permutator = PERMUTATOR ( self              ,
@@ -444,18 +443,18 @@ class MIXnp(GoFnp) :
     @property
     def config ( self ) :
         """`config` : full configuration"""
-        conf = GoFnp.config
+        conf = super().config
         conf [ 'analytic' ] = self.analytic
         return conf 
     
     # =========================================================================
     # calculate t-value for (non-structured) 2D arrays
-    def t_value ( self      , 
-                  data1     , 
-                  data2     , * , 
-                  weight1   = None , 
-                  weight2   = None ,
-                  normalize = True ) :
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
@@ -478,7 +477,8 @@ class MIXnp(GoFnp) :
                 
         data       = numpy.vstack       ( [ uds1  , uds2 ]    )
         labels     = numpy.array        ( [ 1 ] * n1 + [ 0 ] * n2  )
-        
+
+        ## weights 
         w1_trivial = weight_trivial ( weight1 )
         w2_trivial = weight_trivial ( weight2 )
         
@@ -548,12 +548,12 @@ class MIXnp(GoFnp) :
         if self.normalize : uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
 
         ### get t-value 
-        t_value    = self.t_value ( uds1      ,
-                                    uds2      ,
-                                    weight1   = weight1 ,
-                                    weight2   = weight2 ,
-                                    normalize = False   )
-
+        t_value    = self.tvalue ( uds1      ,
+                                   uds2      ,
+                                   weight1   = weight1 ,
+                                   weight2   = weight2 ,
+                                   normalize = False   )
+        
         if self.analytic and weight_trivial ( weight1 ) and weight_trivial ( weight2 ) : 
 
             n1     = len ( uds1 )
@@ -647,15 +647,20 @@ class PPDnp(GoFnp) :
                    parallel  = False      , 
                    silent    = False      ,
                    progress  = True       , 
-                   maxsize   = 1000000    ) :
+                   maxsize   = 1000000    , **params ) :
+
+
+        n_jobs = num_jobs ( params , numcpu() - 1 )
+        if parallel : n_jobs = 1 
         
         GoFnp.__init__ ( self                 ,
                          nToys     = nToys    ,
                          parallel  = parallel , 
                          silent    = silent   ,
-                         progress  = progress ,
-                         normalize = True     ,                          
-                         method    = 'Point-to-Point Dissimilarity' )
+                         progress  = progress , ## ATTENTION!                          
+                         normalize = False    ,
+                         n_jobs    = n_jobs   , 
+                         method    = 'Point-to-Point Dissimilarity' , **params )
         
         self.__mc2mc     = True if mc2mc else False
         self.__transform = None
@@ -670,9 +675,17 @@ class PPDnp(GoFnp) :
         self.__distance_type , _ , _ = psi_conf ( psi , scale )
 
     # =========================================================================
+    ## Are weights supported by this estimator?
+    @property
+    def weights_supported ( self ) :
+        """`weights_supported` : Are weights supported by this estimator?
+        """
+        return False
+    
+    # =========================================================================
     @property
     def mc2mc ( self ) :
-        """`mc2mc` : add mc<-->mc distances to the T-value 
+        """`mc2mc` : add mc <-->mc distances to the T-value ?
         - when size of the second data set is significantly larger, 
         `mc2mc = False` can be used to speedup calculations 
         """
@@ -712,22 +725,32 @@ class PPDnp(GoFnp) :
         scale = -0.5 / ( self.sigma ** 2 ) 
         distance_type , transform , _ = psi_conf ( self.psi , scale )
         ##
-        ## calculate all pair-wise distances
-        distances = cdist ( data1 , data2 , distance_type ) .flatten () ## data <-> data
         
-        ## distances = distances [ distances > 0 ]        
+        ## calculate all pair-wise distances    
+        distances = cdist ( data1 , data2 , distance_type ) .flatten () ## data <-> data
+
+        ## ## calculate all pair-wise distances
+        """
+        from sklearn.metrics import pairwise_distances        
+        distances = pairwise_distances ( data1                  ,
+                                         data2                  ,
+                                         metric = distance_type , **self.params ) .flatten () ## data <-> data
+        """
+
+        
+        distances = distances [ distances > 0 ]
         if transform : distances  = transform ( distances )        
         ## 
         return numpy.sum ( distances )
     
     # =========================================================================
-    # calculate t-value for (non-structured) 2D arrays
-    def t_value ( self      , 
-                  data1     , 
-                  data2     , *    , 
-                  weight1   = None , 
-                  weight2   = None ,
-                  normalize = True ) :
+    ## Calculate the t-value for 2D arrays
+    def tvalue ( self      , 
+                 data1     , 
+                 data2     , *    , 
+                 weight1   = None , 
+                 weight2   = None ,
+                 normalize = True ) :
         """ Calculate t-value for (non-structured) 2D arrays
         """
         ##
@@ -737,38 +760,28 @@ class PPDnp(GoFnp) :
             weight1 = None
             weight2 = None
 
-        ## transform ?  
-        structured1 = True if data1.dtype.fields else False
-        structured2 = True if data2.dtype.fields else False
-        
-        ## convert to unstructured datasets 
-        data1 = s2u ( data1 , copy = False ) if structured1 else data1
-        data2 = s2u ( data2 , copy = False ) if structured2 else data2
+        ## unpack data 
+        uds1 , uds2 = self.unpack ( data1 , data2 ) 
+
+        shape1 = uds1.shape 
+        shape2 = uds2.shape 
+        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        if 1 == len ( shape2 ) : uds2.reshape ( -1 , shape2 [ 0 ] ) 
         
         ## normalize
         if normalize and self.normalize :
-            data1, data2 = normalize_pooled ( data1 , data2 ) 
-                               
-        shape1 = data1.shape
-        shape2 = data2.shape
-        assert 2 == len ( shape1 ) and 2 == len ( shape2 ) and shape1 [ 1 ]  == shape2 [ 1 ] , \
-            "Invalid arrays: %s , %s" % ( shape1 , shape2  )
+            uds1 , uds2 = normalize_pooled ( uds1 , uds2 ) 
+            
+        n1 = len ( uds1 ) 
+        n2 = len ( uds2 )
         
-        n1 = len ( data1 ) 
-        n2 = len ( data2 ) 
-        ##
-        
-        ## For 1D-arrays add a fictive second dimension to please `cdist`-function
-        if 1 == shape1 [ 1 ] : data1 = numpy.c_[ data1 , numpy.zeros ( n1 , dtype = float ) ] 
-        if 1 == shape2 [ 1 ] : data2 = numpy.c_[ data2 , numpy.zeros ( n2 , dtype = float ) ] 
-
         ## calculate sums of distances, Eq (3.7) 
-        result  = self.sum_distances ( data1 , data1 ) / ( n1 * ( n1 - 1 ) )
-        result -= self.sum_distances ( data1 , data2 ) / ( n1 * n2 )
+        result  = self.sum_distances ( uds1 , uds1 ) / ( n1 * ( n1 - 1 ) )
+        result -= self.sum_distances ( uds1 , uds2 ) / ( n1 *   n2       )
+    
+        ## add the distances from the second dataset? 
+        if self.mc2mc : result += self.sum_distances ( uds2 , uds2 ) / ( n2 * ( n2 - 1 ) )
         
-        if self.mc2mc :
-            ## add the distances from the second dataset? 
-            result += self.sum_distances ( data2 , data2 ) / ( n2 * ( n2 - 1 ) )
         ## 
         return float ( result )
 
@@ -794,22 +807,24 @@ class PPDnp(GoFnp) :
         >>> t = ppd ( data1 , data1 , normalize = True  ) 
         """
         
-        ## transform ?  
-        structured1 = True if data1.dtype.fields else False
-        structured2 = True if data2.dtype.fields else False
-  
-        ## convert to unstructured datasets 
-        uds1 = s2u ( data1 , copy = False ) if structured1 else data1 
-        uds2 = s2u ( data2 , copy = False ) if structured2 else data2
-         
-        ## normalize
-        if normalize and self.normalize : uds1, uds2= normalize_pooled ( uds1 , uds2 ) 
-                            
-        ## For 1D-arrays add a fictive second dimension to please `cdist`-function
-        if 1 == uds1.shape [ 1 ] : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( uds1 ) ) ] 
-        if 1 == uds2.shape [ 1 ] : uds2 = numpy.c_[ uds2 , numpy.zeros ( len ( uds2 ) ) ] 
+        ## unpack data is if needed 
+        uds1 , uds2 = self.unpack ( data1 , data2 ) 
         ## 
-        return self.t_value ( uds1 , uds2 , weight1 = weight1 , weight2 = weight2 , normalize = False )
+        shape1 = uds1.shape 
+        shape2 = uds2.shape 
+        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        if 1 == len ( shape2 ) : uds2.reshape ( -1 , shape2 [ 0 ] ) 
+        ## 
+        ## normalize
+        if normalize and self.normalize :
+            uds1 , uds2 = normalize_pooled ( uds1 , uds2 )
+            
+        ##        
+        return self.tvalue ( uds1      ,
+                             uds2      ,
+                             weight1   = weight1 ,
+                             weight2   = weight2 ,
+                             normalize = False   )
     
 # =============================================================================
 ## @class DNNnp
@@ -825,7 +840,7 @@ class PPDnp(GoFnp) :
 #    tool (especially for very high dimensional analyses), but its quantitative
 #    usefulness as a g.o.f. test is limited.  
 class DNNnp(GoFnp) : 
-    """ Distance-to-Nearest-Neighour GoF-method 
+    """ Distance-to-Nearest-Neighor GoF-method 
     - see M.Williams, "How good are your fits? Unbinned multivariate goodness-of-fit tests in high energy physics"
     - see https://doi.org/10.1088/1748-0221/5/09/P09004    
     - see http://arxiv.org/abs/arXiv:1003.1768 
@@ -842,128 +857,148 @@ class DNNnp(GoFnp) :
                    nToys    = 1000   ,
                    parallel = False  , 
                    silent   = False  ,
-                   progress = True   ) :
+                   progress = True   , **params ) :
         
-        GoFnp.__init__ ( self                 ,
-                         nToys     = nToys    ,
-                         parallel  = parallel , 
-                         silent    = silent   ,
-                         progress  = progress ,
-                         normalize = False    ,                          
-                         method    = 'Distance-to-Nearest-Neighbour' )
+        n_jobs = num_jobs ( params , numcpu() - 1 )
+        if parallel : n_jobs = 1 
         
+        GoFnp.__init__ ( self                      ,
+                         nToys       = nToys       ,
+                         parallel    = parallel    , 
+                         silent      = silent      ,
+                         progress    = progress    ,
+                         normalize   = True        ,                          
+                         method      = 'Distance-to-Nearest-Neighbor' ,
+                         metric      = 'euclidean' , 
+                         n_neighbors = 2           , 
+                         n_jobs      = n_jobs      , **params )
+        
+
         self.__histo = None 
         if   isinstance ( histo , ROOT.TH1 ) :
             self.__histo = histo
-        elif isinstance ( histo , int  ) and 1 < histo :
+        elif isinstance ( histo , int      ) and 1 < histo :
             self.__histo = ROOT.TH1D ( hID() , 'U-values' , histo , -0.1 , 1.1 ) 
-            
+
     # =========================================================================
     ## Are weights  are supported by this estimators?
     @property 
     def weights_supported ( self ) :
         """ Are weights are supported by this estimators?
         """
-        return False 
+        return True 
     
     # =========================================================================
     ## Calculate the t-value
     #  @see Eqs. (3.16) in M.Williams' paper
     #  @param data1 actual data (as unstructured array)
     #  @param vpdf  array of PDF values  
-    def t_value ( self      ,
-                  ds1       ,
-                  vpdf      , * ,
-                  weight1   = None ,
-                  weight2   = None ,
-                  normalize = True ) :
+    def tvalue ( self      ,
+                 data      ,
+                 vpdf      , * ,
+                 weight1   = None ,
+                 weight2   = None ,
+                 normalize = True ) :
         """ Calculate the t-value
         - see Eqs. (3.14)&(3.15) in M/.Williams' paper
         data1 : actual data (as unstructured array)
         vpdf  : array of PDF values  
         """
-        
-        if not self.weights_supported :
-            assert weight_trivial ( weight1 ) , "weight1 must be *trivial*"
-            assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
-            weight1 = None
-            weight2 = None
-        
-        sh1 = ds1 .shape
-        sh2 = vpdf.shape
-        assert 2 == len ( sh1 ) and 1 == len ( sh2 ) and len ( ds1 ) == len ( vpdf ) , \
-            "Invalid arrays: %s , %s" % ( sh1 , sh2 )
+        ## 
+        assert weight_trivial ( weight2 ) , "weight2 must be *trivial*"
 
-        data1 , data2 = ds1 , vpdf
-        
-        ## transform ?  
-        structured1 = True if data1.dtype.fields else False
-        structured2 = True if data2.dtype.fields else False        
-        
-        ## convert to unstructured datasets 
-        data1 = s2u ( data1 , copy = False ) if structured1 else data1
-        data2 = s2u ( data2 , copy = False ) if structured2 else data2
+        ## 
+        w1_trivial = weight_trivial ( weight1 ) 
 
+        ## unpack if needed 
+        uds1 , uds2 = self.unpack ( data , vpdf ) 
+        
+        ## reshape it if needed 
+        shape1 = uds1.shape 
+        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        
+        shape2 = uds2 .shape
+        assert 2 == len ( shape1 ) and 1 == len ( shape2 ) and len ( uds1 ) == len ( uds2 ) , \
+            "Invalid arrays: %s , %s" % ( shape1 , shape2 )
+
+        ## # of points & dimensionality of the problem
+        N , D = shape1
+
+        ## total weight 
+        W_tot = N if w1_trivial else numpy.sum ( weight1 ) 
+        
         ## normalize
+        jacobian = 1.0  
         if normalize and self.normalize :
-            data1 = normalize_pooled ( data1  )     
-            
-            
-        tree = scipy.spatial.KDTree ( data1 )
-        ## uvalues , _ = tree.query ( ds1 , **qconf )
-        ## uvalues     = uvalues.flatten ()
-        uvalues = neighbour_distances ( tree , data1 ) 
-        del tree
+            jacobian = numpy.prod ( numpy.std  ( uds1  , axis = 0 , keepdims = True ) ) 
+            uds1     = normalize_pooled ( uds1  )     
 
-        ## dimension of the problem (it must be set in __call__)
-        D = self.__D
-        C = - Ostap.Math.nball_volume ( D ) * len ( data2 )  ## constant 
-        if 1 != D : uvalues = uvalues ** D
+
+        from sklearn.neighbors import NearestNeighbors   
+        nn = NearestNeighbors ( **self.params )
         
-        uvalues *= C
-        uvalues  = numpy.exp ( uvalues * vpdf ) 
+        nn.fit ( uds1 )
         
+        distances ,  _  = nn.kneighbors( uds1 )
+        distances       = distances [ : , 1]  # DNN (Distance to Nearest Neighbor)        
+        if  1 != D : distances = distances ** D
+    
+        ## volume of the ball in D-dimensions 
+        VD = 1.0 * Ostap.Math.NBallVolume_ [ D ].unit_volume 
+        
+        ## total weight 
+        WT = 1.0 * N if w1_trivial else numpy.sum ( weight1 )
+        
+        ## Collect all multiplicative factors 
+        factor = - WT * VD * jacobian
+        
+        ## get u-values 
+        ##  expected weight in sphere
+        uvalues = factor * distances 
+        if not w1_trivial : uvalues /= weight1 
+        uvalues = 1.0 - numpy.exp ( uvalues )
+
+        delta   = 1.e-8 
+        uvalues = numpy.clip ( uvalues , delta , 1.0 - delta )
+
         ## fill the histogram of u-values (if defined)
-        if self.__histo : 
-            for u in uvalues :
-                v = min ( max ( 0 , float ( u  ) ) , 0.999999 )
-                self.__histo.Fill ( v ) 
-        
-        ## convert u-values into t-values:        
-        uvalues  = numpy.sort ( uvalues )
-        
-        n        = len ( uvalues )
-        aux      = numpy.linspace ( 1 , n , n ) / n 
-        uvalues -= aux
-        
-        return numpy.sum ( uvalues ** 2 ) 
+        if self.__histo :
+            self.__histo.Reset () 
+            for u in uvalues : self.__histo.Fill ( u ) 
+            
+        ## t-value as Gemini AI suggests: (modified Anderson-Darling criteria)
+        return - numpy.mean ( numpy.log ( uvalues ) + numpy.log ( 1.0 - uvalues ) )
 
     # ===========================================================================
     ## Calculate the t-value
     #  @see Eqs. (3.16) in M.Williams' paper
     #  @param data1 actual data (as structured array)
     #  @param vpdf  array of PDF values  
-    def __call__ ( self ,  data1 , vpdf , * , normalize = False ) :
+    def __call__ ( self      ,
+                   data1     ,
+                   vpdf      , * ,
+                   weight1   = None  ,
+                   weight2   = None  , 
+                   normalize = True  ) :
         """" Calculate the t-value
         - see Eqs. (3.16) in M.Williams' paper
         data1: actual data (as structured array)
         vpdf : array of PDF values  
         """
-        if normalize :
-            logger.warning ( "%s: `normalize` must be `False`!" % typename ( self ) )
-            normalize = False 
-
+        ## 
+        assert weight_trivial ( weight2 ) , "weight2 must be trivial!"
+        ## 
         uds1 , uds2 = self.unpack ( data1 , vpdf ) 
-        
-        self.__D = uds1.shape [ 1 ] 
-        
-        ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
-        if 1 == self.__D : uds1 = numpy.c_[ uds1 , numpy.zeros ( len ( data1) ) ]        
-        ## For 1D-arrays add a fictive second dimension to please `cKDTree`-structure
-        ## if 1 == self.__D : data2  = numpy.c_[ data2 , numpy.zeros ( len ( data2 ) ) ]
-        
-        return self.t_value ( uds1 , uds2 , normalize = False  )
-
+        ## 
+        shape1 = uds1.shape 
+        if 1 == len ( shape1 ) : uds1.reshape ( -1 , shape1 [ 0 ] ) 
+        ##        
+        return self.tvalue ( uds1               ,
+                             uds2                ,
+                             weight1   = weight1 ,
+                             weight2   = weight2 ,                             
+                             normalize = True    )
+    
     '''
     # ============================================================================
     ## p-value is not really defined here 

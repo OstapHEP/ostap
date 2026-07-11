@@ -41,7 +41,8 @@ logger.debug ( 'Simple utilities for goodness-of-fit studies' )
 #  t_value           = gof        ( pdf , data )
 #  t_value, p_value  = gof.pvalue ( pdf , data )
 #  @endcode
-class AGoF(object) :
+## class AGoF(object) :
+class AGoF(abc.ABC) :
     """ An abstract base class for family of methods to probe Goodness-of-Fit
     There are two abstract methods
     - `__call__` to evaluate t-value, the value of GoF estimator 
@@ -172,7 +173,8 @@ class AGoF(object) :
 #  t    = god        ( ds1 , ds2 , normalize = True )
 #  t,p  = god.pvalue ( ds1 , ds2 , normalize = True )
 #  @endcode
-class AGoFnp(object) :
+## class AGoF(abc.ABC) :
+class AGoFnp(abc.ABC) :
     """ An abstract base class for numpy-related family of methods to probe goodness-of fit
     
     There are two abstract methods
@@ -185,25 +187,51 @@ class AGoFnp(object) :
     >>> t,p  = gof ( ds1 , ds2 , normalize = True )
     """
     # =========================================================================
-    ## Calculate T-value for two datasets 
+    ## Calculate t-value for two datasets 
     #  @code
     #  data1 = ... ## the first  data set 
     #  data2 = ... ## the second data set
     #  gof   = ...
-    #  t = gof ( data1 , data1 , normalize = False ) 
-    #  t = gof ( data1 , data1 , normalize = True  ) 
+    #  t = gof ( data1 , data2 , normalize = False ) 
+    #  t = gof ( data1 , data2 , normalize = True  ) 
     #  @endcode
     @abc.abstractmethod
-    def __call__ ( self , data1 , data2 , normalize = True ) :
+    def __call__ ( self      ,
+                   data1     ,
+                   data2     , * ,
+                   weight1   = None ,
+                   weight2   = None ,                   
+                   normalize = True ) :
         """ Calculate T-value for two data sets 
         >>> gof    = ...
         >>> data1 = ... ## the first  data set 
         >>> data2 = ... ## the second data set
-        >>> t = gof ( data1 , data1 , normalize = False ) 
-        >>> t = gof ( data1 , data1 , normalize = True  ) 
+        >>> t = gof ( data1 , data2 , normalize = False ) 
+        >>> t = gof ( data1 , data2 , normalize = True  ) 
         """
         return NotImplemented 
             
+    # =========================================================================
+    ## Calculate t-value 
+    #  @code
+    #  gof = ...
+    #  ds1 , ds2 = ...
+    #  t   = gof.tvalue ( ds1 , ds2 , normalize = True ) 
+    #  @endcode 
+    @abc.abstractmethod
+    def tvalue ( self      ,
+                 data1     ,
+                 data2     , *    ,
+                 weight1   = None ,
+                 weight2   = None ,
+                 normalize = True ) : 
+        """ Calculate the t-value
+        >>> gof = ...
+        >>> ds1 , ds2 = ...
+        >>> t   = gof.tvalue ( ds1 , ds2 , normalize = True ) 
+        """
+        return NotImplemented
+
     # =========================================================================
     ## Calculate the t & p-values
     #  @code
@@ -212,7 +240,11 @@ class AGoFnp(object) :
     #  t , p = gof.pvalue ( ds1 , ds2 , normalize = True ) 
     #  @endcode 
     @abc.abstractmethod
-    def pvalue ( self , data1 , data2 , normalize = True ) :
+    def pvalue ( self      ,
+                 data1     ,
+                 data2     , *    ,
+                 weight1   = None ,
+                 weight2   = None ) : 
         """ Calculate the t & p-values
         >>> gof = ...
         >>> ds1 , ds2 = ...
@@ -221,7 +253,7 @@ class AGoFnp(object) :
         return NotImplemented
 
     # =========================================================================
-    ## Are weigths supported by this GoF estimator?
+    ## Are weights supported by this GoF estimator?
     @property 
     @abc.abstractmethod
     def weights_supported ( self ) :

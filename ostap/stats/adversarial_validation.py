@@ -44,13 +44,11 @@ __all__     = (
     'ADVAL_RF'   , ## RandomForst-based class for Adversarial Validation for the difference between two (weighted) dataset
 )
 # =============================================================================
-## from   pandas._config           import config
-## from   sklearn.utils            import parallel
 from   ostap.core.ostap_types   import string_types
 from   ostap.core.cpu_info      import HAS_AVX2
 from   ostap.utils.basic        import typename , numcpu 
 from   ostap.stats.gof_np       import GoFnp 
-from   ostap.stats.gof_utils    import weigth_trivial
+from   ostap.stats.gof_utils    import num_jobs, weight_trivial
 import ROOT, numpy, abc, os   
 # =============================================================================
 # logging 
@@ -60,6 +58,13 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.adversarial_valid
 else                       : logger = getLogger ( __name__ )
 # =============================================================================
 logger.debug ( 'Implement adversarial validation for Goodness-of-fit & Two-Samples test' )
+# =============================================================================
+## t-value from A
+#  t-value is defined as \f$  100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 
+def tvaleu_from_AUC ( auc ) :
+    """ t-value is defined as 100 * abs(1-2*AUC)**2
+    """
+    return 100 * ( 1.0 - 2.0 * auc ) ** 2 
 # =============================================================================
 ## allow parallel run
 #  - check "OMP_NUM_THREADS"
@@ -95,14 +100,13 @@ class ADVAL_base (GoFnp):
                    n_splits = 5     , ##  number of splits for cross-validation 
                    **params         ) :
 
-        if not 'random_state' in params : params [ 'random_state' ] = 42
-        
-        GoFnp.__init__ ( self                ,
-                         nToys    = nToys    ,
-                         parallel = parallel , 
-                         silent   = silent   ,
-                         progress = progress , 
-                         method   = method   , **params )
+        GoFnp.__init__ ( self                 ,
+                         nToys     = nToys    ,
+                         parallel  = parallel , 
+                         silent    = silent   ,
+                         progress  = progress ,
+                         normalize = False    , 
+                         method    = method   , **params )
         
         assert isinstance ( n_splits , int ) and 2 <= n_splits , "Invalid n_splits:%s" % n_splits
         self.__n_splits = n_splits 
@@ -117,7 +121,7 @@ class ADVAL_base (GoFnp):
     @property
     def config ( self ) :
         """`config` : get all configuratino parameters"""
-        conf = GoFnp.config
+        conf = super().config
         conf [ 'n_splits' ] = self.n_splits 
         return conf
     
@@ -135,12 +139,12 @@ class ADVAL_base (GoFnp):
     #   @param weight1 the first array of weights 
     #   @param weight3 the second array of weights
     #   tvalue is defined as \f$  100 \times \left( 1 - 2 \times AUC \right)^2 \f$ 
-    def t_value ( self              ,
-                  data1             ,
-                  data2             ,  * , 
-                  weight1   = None  ,
-                  weight2   = None  ,
-                  normalize = False ) :
+    def tvalue ( self              ,
+                 data1             ,
+                 data2             ,  * , 
+                 weight1   = None  ,
+                 weight2   = None  ,
+                 normalize = False ) :
         """ Calculate t-value for two non-structured (weighted) arrays 
         - data1   : the first dataset
         - data2   : the second dataset
@@ -148,10 +152,10 @@ class ADVAL_base (GoFnp):
         - weight3 : the second array of weights 
          t-value is defined as 100 * abs(1-2*AUC)**2
         """
-
+        ## 
         sh1 = data1.shape 
         sh2 = data2.shape
-        
+        ## 
         assert 2 == len ( sh1 ) and 2 == len ( sh2 ) and sh1 [ 1 ] == sh2 [ 1 ] and sh1 [ 0 ] and sh2 [ 0 ] , \
             "Invalid arrays: %s , %s" % ( sh1 , sh2 )
         
@@ -195,8 +199,8 @@ class ADVAL_base (GoFnp):
         ## 
         for fold , ( train_idx , val_idx ) in enumerate ( cv.split ( X, Y ) ):
 
-            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ] if weigths else None 
-            X_val   , Y_val   , W_val   = X.iloc [ val_idx   ] , Y.iloc [ val_idx   ] , W.iloc [ val_idx   ] if weigths else None 
+            X_train , Y_train , W_train = X.iloc [ train_idx ] , Y.iloc [ train_idx ] , W.iloc [ train_idx ] if weights else None 
+            X_val   , Y_val   , W_val   = X.iloc [ val_idx   ] , Y.iloc [ val_idx   ] , W.iloc [ val_idx   ] if weights else None 
                             
             ## train model and make predictions & predict 
             oof_preds [ val_idx ] = self.work ( X_train , Y_train , W_train , X_val  , Y_val , W_val   )
@@ -205,8 +209,7 @@ class ADVAL_base (GoFnp):
         auc_score = roc_auc_score ( Y , oof_preds , sample_weight = W )
 
         ## 
-        return  100 * ( 1.0 - 2.0 * auc_score ) ** 2 
-
+        return tvaleu_from_AUC ( auc_score )
         
 # =======================================================================================
 ## @class ADVAL_LGBM
@@ -380,7 +383,6 @@ if HAS_AVX2 :
             ## Attention! 
             params [ 'thread_count' ] = 1 if parallel else num_jobs ( params , numcpu () - 1 )  
            
-            
             ## 
             import catboost as CatBoost 
             config.update ( params ) 

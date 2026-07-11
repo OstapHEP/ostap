@@ -26,7 +26,7 @@ from   ostap.core.ostap_types   import string_types, num_types
 from   ostap.math.math_base     import doubles, axis_range
 from   ostap.math.math_ve       import significance
 from   ostap.math.ve            import fmt_pretty_ve
-from    ostap.math.math_base    import pos_infinity     
+from   ostap.math.math_base     import pos_infinity     
 from   ostap.stats.counters     import SE, WSE, EffCounter
 from   ostap.utils.basic        import numcpu, loop_items, typename  
 from   ostap.utils.utils        import splitter
@@ -441,7 +441,7 @@ def make_permutations ( nToys    ,
 
     
     ## run permutations 
-    for i in progress_bar ( nToys , silent = silent and not progress ) :
+    for i in progress_bar ( nToys , silent = silent and not progress , description = 'Permutations:' ) :
         
         numpy.random.shuffle ( pooled )
         
@@ -490,7 +490,7 @@ class PERMUTATOR(object) :
         self.weight1 = weight1
         self.weight2 = weight2 
         self.t_value = t_value
-        self.__ecdf  = None
+        self.ecdf    = None
         
     ## serialize the object 
     def __getstate__ ( self ) :
@@ -514,7 +514,7 @@ class PERMUTATOR(object) :
         self.weight1 = state.pop ( 'weight1'    )
         self.weight2 = state.pop ( 'weight2'    )
         self.t_value = state.pop ( 't_value'    )
-        self.__ecdf  = state.pop ( 'ecdf'       )
+        self.ecdf    = state.pop ( 'ecdf'       )
         
     # =========================================================================
     ## run N-permutations 
@@ -522,8 +522,8 @@ class PERMUTATOR(object) :
         
         counter, tvalues = self.run_toys ( N = N , silent = silent , progress = progress )
         
-        if not self.__ecdf : self.__ecdf = Ostap.Math.ECDF ( tvalues , True )
-        else               : self.__ecdf.add ( data2vct ( tvalues )  )
+        if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
+        else             : self.ecdf.add ( data2vct ( tvalues )  )
         
         return counter 
 
@@ -545,27 +545,25 @@ class PERMUTATOR(object) :
                                                                      silent   = silent       ) :
 
             ## attention: normalize = False 
-            tv       = self.gof.t_value ( data1     ,
-                                          data2     ,
-                                          weight1   = weight1 ,
-                                          weight2   = weight2 ,
-                                          normalize = False   )
+            tv       = self.gof.tvalue ( data1     ,
+                                         data2     ,
+                                         weight1   = weight1 ,
+                                         weight2   = weight2 ,
+                                         normalize = False   )
             tv       = float ( tv )
-            tvalues.append  ( tv  )
-            counter += bool ( self.t_value < tv  )
+            tvalues.append   ( tv  )
+            counter += bool  ( self.t_value < tv  )
 
-        print ('T-VALUES', tvalues) 
+        ##
+        t1 = [ t for t in tvalues if t <  self.t_value ]
+        t2 = [ t for t in tvalues if t >= self.t_value ]
+        tmin = min ( tvalues ) 
+        tmax = max ( tvalues ) 
+        ##
+        print ( 'RUN-TOYS:', self.t_value , tvalues , tmin , tmax , tmin <= self.t_value <= tmax )
+                
+        
         return counter, tuple ( tvalues )
-
-    @property 
-    def ecdf ( self ) :
-        """`ecdf` : empirical CDF for t-values from permutations 
-        """
-        return self.__ecdf    
-    @ecdf.setter
-    def ecdf ( self , value ) :
-        self.__ecdf = value
-
         
 # =============================================================================
 jl = None 
@@ -647,6 +645,8 @@ if not jl : # =================================================================
         ##
         if not self.ecdf : self.ecdf = Ostap.Math.ECDF ( tvalues , True )
         else             : self.ecdf.add    ( data2vct ( tvalues )     )
+        ##
+        print ('PP-RUN', tvalues , counter ) 
         ## 
         return counter
     # =========================================================================
