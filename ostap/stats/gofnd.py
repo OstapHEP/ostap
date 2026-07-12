@@ -336,18 +336,17 @@ class GoF(AGoF) :
     
     # =========================================================================
     ## Draw the empirical CDF from permutations or toys  
-    def draw  ( self , tvalue = None , option = '' , *args , **kwargs ) :
+    def draw  ( self , option = '' , * , tvalue = None , **kwargs ) :
         """ Draw empirical CDF from permutations or toys 
         """
         ## 
         ecdf = self.ecdf 
         if not ecdf : return ecdf 
         ## 
-        has_tvalue = not tvalue is None and isinstance ( tvalue , num_types )
+        has_tvalue = isinstance ( tvalue , num_types )
         ## 
-        if not has_tvalue : return draw_ecdf (  ecdf , tvalue = None  , option = option , **kwargs )
-        ## 
-        result, vline, hline = draw_ecdf (  ecdf , tvalue = tvalue , option = option , **kwargs )
+        if not has_tvalue : return draw_ecdf ( ecdf , tvalue = None   , option = option , **kwargs )
+        result, vline, hline     = draw_ecdf ( ecdf , tvalue = tvalue , option = option , **kwargs )
         ## 
         self._vline = vline 
         self._hline = hline 
@@ -885,14 +884,14 @@ class NLL(AGoF) :
     
     # =========================================================================
     ## Draw the empirical CDF from toys  
-    def draw  ( self , option = '' , *args , **kwargs ) :
+    def draw  ( self , option = '' , * , tvalue = None , **kwargs ) :
         """ Draw empirical CDF from toys 
         """
         ## 
         ecdf = self.ecdf 
         if not ecdf : return ecdf 
         ##
-        t_value = self.the_tvalue ( self.fitresult ) 
+        t_value = self.the_tvalue ( self.fitresult ) if tvalue is None else tvalue
         ## 
         result, vline, hline = draw_ecdf (  ecdf , tvalue = t_value , option = option , **kwargs )
         ## 
