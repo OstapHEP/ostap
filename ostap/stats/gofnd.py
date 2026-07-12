@@ -892,7 +892,7 @@ class NLL(AGoF) :
         ecdf = self.ecdf 
         if not ecdf : return ecdf 
         ##
-        t_value = self.t_value ( self.fitresult ) 
+        t_value = self.the_tvalue ( self.fitresult ) 
         ## 
         result, vline, hline = draw_ecdf (  ecdf , tvalue = t_value , option = option , **kwargs )
         ## 
