@@ -13,8 +13,10 @@ endif ()
 ##  add_compile_options (-fsanitize=undefined ) 
 ## endif ()
 
-if(ROOT_VERSION VERSION_LESS "6.26")
+if    (ROOT_VERSION VERSION_LESS "6.26")
   message ( FATAL_ERROR " ROOT   version " ${ROOT_VERSION} "<6.26 is not supported anymore" )
+elseif(ROOT_VERSION VERSION_LESS "6.28")
+  message ( WARNING     " ROOT   version " ${ROOT_VERSION} "<6.28 support will be drop soon" )
 endif() 
     
 message ( "----> ROOT            version    : " ${ROOT_VERSION} )
@@ -47,8 +49,10 @@ else()
   message ( FATAL_ERROR "Python3 is NOT FOUND!" ) 
 endif()
 
-if (Python3_VERSION  VERSION_LESS "3.8" )
+if     (Python3_VERSION  VERSION_LESS "3.8"  )
   message ( FATAL_ERROR " Python version " ${Python3_VERSION} "<3.8 is not supported anymore")
+elseif (Python3_VERSION  VERSION_LESS "3.10" )
+  message ( WARNING     " Python version " ${Python3_VERSION} "<3.10 support will be drop soon")
 endif() 
 
 set(Python_VERSION ${Python3_VERSION}  )
